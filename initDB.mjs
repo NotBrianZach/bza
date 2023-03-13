@@ -1,5 +1,6 @@
 import Database from "better-sqlite3";
 
+// fileTypes: ["pdf", "html", "url", "epub", "", "txt"], "" = plaintext
 // articleTypes: ["book", "research paper", "monograph"],
 // exampleCharacterValues: ["", "socrates", "lao-tzu", "mike tyson"],
 
@@ -19,8 +20,9 @@ const dbBookmarks = db.prepare(
  title TEXT not null default '',
  synopsis TEXT not null default '',
  pageNumber INTEGER not null default 0,
+ fileType TEXT not null default 'pdf',
  isQuiz boolean default false,
-  isPrintChunkSummary boolean default false,
+ isPrintChunkSummary boolean default false,
  chunkSize INTEGER not null default ${defaultChunkSize},
  maxTokens INTEGER not null default ${defaultMaxTokens},
  narrator TEXT,
@@ -49,7 +51,7 @@ dbPDFs.run();
 // 1800 is about how many characters are on the page of a typical book
 // supposedly, according to a quick google
 const dbHTML = db.prepare(
-  `create table if not exists pdfs (bTitle TEXT primary key,
+  `create table if not exists htmls (bTitle TEXT primary key,
  filepath text not null,
  isPrintPage boolean default true,
  charPageLength INTEGER not null default ${defaultCharPageLength},
@@ -60,7 +62,7 @@ const dbHTML = db.prepare(
 dbHTML.run();
 
 const dbPlaintxt = db.prepare(
-  `create table if not exists pdfs (bTitle TEXT primary key,
+  `create table if not exists plaintxts (bTitle TEXT primary key,
  filepath text not null,
  isPrintPage boolean default true,
  charPageLength INTEGER not null default ${defaultCharPageLength},
@@ -94,6 +96,13 @@ const dbLogging = db.prepare(
 dbLogging.run();
 
 // const dbExamplePDFBook = db.prepare(
+// `create table if not exists pdfs (bTitle TEXT primary key,
+//  filepath text not null,
+//  isPrintPage boolean default true,
+//  charPageLength INTEGER not null default ${defaultCharPageLength},
+//  readerExe text,
+//  readerArgs text
+// `INSERT OR REPLACE INTO clientNotes (phone, clientName, petName, breed, gender, age, weight, lastPriceUpdate, pricesJSON, schdJSON, prfDaysJSON, notesJSON, groomJSON, historyJSONList, priceHistoryJSONList) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
 //   `insert into`
 //   //   Frankenstein: {
 //   //     pageNumber: 0,

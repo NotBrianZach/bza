@@ -41,7 +41,7 @@ And it stores all this into "bookmarks" in a local database.
 6. parting thoughts from gpt3, call onExit method (cleanup)
 
 ### Quiz SubLoop: 
-if toggled on, start after step 1 in Event Loop
+if toggled on, start after step 2 in Event Loop
 1. query gpt3 to generate quiz, print quiz, 
 2. get user input for answers
 3. query gpt3 for "grade", explain "wrong" answers
