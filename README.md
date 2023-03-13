@@ -1,4 +1,4 @@
-# Book piZzA: A GPT-Powered Conversational Read Eval Print Loop and Bookmarks Manager for Books, Articles & Webpages (WIP)
+# Book piZzA: GPT Conversational Read Eval Print Loop and Bookmarks Manager for Books, Articles, Webpages, & Plaintext (WIP)
 
 Interactive books. Books sliced up like pizza. Book pizza. bza.
 
@@ -95,9 +95,8 @@ if toggled on, start after step 2 in Event Loop
 
 
 ## Other Configuration: 
+can modify eventLoop prompts in genPrompts.mjs
 see [initDB.mjs]() for database schema
-
-or
 
 1. `sqlite3 bookmarks.sq3`
 2. `.schema`
