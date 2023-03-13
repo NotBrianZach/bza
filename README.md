@@ -151,7 +151,7 @@ then i saw this reddit post
 
 https://www.reddit.com/r/singularity/comments/11ho23y/first_post_in_reddit_mistakely_used_a_text_post/
 
-and a within a couple minutes (well, techincally, i had started working a bit the day before on a book2quiz concept), after some good ole reddit arguing, i started writing this
+and a within a couple minutes (well, techincally, i had started working a bit the day before on a book2quiz concept (it did still involve chunking through book just like this)), after some good ole reddit arguing, i started writing this
 
 [original link](https://github.com/NotBrianZach/gptbook2quiz)
 
