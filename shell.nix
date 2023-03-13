@@ -17,7 +17,8 @@ pkgs.stdenv.mkDerivation {
 
   buildInputs = [
     pkgs.nodejs
-    pkgs.tmux
+    pkgs.screen
+    # pkgs.tmux
     pkgs.sqlite
 
     # command line epub reader
@@ -33,7 +34,7 @@ pkgs.stdenv.mkDerivation {
   ];
 
   shellHook = ''
-    alias bza=$(pwd)/bza.mjs
+    alias bza=DB_PATH=$(pwd)/bookmarks.sq3 $(pwd)/bza.mjs
     bza --help
 # TODO tmux commands to make two windows (also make it so you can turn off tmux)
     echo "Hi, it's bza time!\n some useful links: http://bropages.org/tmux\n To get started you could run something like "

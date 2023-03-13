@@ -6,7 +6,9 @@ import Database from "better-sqlite3";
 
 const defaultChunkSize = 2;
 const defaultMaxTokens = 2;
-const defaultCharPageLength = 2;
+// 1800 is about how many characters are on the page of a typical book
+// supposedly, according to a quick google
+const defaultCharPageLength = 1800;
 
 const db = new Database("./bookmarks.sq3", {
   // fileMustExist: true,
@@ -31,14 +33,16 @@ const dbBookmarks = db.prepare(
 dbBookmarks.run();
 
 const dbContexts = db.prepare(
-  `create table if not exists contexts (bTitle TEXT primary key,
-    order int not null,
+  `create table if not exists contexts (bTitle TEXT not null,
+    ordering integer not null,
     prepend text not null default '',
     append text not null default '',
     prependSummary text not null default '',
-    appendSummary text not null default '' primary key(bTitle, order))`
+    appendSummary text not null default '',
+    primary key(bTitle, ordering))`
 );
 dbContexts.run();
+
 const dbPDFs = db.prepare(
   `create table if not exists pdfs (bTitle TEXT primary key,
  filepath text not null,
@@ -48,8 +52,6 @@ const dbPDFs = db.prepare(
  isImage boolean default false)`
 );
 dbPDFs.run();
-// 1800 is about how many characters are on the page of a typical book
-// supposedly, according to a quick google
 const dbHTML = db.prepare(
   `create table if not exists htmls (bTitle TEXT primary key,
  filepath text not null,
@@ -91,7 +93,8 @@ const dbLogging = db.prepare(
  chunkSize INTEGER not null,
  maxTokens INTEGER not null default ${defaultMaxTokens},
  narrator TEXT,
- read_tstamp TEXT primary key(read_tstamp))`
+ read_tstamp TEXT,
+ primary key(read_tstamp))`
 );
 dbLogging.run();
 
@@ -124,8 +127,7 @@ dbLogging.run();
 //   //     prependContext: [""],
 //   //     appendContext: [""]
 // );
-
-dbExamplePDFBook.run();
+// dbExamplePDFBook.run();
 // pdf: {
 //   },
 //   "World Models": {

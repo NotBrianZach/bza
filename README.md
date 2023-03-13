@@ -46,9 +46,9 @@ if toggled on, start after step 2 in Event Loop
 2. get user input for answers
 3. query gpt3 for "grade", explain "wrong" answers
 4. get user input 
-      - save=save a log of the quiz&answers,
+      - done=exit&save a log of the quiz&answers,
       - delete=don't log quiz
-      - t=talk to gpt about quiz
+      - c=converse with gpt about quiz
       - again=run quiz loop again, saving log
       - againFresh=run quiz loop again, don't log
 5. get User Input (default options)
@@ -56,17 +56,17 @@ if toggled on, start after step 2 in Event Loop
 ## User Input (default options):
 - c="continue" to next pageChunk,
 - jump="jump" to input pageNumber,
-- EX="EXit" exit program, saving logs
+- EX="EXit" exit program, save to db
 ##### ASK user for input
 - r="repeat" ask user for input, append to prompt and query gpt, 
-- RE="REstart" restart conversation w/only initial prompt and save to logs
+- RE="REstart" restart conversation w/only initial prompt and save to db
 - REDT="REstart DesTructive" hard restart conversation w/only initial prompt
 ##### SUBLOOP COMMANDS
 - quiz= run quiz loop once
 - toggleQuiz= toggles quiz loop, print boolean value
 ##### PRINT TOGGLES: print to console, and enable/disable printing in event loop
 - h or help = show options
-- pChunk="summary of page chunk" print gpt summary of the last chunk of pages
+- pChunk="summary of page chunk" print gpt summary of the current chunk of pages
 - pRoll="rolling summary" print gpt summary of everything up to this point (short term memory)
 - narrate= rewrite all output in the voice of a character
 - voiceOut= TODO "Voice output" use ?[TTS](https://github.com/coqui-ai/TTS)? to generate voice to narrate gpt response & queries to user
@@ -96,11 +96,16 @@ if toggled on, start after step 2 in Event Loop
 
 ## Other Configuration: 
 can modify eventLoop prompts in genPrompts.mjs
-see [initDB.mjs]() for database schema
 
+see [initDB.mjs]() for database schema
+or 
+0. nix-shell if not already in a nix shell
 1. `sqlite3 bookmarks.sq3`
 2. `.schema`
-3. can do `.help` to list some other commands
+can do `.help` to list some other commands
+
+could create another file e.g. alterDB.mjs which has alter table statements if you wanted to change db schema (to add an articleType or something)
+
 
 
 

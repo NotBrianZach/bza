@@ -16,6 +16,21 @@ const queryGPT = createGPTQuery(process.env.OPENAI_API_KEY);
 
 import Database from "better-sqlite3";
 
+console.log(process.env.DB_PATH)
+const db = new Database(process.env.DB_PATH, {
+  // fileMustExist: true,
+  timeout: 5000, // 5 seconds
+  verbose: sqlstatement => console.log(`sqlite3 trace ${sqlstatement}`)
+});
+db.pragma("journal_mode = WAL");
+
+// "CREATE TABLE IF NOT EXISTS shopDetails (optimalNumDogs INTEGER not null default 17, shopPassword TEXT not null default 'playingBoxesYellow', homeDir TEXT not null default '/home/zach/poinkare', woofsURL TEXT not null default 'woofspetsalon.com')"
+const stmt = db.prepare(
+  "create table if not exists msgLog (phoneNum TEXT not null default, msg TEXT not null default, timestamp TEXT)"
+);
+
+stmt.run();
+
 import axios from "axios";
 const htmlToTxtOpts = {
   wordwrap: 130
@@ -33,13 +48,6 @@ program
         pageNumber: readingList[title].pageNumber
       }))
     );
-  });
-
-program
-  .command("initDB")
-  .description('initialize "bookmark" database idempotently')
-  .action(() => {
-    // console.log(Object.keys(readingList).map((val, tit) => tit));
   });
 
 // .option("-C, --character <character>", "character to reply as")
@@ -246,22 +254,5 @@ program
         console.error("no filetype or url specified or inferrable");
     }
   });
-
-import Database from "better-sqlite3";
-const db = new Database(process.env.DB_PATH, {
-  // fileMustExist: true,
-  timeout: 5000, // 5 seconds
-  verbose: sqlstatement => console.log(`sqlite3 trace ${sqlstatement}`)
-});
-db.pragma("journal_mode = WAL");
-
-// "CREATE TABLE IF NOT EXISTS shopDetails (optimalNumDogs INTEGER not null default 17, shopPassword TEXT not null default 'playingBoxesYellow', homeDir TEXT not null default '/home/zach/poinkare', woofsURL TEXT not null default 'woofspetsalon.com')"
-const stmt = db.prepare(
-  "create table if not exists msgLog (phoneNum TEXT not null default, msg TEXT not null default, timestamp TEXT)"
-);
-
-stmt.run();
-
-module.exports = db;
 
 program.parse(process.argv);
