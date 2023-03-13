@@ -89,10 +89,8 @@ if toggled on, start after step 2 in Event Loop
 - maxTokenSummary=change response length/max summary token count (default 2000, max = 4096 includes summary prompts)
 
 ## Command Line Meta Commands (bza)
-- read <bookName>
-
+- read bookName
 - printLog
-  - 
 - resumeFromLog
 
 
