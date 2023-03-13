@@ -18,6 +18,7 @@ pkgs.stdenv.mkDerivation {
   buildInputs = [
     pkgs.nodejs
     pkgs.tmux
+    pkgs.sqlite
 
     # command line epub reader
     pkgs.epr

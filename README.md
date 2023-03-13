@@ -99,8 +99,9 @@ see [initDB.mjs]() for database schema
 
 or
 
-`sqlite3 bza.sq3`
-`.schema`
+1. `sqlite3 bookmarks.sq3`
+2. `.schema`
+3. can do `.help` to list some other commands
 
 
 
