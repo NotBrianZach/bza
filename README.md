@@ -99,12 +99,19 @@ can modify eventLoop prompts in genPrompts.mjs
 
 see [initDB.mjs]() for database schema
 or 
+
 0. nix-shell if not already in a nix shell
 1. `sqlite3 bookmarks.sq3`
-2. `.schema`
-can do `.help` to list some other commands
+2. `.schema` to print db schema
+
+can do `.help` to list some other commands (e.g. .tables)
 
 could create another file e.g. alterDB.mjs which has alter table statements if you wanted to change db schema (to add an articleType or something)
+
+## Future Work
+
+- multiplayer repls? (idk websocket or something, could also have )
+- categorize query types (other than just summarize/non summarize) and allow for loop and stack creation within repl itself?
 
 
 
