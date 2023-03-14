@@ -45,7 +45,7 @@ dbContexts.run();
 
 const dbPDFs = db.prepare(
   `create table if not exists pdfs (bTitle TEXT primary key,
- filepath text not null,
+ filePath text not null,
  isPrintPage boolean default false,
  readerExe text not null default 'mupdf',
  readerArgs not null default '-Y 2',
@@ -54,7 +54,7 @@ const dbPDFs = db.prepare(
 dbPDFs.run();
 const dbHTML = db.prepare(
   `create table if not exists htmls (bTitle TEXT primary key,
- filepath text not null,
+ filePath text not null,
  isPrintPage boolean default true,
  charPageLength INTEGER not null default ${defaultCharPageLength},
  readerExe text,
@@ -65,7 +65,7 @@ dbHTML.run();
 
 const dbPlaintxt = db.prepare(
   `create table if not exists plaintxts (bTitle TEXT primary key,
- filepath text not null,
+ filePath text not null,
  isPrintPage boolean default true,
  charPageLength INTEGER not null default ${defaultCharPageLength},
  readerExe text,
@@ -98,58 +98,58 @@ const dbLogging = db.prepare(
 );
 dbLogging.run();
 
-// const dbExamplePDFBook = db.prepare(
-// `create table if not exists pdfs (bTitle TEXT primary key,
-//  filepath text not null,
-//  isPrintPage boolean default true,
-//  charPageLength INTEGER not null default ${defaultCharPageLength},
-//  readerExe text,
-//  readerArgs text
-// `INSERT OR REPLACE INTO clientNotes (phone, clientName, petName, breed, gender, age, weight, lastPriceUpdate, pricesJSON, schdJSON, prfDaysJSON, notesJSON, groomJSON, historyJSONList, priceHistoryJSONList) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
-//   `insert into`
-//   //   Frankenstein: {
-//   //     pageNumber: 0,
-//   //     articleType: "book",
-//   //     chunkSize: 2,
-//   //     narrator: "Mr. T",
-//   //     title: "Frankenstein",
-//   //     synopsis:
-//   //       "A scientist, Victor Von Frankenstein creates life by infusing corpses with lightning. His Misshapen creature seeks the affection of his father and failing that, the creation of a bride, but Frankenstein refuses leading to a climactic chase across the world as the creature rebels against his creator.",
-//   //     isPrintPage: true,
-//   //     isPrintChunkSummary: true,
-//   //     isPrintRollingSummary: true,
-//   //     quiz: false,
-//   //     path: "./Frankenstein.pdf",
-//   //     url: "",
-//   //     max_tokens: 2000,
-//   //     executable: "xpdf",
-//   //     exeArguments: "-z 200",
-//   //     prependContext: [""],
-//   //     appendContext: [""]
-// );
-// dbExamplePDFBook.run();
-// pdf: {
-//   },
-//   "World Models": {
-//     pageNumber: 0,
-//     articleType: "book",
-//     chunkSize: 2,
-//     title: "World Models: A Path to AGI",
-//     narrator: "",
-//     synopsis:
-//       "In this research paper, Yann Lecunn outlines a hypothetical software architecture that would allow for learning and creation of a differentiable, configurable world model that might reach parity with human mental faculties",
-//     isPrintPage: false,
-//     isPrintChunkSummary: false,
-//     isPrintRollingSummary: false,
-//     quiz: true,
-//     path: "./a_path_towards_agi.pdf",
-//     url: "",
-//     max_tokens: 2000,
-//     executable: "xpdf",
-//     exeArguments: "-z 200",
-//     prependContext: [""],
-//     appendContext: [""]
-//   }
-// },
+function insertSamplePDF(
+  bTitle,
+  filePath,
+  isPrintPage,
+  title,
+  synopsis,
+  isQuiz,
+  isPrintChunkSummary,
+  narrator,
+  today
+) {
+  const dbExamplePDFBook = db.prepare(
+    `insert or replace into pdfs (bTitle, filePath, isPrintPage) values (?,?,?)`
+  );
+  dbExamplePDFBook.run(bTitle, filePath, isPrintPage);
+
+  const dbExamplePDFBookmark = db.prepare(
+    `insert or replace into bookmarks (bTitle, title, synopsis, isQuiz, isPrintChunkSummary, narrator) values (?,?,?,?,?,?)`
+  );
+  dbExamplePDFBookmark.run(
+    bTitle,
+    title,
+    synopsis,
+    isQuiz,
+    isPrintChunkSummary,
+    narrator
+  );
+}
+const today = new Date();
+insertSamplePDF(
+  "Frankenstein",
+  "./library/Frankenstein.pdf",
+  1,
+  "Frankenstein",
+  "A scientist, Victor Von Frankenstein creates life by infusing corpses with lightning. His Misshapen creature seeks the affection of his father and failing that, the creation of a bride, but Frankenstein refuses leading to a climactic chase across the world as the creature rebels against his creator.",
+  1,
+  1,
+  1,
+  "Mr. T",
+  today.toString()
+);
+insertSamplePDF(
+  "World Models: A Path to AGI",
+  "./library/a_path_towards_agi.pdf",
+  0,
+  "Frankenstein",
+  "In this research paper, Yann Lecunn outlines a hypothetical software architecture that would allow for learning and creation of a differentiable, configurable world model that might reach parity with human mental faculties",
+  1,
+  1,
+  1,
+  "",
+  today.toString()
+);
 
 console.log("initialized database");
