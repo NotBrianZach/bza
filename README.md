@@ -89,6 +89,7 @@ if toggled on, start after step 2 in Event Loop
 - maxTokenSummary=change response length/max summary token count (default 2000, max = 4096 includes summary prompts)
 
 ## Command Line Meta Commands (bza)
+- gptDB ask gpt to query database for you, print command, then hit y to run or n to cancel (can also copy&paste into sql repl)
 - read bookName
 - printLog
 - resumeFromLog
@@ -110,10 +111,9 @@ could create another file e.g. alterDB.mjs which has alter table statements if y
 
 ## Future Work
 
-- multiplayer repls? (idk websocket or something, could also have )
+- cosine similarity (or similar metrics) on book pages vector array option to get relevant context
+- multiplayer repls? (idk websocket or something)
 - categorize query types (other than just summarize/non summarize) and allow for loop and stack creation within repl itself?
-
-
 
 
 ## Design Decisions

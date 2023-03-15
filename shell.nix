@@ -34,7 +34,7 @@ pkgs.stdenv.mkDerivation {
   ];
 
   shellHook = ''
-    alias bza=DB_PATH=$(pwd)/bookmarks.sq3 $(pwd)/bza.mjs
+    alias bza="DB_PATH=$(pwd)/bookmarks.sq3 $(pwd)/bza.mjs"
     bza --help
 # TODO tmux commands to make two windows (also make it so you can turn off tmux)
     echo "Hi, it's bza time!\n some useful links: http://bropages.org/tmux\n To get started you could run something like "

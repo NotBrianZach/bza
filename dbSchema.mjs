@@ -1,21 +1,13 @@
-import Database from "better-sqlite3";
+import db from "./lib/dbConnect.mjs";
 
 // fileTypes: ["pdf", "html", "url", "epub", "", "txt"], "" = plaintext
 // articleTypes: ["book", "research paper", "monograph"],
-// exampleCharacterValues: ["", "socrates", "lao-tzu", "mike tyson"],
 
 const defaultChunkSize = 2;
 const defaultMaxTokens = 2;
 // 1800 is about how many characters are on the page of a typical book
 // supposedly, according to a quick google
 const defaultCharPageLength = 1800;
-
-const db = new Database("./bookmarks.sq3", {
-  // fileMustExist: true,
-  timeout: 2000 // 2 seconds
-  // verbose: sqlstatement => console.log(`sqlite3 trace ${sqlstatement}`)
-});
-db.pragma("journal_mode = WAL");
 
 const dbBookmarks = db.prepare(
   `create table if not exists bookmarks (bTitle TEXT primary key,
@@ -97,59 +89,5 @@ const dbLogging = db.prepare(
  primary key(read_tstamp))`
 );
 dbLogging.run();
-
-function insertSamplePDF(
-  bTitle,
-  filePath,
-  isPrintPage,
-  title,
-  synopsis,
-  isQuiz,
-  isPrintChunkSummary,
-  narrator,
-  today
-) {
-  const dbExamplePDFBook = db.prepare(
-    `insert or replace into pdfs (bTitle, filePath, isPrintPage) values (?,?,?)`
-  );
-  dbExamplePDFBook.run(bTitle, filePath, isPrintPage);
-
-  const dbExamplePDFBookmark = db.prepare(
-    `insert or replace into bookmarks (bTitle, title, synopsis, isQuiz, isPrintChunkSummary, narrator) values (?,?,?,?,?,?)`
-  );
-  dbExamplePDFBookmark.run(
-    bTitle,
-    title,
-    synopsis,
-    isQuiz,
-    isPrintChunkSummary,
-    narrator
-  );
-}
-const today = new Date();
-insertSamplePDF(
-  "Frankenstein",
-  "./library/Frankenstein.pdf",
-  1,
-  "Frankenstein",
-  "A scientist, Victor Von Frankenstein creates life by infusing corpses with lightning. His Misshapen creature seeks the affection of his father and failing that, the creation of a bride, but Frankenstein refuses leading to a climactic chase across the world as the creature rebels against his creator.",
-  1,
-  1,
-  1,
-  "Mr. T",
-  today.toString()
-);
-insertSamplePDF(
-  "World Models: A Path to AGI",
-  "./library/a_path_towards_agi.pdf",
-  0,
-  "Frankenstein",
-  "In this research paper, Yann Lecunn outlines a hypothetical software architecture that would allow for learning and creation of a differentiable, configurable world model that might reach parity with human mental faculties",
-  1,
-  1,
-  1,
-  "",
-  today.toString()
-);
 
 console.log("initialized database");
