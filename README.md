@@ -88,10 +88,13 @@ if toggled on, start after step 2 in Event Loop
 - delAfterSummary= delete stack of appended prompts
 - maxTokenSummary=change response length/max summary token count (default 2000, max = 4096 includes summary prompts)
 
-## Command Line Meta Commands (bza)
-- gptDB ask gpt to query database for you, print command, then hit y to run or n to cancel (can also copy&paste into sql repl)
-- read bookName
-- printLog
+## Command Line Tooling (bza)
+
+- bza gptDB ask gpt to query database for you, print command, then hit y to run or n to cancel (can also copy&paste into sql repl)
+- bza loadBookmark bookmarkName (bookmarkName usually = title)
+- bza loadPDF filepath
+- bza loadUrl filepath letterPerPage
+- bza printBookmarks
 - resumeFromLog
 
 

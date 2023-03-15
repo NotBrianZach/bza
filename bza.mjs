@@ -2,7 +2,6 @@
 
 import { program, Option } from "commander";
 import fs from "fs";
-import path from "path";
 import prompt from "prompt";
 import { exec, spawn } from "child_process";
 import path from "path";
@@ -183,24 +182,20 @@ program
     // TODO replace with sequel query
   });
 
-program
-  .command("loadPDF")
-  .argument('<filepath>', 'path to pdf')
-  .option(
-    "-I, --isPDFImage <isPDFImage>",
-    "if pdf is a scanned image w/no searchable text"
-  )
-  .description("load pdf and create a bookmark")
-  .action(() => {
-    console.log("TODO")
-    // console.log(Object.keys(readingList).map((val, tit) => tit));
-    // TODO replace with sequel query
-  });
+// program
+//   .command("loadEpub")
+//   .argument('<filepath>', 'path to epub')
+//   .description("load epub and create a bookmark")
+//   .action(() => {
+//     console.log("TODO")
+//     // console.log(Object.keys(readingList).map((val, tit) => tit));
+//     // TODO replace with sequel query
+//   });
 
 program
   .command("loadUrl")
   .argument('<urlPath>', 'url to load into bookmars db')
-  .argument('<letterPerPage>', 'letters per page, default 1800', 1800)
+  .argument('[letterPerPage]', 'letters per page, default 1800', 1800)
   // .option(
   //   "-I, --isPDFImage <isPDFImage>",
   //   "if pdf is a scanned image w/no searchable text"
