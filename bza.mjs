@@ -21,110 +21,7 @@ const htmlToTxtOpts = {
   wordwrap: 130
 };
 
-program
-  .command("printBookmarks")
-  .argument("[numToPrint]", "# of bookmarks to print, default 10, order by most recent", 10)
-  .action((numToPrint) => {
-    // console.log(Object.keys(readingList).map((val, tit) => tit));
-    // TODO replace with sequel query
-    console.log(numToPrint)
-    console.log(
-    loadBookmarks(numToPrint)
-    );
-      // Object.keys(readingList).map(title => ({
-      //   title,
-      //   pageNumber: readingList[title].pageNumber
-      // }))
-  });
-
-program
-  .command("gptDB")
-  .argument('<plainRequest>', 'plainRequest')
-  .description("ask gpt to query database for you, print command, then hit y to run or n to cancel")
-  .action(() => {
-    // console.log("TODO")
-    const dbSchema = removeExtraWhitespace(fs.readFileSync(path.resolve("./dbSchema.mjs")).toString())
-    queryGPT(`given follwing sqlite db schema, write a sql that peforms task: ${plainRequest} \ndbschema: ${dbSchema}`)
-  });
-
-program
-  .command("loadPDF")
-  .argument('<filepath>', 'path to pdf')
-  .option(
-    "-I, --isPDFImage <isPDFImage>",
-    "if pdf is a scanned image w/no searchable text"
-  )
-  .description("load pdf, create a bookmark, run eventLoop")
-  .action(() => {
-    console.log("TODO")
-    // console.log(Object.keys(readingList).map((val, tit) => tit));
-    // TODO replace with sequel query
-  });
-
-program
-  .command("loadPDF")
-  .argument('<filepath>', 'path to pdf')
-  .option(
-    "-I, --isPDFImage <isPDFImage>",
-    "if pdf is a scanned image w/no searchable text"
-  )
-  .description("load pdf and create a bookmark")
-  .action(() => {
-    console.log("TODO")
-    // console.log(Object.keys(readingList).map((val, tit) => tit));
-    // TODO replace with sequel query
-  });
-
-// .option("-C, --character <character>", "character to reply as")
-// .option("-t, --type <type>", "pdf, TODO html")
-// TODO stick copies of this where appropriate
-// if (process.env.OPENAI_API_KEY === undefined) {
-//    console.log()
-//    process.exit(1);
-// }
-
-// .command('loop [destination]')
-// .description('Run Event Loop')
-
-program
-  .version("0.1.0")
-  // .option(
-  //   "-f, --file <file>",
-  //   "Path to file to read from (if epub, must be utf8)"
-  // )
-  // // .command('loop <source> [destination]')
-  // // .description('Run Event Loop')
-  // .addOption(
-  //   new Option("-w, --webUrl <webUrl>", "URL to parse text from").conflicts([
-  //     "file",
-  //     "isPDFImage"
-  //   ])
-  // )
-  // .addOption(
-  //   new Option(
-  //     "-b, --bookmarkName <bookmarkName>",
-  //     'look up "bookmark" name (usually title) in bookmarks&load file path from there, in case of conflict, update bookmark entry with command line param values'
-  //   )
-  // )
-  // // .option("-O, --openAIAPIKey <openAIAPIKey>", "api key")// .env("openAIAPIKey")
-  // .option("-n, --narrator <narrator>", "character to narrate as")
-  // .option("-p, --page <page>", "current page number (default 0)")
-  // .option(
-  //   "-c, --chunkSize <chunkSize>",
-  //   "number of pages to read at once (default 2)"
-  // )
-  .action((options) => {
-    program.help()
-    // console.log(options);
-    // if (!options.file && typeof options.bookName !== "string") {
-    //   console.error(
-    //     "No file or bookName specified e.g. -f ./Frankenstein.pdf, -b Frankenstein"
-    //   );
-    //   process.exit(1);
-    // }
-
-    // const logs = {};
-
+function runEventLoop() {
     // readingList = loadBookmarks()
     // const readingListBook = readingList[options.bookName];
     // console.log("readingListBook", readingListBook);
@@ -244,38 +141,164 @@ program
     //     });
     //     break;
     //   case "url":
-    //     // const text = convert(html, htmlToTxtOpts);
-    //     axios
-    //       .get(options.webURL)
-    //       .then(function(response) {
-    //         // handle success
-    //         // console.log("axios response:", response);
-    //         const text = htmlToText(response.body, {
-    //           // selectors: [
-    //           //   { selector: 'a', options: { baseUrl: 'https://example.com' } },
-    //           //   { selector: 'a.button', format: 'skip' }
-    //           // ]
-    //         });
-    //         // TODO chunk returned text pdfTxt.text_pages.slice(pageNum, pageNum + chunkSize).join("")
-    //         eventLoop(text, {
-    //           ...readingOpts
-    //         }, queryGPT);
-    //       })
-    //       .catch(function(error) {
-    //         // handle error
-    //         console.log(error);
-    //       })
-    //       .finally(function() {
-    //         // always executed
-    //       });
-    //     // console.log(text); // Hello World
-    //     break;
-    //   case "epub":
-    //     break;
+}
 
-    //   default:
-    //     console.error("no filetype or url specified or inferrable");
+program
+  .command("printBookmarks")
+  .argument("[numToPrint]", "# of bookmarks to print, default 10, order by most recent", 10)
+  .action((numToPrint) => {
+    // console.log(Object.keys(readingList).map((val, tit) => tit));
+    // TODO replace with sequel query
+    console.log(numToPrint)
+    console.log(
+    loadBookmarks(numToPrint)
+    );
+      // Object.keys(readingList).map(title => ({
+      //   title,
+      //   pageNumber: readingList[title].pageNumber
+      // }))
+  });
+
+program
+  .command("gptDB")
+  .argument('<plainRequest>', 'plainRequest')
+  .description("ask gpt to query database for you, print command, then hit y to run or n to cancel")
+  .action(() => {
+    // console.log("TODO")
+    const dbSchema = removeExtraWhitespace(fs.readFileSync(path.resolve("./dbSchema.mjs")).toString())
+    queryGPT(`given follwing sqlite db schema, write a sql that peforms task: ${plainRequest} \ndbschema: ${dbSchema}`)
+  });
+
+program
+  .command("loadPDF")
+  .argument('<filepath>', 'path to pdf')
+  .option(
+    "-I, --isPDFImage <isPDFImage>",
+    "if pdf is a scanned image w/no searchable text"
+  )
+  .description("load pdf, create a bookmark, run eventLoop")
+  .action(() => {
+    console.log("TODO")
+    // console.log(Object.keys(readingList).map((val, tit) => tit));
+    // TODO replace with sequel query
+  });
+
+program
+  .command("loadPDF")
+  .argument('<filepath>', 'path to pdf')
+  .option(
+    "-I, --isPDFImage <isPDFImage>",
+    "if pdf is a scanned image w/no searchable text"
+  )
+  .description("load pdf and create a bookmark")
+  .action(() => {
+    console.log("TODO")
+    // console.log(Object.keys(readingList).map((val, tit) => tit));
+    // TODO replace with sequel query
+  });
+
+program
+  .command("loadUrl")
+  .argument('<urlPath>', 'url to load into bookmars db')
+  .argument('<letterPerPage>', 'letters per page, default 1800', 1800)
+  // .option(
+  //   "-I, --isPDFImage <isPDFImage>",
+  //   "if pdf is a scanned image w/no searchable text"
+  // )
+  .description("load url and create a bookmark")
+  .action((args) => {
+    console.log("TODO")
+    // console.log(Object.keys(readingList).map((val, tit) => tit));
+    // TODO replace with sequel query
+    axios
+      .get(args.urlPath)
+      .then(function(response) {
+        // handle success
+        // console.log("axios response:", response);
+        const text = htmlToText(response.body, {
+          // selectors: [
+          //   { selector: 'a', options: { baseUrl: 'https://example.com' } },
+          //   { selector: 'a.button', format: 'skip' }
+          // ]
+        });
+        function sliceString(string, lettersPerPage){
+          let text_pages = {};
+          let startIndex = 0;
+          let counter = 0;
+          while (startIndex < string.length){
+            let endIndex = startIndex + lettersPerPage;
+            let page = string.slice(startIndex, endIndex);
+            text_pages[counter] = page;
+            counter += 1
+            startIndex = endIndex;
+          }
+          return text_pages;
+          }
+        // url
+        // TODO chunk returned text pdfTxt.text_pages.slice(pageNum, pageNum + chunkSize).join("")
+        eventLoop({text_pages}, {
+          ...readingOpts
+        }, queryGPT);
+      })
+      .catch(function(error) {
+        // handle error
+        console.log(error);
+      })
+      .finally(function() {
+        // always executed
+      });
+  });
+
+// .option("-C, --character <character>", "character to reply as")
+// .option("-t, --type <type>", "pdf, TODO html")
+// TODO stick copies of this where appropriate
+// if (process.env.OPENAI_API_KEY === undefined) {
+//    console.log()
+//    process.exit(1);
+// }
+
+// .command('loop [destination]')
+// .description('Run Event Loop')
+
+program
+  .version("0.1.0")
+  // .option(
+  //   "-f, --file <file>",
+  //   "Path to file to read from (if epub, must be utf8)"
+  // )
+  // // .command('loop <source> [destination]')
+  // // .description('Run Event Loop')
+  // .addOption(
+  //   new Option("-w, --webUrl <webUrl>", "URL to parse text from").conflicts([
+  //     "file",
+  //     "isPDFImage"
+  //   ])
+  // )
+  // .addOption(
+  //   new Option(
+  //     "-b, --bookmarkName <bookmarkName>",
+  //     'look up "bookmark" name (usually title) in bookmarks&load file path from there, in case of conflict, update bookmark entry with command line param values'
+  //   )
+  // )
+  // // .option("-O, --openAIAPIKey <openAIAPIKey>", "api key")// .env("openAIAPIKey")
+  // .option("-n, --narrator <narrator>", "character to narrate as")
+  // .option("-p, --page <page>", "current page number (default 0)")
+  // .option(
+  //   "-c, --chunkSize <chunkSize>",
+  //   "number of pages to read at once (default 2)"
+  // )
+  .action((options) => {
+    program.help()
+    // console.log(options);
+    // if (!options.file && typeof options.bookName !== "string") {
+    //   console.error(
+    //     "No file or bookName specified e.g. -f ./Frankenstein.pdf, -b Frankenstein"
+    //   );
+    //   process.exit(1);
     // }
+
+    // const logs = {};
+
   });
 
 program.parse(process.argv);
