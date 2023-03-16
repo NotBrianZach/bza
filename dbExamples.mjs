@@ -14,12 +14,12 @@ function insertSamplePDF(
 ) {
   const correctFormatDate = yyyymmddhhmmss(jDate);
   const dbExamplePDFBook = db.prepare(
-    `insert or replace into pdfs (bTitle, filePath, isPrintPage) values (?,?,?)`
+    `insert or replace into pdfs (bTitle, tStamp, filePath, isPrintPage) values (?,?,?, ?)`
   );
-  dbExamplePDFBook.run(bTitle, filePath, isPrintPage);
+  dbExamplePDFBook.run(bTitle, correctFormatDate, filePath, isPrintPage);
 
   const dbExamplePDFBookmark = db.prepare(
-    `insert or replace into bookmarks (bTitle, title, synopsis, isQuiz, isPrintChunkSummary, narrator, last_read_tstamp) values (?,?,?,?,?,?,?)`
+    `insert or replace into bookmarks (bTitle, title, synopsis, isQuiz, isPrintChunkSummary, narrator, tStamp) values (?,?,?,?,?,?,?)`
   );
   dbExamplePDFBookmark.run(
     bTitle,

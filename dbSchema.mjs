@@ -10,7 +10,8 @@ const defaultMaxTokens = 2;
 const defaultCharPageLength = 1800;
 
 const dbBookmarks = db.prepare(
-  `create table if not exists bookmarks (bTitle TEXT primary key,
+  `create table if not exists bookmarks (bTitle TEXT not null,
+ tStamp TEXT not null,
  title TEXT not null default '',
  synopsis TEXT not null default '',
  pageNumber INTEGER not null default 0,
@@ -20,58 +21,74 @@ const dbBookmarks = db.prepare(
  chunkSize INTEGER not null default ${defaultChunkSize},
  maxTokens INTEGER not null default ${defaultMaxTokens},
  narrator TEXT,
- last_read_tstamp TEXT)`
+ primary key(bTitle, tStamp))`
 );
 dbBookmarks.run();
+const dbQuizzes = db.prepare(
+  `create table if not exists quizzes (bTitle TEXT not null,
+    tStamp text not null,
+    quiz text not null,
+    answer text not null default '',
+    primary key(bTitle, tStamp))`
+);
+dbQuizzes.run();
 
 const dbContexts = db.prepare(
   `create table if not exists contexts (bTitle TEXT not null,
+    tStamp TEXT not null,
     ordering integer not null,
     prepend text not null default '',
     append text not null default '',
     prependSummary text not null default '',
     appendSummary text not null default '',
-    primary key(bTitle, ordering))`
+    primary key(bTitle, tStamp, ordering))`
 );
 dbContexts.run();
 
 const dbPDFs = db.prepare(
-  `create table if not exists pdfs (bTitle TEXT primary key,
+  `create table if not exists pdfs (bTitle TEXT not null,
+    tStamp text not null,
  filePath text not null,
  isPrintPage boolean default false,
  readerExe text not null default 'mupdf',
  readerArgs not null default '-Y 2',
- isImage boolean default false)`
+ isImage boolean default false, primary key(bTitle, tStamp))`
 );
 dbPDFs.run();
 const dbHTML = db.prepare(
-  `create table if not exists htmls (bTitle TEXT primary key,
+  `create table if not exists htmls (bTitle TEXT not null,
+ tStamp TEXT not null,
  filePath text not null,
  isPrintPage boolean default true,
  charPageLength INTEGER not null default ${defaultCharPageLength},
  readerExe text,
- readerArgs text
+ readerArgs text,
+ primary key(bTitle, tStamp)
  )`
 );
 dbHTML.run();
 
 const dbPlaintxt = db.prepare(
-  `create table if not exists plaintxts (bTitle TEXT primary key,
+  `create table if not exists plaintxts (bTitle TEXT not null,
+ tStamp TEXT not null,
  filePath text not null,
  isPrintPage boolean default true,
  charPageLength INTEGER not null default ${defaultCharPageLength},
  readerExe text,
- readerArgs text
+ readerArgs text,
+primary key (bTitle, tStamp)
  )`
 );
 dbPlaintxt.run();
 
 const dbURL = db.prepare(
-  `create table if not exists urls (bTitle TEXT primary key,
+  `create table if not exists urls (bTitle TEXT not null,
+  tStamp text not null,
  isPrintPage boolean default true,
  charPageLength INTEGER not null default ${defaultCharPageLength} ,
  readerExe text,
- readerArgs text
+ readerArgs text,
+ primary key (bTitle, tStamp)
  )`
 );
 dbURL.run();
@@ -85,8 +102,8 @@ const dbLogging = db.prepare(
  chunkSize INTEGER not null,
  maxTokens INTEGER not null default ${defaultMaxTokens},
  narrator TEXT,
- read_tstamp TEXT,
- primary key(read_tstamp))`
+ tStamp TEXT,
+ primary key(bTitle, tStamp))`
 );
 dbLogging.run();
 

@@ -4,6 +4,7 @@ import prompt from "prompt";
 import pdf_extract from "pdf-extract";
 import getUserInput from "./getUserInput.mjs";
 import runQuiz from "./lib/runQuiz.mjs";
+import {genChunkSummaryPrompt, genRollingSummaryPrompt} from "./lib/genPrompts.mjs";
 import {
   removeExtraWhitespace,
   validateObj
@@ -11,10 +12,11 @@ import {
 import path from "path";
 
 const nowTime = new Date();
-export default async function eventLoop(bzaTxt, readOpts, queryGPT) {
+export default async function eventLoop(bzaTxt, readOpts, queryGPT, sessionTime) {
   const totalPages = bzaTxt.text_pages.length;
   const {
     pageNum,
+    narrator,
     chunkSize,
     synopsis,
     rollingSummary,
@@ -29,29 +31,32 @@ export default async function eventLoop(bzaTxt, readOpts, queryGPT) {
     readOpts.pageNumber,
     readOpts.chunkSize
   );
-  const pageChunk = removeExtraWhitespace(
+  // TODO run queries that can be in parallel (queryGPT narrator, chunkSummary, rollingSummary) narrator&ChunkSummary both required for user query
+  let pageChunkInit = removeExtraWhitespace(
     bzaTxt.text_pages.slice(pageNum, pageNum + chunkSize).join("")
   );
-  const chunkSummary = queryGPT(
+  let pageChunk = ""
+  if (narrator !== "") {
+    queryGPT(
+      pageChunk = await queryGPT(retellChunkAsNarratorPrompt(narrator, pageChunk, title, synopsis, rollingSummary))
+    )
+  } else {
+    pageChunk = pageChunkInit
+  }
+  const chunkSummary = await queryGPT(
     genChunkSummaryPrompt(title, synopsis, rollingSummary, pageChunk)
   );
 
   if (isPrintPage) {
     console.log(
       `Page Chunk`,
-      rollingSummary
+      pageChunk
     );
   }
   if (isPrintChunkSummary) {
     console.log(
       `Summary of pages ${pageNum} to ${pageNum + chunkSize}:`,
-      rollingSummary
-    );
-  }
-  if (isPrintRollingSummary) {
-    console.log(
-      `Summary of pages ${pageNum} to ${pageNum + chunkSize}:`,
-      rollingSummary
+      chunkSummary
     );
   }
   // console.log(
@@ -64,6 +69,12 @@ export default async function eventLoop(bzaTxt, readOpts, queryGPT) {
 
   // 2. rollingSummary=queryGPT3(synopsis+pageChunkSummary)
   const newRollingSummary = queryGPT(genRollingSummaryPrompt(title, synopsis, rollingSummary, excerpt));
+  if (isPrintRollingSummary) {
+    console.log(
+      `Summary of pages ${pageNum} to ${pageNum + chunkSize} within context of synopsis:`,
+      rollingSummary
+    );
+  }
 
   // console.log(`New Meta Summary:`, synopsis);
   if (pageNum + chunkSize < totalPages) {

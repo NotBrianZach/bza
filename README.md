@@ -40,20 +40,7 @@ And it stores all this into "bookmarks" in a local database.
 5. WHILE (pageNumber < bookLength), set pageNumber=pageNumber+chunkSize, jump back to 1. else continue to 6.
 6. parting thoughts from gpt3, call onExit method (cleanup)
 
-### Quiz SubLoop: 
-if toggled on, start after step 2 in Event Loop
-1. query gpt3 to generate quiz, print quiz, 
-2. get user input for answers
-3. query gpt3 for "grade", explain "wrong" answers
-4. get user input 
-      - done=exit&save a log of the quiz&answers,
-      - delete=don't log quiz
-      - c=converse with gpt about quiz
-      - again=run quiz loop again, saving log
-      - againFresh=run quiz loop again, don't log
-5. get User Input (default options)
-
-## User Input (default options):
+## User Input (Step 3 Event Loop):
 - c="continue" to next pageChunk,
 - jump="jump" to input pageNumber,
 - EX="EXit" exit program, save to db
@@ -87,6 +74,19 @@ if toggled on, start after step 2 in Event Loop
   - "...and make it light hearted and funny" 
 - delAfterSummary= delete stack of appended prompts
 - maxTokenSummary=change response length/max summary token count (default 2000, max = 4096 includes summary prompts)
+
+### Quiz SubLoop: 
+if toggled on, start after step 2 in Event Loop
+1. query gpt3 to generate quiz, print quiz, 
+2. get user input for answers
+3. query gpt3 for "grade", explain "wrong" answers
+4. get user input 
+      - done=exit&save a log of the quiz&answers,
+      - delete=don't log quiz
+      - c=converse with gpt about quiz
+      - again=run quiz loop again, saving log
+      - againFresh=run quiz loop again, don't log
+5. get User Input (default options)
 
 ## Command Line Tooling (bza)
 
