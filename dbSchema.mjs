@@ -15,16 +15,19 @@ const dbBookmarks = db.prepare(
  title TEXT not null default '',
  synopsis TEXT not null default '',
  pageNum INTEGER not null default 0,
+ rollingSummary TEXT not null default '',
  fileType TEXT not null default 'pdf',
  isQuiz boolean default false,
  isPrintPage boolean default false,
  isPrintChunkSummary boolean default false,
+ isPrintRollingSummary boolean default false,
  chunkSize INTEGER not null default ${defaultChunkSize},
  maxTokens INTEGER not null default ${defaultMaxTokens},
  narrator TEXT,
  primary key(bTitle, tStamp))`
 );
 dbBookmarks.run();
+
 const dbQuizzes = db.prepare(
   `create table if not exists quizzes (bTitle TEXT not null,
     tStamp text not null,
@@ -55,6 +58,7 @@ const dbPDFs = db.prepare(
  isImage boolean default false, primary key(bTitle, tStamp))`
 );
 dbPDFs.run();
+
 const dbHTML = db.prepare(
   `create table if not exists htmls (bTitle TEXT not null,
  tStamp TEXT not null,
@@ -89,6 +93,10 @@ const dbURL = db.prepare(
  )`
 );
 dbURL.run();
+
+// TODO not sure if need this table (might be of use to save and resume conversations)
+// within a "timestamp id" (might help to avoid proliferation of timestamps )
+// (tStamp+title identifies all conversations you had in a session whereas conversationTStamp sort those perhaps)
 const dbLogging = db.prepare(
   `create table if not exists logs (bTitle TEXT,
  pageNum INTEGER not null default 0,
@@ -100,6 +108,7 @@ const dbLogging = db.prepare(
  maxTokens INTEGER not null default ${defaultMaxTokens},
  narrator TEXT,
  tStamp TEXT,
+ conversationTStamp TEXT,
  primary key(bTitle, tStamp))`
 );
 dbLogging.run();

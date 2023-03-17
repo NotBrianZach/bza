@@ -6,6 +6,7 @@ import prompt from "prompt";
 import { exec, spawn } from "child_process";
 import path from "path";
 import _ from "underscore";
+import pdf_extract from "pdf-extract";
 import db from "./lib/dbConnect.mjs";
 import eventLoop from "./eventLoop.mjs";
 
@@ -18,9 +19,11 @@ import eventLoop from "./eventLoop.mjs";
 // There is also an alias to `convert` called `htmlToText`.
 import { htmlToText } from "html-to-text";
 import { createGPTQuery } from "./lib/createGPTQuery.mjs";
-import { loadBookmarks, loadBookmark } from "./lib/dbQueries.mjs";
-import { removeExtraWhitespace } from "./lib/utils.mjs";
+import { loadBookmarks, loadBookmark, loadPDFTable, insertPDF } from "./lib/dbQueries.mjs";
+import { removeExtraWhitespace, yyyymmddhhmmss } from "./lib/utils.mjs";
 const queryGPT = createGPTQuery(process.env.OPENAI_API_KEY);
+
+console.log("typeof queryGPT", typeof queryGPT)
 import axios from "axios";
 const htmlToTxtOpts = {
   wordwrap: 130
@@ -47,31 +50,6 @@ program
   });
 
 
-program
-  .command("gptDB")
-  .argument(new Argument('<selectOrUpdate>', 'specify whether', "update").choices(['update', 'select']))
-  .argument('<plainRequest>', 'plainRequest')
-  .description("ask gpt to create db query for you to either get or update database, print command, then type yes to run or n to cancel")
-  .action(async function(args) {
-    console.log("TODO")
-    const dbSchema = removeExtraWhitespace(fs.readFileSync(path.resolve("./dbSchema.mjs")).toString())
-    const sql = await queryGPT(`given follwing sqlite db schema: ${dbSchema}, write a sql that peforms task: ${args.plainRequest}`)
-    console.log("gpt proposed sql", sql)
-    while (true) {
-      const { yesOrNo } = await prompt.get(["yesOrNo"])
-      if (yesOrNo === "yes") {
-        if (args.selectOrUpdate === "select") {
-          console.log("select results", db.prepare(sql).all())
-        } else {
-          console.log("update return codes", db.prepare(sql).run())
-        }
-      } else {
-        console.log("exiting")
-        return
-      }
-    }
-
-  });
 
 async function queryUserTitleSynopsis() {
   var titlePromptSchema = {
@@ -97,8 +75,10 @@ async function queryUserTitleSynopsis() {
   return { title, synopsis }
 }
 
-function loadPDF(title, synopsis, tStamp, filePath, isPDFImage, pageNumber, chunkSize, narrator, isPrintPage, isPrintChunSummary, isPrintRollingSummary) {
-    if (isPdfImage) {
+function loadPDF(title, synopsis, tStamp, filePath, isImage, pageNum, chunkSize, rollingSummary, narrator, isPrintPage, isPrintChunkSummary, isPrintRollingSummary) {
+console.log("begin loadPDF", arguments)
+    let processor
+    if (!isImage) {
       // extract text from pdf with searchable text
       var pdfOptions = {
         type: "text", // extract the actual text in the pdf file
@@ -108,7 +88,8 @@ function loadPDF(title, synopsis, tStamp, filePath, isPDFImage, pageNumber, chun
         clean: true // try prevent tmp directory /usr/run/$userId$ from overfilling with parsed pdf pages (doesn't seem to work)
       };
 
-      var processor = pdf_extract(options.file, pdfOptions, function(err) {
+      processor = pdf_extract(path.resolve(filePath), pdfOptions, function(err) {
+        console.log("begin loadPDF extract")
         // TODO might not spawn background process like we want (interrupts user input)
         // spawn("mupdf", ["-Y", 2, args.filepath]);
         if (err) {
@@ -129,25 +110,29 @@ function loadPDF(title, synopsis, tStamp, filePath, isPDFImage, pageNumber, chun
       // processor.on('error', callback)
       // function callback (error, data) { error ? console.error(error) : console.log(data.text_pages[0]) }
     }
-    processor.on("complete", function(pdfText) {
+    processor.on("complete", function(pdfTxt) {
+
+      console.log("begin loadPDF extract complete")
       console.log("pdf load completed, db insert error on undefined: ", insertPDF(
         title,
         tStamp,
         synopsis,
         narrator,
+        pageNum,
         chunkSize,
         rollingSummary,
         isPrintPage,
         isPrintChunkSummary,
         isPrintRollingSummary,
         filePath,
-        isPdfImage
+        isImage
       ))
       eventLoop(pdfTxt, {
         title,
         synopsis,
-        narrator: args.narrator,
-        chunkSize: args.chunkSize,
+        narrator,
+        pageNum,
+        chunkSize,
         rollingSummary,
         isPrintPage,
         isPrintChunkSummary,
@@ -159,21 +144,21 @@ function loadPDF(title, synopsis, tStamp, filePath, isPDFImage, pageNumber, chun
 program
   .command("loadPDF")
   .argument('<filePath>', 'path to pdf')
-  .argument('[isPDFImage]', 'if pdf is just a scanned image wihout delineated text, default false', "")
+  .addArgument(new Argument('[isPDFImage]', 'if pdf is just a scanned image wihout delineated text').choices([0, 1]))
   .argument('[pageNumber]', 'pageNumber to start on, default 0', 0)
   .argument('[chunkSize]', 'how many pages to read at once, default 2 (more=less context window for conversation)', 2)
   .argument('[narrator]', 'narrator persona, default none ("")', "")
-  .argument('[isPrintPage]', 'whether to print each page of chunk, false/0', 0)
+  // .argument('[isPrintPage]', 'whether to print each page of chunk, false=0', 0)
   .addArgument(new Argument('[isPrintPage]', 'whether to print each page, false=0').choices([0, 1]))
   .addArgument(new Argument('[isPrintChunkSummary]', 'whether to print each chunk summary, false=0').choices([0, 1]))
   .addArgument(new Argument('[isPrintRollingSummary]', 'whether to print each rolling summary, false=0').choices([0, 1]))
   // .argument('[narrator]', 'narrator persona, default none ("")', "")
-  .description("load pdf, create a bookmark, run eventLoop")
+  .description("load pdf, create new bookmark, run eventLoop")
   .action(async function(filePath, isPDFImage, pageNumber, chunkSize, narrator, isPrintPage, isPrintChunSummary, isPrintRollingSummary) {
-    const tStamp = yyyymmddhhmmss(new Date)
+    const tStamp = newSessionTime()
     const {title, synopsis} = await queryUserTitleSynopsis()
     loadPDF(title, tStamp, synopsis,
-            filePath, isPDFImage, pageNumber, chunkSize, narrator, isPrintPage, isPrintChunSummary, isPrintRollingSummary
+            filePath, isPDFImage, pageNumber, chunkSize, "", narrator, isPrintPage, isPrintChunkSummary, isPrintRollingSummary
            )
   });
 
@@ -225,7 +210,7 @@ program
         // TODO chunk returned text pdfTxt.text_pages.slice(pageNum, pageNum + chunkSize).join("")
         eventLoop({text_pages}, {
           ...readingOpts
-        }, queryGPT, yyyymmddhhmmss(new Date));
+        }, queryGPT, newSessionTime());
       })
       .catch(function(error) {
         // handle error
@@ -254,8 +239,28 @@ program
   .description("load bookmark from databse into event loop")
   .action(async function(bookmarkTitle, tStamp) {
     console.log(bookmarkTitle, tStamp)
-    const bookData = loadBookmark(bookmarkTitle)
-    console.log("bookmark data", bookData)
+    const mData = loadBookmark(bookmarkTitle)
+    console.log("bookmark data", mData)
+    if (mData.fileType === "pdf") {
+      const pData = loadPDFTable(bookmarkTitle)
+      if (pData === undefined) {
+        console.error("failed to load pdf data from db")
+      } else {
+        const tStamp = newSessionTime()
+        loadPDF(mData.title, mData.synopsis, tStamp, pData.filePath, pData.isImage, mData.pageNum, mData.chunkSize, mData.rollingSummary, mData.narrator, mData.isPrintPage, mData.isPrintChunkSummary, mData.isPrintRollingSummary)
+      }
+    }
+    /* TODO
+    if (mData.fileType === "url") {
+      // loadURL(mData.title, mData.synopsis, mData.tStamp, mData.filePath, mData.isImage, mData.pageNumber, mData.chunkSize, mData.narrator, mData.isPrintPage, mData.isPrintChunSummary, mData.isPrintRollingSummary)
+    }
+    if (mData.fileType === "html") {
+    }
+    if (mData.fileType === "plaintxt") {
+    }
+    if (mData.fileType === "epub") {
+    }
+    TODO */
     // eventLoop()
 
     // bTitle: 'Frankenstein',
@@ -283,6 +288,30 @@ program
     // title
 
   })
+
+program .command("gptDB")
+  .argument(new Argument('<selectOrUpdate>', 'specify whether', "update").choices(['update', 'select']))
+  .argument('<plainRequest>', 'plainRequest')
+  .description("ask gpt to create db query for you to either get or update database, print command, then type yes to run or n to cancel")
+  .action(async function(args) {
+    console.log("TODO")
+    const dbSchema = removeExtraWhitespace(fs.readFileSync(path.resolve("./dbSchema.mjs")).toString())
+    const sql = await queryGPT(`given follwing sqlite db schema: ${dbSchema}, write a sql that peforms task: ${args.plainRequest}`)
+    console.log("gpt proposed sql", sql)
+    while (true) {
+      const { yesOrNo } = await prompt.get(["yesOrNo"])
+      if (yesOrNo === "yes") {
+        if (args.selectOrUpdate === "select") {
+          console.log("select results", db.prepare(sql).all())
+        } else {
+          console.log("update return codes", db.prepare(sql).run())
+        }
+      } else {
+        console.log("exiting")
+        return
+      }
+    }
+  });
 
 program
   .version("0.1.0")

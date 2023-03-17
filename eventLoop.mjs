@@ -1,10 +1,9 @@
 #!/usr/bin/env node
 import fs from "fs";
 import prompt from "prompt";
-import pdf_extract from "pdf-extract";
 import getUserInput from "./getUserInput.mjs";
 import runQuiz from "./lib/runQuiz.mjs";
-import {genChunkSummaryPrompt, genRollingSummaryPrompt} from "./lib/genPrompts.mjs";
+import {genChunkSummaryPrompt, genRollingSummaryPrompt, retellChunkAsNarratorPrompt} from "./lib/genPrompts.mjs";
 import {
   removeExtraWhitespace,
   validateObj
@@ -64,8 +63,8 @@ export default async function eventLoop(bzaTxt, readOpts, queryGPT, sessionTime)
   //     chunkSize}:`,
   //   rollingSummary
   // );
-  const { quiz, grade } = await runQuiz(title, synopsis, pageChunk, queryGPT);
-  getUserInput(bzaTxt, pageNum, rollingSummary, toggles);
+  const { quiz, grade } = await runQuiz(pageChunk, readOpts, queryGPT);
+  getUserInput(pageNum, rollingSummary, queryGPT);
 
   // 2. rollingSummary=queryGPT3(synopsis+pageChunkSummary)
   const newRollingSummary = queryGPT(genRollingSummaryPrompt(title, synopsis, rollingSummary, excerpt));
@@ -82,7 +81,7 @@ export default async function eventLoop(bzaTxt, readOpts, queryGPT, sessionTime)
     return eventLoop(bzaTxt, {
       ...readOpts,
       pageNum: pageNum + chunkSize
-    });
+    }, queryGPT, tStamp);
   } else {
     console.log(logs);
     // 4. record a log of all the summaries and quizzes

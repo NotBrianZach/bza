@@ -7,7 +7,7 @@ in
 let
   # all binary requirements of pdf-extract npm package
   pdftk = pkgs.pdftk;
-  pdftotext = pkgs.poppler;
+  pdftotext = pkgs.poppler_utils;
   ghostscript = pkgs.ghostscript;
   tesseractjs = pkgs.tesseract4;
 in
@@ -36,7 +36,8 @@ pkgs.stdenv.mkDerivation {
   shellHook = ''
     alias bza="DB_PATH=$(pwd)/bookmarks.sq3 $(pwd)/bza.mjs"
     bza --help
+# some useful links: http://bropages.org/tmux
 # TODO tmux commands to make two windows (also make it so you can turn off tmux)
-    echo "Hi, it's bza time!\n some useful links: http://bropages.org/tmux\n To get started you could run something like "
+    echo "It's bza time!"
   '';
 }
