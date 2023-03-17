@@ -17,8 +17,8 @@ And it stores all this into "bookmarks" in a local database.
 - install [the nix package manager](https://nixos.org/download.html)
 - install [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
 - open a terminal or shell (if you don't know how, you could ask chatgpt...)
-- `git clone https://github.com/NotBrianZach/bzabook2aquiz.git`
-- `cd bzabook2aquiz`
+- `git clone https://github.com/NotBrianZach/bzab.git`
+- `cd bza`
 - `nix-shell` (might take a few minutes to download and install dependencies)
 - `npm install`
 - get $OPENAI_API_KEY key [here](https://platform.openai.com/account/api-keys) if u dont have 
