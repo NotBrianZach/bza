@@ -116,7 +116,7 @@ could create another file e.g. alterDB.mjs which has alter table statements if y
 
 - cosine similarity (or similar metrics) on book pages vector array option to get relevant context
 - multiplayer repls? (idk websocket or something)
-- categorize query types (other than just summarize/non summarize) and allow for loop and stack creation within repl itself?
+- categorize query types (other than just summarize/non summarize) and allow for loop and prompt stack creation within repl itself?
 
 
 ## Design Decisions

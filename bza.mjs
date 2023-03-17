@@ -5,6 +5,7 @@ import fs from "fs";
 import prompt from "prompt";
 import { exec, spawn } from "child_process";
 import path from "path";
+import _ from "underscore";
 import db from "./lib/dbConnect.mjs";
 import eventLoop from "./eventLoop.mjs";
 
@@ -60,13 +61,15 @@ program
     // tStamp: '2023-03-16 18:13:49',
     // title: 'Frankenstein',
     // synopsis: 'A scientist, Victor Von Frankenstein creates life by infusing corpses with lightning. His Misshapen creature seeks the affection of his father and failing that, the creation of a bride, but Frankenstein refuses leading to a climactic chase across the world as the creature rebels against his creator.',
-    // pageNumber: 0,
+    // pageNum: 0,
     // fileType: 'pdf',
     // isQuiz: 1,
     // isPrintChunkSummary: 1,
     // chunkSize: 2,
     // maxTokens: 2,
     // narrator: 'Mr. T'
+
+    // _.omit(bookData, "fileType", tStamp, maxTokens)
 
     // pageNum,
     // narrator,
