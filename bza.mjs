@@ -48,9 +48,11 @@ program
 program
   .command("loadMark")
   .argument('<bookmarkTitle>', 'title of bookmark to load')
+  .argument('[tStamp]', 'tStamp to load from "yyyy-mm dd-hh-mm-ss" (defaults to most recent)')
   .description("load bookmark from databse into event loop")
-  .action(async function(args) {
-    const bookData = await loadBookmark(args.bookmarkTitle)
+  .action(async function(bookmarkTitle, tStamp) {
+    console.log(bookmarkTitle, tStamp)
+    const bookData = loadBookmark(bookmarkTitle)
     console.log("bookmark data", bookData)
     // eventLoop()
 
@@ -106,19 +108,8 @@ async function queryUserTitleSynopsis() {
   return { title, synopsis }
 }
 
-program
-  .command("loadPDF")
-  .argument('<filepath>', 'path to pdf')
-  .argument('[isPDFImage]', 'if pdf is just a scanned image wihout delineated text, default false', "")
-  .argument('[pageNumber]', 'pageNumber to start on, default 0', 0)
-  .argument('[chunkSize]', 'how many pages to read at once, default 2 (more=less context window for conversation)', 2)
-  .argument('[narrator]', 'narrator persona, default none ("")', "")
-  // .argument('[narrator]', 'narrator persona, default none ("")', "")
-  .description("load pdf, create a bookmark, run eventLoop")
-  .action(async function(args) {
-    // console.log("TODO")
-    // TODO replace with sequel query
-    if (!args.isPdfImage) {
+function loadPDF(title, synopsis, tStamp, isPdfImage) {
+    if (isPdfImage) {
       // extract text from pdf with searchable text
       var pdfOptions = {
         type: "text", // extract the actual text in the pdf file
@@ -156,8 +147,7 @@ program
       // processor.on('error', callback)
       // function callback (error, data) { error ? console.error(error) : console.log(data.text_pages[0]) }
     }
-    processor.on("complete", async function(pdfText) {
-      const {title, synopsis} = queryUserTitleSynopsis()
+    processor.on("complete", function(pdfText) {
       eventLoop(pdfTxt, {
         title,
         synopsis,
@@ -167,8 +157,36 @@ program
         isPrintPage,
         isPrintChunkSummary,
         isPrintRollingSummary
-      }, queryGPT, yyyymmddhhmmss(new Date));
+      }, queryGPT, tStamp);
     });
+}
+
+program
+  .command("loadPDF")
+  .argument('<filePath>', 'path to pdf')
+  .argument('[isPDFImage]', 'if pdf is just a scanned image wihout delineated text, default false', "")
+  .argument('[pageNumber]', 'pageNumber to start on, default 0', 0)
+  .argument('[chunkSize]', 'how many pages to read at once, default 2 (more=less context window for conversation)', 2)
+  .argument('[narrator]', 'narrator persona, default none ("")', "")
+  // .argument('[isPrintPage]', 'whether to print each page of chunk, false/0', 0)
+  .addArgument(new Argument('[isPrintPage]', 'whether to print each page, false=0').choices([0, 1]))
+  .addArgument(new Argument('[isPrintChunkSummary]', 'whether to print each chunk summary, false=0').choices([0, 1]))
+  .addArgument(new Argument('[isPrintRollingSummary]', 'whether to print each rolling summary, false=0').choices([0, 1]))
+  // .argument('[narrator]', 'narrator persona, default none ("")', "")
+  .description("load pdf, create a bookmark, run eventLoop")
+  .action(async function(filePath, isPDFImage, pageNumber, chunkSize, narrator, ) {
+    const tStamp = yyyymmddhhmmss(new Date)
+    const {title, synopsis} = await queryUserTitleSynopsis()
+    loadPDF(title, tStamp, title, synopsis,
+            narrator,
+            chunkSize,
+            rollingSummary,
+            isPrintPage,
+            isPrintChunkSummary,
+            isPrintRollingSummary,
+            filePath,
+            isPDFImage
+           )
   });
 
 // program
