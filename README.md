@@ -4,11 +4,11 @@ Interactive books. Books sliced up like pizza. Book pizza. bza.
 
 It feeds a pdf, webpage, or epub a few (chunkSize) pages at a time into chatgpt or another LLM,
 
-then outputs something, for example, a quiz on the topic of the pages it read 
+then outputs something, for example, a quiz on the topic of the pages it read
 
-then waits for user input to tell it to what to do next with the pageChunk before continuing on: you could ask it to tell a joke, respond with a parable, or translate into spanish. lots of possibilities.  
+then waits for user input to tell it to what to do next with the pageChunk before continuing on: you could ask it to tell a joke, respond with a parable, or translate into spanish. lots of possibilities.
 
-It's an active reading buddy, a summarizer, a customizable narrator and reteller. 
+It's an active reading buddy, a summarizer, a customizable narrator and reteller.
 
 And it stores all this into "bookmarks" in a local database.
 
@@ -21,21 +21,21 @@ And it stores all this into "bookmarks" in a local database.
 - `cd bza`
 - `nix-shell` (might take a few minutes to download and install dependencies)
 - `npm install`
-- get $OPENAI_API_KEY key [here](https://platform.openai.com/account/api-keys) if u dont have 
+- get $OPENAI_API_KEY key [here](https://platform.openai.com/account/api-keys) if u dont have
 - `OPENAI_API_KEY=$OPENAI_API_KEY bza -f path_2_ur_pdf_here.pdf`
 - or (TODO)
 - `OPENAI_API_KEY=$OPENAI_API_KEY bza -w https://www.reddit.com/r/WritingPrompts/comments/5uilpw/wp_the_year_is_1910_adolf_hitler_a_struggling/`
 - open an issue detailing why doesnt work
 
-### Event Loop Setup: 
+### Event Loop Setup:
 0. - IF db has an entry for bookName, load title & synopsis & rollingSummary from there
    - ELSE prompt user for title&synopsis, and get pageNumber&chunkSize from commandline params or defaults (0,2)
      - you can, for example, have gpt make a synopsis for you by copy pasting abstract or table of contents into e.g. openai playground and prompting it to summarize said abstract or table of contents
    - finally initialize rollingSummary="this is the start of the document"
-## Event Loop: Giving Gpt3 Short & Long Term Memory 
+## Event Loop: Giving Gpt3 Short & Long Term Memory
 1. const pageChunk = pages.slice(pageNumber,pageNumber+chunkSize)
 2. pageChunkSummary=queryGPT(summarize pageSlice given title+synopsis+rollingSummary)
-3. get User Input, act on input 
+3. get User Input, act on input
 4. rollingSummary=queryGPT3(further contextualize pageSlice with respect to rest of book, this will act as a summary of previous pages for next pageChunkSummary)
 5. WHILE (pageNumber < bookLength), set pageNumber=pageNumber+chunkSize, jump back to 1. else continue to 6.
 6. parting thoughts from gpt3, call onExit method (cleanup)
@@ -45,7 +45,7 @@ And it stores all this into "bookmarks" in a local database.
 - jump="jump" to input pageNumber,
 - EX="EXit" exit program, save to db
 ##### ASK user for input
-- r="repeat" ask user for input, append to prompt and query gpt, 
+- r="repeat" ask user for input, append to prompt and query gpt,
 - RE="REstart" restart conversation w/only initial prompt and save to db
 - REDT="REstart DesTructive" hard restart conversation w/only initial prompt
 ##### SUBLOOP COMMANDS
@@ -60,27 +60,27 @@ And it stores all this into "bookmarks" in a local database.
 - voiceIn= TODO "voice input"  use ?talon? to allow voice input
 ##### LLM PROMPT MODIFICATION: change all non-summary llm queries going forward
 - before= get user input, prepend to conversation prompt
-  - "tell a joke about the following text:" 
+  - "tell a joke about the following text:"
 - delBefore=delete stack of prepended prompts
 - after= append next user query input to all non summary gpt requests
-  - "...tell another joke about the above text that ties into the first joke" 
+  - "...tell another joke about the above text that ties into the first joke"
 - delAfter= delete stack of appended prompts
 - maxToken=change response length/max token count (default 2000, max = 4096 includes prompt)
 ##### LLM SUMMARY PROMPT MODIFICATION: change all summary llm queries going forward
 - beforeSummary= prepend user input to summarization prompt
-  - "You are helping a student cram for a test" 
+  - "You are helping a student cram for a test"
 - delBeforeSummary=delete stack of prepended prompts
 - afterSummary= append next user input to all summary gpt requests
-  - "...and make it light hearted and funny" 
+  - "...and make it light hearted and funny"
 - delAfterSummary= delete stack of appended prompts
 - maxTokenSummary=change response length/max summary token count (default 2000, max = 4096 includes summary prompts)
 
-### Quiz SubLoop: 
+### Quiz SubLoop:
 if toggled on, start after step 2 in Event Loop
-1. query gpt3 to generate quiz, print quiz, 
+1. query gpt3 to generate quiz, print quiz,
 2. get user input for answers
 3. query gpt3 for "grade", explain "wrong" answers
-4. get user input 
+4. get user input
       - done=exit&save a log of the quiz&answers,
       - delete=don't log quiz
       - c=converse with gpt about quiz
@@ -90,7 +90,7 @@ if toggled on, start after step 2 in Event Loop
 
 ## Command Line Tooling (bza)
 
-- bza gptDB ask gpt to query database for you, print command, then hit y to run or n to cancel (can also copy&paste into sql repl)
+- bza gptDB ask gpt to query database for you, print command, then enter yes to run or n (or other letter) to cancel (can also copy&paste into sql repl)
 - bza loadBookmark bookmarkName (bookmarkName usually = title)
 - bza loadPDF filepath
 - bza loadUrl filepath letterPerPage
@@ -98,11 +98,11 @@ if toggled on, start after step 2 in Event Loop
 - resumeFromLog
 
 
-## Other Configuration: 
+## Other Configuration:
 can modify eventLoop prompts in genPrompts.mjs
 
 see [initDB.mjs]() for database schema
-or 
+or
 
 0. nix-shell if not already in a nix shell
 1. `sqlite3 bookmarks.sq3`
@@ -125,14 +125,14 @@ pdf-extract introduces a bunch of binary dependencies relative to alternative li
 Also it would be nice to use other binary dependencies that can read pdfs or other types of file from the command line (and have the option to pass in e.g. the current pagenumber).
 
 ## Naming
-The naive/correct pronounciation sounds like pizza, which is typically sliced into pieces just like we are chunking up books. Book pizza. 
+The naive/correct pronounciation sounds like pizza, which is typically sliced into pieces just like we are chunking up books. Book pizza.
 ![bzatime](bzatime.jpg)
 
 bza is also my initials. #branding
 
 and bza is a short three letter word which is not too overloaded and can be invoked easily on the command line.
 
-Makes total sense. 
+Makes total sense.
 
 ## Inspiration
 
@@ -152,7 +152,7 @@ xpdf ~/media/books/LinuxProgrammingInterface2010.pdf
 
 in a file in my /home/$user/media directory so i could read books from command line and record current position
 
-i had also been looking for technically inclined book club without luck (well i didnt try super hard) 
+i had also been looking for technically inclined book club without luck (well i didnt try super hard)
 
 a thought had been bubbling in my head that I wanted to read books alongside gpt3,
 
@@ -193,4 +193,4 @@ i think there is a similar analogy going on here.
 reddit user SignificanceMassive3's diagram displays a "context free" or "pushdown" large language model (ignore the fact the diagram has two stacks and is ?probably? technically turing complete, we don't push to our long term context after we define it, well, mostly... Look buddy we are operationally a pushdown automata!)
 ![PushDownLLM.png](PushDownLLM.png)
 
-which, much like a regular expression is suitable for matching patterns in text, a "push down llm" is suitable for the task of reading along with longer form text 
+which, much like a regular expression is suitable for matching patterns in text, a "push down llm" is suitable for the task of reading along with longer form text
