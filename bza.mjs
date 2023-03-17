@@ -46,42 +46,6 @@ program
       // }))
   });
 
-program
-  .command("loadMark")
-  .argument('<bookmarkTitle>', 'title of bookmark to load')
-  .argument('[tStamp]', 'tStamp to load from "yyyy-mm dd-hh-mm-ss" (defaults to most recent)')
-  .description("load bookmark from databse into event loop")
-  .action(async function(bookmarkTitle, tStamp) {
-    console.log(bookmarkTitle, tStamp)
-    const bookData = loadBookmark(bookmarkTitle)
-    console.log("bookmark data", bookData)
-    eventLoop()
-
-    // bTitle: 'Frankenstein',
-    // tStamp: '2023-03-16 18:13:49',
-    // title: 'Frankenstein',
-    // synopsis: 'A scientist, Victor Von Frankenstein creates life by infusing corpses with lightning. His Misshapen creature seeks the affection of his father and failing that, the creation of a bride, but Frankenstein refuses leading to a climactic chase across the world as the creature rebels against his creator.',
-    // pageNum: 0,
-    // fileType: 'pdf',
-    // isQuiz: 1,
-    // isPrintChunkSummary: 1,
-    // chunkSize: 2,
-    // maxTokens: 2,
-    // narrator: 'Mr. T'
-
-    // _.omit(bookData, "fileType", tStamp, maxTokens)
-
-    // pageNum,
-    // narrator,
-    // chunkSize,
-    // synopsis,
-    // rollingSummary,
-    // isPrintPage,
-    // isPrintChunkSummary,
-    // isPrintRollingSummary,
-    // title
-
-  })
 
 program
   .command("gptDB")
@@ -166,6 +130,19 @@ function loadPDF(title, synopsis, tStamp, isPdfImage) {
       // function callback (error, data) { error ? console.error(error) : console.log(data.text_pages[0]) }
     }
     processor.on("complete", function(pdfText) {
+      console.log("pdf load completed, db insert error on undefined: ", insertPDF(
+        title,
+        tStamp,
+        synopsis,
+        narrator,
+        chunkSize,
+        rollingSummary,
+        isPrintPage,
+        isPrintChunkSummary,
+        isPrintRollingSummary,
+        filePath,
+        isPdfImage
+      ))
       eventLoop(pdfTxt, {
         title,
         synopsis,
@@ -276,6 +253,43 @@ program
 
 // .command('loop [destination]')
 // .description('Run Event Loop')
+
+program
+  .command("loadMark")
+  .argument('<bookmarkTitle>', 'title of bookmark to load')
+  .argument('[tStamp]', 'tStamp to load from "yyyy-mm dd-hh-mm-ss" (defaults to most recent)')
+  .description("load bookmark from databse into event loop")
+  .action(async function(bookmarkTitle, tStamp) {
+    console.log(bookmarkTitle, tStamp)
+    const bookData = loadBookmark(bookmarkTitle)
+    console.log("bookmark data", bookData)
+    // eventLoop()
+
+    // bTitle: 'Frankenstein',
+    // tStamp: '2023-03-16 18:13:49',
+    // title: 'Frankenstein',
+    // synopsis: 'A scientist, Victor Von Frankenstein creates life by infusing corpses with lightning. His Misshapen creature seeks the affection of his father and failing that, the creation of a bride, but Frankenstein refuses leading to a climactic chase across the world as the creature rebels against his creator.',
+    // pageNum: 0,
+    // fileType: 'pdf',
+    // isQuiz: 1,
+    // isPrintChunkSummary: 1,
+    // chunkSize: 2,
+    // maxTokens: 2,
+    // narrator: 'Mr. T'
+
+    // _.omit(bookData, "fileType", tStamp, maxTokens)
+
+    // pageNum,
+    // narrator,
+    // chunkSize,
+    // synopsis,
+    // rollingSummary,
+    // isPrintPage,
+    // isPrintChunkSummary,
+    // isPrintRollingSummary,
+    // title
+
+  })
 
 program
   .version("0.1.0")
