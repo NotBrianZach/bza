@@ -97,7 +97,7 @@ async function queryUserTitleSynopsis() {
   return { title, synopsis }
 }
 
-function loadPDF(title, synopsis, tStamp, isPdfImage) {
+function loadPDF(title, synopsis, tStamp, filePath, isPDFImage, pageNumber, chunkSize, narrator, isPrintPage, isPrintChunSummary, isPrintRollingSummary) {
     if (isPdfImage) {
       // extract text from pdf with searchable text
       var pdfOptions = {
@@ -163,24 +163,17 @@ program
   .argument('[pageNumber]', 'pageNumber to start on, default 0', 0)
   .argument('[chunkSize]', 'how many pages to read at once, default 2 (more=less context window for conversation)', 2)
   .argument('[narrator]', 'narrator persona, default none ("")', "")
-  // .argument('[isPrintPage]', 'whether to print each page of chunk, false/0', 0)
+  .argument('[isPrintPage]', 'whether to print each page of chunk, false/0', 0)
   .addArgument(new Argument('[isPrintPage]', 'whether to print each page, false=0').choices([0, 1]))
   .addArgument(new Argument('[isPrintChunkSummary]', 'whether to print each chunk summary, false=0').choices([0, 1]))
   .addArgument(new Argument('[isPrintRollingSummary]', 'whether to print each rolling summary, false=0').choices([0, 1]))
   // .argument('[narrator]', 'narrator persona, default none ("")', "")
   .description("load pdf, create a bookmark, run eventLoop")
-  .action(async function(filePath, isPDFImage, pageNumber, chunkSize, narrator, ) {
+  .action(async function(filePath, isPDFImage, pageNumber, chunkSize, narrator, isPrintPage, isPrintChunSummary, isPrintRollingSummary) {
     const tStamp = yyyymmddhhmmss(new Date)
     const {title, synopsis} = await queryUserTitleSynopsis()
-    loadPDF(title, tStamp, title, synopsis,
-            narrator,
-            chunkSize,
-            rollingSummary,
-            isPrintPage,
-            isPrintChunkSummary,
-            isPrintRollingSummary,
-            filePath,
-            isPDFImage
+    loadPDF(title, tStamp, synopsis,
+            filePath, isPDFImage, pageNumber, chunkSize, narrator, isPrintPage, isPrintChunSummary, isPrintRollingSummary
            )
   });
 
