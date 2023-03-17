@@ -14,7 +14,7 @@ const dbBookmarks = db.prepare(
  tStamp TEXT not null,
  title TEXT not null default '',
  synopsis TEXT not null default '',
- pageNumber INTEGER not null default 0,
+ pageNum INTEGER not null default 0,
  fileType TEXT not null default 'pdf',
  isQuiz boolean default false,
  isPrintPage boolean default false,
@@ -91,7 +91,7 @@ const dbURL = db.prepare(
 dbURL.run();
 const dbLogging = db.prepare(
   `create table if not exists logs (bTitle TEXT,
- pageNumber INTEGER not null default 0,
+ pageNum INTEGER not null default 0,
  pageChunk TEXT,
  pageChunkSummary TEXT,
  rollingSummary TEXT,

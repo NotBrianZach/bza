@@ -54,7 +54,29 @@ program
     console.log(bookmarkTitle, tStamp)
     const bookData = loadBookmark(bookmarkTitle)
     console.log("bookmark data", bookData)
-    // eventLoop()
+    eventLoop()
+
+    // bTitle: 'Frankenstein',
+    // tStamp: '2023-03-16 18:13:49',
+    // title: 'Frankenstein',
+    // synopsis: 'A scientist, Victor Von Frankenstein creates life by infusing corpses with lightning. His Misshapen creature seeks the affection of his father and failing that, the creation of a bride, but Frankenstein refuses leading to a climactic chase across the world as the creature rebels against his creator.',
+    // pageNumber: 0,
+    // fileType: 'pdf',
+    // isQuiz: 1,
+    // isPrintChunkSummary: 1,
+    // chunkSize: 2,
+    // maxTokens: 2,
+    // narrator: 'Mr. T'
+
+    // pageNum,
+    // narrator,
+    // chunkSize,
+    // synopsis,
+    // rollingSummary,
+    // isPrintPage,
+    // isPrintChunkSummary,
+    // isPrintRollingSummary,
+    // title
 
   })
 
@@ -67,15 +89,15 @@ program
     console.log("TODO")
     const dbSchema = removeExtraWhitespace(fs.readFileSync(path.resolve("./dbSchema.mjs")).toString())
     const sql = await queryGPT(`given follwing sqlite db schema: ${dbSchema}, write a sql that peforms task: ${args.plainRequest}`)
-    console.log("sql", sql)
+    console.log("gpt proposed sql", sql)
     while (true) {
       const { yesOrNo } = await prompt.get(["yesOrNo"])
       if (yesOrNo === "yes") {
         if (args.selectOrUpdate === "select") {
-          console.log(db.prepare(sql).all())
+          console.log("select results", db.prepare(sql).all())
         } else {
+          console.log("update return codes", db.prepare(sql).run())
         }
-        // TODO
       } else {
         console.log("exiting")
         return
@@ -118,13 +140,6 @@ function loadPDF(title, synopsis, tStamp, isPdfImage) {
         enc: "UTF-8", // optional, encoding to use for the text output
         clean: true // try prevent tmp directory /usr/run/$userId$ from overfilling with parsed pdf pages (doesn't seem to work)
       };
-
-      // todo
-      //     readingOpts = {
-      //       ...readingListTopLevel.defaults,
-      //       title,
-      //       synopsis,
-      //       path: options.path
 
       var processor = pdf_extract(options.file, pdfOptions, function(err) {
         // TODO might not spawn background process like we want (interrupts user input)
