@@ -1,8 +1,18 @@
 import prompt from "prompt";
 import runQuiz from "./lib/runQuiz.mjs";
 import fs from "fs";
+import {
+  genChunkSummaryPrompt,
+  genRollingSummaryPrompt,
+  retellChunkAsNarratorPrompt
+} from "./lib/genPrompts.mjs";
 
-export default async function getUserInput(curPageNum, gptPrompt, queryGPT) {
+// might append summaries to getUserInput readOpts so dont have to recompute them
+// (then again might be useful to do so if changing summary stack or prepending narration)
+export default async function getUserInput(bzaTxt, readOpts, queryGPT) {
+  // TODO replace gpt prompt
+  const { pageNum, rollingSummary, synopsis } = readOpts;
+  const gptPrompt = gen;
   const defaultQuerySchema = {
     properties: {
       nextAction: {
@@ -54,34 +64,21 @@ export default async function getUserInput(curPageNum, gptPrompt, queryGPT) {
       break;
     case "r":
       query = await prompt(["query"]);
-      gptResponse = queryGPT(`${gptPrompt}\n${query}`);
+      gptResponse = queryGPT(`${gptPrompt}\n${query}`, {});
       console.log("gptResponse", gptResponse);
       getUserInput(curPageNum, `${gptPrompt}\n${query}\ngptResponse`, queryGPT);
       break;
     case "RE":
       query = await prompt(["query"]);
-      gptResponse = queryGPT(`${gptPrompt}`);
+      gptResponse = queryGPT(`${gptPrompt}`, {});
       getUserInput(curPageNum, gptResponse, queryGPT);
       break;
     case "jump":
       const pageNum = await prompt(["pageNumber"]);
-      return { jump: pageNum };
+      return { label: "jump", jump: pageNum };
       break;
     case "EX":
-      // TODO fix
-
-      // const { title, synopsis, pageSlice } = await prompt([
-      //   "title",
-      //   "synopsis",
-      //   "pageSlice"
-      // ]);
-      // const readingListEntry = {
-      //   title,
-      //   synopsis,
-      //   pageSlice
-      // };
-      // fs.writeFileSync(`./readingList.js`, JSON.stringify(readingListEntry));
-      // return queryValue;
+      return { label: "EX" };
       break;
     case "q":
       const { quiz, grade } = await runQuiz(
@@ -115,6 +112,7 @@ export default async function getUserInput(curPageNum, gptPrompt, queryGPT) {
       getUserInput(curPageNum, gptPrompt, queryGPT);
       break;
     case "narrate":
+      // TODO toggle narrative option on
       const narrative = await queryGPT(
         `${gptPrompt}\nRewrite all output in the voice of a character`
       );
