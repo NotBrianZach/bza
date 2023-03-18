@@ -17,13 +17,19 @@ export default async function getUserInput(bzaTxt, readOpts, queryGPT) {
       nextAction: {
         type: "string", // Specify the type of input to expect.
         description: `
-- c="continue" to next pageChunk,\n
-- jump="jump" to input pageNumber,\n
-- EX="EXit" exit program, save to db\n
+- next=continue to next pageChunk\n
+- jump=jump to input pageNumber\n
+- exit= exit program, save to db\n
 ##### ASK user for input\n
-- r="repeat" ask user for input, append to prompt and query gpt,\n
-- RE="REstart" restart conversation w/only initial prompt and save to db\n
-- REDT="REstart DesTructive" hard restart conversation w/only initial prompt\n
+- start = start conversation w/specified prompt; without subcommand assumes [start = start title synopsis rollingSummary pageChunkSummary pages], saves previous conversation if applicable\n
+  - title = append title\n
+  - synopsis = append synopsis\n
+  - rollingSummary = append pageChunkSummary\n
+  - pageChunkSummary = append pageChunkSummary\n
+  - pages = append pageChunk\n
+- c = continue conversation (if no current conversation assume start default)\n
+- "hard restart"= restart conversation w/only initial prompt, NO save to database\n
+  - same subcommands as start\n
 ##### SUBLOOP COMMANDS\n
 - quiz= run quiz loop once\n
 - toggleQuiz= toggles quiz loop, print boolean value\n
@@ -58,19 +64,19 @@ export default async function getUserInput(bzaTxt, readOpts, queryGPT) {
   let query = "";
   let gptResponse = "";
   switch (queryValue) {
-    case "c":
+    case "next":
       return queryValue;
       break;
-    case "r":
+    case "start":
       query = await prompt(["query"]);
       gptResponse = queryGPT(`${gptPrompt}\n${query}`, {});
       console.log("gptResponse", gptResponse);
-      getUserInput(curPageNum, `${gptPrompt}\n${query}\ngptResponse`, queryGPT);
+      getUserInput(bzaTxt, `${gptPrompt}\n${query}\ngptResponse`, queryGPT);
       break;
-    case "RE":
+    case "continue":
       query = await prompt(["query"]);
       gptResponse = queryGPT(`${gptPrompt}`, {});
-      getUserInput(curPageNum, gptResponse, queryGPT);
+      getUserInput(bzaTxt, gptResponse, queryGPT);
       break;
     case "jump":
       const pageNum = await prompt(["pageNumber"]);
@@ -92,23 +98,23 @@ export default async function getUserInput(bzaTxt, readOpts, queryGPT) {
     case "toggleQuiz":
       const toggleVal = await prompt(["toggleVal"]);
       console.log(toggleVal);
-      getUserInput(curPageNum, gptPrompt, queryGPT);
+      getUserInput(bzaTxt, readOpts, queryGPT);
       break;
     case "h": // fall through to help
     case "help":
       console.log(defaultQuerySchema.properties.nextAction.description);
-      getUserInput(curPageNum, gptPrompt, queryGPT);
+      getUserInput(bzaTxt, readOpts, queryGPT);
       break;
     case "pChunk":
       console.log(gptPrompt);
-      getUserInput(curPageNum, gptPrompt, queryGPT);
+      getUserInput(bzaTxt, readOpts, queryGPT);
       break;
     case "pRoll":
       const rollingSummary = await queryGPT(
         `${gptPrompt}\nSummary of everything up to this point`
       );
       console.log(rollingSummary);
-      getUserInput(curPageNum, gptPrompt, queryGPT);
+      getUserInput(bzaTxt, readOpts, queryGPT);
       break;
     case "narrate":
       // TODO toggle narrative option on
@@ -116,82 +122,84 @@ export default async function getUserInput(bzaTxt, readOpts, queryGPT) {
         `${gptPrompt}\nRewrite all output in the voice of a character`
       );
       console.log(narrative);
-      getUserInput(curPageNum, gptPrompt, queryGPT);
+      getUserInput(bzaTxt, readOpts, queryGPT);
       break;
     case "voiceOut":
+      // TODO fix
       // const voiceOutput = await queryGPT(
       //   `${gptPrompt}\nUse TTS to generate voice to narrate gpt response & queries to user`
       // );
       // console.log(voiceOutput);
-      getUserInput(curPageNum, gptPrompt, queryGPT);
+      getUserInput(bzaTxt, readOpts, queryGPT);
       break;
     case "voiceIn":
+      // TODO fix
       // const voiceInput = await queryGPT(
       //   `${gptPrompt}\nUse talon to allow voice input`
       // );
       // console.log(voiceInput);
-      getUserInput(curPageNum, gptPrompt, queryGPT);
+      getUserInput(bzaTxt, readOpts, queryGPT);
       break;
     case "before":
       // TODO fix
       const beforeQuery = await prompt(["query"]);
       gptResponse = queryGPT(`${gptPrompt}\n${beforeQuery}`);
       console.log("gptResponse", gptResponse);
-      getUserInput(curPageNum, gptPrompt, queryGPT);
+      getUserInput(bzaTxt, readOpts, queryGPT);
       break;
     case "delBefore":
       // TODO fix
       // gptResponse = queryGPT(`${gptPrompt}`);
       // console.log("gptResponse", gptResponse);
-      getUserInput(curPageNum, gptPrompt, queryGPT);
+      getUserInput(bzaTxt, readOpts, queryGPT);
       break;
     case "after":
       // TODO fix
       const afterQuery = await prompt(["query"]);
       gptResponse = queryGPT(`${gptPrompt}\n${afterQuery}`);
       console.log("gptResponse", gptResponse);
-      getUserInput(curPageNum, gptPrompt, queryGPT);
+      getUserInput(bzaTxt, readOpts, queryGPT);
       break;
     case "delAfter":
       // TODO fix
       gptResponse = queryGPT(`${gptPrompt}`);
       console.log("gptResponse", gptResponse);
-      getUserInput(curPageNum, gptPrompt, queryGPT);
+      getUserInput(bzaTxt, readOpts, queryGPT);
       break;
     case "maxToken":
       // TODO fix
       const tokenCount = await prompt(["tokenCount"]);
       gptResponse = queryGPT(`${gptPrompt}\nMax Token Count: ${tokenCount}`);
       console.log("gptResponse", gptResponse);
-      getUserInput(curPageNum, gptPrompt, queryGPT);
+      getUserInput(bzaTxt, readOpts, queryGPT);
       break;
     case "beforeSummary":
       // TODO fix
       const beforeSummaryQuery = await prompt(["query"]);
       gptResponse = queryGPT(`${gptPrompt}\n${beforeSummaryQuery}\nSummary:`);
       console.log("gptResponse", gptResponse);
-      getUserInput(curPageNum, gptPrompt, queryGPT);
+      getUserInput(bzaTxt, readOpts, queryGPT);
       break;
     case "delBeforeSummary":
       // TODO fix
       gptResponse = queryGPT(`${gptPrompt}\nSummary:`);
       console.log("gptResponse", gptResponse);
-      getUserInput(curPageNum, gptPrompt, queryGPT);
+      getUserInput(bzaTxt, readOpts, queryGPT);
       break;
     case "afterSummary":
       // TODO fix
       const afterSummaryQuery = await prompt(["query"]);
       gptResponse = queryGPT(`${gptPrompt}\n${afterSummaryQuery}\nSummary:`);
       console.log("gptResponse", gptResponse);
-      getUserInput(curPageNum, gptPrompt, queryGPT);
+      getUserInput(bzaTxt, readOpts, queryGPT);
       break;
     case "delAfterSummary":
       // TODO fix
       gptResponse = queryGPT(`${gptPrompt}\nSummary:`);
       console.log("gptResponse", gptResponse);
-      getUserInput(curPageNum, gptPrompt, queryGPT);
+      getUserInput(bzaTxt, readOpts, queryGPT);
       break;
     default:
-      return getUserInput(curPageNum, gptPrompt, queryGPT);
+      return getUserInput(bzaTxt, readOpts, queryGPT);
   }
 }

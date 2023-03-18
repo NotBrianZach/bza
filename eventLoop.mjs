@@ -70,17 +70,8 @@ export default async function eventLoop(bzaTxt, readOpts, queryGPT, sessionTime)
                                           pageChunk,
                                           chunkSummary
                                          }, queryGPT);
-
-  // 2. rollingSummary=queryGPT3(synopsis+pageChunkSummary)
-  const newRollingSummary = queryGPT(genRollingSummaryPrompt(title, synopsis, rollingSummary, excerpt), {});
-  if (isPrintRollingSummary) {
-    console.log(
-      `Summary of pages ${pageNum} to ${pageNum + chunkSize} within context of synopsis:`,
-      rollingSummary
-    );
-  }
   switch (userInput.label) {
-    case "jump":
+  case "jump":
     if (userInput.jump < totalPages) {
       return eventLoop(bzaTxt, {
         ...readOpts,
@@ -101,7 +92,16 @@ export default async function eventLoop(bzaTxt, readOpts, queryGPT, sessionTime)
 
     return "successful loop exit"
     break
-    default: // do nothing
+  default: // do nothing
+  }
+
+  // 2. rollingSummary=queryGPT3(synopsis+pageChunkSummary)
+  const newRollingSummary = queryGPT(genRollingSummaryPrompt(title, synopsis, rollingSummary, excerpt), {});
+  if (isPrintRollingSummary) {
+    console.log(
+      `Summary of pages ${pageNum} to ${pageNum + chunkSize} within context of synopsis:`,
+      rollingSummary
+    );
   }
 
   // console.log(`New Meta Summary:`, synopsis);

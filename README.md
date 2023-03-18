@@ -41,18 +41,20 @@ And it stores all this into "bookmarks" in a local database.
 6. parting thoughts from gpt3, call onExit method (cleanup)
 
 ## User Input (Step 3 Event Loop):
-- c="continue" to next pageChunk,
-- jump="jump" to input pageNumber,
-- exit="exit" exit program, save to db
+- next=continue to next pageChunk,
+- jump=jump to input pageNumber,
+- exit= exit program, save to db
 ##### ASK user for input
-- start= start conversation w/specified prompt without subcommand ( = start)
-  - pages = append pageChunk
-  - pageChunkSummary = append pageChunkSummary
-  - rollingSummary = append pageChunkSummary
-  - synopsis = append synopsis 
+- start = start conversation w/specified prompt; without subcommand assumes [start = start title synopsis rollingSummary pageChunkSummary pages], saves previous conversation if applicable
   - title = append title
+  - synopsis = append synopsis 
+  - rollingSummary = append pageChunkSummary
+  - pageChunkSummary = append pageChunkSummary
+  - pages = append pageChunk
+- c = continue conversation (if no current conversation assume start default)
 <!-- - restart="restart" save current conversation to db, restart conversation w/only initial prompt  -->
-<!-- - "hard restart"= restart conversation w/only initial prompt, NO save to db -->
+- "hard restart"= restart conversation w/only initial prompt, NO save to database
+  - same subcommands as start
 ##### SUBLOOP COMMANDS
 - quiz= run quiz loop once
 - toggleQuiz= toggles quiz loop, print boolean value
