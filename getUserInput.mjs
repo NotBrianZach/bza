@@ -12,7 +12,6 @@ import {
 export default async function getUserInput(bzaTxt, readOpts, queryGPT) {
   // TODO replace gpt prompt
   const { pageNum, rollingSummary, synopsis } = readOpts;
-  const gptPrompt = gen;
   const defaultQuerySchema = {
     properties: {
       nextAction: {

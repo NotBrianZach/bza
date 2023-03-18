@@ -45,7 +45,7 @@ And it stores all this into "bookmarks" in a local database.
 - jump="jump" to input pageNumber,
 - EX="EXit" exit program, save to db
 ##### ASK user for input
-- r="repeat" ask user for input, append to prompt and query gpt,
+- r="repeat" ask user for input, append to prompt and query gpt, (TODO which prompt? quiz?last summary? last page?)
 - RE="REstart" restart conversation w/only initial prompt and save to db
 - REDT="REstart DesTructive" hard restart conversation w/only initial prompt
 ##### SUBLOOP COMMANDS
