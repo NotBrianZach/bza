@@ -43,11 +43,16 @@ And it stores all this into "bookmarks" in a local database.
 ## User Input (Step 3 Event Loop):
 - c="continue" to next pageChunk,
 - jump="jump" to input pageNumber,
-- EX="EXit" exit program, save to db
+- exit="exit" exit program, save to db
 ##### ASK user for input
-- r="repeat" ask user for input, append to prompt and query gpt, (TODO which prompt? quiz?last summary? last page?)
-- RE="REstart" restart conversation w/only initial prompt and save to db
-- REDT="REstart DesTructive" hard restart conversation w/only initial prompt
+- start= start conversation w/specified prompt without subcommand ( = start)
+  - pages = append pageChunk
+  - pageChunkSummary = append pageChunkSummary
+  - rollingSummary = append pageChunkSummary
+  - synopsis = append synopsis 
+  - title = append title
+<!-- - restart="restart" save current conversation to db, restart conversation w/only initial prompt  -->
+<!-- - "hard restart"= restart conversation w/only initial prompt, NO save to db -->
 ##### SUBLOOP COMMANDS
 - quiz= run quiz loop once
 - toggleQuiz= toggles quiz loop, print boolean value
