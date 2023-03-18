@@ -23,15 +23,14 @@ import { loadBookmarks, loadBookmark, loadPDFTable, insertPDF } from "./lib/dbQu
 import { removeExtraWhitespace, yyyymmddhhmmss } from "./lib/utils.mjs";
 const queryGPT = createGPTQuery(process.env.OPENAI_API_KEY);
 
-console.log("typeof queryGPT", typeof queryGPT)
 import axios from "axios";
 const htmlToTxtOpts = {
   wordwrap: 130
 };
+
 function newSessionTime() {
   return yyyymmddhhmmss(new Date)
 }
-
 
 program
   .command("printBookmarks")
@@ -290,7 +289,7 @@ program
   })
 
 program .command("gptDB")
-  .argument(new Argument('<selectOrUpdate>', 'specify whether', "update").choices(['update', 'select']))
+  .addArgument(new Argument('<updateOrSelect>', 'specify whether', "update").choices(['update', 'select']))
   .argument('<plainRequest>', 'plainRequest')
   .description("ask gpt to create db query for you to either get or update database, print command, then type yes to run or n to cancel")
   .action(async function(args) {
@@ -301,7 +300,7 @@ program .command("gptDB")
     while (true) {
       const { yesOrNo } = await prompt.get(["yesOrNo"])
       if (yesOrNo === "yes") {
-        if (args.selectOrUpdate === "select") {
+        if (args.updateOrSelect === "select") {
           console.log("select results", db.prepare(sql).all())
         } else {
           console.log("update return codes", db.prepare(sql).run())

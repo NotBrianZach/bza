@@ -64,7 +64,7 @@ export default async function eventLoop(bzaTxt, readOpts, queryGPT, sessionTime)
   //   rollingSummary
   // );
   const { quiz, grade } = await runQuiz(pageChunk, readOpts, queryGPT);
-  getUserInput(pageNum, rollingSummary, queryGPT);
+  const userInput = getUserInput(pageNum, rollingSummary, queryGPT);
 
   // 2. rollingSummary=queryGPT3(synopsis+pageChunkSummary)
   const newRollingSummary = queryGPT(genRollingSummaryPrompt(title, synopsis, rollingSummary, excerpt));
@@ -73,6 +73,17 @@ export default async function eventLoop(bzaTxt, readOpts, queryGPT, sessionTime)
       `Summary of pages ${pageNum} to ${pageNum + chunkSize} within context of synopsis:`,
       rollingSummary
     );
+  }
+  if (userInput.jump !== undefined) {
+    if (userInput.jump < totalPages) {
+      return eventLoop(bzaTxt, {
+        ...readOpts,
+        pageNum: userInput.jump
+      }, queryGPT, tStamp);
+    } else {
+      console.log("jump failed")
+    }
+
   }
 
   // console.log(`New Meta Summary:`, synopsis);
