@@ -7,8 +7,8 @@ import { exec, spawn } from "child_process";
 import path from "path";
 import _ from "underscore";
 import pdf_extract from "pdf-extract";
-import db from "./lib/dbConnect.mjs";
-import eventLoop from "./eventLoop.mjs";
+import { htmlToText } from "html-to-text";
+import axios from "axios";
 
 // TODO compute-cosine-similarity
 // https://www.npmjs.com/package/compute-cosine-similarity
@@ -17,20 +17,16 @@ import eventLoop from "./eventLoop.mjs";
 
 // could also use https://github.com/mozilla/readability
 // There is also an alias to `convert` called `htmlToText`.
-import { htmlToText } from "html-to-text";
+import { removeExtraWhitespace, devLog, newSessionTime } from "./lib/utils.mjs";
 import { createGPTQuery } from "./lib/createGPTQuery.mjs";
+import db from "./lib/dbConnect.mjs";
+import eventLoop from "./eventLoop.mjs";
 import { loadBookmarks, loadBookmark, loadPDFTable, insertPDF } from "./lib/dbQueries.mjs";
-import { removeExtraWhitespace, yyyymmddhhmmss } from "./lib/utils.mjs";
 const queryGPT = createGPTQuery(process.env.OPENAI_API_KEY);
 
-import axios from "axios";
 const htmlToTxtOpts = {
   wordwrap: 130
 };
-
-function newSessionTime() {
-  return yyyymmddhhmmss(new Date)
-}
 
 program
   .command("printBookmarks")
@@ -127,6 +123,7 @@ console.log("begin loadPDF", arguments)
         isImage
       ))
       const eventLoopEndMsg = eventLoop(pdfTxt, {
+        fileType: "pdf",
         title,
         synopsis,
         narrator,
@@ -235,18 +232,17 @@ program
 program
   .command("loadMark")
   .argument('<bookmarkTitle>', 'title of bookmark to load')
-  .argument('[tStamp]', 'tStamp to load from "yyyy-mm dd-hh-mm-ss" (defaults to most recent)')
+  .argument('[tStamp]', 'tStamp to load from "yyyy-mm dd-hh-mm-ss" (defaults to most recent)', newSessionTime())
   .description("load bookmark from databse into event loop")
   .action(async function(bookmarkTitle, tStamp) {
-    console.log(bookmarkTitle, tStamp)
+    devLog(bookmarkTitle, tStamp)
     const mData = loadBookmark(bookmarkTitle)
-    console.log("bookmark data", mData)
+    devLog("bookmark data", mData)
     if (mData.fileType === "pdf") {
       const pData = loadPDFTable(bookmarkTitle)
       if (pData === undefined) {
         console.error("failed to load pdf data from db")
       } else {
-        const tStamp = newSessionTime()
         loadPDF(mData.title, mData.synopsis, tStamp, pData.filePath, pData.isImage, mData.pageNum, mData.chunkSize, mData.rollingSummary, mData.narrator, mData.isPrintPage, mData.isPrintChunkSummary, mData.isPrintRollingSummary)
       }
     }

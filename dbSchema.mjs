@@ -94,11 +94,12 @@ const dbURL = db.prepare(
 );
 dbURL.run();
 
-// TODO not sure if need this table (might be of use to save and resume conversations)
-// within a "timestamp id" (might help to avoid proliferation of timestamps )
+// save and resume conversations within single iteration of event loop
+// help to avoid proliferation of bookmark timestamps by adding a nested level of them to resume individual conversations from
 // (tStamp+title identifies all conversations you had in a session whereas conversationTStamp sort those perhaps)
-const dbLogging = db.prepare(
-  `create table if not exists logs (bTitle TEXT,
+// TODO not sure if some of these properties will simply be inherited from bookmarks
+const conversationStore = db.prepare(
+  `create table if not exists conversations (bTitle TEXT,
  pageNum INTEGER not null default 0,
  pageChunk TEXT,
  pageChunkSummary TEXT,
@@ -109,8 +110,8 @@ const dbLogging = db.prepare(
  narrator TEXT,
  tStamp TEXT,
  conversationTStamp TEXT,
- primary key(bTitle, tStamp))`
+ primary key(bTitle, tStamp, conversationTStamp))`
 );
-dbLogging.run();
+conversationStore.run();
 
 console.log("initialized database");
