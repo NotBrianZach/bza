@@ -36,15 +36,24 @@ export default async function eventLoop(bzaTxt, readOpts, queryGPT, sessionTime)
   );
   let pageChunk = ""
   if (narrator !== "") {
-    queryGPT(
-      pageChunk = await queryGPT(retellChunkAsNarratorPrompt(narrator, pageChunk, title, synopsis, rollingSummary), {})
-    )
+    const pageChunkQuery = await queryGPT(retellChunkAsNarratorPrompt(narrator, pageChunk, title, synopsis, rollingSummary), {})
+    if (pageChunkQuery.gptQueryErr !== undefined) {
+      return `gpt query error when narrator retelling pageChunk: ${pageChunkQuery.gptQueryErr}`
+    } else {
+      pageChunk = pageChunkQuery.txt
+    }
   } else {
     pageChunk = pageChunkInit
   }
-  const chunkSummary = await queryGPT(
+  const chunkSummaryQuery = await queryGPT(
     genChunkSummaryPrompt(title, synopsis, rollingSummary, pageChunk), {}
-  );
+    )
+  let chunkSummary
+  if (chunkSummaryQuery.gptQueryErr !== undefined) {
+    return `gpt query error when summarigizing pageChunk: ${chunkSummaryQuery.gptQueryErr}`
+  } else {
+    chunkSummary = pageChunkQuery.txt
+  }
 
   if (isPrintPage) {
     console.log(
@@ -65,6 +74,7 @@ export default async function eventLoop(bzaTxt, readOpts, queryGPT, sessionTime)
   // );
   const { quiz, grade } = await runQuiz(pageChunk, readOpts, queryGPT);
   const userInput = getUserInput(bzaTxt, {...readOpts,
+                                          sessionTime,
                                           rollingSummary,
                                           pageChunkInit,
                                           pageChunk,
@@ -81,7 +91,7 @@ export default async function eventLoop(bzaTxt, readOpts, queryGPT, sessionTime)
       console.log("jump failed")
     }
     break
-  case "EX":
+  case "exit":
     //TODO cases to handle
     // readOpts
     // pdfs
@@ -96,7 +106,16 @@ export default async function eventLoop(bzaTxt, readOpts, queryGPT, sessionTime)
   }
 
   // 2. rollingSummary=queryGPT3(synopsis+pageChunkSummary)
-  const newRollingSummary = queryGPT(genRollingSummaryPrompt(title, synopsis, rollingSummary, excerpt), {});
+  let newRollingSummary = ""
+  const rollingSummaryQuery = await queryGPT(
+    genRollingSummaryPrompt(title, synopsis, rollingSummary, pageRolling), {}
+  )
+  if (rollingSummaryQuery.gptQueryErr !== undefined) {
+    return `gpt query error when summarizing rollingSummary : ${rollingSummaryQuery.gptQueryErr}`
+  } else {
+    newRollingSummary = pageRollingQuery.txt
+  }
+
   if (isPrintRollingSummary) {
     console.log(
       `Summary of pages ${pageNum} to ${pageNum + chunkSize} within context of synopsis:`,
@@ -104,7 +123,6 @@ export default async function eventLoop(bzaTxt, readOpts, queryGPT, sessionTime)
     );
   }
 
-  // console.log(`New Meta Summary:`, synopsis);
   if (pageNum + chunkSize < totalPages) {
     // logSummary.push(rollingSummary);
     return eventLoop(bzaTxt, {

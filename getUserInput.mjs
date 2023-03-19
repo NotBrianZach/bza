@@ -11,7 +11,7 @@ import {
 // (then again might be useful to do so if changing summary stack or prepending narration)
 export default async function getUserInput(bzaTxt, readOpts, queryGPT) {
   // TODO replace gpt prompt
-  const { pageNum, rollingSummary, synopsis } = readOpts;
+  const { pageNum, rollingSummary, synopsis, gptConvParentId } = readOpts;
   const defaultQuerySchema = {
     properties: {
       nextAction: {
@@ -73,19 +73,27 @@ export default async function getUserInput(bzaTxt, readOpts, queryGPT) {
       console.log("gptResponse", gptResponse);
       getUserInput(bzaTxt, `${gptPrompt}\n${query}\ngptResponse`, queryGPT);
       break;
-    case "continue":
+    case "c":
       query = await prompt(["query"]);
       gptResponse = queryGPT(`${gptPrompt}`, {});
-      getUserInput(bzaTxt, gptResponse, queryGPT);
+      getUserInput(
+        bzaTxt,
+        {
+          ...readOpts,
+          convTxt: gptResponse.text,
+          parentId: gptResponse.id
+        },
+        queryGPT
+      );
       break;
     case "jump":
       const pageNum = await prompt(["pageNumber"]);
       return { label: "jump", jump: pageNum };
       break;
-    case "EX":
-      return { label: "EX" };
+    case "exit":
+      return { label: "exit" };
       break;
-    case "q":
+    case "quiz":
       const { quiz, grade } = await runQuiz(
         title,
         synopsis,

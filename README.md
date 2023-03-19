@@ -122,6 +122,7 @@ could create another file e.g. alterDB.mjs which has alter table statements if y
 ## Future Work
 
 - cosine similarity (or similar metrics) on book pages vector array option to get relevant context
+- https://github.com/mooz/percol fuzzy filtering of some kind like this, everywhere applicable
 - multiplayer repls? (idk websocket or something)
 - categorize query types (other than just summarize/non summarize) and allow for loop and prompt stack creation within repl itself?
 

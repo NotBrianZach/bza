@@ -126,7 +126,7 @@ console.log("begin loadPDF", arguments)
         filePath,
         isImage
       ))
-      eventLoop(pdfTxt, {
+      const eventLoopEndMsg = eventLoop(pdfTxt, {
         title,
         synopsis,
         narrator,
@@ -137,6 +137,7 @@ console.log("begin loadPDF", arguments)
         isPrintChunkSummary,
         isPrintRollingSummary
       }, queryGPT, tStamp);
+      console.log(eventLoopEndMsg)
     });
 }
 
