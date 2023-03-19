@@ -1,4 +1,5 @@
 let
+# 4d2b37a84fad1091b9de401eb450aae66f1a741e
   nixpkgs.url = "https://github.com/NixOS/nixpkgs/archive/4d2b37a84fad1091b9de401eb450aae66f1a741e.tar.gz";
   nixpkgs.sha256 = "11w3wn2yjhaa5pv20gbfbirvjq6i3m7pqrq2msf0g7cv44vijwgw";
 in
@@ -16,7 +17,7 @@ pkgs.stdenv.mkDerivation {
   name = "nix-shell-bza";
 
   buildInputs = [
-    pkgs.nodejs
+    pkgs.nodejs-17_x
     pkgs.screen
     # pkgs.tmux
     pkgs.sqlite

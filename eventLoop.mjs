@@ -171,7 +171,7 @@ export default async function eventLoop(bzaTxt, readOpts, queryGPT, sessionTime)
       return eventLoop(bzaTxt, {
         ...readOpts,
         rollingSummary,
-        pageNum: pageNum + lastChunkSize
+        pageNum: pageNum + lastChunkSize,
         chunkSize: lastChunkSize
       }, queryGPT, tStamp);
     }
