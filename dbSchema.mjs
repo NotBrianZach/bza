@@ -28,14 +28,29 @@ const dbBookmarks = db.prepare(
 );
 dbBookmarks.run();
 
-const dbQuizzes = db.prepare(
-  `create table if not exists quizzes (bTitle TEXT not null,
-    tStamp text not null,
-    quiz text not null,
-    answer text not null default '',
-    primary key(bTitle, tStamp))`
-);
-dbQuizzes.run();
+// const dbQuizzes = db.prepare(
+//   `create table if not exists quizzes (bTitle TEXT not null,
+//     tStamp text not null,
+//     quiz text not null,
+//     answer text not null default '',
+//     primary key(bTitle, tStamp))`
+// );
+// dbQuizzes.run();
+
+// key = quiz
+// gptOut = "[1. how fast can a swallow fly 2. ]"
+// userInput = "[1. 200 mph]"
+// key = answer
+// gptOut = "1. how fast can a swallow fly"
+// const dbSubloops = db.prepare(
+//   `create table if not exists quizzes (bTitle TEXT not null,
+//     tStamp text not null,
+//     key text not null,
+//     userInputs text not null default '',
+//     gptOut text not null default '',
+//     primary key(bTitle, tStamp, key))`
+// );
+// dbQuizzes.run();
 
 const dbContexts = db.prepare(
   `create table if not exists contexts (bTitle TEXT not null,
@@ -49,30 +64,20 @@ const dbContexts = db.prepare(
 );
 dbContexts.run();
 
-const dbPDFs = db.prepare(
-  `create table if not exists pdfs (bTitle TEXT not null,
-    tStamp text not null,
- filePath text not null,
- readerExe text not null default 'mupdf',
- readerArgs not null default '-Y 2',
- isImage boolean default false, primary key(bTitle, tStamp))`
+const dbEmbeddings = db.prepare(
+  `create table if not exists embeddings (bTitle TEXT not null,
+    tStamp TEXT not null,
+    ordering integer not null,
+    prepend text not null default '',
+    append text not null default '',
+    prependSummary text not null default '',
+    appendSummary text not null default '',
+    primary key(bTitle, tStamp, ordering))`
 );
-dbPDFs.run();
+dbEmbeddings.run();
 
-const dbHTML = db.prepare(
-  `create table if not exists htmls (bTitle TEXT not null,
- tStamp TEXT not null,
- filePath text not null,
- charPageLength INTEGER not null default ${defaultCharPageLength},
- readerExe text,
- readerArgs text,
- primary key(bTitle, tStamp)
- )`
-);
-dbHTML.run();
-
-const dbPlaintxt = db.prepare(
-  `create table if not exists plaintxts (bTitle TEXT not null,
+const dbMD = db.prepare(
+  `create table if not exists md (bTitle TEXT not null,
  tStamp TEXT not null,
  filePath text not null,
  charPageLength INTEGER not null default ${defaultCharPageLength},
@@ -81,18 +86,52 @@ const dbPlaintxt = db.prepare(
 primary key (bTitle, tStamp)
  )`
 );
-dbPlaintxt.run();
+dbMD.run();
 
-const dbURL = db.prepare(
-  `create table if not exists urls (bTitle TEXT not null,
-  tStamp text not null,
- charPageLength INTEGER not null default ${defaultCharPageLength} ,
- readerExe text,
- readerArgs text,
- primary key (bTitle, tStamp)
- )`
-);
-dbURL.run();
+// const dbPDFs = db.prepare(
+//   `create table if not exists pdfs (bTitle TEXT not null,
+//     tStamp text not null,
+//  filePath text not null,
+//  readerExe text not null default 'mupdf',
+//  readerArgs not null default '-Y 2',
+//  isImage boolean default false, primary key(bTitle, tStamp))`
+// );
+// dbPDFs.run();
+
+// const dbHTML = db.prepare(
+//   `create table if not exists htmls (bTitle TEXT not null,
+//  tStamp TEXT not null,
+//  filePath text not null,
+//  charPageLength INTEGER not null default ${defaultCharPageLength},
+//  readerExe text,
+//  readerArgs text,
+//  primary key(bTitle, tStamp)
+//  )`
+// );
+// dbHTML.run();
+
+// const dbPlaintxt = db.prepare(
+//   `create table if not exists plaintxts (bTitle TEXT not null,
+//  tStamp TEXT not null,
+//  filePath text not null,
+//  charPageLength INTEGER not null default ${defaultCharPageLength},
+//  readerExe text,
+//  readerArgs text,
+// primary key (bTitle, tStamp)
+//  )`
+// );
+// dbPlaintxt.run();
+
+// const dbURL = db.prepare(
+//   `create table if not exists urls (bTitle TEXT not null,
+//   tStamp text not null,
+//  charPageLength INTEGER not null default ${defaultCharPageLength} ,
+//  readerExe text,
+//  readerArgs text,
+//  primary key (bTitle, tStamp)
+//  )`
+// );
+// dbURL.run();
 
 // save and resume conversations within single iteration of event loop
 // help to avoid proliferation of bookmark timestamps by adding a nested level of them to resume individual conversations from

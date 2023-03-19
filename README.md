@@ -1,16 +1,22 @@
-# Book piZzA: GPT Conversational Read Eval Print Loop and Bookmarks Manager for Books, Articles, Webpages, & Plaintext (WIP)
+# Book piZzA: GPT Conversational Read Eval Print Loop and Bookmarks Management System for Text (WIP)
 
 Interactive books. Books sliced up like pizza. Book pizza. bza.
 
-It feeds a pdf, webpage, or epub a few (chunkSize) pages at a time into chatgpt or another LLM,
+First input text, 
 
-then outputs something, for example, a quiz on the topic of the pages it read
+feed it (sliceSize) pages at a time into chatgpt or another LLM, summarizing as it goes
 
-then waits for user input to tell it to what to do next with the pageChunk before continuing on: you could ask it to tell a joke, respond with a parable, or translate into spanish. lots of possibilities.
+then prompt user for a command e.g. 
+- print out the slice of pages 
+  - in the voice of a character,
+  - translate into spanish
+- print out the summary of content up to this point
+- generate a quiz and grade it
+- continue on to the next page slice
 
 It's an active reading buddy, a summarizer, a customizable narrator and reteller.
 
-And it stores all this into "bookmarks" in a local database.
+And it stores all this into "bookmarks" from which can resume our session in a local database. (where we can also do things like store vector represenations of all the pages of the books to compute cosine similarity to use when prompting the LLM)
 
 ## To Run (TODO)
 - if windows, install [windows subsystem for linux](https://learn.microsoft.com/en-us/windows/wsl/install)
@@ -19,38 +25,84 @@ And it stores all this into "bookmarks" in a local database.
 - open a terminal or shell (if you don't know how, you could ask chatgpt...)
 - `git clone https://github.com/NotBrianZach/bza.git`
 - `cd bza`
-- `nix-shell` (might take a few minutes to download and install dependencies)
+- `./shell.sh` (might take a few minutes to download and install dependencies)
 - `npm install`
 - get $OPENAI_API_KEY key [here](https://platform.openai.com/account/api-keys) if u dont have
-- `OPENAI_API_KEY=$OPENAI_API_KEY bza -f path_2_ur_pdf_here.pdf`
-- or (TODO)
-- `OPENAI_API_KEY=$OPENAI_API_KEY bza -w https://www.reddit.com/r/WritingPrompts/comments/5uilpw/wp_the_year_is_1910_adolf_hitler_a_struggling/`
+- `OPENAI_API_KEY=$OPENAI_API_KEY bza `
 - open an issue detailing why doesnt work
+
+## Convert to Markdown
+
+In this system we love markdown because it is close to plaintext and easy to read in raw format for both humans and gpt (it makes prompting easier while still being quite readable with a markdown reader like glow or by converting to html)
+
+So, before we can add more articles to our library, we need to convert to markdown using best available tools:
+
+- html
+  - a website
+    - curl https://example.com | percollate md -o ./library/file.md -u https://example.com -
+  - local html we downloaded
+    - cat path/to/html/file.html > percollate md -o ./library/file.md
+
+- pdf (also images&docx):
+  - for pdfs we will first need to install [parsr](https://github.com/axa-group/Parsr)
+  - docker pull axarev/parsr
+  - docker run -p 3001:3001 axarev/parsr
+  - TODO sophisticated examples and create default parsr config
+  - curl -X POST \
+  http://localhost:3001/api/v1/document \
+  -H 'Content-Type: multipart/form-data' \
+  -F 'file=@/path/to/file.pdf;type=application/pdf' \
+  -F 'config=@/path/to/config.json;type=application/json'
+  
+TODO
+https://github.com/yoshuawuyts/vmd/blob/master/main/create-window.js
+we will read along with vmd (can store position in bookmarks with vmd-window-state.json)
+
+()
+  file: 'vmd-window-state.json',
+
+  const fromFile = typeof windowOptions.filePath !== 'undefined';
+  const preloadPath = path.resolve(__dirname, 'client-api.js');
+
+  let win = new BrowserWindow({
+    webPreferences: {
+      preload: preloadPath,
+    },
+    icon: path.join(__dirname, 'assets/app-icon/png/512.png'),
+    width: windowOptions.width,
+    height: windowOptions.height,
+    x: windowOptions.x,
+    y: windowOptions.y,
+    autoHideMenuBar,
+  });
+TODO
+
+
 
 ### Event Loop Setup:
 0. - IF db has an entry for bookName, load title & synopsis & rollingSummary from there
-   - ELSE prompt user for title&synopsis, and get pageNumber&chunkSize from commandline params or defaults (0,2)
+   - ELSE prompt user for title&synopsis, and get pageNumber&sliceSize from commandline params or defaults (0,2)
      - you can, for example, have gpt make a synopsis for you by copy pasting abstract or table of contents into e.g. openai playground and prompting it to summarize said abstract or table of contents
    - finally initialize rollingSummary="this is the start of the document"
 ## Event Loop: Giving Gpt3 Short & Long Term Memory
-1. const pageChunk = pages.slice(pageNumber,pageNumber+chunkSize)
-2. pageChunkSummary=queryGPT(summarize pageSlice given title+synopsis+rollingSummary)
+1. const pageSlice = pages.slice(pageNumber,pageNumber+sliceSize)
+2. pageSliceSummary=queryGPT(summarize pageSlice given title+synopsis+rollingSummary)
 3. get User Input, act on input
-4. rollingSummary=queryGPT3(further contextualize pageSlice with respect to rest of book, this will act as a summary of previous pages for next pageChunkSummary)
-5. WHILE (pageNumber < bookLength), set pageNumber=pageNumber+chunkSize, jump back to 1. else continue to 6.
+4. rollingSummary=queryGPT3(further contextualize pageSlice with respect to rest of book, this will act as a summary of previous pages for next pageSliceSummary)
+5. WHILE (pageNumber < bookLength), set pageNumber=pageNumber+sliceSize, jump back to 1. else continue to 6.
 6. parting thoughts from gpt3, call onExit method (cleanup)
 
 ## User Input (Step 3 Event Loop):
-- next=continue to next pageChunk,
+- next=continue to next pageSlice,
 - jump=jump to input pageNumber,
 - exit= exit program, save to db
 ##### ASK user for input
-- start = start conversation w/specified prompt; without subcommand assumes [start = start title synopsis rollingSummary pageChunkSummary pages], saves previous conversation if applicable
+- start = start conversation w/specified prompt; without subcommand assumes [start = start title synopsis rollingSummary pageSliceSummary pages], saves previous conversation if applicable
   - title = append title
   - synopsis = append synopsis 
-  - rollingSummary = append pageChunkSummary
-  - pageChunkSummary = append pageChunkSummary
-  - pages = append pageChunk
+  - rollingSummary = append pageSliceSummary
+  - pageSliceSummary = append pageSliceSummary
+  - pages = append pageSlice
 - c = continue conversation (if no current conversation assume start default)
 <!-- - restart="restart" save current conversation to db, restart conversation w/only initial prompt  -->
 - "hard restart"= restart conversation w/only initial prompt, NO save to database
@@ -60,7 +112,7 @@ And it stores all this into "bookmarks" in a local database.
 - toggleQuiz= toggles quiz loop, print boolean value
 ##### PRINT TOGGLES: print to console, and enable/disable printing in event loop
 - h or help = show options
-- pChunk="summary of page chunk" print gpt summary of the current chunk of pages
+- pSlice="summary of page slice" print gpt summary of the current slice of pages
 - pRoll="rolling summary" print gpt summary of everything up to this point (short term memory)
 - narrate= rewrite all output in the voice of a character
 - voiceOut= TODO "Voice output" use ?[TTS](https://github.com/coqui-ai/TTS)? to generate voice to narrate gpt response & queries to user
@@ -96,14 +148,11 @@ if toggled on, start after step 2 in Event Loop
 5. get User Input (default options)
 
 ## Command Line Tooling (bza)
-
-- bza gptDB ask gpt to query database for you, print command, then enter yes to run or n (or other letter) to cancel (can also copy&paste into sql repl)
-- bza loadBookmark bookmarkName (bookmarkName usually = title)
-- bza loadPDF filepath
-- bza loadUrl filepath letterPerPage
-- bza printBookmarks
-- resumeFromLog
-
+- <> = required argument, [] = optional arguments, ;; = comment (not part of command)
+- bza resume <bookmarkName> [timestamp] ;; (bookmarkName usually = title)
+- bza load <filepath>
+- bza gptDB   ;; ask gpt to query database for you, print command, then enter yes to run or n (or other letter) to cancel (can also copy&paste into sql repl)
+- bza print [numberToPrint] ;; prints bookmarks, 10 by default
 
 ## Other Configuration:
 can modify eventLoop prompts in genPrompts.mjs
@@ -111,7 +160,7 @@ can modify eventLoop prompts in genPrompts.mjs
 see [initDB.mjs]() for database schema
 or
 
-0. nix-shell if not already in a nix shell
+0. ./shell.sh if not already in a nix shell
 1. `sqlite3 bookmarks.sq3`
 2. `.schema` to print db schema
 
@@ -128,12 +177,10 @@ could create another file e.g. alterDB.mjs which has alter table statements if y
 
 
 ## Design Decisions
-pdf-extract introduces a bunch of binary dependencies relative to alternative libraries but we want those because they enable optical character recognition on the subset of pdfs that are just scans of images (and I am guessing they are fast hopefully).
 
-Also it would be nice to use other binary dependencies that can read pdfs or other types of file from the command line (and have the option to pass in e.g. the current pagenumber).
 
 ## Naming
-The naive/correct pronounciation sounds like pizza, which is typically sliced into pieces just like we are chunking up books. Book pizza.
+The naive/correct pronounciation sounds like pizza, which is typically sliced into pieces just like we are sliceing up books. Book pizza.
 ![bzatime](bzatime.jpg)
 
 bza is also my initials. #branding
@@ -172,7 +219,7 @@ then i saw this reddit post
 
 https://www.reddit.com/r/singularity/comments/11ho23y/first_post_in_reddit_mistakely_used_a_text_post/
 
-and a within a couple minutes (well, techincally, i had started working a bit the day before on a book2quiz concept (it did still involve chunking through book just like this)), after some good ole reddit arguing, i started writing this
+and a within a couple minutes (well, techincally, i had started working a bit the day before on a book2quiz concept (it did still involve sliceing through book just like this)), after some good ole reddit arguing, i started writing this
 
 [original link](https://github.com/NotBrianZach/gptbook2quiz)
 

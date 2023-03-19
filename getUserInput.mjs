@@ -2,9 +2,9 @@ import prompt from "prompt";
 import runQuiz from "./lib/runQuiz.mjs";
 import fs from "fs";
 import {
-  genChunkSummaryPrompt,
+  genSliceSummaryPrompt,
   genRollingSummaryPrompt,
-  retellChunkAsNarratorPrompt
+  retellSliceAsNarratorPrompt
 } from "./lib/genPrompts.mjs";
 
 // might append summaries to getUserInput readOpts so dont have to recompute them
@@ -17,16 +17,16 @@ export default async function getUserInput(bzaTxt, readOpts, queryGPT) {
       nextAction: {
         type: "string", // Specify the type of input to expect.
         description: `
-- next=continue to next pageChunk\n
+- next=continue to next pageSlice\n
 - jump=jump to input pageNumber\n
 - exit= exit program, save to db\n
 ##### ASK user for input\n
-- start = start conversation w/specified prompt; without subcommand assumes [start = start title synopsis rollingSummary pageChunkSummary pages], saves previous conversation if applicable\n
+- start = start conversation w/specified prompt; without subcommand assumes [start = start title synopsis rollingSummary pageSliceSummary pages], saves previous conversation if applicable\n
   - title = append title\n
   - synopsis = append synopsis\n
-  - rollingSummary = append pageChunkSummary\n
-  - pageChunkSummary = append pageChunkSummary\n
-  - pages = append pageChunk\n
+  - rollingSummary = append pageSliceSummary\n
+  - pageSliceSummary = append pageSliceSummary\n
+  - pages = append pageSlice\n
 - c = continue conversation (if no current conversation assume start default)\n
 - "hard restart"= restart conversation w/only initial prompt, NO save to database\n
   - same subcommands as start\n
@@ -35,7 +35,7 @@ export default async function getUserInput(bzaTxt, readOpts, queryGPT) {
 - toggleQuiz= toggles quiz loop, print boolean value\n
 ##### PRINT TOGGLES: print to console, and enable/disable printing in event loop\n
 - h or help = show options\n
-- pChunk="summary of page chunk" print gpt summary of the current chunk of pages\n
+- pSlice="summary of page slice" print gpt summary of the current slice of pages\n
 - pRoll="rolling summary" print gpt summary of everything up to this point (short term memory)\n
 - narrate= rewrite all output in the voice of a character\n
 - voiceOut= TODO "Voice output" use ?[TTS](https://github.com/coqui-ai/TTS)? to generate voice to narrate gpt response & queries to user\n
@@ -113,7 +113,7 @@ export default async function getUserInput(bzaTxt, readOpts, queryGPT) {
       console.log(defaultQuerySchema.properties.nextAction.description);
       getUserInput(bzaTxt, readOpts, queryGPT);
       break;
-    case "pChunk":
+    case "pSlice":
       console.log(gptPrompt);
       getUserInput(bzaTxt, readOpts, queryGPT);
       break;

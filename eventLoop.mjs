@@ -3,7 +3,7 @@ import fs from "fs";
 import prompt from "prompt";
 import getUserInput from "./getUserInput.mjs";
 import runQuiz from "./lib/runQuiz.mjs";
-import {genChunkSummaryPrompt, genRollingSummaryPrompt, retellChunkAsNarratorPrompt} from "./lib/genPrompts.mjs";
+import {genSliceSummaryPrompt, genRollingSummaryPrompt, retellSliceAsNarratorPrompt} from "./lib/genPrompts.mjs";
 import {
   removeExtraWhitespace,
   devLog,
@@ -19,91 +19,91 @@ export default async function eventLoop(bzaTxt, readOpts, queryGPT, sessionTime)
   const {
     pageNum,
     narrator,
-    chunkSize,
+    sliceSize,
     synopsis,
     rollingSummary,
     isPrintPage,
-    isPrintChunkSummary,
+    isPrintSliceSummary,
     isPrintRollingSummary,
     title
   } = readOpts;
   console.log(
-    `totalPages ${totalPages}, pageNum ${readOpts.pageNumber}, chunkSize ${readOpts.chunkSize}`
+    `totalPages ${totalPages}, pageNum ${readOpts.pageNumber}, sliceSize ${readOpts.sliceSize}`
   );
-  let pageChunkInit = removeExtraWhitespace(
-    bzaTxt.text_pages.slice(pageNum, pageNum + chunkSize).join("")
+  let pageSliceInit = removeExtraWhitespace(
+    bzaTxt.text_pages.slice(pageNum, pageNum + sliceSize).join("")
   );
 
-  devLog("initial pageChunk b4 queryGPT retell chunk", pageChunkInit)
+  devLog("initial pageSlice b4 queryGPT retell slice", pageSliceInit)
 
   //gpt4 code
-  let pageChunk = "";
-  let chunkSummary = "";
-  const getPageChunkQuery = async () => {
+  let pageSlice = "";
+  let sliceSummary = "";
+  const getPageSliceQuery = async () => {
     if (narrator !== "") {
-      const pageChunkQuery = await queryGPT(
-        retellChunkAsNarratorPrompt(narrator, pageChunk, title, synopsis, rollingSummary),
+      const pageSliceQuery = await queryGPT(
+        retellSliceAsNarratorPrompt(narrator, pageSlice, title, synopsis, rollingSummary),
         {}
       );
 
-      if (pageChunkQuery.gptQueryErr !== undefined) {
-        throw new Error(`gpt query error when narrator retelling pageChunk: ${pageChunkQuery.gptQueryErr}`);
+      if (pageSliceQuery.gptQueryErr !== undefined) {
+        throw new Error(`gpt query error when narrator retelling pageSlice: ${pageSliceQuery.gptQueryErr}`);
       } else {
-        console.log("pageChunkQuery.txt", pageChunkQuery.txt);
-        return pageChunkQuery.txt;
+        console.log("pageSliceQuery.txt", pageSliceQuery.txt);
+        return pageSliceQuery.txt;
       }
     } else {
-      return pageChunkInit;
+      return pageSliceInit;
     }
   };
-  const getChunkSummaryQuery = async (pageChunk) => {
-    const chunkSummaryQuery = await queryGPT(
-      genChunkSummaryPrompt(title, synopsis, rollingSummary, pageChunkInit),
+  const getSliceSummaryQuery = async (pageSlice) => {
+    const sliceSummaryQuery = await queryGPT(
+      genSliceSummaryPrompt(title, synopsis, rollingSummary, pageSliceInit),
       {}
     );
 
-    if (chunkSummaryQuery.gptQueryErr !== undefined) {
-      throw new Error(`gpt query error when summarigizing pageChunk: ${chunkSummaryQuery.gptQueryErr}`);
+    if (sliceSummaryQuery.gptQueryErr !== undefined) {
+      throw new Error(`gpt query error when summarigizing pageSlice: ${sliceSummaryQuery.gptQueryErr}`);
     } else {
-      return chunkSummaryQuery.txt;
+      return sliceSummaryQuery.txt;
     }
   };
 
   try {
-    const [pageChunkResult, chunkSummaryResult] = await Promise.all([
-      getPageChunkQuery(),
-      getChunkSummaryQuery()
+    const [pageSliceResult, sliceSummaryResult] = await Promise.all([
+      getPageSliceQuery(),
+      getSliceSummaryQuery()
     ]);
-    pageChunk = pageChunkResult;
-    chunkSummary = chunkSummaryResult;
+    pageSlice = pageSliceResult;
+    sliceSummary = sliceSummaryResult;
   } catch (error) {
     console.error(error.message);
   }
 
   if (isPrintPage) {
     console.log(
-      `Page Chunk`,
-      pageChunk
+      `Page Slice`,
+      pageSlice
     );
   }
-  if (isPrintChunkSummary) {
+  if (isPrintSliceSummary) {
     console.log(
-      `Summary of pages ${pageNum} to ${pageNum + chunkSize}:`,
-      chunkSummary
+      `Summary of pages ${pageNum} to ${pageNum + sliceSize}:`,
+      sliceSummary
     );
   }
   console.log(
     `Summary of pages ${pageNum} to ${pageNum +
-      chunkSize}:`,
+      sliceSize}:`,
     rollingSummary
   );
-  const { quiz, grade } = await runQuiz(pageChunk, readOpts, queryGPT);
+  const { quiz, grade } = await runQuiz(pageSlice, readOpts, queryGPT);
   const userInput = getUserInput(bzaTxt, {...readOpts,
                                           sessionTime,
                                           rollingSummary,
-                                          pageChunkInit,
-                                          pageChunk,
-                                          chunkSummary
+                                          pageSliceInit,
+                                          pageSlice,
+                                          sliceSummary
                                          }, queryGPT);
   switch (userInput.label) {
   case "jump":
@@ -128,10 +128,10 @@ export default async function eventLoop(bzaTxt, readOpts, queryGPT, sessionTime)
         readOpts.synopsis,
         readOpts.narrator,
         readOpts.pageNum,
-        readOpts.chunkSize,
+        readOpts.sliceSize,
         readOpts.rollingSummary,
         readOpts.isPrintPage,
-        readOpts.isPrintChunkSummary,
+        readOpts.isPrintSliceSummary,
         readOpts.isPrintRollingSummary,
         readOpts.filePath,
         readOpts.isImage
@@ -151,7 +151,7 @@ export default async function eventLoop(bzaTxt, readOpts, queryGPT, sessionTime)
   default: // do nothing
   }
 
-  // 2. rollingSummary=queryGPT3(synopsis+pageChunkSummary)
+  // 2. rollingSummary=queryGPT3(synopsis+pageSliceSummary)
   let newRollingSummary = ""
   const rollingSummaryQuery = await queryGPT(
     genRollingSummaryPrompt(title, synopsis, rollingSummary, pageRolling), {}
@@ -164,16 +164,16 @@ export default async function eventLoop(bzaTxt, readOpts, queryGPT, sessionTime)
 
   if (isPrintRollingSummary) {
     console.log(
-      `Summary of pages ${pageNum} to ${pageNum + chunkSize} within context of synopsis:`,
+      `Summary of pages ${pageNum} to ${pageNum + sliceSize} within context of synopsis:`,
       rollingSummary
     );
   }
 
-  if (pageNum + chunkSize < totalPages) {
+  if (pageNum + sliceSize < totalPages) {
     // logSummary.push(rollingSummary);
     return eventLoop(bzaTxt, {
       ...readOpts,
-      pageNum: pageNum + chunkSize
+      pageNum: pageNum + sliceSize
     }, queryGPT, tStamp);
   } else {
     // pageNum+1 becuz zero index
@@ -212,16 +212,16 @@ export default async function eventLoop(bzaTxt, readOpts, queryGPT, sessionTime)
       return "successful loop exit"
     } else {
       // read up to totalPages (but not beyond)
-      // 10 pages total, 0 index pageNum = 8 (actually 9), chunkSize = 2
-      // pageNum + chunksize = total pages
-      // 10 pages total, 0 index pageNum = 8 (actually 9), chunkSize = 3
-      // pageNum + chunksize > total pages
-      const lastChunkSize = totalPages - pageNum - 1
+      // 10 pages total, 0 index pageNum = 8 (actually 9), sliceSize = 2
+      // pageNum + slicesize = total pages
+      // 10 pages total, 0 index pageNum = 8 (actually 9), sliceSize = 3
+      // pageNum + slicesize > total pages
+      const lastSliceSize = totalPages - pageNum - 1
       return eventLoop(bzaTxt, {
         ...readOpts,
         rollingSummary,
-        pageNum: pageNum + lastChunkSize,
-        chunkSize: lastChunkSize
+        pageNum: pageNum + lastSliceSize,
+        sliceSize: lastSliceSize
       }, queryGPT, tStamp);
     }
 

@@ -6,8 +6,8 @@ import prompt from "prompt";
 import { exec, spawn } from "child_process";
 import path from "path";
 import _ from "underscore";
-import pdf_extract from "pdf-extract";
-import { htmlToText } from "html-to-text";
+// import pdf_extract from "pdf-extract";
+// import { htmlToText } from "html-to-text";
 import axios from "axios";
 
 // TODO compute-cosine-similarity
@@ -21,6 +21,7 @@ import { removeExtraWhitespace, devLog, newSessionTime } from "./lib/utils.mjs";
 import { createGPTQuery } from "./lib/createGPTQuery.mjs";
 import db from "./lib/dbConnect.mjs";
 import eventLoop from "./eventLoop.mjs";
+// import { loadBookmarks, loadBookmark, loadPDFTable, insertPDF } from "./lib/dbQueries.mjs";
 import { loadBookmarks, loadBookmark, loadPDFTable, insertPDF } from "./lib/dbQueries.mjs";
 const queryGPT = createGPTQuery(process.env.OPENAI_API_KEY);
 
@@ -70,8 +71,96 @@ async function queryUserTitleSynopsis() {
   return { title, synopsis }
 }
 
-function loadPDF(title, synopsis, tStamp, filePath, isImage, pageNum, chunkSize, rollingSummary, narrator, isPrintPage, isPrintChunkSummary, isPrintRollingSummary) {
-console.log("begin loadPDF", arguments)
+// function loadPDF(title, synopsis, tStamp, filePath, isImage, pageNum, sliceSize, rollingSummary, narrator, isPrintPage, isPrintSliceSummary, isPrintRollingSummary) {
+// console.log("begin loadPDF", arguments)
+//     let processor
+//     if (!isImage) {
+//       // extract text from pdf with searchable text
+//       var pdfOptions = {
+//         type: "text", // extract the actual text in the pdf file
+//         mode: "layout", // optional, only applies to 'text' type. Available modes are 'layout', 'simple', 'table' or 'lineprinter'. Default is 'layout'
+//         ocr_flags: ["--psm 1"], // automatically detect page orientation
+//         enc: "UTF-8", // optional, encoding to use for the text output
+//         clean: true // try prevent tmp directory /usr/run/$userId$ from overfilling with parsed pdf pages (doesn't seem to work)
+//       };
+
+//       processor = pdf_extract(path.resolve(filePath), pdfOptions, function(err) {
+//         console.log("begin loadPDF extract")
+//         // TODO might not spawn background process like we want (interrupts user input)
+//         // spawn("mupdf", ["-Y", 2, args.filepath]);
+//         if (err) {
+//           console.error("failed to extract pdf, err:", err);
+//         }
+//       });
+//     } else {
+//       // extract text from scanned image pdf without searchable text
+//       // console.log("Usage: node thisfile.js the/path/tothe.pdf")
+//       // const absolute_path_to_pdf = path.resolve(process.argv[2])
+//       // if (absolute_path_to_pdf.includes(" ")) throw new Error("will fail for paths w spaces like "+absolute_path_to_pdf)
+//       // const options = {
+//       //   type: 'ocr', // perform ocr to get the text within the scanned image
+//       //   ocr_flags: ['--psm 1'], // automatically detect page orientation
+//       // }
+//       // const processor = pdf_extract(absolute_path_to_pdf, options, ()=>console.log("Starting…"))
+//       // processor.on('complete', data => callback(null, data))
+//       // processor.on('error', callback)
+//       // function callback (error, data) { error ? console.error(error) : console.log(data.text_pages[0]) }
+//     }
+//     processor.on("complete", function(pdfTxt) {
+//       console.log("begin loadPDF extract complete")
+//       console.log("pdf load completed, db insert error on undefined: ", insertPDF(
+//         title,
+//         tStamp,
+//         synopsis,
+//         narrator,
+//         pageNum,
+//         sliceSize,
+//         rollingSummary,
+//         isPrintPage,
+//         isPrintSliceSummary,
+//         isPrintRollingSummary,
+//         filePath,
+//         isImage
+//       ))
+//       const eventLoopEndMsg = eventLoop(pdfTxt, {
+//         fileType: "pdf",
+//         title,
+//         synopsis,
+//         narrator,
+//         pageNum,
+//         sliceSize,
+//         rollingSummary,
+//         isPrintPage,
+//         isPrintSliceSummary,
+//         isPrintRollingSummary
+//       }, queryGPT, tStamp);
+//       console.log(eventLoopEndMsg)
+//     });
+// }
+
+// program
+//   .command("loadPDF")
+//   .argument('<filePath>', 'path to pdf')
+//   .addArgument(new Argument('[isPDFImage]', 'if pdf is just a scanned image wihout delineated text').choices([0, 1]))
+//   .argument('[pageNumber]', 'pageNumber to start on, default 0', 0)
+//   .argument('[sliceSize]', 'how many pages to read at once, default 2 (more=less context window for conversation)', 2)
+//   .argument('[narrator]', 'narrator persona, default none ("")', "")
+//   // .argument('[isPrintPage]', 'whether to print each page of slice, false=0', 0)
+//   .addArgument(new Argument('[isPrintPage]', 'whether to print each page, false=0').choices([0, 1]))
+//   .addArgument(new Argument('[isPrintSliceSummary]', 'whether to print each slice summary, false=0').choices([0, 1]))
+//   .addArgument(new Argument('[isPrintRollingSummary]', 'whether to print each rolling summary, false=0').choices([0, 1]))
+//   // .argument('[narrator]', 'narrator persona, default none ("")', "")
+//   .description("load pdf, create new bookmark, run eventLoop")
+//   .action(async function(filePath, isPDFImage, pageNumber, sliceSize, narrator, isPrintPage, isPrintChunSummary, isPrintRollingSummary) {
+//     const tStamp = newSessionTime()
+//     const {title, synopsis} = await queryUserTitleSynopsis()
+//     loadPDF(title, tStamp, synopsis,
+//             filePath, isPDFImage, pageNumber, sliceSize, "", narrator, isPrintPage, isPrintSliceSummary, isPrintRollingSummary
+//            )
+//   });
+
+function load(title, synopsis, tStamp, filePath, isImage, pageNum, sliceSize, rollingSummary, narrator, isPrintPage, isPrintSliceSummary, isPrintRollingSummary) {
+// console.log("begin loadMD", arguments)
     let processor
     if (!isImage) {
       // extract text from pdf with searchable text
@@ -106,32 +195,29 @@ console.log("begin loadPDF", arguments)
       // function callback (error, data) { error ? console.error(error) : console.log(data.text_pages[0]) }
     }
     processor.on("complete", function(pdfTxt) {
-
       console.log("begin loadPDF extract complete")
       console.log("pdf load completed, db insert error on undefined: ", insertPDF(
-        title,
         tStamp,
         synopsis,
         narrator,
         pageNum,
-        chunkSize,
+        sliceSize,
         rollingSummary,
         isPrintPage,
-        isPrintChunkSummary,
+        isPrintSliceSummary,
         isPrintRollingSummary,
         filePath,
         isImage
       ))
       const eventLoopEndMsg = eventLoop(pdfTxt, {
-        fileType: "pdf",
         title,
         synopsis,
         narrator,
         pageNum,
-        chunkSize,
+        sliceSize,
         rollingSummary,
         isPrintPage,
-        isPrintChunkSummary,
+        isPrintSliceSummary,
         isPrintRollingSummary
       }, queryGPT, tStamp);
       console.log(eventLoopEndMsg)
@@ -143,91 +229,22 @@ program
   .argument('<filePath>', 'path to pdf')
   .addArgument(new Argument('[isPDFImage]', 'if pdf is just a scanned image wihout delineated text').choices([0, 1]))
   .argument('[pageNumber]', 'pageNumber to start on, default 0', 0)
-  .argument('[chunkSize]', 'how many pages to read at once, default 2 (more=less context window for conversation)', 2)
+  .argument('[sliceSize]', 'how many pages to read at once, default 2 (more=less context window for conversation)', 2)
   .argument('[narrator]', 'narrator persona, default none ("")', "")
-  // .argument('[isPrintPage]', 'whether to print each page of chunk, false=0', 0)
+  // .argument('[isPrintPage]', 'whether to print each page of slice, false=0', 0)
   .addArgument(new Argument('[isPrintPage]', 'whether to print each page, false=0').choices([0, 1]))
-  .addArgument(new Argument('[isPrintChunkSummary]', 'whether to print each chunk summary, false=0').choices([0, 1]))
+  .addArgument(new Argument('[isPrintSliceSummary]', 'whether to print each slice summary, false=0').choices([0, 1]))
   .addArgument(new Argument('[isPrintRollingSummary]', 'whether to print each rolling summary, false=0').choices([0, 1]))
   // .argument('[narrator]', 'narrator persona, default none ("")', "")
   .description("load pdf, create new bookmark, run eventLoop")
-  .action(async function(filePath, isPDFImage, pageNumber, chunkSize, narrator, isPrintPage, isPrintChunSummary, isPrintRollingSummary) {
+  .action(async function(filePath, isPDFImage, pageNumber, sliceSize, narrator, isPrintPage, isPrintChunSummary, isPrintRollingSummary) {
     const tStamp = newSessionTime()
     const {title, synopsis} = await queryUserTitleSynopsis()
     loadPDF(title, tStamp, synopsis,
-            filePath, isPDFImage, pageNumber, chunkSize, "", narrator, isPrintPage, isPrintChunkSummary, isPrintRollingSummary
+            filePath, isPDFImage, pageNumber, sliceSize, "", narrator, isPrintPage, isPrintSliceSummary, isPrintRollingSummary
            )
   });
 
-// program
-//   .command("loadEpub")
-//   .argument('<filepath>', 'path to epub')
-//   .argument('[letterPerPage]', 'letters per page, default 1800', 1800)
-//   .description("load epub and create a bookmark")
-//   .action(() => {
-//     console.log("TODO")
-//     // console.log(Object.keys(readingList).map((val, tit) => tit));
-//     // TODO replace with sequel query
-//   });
-
-program
-  .command("loadUrl")
-  .argument('<urlPath>', 'url to load into bookmars db')
-  .argument('[letterPerPage]', 'letters per page, default 1800', 1800)
-  .description("load url and create a bookmark")
-  .action((args) => {
-    console.log("TODO")
-    // console.log(Object.keys(readingList).map((val, tit) => tit));
-    // TODO replace with sequel query
-    axios
-      .get(args.urlPath)
-      .then(function(response) {
-        // handle success
-        // console.log("axios response:", response);
-        const text = htmlToText(response.body, {
-          // selectors: [
-          //   { selector: 'a', options: { baseUrl: 'https://example.com' } },
-          //   { selector: 'a.button', format: 'skip' }
-          // ]
-        });
-        function sliceString(string, lettersPerPage){
-          let text_pages = {};
-          let startIndex = 0;
-          let counter = 0;
-          while (startIndex < string.length){
-            let endIndex = startIndex + lettersPerPage;
-            let page = string.slice(startIndex, endIndex);
-            text_pages[counter] = page;
-            counter += 1
-            startIndex = endIndex;
-          }
-          return text_pages;
-          }
-        // url
-        // TODO chunk returned text pdfTxt.text_pages.slice(pageNum, pageNum + chunkSize).join("")
-        eventLoop({text_pages}, {
-          ...readingOpts
-        }, queryGPT, newSessionTime());
-      })
-      .catch(function(error) {
-        // handle error
-        console.log(error);
-      })
-      .finally(function() {
-        // always executed
-      });
-  });
-
-// .option("-C, --character <character>", "character to reply as")
-// .option("-t, --type <type>", "pdf, TODO html")
-// TODO stick copies of this where appropriate
-// if (process.env.OPENAI_API_KEY === undefined) {
-//    console.log()
-//    process.exit(1);
-// }
-
-// .command('loop [destination]')
-// .description('Run Event Loop')
 
 program
   .command("loadMark")
@@ -243,12 +260,12 @@ program
       if (pData === undefined) {
         console.error("failed to load pdf data from db")
       } else {
-        loadPDF(mData.title, mData.synopsis, tStamp, pData.filePath, pData.isImage, mData.pageNum, mData.chunkSize, mData.rollingSummary, mData.narrator, mData.isPrintPage, mData.isPrintChunkSummary, mData.isPrintRollingSummary)
+        loadPDF(mData.title, mData.synopsis, tStamp, pData.filePath, pData.isImage, mData.pageNum, mData.sliceSize, mData.rollingSummary, mData.narrator, mData.isPrintPage, mData.isPrintSliceSummary, mData.isPrintRollingSummary)
       }
     }
     /* TODO
     if (mData.fileType === "url") {
-      // loadURL(mData.title, mData.synopsis, mData.tStamp, mData.filePath, mData.isImage, mData.pageNumber, mData.chunkSize, mData.narrator, mData.isPrintPage, mData.isPrintChunSummary, mData.isPrintRollingSummary)
+      // loadURL(mData.title, mData.synopsis, mData.tStamp, mData.filePath, mData.isImage, mData.pageNumber, mData.sliceSize, mData.narrator, mData.isPrintPage, mData.isPrintChunSummary, mData.isPrintRollingSummary)
     }
     if (mData.fileType === "html") {
     }
@@ -266,8 +283,8 @@ program
     // pageNum: 0,
     // fileType: 'pdf',
     // isQuiz: 1,
-    // isPrintChunkSummary: 1,
-    // chunkSize: 2,
+    // isPrintSliceSummary: 1,
+    // sliceSize: 2,
     // maxTokens: 2,
     // narrator: 'Mr. T'
 
@@ -275,11 +292,11 @@ program
 
     // pageNum,
     // narrator,
-    // chunkSize,
+    // sliceSize,
     // synopsis,
     // rollingSummary,
     // isPrintPage,
-    // isPrintChunkSummary,
+    // isPrintSliceSummary,
     // isPrintRollingSummary,
     // title
 
@@ -321,7 +338,7 @@ program
   // .option("-n, --narrator <narrator>", "character to narrate as")
   // .option("-p, --page <page>", "current page number (default 0)")
   // .option(
-  //   "-c, --chunkSize <chunkSize>",
+  //   "-c, --sliceSize <sliceSize>",
   //   "number of pages to read at once (default 2)"
   // )
   .action((options) => {
