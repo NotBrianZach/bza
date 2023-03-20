@@ -58,7 +58,7 @@ function loadMD(title, synopsis, tStamp, filePath, pageNum, sliceSize, rollingSu
 }
 
 program
-  .command("loadMarkdown")
+  .command("load")
   .argument('<filePath>', 'path to pdf')
   // .addArgument(new Argument('[charPerPage]', '').choices([0, 1]))
   .argument('[pageNumber]', 'pageNumber to start on, default 0', 0)
@@ -123,10 +123,10 @@ program
   });
 
 program
-  .command("loadBookmark")
+  .command("resume")
   .argument('<bookmarkTitle>', 'title of bookmark to load')
   .argument('[tStamp]', 'tStamp to load from "yyyy-mm dd-hh-mm-ss" (defaults to most recent)', newSessionTime())
-  .description("load bookmark from database into event loop")
+  .description("load bookmark from database into event loop, creates a new bookmark")
   .action(async function(bookmarkTitle, tStamp) {
     devLog(bookmarkTitle, tStamp)
     const bData = loadRecentBookmark(bookmarkTitle)
