@@ -24,7 +24,7 @@ pkgs.stdenv.mkDerivation {
 
   shellHook = ''
     alias bza="DB_PATH=$(pwd)/bookmarks.sq3 $(pwd)/bza.mjs"
-    # alias perco="./node_modules/.bin/percollate"
+    alias percollate="./node_modules/.bin/percollate"
     bza --help
     export IS_DEV=true
     echo "html to markdown"
