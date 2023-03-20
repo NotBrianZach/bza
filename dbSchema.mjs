@@ -11,7 +11,7 @@ const dbMD = db.prepare(
  articleType TEXT not null default 'article',
  title TEXT not null default '',
  synopsis TEXT not null default '',
- tStamp TEXT not null,
+ createdTStamp TEXT not null,
  charPageLength INTEGER not null default ${defaultCharPageLength},
  readerExe text not null default 'vmd',
  readerArgs text,
