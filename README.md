@@ -150,7 +150,7 @@ if toggled on, start after step 2 in Event Loop
 
 ## Command Line Tooling (bza)
 - <> = required argument, [] = optional arguments, ;; = comment (not part of command)
-- bza resume <bookmarkName> [timestamp] ;; (bookmarkName usually = title, defaults to most recent) starts from an old bookmark, creating a new one
+- bza resume <bookmarkName> [timestamp] ;; (bookmarkName usually = title, timesteamp defaults to most recent) resumes from an old bookmark, creating a new one
 - bza load <filepath> [pageNumber] [sliceSize] [charPerPage] [narrator] [isPrintPage] [isPrintSliceSummary] [isPrintRollingSummary] ;; load markdown file, create new bookmark, run eventLoop
 - bza gptDB   ;; for fun, ask gpt, given db schema as pre-prompt, to create db query to either select from or update database, print command, then type yes to run or n to cancel (might not be executable)
 - bza print [numberToPrint] ;; prints bookmarks, 10 by default
@@ -171,6 +171,7 @@ could create another file e.g. alterDB.mjs which has alter table statements if y
 
 ## Future Work
 
+- use https://github.com/NotBrianZach/ink-mde, open browser start server and create notifications that push to markdown viewing/editing client whenever user switches pages
 - cosine similarity (or similar metrics) on book pages vector array option to get relevant context
 - multiplayer repls? (idk websocket or something)
 - categorize query types (other than just summarize/non summarize) and allow for loop and prompt stack creation within repl itself?
