@@ -93,10 +93,11 @@ TODO
 6. parting thoughts from gpt3, call onExit method (cleanup)
 
 ## User Input (Step 3 Event Loop):
+##### NAVIGATE
 - next=continue to next pageSlice,
 - jump=jump to input pageNumber,
 - exit= exit program, save to db
-##### ASK user for input
+##### ASK USER for input
 - start = start conversation w/specified prompt; without subcommand assumes [start = start title synopsis rollingSummary pageSliceSummary pages], saves previous conversation if applicable
   - title = append title
   - synopsis = append synopsis 
