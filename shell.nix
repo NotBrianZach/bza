@@ -18,9 +18,6 @@ pkgs.stdenv.mkDerivation {
     # epub to markdown
     pkgs.pandoc
 
-    # markdown reader
-    pkgs.glow
-
     # (used for installing parsr)
     pkgs.docker
   ];

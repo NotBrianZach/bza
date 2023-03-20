@@ -1,7 +1,7 @@
 import db from "./lib/dbConnect.mjs";
 import { yyyymmddhhmmss } from "./lib/utils.mjs";
 
-function insertSamplePDF(
+function insertSample(
   bTitle,
   filePath,
   isPrintPage,
@@ -13,15 +13,15 @@ function insertSamplePDF(
   jDate
 ) {
   const correctFormatDate = yyyymmddhhmmss(jDate);
-  const dbExamplePDFBook = db.prepare(
-    `insert or replace into pdfs (bTitle, tStamp, filePath) values (?,?,?)`
+  const dbExampleBook = db.prepare(
+    `insert or replace into md (bTitle, tStamp, filePath) values (?,?,?)`
   );
-  dbExamplePDFBook.run(bTitle, correctFormatDate, filePath);
+  dbExampleBook.run(bTitle, correctFormatDate, filePath);
 
-  const dbExamplePDFBookmark = db.prepare(
+  const dbExampleBookmark = db.prepare(
     `insert or replace into bookmarks (bTitle, title, synopsis, isQuiz, isPrintPage, isPrintChunkSummary, narrator, tStamp) values (?,?,?,?,?,?,?,?)`
   );
-  dbExamplePDFBookmark.run(
+  dbExampleBookmark.run(
     bTitle,
     title,
     synopsis,
@@ -33,7 +33,7 @@ function insertSamplePDF(
   );
 }
 const today = new Date();
-insertSamplePDF(
+insertSample(
   "Frankenstein",
   "./library/Frankenstein.pdf",
   1,
@@ -45,7 +45,7 @@ insertSamplePDF(
   today
 );
 
-insertSamplePDF(
+insertSample(
   "World Models: A Path to AGI",
   "./library/a_path_towards_agi.pdf",
   0,

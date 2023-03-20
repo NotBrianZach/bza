@@ -33,7 +33,7 @@ And it stores all this into "bookmarks" from which can resume our session in a l
 
 ## Convert to Markdown
 
-In this system we love markdown because it is close to plaintext and easy to read in raw format for both humans and gpt (it makes prompting easier while still being quite readable with a markdown reader like glow or by converting to html)
+We love markdown because it is close to plaintext and easy to read in raw format for both humans and gpt (it makes prompting easier while still allowing for hyperlinks, latex, and image embedding)
 
 So, before we can add more articles to our library, we need to convert to markdown using best available tools:
 
@@ -44,7 +44,7 @@ So, before we can add more articles to our library, we need to convert to markdo
     - cat path/to/html/file.html > percollate md -o ./library/file.md
 
 - pdf (also images&docx):
-  - for pdfs we will first need to install [parsr](https://github.com/axa-group/Parsr)
+  - for pdfs we use [parsr](https://github.com/axa-group/Parsr) which we'll have to install via docker
   - docker pull axarev/parsr
   - docker run -p 3001:3001 axarev/parsr
   - TODO sophisticated examples and create default parsr config
@@ -134,7 +134,7 @@ TODO
 - delAfterSummary= delete stack of appended prompts
 - maxTokenSummary=change response length/max summary token count (default 2000, max = 4096 includes summary prompts)
 
-### Quiz SubLoop:
+### SubLoops (e.g. quizzes):
 if toggled on, start after step 2 in Event Loop
 1. query gpt3 to generate quiz, print quiz,
 2. get user input for answers
