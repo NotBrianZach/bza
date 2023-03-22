@@ -44,15 +44,17 @@ So, before we can add more articles to our library, we need to convert to markdo
     - cat path/to/html/file.html > percollate md -o ./library/file.md
 
 - pdf (also images&docx):
-  - for pdfs we use [parsr](https://github.com/axa-group/Parsr) which we'll have to install via docker
-  - it's recommended to use parsr gui (parsr api is complex) that the shellhook in shell.nix *should* set up, it can be reached at localhost:8080 if that port was not already in use (if it was you'll probably need to rerun one or more of the following commands, possibly with sudo)
-    - sudo dockerd &
-    - docker pull axarev/parsr
-    - docker pull axarev/parsr-ui-localhost
-    - docker run -p 3001:3001 axarev/parsr &
-    - docker run -t -p 8080:80 axarev/parsr-ui-localhost:latest &
-  - it takes quite some time for this tool to run btw, like a lot, it's a NLP tool
-  - maybe someone should make a LLM version that is way better and works 99% of the time lol (that would be good enough for us)
+  -  https://cloudconvert.com/pdf-to-html unless you really want to fine tune your pdf parsing just use this then see instructions for html, otherwise ...
+    - to parse pdfs into structured text [parsr](https://github.com/axa-group/Parsr) which we'll have to install via docker
+    - it's recommended to use parsr gui (parsr api is complex) that the shellhook in shell.nix *should* set up, it can be reached at localhost:8080 if that port was not already in use (if it was you'll probably need to rerun one or more of the following commands, possibly with sudo)
+      - nix-shell -p docker
+      - dockerd &
+      - docker pull axarev/parsr
+      - docker pull axarev/parsr-ui-localhost
+      - docker run -p 3001:3001 axarev/parsr &
+      - docker run -t -p 8080:80 axarev/parsr-ui-localhost:latest &
+    - it takes quite some time for this tool to run btw, like a lot, it's a NLP tool
+    - maybe someone should make a LLM version that is way better and works 99% of the time lol (that would be good enough for us)
 
 ## TODO Read Markdown
 - to read the markdown we use ink-mde

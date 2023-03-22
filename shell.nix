@@ -7,8 +7,6 @@ pkgs.stdenv.mkDerivation {
     pkgs.nodejs-18_x
 
     pkgs.sqlite
-    # pkgs.electron
-    pkgs.lynx
 
     # use this to fuzzy search db results
     pkgs.fzf
@@ -17,11 +15,9 @@ pkgs.stdenv.mkDerivation {
     # pkgs.screen
     # pkgs.tmux
 
-    # epub to markdown
+    # html oepub to markdown
     pkgs.pandoc
 
-    # (used for installing parsr)
-    pkgs.docker
   ];
 
   shellHook = ''

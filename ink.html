@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html class="auto">
+  <head>
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1.0,user-scalable=0"
+    />
+
+    <title>ink-mde</title>
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Fira+Code&family=Inter:wght@300;400;700&display=swap"
+    />
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      :root {
+        --ink-code-font-family: "Fira Code";
+      }
+
+      body {
+        font-family: "Inter", Helvetica, sans-serif;
+        margin: 0;
+      }
+
+      .dark body {
+        background-color: rgb(24, 24, 27);
+        color: #fafafa;
+      }
+
+      .light body {
+        background-color: #fafafa;
+        color: rgb(24, 24, 27);
+      }
+
+      @media (prefers-color-scheme: dark) {
+        .auto body {
+          background-color: rgb(24, 24, 27);
+          color: #fafafa;
+        }
+      }
+
+      @media (prefers-color-scheme: light) {
+        .auto body {
+          background-color: #fafafa;
+          color: rgb(24, 24, 27);
+        }
+      }
+
+      .app-wrapper {
+        margin: auto;
+        max-width: 120ch;
+      }
+
+      .ink-mde .ink-mde-container {
+        max-width: 80ch;
+      }
+
+      #app .cm-editor.cm-focused {
+        outline: none;
+      }
+
+      html,
+      body,
+      .app-wrapper,
+      #app,
+      .ink-mde {
+        height: 100%;
+      }
+
+      .app-wrapper {
+        padding: 0.5rem;
+      }
+
+      /* .ink-mde-container {
+        max-width: 30rem;
+      } */
+    </style>
+  </head>
+  <body>
+    <div class="app-wrapper">
+      <div id="app"></div>
+    </div>
+    <script type="module">
+      import ink from "/src/index.tsx";
+      import example from "/test/assets/example.md?raw";
+
+      window.ink = ink(document.getElementById("app"), {
+        doc: example,
+        files: {
+          clipboard: true,
+          dragAndDrop: true,
+          handler(files) {
+            // eslint-disable-next-line no-console
+            console.log({ files });
+
+            return URL.createObjectURL(Array.from(files).pop());
+          },
+          injectMarkup: true
+        },
+        interface: {
+          images: true,
+          lists: true,
+          readonly: false,
+          spellcheck: true,
+          toolbar: true
+        },
+        placeholder: "Start typing...",
+        readability: true,
+        toolbar: {
+          upload: true
+        }
+      });
+
+      window.ink.focus();
+
+      window.theme = theme => {
+        document.documentElement.classList.remove("auto", "dark", "light");
+        document.documentElement.classList.add(theme);
+
+        window.ink.reconfigure({ interface: { appearance: theme } });
+      };
+
+      window.imagesShow = () => {
+        window.ink.reconfigure({ interface: { images: true } });
+      };
+
+      window.imagesHide = () => {
+        window.ink.reconfigure({ interface: { images: false } });
+      };
+
+      window.readonly = enabled => {
+        window.ink.reconfigure({ interface: { readonly: enabled } });
+      };
+
+      window.dragAndDrop = enabled => {
+        window.ink.reconfigure({ files: { dragAndDrop: enabled } });
+      };
+    </script>
+  </body>
+</html>
