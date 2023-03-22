@@ -1,4 +1,4 @@
-import db from "./lib/dbConnect.mjs";
+import db from "../lib/dbConnect.mjs";
 
 // md = markdown
 // 1800 is about how many characters are on the page of a typical book

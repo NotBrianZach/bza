@@ -1,5 +1,5 @@
-import db from "./lib/dbConnect.mjs";
-import { yyyymmddhhmmss } from "./lib/utils.mjs";
+import db from "../lib/dbConnect.mjs";
+import { yyyymmddhhmmss } from "../lib/utils.mjs";
 
 function insertSample(
   bTitle,

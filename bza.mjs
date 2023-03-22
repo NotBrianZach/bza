@@ -162,7 +162,7 @@ program
   });
 
 program
-  .command("printBookmarks")
+  .command("print")
   .addArgument(new Argument('[orderBy]', 'order By, default tStamp', "tStamp").choices([
     "tStamp",
     "bTitle",
@@ -173,7 +173,7 @@ program
   ]))
   .argument("[numToPrint]", "max # of bookmarks to print, default 10000", 10000)
 // filter by
-  .description("print bookmarks, (can use fzf to filter/fuzzy search e.g. bza printBookmarks | fzf)")
+  .description("print bookmarks, (can use fzf to filter/fuzzy search e.g. bza print | fzf)")
   .action((orderBy, numToPrint) => {
     // console.log(numToPrint)
     console.log(
