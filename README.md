@@ -45,8 +45,8 @@ So, before we can add more articles to our library, we need to convert to markdo
 
 - pdf (also images&docx):
   -  https://cloudconvert.com/pdf-to-html unless you really want to fine tune your pdf parsing just use this then see instructions for html, otherwise ...
-    - to parse pdfs into structured text [parsr](https://github.com/axa-group/Parsr) which we'll have to install via docker
-    - it's recommended to use parsr gui (parsr api is complex) that the shellhook in shell.nix *should* set up, it can be reached at localhost:8080 if that port was not already in use (if it was you'll probably need to rerun one or more of the following commands, possibly with sudo)
+    - to parse pdfs into structured text locally we'll use [parsr](https://github.com/axa-group/Parsr) which we'll have to install via docker
+    - it's recommended to use parsr gui (parsr api is complex), it can be reached at localhost:8080 if that port was not already in use
       - nix-shell -p docker
       - dockerd &
       - docker pull axarev/parsr
@@ -60,8 +60,6 @@ So, before we can add more articles to our library, we need to convert to markdo
 - to read the markdown we use ink-mde
 
 TODO
-
-
 
 ### Event Loop Setup:
 0. - IF db has an entry for bookName, load title & synopsis & rollingSummary from there
