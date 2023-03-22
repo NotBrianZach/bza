@@ -45,36 +45,18 @@ So, before we can add more articles to our library, we need to convert to markdo
 
 - pdf (also images&docx):
   - for pdfs we use [parsr](https://github.com/axa-group/Parsr) which we'll have to install via docker
-  - docker pull axarev/parsr
-  - docker run -p 3001:3001 axarev/parsr
-  - TODO sophisticated examples and create default parsr config
-  - curl -X POST \
-  http://localhost:3001/api/v1/document \
-  -H 'Content-Type: multipart/form-data' \
-  -F 'file=@/path/to/file.pdf;type=application/pdf' \
-  -F 'config=@/path/to/config.json;type=application/json'
-  
-TODO
-https://github.com/yoshuawuyts/vmd/blob/master/main/create-window.js
-we will read along with vmd (can store position in bookmarks with vmd-window-state.json)
+  - it's recommended to use parsr gui (parsr api is complex) that the shellhook in shell.nix *should* set up, it can be reached at localhost:8080 if that port was not already in use (if it was you'll probably need to rerun one of the following commands, possibly with sudo)
+    - sudo dockerd &
+    - docker pull axarev/parsr
+    - docker pull axarev/parsr-ui-localhost
+    - docker run -p 3001:3001 axarev/parsr &
+    - docker run -t -p 8080:80 axarev/parsr-ui-localhost:latest &
+  - it takes quite some time for this tool to run btw, like a lot, it's a NLP tool
+  - maybe someone should make a LLM version that is way better and works 99% of the time lol (that would be good enough for us)
 
-()
-  file: 'vmd-window-state.json',
+## TODO Read Markdown
+- to read the markdown 
 
-  const fromFile = typeof windowOptions.filePath !== 'undefined';
-  const preloadPath = path.resolve(__dirname, 'client-api.js');
-
-  let win = new BrowserWindow({
-    webPreferences: {
-      preload: preloadPath,
-    },
-    icon: path.join(__dirname, 'assets/app-icon/png/512.png'),
-    width: windowOptions.width,
-    height: windowOptions.height,
-    x: windowOptions.x,
-    y: windowOptions.y,
-    autoHideMenuBar,
-  });
 TODO
 
 
@@ -175,11 +157,7 @@ could create another file e.g. alterDB.mjs which has alter table statements if y
 - cosine similarity (or similar metrics) on book pages vector array option to get relevant context
 - multiplayer repls? (idk websocket or something)
 - categorize query types (other than just summarize/non summarize) and allow for loop and prompt stack creation within repl itself?
-- repl command history&fuzzy search, somehow
-
-
-## Design Decisions
-
+- repl command history&fuzzy search, somehow (maybe via some term emulator shell.nix install?)
 
 ## Naming
 The naive/correct pronounciation sounds like pizza, which is typically sliced into pieces just like we are sliceing up books. Book pizza.

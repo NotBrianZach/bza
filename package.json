@@ -27,6 +27,7 @@
     "enquirer": "^2.3.6",
     "fetch-ponyfill": "^7.1.0",
     "html-to-text": "^9.0.4",
+    "ink-mde": "^0.24.0",
     "openai": "^3.2.1",
     "pdf-extract": "^1.0.11",
     "percollate": "^4.0.2",

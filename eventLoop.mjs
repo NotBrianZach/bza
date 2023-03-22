@@ -117,34 +117,47 @@ export default async function eventLoop(bzaTxt, readOpts, queryGPT, sessionTime)
     }
     break
   case "exit":
+      return `Event Loop End, saving bookmark result: ${insertMD(
+         readOpts.title,
+         readOpts.tStamp,
+         readOpts.synopsis,
+         readOpts.narrator,
+         readOpts.pageNum,
+         readOpts.sliceSize,
+         readOpts.rollingSummary,
+         readOpts.isPrintPage,
+         readOpts.isPrintSliceSummary,
+         readOpts.isPrintRollingSummary,
+         readOpts.filePath
+)}``
     //TODO cases to handle
     // readOpts
-    switch (readOpts.fileType) {
-      // pdfs
-      case "pdf":
-      return `Event Loop End, saving pdf bookmark result: ${insertPDF(
-        readOpts.title,
-        readOpts.tStamp,
-        readOpts.synopsis,
-        readOpts.narrator,
-        readOpts.pageNum,
-        readOpts.sliceSize,
-        readOpts.rollingSummary,
-        readOpts.isPrintPage,
-        readOpts.isPrintSliceSummary,
-        readOpts.isPrintRollingSummary,
-        readOpts.filePath,
-        readOpts.isImage
-      )}`
-    case "url":
-      return "TODO handle url save in event loop, wasn't able to save bookmark to DB"
-    case "html":
-      return "TODO handle html save in event loop, wasn't able to save bookmark to DB"
-    case "plaintxt":
-      return "TODO handle plaintxt save in event loop, wasn't able to save bookmark to DB"
-      default:
-      return "Error: file type not passed into event loop, wasn't able to save bookmark to DB"
-    }
+    // switch (readOpts.fileType) {
+    //   // pdfs
+    //   case "pdf":
+    //   return `Event Loop End, saving pdf bookmark result: ${insertPDF(
+    //     readOpts.title,
+    //     readOpts.tStamp,
+    //     readOpts.synopsis,
+    //     readOpts.narrator,
+    //     readOpts.pageNum,
+    //     readOpts.sliceSize,
+    //     readOpts.rollingSummary,
+    //     readOpts.isPrintPage,
+    //     readOpts.isPrintSliceSummary,
+    //     readOpts.isPrintRollingSummary,
+    //     readOpts.filePath,
+    //     readOpts.isImage
+    //   )}`
+    // case "url":
+    //   return "TODO handle url save in event loop, wasn't able to save bookmark to DB"
+    // case "html":
+    //   return "TODO handle html save in event loop, wasn't able to save bookmark to DB"
+    // case "plaintxt":
+    //   return "TODO handle plaintxt save in event loop, wasn't able to save bookmark to DB"
+    //   default:
+    //   return "Error: file type not passed into event loop, wasn't able to save bookmark to DB"
+    // }
 
     return "successful loop exit"
     break
