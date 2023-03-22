@@ -41,7 +41,9 @@ So, before we can add more articles to our library, we need to convert to markdo
   - a website
     - curl https://example.com | percollate md -o ./library/file.md -u https://example.com -
   - local html we downloaded
-    - cat path/to/html/file.html > percollate md -o ./library/file.md
+    - cat ./library/a_path_towards_agi.html | percollate md --output ./library/a_path_towards_agi.md
+- epub
+ - pandoc -i /path/to/file.epub -o /path/to/output.md
 
 - pdf (also images&docx):
   -  https://cloudconvert.com/pdf-to-html unless you really want to fine tune your pdf parsing just use this then see instructions for html, otherwise ...
