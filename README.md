@@ -45,7 +45,7 @@ So, before we can add more articles to our library, we need to convert to markdo
 
 - pdf (also images&docx):
   - for pdfs we use [parsr](https://github.com/axa-group/Parsr) which we'll have to install via docker
-  - it's recommended to use parsr gui (parsr api is complex) that the shellhook in shell.nix *should* set up, it can be reached at localhost:8080 if that port was not already in use (if it was you'll probably need to rerun one of the following commands, possibly with sudo)
+  - it's recommended to use parsr gui (parsr api is complex) that the shellhook in shell.nix *should* set up, it can be reached at localhost:8080 if that port was not already in use (if it was you'll probably need to rerun one or more of the following commands, possibly with sudo)
     - sudo dockerd &
     - docker pull axarev/parsr
     - docker pull axarev/parsr-ui-localhost
@@ -55,7 +55,7 @@ So, before we can add more articles to our library, we need to convert to markdo
   - maybe someone should make a LLM version that is way better and works 99% of the time lol (that would be good enough for us)
 
 ## TODO Read Markdown
-- to read the markdown 
+- to read the markdown we use ink-mde
 
 TODO
 
