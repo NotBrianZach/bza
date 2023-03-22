@@ -129,7 +129,7 @@ export default async function eventLoop(bzaTxt, readOpts, queryGPT, sessionTime)
          readOpts.isPrintSliceSummary,
          readOpts.isPrintRollingSummary,
          readOpts.filePath
-)}``
+)}`
     //TODO cases to handle
     // readOpts
     // switch (readOpts.fileType) {

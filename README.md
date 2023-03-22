@@ -98,9 +98,7 @@ TODO
 ##### PRINT TOGGLES: print to console, and enable/disable printing in event loop
 - h or help = show options
 - pSlice="summary of page slice" print gpt summary of the current slice of pages
-- pRoll="rolling summary" print gpt summary of everything up to this point (short term memory)
-- narrate= rewrite all output in the voice of a character
-- voiceOut= TODO "Voice output" use ?[TTS](https://github.com/coqui-ai/TTS)? to generate voice to narrate gpt response & queries to user
+- pRoll="rolling summary" print gpt summary of everything up to this point (short term memory) - narrate= rewrite all output in the voice of a character - voiceOut= TODO "Voice output" use ?[TTS](https://github.com/coqui-ai/TTS)? to generate voice to narrate gpt response & queries to user
 - voiceIn= TODO "voice input"  use ?talon? to allow voice input
 ##### LLM PROMPT MODIFICATION: change all non-summary llm queries going forward
 - before= get user input, prepend to conversation prompt
@@ -155,6 +153,8 @@ could create another file e.g. alterDB.mjs which has alter table statements if y
 
 ## Future Work
 
+- handle embedded images vs linked images
+- multimodality?
 - use https://github.com/NotBrianZach/ink-mde, open browser start server and create notifications that push to markdown viewing/editing client whenever user switches pages
 - cosine similarity (or similar metrics) on book pages vector array option to get relevant context
 - multiplayer repls? (idk websocket or something)

@@ -18,11 +18,70 @@ import { createGPTQuery } from "./lib/createGPTQuery.mjs";
 import db from "./lib/dbConnect.mjs";
 import eventLoop from "./eventLoop.mjs";
 import { loadBookmarksBy, loadBookmark, insertMD } from "./lib/dbQueries.mjs";
+
+import MarkdownIt from 'markdown-it';
 const queryGPT = createGPTQuery(process.env.OPENAI_API_KEY);
 
 function loadMD(title, synopsis, tStamp, filePath, pageNum, sliceSize, rollingSummary, narrator, isPrintPage, isPrintSliceSummary, isPrintRollingSummary, articleType) {
   devLog("begin loadMD", arguments)
   fs.readFile(filePath,(mdTxt) => {
+    // Initialize the Markdown parser (to save image files that may be base64 embedded in the markdown (which will get in the way of gpt reading the text))
+    const md = new MarkdownIt();
+
+    //Parse the Markdown and extract the image URLs
+    const imageUrls = [];
+    md.renderer.rules.image = (tokens, idx) => {
+      const url = tokens[idx].attrGet('src');
+      if (url) {
+        imageUrls.push(url);
+      }
+      return '';
+    };
+
+    // Render the Markdown to extract image URLs
+    md.render(mdTxt);
+
+    // Download and save the images
+    const downloadAndSaveImage = async (url, outputPath) => {
+      try {
+        const response = await axios({
+          method: 'get',
+          url,
+          responseType: 'stream',
+        });
+
+        const writer = fs.createWriteStream(outputPath);
+        response.data.pipe(writer);
+
+        return new Promise((resolve, reject) => {
+          writer.on('finish', resolve);
+          writer.on('error', reject);
+        });
+      } catch (error) {
+        console.error('Error downloading image:', error);
+      }
+    };
+
+    const saveImages = async () => {
+      for (const [index, url] of imageUrls.entries()) {
+        const extension = path.extname(url);
+        const outputPath = `image${index + 1}${extension}`;
+        await downloadAndSaveImage(url, outputPath);
+        console.log(`Downloaded and saved ${url} as ${outputPath}`);
+      }
+    };
+
+    saveImages();
+    function removeImagesFromMarkdown(markdown) {
+      // Regular expression to match Markdown base64 image syntax
+      const imageRegex = /!\[.*?\]\(.*?\)/g;
+
+      // Replace all image occurrences with an empty string
+      const strippedMarkdown = markdown.replace(imageRegex, '');
+
+      return strippedMarkdown;
+    }
+    const markdownStrippedOfImages = removeImagesFromMarkdown(mdTxt)
     console.log("markdown read completed")
     const insertReturnStatus = insertMD(
       tStamp,
@@ -42,7 +101,7 @@ function loadMD(title, synopsis, tStamp, filePath, pageNum, sliceSize, rollingSu
     } else {
       devLog("insertMD return status", insertReturnStatus)
     }
-    const eventLoopEndMsg = eventLoop(pdfTxt, {
+    const eventLoopEndMsg = eventLoop(markdownStrippedOfImages, {
       title,
       synopsis,
       narrator,
