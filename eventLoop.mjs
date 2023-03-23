@@ -168,12 +168,12 @@ export default async function eventLoop(bzaTxt, readOpts, queryGPT, sessionTime)
   // 2. rollingSummary=queryGPT3(synopsis+pageSliceSummary)
   let newRollingSummary = ""
   const rollingSummaryQuery = await queryGPT(
-    genRollingSummaryPrompt(title, synopsis, rollingSummary, pageRolling), {}
+    genRollingSummaryPrompt(title, synopsis, rollingSummary, pageSlice), {}
   )
   if (rollingSummaryQuery.gptQueryErr !== undefined) {
     return `gpt query error when summarizing rollingSummary : ${rollingSummaryQuery.gptQueryErr}`
   } else {
-    newRollingSummary = pageRollingQuery.txt
+    newRollingSummary = rollingSummaryQuery.txt
   }
 
   if (isPrintRollingSummary) {

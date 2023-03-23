@@ -173,6 +173,8 @@ and bza is a short three letter word which is not too overloaded and can be invo
 Makes total sense.
 
 ## Inspiration
+if interested in this project you may find this interesting as well:
+https://github.com/thunlp/PromptPapers
 
 i have kept, for a couple years, a reading list with commands like
 

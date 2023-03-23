@@ -115,12 +115,6 @@ function loadMD(title, synopsis, tStamp, filePath, pageNum, sliceSize, rollingSu
       devLog("insertMD return status", insertReturnStatus)
     }
 
-    function sliceMarkdownIntoPages(markdownToSlice) {
-      markdown
-      sliceSize
-
-
-    }
     function splitStringIntoSubstringsLengthN(str, n) {
       const substrings = [];
       for (let i = 0; i < str.length; i += n) {
