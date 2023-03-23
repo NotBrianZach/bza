@@ -3,7 +3,7 @@
 import { program, Option, Argument } from "commander";
 import fs from "fs";
 import prompt from "prompt";
-import { exec, spawn } from "child_process";
+import { exec, fork, spawn } from "child_process";
 import path from "path";
 import _ from "underscore";
 import axios from "axios";
@@ -17,10 +17,11 @@ import { removeExtraWhitespace, devLog, newSessionTime } from "./lib/utils.mjs";
 import { createGPTQuery } from "./lib/createGPTQuery.mjs";
 import db from "./lib/dbConnect.mjs";
 import eventLoop from "./eventLoop.mjs";
-import { loadBookmarksBy, loadBookmark, insertMD } from "./lib/dbQueries.mjs";
+import { loadBookmarksBy, loadBookmark, insertMD, loadMDTable } from "./lib/dbQueries.mjs";
 
 import MarkdownIt from 'markdown-it';
 const queryGPT = createGPTQuery(process.env.OPENAI_API_KEY);
+
 
 function loadMD(title, synopsis, tStamp, filePath, pageNum, sliceSize, rollingSummary, narrator, isPrintPage, isPrintSliceSummary, isPrintRollingSummary, articleType) {
   devLog("begin loadMD", arguments)
@@ -101,6 +102,7 @@ function loadMD(title, synopsis, tStamp, filePath, pageNum, sliceSize, rollingSu
     } else {
       devLog("insertMD return status", insertReturnStatus)
     }
+    fork("markdownViewerServer.mjs", ["argument"], { cwd: process.cwd() });
     const eventLoopEndMsg = eventLoop(markdownStrippedOfImages, {
       title,
       synopsis,
@@ -183,12 +185,12 @@ program
 
 program
   .command("resume")
-  .argument('<bookmarkTitle>', 'title of bookmark to load')
+  .argument('[bookmarkTitle]', 'title of bookmark to load (defaults to most recent)')
   .argument('[tStamp]', 'tStamp to load from "yyyy-mm dd-hh-mm-ss" (defaults to most recent)', newSessionTime())
   .description("load bookmark from database into event loop, creates a new bookmark")
   .action(async function(bookmarkTitle, tStamp) {
     devLog(bookmarkTitle, tStamp)
-    const bData = loadRecentBookmark(bookmarkTitle)
+    const bData = loadBookmark(bookmarkTitle)
     devLog("bookmark data", bData)
     const mData = loadMDTable(bookmarkTitle)
     loadMD(bData.title, bData.synopsis, tStamp, mData.filePath, bData.pageNum, bData.sliceSize, bData.rollingSummary, bData.narrator, bData.isPrintPage, bData.isPrintSliceSummary, bData.isPrintRollingSummary)

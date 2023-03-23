@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 
-node dbSchema.mjs
-node dbExamples.mjs
+DB_PATH=$(pwd)/bookmarks.sq3 node dbSchema.mjs
+DB_PATH=$(pwd)/bookmarks.sq3 node dbExamples.mjs

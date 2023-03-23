@@ -25,6 +25,7 @@
     "compute-cosine-similarity": "^1.0.0",
     "electron": "^23.1.4",
     "enquirer": "^2.3.6",
+    "express": "^4.18.2",
     "fetch-ponyfill": "^7.1.0",
     "html-to-text": "^9.0.4",
     "ink-mde": "^0.24.0",

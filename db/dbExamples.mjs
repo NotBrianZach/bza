@@ -14,22 +14,21 @@ function insertSample(
 ) {
   const correctFormatDate = yyyymmddhhmmss(jDate);
   const dbExampleBook = db.prepare(
-    `insert or replace into md (bTitle, tStamp, filePath) values (?,?,?)`
+    `insert or replace into md (createdTStamp, title, synopsis, filePath) values (?,?,?,?)`
   );
-  dbExampleBook.run(bTitle, correctFormatDate, filePath);
+  dbExampleBook.run(correctFormatDate, title, synopsis, filePath);
 
   const dbExampleBookmark = db.prepare(
-    `insert or replace into bookmarks (bTitle, title, synopsis, isQuiz, isPrintPage, isPrintChunkSummary, narrator, tStamp) values (?,?,?,?,?,?,?,?)`
+    `insert or replace into bookmarks (bTitle, isQuiz, isPrintPage, isPrintChunkSummary, narrator, tStamp, filePath) values (?,?,?,?,?,?,?)`
   );
   dbExampleBookmark.run(
     bTitle,
-    title,
-    synopsis,
     isQuiz,
     isPrintPage,
     isPrintChunkSummary,
     narrator,
-    correctFormatDate
+    correctFormatDate,
+    filePath
   );
 }
 const today = new Date();
