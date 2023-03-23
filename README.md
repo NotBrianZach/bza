@@ -153,13 +153,14 @@ could create another file e.g. alterDB.mjs which has alter table statements if y
 
 ## Future Work
 
-- handle embedded images vs linked images
+- handle embedded images vs linked images (wip)
+- use https://github.com/NotBrianZach/ink-mde, open browser start server and create notifications that push to markdown viewing/editing client whenever user switches pages (wip)
+- cosine similarity (or similar metrics) on book pages vector array option to get relevant context (wip)
+- categorize query types (other than just summarize/non summarize) and allow for loop and prompt stack creation within repl itself? (wip)
 - multimodality?
-- use https://github.com/NotBrianZach/ink-mde, open browser start server and create notifications that push to markdown viewing/editing client whenever user switches pages
-- cosine similarity (or similar metrics) on book pages vector array option to get relevant context
 - multiplayer repls? (idk websocket or something)
-- categorize query types (other than just summarize/non summarize) and allow for loop and prompt stack creation within repl itself?
 - repl command history&fuzzy search, somehow (maybe via some term emulator shell.nix install?)
+- package for nixos,brew,apt
 
 ## Naming
 The naive/correct pronounciation sounds like pizza, which is typically sliced into pieces just like we are sliceing up books. Book pizza.
