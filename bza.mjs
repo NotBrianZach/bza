@@ -23,7 +23,7 @@ import MarkdownIt from 'markdown-it';
 const queryGPT = createGPTQuery(process.env.OPENAI_API_KEY);
 
 
-function loadMD(title, synopsis, tStamp, filePath, pageNum, sliceSize, rollingSummary, narrator, isPrintPage, isPrintSliceSummary, isPrintRollingSummary, articleType) {
+function loadMD(title, synopsis, tStamp, filePath, pageNum, sliceSize, rollingSummary, narrator, isPrintPage, isPrintSliceSummary, isPrintRollingSummary, articleType, charPageLength) {
   devLog("begin loadMD", arguments)
   console.log(filePath.substring(filePath.length - 2))
   if (filePath.substring(filePath.length - 2) !== "md") {
@@ -78,7 +78,7 @@ function loadMD(title, synopsis, tStamp, filePath, pageNum, sliceSize, rollingSu
         const extension = path.extname(url);
         const outputPath = `image${index + 1}${extension}`;
         await downloadAndSaveImage(url, outputPath);
-        console.log(`Downloaded and saved ${url} as ${outputPath}`);
+        console.log(`Downloaded and saved image?url as ${outputPath}`);
       }
     };
 
@@ -114,9 +114,25 @@ function loadMD(title, synopsis, tStamp, filePath, pageNum, sliceSize, rollingSu
     } else {
       devLog("insertMD return status", insertReturnStatus)
     }
+
+    function sliceMarkdownIntoPages(markdownToSlice) {
+      markdown
+      sliceSize
+
+
+    }
+    function splitStringIntoSubstringsLengthN(str, n) {
+      const substrings = [];
+      for (let i = 0; i < str.length; i += n) {
+        substrings.push(str.substring(i, i + n));
+      }
+      return substrings;
+    }
+
+    const finalMarkdownArray = splitStringIntoSubstringsLengthN(markdownStrippedOfImages, sliceSize)
+
     fork("markdownViewerServer.mjs", ["argument"], { cwd: process.cwd() });
-    devLog("typeof markdownStrippedOfImages", typeof markdownStrippedOfImages)
-    const eventLoopEndMsg = eventLoop(markdownStrippedOfImages, {
+    const eventLoopEndMsg = eventLoop(finalMarkdownArray, {
       title,
       synopsis,
       narrator,
@@ -139,7 +155,7 @@ program
   .addArgument(new Argument('[articleType]', 'type of article').choices(["book", "arxiv preprint", "research paper", "monograph", "news", "dnd setting"]))
   .argument('[pageNumber]', 'pageNumber to start on, default 0', 0)
   .argument('[sliceSize]', 'how many pages to read at once, default 2 (more=less context window for conversation)', 2)
-  .argument('[charPerPage]', 'characters per page default 1800', 1800)
+  .argument('[charPageLength]', 'characters per page default 1800', 1800)
   .argument('[narrator]', 'narrator persona, default none ("")', "")
   // .argument('[isPrintPage]', 'whether to print each page of slice, false=0', 0)
   .addArgument(new Argument('[isPrintPage]', 'whether to print each page, false=0').choices([0, 1]))
@@ -147,7 +163,7 @@ program
   .addArgument(new Argument('[isPrintRollingSummary]', 'whether to print each rolling summary, false=0').choices([0, 1]))
   // .argument('[narrator]', 'narrator persona, default none ("")', "")
   .description("load markdown file, create new bookmark, run eventLoop")
-  .action(async function(filePath, articleType, pageNumber, sliceSize, charPerPage, narrator, isPrintPage, isPrintChunSummary, isPrintRollingSummary) {
+  .action(async function(filePath, articleType, pageNumber, sliceSize, charPageLength, narrator, isPrintPage, isPrintChunSummary, isPrintRollingSummary) {
     const tStamp = newSessionTime()
     async function queryUserTitleSynopsis() {
       var titlePromptSchema = {
@@ -174,7 +190,7 @@ program
     }
     const {title, synopsis} = await queryUserTitleSynopsis()
     loadMD(title, tStamp, synopsis,
-            filePath, pageNumber, sliceSize, "", narrator, isPrintPage, isPrintSliceSummary, isPrintRollingSummary, articleType
+           filePath, pageNumber, sliceSize, "", narrator, isPrintPage, isPrintSliceSummary, isPrintRollingSummary, articleType, charPageLength
            )
   });
 
@@ -209,7 +225,7 @@ program
     devLog("bookmark data", bData)
     const mData = loadMDTable(bData.filePath)
     devLog("markdown data", mData)
-    loadMD(mData.title, mData.synopsis, tStamp, mData.filePath, bData.pageNum, bData.sliceSize, bData.rollingSummary, bData.narrator, bData.isPrintPage, bData.isPrintSliceSummary, bData.isPrintRollingSummary, mData.articleType)
+    loadMD(mData.title, mData.synopsis, tStamp, mData.filePath, bData.pageNum, bData.sliceSize, bData.rollingSummary, bData.narrator, bData.isPrintPage, bData.isPrintSliceSummary, bData.isPrintRollingSummary, mData.articleType, mData.charPageLength)
   })
 
 program .command("gptDB")

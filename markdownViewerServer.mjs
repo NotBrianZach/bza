@@ -10,6 +10,10 @@ console.log = function(data) {
   logStream.write(data + "\n");
 };
 
+console.error = function(data) {
+  logStream.write("error" + data + "\n");
+};
+
 // use the middleware to log requests to the file
 app.use((req, res, next) => {
   const logEntry = `${new Date().toISOString()} - ${req.method} ${req.url}`;
