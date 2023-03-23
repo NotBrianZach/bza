@@ -25,7 +25,17 @@ const queryGPT = createGPTQuery(process.env.OPENAI_API_KEY);
 
 function loadMD(title, synopsis, tStamp, filePath, pageNum, sliceSize, rollingSummary, narrator, isPrintPage, isPrintSliceSummary, isPrintRollingSummary, articleType) {
   devLog("begin loadMD", arguments)
-  fs.readFile(filePath,(mdTxt) => {
+  console.log(filePath.substring(filePath.length - 2))
+  if (filePath.substring(filePath.length - 2) !== "md") {
+    console.error("error, not a markdown file, file must end with .md suffix")
+    return
+  }
+  console.log(filePath)
+  fs.readFile(filePath,function(err, mdTxt) {
+    if (err !== null) {
+      console.log(`error ${err} reading from filePath ${filePath}`)
+    }
+    devLog("fsreadfile arguments", arguments)
     // Initialize the Markdown parser (to save image files that may be base64 embedded in the markdown (which will get in the way of gpt reading the text))
     const md = new MarkdownIt();
 
@@ -105,6 +115,7 @@ function loadMD(title, synopsis, tStamp, filePath, pageNum, sliceSize, rollingSu
       devLog("insertMD return status", insertReturnStatus)
     }
     fork("markdownViewerServer.mjs", ["argument"], { cwd: process.cwd() });
+    devLog("typeof markdownStrippedOfImages", typeof markdownStrippedOfImages)
     const eventLoopEndMsg = eventLoop(markdownStrippedOfImages, {
       title,
       synopsis,

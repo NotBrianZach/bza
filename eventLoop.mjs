@@ -30,6 +30,7 @@ export default async function eventLoop(bzaTxt, readOpts, queryGPT, sessionTime)
   console.log(
     `totalPages ${totalPages}, pageNum ${readOpts.pageNumber}, sliceSize ${readOpts.sliceSize}`
   );
+  devLog("eventLoop arguments", arguments)
   let pageSliceInit = removeExtraWhitespace(
     bzaTxt.slice(pageNum, pageNum + sliceSize).join("")
   );

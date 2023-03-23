@@ -35,6 +35,7 @@
     "percollate": "^4.0.2",
     "prettier": "^2.8.4",
     "prompt": "^1.3.0",
-    "underscore": "^1.13.6"
+    "underscore": "^1.13.6",
+    "winston": "^3.8.2"
   }
 }
