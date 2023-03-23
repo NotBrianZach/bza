@@ -8,28 +8,30 @@ function insertSample(
   title,
   synopsis,
   isQuiz,
-  isPrintChunkSummary,
+  isPrintSliceSummary,
   narrator,
-  jDate
+  jDate,
+  articleType
 ) {
   const correctFormatDate = yyyymmddhhmmss(jDate);
   const dbExampleBook = db.prepare(
-    `insert or replace into md (createdTStamp, title, synopsis, filePath) values (?,?,?,?)`
+    `insert or replace into md (createdTStamp, title, synopsis, filePath, articleType) values (?,?,?,?,?)`
   );
-  dbExampleBook.run(correctFormatDate, title, synopsis, filePath);
+  dbExampleBook.run(correctFormatDate, title, synopsis, filePath, articleType);
 
-  const dbExampleBookmark = db.prepare(
-    `insert or replace into bookmarks (bTitle, isQuiz, isPrintPage, isPrintChunkSummary, narrator, tStamp, filePath) values (?,?,?,?,?,?,?)`
-  );
-  dbExampleBookmark.run(
-    bTitle,
-    isQuiz,
-    isPrintPage,
-    isPrintChunkSummary,
-    narrator,
-    correctFormatDate,
-    filePath
-  );
+  const dbExampleBookmark = db
+    .prepare(
+      `insert or replace into bookmarks (bTitle, isQuiz, isPrintPage, isPrintSliceSummary, narrator, tStamp, filePath) values (?,?,?,?,?,?,?)`
+    )
+    .run(
+      bTitle,
+      isQuiz,
+      isPrintPage,
+      isPrintSliceSummary,
+      narrator,
+      correctFormatDate,
+      filePath
+    );
 }
 const today = new Date();
 insertSample(
@@ -41,7 +43,8 @@ insertSample(
   1,
   1,
   "Mr. T",
-  today
+  today,
+  "book"
 );
 
 insertSample(
@@ -53,5 +56,6 @@ insertSample(
   1,
   1,
   "",
-  today
+  today,
+  "arxiv preprint"
 );

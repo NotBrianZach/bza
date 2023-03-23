@@ -22,7 +22,7 @@ pkgs.stdenv.mkDerivation {
 
   shellHook = ''
     alias bza="DB_PATH=$(pwd)/db/bookmarks.sq3 $(pwd)/bza.mjs"
-    alias percollate="./node_modules/.bin/percollate"
+    alias percollate="$(pwd)/node_modules/.bin/percollate"
     # alias vmd="./node_modules/.bin/vmd"
 # rmd () {
 #   pandoc $1 | lynx -stdin

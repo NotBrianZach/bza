@@ -33,7 +33,7 @@ And it stores all this into "bookmarks" from which can resume our session in a l
 
 ## Convert to Markdown
 
-We love markdown because it is close to plaintext and easy to read in raw format for both humans and gpt (it makes prompting easier while still allowing for hyperlinks, latex, and image embedding)
+We love markdown because it is close to plaintext and easy to read in raw format for both humans and gpt. It makes copy&paste into prompt, and shell scripting easy while still allowing for hyperlinks, latex, and image embedding.
 
 So, before we can add more articles to our library, we need to convert to markdown using best available tools:
 
@@ -80,7 +80,7 @@ TODO
 ##### NAVIGATE
 - next=continue to next pageSlice,
 - jump=jump to input pageNumber,
-- exit= exit program, save to db
+- exit= exit program, save db bookmark
 ##### ASK USER for input
 - start = start conversation w/specified prompt; without subcommand assumes [start = start title synopsis rollingSummary pageSliceSummary pages], saves previous conversation if applicable
   - title = append title

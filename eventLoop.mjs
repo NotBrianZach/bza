@@ -15,7 +15,7 @@ import path from "path";
 const IS_DEV = process.env.IS_DEV
 const nowTime = new Date();
 export default async function eventLoop(bzaTxt, readOpts, queryGPT, sessionTime) {
-  const totalPages = bzaTxt.text_pages.length;
+  const totalPages = bzaTxt.length;
   const {
     pageNum,
     narrator,
@@ -31,7 +31,7 @@ export default async function eventLoop(bzaTxt, readOpts, queryGPT, sessionTime)
     `totalPages ${totalPages}, pageNum ${readOpts.pageNumber}, sliceSize ${readOpts.sliceSize}`
   );
   let pageSliceInit = removeExtraWhitespace(
-    bzaTxt.text_pages.slice(pageNum, pageNum + sliceSize).join("")
+    bzaTxt.slice(pageNum, pageNum + sliceSize).join("")
   );
 
   devLog("initial pageSlice b4 queryGPT retell slice", pageSliceInit)

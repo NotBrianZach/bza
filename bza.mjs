@@ -40,7 +40,7 @@ function loadMD(title, synopsis, tStamp, filePath, pageNum, sliceSize, rollingSu
     };
 
     // Render the Markdown to extract image URLs
-    md.render(mdTxt);
+    md.render(mdTxt.toString());
 
     // Download and save the images
     const downloadAndSaveImage = async (url, outputPath) => {
@@ -82,20 +82,22 @@ function loadMD(title, synopsis, tStamp, filePath, pageNum, sliceSize, rollingSu
 
       return strippedMarkdown;
     }
-    const markdownStrippedOfImages = removeImagesFromMarkdown(mdTxt)
+    const markdownStrippedOfImages = removeImagesFromMarkdown(mdTxt.toString())
     console.log("markdown read completed")
+
     const insertReturnStatus = insertMD(
-      tStamp,
-      synopsis,
-      narrator,
-      pageNum,
-      sliceSize,
-      rollingSummary,
-      isPrintPage,
-      isPrintSliceSummary,
-      isPrintRollingSummary,
       filePath,
+      title,
+      synopsis,
+      tStamp,
       articleType
+      // narrator,
+      // pageNum,
+      // sliceSize,
+      // rollingSummary,
+      // isPrintPage,
+      // isPrintSliceSummary,
+      // isPrintRollingSummary,
     )
     if (insertReturnStatus === undefined) {
       console.log("db insert error markdown read completed")
@@ -122,6 +124,8 @@ program
   .command("load")
   .argument('<filePath>', 'path to pdf')
   // .addArgument(new Argument('[charPerPage]', '').choices([0, 1]))
+// TODO add more article types
+  .addArgument(new Argument('[articleType]', 'type of article').choices(["book", "arxiv preprint", "research paper", "monograph", "news", "dnd setting"]))
   .argument('[pageNumber]', 'pageNumber to start on, default 0', 0)
   .argument('[sliceSize]', 'how many pages to read at once, default 2 (more=less context window for conversation)', 2)
   .argument('[charPerPage]', 'characters per page default 1800', 1800)
@@ -132,7 +136,7 @@ program
   .addArgument(new Argument('[isPrintRollingSummary]', 'whether to print each rolling summary, false=0').choices([0, 1]))
   // .argument('[narrator]', 'narrator persona, default none ("")', "")
   .description("load markdown file, create new bookmark, run eventLoop")
-  .action(async function(filePath,  pageNumber, sliceSize, charPerPage, narrator, isPrintPage, isPrintChunSummary, isPrintRollingSummary) {
+  .action(async function(filePath, articleType, pageNumber, sliceSize, charPerPage, narrator, isPrintPage, isPrintChunSummary, isPrintRollingSummary) {
     const tStamp = newSessionTime()
     async function queryUserTitleSynopsis() {
       var titlePromptSchema = {
@@ -159,7 +163,7 @@ program
     }
     const {title, synopsis} = await queryUserTitleSynopsis()
     loadMD(title, tStamp, synopsis,
-            filePath, pageNumber, sliceSize, "", narrator, isPrintPage, isPrintSliceSummary, isPrintRollingSummary
+            filePath, pageNumber, sliceSize, "", narrator, isPrintPage, isPrintSliceSummary, isPrintRollingSummary, articleType
            )
   });
 
@@ -192,8 +196,9 @@ program
     devLog(bookmarkTitle, tStamp)
     const bData = loadBookmark(bookmarkTitle)
     devLog("bookmark data", bData)
-    const mData = loadMDTable(bookmarkTitle)
-    loadMD(bData.title, bData.synopsis, tStamp, mData.filePath, bData.pageNum, bData.sliceSize, bData.rollingSummary, bData.narrator, bData.isPrintPage, bData.isPrintSliceSummary, bData.isPrintRollingSummary)
+    const mData = loadMDTable(bData.filePath)
+    devLog("markdown data", mData)
+    loadMD(mData.title, mData.synopsis, tStamp, mData.filePath, bData.pageNum, bData.sliceSize, bData.rollingSummary, bData.narrator, bData.isPrintPage, bData.isPrintSliceSummary, bData.isPrintRollingSummary, mData.articleType)
   })
 
 program .command("gptDB")

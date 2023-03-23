@@ -14,7 +14,7 @@ const dbMd = db
  synopsis TEXT not null default '',
  createdTStamp TEXT not null,
  charPageLength INTEGER not null default ${defaultCharPageLength},
- readerExe text not null default 'vmd',
+ readerExe text not null default '',
  readerArgs text,
  readerStateFile text
  )`
@@ -31,9 +31,9 @@ const dbBookmarks = db
  rollingSummary TEXT not null default '',
  isQuiz boolean default false,
  isPrintPage boolean default false,
- isPrintChunkSummary boolean default false,
+ isPrintSliceSummary boolean default false,
  isPrintRollingSummary boolean default false,
- chunkSize INTEGER not null default 2,
+ sliceSize INTEGER not null default 2,
  maxTokens INTEGER not null default 2,
  narrator TEXT,
  filePath TEXT not null,
