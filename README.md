@@ -99,7 +99,7 @@ TODO
 - h or help = show options
 - pSlice="summary of page slice" print gpt summary of the current slice of pages
 - pRoll="rolling summary" print gpt summary of everything up to this point (short term memory) - narrate= rewrite all output in the voice of a character - voiceOut= TODO "Voice output" use ?[TTS](https://github.com/coqui-ai/TTS)? to generate voice to narrate gpt response & queries to user
-- voiceIn= TODO "voice input"  use ?talon? to allow voice input
+- voiceIn= TODO "voice input"  use ?whisper?/?talon? to allow voice input
 ##### LLM PROMPT MODIFICATION: change all non-summary llm queries going forward
 - before= get user input, prepend to conversation prompt
   - "tell a joke about the following text:"
@@ -118,11 +118,12 @@ TODO
 - maxTokenSummary=change response length/max summary token count (default 2000, max = 4096 includes summary prompts)
 
 ### SubLoops (e.g. quizzes):
+#### Quiz (quiz user and grade responses)
 if toggled on, start after step 2 in Event Loop
 1. query gpt3 to generate quiz, print quiz,
-2. get user input for answers
+2. get user input for answers, multine input }}} to terminate
 3. query gpt3 for "grade", explain "wrong" answers
-4. get user input
+4. get user input, options:
       - done=exit&save a log of the quiz&answers,
       - delete=don't log quiz
       - c=converse with gpt about quiz
@@ -130,7 +131,11 @@ if toggled on, start after step 2 in Event Loop
       - againFresh=run quiz loop again, don't log
 5. get User Input (default options)
 
+#### Teach
 - TODO mode where gpt pretends not to know and asks you to teach it
+
+#### Feeback
+- TODO mode where gpt provides a running meta commentary on user input or approval/disapproval meant to emulate social media like button dopamine for users
 
 ## Command Line Tooling (bza)
 - <> = required argument, [] = optional arguments, ;; = comment (not part of command)

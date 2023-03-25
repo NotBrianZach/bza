@@ -15,13 +15,28 @@ import path from "path";
 
 // const app = express();
 // const http = require('http').createServer(app);
-import io from "socket.io";
+import { Server } from "socket.io";
 import app from "./markdownViewerServer.mjs"
-io(app)
-// const rl = readline.createInterface({
-//   input: process.stdin,
-//   output: process.stdout,
-// });
+import  createServer from 'http'
+const server = createServer(app)
+const io = new Server(server);
+// io.on('connection', () => { /* … */ });
+io.on('connection', (socket) => {
+  console.log('A user connected');
+
+  socket.on('message', (data) => {
+    console.log('Message received:', data);
+    socket.broadcast.emit('message', data);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('A user disconnected');
+  });
+});
+
+server.listen(3000, () => {
+  console.log('Markdown  listening on port 3000');
+});
 // io.emit('requestMarkdown', {});
 
 // io.on('markdown', (data) => {
@@ -35,25 +50,7 @@ io(app)
 //     let pageContent = markdown.substring(start, end);
 //     console.log(`Page ${i + 1}:\n${pageContent}\n`);
 //   }
-// rl.on('line', (input) => {
-//   if (input === 'print') {
-//     let markdown = '';
-//     io.emit('requestMarkdown', {});
 
-//     io.on('markdown', (data) => {
-//       markdown = data;
-
-//       let pages = Math.ceil(markdown.length / charPerPage);
-//       console.log(`Total pages: ${pages}`);
-//       for (let i = 0; i < pages; i++) {
-//         let start = i * charPerPage;
-//         let end = start + charPerPage;
-//         let pageContent = markdown.substring(start, end);
-//         console.log(`Page ${i + 1}:\n${pageContent}\n`);
-//       }
-//       })
-//   }
-// }
 
 const IS_DEV = process.env.IS_DEV
 const nowTime = new Date();
@@ -159,6 +156,31 @@ export default async function eventLoop(bzaTxt, readOpts, queryGPT, sessionTime)
       console.log("jump failed")
     }
     break
+  case "multiline":
+    // const rl = readline.createInterface({
+    //   input: process.stdin,
+    //   output: process.stdout,
+    // });
+    // rl.on('line', (input) => {
+    //   if (input === 'print') {
+    //     let markdown = '';
+    //     io.emit('requestMarkdown', {});
+
+    //     io.on('markdown', (data) => {
+    //       markdown = data;
+
+    //       let pages = Math.ceil(markdown.length / charPerPage);
+    //       console.log(`Total pages: ${pages}`);
+    //       for (let i = 0; i < pages; i++) {
+    //         let start = i * charPerPage;
+    //         let end = start + charPerPage;
+    //         let pageContent = markdown.substring(start, end);
+    //         console.log(`Page ${i + 1}:\n${pageContent}\n`);
+    //       }
+    //       })
+    //   }
+    // }
+          break
   case "exit":
       return `Event Loop End, saving bookmark result: ${insertMD(
          readOpts.title,
@@ -171,37 +193,7 @@ export default async function eventLoop(bzaTxt, readOpts, queryGPT, sessionTime)
          readOpts.isPrintPage,
          readOpts.isPrintSliceSummary,
          readOpts.isPrintRollingSummary,
-         readOpts.filePath
-)}`
-    //TODO cases to handle
-    // readOpts
-    // switch (readOpts.fileType) {
-    //   // pdfs
-    //   case "pdf":
-    //   return `Event Loop End, saving pdf bookmark result: ${insertPDF(
-    //     readOpts.title,
-    //     readOpts.tStamp,
-    //     readOpts.synopsis,
-    //     readOpts.narrator,
-    //     readOpts.pageNum,
-    //     readOpts.sliceSize,
-    //     readOpts.rollingSummary,
-    //     readOpts.isPrintPage,
-    //     readOpts.isPrintSliceSummary,
-    //     readOpts.isPrintRollingSummary,
-    //     readOpts.filePath,
-    //     readOpts.isImage
-    //   )}`
-    // case "url":
-    //   return "TODO handle url save in event loop, wasn't able to save bookmark to DB"
-    // case "html":
-    //   return "TODO handle html save in event loop, wasn't able to save bookmark to DB"
-    // case "plaintxt":
-    //   return "TODO handle plaintxt save in event loop, wasn't able to save bookmark to DB"
-    //   default:
-    //   return "Error: file type not passed into event loop, wasn't able to save bookmark to DB"
-    // }
-
+         readOpts.filePath)}`
     return "successful loop exit"
     break
   default: // do nothing
@@ -236,35 +228,6 @@ export default async function eventLoop(bzaTxt, readOpts, queryGPT, sessionTime)
     if (pageNum + 1 === totalPages) {
       // save and ex
       console.log(logs);
-      // TODO for fun predict summary of sequel
-
-      // 4. record a log of all the summaries and quizzes
-      // TODO make subdirectory for ${title}
-      // const newBookNameDirectory = "./";
-      // fs.access(path, (error) => {
-      //   // To check if the given directory
-      //   // already exists or not
-      //   if (error) {
-      //     // If current directory does not exist
-      //     // then create it
-      //     fs.mkdir(path, (error) => {
-      //       if (error) {
-      //         console.log(error);
-      //       } else {
-      //         console.log("New Directory created successfully !!");
-      //       }
-      //     });
-      //   } else {
-      //     console.log("Given Directory already exists !!");
-      //   }
-      // TODO clean up /run/user if using pdf-extract and there are files present
-      // fs.writeFileSync(
-      //   "./logs/${nowTime}-${title}",
-      //   JSON.stringify({
-      //     logs,
-      //     readOpts
-      //   })
-      // );
       return "successful loop exit"
     } else {
       // read up to totalPages (but not beyond)
