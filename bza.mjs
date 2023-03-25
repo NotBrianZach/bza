@@ -39,7 +39,7 @@ function loadMarkdown(title, synopsis, tStamp, filePath, pageNum, sliceSize, rol
     const md = new MarkdownIt();
     const tokens = md.parse(mdTxt.toString(), {});
 
-    // Parse the markdown and find the images (percollate will embedd all images as base64 data into the markdown)
+    // Parse the markdown and find the images (percollate will embed all images as base64 data into the markdown)
     const imageTokens = tokens.filter(token => token.type === 'inline' && token.children.some(child => child.type === 'image'));
     if (imageTokens.length > 0) {
       const imageDirPath = `${filePath}imagesD`
@@ -48,14 +48,13 @@ function loadMarkdown(title, synopsis, tStamp, filePath, pageNum, sliceSize, rol
           console.error('Error creating directory to save images:', error);
           return
         } else {
-          console.log('Directory created to store markdown embedded images:', imageDirPath);
+          devLog('Directory created to store markdown embedded images:', imageDirPath);
           let imageCounter = 1;
           imageTokens.forEach(token => {
             const imageToken = token.children.find(child => child.type === 'image');
             const imageData = imageToken.attrGet('src');
             const dataUrlRegEx = /^data:image\/([a-zA-Z]+);base64,/;
             const match = dataUrlRegEx.exec(imageData);
-
             if (match) {
               const extension = match[1];
               const base64Data = imageData.replace(dataUrlRegEx, '');
@@ -64,12 +63,11 @@ function loadMarkdown(title, synopsis, tStamp, filePath, pageNum, sliceSize, rol
               // Save the image to a file
               const fileName = `${imageDirPath}/image-${imageCounter}.${extension}`;
               fs.writeFileSync(fileName, buffer);
-              console.log(`Image saved as ${fileName}`);
+              devLog(`Image saved as ${fileName}`);
 
               // Update the image src attribute in the token
               imageToken.attrSet('src', fileName);
               imageCounter++;
-
             }
           });
         }

@@ -1,9 +1,5 @@
 import { ink } from "ink-mde";
 import express from "express";
-import io from "socket.io";
-// const app = express();
-// const http = require('http').createServer(app);
-// io(http)
 
 const app = express();
 import fs from "fs";

@@ -5,7 +5,6 @@ import getUserInput from "./getUserInput.mjs";
 import runQuiz from "./lib/runQuiz.mjs";
 import {genSliceSummaryPrompt, genRollingSummaryPrompt, retellSliceAsNarratorPrompt} from "./lib/genPrompts.mjs";
 import readline from 'readline';
-import app from "./markdownViewer.mjs"
 import {
   removeExtraWhitespace,
   devLog,
@@ -14,6 +13,11 @@ import {
 } from "./lib/utils.mjs";
 import path from "path";
 
+// const app = express();
+// const http = require('http').createServer(app);
+import io from "socket.io";
+import app from "./markdownViewerServer.mjs"
+io(app)
 // const rl = readline.createInterface({
 //   input: process.stdin,
 //   output: process.stdout,
