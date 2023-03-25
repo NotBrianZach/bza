@@ -4,6 +4,8 @@ import prompt from "prompt";
 import getUserInput from "./getUserInput.mjs";
 import runQuiz from "./lib/runQuiz.mjs";
 import {genSliceSummaryPrompt, genRollingSummaryPrompt, retellSliceAsNarratorPrompt} from "./lib/genPrompts.mjs";
+import readline from 'readline';
+import app from "./markdownViewer.mjs"
 import {
   removeExtraWhitespace,
   devLog,
@@ -11,6 +13,43 @@ import {
   validateObj
 } from "./lib/utils.mjs";
 import path from "path";
+
+// const rl = readline.createInterface({
+//   input: process.stdin,
+//   output: process.stdout,
+// });
+// io.emit('requestMarkdown', {});
+
+// io.on('markdown', (data) => {
+//   markdown = data;
+
+//   let pages = Math.ceil(markdown.length / charPerPage);
+//   console.log(`Total pages: ${pages}`);
+//   for (let i = 0; i < pages; i++) {
+//     let start = i * charPerPage;
+//     let end = start + charPerPage;
+//     let pageContent = markdown.substring(start, end);
+//     console.log(`Page ${i + 1}:\n${pageContent}\n`);
+//   }
+// rl.on('line', (input) => {
+//   if (input === 'print') {
+//     let markdown = '';
+//     io.emit('requestMarkdown', {});
+
+//     io.on('markdown', (data) => {
+//       markdown = data;
+
+//       let pages = Math.ceil(markdown.length / charPerPage);
+//       console.log(`Total pages: ${pages}`);
+//       for (let i = 0; i < pages; i++) {
+//         let start = i * charPerPage;
+//         let end = start + charPerPage;
+//         let pageContent = markdown.substring(start, end);
+//         console.log(`Page ${i + 1}:\n${pageContent}\n`);
+//       }
+//       })
+//   }
+// }
 
 const IS_DEV = process.env.IS_DEV
 const nowTime = new Date();
@@ -37,7 +76,6 @@ export default async function eventLoop(bzaTxt, readOpts, queryGPT, sessionTime)
 
   devLog("initial pageSlice b4 queryGPT retell slice", pageSliceInit)
 
-  //gpt4 code
   let pageSlice = "";
   let sliceSummary = "";
   const getPageSliceQuery = async () => {

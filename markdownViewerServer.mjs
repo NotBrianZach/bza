@@ -1,9 +1,14 @@
 import { ink } from "ink-mde";
 import express from "express";
+import io from "socket.io";
+// const app = express();
+// const http = require('http').createServer(app);
+// io(http)
+
 const app = express();
 import fs from "fs";
 
-const logStream = fs.createWriteStream("server.log", { flags: "a" }); // create a writable stream to the file
+// const logStream = fs.createWriteStream("server.log", { flags: "a" }); // create a writable stream to the file
 
 // redirect console output to the file
 console.log = function(data) {
@@ -45,7 +50,27 @@ app.get("/", function(req, res) {
   });
 });
 
+// Update the server's socket.io connection to handle the 'requestMarkdown' event
+io.on("connection", socket => {
+  console.log("A user connected");
+
+  socket.on("markdown", data => {
+    io.emit("markdown", data);
+  });
+
+  // Add this event listener
+  socket.on("requestMarkdown", () => {
+    io.emit("requestMarkdown", {});
+  });
+
+  socket.on("disconnect", () => {
+    console.log("User disconnected");
+  });
+});
+
 // start the server
 app.listen(8675, () => {
   console.log("Server started on port 8675");
 });
+
+export default app;

@@ -1,3 +1,18 @@
+<!-- public/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Markdown Editor</title>
+    <script src="/socket.io/socket.io.js"></script>
+  </head>
+  <body>
+    <textarea id="editor"></textarea>
+
+    <script></script>
+  </body>
+</html>
 <!DOCTYPE html>
 <html class="auto">
   <head>
@@ -17,53 +32,43 @@
       * {
         box-sizing: border-box;
       }
-
       :root {
         --ink-code-font-family: "Fira Code";
       }
-
       body {
         font-family: "Inter", Helvetica, sans-serif;
         margin: 0;
       }
-
       .dark body {
         background-color: rgb(24, 24, 27);
         color: #fafafa;
       }
-
       .light body {
         background-color: #fafafa;
         color: rgb(24, 24, 27);
       }
-
       @media (prefers-color-scheme: dark) {
         .auto body {
           background-color: rgb(24, 24, 27);
           color: #fafafa;
         }
       }
-
       @media (prefers-color-scheme: light) {
         .auto body {
           background-color: #fafafa;
           color: rgb(24, 24, 27);
         }
       }
-
       .app-wrapper {
         margin: auto;
         max-width: 120ch;
       }
-
       .ink-mde .ink-mde-container {
         max-width: 80ch;
       }
-
       #app .cm-editor.cm-focused {
         outline: none;
       }
-
       html,
       body,
       .app-wrapper,
@@ -71,11 +76,9 @@
       .ink-mde {
         height: 100%;
       }
-
       .app-wrapper {
         padding: 0.5rem;
       }
-
       /* .ink-mde-container {
         max-width: 30rem;
       } */
@@ -84,62 +87,76 @@
   <body>
     <div class="app-wrapper">
       <div id="app"></div>
+      <div id="editor"></div>
     </div>
     <script type="module">
       import ink from "/src/index.tsx";
-      import example from "/test/assets/example.md?raw";
+      /* import example from "/test/assets/example.md?raw"; */
 
-      window.ink = ink(document.getElementById("app"), {
-        doc: example,
-        files: {
-          clipboard: true,
-          dragAndDrop: true,
-          handler(files) {
-            // eslint-disable-next-line no-console
-            console.log({ files });
+      const socket = io();
 
-            return URL.createObjectURL(Array.from(files).pop());
-          },
-          injectMarkup: true
-        },
-        interface: {
-          images: true,
-          lists: true,
-          readonly: false,
-          spellcheck: true,
-          toolbar: true
-        },
-        placeholder: "Start typing...",
-        readability: true,
-        toolbar: {
-          upload: true
-        }
+      const editor = document.getElementById("editor");
+      editor.addEventListener("input", () => {
+        socket.emit("markdown", editor.value);
       });
 
-      window.ink.focus();
+      socket.on("markdown", data => {
+        editor.value = data;
+        /* window.ink = ink(document.getElementById("app"), {
+        *   doc: example,
+        *   files: {
+        *     clipboard: true,
+        *     dragAndDrop: true,
+        *     handler(files) {
+        *       // eslint-disable-next-line no-console
+        *       console.log({ files });
 
-      window.theme = theme => {
-        document.documentElement.classList.remove("auto", "dark", "light");
-        document.documentElement.classList.add(theme);
+        *       return URL.createObjectURL(Array.from(files).pop());
+        *     },
+        *     injectMarkup: true
+        *   },
+        *   interface: {
+        *     images: true,
+        *     lists: true,
+        *     readonly: false,
+        *     spellcheck: true,
+        *     toolbar: true
+        *   },
+        *   placeholder: "Start typing...",
+        *   readability: true,
+        *   toolbar: {
+        *     upload: true
+        *   }
+        * });
 
-        window.ink.reconfigure({ interface: { appearance: theme } });
-      };
+        * window.ink.focus();
 
-      window.imagesShow = () => {
-        window.ink.reconfigure({ interface: { images: true } });
-      };
+        * window.theme = theme => {
+        *   document.documentElement.classList.remove("auto", "dark", "light");
+        *   document.documentElement.classList.add(theme);
 
-      window.imagesHide = () => {
-        window.ink.reconfigure({ interface: { images: false } });
-      };
+        *   window.ink.reconfigure({ interface: { appearance: theme } });
+        * };
 
-      window.readonly = enabled => {
-        window.ink.reconfigure({ interface: { readonly: enabled } });
-      };
+        * window.imagesShow = () => {
+        *   window.ink.reconfigure({ interface: { images: true } });
+        * };
 
-      window.dragAndDrop = enabled => {
-        window.ink.reconfigure({ files: { dragAndDrop: enabled } });
-      };
+        * window.imagesHide = () => {
+        *   window.ink.reconfigure({ interface: { images: false } });
+        * };
+
+        * window.readonly = enabled => {
+        *   window.ink.reconfigure({ interface: { readonly: enabled } });
+        * };
+
+        * window.dragAndDrop = enabled => {
+        *   window.ink.reconfigure({ files: { dragAndDrop: enabled } });
+        * }; */
+      });
+      socket.on("requestMarkdown", () => {
+        socket.emit("markdown", editor.value);
+      });
     </script>
   </body>
 </html>

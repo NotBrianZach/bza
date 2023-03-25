@@ -22,15 +22,14 @@ import { loadBookmarksBy, loadBookmark, insertMD, loadMDTable } from "./lib/dbQu
 import MarkdownIt from 'markdown-it';
 const queryGPT = createGPTQuery(process.env.OPENAI_API_KEY);
 
-
-function loadMD(title, synopsis, tStamp, filePath, pageNum, sliceSize, rollingSummary, narrator, isPrintPage, isPrintSliceSummary, isPrintRollingSummary, articleType, charPageLength) {
-  devLog("begin loadMD", arguments)
-  console.log(filePath.substring(filePath.length - 2))
+function loadMarkdown(title, synopsis, tStamp, filePath, pageNum, sliceSize, rollingSummary, narrator, isPrintPage, isPrintSliceSummary, isPrintRollingSummary, articleType, charPageLength) {
+  devLog("begin loadMarkdown", arguments)
+  devLog(filePath.substring(filePath.length - 2))
   if (filePath.substring(filePath.length - 2) !== "md") {
     console.error("error, not a markdown file, file must end with .md suffix")
     return
   }
-  console.log(filePath)
+  devLog(filePath)
   fs.readFile(filePath,function(err, mdTxt) {
     if (err !== null) {
       console.log(`error ${err} reading from filePath ${filePath}`)
@@ -38,63 +37,48 @@ function loadMD(title, synopsis, tStamp, filePath, pageNum, sliceSize, rollingSu
     devLog("fsreadfile arguments", arguments)
     // Initialize the Markdown parser (to save image files that may be base64 embedded in the markdown (which will get in the way of gpt reading the text))
     const md = new MarkdownIt();
+    const tokens = md.parse(mdTxt.toString(), {});
 
-    //Parse the Markdown and extract the image URLs
-    const imageUrls = [];
-    md.renderer.rules.image = (tokens, idx) => {
-      const url = tokens[idx].attrGet('src');
-      if (url) {
-        imageUrls.push(url);
-      }
-      return '';
-    };
+    // Parse the markdown and find the images (percollate will embedd all images as base64 data into the markdown)
+    const imageTokens = tokens.filter(token => token.type === 'inline' && token.children.some(child => child.type === 'image'));
+    if (imageTokens.length > 0) {
+      const imageDirPath = `${filePath}imagesD`
+      fs.mkdir(imageDirPath, { recursive: true }, (error) => {
+        if (error) {
+          console.error('Error creating directory to save images:', error);
+          return
+        } else {
+          console.log('Directory created to store markdown embedded images:', imageDirPath);
+          let imageCounter = 1;
+          imageTokens.forEach(token => {
+            const imageToken = token.children.find(child => child.type === 'image');
+            const imageData = imageToken.attrGet('src');
+            const dataUrlRegEx = /^data:image\/([a-zA-Z]+);base64,/;
+            const match = dataUrlRegEx.exec(imageData);
 
-    // Render the Markdown to extract image URLs
-    md.render(mdTxt.toString());
+            if (match) {
+              const extension = match[1];
+              const base64Data = imageData.replace(dataUrlRegEx, '');
+              const buffer = Buffer.from(base64Data, 'base64');
 
-    // Download and save the images
-    const downloadAndSaveImage = async (url, outputPath) => {
-      try {
-        const response = await axios({
-          method: 'get',
-          url,
-          responseType: 'stream',
-        });
+              // Save the image to a file
+              const fileName = `${imageDirPath}/image-${imageCounter}.${extension}`;
+              fs.writeFileSync(fileName, buffer);
+              console.log(`Image saved as ${fileName}`);
 
-        const writer = fs.createWriteStream(outputPath);
-        response.data.pipe(writer);
+              // Update the image src attribute in the token
+              imageToken.attrSet('src', fileName);
+              imageCounter++;
 
-        return new Promise((resolve, reject) => {
-          writer.on('finish', resolve);
-          writer.on('error', reject);
-        });
-      } catch (error) {
-        console.error('Error downloading image:', error);
-      }
-    };
-
-    const saveImages = async () => {
-      for (const [index, url] of imageUrls.entries()) {
-        const extension = path.extname(url);
-        const outputPath = `image${index + 1}${extension}`;
-        await downloadAndSaveImage(url, outputPath);
-        console.log(`Downloaded and saved image?url as ${outputPath}`);
-      }
-    };
-
-    saveImages();
-    function removeImagesFromMarkdown(markdown) {
-      // Regular expression to match Markdown base64 image syntax
-      const imageRegex = /!\[.*?\]\(.*?\)/g;
-
-      // Replace all image occurrences with an empty string
-      const strippedMarkdown = markdown.replace(imageRegex, '');
-
-      return strippedMarkdown;
+            }
+          });
+        }
+      });
     }
-    const markdownStrippedOfImages = removeImagesFromMarkdown(mdTxt.toString())
-    console.log("markdown read completed")
-
+    // Render the updated markdown
+    const markdownStrippedOfEmbedImages = md.renderer.render(tokens, md.options, {});
+    fs.writeFileSync(filePath, markdownStrippedOfEmbedImages);
+    const finalMarkdownArray = splitStringIntoSubstringsLengthN(markdownStrippedOfEmbedImages, sliceSize)
     const insertReturnStatus = insertMD(
       filePath,
       title,
@@ -123,9 +107,6 @@ function loadMD(title, synopsis, tStamp, filePath, pageNum, sliceSize, rollingSu
       return substrings;
     }
 
-    const finalMarkdownArray = splitStringIntoSubstringsLengthN(markdownStrippedOfImages, sliceSize)
-
-    fork("markdownViewerServer.mjs", ["argument"], { cwd: process.cwd() });
     const eventLoopEndMsg = eventLoop(finalMarkdownArray, {
       title,
       synopsis,
@@ -144,7 +125,6 @@ function loadMD(title, synopsis, tStamp, filePath, pageNum, sliceSize, rollingSu
 program
   .command("load")
   .argument('<filePath>', 'path to pdf')
-  // .addArgument(new Argument('[charPerPage]', '').choices([0, 1]))
 // TODO add more article types
   .addArgument(new Argument('[articleType]', 'type of article').choices(["book", "arxiv preprint", "research paper", "monograph", "news", "dnd setting"]))
   .argument('[pageNumber]', 'pageNumber to start on, default 0', 0)
@@ -183,7 +163,7 @@ program
       return { title, synopsis }
     }
     const {title, synopsis} = await queryUserTitleSynopsis()
-    loadMD(title, tStamp, synopsis,
+    loadMarkdown(title, tStamp, synopsis,
            filePath, pageNumber, sliceSize, "", narrator, isPrintPage, isPrintSliceSummary, isPrintRollingSummary, articleType, charPageLength
            )
   });
@@ -219,10 +199,11 @@ program
     devLog("bookmark data", bData)
     const mData = loadMDTable(bData.filePath)
     devLog("markdown data", mData)
-    loadMD(mData.title, mData.synopsis, tStamp, mData.filePath, bData.pageNum, bData.sliceSize, bData.rollingSummary, bData.narrator, bData.isPrintPage, bData.isPrintSliceSummary, bData.isPrintRollingSummary, mData.articleType, mData.charPageLength)
+    loadMarkdown(mData.title, mData.synopsis, tStamp, mData.filePath, bData.pageNum, bData.sliceSize, bData.rollingSummary, bData.narrator, bData.isPrintPage, bData.isPrintSliceSummary, bData.isPrintRollingSummary, mData.articleType, mData.charPageLength)
   })
 
-program .command("gptDB")
+program
+  .command("gptDB")
   .addArgument(new Argument('<updateOrSelect>', 'specify whether', "update").choices(['update', 'select']))
   .argument('<plainRequest>', 'plainRequest')
   .description("for fun, ask gpt, given db schema as pre-prompt, to create db query to either select from or update database, print command, then type yes to run or n to cancel (might not be executable)")

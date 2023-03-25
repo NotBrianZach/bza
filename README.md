@@ -130,6 +130,8 @@ if toggled on, start after step 2 in Event Loop
       - againFresh=run quiz loop again, don't log
 5. get User Input (default options)
 
+- TODO mode where gpt pretends not to know and asks you to teach it
+
 ## Command Line Tooling (bza)
 - <> = required argument, [] = optional arguments, ;; = comment (not part of command)
 - bza resume <bookmarkName> [timestamp] ;; (bookmarkName usually = title, timesteamp defaults to most recent) resumes from an old bookmark, creating a new one
