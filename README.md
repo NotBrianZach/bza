@@ -158,6 +158,7 @@ could create another file e.g. alterDB.mjs which has alter table statements if y
 - handle embedded images vs linked images (wip)
 - use https://github.com/NotBrianZach/ink-mde, open browser start server and create notifications that push to markdown viewing/editing client whenever user switches pages (wip)
 - cosine similarity (or similar metrics) on book pages vector array option to get relevant context (wip)
+- recognize images and sumarize their meaning into text (when we get access to good multimodal models)
 - categorize query types (other than just summarize/non summarize) and allow for loop and prompt stack creation within repl itself? (wip)
 - multimodality?
 - multiplayer repls? (idk websocket or something)
