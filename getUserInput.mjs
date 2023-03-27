@@ -1,7 +1,7 @@
 import prompt from "prompt";
 // import prompt from "prompt";
 import runQuiz from "./lib/runQuiz.mjs";
-import { explainAutoComplete } from "./lib/explanatoryPrompt.mjs";
+import { promptWithAutoCompleteAndExplain } from "./lib/explanatoryPrompt.mjs";
 import fs from "fs";
 import {
   genSliceSummaryPrompt,
@@ -124,22 +124,54 @@ export default async function getUserInput(bzaTxt, readOpts, queryGPT) {
     }
   ];
 
-  const defaultPrompt = explainAutoComplete(defaultQueryOptions);
+  const defaultPrompt = promptWithAutoCompleteAndExplain(defaultQueryOptions);
   let query = "";
   let gptResponse = "";
 
-  defaultPrompt
+  return defaultPrompt
     .run()
     .then(async queryValue => {
       switch (queryValue) {
         case "next":
           return queryValue;
           break;
+        case "jump":
+          const pageNum = await prompt(["pageNumber"]);
+          return { label: "jump", jump: pageNum };
+          break;
+        case "exit":
+          return { label: "exit" };
+          break;
         case "start":
           query = await prompt(["query"]);
           gptResponse = queryGPT(`${gptPrompt}\n${query}`, {});
           console.log("gptResponse", gptResponse);
           getUserInput(bzaTxt, `${gptPrompt}\n${query}\ngptResponse`, queryGPT);
+          break;
+        case "multiline":
+          const rl = readline.createInterface({
+            input: process.stdin,
+            output: process.stdout
+          });
+          // rl.on('line', (input) => {
+          //   if (input === 'print') {
+          //     let markdown = '';
+          //     io.emit('requestMarkdown', {});
+
+          //     io.on('markdown', (data) => {
+          //       markdown = data;
+
+          //       let pages = Math.ceil(markdown.length / charPerPage);
+          //       console.log(`Total pages: ${pages}`);
+          //       for (let i = 0; i < pages; i++) {
+          //         let start = i * charPerPage;
+          //         let end = start + charPerPage;
+          //         let pageContent = markdown.substring(start, end);
+          //         console.log(`Page ${i + 1}:\n${pageContent}\n`);
+          //       }
+          //       })
+          //   }
+          // }
           break;
         case "continue":
           query = await prompt(["query"]);
@@ -153,13 +185,6 @@ export default async function getUserInput(bzaTxt, readOpts, queryGPT) {
             },
             queryGPT
           );
-          break;
-        case "jump":
-          const pageNum = await prompt(["pageNumber"]);
-          return { label: "jump", jump: pageNum };
-          break;
-        case "exit":
-          return { label: "exit" };
           break;
         case "quiz":
           const { quiz, grade } = await runQuiz(

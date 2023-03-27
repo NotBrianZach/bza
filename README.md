@@ -82,13 +82,13 @@ TODO
 - jump=jump to input pageNumber,
 - exit= exit program, save db bookmark
 ##### ASK USER for input
-- start = start conversation w/specified prompt; without subcommand assumes [start = start title synopsis rollingSummary pageSliceSummary pages], saves previous conversation if applicable
+- start = start conversation w/specified prompt; without subcommands assumes "start title synopsis rollingSummary pageSliceSummary pages", saves previous conversation if applicable
   - title = append title
   - synopsis = append synopsis 
   - rollingSummary = append pageSliceSummary
   - pageSliceSummary = append pageSliceSummary
   - pages = append pageSlice
-- c = continue conversation (if no current conversation assume start default)
+- continue = continue conversation (if no current conversation assume start default)
 <!-- - restart="restart" save current conversation to db, restart conversation w/only initial prompt  -->
 - "hard restart"= restart conversation w/only initial prompt, NO save to database
   - same subcommands as start
@@ -98,7 +98,9 @@ TODO
 ##### PRINT TOGGLES: print to console, and enable/disable printing in event loop
 - h or help = show options
 - pSlice="summary of page slice" print gpt summary of the current slice of pages
-- pRoll="rolling summary" print gpt summary of everything up to this point (short term memory) - narrate= rewrite all output in the voice of a character - voiceOut= TODO "Voice output" use ?[TTS](https://github.com/coqui-ai/TTS)? to generate voice to narrate gpt response & queries to user
+- pRoll="rolling summary" print gpt summary of everything up to this point (short term memory) 
+- narrate= rewrite all output in the voice of a character 
+- voiceOut= TODO "Voice output" use ?[TTS](https://github.com/coqui-ai/TTS)? to generate voice to narrate gpt response & queries to user
 - voiceIn= TODO "voice input"  use ?whisper?/?talon? to allow voice input
 ##### LLM PROMPT MODIFICATION: change all non-summary llm queries going forward
 - before= get user input, prepend to conversation prompt

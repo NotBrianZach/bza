@@ -1,19 +1,35 @@
 import { ink } from "ink-mde";
 import express from "express";
-
-const app = express();
 import fs from "fs";
+import { createServer } from "http";
+import { Server } from "socket.io";
+export const app = express();
+const server = createServer(app);
+export const io = new Server(server);
 
-// const logStream = fs.createWriteStream("server.log", { flags: "a" }); // create a writable stream to the file
+io.on("connection", socket => {
+  console.log("A user connected");
+
+  socket.on("message", data => {
+    console.log("Message received:", data);
+    socket.broadcast.emit("message", data);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("A user disconnected");
+  });
+});
+
+const logStream = fs.createWriteStream("server.log", { flags: "a" }); // create a writable stream to the file
 
 // redirect console output to the file
-console.log = function(data) {
+function serverLog(data) {
   logStream.write(data + "\n");
-};
+}
 
-console.error = function(data) {
+function serverLogError(data) {
   logStream.write("error" + data + "\n");
-};
+}
 
 // use the middleware to log requests to the file
 app.use((req, res, next) => {
@@ -68,5 +84,3 @@ io.on("connection", socket => {
 app.listen(8675, () => {
   console.log("Server started on port 8675");
 });
-
-export default app;

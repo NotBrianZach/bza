@@ -15,29 +15,7 @@ import path from "path";
 
 // const app = express();
 // const http = require('http').createServer(app);
-import { Server } from "socket.io";
-import app from "./markdownViewerServer.mjs"
-import  createServer from 'http'
-const server = createServer(app)
-const io = new Server(server);
-// io.on('connection', () => { /* … */ });
-io.on('connection', (socket) => {
-  console.log('A user connected');
-
-  socket.on('message', (data) => {
-    console.log('Message received:', data);
-    socket.broadcast.emit('message', data);
-  });
-
-  socket.on('disconnect', () => {
-    console.log('A user disconnected');
-  });
-});
-
-server.listen(3000, () => {
-  console.log('Markdown  listening on port 3000');
-});
-// io.emit('requestMarkdown', {});
+import {io} from "./markdownViewerServer.mjs"
 
 // io.on('markdown', (data) => {
 //   markdown = data;
@@ -50,7 +28,6 @@ server.listen(3000, () => {
 //     let pageContent = markdown.substring(start, end);
 //     console.log(`Page ${i + 1}:\n${pageContent}\n`);
 //   }
-
 
 const IS_DEV = process.env.IS_DEV
 const nowTime = new Date();
@@ -67,6 +44,7 @@ export default async function eventLoop(bzaTxt, readOpts, queryGPT, sessionTime)
     isPrintRollingSummary,
     title
   } = readOpts;
+  let readOptsToToggle = {}
   console.log(
     `totalPages ${totalPages}, pageNum ${readOpts.pageNumber}, sliceSize ${readOpts.sliceSize}`
   );
@@ -120,25 +98,37 @@ export default async function eventLoop(bzaTxt, readOpts, queryGPT, sessionTime)
     console.error(error.message);
   }
 
-  if (isPrintPage) {
+
+  let markdownToEmit = ""
+  if (isPrintRollingSummary) {
     console.log(
-      `Page Slice`,
-      pageSlice
+      `Summary of pages ${pageNum} to ${pageNum +
+      sliceSize}:`,
+      rollingSummary
     );
+    markdownToEmit += rollingSummary
   }
   if (isPrintSliceSummary) {
     console.log(
       `Summary of pages ${pageNum} to ${pageNum + sliceSize}:`,
       sliceSummary
     );
+    markdownToEmit += "----------------------------------------\n"
+    markdownToEmit += sliceSummary
   }
-  console.log(
-    `Summary of pages ${pageNum} to ${pageNum +
-      sliceSize}:`,
-    rollingSummary
-  );
-  const { quiz, grade } = await runQuiz(pageSlice, readOpts, queryGPT);
-  const userInput = getUserInput(bzaTxt, {...readOpts,
+  if (isPrintPage) {
+    console.log(
+      `Page Slice`,
+      pageSlice
+    );
+    markdownToEmit += "----------------------------------------\n"
+    markdownToEmit += pageSlice
+  }
+  io.emit("markdown", markdownToEmit);
+  if () {
+    const {} = await runQuiz(pageSlice, readOpts, queryGPT);
+  }
+  const userInput = await getUserInput(bzaTxt, {...readOpts,
                                           sessionTime,
                                           rollingSummary,
                                           pageSliceInit,
@@ -146,57 +136,32 @@ export default async function eventLoop(bzaTxt, readOpts, queryGPT, sessionTime)
                                           sliceSummary
                                          }, queryGPT);
   switch (userInput.label) {
-  case "jump":
-    if (userInput.jump < totalPages) {
-      return eventLoop(bzaTxt, {
-        ...readOpts,
-        pageNum: userInput.jump
-      }, queryGPT, tStamp);
-    } else {
-      console.log("jump failed")
-    }
-    break
-  case "multiline":
-    // const rl = readline.createInterface({
-    //   input: process.stdin,
-    //   output: process.stdout,
-    // });
-    // rl.on('line', (input) => {
-    //   if (input === 'print') {
-    //     let markdown = '';
-    //     io.emit('requestMarkdown', {});
-
-    //     io.on('markdown', (data) => {
-    //       markdown = data;
-
-    //       let pages = Math.ceil(markdown.length / charPerPage);
-    //       console.log(`Total pages: ${pages}`);
-    //       for (let i = 0; i < pages; i++) {
-    //         let start = i * charPerPage;
-    //         let end = start + charPerPage;
-    //         let pageContent = markdown.substring(start, end);
-    //         console.log(`Page ${i + 1}:\n${pageContent}\n`);
-    //       }
-    //       })
-    //   }
-    // }
-          break
-  case "exit":
-      return `Event Loop End, saving bookmark result: ${insertMD(
-         readOpts.title,
-         readOpts.tStamp,
-         readOpts.synopsis,
-         readOpts.narrator,
-         readOpts.pageNum,
-         readOpts.sliceSize,
-         readOpts.rollingSummary,
-         readOpts.isPrintPage,
-         readOpts.isPrintSliceSummary,
-         readOpts.isPrintRollingSummary,
-         readOpts.filePath)}`
-    return "successful loop exit"
-    break
-  default: // do nothing
+    case "jump":
+      if (userInput.jump < totalPages) {
+        return eventLoop(bzaTxt, {
+          ...readOpts,
+          pageNum: userInput.jump
+        }, queryGPT, sessionTime);
+      } else {
+        console.log("jump failed")
+      }
+      break
+    case "exit":
+        return `Event Loop End, saving bookmark result: ${insertMD(
+           readOpts.title,
+           readOpts.tStamp,
+           readOpts.synopsis,
+           readOpts.narrator,
+           readOpts.pageNum,
+           readOpts.sliceSize,
+           readOpts.rollingSummary,
+           readOpts.isPrintPage,
+           readOpts.isPrintSliceSummary,
+           readOpts.isPrintRollingSummary,
+           readOpts.filePath)}`
+      return "successful loop exit"
+      break
+    default: // do nothing
   }
 
   // 2. rollingSummary=queryGPT3(synopsis+pageSliceSummary)
@@ -222,7 +187,7 @@ export default async function eventLoop(bzaTxt, readOpts, queryGPT, sessionTime)
     return eventLoop(bzaTxt, {
       ...readOpts,
       pageNum: pageNum + sliceSize
-    }, queryGPT, tStamp);
+    }, queryGPT, sessionTime);
   } else {
     // pageNum+1 becuz zero index
     if (pageNum + 1 === totalPages) {
@@ -241,7 +206,7 @@ export default async function eventLoop(bzaTxt, readOpts, queryGPT, sessionTime)
         rollingSummary,
         pageNum: pageNum + lastSliceSize,
         sliceSize: lastSliceSize
-      }, queryGPT, tStamp);
+      }, queryGPT, sessionTime);
     }
 
   }

@@ -13,7 +13,7 @@ import axios from "axios";
 // var similarity = require( 'compute-cosine-similarity' );
 // similarity( x, y[, accessor] )
 
-import { removeExtraWhitespace, devLog, newSessionTime } from "./lib/utils.mjs";
+import { removeExtraWhitespace, devLog, removeRepeatingBase64ImagesFromMarkdownString, newSessionTime } from "./lib/utils.mjs";
 import { createGPTQuery } from "./lib/createGPTQuery.mjs";
 import db from "./lib/dbConnect.mjs";
 import eventLoop from "./eventLoop.mjs";
@@ -37,7 +37,11 @@ function loadMarkdown(title, synopsis, tStamp, filePath, pageNum, sliceSize, rol
     devLog("fsreadfile arguments", arguments)
     // Initialize the Markdown parser (to save image files that may be base64 embedded in the markdown (which will get in the way of gpt reading the text))
     const md = new MarkdownIt();
-    const tokens = md.parse(mdTxt.toString(), {});
+
+    // strip all images that repeat 3 or more times
+    const mdMinus3OrMoreRepeatingBase64Images = removeRepeatingBase64ImagesFromMarkdownString(mdTxt.toString())
+
+    const tokens = md.parse(mdMinus3OrMoreRepeatingBase64Images, {});
 
     // Parse the markdown and find the images (percollate will embed all images as base64 data into the markdown)
     const imageTokens = tokens.filter(token => token.type === 'inline' && token.children.some(child => child.type === 'image'));
