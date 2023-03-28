@@ -19,72 +19,27 @@ import db from "./lib/dbConnect.mjs";
 import eventLoop from "./eventLoop.mjs";
 import { loadBookmarksBy, loadBookmark, insertMD, loadMDTable } from "./lib/dbQueries.mjs";
 
-import MarkdownIt from 'markdown-it';
 const queryGPT = createGPTQuery(process.env.OPENAI_API_KEY);
 
-function loadMarkdown(title, synopsis, tStamp, filePath, pageNum, sliceSize, rollingSummary, narrator, isPrintPage, isPrintSliceSummary, isPrintRollingSummary, articleType, charPageLength) {
+const togglesOptions = ["isPrintPage", "isPrintSliceSummary", "isPrintRollingSummary", "isQuiz"]
+function loadMarkdown(title, synopsis, tStamp, filePath, pageNum, sliceSize, rollingSummary, narrator, articleType, charPageLength, toggles) {
   devLog("begin loadMarkdown", arguments)
   devLog(filePath.substring(filePath.length - 2))
   if (filePath.substring(filePath.length - 2) !== "md") {
     console.error("error, not a markdown file, file must end with .md suffix")
     return
   }
+  const { isPrintPage, isPrintRollingSummary}
   devLog(filePath)
   fs.readFile(filePath,function(err, mdTxt) {
     if (err !== null) {
       console.log(`error ${err} reading from filePath ${filePath}`)
     }
     devLog("fsreadfile arguments", arguments)
-    // Initialize the Markdown parser (to save image files that may be base64 embedded in the markdown (which will get in the way of gpt reading the text))
-    const md = new MarkdownIt();
-
-    // strip all images that repeat 3 or more times
-    const mdMinus3OrMoreRepeatingBase64Images = removeRepeatingBase64ImagesFromMarkdownString(mdTxt.toString())
-
-    const tokens = md.parse(mdMinus3OrMoreRepeatingBase64Images, {});
-
-    // Parse the markdown and find the images (percollate will embed all images as base64 data into the markdown)
-    const imageTokens = tokens.filter(token => token.type === 'inline' && token.children.some(child => child.type === 'image'));
-    if (imageTokens.length > 0) {
-      const imageDirPath = `${filePath}imagesD`
-      fs.mkdir(imageDirPath, { recursive: true }, (error) => {
-        if (error) {
-          console.error('Error creating directory to save images:', error);
-          return
-        } else {
-          devLog('Directory created to store markdown embedded images:', imageDirPath);
-          let imageCounter = 1;
-          imageTokens.forEach(token => {
-            const imageToken = token.children.find(child => child.type === 'image');
-            const imageData = imageToken.attrGet('src');
-            const dataUrlRegEx = /^data:image\/([a-zA-Z]+);base64,/;
-            const match = dataUrlRegEx.exec(imageData);
-            if (match) {
-              const extension = match[1];
-              const base64Data = imageData.replace(dataUrlRegEx, '');
-              const buffer = Buffer.from(base64Data, 'base64');
-
-              // Save the image to a file
-              const fileName = `${imageDirPath}/image-${imageCounter}.${extension}`;
-              fs.writeFileSync(fileName, buffer);
-              devLog(`Image saved as ${fileName}`);
-
-              // Update the image src attribute in the token
-              imageToken.attrSet('src', fileName);
-              imageCounter++;
-            }
-          });
-        }
-      });
-    }
-    // Render the updated markdown
-    const markdownStrippedOfEmbedImages = md.renderer.render(tokens, md.options, {});
-    fs.writeFileSync(filePath, markdownStrippedOfEmbedImages);
     const finalMarkdownArray = splitStringIntoSubstringsLengthN(markdownStrippedOfEmbedImages, sliceSize)
     const insertReturnStatus = insertMD(
       filePath,
       title,
-      synopsis,
       tStamp,
       articleType
       // narrator,
@@ -118,10 +73,28 @@ function loadMarkdown(title, synopsis, tStamp, filePath, pageNum, sliceSize, rol
       rollingSummary,
       isPrintPage,
       isPrintSliceSummary,
-      isPrintRollingSummary
+      isPrintRollingSummary,
+      isQuiz
     }, queryGPT, tStamp);
     console.log(eventLoopEndMsg)
   })
+}
+
+function factoryTakeArgs(choicesList) {
+  return function (value, previous) {
+    if (!choicesList.includes(value)) {
+      console.error(`Invalid choice: ${value}. Please select from the available choices: ${choicesList.join(', ')}`);
+      process.exit(1);
+    }
+
+    if (previous.includes(value)) {
+      console.warn(`Duplicate choice: ${value} is already selected.`);
+    } else {
+      previous.push(value);
+    }
+
+    return previous;
+  }
 }
 
 program
@@ -134,12 +107,13 @@ program
   .argument('[charPageLength]', 'characters per page default 1800', 1800)
   .argument('[narrator]', 'narrator persona, default none ("")', "")
   // .argument('[isPrintPage]', 'whether to print each page of slice, false=0', 0)
-  .addArgument(new Argument('[isPrintPage]', 'whether to print each page, false=0').choices([0, 1]))
-  .addArgument(new Argument('[isPrintSliceSummary]', 'whether to print each slice summary, false=0').choices([0, 1]))
-  .addArgument(new Argument('[isPrintRollingSummary]', 'whether to print each rolling summary, false=0').choices([0, 1]))
+  .argument("-t, --toggles [toggles]", 'Select multiple choices from the list', factoryTakeArgs(togglesOptions), [])
+  // .addArgument(new Argument('[isPrintPage]', 'whether to print each page, false=0').choices([0, 1]))
+  // .addArgument(new Argument('[isPrintSliceSummary]', 'whether to print each slice summary, false=0').choices([0, 1]))
+  // .addArgument(new Argument('[isPrintRollingSummary]', 'whether to print each rolling summary, false=0').choices([0, 1]))
   // .argument('[narrator]', 'narrator persona, default none ("")', "")
   .description("load markdown file, create new bookmark, run eventLoop")
-  .action(async function(filePath, articleType, pageNumber, sliceSize, charPageLength, narrator, isPrintPage, isPrintChunSummary, isPrintRollingSummary) {
+  .action(async function(filePath, articleType, pageNumber, sliceSize, charPageLength, narrator, toggles) {
     const tStamp = newSessionTime()
     async function queryUserTitleSynopsis() {
       var titlePromptSchema = {
@@ -166,7 +140,7 @@ program
     }
     const {title, synopsis} = await queryUserTitleSynopsis()
     loadMarkdown(title, tStamp, synopsis,
-           filePath, pageNumber, sliceSize, "", narrator, isPrintPage, isPrintSliceSummary, isPrintRollingSummary, articleType, charPageLength
+           filePath, pageNumber, sliceSize, "", narrator, articleType, charPageLength, toggles
            )
   });
 
@@ -201,7 +175,14 @@ program
     devLog("bookmark data", bData)
     const mData = loadMDTable(bData.filePath)
     devLog("markdown data", mData)
-    loadMarkdown(mData.title, mData.synopsis, tStamp, mData.filePath, bData.pageNum, bData.sliceSize, bData.rollingSummary, bData.narrator, bData.isPrintPage, bData.isPrintSliceSummary, bData.isPrintRollingSummary, mData.articleType, mData.charPageLength)
+    const resumeToggles = []
+    // create trueKeysList from object with bool values
+    for (const [key, value] of Object.entries({bData.isPrintPage, bData.isPrintSliceSummary, bData.isPrintRollingSummary})) {
+      if (value) {
+        resumeToggles.push(key);
+      }
+}
+    loadMarkdown(mData.title, bData.synopsis, tStamp, mData.filePath, bData.pageNum, bData.sliceSize, bData.rollingSummary, bData.narrator, , mData.articleType, mData.charPageLength, resumeToggles)
   })
 
 program

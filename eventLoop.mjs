@@ -44,7 +44,12 @@ export default async function eventLoop(bzaTxt, readOpts, queryGPT, sessionTime)
     isPrintRollingSummary,
     title
   } = readOpts;
-  let readOptsToToggle = {}
+  let readOptsToToggle = {
+    isPrintPage,
+    isPrintSliceSummary,
+    isPrintRollingSummary,
+    isQuiz
+  }
   console.log(
     `totalPages ${totalPages}, pageNum ${readOpts.pageNumber}, sliceSize ${readOpts.sliceSize}`
   );
@@ -125,9 +130,14 @@ export default async function eventLoop(bzaTxt, readOpts, queryGPT, sessionTime)
     markdownToEmit += pageSlice
   }
   io.emit("markdown", markdownToEmit);
-  if () {
-    const {} = await runQuiz(pageSlice, readOpts, queryGPT);
+  if (readOptsToToggle.isQuiz) {
+    const quizToggles = await runQuiz(pageSlice, readOpts, queryGPT);
+    readOptsToToggle =  {
+      ...readOptsToToggle,
+      ...quizToggles
+    }
   }
+
   const userInput = await getUserInput(bzaTxt, {...readOpts,
                                           sessionTime,
                                           rollingSummary,

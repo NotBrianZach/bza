@@ -15,16 +15,17 @@ function insertSample(
 ) {
   const correctFormatDate = yyyymmddhhmmss(jDate);
   const dbExampleBook = db.prepare(
-    `insert or replace into md (createdTStamp, title, synopsis, filePath, articleType) values (?,?,?,?,?)`
+    `insert or replace into md (createdTStamp, title,  filePath, articleType) values (?,?,?,?)`
   );
-  dbExampleBook.run(correctFormatDate, title, synopsis, filePath, articleType);
+  dbExampleBook.run(correctFormatDate, title, filePath, articleType);
 
   const dbExampleBookmark = db
     .prepare(
-      `insert or replace into bookmarks (bTitle, isQuiz, isPrintPage, isPrintSliceSummary, narrator, tStamp, filePath) values (?,?,?,?,?,?,?)`
+      `insert or replace into bookmarks (bTitle, synopsis, isQuiz, isPrintPage, isPrintSliceSummary, narrator, tStamp, filePath) values (?,?,?,?,?,?,?,?)`
     )
     .run(
       bTitle,
+      synopsis,
       isQuiz,
       isPrintPage,
       isPrintSliceSummary,
