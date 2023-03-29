@@ -33,20 +33,26 @@ And it stores all this into "bookmarks" from which can resume our session in a l
 
 ## Convert to Markdown
 
+FIRST, must complete all the setps in TO RUN
+
 We love markdown because it is close to plaintext and easy to read in raw format for both humans and gpt. It makes copy&paste into prompt, and shell scripting easy while still allowing for hyperlinks, latex, and image embedding.
 
 So, before we can add more articles to our library, we need to convert to markdown using best available tools:
 
+for utility function definitions, see shellHook in shell.nix
+
 - html
   - a website
-    - curl https://example.com | percollate md -o ./library/file.md -u https://example.com | ./tools/imageStripper.mjs ./library/example.com
+    - url2md https://example.com ./library/example.com 
+    - (url2md sourceUrl outputFilePath, image directory will be filename+d)
   - local html we downloaded
-    - cat ~/Downloads/a_path_towards_agi.html | percollate md --output ./library/a_path_towards_agi.md
+    - html2md ~/Downloads/a_path_towards_agi.html agi.md
+    - (html2md sourceUrl outputFilePath, image directory will be filename+d)
 - epub
  - pandoc -i /path/to/file.epub -o /path/to/output.md
 
 - pdf (also images&docx):
-  -  https://cloudconvert.com/pdf-to-html unless you really want to fine tune your pdf parsing just use this then see instructions for html, otherwise ...
+  -  https://cloudconvert.com/pdf-to-html unless you really want to fine tune your pdf parsing just use this then see earlier instructions for html files using html2md bash function, otherwise ...
     - to parse pdfs into structured text locally we'll use [parsr](https://github.com/axa-group/Parsr) which we'll have to install via docker
     - it's recommended to use parsr gui (parsr api is complex), it can be reached at localhost:8080 if that port was not already in use
       - nix-shell -p docker
