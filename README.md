@@ -39,7 +39,7 @@ So, before we can add more articles to our library, we need to convert to markdo
 
 - html
   - a website
-    - curl https://example.com | percollate md -o ./library/file.md -u https://example.com -
+    - curl https://example.com | percollate md -o ./library/file.md -u https://example.com | ./tools/imageStripper.mjs ./library/example.com
   - local html we downloaded
     - cat ~/Downloads/a_path_towards_agi.html | percollate md --output ./library/a_path_towards_agi.md
 - epub

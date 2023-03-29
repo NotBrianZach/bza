@@ -21,8 +21,24 @@ pkgs.stdenv.mkDerivation {
   ];
 
   shellHook = ''
-    alias bza="DB_PATH=$(pwd)/db/bookmarks.sq3 $(pwd)/bza.mjs"
-    alias percollate="$(pwd)/node_modules/.bin/percollate"
+    export bzaDir=$(pwd)
+    alias bza="DB_PATH=$bzaDir/db/bookmarks.sq3 $(pwd)/bza.mjs"
+    alias percollate="$bzaDir/node_modules/.bin/percollate"
+    function web2md() {
+      url=$1
+      output_file=realpath $2
+
+      curl "$url" | \
+      percollate md -o "$output_file" -u "$url"
+      $bzaDir/tools/imageStripper.mjs $output_file
+    }
+
+    function html2md() {
+      file_path=$1
+      output_file=realpath $2
+      percollate md $file_path -o $output_file
+      $bzaDir/tools/imageStripper.mjs $output_file
+    }
     # alias vmd="./node_modules/.bin/vmd"
 # rmd () {
 #   pandoc $1 | lynx -stdin

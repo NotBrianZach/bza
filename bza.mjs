@@ -13,7 +13,7 @@ import axios from "axios";
 // var similarity = require( 'compute-cosine-similarity' );
 // similarity( x, y[, accessor] )
 
-import { removeExtraWhitespace, devLog, removeRepeatingBase64ImagesFromMarkdownString, newSessionTime } from "./lib/utils.mjs";
+import { removeExtraWhitespace, devLog, newSessionTime } from "./lib/utils.mjs";
 import { createGPTQuery } from "./lib/createGPTQuery.mjs";
 import db from "./lib/dbConnect.mjs";
 import eventLoop from "./eventLoop.mjs";
@@ -29,7 +29,12 @@ function loadMarkdown(title, synopsis, tStamp, filePath, pageNum, sliceSize, rol
     console.error("error, not a markdown file, file must end with .md suffix")
     return
   }
-  const { isPrintPage, isPrintRollingSummary}
+  const {
+    isPrintPage,
+    isPrintRollingSummary,
+    isPrintSliceSummary,
+    isQuiz
+  } = toggles
   devLog(filePath)
   fs.readFile(filePath,function(err, mdTxt) {
     if (err !== null) {
@@ -177,12 +182,12 @@ program
     devLog("markdown data", mData)
     const resumeToggles = []
     // create trueKeysList from object with bool values
-    for (const [key, value] of Object.entries({bData.isPrintPage, bData.isPrintSliceSummary, bData.isPrintRollingSummary})) {
+    for (const [key, value] of Object.entries({ isPrintPage: bData.isPrintPage, isprintSliceSummary: bData.isPrintSliceSummary, isPrintRolingSummary: bData.isPrintRollingSummary, isQuiz: bData.isQuiz })) {
       if (value) {
         resumeToggles.push(key);
       }
 }
-    loadMarkdown(mData.title, bData.synopsis, tStamp, mData.filePath, bData.pageNum, bData.sliceSize, bData.rollingSummary, bData.narrator, , mData.articleType, mData.charPageLength, resumeToggles)
+    loadMarkdown(mData.title, bData.synopsis, tStamp, mData.filePath, bData.pageNum, bData.sliceSize, bData.rollingSummary, bData.narrator, mData.articleType, mData.charPageLength, resumeToggles)
   })
 
 program
