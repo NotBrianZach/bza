@@ -54,7 +54,9 @@ for utility function definitions, see shellHook in shell.nix
  - pandoc -i /path/to/file.epub -o /path/to/output.md
 
 - pdf (also images&docx):
-  -  https://cloudconvert.com/pdf-to-html unless you really want to fine tune your pdf parsing just use this then see earlier instructions for html files using html2md bash function, otherwise ...
+  -  https://cloudconvert.com/pdf-to-html just use this then see earlier instructions for html files using html2md bash function, 
+    - otherwise ...
+    - if you really want to fine tune your pdf parsing...
     - to parse pdfs into structured text locally we'll use [parsr](https://github.com/axa-group/Parsr) which we'll have to install via docker
     - it's recommended to use parsr gui (parsr api is complex), it can be reached at localhost:8080 if that port was not already in use
       - nix-shell -p docker
