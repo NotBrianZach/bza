@@ -50,6 +50,10 @@ function tokensToMarkdown(tokens) {
         output += `](${token.attrs.find(attr => attr[0] === "href")[1]})`;
         break;
       case "image":
+        console.log(
+          "image src",
+          token.attrs.find(attr => attr[0] === "src")
+        );
         output += `![${token.content}](${
           token.attrs.find(attr => attr[0] === "src")[1]
         })`;
@@ -104,31 +108,7 @@ function tokensToMarkdown(tokens) {
 }
 
 console.log("imageStripper");
-function removeRepeatingBase64ImagesFromMarkdownString(markdownContent) {
-  console.log("removeRepeatingBase64ImagesFromMarkdownString");
-  const MAX_REPEATS = 3; // Define the maximum number of times a base64 image is allowed to repeat
-
-  const base64ImageRegex = /!\[.*?\]\s*\(data:image\/.*?;base64,.*?\)/g;
-  const base64Images = markdownContent.match(base64ImageRegex) || [];
-
-  const imageCounter = {};
-
-  // Count occurrences of each image
-  base64Images.forEach(image => {
-    imageCounter[image] = (imageCounter[image] || 0) + 1;
-  });
-
-  let cleanedMarkdown = markdownContent;
-  console.log("base64 images", base64Images);
-
-  // Remove images that repeat too often
-  for (const [image, count] of Object.entries(imageCounter)) {
-    if (count > MAX_REPEATS) {
-      cleanedMarkdown = cleanedMarkdown.split(image).join("");
-    }
-  }
-  return cleanedMarkdown;
-}
+function removeBase64ImagesFromMarkdownString(markdownContent, outputDir) {}
 
 function getFilenameWithoutSuffix(filePath) {
   // Extract the filename from the file path
@@ -155,63 +135,73 @@ function stripMarkdownOfImages(inputFilePath) {
       inputFilePathComponenetList.join("/") + inputFileName + "d";
     const inputMarkdown = inputMarkdownBuffer.toString();
     // strip all images that repeat 3 or more times
-    const mdMinus3OrMoreRepeatingBase64Images = removeRepeatingBase64ImagesFromMarkdownString(
-      inputMarkdown
-    );
+    // const cleanMarkdown = removeBase64ImagesFromMarkdownString(
+    //   inputMarkdown,
+    //   outputDir
+    // );
 
-    // const mdMinus3OrMoreRepeatingBase64Images = inputMarkdown;
+    console.log("removeBase64ImagesFromMarkdownString");
+    const MAX_REPEATS = 3; // Define the maximum number of times a base64 image is allowed to repeat
 
-    const tokens = md.parse(mdMinus3OrMoreRepeatingBase64Images, {});
+    const base64ImageRegex = /!\[.*?\]\s*\(data:image\/.*?;base64,.*?\)/g;
+    let base64Images = inputMarkdown.match(base64ImageRegex) || [];
 
-    // Parse the markdown and find the images (percollate will embed all images as base64 data into the markdown)
-    const imageTokens = tokens.filter(
-      token =>
-        token.type === "inline" &&
-        token.children.some(child => child.type === "image")
-    );
-    if (imageTokens.length > 0) {
-      const imageDirPath = `${outputDir}imagesD`;
-      fs.mkdir(imageDirPath, { recursive: true }, error => {
-        if (error) {
-          console.error("Error creating directory to save images:", error);
-          return;
-        } else {
-          console.log(
-            "Directory created to store markdown embedded images:",
-            imageDirPath
-          );
-          let imageCounter = 1;
-          imageTokens.forEach(token => {
-            const imageToken = token.children.find(
-              child => child.type === "image"
-            );
-            const imageData = imageToken.attrGet("src");
-            const dataUrlRegEx = /^data:image\/([a-zA-Z]+);base64,/;
-            const match = dataUrlRegEx.exec(imageData);
-            if (match) {
-              const extension = match[1];
-              const base64Data = imageData.replace(dataUrlRegEx, "");
-              const buffer = Buffer.from(base64Data, "base64");
+    let imageCounter = {};
 
-              // Save the image to a file
-              const fileName = `${imageDirPath}/image-${imageCounter}.${extension}`;
-              fs.writeFileSync(fileName, buffer);
-              console.log(`Image saved as ${fileName}`);
+    // Count occurrences of each image
+    let cleanedMarkdown = inputMarkdown;
+    base64Images.forEach(image => {
+      imageCounter[image] = (imageCounter[image] || 0) + 1;
+    });
 
-              // Update the image src attribute in the token
-              imageToken.attrSet("src", fileName);
-              imageCounter++;
-            }
-          });
-        }
-      });
+    // Remove images that repeat too often
+    for (const [image, count] of Object.entries(imageCounter)) {
+      if (count > MAX_REPEATS) {
+        cleanedMarkdown = cleanedMarkdown.split(image).join("");
+      }
     }
-    // isPrintPage, isPrintSliceSummary, isPrintRollingSummary,
 
-    // Render the updated markdown
-    const markdownStrippedOfEmbedImages = tokensToMarkdown(tokens);
+    const imageDirPath = `${outputDir}/imagesD`;
 
-    fs.writeFileSync(inputFilePath, markdownStrippedOfEmbedImages);
+    console.log("removeBase64ImagesFromMarkdownString2");
+    fs.mkdir(imageDirPath, { recursive: true }, error => {
+      console.log("cleanedMarkdown0");
+      if (error && error.code !== "EEXIST") {
+        console.error("Error creating directory to save images:", error);
+        return "Error creating directory to save images: ${error}";
+      } else {
+        imageCounter = 0;
+        // console.log("cleanedMarkdown", cleanedMarkdown);
+        base64Images = cleanedMarkdown.match(base64ImageRegex) || [];
+        // console.log("base64Images", base64Images);
+        base64Images.forEach(image => {
+          const base64DataRegex = /data:image\/(.*?);base64,(.*)/;
+          const matches = image.match(base64DataRegex);
+
+          const extension = matches[1];
+          const base64Data = matches[2];
+          const buffer = Buffer.from(base64Data, "base64");
+
+          // Save the image to a file
+          const fileName = `${imageDirPath}/image-${imageCounter}.${extension}`;
+          fs.writeFileSync(fileName, buffer);
+          console.log(`Image saved as ${fileName}`);
+
+          cleanedMarkdown = cleanedMarkdown
+            .split(image)
+            .join(
+              `![image-${imageCounter}](./imagesD/image-${imageCounter}.${extension})`
+            );
+
+          // Update the image src attribute in the token
+          imageCounter++;
+        });
+
+        // return cleanedMarkdown;
+
+        fs.writeFileSync(inputFilePath, cleanedMarkdown);
+      }
+    });
   });
 }
 
@@ -224,33 +214,3 @@ if (process.argv.length === 3) {
     "must invoke imageStripper with filePath to modify: imageStripper.mjs filePath"
   );
 }
-// my_script.js
-// process.stdin.setEncoding("utf-8");
-
-// if (process.argv.length > 3) {
-//   // Read from command-line argument
-//   process.stdout.write(stripMarkdownOfImages(process.argv[2], process.argv[3]));
-// } else {
-//   let inputData = "";
-
-//   if (process.argv.length < 3) {
-//     // Read from command-line argument
-//     throw new Error(
-//       "must invoke imageStripper with outputpath: node imageStripper.mjs outputPath"
-//     );
-//   }
-//   if (process.stdin === undefined) {
-//     throw new Error("failed pass argument or pipe input to imageStripper.mjs");
-//   }
-//   // Read from piped input
-//   process.stdin.on("readable", () => {
-//     let chunk;
-//     while ((chunk = process.stdin.read()) !== null) {
-//       inputData += chunk;
-//     }
-//   });
-
-//   process.stdin.on("end", () => {
-//     process.stdout.write(stripMarkdownOfImages(process.argv[2], inputData));
-//   });
-// }
