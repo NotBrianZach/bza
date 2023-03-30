@@ -34,10 +34,10 @@ pkgs.stdenv.mkDerivation {
     }
 
     function html2md() {
-      file_path=$1
-      output_file=realpath $2
-      percollate md $file_path -o $output_file
-      $bzaDir/tools/imageStripper.mjs $output_file
+      file_path="$1"
+      output_file="$(readlink -f "$2")"
+      percollate md "$file_path" -o "$output_file"
+      $bzaDir/tools/imageStripper.mjs "$output_file"
     }
     # alias vmd="./node_modules/.bin/vmd"
 # rmd () {

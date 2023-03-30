@@ -46,7 +46,7 @@ for utility function definitions, see shellHook in shell.nix
     - url2md https://example.com ./library/example.com 
     - (url2md sourceUrl outputFilePath, image directory will be filename+d)
   - local html we downloaded
-    - html2md ~/Downloads/a_path_towards_agi.html agi.md
+    - html2md ~/Downloads/a_path_towards_agi.html ./library/agi.md
     - (html2md sourceUrl outputFilePath, image directory will be filename+d)
 - epub
  - pandoc -i /path/to/file.epub -o /path/to/output.md

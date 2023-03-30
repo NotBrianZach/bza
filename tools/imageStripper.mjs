@@ -3,11 +3,110 @@
 import MarkdownIt from "markdown-it";
 import fs from "fs";
 
+const md = new MarkdownIt({
+  html: true,
+  linkify: true,
+  typographer: true,
+  breaks: true
+});
+
+// Your tokens array
+function tokensToMarkdown(tokens) {
+  let output = "";
+
+  for (const token of tokens) {
+    switch (token.type) {
+      case "heading_open":
+        output += `${"#".repeat(token.tag.substr(1))} `;
+        break;
+      case "heading_close":
+        output += "\n";
+        break;
+      case "paragraph_open":
+        output += "\n";
+        break;
+      case "paragraph_close":
+        output += "\n";
+        break;
+      case "bullet_list_open":
+        break;
+      case "bullet_list_close":
+        break;
+      case "ordered_list_open":
+        break;
+      case "ordered_list_close":
+        break;
+      case "list_item_open":
+        break;
+      case "list_item_close":
+        break;
+      case "inline":
+        output += token.content;
+        break;
+      case "link_open":
+        output += `[`;
+        break;
+      case "link_close":
+        output += `](${token.attrs.find(attr => attr[0] === "href")[1]})`;
+        break;
+      case "image":
+        output += `![${token.content}](${
+          token.attrs.find(attr => attr[0] === "src")[1]
+        })`;
+        break;
+      case "code_inline":
+        output += `\`${token.content}\``;
+        break;
+      case "fence":
+        output += `\n\`\`\`${token.info || ""}\n${token.content}\n\`\`\`\n`;
+        break;
+      case "code_block":
+        output += `\n\`\`\`\n${token.content}\n\`\`\`\n`;
+        break;
+      case "blockquote_open":
+        output += "> ";
+        break;
+      case "blockquote_close":
+        break;
+      case "hr":
+        output += "\n---\n";
+        break;
+      case "strong_open":
+        output += "**";
+        break;
+      case "strong_close":
+        output += "**";
+        break;
+      case "em_open":
+        output += "_";
+        break;
+      case "em_close":
+        output += "_";
+        break;
+      case "s_open":
+        output += "~~";
+        break;
+      case "s_close":
+        output += "~~";
+        break;
+      case "hardbreak":
+        output += "  \n";
+        break;
+      case "softbreak":
+        output += "\n";
+        break;
+      default:
+        console.log(`Unhandled token type: ${token.type}`);
+    }
+  }
+
+  return output;
+}
+
 console.log("imageStripper");
 function removeRepeatingBase64ImagesFromMarkdownString(markdownContent) {
   console.log("removeRepeatingBase64ImagesFromMarkdownString");
   const MAX_REPEATS = 3; // Define the maximum number of times a base64 image is allowed to repeat
-  const md = new MarkdownIt();
 
   const base64ImageRegex = /!\[.*?\]\s*\(data:image\/.*?;base64,.*?\)/g;
   const base64Images = markdownContent.match(base64ImageRegex) || [];
@@ -48,7 +147,6 @@ function stripMarkdownOfImages(inputFilePath) {
     // console.log(inputMarkdownBuffer, other);
     if (err !== null) throw new Error(err);
     // Initialize the Markdown parser (to save image files that may be base64 embedded in the markdown (which will get in the way of gpt reading the text))
-    const md = new MarkdownIt();
     const inputFileName = getFilenameWithoutSuffix(inputFilePath);
 
     const inputFilePathComponenetList = inputFilePath.split("/");
@@ -60,6 +158,8 @@ function stripMarkdownOfImages(inputFilePath) {
     const mdMinus3OrMoreRepeatingBase64Images = removeRepeatingBase64ImagesFromMarkdownString(
       inputMarkdown
     );
+
+    // const mdMinus3OrMoreRepeatingBase64Images = inputMarkdown;
 
     const tokens = md.parse(mdMinus3OrMoreRepeatingBase64Images, {});
 
@@ -109,11 +209,7 @@ function stripMarkdownOfImages(inputFilePath) {
     // isPrintPage, isPrintSliceSummary, isPrintRollingSummary,
 
     // Render the updated markdown
-    const markdownStrippedOfEmbedImages = md.renderer.render(
-      tokens,
-      md.options,
-      {}
-    );
+    const markdownStrippedOfEmbedImages = tokensToMarkdown(tokens);
 
     fs.writeFileSync(inputFilePath, markdownStrippedOfEmbedImages);
   });
