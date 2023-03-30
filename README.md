@@ -43,10 +43,12 @@ for utility function definitions, see shellHook in shell.nix
 
 - html
   - a website
-    - url2md https://example.com ./library/example.com 
-    - (url2md sourceUrl outputFilePath, image directory will be filename+d)
-  - local html we downloaded
-    - html2md ~/Downloads/a_path_towards_agi.html ./library/agi.md
+    - pullUrl https://example.com # this is a wrapper for wget in shellHook in shell.nix 
+    - cd example.com then find whatever file you want in the directory structure, then see below
+  - local html 
+    - html2md ~/Downloads/a_path_towards_agi.html
+    - mv a_path_towards_agi.md $bzaDir/library
+    - mv a_path_towards_agid $bzaDir/library
     - (html2md sourceUrl outputFilePath, image directory will be filename+d)
 - epub
  - pandoc -i /path/to/file.epub -o /path/to/output.md
@@ -150,7 +152,7 @@ if toggled on, start after step 2 in Event Loop
 - bza resume <bookmarkName> [timestamp] ;; (bookmarkName usually = title, timesteamp defaults to most recent) resumes from an old bookmark, creating a new one
 - bza load <filepath> [pageNumber] [sliceSize] [charPerPage] [narrator] [isPrintPage] [isPrintSliceSummary] [isPrintRollingSummary] ;; load markdown file, create new bookmark, run eventLoop
 - bza gptDB   ;; for fun, ask gpt, given db schema as pre-prompt, to create db query to either select from or update database, print command, then type yes to run or n to cancel (might not be executable)
-- bza print [numberToPrint] ;; prints bookmarks, 10 by default
+- bza print [orderBy] [numberToPrint] ;; prints bookmarks, 10000 by default, orderBy= "tStamp", "bTitle", "synopsis", "pageNum", "filePath", "narrator"
 
 ## Other Configuration:
 can modify eventLoop prompts in genPrompts.mjs
@@ -173,9 +175,9 @@ could create another file e.g. alterDB.mjs which has alter table statements if y
 - cosine similarity (or similar metrics) on book pages vector array option to get relevant context (wip)
 - recognize images and sumarize their meaning into text (when we get access to good multimodal models)
 - categorize query types (other than just summarize/non summarize) and allow for loop and prompt stack creation within repl itself? (wip)
+- more programmability: maybe "vim like" language to create context stacks inside repl and store them in either db or key value store (or db emulating key value store)
 - multimodality?
 - multiplayer repls? (idk websocket or something)
-- repl command history&fuzzy search, somehow (maybe via some term emulator shell.nix install?)
 - package for nixos,brew,apt
 
 ## Naming

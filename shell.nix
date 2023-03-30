@@ -24,28 +24,17 @@ pkgs.stdenv.mkDerivation {
     export bzaDir=$(pwd)
     alias bza="DB_PATH=$bzaDir/db/bookmarks.sq3 $(pwd)/bza.mjs"
     alias percollate="$bzaDir/node_modules/.bin/percollate"
-    function web2md() {
+    function pullUrl() {
       url=$1
-      output_file=realpath $2
-
-      curl "$url" | \
-      percollate md -o "$output_file" -u "$url"
-      $bzaDir/tools/imageStripper.mjs $output_file
+      # mkdir -p "$folder_name"
+      wget --recursive --no-clobber --level 1 --accept html,js,tmp,jpg,jpeg,png,gif,css --directory-prefix="dled" "$url"
     }
 
-    function html2md() {
-      file_path="$1"
-      output_file="$(readlink -f "$2")"
-      percollate md "$file_path" -o "$output_file"
-      $bzaDir/tools/imageStripper.mjs "$output_file"
-    }
+    alias html2md="$(pwd)/tools/html2md.mjs"
     # alias vmd="./node_modules/.bin/vmd"
-# rmd () {
-#   pandoc $1 | lynx -stdin
-# }
-# function mdview {
-# pandoc "$1" -f markdown -t html | lynx -stdin
-# }
+    # function mdview {
+    # pandoc "$1" -f markdown -t html | lynx -stdin
+    # }
     bza --help
     export IS_DEV=true
 
