@@ -43,8 +43,7 @@ for utility function definitions, see shellHook in shell.nix
 
 - html
   - a website
-    - pullUrl https://example.com # this is a wrapper for wget in shellHook in shell.nix 
-    - cd example.com then find whatever file you want in the directory structure, then see below
+    - html2md -u  https://example.com  -o "example.md" # this is a wrapper for wget in shellHook in shell.nix 
   - local html 
     - html2md ~/Downloads/a_path_towards_agi.html
     - mv a_path_towards_agi.md $bzaDir/library

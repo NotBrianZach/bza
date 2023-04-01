@@ -3,6 +3,7 @@
 pkgs.stdenv.mkDerivation {
   name = "nix-shell-bza";
 
+
   buildInputs = [
     pkgs.nodejs-18_x
 
@@ -17,20 +18,19 @@ pkgs.stdenv.mkDerivation {
 
     # html oepub to markdown
     pkgs.pandoc
-
   ];
 
   shellHook = ''
     export bzaDir=$(pwd)
     alias bza="DB_PATH=$bzaDir/db/bookmarks.sq3 $(pwd)/bza.mjs"
-    alias percollate="$bzaDir/node_modules/.bin/percollate"
     function pullUrl() {
       url=$1
       # mkdir -p "$folder_name"
       wget --recursive --no-clobber --level 1 --accept html,js,tmp,jpg,jpeg,png,gif,css --directory-prefix="dled" "$url"
     }
 
-    alias html2md="$(pwd)/tools/html2md.mjs"
+    alias html2md="$(pwd)/tools/html2md.sh"
+    alias url2md="$(pwd)/tools/url2md.sh"
     # alias vmd="./node_modules/.bin/vmd"
     # function mdview {
     # pandoc "$1" -f markdown -t html | lynx -stdin
@@ -43,3 +43,27 @@ pkgs.stdenv.mkDerivation {
     echo "It's bza time!"
   '';
 }
+# { pkgs ? import <nixpkgs> {} }:
+
+# pkgs.mkShell {
+#   name = "my-postgres-shell";
+#   buildInputs = [ pkgs.postgresql ];
+
+#   shellHook = ''
+#     export PGDATA=${toString ./my-db-dir}
+#     export PGPORT=5432
+#     export PGHOST=localhost
+#     export PGUSER=myuser
+#     export PGPASSWORD=mypassword
+
+#     mkdir -p $PGDATA
+#     if [ ! -e $PGDATA/PG_VERSION ]; then
+#       echo "Initializing PostgreSQL database in $PGDATA"
+#       initdb --auth=md5 --username=$PGUSER --pwfile=<(echo $PGPASSWORD)
+#     fi
+
+#     pg_ctl start
+#     trap "pg_ctl stop" EXIT
+#   '';
+# }
+
