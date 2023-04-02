@@ -3,15 +3,30 @@
 // For Node.js
 var TurndownService = require("@joplin/turndown");
 var turndownPluginGfm = require("@joplin/turndown-plugin-gfm");
+const { JSDOM } = require('jsdom');
 
-var gfm = turndownPluginGfm.gfm;
-var turndownService = new TurndownService();
+
+const gfm = turndownPluginGfm.gfm;
+const turndownService = new TurndownService();
 turndownService.use(gfm);
 
 // var markdown = turndownService.turndown("<strike>Hello world!</strike>");
 const fs = require("fs");
 const path = require("path");
-const turndownService = require("turndown")();
+
+// Function to remove CSS and JavaScript from the HTML
+function removeCSSAndJS(html) {
+    const dom = new JSDOM(html);
+    const document = dom.window.document;
+    const styles = document.querySelectorAll('style, link[rel="stylesheet"], script');
+
+    styles.forEach((style) => {
+                       style.remove();
+                   });
+
+    return document.documentElement.outerHTML;
+}
+
 
 async function readFile(filePath) {
   return new Promise((resolve, reject) => {
@@ -90,7 +105,7 @@ async function removeBase64Images(inputMarkdown, outputDir) {
   return cleanedMarkdown;
 }
 
-async function convertHtmlToMarkdown(inputFilePath) {
+async function convertHTMLToMarkdown(inputFilePath) {
   console.log("inputFilePath", inputFilePath);
 
   try {
@@ -101,13 +116,20 @@ async function convertHtmlToMarkdown(inputFilePath) {
       inputFileName + "d"
     );
 
-    const inputMarkdown = turndownService.turndown(inputHtmlBuffer.toString());
+    // Remove CSS and JavaScript from the HTML content
+    const htmlWithoutCSSAndJS = removeCSSAndJS(inputHtmlBuffer.toString());
+    const inputMarkdown = turndownService.turndown(htmlWithoutCSSAndJS);
     const cleanedMarkdown = await removeBase64Images(inputMarkdown, outputDir);
 
-    await writeFile(inputFilePath, cleanedMarkdown);
+    await writeFile(`${outputDir}/${inputFileName}.md`, cleanedMarkdown);
   } catch (err) {
     throw new Error(err);
   }
 }
 
-convertHTMLToMarkdown(process.env.args[3]);
+if (process.argv.length === 3) {
+       console.log("process.argv", process.argv)
+       convertHTMLToMarkdown(process.argv[2]);
+ } else {
+       console.error("html2md run with wrong number of arguments (wants one file path)")
+   }

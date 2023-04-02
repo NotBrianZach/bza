@@ -43,11 +43,12 @@ for utility function definitions, see shellHook in shell.nix
 
 - html
   - a website
-    - html2md -u  https://example.com  -o "example.md" # this is a wrapper for wget in shellHook in shell.nix 
+    - url2md -u  https://example.com  -o "example.md" # this is a wrapper for wget in shellHook in shell.nix 
   - local html 
-    - html2md ~/Downloads/a_path_towards_agi.html
-    - mv a_path_towards_agi.md $bzaDir/library
-    - mv a_path_towards_agid $bzaDir/library
+    - html2md ./library/Frankenstein.html 
+      - this will create a directory ./library/Frankensteind
+        - a file ./library/Frankensteind/Frankenstein.md
+        - and a subdirectory ./library/Frankensteind/imagesD/
     - (html2md sourceUrl outputFilePath, image directory will be filename+d)
 - epub
  - pandoc -i /path/to/file.epub -o /path/to/output.md
