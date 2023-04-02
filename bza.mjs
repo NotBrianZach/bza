@@ -41,10 +41,11 @@ function loadMarkdown(title, synopsis, tStamp, filePath, pageNum, sliceSize, rol
       console.log(`error ${err} reading from filePath ${filePath}`)
     }
     devLog("fsreadfile arguments", arguments)
-    const finalMarkdownArray = splitStringIntoSubstringsLengthN(markdownStrippedOfEmbedImages, sliceSize)
-    const insertReturnStatus = insertMD(
+    const finalMarkdownArray = splitStringIntoSubstringsLengthN(mdTxt.toString(), sliceSize)
+    const insertMDReturnStatus = insertMD(
       filePath,
       title,
+      synopsis,
       tStamp,
       articleType
       // narrator,
@@ -56,8 +57,22 @@ function loadMarkdown(title, synopsis, tStamp, filePath, pageNum, sliceSize, rol
       // isPrintRollingSummary,
     )
     if (insertReturnStatus === undefined) {
-      console.log("db insert error markdown read completed")
+      console.log("db insertMD error  ")
     } else {
+      const insertMarkReturnStatus = insertMD(
+        filePath,
+        title,
+        synopsis,
+        tStamp,
+        articleType
+        // narrator,
+        // pageNum,
+        // sliceSize,
+        // rollingSummary,
+        // isPrintPage,
+        // isPrintSliceSummary,
+        // isPrintRollingSummary,
+      )
       devLog("insertMD return status", insertReturnStatus)
     }
 
@@ -112,7 +127,7 @@ program
   .argument('[charPageLength]', 'characters per page default 1800', 1800)
   .argument('[narrator]', 'narrator persona, default none ("")', "")
   // .argument('[isPrintPage]', 'whether to print each page of slice, false=0', 0)
-  .argument("-t, --toggles [toggles]", 'Select multiple choices from the list', factoryTakeArgs(togglesOptions), [])
+  .argument("[toggles]", 'Select multiple choices from the list', factoryTakeArgs(togglesOptions), [])
   // .addArgument(new Argument('[isPrintPage]', 'whether to print each page, false=0').choices([0, 1]))
   // .addArgument(new Argument('[isPrintSliceSummary]', 'whether to print each slice summary, false=0').choices([0, 1]))
   // .addArgument(new Argument('[isPrintRollingSummary]', 'whether to print each rolling summary, false=0').choices([0, 1]))

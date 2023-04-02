@@ -31,9 +31,9 @@ And it stores all this into "bookmarks" from which can resume our session in a l
 - `OPENAI_API_KEY=$OPENAI_API_KEY bza `
 - open an issue detailing why doesnt work
 
-## Convert to Markdown
+## Convert to Markdown, Shell Tools
 
-FIRST, must complete all the setps in TO RUN
+FIRST, must complete all steps in TO RUN
 
 We love markdown because it is close to plaintext and easy to read in raw format for both humans and gpt. It makes copy&paste into prompt, and shell scripting easy while still allowing for hyperlinks, latex, and image embedding.
 
@@ -41,11 +41,16 @@ So, before we can add more articles to our library, we need to convert to markdo
 
 for utility function definitions, see shellHook in shell.nix
 
+<> = requried arguments, []= optional arguments
+
+- attempt to clean badly formatted tables or latex
+  - gptClean <inputFile>
+
 - html
   - a website
-    - url2md -u  https://example.com  -o "example.md" # this is a wrapper for wget in shellHook in shell.nix 
+    - url2md [-u  https://example.com]  <-o "example.md"> # this is a wrapper for wget in shellHook in shell.nix 
   - local html 
-    - html2md ./library/Frankenstein.html 
+    - html2md <./library/Frankenstein.html >
       - this will create a directory ./library/Frankensteind
         - a file ./library/Frankensteind/Frankenstein.md
         - and a subdirectory ./library/Frankensteind/imagesD/
