@@ -25,13 +25,18 @@ And it stores all this into "bookmarks" from which can resume our session in a l
 - open a terminal or shell (if you don't know how, you could ask chatgpt...)
 - `git clone https://github.com/NotBrianZach/bza.git`
 - `cd bza`
+- get $OPENAI_API_KEY key [here](https://platform.openai.com/account/api-keys) if u dont have
+- `export OPENAI_API_KEY=$OPENAI_API_KEY`
 - `./shell.sh` (might take a few minutes to download and install dependencies)
 - `npm install`
-- get $OPENAI_API_KEY key [here](https://platform.openai.com/account/api-keys) if u dont have
-- `OPENAI_API_KEY=$OPENAI_API_KEY bza `
+-  `bza load <path_to_markdown_file>`
+- or 
+-  `bza resume Frankenstein`
+- or 
+-  `bza print`  (shows current booksmarks, e.g. Frankenstein)
 - open an issue detailing why doesnt work
 
-## Convert to Markdown, Shell Tools
+## Convert to Markdown, Conversion Tools
 
 FIRST, must complete all steps in TO RUN
 
@@ -41,22 +46,20 @@ So, before we can add more articles to our library, we need to convert to markdo
 
 for utility function definitions, see shellHook in shell.nix
 
-<> = requried arguments, []= optional arguments
-
-- attempt to clean badly formatted tables or latex
-  - gptClean <inputFile>
-
 - html
   - a website
-    - url2md [-u  https://example.com]  <-o "example.md"> # this is a wrapper for wget in shellHook in shell.nix 
+    - `url2md -u  https://example.com  -o "example.md"` # this is a wrapper for wget in shellHook in shell.nix 
   - local html 
-    - html2md <./library/Frankenstein.html >
+    - `html2md ./library/Frankenstein.html`
       - this will create a directory ./library/Frankensteind
         - a file ./library/Frankensteind/Frankenstein.md
         - and a subdirectory ./library/Frankensteind/imagesD/
-    - (html2md sourceUrl outputFilePath, image directory will be filename+d)
+    - (html2md <sourceUrl> [outputFilePath], image directory will be filename+d)
 - epub
  - pandoc -i /path/to/file.epub -o /path/to/output.md
+
+- EXPERIMENTAL attempt to clean badly formatted tables or latex (might try tweaking prompt if doesn't work)
+  - gptClean <inputFile>
 
 - pdf (also images&docx):
   -  https://cloudconvert.com/pdf-to-html just use this then see earlier instructions for html files using html2md bash function, 
@@ -154,7 +157,7 @@ if toggled on, start after step 2 in Event Loop
 #### Feeback
 - TODO mode where gpt provides a running meta commentary on user input or approval/disapproval meant to emulate social media like button dopamine for users
 
-## Command Line Tooling (bza)
+## BZA Command Line
 - <> = required argument, [] = optional arguments, ;; = comment (not part of command)
 - bza resume <bookmarkName> [timestamp] ;; (bookmarkName usually = title, timesteamp defaults to most recent) resumes from an old bookmark, creating a new one
 - bza load <filepath> [pageNumber] [sliceSize] [charPerPage] [narrator] [isPrintPage] [isPrintSliceSummary] [isPrintRollingSummary] ;; load markdown file, create new bookmark, run eventLoop
@@ -186,6 +189,7 @@ could create another file e.g. alterDB.mjs which has alter table statements if y
 - multimodality?
 - multiplayer repls? (idk websocket or something)
 - package for nixos,brew,apt
+- ?hyena optional full book context?
 
 ## Naming
 The naive/correct pronounciation sounds like pizza, which is typically sliced into pieces just like we are sliceing up books. Book pizza.

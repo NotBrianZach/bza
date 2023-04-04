@@ -21,6 +21,7 @@ pkgs.stdenv.mkDerivation {
   ];
 
   shellHook = ''
+    export OPENAI_API_KEY=$OPENAI_API_KEY
     export bzaDir=$(pwd)
     alias bza="DB_PATH=$bzaDir/db/bookmarks.sq3 $(pwd)/bza.mjs"
     function pullUrl() {
@@ -31,6 +32,7 @@ pkgs.stdenv.mkDerivation {
 
     alias html2md="$(pwd)/tools/html2md.sh"
     alias url2md="$(pwd)/tools/url2md.sh"
+    alias gptClean="$(pwd)/tools/gptClean.sh"
     # alias vmd="./node_modules/.bin/vmd"
     # function mdview {
     # pandoc "$1" -f markdown -t html | lynx -stdin
