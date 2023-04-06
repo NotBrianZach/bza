@@ -13,7 +13,7 @@ import { readMultilineInput } from "./lib/utils.mjs";
 
 // might append summaries to getUserInput readOpts so dont have to recompute them
 // (then again might be useful to do so if changing summary stack or prepending narration)
-export default async function getUserInput(bzaTxt, readOpts, queryGPT) {
+export default async function getUserInput(pageSlice, readOpts, queryGPT) {
   // TODO replace gpt prompt
   const { pageNum, rollingSummary, synopsis, gptConvParentId } = readOpts;
   const defaultQueryOptions = [
@@ -126,6 +126,17 @@ export default async function getUserInput(bzaTxt, readOpts, queryGPT) {
     }
   ];
 
+  // readOpts.title,
+  // readOpts.tStamp,
+  // readOpts.synopsis,
+  // readOpts.narrator,
+  // readOpts.pageNum,
+  // readOpts.sliceSize,
+  // readOpts.rollingSummary,
+  // readOpts.isPrintPage,
+  // readOpts.isPrintSliceSummary,
+  // readOpts.isPrintRollingSummary,
+
   const defaultPrompt = promptWithAutoCompleteAndExplain(defaultQueryOptions);
   let query = "";
   let gptResponse = "";
@@ -144,46 +155,33 @@ export default async function getUserInput(bzaTxt, readOpts, queryGPT) {
         case "exit":
           return { label: "exit" };
           break;
-        case "start":
-          let userInput = await readMultilineInput();
-          gptResponse = queryGPT(`${queryGPT}\n${query}`, {});
-          console.log("gptResponse", gptResponse);
-          getUserInput(
-            bzaTxt,
-            `${queryGPT}\n${query}\n${gptResponse}`,
-            queryGPT
-          );
-          break;
-        // case "multiline":
-        // if (input === "}}}") {
 
-        // let markdown = '';
-        // io.emit('requestMarkdown', {});
-        // io.on('markdown', (data) => {
-        //   markdown = data;
-        //   let pages = Math.ceil(markdown.length / charPerPage);
-        //   console.log(`Total pages: ${pages}`);
-        //   for (let i = 0; i < pages; i++) {
-        //     let start = i * charPerPage;
-        //     let end = start + charPerPage;
-        //     let pageContent = markdown.substring(start, end);
-        //     console.log(`Page ${i + 1}:\n${pageContent}\n`);
-        //   }
-        // })
-        // }
-        // });
-        // }
-        // break;
         case "continue":
-          query = await prompt(["query"]);
+          // - continue = continue conversation, multiline input, }}} to terminate (if no current conversation assume start default)
+          let userInput = await readMultilineInput();
           gptResponse = queryGPT(`${gptPrompt}`, {});
           getUserInput(
-            bzaTxt,
+            pageSlice,
             {
               ...readOpts,
               convTxt: gptResponse.text,
               parentId: gptResponse.id
             },
+            queryGPT
+          );
+          break;
+        case "start":
+          // - title = append title
+          // - synopsis = append synopsis
+          // - rollingSummary = append pageSliceSummary
+          // - pageSliceSummary = append pageSliceSummary
+          // - pages = append pageSlice
+          let userInput = await readMultilineInput();
+          gptResponse = queryGPT(`${gptPrompt}\n${query}`, {});
+          console.log("gptResponse", gptResponse);
+          getUserInput(
+            pageSlice,
+            `${gptPrompt}\n${query}\n${gptResponse}`,
             queryGPT
           );
           break;
@@ -200,23 +198,23 @@ export default async function getUserInput(bzaTxt, readOpts, queryGPT) {
         case "toggleQuiz":
           const toggleVal = await prompt(["toggleVal"]);
           console.log(toggleVal);
-          getUserInput(bzaTxt, readOpts, queryGPT);
+          getUserInput(pageSlice, readOpts, queryGPT);
           break;
         case "h": // fall through to help
         case "help":
           // console.log(defaultQueryOptions.properties.nextAction.description);
-          getUserInput(bzaTxt, readOpts, queryGPT);
+          getUserInput(pageSlice, readOpts, queryGPT);
           break;
         case "pSlice":
           console.log(gptPrompt);
-          getUserInput(bzaTxt, readOpts, queryGPT);
+          getUserInput(pageSlice, readOpts, queryGPT);
           break;
         case "pRoll":
           const rollingSummary = await queryGPT(
             `${gptPrompt}\nSummary of everything up to this point`
           );
           console.log(rollingSummary);
-          getUserInput(bzaTxt, readOpts, queryGPT);
+          getUserInput(pageSlice, readOpts, queryGPT);
           break;
         case "narrate":
           // TODO toggle narrative option on
@@ -224,7 +222,7 @@ export default async function getUserInput(bzaTxt, readOpts, queryGPT) {
             `${gptPrompt}\nRewrite all output in the voice of a character`
           );
           console.log(narrative);
-          getUserInput(bzaTxt, readOpts, queryGPT);
+          getUserInput(pageSlice, readOpts, queryGPT);
           break;
         case "voiceOut":
           // TODO fix
@@ -232,7 +230,7 @@ export default async function getUserInput(bzaTxt, readOpts, queryGPT) {
           //   `${gptPrompt}\nUse TTS to generate voice to narrate gpt response & queries to user`
           // );
           // console.log(voiceOutput);
-          getUserInput(bzaTxt, readOpts, queryGPT);
+          getUserInput(pageSlice, readOpts, queryGPT);
           break;
         case "voiceIn":
           // TODO fix
@@ -240,33 +238,33 @@ export default async function getUserInput(bzaTxt, readOpts, queryGPT) {
           //   `${gptPrompt}\nUse talon to allow voice input`
           // );
           // console.log(voiceInput);
-          getUserInput(bzaTxt, readOpts, queryGPT);
+          getUserInput(pageSlice, readOpts, queryGPT);
           break;
         case "before":
           // TODO fix
           const beforeQuery = await prompt(["query"]);
           gptResponse = queryGPT(`${gptPrompt}\n${beforeQuery}`);
           console.log("gptResponse", gptResponse);
-          getUserInput(bzaTxt, readOpts, queryGPT);
+          getUserInput(pageSlice, readOpts, queryGPT);
           break;
         case "delBefore":
           // TODO fix
           // gptResponse = queryGPT(`${gptPrompt}`);
           // console.log("gptResponse", gptResponse);
-          getUserInput(bzaTxt, readOpts, queryGPT);
+          getUserInput(pageSlice, readOpts, queryGPT);
           break;
         case "after":
           // TODO fix
           const afterQuery = await prompt(["query"]);
           gptResponse = queryGPT(`${gptPrompt}\n${afterQuery}`);
           console.log("gptResponse", gptResponse);
-          getUserInput(bzaTxt, readOpts, queryGPT);
+          getUserInput(pageSlice, readOpts, queryGPT);
           break;
         case "delAfter":
           // TODO fix
           gptResponse = queryGPT(`${gptPrompt}`);
           console.log("gptResponse", gptResponse);
-          getUserInput(bzaTxt, readOpts, queryGPT);
+          getUserInput(pageSlice, readOpts, queryGPT);
           break;
         case "maxToken":
           // TODO fix
@@ -275,7 +273,7 @@ export default async function getUserInput(bzaTxt, readOpts, queryGPT) {
             `${gptPrompt}\nMax Token Count: ${tokenCount}`
           );
           console.log("gptResponse", gptResponse);
-          getUserInput(bzaTxt, readOpts, queryGPT);
+          getUserInput(pageSlice, readOpts, queryGPT);
           break;
         case "beforeSummary":
           // TODO fix
@@ -284,13 +282,13 @@ export default async function getUserInput(bzaTxt, readOpts, queryGPT) {
             `${gptPrompt}\n${beforeSummaryQuery}\nSummary:`
           );
           console.log("gptResponse", gptResponse);
-          getUserInput(bzaTxt, readOpts, queryGPT);
+          getUserInput(pageSlice, readOpts, queryGPT);
           break;
         case "delBeforeSummary":
           // TODO fix
           gptResponse = queryGPT(`${gptPrompt}\nSummary:`);
           console.log("gptResponse", gptResponse);
-          getUserInput(bzaTxt, readOpts, queryGPT);
+          getUserInput(pageSlice, readOpts, queryGPT);
           break;
         case "afterSummary":
           // TODO fix
@@ -299,16 +297,16 @@ export default async function getUserInput(bzaTxt, readOpts, queryGPT) {
             `${gptPrompt}\n${afterSummaryQuery}\nSummary:`
           );
           console.log("gptResponse", gptResponse);
-          getUserInput(bzaTxt, readOpts, queryGPT);
+          getUserInput(pageSlice, readOpts, queryGPT);
           break;
         case "delAfterSummary":
           // TODO fix
           gptResponse = queryGPT(`${gptPrompt}\nSummary:`);
           console.log("gptResponse", gptResponse);
-          getUserInput(bzaTxt, readOpts, queryGPT);
+          getUserInput(pageSlice, readOpts, queryGPT);
           break;
         default:
-          return getUserInput(bzaTxt, readOpts, queryGPT);
+          return getUserInput(pageSlice, readOpts, queryGPT);
       }
     })
     .catch(console.error);

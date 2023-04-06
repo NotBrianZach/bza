@@ -131,7 +131,7 @@ export default async function eventLoop(bzaTxt, readOpts, queryGPT, sessionTime)
   }
   io.emit("markdown", markdownToEmit);
   if (readOptsToToggle.isQuiz) {
-    const quizToggles = await runQuiz(pageSlice, readOpts, queryGPT);
+    const quizToggles = await runQuiz(pageSlice, {...readOpts}, queryGPT);
     readOptsToToggle =  {
       ...readOptsToToggle,
       ...quizToggles
