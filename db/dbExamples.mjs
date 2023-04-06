@@ -37,7 +37,7 @@ function insertSample(
 const today = new Date();
 insertSample(
   "Frankenstein",
-  "./library/Frankenstein.md",
+  "./library/Frankensteind/Frankenstein.md",
   1,
   "Frankenstein",
   "A scientist, Victor Von Frankenstein creates life by infusing corpses with lightning. His Misshapen creature seeks the affection of his father and failing that, the creation of a bride, but Frankenstein refuses leading to a climactic chase across the world as the creature rebels against his creator.",
@@ -50,7 +50,7 @@ insertSample(
 
 insertSample(
   "World Models: A Path to AGI",
-  "./library/a_path_towards_agi.md",
+  "./library/a_path_towards_agid/a_path_towards_agi.md",
   0,
   "World Models: A Path to AGI",
   "In this research paper, Yann Lecunn outlines a hypothetical software architecture that would allow for learning and creation of a differentiable, configurable world model that might reach parity with human mental faculties",

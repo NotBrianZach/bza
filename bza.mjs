@@ -56,7 +56,8 @@ function loadMarkdown(title, synopsis, tStamp, filePath, pageNum, sliceSize, rol
       // isPrintSliceSummary,
       // isPrintRollingSummary,
     )
-    if (insertReturnStatus === undefined) {
+    devLog("insertMD return status", insertMDReturnStatus)
+    if (insertMDReturnStatus === undefined) {
       console.log("db insertMD error  ")
     } else {
       const insertMarkReturnStatus = insertMD(
@@ -73,7 +74,7 @@ function loadMarkdown(title, synopsis, tStamp, filePath, pageNum, sliceSize, rol
         // isPrintSliceSummary,
         // isPrintRollingSummary,
       )
-      devLog("insertMD return status", insertReturnStatus)
+      devLog("insertMark return status", insertMarkReturnStatus)
     }
 
     function splitStringIntoSubstringsLengthN(str, n) {

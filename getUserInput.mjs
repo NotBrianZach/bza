@@ -33,7 +33,14 @@ export default async function getUserInput(pageSlice, readOpts, queryGPT) {
     {
       name: "start",
       description:
-        "Start a conversation with the specified prompt or default options, and save any previous conversation if applicable."
+        "Start a conversation with the specified prompt or default options, and save any previous conversation if applicable.",
+      subCommands: [
+        "title",
+        "synopsis",
+        "rollingSummary",
+        "pageSliceSummary",
+        "pages"
+      ]
     },
     {
       name: "continue",
@@ -143,7 +150,9 @@ export default async function getUserInput(pageSlice, readOpts, queryGPT) {
 
   return defaultPrompt
     .run()
-    .then(async queryValue => {
+    .then(async (queryValue, thing2) => {
+      let gptPrompt = "";
+      let userInput = "";
       switch (queryValue) {
         case "next":
           return queryValue;
@@ -155,11 +164,11 @@ export default async function getUserInput(pageSlice, readOpts, queryGPT) {
         case "exit":
           return { label: "exit" };
           break;
-
         case "continue":
           // - continue = continue conversation, multiline input, }}} to terminate (if no current conversation assume start default)
-          let userInput = await readMultilineInput();
-          gptResponse = queryGPT(`${gptPrompt}`, {});
+          console.log(queryValue, thing2);
+          userInput = await readMultilineInput();
+          gptResponse = await queryGPT(`${gptPrompt}`, {});
           getUserInput(
             pageSlice,
             {
@@ -176,10 +185,10 @@ export default async function getUserInput(pageSlice, readOpts, queryGPT) {
           // - rollingSummary = append pageSliceSummary
           // - pageSliceSummary = append pageSliceSummary
           // - pages = append pageSlice
-          let userInput = await readMultilineInput();
-          gptResponse = queryGPT(`${gptPrompt}\n${query}`, {});
+          userInput = await readMultilineInput();
+          gptResponse = await queryGPT(`${gptPrompt}\n${query}`, {});
           console.log("gptResponse", gptResponse);
-          getUserInput(
+          return await getUserInput(
             pageSlice,
             `${gptPrompt}\n${query}\n${gptResponse}`,
             queryGPT

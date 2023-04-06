@@ -39,6 +39,7 @@ export default async function eventLoop(bzaTxt, readOpts, queryGPT, sessionTime)
     sliceSize,
     synopsis,
     rollingSummary,
+    isQuiz,
     isPrintPage,
     isPrintSliceSummary,
     isPrintRollingSummary,

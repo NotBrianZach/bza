@@ -16,7 +16,7 @@ async function gptCleanFormatting(content) {
     const data = {
         model: "gpt-3.5-turbo",
         messages:
-        [ {"role": "system", "content": "Make possible non human legible text human legible in the following content which was originally a pdf epub or html document but is now markdown, for instance tables, diagrams, or LaTeX might have illegible representations. Returned text should be valid markdown." }, {"role": "user", "content": `${content}----ll` }
+        [ {"role": "system", "content": "Make possiblly illegible text human legible in the following content which was originally a pdf epub or html document but is now markdown, for instance tables, diagrams, or LaTeX might have illegible representations. Returned text should be valid markdown." }, {"role": "user", "content": `${content}----ll` }
                 ],
         max_tokens: 2000,
         n: 1,
@@ -28,7 +28,7 @@ async function gptCleanFormatting(content) {
         console.log(data)
         const response = await axios.post(apiUrl, data, { headers: headers });
         console.log(response.data.choices[0])
-        return response.data.choices[0].message.content();
+        return response.data.choices[0].message.content;
     } catch (error) {
         console.error(`Error: ${error}`);
     }
@@ -46,21 +46,24 @@ async function processFile(inputFilePath, outputFilePath) {
                 console.error(`Error reading Markdown file: ${error}`);
             }
         }
+        let countChunks = 0
         const markdown = readMarkdownFile(inputFilePath);
         function splitStringIntoChunks(str, chunkSize) {
             const chunks = [];
             for (let i = 0; i < str.length; i += chunkSize) {
                 chunks.push(str.slice(i, i + chunkSize));
+                countChunks += 1
             }
                 return chunks;
         }
         const mdChunks = splitStringIntoChunks(markdown, 1900)
+        console.log(`Splitting ${inputFilePath} into ${countChunks} chunks`)
 
-        const cleanChunks = []
-        for (let i = 0; i < mdChunks.length; i += 1) {
-            const cleanContent = await gptCleanFormatting(mdChunks[i]);
-            cleanChunks.push(cleanContent)
-        }
+        // const cleanChunks = []
+        // for (let i = 0; i < mdChunks.length; i += 1) {
+        //     const cleanContent = await gptCleanFormatting(mdChunks[i]);
+        //     cleanChunks.push(cleanContent)
+        // }
         function saveMarkdownFile(filePath, content) {
             try {
                 fs.writeFileSync(filePath, content);
@@ -69,7 +72,16 @@ async function processFile(inputFilePath, outputFilePath) {
                 console.error(`Error saving markdown to file: ${error}`);
             }
         }
-        saveMarkdownFile(outputFilePath, cleanChunks.join(""));
+
+        const cleanChunksPromises = mdChunks.map(chunk => gptCleanFormatting(chunk));
+
+        try {
+            const cleanChunks = await Promise.all(cleanChunksPromises);
+            console.log(`Split ${inputFilePath} into ${countChunks} chunks, writing to ${outputPath}`)
+            saveMarkdownFile(outputPath, cleanChunks.join(""));
+        } catch (error) {
+            console.error(`Clean Chunk Error: ${error}`);
+        }
     } catch (error) {
         console.error(`Error: ${error}`);
     }

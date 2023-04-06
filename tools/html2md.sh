@@ -112,7 +112,7 @@ async function convertHTMLToMarkdown(inputFilePath) {
     const inputHtmlBuffer = await readFile(inputFilePath);
     const inputFileName = getFilenameWithoutSuffix(inputFilePath);
     const outputDir = path.join(
-      path.dirname(inputFilePath),
+      path.dirname(path.dirname(inputFilePath)),
       inputFileName + "d"
     );
 
