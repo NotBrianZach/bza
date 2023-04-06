@@ -3,6 +3,8 @@
 const axios = require('axios')
 const MarkdownIt = require('markdown-it')
 const fs = require('fs')
+const path = require('path');
+
 
 async function gptCleanFormatting(content) {
     const apiKey = process.env.OPENAI_API_KEY;
@@ -35,8 +37,8 @@ async function gptCleanFormatting(content) {
 }
 
 async function processFile(inputFilePath, outputFilePath) {
-
-    const outputPath = outputFilePath === undefined ? `${inputFilePath}GPTCleaned.md` : outputFilePath
+    const fileName = path.basename(inputFilePath, path.extname(inputFilePath));
+    const outputPath = outputFilePath === undefined ? `${fileName}GPTCleaned.md` : outputFilePath
     try {
         function readMarkdownFile(filePath) {
             try {
