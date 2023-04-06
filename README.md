@@ -106,7 +106,7 @@ TODO
   - rollingSummary = append pageSliceSummary
   - pageSliceSummary = append pageSliceSummary
   - pages = append pageSlice
-- continue = continue conversation (if no current conversation assume start default)
+- continue = continue conversation, multiline input, }}} to terminate (if no current conversation assume start default)
 <!-- - restart="restart" save current conversation to db, restart conversation w/only initial prompt  -->
 - "hard restart"= restart conversation w/only initial prompt, NO save to database
   - same subcommands as start
@@ -141,12 +141,12 @@ TODO
 #### Quiz (quiz user and grade responses)
 if toggled on, start after step 2 in Event Loop
 1. query gpt3 to generate quiz, print quiz,
-2. get user input for answers, multine input }}} to terminate
+2. get user input for answers, multine input, }}} to terminate
 3. query gpt3 for "grade", explain "wrong" answers
 4. get user input, options:
       - done=exit&save a log of the quiz&answers,
       - delete=don't log quiz
-      - c=converse with gpt about quiz
+      - c=converse with gpt about quiz, multiline input, }}} to terminate
       - again=run quiz loop again, saving log
       - againFresh=run quiz loop again, don't log
 5. get User Input (default options)

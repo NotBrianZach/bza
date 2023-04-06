@@ -1,5 +1,6 @@
 import prompt from "prompt";
 // import prompt from "prompt";
+import readline from "readline";
 import runQuiz from "./lib/runQuiz.mjs";
 import { promptWithAutoCompleteAndExplain } from "./lib/explanatoryPrompt.mjs";
 import fs from "fs";
@@ -8,6 +9,7 @@ import {
   genRollingSummaryPrompt,
   retellSliceAsNarratorPrompt
 } from "./lib/genPrompts.mjs";
+import { readMultilineInput } from "./lib/utils.mjs";
 
 // might append summaries to getUserInput readOpts so dont have to recompute them
 // (then again might be useful to do so if changing summary stack or prepending narration)
@@ -143,36 +145,35 @@ export default async function getUserInput(bzaTxt, readOpts, queryGPT) {
           return { label: "exit" };
           break;
         case "start":
-          query = await prompt(["query"]);
-          gptResponse = queryGPT(`${gptPrompt}\n${query}`, {});
+          let userInput = await readMultilineInput();
+          gptResponse = queryGPT(`${queryGPT}\n${query}`, {});
           console.log("gptResponse", gptResponse);
-          getUserInput(bzaTxt, `${gptPrompt}\n${query}\ngptResponse`, queryGPT);
+          getUserInput(
+            bzaTxt,
+            `${queryGPT}\n${query}\n${gptResponse}`,
+            queryGPT
+          );
           break;
-        case "multiline":
-          const rl = readline.createInterface({
-            input: process.stdin,
-            output: process.stdout
-          });
-          // rl.on('line', (input) => {
-          //   if (input === 'print') {
-          //     let markdown = '';
-          //     io.emit('requestMarkdown', {});
+        // case "multiline":
+        // if (input === "}}}") {
 
-          //     io.on('markdown', (data) => {
-          //       markdown = data;
-
-          //       let pages = Math.ceil(markdown.length / charPerPage);
-          //       console.log(`Total pages: ${pages}`);
-          //       for (let i = 0; i < pages; i++) {
-          //         let start = i * charPerPage;
-          //         let end = start + charPerPage;
-          //         let pageContent = markdown.substring(start, end);
-          //         console.log(`Page ${i + 1}:\n${pageContent}\n`);
-          //       }
-          //       })
-          //   }
-          // }
-          break;
+        // let markdown = '';
+        // io.emit('requestMarkdown', {});
+        // io.on('markdown', (data) => {
+        //   markdown = data;
+        //   let pages = Math.ceil(markdown.length / charPerPage);
+        //   console.log(`Total pages: ${pages}`);
+        //   for (let i = 0; i < pages; i++) {
+        //     let start = i * charPerPage;
+        //     let end = start + charPerPage;
+        //     let pageContent = markdown.substring(start, end);
+        //     console.log(`Page ${i + 1}:\n${pageContent}\n`);
+        //   }
+        // })
+        // }
+        // });
+        // }
+        // break;
         case "continue":
           query = await prompt(["query"]);
           gptResponse = queryGPT(`${gptPrompt}`, {});
@@ -203,7 +204,7 @@ export default async function getUserInput(bzaTxt, readOpts, queryGPT) {
           break;
         case "h": // fall through to help
         case "help":
-          console.log(defaultQuerySchema.properties.nextAction.description);
+          // console.log(defaultQueryOptions.properties.nextAction.description);
           getUserInput(bzaTxt, readOpts, queryGPT);
           break;
         case "pSlice":
