@@ -17,7 +17,7 @@ import { removeExtraWhitespace, devLog, newSessionTime } from "./lib/utils.mjs";
 import { createGPTQuery } from "./lib/createGPTQuery.mjs";
 import db from "./lib/dbConnect.mjs";
 import eventLoop from "./eventLoop.mjs";
-import { loadBookmarksBy, loadBookmark, insertMD, loadMDTable } from "./lib/dbQueries.mjs";
+import { loadBookmarksBy, loadBookmark, insertMD, insertBookmark, loadMDTable } from "./lib/dbQueries.mjs";
 
 const queryGPT = createGPTQuery(process.env.OPENAI_API_KEY);
 
@@ -45,34 +45,32 @@ function loadMarkdown(title, synopsis, tStamp, filePath, pageNum, sliceSize, rol
     const insertMDReturnStatus = insertMD(
       filePath,
       title,
-      synopsis,
       tStamp,
       articleType
-      // narrator,
       // pageNum,
+      // narrator,
       // sliceSize,
       // rollingSummary,
       // isPrintPage,
       // isPrintSliceSummary,
-      // isPrintRollingSummary,
+      // isPrintRollingSummary
     )
     devLog("insertMD return status", insertMDReturnStatus)
     if (insertMDReturnStatus === undefined) {
       console.log("db insertMD error  ")
     } else {
-      const insertMarkReturnStatus = insertMD(
+      const insertMarkReturnStatus = insertBookmark(
         filePath,
         title,
         synopsis,
         tStamp,
-        articleType
-        // narrator,
-        // pageNum,
-        // sliceSize,
-        // rollingSummary,
-        // isPrintPage,
-        // isPrintSliceSummary,
-        // isPrintRollingSummary,
+        narrator,
+        pageNum,
+        sliceSize,
+        rollingSummary,
+        isPrintPage,
+        isPrintSliceSummary,
+        isPrintRollingSummary,
       )
       devLog("insertMark return status", insertMarkReturnStatus)
     }
@@ -193,6 +191,10 @@ program
   .action(async function(bookmarkTitle, tStamp) {
     devLog(bookmarkTitle, tStamp)
     const bData = loadBookmark(bookmarkTitle)
+    if (bData === undefined) {
+      console.log("no bookmark found")
+      process.exit(1)
+    }
     devLog("bookmark data", bData)
     const mData = loadMDTable(bData.filePath)
     devLog("markdown data", mData)

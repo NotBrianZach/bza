@@ -19,16 +19,26 @@ export default async function getUserInput(pageSlice, readOpts, queryGPT) {
   const defaultQueryOptions = [
     {
       name: "next",
-      description: "Continue to the next pageSlice."
+      description: "Continue to the next pageSlice.",
+      after: () => {
+        return "next";
+      }
     },
     {
       name: "jump",
-      description: "Jump to the specified input pageNumber."
+      description: "Jump to the specified input pageNumber.",
+      after: async () => {
+        const pageNum = await prompt(["enter page number:"]);
+        return { label: "jump", jump: pageNum };
+      }
     },
     {
       name: "exit",
       description:
-        "Exit the program and save the current state to the database."
+        "Exit the program and save the current state to the database.",
+      after: () => {
+        return { label: "exit" };
+      }
     },
     {
       name: "start",
@@ -40,7 +50,11 @@ export default async function getUserInput(pageSlice, readOpts, queryGPT) {
         "rollingSummary",
         "pageSliceSummary",
         "pages"
-      ]
+      ],
+      after: async () => {
+        // const userInput = await prompt(["enter conversation prompt:"]);
+        return { label: "start", userInput };
+      }
     },
     {
       name: "continue",
@@ -148,9 +162,15 @@ export default async function getUserInput(pageSlice, readOpts, queryGPT) {
   let query = "";
   let gptResponse = "";
 
-  return defaultPrompt
-    .run()
-    .then(async (queryValue, thing2) => {
+  async function executeAfter(inputName, queryValue) {
+    for (const option of defaultQueryOptions) {
+      if (option.name === inputName) {
+        return await option.after();
+      }
+    }
+  }
+  /*
+      async (queryValue, thing2) => {
       let gptPrompt = "";
       let userInput = "";
       switch (queryValue) {
@@ -318,5 +338,9 @@ export default async function getUserInput(pageSlice, readOpts, queryGPT) {
           return getUserInput(pageSlice, readOpts, queryGPT);
       }
     })
+   */
+  return defaultPrompt
+    .run()
+    .then(executeAfter)
     .catch(console.error);
 }

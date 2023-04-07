@@ -27,9 +27,9 @@ async function gptCleanFormatting(content) {
     };
 
     try {
-        console.log(data)
+        // console.log(data)
         const response = await axios.post(apiUrl, data, { headers: headers });
-        console.log(response.data.choices[0])
+        // console.log(response.data.choices[0])
         return response.data.choices[0].message.content;
     } catch (error) {
         console.error(`Error: ${error}`);
@@ -38,7 +38,8 @@ async function gptCleanFormatting(content) {
 
 async function processFile(inputFilePath, outputFilePath) {
     const fileName = path.basename(inputFilePath, path.extname(inputFilePath));
-    const outputPath = outputFilePath === undefined ? `${fileName}GPTCleaned.md` : outputFilePath
+    const filePath = path.resolve(path.dirname(inputFilePath));
+    const outputPath = outputFilePath === undefined ? `${filePath}/${fileName}GPTCleaned.md` : outputFilePath
     try {
         function readMarkdownFile(filePath) {
             try {

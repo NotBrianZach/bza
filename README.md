@@ -58,8 +58,9 @@ for utility function definitions, see shellHook in shell.nix
 - epub
  - pandoc -i /path/to/file.epub -o /path/to/output.md
 
-- EXPERIMENTAL attempt to clean badly formatted tables or latex (might try tweaking prompt if doesn't work)
-  - gptClean <inputFile>
+- EXPERIMENTAL attempt to clean badly formatted tables or latex with gpt3.5-turbo (might try tweaking prompt if doesn't work, takes a few minutes and costs about a dollar for every 100 pages as of this writing)
+  - gptClean <inputFile> [outputFilePath]
+    - defaults to inputFilePath + "cleaned.md"
 
 - pdf (also images&docx):
   -  https://cloudconvert.com/pdf-to-html just use this then see earlier instructions for html files using html2md bash function, 
@@ -100,15 +101,15 @@ TODO
 - jump=jump to input pageNumber,
 - exit= exit program, save db bookmark
 ##### ASK USER for input
-- start = start conversation w/specified prompt; without subcommands assumes "start title synopsis rollingSummary pageSliceSummary pages", saves previous conversation if applicable
+- startConversation = start conversation w/specified prompt; without subcommands assumes "start title synopsis rollingSummary pageSliceSummary pages", saves previous conversation if applicable
   - title = append title
   - synopsis = append synopsis 
   - rollingSummary = append pageSliceSummary
   - pageSliceSummary = append pageSliceSummary
   - pages = append pageSlice
-- continue = continue conversation, multiline input, }}} to terminate (if no current conversation assume start default)
+- continueConversation = continue conversation, multiline input, }}} to terminate (if no current conversation assume start default)
 <!-- - restart="restart" save current conversation to db, restart conversation w/only initial prompt  -->
-- "hard restart"= restart conversation w/only initial prompt, NO save to database
+- "hard restart conversation"= restart conversation w/only initial prompt, NO save to database
   - same subcommands as start
 ##### SUBLOOP COMMANDS
 - quiz= run quiz loop once

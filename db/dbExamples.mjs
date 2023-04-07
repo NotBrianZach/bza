@@ -50,7 +50,7 @@ insertSample(
 
 insertSample(
   "World Models: A Path to AGI",
-  "./library/a_path_towards_agid/a_path_towards_agi.md",
+  "./library/a_path_towards_agid/a_path_towards_agiGPTCleaned.md",
   0,
   "World Models: A Path to AGI",
   "In this research paper, Yann Lecunn outlines a hypothetical software architecture that would allow for learning and creation of a differentiable, configurable world model that might reach parity with human mental faculties",
