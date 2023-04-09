@@ -181,7 +181,6 @@ could create another file e.g. alterDB.mjs which has alter table statements if y
 
 ## Future Work
 
-- handle embedded images vs linked images (wip)
 - use https://github.com/NotBrianZach/ink-mde, open browser start server and create notifications that push to markdown viewing/editing client whenever user switches pages (wip)
 - cosine similarity (or similar metrics) on book pages vector array option to get relevant context (wip)
 - recognize images and sumarize their meaning into text (when we get access to good multimodal models)
@@ -189,7 +188,7 @@ could create another file e.g. alterDB.mjs which has alter table statements if y
 - more programmability: maybe "vim like" language to create context stacks inside repl and store them in either db or key value store (or db emulating key value store)
 - multimodality?
 - multiplayer repls? (idk websocket or something)
-- package for nixos,brew,apt
+- package for nixos,brew,apt, (window - winglet?)
 - ?hyena optional full book context?
 - bza for other media types (e.g. movies, music, etc); 
   - chrome plugin that follows along with youtube video transcript and interrupts to ask questions/summarize/etc
