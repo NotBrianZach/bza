@@ -41,40 +41,6 @@ function loadMarkdown(title, synopsis, tStamp, filePath, pageNum, sliceSize, rol
       console.log(`error ${err} reading from filePath ${filePath}`)
     }
     devLog("fsreadfile arguments", arguments)
-    const finalMarkdownArray = splitStringIntoSubstringsLengthN(mdTxt.toString(), sliceSize)
-    const insertMDReturnStatus = insertMD(
-      filePath,
-      title,
-      tStamp,
-      articleType
-      // pageNum,
-      // narrator,
-      // sliceSize,
-      // rollingSummary,
-      // isPrintPage,
-      // isPrintSliceSummary,
-      // isPrintRollingSummary
-    )
-    devLog("insertMD return status", insertMDReturnStatus)
-    if (insertMDReturnStatus === undefined) {
-      console.log("db insertMD error  ")
-    } else {
-      const insertMarkReturnStatus = insertBookmark(
-        filePath,
-        title,
-        synopsis,
-        tStamp,
-        narrator,
-        pageNum,
-        sliceSize,
-        rollingSummary,
-        isPrintPage,
-        isPrintSliceSummary,
-        isPrintRollingSummary,
-      )
-      devLog("insertMark return status", insertMarkReturnStatus)
-    }
-
     function splitStringIntoSubstringsLengthN(str, n) {
       const substrings = [];
       for (let i = 0; i < str.length; i += n) {
@@ -82,20 +48,39 @@ function loadMarkdown(title, synopsis, tStamp, filePath, pageNum, sliceSize, rol
       }
       return substrings;
     }
-
-    const eventLoopEndMsg = eventLoop(finalMarkdownArray, {
+    const finalMarkdownArray = splitStringIntoSubstringsLengthN(mdTxt.toString(), sliceSize)
+    const insertMarkReturnStatus = insertBookmark(
+      filePath,
       title,
       synopsis,
+      tStamp,
       narrator,
       pageNum,
       sliceSize,
       rollingSummary,
       isPrintPage,
       isPrintSliceSummary,
-      isPrintRollingSummary,
-      isQuiz
-    }, queryGPT, tStamp);
-    console.log(eventLoopEndMsg)
+      isPrintRollingSummary
+    )
+    devLog("insertMark return status", insertMarkReturnStatus)
+    if (insertMarkReturnStatus === undefined) {
+      console.log("db insertMark error")
+    } else {
+      const eventLoopEndMsg = eventLoop(finalMarkdownArray, {
+        title,
+        synopsis,
+        narrator,
+        pageNum,
+        sliceSize,
+        rollingSummary,
+        isPrintPage,
+        isPrintSliceSummary,
+        isPrintRollingSummary,
+        isQuiz
+      }, queryGPT, tStamp);
+      console.log(eventLoopEndMsg)
+    }
+
   })
 }
 
@@ -158,9 +143,29 @@ program
       return { title, synopsis }
     }
     const {title, synopsis} = await queryUserTitleSynopsis()
-    loadMarkdown(title, tStamp, synopsis,
-           filePath, pageNumber, sliceSize, "", narrator, articleType, charPageLength, toggles
-           )
+
+    const insertMDReturnStatus = insertMD(
+      filePath,
+      title,
+      tStamp,
+      articleType
+      // pageNum,
+      // narrator,
+      // sliceSize,
+      // rollingSummary,
+      // isPrintPage,
+      // isPrintSliceSummary,
+      // isPrintRollingSummary
+    )
+    devLog("insertMD return status", insertMDReturnStatus)
+    if (insertMDReturnStatus === undefined) {
+      console.log("db insertMD error  ")
+    } else {
+      loadMarkdown(title, tStamp, synopsis,
+                   filePath, pageNumber, sliceSize, "", narrator, articleType, charPageLength, toggles
+                  )
+    }
+
   });
 
 program
@@ -192,6 +197,7 @@ program
     devLog(bookmarkTitle, tStamp)
     const bData = loadBookmark(bookmarkTitle)
     if (bData === undefined) {
+      // TODO get most recent bookmark
       console.log("no bookmark found")
       process.exit(1)
     }

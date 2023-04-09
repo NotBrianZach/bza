@@ -43,7 +43,7 @@ insertSample(
   "A scientist, Victor Von Frankenstein creates life by infusing corpses with lightning. His Misshapen creature seeks the affection of his father and failing that, the creation of a bride, but Frankenstein refuses leading to a climactic chase across the world as the creature rebels against his creator.",
   1,
   1,
-  "Mr. T",
+  null,
   today,
   "book"
 );

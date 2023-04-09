@@ -59,7 +59,11 @@ export default async function getUserInput(pageSlice, readOpts, queryGPT) {
     {
       name: "continue",
       description:
-        "Continue the current conversation, or start a new one with default options if no conversation is active."
+        "Continue the current conversation, or start a new one with default options if no conversation is active.",
+      after: async () => {
+        // const userInput = await readMultilineInput();
+        // return { label: "continue", userInput };
+      }
     },
     {
       name: "hard restart",
@@ -174,16 +178,6 @@ export default async function getUserInput(pageSlice, readOpts, queryGPT) {
       let gptPrompt = "";
       let userInput = "";
       switch (queryValue) {
-        case "next":
-          return queryValue;
-          break;
-        case "jump":
-          const pageNum = await prompt(["pageNumber"]);
-          return { label: "jump", jump: pageNum };
-          break;
-        case "exit":
-          return { label: "exit" };
-          break;
         case "continue":
           // - continue = continue conversation, multiline input, }}} to terminate (if no current conversation assume start default)
           console.log(queryValue, thing2);

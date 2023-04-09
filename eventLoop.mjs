@@ -4,6 +4,7 @@ import prompt from "prompt";
 import getUserInput from "./getUserInput.mjs";
 import runQuiz from "./lib/runQuiz.mjs";
 import {genSliceSummaryPrompt, genRollingSummaryPrompt, retellSliceAsNarratorPrompt} from "./lib/genPrompts.mjs";
+import { insertMD, insertBookmark, loadMDTable } from "./lib/dbQueries.mjs";
 import readline from 'readline';
 import {
   removeExtraWhitespace,
@@ -61,35 +62,47 @@ export default async function eventLoop(bzaTxt, readOpts, queryGPT, sessionTime)
 
   devLog("initial pageSlice b4 queryGPT retell slice", pageSliceInit)
 
+  let systemMsg = genSystemMsg(
+    title,
+    synopsis,
+    articleType,
+    prependList,
+    appendList
+  )
+  let mostRecentChatId = "";
   let pageSlice = "";
   let sliceSummary = "";
   const getPageSliceQuery = async () => {
-    if (narrator !== "") {
+    if (narrator !== "" && narrator !== undefined && narrator !== null) {
       const pageSliceQuery = await queryGPT(
-        retellSliceAsNarratorPrompt(narrator, pageSlice, title, synopsis, rollingSummary),
-        {}
+        retellSliceAsNarratorPrompt(narrator, pageSlice, rollingSummary),
+        {
+          systemMsg,
+          parentId: readOpts.parentId
+        }
       );
 
       if (pageSliceQuery.gptQueryErr !== undefined) {
         throw new Error(`gpt query error when narrator retelling pageSlice: ${pageSliceQuery.gptQueryErr}`);
       } else {
-        console.log("pageSliceQuery.txt", pageSliceQuery.txt);
+        devLog("pageSliceQuery", pageSliceQuery);
+        mostRecentChatId = pageSliceQuery.id;
         return pageSliceQuery.txt;
       }
     } else {
       return pageSliceInit;
     }
   };
+
   const getSliceSummaryQuery = async (pageSlice) => {
     const sliceSummaryQuery = await queryGPT(
       genSliceSummaryPrompt(title, synopsis, rollingSummary, pageSliceInit),
       {}
     );
-
     if (sliceSummaryQuery.gptQueryErr !== undefined) {
       throw new Error(`gpt query error when summarigizing pageSlice: ${sliceSummaryQuery.gptQueryErr}`);
     } else {
-      return sliceSummaryQuery.txt;
+      return sliceSummaryQuery;
     }
   };
 
@@ -98,8 +111,8 @@ export default async function eventLoop(bzaTxt, readOpts, queryGPT, sessionTime)
       getPageSliceQuery(),
       getSliceSummaryQuery()
     ]);
-    pageSlice = pageSliceResult;
-    sliceSummary = sliceSummaryResult;
+    pageSlice = pageSliceResult.txt;
+    sliceSummary = sliceSummaryResult.txt;
   } catch (error) {
     console.error(error.message);
   }
@@ -158,7 +171,8 @@ export default async function eventLoop(bzaTxt, readOpts, queryGPT, sessionTime)
       }
       break
     case "exit":
-        return `Event Loop End, saving bookmark result: ${insertMD(
+        return `Event Loop End, saving bookmark result: ${insertBookmark(
+           readOpts.filePath,
            readOpts.title,
            readOpts.tStamp,
            readOpts.synopsis,
@@ -198,6 +212,7 @@ export default async function eventLoop(bzaTxt, readOpts, queryGPT, sessionTime)
     return eventLoop(bzaTxt, {
       ...readOpts,
       pageNum: pageNum + sliceSize
+      parentId: sliceSummaryResult.parentId,
     }, queryGPT, sessionTime);
   } else {
     // pageNum+1 becuz zero index

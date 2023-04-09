@@ -191,6 +191,8 @@ could create another file e.g. alterDB.mjs which has alter table statements if y
 - multiplayer repls? (idk websocket or something)
 - package for nixos,brew,apt
 - ?hyena optional full book context?
+- bza for other media types (e.g. movies, music, etc); 
+  - chrome plugin that follows along with youtube video transcript and interrupts to ask questions/summarize/etc
 
 ## Naming
 The naive/correct pronounciation sounds like pizza, which is typically sliced into pieces just like we are sliceing up books. Book pizza.
