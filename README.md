@@ -67,6 +67,7 @@ for utility function definitions, see shellHook in shell.nix
     - otherwise ...
     - if you really want to fine tune your pdf parsing...
     - to parse pdfs into structured text locally we'll use [parsr](https://github.com/axa-group/Parsr) which we'll have to install via docker
+      - alternatively try https://github.com/Unstructured-IO/unstructured which should work similarly I think (langchain uses this)
     - it's recommended to use parsr gui (parsr api is complex), it can be reached at localhost:8080 if that port was not already in use
       - nix-shell -p docker
       - dockerd &
@@ -190,6 +191,7 @@ could create another file e.g. alterDB.mjs which has alter table statements if y
 - multiplayer repls? (idk websocket or something)
 - package for nixos,brew,apt, (window - winglet?)
 - ?hyena optional full book context?
+- investigate langchain & https://github.com/Unstructured-IO/unstructured
 - bza for other media types (e.g. movies, music, etc); 
   - chrome plugin that follows along with youtube video transcript and interrupts to ask questions/summarize/etc
 
