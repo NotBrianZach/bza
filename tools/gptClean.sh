@@ -6,7 +6,7 @@ const fs = require('fs')
 const path = require('path');
 
 
-async function gptCleanFormatting(content) {
+async function gptCleanFormatting(content, retryCount = 0) {
     const apiKey = process.env.OPENAI_API_KEY;
     const apiUrl = 'https://api.openai.com/v1/chat/completions';
 
@@ -27,13 +27,23 @@ async function gptCleanFormatting(content) {
     };
 
     try {
-        // console.log(data)
         const response = await axios.post(apiUrl, data, { headers: headers });
-        // console.log(response.data.choices[0])
         return response.data.choices[0].message.content;
     } catch (error) {
         console.error(`Error: ${error}`);
-    }
+        if (retryCount < 3) {
+               return gptCleanFormatting(content, retryCount + 1);
+           } else {
+           }
+   }
+    // try {
+    //     // console.log(data)
+    //     const response = await axios.post(apiUrl, data, { headers: headers });
+    //     // console.log(response.data.choices[0])
+    //     return response.data.choices[0].message.content;
+    // } catch (error) {
+    //     console.error(`Error: ${error}`);
+    // }
 }
 
 async function processFile(inputFilePath, outputFilePath) {
@@ -77,6 +87,7 @@ async function processFile(inputFilePath, outputFilePath) {
         }
 
         const cleanChunksPromises = mdChunks.map(chunk => gptCleanFormatting(chunk));
+
 
         try {
             const cleanChunks = await Promise.all(cleanChunksPromises);
