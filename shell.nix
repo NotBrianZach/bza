@@ -10,6 +10,9 @@ pkgs.stdenv.mkDerivation {
     pkgs.sqlite
 
     # use this to fuzzy search db results
+    pkgs.jq
+
+    # use this to fuzzy search db results (maybe)
     pkgs.fzf
 
     # TODO (possibly) settle on multiplexing solution
@@ -23,6 +26,8 @@ pkgs.stdenv.mkDerivation {
   shellHook = ''
     export OPENAI_API_KEY=$OPENAI_API_KEY
     export bzaDir=$(pwd)
+    alias bzaT="bza print | jq '.[].bTitle'"
+
     alias bza="DB_PATH=$bzaDir/db/bookmarks.sq3 $(pwd)/bza.mjs"
     function pullUrl() {
       url=$1

@@ -3,10 +3,11 @@
 import { program, Option, Argument } from "commander";
 import fs from "fs";
 import prompt from "prompt";
-import { exec, fork, spawn } from "child_process";
+// import { exec, fork, spawn } from "child_process";
 import path from "path";
 import _ from "underscore";
 import axios from "axios";
+import { createWebsocketServer } from "./markdownViewerServer.mjs"
 
 // TODO compute-cosine-similarity
 // https://www.npmjs.com/package/compute-cosine-similarity
@@ -22,7 +23,7 @@ import { loadBookmarksBy, loadBookmark, insertMD, insertBookmark, loadMDTable } 
 const queryGPT = createGPTQuery(process.env.OPENAI_API_KEY);
 
 const togglesOptions = ["isPrintPage", "isPrintSliceSummary", "isPrintRollingSummary", "isQuiz"]
-function loadMarkdown(title, synopsis, tStamp, filePath, pageNum, sliceSize, rollingSummary, narrator, articleType, charPageLength, toggles) {
+function loadMarkdown(title, synopsis, tStamp, filePath, pageNum=0, sliceSize, rollingSummary, narrator, articleType = "book", charPageLength = 1800, toggles) {
   devLog("begin loadMarkdown", arguments)
   devLog(filePath.substring(filePath.length - 2))
   if (filePath.substring(filePath.length - 2) !== "md") {
@@ -52,10 +53,10 @@ function loadMarkdown(title, synopsis, tStamp, filePath, pageNum, sliceSize, rol
     const insertMarkReturnStatus = insertBookmark(
       filePath,
       title,
-      synopsis,
       tStamp,
-      narrator,
+      synopsis,
       pageNum,
+      narrator,
       sliceSize,
       rollingSummary,
       isPrintPage,
@@ -66,18 +67,21 @@ function loadMarkdown(title, synopsis, tStamp, filePath, pageNum, sliceSize, rol
     if (insertMarkReturnStatus === undefined) {
       console.log("db insertMark error")
     } else {
-      const eventLoopEndMsg = eventLoop(finalMarkdownArray, {
+      const io = createWebsocketServer()
+      const eventLoopEndMsg = eventLoop(finalMarkdownArray.join(""), {
         title,
         synopsis,
         narrator,
         pageNum,
+        articleType,
         sliceSize,
         rollingSummary,
         isPrintPage,
         isPrintSliceSummary,
         isPrintRollingSummary,
-        isQuiz
-      }, queryGPT, tStamp);
+        isQuiz,
+        charPageLength
+      }, queryGPT, tStamp, io);
       console.log(eventLoopEndMsg)
     }
 
@@ -178,14 +182,25 @@ program
     "filePath",
     "narrator"
   ]))
-  .argument("[numToPrint]", "max # of bookmarks to print, default 10000", 10000)
+  // .addArgument(new Argument('columnsToSelect', '', "tStamp").choices([
+  //   "tStamp",
+  //   "bTitle",
+  //   "synopsis",
+  //   "pageNum",
+  //   "filePath",
+  //   "narrator"
+  // ]))
+  .argument("[numToPrint]", "max # of bookmarks to print, default 5", 5)
 // filter by
-  .description("print bookmarks, (can use fzf to filter/fuzzy search e.g. bza print | fzf)")
+  .description("print bookmarks, (bza print | jq '.[].bTitle')")
   .action((orderBy, numToPrint) => {
     // console.log(numToPrint)
     console.log(
-      loadBookmarksBy(orderBy, numToPrint)
+      JSON.stringify(loadBookmarksBy(orderBy, numToPrint))
     );
+    // console.log(
+    //   `(e.g. bza print | jq '.[0].bTitle')`
+    // );
   });
 
 program
@@ -211,7 +226,7 @@ program
         resumeToggles.push(key);
       }
 }
-    loadMarkdown(mData.title, bData.synopsis, tStamp, mData.filePath, bData.pageNum, bData.sliceSize, bData.rollingSummary, bData.narrator, mData.articleType, mData.charPageLength, resumeToggles)
+    await loadMarkdown(mData.title, bData.synopsis, tStamp, mData.filePath, bData.pageNum, bData.sliceSize, bData.rollingSummary, bData.narrator, mData.articleType, mData.charPageLength, resumeToggles)
   })
 
 program
