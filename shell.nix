@@ -16,6 +16,8 @@ pkgs.stdenv.mkDerivation {
     pkgs.fzf
 
     # TODO (possibly) settle on multiplexing solution
+# some useful links: http://bropages.org/tmux
+# TODO tmux commands to make two windows (also make it so you can turn off tmux)
     # pkgs.screen
     # pkgs.tmux
 
@@ -26,7 +28,7 @@ pkgs.stdenv.mkDerivation {
   shellHook = ''
     export OPENAI_API_KEY=$OPENAI_API_KEY
     export bzaDir=$(pwd)
-    alias bzaT="bza print | jq '.[].bTitle'"
+    alias bzaT="bza print | jq '.[] | {bTitle, tStamp}'"
 
     alias bza="DB_PATH=$bzaDir/db/bookmarks.sq3 $(pwd)/bza.mjs"
     function pullUrl() {
@@ -45,8 +47,6 @@ pkgs.stdenv.mkDerivation {
     bza --help
     export IS_DEV=true
 
-# some useful links: http://bropages.org/tmux
-# TODO tmux commands to make two windows (also make it so you can turn off tmux)
     echo "It's bza time!"
   '';
 }

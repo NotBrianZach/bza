@@ -117,10 +117,11 @@ export default async function eventLoop(bzaTxt, {
   };
 
   let currentParentId = parentId;
+  console.log("2345")
   try {
     const [pageSliceResult, sliceSummaryResult] = await Promise.all([
-      getPageSliceQuery(),
-      getSliceSummaryQuery()
+      getPageSliceQuery(pageSlice),
+      getSliceSummaryQuery(pageSlice)
     ]);
     pageSlice = pageSliceResult;
     sliceSummary = sliceSummaryResult.txt;
@@ -128,6 +129,7 @@ export default async function eventLoop(bzaTxt, {
   } catch (error) {
     console.error(error.message);
   }
+  console.log("1234")
 
 
   let markdownToEmit = ""
@@ -155,7 +157,8 @@ export default async function eventLoop(bzaTxt, {
     markdownToEmit += "----------------------------------------\n"
     markdownToEmit += pageSlice
   }
-  io.emit("markdown", markdownToEmit);
+  const isMarkdownEmitted = io.emit("markdown", markdownToEmit);
+  devLog("isMarkdownEmitted", isMarkdownEmitted)
 
   if (readOptsToToggle.isQuiz) {
     const quizToggles = await runQuiz(pageSlice, {...readOpts}, queryGPT);
