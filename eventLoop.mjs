@@ -79,41 +79,48 @@ export default async function eventLoop(bzaTxt, {
   let mostRecentChatId = "";
   let pageSlice = pageSliceInit
   let sliceSummary = "";
-  const getPageSliceQuery = async () => {
+  const getPageSliceQuery = async (pageSlice2) => {
     if (narrator !== "" && narrator !== undefined && narrator !== null) {
-      const pageSliceQuery = await queryGPT(
-        retellSliceAsNarratorPrompt(narrator, pageSlice, rollingSummary),
-        {
-          systemMsg,
-          parentId: parentId
+      try {
+        return await queryGPT(
+          retellSliceAsNarratorPrompt(narrator, pageSlice2, rollingSummary),
+          {
+            systemMsg,
+            parentId: parentId
+          }
+        );
+      } catch(gptQueryErr) {
+        if (pageSliceQuery.gptQueryErr !== undefined) {
+          throw new Error(`gpt query error when narrator retelling pageSlice: ${pageSliceQuery.gptQueryErr}`);
+        } else {
+          devLog("pageSliceQuery", pageSliceQuery);
+          mostRecentChatId = pageSliceQuery.id;
+          return Promise.resolve(pageSliceQuery.txt);
         }
-      );
-
-      if (pageSliceQuery.gptQueryErr !== undefined) {
-        throw new Error(`gpt query error when narrator retelling pageSlice: ${pageSliceQuery.gptQueryErr}`);
-      } else {
-        devLog("pageSliceQuery", pageSliceQuery);
-        mostRecentChatId = pageSliceQuery.id;
-        return pageSliceQuery.txt;
       }
     } else {
-      return pageSliceInit;
+      return Promise.resolve(pageSliceInit);
     }
   };
 
-  const getSliceSummaryQuery = async (pageSlice2) => {
-    const sliceSummaryQuery = await queryGPT(
+  const getSliceSummaryQuery = (pageSlice2) => {
+    try {
+    return queryGPT(
       genSliceSummaryPrompt(title, synopsis, rollingSummary, pageSlice2),
       {
         systemMsg,
         parentId: parentId
       }
     );
-    if (sliceSummaryQuery.gptQueryErr !== undefined) {
-      throw new Error(`gpt query error when summarizing pageSlice2: ${sliceSummaryQuery.gptQueryErr}`);
-    } else {
-      return sliceSummaryQuery;
-    }
+      } catch(gptQueryErr) {
+        throw new Error(`gpt query error when summarizing pageSlice2: ${gptQueryErr}`);
+
+      }
+    // if (sliceSummaryQuery.gptQueryErr !== undefined) {
+    //   throw new Error(`gpt query error when summarizing pageSlice2: ${sliceSummaryQuery.gptQueryErr}`);
+    // } else {
+    //   return sliceSummaryQuery;
+    // }
   };
 
   let currentParentId = parentId;

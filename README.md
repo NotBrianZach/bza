@@ -27,7 +27,7 @@ And it stores all this into "bookmarks" from which can resume our session in a l
 - `cd bza`
 - get $OPENAI_API_KEY key [here](https://platform.openai.com/account/api-keys) if u dont have
 - `export OPENAI_API_KEY=$OPENAI_API_KEY`
-- `./shell.sh` (might take a few minutes to download and install dependencies)
+- `nix-shell` (might take a few minutes to download and install dependencies)
 - `npm install`
 -  `bza load <path_to_markdown_file>`
 - or 
@@ -40,7 +40,8 @@ And it stores all this into "bookmarks" from which can resume our session in a l
 
 FIRST, must complete all steps in TO RUN
 
-We love markdown because it is close to plaintext and easy to read in raw format for both humans and gpt. It makes copy&paste into prompt, and shell scripting easy while still allowing for hyperlinks, latex, and image embedding.
+We love markdown because it is close to plaintext and easy to read in raw format for both humans and gpt. It makes copy&paste into prompt, andls
+rm stnshell scripting easy while still allowing for hyperlinks, latex, and image embedding.
 
 So, before we can add more articles to our library, we need to convert to markdown using best available tools:
 
@@ -172,7 +173,7 @@ can modify eventLoop prompts in genPrompts.mjs
 see [initDB.mjs]() for database schema
 or
 
-0. ./shell.sh if not already in a nix shell
+0. nix-shell if not already in a nix shell
 1. `sqlite3 bookmarks.sq3`
 2. `.schema` to print db schema
 

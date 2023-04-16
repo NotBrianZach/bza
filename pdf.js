@@ -6,11 +6,12 @@ const path = require("path");
 
 // const PDFJS = require("pdfjs-dist");
 
-const { loadGraphicalModel } = require("@tensorflow/tfjs");
-const { NearestNeighbors } = require("scikit-learn");
+const tfjs = require("@tensorflow/tfjs");
+const { NearestNeighbors } = require("scikitjs");
 const { tokenizeAndStem } = require("natural");
 const openai = require("openai");
 const openAIKey = process.env.OPENAI_API_KEY;
+console.log(tfjs);
 
 async function downloadPdf(url, outputPath) {
   const response = await axios({
@@ -81,8 +82,11 @@ function textToChunks(texts, wordLength = 150, startPage = 1) {
 }
 
 function createSemanticSearch() {
+  // console.log(typeof loadGraphicalModel);
   const state = {
-    use: new TfHub("https://tfhub.dev/google/universal-sentence-encoder/4"),
+    use: tfjs.loadGraphModelSync(
+      "https://tfhub.dev/google/universal-sentence-encoder/4"
+    ),
     fitted: false,
     data: null,
     embeddings: null,
@@ -93,7 +97,7 @@ function createSemanticSearch() {
     state.data = data;
     state.embeddings = await getTextEmbedding(data, batch);
     nNeighbors = Math.min(nNeighbors, state.embeddings.length);
-    state.nn = new NearestNeighbors(nNeighbors);
+    state.nn = new NearestNeighbors({ nNeighbors });
     state.nn.fit(state.embeddings);
     state.fitted = true;
   }

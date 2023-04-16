@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 usage() {
-  echo "Usage: $0 -u <URL> [-o <output_file>] [-f <URLs_file>] [-l <local_html_file>]"
+  echo "Usage: $0 -u <URL> [-o output_file] [-f URLs_file] [-l local_html_file]"
   exit 1
 }
 
@@ -33,8 +33,9 @@ convert_to_markdown() {
       pandoc -f html -t gfm -o "$output_file" "$input"
   fi
 
-  # Replace img tags with image URLs in Markdown format
-  sed -i 's/\!\[\(.*\)\](\(.*\))/\[\1\]\(\2\)/g' "$output_file"
+  # Try to replace img tags with image URLs in Markdown format
+  sed -i 's/<img\s\+src\s*=\s*"\([^"]*\)"\s\+alt\s*=\s*"\([^"]*\)"[^>]*>/!\[\2](\1)/g' "$output_file"
+
 
   echo "Converted input to Markdown: $output_file"
 }
@@ -42,7 +43,7 @@ convert_to_markdown() {
 # Convert single URL
 if [ ! -z "$URL" ]; then
   if [ -z "$OUTPUT_FILE" ]; then
-    OUTPUT_FILE="$(echo "$URL" | sed 's/.*\/\/\([^/]*\).*/\1/').md"
+      OUTPUT_FILE=$bzaDir"/library/$(echo "$URL" | sed 's/.*\/\/\([^/]*\).*/\1/').md"
   fi
 
   convert_to_markdown "$URL" "$OUTPUT_FILE" true
@@ -51,7 +52,7 @@ fi
 # Batch convert URLs from file
 if [ ! -z "$URLS_FILE" ]; then
   while IFS= read -r url; do
-    output_file="$(echo "$url" | sed 's/.*\/\/\([^/]*\).*/\1/').md"
+      output_file=$bzaDir"/library/$(echo "$url" | sed 's/.*\/\/\([^/]*\).*/\1/').md"
     convert_to_markdown "$url" "$output_file" true
   done < "$URLS_FILE"
 fi
@@ -59,8 +60,7 @@ fi
 # Convert local HTML file
 if [ ! -z "$LOCAL_HTML_FILE" ]; then
   if [ -z "$OUTPUT_FILE" ]; then
-    OUTPUT_FILE="$(basename "$LOCAL_HTML_FILE" .html).md"
+      OUTPUT_FILE=$bzaDir"/library/$(basename "$LOCAL_HTML_FILE" .html).md"
   fi
-
   convert_to_markdown "$LOCAL_HTML_FILE" "$OUTPUT_FILE" false
 fi
