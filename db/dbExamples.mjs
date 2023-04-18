@@ -1,4 +1,7 @@
-import db from "../lib/dbConnect.mjs";
+#!/usr/bin/env node
+
+// import db from "../lib/dbConnect.mjs";
+import pool from "../lib/dbConnect.mjs";
 import { yyyymmddhhmmss } from "../lib/utils.mjs";
 
 function insertSample(
@@ -14,26 +17,43 @@ function insertSample(
   articleType
 ) {
   const correctFormatDate = yyyymmddhhmmss(jDate);
-  const dbExampleBook = db.prepare(
-    `insert or replace into md (createdTStamp, title,  filePath, articleType) values (?,?,?,?)`
+  // const dbExampleBook = db.prepare(
+  //   `insert or replace into md (createdTStamp, title,  filePath, articleType) values (?,?,?,?)`
+  // );
+  // dbExampleBook.run(correctFormatDate, title, filePath, articleType);
+  const dbExampleBook = pool.query(
+    `insert into markdown (createdTStamp, title,  filePath, articleType) values ($1,$2,$3,$4) on conflict do nothing`,
+    [correctFormatDate, title, filePath, articleType],
+    (err, result) => {
+      if (err) {
+        console.log("error inserting into markdown table", err);
+      } else {
+        // console.log();
+        const dbExampleBookmark = pool.query(
+          `insert into bookmarks (bTitle, synopsis, isQuiz, isPrintPage, isPrintSliceSummary, narrator, tStamp, filePath) values ($1,$2,$3,$4,$5,$6,$7,$8) on conflict do nothing`,
+          [
+            bTitle,
+            synopsis,
+            isQuiz,
+            isPrintPage,
+            isPrintSliceSummary,
+            narrator,
+            correctFormatDate,
+            filePath
+          ],
+          (err2, result2) => {
+            if (err2) {
+              console.log("error inserting into bookmarks", err2);
+            } else {
+              console.log("inserted db examples, on conflict nothing");
+            }
+          }
+        );
+      }
+    }
   );
-  dbExampleBook.run(correctFormatDate, title, filePath, articleType);
-
-  const dbExampleBookmark = db
-    .prepare(
-      `insert or replace into bookmarks (bTitle, synopsis, isQuiz, isPrintPage, isPrintSliceSummary, narrator, tStamp, filePath) values (?,?,?,?,?,?,?,?)`
-    )
-    .run(
-      bTitle,
-      synopsis,
-      isQuiz,
-      isPrintPage,
-      isPrintSliceSummary,
-      narrator,
-      correctFormatDate,
-      filePath
-    );
 }
+
 const today = new Date();
 insertSample(
   "Frankenstein",

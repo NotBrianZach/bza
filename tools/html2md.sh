@@ -113,6 +113,7 @@ async function convertHTMLToMarkdown(inputFilePath) {
     const inputFileName = getFilenameWithoutSuffix(inputFilePath);
     const outputDir = path.join(
       path.dirname(path.dirname(inputFilePath)),
+      "library"
       inputFileName + "d"
     );
 
