@@ -56,13 +56,6 @@ for utility function definitions, see shellHook in shell.nix
         - a file ./library/Frankensteind/Frankenstein.md
         - and a subdirectory ./library/Frankensteind/imagesD/
     - (html2md <sourceUrl> [outputFilePath], image directory will be filename+d)
-- epub
- - pandoc -i /path/to/file.epub -o /path/to/output.md
-
-- EXPERIMENTAL attempt to clean badly formatted tables or latex with gpt3.5-turbo (might try tweaking prompt if doesn't work, takes a few minutes and costs about a dollar for every 100 pages as of this writing)
-  - gptClean <inputFile> [outputFilePath]
-    - defaults to inputFilePath + "cleaned.md"
-
 - pdf (also images&docx):
   -  https://cloudconvert.com/pdf-to-html just use this then see earlier instructions for html files using html2md bash function, 
     - otherwise ...
@@ -78,6 +71,13 @@ for utility function definitions, see shellHook in shell.nix
       - docker run -t -p 8080:80 axarev/parsr-ui-localhost:latest &
     - it takes quite some time for this tool to run btw, like a lot, it's a NLP tool
     - maybe someone should make a LLM version that is way better and works 99% of the time lol (that would be good enough for us)
+- epub
+  - pandoc -i /path/to/file.epub -o /path/to/output.md
+
+- EXPERIMENTAL attempt to clean badly formatted tables or latex with gpt3.5-turbo (might try tweaking prompt if doesn't work, takes a few minutes and costs about a dollar for every 100 pages as of this writing)
+  - gptClean <inputFile> [outputFilePath]
+    - defaults to inputFilePath + "cleaned.md"
+
 
 ## TODO Read Markdown
 - to read the markdown we use ink-mde
