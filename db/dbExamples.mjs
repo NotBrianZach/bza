@@ -29,6 +29,10 @@ function insertSample(
         console.log("error inserting into markdown table", err);
       } else {
         // console.log();
+        console.log(
+          "inserted db example markdown, on conflict nothing, result",
+          result
+        );
         const dbExampleBookmark = pool.query(
           `insert into bookmarks (bTitle, synopsis, isQuiz, isPrintPage, isPrintSliceSummary, narrator, tStamp, filePath) values ($1,$2,$3,$4,$5,$6,$7,$8) on conflict do nothing`,
           [
@@ -45,7 +49,10 @@ function insertSample(
             if (err2) {
               console.log("error inserting into bookmarks", err2);
             } else {
-              console.log("inserted db examples, on conflict nothing");
+              console.log(
+                "inserted db example bookmarks, on conflict nothing, result2",
+                result2
+              );
             }
           }
         );

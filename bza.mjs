@@ -148,7 +148,7 @@ program
     }
     const {title, synopsis} = await queryUserTitleSynopsis()
 
-    const insertMDReturnStatus = insertMD(
+    const insertMDReturnStatus = await insertMD(
       filePath,
       title,
       tStamp,
@@ -174,14 +174,14 @@ program
 
 program
   .command("print")
-  .addArgument(new Argument('[orderBy]', 'order By, default tStamp', "tStamp").choices([
+  .addArgument(new Argument('[orderBy]', 'order By, default tStamp').choices([
     "tStamp",
     "bTitle",
     "synopsis",
     "pageNum",
     "filePath",
     "narrator"
-  ]))
+  ]).default("tStamp"))
   // .addArgument(new Argument('columnsToSelect', '', "tStamp").choices([
   //   "tStamp",
   //   "bTitle",
@@ -193,10 +193,11 @@ program
   .argument("[numToPrint]", "max # of bookmarks to print, default 5", 5)
 // filter by
   .description("print bookmarks, (bza print | jq '.[].bTitle')")
-  .action((orderBy, numToPrint) => {
-    // console.log(numToPrint)
+  .action(async (orderBy, numToPrint) => {
+    devLog(orderBy, numToPrint)
+    const bookmarkResults = await loadBookmarksBy(orderBy, numToPrint)
     console.log(
-      JSON.stringify(loadBookmarksBy(orderBy, numToPrint))
+      bookmarkResults
     );
     // console.log(
     //   `(e.g. bza print | jq '.[0].bTitle')`
@@ -210,14 +211,14 @@ program
   .description("load bookmark from database into event loop, creates a new bookmark")
   .action(async function(bookmarkTitle, tStamp) {
     devLog(bookmarkTitle, tStamp)
-    const bData = loadBookmark(bookmarkTitle)
+    const bData = await loadBookmark(bookmarkTitle)
     if (bData === undefined) {
       // TODO get most recent bookmark
       console.log("no bookmark found")
       process.exit(1)
     }
     devLog("bookmark data", bData)
-    const mData = loadMDTable(bData.filePath)
+    const mData = await loadMDTable(bData.filePath)
     devLog("markdown data", mData)
     const resumeToggles = []
     // create trueKeysList from object with bool values

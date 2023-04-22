@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS markdown (
     bTitle TEXT not null,
     tStamp TEXT not null,
     ordering INTEGER not null,
-    embedding text not null default '',
+    embedding vector (1536),
     append text not null default '',
     prependSummary text not null default '',
     appendSummary text not null default '',
@@ -76,12 +76,45 @@ CREATE TABLE IF NOT EXISTS markdown (
  conversation TEXT,
  primary key(bTitle, tStamp, conversationTStamp))`,
 
+  // roughly following https://supabase.com/blog/openai-embeddings-postgres-vector
   `create table if not exists embeddings (
     bTitle TEXT not null,
     tStamp TEXT not null,
     pageNum INTEGER not null,
-    embedding TEXT not null,
-    primary key(bTitle, tStamp))`
+    content TEXT not null,
+    embedding vector(1536),
+    primary key(bTitle, tStamp))`,
+  ` create index on embeddings
+using ivfflat (embedding vector_cosine_ops)
+with (lists = 100);
+`,
+
+  `
+create or replace function match_documents (
+  query_embedding vector(1536),
+  similarity_threshold float,
+  match_count int
+)
+returns table (
+  id bigint,
+  content text,
+  similarity float
+)
+language plpgsql
+as $$
+begin
+  return query
+  select
+    id,
+    content,
+    1 - (documents.embedding <=> query_embedding) as similarity
+  from documents
+  where 1 - (documents.embedding <=> query_embedding) > similarity_threshold
+  order by documents.embedding <=> query_embedding
+  limit match_count;
+end;
+$$;
+`
 ];
 
 const executeQueries = async (client, queries) => {
