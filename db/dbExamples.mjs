@@ -22,7 +22,7 @@ function insertSample(
   // );
   // dbExampleBook.run(correctFormatDate, title, filePath, articleType);
   const dbExampleBook = pool.query(
-    `insert into markdown (createdTStamp, title,  filePath, articleType) values ($1,$2,$3,$4) on conflict do nothing`,
+    `insert into markdown ("createdTStamp", title,  "filePath", "articleType") values ($1,$2,$3,$4) on conflict do nothing`,
     [correctFormatDate, title, filePath, articleType],
     (err, result) => {
       if (err) {
@@ -34,7 +34,7 @@ function insertSample(
           result
         );
         const dbExampleBookmark = pool.query(
-          `insert into bookmarks (bTitle, synopsis, isQuiz, isPrintPage, isPrintSliceSummary, narrator, tStamp, filePath) values ($1,$2,$3,$4,$5,$6,$7,$8) on conflict do nothing`,
+          `insert into bookmarks ("bTitle", synopsis, "isQuiz", "isPrintPage", "isPrintSliceSummary", narrator, "tStamp", "filePath") values ($1,$2,$3,$4,$5,$6,$7,$8) on conflict do nothing`,
           [
             bTitle,
             synopsis,
