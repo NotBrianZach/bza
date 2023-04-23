@@ -222,6 +222,9 @@ pkgs.stdenv.mkDerivation {
 
 
     #END POSTGRES
+    source bzaenv/bin/activate
+    pip install -r requirements.txt
+
 
     bza --help
     export IS_DEV=true
