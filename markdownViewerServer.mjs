@@ -22,7 +22,10 @@ export function createWebsocketServer() {
     });
   });
 
-  const logStream = fs.createWriteStream("server.log", { flags: "a" }); // create a writable stream to the file
+  const logStream = fs.createWriteStream(
+    `${process.env.bzaDir}/logs/markdownViewServer.log`,
+    { flags: "a" }
+  ); // create a writable stream to the file
 
   // redirect console output to the file
   function serverLog(data) {
@@ -83,7 +86,7 @@ export function createWebsocketServer() {
   });
 
   // start the server
-  app.listen(8675, () => {
+  app.listen(process.env.MarkdownViewerPort, () => {
     console.log("Server started on port 8675");
   });
 

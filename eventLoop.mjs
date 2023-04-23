@@ -3,9 +3,14 @@ import fs from "fs";
 import prompt from "prompt";
 import getUserInput from "./getUserInput.mjs";
 import runQuiz from "./lib/runQuiz.mjs";
-import {genSystemMsg, genSliceSummaryPrompt, genRollingSummaryPrompt, retellSliceAsNarratorPrompt} from "./lib/genPrompts.mjs";
+import {
+  genSystemMsg,
+  genSliceSummaryPrompt,
+  genRollingSummaryPrompt,
+  retellSliceAsNarratorPrompt
+} from "./lib/genPrompts.mjs";
 import { insertMD, insertBookmark } from "./lib/dbQueries.mjs";
-import readline from 'readline';
+import readline from "readline";
 import {
   removeExtraWhitespace,
   devLog,
@@ -16,7 +21,6 @@ import path from "path";
 
 // const app = express();
 // const http = require('http').createServer(app);
-
 
 // io.on('markdown', (data) => {
 //   markdown = data;
@@ -30,44 +34,53 @@ import path from "path";
 //     console.log(`Page ${i + 1}:\n${pageContent}\n`);
 //   }
 
-const IS_DEV = process.env.IS_DEV
+const IS_DEV = process.env.IS_DEV;
 const nowTime = new Date();
 
-export default async function eventLoop(bzaTxt, {
-  pageNum = 0,
-  narrator = "",
-  articleType = "book",
-  prependList = [],
-  appendList = [],
-  sliceSize = 2,
-  charPageLength = 1800,
-  synopsis = "",
-  rollingSummary = "",
-  parentId = undefined,
-  isQuiz = false,
-  isPrintPage = true,
-  isPrintSliceSummary = true,
-  isPrintRollingSummary = true,
-  title
-}, queryGPT, sessionTime, io) {
+export default async function eventLoop(
+  bzaTxt,
+  {
+    pageNum = 0,
+    narrator = "",
+    articleType = "book",
+    prependList = [],
+    appendList = [],
+    sliceSize = 2,
+    charPageLength = 1800,
+    synopsis = "",
+    rollingSummary = "",
+    parentId = undefined,
+    isQuiz = false,
+    isPrintPage = true,
+    isPrintSliceSummary = true,
+    isPrintRollingSummary = true,
+    title
+  },
+  queryGPT,
+  sessionTime,
+  io
+) {
   const totalPages = bzaTxt.length;
-  const readOpts = arguments[1]
+  const readOpts = arguments[1];
   let readOptsToToggle = {
     isPrintPage,
     isPrintSliceSummary,
     isPrintRollingSummary,
     isQuiz
-  }
+  };
   console.log(
     `totalPages ${totalPages}, pageNum ${pageNum}, sliceSize ${sliceSize}`
   );
   // devLog("eventLoop arguments", arguments)
 
   let pageSliceInit = removeExtraWhitespace(
-    bzaTxt.slice(pageNum * charPageLength, (pageNum + sliceSize) * charPageLength)
+    bzaTxt.slice(
+      pageNum * charPageLength,
+      (pageNum + sliceSize) * charPageLength
+    )
   );
 
-  devLog("initial pageSlice b4 queryGPT retell slice", pageSliceInit)
+  devLog("initial pageSlice b4 queryGPT retell slice", pageSliceInit);
 
   let systemMsg = genSystemMsg(
     title,
@@ -75,11 +88,11 @@ export default async function eventLoop(bzaTxt, {
     articleType,
     prependList,
     appendList
-  )
+  );
   let mostRecentChatId = "";
-  let pageSlice = pageSliceInit
+  let pageSlice = pageSliceInit;
   let sliceSummary = "";
-  const getPageSliceQuery = async (pageSlice2) => {
+  const getPageSliceQuery = async pageSlice2 => {
     if (narrator !== "" && narrator !== undefined && narrator !== null) {
       try {
         return await queryGPT(
@@ -89,9 +102,11 @@ export default async function eventLoop(bzaTxt, {
             parentId: parentId
           }
         );
-      } catch(gptQueryErr) {
+      } catch (gptQueryErr) {
         if (pageSliceQuery.gptQueryErr !== undefined) {
-          throw new Error(`gpt query error when narrator retelling pageSlice: ${pageSliceQuery.gptQueryErr}`);
+          throw new Error(
+            `gpt query error when narrator retelling pageSlice: ${pageSliceQuery.gptQueryErr}`
+          );
         } else {
           devLog("pageSliceQuery", pageSliceQuery);
           mostRecentChatId = pageSliceQuery.id;
@@ -103,19 +118,20 @@ export default async function eventLoop(bzaTxt, {
     }
   };
 
-  const getSliceSummaryQuery = (pageSlice2) => {
+  const getSliceSummaryQuery = pageSlice2 => {
     try {
-    return queryGPT(
-      genSliceSummaryPrompt(title, synopsis, rollingSummary, pageSlice2),
-      {
-        systemMsg,
-        parentId: parentId
-      }
-    );
-      } catch(gptQueryErr) {
-        throw new Error(`gpt query error when summarizing pageSlice2: ${gptQueryErr}`);
-
-      }
+      return queryGPT(
+        genSliceSummaryPrompt(title, synopsis, rollingSummary, pageSlice2),
+        {
+          systemMsg,
+          parentId: parentId
+        }
+      );
+    } catch (gptQueryErr) {
+      throw new Error(
+        `gpt query error when summarizing pageSlice2: ${gptQueryErr}`
+      );
+    }
     // if (sliceSummaryQuery.gptQueryErr !== undefined) {
     //   throw new Error(`gpt query error when summarizing pageSlice2: ${sliceSummaryQuery.gptQueryErr}`);
     // } else {
@@ -124,7 +140,7 @@ export default async function eventLoop(bzaTxt, {
   };
 
   let currentParentId = parentId;
-  console.log("2345")
+  console.log("2345");
   try {
     const [pageSliceResult, sliceSummaryResult] = await Promise.all([
       getPageSliceQuery(pageSlice),
@@ -136,128 +152,155 @@ export default async function eventLoop(bzaTxt, {
   } catch (error) {
     console.error(error.message);
   }
-  console.log("1234")
+  console.log("1234");
 
-
-  let markdownToEmit = ""
+  let markdownToEmit = "";
   if (isPrintRollingSummary) {
     console.log(
-      `Rolling Summary of pages ${pageNum} to ${pageNum +
-      sliceSize}:`,
+      `Rolling Summary of pages ${pageNum} to ${pageNum + sliceSize}:`,
       rollingSummary
     );
-    markdownToEmit += rollingSummary
+    markdownToEmit += rollingSummary;
   }
   if (isPrintSliceSummary) {
     console.log(
       `Summary of pages ${pageNum} to ${pageNum + sliceSize}:`,
       sliceSummary
     );
-    markdownToEmit += "----------------------------------------\n"
-    markdownToEmit += sliceSummary
+    markdownToEmit += "----------------------------------------\n";
+    markdownToEmit += sliceSummary;
   }
   if (isPrintPage) {
-    console.log(
-      `Page Slice`,
-      pageSlice
-    );
-    markdownToEmit += "----------------------------------------\n"
-    markdownToEmit += pageSlice
+    console.log(`Page Slice`, pageSlice);
+    markdownToEmit += "----------------------------------------\n";
+    markdownToEmit += pageSlice;
   }
   const isMarkdownEmitted = io.emit("markdown", markdownToEmit);
-  devLog("isMarkdownEmitted", isMarkdownEmitted)
+  devLog("isMarkdownEmitted", isMarkdownEmitted);
 
   if (readOptsToToggle.isQuiz) {
-    const quizToggles = await runQuiz(pageSlice, {...readOpts}, queryGPT);
-    readOptsToToggle =  {
-      ...readOptsToToggle,
-      ...quizToggles,
-      parentId: currentParentId
+    try {
+      const quizToggles = await runQuiz(pageSlice, { ...readOpts }, queryGPT);
+      readOptsToToggle = {
+        ...readOptsToToggle,
+        ...quizToggles,
+        parentId: currentParentId
+      };
+      currentParentId = quizToggles.parentId;
+    } catch (err) {
+      console.error("failed runQuiz:", err.message);
     }
-    currentParentId = quizToggles.parentId
   }
 
-  const userInput = await getUserInput(bzaTxt, {...readOpts,
-                                          sessionTime,
-                                          originalParentId: currentParentId,
-                                          pageSlice
-                                          // sliceSummary
-                                         }, queryGPT);
-  switch (userInput.label) {
-    case "jump":
-      if (userInput.jump < totalPages) {
-        return eventLoop(bzaTxt, {
-          ...readOpts,
-          pageNum: userInput.jump
-        }, queryGPT, sessionTime);
-      } else {
-        console.log("jump failed")
-      }
-      break
-    case "exit":
+  try {
+    const userInput = await getUserInput(
+      bzaTxt,
+      {
+        ...readOpts,
+        sessionTime,
+        originalParentId: currentParentId,
+        pageSlice
+        // sliceSummary
+      },
+      queryGPT
+    );
+    switch (userInput.label) {
+      case "jump":
+        if (userInput.jump < totalPages) {
+          return eventLoop(
+            bzaTxt,
+            {
+              ...readOpts,
+              pageNum: userInput.jump
+            },
+            queryGPT,
+            sessionTime
+          );
+        } else {
+          console.log("jump failed");
+        }
+        break;
+      case "exit":
         return `Event Loop End, saving bookmark result: ${insertBookmark(
-           readOpts.filePath,
-           readOpts.title,
-           readOpts.tStamp,
-           readOpts.synopsis,
-           readOpts.narrator,
-           readOpts.pageNum,
-           readOpts.sliceSize,
-           readOpts.rollingSummary,
-           readOpts.isPrintPage,
-           readOpts.isPrintSliceSummary,
-           readOpts.isPrintRollingSummary,
-           readOpts.filePath)}`
-      return "successful loop exit"
-      break
-    default: // do nothing
+          readOpts.filePath,
+          readOpts.title,
+          readOpts.tStamp,
+          readOpts.synopsis,
+          readOpts.narrator,
+          readOpts.pageNum,
+          readOpts.sliceSize,
+          readOpts.rollingSummary,
+          readOpts.isPrintPage,
+          readOpts.isPrintSliceSummary,
+          readOpts.isPrintRollingSummary,
+          readOpts.filePath
+        )}`;
+        return "successful loop exit";
+        break;
+      default: // do nothing
+    }
+  } catch (err) {
+    console.error("failed getUserInput:", err.message);
   }
 
   // 2. rollingSummary=queryGPT3(synopsis+pageSliceSummary)
-  let newRollingSummary = ""
+  let newRollingSummary = "";
   const rollingSummaryQuery = await queryGPT(
-    genRollingSummaryPrompt(title, synopsis, rollingSummary, pageSlice), {}
-  )
+    genRollingSummaryPrompt(title, synopsis, rollingSummary, pageSlice),
+    {}
+  );
   if (rollingSummaryQuery.gptQueryErr !== undefined) {
-    return `gpt query error when summarizing rollingSummary : ${rollingSummaryQuery.gptQueryErr}`
+    return `gpt query error when summarizing rollingSummary : ${rollingSummaryQuery.gptQueryErr}`;
   } else {
-    newRollingSummary = rollingSummaryQuery.txt
+    newRollingSummary = rollingSummaryQuery.txt;
   }
 
   if (isPrintRollingSummary) {
     console.log(
-      `Summary of pages ${pageNum} to ${pageNum + sliceSize} within context of synopsis:`,
+      `Summary of pages ${pageNum} to ${pageNum +
+        sliceSize} within context of synopsis:`,
       rollingSummary
     );
   }
 
   if (pageNum + sliceSize < totalPages) {
     // logSummary.push(rollingSummary);
-    return eventLoop(bzaTxt, {
-      ...readOpts,
-      pageNum: pageNum + sliceSize,
-      parentId: rollingSummaryQuery.parentId,
-    }, queryGPT, sessionTime, io);
+    return eventLoop(
+      bzaTxt,
+      {
+        ...readOpts,
+        pageNum: pageNum + sliceSize,
+        parentId: rollingSummaryQuery.parentId
+      },
+      queryGPT,
+      sessionTime,
+      io
+    );
   } else {
     // pageNum+1 becuz zero index
     if (pageNum + 1 === totalPages) {
       // save and ex
       console.log(logs);
-      return "successful loop exit"
+      return "successful loop exit";
     } else {
       // read up to totalPages (but not beyond)
       // 10 pages total, 0 index pageNum = 8 (actually 9), sliceSize = 2
       // pageNum + slicesize = total pages
       // 10 pages total, 0 index pageNum = 8 (actually 9), sliceSize = 3
       // pageNum + slicesize > total pages
-      const lastSliceSize = totalPages - pageNum - 1
-      return eventLoop(bzaTxt, {
-        ...readOpts,
-        rollingSummary,
-        pageNum: pageNum + lastSliceSize,
-        sliceSize: lastSliceSize
-      }, queryGPT, sessionTime, io);
+      const lastSliceSize = totalPages - pageNum - 1;
+      return eventLoop(
+        bzaTxt,
+        {
+          ...readOpts,
+          rollingSummary,
+          pageNum: pageNum + lastSliceSize,
+          sliceSize: lastSliceSize
+        },
+        queryGPT,
+        sessionTime,
+        io
+      );
     }
-
   }
 }

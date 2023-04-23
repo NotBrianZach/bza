@@ -30,18 +30,18 @@ function loadMarkdown(title, synopsis, tStamp, filePath, pageNum=0, sliceSize, r
     console.error("error, not a markdown file, file must end with .md suffix")
     return
   }
-  const {
-    isPrintPage,
-    isPrintRollingSummary,
-    isPrintSliceSummary,
-    isQuiz
-  } = toggles
+  // const {
+  //   isPrintPage,
+  //   isPrintRollingSummary,
+  //   isPrintSliceSummary,
+  //   isQuiz
+  // } = toggles
   devLog(filePath)
-  fs.readFile(filePath,function(err, mdTxt) {
+  fs.readFile(filePath,async function(err, mdTxt) {
     if (err !== null) {
       console.log(`error ${err} reading from filePath ${filePath}`)
     }
-    devLog("fsreadfile arguments", arguments)
+    // devLog("fsreadfile arguments", arguments)
     function splitStringIntoSubstringsLengthN(str, n) {
       const substrings = [];
       for (let i = 0; i < str.length; i += n) {
@@ -50,23 +50,25 @@ function loadMarkdown(title, synopsis, tStamp, filePath, pageNum=0, sliceSize, r
       return substrings;
     }
     const finalMarkdownArray = splitStringIntoSubstringsLengthN(mdTxt.toString(), sliceSize)
-    const insertMarkReturnStatus = insertBookmark(
-      filePath,
-      title,
-      tStamp,
-      synopsis,
-      pageNum,
-      narrator,
-      sliceSize,
-      rollingSummary,
-      isPrintPage,
-      isPrintSliceSummary,
-      isPrintRollingSummary
-    )
-    devLog("insertMark return status", insertMarkReturnStatus)
-    if (insertMarkReturnStatus === undefined) {
-      console.log("db insertMark error")
-    } else {
+
+    const isPrintPage = toggles.includes("isPrintPage")
+    const isPrintSliceSummary = toggles.includes("isPrintSliceSummary")
+    const isPrintRollingSummary = toggles.includes("isPrintRollingSummary")
+    const isQuiz = toggles.includes("isQuiz")
+    try {
+      const insertMarkReturnStatus = await insertBookmark({
+        filePath,
+        title,
+        tStamp,
+        synopsis,
+        pageNum,
+        narrator,
+        sliceSize,
+        rollingSummary,
+        isPrintPage,
+        isPrintSliceSummary,
+        isPrintRollingSummary
+      })
       const io = createWebsocketServer()
       const eventLoopEndMsg = eventLoop(finalMarkdownArray.join(""), {
         title,
@@ -83,8 +85,9 @@ function loadMarkdown(title, synopsis, tStamp, filePath, pageNum=0, sliceSize, r
         charPageLength
       }, queryGPT, tStamp, io);
       console.log(eventLoopEndMsg)
+    } catch (err){
+      console.log("error loadMarkdown->insertBookMark", err)
     }
-
   })
 }
 
@@ -113,7 +116,7 @@ program
   .argument('[pageNumber]', 'pageNumber to start on, default 0', 0)
   .argument('[sliceSize]', 'how many pages to read at once, default 2 (more=less context window for conversation)', 2)
   .argument('[charPageLength]', 'characters per page default 1800', 1800)
-  .argument('[narrator]', 'narrator persona, default none ("")', "")
+  .argument('[narrator]', 'narrator persona, default null', null)
   // .argument('[isPrintPage]', 'whether to print each page of slice, false=0', 0)
   .argument("[toggles]", 'Select multiple choices from the list', factoryTakeArgs(togglesOptions), [])
   // .addArgument(new Argument('[isPrintPage]', 'whether to print each page, false=0').choices([0, 1]))
@@ -153,21 +156,15 @@ program
       title,
       tStamp,
       articleType
-      // pageNum,
-      // narrator,
-      // sliceSize,
-      // rollingSummary,
-      // isPrintPage,
-      // isPrintSliceSummary,
-      // isPrintRollingSummary
     )
     devLog("insertMD return status", insertMDReturnStatus)
     if (insertMDReturnStatus === undefined) {
       console.log("db insertMD error  ")
     } else {
-      loadMarkdown(title, tStamp, synopsis,
+      loadMarkdown(title, synopsis, tStamp,
                    filePath, pageNumber, sliceSize, "", narrator, articleType, charPageLength, toggles
                   )
+      // title, synopsis, tStamp, filePath, pageNum=0, sliceSize, rollingSummary, narrator, articleType = "book", charPageLength = 1800, toggles
     }
 
   });
@@ -229,6 +226,7 @@ program
     }
     console.log("args b4 loadMarkdown", mData.title, bData.synopsis, tStamp, mData.filePath, bData.pageNum, bData.sliceSize, bData.rollingSummary, bData.narrator, mData.articleType, mData.charPageLength, resumeToggles)
     await loadMarkdown(mData.title, bData.synopsis, tStamp, mData.filePath, bData.pageNum, bData.sliceSize, bData.rollingSummary, bData.narrator, mData.articleType, mData.charPageLength, resumeToggles)
+
   })
 
 program

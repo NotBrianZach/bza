@@ -12,6 +12,7 @@ pkgs.stdenv.mkDerivation {
 
   buildInputs = [
     pkgs.nodejs-18_x
+    pkgs.python39
 
     pkgs.sqlite
 
@@ -219,6 +220,7 @@ pkgs.stdenv.mkDerivation {
     alias html2md="$(pwd)/tools/html2md.sh"
     alias url2md="$(pwd)/tools/url2md.sh"
     alias gptClean="$(pwd)/tools/gptClean.sh"
+    export MarkdownViewerPort=8675
 
 
     #END POSTGRES
