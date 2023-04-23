@@ -183,6 +183,8 @@ could create another file e.g. alterDB.mjs which has alter table statements if y
 
 ## Future Work
 
+- get basic functionality working
+- text to speech  https://github.com/suno-ai/bark ; speech to text https://github.com/openai/whisper
 - use https://github.com/NotBrianZach/ink-mde, open browser start server and create notifications that push to markdown viewing/editing client whenever user switches pages (wip)
 - https://github.com/karpathy/randomfun/blob/master/knn_vs_svm.ipynb on book pages vector array option to get relevant context (wip)
 - recognize images and sumarize their meaning into text (when we get access to good multimodal models)

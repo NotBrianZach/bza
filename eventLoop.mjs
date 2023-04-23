@@ -4,7 +4,7 @@ import prompt from "prompt";
 import getUserInput from "./getUserInput.mjs";
 import runQuiz from "./lib/runQuiz.mjs";
 import {genSystemMsg, genSliceSummaryPrompt, genRollingSummaryPrompt, retellSliceAsNarratorPrompt} from "./lib/genPrompts.mjs";
-import { insertMD, insertBookmark, loadMDTable } from "./lib/dbQueries.mjs";
+import { insertMD, insertBookmark } from "./lib/dbQueries.mjs";
 import readline from 'readline';
 import {
   removeExtraWhitespace,

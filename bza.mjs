@@ -18,7 +18,7 @@ import { removeExtraWhitespace, devLog, newSessionTime } from "./lib/utils.mjs";
 import { createGPTQuery } from "./lib/createGPTQuery.mjs";
 import db from "./lib/dbConnect.mjs";
 import eventLoop from "./eventLoop.mjs";
-import { loadBookmarksBy, loadBookmark, insertMD, insertBookmark, loadMDTable } from "./lib/dbQueries.mjs";
+import { loadBookmarksBy, loadBookmark, insertMD, insertBookmark, loadMarkdownDataFromDBWithFilepath } from "./lib/dbQueries.mjs";
 
 const queryGPT = createGPTQuery(process.env.OPENAI_API_KEY);
 
@@ -218,7 +218,7 @@ program
       process.exit(1)
     }
     devLog("bookmark data", bData)
-    const mData = await loadMDTable(bData.filePath)
+    const mData = await loadMarkdownDataFromDBWithFilepath(bData.filePath)
     devLog("markdown data", mData)
     const resumeToggles = []
     // create trueKeysList from object with bool values
@@ -226,7 +226,8 @@ program
       if (value) {
         resumeToggles.push(key);
       }
-}
+    }
+    console.log("args b4 loadMarkdown", mData.title, bData.synopsis, tStamp, mData.filePath, bData.pageNum, bData.sliceSize, bData.rollingSummary, bData.narrator, mData.articleType, mData.charPageLength, resumeToggles)
     await loadMarkdown(mData.title, bData.synopsis, tStamp, mData.filePath, bData.pageNum, bData.sliceSize, bData.rollingSummary, bData.narrator, mData.articleType, mData.charPageLength, resumeToggles)
   })
 
