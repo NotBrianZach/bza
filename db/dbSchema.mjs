@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS markdown (
   "filePath" TEXT PRIMARY KEY,
   "articleType" TEXT NOT NULL DEFAULT 'article',
   title TEXT NOT NULL DEFAULT '',
-  "createdTStamp" TEXT NOT NULL,
+  "createdTStamp" TIMESTAMP NOT NULL DEFAULT NOW(),
   "charPageLength" INTEGER NOT NULL DEFAULT ${defaultCharPageLength},
   "readerExe" TEXT NOT NULL DEFAULT '',
   "readerArgs" TEXT,
@@ -23,8 +23,10 @@ CREATE TABLE IF NOT EXISTS markdown (
   // articleTypes: ["book", "research paper", "monograph", "news article", "article"],
 
   `create table if not exists bookmarks (
+    bookmarkId SERIAL PRIMARY KEY,
     "bTitle" TEXT not null,
-    "tStamp" TEXT not null,
+    "tStamp" TIMESTAMP not null,
+    "parentConvId" INTEGER,
     "pageNum" INTEGER not null default 0,
     "rollingSummary" TEXT not null default '',
     "isQuiz" boolean default false,
@@ -36,8 +38,9 @@ CREATE TABLE IF NOT EXISTS markdown (
     synopsis TEXT not null default '',
     narrator TEXT,
     "filePath" TEXT not null,
-    FOREIGN KEY ("filePath") references markdown("filePath"),
-    primary key("bTitle", "tStamp"))`,
+    FOREIGN KEY ("filePath") references markdown("filePath")
+    )`,
+  `CREATE INDEX bookmarks_filePath_idx ON bookmarks (filePath);`,
 
   // key = quiz
   // gptOut = "[1. how fast can a swallow fly 2. ]"
@@ -47,7 +50,7 @@ CREATE TABLE IF NOT EXISTS markdown (
 
   `create table if not exists subLoops (
     "bTitle" TEXT not null,
-    "tStamp" text not null,
+    "tStamp" TIMESTAMP not null,
     ordering INTEGER not null,
     "loopKey" text not null,
     "userInputs" text not null default '',
@@ -67,12 +70,14 @@ CREATE TABLE IF NOT EXISTS markdown (
   // save and resume conversations within single iteration of event loop
   // help to avoid proliferation of bookmark timestamps by adding a nested level of them to resume individual conversations from
   // (tStamp+title identifies all conversations you had in a session, conversationTStamp more granular sorting)
-  // TODO not sure if some of these properties will simply be inherited from bookmarks
-
-  `create table if not exists conversations (
+  `CREATE TABLE IF NOT EXISTS quiz_configs (
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    description TEXT NOT NULL
+  );``create table if not exists conversations (
  "bTitle" TEXT,
- "tStamp" TEXT,
- "conversationTStamp" TEXT,
+ "tStamp" TIMESTAMP NOT NULL DEFAULT REFERENCES,
+ "conversationTStamp" TIMESTAMP NOT NULL DEFAULT NOW(),
  conversation TEXT,
  primary key("bTitle", "tStamp", "conversationTStamp"))`,
 
@@ -82,7 +87,7 @@ CREATE TABLE IF NOT EXISTS markdown (
     "tStamp" TEXT not null,
     "pageNum" INTEGER not null,
     content TEXT not null,
-    embedding vector(1536),
+    embedding vector(1024),
     primary key("bTitle", "tStamp"))`,
   ` create index on embeddings
 using ivfflat (embedding vector_cosine_ops)
@@ -91,7 +96,7 @@ with (lists = 100);
 
   `
 create or replace function match_documents (
-  "queryEmbedding" vector(1536),
+  "queryEmbedding" vector(1024),
   "similarityThreshold" float,
   "matchCount" int
 )

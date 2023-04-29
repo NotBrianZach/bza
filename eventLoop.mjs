@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import fs from "fs";
 import prompt from "prompt";
+import _ from "underscore";
 import getUserInput from "./getUserInput.mjs";
 import runQuiz from "./lib/runQuiz.mjs";
 import {
@@ -45,11 +46,11 @@ export default async function eventLoop(
     articleType = "book",
     prependList = [],
     appendList = [],
-    sliceSize = 2,
-    charPageLength = 1800,
+    parentConvId = undefined,
     synopsis = "",
     rollingSummary = "",
-    parentId = undefined,
+    sliceSize = 2,
+    charPageLength = 1800,
     isQuiz = false,
     isPrintPage = true,
     isPrintSliceSummary = true,
@@ -99,7 +100,7 @@ export default async function eventLoop(
           retellSliceAsNarratorPrompt(narrator, pageSlice2, rollingSummary),
           {
             systemMsg,
-            parentId: parentId
+            parentConvId: parentConvId
           }
         );
       } catch (gptQueryErr) {
@@ -124,7 +125,7 @@ export default async function eventLoop(
         genSliceSummaryPrompt(title, synopsis, rollingSummary, pageSlice2),
         {
           systemMsg,
-          parentId: parentId
+          parentConvId: parentConvId
         }
       );
     } catch (gptQueryErr) {
@@ -139,7 +140,7 @@ export default async function eventLoop(
     // }
   };
 
-  let currentParentId = parentId;
+  let currentParentConvId = parentConvId;
   console.log("2345");
   try {
     const [pageSliceResult, sliceSummaryResult] = await Promise.all([
@@ -148,7 +149,7 @@ export default async function eventLoop(
     ]);
     pageSlice = pageSliceResult;
     sliceSummary = sliceSummaryResult.txt;
-    currentParentId = sliceSummaryResult.id;
+    currentParentConvId = sliceSummaryResult.id;
   } catch (error) {
     console.error(error.message);
   }
@@ -184,9 +185,9 @@ export default async function eventLoop(
       readOptsToToggle = {
         ...readOptsToToggle,
         ...quizToggles,
-        parentId: currentParentId
+        parentConvId: currentParentConvId
       };
-      currentParentId = quizToggles.parentId;
+      currentParentConvId = quizToggles.parentConvId;
     } catch (err) {
       console.error("failed runQuiz:", err.message);
     }
@@ -198,13 +199,37 @@ export default async function eventLoop(
       {
         ...readOpts,
         sessionTime,
-        originalParentId: currentParentId,
+        originalParentConvId: currentParentConvId,
         pageSlice
         // sliceSummary
       },
       queryGPT
     );
     switch (userInput.label) {
+      case "start":
+      // TODO
+        startConversation = createSubloop(pageSlice, readOpts)
+      //
+      // case "queryEmbeddings":
+      //   // TODO save
+      //   // quiz, grade
+      //   break;
+    // case "done":
+    //   // TODO save
+    //   // quiz, grade
+    //   break;
+    // case "forget":
+    //   break;
+    // case "converse":
+    //   break;
+    // case "again":
+    //   break;
+    // case "againFresh":
+    //   break;
+      // TODO
+        await startConversation()
+
+
       case "jump":
         if (userInput.jump < totalPages) {
           return eventLoop(
@@ -221,20 +246,15 @@ export default async function eventLoop(
         }
         break;
       case "exit":
-        return `Event Loop End, saving bookmark result: ${insertBookmark(
-          readOpts.filePath,
-          readOpts.title,
-          readOpts.tStamp,
-          readOpts.synopsis,
-          readOpts.narrator,
-          readOpts.pageNum,
-          readOpts.sliceSize,
-          readOpts.rollingSummary,
-          readOpts.isPrintPage,
-          readOpts.isPrintSliceSummary,
-          readOpts.isPrintRollingSummary,
-          readOpts.filePath
-        )}`;
+        console.log("exiting");
+      const bookmarkResult = await insertBookmark(
+        _.omit(readOpts, [
+          "articleType",
+          // "prependList",
+          // "appendList"
+        ])
+      )
+        return `Event Loop End, saving bookmark result: ${bookmarkResult}`;
         return "successful loop exit";
         break;
       default: // do nothing

@@ -2,7 +2,7 @@ import prompt from "prompt";
 // import prompt from "prompt";
 import readline from "readline";
 import runQuiz from "./lib/runQuiz.mjs";
-import { promptWithAutoCompleteAndExplain } from "./lib/explanatoryPrompt.mjs";
+import { promptAutoCompleteExplainExecute } from "./lib/explanatoryPrompt.mjs";
 import fs from "fs";
 import {
   genSliceSummaryPrompt,
@@ -162,7 +162,7 @@ export default async function getUserInput(pageSlice, readOpts, queryGPT) {
   // readOpts.isPrintSliceSummary,
   // readOpts.isPrintRollingSummary,
 
-  const defaultPrompt = promptWithAutoCompleteAndExplain(defaultQueryOptions);
+  const defaultPrompt = promptAutoCompleteExplainExecute(defaultQueryOptions);
   let query = "";
   let gptResponse = "";
 

@@ -13,6 +13,7 @@ pkgs.stdenv.mkDerivation {
   buildInputs = [
     pkgs.nodejs-18_x
     pkgs.python39
+    pkgs.ffmpeg
 
     pkgs.sqlite
 

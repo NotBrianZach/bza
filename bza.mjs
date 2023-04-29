@@ -202,6 +202,13 @@ program
   });
 
 program
+  .command("ask")
+  .description("TODO, in the future you can ask questions about how to use bza")
+  .action(async function(bookmarkTitle, tStamp) {
+    console.log("TODO, in the future you can ask questions about how to use bza")
+  })
+
+program
   .command("resume")
   .argument('[bookmarkTitle]', 'title of bookmark to load (defaults to most recent)')
   .argument('[tStamp]', 'tStamp to load from "yyyy-mm dd-hh-mm-ss" (defaults to most recent)', newSessionTime())
