@@ -113,6 +113,7 @@ TODO
 <!-- - restart="restart" save current conversation to db, restart conversation w/only initial prompt  -->
 - "hard restart conversation"= restart conversation w/only initial prompt, NO save to database
   - same subcommands as start
+# TODO SUBLOOP OVERHUAL USING LLM PSUEDOLANGUAGE https://github.com/NotBrianZach/gpt-jargon (need database integration though... tricky.)
 ##### SUBLOOP COMMANDS
 - quiz= run quiz loop once
 - toggleQuiz= toggles quiz loop, print boolean value
