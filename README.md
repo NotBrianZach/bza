@@ -1,13 +1,14 @@
 # Book piZzA: GPT Conversational Read Eval Print Loop and Bookmarks Management System for Text (WIP)
 
+
 Interactive books. Books sliced up like pizza. Book pizza. bza.
 
-First input text, 
+First input text,
 
 feed it (sliceSize) pages at a time into chatgpt or another LLM, summarizing as it goes
 
-then prompt user for a command e.g. 
-- print out the slice of pages 
+then prompt user for a command e.g.
+- print out the slice of pages
   - in the voice of a character,
   - translate into spanish
 - print out the summary of content up to this point
@@ -30,9 +31,9 @@ And it stores all this into "bookmarks" from which can resume our session in a l
 - `nix-shell` (might take a few minutes to download and install dependencies)
 - `npm install`
 -  `bza load <path_to_markdown_file>`
-- or 
+- or
 -  `bza resume Frankenstein`
-- or 
+- or
 -  `bza print`  (shows current booksmarks, e.g. Frankenstein)
 - open an issue detailing why doesnt work
 
@@ -49,15 +50,15 @@ for utility function definitions, see shellHook in shell.nix
 
 - html
   - a website
-    - `url2md -u  https://example.com  -o "example.md"` # this is a wrapper for wget in shellHook in shell.nix 
-  - local html 
+    - `url2md -u  https://example.com  -o "example.md"` # this is a wrapper for wget in shellHook in shell.nix
+  - local html
     - `html2md ./library/sources/Frankenstein.html`
       - this will create a directory ./library/Frankensteind
         - a file ./library/Frankensteind/Frankenstein.md
         - and a subdirectory ./library/Frankensteind/imagesD/
     - (html2md <sourceUrl> [outputFilePath], image directory will be filename+d)
 - pdf (also images&docx):
-  -  https://cloudconvert.com/pdf-to-html just use this then see earlier instructions for html files using html2md bash function, 
+  -  https://cloudconvert.com/pdf-to-html just use this then see earlier instructions for html files using html2md bash function,
     - otherwise ...
     - if you really want to fine tune your pdf parsing...
     - to parse pdfs into structured text locally we'll use [parsr](https://github.com/axa-group/Parsr) which we'll have to install via docker
@@ -105,7 +106,7 @@ TODO
 ##### ASK USER for input
 - startConversation = start conversation w/specified prompt; without subcommands assumes "start title synopsis rollingSummary pageSliceSummary pages", saves previous conversation if applicable
   - title = append title
-  - synopsis = append synopsis 
+  - synopsis = append synopsis
   - rollingSummary = append pageSliceSummary
   - pageSliceSummary = append pageSliceSummary
   - pages = append pageSlice
@@ -113,15 +114,15 @@ TODO
 <!-- - restart="restart" save current conversation to db, restart conversation w/only initial prompt  -->
 - "hard restart conversation"= restart conversation w/only initial prompt, NO save to database
   - same subcommands as start
-# TODO SUBLOOP OVERHUAL USING LLM PSUEDOLANGUAGE https://github.com/NotBrianZach/gpt-jargon (need database integration though... tricky.)
+# TODO SUBLOOP OVERHUAL USING LLM PSEUDOLANGUAGE https://github.com/NotBrianZach/gpt-jargon (need database integration though... tricky.)
 ##### SUBLOOP COMMANDS
 - quiz= run quiz loop once
 - toggleQuiz= toggles quiz loop, print boolean value
 ##### PRINT TOGGLES: print to console, and enable/disable printing in event loop
 - h or help = show options
 - pSlice="summary of page slice" print gpt summary of the current slice of pages
-- pRoll="rolling summary" print gpt summary of everything up to this point (short term memory) 
-- narrate= rewrite all output in the voice of a character 
+- pRoll="rolling summary" print gpt summary of everything up to this point (short term memory)
+- narrate= rewrite all output in the voice of a character
 - voiceOut= TODO "Voice output" use ?[TTS](https://github.com/coqui-ai/TTS)? to generate voice to narrate gpt response & queries to user
 - voiceIn= TODO "voice input"  use ?whisper?/?talon? to allow voice input
 ##### LLM PROMPT MODIFICATION: change all non-summary llm queries going forward
@@ -196,7 +197,7 @@ could create another file e.g. alterDB.mjs which has alter table statements if y
 - package for nixos,brew,apt, (window - winglet?)
 - ?hyena optional full book context?
 - investigate langchain & https://github.com/Unstructured-IO/unstructured
-- bza for other media types (e.g. movies, music, etc); 
+- bza for other media types (e.g. movies, music, etc);
   - chrome plugin that follows along with youtube video transcript and interrupts to ask questions/summarize/etc
 
 ## Naming
