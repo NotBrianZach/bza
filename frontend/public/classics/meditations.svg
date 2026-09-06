@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6B6B6B"/>
+      <stop offset="50%" style="stop-color:#8A8A8A"/>
+      <stop offset="100%" style="stop-color:#5A5A5A"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="260" fill="url(#bg)"/>
+  <!-- Subtle marble texture lines -->
+  <path d="M50,0 Q120,80 80,180 Q60,230 100,260" stroke="rgba(255,255,255,0.05)" stroke-width="30" fill="none"/>
+  <path d="M300,0 Q340,100 310,200 Q290,240 330,260" stroke="rgba(255,255,255,0.04)" stroke-width="25" fill="none"/>
+  <!-- Laurel wreath -->
+  <g transform="translate(200,90)">
+    <!-- Left branch -->
+    <path d="M-5,30 C-15,20 -25,10 -30,-5 C-32,-15 -28,-25 -22,-32" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.5"/>
+    <ellipse cx="-18" cy="18" rx="5" ry="10" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1" transform="rotate(-20 -18 18)"/>
+    <ellipse cx="-25" cy="8" rx="5" ry="10" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1" transform="rotate(-35 -25 8)"/>
+    <ellipse cx="-30" cy="-5" rx="5" ry="10" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1" transform="rotate(-50 -30 -5)"/>
+    <ellipse cx="-28" cy="-18" rx="5" ry="9" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1" transform="rotate(-65 -28 -18)"/>
+    <ellipse cx="-22" cy="-28" rx="4" ry="8" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1" transform="rotate(-80 -22 -28)"/>
+    <!-- Leaves on outer side -->
+    <ellipse cx="-10" cy="22" rx="4" ry="9" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1" transform="rotate(15 -10 22)"/>
+    <ellipse cx="-13" cy="10" rx="4" ry="9" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1" transform="rotate(0 -13 10)"/>
+    <ellipse cx="-18" cy="-2" rx="4" ry="9" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1" transform="rotate(-15 -18 -2)"/>
+    <!-- Right branch -->
+    <path d="M5,30 C15,20 25,10 30,-5 C32,-15 28,-25 22,-32" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.5"/>
+    <ellipse cx="18" cy="18" rx="5" ry="10" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1" transform="rotate(20 18 18)"/>
+    <ellipse cx="25" cy="8" rx="5" ry="10" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1" transform="rotate(35 25 8)"/>
+    <ellipse cx="30" cy="-5" rx="5" ry="10" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1" transform="rotate(50 30 -5)"/>
+    <ellipse cx="28" cy="-18" rx="5" ry="9" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1" transform="rotate(65 28 -18)"/>
+    <ellipse cx="22" cy="-28" rx="4" ry="8" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1" transform="rotate(80 22 -28)"/>
+    <!-- Leaves on outer side -->
+    <ellipse cx="10" cy="22" rx="4" ry="9" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1" transform="rotate(-15 10 22)"/>
+    <ellipse cx="13" cy="10" rx="4" ry="9" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1" transform="rotate(0 13 10)"/>
+    <ellipse cx="18" cy="-2" rx="4" ry="9" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1" transform="rotate(15 18 -2)"/>
+  </g>
+  <!-- Title -->
+  <text x="200" y="175" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="30" fill="white" letter-spacing="3">Meditations</text>
+  <text x="200" y="205" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="11" fill="rgba(255,255,255,0.5)" letter-spacing="4">MARCUS AURELIUS</text>
+</svg>

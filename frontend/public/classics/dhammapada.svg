@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#c47a20"/>
+      <stop offset="50%" stop-color="#d4922e"/>
+      <stop offset="100%" stop-color="#a86818"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="260" fill="url(#bg)"/>
+  <!-- Subtle circle -->
+  <circle cx="200" cy="130" r="110" fill="none" stroke="#fff" stroke-width="0.3" opacity="0.1"/>
+  <!-- Lotus flower -->
+  <g transform="translate(200, 95)" fill="#fff" opacity="0.85">
+    <!-- Center petals -->
+    <ellipse cx="0" cy="-8" rx="8" ry="22" opacity="0.9"/>
+    <ellipse cx="0" cy="-8" rx="8" ry="22" transform="rotate(30)" opacity="0.8"/>
+    <ellipse cx="0" cy="-8" rx="8" ry="22" transform="rotate(-30)" opacity="0.8"/>
+    <ellipse cx="0" cy="-8" rx="8" ry="22" transform="rotate(60)" opacity="0.65"/>
+    <ellipse cx="0" cy="-8" rx="8" ry="22" transform="rotate(-60)" opacity="0.65"/>
+    <ellipse cx="0" cy="-8" rx="8" ry="22" transform="rotate(90)" opacity="0.45"/>
+    <!-- Center dot -->
+    <circle cx="0" cy="0" r="4" fill="#a86818" opacity="0.6"/>
+  </g>
+  <text x="200" y="178" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="28" fill="#fff" letter-spacing="3" opacity="0.95">The Dhammapada</text>
+  <text x="200" y="205" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="11" fill="#fff" letter-spacing="5" opacity="0.5">BUDDHA'S PATH</text>
+</svg>

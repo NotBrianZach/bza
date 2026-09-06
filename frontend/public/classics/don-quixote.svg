@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#8a6830"/>
+      <stop offset="50%" stop-color="#a07838"/>
+      <stop offset="100%" stop-color="#705420"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="260" fill="url(#bg)"/>
+  <!-- Distant horizon -->
+  <line x1="0" y1="170" x2="400" y2="170" stroke="#fff" stroke-width="0.3" opacity="0.15"/>
+  <!-- Windmill -->
+  <g transform="translate(200, 100)" opacity="0.85">
+    <!-- Tower -->
+    <polygon points="-10,45 10,45 7,-10 -7,-10" fill="#f0e8d0" opacity="0.8"/>
+    <!-- Blades -->
+    <g stroke="#f0e8d0" stroke-width="2" fill="none" opacity="0.9">
+      <line x1="0" y1="-10" x2="0" y2="-55"/>
+      <line x1="0" y1="-10" x2="40" y2="15"/>
+      <line x1="0" y1="-10" x2="-40" y2="15"/>
+      <line x1="0" y1="-10" x2="0" y2="35"/>
+    </g>
+    <!-- Blade sails -->
+    <polygon points="0,-55 -8,-40 0,-25" fill="#f0e8d0" opacity="0.2"/>
+    <polygon points="40,15 20,22 0,-10" fill="#f0e8d0" opacity="0.15"/>
+    <!-- Hub -->
+    <circle cx="0" cy="-10" r="3" fill="#f0e8d0" opacity="0.9"/>
+    <!-- Door -->
+    <rect x="-3" y="35" width="6" height="10" rx="3" fill="#705420" opacity="0.6"/>
+  </g>
+  <text x="200" y="198" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="28" fill="#f0e8d0" letter-spacing="3" opacity="0.95">Don Quixote</text>
+  <text x="200" y="224" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="11" fill="#d0c8a0" letter-spacing="4" opacity="0.5">CERVANTES</text>
+</svg>

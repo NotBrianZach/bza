@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#4A0E0E"/>
+      <stop offset="50%" style="stop-color:#2D0A0A"/>
+      <stop offset="100%" style="stop-color:#0D0505"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="260" fill="url(#bg)"/>
+  <!-- Vignette effect -->
+  <rect width="400" height="260" fill="rgba(0,0,0,0.15)" rx="0"/>
+  <!-- Crown -->
+  <g transform="translate(200,85)">
+    <!-- Crown base band -->
+    <rect x="-35" y="5" width="70" height="12" rx="2" fill="none" stroke="rgba(255,215,0,0.7)" stroke-width="1.5"/>
+    <!-- Crown points -->
+    <path d="M-35,5 L-35,-15 L-20,0 L-5,-25 L0,-20 L5,-25 L20,0 L35,-15 L35,5" fill="none" stroke="rgba(255,215,0,0.7)" stroke-width="1.5"/>
+    <!-- Jewels on points -->
+    <circle cx="-35" cy="-15" r="3" fill="none" stroke="rgba(255,215,0,0.5)" stroke-width="1"/>
+    <circle cx="-5" cy="-25" r="3" fill="none" stroke="rgba(255,215,0,0.5)" stroke-width="1"/>
+    <circle cx="5" cy="-25" r="3" fill="none" stroke="rgba(255,215,0,0.5)" stroke-width="1"/>
+    <circle cx="35" cy="-15" r="3" fill="none" stroke="rgba(255,215,0,0.5)" stroke-width="1"/>
+    <!-- Center jewel -->
+    <circle cx="0" cy="-20" r="4" fill="none" stroke="rgba(255,215,0,0.6)" stroke-width="1.5"/>
+    <!-- Band details -->
+    <circle cx="-18" cy="11" r="3" fill="none" stroke="rgba(255,215,0,0.35)" stroke-width="1"/>
+    <circle cx="0" cy="11" r="3" fill="none" stroke="rgba(255,215,0,0.35)" stroke-width="1"/>
+    <circle cx="18" cy="11" r="3" fill="none" stroke="rgba(255,215,0,0.35)" stroke-width="1"/>
+    <!-- Velvet cap suggestion -->
+    <path d="M-30,5 Q0,-8 30,5" fill="none" stroke="rgba(255,215,0,0.2)" stroke-width="1"/>
+  </g>
+  <!-- Title -->
+  <text x="200" y="170" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="32" fill="rgba(255,215,0,0.85)" letter-spacing="3">The Prince</text>
+  <text x="200" y="200" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="11" fill="rgba(255,215,0,0.4)" letter-spacing="4">MACHIAVELLI</text>
+  <!-- Decorative line -->
+  <line x1="140" y1="180" x2="260" y2="180" stroke="rgba(255,215,0,0.2)" stroke-width="0.5"/>
+</svg>

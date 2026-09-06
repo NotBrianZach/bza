@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0.8" y2="1">
+      <stop offset="0%" stop-color="#2a2420"/>
+      <stop offset="50%" stop-color="#3a3228"/>
+      <stop offset="100%" stop-color="#1a1814"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="260" fill="url(#bg)"/>
+  <!-- Scales of justice -->
+  <g transform="translate(200, 90)" stroke="#b89848" fill="none" opacity="0.8">
+    <!-- Central pillar -->
+    <line x1="0" y1="-35" x2="0" y2="30" stroke-width="2"/>
+    <!-- Base -->
+    <line x1="-15" y1="30" x2="15" y2="30" stroke-width="2.5"/>
+    <!-- Beam -->
+    <line x1="-40" y1="-30" x2="40" y2="-20" stroke-width="2"/>
+    <!-- Left pan chains -->
+    <line x1="-40" y1="-30" x2="-48" y2="-5" stroke-width="1"/>
+    <line x1="-40" y1="-30" x2="-32" y2="-5" stroke-width="1"/>
+    <!-- Left pan (lower - heavier) -->
+    <path d="M -52,-5 Q -40,8 -28,-5" stroke-width="1.5" fill="#b89848" opacity="0.3"/>
+    <!-- Right pan chains -->
+    <line x1="40" y1="-20" x2="48" y2="5" stroke-width="1"/>
+    <line x1="40" y1="-20" x2="32" y2="5" stroke-width="1"/>
+    <!-- Right pan (higher - lighter) -->
+    <path d="M 28,5 Q 40,18 52,5" stroke-width="1.5" fill="#b89848" opacity="0.3"/>
+    <!-- Top ornament -->
+    <circle cx="0" cy="-38" r="4" stroke-width="1.5" fill="#b89848" opacity="0.4"/>
+  </g>
+  <text x="200" y="180" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="22" fill="#b89848" letter-spacing="2" opacity="0.9">Crime &amp; Punishment</text>
+  <text x="200" y="208" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="11" fill="#6a5a3a" letter-spacing="4">DOSTOEVSKY</text>
+</svg>

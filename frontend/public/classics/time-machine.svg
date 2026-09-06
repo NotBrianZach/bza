@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2D5A27"/>
+      <stop offset="50%" style="stop-color:#3A6B35"/>
+      <stop offset="100%" style="stop-color:#8B7D3C"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="260" fill="url(#bg)"/>
+  <!-- Gear shapes background -->
+  <g transform="translate(310,70)" opacity="0.12">
+    <circle cx="0" cy="0" r="35" fill="white"/>
+    <circle cx="0" cy="0" r="25" fill="url(#bg)"/>
+  </g>
+  <g transform="translate(100,55)" opacity="0.08">
+    <circle cx="0" cy="0" r="25" fill="white"/>
+    <circle cx="0" cy="0" r="18" fill="url(#bg)"/>
+  </g>
+  <!-- Clock face -->
+  <g transform="translate(200,95)">
+    <circle cx="0" cy="0" r="42" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2"/>
+    <circle cx="0" cy="0" r="38" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="0.5"/>
+    <!-- Hour markers -->
+    <line x1="0" y1="-35" x2="0" y2="-30" stroke="rgba(255,255,255,0.8)" stroke-width="2"/>
+    <line x1="0" y1="35" x2="0" y2="30" stroke="rgba(255,255,255,0.8)" stroke-width="2"/>
+    <line x1="-35" y1="0" x2="-30" y2="0" stroke="rgba(255,255,255,0.8)" stroke-width="2"/>
+    <line x1="35" y1="0" x2="30" y2="0" stroke="rgba(255,255,255,0.8)" stroke-width="2"/>
+    <!-- Diagonal markers -->
+    <line x1="24.7" y1="-24.7" x2="21.2" y2="-21.2" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
+    <line x1="-24.7" y1="-24.7" x2="-21.2" y2="-21.2" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
+    <line x1="24.7" y1="24.7" x2="21.2" y2="21.2" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
+    <line x1="-24.7" y1="24.7" x2="-21.2" y2="21.2" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
+    <!-- Clock hands -->
+    <line x1="0" y1="0" x2="0" y2="-25" stroke="rgba(255,255,255,0.9)" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="0" y1="0" x2="18" y2="10" stroke="rgba(255,255,255,0.9)" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="0" cy="0" r="3" fill="rgba(255,255,255,0.9)"/>
+    <!-- Gear teeth around clock -->
+    <g opacity="0.4">
+      <rect x="-4" y="-48" width="8" height="8" rx="1" fill="white"/>
+      <rect x="-4" y="40" width="8" height="8" rx="1" fill="white"/>
+      <rect x="-48" y="-4" width="8" height="8" rx="1" fill="white"/>
+      <rect x="40" y="-4" width="8" height="8" rx="1" fill="white"/>
+      <rect x="27" y="-35" width="8" height="8" rx="1" fill="white" transform="rotate(30 31 -31)"/>
+      <rect x="-35" y="-35" width="8" height="8" rx="1" fill="white" transform="rotate(-30 -31 -31)"/>
+      <rect x="27" y="27" width="8" height="8" rx="1" fill="white" transform="rotate(-30 31 31)"/>
+      <rect x="-35" y="27" width="8" height="8" rx="1" fill="white" transform="rotate(30 -31 31)"/>
+    </g>
+  </g>
+  <!-- Title -->
+  <text x="200" y="175" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="28" fill="white" letter-spacing="2">The Time Machine</text>
+  <text x="200" y="205" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="11" fill="rgba(255,255,255,0.5)" letter-spacing="4">H.G. WELLS</text>
+</svg>

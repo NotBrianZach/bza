@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#D4903A"/>
+      <stop offset="40%" style="stop-color:#C27830"/>
+      <stop offset="100%" style="stop-color:#5B8FB9"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="260" fill="url(#bg)"/>
+  <!-- Subtle clouds -->
+  <ellipse cx="80" cy="60" rx="40" ry="15" fill="rgba(255,255,255,0.08)"/>
+  <ellipse cx="320" cy="45" rx="35" ry="12" fill="rgba(255,255,255,0.06)"/>
+  <!-- Hot air balloon -->
+  <g transform="translate(200,85)">
+    <!-- Balloon envelope -->
+    <ellipse cx="0" cy="-15" rx="32" ry="40" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="2"/>
+    <!-- Balloon stripes -->
+    <path d="M-20,-45 C-15,-10 -10,15 -8,25" stroke="rgba(255,255,255,0.3)" stroke-width="1" fill="none"/>
+    <path d="M0,-55 C0,-20 0,15 0,25" stroke="rgba(255,255,255,0.3)" stroke-width="1" fill="none"/>
+    <path d="M20,-45 C15,-10 10,15 8,25" stroke="rgba(255,255,255,0.3)" stroke-width="1" fill="none"/>
+    <!-- Ropes -->
+    <line x1="-8" y1="25" x2="-10" y2="38" stroke="rgba(255,255,255,0.6)" stroke-width="1"/>
+    <line x1="8" y1="25" x2="10" y2="38" stroke="rgba(255,255,255,0.6)" stroke-width="1"/>
+    <!-- Basket -->
+    <rect x="-12" y="38" width="24" height="12" rx="2" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="1.5"/>
+  </g>
+  <!-- Title -->
+  <text x="200" y="175" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="22" fill="white" letter-spacing="1">Around the World</text>
+  <text x="200" y="200" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="16" fill="rgba(255,255,255,0.8)" letter-spacing="1">in 80 Days</text>
+  <text x="200" y="230" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="11" fill="rgba(255,255,255,0.45)" letter-spacing="4">JULES VERNE</text>
+</svg>

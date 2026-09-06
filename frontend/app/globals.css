@@ -1,0 +1,203 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 17, 24, 39;
+  --background-rgb: 255, 255, 255;
+}
+
+.dark {
+  --foreground-rgb: 229, 231, 235;
+  --background-rgb: 17, 24, 39;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background-color: rgb(var(--background-rgb));
+}
+
+@layer base {
+  h1 {
+    @apply text-4xl font-bold;
+  }
+  h2 {
+    @apply text-3xl font-semibold;
+  }
+  h3 {
+    @apply text-2xl font-semibold;
+  }
+  h4 {
+    @apply text-xl font-medium;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply px-4 py-2 rounded-lg font-medium transition-colors duration-200;
+  }
+
+  .btn-primary {
+    @apply bg-primary-600 text-white hover:bg-primary-700 disabled:bg-gray-300 disabled:cursor-not-allowed dark:disabled:bg-gray-600;
+  }
+
+  .btn-secondary {
+    @apply bg-gray-200 text-gray-800 hover:bg-gray-300 disabled:bg-gray-100 disabled:cursor-not-allowed
+           dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 dark:disabled:bg-gray-800;
+  }
+
+  .btn-danger {
+    @apply bg-red-600 text-white hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed dark:disabled:bg-gray-600;
+  }
+
+  .input {
+    @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent
+           bg-white text-gray-900 placeholder-gray-400
+           dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-500;
+  }
+
+  .card {
+    @apply bg-white rounded-lg shadow-md p-6 border border-gray-200
+           dark:bg-gray-800 dark:border-gray-700;
+  }
+
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .badge-primary {
+    @apply bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200;
+  }
+
+  .badge-success {
+    @apply bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200;
+  }
+
+  .badge-warning {
+    @apply bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200;
+  }
+
+  .badge-danger {
+    @apply bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200;
+  }
+}
+
+/* Hide images toggle */
+.bza-hide-images img { display: none !important; }
+
+/* Loading spinner */
+.spinner {
+  border: 3px solid rgba(128, 128, 128, 0.2);
+  border-left-color: currentColor;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Reading progress bar */
+.progress-bar {
+  @apply w-full h-2 bg-gray-200 rounded-full overflow-hidden;
+}
+
+.progress-bar-fill {
+  @apply h-full bg-primary-600 transition-all duration-300;
+}
+
+/* Chat message animations */
+.message-enter {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Configurable dark mode text color for reader */
+:root {
+  --bza-reader-text: #f3f4f6; /* gray-100 default */
+}
+.dark .bza-reader-text { color: var(--bza-reader-text) !important; }
+.dark .bza-reader-text .prose { color: var(--bza-reader-text) !important; }
+
+/* Persona avatar animations */
+@keyframes persona-idle {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+@keyframes persona-talk {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  25% { transform: scale(1.08) rotate(-2deg); }
+  75% { transform: scale(1.08) rotate(2deg); }
+}
+.animate-persona-idle {
+  animation: persona-idle 3s ease-in-out infinite;
+}
+.animate-persona-talk {
+  animation: persona-talk 0.4s ease-in-out infinite;
+}
+@keyframes persona-mouth {
+  0%, 100% { ry: 2; }
+  50% { ry: 5; }
+}
+.animate-persona-mouth {
+  animation: persona-mouth 0.3s ease-in-out infinite;
+}
+
+/* Landscape orientation — split pane horizontal on phone sideways */
+@media (orientation: landscape) {
+  .landscape\:flex-row { flex-direction: row !important; }
+  .landscape\:border-b-0 { border-bottom-width: 0 !important; }
+  .landscape\:border-r { border-right-width: 1px !important; }
+}
+
+/* Book card hover effect */
+.book-card {
+  @apply transition-transform duration-200 hover:scale-105 hover:shadow-lg;
+}
+
+/* Custom scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  @apply bg-gray-100 rounded dark:bg-gray-800;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded hover:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500;
+}
+
+/* Dark mode prose (book text) */
+.dark .prose {
+  @apply text-gray-200;
+}
+.dark .prose h1, .dark .prose h2, .dark .prose h3, .dark .prose h4 {
+  @apply text-gray-100;
+}
+.dark .prose strong {
+  @apply text-gray-100;
+}
+.dark .prose a {
+  @apply text-primary-400;
+}
+.dark .prose code {
+  @apply text-gray-200 bg-gray-700;
+}
+.dark .prose blockquote {
+  @apply border-gray-600 text-gray-400;
+}

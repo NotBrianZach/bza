@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0D7377"/>
+      <stop offset="50%" style="stop-color:#1A8A8E"/>
+      <stop offset="100%" style="stop-color:#E8E8E8"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="260" fill="url(#bg)"/>
+  <!-- Background geometric pattern -->
+  <g opacity="0.06">
+    <rect x="30" y="30" width="80" height="80" fill="white" transform="rotate(15 70 70)"/>
+    <rect x="290" y="150" width="60" height="60" fill="white" transform="rotate(25 320 180)"/>
+  </g>
+  <!-- Geometric shapes cluster -->
+  <g transform="translate(200,88)">
+    <!-- Triangle -->
+    <polygon points="0,-40 -35,20 35,20" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="2"/>
+    <!-- Circle inscribed -->
+    <circle cx="0" cy="2" r="22" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.5"/>
+    <!-- Square overlapping -->
+    <rect x="-18" y="-16" width="36" height="36" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" transform="rotate(45 0 2)"/>
+    <!-- Center point -->
+    <circle cx="0" cy="2" r="2" fill="rgba(255,255,255,0.7)"/>
+    <!-- Construction lines -->
+    <line x1="0" y1="-40" x2="0" y2="20" stroke="rgba(255,255,255,0.2)" stroke-width="0.5" stroke-dasharray="3,3"/>
+    <line x1="-35" y1="20" x2="35" y2="20" stroke="rgba(255,255,255,0.15)" stroke-width="0.5" stroke-dasharray="3,3"/>
+    <!-- Small circles at vertices -->
+    <circle cx="0" cy="-40" r="2.5" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+    <circle cx="-35" cy="20" r="2.5" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+    <circle cx="35" cy="20" r="2.5" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+  </g>
+  <!-- Title -->
+  <text x="200" y="172" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="26" fill="white" letter-spacing="2">Euclid's Elements</text>
+  <text x="200" y="200" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="11" fill="rgba(255,255,255,0.5)" letter-spacing="4">EUCLID</text>
+</svg>

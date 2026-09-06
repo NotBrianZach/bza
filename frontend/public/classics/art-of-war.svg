@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B0000"/>
+      <stop offset="60%" style="stop-color:#5C0000"/>
+      <stop offset="100%" style="stop-color:#1A0000"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="260" fill="url(#bg)"/>
+  <!-- Subtle diagonal lines -->
+  <line x1="0" y1="260" x2="400" y2="0" stroke="rgba(255,255,255,0.03)" stroke-width="60"/>
+  <line x1="100" y1="260" x2="400" y2="60" stroke="rgba(255,255,255,0.02)" stroke-width="40"/>
+  <!-- Crossed swords -->
+  <g transform="translate(200,90)">
+    <!-- Sword 1 -->
+    <g transform="rotate(-30)">
+      <rect x="-2" y="-50" width="4" height="65" rx="1" fill="none" stroke="rgba(255,255,255,0.75)" stroke-width="1.5"/>
+      <rect x="-12" y="15" width="24" height="4" rx="2" fill="none" stroke="rgba(255,255,255,0.75)" stroke-width="1.5"/>
+      <rect x="-3" y="19" width="6" height="15" rx="1" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.5"/>
+      <!-- Blade point -->
+      <path d="M-2,-50 L0,-58 L2,-50" fill="none" stroke="rgba(255,255,255,0.75)" stroke-width="1.5"/>
+    </g>
+    <!-- Sword 2 -->
+    <g transform="rotate(30)">
+      <rect x="-2" y="-50" width="4" height="65" rx="1" fill="none" stroke="rgba(255,255,255,0.75)" stroke-width="1.5"/>
+      <rect x="-12" y="15" width="24" height="4" rx="2" fill="none" stroke="rgba(255,255,255,0.75)" stroke-width="1.5"/>
+      <rect x="-3" y="19" width="6" height="15" rx="1" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.5"/>
+      <path d="M-2,-50 L0,-58 L2,-50" fill="none" stroke="rgba(255,255,255,0.75)" stroke-width="1.5"/>
+    </g>
+  </g>
+  <!-- Title -->
+  <text x="200" y="178" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="30" fill="white" letter-spacing="4">The Art of War</text>
+  <text x="200" y="208" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="11" fill="rgba(255,255,255,0.5)" letter-spacing="4">SUN TZU</text>
+</svg>

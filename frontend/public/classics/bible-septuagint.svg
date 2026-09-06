@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0%" stop-color="#1a1408"/>
+      <stop offset="50%" stop-color="#2a2010"/>
+      <stop offset="100%" stop-color="#181008"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e8c850"/>
+      <stop offset="100%" stop-color="#c0a030"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="260" fill="url(#bg)"/>
+  <!-- Byzantine mosaic border -->
+  <rect x="14" y="14" width="372" height="232" rx="4" fill="none" stroke="#c0a030" stroke-width="2" opacity="0.3"/>
+  <rect x="20" y="20" width="360" height="220" rx="3" fill="none" stroke="#c0a030" stroke-width="0.5" opacity="0.2"/>
+  <!-- Corner flourishes -->
+  <g fill="#c0a030" opacity="0.25">
+    <rect x="14" y="14" width="12" height="12" rx="1"/>
+    <rect x="374" y="14" width="12" height="12" rx="1"/>
+    <rect x="14" y="234" width="12" height="12" rx="1"/>
+    <rect x="374" y="234" width="12" height="12" rx="1"/>
+  </g>
+  <!-- Orthodox three-bar cross -->
+  <g fill="url(#gold)" opacity="0.8">
+    <rect x="196" y="42" width="8" height="85" rx="1"/>
+    <!-- Top bar (short) -->
+    <rect x="186" y="52" width="28" height="6" rx="1"/>
+    <!-- Middle bar (long) -->
+    <rect x="180" y="72" width="40" height="7" rx="1"/>
+    <!-- Bottom bar (slanted) -->
+    <rect x="183" y="105" width="34" height="6" rx="1" transform="rotate(-15 200 108)"/>
+  </g>
+  <!-- Byzantine dome silhouette -->
+  <path d="M160,130 Q165,108 180,105 Q190,95 200,92 Q210,95 220,105 Q235,108 240,130" fill="none" stroke="#c0a030" stroke-width="0.8" opacity="0.2"/>
+  <!-- Halo circle -->
+  <circle cx="200" cy="75" r="35" fill="none" stroke="#e8c850" stroke-width="0.5" opacity="0.15"/>
+  <!-- Mosaic dots -->
+  <g fill="#c0a030" opacity="0.12">
+    <circle cx="155" cy="60" r="2"/><circle cx="245" cy="60" r="2"/>
+    <circle cx="150" cy="85" r="2"/><circle cx="250" cy="85" r="2"/>
+    <circle cx="155" cy="110" r="2"/><circle cx="245" cy="110" r="2"/>
+    <circle cx="165" cy="130" r="1.5"/><circle cx="235" cy="130" r="1.5"/>
+  </g>
+  <text x="200" y="172" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="26" fill="#e8c850" letter-spacing="2">The Septuagint</text>
+  <text x="200" y="196" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="10" fill="#c0a060" letter-spacing="4">BRENTON TRANSLATION</text>
+  <text x="200" y="216" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="9" fill="#908060" letter-spacing="2">Orthodox Old Testament</text>
+</svg>

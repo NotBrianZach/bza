@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0%" stop-color="#e8e4dc"/>
+      <stop offset="40%" stop-color="#d4cfc4"/>
+      <stop offset="100%" stop-color="#b8b0a4"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="260" fill="url(#bg)"/>
+  <!-- Subtle ink wash texture -->
+  <circle cx="300" cy="60" r="120" fill="#9a9488" opacity="0.06"/>
+  <circle cx="100" cy="200" r="100" fill="#7a7468" opacity="0.05"/>
+  <!-- Yin-Yang -->
+  <g transform="translate(200, 105)">
+    <circle cx="0" cy="0" r="38" fill="#2a2820" opacity="0.8"/>
+    <path d="M 0,-38 A 38,38 0 0,1 0,38 A 19,19 0 0,1 0,0 A 19,19 0 0,0 0,-38" fill="#e8e4dc"/>
+    <circle cx="0" cy="-19" r="5.5" fill="#2a2820" opacity="0.8"/>
+    <circle cx="0" cy="19" r="5.5" fill="#e8e4dc"/>
+    <circle cx="0" cy="0" r="38" fill="none" stroke="#2a2820" stroke-width="1" opacity="0.3"/>
+  </g>
+  <text x="200" y="190" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="28" fill="#2a2820" letter-spacing="4" opacity="0.85">Tao Te Ching</text>
+  <text x="200" y="216" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="11" fill="#6a6458" letter-spacing="5">LAO TZU</text>
+</svg>

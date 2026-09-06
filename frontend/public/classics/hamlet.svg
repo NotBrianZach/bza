@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0%" stop-color="#1a1030"/>
+      <stop offset="50%" stop-color="#2a1848"/>
+      <stop offset="100%" stop-color="#140c28"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="260" fill="url(#bg)"/>
+  <!-- Subtle radial glow -->
+  <circle cx="200" cy="95" r="70" fill="#4a2868" opacity="0.12"/>
+  <!-- Skull silhouette -->
+  <g transform="translate(200, 90)" fill="#c0b8d0" opacity="0.8">
+    <!-- Cranium -->
+    <ellipse cx="0" cy="-8" rx="24" ry="28"/>
+    <!-- Jaw area -->
+    <ellipse cx="0" cy="18" rx="17" ry="10"/>
+    <!-- Cut out to make skull shape -->
+    <rect x="-20" y="14" width="40" height="3" fill="#2a1848"/>
+    <!-- Eyes -->
+    <ellipse cx="-8" cy="-5" rx="6" ry="7" fill="#2a1848"/>
+    <ellipse cx="8" cy="-5" rx="6" ry="7" fill="#2a1848"/>
+    <!-- Nose -->
+    <ellipse cx="0" cy="6" rx="3" ry="5" fill="#2a1848"/>
+    <!-- Teeth line -->
+    <line x1="-10" y1="18" x2="10" y2="18" stroke="#2a1848" stroke-width="1"/>
+    <line x1="-6" y1="14" x2="-6" y2="22" stroke="#2a1848" stroke-width="0.8"/>
+    <line x1="-2" y1="14" x2="-2" y2="22" stroke="#2a1848" stroke-width="0.8"/>
+    <line x1="2" y1="14" x2="2" y2="22" stroke="#2a1848" stroke-width="0.8"/>
+    <line x1="6" y1="14" x2="6" y2="22" stroke="#2a1848" stroke-width="0.8"/>
+  </g>
+  <text x="200" y="178" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="34" fill="#c0b8d0" letter-spacing="6" opacity="0.9">Hamlet</text>
+  <text x="200" y="208" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="11" fill="#6a5880" letter-spacing="4">SHAKESPEARE</text>
+</svg>

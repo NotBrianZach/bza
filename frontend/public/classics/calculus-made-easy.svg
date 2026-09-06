@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1B5E5E"/>
+      <stop offset="50%" style="stop-color:#2A4A3F"/>
+      <stop offset="100%" style="stop-color:#1C3325"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="260" fill="url(#bg)"/>
+  <!-- Chalkboard texture lines -->
+  <line x1="0" y1="50" x2="400" y2="50" stroke="rgba(255,255,255,0.02)" stroke-width="1"/>
+  <line x1="0" y1="100" x2="400" y2="100" stroke="rgba(255,255,255,0.02)" stroke-width="1"/>
+  <line x1="0" y1="150" x2="400" y2="150" stroke="rgba(255,255,255,0.02)" stroke-width="1"/>
+  <line x1="0" y1="200" x2="400" y2="200" stroke="rgba(255,255,255,0.02)" stroke-width="1"/>
+  <!-- Background equation scribbles -->
+  <text x="60" y="45" font-family="Georgia, 'Times New Roman', serif" font-size="12" fill="rgba(255,255,255,0.08)" transform="rotate(-5 60 45)">dy/dx</text>
+  <text x="310" y="55" font-family="Georgia, 'Times New Roman', serif" font-size="10" fill="rgba(255,255,255,0.06)" transform="rotate(3 310 55)">f'(x)</text>
+  <text x="55" y="230" font-family="Georgia, 'Times New Roman', serif" font-size="11" fill="rgba(255,255,255,0.06)">lim</text>
+  <text x="330" y="220" font-family="Georgia, 'Times New Roman', serif" font-size="10" fill="rgba(255,255,255,0.06)">dx</text>
+  <!-- Large integral sign -->
+  <g transform="translate(200,85)">
+    <text x="0" y="15" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="80" fill="rgba(255,255,255,0.7)" font-style="italic">&#x222B;</text>
+    <!-- Curve (function graph) -->
+    <path d="M-50,20 C-30,-10 -10,5 0,-15 C10,-35 30,0 50,-10" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" stroke-linecap="round"/>
+    <!-- x-axis -->
+    <line x1="-55" y1="25" x2="55" y2="25" stroke="rgba(255,255,255,0.25)" stroke-width="1"/>
+    <!-- Shaded area under curve suggestion -->
+    <path d="M-30,25 L-30,5 C-20,-5 -10,0 0,-15 C5,-22 10,-18 15,-10 L15,25Z" fill="rgba(255,255,255,0.08)"/>
+  </g>
+  <!-- Title -->
+  <text x="200" y="175" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="24" fill="white" letter-spacing="1">Calculus Made Easy</text>
+  <text x="200" y="205" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="11" fill="rgba(255,255,255,0.45)" letter-spacing="4">SILVANUS P. THOMPSON</text>
+</svg>

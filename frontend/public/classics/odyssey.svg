@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#1565C0"/>
+      <stop offset="50%" style="stop-color:#0D47A1"/>
+      <stop offset="100%" style="stop-color:#1A237E"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="260" fill="url(#bg)"/>
+  <!-- Waves at bottom -->
+  <path d="M0,220 Q30,210 60,220 T120,220 T180,220 T240,220 T300,220 T360,220 T420,220 L400,260 L0,260Z" fill="rgba(255,255,255,0.06)"/>
+  <path d="M-20,230 Q20,222 60,230 T140,230 T220,230 T300,230 T380,230 T420,230 L400,260 L0,260Z" fill="rgba(255,255,255,0.05)"/>
+  <!-- Greek ship -->
+  <g transform="translate(200,100)">
+    <!-- Hull -->
+    <path d="M-50,15 C-45,25 45,25 50,15 L55,10 C55,10 50,20 -50,20 L-55,10 Z" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="1.5"/>
+    <path d="M-50,15 L-60,10 M50,15 L65,8" stroke="rgba(255,255,255,0.7)" stroke-width="1.5" stroke-linecap="round"/>
+    <!-- Mast -->
+    <line x1="0" y1="15" x2="0" y2="-40" stroke="rgba(255,255,255,0.8)" stroke-width="2"/>
+    <!-- Sail -->
+    <path d="M-25,-35 C-20,-15 20,-15 25,-35 L25,-35 C15,-32 -15,-32 -25,-35Z" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.7)" stroke-width="1.5"/>
+    <!-- Cross beam -->
+    <line x1="-28" y1="-35" x2="28" y2="-35" stroke="rgba(255,255,255,0.6)" stroke-width="1.5"/>
+    <!-- Oars -->
+    <line x1="-30" y1="18" x2="-35" y2="30" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+    <line x1="-15" y1="20" x2="-18" y2="30" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+    <line x1="15" y1="20" x2="18" y2="30" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+    <line x1="30" y1="18" x2="35" y2="30" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+  </g>
+  <!-- Stars -->
+  <circle cx="50" cy="30" r="1.5" fill="rgba(255,255,255,0.4)"/>
+  <circle cx="130" cy="20" r="1" fill="rgba(255,255,255,0.3)"/>
+  <circle cx="300" cy="25" r="1.5" fill="rgba(255,255,255,0.35)"/>
+  <circle cx="350" cy="50" r="1" fill="rgba(255,255,255,0.25)"/>
+  <circle cx="80" cy="55" r="1" fill="rgba(255,255,255,0.2)"/>
+  <!-- Title -->
+  <text x="200" y="180" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="32" fill="white" letter-spacing="3">The Odyssey</text>
+  <text x="200" y="210" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="11" fill="rgba(255,255,255,0.5)" letter-spacing="4">HOMER</text>
+</svg>

@@ -1,0 +1,64 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# next.js
+.next/
+out/
+*.tsbuildinfo
+
+# open-next / cloudflare
+.open-next/
+.wrangler/
+
+# nix / direnv
+.direnv/
+.envrc.cache
+result
+result-*
+
+# env / secrets
+.env
+.env.local
+.env.*.local
+!.env.local.example
+
+# logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# testing / coverage
+coverage/
+.nyc_output
+
+# editors / OS
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# build outputs
+dist/
+build/
+
+# misc
+*.pid
+*.seed
+*.pid.lock
+
+# python venvs and caches
+.venv/
+bzaenv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# stale artifacts not tracked by templedb
+backend/
+gui/

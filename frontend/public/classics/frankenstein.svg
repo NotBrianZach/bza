@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0%" stop-color="#2a3040"/>
+      <stop offset="50%" stop-color="#3a4458"/>
+      <stop offset="100%" stop-color="#1a2030"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="260" fill="url(#bg)"/>
+  <!-- Storm clouds suggestion -->
+  <circle cx="120" cy="40" r="60" fill="#4a5468" opacity="0.15"/>
+  <circle cx="280" cy="30" r="50" fill="#4a5468" opacity="0.1"/>
+  <!-- Lightning bolt -->
+  <g transform="translate(200, 95)" opacity="0.9">
+    <polygon points="-5,-50 10,-10 0,-10 12,45 -3,5 5,5" fill="#e8d44a" stroke="#f0e060" stroke-width="0.5"/>
+    <!-- Glow -->
+    <polygon points="-5,-50 10,-10 0,-10 12,45 -3,5 5,5" fill="#e8d44a" opacity="0.3" filter="url(#glow)" transform="scale(1.15)"/>
+  </g>
+  <!-- Subtle electric arcs -->
+  <line x1="160" y1="75" x2="175" y2="85" stroke="#e8d44a" stroke-width="0.5" opacity="0.3"/>
+  <line x1="240" y1="80" x2="225" y2="90" stroke="#e8d44a" stroke-width="0.5" opacity="0.3"/>
+  <text x="200" y="195" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="30" fill="#e8d44a" letter-spacing="4" opacity="0.9">Frankenstein</text>
+  <text x="200" y="222" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="11" fill="#7a8498" letter-spacing="4">MARY SHELLEY</text>
+</svg>

@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0%" stop-color="#1a0a2e"/>
+      <stop offset="50%" stop-color="#2d1b4e"/>
+      <stop offset="100%" stop-color="#1a0a2e"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f0d060"/>
+      <stop offset="100%" stop-color="#c8a030"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="260" fill="url(#bg)"/>
+  <!-- Ornate border -->
+  <rect x="16" y="16" width="368" height="228" rx="6" fill="none" stroke="#c8a030" stroke-width="1.5" opacity="0.4"/>
+  <rect x="22" y="22" width="356" height="216" rx="4" fill="none" stroke="#c8a030" stroke-width="0.5" opacity="0.25"/>
+  <!-- Stained glass rose window -->
+  <circle cx="200" cy="95" r="42" fill="none" stroke="#c8a030" stroke-width="1" opacity="0.35"/>
+  <circle cx="200" cy="95" r="30" fill="none" stroke="#c8a030" stroke-width="0.5" opacity="0.25"/>
+  <!-- Cross in center -->
+  <rect x="196" y="65" width="8" height="60" rx="1.5" fill="url(#gold)" opacity="0.8"/>
+  <rect x="181" y="80" width="38" height="8" rx="1.5" fill="url(#gold)" opacity="0.8"/>
+  <!-- Radial petals (rose window) -->
+  <g stroke="#9040c0" stroke-width="0.8" fill="none" opacity="0.3">
+    <ellipse cx="200" cy="62" rx="5" ry="10" transform="rotate(0 200 95)"/>
+    <ellipse cx="200" cy="62" rx="5" ry="10" transform="rotate(45 200 95)"/>
+    <ellipse cx="200" cy="62" rx="5" ry="10" transform="rotate(90 200 95)"/>
+    <ellipse cx="200" cy="62" rx="5" ry="10" transform="rotate(135 200 95)"/>
+    <ellipse cx="200" cy="62" rx="5" ry="10" transform="rotate(180 200 95)"/>
+    <ellipse cx="200" cy="62" rx="5" ry="10" transform="rotate(225 200 95)"/>
+    <ellipse cx="200" cy="62" rx="5" ry="10" transform="rotate(270 200 95)"/>
+    <ellipse cx="200" cy="62" rx="5" ry="10" transform="rotate(315 200 95)"/>
+  </g>
+  <!-- Stained glass color accents -->
+  <circle cx="175" cy="75" r="4" fill="#3050a0" opacity="0.3"/>
+  <circle cx="225" cy="75" r="4" fill="#a03040" opacity="0.3"/>
+  <circle cx="175" cy="115" r="4" fill="#a03040" opacity="0.3"/>
+  <circle cx="225" cy="115" r="4" fill="#3050a0" opacity="0.3"/>
+  <text x="200" y="178" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="26" fill="#f0d060" letter-spacing="2">The Holy Bible</text>
+  <text x="200" y="200" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="11" fill="#b090d0" letter-spacing="3">DOUAY-RHEIMS</text>
+  <text x="200" y="218" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="9" fill="#8070a0" letter-spacing="2">Catholic Edition</text>
+</svg>
