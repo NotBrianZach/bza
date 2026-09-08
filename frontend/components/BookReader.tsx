@@ -11,6 +11,10 @@ import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
 import rehypeKatex from 'rehype-katex'
 import rehypeRaw from 'rehype-raw'
+import { translationQueries } from '@/lib/queries/translations'
+import { personaSpeak, getTtsEngine, getPersonaInfo } from '@/lib/persona'
+import { StorageImage } from './reader/StorageImage'
+import { TranslatedPaneHeader } from './reader/TranslatedPaneHeader'
 
 export interface TocEntry { title: string; level: number; page: number }
 export interface InlineImage { url: string; alt: string; page: number }
@@ -32,66 +36,6 @@ interface BookReaderProps {
 
 import SerendipityOverlay, { SerendipityCard } from './SerendipityOverlay'
 import { supabase } from '@/lib/supabase'
-
-// Resolves storage:// URLs and old public URLs to signed Supabase storage URLs
-function StorageImage({ src, alt }: { src?: string; alt?: string }) {
-  const [resolvedSrc, setResolvedSrc] = useState('')
-  useEffect(() => {
-    if (!src) return
-    // storage://bucket/path scheme
-    const storageMatch = src.match(/^storage:\/\/([^/]+)\/(.+)$/)
-    if (storageMatch) {
-      const [, bucket, path] = storageMatch
-      supabase.storage.from(bucket).createSignedUrl(path, 3600).then(({ data }) => {
-        if (data?.signedUrl) setResolvedSrc(data.signedUrl)
-      })
-      return
-    }
-    // Old public URLs: .../storage/v1/object/public/BUCKET/PATH
-    const publicMatch = src.match(/\/storage\/v1\/object\/public\/([^/]+)\/(.+)$/)
-    if (publicMatch) {
-      const [, bucket, path] = publicMatch
-      supabase.storage.from(bucket).createSignedUrl(path, 3600).then(({ data }) => {
-        if (data?.signedUrl) setResolvedSrc(data.signedUrl)
-      })
-      return
-    }
-    // Raw path (no scheme, no URL) — assume page-images bucket
-    if (!src.startsWith('http') && !src.startsWith('data:') && src.includes('/')) {
-      supabase.storage.from('page-images').createSignedUrl(src, 3600).then(({ data }) => {
-        if (data?.signedUrl) setResolvedSrc(data.signedUrl)
-      })
-      return
-    }
-    // Regular URL — pass through
-    setResolvedSrc(src)
-  }, [src])
-  if (!resolvedSrc) return null
-  return <img src={resolvedSrc} alt={alt ?? ''} referrerPolicy="no-referrer" style={{ maxWidth: '100%' }} loading="lazy" />
-}
-import { translationQueries } from '@/lib/queries/translations'
-import { personaSpeak, getTtsEngine, getPersonaInfo } from '@/lib/persona'
-
-function TranslatedPaneHeader({ label, narrating, onNarrate, saving, savedId, onSave }: {
-  label: string; narrating: boolean; onNarrate: () => void
-  saving: boolean; savedId: number | null; onSave: () => void
-}) {
-  return (
-    <div className="flex items-center gap-2 mb-4 not-prose">
-      <span className="text-xs font-semibold text-violet-500 dark:text-violet-400 uppercase tracking-wide flex-1 truncate">{label || 'Translated'}</span>
-      <button onClick={onNarrate} title={narrating ? 'Stop reading' : 'Read aloud'} className={`btn btn-secondary p-1 ${narrating ? 'bg-green-50 dark:bg-green-900/30 border-green-300 text-green-600' : ''}`}>
-        {narrating ? <VolumeX size={13} /> : <Volume2 size={13} />}
-      </button>
-      {savedId ? (
-        <a href={`/books/${savedId}`} className="btn btn-secondary text-xs px-2 py-1 whitespace-nowrap text-blue-600 dark:text-blue-400 border-blue-300">Open book →</a>
-      ) : (
-        <button onClick={onSave} disabled={saving} className="btn btn-secondary text-xs px-2 py-1 whitespace-nowrap flex items-center gap-1 disabled:opacity-40">
-          {saving ? <><Loader2 size={11} className="animate-spin" /> Saving…</> : <><BookDown size={11} /> Save</>}
-        </button>
-      )}
-    </div>
-  )
-}
 
 export default function BookReader({ book, onBack, onToggleSidebar, sidebarMode, onPageChange, isAuthenticated = false, initialPage, serendipityPrefs, onTocReady, onRegisterNavigate, onRegisterGetPageSource, onInlineImagesReady }: BookReaderProps) {
   const [currentPage, setCurrentPage] = useState(initialPage ?? 1)
