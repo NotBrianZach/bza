@@ -14,6 +14,9 @@ const nextConfig = {
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
+    // Injected at deploy time so /api/version can report what's actually running
+    BUILD_SHA: process.env.BUILD_SHA || 'unknown',
+    BUILD_TIME: process.env.BUILD_TIME || new Date().toISOString(),
   },
   images: {
     remotePatterns: [
