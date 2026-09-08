@@ -168,7 +168,7 @@ export function MangaUploader({
         router.push(`/books/${nb.id}`)
       } else {
         // Upload original images to storage too
-        const book = await booksQueries.upload(file, { title: bookTitle, contentType: 'manga' })
+        const book = await booksQueries.upload(file, { title: bookTitle, articleType: 'manga' })
 
         // Upload page images for the Images tab
         for (const page of pages) {

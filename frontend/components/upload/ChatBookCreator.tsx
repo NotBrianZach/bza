@@ -142,7 +142,7 @@ export function ChatBookCreator({ useLocalStorage, onSuccess }: { useLocalStorag
         onSuccess?.()
         router.push(`/books/${nb.id}`)
       } else {
-        const book = await booksQueries.upload(file, { title, contentType: 'reference' })
+        const book = await booksQueries.upload(file, { title, articleType: 'reference' })
         onSuccess?.()
         router.push(`/books/${book.id}`)
       }
