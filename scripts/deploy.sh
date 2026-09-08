@@ -44,4 +44,4 @@ if [ "$SKIP_VERIFY" = true ] || [ "$TARGET" != "production" ]; then
 fi
 
 echo "→ Verifying live sha matches graph"
-bash "$SCRIPT_DIR/verify-live-sha.sh"
+templedb reconcile deployment bza --url https://aireadalong.com/api/version
