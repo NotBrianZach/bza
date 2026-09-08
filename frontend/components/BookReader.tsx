@@ -12,7 +12,9 @@ import remarkMath from 'remark-math'
 import rehypeKatex from 'rehype-katex'
 import rehypeRaw from 'rehype-raw'
 import { translationQueries } from '@/lib/queries/translations'
-import { personaSpeak, getTtsEngine, getPersonaInfo } from '@/lib/persona'
+import { getTtsEngine, getPersonaInfo } from '@/lib/persona'
+import { useNarration } from './reader/useNarration'
+import { toPlainText } from './reader/utils'
 import { StorageImage } from './reader/StorageImage'
 import { TranslatedPaneHeader } from './reader/TranslatedPaneHeader'
 
@@ -38,6 +40,15 @@ import SerendipityOverlay, { SerendipityCard } from './SerendipityOverlay'
 import { supabase } from '@/lib/supabase'
 
 export default function BookReader({ book, onBack, onToggleSidebar, sidebarMode, onPageChange, isAuthenticated = false, initialPage, serendipityPrefs, onTocReady, onRegisterNavigate, onRegisterGetPageSource, onInlineImagesReady }: BookReaderProps) {
+  const {
+    narrating, setNarrating,
+    narrateLoading,
+    narratingTranslation, setNarratingTranslation,
+    narrateAutoAdvance,
+    stopNarration,
+    speakText,
+  } = useNarration()
+
   const [currentPage, setCurrentPage] = useState(initialPage ?? 1)
   const [pageContent, setPageContent] = useState<Page | null>(null)  // auth path only
   const [progressPercent, setProgressPercent] = useState(0)
@@ -87,7 +98,6 @@ export default function BookReader({ book, onBack, onToggleSidebar, sidebarMode,
   const [showTranslatePanel, setShowTranslatePanel] = useState(false)
   const [autoTranslate, setAutoTranslate] = useState(false)
   const [translateView, setTranslateView] = useState<'translated' | 'original' | 'split'>('translated')
-  const [narratingTranslation, setNarratingTranslation] = useState(false)
   const [savingTranslatedBook, setSavingTranslatedBook] = useState(false)
   const [savedTranslatedBookId, setSavedTranslatedBookId] = useState<number | null>(null)
 
@@ -123,9 +133,6 @@ export default function BookReader({ book, onBack, onToggleSidebar, sidebarMode,
       .finally(() => setIsTranslating(false))
   }, [currentPage, autoTranslate, showTranslatePanel])
 
-  const [narrating, setNarrating] = useState(false)
-  const [narrateLoading, setNarrateLoading] = useState(false)
-  const narrateAutoAdvance = useRef(false)
 
   const [scrollMode, setScrollMode] = useState(() => {
     try { const v = localStorage.getItem('bza-scroll-mode'); return v === null ? true : v === 'true' } catch { return true }
@@ -220,44 +227,6 @@ export default function BookReader({ book, onBack, onToggleSidebar, sidebarMode,
     })
   }
 
-  const toPlainText = (md: string) =>
-    md
-      .replace(/!\[.*?\]\(.*?\)/g, '')              // images
-      .replace(/\[>>(\d+)\]\([^)]+\)/g, '')         // 4chan reply links [>>12345](#p12345)
-      .replace(/>>?\d+/g, '')                        // bare >>12345 or >12345 reply refs
-      .replace(/\bNo\.\d+\b/g, '')                  // post numbers "No.12345678"
-      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')      // other links → text only
-      .replace(/#{1,6}\s+/g, '')
-      .replace(/\*{1,3}([^*]+)\*{1,3}/g, '$1')
-      .replace(/`[^`]+`/g, '')
-      .replace(/^>+\s*/gm, '')                      // blockquotes / greentext (single or double >)
-      .replace(/^[-*+]\s+/gm, '')
-      .replace(/\n{2,}/g, '. ')
-      .replace(/\n/g, ' ')
-      .trim()
-
-  const cancelNarrationRef = useRef<(() => void) | null>(null)
-  const stoppingRef = useRef(false) // prevent re-entrant stopNarration
-
-  const stopNarration = () => {
-    if (stoppingRef.current) return
-    stoppingRef.current = true
-    const cancel = cancelNarrationRef.current
-    cancelNarrationRef.current = null
-    if (cancel) cancel()
-    if (typeof window !== 'undefined') window.speechSynthesis?.cancel()
-    setNarrating(false)
-    setNarrateLoading(false)
-    setNarratingTranslation(false)
-    narrateAutoAdvance.current = false
-    stoppingRef.current = false
-  }
-
-  /** Speak text using persona voice (AI or browser based on settings) */
-  const speakText = (text: string, onStart: () => void, onEnd: () => void) => {
-    setNarrateLoading(true)
-    cancelNarrationRef.current = personaSpeak(text, () => { setNarrateLoading(false); onStart() }, () => { setNarrateLoading(false); onEnd() })
-  }
 
   const narrateTranslation = (pageNum: number) => {
     const text = translatedPagesRef.current[pageNum]
