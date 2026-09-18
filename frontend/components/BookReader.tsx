@@ -4,19 +4,22 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { Book, Page } from '@/types'
 import { booksQueries, imageQueries } from '@/lib/queries'
 import { getBookContent, getLocalProgress, saveLocalProgress } from '@/lib/localStorage'
-import { track } from '@/lib/analytics'
 import { ChevronLeft, ChevronRight, ArrowLeft, Image as ImageIcon, ImageOff, PanelRight, Maximize2, X as XIcon, ExternalLink, Columns2, Search, RefreshCw, BookOpen, Volume2, VolumeX, AlignJustify, Languages, BookDown, Loader2 } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
 import rehypeKatex from 'rehype-katex'
 import rehypeRaw from 'rehype-raw'
-import { translationQueries } from '@/lib/queries/translations'
 import { getTtsEngine, getPersonaInfo } from '@/lib/persona'
-import { useNarration } from './reader/useNarration'
+import { useReading } from './reader/useReading'
+import { useWikiUpdate } from './reader/useWikiUpdate'
+import { useSerendipity } from './reader/useSerendipity'
 import { toPlainText } from './reader/utils'
 import { StorageImage } from './reader/StorageImage'
 import { TranslatedPaneHeader } from './reader/TranslatedPaneHeader'
+import { TranslationPanel } from './reader/TranslationPanel'
+import { MangaReader } from './reader/MangaReader'
+import { ChatBookReader } from './reader/ChatBookReader'
 
 export interface TocEntry { title: string; level: number; page: number }
 export interface InlineImage { url: string; alt: string; page: number }
@@ -36,19 +39,10 @@ interface BookReaderProps {
   onInlineImagesReady?: (images: InlineImage[]) => void
 }
 
-import SerendipityOverlay, { SerendipityCard } from './SerendipityOverlay'
+import SerendipityOverlay from './SerendipityOverlay'
 import { supabase } from '@/lib/supabase'
 
 export default function BookReader({ book, onBack, onToggleSidebar, sidebarMode, onPageChange, isAuthenticated = false, initialPage, serendipityPrefs, onTocReady, onRegisterNavigate, onRegisterGetPageSource, onInlineImagesReady }: BookReaderProps) {
-  const {
-    narrating, setNarrating,
-    narrateLoading,
-    narratingTranslation, setNarratingTranslation,
-    narrateAutoAdvance,
-    stopNarration,
-    speakText,
-  } = useNarration()
-
   const [currentPage, setCurrentPage] = useState(initialPage ?? 1)
   const [pageContent, setPageContent] = useState<Page | null>(null)  // auth path only
   const [progressPercent, setProgressPercent] = useState(0)
@@ -74,13 +68,7 @@ export default function BookReader({ book, onBack, onToggleSidebar, sidebarMode,
   const [searchResults, setSearchResults] = useState<Array<{ pageNum: number; snippet: string }>>([])
   const searchInputRef = useRef<HTMLInputElement>(null)
 
-  // Wikipedia update checking
-  const [wikiChecking, setWikiChecking] = useState(false)
-  const [wikiUpdating, setWikiUpdating] = useState(false)
-  const [wikiDiff, setWikiDiff] = useState<{ hasUpdate: boolean; latestRevid: number; diffRows: { type: number; content: string }[]; diffUrl: string; title: string } | null>(null)
-  const [wikiDiffOpen, setWikiDiffOpen] = useState(false)
   const goToPageRef = useRef<(page: number) => void>(() => {})
-  const isWiki = book.content_type === 'wikipedia_article'
   const isChatBook = book.content_type === 'chat_book'
   const isManga = book.content_type === 'manga'
   const [chatInput, setChatInput] = useState('')
@@ -90,49 +78,6 @@ export default function BookReader({ book, onBack, onToggleSidebar, sidebarMode,
   const [mangaOcrLoading, setMangaOcrLoading] = useState(false)
 
   const [highlightedPostId, setHighlightedPostId] = useState<string | null>(null)
-
-  // Translation state
-  const [translationPrompt, setTranslationPrompt] = useState('translate to spanish')
-  const [translatedPages, setTranslatedPages]     = useState<Record<number, string>>({})
-  const [isTranslating, setIsTranslating]         = useState(false)
-  const [showTranslatePanel, setShowTranslatePanel] = useState(false)
-  const [autoTranslate, setAutoTranslate] = useState(false)
-  const [translateView, setTranslateView] = useState<'translated' | 'original' | 'split'>('translated')
-  const [savingTranslatedBook, setSavingTranslatedBook] = useState(false)
-  const [savedTranslatedBookId, setSavedTranslatedBookId] = useState<number | null>(null)
-
-  // Refs so utterance callbacks can read current values without stale closures
-  const translationPromptRef = useRef('')
-  const showTranslationRef   = useRef(false)
-  const translatedPagesRef   = useRef<Record<number, string>>({})
-  useEffect(() => { translationPromptRef.current = translationPrompt }, [translationPrompt])
-  useEffect(() => { showTranslationRef.current = showTranslatePanel }, [showTranslatePanel])
-  useEffect(() => { translatedPagesRef.current = translatedPages }, [translatedPages])
-
-  // Auto-translate when navigating to a new page
-  useEffect(() => {
-    if (!autoTranslate || !showTranslatePanel || !translationPrompt) return
-    if (translatedPages[currentPage] || isTranslating) return
-    if (!contentCacheRef.current || !pageBreaksRef.current.length) return
-    const rawSlice = getSliceForPage(currentPage)
-    if (!rawSlice) return
-    setIsTranslating(true)
-    fetch('/api/translate-page', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content: rawSlice, prompt: translationPrompt }),
-    })
-      .then(r => r.text())
-      .then(translated => {
-        const updated = { ...translatedPagesRef.current, [currentPage]: translated }
-        setTranslatedPages(updated)
-        translatedPagesRef.current = updated
-        translationQueries.upsert(book.id, currentPage, translationPrompt, translated).catch(() => {})
-      })
-      .catch(() => {})
-      .finally(() => setIsTranslating(false))
-  }, [currentPage, autoTranslate, showTranslatePanel])
-
 
   const [scrollMode, setScrollMode] = useState(() => {
     try { const v = localStorage.getItem('bza-scroll-mode'); return v === null ? true : v === 'true' } catch { return true }
@@ -228,149 +173,7 @@ export default function BookReader({ book, onBack, onToggleSidebar, sidebarMode,
   }
 
 
-  const narrateTranslation = (pageNum: number) => {
-    const text = translatedPagesRef.current[pageNum]
-    if (!text) return
-    stopNarration()
-    narrateAutoAdvance.current = true
-    speakText(
-      toPlainText(text),
-      () => setNarratingTranslation(true),
-      () => {
-        const nextPage = pageNum + 1
-        if (!narrateAutoAdvance.current || nextPage > totalPages) {
-          setNarratingTranslation(false)
-          narrateAutoAdvance.current = false
-          return
-        }
-        goToPage(nextPage)
-        if (translatedPagesRef.current[nextPage]) {
-          narrateTranslation(nextPage)
-          return
-        }
-        if (translationPromptRef.current && isAuthenticated && contentCacheRef.current && pageBreaksRef.current.length > 0) {
-          const rawSlice = getSliceForPage(nextPage)
-          if (rawSlice) {
-            fetch('/api/translate-page', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ content: rawSlice, prompt: translationPromptRef.current }),
-            })
-              .then(r => r.text())
-              .then(translated => {
-                const updated = { ...translatedPagesRef.current, [nextPage]: translated }
-                setTranslatedPages(updated)
-                translatedPagesRef.current = updated
-                translationQueries.upsert(book.id, nextPage, translationPromptRef.current, translated).catch(() => {})
-                narrateTranslation(nextPage)
-              })
-              .catch(() => { setNarratingTranslation(false); narrateAutoAdvance.current = false })
-            return
-          }
-        }
-        setNarratingTranslation(false)
-        narrateAutoAdvance.current = false
-      },
-    )
-  }
-
-  const saveTranslatedBook = async () => {
-    if (savingTranslatedBook) return
-    const pageNums = Object.keys(translatedPages).map(Number).sort((a, b) => a - b)
-    if (pageNums.length === 0) return
-    setSavingTranslatedBook(true)
-    try {
-      const combined = pageNums.map(p => translatedPages[p]).join('\n\n')
-      const title = `${book.title} (${translationPrompt})`
-      const res = await fetch('/api/create-translated-book', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, content: combined, sourceBookId: book.id, prompt: translationPrompt }),
-      })
-      const data = await res.json()
-      if (data.bookId) setSavedTranslatedBookId(data.bookId)
-    } catch (err) {
-      console.error('Save translated book failed:', err)
-    } finally {
-      setSavingTranslatedBook(false)
-    }
-  }
-
-  const narratePage = (pageNum: number, autoAdvance = false) => {
-    stopNarration()
-    narrateAutoAdvance.current = autoAdvance
-
-    const chunk = scrollMode ? 1 : pagesPerView
-
-    let text = ''
-    if (isAuthenticated && contentCacheRef.current && pageBreaksRef.current.length > 0) {
-      for (let i = 0; i < chunk; i++) {
-        const p = pageNum + i
-        if (p <= totalPages) {
-          const raw = getSliceForPage(p)
-          const source = showTranslationRef.current && translatedPagesRef.current[p]
-            ? translatedPagesRef.current[p]
-            : raw
-          text += toPlainText(source) + ' '
-        }
-      }
-    } else if (!isAuthenticated && fullContent) {
-      const len = fullContent.length
-      const start = Math.floor(((pageNum - 1) / totalLocalPages) * len)
-      const end = Math.floor(((pageNum - 1 + chunk) / totalLocalPages) * len)
-      text = toPlainText(fullContent.slice(start, Math.min(end, len)))
-    }
-    if (!text) return
-
-    speakText(
-      text,
-      () => setNarrating(true),
-      () => {
-        const nextPage = pageNum + chunk
-        if (narrateAutoAdvance.current && nextPage <= totalPages) {
-          if (
-            showTranslationRef.current &&
-            translationPromptRef.current &&
-            isAuthenticated &&
-            contentCacheRef.current &&
-            !translatedPagesRef.current[nextPage]
-          ) {
-            const rawSlice = pageBreaksRef.current.length > 0 ? getSliceForPage(nextPage) : ''
-            if (rawSlice) {
-              fetch('/api/translate-page', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ content: rawSlice, prompt: translationPromptRef.current }),
-              })
-                .then(r => r.text())
-                .then(translated => {
-                  const updated = { ...translatedPagesRef.current, [nextPage]: translated }
-                  setTranslatedPages(updated)
-                  translatedPagesRef.current = updated
-                  translationQueries.upsert(book.id, nextPage, translationPromptRef.current, translated).catch(() => {})
-                  narratePage(nextPage, true)
-                  goToPage(nextPage)
-                })
-                .catch(() => {
-                  narratePage(nextPage, true)
-                  goToPage(nextPage)
-                })
-              return
-            }
-          }
-          narratePage(nextPage, true)
-          goToPage(nextPage)
-        } else {
-          setNarrating(false)
-        }
-      },
-    )
-  }
-
-  const [serendipityCard, setSerendipityCard] = useState<SerendipityCard | null>(null)
-  const flipCountRef = useRef(0)
-  const prefetchedCardRef = useRef<SerendipityCard | null>(null)
-  const serendipityTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const { serendipityCard, dismissSerendipity, maybeShowOnPageFlip } = useSerendipity({ prefs: serendipityPrefs })
 
   const containerRef = useRef<HTMLDivElement>(null)   // content area / scroll container
   const columnsRef  = useRef<HTMLDivElement>(null)    // CSS-columns div (local path)
@@ -384,6 +187,29 @@ export default function BookReader({ book, onBack, onToggleSidebar, sidebarMode,
   // the stored page. If ?page= was provided, that's the source of truth so we
   // start unblocked.
   const progressRestoredRef = useRef<boolean>(!!initialPage)
+
+  const {
+    // narration primitives (from useNarration inside useReading)
+    narrating, narrateLoading, narratingTranslation, narrateAutoAdvance, stopNarration,
+    // translation state
+    translationPrompt, setTranslationPrompt,
+    translatedPages,
+    isTranslating,
+    showTranslatePanel, setShowTranslatePanel,
+    autoTranslate, setAutoTranslate,
+    translateView, setTranslateView,
+    savingTranslatedBook,
+    savedTranslatedBookId,
+    // composed handlers
+    handleTranslate,
+    saveTranslatedBook,
+    narratePage,
+    narrateTranslation,
+  } = useReading({
+    book, isAuthenticated, currentPage, totalPages, pagesPerView, scrollMode,
+    fullContent, totalLocalPages,
+    contentCacheRef, pageBreaksRef, getSliceForPage, goToPageRef,
+  })
 
   const saveProgressDebounced = (pageNum: number, scrollFraction?: number) => {
     if (!progressRestoredRef.current) return
@@ -645,13 +471,6 @@ export default function BookReader({ book, onBack, onToggleSidebar, sidebarMode,
     window.addEventListener('keydown', handleKey)
     return () => window.removeEventListener('keydown', handleKey)
   }, [currentPage, totalPages, pagesPerView, scrollMode])
-
-  // Pre-fetch first serendipity card on mount
-  useEffect(() => {
-    if (serendipityPrefs?.enabled) {
-      prefetchSerendipity(serendipityPrefs.sources, serendipityPrefs.customUrls ?? [])
-    }
-  }, [serendipityPrefs?.enabled])
 
   // Register goToPage so parent/siblings can navigate imperatively
   useEffect(() => {
@@ -1018,26 +837,6 @@ export default function BookReader({ book, onBack, onToggleSidebar, sidebarMode,
     }
   }
 
-  const pickRandomSource = (sources: string[], customUrls: string[]) => {
-    const pool = [...sources, ...customUrls]
-    return pool[Math.floor(Math.random() * pool.length)]
-  }
-
-  const prefetchSerendipity = (sources: string[], customUrls: string[]) => {
-    const pool = [...sources, ...customUrls]
-    if (!pool.length) return
-    const source = pool[Math.floor(Math.random() * pool.length)]
-    fetch(`/api/serendipity?source=${encodeURIComponent(source)}`)
-      .then(r => r.ok ? r.json() : null)
-      .then(card => { if (card && !card.error) prefetchedCardRef.current = card })
-      .catch(() => {})
-  }
-
-  const dismissSerendipity = () => {
-    setSerendipityCard(null)
-    if (serendipityTimerRef.current) clearTimeout(serendipityTimerRef.current)
-  }
-
   const goToPage = (pageNum: number) => {
     if (pageNum >= 1 && pageNum <= totalPages) {
       setCurrentPage(pageNum)
@@ -1054,105 +853,21 @@ export default function BookReader({ book, onBack, onToggleSidebar, sidebarMode,
         })
       }
 
-      if (serendipityPrefs?.enabled && !scrollMode) {
-        const { sources, customUrls = [], frequency } = serendipityPrefs
-        const pool = [...sources, ...customUrls]
-        if (pool.length > 0) {
-          flipCountRef.current += 1
-          if (flipCountRef.current % frequency === 0) {
-            const show = (card: SerendipityCard) => {
-              setSerendipityCard(card)
-              if (serendipityTimerRef.current) clearTimeout(serendipityTimerRef.current)
-              serendipityTimerRef.current = setTimeout(() => setSerendipityCard(null), 10000)
-              prefetchSerendipity(sources, customUrls)
-            }
-            if (prefetchedCardRef.current) {
-              show(prefetchedCardRef.current)
-              prefetchedCardRef.current = null
-            } else {
-              const source = pickRandomSource(sources, customUrls)
-              fetch(`/api/serendipity?source=${encodeURIComponent(source)}`)
-                .then(r => r.ok ? r.json() : null)
-                .then(card => { if (card && !card.error) show(card) })
-                .catch(() => {})
-            }
-          }
-        }
-      }
+      maybeShowOnPageFlip(scrollMode)
     }
   }
 
-  const checkWikiUpdates = async () => {
-    if (!isWiki || !book.source_url) return
-    setWikiChecking(true)
-    try {
-      const match = book.source_url.match(/([a-z]+)\.wikipedia\.org\/wiki\/(.+)/)
-      if (!match) return
-      const [, lang, articleKey] = match
-      const params = new URLSearchParams({ title: articleKey, lang, from_revid: book.wiki_revid ?? '' })
-      const res = await fetch(`/api/wikipedia?${params}`)
-      const data = await res.json()
-      setWikiDiff(data)
-      setWikiDiffOpen(true)
-    } catch (e) {
-      console.error('Wiki update check failed', e)
-    } finally {
-      setWikiChecking(false)
-    }
-  }
+  const {
+    isWiki,
+    wikiChecking,
+    wikiUpdating,
+    wikiDiff,
+    wikiDiffOpen,
+    setWikiDiffOpen,
+    checkWikiUpdates,
+    updateWikiToLatest,
+  } = useWikiUpdate({ book, contentCacheRef, pageBreaksRef, onTocReady, setAuthTotalPages, loadPage })
 
-  const updateWikiToLatest = async () => {
-    if (!isWiki || !book.source_url || !wikiDiff?.hasUpdate) return
-    setWikiUpdating(true)
-    try {
-      const res = await fetch(`/api/fetch-url?url=${encodeURIComponent(book.source_url)}`)
-      const data = await res.json()
-      if (data.type !== 'wikipedia' || !data.markdown) throw new Error('Unexpected response from fetch-url')
-      await booksQueries.updateWikiContent(book.id, book.file_path, data.markdown, String(data.revid), book.char_page_length ?? 420)
-      // Clear cache so next page load re-fetches updated content
-      contentCacheRef.current = null
-      pageBreaksRef.current = []
-      book.wiki_revid = String(data.revid)
-      book.total_pages = Math.ceil(data.markdown.length / (book.char_page_length ?? 420))
-      setWikiDiff(null)
-      setWikiDiffOpen(false)
-      onTocReady?.([])
-      setAuthTotalPages(0)
-      await loadPage(1)
-    } catch (e) {
-      console.error('Wiki update failed', e)
-      alert('Failed to update article. Please try again.')
-    } finally {
-      setWikiUpdating(false)
-    }
-  }
-
-  const handleTranslate = async (force = false) => {
-    if (!translationPrompt || !isAuthenticated || !contentCacheRef.current) return
-    if (translatedPages[currentPage] && !force) {
-      return handleTranslate(true) // re-translate
-    }
-    const rawSlice = pageBreaksRef.current.length > 0 ? getSliceForPage(currentPage) : ''
-    if (!rawSlice) return
-    track('translate_page', { book_id: book?.id, page: currentPage })
-    setIsTranslating(true)
-    try {
-      const res = await fetch('/api/translate-page', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: rawSlice, prompt: translationPrompt }),
-      })
-      const translated = await res.text()
-      const updated = { ...translatedPages, [currentPage]: translated }
-      setTranslatedPages(updated)
-      translatedPagesRef.current = updated
-      translationQueries.upsert(book.id, currentPage, translationPrompt, translated).catch(() => {})
-    } catch (err) {
-      console.error('Translation error:', err)
-    } finally {
-      setIsTranslating(false)
-    }
-  }
 
   // Memoize scroll-mode ReactMarkdown so page/progress state changes don't re-render the entire book
   const localScrollContent = useMemo(() => {
@@ -1562,47 +1277,15 @@ export default function BookReader({ book, onBack, onToggleSidebar, sidebarMode,
 
         {/* ── Chat book: dedicated content + input ── */}
         {isChatBook && (
-          <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', zIndex: 5 }} className="bg-gray-50 dark:bg-gray-900">
-            <div ref={scrollContainerRef} style={{ flex: 1, overflowY: 'auto', paddingBottom: 64 }}>
-              <div className="max-w-prose mx-auto px-6 pt-8 pb-12 prose prose-lg font-serif text-gray-900 dark:text-gray-100 dark:prose-invert">
-                {chatBookContent ? (
-                  <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeRaw, [rehypeKatex, { throwOnError: false }]]}>
-                    {chatBookContent}
-                  </ReactMarkdown>
-                ) : (
-                  <p className="text-gray-400 italic">Send a message to start the conversation…</p>
-                )}
-                {chatSending && <p className="text-gray-400 animate-pulse">Thinking…</p>}
-                {loadError && <p className="text-red-500 text-sm">{loadError}</p>}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Chat book input bar */}
-        {isChatBook && (
-          <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 p-3 z-10">
-            <form
-              onSubmit={e => { e.preventDefault(); sendChatBookMessage() }}
-              className="flex gap-2 max-w-prose mx-auto"
-            >
-              <input
-                type="text"
-                value={chatInput}
-                onChange={e => setChatInput(e.target.value)}
-                placeholder="Type a message…"
-                disabled={chatSending}
-                className="flex-1 text-sm border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              />
-              <button
-                type="submit"
-                disabled={chatSending || !chatInput.trim()}
-                className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-40 text-sm flex items-center gap-1"
-              >
-                {chatSending ? <Loader2 size={14} className="animate-spin" /> : 'Send'}
-              </button>
-            </form>
-          </div>
+          <ChatBookReader
+            scrollContainerRef={scrollContainerRef}
+            chatBookContent={chatBookContent}
+            chatSending={chatSending}
+            loadError={loadError}
+            chatInput={chatInput}
+            setChatInput={setChatInput}
+            onSend={sendChatBookMessage}
+          />
         )}
 
         {/* Images drawer */}
@@ -1672,53 +1355,20 @@ export default function BookReader({ book, onBack, onToggleSidebar, sidebarMode,
 
         {/* ── Manga reader — full-page images ── */}
         {isManga && (
-          <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#111' }}>
-            {mangaPageUrls[currentPage] ? (
-              <img
-                src={mangaPageUrls[currentPage]}
-                alt={`Page ${currentPage}`}
-                className="max-h-full max-w-full object-contain"
-                style={{ userSelect: 'none' }}
-              />
-            ) : (
-              <div className="text-center text-gray-400">
-                <div className="spinner mx-auto mb-4" />
-                <p className="text-sm">Loading page {currentPage}…</p>
-              </div>
-            )}
-            {/* OCR button */}
-            <button
-              onClick={async () => {
-                if (mangaOcrLoading) return
-                setMangaOcrLoading(true)
-                try {
-                  const { data: { session } } = await supabase.auth.getSession()
-                  if (!session) return
-                  const FUNCTIONS_BASE = (process.env.NEXT_PUBLIC_FUNCTIONS_URL || process.env.NEXT_PUBLIC_SUPABASE_URL) + '/functions/v1'
-                  const res = await fetch(`${FUNCTIONS_BASE}/manga-ocr`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-                    body: JSON.stringify({ bookId: book.id, pageNum: currentPage }),
-                  })
-                  if (!res.ok) throw new Error('OCR failed')
-                  const { text } = await res.json()
-                  if (text) {
-                    setPageContent({ page_num: currentPage, content: text, book_id: book.id, word_count: text.split(/\s+/).length, has_images: true })
-                  }
-                } catch (err: any) {
-                  console.error('Manga OCR error:', err)
-                } finally {
-                  setMangaOcrLoading(false)
-                }
-              }}
-              disabled={mangaOcrLoading}
-              className="absolute bottom-4 right-4 px-3 py-1.5 bg-black/60 hover:bg-black/80 text-white text-xs rounded-lg backdrop-blur flex items-center gap-1.5"
-              title="Extract text from this page (for narration, search, accessibility)"
-            >
-              {mangaOcrLoading ? <Loader2 size={12} className="animate-spin" /> : <BookOpen size={12} />}
-              {mangaOcrLoading ? 'Reading…' : 'Read page'}
-            </button>
-          </div>
+          <MangaReader
+            bookId={book.id}
+            currentPage={currentPage}
+            mangaPageUrls={mangaPageUrls}
+            mangaOcrLoading={mangaOcrLoading}
+            setMangaOcrLoading={setMangaOcrLoading}
+            onOcrText={text => setPageContent({
+              page_num: currentPage,
+              content: text,
+              book_id: book.id,
+              word_count: text.split(/\s+/).length,
+              has_images: true,
+            })}
+          />
         )}
 
         {/* ── Auth path: scroll mode — render full content vertically ── */}
@@ -1804,117 +1454,35 @@ export default function BookReader({ book, onBack, onToggleSidebar, sidebarMode,
             )}
             </div>
             {/* Translation pane — full overlay on mobile, side panel on desktop */}
-            {showTranslatePanel && (() => {
-              const hasTranslation = !!translatedPages[currentPage]
-              const origContent = contentCacheRef.current && pageBreaksRef.current.length > 0 ? preprocessContent(getSliceForPage(currentPage)) : ''
-              const translatedContent = translatedPages[currentPage] ?? ''
-              const showOriginal = translateView === 'original' || translateView === 'split'
-              const showTranslated = translateView === 'translated' || translateView === 'split'
-
-              return (
-                <div className="fixed inset-0 z-30 flex flex-col bg-white dark:bg-gray-800 lg:relative lg:inset-auto lg:z-auto" style={{ flex: 1, minWidth: 0, borderLeft: '1px solid var(--border-color, #e5e7eb)' }}>
-                  {/* Header bar */}
-                  <div className="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-3 py-2 flex-shrink-0 space-y-2">
-                    {/* Prompt row */}
-                    <div className="flex items-center gap-2">
-                      <button onClick={() => setShowTranslatePanel(false)} className="lg:hidden btn btn-secondary p-1.5 flex-shrink-0">
-                        <XIcon size={16} />
-                      </button>
-                      <input
-                        type="text"
-                        value={translationPrompt}
-                        onChange={e => setTranslationPrompt(e.target.value)}
-                        placeholder="e.g. translate to Spanish, summarize, explain simply…"
-                        className="input flex-1 min-w-0 text-sm py-2"
-                        onKeyDown={e => { if (e.key === 'Enter') handleTranslate() }}
-                      />
-                      <button
-                        onClick={() => handleTranslate()}
-                        disabled={!translationPrompt || isTranslating}
-                        className="btn btn-primary text-sm px-3 py-2 disabled:opacity-40 whitespace-nowrap flex-shrink-0"
-                      >
-                        {isTranslating ? '…' : 'Go'}
-                      </button>
-                    </div>
-                    {/* Controls row */}
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      {/* Page nav */}
-                      <button onClick={() => goToPage(currentPage - 1)} disabled={currentPage <= 1} className="btn btn-secondary p-1 disabled:opacity-30" title="Previous page">
-                        <ChevronLeft size={14} />
-                      </button>
-                      <span className="text-xs font-mono text-gray-500 min-w-[3ch] text-center">{currentPage}</span>
-                      <button onClick={() => goToPage(currentPage + 1)} disabled={currentPage >= totalPages} className="btn btn-secondary p-1 disabled:opacity-30" title="Next page">
-                        <ChevronRight size={14} />
-                      </button>
-                      {/* Auto-translate */}
-                      <label className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 cursor-pointer select-none ml-1">
-                        <input type="checkbox" checked={autoTranslate} onChange={e => setAutoTranslate(e.target.checked)} className="rounded" />
-                        Auto
-                      </label>
-                      {/* View mode */}
-                      <div className="flex rounded-md overflow-hidden border border-gray-200 dark:border-gray-600 text-[10px] ml-auto">
-                        {(['translated', 'split', 'original'] as const).map(v => (
-                          <button
-                            key={v}
-                            onClick={() => setTranslateView(v)}
-                            className={`px-2 py-1 transition-colors ${translateView === v ? 'bg-violet-500 text-white' : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'}`}
-                          >
-                            {v === 'translated' ? 'Result' : v === 'original' ? 'Original' : 'Split'}
-                          </button>
-                        ))}
-                      </div>
-                      {/* Extra actions */}
-                      {hasTranslation && (
-                        <>
-                          <button
-                            onClick={() => narratingTranslation ? stopNarration() : narrateTranslation(currentPage)}
-                            className={`btn btn-secondary p-1 flex-shrink-0 ${narratingTranslation ? 'bg-green-50 dark:bg-green-900/30 border-green-300 text-green-600' : ''}`}
-                          >
-                            {narratingTranslation ? <VolumeX size={12} /> : <Volume2 size={12} />}
-                          </button>
-                          {savedTranslatedBookId ? (
-                            <a href={`/books/${savedTranslatedBookId}`} className="btn btn-secondary text-[10px] px-1.5 py-1 text-blue-600">Open →</a>
-                          ) : (
-                            <button onClick={saveTranslatedBook} disabled={savingTranslatedBook} className="btn btn-secondary p-1 disabled:opacity-40" title="Save as book">
-                              {savingTranslatedBook ? <Loader2 size={12} className="animate-spin" /> : <BookDown size={12} />}
-                            </button>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  </div>
-                  {/* Content area */}
-                  <div className={`flex-1 overflow-hidden flex ${translateView === 'split' ? 'flex-col landscape:flex-row' : ''}`}>
-                    {/* Original pane */}
-                    {showOriginal && (
-                      <div className={`overflow-y-auto ${translateView === 'split' ? 'flex-1 border-b landscape:border-b-0 landscape:border-r border-gray-200 dark:border-gray-700' : 'flex-1'}`}>
-                        <div className={`max-w-prose mx-auto px-5 pt-6 pb-10 prose prose-base font-serif text-gray-900 dark:text-gray-100 text-justify hyphens-auto bza-reader-text${!showInlineImages ? ' bza-hide-images' : ''}`}>
-                          <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeRaw, [rehypeKatex, { throwOnError: false, output: 'htmlAndMathml' }]]} components={sharedMdComponents}>
-                            {origContent}
-                          </ReactMarkdown>
-                        </div>
-                      </div>
-                    )}
-                    {/* Translated pane */}
-                    {showTranslated && (
-                      <div className="overflow-y-auto flex-1">
-                        {translatedContent ? (
-                          <div className={`max-w-prose mx-auto px-5 pt-6 pb-10 prose prose-base font-serif text-gray-900 dark:text-gray-100 text-justify hyphens-auto bza-reader-text${!showInlineImages ? ' bza-hide-images' : ''}`}>
-                            <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeRaw, [rehypeKatex, { throwOnError: false, output: 'htmlAndMathml' }]]} components={sharedMdComponents}>
-                              {translatedContent}
-                            </ReactMarkdown>
-                          </div>
-                        ) : (
-                          <div className="flex items-center justify-center h-full text-sm text-gray-400 dark:text-gray-500 p-8 text-center">
-                            {isTranslating ? <><Loader2 size={16} className="animate-spin mr-2" /> Translating…</> : 'Click Go to translate this page'}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )
-            })()}
+            {showTranslatePanel && (
+              <TranslationPanel
+                translationPrompt={translationPrompt}
+                setTranslationPrompt={setTranslationPrompt}
+                translatedPages={translatedPages}
+                isTranslating={isTranslating}
+                translateView={translateView}
+                setTranslateView={setTranslateView}
+                autoTranslate={autoTranslate}
+                setAutoTranslate={setAutoTranslate}
+                handleTranslate={handleTranslate}
+                saveTranslatedBook={saveTranslatedBook}
+                savingTranslatedBook={savingTranslatedBook}
+                savedTranslatedBookId={savedTranslatedBookId}
+                narratingTranslation={narratingTranslation}
+                narrateTranslation={narrateTranslation}
+                stopNarration={stopNarration}
+                onClose={() => setShowTranslatePanel(false)}
+                currentPage={currentPage}
+                totalPages={totalPages}
+                goToPage={goToPage}
+                contentCacheRef={contentCacheRef}
+                pageBreaksRef={pageBreaksRef}
+                getSliceForPage={getSliceForPage}
+                preprocessContent={preprocessContent}
+                showInlineImages={showInlineImages}
+                mdComponents={sharedMdComponents}
+              />
+            )}
           </div>
           )
         })()}

@@ -53,11 +53,8 @@ export const storage = {
  * Auth helper functions
  */
 export const auth = {
-  async signUp(email: string, password: string, fullName?: string) {
-    const { data, error } = await supabase.auth.signUp({
-      email, password,
-      options: { data: { full_name: fullName } },
-    })
+  async signUp(email: string, password: string) {
+    const { data, error } = await supabase.auth.signUp({ email, password })
     if (error) throw error
     return data
   },

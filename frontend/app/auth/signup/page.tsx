@@ -8,10 +8,9 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { auth } from '@/lib/supabase'
 import { track } from '@/lib/analytics'
-import { Mail, Lock, User, AlertCircle, CheckCircle } from 'lucide-react'
+import { Mail, Lock, AlertCircle, CheckCircle } from 'lucide-react'
 
 const signupSchema = z.object({
-  fullName: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Invalid email address'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
   confirmPassword: z.string(),
@@ -54,7 +53,7 @@ export default function SignupPage() {
       setError(null)
       setIsLoading(true)
 
-      await auth.signUp(data.email, data.password, data.fullName)
+      await auth.signUp(data.email, data.password)
       track('signup_completed')
 
       setSuccess(true)
@@ -131,27 +130,6 @@ export default function SignupPage() {
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {/* Full Name Field */}
-            <div>
-              <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Full Name
-              </label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                <input
-                  {...register('fullName')}
-                  type="text"
-                  id="fullName"
-                  className="input pl-10"
-                  placeholder="John Doe"
-                  disabled={isLoading}
-                />
-              </div>
-              {errors.fullName && (
-                <p className="mt-1 text-sm text-red-600">{errors.fullName.message}</p>
-              )}
-            </div>
-
             {/* Email Field */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
