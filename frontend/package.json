@@ -26,7 +26,6 @@
     "@myriaddreamin/typst-ts-renderer": "^0.7.0-rc2",
     "@myriaddreamin/typst-ts-web-compiler": "^0.7.0-rc2",
     "@myriaddreamin/typst.ts": "^0.7.0-rc2",
-    "@opennextjs/aws": "^4.0.3",
     "@stripe/stripe-js": "^2.4.0",
     "@supabase/auth-helpers-nextjs": "^0.8.7",
     "@supabase/ssr": "^0.10.3",
