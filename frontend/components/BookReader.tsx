@@ -20,6 +20,8 @@ import { TranslatedPaneHeader } from './reader/TranslatedPaneHeader'
 import { TranslationPanel } from './reader/TranslationPanel'
 import { MangaReader } from './reader/MangaReader'
 import { ChatBookReader } from './reader/ChatBookReader'
+import { UnauthReader } from './reader/UnauthReader'
+import { AuthReader } from './reader/AuthReader'
 
 export interface TocEntry { title: string; level: number; page: number }
 export interface InlineImage { url: string; alt: string; page: number }
@@ -1163,116 +1165,27 @@ export default function BookReader({ book, onBack, onToggleSidebar, sidebarMode,
 
         {/* ── Local path: CSS columns (paginated) or vertical scroll ── */}
         {!isAuthenticated && !isManga && !isChatBook && (
-          fullContent ? (
-            scrollMode ? (
-              <div ref={scrollContainerRef} onScroll={handleScrollProgress} style={{ position: 'absolute', inset: 0, overflowY: 'scroll', paddingBottom: isChatBook ? 64 : 0 }}>
-                <div className={`max-w-prose mx-auto px-6 pt-8 pb-12 prose prose-lg font-serif text-gray-900 dark:text-gray-100 text-justify hyphens-auto dark:prose-invert bza-reader-text${!showInlineImages ? ' bza-hide-images' : ''}`} lang="en">
-                  {localScrollContent}
-                </div>
-              </div>
-            ) : pageBreaksRef.current.length > 0 && contentCacheRef.current ? (
-            <div style={{ position: 'absolute', inset: 0, display: 'flex' }}>
-              {Array.from({ length: pagesPerView }, (_, i) => {
-                const pageNum = Math.min(currentPage + i, totalPages || 1)
-                if (currentPage + i > (totalPages || 1)) return null
-                return (
-                  <div
-                    key={pageNum}
-                    style={{ flex: 1, overflowY: 'scroll', borderLeft: i > 0 ? '1px solid var(--border-color, #e5e7eb)' : undefined }}
-                  >
-                    <div
-                      className={`max-w-prose mx-auto px-6 pt-8 pb-12 prose prose-lg font-serif text-gray-900 dark:text-gray-100 text-justify hyphens-auto dark:prose-invert bza-reader-text${!showInlineImages ? ' bza-hide-images' : ''}`}
-                      lang="en"
-                    >
-                      <ReactMarkdown
-                        remarkPlugins={[remarkGfm, remarkMath]}
-                        rehypePlugins={[rehypeRaw, [rehypeKatex, { throwOnError: false, output: 'htmlAndMathml' }]]}
-                        components={{
-                          img: ({ src, alt }) => !showInlineImages ? null : <StorageImage src={src} alt={alt ?? ''} />,
-                          a: ({ href, children }) => {
-                            if (href?.startsWith('fn:')) return <sup className="text-amber-600 dark:text-amber-400">{children}</sup>
-                            return <a href={href} target="_blank" rel="noopener noreferrer">{children}</a>
-                          },
-                        }}
-                      >
-                        {preprocessContent(getSliceForPage(pageNum))}
-                      </ReactMarkdown>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-            ) : (
-            <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
-              <div
-                ref={columnsRef}
-                style={{
-                  columnWidth: containerWidth > 0 ? `${containerWidth}px` : '100vw',
-                  columnGap: 0,
-                  height: '100%',
-                  overflow: 'hidden',
-                  transform: containerWidth > 0
-                    ? `translateX(${-(currentPage - 1) * containerWidth}px)`
-                    : undefined,
-                  transition: 'transform 0.3s ease',
-                  willChange: 'transform',
-                }}
-              >
-                <div
-                  className={`max-w-prose mx-auto px-6 pt-8 pb-8 prose prose-lg font-serif text-gray-900 dark:text-gray-100 text-justify hyphens-auto dark:prose-invert bza-reader-text${!showInlineImages ? ' bza-hide-images' : ''}`}
-                  lang="en"
-                >
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm, remarkMath]}
-                    rehypePlugins={[rehypeRaw, [rehypeKatex, { throwOnError: false, output: 'htmlAndMathml' }]]}
-                    components={{
-                      img: ({ src, alt }) => !showInlineImages ? null : <StorageImage src={src} alt={alt ?? ''} />,
-                      a: ({ href, children }) => {
-                        const postMatch = href?.match(/#p(\d+)$/)
-                        if (postMatch) {
-                          return (
-                            <a
-                              className="text-orange-500 hover:underline cursor-pointer font-mono text-sm"
-                              onClick={e => {
-                                e.preventDefault()
-                                const content = contentCacheRef.current
-                                if (!content) return
-                                const idx = content.indexOf(`No.${postMatch[1]}`)
-                                if (idx === -1) return
-                                // Local path: no pageBreaks computed; use proportional estimate
-                                const page = pageBreaksRef.current.length > 1
-                                  ? pageBreaksRef.current.findIndex((b, i) => b <= idx && (pageBreaksRef.current[i + 1] ?? Infinity) > idx) + 1
-                                  : Math.max(1, Math.round((idx / content.length) * totalLocalPages))
-                                goToPage(Math.max(1, page))
-                                setHighlightedPostId(postMatch[1])
-                              }}
-                            >
-                              {children}
-                            </a>
-                          )
-                        }
-                        return <a href={href} target="_blank" rel="noopener noreferrer">{children}</a>
-                      },
-                    }}
-                  >
-                    {addPostAnchors(fullContent)}
-                  </ReactMarkdown>
-                </div>
-              </div>
-            </div>
-            )
-          ) : (
-            <div className="flex-1 flex flex-col items-center justify-center py-16 text-gray-500 dark:text-gray-400 px-6">
-              {book.file_path === 'local' ? (
-                <>
-                  <p className="text-sm font-medium mb-2">No content available</p>
-                  <p className="text-xs text-center max-w-xs">Content couldn't be loaded. Try refreshing, or create a free account to read from the cloud.</p>
-                </>
-              ) : (
-                <div className="spinner" />
-              )}
-            </div>
-          )
+          <UnauthReader
+            book={book}
+            fullContent={fullContent}
+            scrollMode={scrollMode}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalLocalPages={totalLocalPages}
+            pagesPerView={pagesPerView}
+            containerWidth={containerWidth}
+            showInlineImages={showInlineImages}
+            scrollContainerRef={scrollContainerRef}
+            columnsRef={columnsRef}
+            contentCacheRef={contentCacheRef}
+            pageBreaksRef={pageBreaksRef}
+            handleScrollProgress={handleScrollProgress}
+            goToPage={goToPage}
+            setHighlightedPostId={setHighlightedPostId}
+            getSliceForPage={getSliceForPage}
+            preprocessContent={preprocessContent}
+            localScrollContent={localScrollContent}
+          />
         )}
 
         {/* ── Chat book: dedicated content + input ── */}
@@ -1371,90 +1284,31 @@ export default function BookReader({ book, onBack, onToggleSidebar, sidebarMode,
           />
         )}
 
-        {/* ── Auth path: scroll mode — render full content vertically ── */}
-        {isAuthenticated && !isManga && !isChatBook && scrollMode && (
-          <div ref={scrollContainerRef} onScroll={handleScrollProgress} style={{ position: 'absolute', inset: 0, overflowY: 'scroll' }}>
-            {!contentCacheRef.current ? (
-              <div className="text-center py-16"><div className="spinner mx-auto mb-4" /><p className="text-gray-600 dark:text-gray-300">Loading…</p></div>
-            ) : (
-              <div className={`max-w-prose mx-auto px-6 pt-8 pb-12 prose prose-lg font-serif text-gray-900 dark:text-gray-100 text-justify hyphens-auto dark:prose-invert bza-reader-text${!showInlineImages ? ' bza-hide-images' : ''}`} lang="en">
-                {authScrollContent}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ── Auth path: server-paginated (containerRef scrolls) ── */}
-        {isAuthenticated && !isManga && !isChatBook && !scrollMode && (() => {
-          const sharedMdComponents: any = {
-            img: ({ src, alt }: any) => !showInlineImages ? null : <StorageImage src={src} alt={alt ?? ''} />,
-            a: ({ href, children }: any) => {
-              if (href?.startsWith('fn:')) return <sup className="text-amber-600 dark:text-amber-400">{children}</sup>
-              const postMatch = href?.match(/#p(\d+)$/)
-              if (postMatch) {
-                return <a className="text-orange-500 hover:underline cursor-pointer font-mono text-sm" onClick={(e: any) => { e.preventDefault(); const content = contentCacheRef.current; if (!content) return; const idx = content.indexOf(`No.${postMatch[1]}`); if (idx === -1) return; const breaks = pageBreaksRef.current; const page = breaks.length > 1 ? breaks.findIndex((b: number, i: number) => b <= idx && (breaks[i + 1] ?? Infinity) > idx) + 1 : Math.floor(idx / (book.char_page_length ?? 420)) + 1; goToPage(Math.max(1, page)); setHighlightedPostId(postMatch[1]) }}>{children}</a>
-              }
-              return <a href={href} target="_blank" rel="noopener noreferrer">{children}</a>
-            },
-          }
-          const proseClass = `max-w-prose mx-auto px-6 pt-8 pb-12 prose prose-lg font-serif text-gray-900 dark:text-gray-100 text-justify hyphens-auto bza-reader-text${!showInlineImages ? ' bza-hide-images' : ''}`
-          return (
-          <div style={{ position: 'absolute', inset: 0, display: 'flex' }}>
-            {/* Original content column(s) */}
-            <div style={{ flex: 1, display: 'flex', minWidth: 0 }}>
-            {isLoading ? (
-              <div className="flex-1 text-center py-16">
-                <div className="spinner mx-auto mb-4" />
-                <p className="text-gray-600 dark:text-gray-300">Loading page...</p>
-              </div>
-            ) : pageContent ? (
-              <>
-                {Array.from({ length: pagesPerView }, (_, i) => {
-                  const pageNum = currentPage + i
-                  if (pageNum > totalPages) return null
-                  const rawContent = i === 0
-                    ? pageContent.content
-                    : (() => {
-                        if (!contentCacheRef.current || pageBreaksRef.current.length === 0) return ''
-                        const { text } = parseFootnotes(getSliceForPage(pageNum))
-                        return preprocessContent(text)
-                      })()
-                  const content = rawContent
-
-                  return (
-                    <div
-                      key={pageNum}
-                      style={{ flex: 1, overflowY: 'scroll', borderLeft: i > 0 ? '1px solid var(--border-color, #e5e7eb)' : undefined }}
-                    >
-                      <div className={proseClass} lang="en">
-                        <ReactMarkdown
-                          remarkPlugins={[remarkGfm, remarkMath]}
-                          rehypePlugins={[rehypeRaw, [rehypeKatex, { throwOnError: false, output: 'htmlAndMathml' }]]}
-                          components={sharedMdComponents}
-                        >
-                          {content}
-                        </ReactMarkdown>
-                        {i === 0 && pageContent.word_count > 0 && (
-                          <div className="mt-8 pt-4 border-t border-gray-200 dark:border-gray-700 text-sm text-gray-500 dark:text-gray-400">
-                            {pageContent.word_count} words
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )
-                })}
-              </>
-            ) : (
-              <div className="flex-1 flex flex-col items-center justify-center py-16 text-gray-500 dark:text-gray-400 px-6">
-                <p className="text-sm font-medium mb-2">{loadError || 'No content available'}</p>
-                <button onClick={() => { setLoadError(null); loadPage(currentPage) }} className="text-xs px-3 py-1.5 bg-purple-600 text-white rounded hover:bg-purple-700 mt-2">
-                  Retry
-                </button>
-              </div>
-            )}
-            </div>
-            {/* Translation pane — full overlay on mobile, side panel on desktop */}
-            {showTranslatePanel && (
+        {/* ── Auth path: scroll or server-paginated (with optional translation pane) ── */}
+        {isAuthenticated && !isManga && !isChatBook && (
+          <AuthReader
+            book={book}
+            scrollMode={scrollMode}
+            isLoading={isLoading}
+            pageContent={pageContent}
+            loadError={loadError}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            pagesPerView={pagesPerView}
+            showInlineImages={showInlineImages}
+            scrollContainerRef={scrollContainerRef}
+            contentCacheRef={contentCacheRef}
+            pageBreaksRef={pageBreaksRef}
+            handleScrollProgress={handleScrollProgress}
+            goToPage={goToPage}
+            setHighlightedPostId={setHighlightedPostId}
+            setLoadError={setLoadError}
+            loadPage={loadPage}
+            getSliceForPage={getSliceForPage}
+            preprocessContent={preprocessContent}
+            parseFootnotes={parseFootnotes}
+            authScrollContent={authScrollContent}
+            renderTranslationPanel={showTranslatePanel ? (mdComponents) => (
               <TranslationPanel
                 translationPrompt={translationPrompt}
                 setTranslationPrompt={setTranslationPrompt}
@@ -1480,12 +1334,11 @@ export default function BookReader({ book, onBack, onToggleSidebar, sidebarMode,
                 getSliceForPage={getSliceForPage}
                 preprocessContent={preprocessContent}
                 showInlineImages={showInlineImages}
-                mdComponents={sharedMdComponents}
+                mdComponents={mdComponents}
               />
-            )}
-          </div>
-          )
-        })()}
+            ) : undefined}
+          />
+        )}
       </div>
 
       {/* Wikipedia diff modal */}
