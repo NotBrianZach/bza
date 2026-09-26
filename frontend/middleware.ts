@@ -72,6 +72,7 @@ export async function middleware(request: NextRequest) {
     // Allow dashboard for free tier (localStorage-based)
     '/dashboard',
     '/books', // Allow book reading for free tier
+    '/listen', // AI Listen Along — playable on an anonymous session
   ]
 
   // Check if the current path is public

@@ -11,7 +11,7 @@ import { booksQueries } from '@/lib/queries'
 import { getLocalBooks, deleteLocalBook, getStorageUsage } from '@/lib/localStorage'
 import BookCard from '@/components/BookCard'
 import Link from 'next/link'
-import { Plus, BookOpen, Image as ImageIcon, HardDrive, CreditCard, Search, PuzzleIcon, GraduationCap, Clock, SlidersHorizontal, Eye, EyeOff, ChevronUp, ChevronDown, Trash2, Calculator, Download, Settings, Menu, LayoutGrid, List, Loader2 } from 'lucide-react'
+import { Plus, BookOpen, Image as ImageIcon, HardDrive, CreditCard, Search, PuzzleIcon, GraduationCap, Clock, SlidersHorizontal, Eye, EyeOff, ChevronUp, ChevronDown, Trash2, Calculator, Download, Settings, Menu, LayoutGrid, List, Loader2, RadioTower } from 'lucide-react'
 import { billingQueries, quizQueries, settingsQueries, UserPrefs } from '@/lib/queries'
 import { bookmarksQueries } from '@/lib/queries/bookmarks'
 import type { PageBookmark } from '@/lib/queries/types'
@@ -439,6 +439,14 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
                     Get Capture Extension
                   </a>
                 )}
+                <Link
+                  href="/listen"
+                  title="AI Listen Along — music games where the song does the work in the rules"
+                  className="flex items-center gap-1.5 text-xs font-medium text-indigo-700 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 rounded-full px-3 py-1.5 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-colors"
+                >
+                  <RadioTower size={13} />
+                  Listen Along
+                </Link>
                 {isAuthenticated && (
                   <button
                     onClick={() => setMetaDrawerOpen(o => !o)}
@@ -512,6 +520,9 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
                           <BookOpen size={15} /> Librarian
                         </button>
                       )}
+                      <Link href="/listen" onClick={() => setMobileMenuOpen(false)} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2">
+                        <RadioTower size={15} /> Listen Along
+                      </Link>
                       <Link href="/settings" onClick={() => setMobileMenuOpen(false)} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2">
                         <Settings size={15} /> Settings
                       </Link>

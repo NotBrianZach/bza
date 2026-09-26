@@ -13,7 +13,8 @@
     "preview:cf": "npm run build:cf && npx wrangler dev",
     "start": "next start",
     "lint": "next lint",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test:listen": "node tests/listen-logic.mjs"
   },
   "dependencies": {
     "@codemirror/lang-markdown": "^6.3.1",

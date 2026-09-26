@@ -33,6 +33,8 @@ export type AnalyticsEvent =
   | 'tts_played'
   | 'signup_completed'
   | 'upgrade_clicked'
+  | 'listen_game_started'
+  | 'listen_turn_played'
 
 export function track(name: AnalyticsEvent | string, props?: Record<string, unknown>): void {
   if (typeof window === 'undefined') return
