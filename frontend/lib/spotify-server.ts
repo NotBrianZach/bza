@@ -137,7 +137,7 @@ export async function upsertTokens(userId: string, tokens: {
   access_token: string; refresh_token: string; expires_in: number; product: string; display_name: string
 }) {
   const expires_at = new Date(Date.now() + tokens.expires_in * 1000).toISOString()
-  await dbFetch('spotify_tokens', {
+  const res = await dbFetch('spotify_tokens', {
     method: 'POST',
     headers: { Prefer: 'resolution=merge-duplicates' },
     body: JSON.stringify({
@@ -149,6 +149,17 @@ export async function upsertTokens(userId: string, tokens: {
       display_name: tokens.display_name,
     }),
   })
+
+  // Throw rather than return quietly: the OAuth callback's only signal that the
+  // connection succeeded is this write, so swallowing a failure here would send
+  // the user back to a page that still asks them to connect, with no error.
+  if (!res.ok) {
+    const body = await res.text().catch(() => '')
+    throw new SpotifyError(
+      `Failed to persist Spotify tokens (HTTP ${res.status})${body ? `: ${body.slice(0, 200)}` : ''}`,
+      res.status,
+    )
+  }
 }
 
 export async function deleteTokens(userId: string) {

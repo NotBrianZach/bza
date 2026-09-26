@@ -1,9 +1,17 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabaseServerClient'
+import { AUTH_COOKIE, COOKIE_DOMAIN, isProdEnv } from '@/lib/supabaseCookieOptions'
 
-const SUPABASE_PROJECT_REF = 'xqttukoykhbiueskfvad'
-const AUTH_COOKIE = `sb-${SUPABASE_PROJECT_REF}-auth-token`
+/** Session cookie chunk suffixes @supabase/ssr may split a large token across. */
+const MAX_COOKIE_CHUNKS = 5
+
+/** `sb-<ref>-auth-token` plus every chunk name it can be split into. */
+function authCookieNames(): string[] {
+  const names = [AUTH_COOKIE]
+  for (let i = 0; i < MAX_COOKIE_CHUNKS; i++) names.push(`${AUTH_COOKIE}.${i}`)
+  return names
+}
 
 /**
  * Detect a broken/partial Supabase session cookie — one that parsed as JSON
@@ -22,21 +30,65 @@ function isBrokenSessionCookie(value: string): boolean {
   }
 }
 
+/**
+ * Names of auth cookies that arrived more than once in the raw Cookie header.
+ *
+ * A duplicate name means the same cookie exists at two different domain scopes —
+ * host-only (`aireadalong.com` / `www.aireadalong.com`) *and* the shared
+ * `.aireadalong.com`. That used to happen constantly, because the browser client
+ * wrote host-only cookies while the server wrote domain-scoped ones; each side
+ * refreshed its own copy and rotated the other's refresh token into invalidity.
+ * `getUser()` then returned null whenever it happened to read the stale copy.
+ *
+ * `request.cookies.getAll()` is keyed by name and collapses duplicates, so the
+ * raw header is the only place this is visible.
+ */
+function duplicatedAuthCookies(request: NextRequest): string[] {
+  const raw = request.headers.get('cookie')
+  if (!raw) return []
+
+  const counts = new Map<string, number>()
+  for (const pair of raw.split(';')) {
+    const name = pair.slice(0, pair.indexOf('=')).trim()
+    if (name) counts.set(name, (counts.get(name) ?? 0) + 1)
+  }
+
+  return authCookieNames().filter(name => (counts.get(name) ?? 0) > 1)
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
+  const isProd = isProdEnv()
+
+  // Drop leftover host-only duplicates from before the browser and server agreed
+  // on a cookie domain. Omitting `domain` scopes the deletion to the host-only
+  // cookie, so the `.aireadalong.com` copy the server maintains survives.
+  //
+  // Return immediately rather than also refreshing the session on this response:
+  // the point is to let the browser apply the deletions so the *next* request
+  // carries exactly one copy of each cookie.
+  if (isProd) {
+    const duplicates = duplicatedAuthCookies(request)
+    if (duplicates.length > 0) {
+      const response = NextResponse.next({ request })
+      for (const name of duplicates) {
+        response.cookies.set(name, '', { maxAge: 0, path: '/' })
+      }
+      return response
+    }
+  }
 
   // Clear any broken Supabase session cookies that would crash SSR.
   const authCookieValue = request.cookies.get(AUTH_COOKIE)?.value
   if (authCookieValue && isBrokenSessionCookie(authCookieValue)) {
     const response = NextResponse.next()
-    const isProd = process.env.NEXT_PUBLIC_APP_ENV === 'production'
     const cookieOpts = isProd
-      ? { maxAge: 0, path: '/', domain: '.aireadalong.com' }
+      ? { maxAge: 0, path: '/', domain: COOKIE_DOMAIN }
       : { maxAge: 0, path: '/' }
-    response.cookies.set(AUTH_COOKIE, '', cookieOpts)
-    // Also clear chunks in case any are present
-    for (let i = 0; i < 5; i++) {
-      response.cookies.set(`${AUTH_COOKIE}.${i}`, '', cookieOpts)
+    for (const name of authCookieNames()) {
+      response.cookies.set(name, '', cookieOpts)
+      // Also clear any host-only twin, which predates the shared cookie domain.
+      if (isProd) response.cookies.set(name, '', { maxAge: 0, path: '/' })
     }
     return response
   }

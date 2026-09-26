@@ -5,6 +5,13 @@ module.exports = {
     './pages/**/*.{js,ts,jsx,tsx,mdx}',
     './components/**/*.{js,ts,jsx,tsx,mdx}',
     './app/**/*.{js,ts,jsx,tsx,mdx}',
+    // lib/ holds class strings too — ACCENT_CLASSES in lib/listen/modes.ts is the
+    // whole visual chrome for the Listen Along modes. Without this glob those are
+    // purged unless the identical string happens to appear in a scanned file, which
+    // produced a *partial* theme: `bg-violet-50` survived (used elsewhere) but
+    // `dark:bg-violet-950/30` did not, so the opening-prompt box kept a near-white
+    // background in dark mode while its text still went light grey.
+    './lib/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
     extend: {

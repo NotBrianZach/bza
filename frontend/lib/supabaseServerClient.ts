@@ -1,20 +1,21 @@
 /**
  * Shared helper for creating Supabase server-side clients (middleware, route handlers).
  * Centralises cookie options so they stay in sync across all server contexts.
+ *
+ * The cookie attributes themselves live in lib/supabaseCookieOptions.ts, which is
+ * also imported by the *browser* client — both sides have to write the session on
+ * the same domain scope. Route handlers should reach for this (or getRouteUser)
+ * rather than calling `createServerClient` directly; an ad-hoc client constructed
+ * without `cookieOptions` silently writes host-only cookies that shadow these.
  */
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import type { NextRequest, NextResponse } from 'next/server'
+import { YEAR_IN_SECONDS, supabaseCookieOptions as sharedCookieOptions } from './supabaseCookieOptions'
 
-const YEAR_IN_SECONDS = 60 * 60 * 24 * 365
+export { YEAR_IN_SECONDS }
 
 export function supabaseCookieOptions(): CookieOptions {
-  const isProd = process.env.NEXT_PUBLIC_APP_ENV === 'production'
-  return {
-    maxAge: YEAR_IN_SECONDS,
-    sameSite: 'lax',
-    path: '/',
-    ...(isProd ? { domain: '.aireadalong.com' } : {}),
-  }
+  return sharedCookieOptions()
 }
 
 /**

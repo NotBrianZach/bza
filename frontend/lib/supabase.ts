@@ -5,12 +5,17 @@
  * the middleware on every request.
  */
 import { createBrowserClient } from '@supabase/ssr'
+import { supabaseCookieOptions } from './supabaseCookieOptions'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
 // Singleton browser client — cookies are used for session storage automatically.
 export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey, {
+  // Must match what the server writes (middleware + route handlers), or the two
+  // sides end up maintaining two same-named cookies on different domain scopes
+  // and fight over which refresh token is live. See lib/supabaseCookieOptions.ts.
+  cookieOptions: supabaseCookieOptions(),
   auth: {
     // detectSessionInUrl:false prevents _initialize() from auto-detecting the
     // ?code= param and calling _getUser() (which hangs on mobile). The
