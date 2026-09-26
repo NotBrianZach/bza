@@ -22,6 +22,8 @@ interface SpotifyStatus {
   connected: boolean
   isPremium?: boolean
   displayName?: string
+  /** Connected, but the scope grant predates a scope the Web Playback SDK needs. */
+  needsReconnect?: boolean
 }
 
 function ListenPageInner() {
@@ -144,6 +146,20 @@ function ListenPageInner() {
           <div className="mb-6 flex items-start gap-2 p-3 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50">
             <AlertTriangle size={15} className="text-red-500 flex-shrink-0 mt-0.5" />
             <p className="text-sm text-red-600 dark:text-red-400">Spotify did not connect. Try again.</p>
+          </div>
+        )}
+
+        {/* A re-consent is the only way to widen a scope grant; refreshing the
+            token cannot do it, so without this prompt the player just fails. */}
+        {status?.needsReconnect && (
+          <div className="mb-6 flex items-start gap-2 p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50">
+            <AlertTriangle size={15} className="text-amber-500 flex-shrink-0 mt-0.5" />
+            <div className="text-sm text-amber-700 dark:text-amber-300">
+              <p>Your Spotify connection is missing a permission that in-page playback needs.</p>
+              <a href="/api/spotify/auth?returnTo=/listen" className="mt-1 inline-block font-semibold underline hover:no-underline">
+                Reconnect Spotify
+              </a>
+            </div>
           </div>
         )}
 

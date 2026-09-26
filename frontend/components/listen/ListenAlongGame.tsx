@@ -245,7 +245,17 @@ export default function ListenAlongGame({
           </div>
 
           {isPremium && player.error && (
-            <p className="text-[11px] text-amber-600 dark:text-amber-400">{player.error}</p>
+            <div className="text-[11px] text-amber-600 dark:text-amber-400">
+              <p>{player.error}</p>
+              {/* "Invalid token scopes" is the SDK's whole message when the grant is
+                  short — it names no scope and no remedy, so spell one out. Only a
+                  re-consent can widen a grant; refreshing the token cannot. */}
+              {/scope/i.test(player.error) && (
+                <a href="/api/spotify/auth?returnTo=/listen" className="mt-1 inline-block font-semibold underline hover:no-underline">
+                  Reconnect Spotify to fix this
+                </a>
+              )}
+            </div>
           )}
         </aside>
       </div>

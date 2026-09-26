@@ -27,12 +27,44 @@ export const SPOTIFY_REDIRECT_URI =
 //   user-read-private          reads `product`, which gates that playback
 //   user-read-playback-state   reading the active device
 //   user-modify-playback-state PUT /me/player/play
+//   user-read-email            NOT read by us — the Web Playback SDK refuses to
+//                              authenticate without it. It requires the trio
+//                              streaming + user-read-private + user-read-email
+//                              and reports a bare "Invalid token scopes" via
+//                              authentication_error when any is absent, naming
+//                              nothing. The per-endpoint scope table in Spotify's
+//                              docs does not mention this, so the one-caller rule
+//                              above genuinely does not apply here.
 export const SPOTIFY_SCOPES = [
   'streaming',
   'user-read-private',
   'user-read-playback-state',
   'user-modify-playback-state',
+  'user-read-email',
 ].join(' ')
+
+/**
+ * Does this connection carry the scopes the Web Playback SDK demands?
+ *
+ * Refreshing an access token never widens its scope grant — the grant is fixed
+ * when the user consents — so a connection made before `user-read-email` joined
+ * the list above stays broken forever until the user re-consents. Detecting that
+ * is what lets the UI say "reconnect" instead of rendering a player that fails.
+ *
+ * `/v1/me` omits `email` entirely unless user-read-email was granted, which makes
+ * the response itself the scope probe. Preferred over persisting the granted
+ * scope string: nothing can drift out of sync with what Spotify actually thinks.
+ */
+export async function hasPlaybackScopes(userId: string): Promise<boolean | null> {
+  try {
+    const { data } = await spotifyFetch(userId, '/me')
+    return !!data && 'email' in data
+  } catch {
+    // Unknown rather than false — a transient Spotify failure must not nag a
+    // correctly-connected user to reconnect.
+    return null
+  }
+}
 
 interface SpotifyTokenRow {
   user_id: string
