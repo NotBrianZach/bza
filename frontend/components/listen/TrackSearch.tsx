@@ -41,7 +41,10 @@ export default function TrackSearch({
     const mine = ++seq.current
     const timer = setTimeout(async () => {
       try {
-        const res = await authedFetch(`/api/spotify/search?q=${encodeURIComponent(query)}&type=track&limit=12`)
+        // No `limit` — the route owns it. Spotify's real ceiling for this app is
+        // lower than its documented one, so pinning a number here just gives it
+        // somewhere else to drift out of date.
+        const res = await authedFetch(`/api/spotify/search?q=${encodeURIComponent(query)}&type=track`)
         const data = await res.json()
         // A slower earlier request must not overwrite a newer result set.
         if (mine !== seq.current) return

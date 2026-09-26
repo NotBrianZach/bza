@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { SpotifyError, mapPlaylist, mapTrack, spotifyFetch } from '@/lib/spotify-server'
+import { SpotifyError, clampSearchLimit, mapPlaylist, mapTrack, spotifyFetch } from '@/lib/spotify-server'
 import { getRouteUser } from '@/lib/spotify-route-auth'
 
 /**
@@ -18,7 +18,9 @@ export async function GET(req: NextRequest) {
   const url = new URL(req.url)
   const q = url.searchParams.get('q')
   const type = url.searchParams.get('type') === 'playlist' ? 'playlist' : 'track'
-  const limit = Math.min(Number(url.searchParams.get('limit')) || 12, 50)
+  // clampSearchLimit, not Math.min(..., 50): this app's quota tier 400s on
+  // anything above 10 even though Spotify documents 50 as the maximum.
+  const limit = clampSearchLimit(url.searchParams.get('limit'))
 
   if (!q?.trim()) return NextResponse.json(type === 'playlist' ? { playlists: [] } : { tracks: [] })
 

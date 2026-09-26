@@ -288,11 +288,36 @@ export function mapPlaylist(p: any): SpotifyPlaylistRef {
   }
 }
 
-export async function searchTracks(userId: string, q: string, limit = 12): Promise<SpotifyTrackRef[]> {
+/**
+ * Largest `limit` /search will accept for this app.
+ *
+ * Spotify documents the maximum as 50, but this app's quota tier rejects
+ * anything above 10 with 400 "Invalid limit" — measured against the live API: 10
+ * succeeds, 11 fails, and the cap applies to every search type, not just track.
+ * Omitting `limit` returns 5, so the documented default of 20 is not in force
+ * either.
+ *
+ * If the app is ever granted extended quota, raise this — it is the only place
+ * the number lives, and `searchTracks` clamps to it so no caller can exceed it.
+ */
+export const SPOTIFY_SEARCH_MAX_LIMIT = 10
+
+/** Coerce any caller-supplied limit into a range /search will actually accept. */
+export function clampSearchLimit(limit: unknown): number {
+  const n = Math.trunc(Number(limit))
+  if (!Number.isFinite(n) || n < 1) return SPOTIFY_SEARCH_MAX_LIMIT
+  return Math.min(n, SPOTIFY_SEARCH_MAX_LIMIT)
+}
+
+export async function searchTracks(
+  userId: string,
+  q: string,
+  limit: number = SPOTIFY_SEARCH_MAX_LIMIT,
+): Promise<SpotifyTrackRef[]> {
   if (!q.trim()) return []
   const { data } = await spotifyFetch(
     userId,
-    `/search?q=${encodeURIComponent(q.trim())}&type=track&limit=${limit}`,
+    `/search?q=${encodeURIComponent(q.trim())}&type=track&limit=${clampSearchLimit(limit)}`,
   )
   return (data?.tracks?.items ?? []).filter(Boolean).map(mapTrack)
 }
