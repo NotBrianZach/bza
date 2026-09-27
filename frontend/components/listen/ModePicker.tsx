@@ -11,25 +11,46 @@ const JUDGE_LABEL: Record<ListenMode['judge'], string> = {
   narrator: 'Story — an interpreter turns the choice into an event',
 }
 
+const PIECE_ROWS = [
+  ['Your move', 'playerMove'],
+  ['Interpreter', 'interpreter'],
+  ['Response', 'responseRule'],
+  ['Persists', 'worldState'],
+  ['Constraint', 'constraint'],
+  ['Goal', 'goal'],
+] as const
+
 /**
  * Start a new game.
  *
  * Each card shows what a song *is* in that mode and who interprets it, because
  * that pairing is what actually changes play — the same songs produce very
- * different games depending on who gets to read them. The six pieces are one
- * click away rather than hidden.
+ * different games depending on who gets to read them.
+ *
+ * The six pieces are shown by default. They were behind a per-card toggle, but
+ * they are the actual description of the game: choosing between eight modes
+ * means comparing them, and a reader should not have to click eight times to do
+ * that. The toggle survives inverted — as a way to collapse a card you have
+ * already read, so scanning a long list stays possible.
  */
 export default function ModePicker({ onStart, starting }: {
   onStart: (mode: ListenModeId) => void
   starting: ListenModeId | null
 }) {
-  const [open, setOpen] = useState<ListenModeId | null>(null)
+  const [collapsed, setCollapsed] = useState<ReadonlySet<ListenModeId>>(new Set())
+
+  const toggle = (id: ListenModeId) =>
+    setCollapsed(prev => {
+      const next = new Set(prev)
+      if (!next.delete(id)) next.add(id)
+      return next
+    })
 
   return (
     <div className="grid sm:grid-cols-2 gap-3">
       {MODE_LIST.map(mode => {
         const accent = ACCENT_CLASSES[mode.accent]
-        const expanded = open === mode.id
+        const expanded = !collapsed.has(mode.id)
         return (
           <div key={mode.id} className={`rounded-2xl border ${accent.ring} bg-white dark:bg-gray-800 overflow-hidden flex flex-col`}>
             <div className="p-4 flex-1">
@@ -52,32 +73,25 @@ export default function ModePicker({ onStart, starting }: {
                 </div>
               </dl>
 
+              {expanded && (
+                <dl className="mt-3 space-y-2 border-t border-gray-100 dark:border-gray-700 pt-3">
+                  {PIECE_ROWS.map(([label, key]) => (
+                    <div key={label}>
+                      <dt className="text-[10px] uppercase tracking-wide text-gray-400 dark:text-gray-500">{label}</dt>
+                      <dd className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">{mode.pieces[key]}</dd>
+                    </div>
+                  ))}
+                </dl>
+              )}
+
               <button
-                onClick={() => setOpen(o => (o === mode.id ? null : mode.id))}
+                onClick={() => toggle(mode.id)}
                 className="mt-3 flex items-center gap-1 text-[11px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
                 aria-expanded={expanded}
               >
                 <ChevronDown size={12} className={`transition-transform ${expanded ? 'rotate-180' : ''}`} />
                 {expanded ? 'Hide the rules' : 'The six pieces'}
               </button>
-
-              {expanded && (
-                <dl className="mt-3 space-y-2 border-t border-gray-100 dark:border-gray-700 pt-3">
-                  {([
-                    ['Your move', mode.pieces.playerMove],
-                    ['Interpreter', mode.pieces.interpreter],
-                    ['Response', mode.pieces.responseRule],
-                    ['Persists', mode.pieces.worldState],
-                    ['Constraint', mode.pieces.constraint],
-                    ['Goal', mode.pieces.goal],
-                  ] as const).map(([label, text]) => (
-                    <div key={label}>
-                      <dt className="text-[10px] uppercase tracking-wide text-gray-400 dark:text-gray-500">{label}</dt>
-                      <dd className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">{text}</dd>
-                    </div>
-                  ))}
-                </dl>
-              )}
             </div>
 
             <button
