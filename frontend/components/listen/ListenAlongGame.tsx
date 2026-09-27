@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
-  AlertTriangle, ArrowLeft, CheckCircle2, Flag, Globe2, Loader2, RadioTower, SignalZero,
+  AlertTriangle, ArrowLeft, CheckCircle2, Flag, Globe2, Loader2, Pause, Play, RadioTower,
+  SignalZero, SkipBack,
 } from 'lucide-react'
 import { authedFetch } from '@/lib/authedFetch'
 import { track } from '@/lib/analytics'
@@ -50,6 +51,32 @@ export default function ListenAlongGame({
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
   }, [session.id])
+
+  /**
+   * The constructed run, in play order: each legal turn contributes your move
+   * and then the reply it drew.
+   *
+   * Rejected turns are left out — a move that did not connect never joined the
+   * chain, so it should not be in the thing you listen back to. A turn where the
+   * dial missed contributes just the move.
+   */
+  const chain = useMemo(
+    () => turns
+      .filter(t => t.legal)
+      .flatMap(t => [t.move_track, t.reply_track])
+      .filter((t): t is TrackRef => !!t?.uri),
+    [turns],
+  )
+
+  const playChain = useCallback(
+    () => { player.playQueue(chain.map(t => t.uri)) },
+    [chain, player],
+  )
+
+  /** Where in the chain playback currently is, for the "now playing" readout. */
+  const playingIndex = player.state?.uri
+    ? chain.findIndex(t => t.uri === player.state!.uri)
+    : -1
 
   const updateSession = useCallback((next: ListenSession) => {
     setSession(next)
@@ -148,6 +175,46 @@ export default function ListenAlongGame({
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">{mode.pieces.goal}</p>
             </div>
           ) : (
+            <>
+              {/* Listen back to the whole run. Spotify advances the queue itself,
+                  so this plays straight through without a click per song. */}
+              {chain.length > 1 && (
+                <div className="mb-4 flex items-center gap-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2">
+                  {player.ready ? (
+                    <>
+                      <button
+                        onClick={() => (playingIndex >= 0 ? player.toggle() : playChain())}
+                        className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full ${accent.bg} ${accent.text} hover:brightness-95 dark:hover:brightness-110 transition-all`}
+                      >
+                        {playingIndex >= 0 && player.state && !player.state.paused
+                          ? <><Pause size={13} /> Pause</>
+                          : <><Play size={13} /> Play the chain</>}
+                      </button>
+                      <p className="text-[11px] text-gray-500 dark:text-gray-400 min-w-0 truncate">
+                        {playingIndex >= 0
+                          ? `${playingIndex + 1} of ${chain.length} · ${player.state?.trackName}`
+                          : `${chain.length} songs, in order`}
+                      </p>
+                      {playingIndex >= 0 && (
+                        <button
+                          onClick={() => playChain()}
+                          title="Start again from the first song"
+                          className="ml-auto flex-shrink-0 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+                        >
+                          <SkipBack size={13} />
+                        </button>
+                      )}
+                    </>
+                  ) : (
+                    <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                      {isPremium
+                        ? 'Connecting the player — continuous playback will appear here.'
+                        : `${chain.length} songs so far. Playing the chain straight through needs Spotify Premium; without it each song opens in its own player.`}
+                    </p>
+                  )}
+                </div>
+              )}
+
             <ol className="space-y-6 mb-6">
               {turns.map(turn => (
                 <li key={turn.id}>
@@ -155,6 +222,7 @@ export default function ListenAlongGame({
                 </li>
               ))}
             </ol>
+            </>
           )}
 
           {!isOver && (

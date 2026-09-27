@@ -32,8 +32,27 @@ export interface SpotifyPlayer {
   state: PlayerState | null
   error: string
   playTrack: (uri: string) => Promise<void>
+  /**
+   * Play a whole run of tracks back to back.
+   *
+   * Spotify advances the queue itself — `PUT /me/player/play` takes the full
+   * `uris` list — so this needs no end-of-track listener and no timer, and it
+   * keeps playing even while the tab is backgrounded.
+   */
+  playQueue: (uris: string[]) => Promise<void>
   toggle: () => void
 }
+
+/**
+ * How many tracks to hand Spotify at once.
+ *
+ * Spotify does not document a ceiling for `uris`, and this app is on a
+ * restricted quota tier that has already turned out to enforce undocumented
+ * limits elsewhere (search caps at 10, not the documented 50). So cap
+ * conservatively, and tell the caller when the queue was shortened rather than
+ * silently dropping the tail.
+ */
+export const MAX_QUEUE = 50
 
 export function useSpotifyPlayer(enabled: boolean): SpotifyPlayer {
   const [ready, setReady] = useState(false)
@@ -101,18 +120,28 @@ export function useSpotifyPlayer(enabled: boolean): SpotifyPlayer {
     }
   }, [enabled])
 
-  const playTrack = useCallback(async (uri: string) => {
-    if (!ready) return
+  const playQueue = useCallback(async (uris: string[]) => {
+    if (!ready || uris.length === 0) return
+    const queue = uris.slice(0, MAX_QUEUE)
     const res = await fetch('/api/spotify/play', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ uris: [uri], deviceId }),
+      body: JSON.stringify({ uris: queue, deviceId }),
     })
     if (!res.ok) {
       const d = await res.json().catch(() => ({}))
       setError(d.error ?? 'Playback failed')
+      return
     }
+    setError(uris.length > queue.length
+      ? `Playing the first ${queue.length} of ${uris.length} songs.`
+      : '')
   }, [ready, deviceId])
+
+  const playTrack = useCallback(
+    (uri: string) => playQueue([uri]),
+    [playQueue],
+  )
 
   const toggle = useCallback(() => {
     const p = playerRef.current
@@ -124,5 +153,5 @@ export function useSpotifyPlayer(enabled: boolean): SpotifyPlayer {
     })
   }, [])
 
-  return { ready, deviceId, state, error, playTrack, toggle }
+  return { ready, deviceId, state, error, playTrack, playQueue, toggle }
 }
