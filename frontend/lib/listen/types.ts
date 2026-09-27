@@ -22,14 +22,19 @@ export type ListenModeId =
  * Who reads the music. This is the distinction that actually changes play,
  * more than the mode label does:
  *
- *  - 'features'  strict. The link is verified against Spotify metadata, so a
- *                move is legal or it isn't and nobody's opinion enters into it.
  *  - 'player'    social. You judge the connection; the interpreter argues but
  *                does not rule.
  *  - 'narrator'  story. An in-fiction interpreter turns the choice into an
  *                event, and the event sticks.
+ *
+ * There used to be a third kind, 'features', where legality was computed from
+ * Spotify metadata — shared artist, same decade, near-identical length. It was
+ * removed: those are facts *about* a release, not things you hear, and a game
+ * that runs on them is a metadata quiz wearing a music game's clothes. Judging
+ * a connection is now always something somebody does, and `enforcesConstraint`
+ * is what decides whether that judgement can actually stop a move.
  */
-export type Judge = 'features' | 'player' | 'narrator'
+export type Judge = 'player' | 'narrator'
 
 /** The six pieces every mode has to answer for. */
 export interface GamePieces {
@@ -54,6 +59,16 @@ export interface ListenMode {
   /** What a song *is* in this game — a move, an argument, a clue, a key… */
   songIs: string
   judge: Judge
+  /**
+   * Can the interpreter's judgement actually reject a move?
+   *
+   * Most modes read a move and carry on regardless — the reading *is* the
+   * outcome. A mode that sets this is one where the move can simply fail: the
+   * interpreter rules on whether the constraint was met, an illegal move does
+   * not advance the world or the song on the table, and the turn is kept in the
+   * log so the miss stays legible.
+   */
+  enforcesConstraint?: boolean
   pieces: GamePieces
   /** Persona and voice for the interpreter. */
   persona: string
@@ -85,17 +100,6 @@ export interface TrackRef {
   durationMs: number
   popularity: number
   explicit: boolean
-}
-
-/**
- * A verifiable relationship between two tracks, computed from Spotify metadata
- * rather than asserted by the interpreter. Strict modes use these for legality;
- * every mode shows them as evidence under the narration.
- */
-export interface LinkCheck {
-  id: 'artist' | 'album' | 'title-word' | 'decade' | 'year' | 'duration' | 'popularity'
-  label: string
-  detail: string
 }
 
 export interface WorldFact {
@@ -133,7 +137,11 @@ export interface ListenTurn {
   reading: string | null
   narration: string | null
   facts: string[]
-  links: LinkCheck[]
+  /**
+   * False only in modes that set `enforcesConstraint`, when the interpreter
+   * ruled the move did not connect. The row is still written so the miss shows
+   * in the log.
+   */
   legal: boolean
   created_at: string
 }
@@ -152,7 +160,11 @@ export interface Interpretation {
   facts: string[]
   /** Shallow merge into world_state. Never a wholesale rewrite. */
   worldDelta: Record<string, any>
-  /** Strict modes only: did the move satisfy the constraint? */
+  /**
+   * Modes with `enforcesConstraint` only: did the move satisfy the constraint?
+   * Authoritative there — this is the interpreter's ruling, and nothing
+   * recomputes it.
+   */
   verdict?: 'legal' | 'illegal'
 }
 

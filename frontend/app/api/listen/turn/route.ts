@@ -8,7 +8,6 @@ import {
   type SpotifyTrackRef,
 } from '@/lib/spotify-server'
 import { getMode } from '@/lib/listen/modes'
-import { computeLinks } from '@/lib/listen/links'
 import {
   applyWorldDelta,
   buildSystemPrompt,
@@ -25,9 +24,13 @@ import {
  *   1. Re-fetch the move from Spotify by id. The client sends an id, never a
  *      track body — a move has to be a real song and the server is the one that
  *      decides what that song is.
- *   2. Compute the verifiable links against the song on the table. Strict modes
- *      reject a move here, before any model call.
- *   3. Ask the interpreter to read the move and name a reply song.
+ *   2. Ask the interpreter to read the move and name a reply song. In a mode
+ *      that enforces its constraint, the same call rules on whether the move
+ *      connects at all — that ruling is the only one there is. Legality used to
+ *      be computed from Spotify metadata before the model was called; it isn't
+ *      any more, because a shared decade or running time is not something you
+ *      can hear.
+ *   3. (nothing — step 2 covers the reading and the ruling together.)
  *   4. Resolve that reply against Spotify. If nothing matches, the dial missed —
  *      the turn is still recorded, with the query kept so the miss is legible.
  *   5. Persist the turn and the world delta.
@@ -109,7 +112,6 @@ export async function POST(req: NextRequest) {
   const previous: SpotifyTrackRef | null =
     (lastLegal?.reply_track as SpotifyTrackRef | null) ?? (lastLegal?.move_track as SpotifyTrackRef | undefined) ?? null
 
-  const links = computeLinks(move, previous)
   const turnIndex = history.length > 0 ? history[history.length - 1].turn_index + 1 : 0
 
   const inPlay = new Set<string>([move.id])
@@ -117,8 +119,6 @@ export async function POST(req: NextRequest) {
     if (t.move_track?.id) inPlay.add(t.move_track.id)
     if (t.reply_track?.id) inPlay.add(t.reply_track.id)
   }
-
-  const strictReject = mode.judge === 'features' && previous !== null && links.length === 0
 
   // --- 3. The interpreter --------------------------------------------------
   const world = (session.world_state ?? {}) as Record<string, any>
@@ -128,7 +128,6 @@ export async function POST(req: NextRequest) {
     world,
     history: history.map(({ legal, ...t }) => t),
     move,
-    links,
     previous,
     prediction: prediction?.trim() || null,
     turnIndex,
@@ -173,9 +172,14 @@ export async function POST(req: NextRequest) {
 
   logUsage(userId, 0.004, { model: modelId, endpoint: 'listen-turn' })
 
-  // The metadata check is authoritative in strict modes — the model does not get
-  // to overrule it in either direction.
-  const legal = strictReject ? false : true
+  // In a mode that enforces its constraint the interpreter's verdict is the
+  // ruling — there is no second opinion to reconcile it against now that
+  // legality is not computed from metadata. An opening move has nothing to
+  // connect to, so it cannot be illegal, and a mode that never gatekeeps is
+  // always legal regardless of what the model volunteers.
+  const legal = mode.enforcesConstraint && previous !== null
+    ? interpretation.verdict !== 'illegal'
+    : true
 
   // --- 4. Resolve the reply to a real song --------------------------------
   let reply: SpotifyTrackRef | null = null
@@ -199,7 +203,6 @@ export async function POST(req: NextRequest) {
       reading: interpretation.reading,
       narration: interpretation.narration,
       facts: interpretation.facts,
-      links,
       legal,
     })
     .select()

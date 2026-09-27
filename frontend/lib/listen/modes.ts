@@ -57,35 +57,43 @@ export const MODES: Record<ListenModeId, ListenMode> = {
   tag: {
     id: 'tag',
     name: 'Tag',
-    tagline: 'Answer the last song with one that is provably linked to it.',
-    songIs: 'A move the next player must connect to',
-    judge: 'features',
+    tagline: 'Answer the last song with one that genuinely follows from it — and say nothing.',
+    songIs: 'A move the next song has to answer',
+    judge: 'narrator',
+    enforcesConstraint: true,
     accent: 'emerald',
     pieces: {
-      playerMove: 'A song linked to the one on the table.',
-      interpreter: 'Spotify metadata. The link is checked, not argued.',
-      responseRule: 'A real song that is linked to yours in a different way than you linked to the last one.',
-      worldState: 'The chain so far, and which kinds of link are used up.',
-      constraint: 'The link must be verifiable — shared artist, album, title word, year, decade, or length. Your reading of the mood does not count.',
-      goal: 'Keep the chain alive, and make each link a different kind from the last.',
+      playerMove: 'A song that follows from the one on the table.',
+      interpreter: 'A referee who listens. The connection has to be audible, not filed.',
+      responseRule: 'A real song that answers yours along a different thread than the one you just used.',
+      worldState: 'The chain so far, and which kinds of connection are spent.',
+      constraint:
+        'The connection has to be one a listener could hear or recognise — a sound, a scene, a lineage, ' +
+        'a phrase, a subject, a way of using the voice. Shared release year or track length is not a ' +
+        'connection; it is a coincidence of filing.',
+      goal: 'Keep the chain alive, and never use the same kind of connection twice in a row.',
     },
     persona:
-      'You are a referee with a good ear. You state the link that was found, dryly and exactly, then ' +
-      'play your own answer. You never flatter a move. When a move only barely qualifies, you say so.',
+      'You are a referee with a good ear and no patience for cleverness that does not sound like ' +
+      'anything. You name the thread you actually hear between two songs, in one dry sentence, then ' +
+      'play your own answer. You never flatter a move. When a move only barely holds, you say so. When ' +
+      'it does not hold at all you say that too, plainly, without apologising and without softening it ' +
+      'into a maybe. You never appeal to release dates, chart position or running time — if that is all ' +
+      'two songs share, they share nothing.',
     replyRule:
-      'Your reply must be a real song that shares at least one checkable property with the move — same ' +
-      'artist, same album, a word in the title, the same year or decade, or near-identical length — and ' +
-      'it must use a different kind of link than the move just used. Name the link you are using.',
+      'Your reply must be a real song that genuinely follows from the move along some audible thread — ' +
+      'its sound, its scene, its lineage, a phrase or subject it shares, the way it is sung. It must use ' +
+      'a different kind of thread than the move just used. Name the thread you are using in one phrase.',
     worldKeys: [
       { key: 'chain', description: 'The ordered chain of songs played.' },
-      { key: 'linksUsed', description: 'Kinds of link already spent, newest last.' },
+      { key: 'threadsUsed', description: 'Kinds of connection already spent, newest last.' },
     ],
     seedWorld: {
       chain: [],
-      linksUsed: [],
+      threadsUsed: [],
       facts: [],
     },
-    openingPrompt: 'Open the chain with any song. From the next move on, every link gets checked.',
+    openingPrompt: 'Open the chain with any song. From the next move on, the connection has to hold.',
   },
 
   duel: {
@@ -328,9 +336,9 @@ export function getMode(id: string): ListenMode | null {
   return (MODES as Record<string, ListenMode>)[id] ?? null
 }
 
-/** Modes where a move can be rejected outright by a metadata check. */
+/** Modes where a move can be rejected outright rather than merely read. */
 export function isStrict(mode: ListenMode): boolean {
-  return mode.judge === 'features'
+  return mode.enforcesConstraint === true
 }
 
 /** Modes that ask the player for a prediction alongside the move. */

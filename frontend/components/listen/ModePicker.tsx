@@ -6,10 +6,12 @@ import { ACCENT_CLASSES, MODE_LIST } from '@/lib/listen/modes'
 import type { ListenMode, ListenModeId } from '@/lib/listen/types'
 
 const JUDGE_LABEL: Record<ListenMode['judge'], string> = {
-  features: 'Strict — the link is checked against Spotify metadata',
   player: 'Social — you judge the connection',
   narrator: 'Story — an interpreter turns the choice into an event',
 }
+
+/** Modes that can actually reject a move get a second line saying so. */
+const ENFORCED_LABEL = 'Strict — a move that does not connect is turned away'
 
 const PIECE_ROWS = [
   ['Your move', 'playerMove'],
@@ -69,7 +71,12 @@ export default function ModePicker({ onStart, starting }: {
                 </div>
                 <div className="flex gap-2 text-xs">
                   <dt className="text-gray-400 dark:text-gray-500 flex-shrink-0 w-20">Read by</dt>
-                  <dd className="text-gray-700 dark:text-gray-300">{JUDGE_LABEL[mode.judge]}</dd>
+                  <dd className="text-gray-700 dark:text-gray-300">
+                    {JUDGE_LABEL[mode.judge]}
+                    {mode.enforcesConstraint && (
+                      <span className="block text-gray-500 dark:text-gray-400 mt-0.5">{ENFORCED_LABEL}</span>
+                    )}
+                  </dd>
                 </div>
               </dl>
 

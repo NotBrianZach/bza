@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
-  AlertTriangle, ArrowLeft, CheckCircle2, Flag, Globe2, Link2, Loader2, RadioTower, SignalZero,
+  AlertTriangle, ArrowLeft, CheckCircle2, Flag, Globe2, Loader2, RadioTower, SignalZero,
 } from 'lucide-react'
 import { authedFetch } from '@/lib/authedFetch'
 import { track } from '@/lib/analytics'
@@ -273,7 +273,7 @@ function TurnBlock({ turn, player, accentText }: {
     return (
       <div className="rounded-2xl border border-dashed border-red-200 dark:border-red-900/50 bg-red-50/50 dark:bg-red-950/20 p-4">
         <p className="flex items-center gap-1.5 text-[11px] font-medium text-red-600 dark:text-red-400 mb-3">
-          <SignalZero size={13} /> Turn {turn.turn_index + 1} — move rejected, nothing links
+          <SignalZero size={13} /> Turn {turn.turn_index + 1} — move rejected, the connection did not hold
         </p>
         <TrackCard track={turn.move_track} player={player} label="you played" compact />
         {turn.reading && <p className="mt-3 text-sm text-gray-600 dark:text-gray-300 leading-relaxed">{turn.reading}</p>}
@@ -288,19 +288,9 @@ function TurnBlock({ turn, player, accentText }: {
 
       <TrackCard track={turn.move_track} player={player} label="you sent" />
 
-      {turn.links.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 pl-1">
-          {turn.links.map(l => (
-            <span
-              key={l.id}
-              title={l.detail}
-              className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
-            >
-              <Link2 size={9} /> {l.label}
-            </span>
-          ))}
-        </div>
-      )}
+      {/* The metadata link chips ("Same decade", "Equally well known") used to sit
+          here. They are gone with the metadata itself — the thread between two
+          songs is now named in the reading below, in words, by whoever heard it. */}
 
       {turn.reading && (
         <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed pl-1 italic">{turn.reading}</p>

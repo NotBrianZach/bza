@@ -4,8 +4,7 @@
  * model, so the mode registry stays declarative.
  */
 
-import type { Interpretation, LinkCheck, ListenMode, TrackRef } from './types'
-import { describeLinks } from './links'
+import type { Interpretation, ListenMode, TrackRef } from './types'
 
 /** A previous turn, trimmed to what the interpreter needs to stay consistent. */
 export interface TurnContext {
@@ -67,7 +66,7 @@ markdown fence. Schema:
   "replyQuery": "Artist — Title",
   "replyReason": "why that song answers this move, one sentence.",
   "facts": ["at most two new durable statements"],
-  "worldDelta": { "only": "changed keys" }${mode.judge === 'features' ? ',\n  "verdict": "legal" | "illegal"' : ''}
+  "worldDelta": { "only": "changed keys" }${mode.enforcesConstraint ? ',\n  "verdict": "legal" | "illegal"' : ''}
 }`
 }
 
@@ -76,12 +75,11 @@ export function buildUserPrompt(opts: {
   world: Record<string, any>
   history: TurnContext[]
   move: TrackRef
-  links: LinkCheck[]
   previous: TrackRef | null
   prediction?: string | null
   turnIndex: number
 }): string {
-  const { mode, world, history, move, links, previous, prediction, turnIndex } = opts
+  const { mode, world, history, move, previous, prediction, turnIndex } = opts
   const parts: string[] = []
 
   parts.push(`WORLD STATE (turn ${turnIndex})\n${JSON.stringify(world, null, 2)}`)
@@ -98,19 +96,34 @@ export function buildUserPrompt(opts: {
     parts.push(`RECENT TURNS\n${log}`)
   }
 
-  parts.push(`THE PLAYER'S MOVE\n${trackLine(move)}\nDuration ${Math.round(move.durationMs / 1000)}s · popularity ${move.popularity}/100${move.explicit ? ' · explicit' : ''}`)
+  // Identity only — title, artist, album, year. Deliberately no duration or
+  // popularity: those were fed to the interpreter when legality was computed
+  // from Spotify metadata, and inviting it to reason about them is what made
+  // "same decade" and "similar running time" feel like moves in the game.
+  parts.push(`THE PLAYER'S MOVE\n${trackLine(move)}${move.explicit ? ' · explicit' : ''}`)
 
   if (previous) {
-    parts.push(
-      `VERIFIED LINKS between this move and the song on the table (${trackLine(previous)}):\n` +
-      `${describeLinks(links)}\n` +
-      `These were computed from Spotify metadata. Treat them as fact; do not claim links that are not listed.`,
-    )
-    if (mode.judge === 'features') {
+    parts.push(`THE SONG ON THE TABLE\n${trackLine(previous)}`)
+
+    if (mode.enforcesConstraint) {
+      const spent = Array.isArray(world.threadsUsed) ? world.threadsUsed.filter((t: any) => typeof t === 'string') : []
       parts.push(
-        links.length === 0
-          ? 'No link holds, so this move is illegal under the constraint. Set verdict to "illegal", say plainly which link the player seemed to be reaching for and why it does not hold, and do not extend the chain — leave replyQuery as an empty string.'
-          : 'At least one link holds, so the move is legal. Set verdict to "legal" and name the link you are treating as the connection.',
+        `RULING ON THE MOVE\nDecide, from what you know of these two records, whether the move genuinely ` +
+        `follows from the song on the table. You are the judge — nothing has been computed for you.\n` +
+        `- The connection must be one a listener could hear or recognise: a sound, a scene, a lineage, a ` +
+        `shared phrase or subject, a way of using the voice.\n` +
+        `- A shared release year, a similar running time, or comparable popularity is NOT a connection. ` +
+        `If that is all they share, rule it illegal.\n` +
+        `- Do not invent a connection to be generous, and do not reject a real one for being obvious.` +
+        (spent.length > 0
+          ? `\n- Threads already spent (a move may not reuse the most recent one): ${spent.join(', ')}.`
+          : ''),
+      )
+      parts.push(
+        `If it holds: set verdict to "legal", name the thread in your reading, append that kind to ` +
+        `threadsUsed in your worldDelta, and play your answer.\n` +
+        `If it does not hold: set verdict to "illegal", say plainly what the player seemed to be reaching ` +
+        `for and why it does not carry, leave replyQuery as an empty string, and do not extend the chain.`,
       )
     }
   }

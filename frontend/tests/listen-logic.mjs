@@ -3,11 +3,14 @@
  * Unit checks for the AI Listen Along game logic.
  *
  * Covers the parts of the section that are pure and mechanical, and therefore
- * the parts a regression would hide in: the verifiable link checks that decide
- * legality in strict modes, the tolerant JSON parse that stands between a model
- * response and the database, the world-state merge that guarantees established
- * facts accumulate rather than get overwritten, and the mode registry's own
- * internal consistency.
+ * the parts a regression would hide in: the tolerant JSON parse that stands
+ * between a model response and the database, the world-state merge that
+ * guarantees established facts accumulate rather than get overwritten, and the
+ * mode registry's own internal consistency.
+ *
+ * There used to be a computeLinks group here, covering the Spotify-metadata link
+ * checks that decided legality in strict modes. Both are gone: legality is now
+ * the interpreter's ruling, which is not mechanical and so is not testable here.
  *
  * Nothing here touches the network — no Spotify, no interpreter. The turn route
  * itself is covered by playing a game in the browser.
@@ -32,7 +35,7 @@ const outDir = mkdtempSync(join(tmpdir(), 'listen-logic-'))
 
 function build() {
   const tsc = join(FRONTEND, 'node_modules', 'typescript', 'bin', 'tsc')
-  const entries = ['links', 'prompt', 'modes'].map(n => join('lib', 'listen', `${n}.ts`))
+  const entries = ['prompt', 'modes'].map(n => join('lib', 'listen', `${n}.ts`))
   try {
     execFileSync(process.execPath, [
       tsc, ...entries,
@@ -51,14 +54,12 @@ function build() {
   }
   const require = createRequire(import.meta.url)
   return {
-    links: require(join(outDir, 'links.js')),
     prompt: require(join(outDir, 'prompt.js')),
     modes: require(join(outDir, 'modes.js')),
   }
 }
 
-const { links: L, prompt: P, modes: M } = build()
-const { computeLinks, describeLinks } = L
+const { prompt: P, modes: M } = build()
 const { parseJsonObject, normalizeInterpretation, applyWorldDelta } = P
 const { MODE_LIST, MODES, getMode } = M
 
@@ -69,52 +70,6 @@ function t(name, cond, extra = '') {
   else { failures.push(name); console.log(`  ✗ ${name}${extra ? ` :: ${extra}` : ''}`) }
 }
 const group = name => console.log(`\n${name}`)
-
-/** A track with sane defaults, so each case only states what it is testing. */
-const mk = o => ({
-  id: o.id,
-  name: o.name,
-  artist: o.artist ?? 'Some Artist',
-  artistIds: o.artistIds ?? ['artist-default'],
-  album: o.album ?? 'Some Album',
-  albumId: o.albumId ?? 'album-default',
-  releaseDate: o.releaseDate ?? '2001-01-01',
-  uri: `spotify:track:${o.id}`,
-  url: null,
-  image: null,
-  previewUrl: null,
-  durationMs: o.durationMs ?? 200_000,
-  popularity: o.popularity ?? 50,
-  explicit: false,
-})
-
-// Two genuinely unrelated tracks: different artist, album, decade, length, reach.
-const ROSE = mk({ id: 'rose', name: 'Rose Nebula', artist: 'Pram', artistIds: ['pram'], albumId: 'alb-a', releaseDate: '1998-03-01', durationMs: 240_000, popularity: 20 })
-const ERROR = mk({ id: 'err', name: 'A New Error', artist: 'Moderat', artistIds: ['moderat'], albumId: 'alb-b', releaseDate: '2009-05-01', durationMs: 300_000, popularity: 60 })
-/** Shares nothing with ROSE on any axis — the baseline for "no link holds". */
-const unrelatedTo = o => mk({ albumId: 'alb-z', releaseDate: '1970-01-01', durationMs: 1_000, popularity: 99, artistIds: ['nobody'], ...o })
-
-group('computeLinks — legality in strict modes')
-t('an opening move has no previous track to link to', computeLinks(ROSE, null).length === 0)
-t('unrelated tracks share nothing checkable', computeLinks(ROSE, ERROR).length === 0, describeLinks(computeLinks(ROSE, ERROR)))
-t('same artist is a link', computeLinks(unrelatedTo({ id: 'x', name: 'Zzz', artistIds: ['pram'] }), ROSE).some(l => l.id === 'artist'))
-t('same album is a link', computeLinks(unrelatedTo({ id: 'x', name: 'Zzz', albumId: 'alb-a' }), ROSE).some(l => l.id === 'album'))
-t('a shared title word is a link', computeLinks(unrelatedTo({ id: 'x', name: 'Nebula Drift' }), ROSE).some(l => l.id === 'title-word'))
-t('stopwords and short words are not a title link', !computeLinks(
-  unrelatedTo({ id: 'x', name: 'The It Of A' }),
-  mk({ id: 'y', name: 'A Of The It', artistIds: ['nobody2'], albumId: 'alb-y', releaseDate: '1955-01-01', durationMs: 5_000, popularity: 7 }),
-).some(l => l.id === 'title-word'))
-t('remaster suffixes are stripped before matching', computeLinks(unrelatedTo({ id: 'x', name: 'Nebula (2011 Remaster)' }), ROSE).some(l => l.id === 'title-word'))
-t('dash suffixes are stripped before matching', computeLinks(unrelatedTo({ id: 'x', name: 'Nebula - Live at Home' }), ROSE).some(l => l.id === 'title-word'))
-t('same decade is a link', computeLinks(unrelatedTo({ id: 'x', name: 'Zzz', releaseDate: '1994-01-01' }), ROSE).some(l => l.id === 'decade'))
-t('same year reports as year, not decade', (() => {
-  const ls = computeLinks(unrelatedTo({ id: 'x', name: 'Zzz', releaseDate: '1998-11-01' }), ROSE)
-  return ls.some(l => l.id === 'year') && !ls.some(l => l.id === 'decade')
-})())
-t('near-identical length is a link', computeLinks(unrelatedTo({ id: 'x', name: 'Zzz', durationMs: 245_000 }), ROSE).some(l => l.id === 'duration'))
-t('a 40-second gap is not a length link', !computeLinks(unrelatedTo({ id: 'x', name: 'Zzz', durationMs: 280_000 }), ROSE).some(l => l.id === 'duration'))
-t('comparable popularity is a link', computeLinks(unrelatedTo({ id: 'x', name: 'Zzz', popularity: 22 }), ROSE).some(l => l.id === 'popularity'))
-t('describeLinks reports an empty set as none', describeLinks([]) === 'none')
 
 group('parseJsonObject — surviving what models actually return')
 t('a bare object', parseJsonObject('{"a":1}')?.a === 1)
@@ -158,8 +113,11 @@ t('every declared world key is seeded', MODE_LIST.every(m => m.worldKeys.every(k
 t('every mode answers all six pieces', MODE_LIST.every(m =>
   ['playerMove', 'interpreter', 'responseRule', 'worldState', 'constraint', 'goal'].every(k => typeof m.pieces[k] === 'string' && m.pieces[k].length > 0)))
 t('every mode has a persona and a reply rule', MODE_LIST.every(m => m.persona.length > 0 && m.replyRule.length > 0))
-t('every judge is one of the three kinds', MODE_LIST.every(m => ['features', 'player', 'narrator'].includes(m.judge)))
-t('all three interpretation kinds are represented', new Set(MODE_LIST.map(m => m.judge)).size === 3)
+t('every judge is one of the two kinds', MODE_LIST.every(m => ['player', 'narrator'].includes(m.judge)))
+t('both interpretation kinds are represented', new Set(MODE_LIST.map(m => m.judge)).size === 2)
+t('no mode judges on Spotify metadata any more', MODE_LIST.every(m => m.judge !== 'features'))
+t('a mode that enforces its constraint exists', MODE_LIST.some(m => m.enforcesConstraint === true))
+t('enforcesConstraint is boolean-or-absent', MODE_LIST.every(m => m.enforcesConstraint === undefined || typeof m.enforcesConstraint === 'boolean'))
 t('an unknown mode id yields null', getMode('no-such-mode') === null)
 
 rmSync(outDir, { recursive: true, force: true })
