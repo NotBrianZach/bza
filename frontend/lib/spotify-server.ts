@@ -27,6 +27,7 @@ export const SPOTIFY_REDIRECT_URI =
 //   user-read-private          reads `product`, which gates that playback
 //   user-read-playback-state   reading the active device
 //   user-modify-playback-state PUT /me/player/play
+//   playlist-modify-private    createPlaylist, for exporting a game's chain
 //   user-read-email            NOT read by us — the Web Playback SDK refuses to
 //                              authenticate without it. It requires the trio
 //                              streaming + user-read-private + user-read-email
@@ -41,19 +42,26 @@ export const SPOTIFY_SCOPES = [
   'user-read-playback-state',
   'user-modify-playback-state',
   'user-read-email',
+  'playlist-modify-private',
 ].join(' ')
 
 /**
- * Does this connection carry the scopes the Web Playback SDK demands?
+ * Was this connection granted the current scope list?
  *
  * Refreshing an access token never widens its scope grant — the grant is fixed
- * when the user consents — so a connection made before `user-read-email` joined
- * the list above stays broken forever until the user re-consents. Detecting that
- * is what lets the UI say "reconnect" instead of rendering a player that fails.
+ * when the user consents — so a connection made before a scope joined the list
+ * above stays short forever until the user re-consents. Detecting that is what
+ * lets the UI say "reconnect" instead of rendering a player that fails or an
+ * export that 403s.
  *
  * `/v1/me` omits `email` entirely unless user-read-email was granted, which makes
- * the response itself the scope probe. Preferred over persisting the granted
- * scope string: nothing can drift out of sync with what Spotify actually thinks.
+ * the response itself the probe. Preferred over persisting the granted scope
+ * string: nothing can drift out of sync with what Spotify actually thinks.
+ *
+ * user-read-email and playlist-modify-private were added at the same time, so
+ * this one probe answers for both. If a scope is ever added *without* a companion
+ * observable in `/v1/me`, this stops being a complete check — persist the granted
+ * `scope` string from the token response at that point.
  */
 export async function hasPlaybackScopes(userId: string): Promise<boolean | null> {
   try {
@@ -307,6 +315,52 @@ export function clampSearchLimit(limit: unknown): number {
   const n = Math.trunc(Number(limit))
   if (!Number.isFinite(n) || n < 1) return SPOTIFY_SEARCH_MAX_LIMIT
   return Math.min(n, SPOTIFY_SEARCH_MAX_LIMIT)
+}
+
+/** Spotify accepts at most 100 items per add-to-playlist request. */
+const PLAYLIST_ADD_CHUNK = 100
+
+/**
+ * Create a private playlist in the user's account and fill it.
+ *
+ * This is the one place the app *writes* to someone's Spotify account, which is
+ * why the playlist is private: it is a game artifact, and it should not appear on
+ * a profile unless its owner decides to make it public in Spotify.
+ *
+ * Also the answer to continuous playback for free accounts. In-page playback is
+ * premium-only and Spotify no longer exposes preview clips to this app, so there
+ * is no audio here to chain — but a real playlist plays straight through in
+ * Spotify's own client, on any tier.
+ */
+export async function createPlaylist(userId: string, opts: {
+  name: string
+  description?: string
+  uris: string[]
+}): Promise<SpotifyPlaylistRef> {
+  const { data: created } = await spotifyFetch(userId, '/me/playlists', {
+    method: 'POST',
+    body: JSON.stringify({
+      name: opts.name.slice(0, 100),
+      // Spotify silently truncates past 300; clip it ourselves so what we send
+      // is what lands.
+      description: (opts.description ?? '').slice(0, 300),
+      public: false,
+    }),
+  })
+  if (!created?.id) throw new SpotifyError('Spotify did not return a playlist', 502)
+
+  // Chunked because of the 100-item cap, and sequential because order is the
+  // point — a parallel fan-out could append out of sequence.
+  for (let i = 0; i < opts.uris.length; i += PLAYLIST_ADD_CHUNK) {
+    await spotifyFetch(userId, `/playlists/${created.id}/tracks`, {
+      method: 'POST',
+      body: JSON.stringify({ uris: opts.uris.slice(i, i + PLAYLIST_ADD_CHUNK) }),
+    })
+  }
+
+  // Re-map rather than trusting `created.tracks.total`, which is 0 in the create
+  // response — the tracks had not been added yet when it was generated.
+  return { ...mapPlaylist(created), tracks: opts.uris.length }
 }
 
 export async function searchTracks(

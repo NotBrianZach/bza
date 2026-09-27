@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
-  AlertTriangle, ArrowLeft, CheckCircle2, Flag, Globe2, Loader2, Pause, Play, RadioTower,
-  SignalZero, SkipBack,
+  AlertTriangle, ArrowLeft, CheckCircle2, Flag, Globe2, ListPlus, Loader2, Pause, Play,
+  RadioTower, SignalZero, SkipBack,
 } from 'lucide-react'
 import { authedFetch } from '@/lib/authedFetch'
 import { track } from '@/lib/analytics'
@@ -38,6 +38,10 @@ export default function ListenAlongGame({
   const [pending, setPending] = useState(false)
   const [error, setError] = useState('')
   const [prediction, setPrediction] = useState('')
+  const [exporting, setExporting] = useState(false)
+  const [exportError, setExportError] = useState('')
+  /** The playlist this chain was saved to, once it has been. */
+  const [exported, setExported] = useState<{ name: string; url: string | null } | null>(null)
 
   const player = useSpotifyPlayer(isPremium)
   const mode = getMode(session.mode)
@@ -77,6 +81,37 @@ export default function ListenAlongGame({
   const playingIndex = player.state?.uri
     ? chain.findIndex(t => t.uri === player.state!.uri)
     : -1
+
+  // Playing another turn makes a saved playlist stale — it no longer matches the
+  // chain. Drop the confirmation so the offer to save comes back rather than
+  // leaving a link that quietly points at an older version of the game.
+  useEffect(() => { setExported(null) }, [chain.length])
+
+  const exportChain = useCallback(async () => {
+    setExporting(true)
+    setExportError('')
+    try {
+      const res = await authedFetch('/api/spotify/playlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: session.title,
+          description:
+            `${mode?.name ?? 'Listen Along'} · ${chain.length} songs, in the order they were played. ` +
+            `Built at aireadalong.com/listen.`,
+          uris: chain.map(t => t.uri),
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Could not save the playlist')
+      setExported(data.playlist)
+      track('listen_chain_exported', { mode: session.mode, songs: data.exported })
+    } catch (e: any) {
+      setExportError(e?.message ?? 'Could not save the playlist')
+    } finally {
+      setExporting(false)
+    }
+  }, [chain, session.title, session.mode, mode?.name])
 
   const updateSession = useCallback((next: ListenSession) => {
     setSession(next)
@@ -209,10 +244,42 @@ export default function ListenAlongGame({
                     <p className="text-[11px] text-gray-500 dark:text-gray-400">
                       {isPremium
                         ? 'Connecting the player — continuous playback will appear here.'
-                        : `${chain.length} songs so far. Playing the chain straight through needs Spotify Premium; without it each song opens in its own player.`}
+                        : `${chain.length} songs so far. In-page playback needs Premium, but you can send the chain to Spotify and play it there.`}
                     </p>
                   )}
+
+                  {/* Export is open to every tier on purpose: for a free account
+                      this is the only route to continuous playback. */}
+                  <div className="ml-auto flex items-center gap-2 flex-shrink-0">
+                    {exported ? (
+                      <a
+                        href={exported.url ?? undefined}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1.5 text-[11px] font-medium text-green-600 dark:text-green-400 hover:underline"
+                      >
+                        <CheckCircle2 size={13} /> Open “{exported.name}” in Spotify
+                      </a>
+                    ) : (
+                      <button
+                        onClick={exportChain}
+                        disabled={exporting}
+                        title="Save this chain as a private Spotify playlist"
+                        className="flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1.5 rounded-full border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
+                      >
+                        {exporting
+                          ? <><Loader2 size={12} className="animate-spin" /> Saving…</>
+                          : <><ListPlus size={12} /> Save to Spotify</>}
+                      </button>
+                    )}
+                  </div>
                 </div>
+              )}
+
+              {exportError && (
+                <p className="mb-4 flex items-start gap-1.5 text-[11px] text-amber-600 dark:text-amber-400">
+                  <AlertTriangle size={12} className="flex-shrink-0 mt-0.5" /> {exportError}
+                </p>
               )}
 
             <ol className="space-y-6 mb-6">
