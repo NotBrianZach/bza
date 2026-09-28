@@ -44,4 +44,8 @@ if [ "$SKIP_VERIFY" = true ] || [ "$TARGET" != "production" ]; then
 fi
 
 echo "→ Verifying live sha matches graph"
-templedb reconcile deployment bza --url https://aireadalong.com/api/version
+# Was `templedb reconcile deployment bza --url …`, which is not a subcommand —
+# reconcile only has machine/history/schedule, so every production deploy ended in
+# a red "Unknown command: deployment" *after* succeeding. verify-live-sha.sh is the
+# thing that actually performs this check.
+exec bash "$SCRIPT_DIR/verify-live-sha.sh" https://aireadalong.com/api/version

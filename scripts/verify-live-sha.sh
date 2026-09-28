@@ -23,7 +23,10 @@ if [ -z "$resp" ]; then
   exit 2
 fi
 
-actual=$(printf '%s' "$resp" | python3 -c 'import sys, json; print(json.load(sys.stdin).get("sha", "unknown"))' 2>/dev/null || echo unknown)
+# node rather than python3: this is a Node project so node is always present,
+# whereas python3 is not reliably on PATH — and the `|| echo unknown` below turns a
+# missing interpreter into a MISMATCH that looks like a failed deploy.
+actual=$(printf '%s' "$resp" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{console.log(JSON.parse(s).sha||"unknown")}catch{console.log("unknown")}})' 2>/dev/null || echo unknown)
 
 if [ "$actual" = "unknown" ]; then
   echo "MISMATCH: endpoint returned sha=unknown (BUILD_SHA not injected at build)" >&2
