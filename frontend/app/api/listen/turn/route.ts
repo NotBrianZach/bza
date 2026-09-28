@@ -1,12 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { getUserFromToken, checkQuota, logUsage } from '@/lib/apiQuota'
-import {
-  SpotifyError,
-  getTrack,
-  resolveTrack,
-  type SpotifyTrackRef,
-} from '@/lib/spotify-server'
+import { MusicError, lookupTrack, resolveTrack } from '@/lib/music/itunes'
+import type { TrackRef } from '@/lib/listen/types'
 import { getMode } from '@/lib/listen/modes'
 import {
   applyWorldDelta,
@@ -21,7 +17,7 @@ import {
  * Play one turn of a Listen Along music game.
  *
  * The turn loop, in order:
- *   1. Re-fetch the move from Spotify by id. The client sends an id, never a
+ *   1. Re-fetch the move from the music provider by id. The client sends an id, never a
  *      track body — a move has to be a real song and the server is the one that
  *      decides what that song is.
  *   2. Ask the interpreter to read the move and name a reply song. In a mode
@@ -31,7 +27,7 @@ import {
  *      any more, because a shared decade or running time is not something you
  *      can hear.
  *   3. (nothing — step 2 covers the reading and the ruling together.)
- *   4. Resolve that reply against Spotify. If nothing matches, the dial missed —
+ *   4. Resolve that reply against the music provider. If nothing matches, the dial missed —
  *      the turn is still recorded, with the query kept so the miss is legible.
  *   5. Persist the turn and the world delta.
  *
@@ -84,20 +80,20 @@ export async function POST(req: NextRequest) {
   if (!session) return err('Session not found', 404)
   if (session.status !== 'active') return err('This game is finished', 409)
 
-  // --- 1. The move, as Spotify has it -------------------------------------
-  let move: SpotifyTrackRef | null
+  // --- 1. The move, as the provider has it -------------------------------------
+  let move: TrackRef | null
   try {
-    move = await getTrack(userId, trackId)
+    move = await lookupTrack(trackId)
   } catch (e) {
-    if (e instanceof SpotifyError) return err(e.message, e.status)
+    if (e instanceof MusicError) return err(e.message, e.status)
     throw e
   }
-  if (!move) return err('That track could not be found on Spotify', 404)
+  if (!move) return err('That track could not be found', 404)
 
   const mode = getMode(session.mode)
   if (!mode) return err(`Unknown game mode "${session.mode}"`, 500)
 
-  // --- 2. Context and verifiable links ------------------------------------
+  // --- 2. Context -----------------------------------------------------------
   const { data: historyRows } = await ((db.from('listen_turns') as any)
     .select('turn_index, move_track, reply_track, reading, narration, legal')
     .eq('session_id', sessionId)
@@ -109,8 +105,8 @@ export async function POST(req: NextRequest) {
   // The song on the table is the last *legal* exchange's reply, falling back to
   // that turn's move when the dial missed. An illegal move does not advance it.
   const lastLegal = [...history].reverse().find(t => t.legal)
-  const previous: SpotifyTrackRef | null =
-    (lastLegal?.reply_track as SpotifyTrackRef | null) ?? (lastLegal?.move_track as SpotifyTrackRef | undefined) ?? null
+  const previous: TrackRef | null =
+    (lastLegal?.reply_track as TrackRef | null) ?? (lastLegal?.move_track as TrackRef | undefined) ?? null
 
   const turnIndex = history.length > 0 ? history[history.length - 1].turn_index + 1 : 0
 
@@ -182,12 +178,14 @@ export async function POST(req: NextRequest) {
     : true
 
   // --- 4. Resolve the reply to a real song --------------------------------
-  let reply: SpotifyTrackRef | null = null
+  let reply: TrackRef | null = null
   if (legal && interpretation.replyQuery) {
     try {
-      reply = await resolveTrack(userId, interpretation.replyQuery, [...inPlay])
+      reply = await resolveTrack(interpretation.replyQuery, [...inPlay])
     } catch (e) {
-      if (e instanceof SpotifyError && e.status === 403) return err(e.message, 403)
+      // Rate-limited upstream is worth surfacing; anything else just means the
+      // dial missed, which is a legal outcome the turn records.
+      if (e instanceof MusicError && e.status === 429) return err(e.message, 429)
     }
   }
 

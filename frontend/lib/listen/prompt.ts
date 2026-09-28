@@ -17,7 +17,9 @@ export interface TurnContext {
 
 function trackLine(t: TrackRef): string {
   const year = t.releaseDate?.slice(0, 4) ?? '????'
-  return `"${t.name}" — ${t.artist} (${t.album}, ${year})`
+  // Genre is included because it is something you could plausibly hear, unlike
+  // the popularity and duration numbers this line used to carry.
+  return `"${t.name}" — ${t.artist} (${t.album}, ${year}${t.genre ? `, ${t.genre}` : ''})`
 }
 
 export function buildSystemPrompt(mode: ListenMode): string {
@@ -41,7 +43,7 @@ THE RULES YOU ENFORCE
 CHOOSING YOUR REPLY SONG
 ${mode.replyRule}
 
-Your reply is a *query*, not a claim: it is searched against Spotify, and if no
+Your reply is a *query*, not a claim: it is searched against a music catalogue, and if no
 real song matches, your turn lands nowhere. So name a song you are confident
 exists, formatted exactly as "Artist — Title". Never invent a track. Never reply
 with a song already in play.
@@ -96,10 +98,10 @@ export function buildUserPrompt(opts: {
     parts.push(`RECENT TURNS\n${log}`)
   }
 
-  // Identity only — title, artist, album, year. Deliberately no duration or
-  // popularity: those were fed to the interpreter when legality was computed
-  // from Spotify metadata, and inviting it to reason about them is what made
-  // "same decade" and "similar running time" feel like moves in the game.
+  // Identity plus genre. Deliberately no duration or popularity: those were fed
+  // to the interpreter when legality was computed from release metadata, and
+  // inviting it to reason about them is what made "same decade" and "similar
+  // running time" feel like moves in the game.
   parts.push(`THE PLAYER'S MOVE\n${trackLine(move)}${move.explicit ? ' · explicit' : ''}`)
 
   if (previous) {

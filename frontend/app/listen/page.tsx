@@ -3,9 +3,7 @@
 import { Suspense, useCallback, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import {
-  AlertTriangle, ArrowLeft, Loader2, Music2, RadioTower, Trash2,
-} from 'lucide-react'
+import { ArrowLeft, Loader2, RadioTower, Trash2 } from 'lucide-react'
 import { ThemeToggle } from '@/components/ThemeProvider'
 import { ensureSession } from '@/lib/anonAuth'
 import { track } from '@/lib/analytics'
@@ -18,21 +16,19 @@ import ModePicker from '@/components/listen/ModePicker'
 
 export const dynamic = 'force-dynamic'
 
-interface SpotifyStatus {
-  connected: boolean
-  isPremium?: boolean
-  displayName?: string
-  /** Connected, but the scope grant predates a scope the Web Playback SDK needs. */
-  needsReconnect?: boolean
-}
-
+/**
+ * AI Listen Along.
+ *
+ * There is no connect step. This used to open on "Connect Spotify to play" and
+ * everything behind it was gated on an OAuth grant, a scope set and a
+ * subscription tier. The music provider needs none of those, so the games are
+ * simply playable — the only session is the anonymous one ensureSession() makes.
+ */
 function ListenPageInner() {
   const router = useRouter()
   const params = useSearchParams()
   const gameId = params.get('game')
-  const connectResult = params.get('spotify')
 
-  const [status, setStatus] = useState<SpotifyStatus | null>(null)
   const [sessions, setSessions] = useState<ListenSession[]>([])
   const [loading, setLoading] = useState(true)
   const [starting, setStarting] = useState<ListenModeId | null>(null)
@@ -43,13 +39,8 @@ function ListenPageInner() {
     const load = async () => {
       await ensureSession()
       try {
-        const [statusRes, list] = await Promise.all([
-          fetch('/api/spotify/status').then(r => r.json()).catch(() => ({ connected: false })),
-          listenQueries.listSessions().catch(() => [] as ListenSession[]),
-        ])
-        if (cancelled) return
-        setStatus(statusRes)
-        setSessions(list)
+        const list = await listenQueries.listSessions().catch(() => [] as ListenSession[])
+        if (!cancelled) setSessions(list)
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -98,7 +89,6 @@ function ListenPageInner() {
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <ListenAlongGame
           session={current}
-          isPremium={!!status?.isPremium}
           onBack={() => router.push('/listen')}
           onSessionChange={next => setSessions(s => s.map(x => (x.id === next.id ? next : x)))}
         />
@@ -114,14 +104,7 @@ function ListenPageInner() {
           <Link href="/" className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors">
             <ArrowLeft size={15} /> Library
           </Link>
-          <div className="flex items-center gap-3">
-            {status?.connected && (
-              <span className="hidden sm:inline text-xs text-gray-400 dark:text-gray-500">
-                Spotify · {status.displayName || 'connected'}{status.isPremium ? ' · Premium' : ''}
-              </span>
-            )}
-            <ThemeToggle />
-          </div>
+          <ThemeToggle />
         </div>
       </header>
 
@@ -142,47 +125,9 @@ function ListenPageInner() {
           with. What changes between modes is what a song <em>is</em>, and who gets to interpret it.
         </p>
 
-        {connectResult === 'error' && (
-          <div className="mb-6 flex items-start gap-2 p-3 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50">
-            <AlertTriangle size={15} className="text-red-500 flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-red-600 dark:text-red-400">Spotify did not connect. Try again.</p>
-          </div>
-        )}
-
-        {/* A re-consent is the only way to widen a scope grant; refreshing the
-            token cannot do it, so without this prompt the player just fails. */}
-        {status?.needsReconnect && (
-          <div className="mb-6 flex items-start gap-2 p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50">
-            <AlertTriangle size={15} className="text-amber-500 flex-shrink-0 mt-0.5" />
-            <div className="text-sm text-amber-700 dark:text-amber-300">
-              <p>Your Spotify connection is missing a permission that in-page playback needs.</p>
-              <a href="/api/spotify/auth?returnTo=/listen" className="mt-1 inline-block font-semibold underline hover:no-underline">
-                Reconnect Spotify
-              </a>
-            </div>
-          </div>
-        )}
-
         {loading ? (
           <div className="flex items-center justify-center py-20 text-gray-400">
             <Loader2 size={20} className="animate-spin" />
-          </div>
-        ) : !status?.connected ? (
-          <div className="rounded-2xl border border-green-200 dark:border-green-900/50 bg-green-50 dark:bg-green-950/20 p-8 text-center">
-            <div className="w-12 h-12 mx-auto rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center mb-4">
-              <Music2 size={22} className="text-green-600 dark:text-green-400" />
-            </div>
-            <p className="text-base font-semibold text-gray-800 dark:text-gray-100">Connect Spotify to play</p>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1.5 max-w-md mx-auto">
-              Moves are real songs, so the games run on Spotify search. A free account is enough —
-              Premium adds full-length playback in the page instead of previews.
-            </p>
-            <a
-              href="/api/spotify/auth?returnTo=/listen"
-              className="inline-flex items-center gap-2 mt-5 px-5 py-2.5 rounded-full bg-green-500 hover:bg-green-400 text-white text-sm font-semibold transition-colors"
-            >
-              <Music2 size={15} /> Connect Spotify
-            </a>
           </div>
         ) : (
           <>

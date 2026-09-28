@@ -2,15 +2,15 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
-  AlertTriangle, ArrowLeft, CheckCircle2, Flag, Globe2, ListPlus, Loader2, Pause, Play,
-  RadioTower, SignalZero, SkipBack,
+  AlertTriangle, ArrowLeft, CheckCircle2, Flag, Globe2, Loader2, Pause, Play, RadioTower,
+  SignalZero, SkipBack,
 } from 'lucide-react'
 import { authedFetch } from '@/lib/authedFetch'
 import { track } from '@/lib/analytics'
 import { listenQueries } from '@/lib/queries/listen'
 import { ACCENT_CLASSES, getMode, wantsPrediction } from '@/lib/listen/modes'
 import type { ListenSession, ListenTurn, TrackRef } from '@/lib/listen/types'
-import { useSpotifyPlayer } from './useSpotifyPlayer'
+import { usePreviewPlayer, type PreviewPlayer } from './usePreviewPlayer'
 import TrackCard from './TrackCard'
 import TrackSearch from './TrackSearch'
 
@@ -23,12 +23,10 @@ import TrackSearch from './TrackSearch'
  */
 export default function ListenAlongGame({
   session: initialSession,
-  isPremium,
   onBack,
   onSessionChange,
 }: {
   session: ListenSession
-  isPremium: boolean
   onBack: () => void
   onSessionChange?: (s: ListenSession) => void
 }) {
@@ -38,12 +36,8 @@ export default function ListenAlongGame({
   const [pending, setPending] = useState(false)
   const [error, setError] = useState('')
   const [prediction, setPrediction] = useState('')
-  const [exporting, setExporting] = useState(false)
-  const [exportError, setExportError] = useState('')
-  /** The playlist this chain was saved to, once it has been. */
-  const [exported, setExported] = useState<{ name: string; url: string | null } | null>(null)
 
-  const player = useSpotifyPlayer(isPremium)
+  const player = usePreviewPlayer()
   const mode = getMode(session.mode)
   const accent = ACCENT_CLASSES[mode?.accent ?? 'indigo']
 
@@ -68,50 +62,19 @@ export default function ListenAlongGame({
     () => turns
       .filter(t => t.legal)
       .flatMap(t => [t.move_track, t.reply_track])
-      .filter((t): t is TrackRef => !!t?.uri),
+      .filter((t): t is TrackRef => !!t?.id),
     [turns],
   )
 
   const playChain = useCallback(
-    () => { player.playQueue(chain.map(t => t.uri)) },
+    () => { player.playQueue(chain) },
     [chain, player],
   )
 
   /** Where in the chain playback currently is, for the "now playing" readout. */
-  const playingIndex = player.state?.uri
-    ? chain.findIndex(t => t.uri === player.state!.uri)
+  const playingIndex = player.current
+    ? chain.findIndex(t => t.id === player.current!.id)
     : -1
-
-  // Playing another turn makes a saved playlist stale — it no longer matches the
-  // chain. Drop the confirmation so the offer to save comes back rather than
-  // leaving a link that quietly points at an older version of the game.
-  useEffect(() => { setExported(null) }, [chain.length])
-
-  const exportChain = useCallback(async () => {
-    setExporting(true)
-    setExportError('')
-    try {
-      const res = await authedFetch('/api/spotify/playlist', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: session.title,
-          description:
-            `${mode?.name ?? 'Listen Along'} · ${chain.length} songs, in the order they were played. ` +
-            `Built at aireadalong.com/listen.`,
-          uris: chain.map(t => t.uri),
-        }),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? 'Could not save the playlist')
-      setExported(data.playlist)
-      track('listen_chain_exported', { mode: session.mode, songs: data.exported })
-    } catch (e: any) {
-      setExportError(e?.message ?? 'Could not save the playlist')
-    } finally {
-      setExporting(false)
-    }
-  }, [chain, session.title, session.mode, mode?.name])
 
   const updateSession = useCallback((next: ListenSession) => {
     setSession(next)
@@ -211,74 +174,39 @@ export default function ListenAlongGame({
             </div>
           ) : (
             <>
-              {/* Listen back to the whole run. Spotify advances the queue itself,
-                  so this plays straight through without a click per song. */}
+              {/* Listen back to the whole run: one <audio> element walks the queue,
+                  so it plays straight through without a click per song. No account
+                  and no subscription — every visitor gets this. */}
               {chain.length > 1 && (
                 <div className="mb-4 flex items-center gap-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2">
-                  {player.ready ? (
-                    <>
-                      <button
-                        onClick={() => (playingIndex >= 0 ? player.toggle() : playChain())}
-                        className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full ${accent.bg} ${accent.text} hover:brightness-95 dark:hover:brightness-110 transition-all`}
-                      >
-                        {playingIndex >= 0 && player.state && !player.state.paused
-                          ? <><Pause size={13} /> Pause</>
-                          : <><Play size={13} /> Play the chain</>}
-                      </button>
-                      <p className="text-[11px] text-gray-500 dark:text-gray-400 min-w-0 truncate">
-                        {playingIndex >= 0
-                          ? `${playingIndex + 1} of ${chain.length} · ${player.state?.trackName}`
-                          : `${chain.length} songs, in order`}
-                      </p>
-                      {playingIndex >= 0 && (
-                        <button
-                          onClick={() => playChain()}
-                          title="Start again from the first song"
-                          className="ml-auto flex-shrink-0 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
-                        >
-                          <SkipBack size={13} />
-                        </button>
-                      )}
-                    </>
-                  ) : (
-                    <p className="text-[11px] text-gray-500 dark:text-gray-400">
-                      {isPremium
-                        ? 'Connecting the player — continuous playback will appear here.'
-                        : `${chain.length} songs so far. In-page playback needs Premium, but you can send the chain to Spotify and play it there.`}
-                    </p>
+                  <button
+                    onClick={() => (playingIndex >= 0 ? player.toggle() : playChain())}
+                    className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full ${accent.bg} ${accent.text} hover:brightness-95 dark:hover:brightness-110 transition-all`}
+                  >
+                    {playingIndex >= 0 && !player.paused
+                      ? <><Pause size={13} /> Pause</>
+                      : <><Play size={13} /> Play the chain</>}
+                  </button>
+                  <p className="text-[11px] text-gray-500 dark:text-gray-400 min-w-0 truncate">
+                    {playingIndex >= 0
+                      ? `${playingIndex + 1} of ${chain.length} · ${player.current?.name ?? ""}`
+                      : `${chain.length} songs, in order · 30s previews`}
+                  </p>
+                  {playingIndex >= 0 && (
+                    <button
+                      onClick={() => playChain()}
+                      title="Start again from the first song"
+                      className="ml-auto flex-shrink-0 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+                    >
+                      <SkipBack size={13} />
+                    </button>
                   )}
-
-                  {/* Export is open to every tier on purpose: for a free account
-                      this is the only route to continuous playback. */}
-                  <div className="ml-auto flex items-center gap-2 flex-shrink-0">
-                    {exported ? (
-                      <a
-                        href={exported.url ?? undefined}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1.5 text-[11px] font-medium text-green-600 dark:text-green-400 hover:underline"
-                      >
-                        <CheckCircle2 size={13} /> Open “{exported.name}” in Spotify
-                      </a>
-                    ) : (
-                      <button
-                        onClick={exportChain}
-                        disabled={exporting}
-                        title="Save this chain as a private Spotify playlist"
-                        className="flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1.5 rounded-full border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
-                      >
-                        {exporting
-                          ? <><Loader2 size={12} className="animate-spin" /> Saving…</>
-                          : <><ListPlus size={12} /> Save to Spotify</>}
-                      </button>
-                    )}
-                  </div>
                 </div>
               )}
 
-              {exportError && (
+              {player.error && (
                 <p className="mb-4 flex items-start gap-1.5 text-[11px] text-amber-600 dark:text-amber-400">
-                  <AlertTriangle size={12} className="flex-shrink-0 mt-0.5" /> {exportError}
+                  <AlertTriangle size={12} className="flex-shrink-0 mt-0.5" /> {player.error}
                 </p>
               )}
 
@@ -379,19 +307,9 @@ export default function ListenAlongGame({
             <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">{mode.pieces.responseRule}</p>
           </div>
 
-          {isPremium && player.error && (
-            <div className="text-[11px] text-amber-600 dark:text-amber-400">
-              <p>{player.error}</p>
-              {/* "Invalid token scopes" is the SDK's whole message when the grant is
-                  short — it names no scope and no remedy, so spell one out. Only a
-                  re-consent can widen a grant; refreshing the token cannot. */}
-              {/scope/i.test(player.error) && (
-                <a href="/api/spotify/auth?returnTo=/listen" className="mt-1 inline-block font-semibold underline hover:no-underline">
-                  Reconnect Spotify to fix this
-                </a>
-              )}
-            </div>
-          )}
+          {/* Player errors are reported above the turn log, next to the control that
+              caused them. Nothing auth-shaped can fail here any more — there is no
+              account to be connected, no scope to be missing and no tier to be on. */}
         </aside>
       </div>
     </div>
@@ -401,7 +319,7 @@ export default function ListenAlongGame({
 /** One exchange: the move, how it was read, the reply, and what it established. */
 function TurnBlock({ turn, player, accentText }: {
   turn: ListenTurn
-  player: ReturnType<typeof useSpotifyPlayer>
+  player: PreviewPlayer
   accentText: string
 }) {
   if (!turn.legal) {

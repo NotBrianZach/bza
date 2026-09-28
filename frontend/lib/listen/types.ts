@@ -84,21 +84,27 @@ export interface ListenMode {
   accent: 'indigo' | 'emerald' | 'amber' | 'rose' | 'sky' | 'violet' | 'teal' | 'orange'
 }
 
-/** A real Spotify track, as stored on a turn. Mirrors lib/spotify-server.ts. */
+/** A real track, as stored on a turn. Mirrors lib/music/itunes.ts. */
 export interface TrackRef {
+  /** iTunes trackId, as a string. The identity key everywhere — playback, the
+   *  chain, exclusion lists. There is no separate uri now that there is no
+   *  Spotify. */
   id: string
   name: string
   artist: string
-  artistIds: string[]
+  artistId: string | null
   album: string
   albumId: string | null
   releaseDate: string | null
-  uri: string
+  /** Spotify's track object carried no genre. This provider does, and the
+   *  interpreter uses it when judging whether two songs connect. */
+  genre: string | null
+  /** Link out to the store page for this track. */
   url: string | null
   image: string | null
+  /** 30-second preview. The entire audio story — playback chains these. */
   previewUrl: string | null
   durationMs: number
-  popularity: number
   explicit: boolean
 }
 
@@ -152,7 +158,7 @@ export interface Interpretation {
   reading: string
   /** What the exchange did to the world. */
   narration: string
-  /** The reply song, as a query to resolve against Spotify. */
+  /** The reply song, as a query to resolve against the music catalogue. */
   replyQuery: string
   /** Why that reply answers this move. */
   replyReason: string

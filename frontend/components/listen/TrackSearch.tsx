@@ -8,15 +8,15 @@ import type { TrackRef } from '@/lib/listen/types'
 /**
  * Pick a move.
  *
- * A move has to be a real, specific song, so this searches Spotify rather than
- * taking free text — the player chooses from what exists. Debounced, and it
+ * A move has to be a real, specific song, so this searches a music catalogue
+ * rather than taking free text — the player chooses from what exists. Debounced, and it
  * keeps the last good result set while a new query is in flight so the list
  * does not flicker empty between keystrokes.
  */
 export default function TrackSearch({
   onPick,
   disabled,
-  placeholder = 'Search Spotify for your song…',
+  placeholder = 'Search for your song…',
 }: {
   onPick: (track: TrackRef) => void
   disabled?: boolean
@@ -41,10 +41,7 @@ export default function TrackSearch({
     const mine = ++seq.current
     const timer = setTimeout(async () => {
       try {
-        // No `limit` — the route owns it. Spotify's real ceiling for this app is
-        // lower than its documented one, so pinning a number here just gives it
-        // somewhere else to drift out of date.
-        const res = await authedFetch(`/api/spotify/search?q=${encodeURIComponent(query)}&type=track`)
+        const res = await authedFetch(`/api/music/search?q=${encodeURIComponent(query)}`)
         const data = await res.json()
         // A slower earlier request must not overwrite a newer result set.
         if (mine !== seq.current) return

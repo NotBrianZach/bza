@@ -1,16 +1,17 @@
 'use client'
 
-import { useState } from 'react'
 import { ExternalLink, Music2, Pause, Play } from 'lucide-react'
 import type { TrackRef } from '@/lib/listen/types'
-import type { SpotifyPlayer } from './useSpotifyPlayer'
+import type { PreviewPlayer } from './usePreviewPlayer'
 
 /**
  * One track, playable.
  *
- * Premium users with the Web Playback SDK connected hear the full track in
- * place. Everyone else gets Spotify's embed iframe, which needs neither auth
- * nor a subscription — so a free account can still play the whole game.
+ * Every visitor gets the same thing now: a thirty-second preview, played in page,
+ * no account and no subscription. The previous version had two paths — the
+ * Spotify Web Playback SDK for Premium and an embed iframe for everyone else —
+ * because full-length playback was subscription-gated and the embed was the only
+ * fallback. Both are gone with Spotify.
  */
 export default function TrackCard({
   track,
@@ -19,20 +20,19 @@ export default function TrackCard({
   compact,
 }: {
   track: TrackRef
-  player?: SpotifyPlayer
+  player?: PreviewPlayer
   label?: string
   compact?: boolean
 }) {
-  const [embedOpen, setEmbedOpen] = useState(false)
   const year = track.releaseDate?.slice(0, 4)
-  const canPlayInPage = !!player?.ready
-  const isCurrent = player?.state?.uri === track.uri
-  const isPlaying = isCurrent && player?.state && !player.state.paused
+  const playable = !!track.previewUrl && !!player
+  const isCurrent = !!player?.current && player.current.id === track.id
+  const isPlaying = isCurrent && !player!.paused
 
   const handlePlay = () => {
-    if (!canPlayInPage) { setEmbedOpen(o => !o); return }
+    if (!playable) return
     if (isCurrent) player!.toggle()
-    else player!.playTrack(track.uri)
+    else player!.playTrack(track)
   }
 
   return (
@@ -40,18 +40,29 @@ export default function TrackCard({
       <div className={`flex items-center gap-3 ${compact ? 'p-2' : 'p-3'}`}>
         <button
           onClick={handlePlay}
-          title={canPlayInPage ? (isPlaying ? 'Pause' : 'Play in page') : 'Open the player'}
-          className="relative flex-shrink-0 rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-700 group"
+          disabled={!playable}
+          title={playable ? (isPlaying ? 'Pause' : 'Play the preview') : 'No preview available'}
+          className="relative flex-shrink-0 rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-700 group disabled:cursor-default"
           style={{ width: compact ? 40 : 56, height: compact ? 40 : 56 }}
         >
           {track.image
             ? <img src={track.image} alt="" className="w-full h-full object-cover" />
             : <div className="w-full h-full flex items-center justify-center"><Music2 size={16} className="text-gray-400" /></div>}
-          <span className={`absolute inset-0 flex items-center justify-center bg-black/45 transition-opacity ${isPlaying ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
-            {isPlaying
-              ? <Pause size={14} fill="white" className="text-white" />
-              : <Play size={14} fill="white" className="text-white" />}
-          </span>
+          {playable && (
+            <span className={`absolute inset-0 flex items-center justify-center bg-black/45 transition-opacity ${isPlaying ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+              {isPlaying
+                ? <Pause size={14} fill="white" className="text-white" />
+                : <Play size={14} fill="white" className="text-white" />}
+            </span>
+          )}
+          {/* Previews are 30s, so how far through matters more than it would for a
+              full track — without it a playing card looks identical to a stalled one. */}
+          {isCurrent && (
+            <span
+              className="absolute bottom-0 left-0 h-0.5 bg-white/90 transition-[width] duration-300"
+              style={{ width: `${Math.round(player!.progress * 100)}%` }}
+            />
+          )}
         </button>
 
         <div className="flex-1 min-w-0">
@@ -60,45 +71,22 @@ export default function TrackCard({
           )}
           <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{track.name}</p>
           <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-            {track.artist}{year ? ` · ${year}` : ''}
+            {track.artist}{year ? ` · ${year}` : ''}{track.genre ? ` · ${track.genre}` : ''}
           </p>
         </div>
 
-        <div className="flex items-center gap-1 flex-shrink-0">
-          {!canPlayInPage && (
-            <button
-              onClick={() => setEmbedOpen(o => !o)}
-              className="text-[10px] px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-            >
-              {embedOpen ? 'Hide' : 'Listen'}
-            </button>
-          )}
-          {track.url && (
-            <a
-              href={track.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              title="Open in Spotify"
-              className="p-1.5 text-gray-300 dark:text-gray-600 hover:text-green-600 dark:hover:text-green-400 transition-colors"
-            >
-              <ExternalLink size={13} />
-            </a>
-          )}
-        </div>
+        {track.url && (
+          <a
+            href={track.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Open this track in Apple Music"
+            className="flex-shrink-0 p-1.5 text-gray-300 dark:text-gray-600 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+          >
+            <ExternalLink size={13} />
+          </a>
+        )}
       </div>
-
-      {embedOpen && !canPlayInPage && (
-        <iframe
-          title={`${track.name} — ${track.artist}`}
-          src={`https://open.spotify.com/embed/track/${track.id}`}
-          width="100%"
-          height="80"
-          frameBorder="0"
-          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-          loading="lazy"
-          className="block border-t border-gray-200 dark:border-gray-700"
-        />
-      )}
     </div>
   )
 }
