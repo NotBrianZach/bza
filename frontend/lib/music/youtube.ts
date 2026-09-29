@@ -1,7 +1,7 @@
 /**
  * Full-length playback, via YouTube.
  *
- * The music provider (lib/music/itunes.ts) gives 30-second previews, which is the
+ * The music provider (lib/offerings/music.ts) gives 30-second previews, which is the
  * whole audio story for free — but it is 30 seconds. This resolves a track to a
  * YouTube video id so the real thing can play in an iframe.
  *

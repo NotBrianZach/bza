@@ -1,46 +1,52 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { TrackRef } from '@/lib/listen/types'
+import type { Offering } from '@/lib/correlate/types'
 
 /**
- * Plays tracks, and plays runs of them back to back.
+ * Plays the audible offerings in a chain, and plays runs of them back to back.
  *
- * Replaces the Spotify Web Playback SDK, which needed Premium, an OAuth grant
- * with exactly the right scopes, and an external script — and which had no
- * fallback, because Spotify stopped returning preview audio to this app
- * altogether. This is one <audio> element and thirty-second previews, which every
- * visitor gets with no account of any kind.
+ * Generalised from the music-only player. A chain can now contain paintings,
+ * passages and movements, none of which have audio, so the queue **filters to what
+ * can be heard** rather than refusing to play a mixed chain. That is a deliberate
+ * asymmetry: audio is the only medium with a timeline of its own, so it is the
+ * only one that can advance by itself. A mixed chain is stepped through in the UI,
+ * and its audible members play when reached.
  *
- * Why one element and not one per card: browsers grant autoplay permission to a
- * *media element* the user has interacted with. Advancing a queue means calling
- * play() with no click behind it, so the element that plays track 2 has to be the
- * same one the user started on track 1. A per-card element would be blocked from
- * the second song onward.
+ * Why one <audio> element and not one per card: browsers grant autoplay permission
+ * to a *media element* the user has interacted with. Advancing a queue means
+ * calling play() with no click behind it, so the element that plays item 2 has to
+ * be the same one the user started on item 1. A per-card element would be blocked
+ * from the second item onward.
  */
-export interface PreviewPlayer {
-  /** The track currently loaded, playing or paused. */
-  current: TrackRef | null
+export interface OfferingPlayer {
+  /** The offering currently loaded, playing or paused. */
+  current: Offering | null
   paused: boolean
   error: string
-  /** How far through the current preview, 0..1 — previews are short enough that
-   *  a progress hint is the difference between "stuck" and "playing". */
+  /** How far through the current preview, 0..1 — previews are short enough that a
+   *  progress hint is the difference between "stuck" and "playing". */
   progress: number
   /** Position in the active queue, or -1 when playing a one-off. */
   queueIndex: number
   queueLength: number
-  playTrack: (track: TrackRef) => void
-  playQueue: (tracks: TrackRef[], startIndex?: number) => void
+  playOne: (offering: Offering) => void
+  playQueue: (offerings: Offering[], startIndex?: number) => void
   toggle: () => void
   stop: () => void
 }
 
-export function usePreviewPlayer(): PreviewPlayer {
+/** The audio URL for an offering, if it has one. */
+export function audioUrl(o: Offering): string | null {
+  return o.perceptible.kind === 'audio' ? o.perceptible.url : null
+}
+
+export function useOfferingPlayer(): OfferingPlayer {
   const audioRef = useRef<HTMLAudioElement | null>(null)
-  const queueRef = useRef<TrackRef[]>([])
+  const queueRef = useRef<Offering[]>([])
   const indexRef = useRef(-1)
 
-  const [current, setCurrent] = useState<TrackRef | null>(null)
+  const [current, setCurrent] = useState<Offering | null>(null)
   const [paused, setPaused] = useState(true)
   const [error, setError] = useState('')
   const [progress, setProgress] = useState(0)
@@ -54,16 +60,17 @@ export function usePreviewPlayer(): PreviewPlayer {
   }, [])
 
   const playAt = useCallback((i: number) => {
-    const track = queueRef.current[i]
-    if (!track?.previewUrl) return
+    const offering = queueRef.current[i]
+    const url = offering ? audioUrl(offering) : null
+    if (!url) return
     indexRef.current = i
     setQueueIndex(queueRef.current.length > 1 ? i : -1)
-    setCurrent(track)
+    setCurrent(offering)
     setError('')
     setProgress(0)
 
     const el = audio()
-    el.src = track.previewUrl
+    el.src = url
     el.play().then(
       () => setPaused(false),
       // A rejected play() is nearly always the autoplay policy: the gesture that
@@ -103,16 +110,16 @@ export function usePreviewPlayer(): PreviewPlayer {
     audioRef.current = null
   }, [])
 
-  const playQueue = useCallback((tracks: TrackRef[], startIndex = 0) => {
-    const playable = tracks.filter(t => !!t.previewUrl)
+  const playQueue = useCallback((offerings: Offering[], startIndex = 0) => {
+    const playable = offerings.filter(o => !!audioUrl(o))
     queueRef.current = playable
     setQueueLength(playable.length)
-    if (playable.length === 0) { setError('None of these have a preview to play.'); return }
+    if (playable.length === 0) { setError('Nothing in this chain has audio to play.'); return }
     playAt(Math.max(0, Math.min(startIndex, playable.length - 1)))
   }, [playAt])
 
-  const playTrack = useCallback((track: TrackRef) => {
-    playQueue([track])
+  const playOne = useCallback((offering: Offering) => {
+    playQueue([offering])
   }, [playQueue])
 
   const toggle = useCallback(() => {
@@ -135,6 +142,6 @@ export function usePreviewPlayer(): PreviewPlayer {
 
   return {
     current, paused, error, progress, queueIndex, queueLength,
-    playTrack, playQueue, toggle, stop,
+    playOne, playQueue, toggle, stop,
   }
 }

@@ -1,11 +1,14 @@
--- AI Listen Along — music-game sessions.
+-- Correlation-game sessions. (Created as "AI Listen Along", when the section was
+-- music-only and a turn was a song; see supabase/setup/52_correlation_games.sql
+-- for the generalisation and frontend/lib/correlate/ for the current model.)
 --
--- A session is one running game: a mode (tag / duel / investigation /
--- navigation / construction / transformation / prediction / radio), a
--- persistent world state, and an ordered log of turns. Each turn pairs the
--- player's outgoing song with the interpreter's reply song; both are resolved
--- to real Spotify tracks before the turn is stored, so a turn can never
--- reference a song that does not exist.
+-- A session is one running game: a game id, a persistent world state, and an
+-- ordered log of turns. Each turn pairs the player's offering with the
+-- interpreter's reply; both are resolved to something real before the turn is
+-- stored, so a turn can never reference a thing that does not exist. The list of
+-- game ids deliberately is not repeated here — it lives in
+-- frontend/lib/correlate/games.ts, and a comment enumerating it would go stale the
+-- first time one was retired. (One has: `radio`, "Night Radio".)
 --
 -- LLM cost is tracked in the shared api_usage table via lib/apiQuota.ts::logUsage.
 

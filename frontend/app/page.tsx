@@ -11,7 +11,7 @@ import { booksQueries } from '@/lib/queries'
 import { getLocalBooks, deleteLocalBook, getStorageUsage } from '@/lib/localStorage'
 import BookCard from '@/components/BookCard'
 import Link from 'next/link'
-import { Plus, BookOpen, Image as ImageIcon, HardDrive, CreditCard, Search, PuzzleIcon, GraduationCap, Clock, SlidersHorizontal, Eye, EyeOff, ChevronUp, ChevronDown, Trash2, Calculator, Download, Settings, Menu, LayoutGrid, List, Loader2, RadioTower } from 'lucide-react'
+import { Plus, BookOpen, Image as ImageIcon, HardDrive, CreditCard, Search, PuzzleIcon, GraduationCap, Clock, SlidersHorizontal, Eye, EyeOff, ChevronUp, ChevronDown, Trash2, Calculator, Download, Settings, Menu, LayoutGrid, List, Loader2, Shuffle } from 'lucide-react'
 import { billingQueries, quizQueries, settingsQueries, UserPrefs } from '@/lib/queries'
 import { bookmarksQueries } from '@/lib/queries/bookmarks'
 import type { PageBookmark } from '@/lib/queries/types'
@@ -20,20 +20,25 @@ import ClassicLibrary from '@/components/ClassicLibrary'
 import MetaDrawer from '@/components/MetaDrawer'
 import ReadingStreaks from '@/components/ReadingStreaks'
 import HomeFeedSection from '@/components/HomeFeedSection'
+import CorrelationGamesSection from '@/components/correlate/CorrelationGamesSection'
 import { getPinnedFeeds, savePinnedFeeds, PinnedFeed } from '@/lib/pinnedFeeds'
 import { AUTO_COVER_KEY } from '@/lib/queries/images'
 
-type SectionId = 'streaks' | 'revisit' | 'books' | 'feeds' | 'classics'
+type SectionId = 'streaks' | 'revisit' | 'games' | 'books' | 'feeds' | 'classics'
 interface SectionConfig { id: SectionId; label: string; visible: boolean }
 const DEFAULT_SECTIONS: SectionConfig[] = [
   { id: 'revisit', label: 'Due for Revisit (SR)', visible: true },
+  // Correlation games were a pill in the header, which is where features go to be
+  // ignored. High on the page, but below the spaced-repetition prompt — that is the
+  // one thing a returning reader came here to act on.
+  { id: 'games', label: 'Correlation Games', visible: true },
   { id: 'feeds', label: 'My Feeds', visible: true },
   { id: 'streaks', label: 'Reading Streaks', visible: true },
   { id: 'books', label: 'My Library', visible: true },
   { id: 'classics', label: 'Classic Library', visible: true },
 ]
 
-// ── Spaced-repetition schedule (localStorage) ──────────────────────────────
+// ââ Spaced-repetition schedule (localStorage) ââââââââââââââââââââââââââââââ
 const SR_KEY = 'bza-sr-schedule'
 interface SREntry { interval: number; nextAt: number }
 function getSRSchedule(): Record<number, SREntry> {
@@ -55,7 +60,7 @@ function isSRDue(bookId: number, lastReadAt: string | null, createdAt: string): 
 function srInterval(bookId: number): number {
   return getSRSchedule()[bookId]?.interval ?? 1
 }
-// ── Card size preferences (localStorage) ─────────────────────────────────
+// ââ Card size preferences (localStorage) âââââââââââââââââââââââââââââââââ
 const CARD_SIZES_KEY = 'bza-card-sizes'
 export type CardSize = 'small' | 'medium' | 'large'
 export interface CardSizes { books: CardSize; feeds: CardSize; flashcards: CardSize }
@@ -107,7 +112,7 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
   const [searching, setSearching] = useState(false)
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  // wikiUpdates removed — Updates section deleted from Librarian
+  // wikiUpdates removed â Updates section deleted from Librarian
   const [pinnedFeeds, setPinnedFeeds] = useState<PinnedFeed[]>([])
   const [feedsSignal, setFeedsSignal] = useState<{ open: boolean; v: number }>({ open: false, v: 0 })
   const [globalCatalog, setGlobalCatalog] = useState(() => {
@@ -131,7 +136,7 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
     checkAuthAndLoadData()
 
     // Subscribe to auth state changes to catch sign-in events (e.g. from another tab).
-    // SIGNED_OUT is intentionally NOT handled here — the sign-out button calls
+    // SIGNED_OUT is intentionally NOT handled here â the sign-out button calls
     // window.location.reload() directly, and handling SIGNED_OUT via the listener
     // causes spurious logouts from token-refresh races during the initial page load.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -194,7 +199,7 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
         settingsQueries.setPref('pinned_feeds', merged.map(({ id, label, url }) => ({ id, label, url }))).catch(() => {})
       }
     } else {
-      // First login or feeds not yet in DB — push current localStorage feeds up
+      // First login or feeds not yet in DB â push current localStorage feeds up
       settingsQueries.setPref('pinned_feeds', local.map(({ id, label, url }) => ({ id, label, url }))).catch(() => {})
     }
   }, [isAuthenticated, prefs])
@@ -232,7 +237,7 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
       setError(null)
 
       // getSession() reads from cookie storage and refreshes the token if expired.
-      // Do NOT add a short timeout here — token refresh is a network call that can
+      // Do NOT add a short timeout here â token refresh is a network call that can
       // take a few seconds on slow connections, and timing out would return null,
       // causing the user to appear logged-out even though their session is valid.
       const { data: { session } } = await supabase.auth.getSession()
@@ -252,11 +257,11 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
         setIsAuthenticated(true)
         setUserEmail(session.user.email)
 
-        // Show cached books instantly — don't wait for network
+        // Show cached books instantly â don't wait for network
         const cached = booksQueries.listCached()
         if (cached && cached.length > 0) { setBooks(cached); setIsLoading(false) }
 
-        // Fetch fresh data progressively — each updates state as it arrives
+        // Fetch fresh data progressively â each updates state as it arrives
         booksQueries.list().then(b => { setBooks(b); setIsLoading(false) }).catch(() => setIsLoading(false))
         booksQueries.listTrashed().then(setTrashedBooks).catch(() => {})
 
@@ -277,7 +282,7 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
           setTypstNotes(notesData)
         } catch (err: any) {
           console.error('Error loading user data:', err)
-          // Don't clear books — cached books are still valid
+          // Don't clear books â cached books are still valid
         }
       } else {
         setIsAuthenticated(false)
@@ -339,7 +344,7 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
     }
   }
 
-  // Hold the skeleton for the entire auth check — never render the main page
+  // Hold the skeleton for the entire auth check â never render the main page
   // with isAuthenticated === null, since `!isAuthenticated` guards below would
   // flash logged-out UI (Free Tier notice, Sign In/Up buttons) to real users.
   if (isAuthenticated === null) {
@@ -356,7 +361,7 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
         <div className="container mx-auto px-4 py-8">
           <div className="flex items-center justify-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-6">
             <Loader2 size={16} className="animate-spin" />
-            <span>Loading your library…</span>
+            <span>Loading your libraryâ¦</span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
             {[1, 2, 3, 4, 5, 6].map(i => (
@@ -407,12 +412,12 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
                       finally { setSearching(false) }
                     }, 500)
                   }}
-                  placeholder="Search all books…"
+                  placeholder="Search all booksâ¦"
                   className="input w-full pl-8 text-sm py-1.5"
                 />
                 {(searchResults.length > 0 || searching) && globalSearch.trim().length >= 2 && (
                   <div className="absolute top-full left-0 right-0 mt-1 z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl max-h-72 overflow-y-auto">
-                    {searching && <div className="px-3 py-2 text-xs text-gray-400 flex items-center gap-2"><div className="spinner" style={{ width: 12, height: 12 }} /> Searching…</div>}
+                    {searching && <div className="px-3 py-2 text-xs text-gray-400 flex items-center gap-2"><div className="spinner" style={{ width: 12, height: 12 }} /> Searchingâ¦</div>}
                     {searchResults.map((r, i) => (
                       <a key={i} href={`/books/${r.bookId}?page=${r.page}`} className="block px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700 last:border-0">
                         <p className="text-xs font-medium text-gray-900 dark:text-gray-100 truncate">{r.bookTitle}</p>
@@ -439,14 +444,6 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
                     Get Capture Extension
                   </a>
                 )}
-                <Link
-                  href="/listen"
-                  title="AI Listen Along — music games where the song does the work in the rules"
-                  className="flex items-center gap-1.5 text-xs font-medium text-indigo-700 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 rounded-full px-3 py-1.5 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-colors"
-                >
-                  <RadioTower size={13} />
-                  Listen Along
-                </Link>
                 {isAuthenticated && (
                   <button
                     onClick={() => setMetaDrawerOpen(o => !o)}
@@ -493,7 +490,7 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
                 )}
               </div>
 
-              {/* Add button — always visible */}
+              {/* Add button â always visible */}
               <Link href="/upload" className="btn btn-primary text-sm sm:text-base whitespace-nowrap">
                 <Plus size={18} className="mr-1 sm:mr-2" />
                 <span className="hidden sm:inline">Add</span>
@@ -520,8 +517,8 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
                           <BookOpen size={15} /> Librarian
                         </button>
                       )}
-                      <Link href="/listen" onClick={() => setMobileMenuOpen(false)} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2">
-                        <RadioTower size={15} /> Listen Along
+                      <Link href="/play" onClick={() => setMobileMenuOpen(false)} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2">
+                        <Shuffle size={15} /> Play Along
                       </Link>
                       <Link href="/settings" onClick={() => setMobileMenuOpen(false)} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2">
                         <Settings size={15} /> Settings
@@ -600,7 +597,7 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
           <div className="container mx-auto px-4 py-16 text-center max-w-3xl">
             <h1 className="text-4xl sm:text-5xl font-black mb-4">Read smarter with AI</h1>
             <p className="text-lg text-white/80 mb-8 max-w-xl mx-auto">
-              Upload any book, article, or PDF. Get AI-powered explanations, problem sets, character analysis, flashcards, and audiobook narration — all in one place.
+              Upload any book, article, or PDF. Get AI-powered explanations, problem sets, character analysis, flashcards, and audiobook narration â all in one place.
             </p>
             <div className="flex flex-wrap justify-center gap-4 mb-10">
               <a
@@ -616,12 +613,12 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-left max-w-lg mx-auto">
               {[
-                { icon: '📖', label: 'AI Chat for any book' },
-                { icon: '📝', label: 'Problem sets + hints' },
-                { icon: '🎭', label: 'Persona librarians' },
-                { icon: '🔊', label: 'AI audiobook narration' },
-                { icon: '🌐', label: 'Translate entire books' },
-                { icon: '🧠', label: 'Flashcards + spaced repetition' },
+                { icon: 'ð', label: 'AI Chat for any book' },
+                { icon: 'ð', label: 'Problem sets + hints' },
+                { icon: 'ð­', label: 'Persona librarians' },
+                { icon: 'ð', label: 'AI audiobook narration' },
+                { icon: 'ð', label: 'Translate entire books' },
+                { icon: 'ð§ ', label: 'Flashcards + spaced repetition' },
               ].map(f => (
                 <div key={f.label} className="flex items-center gap-2 text-sm">
                   <span className="text-xl">{f.icon}</span>
@@ -648,7 +645,7 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
                 </p>
                 {storageUsage.percentage > 80 && (
                   <p className="text-sm text-orange-700 mt-2 font-medium">
-                    ⚠️ Storage almost full! <a href="/auth/signup" className="underline">Upgrade to Pro</a> for unlimited cloud storage.
+                    â ï¸ Storage almost full! <a href="/auth/signup" className="underline">Upgrade to Pro</a> for unlimited cloud storage.
                   </p>
                 )}
               </div>
@@ -683,13 +680,13 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
               <p className="text-sm font-medium text-purple-900 dark:text-purple-200">
                 {dueCardCount} flashcard{dueCardCount !== 1 ? 's' : ''} due for review
               </p>
-              <p className="text-xs text-purple-600 dark:text-purple-400">Start today's study session →</p>
+              <p className="text-xs text-purple-600 dark:text-purple-400">Start today's study session â</p>
             </div>
           </Link>
         )}
 
 
-        {/* Search + type filter — always visible */}
+        {/* Search + type filter â always visible */}
         {(isAuthenticated || books.length > 0) && (
           <div className="mb-4">
             <div className="relative max-w-sm">
@@ -698,11 +695,11 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
                 type="text"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                placeholder="Search books…"
+                placeholder="Search booksâ¦"
                 className="input pl-9 w-full"
               />
             </div>
-            {/* Type filter chips — shown when 2+ distinct types exist */}
+            {/* Type filter chips â shown when 2+ distinct types exist */}
             {(() => {
               const presentTypes = [...new Set(books.map(b => b.content_type).filter(Boolean))] as Book['content_type'][]
               const TYPE_LABELS: Record<string, string> = {
@@ -740,13 +737,13 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
                   ))}
                   {typeFilter && (
                     <button onClick={() => setTypeFilter(null)} className="text-xs px-2 py-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
-                      ✕ clear
+                      â clear
                     </button>
                   )}
                 </div>
               )
             })()}
-            {/* Inline search results — shown when search is active */}
+            {/* Inline search results â shown when search is active */}
             {search.trim() && (() => {
               const q = search.toLowerCase().trim()
               const fuzzy = (text: string, query: string) => {
@@ -857,6 +854,13 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
             <ReadingStreaks key="streaks" />
           ) : null
 
+          // Shown to signed-out visitors too: the games need no account to read
+          // about, and the section hands off to /play, which makes an anonymous
+          // session on load.
+          if (section.id === 'games') return (
+            <CorrelationGamesSection key="games" isAuthenticated={isAuthenticated} />
+          )
+
           if (section.id === 'revisit') {
             if (!isAuthenticated) return null
             // srVersion in dep list ensures re-render after advancing schedule
@@ -868,10 +872,10 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
                 <div className="flex items-center gap-2 mb-3">
                   <Clock size={16} className="text-amber-500" />
                   <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Due for revisit</h2>
-                  <span className="text-xs text-gray-400">· spaced repetition</span>
+                  <span className="text-xs text-gray-400">Â· spaced repetition</span>
                 </div>
                 <div className="flex gap-3 overflow-x-auto pb-1">
-                  {/* Jump to last read — most recently read book */}
+                  {/* Jump to last read â most recently read book */}
                   {(() => {
                     const lastRead = [...books].filter(b => b.last_read_at).sort((a, b) => new Date(b.last_read_at!).getTime() - new Date(a.last_read_at!).getTime())[0]
                     if (!lastRead) return null
@@ -906,7 +910,7 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
                           title="Mark reviewed (advance schedule)"
                           className="flex-1 text-[10px] py-1 text-gray-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
                         >
-                          ✓ done
+                          â done
                         </button>
                         <button
                           onClick={() => handleDelete(book.id)}
@@ -963,12 +967,12 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
                         <div className="text-left space-y-4">
                           <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">What you can do</p>
                           {[
-                            { icon: '📖', title: 'Read with AI', desc: 'Chat about any page, get explanations, create flashcards' },
-                            { icon: '📝', title: 'Problem Sets', desc: 'Extract exercises from textbooks, work through them with hints' },
-                            { icon: '🎭', title: 'AI Personas', desc: 'Choose a librarian personality — Sensei, Rival, Professor, and more' },
-                            { icon: '🔊', title: 'Listen', desc: 'Convert any text to audiobook with AI narration' },
-                            { icon: '🌐', title: 'Translate', desc: 'Translate entire books or read side-by-side with the original' },
-                            { icon: '🧠', title: 'Flashcards', desc: 'Auto-generated flashcards with spaced-repetition review' },
+                            { icon: 'ð', title: 'Read with AI', desc: 'Chat about any page, get explanations, create flashcards' },
+                            { icon: 'ð', title: 'Problem Sets', desc: 'Extract exercises from textbooks, work through them with hints' },
+                            { icon: 'ð­', title: 'AI Personas', desc: 'Choose a librarian personality â Sensei, Rival, Professor, and more' },
+                            { icon: 'ð', title: 'Listen', desc: 'Convert any text to audiobook with AI narration' },
+                            { icon: 'ð', title: 'Translate', desc: 'Translate entire books or read side-by-side with the original' },
+                            { icon: 'ð§ ', title: 'Flashcards', desc: 'Auto-generated flashcards with spaced-repetition review' },
                           ].map(f => (
                             <div key={f.title} className="flex items-start gap-3">
                               <span className="text-xl flex-shrink-0">{f.icon}</span>
@@ -997,7 +1001,7 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
                   </div>
                 )
               })()}
-              {/* Math Notes — bookmarks with attached Typst problem sets */}
+              {/* Math Notes â bookmarks with attached Typst problem sets */}
               {isAuthenticated && typstNotes.length > 0 && (
                 <div className="mt-8">
                   <button
@@ -1008,7 +1012,7 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
                     <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
                       Math Notes
                     </h2>
-                    <span className="text-xs text-gray-400">· {typstNotes.length} problem set{typstNotes.length !== 1 ? 's' : ''}</span>
+                    <span className="text-xs text-gray-400">Â· {typstNotes.length} problem set{typstNotes.length !== 1 ? 's' : ''}</span>
                     <ChevronDown size={14} className={`text-gray-400 transition-transform ${showTypstNotes ? 'rotate-180' : ''}`} />
                   </button>
                   {showTypstNotes && (
@@ -1029,11 +1033,11 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
                               </p>
                               {note.book_title && (
                                 <p className="text-xs text-gray-400 dark:text-gray-500 truncate mt-0.5">
-                                  {note.book_title} · p.{note.page_num}
+                                  {note.book_title} Â· p.{note.page_num}
                                 </p>
                               )}
                               <pre className="mt-1.5 text-[10px] text-gray-500 dark:text-gray-400 line-clamp-2 font-mono whitespace-pre-wrap break-all">
-                                {note.typst_content!.slice(0, 120)}{note.typst_content!.length > 120 ? '…' : ''}
+                                {note.typst_content!.slice(0, 120)}{note.typst_content!.length > 120 ? 'â¦' : ''}
                               </pre>
                             </div>
                             <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -1066,7 +1070,7 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
                     <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-200 transition-colors">
                       Trash
                     </h2>
-                    <span className="text-xs text-gray-400">· {trashedBooks.length} book{trashedBooks.length !== 1 ? 's' : ''}</span>
+                    <span className="text-xs text-gray-400">Â· {trashedBooks.length} book{trashedBooks.length !== 1 ? 's' : ''}</span>
                     <ChevronDown size={14} className={`text-gray-400 transition-transform ${showTrash ? 'rotate-180' : ''}`} />
                   </button>
                   {showTrash && (
@@ -1107,13 +1111,13 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
                 return (
                   <div className="mt-8 p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Cloud Storage — {usedGB} GB of {limitGB} GB used ({pct}%)</span>
-                      <a href="/billing" className="text-xs text-primary-600 hover:underline">{isWarning ? 'Buy more →' : 'Manage'}</a>
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Cloud Storage â {usedGB} GB of {limitGB} GB used ({pct}%)</span>
+                      <a href="/billing" className="text-xs text-primary-600 hover:underline">{isWarning ? 'Buy more â' : 'Manage'}</a>
                     </div>
                     <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
                       <div className={'h-2 rounded-full transition-all duration-500 ' + (isWarning ? 'bg-amber-500' : 'bg-primary-500')} style={{ width: pct + '%' }} />
                     </div>
-                    {isWarning && <p className="mt-1.5 text-xs text-amber-600 dark:text-amber-400">Running low on storage.{' '}<a href="/billing" className="underline font-medium">Add 2 GB for $1/mo →</a></p>}
+                    {isWarning && <p className="mt-1.5 text-xs text-amber-600 dark:text-amber-400">Running low on storage.{' '}<a href="/billing" className="underline font-medium">Add 2 GB for $1/mo â</a></p>}
                   </div>
                 )
               })()}
@@ -1125,7 +1129,7 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
             return (
               <div key="feeds" className="mt-8">
                 <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-3">
-                  My Feeds <span className="text-gray-400 dark:text-gray-500 font-normal text-base">· Recent Posts</span>
+                  My Feeds <span className="text-gray-400 dark:text-gray-500 font-normal text-base">Â· Recent Posts</span>
                   <button
                     onClick={() => setFeedsSignal(s => ({ open: !s.open, v: s.v + 1 }))}
                     className="ml-2 text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 inline-flex items-center gap-0.5 font-normal transition-colors"
