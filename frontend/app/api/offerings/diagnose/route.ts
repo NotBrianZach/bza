@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { searchOfferings } from '@/lib/offerings'
 
 /**
  * Probe each catalogue from inside the Worker and report exactly what it answers.
@@ -99,6 +100,40 @@ export async function GET(req: NextRequest) {
           row.threw = String(e?.message ?? e).slice(0, 200)
         }
         results.push(row)
+      }
+    }
+  }
+
+  // ── Live path ────────────────────────────────────────────────────────────
+  // `?live=1` exercises the real resolver rather than a hand-written URL, so a
+  // green raw probe and a broken provider module cannot be confused for each
+  // other. Only the media that need no user: `passage` reads a private library.
+  if (req.nextUrl.searchParams.get('live') === '1') {
+    for (const medium of ['music', 'artwork'] as const) {
+      const started = Date.now()
+      try {
+        const offerings = await searchOfferings(medium, 'rain', {}, 5)
+        results.push({
+          provider: `live:${medium}`,
+          variant: 'searchOfferings',
+          attempt: 1,
+          status: 200,
+          ms: Date.now() - started,
+          count: offerings.length,
+          first: offerings[0]
+            ? `${offerings[0].id} | ${offerings[0].title} | ${offerings[0].attribution ?? '-'} | ${offerings[0].perceptible.kind}`
+            : null,
+        })
+      } catch (e: any) {
+        results.push({
+          provider: `live:${medium}`,
+          variant: 'searchOfferings',
+          attempt: 1,
+          status: e?.status ?? null,
+          ms: Date.now() - started,
+          threw: String(e?.message ?? e).slice(0, 200),
+          upstream: e?.upstreamStatus ?? null,
+        })
       }
     }
   }
