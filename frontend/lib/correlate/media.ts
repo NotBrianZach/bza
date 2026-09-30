@@ -49,7 +49,7 @@ export const MEDIA: Record<MediumId, Medium> = {
     name: 'song',
     plural: 'Music',
     origin: 'catalogue',
-    provider: 'the iTunes catalogue — 30-second previews, no account needed',
+    provider: 'the Deezer catalogue — 30-second previews, no account needed',
     framingHint: 'The whole track, or the part that matters — the opening, the drop, one line.',
     searchPlaceholder: 'Search for a song…',
     physical: false,
