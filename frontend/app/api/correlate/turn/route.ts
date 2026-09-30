@@ -130,7 +130,10 @@ export async function POST(req: NextRequest) {
     try {
       move = await lookupOffering(mediumId, body.offeringId, { userId })
     } catch (e) {
-      if (e instanceof OfferingError) return err(e.message, e.status)
+      if (e instanceof OfferingError) {
+        console.warn(`[correlate] move lookup ${e.provider} upstream=${e.upstreamStatus}: ${e.message}`)
+        return err(e.message, e.status)
+      }
       throw e
     }
     if (!move) return err('That offering could not be found', 404)
@@ -275,13 +278,20 @@ export async function POST(req: NextRequest) {
 
   // --- 5. Make the reply real ---------------------------------------------
   let reply: Offering | null = null
+  let replyError: { message: string; provider: string; upstreamStatus: number | null } | null = null
   if (legal && interpretation.reply) {
     try {
       reply = await resolveReply(interpretation.reply, [...inPlay], { userId })
     } catch (e) {
-      // Rate-limited upstream is worth surfacing; anything else just means the
-      // reply missed, which is a legal outcome the turn records.
-      if (e instanceof OfferingError && e.status === 429) return err(e.message, 429)
+      if (e instanceof OfferingError) {
+        // Distinguish "nothing matched" from "the catalogue refused us". Both leave
+        // reply null, but only the first is the game working as designed; the
+        // second is an outage, and calling it a miss blames the interpreter for it.
+        console.warn(`[correlate] reply resolve ${e.provider} upstream=${e.upstreamStatus}: ${e.message}`)
+        replyError = { message: e.message, provider: e.provider, upstreamStatus: e.upstreamStatus }
+      } else {
+        throw e
+      }
     }
   }
 
@@ -344,6 +354,7 @@ export async function POST(req: NextRequest) {
     turn,
     session: updated ?? session,
     replyReason: interpretation.replyReason,
-    missed: legal && !!interpretation.reply && !reply,
+    missed: legal && !!interpretation.reply && !reply && !replyError,
+    replyError,
   })
 }

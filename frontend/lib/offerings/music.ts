@@ -22,6 +22,9 @@ import { OfferingError, getJson, makeCache } from './shared'
 const SEARCH = 'https://itunes.apple.com/search'
 const LOOKUP = 'https://itunes.apple.com/lookup'
 
+/** Human name for this catalogue, used in every error it can raise. */
+const PROVIDER = 'The iTunes catalogue'
+
 /** iTunes accepts up to 200; 25 is plenty to choose a move from. */
 export const MUSIC_SEARCH_LIMIT = 25
 
@@ -71,7 +74,7 @@ export async function searchMusic(q: string, limit = MUSIC_SEARCH_LIMIT): Promis
 
   const url = `${SEARCH}?term=${encodeURIComponent(term)}&media=music&entity=song`
     + `&limit=${Math.max(1, Math.min(Math.trunc(limit) || MUSIC_SEARCH_LIMIT, 200))}`
-  const data = await getJson(url)
+  const data = await getJson(PROVIDER, url)
 
   const offerings = (data?.results ?? [])
     .map(mapTrack)
@@ -90,7 +93,7 @@ export async function searchMusic(q: string, limit = MUSIC_SEARCH_LIMIT): Promis
  */
 export async function lookupMusic(id: string): Promise<Offering | null> {
   if (!/^\d+$/.test(id)) return null
-  const data = await getJson(`${LOOKUP}?id=${encodeURIComponent(id)}&entity=song`)
+  const data = await getJson(PROVIDER, `${LOOKUP}?id=${encodeURIComponent(id)}&entity=song`)
   const first = (data?.results ?? [])[0]
   return first ? mapTrack(first) : null
 }

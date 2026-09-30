@@ -19,6 +19,8 @@ import { OfferingError, getJson, makeCache } from './shared'
 const API = 'https://api.themoviedb.org/3'
 const IMG = 'https://image.tmdb.org/t/p'
 
+const PROVIDER = 'TMDB'
+
 export const SCENE_SEARCH_LIMIT = 20
 
 const cache = makeCache<Offering[]>(30 * 60 * 1000)
@@ -29,7 +31,7 @@ export function sceneMediumAvailable(): boolean {
 
 function key(): string {
   const k = process.env.TMDB_API_KEY
-  if (!k) throw new OfferingError('Film and TV are not enabled on this deployment.', 501)
+  if (!k) throw new OfferingError('Film and TV are not enabled on this deployment.', 501, PROVIDER)
   return k
 }
 
@@ -74,7 +76,7 @@ export async function searchScenes(q: string, limit = SCENE_SEARCH_LIMIT): Promi
 
   const url = `${API}/search/multi?api_key=${encodeURIComponent(key())}`
     + `&query=${encodeURIComponent(term)}&include_adult=false`
-  const data = await getJson(url)
+  const data = await getJson(PROVIDER, url)
 
   const offerings = (data?.results ?? [])
     .map(mapResult)
@@ -89,7 +91,7 @@ export async function lookupScene(id: string): Promise<Offering | null> {
   const m = /^(movie|tv):(\d+)$/.exec(id)
   if (!m) return null
   const [, kind, tmdbId] = m
-  const data = await getJson(`${API}/${kind}/${tmdbId}?api_key=${encodeURIComponent(key())}`)
+  const data = await getJson(PROVIDER, `${API}/${kind}/${tmdbId}?api_key=${encodeURIComponent(key())}`)
   return mapResult({ ...data, media_type: kind })
 }
 

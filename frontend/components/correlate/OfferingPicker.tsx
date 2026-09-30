@@ -16,6 +16,19 @@ const ICONS: Record<string, any> = {
   Music2, Frame, BookOpen, Clapperboard, Hand, Footprints, Accessibility, Dumbbell,
 }
 
+/**
+ * Search tuning.
+ *
+ * Every catalogued provider is rate-limited by IP, and server-side that IP is ours
+ * and shared by every player, so each keystroke that escapes the debounce spends
+ * from a common budget. Two characters at 350ms fires mid-word — typing "rainy day"
+ * with ordinary pauses sent "ra", "rain", "rainy", "rainy d" before the player had
+ * finished thinking. Three characters at 600ms fires on words rather than
+ * fragments, which is both fewer calls and better queries.
+ */
+const SEARCH_MIN_CHARS = 3
+const SEARCH_DEBOUNCE_MS = 600
+
 export interface MoveDraft {
   medium: MediumId
   offeringId?: string
@@ -100,7 +113,7 @@ export default function OfferingPicker({
   useEffect(() => {
     if (isComposed) return
     const query = q.trim()
-    if (query.length < 2) { setResults([]); setSearchError(''); setSearching(false); return }
+    if (query.length < SEARCH_MIN_CHARS) { setResults([]); setSearchError(''); setSearching(false); return }
 
     setSearching(true)
     const mine = ++seq.current
@@ -110,14 +123,22 @@ export default function OfferingPicker({
         const data = await res.json()
         // A slower earlier request must not overwrite a newer result set.
         if (mine !== seq.current) return
-        if (data.error) { setSearchError(data.error); setResults([]) }
+        if (data.error) {
+          // Name the catalogue and its status. The previous version showed one
+          // generic string for every failure, which is how a hard refusal from one
+          // provider read as a rate limit on another.
+          setSearchError(data.upstreamStatus
+            ? `${data.error} (${data.provider}, HTTP ${data.upstreamStatus})`
+            : data.error)
+          setResults([])
+        }
         else { setSearchError(''); setResults(data.offerings ?? []) }
       } catch {
         if (mine === seq.current) setSearchError('Search failed')
       } finally {
         if (mine === seq.current) setSearching(false)
       }
-    }, 350)
+    }, SEARCH_DEBOUNCE_MS)
 
     return () => clearTimeout(timer)
   }, [q, medium, isComposed])

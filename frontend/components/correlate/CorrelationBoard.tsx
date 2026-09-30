@@ -123,6 +123,13 @@ export default function CorrelationBoard({
       }
       setTurns(t => [...t, data.turn])
       if (data.session) updateSession(data.session)
+      // A reply that found nothing is the game working as designed. A reply that
+      // could not be looked up because a catalogue refused us is an outage, and
+      // letting that read as "found nothing real" blames the interpreter for
+      // infrastructure.
+      if (data.replyError) {
+        setError(`${data.replyError.message} The turn was recorded; the reply could not be looked up.`)
+      }
       track('correlate_turn_played', {
         game: session.mode,
         medium: draft.medium,

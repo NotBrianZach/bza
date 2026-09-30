@@ -42,7 +42,7 @@ export async function searchOfferings(
     case 'artwork': return searchArtwork(q, limit)
     case 'scene':   return searchScenes(q, limit)
     case 'passage':
-      if (!ctx.userId) throw new OfferingError('Sign in to offer a passage from your library.', 401)
+      if (!ctx.userId) throw new OfferingError('Sign in to offer a passage from your library.', 401, 'Your library')
       return searchPassages(ctx.userId, q, limit)
     default:
       // Composed media have nothing to search. Returning empty rather than

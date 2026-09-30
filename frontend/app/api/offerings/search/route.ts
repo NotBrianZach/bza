@@ -51,7 +51,14 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ offerings })
   } catch (e) {
     if (e instanceof OfferingError) {
-      return NextResponse.json({ error: e.message }, { status: e.status })
+      // provider + upstreamStatus travel with the message. Without them a 403 from
+      // one catalogue is indistinguishable from a 429 from another in the UI, which
+      // is precisely how "too many searches" got shown for a hard refusal.
+      console.warn(`[offerings] ${e.provider} ${mediumId} q=${JSON.stringify(q)} upstream=${e.upstreamStatus} -> ${e.message}`)
+      return NextResponse.json(
+        { error: e.message, provider: e.provider, upstreamStatus: e.upstreamStatus },
+        { status: e.status },
+      )
     }
     throw e
   }

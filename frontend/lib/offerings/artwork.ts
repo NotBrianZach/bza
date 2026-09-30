@@ -8,10 +8,13 @@
  * shared rate limit to render one screen. Both are keyless; only one is usable as
  * the primary.
  *
- * The trap worth knowing about: the IIIF image host answers **403 to a request
- * with no User-Agent** and 200 with one. It looks exactly like a broken
- * integration or a hotlink block. `getJson` and `iiif()` both identify
- * themselves; do not strip that.
+ * A trap that turned out not to apply here: AIC's IIIF *image* host answers 403 to
+ * a request with no `User-Agent`. True, and it looks exactly like a hotlink block —
+ * but nothing in this file fetches an image. `iiif()` only builds URLs, and those
+ * go into `<img src>` to be loaded by the browser, which always sends a real UA.
+ * A UA was briefly added to the shared fetch helper because of this, where it did
+ * nothing for images and was sent to every other catalogue as a side effect. If
+ * you ever *do* fetch an image server-side, the header goes on that call.
  */
 
 import type { Offering } from '@/lib/correlate/types'
@@ -19,6 +22,8 @@ import { OfferingError, getJson, makeCache } from './shared'
 
 const API = 'https://api.artic.edu/api/v1/artworks'
 const IIIF = 'https://www.artic.edu/iiif/2'
+
+const PROVIDER = 'The Art Institute of Chicago'
 
 export const ARTWORK_SEARCH_LIMIT = 24
 
@@ -76,7 +81,7 @@ export async function searchArtwork(q: string, limit = ARTWORK_SEARCH_LIMIT): Pr
   const url = `${API}/search?q=${encodeURIComponent(term)}`
     + `&limit=${Math.max(1, Math.min(Math.trunc(limit) * 2 || 48, 100))}`
     + `&fields=${FIELDS}`
-  const data = await getJson(url)
+  const data = await getJson(PROVIDER, url)
 
   const offerings = (data?.data ?? [])
     .map(mapArtwork)
@@ -89,7 +94,7 @@ export async function searchArtwork(q: string, limit = ARTWORK_SEARCH_LIMIT): Pr
 
 export async function lookupArtwork(id: string): Promise<Offering | null> {
   if (!/^\d+$/.test(id)) return null
-  const data = await getJson(`${API}/${encodeURIComponent(id)}?fields=${FIELDS}`)
+  const data = await getJson(PROVIDER, `${API}/${encodeURIComponent(id)}?fields=${FIELDS}`)
   return data?.data ? mapArtwork(data.data) : null
 }
 
