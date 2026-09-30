@@ -25,6 +25,24 @@ const IIIF = 'https://www.artic.edu/iiif/2'
 
 const PROVIDER = 'The Art Institute of Chicago'
 
+/**
+ * AIC's edge refuses an unidentified request.
+ *
+ * Measured from the Cloudflare Worker via /api/offerings/diagnose: no
+ * User-Agent -> 403 and an Akamai block page; any User-Agent -> 200. A laptop
+ * probe cannot see this, because curl sends a UA of its own — which is exactly
+ * how this got mis-diagnosed once already and the header briefly removed.
+ *
+ * `AIC-User-Agent` is what their docs ask for; the plain `User-Agent` is what
+ * their edge actually gates on. Send both. Deliberately not shaped like the
+ * Googlebot `(+https://…)` convention.
+ */
+const HEADERS = {
+  'User-Agent': 'AIReadAlong/1.0 aireadalong.com',
+  'AIC-User-Agent': 'AIReadAlong/1.0 (poinkcompany@gmail.com)',
+}
+
+
 export const ARTWORK_SEARCH_LIMIT = 24
 
 /** Only the fields we render, so the response stays small. */
@@ -81,7 +99,7 @@ export async function searchArtwork(q: string, limit = ARTWORK_SEARCH_LIMIT): Pr
   const url = `${API}/search?q=${encodeURIComponent(term)}`
     + `&limit=${Math.max(1, Math.min(Math.trunc(limit) * 2 || 48, 100))}`
     + `&fields=${FIELDS}`
-  const data = await getJson(PROVIDER, url)
+  const data = await getJson(PROVIDER, url, HEADERS)
 
   const offerings = (data?.data ?? [])
     .map(mapArtwork)
@@ -94,7 +112,7 @@ export async function searchArtwork(q: string, limit = ARTWORK_SEARCH_LIMIT): Pr
 
 export async function lookupArtwork(id: string): Promise<Offering | null> {
   if (!/^\d+$/.test(id)) return null
-  const data = await getJson(PROVIDER, `${API}/${encodeURIComponent(id)}?fields=${FIELDS}`)
+  const data = await getJson(PROVIDER, `${API}/${encodeURIComponent(id)}?fields=${FIELDS}`, HEADERS)
   return data?.data ? mapArtwork(data.data) : null
 }
 
