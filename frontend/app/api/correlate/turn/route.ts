@@ -2,13 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { getUserFromToken, checkQuota, logUsage } from '@/lib/apiQuota'
 import { getGame } from '@/lib/correlate/games'
-import { availableMedia, getMedium, isComposed } from '@/lib/correlate/media'
+import { availableMedia, getMedium, isComposed, replyMediaFor } from '@/lib/correlate/media'
 import { relationPermitted, resolveRelations, spentRelations } from '@/lib/correlate/relations'
 import {
-  applyWorldDelta, buildSystemPrompt, buildUserPrompt, describeRejection, normalizeInterpretation,
-  parseJsonObject, sessionScope, type TurnContext,
+  applyWorldDelta, buildRetryPrompt, buildSystemPrompt, buildUserPrompt, describeRejection,
+  normalizeInterpretation, parseJsonObject, salvageQueries, sessionScope, type TurnContext,
 } from '@/lib/correlate/prompt'
-import type { ActionIntent, MediumId, Offering, RelationId } from '@/lib/correlate/types'
+import type { ActionIntent, Interpretation, MediumId, Offering, RelationId } from '@/lib/correlate/types'
 import { OfferingError, composeOffering, lookupOffering, resolveReply } from '@/lib/offerings'
 
 /**
@@ -46,6 +46,9 @@ function serviceClient() {
   }
   return _service
 }
+
+/** A catalogue refusing or rate-limiting us, as opposed to simply not matching. */
+type ProviderFailure = { message: string; provider: string; upstreamStatus: number | null }
 
 function err(message: string, status: number) {
   return NextResponse.json({ error: message }, { status })
@@ -227,77 +230,167 @@ export async function POST(req: NextRequest) {
     turnIndex,
   })
 
+  // One place that talks to the model, because the reply pipeline below may need
+  // to ask twice and the second ask must be identical in every respect but its
+  // prompt. Returns raw content, or null when the provider itself failed.
   const useOpenRouter = !!process.env.OPENROUTER_API_KEY
   const apiUrl = useOpenRouter
     ? 'https://openrouter.ai/api/v1/chat/completions'
     : 'https://api.openai.com/v1/chat/completions'
   const modelId = useOpenRouter ? MODEL : 'gpt-4o-mini'
 
-  const aiRes = await fetch(apiUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-      ...(useOpenRouter
-        ? { 'HTTP-Referer': 'https://aireadalong.com', 'X-Title': 'AI Play Along' }
-        : {}),
-    },
-    body: JSON.stringify({
-      model: modelId,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
-      ],
-      max_tokens: 1400,
-      temperature: 0.9,
-    }),
-  })
-
-  if (!aiRes.ok) {
-    const detail = await aiRes.text().catch(() => '')
-    return err(`Interpreter unavailable (HTTP ${aiRes.status})${detail ? `: ${detail.slice(0, 200)}` : ''}`, 502)
+  const callInterpreter = async (system: string, user: string): Promise<string | null> => {
+    const res = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+        ...(useOpenRouter
+          ? { 'HTTP-Referer': 'https://aireadalong.com', 'X-Title': 'AI Play Along' }
+          : {}),
+      },
+      body: JSON.stringify({
+        model: modelId,
+        messages: [
+          { role: 'system', content: system },
+          { role: 'user', content: user },
+        ],
+        max_tokens: 1400,
+        temperature: 0.9,
+      }),
+    })
+    if (!res.ok) {
+      const detail = await res.text().catch(() => '')
+      console.warn(`[correlate] interpreter HTTP ${res.status}${detail ? `: ${detail.slice(0, 200)}` : ''}`)
+      return null
+    }
+    logUsage(userId, 0.005, { model: modelId, endpoint: 'correlate-turn' })
+    const data = await res.json()
+    return data?.choices?.[0]?.message?.content ?? ''
   }
 
-  const aiData = await aiRes.json()
-  const interpretation = normalizeInterpretation(
-    parseJsonObject(aiData?.choices?.[0]?.message?.content ?? ''),
-    media,
-    relations,
-  )
-  if (!interpretation) return err('The interpreter returned something unreadable. Try that move again.', 502)
+  const firstRaw = await callInterpreter(systemPrompt, userPrompt)
+  if (firstRaw === null) return err('Interpreter unavailable. Try that move again in a moment.', 502)
 
-  logUsage(userId, 0.005, { model: modelId, endpoint: 'correlate-turn' })
+  const firstPass = normalizeInterpretation(parseJsonObject(firstRaw), media, relations)
+  if (!firstPass) return err('The interpreter returned something unreadable. Try that move again.', 502)
 
-  if (interpretation.replyRejection) {
+  if (firstPass.replyRejection) {
     // Loud on purpose: this is the interpreter and our schema disagreeing, which
     // is a bug in the prompt or the alias table, not a normal game outcome.
-    console.warn(`[correlate] reply rejected in ${game.id}: ${describeRejection(interpretation.replyRejection as any)}`)
+    console.warn(`[correlate] reply rejected in ${game.id}: ${describeRejection(firstPass.replyRejection as any)}`)
   }
 
   // In a game that enforces its constraint the interpreter's verdict is the
   // ruling. An opening move has nothing to connect to, so it cannot be illegal,
   // and a game that never gatekeeps is always legal regardless of what the model
-  // volunteers.
+  // volunteers. Ruled once, on the first pass — a retry answers, it does not judge.
   const legal = game.enforcesConstraint && previous !== null
-    ? interpretation.verdict !== 'illegal'
+    ? firstPass.verdict !== 'illegal'
     : true
 
-  // --- 5. Make the reply real ---------------------------------------------
+  // --- 5. Make the reply real. It is not allowed to come back empty. ------
+  //
+  // A turn with no reply is a dead end: in a chain game the next move has nothing
+  // to answer, so the game simply stops. That used to be treated as an acceptable
+  // outcome ("the reply missed") and it is not one. Three stages, each cheaper to
+  // reach than the last is to need:
+  //
+  //   1. the interpreter's own plan
+  //   2. one corrective re-ask, told what failed, restricted to media that cannot
+  //      fail for reasons it cannot see (so never back into the player's library)
+  //   3. a server-side salvage search seeded from what the interpreter said
+  //      carried across, then from the move itself
+  //
+  // If all three fail the catalogues are unreachable, and then the turn is NOT
+  // recorded — better to ask the player to try again than to write a permanent
+  // hole into their chain.
   let reply: Offering | null = null
-  let replyError: { message: string; provider: string; upstreamStatus: number | null } | null = null
-  if (legal && interpretation.reply) {
+  const failure: { current: ProviderFailure | null } = { current: null }
+  let replySource: 'interpreter' | 'retry' | 'salvage' = 'interpreter'
+  let interpretation = firstPass
+
+  const tryResolve = async (plan: NonNullable<Interpretation['reply']>): Promise<Offering | null> => {
     try {
-      reply = await resolveReply(interpretation.reply, [...inPlay], { userId })
+      return await resolveReply(plan, [...inPlay], { userId })
     } catch (e) {
       if (e instanceof OfferingError) {
-        // Distinguish "nothing matched" from "the catalogue refused us". Both leave
-        // reply null, but only the first is the game working as designed; the
-        // second is an outage, and calling it a miss blames the interpreter for it.
         console.warn(`[correlate] reply resolve ${e.provider} upstream=${e.upstreamStatus}: ${e.message}`)
-        replyError = { message: e.message, provider: e.provider, upstreamStatus: e.upstreamStatus }
-      } else {
-        throw e
+        failure.current = { message: e.message, provider: e.provider, upstreamStatus: e.upstreamStatus }
+        return null
       }
+      throw e
+    }
+  }
+
+  if (legal) {
+    // Stage 1.
+    if (interpretation.reply) reply = await tryResolve(interpretation.reply)
+
+    // Stage 2 — one re-ask, only into media that cannot fail on the player's data.
+    if (!reply) {
+      const retryMedia = replyMediaFor(media)
+      const problem = interpretation.replyRejection
+        ? describeRejection(interpretation.replyRejection as any)
+        : failure.current
+          ? `the catalogue could not be reached (${failure.current.provider})`
+          : 'nothing real matched what you named'
+      const attempted = interpretation.reply?.query
+        ?? interpretation.reply?.composed?.title
+        ?? null
+
+      console.warn(`[correlate] retrying reply in ${game.id}: ${problem}`)
+
+      const retryRaw = await callInterpreter(
+        buildSystemPrompt(game, retryMedia, relations),
+        buildRetryPrompt({
+          game, media: retryMedia, relations, move, previous, problem, attempted,
+          reading: interpretation.reading,
+        }),
+      )
+      const retry = retryRaw
+        ? normalizeInterpretation(parseJsonObject(retryRaw), retryMedia, relations)
+        : null
+
+      if (retry?.reply) {
+        const second = await tryResolve(retry.reply)
+        if (second) {
+          reply = second
+          replySource = 'retry'
+          // Adopt the retry's account of the exchange, not the first pass's: its
+          // narration, carried and lost describe the reply that actually landed.
+          // Legality is NOT revisited — that was ruled once, on the move.
+          interpretation = { ...retry, verdict: firstPass.verdict }
+          failure.current = null
+        }
+      }
+    }
+
+    // Stage 3 — the server tries on its own terms.
+    if (!reply) {
+      for (const seed of salvageQueries(interpretation, move)) {
+        for (const medium of replyMediaFor(media).filter(m => !isComposed(m))) {
+          const found = await tryResolve({ medium, query: seed, framing: 'Found in answer to your move' })
+          if (found) {
+            reply = found
+            replySource = 'salvage'
+            failure.current = null
+            break
+          }
+        }
+        if (reply) break
+      }
+      if (reply) console.warn(`[correlate] salvaged a reply in ${game.id} after two interpreter attempts`)
+    }
+
+    if (!reply) {
+      // Everything is down. Do not persist a turn that can never be answered.
+      return err(
+        failure.current
+          ? `${failure.current.message} Your move was not recorded — try it again in a moment.`
+          : 'Could not find anything real to answer with. Your move was not recorded — try again.',
+        failure.current?.upstreamStatus === 429 ? 429 : 503,
+      )
     }
   }
 
@@ -313,11 +406,14 @@ export async function POST(req: NextRequest) {
   // *rejected* rather than merely unmatched, record that instead — a turn with a
   // reading, a narration and a blank reply used to be indistinguishable from a
   // search that found nothing, and only one of those is our bug.
-  const replyNote = interpretation.reply?.query
-    ?? interpretation.reply?.composed?.title
-    ?? (interpretation.replyRejection
-        ? `rejected: ${describeRejection(interpretation.replyRejection as any)}`
-        : null)
+  // What it reached for, and — when the first reach failed — how the answer was
+  // actually arrived at. A salvaged reply is real but it was not the interpreter's
+  // choice, and the log should not pretend otherwise.
+  const reached = interpretation.reply?.query ?? interpretation.reply?.composed?.title ?? null
+  const replyNote =
+    replySource === 'interpreter' ? reached
+    : replySource === 'retry'     ? (reached ? `${reached} (second attempt)` : 'second attempt')
+    : `salvaged: ${reached ?? 'searched from the move itself'}`
 
   // --- 6. Persist ---------------------------------------------------------
   const { data: turn, error: turnErr } = await ((db.from('listen_turns') as any)
@@ -368,10 +464,12 @@ export async function POST(req: NextRequest) {
     turn,
     session: updated ?? session,
     replyReason: interpretation.replyReason,
-    missed: legal && !!interpretation.reply && !reply && !replyError,
-    replyRejected: interpretation.replyRejection
-      ? describeRejection(interpretation.replyRejection as any)
+    // A legal turn always carries a real reply now, so there is no "missed" to
+    // report. What the client still wants to know is whether the answer was the
+    // interpreter's first choice.
+    replySource,
+    replyRejected: firstPass.replyRejection
+      ? describeRejection(firstPass.replyRejection as any)
       : null,
-    replyError,
   })
 }

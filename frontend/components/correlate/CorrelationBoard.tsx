@@ -41,6 +41,7 @@ export default function CorrelationBoard({
   const [pending, setPending] = useState(false)
   const [error, setError] = useState('')
   const [problems, setProblems] = useState<string[]>([])
+  const [notice, setNotice] = useState('')
   const [prediction, setPrediction] = useState('')
 
   const player = useOfferingPlayer()
@@ -60,7 +61,7 @@ export default function CorrelationBoard({
    * The chain, in play order: each legal turn contributes the move and then the
    * reply it drew.
    *
-   * Rejected turns are left out â a move that did not connect never joined the
+   * Rejected turns are left out — a move that did not connect never joined the
    * chain, so it should not be in the thing you look back over.
    */
   const chain = useMemo(
@@ -105,6 +106,7 @@ export default function CorrelationBoard({
   const play = useCallback(async (draft: MoveDraft) => {
     setPending(true)
     setError('')
+    setNotice('')
     setProblems([])
     try {
       const res = await authedFetch('/api/correlate/turn', {
@@ -123,15 +125,12 @@ export default function CorrelationBoard({
       }
       setTurns(t => [...t, data.turn])
       if (data.session) updateSession(data.session)
-      // A reply that found nothing is the game working as designed. A reply that
-      // could not be looked up because a catalogue refused us is an outage, and
-      // letting that read as "found nothing real" blames the interpreter for
-      // infrastructure.
-      if (data.replyRejected) {
-        setError(`The interpreter's reply could not be used — ${data.replyRejected}. The turn was recorded.`)
-      }
-      if (data.replyError) {
-        setError(`${data.replyError.message} The turn was recorded; the reply could not be looked up.`)
+      // Not an error any more: the pipeline guarantees a real reply, so the only
+      // thing worth surfacing is that it took more than one attempt to get one.
+      if (data.replySource && data.replySource !== 'interpreter') {
+        setNotice(data.replySource === 'retry'
+          ? 'The first answer could not be found, so it answered again.'
+          : 'Two answers could not be found, so this one was searched out from your move.')
       }
       track('correlate_turn_played', {
         game: session.mode,
@@ -161,7 +160,7 @@ export default function CorrelationBoard({
 
   // A session can outlive its game. Night Radio was retired along with the "dial"
   // concept it ran on, and telling someone their game no longer exists is better
-  // than showing them a lookup failure â or worse, silently rehoming the session
+  // than showing them a lookup failure — or worse, silently rehoming the session
   // into a game with different rules, which would rewrite a chain they played.
   if (!game) {
     const retired = retiredGameName(session.mode)
@@ -174,11 +173,11 @@ export default function CorrelationBoard({
         <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">{session.title}</h1>
         <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
           {retired
-            ? `${retired} has been retired, so this game cannot take another turn. Its ${session.turn_count} turn${plural} are still stored â nothing was deleted â but there is no interpreter left to read a new move.`
+            ? `${retired} has been retired, so this game cannot take another turn. Its ${session.turn_count} turn${plural} are still stored — nothing was deleted — but there is no interpreter left to read a new move.`
             : `This session names game "${session.mode}", which is not in the registry, so it cannot take another turn.`}
         </p>
         <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed mt-3">
-          Tag is the closest thing to it â the same exchange, judged by whoever is paying attention
+          Tag is the closest thing to it — the same exchange, judged by whoever is paying attention
           rather than by a radio operator.
         </p>
       </div>
@@ -278,7 +277,7 @@ export default function CorrelationBoard({
             <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
               <div className="flex items-center justify-between mb-3 gap-3">
                 <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                  {turns.length === 0 ? 'Your opening offering' : `Your move â turn ${turns.length + 1}`}
+                  {turns.length === 0 ? 'Your opening offering' : `Your move — turn ${turns.length + 1}`}
                 </p>
                 {onTheTable && (
                   <p className="text-[11px] text-gray-400 dark:text-gray-500 truncate max-w-[55%]">
@@ -294,7 +293,7 @@ export default function CorrelationBoard({
                   value={prediction}
                   onChange={e => setPrediction(e.target.value)}
                   disabled={pending}
-                  placeholder="Your prediction â what will come back?"
+                  placeholder="Your prediction — what will come back?"
                   className="w-full mb-3 px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400 disabled:opacity-50"
                 />
               )}
@@ -317,6 +316,9 @@ export default function CorrelationBoard({
                     </li>
                   ))}
                 </ul>
+              )}
+              {notice && (
+                <p className="mt-3 text-xs text-gray-400 dark:text-gray-500">{notice}</p>
               )}
               {error && (
                 <p className="mt-3 flex items-start gap-2 text-xs text-red-500 dark:text-red-400">
@@ -419,7 +421,7 @@ function TurnBlock({ turn, player, accentText }: {
     return (
       <div className="rounded-2xl border border-dashed border-red-200 dark:border-red-900/50 bg-red-50/50 dark:bg-red-950/20 p-4">
         <p className="flex items-center gap-1.5 text-[11px] font-medium text-red-600 dark:text-red-400 mb-3">
-          <SignalZero size={13} /> Turn {turn.turn_index + 1} â turned away, the connection did not hold
+          <SignalZero size={13} /> Turn {turn.turn_index + 1} — turned away, the connection did not hold
         </p>
         <OfferingCard offering={turn.move_offering} player={player} label="you offered" compact />
         {turn.claimed_relation && (
@@ -469,9 +471,13 @@ function TurnBlock({ turn, player, accentText }: {
       {turn.reply_offering ? (
         <OfferingCard offering={turn.reply_offering} player={player} label="came back" />
       ) : (
+        // Only reachable for turns recorded before the reply pipeline guaranteed
+        // an answer: a legal turn is no longer persisted without one, so this is
+        // history rather than a current outcome.
         <div className="rounded-xl border border-dashed border-gray-300 dark:border-gray-600 p-3">
           <p className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
-            <SignalZero size={13} /> It reached for{turn.reply_query ? ` â${turn.reply_query}â` : ' something'} and found nothing real.
+            <SignalZero size={13} /> No answer was recorded for this turn
+            {turn.reply_query ? ` — it reached for “${turn.reply_query}”` : ''}.
           </p>
         </div>
       )}
@@ -512,13 +518,13 @@ function TurnBlock({ turn, player, accentText }: {
 /** World values are game-defined JSON, so render whatever shape turns up. */
 function WorldValue({ value }: { value: unknown }) {
   if (value === null || value === undefined || value === '') {
-    return <span className="text-gray-400 dark:text-gray-500">â</span>
+    return <span className="text-gray-400 dark:text-gray-500">—</span>
   }
   if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
     return <span>{String(value)}</span>
   }
   if (Array.isArray(value)) {
-    if (value.length === 0) return <span className="text-gray-400 dark:text-gray-500">â</span>
+    if (value.length === 0) return <span className="text-gray-400 dark:text-gray-500">—</span>
     return (
       <ul className="space-y-1">
         {value.slice(-6).map((v, i) => (
@@ -532,7 +538,7 @@ function WorldValue({ value }: { value: unknown }) {
   }
   if (typeof value === 'object') {
     const entries = Object.entries(value as Record<string, unknown>)
-    if (entries.length === 0) return <span className="text-gray-400 dark:text-gray-500">â</span>
+    if (entries.length === 0) return <span className="text-gray-400 dark:text-gray-500">—</span>
     return (
       <span className="space-y-0.5 block">
         {entries.map(([k, v]) => (

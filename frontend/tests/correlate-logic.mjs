@@ -76,10 +76,10 @@ function build() {
 const M = build()
 const {
   parseJsonObject, normalizeInterpretation, applyWorldDelta, offeringLine, sessionScope,
-  describeRejection,
+  describeRejection, salvageQueries,
 } = M.prompt
 const { GAME_LIST, GAMES, getGame, ACCENT_CLASSES, FEATURED_GAMES, FEATURED_GAME_IDS, retiredGameName } = M.games
-const { MEDIA, MEDIUM_LIST, ALL_MEDIUM_IDS, getMedium, isComposed, availableMedia, playableMedia, resolveMedia } = M.media
+const { MEDIA, MEDIUM_LIST, ALL_MEDIUM_IDS, getMedium, isComposed, availableMedia, playableMedia, resolveMedia, replyMediaFor } = M.media
 const { RELATIONS, RELATION_LIST, ALL_RELATION_IDS, relationPermitted, spentRelations, resolveRelations } = M.relations
 const { checkPerformability, composeOffering, vocabularyFor } = M.composed
 
@@ -268,6 +268,37 @@ t('keyless media are always available', availableMedia({}).includes('music') && 
 t('playableMedia narrows to what is available', JSON.stringify(playableMedia(['music', 'scene'], ['music'])) === '["music"]')
 t('playableMedia never returns nothing', playableMedia(['scene'], ['music']).length > 0)
 t('resolveMedia expands "all" to every medium', resolveMedia('all').length === MEDIUM_LIST.length)
+
+group('reply pipeline inputs — what the guarantee is built on')
+t('passage is the only library-dependent medium', (() => {
+  const dependent = MEDIUM_LIST.filter(m => m.dependsOnUserLibrary).map(m => m.id)
+  return dependent.length === 1 && dependent[0] === 'passage'
+})(), MEDIUM_LIST.filter(m => m.dependsOnUserLibrary).map(m => m.id).join(', '))
+// A retry must never land in a medium that can come back empty for reasons the
+// interpreter cannot see or fix — that is how a "guaranteed" reply stays empty.
+t('replyMediaFor drops the library-dependent medium', !replyMediaFor(ALL_MEDIA).includes('passage'))
+t('replyMediaFor keeps everything else', replyMediaFor(ALL_MEDIA).length === ALL_MEDIA.length - 1)
+t('replyMediaFor never returns nothing', replyMediaFor(['passage']).length > 0)
+t('a composed medium survives, since it cannot fail to resolve',
+  replyMediaFor(ALL_MEDIA).some(m => isComposed(m)))
+
+group('salvageQueries — the server\'s own last resort')
+const sq = (interp, move) => salvageQueries(interp, move)
+const mv = { medium: 'music', id: 'dz:1', title: 'Diaphanous', attribution: 'Ana Roxanne', framing: 'f',
+             perceptible: { kind: 'audio', url: 'x' }, sourceUrl: null, origin: 'catalogue', meta: {} }
+t('the carried quality seeds the first attempt', (() => {
+  // Hyphens become spaces: a catalogue search wants words, not compounds.
+  const q = sq({ carried: 'the quality of something almost-visible', facts: [] }, mv)[0]
+  return q === 'quality something almost visible'
+})(), sq({ carried: 'the quality of something almost-visible', facts: [] }, mv)[0])
+t('short words are dropped from the seed',
+  !sq({ carried: 'the and of a quality', facts: [] }, mv)[0].split(' ').some(w => w.length <= 3))
+t('the move title is a later attempt', sq({ carried: '', facts: [] }, mv).includes('Diaphanous'))
+t('the attribution is the last attempt', sq({ carried: '', facts: [] }, mv).includes('Ana Roxanne'))
+t('nothing usable yields no attempts rather than empty strings',
+  sq({ carried: '', facts: [] }, { ...mv, title: '', attribution: null }).length === 0)
+t('punctuation does not leak into a query',
+  !/[—"'?!]/.test(sq({ carried: 'reaching — never "arriving"', facts: [] }, mv)[0]))
 
 group('game registry — internal consistency')
 t('GAME_LIST covers every game exactly once', GAME_LIST.length === Object.keys(GAMES).length && new Set(GAME_LIST.map(g => g.id)).size === GAME_LIST.length)

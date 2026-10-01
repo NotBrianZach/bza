@@ -501,3 +501,72 @@ export function sessionScope(game: CorrelationGame, available: MediumId[]) {
     relations: resolveRelations(game.relations),
   }
 }
+
+/**
+ * A corrective second ask, when the interpreter's reply could not be made real.
+ *
+ * An empty reply is not an acceptable outcome: the next turn has nothing to
+ * answer, which in a chain game simply ends it. So a failed reply buys one more
+ * attempt, told exactly what went wrong and restricted to media that cannot fail
+ * for reasons outside the interpreter's control.
+ *
+ * It re-states the move rather than relying on conversation memory, because this
+ * is a fresh completion and there is no thread.
+ */
+export function buildRetryPrompt(opts: {
+  game: CorrelationGame
+  media: MediumId[]
+  relations: RelationId[]
+  move: Offering
+  previous: Offering | null
+  /** What went wrong the first time, in plain words. */
+  problem: string
+  /** What it tried, so it does not try the same thing again. */
+  attempted: string | null
+  reading: string
+}): string {
+  const { game, media, relations, move, previous, problem, attempted, reading } = opts
+  const parts: string[] = []
+
+  parts.push(
+    `YOUR LAST REPLY COULD NOT BE USED\n${problem}` +
+    (attempted ? `\nYou tried: ${attempted}. Do not offer that again.` : ''),
+  )
+  parts.push(`THE PLAYER'S MOVE\n${offeringLine(move)}`)
+  if (previous) parts.push(`THE OFFERING ON THE TABLE\n${offeringLine(previous)}`)
+  parts.push(`YOUR READING OF THE MOVE (unchanged — keep it)\n${reading}`)
+
+  parts.push(
+    `ANSWER AGAIN. Constraints for this attempt:\n` +
+    `- Your reply medium must be exactly one of: ${media.join(', ')}.\n` +
+    `- Your relation must be exactly one of: ${relations.join(', ')}.\n` +
+    `- For a searchable medium, name something well known enough to be found — a ` +
+    `famous recording, a famous painting. This is the second attempt; reach for the ` +
+    `obvious rather than the obscure.\n` +
+    `- For a composed medium (gesture, movement, stretch, exercise) you author it ` +
+    `outright, so it cannot fail to be found: give a title and one to five concrete ` +
+    `ordered steps. That is the safest way to answer this turn.`,
+  )
+  parts.push(`Respond with the same JSON object as before, and nothing else.`)
+
+  return parts.join('\n\n')
+}
+
+/**
+ * Queries the server can try on its own, if two interpreter attempts both failed.
+ *
+ * Last resort before giving up, and ordered by how likely each is to mean
+ * something: the quality the interpreter said carried across is a better seed than
+ * the move's own title, which is better than nothing. The catalogues are large
+ * enough that a plain-word search almost always returns something real.
+ */
+export function salvageQueries(interpretation: Interpretation, move: Offering): string[] {
+  const words = (s: string) =>
+    s.replace(/[^\p{L}\p{N}\s]/gu, ' ').split(/\s+/).filter(w => w.length > 3).slice(0, 4).join(' ')
+
+  return [
+    interpretation.carried ? words(interpretation.carried) : '',
+    move.title,
+    move.attribution ?? '',
+  ].map(s => s.trim()).filter(Boolean)
+}

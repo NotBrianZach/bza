@@ -35,6 +35,14 @@ export interface Medium {
   /** True when an offering in this medium describes something a body does. */
   physical: boolean
   /**
+   * True when resolving an offering in this medium depends on the player's own
+   * data rather than a public catalogue. Only `passage` does: it searches the
+   * reader's books, so a reader with a small library has nothing for an
+   * interpreter to reach for, and a reply in this medium can fail through nobody's
+   * fault. The reply pipeline therefore never *retries* into it.
+   */
+  dependsOnUserLibrary?: boolean
+  /**
    * Set when the medium needs a credential this deployment may not have. The
    * medium is hidden rather than offered-and-broken when the key is absent.
    */
@@ -74,6 +82,7 @@ export const MEDIA: Record<MediumId, Medium> = {
     plural: 'Reading',
     origin: 'library',
     provider: 'your own library — anything you have read here',
+    dependsOnUserLibrary: true,
     framingHint: 'The sentence that does the work, or the whole paragraph.',
     searchPlaceholder: 'Search your books for a passage…',
     physical: false,
@@ -192,4 +201,16 @@ export function playableMedia(
   const wanted = resolveMedia(spec)
   const usable = wanted.filter(m => available.includes(m))
   return usable.length > 0 ? usable : ['music']
+}
+
+/**
+ * Media an interpreter may be *retried* into.
+ *
+ * Drops anything that depends on the player's own data. A reply pipeline whose
+ * job is to guarantee a real answer must not retry into a medium that can come
+ * back empty for reasons the interpreter cannot see or fix.
+ */
+export function replyMediaFor(media: MediumId[]): MediumId[] {
+  const reliable = media.filter(id => !MEDIA[id]?.dependsOnUserLibrary)
+  return reliable.length > 0 ? reliable : media
 }
