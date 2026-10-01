@@ -1,87 +1,82 @@
 /**
- * Artwork offerings — the Art Institute of Chicago collection.
+ * Artwork offerings — the Cleveland Museum of Art open-access collection.
  *
- * Chosen over the Met for one concrete reason: AIC's search returns the image id,
- * the artist, the date and the public-domain flag **in the search response**,
- * so a result list costs one request. The Met's search returns bare objectIDs and
- * every row then needs its own fetch, which turns a picker into an N+1 and burns a
- * shared rate limit to render one screen. Both are keyless; only one is usable as
- * the primary.
+ * Third artwork provider in two days, and the reason is the same one that keeps
+ * biting this section: an API being reachable is not the same as its *images*
+ * being viewable.
  *
- * A trap that turned out not to apply here: AIC's IIIF *image* host answers 403 to
- * a request with no `User-Agent`. True, and it looks exactly like a hotlink block —
- * but nothing in this file fetches an image. `iiif()` only builds URLs, and those
- * go into `<img src>` to be loaded by the browser, which always sends a real UA.
- * A UA was briefly added to the shared fetch helper because of this, where it did
- * nothing for images and was sent to every other catalogue as a side effect. If
- * you ever *do* fetch an image server-side, the header goes on that call.
+ *  - The Met was rejected first because its search returns bare objectIDs, so
+ *    rendering one screen of results costs one request per row.
+ *  - The Art Institute replaced it — one search call carrying image ids and
+ *    metadata, which was the right trade on paper. But its IIIF image host sits
+ *    behind Cloudflare Bot Management and challenges a hotlinked <img>: a player
+ *    saw empty frames until they opened the URL directly and passed an
+ *    "am I a robot" check, which set a clearance cookie. A proxy cannot fix it
+ *    either — the Worker is refused by that host too, with or without a
+ *    User-Agent (measured via /api/offerings/diagnose).
+ *  - Cleveland has AIC's one-call shape *and* a CDN that answers 200 to a plain
+ *    request with no User-Agent at all. Everything is CC0.
+ *
+ * The lesson encoded here: when adding an image-bearing provider, probe the image
+ * host, not just the API. The API was never the problem.
  */
 
 import type { Offering } from '@/lib/correlate/types'
 import { OfferingError, getJson, makeCache } from './shared'
 
-const API = 'https://api.artic.edu/api/v1/artworks'
-const IIIF = 'https://www.artic.edu/iiif/2'
+const API = 'https://openaccess-api.clevelandart.org/api/artworks'
 
-const PROVIDER = 'The Art Institute of Chicago'
-
-/**
- * AIC's edge refuses an unidentified request.
- *
- * Measured from the Cloudflare Worker via /api/offerings/diagnose: no
- * User-Agent -> 403 and an Akamai block page; any User-Agent -> 200. A laptop
- * probe cannot see this, because curl sends a UA of its own — which is exactly
- * how this got mis-diagnosed once already and the header briefly removed.
- *
- * `AIC-User-Agent` is what their docs ask for; the plain `User-Agent` is what
- * their edge actually gates on. Send both. Deliberately not shaped like the
- * Googlebot `(+https://…)` convention.
- */
-const HEADERS = {
-  'User-Agent': 'AIReadAlong/1.0 aireadalong.com',
-  'AIC-User-Agent': 'AIReadAlong/1.0 (poinkcompany@gmail.com)',
-}
-
+const PROVIDER = 'The Cleveland Museum of Art'
 
 export const ARTWORK_SEARCH_LIMIT = 24
 
 /** Only the fields we render, so the response stays small. */
 const FIELDS = [
-  'id', 'title', 'artist_title', 'date_display', 'image_id',
-  'is_public_domain', 'medium_display', 'place_of_origin', 'artwork_type_title',
+  'id', 'title', 'creators', 'creation_date', 'images', 'url',
+  'type', 'technique', 'culture', 'share_license_status',
 ].join(',')
 
 const cache = makeCache<Offering[]>(30 * 60 * 1000)
 
-/** IIIF image URL at a given pixel width. 843 is AIC's own default full-view size. */
-export function iiif(imageId: string, width = 843): string {
-  return `${IIIF}/${imageId}/full/${width},/0/default.jpg`
+/** "Frederic Edwin Church (American, 1826–1900)" → "Frederic Edwin Church". */
+function artistName(creators: any[]): string | null {
+  const raw = creators?.[0]?.description
+  if (typeof raw !== 'string' || !raw.trim()) return null
+  return raw.replace(/\s*\([^)]*\)\s*$/, '').trim() || null
 }
 
 function mapArtwork(r: any): Offering | null {
+  const web = r?.images?.web?.url
   // No image means nothing to perceive, and an artwork you cannot look at is not
   // an offering in a game about looking.
-  if (!r?.id || !r.title || !r.image_id) return null
+  if (!r?.id || !r.title || !web) return null
+
+  const artist = artistName(r.creators)
+  const culture = Array.isArray(r.culture) ? r.culture[0] : r.culture
+
   return {
     medium: 'artwork',
     id: String(r.id),
     title: r.title,
-    attribution: r.artist_title ?? null,
+    attribution: artist,
     framing: 'The whole picture',
     perceptible: {
       kind: 'image',
-      url: iiif(r.image_id, 843),
-      alt: [r.title, r.artist_title, r.date_display].filter(Boolean).join(', '),
+      url: web,
+      alt: [r.title, artist, r.creation_date].filter(Boolean).join(', '),
     },
-    sourceUrl: `https://www.artic.edu/artworks/${r.id}`,
+    sourceUrl: r.url ?? null,
     origin: 'catalogue',
     meta: {
-      date: r.date_display ?? null,
-      medium: r.medium_display ?? null,
-      origin: r.place_of_origin ?? null,
-      type: r.artwork_type_title ?? null,
-      thumb: iiif(r.image_id, 200),
-      publicDomain: r.is_public_domain ? 'yes' : null,
+      date: r.creation_date ?? null,
+      medium: r.technique ?? r.type ?? null,
+      origin: culture ?? null,
+      type: r.type ?? null,
+      // Same URL at a smaller size would be nicer, but this CDN serves fixed
+      // renditions rather than parameterised ones, so the thumbnail is the
+      // print rendition only when web is missing — which mapTrack already excludes.
+      thumb: web,
+      license: r.share_license_status ?? null,
     },
   }
 }
@@ -90,21 +85,19 @@ export async function searchArtwork(q: string, limit = ARTWORK_SEARCH_LIMIT): Pr
   const term = q.trim()
   if (!term) return []
 
-  const key = `${term.toLowerCase()}|${limit}`
+  const bounded = Math.max(1, Math.min(Math.trunc(limit) || ARTWORK_SEARCH_LIMIT, 100))
+  const key = `${term.toLowerCase()}|${bounded}`
   const hit = cache.get(key)
   if (hit) return hit
 
-  // Over-fetch, because the `image_id`-less rows are dropped and a screen of
-  // results should not come back half empty.
-  const url = `${API}/search?q=${encodeURIComponent(term)}`
-    + `&limit=${Math.max(1, Math.min(Math.trunc(limit) * 2 || 48, 100))}`
-    + `&fields=${FIELDS}`
-  const data = await getJson(PROVIDER, url, HEADERS)
+  // has_image filters server-side, so unlike the previous provider there is no
+  // need to over-fetch and discard imageless rows.
+  const url = `${API}?q=${encodeURIComponent(term)}&limit=${bounded}&has_image=1&fields=${FIELDS}`
+  const data = await getJson(PROVIDER, url)
 
   const offerings = (data?.data ?? [])
     .map(mapArtwork)
     .filter((o: Offering | null): o is Offering => !!o)
-    .slice(0, limit)
 
   cache.set(key, offerings)
   return offerings
@@ -112,7 +105,7 @@ export async function searchArtwork(q: string, limit = ARTWORK_SEARCH_LIMIT): Pr
 
 export async function lookupArtwork(id: string): Promise<Offering | null> {
   if (!/^\d+$/.test(id)) return null
-  const data = await getJson(PROVIDER, `${API}/${encodeURIComponent(id)}?fields=${FIELDS}`, HEADERS)
+  const data = await getJson(PROVIDER, `${API}/${encodeURIComponent(id)}?fields=${FIELDS}`)
   return data?.data ? mapArtwork(data.data) : null
 }
 
@@ -121,6 +114,7 @@ export async function lookupArtwork(id: string): Promise<Offering | null> {
  *
  * Interpreters name art as "Artist — Title", the same convention they use for
  * songs, so the same three attempts apply: as given, swapped, and the bare title.
+ * The bare title goes last because it is loosest.
  */
 export async function resolveArtwork(query: string, exclude: string[] = []): Promise<Offering | null> {
   const raw = query.trim()
@@ -134,7 +128,7 @@ export async function resolveArtwork(query: string, exclude: string[] = []): Pro
   }
 
   const excluded = new Set(exclude)
-  for (const attempt of attempts) {
+  for (const attempt of [...new Set(attempts)]) {
     let results: Offering[]
     try {
       results = await searchArtwork(attempt, 10)
@@ -142,8 +136,8 @@ export async function resolveArtwork(query: string, exclude: string[] = []): Pro
       if (e instanceof OfferingError && e.status === 429) throw e
       continue
     }
-    const hit = results.find(o => !excluded.has(o.id))
-    if (hit) return hit
+    const found = results.find(o => !excluded.has(o.id))
+    if (found) return found
   }
   return null
 }

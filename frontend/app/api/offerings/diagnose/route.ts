@@ -26,31 +26,35 @@ interface Probe { provider: string; url: string }
 
 const PROBES: Probe[] = [
   {
+    // Kept as the cautionary case: 429 to everything, keyed on a shared Cloudflare
+    // egress IP. See lib/offerings/music.ts.
     provider: 'iTunes',
     url: 'https://itunes.apple.com/search?term=rain&media=music&entity=song&limit=25',
   },
   {
-    // Candidate replacement for iTunes: keyless, and its search response carries a
-    // 30-second preview mp3 per track, which is the one thing a game built on
-    // listening cannot do without.
     provider: 'Deezer',
     url: 'https://api.deezer.com/search?q=rain&limit=25',
   },
   {
-    // A different operator again, so a single fallback is not a single point of
-    // failure. The client_id here is Jamendo's public demo one.
-    provider: 'Jamendo',
-    url: 'https://api.jamendo.com/v3.0/tracks/?client_id=56d30c95&format=json&limit=5&search=rain',
+    provider: 'CMA-api',
+    url: 'https://openaccess-api.clevelandart.org/api/artworks/?q=rain&limit=24&has_image=1'
+      + '&fields=id,title,creators,creation_date,images,url,type,technique,culture',
   },
   {
-    provider: 'AIC',
-    url: 'https://api.artic.edu/api/v1/artworks/search?q=rain&limit=48'
-      + '&fields=id,title,artist_title,date_display,image_id,is_public_domain',
+    // THE probe that should have been run before adopting an image provider. An API
+    // being reachable says nothing about whether its images can be displayed.
+    provider: 'CMA-image',
+    url: 'https://openaccess-cdn.clevelandart.org/1969.52/1969.52_web.jpg',
   },
   {
-    // Nothing server-side fetches this; the probe exists so the claim that the
-    // image host refuses the Worker stays testable rather than remembered.
-    provider: 'AIC-IIIF-image',
+    // The previous artwork provider, kept to document why it was dropped: the API
+    // needs a UA and the image host challenges everyone, including real browsers
+    // hotlinking an <img>, which showed up as empty frames in a game.
+    provider: 'AIC-api',
+    url: 'https://api.artic.edu/api/v1/artworks/search?q=rain&limit=10&fields=id,title,image_id',
+  },
+  {
+    provider: 'AIC-image',
     url: 'https://www.artic.edu/iiif/2/f8fd76e9-c396-5678-36ed-6a348c904d27/full/200,/0/default.jpg',
   },
 ]
@@ -91,7 +95,7 @@ export async function GET(req: NextRequest) {
           row.bodyPrefix = body.slice(0, 140).replace(/\s+/g, ' ')
           // For the music candidates, the only question that matters is whether a
           // playable preview came back. Answer it here rather than by eye.
-          if (res.ok && ['iTunes', 'Deezer', 'Jamendo'].includes(probe.provider)) {
+          if (res.ok && ['iTunes', 'Deezer'].includes(probe.provider)) {
             row.previewCount = (body.match(/"(previewUrl|preview|audio)"\s*:\s*"http/g) ?? []).length
           }
         } catch (e: any) {

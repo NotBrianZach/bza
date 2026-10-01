@@ -5,7 +5,7 @@ import { getGame } from '@/lib/correlate/games'
 import { availableMedia, getMedium, isComposed } from '@/lib/correlate/media'
 import { relationPermitted, resolveRelations, spentRelations } from '@/lib/correlate/relations'
 import {
-  applyWorldDelta, buildSystemPrompt, buildUserPrompt, normalizeInterpretation,
+  applyWorldDelta, buildSystemPrompt, buildUserPrompt, describeRejection, normalizeInterpretation,
   parseJsonObject, sessionScope, type TurnContext,
 } from '@/lib/correlate/prompt'
 import type { ActionIntent, MediumId, Offering, RelationId } from '@/lib/correlate/types'
@@ -268,6 +268,12 @@ export async function POST(req: NextRequest) {
 
   logUsage(userId, 0.005, { model: modelId, endpoint: 'correlate-turn' })
 
+  if (interpretation.replyRejection) {
+    // Loud on purpose: this is the interpreter and our schema disagreeing, which
+    // is a bug in the prompt or the alias table, not a normal game outcome.
+    console.warn(`[correlate] reply rejected in ${game.id}: ${describeRejection(interpretation.replyRejection as any)}`)
+  }
+
   // In a game that enforces its constraint the interpreter's verdict is the
   // ruling. An opening move has nothing to connect to, so it cannot be illegal,
   // and a game that never gatekeeps is always legal regardless of what the model
@@ -303,6 +309,16 @@ export async function POST(req: NextRequest) {
     relation = null
   }
 
+  // The query is kept so a miss stays legible. When the interpreter's reply was
+  // *rejected* rather than merely unmatched, record that instead — a turn with a
+  // reading, a narration and a blank reply used to be indistinguishable from a
+  // search that found nothing, and only one of those is our bug.
+  const replyNote = interpretation.reply?.query
+    ?? interpretation.reply?.composed?.title
+    ?? (interpretation.replyRejection
+        ? `rejected: ${describeRejection(interpretation.replyRejection as any)}`
+        : null)
+
   // --- 6. Persist ---------------------------------------------------------
   const { data: turn, error: turnErr } = await ((db.from('listen_turns') as any)
     .insert({
@@ -311,9 +327,7 @@ export async function POST(req: NextRequest) {
       turn_index: turnIndex,
       move_offering: move,
       reply_offering: reply,
-      reply_query: interpretation.reply?.query
-        ?? interpretation.reply?.composed?.title
-        ?? null,
+      reply_query: replyNote,
       relation,
       claimed_relation: claimedRelation,
       reading: interpretation.reading,
@@ -355,6 +369,9 @@ export async function POST(req: NextRequest) {
     session: updated ?? session,
     replyReason: interpretation.replyReason,
     missed: legal && !!interpretation.reply && !reply && !replyError,
+    replyRejected: interpretation.replyRejection
+      ? describeRejection(interpretation.replyRejection as any)
+      : null,
     replyError,
   })
 }

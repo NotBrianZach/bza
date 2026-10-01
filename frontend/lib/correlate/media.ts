@@ -61,7 +61,7 @@ export const MEDIA: Record<MediumId, Medium> = {
     name: 'artwork',
     plural: 'Art',
     origin: 'catalogue',
-    provider: 'the Art Institute of Chicago collection',
+    provider: 'the Cleveland Museum of Art open-access collection',
     framingHint: 'The whole picture, or one region — the composition, a colour, a single figure.',
     searchPlaceholder: 'Search paintings, prints, sculpture…',
     physical: false,

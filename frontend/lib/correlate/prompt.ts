@@ -158,7 +158,12 @@ markdown fence. Schema:
   "worldDelta": { "only": "changed keys" }${game.enforcesConstraint ? ',\n  "verdict": "legal" | "illegal"' : ''}
 }
 
-Include "query" or "composed", never both — whichever the reply's medium calls for.`
+Include "query" or "composed", never both — whichever the reply's medium calls for.
+
+The "medium" field of your reply must be EXACTLY one of the strings listed above —
+not a synonym. Write "passage", not "prose" or "text"; "artwork", not "painting";
+"movement", not "dance". A reply naming a medium not on that list cannot be looked
+up, and your turn lands nowhere.`
 }
 
 export function buildUserPrompt(opts: {
@@ -307,6 +312,73 @@ export function parseJsonObject(raw: string): any | null {
   return null
 }
 
+/**
+ * Medium names an interpreter plausibly writes instead of our ids.
+ *
+ * This is not politeness, it is a bug fix. A model told to answer with one of
+ * `["music","artwork","passage",…]` will still write "prose", "text", "dance" or
+ * "painting" — and the first version of `normalizeReply` rejected the whole reply
+ * when the name did not match exactly, *silently*, leaving a turn with a reading,
+ * a narration and no answer. In Tag that kills the chain: there is nothing to play
+ * against on the next turn.
+ *
+ * Observed in production on 2026-09-30: a reply whose `lost` field talked about
+ * "prose" never arrived, because `passage` was not the word the model used.
+ */
+const MEDIUM_ALIASES: Record<string, MediumId> = {
+  // music
+  song: 'music', track: 'music', audio: 'music', sound: 'music', recording: 'music',
+  // artwork
+  art: 'artwork', painting: 'artwork', image: 'artwork', picture: 'artwork',
+  photograph: 'artwork', photo: 'artwork', sculpture: 'artwork', print: 'artwork',
+  // passage
+  text: 'passage', prose: 'passage', writing: 'passage', quote: 'passage',
+  quotation: 'passage', poem: 'passage', poetry: 'passage', book: 'passage',
+  reading: 'passage', excerpt: 'passage',
+  // movement
+  dance: 'movement', choreography: 'movement', motion: 'movement',
+  // gesture
+  gestures: 'gesture',
+  // stretch
+  pose: 'stretch', yoga: 'stretch', stretching: 'stretch',
+  // exercise
+  workout: 'exercise', training: 'exercise',
+  // scene
+  film: 'scene', movie: 'scene', tv: 'scene', television: 'scene', series: 'scene',
+}
+
+/**
+ * Resolve whatever the model wrote to a medium that is actually in play.
+ *
+ * Returns null rather than guessing when the name is unknown *or* known but not
+ * enabled — a game that does not have artwork on the table cannot accept an
+ * artwork reply just because the word was spelled correctly.
+ */
+function resolveReplyMedium(written: string, media: MediumId[]): MediumId | null {
+  const raw = written.trim().toLowerCase()
+  if (!raw) return null
+  const direct = raw as MediumId
+  if (media.includes(direct)) return direct
+  const aliased = MEDIUM_ALIASES[raw]
+  return aliased && media.includes(aliased) ? aliased : null
+}
+
+/** Why a proposed reply could not be used. Recorded, never swallowed. */
+export type ReplyRejection =
+  | { reason: 'absent' }
+  | { reason: 'unknown-medium'; written: string }
+  | { reason: 'no-query'; medium: string }
+  | { reason: 'unperformable'; medium: string }
+
+export function describeRejection(r: ReplyRejection): string {
+  switch (r.reason) {
+    case 'absent':          return 'the interpreter proposed no reply'
+    case 'unknown-medium':   return `the interpreter answered in "${r.written}", which is not in play`
+    case 'no-query':         return `the interpreter named no ${r.medium} to look for`
+    case 'unperformable':    return `the interpreter's ${r.medium} had no followable steps`
+  }
+}
+
 const str = (v: any): string => (typeof v === 'string' ? v.trim() : '')
 
 /**
@@ -315,30 +387,46 @@ const str = (v: any): string => (typeof v === 'string' ? v.trim() : '')
  * A medium the game never enabled is not a reply, and a composed plan without
  * steps is not performable, so both come back null and the turn records a miss.
  */
-function normalizeReply(parsed: any, media: MediumId[]): ReplyPlan | null {
-  if (!parsed || typeof parsed !== 'object') return null
+/**
+ * Coerce a reply plan, or say precisely why it cannot be used.
+ *
+ * Returns a rejection rather than null so the caller can record what the
+ * interpreter actually tried. The previous version returned null for every
+ * failure, which made a dropped reply indistinguishable from a reply that found
+ * nothing — and the former is a bug in us while the latter is the game working.
+ */
+function normalizeReply(
+  parsed: any,
+  media: MediumId[],
+): { ok: true; plan: ReplyPlan } | { ok: false; rejection: ReplyRejection } {
+  if (!parsed || typeof parsed !== 'object') return { ok: false, rejection: { reason: 'absent' } }
 
-  const medium = str(parsed.medium) as MediumId
-  if (!media.includes(medium)) return null
+  const written = str(parsed.medium)
+  const medium = resolveReplyMedium(written, media)
+  if (!medium) return { ok: false, rejection: { reason: 'unknown-medium', written: written || '(none)' } }
 
   const framing = str(parsed.framing)
 
   if (isComposed(medium)) {
     const c = parsed.composed
-    if (!c || typeof c !== 'object') return null
-    const steps = Array.isArray(c.steps) ? c.steps.map(str).filter(Boolean).slice(0, 5) : []
-    const title = str(c.title)
-    if (!title || steps.length === 0) return null
+    const steps = Array.isArray(c?.steps) ? c.steps.map(str).filter(Boolean).slice(0, 5) : []
+    const title = str(c?.title)
+    if (!title || steps.length === 0) {
+      return { ok: false, rejection: { reason: 'unperformable', medium } }
+    }
     return {
-      medium,
-      framing,
-      composed: { title, steps, intent: c.intent === 'invited' ? 'invited' : 'shown' },
+      ok: true,
+      plan: {
+        medium,
+        framing,
+        composed: { title, steps, intent: c.intent === 'invited' ? 'invited' : 'shown' },
+      },
     }
   }
 
   const query = str(parsed.query)
-  if (!query) return null
-  return { medium, query, framing }
+  if (!query) return { ok: false, rejection: { reason: 'no-query', medium } }
+  return { ok: true, plan: { medium, query, framing } }
 }
 
 /** Coerce a parsed object into an Interpretation, dropping anything malformed. */
@@ -365,10 +453,13 @@ export function normalizeInterpretation(
   const claimed = str(parsed.relation) as RelationId
   const relation = relations.includes(claimed) ? claimed : null
 
+  const replyResult = normalizeReply(parsed.reply, media)
+
   return {
     reading,
     narration,
-    reply: normalizeReply(parsed.reply, media),
+    reply: replyResult.ok ? replyResult.plan : null,
+    replyRejection: replyResult.ok ? null : replyResult.rejection,
     replyReason: str(parsed.replyReason),
     relation,
     carried: str(parsed.carried),

@@ -290,6 +290,9 @@ export interface Interpretation {
   /** What the exchange did to the world. */
   narration: string
   reply: ReplyPlan | null
+  /** Set when a reply was proposed but could not be used. Recorded on the turn
+   *  so a dropped reply is never indistinguishable from one that found nothing. */
+  replyRejection?: unknown
   /** Why that reply answers this move. */
   replyReason: string
   /** The relation the reply uses. */

@@ -76,6 +76,7 @@ function build() {
 const M = build()
 const {
   parseJsonObject, normalizeInterpretation, applyWorldDelta, offeringLine, sessionScope,
+  describeRejection,
 } = M.prompt
 const { GAME_LIST, GAMES, getGame, ACCENT_CLASSES, FEATURED_GAMES, FEATURED_GAME_IDS, retiredGameName } = M.games
 const { MEDIA, MEDIUM_LIST, ALL_MEDIUM_IDS, getMedium, isComposed, availableMedia, playableMedia, resolveMedia } = M.media
@@ -160,6 +161,55 @@ t('a relation outside the game is dropped', ni(
 t('a relation the game allows is kept', ni(
   { reading: 'r', relation: 'association' }, ALL_MEDIA, ['association'],
 )?.relation === 'association')
+
+group('reply medium aliases — a synonym must not kill a turn')
+// Production, 2026-09-30: an interpreter answered a song with prose, wrote
+// medium "prose" instead of "passage", and the whole reply was dropped without a
+// trace. In Tag that ends the chain, because the next turn has nothing to answer.
+const niReply = (medium, extra = {}, media = ALL_MEDIA) =>
+  ni({ reading: 'r', reply: { medium, query: 'Someone — Something', framing: 'f', ...extra } }, media)
+t('the exact id works', niReply('passage')?.reply?.medium === 'passage')
+t('"prose" resolves to passage', niReply('prose')?.reply?.medium === 'passage')
+t('"text" resolves to passage', niReply('text')?.reply?.medium === 'passage')
+t('"painting" resolves to artwork', niReply('painting')?.reply?.medium === 'artwork')
+// Composed media need composed content, so aliasing to one is only half the job —
+// which is what these two assert, and what the first draft of them got wrong.
+const niComposed = (medium) => ni({
+  reading: 'r',
+  reply: { medium, framing: 'f', composed: { title: 'The reach', steps: ['Extend one arm forward'] } },
+})
+t('"dance" resolves to movement', niComposed('dance')?.reply?.medium === 'movement')
+t('a composed alias still needs steps', niReply('dance')?.replyRejection?.reason === 'unperformable')
+t('"song" resolves to music', niReply('song')?.reply?.medium === 'music')
+t('"yoga" resolves to stretch', niComposed('yoga')?.reply?.medium === 'stretch')
+t('case and padding are tolerated', niReply('  Prose ')?.reply?.medium === 'passage')
+t('a synonym for a medium NOT in play is still refused',
+  niReply('painting', {}, ['music'])?.reply === null)
+t('an alias cannot smuggle in a disabled medium',
+  niReply('painting', {}, ['music'])?.replyRejection?.reason === 'unknown-medium')
+
+group('reply rejections — recorded, never swallowed')
+t('an absent reply is reported', ni({ reading: 'r' })?.replyRejection?.reason === 'absent')
+t('an unknown medium is reported', niReply('interpretive mime')?.replyRejection?.reason === 'unknown-medium')
+t('the unusable name is kept for the log', niReply('interpretive mime')?.replyRejection?.written === 'interpretive mime')
+t('a catalogued reply with no query is reported', (() => {
+  const r = ni({ reading: 'r', reply: { medium: 'music', framing: 'f' } })
+  return r.replyRejection?.reason === 'no-query'
+})())
+t('a composed reply with no steps is reported', (() => {
+  const r = ni({ reading: 'r', reply: { medium: 'gesture', composed: { title: 'x', steps: [] }, framing: 'f' } })
+  return r.replyRejection?.reason === 'unperformable'
+})())
+t('a usable reply reports no rejection', niReply('music')?.replyRejection === null)
+t('every rejection reason has readable copy', (() => {
+  const cases = [
+    { reason: 'absent' },
+    { reason: 'unknown-medium', written: 'mime' },
+    { reason: 'no-query', medium: 'music' },
+    { reason: 'unperformable', medium: 'gesture' },
+  ]
+  return cases.every(c => typeof describeRejection(c) === 'string' && describeRejection(c).length > 0)
+})())
 
 group('applyWorldDelta — established facts are binding')
 const w0 = { place: 'the airfield', callers: [], anomaly: 'unestablished', facts: ['f1'] }
