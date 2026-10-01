@@ -3,7 +3,7 @@
  *
  * This is deliberately a separate registry from the media one. A game is a
  * choice of which media are in play crossed with which relations are legal, and
- * keeping the two apart is what makes "changing the medium is itself the move"
+ * keeping the two apart is what lets a change of medium be a move in its own right
  * something the rules can express rather than something that happens by
  * accident.
  *

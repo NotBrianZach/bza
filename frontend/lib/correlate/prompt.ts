@@ -76,8 +76,14 @@ offering is: ${game.offeringIs}.
 A correlation game is one where each turn proposes a connection between two things
 and makes it perceptible by offering a second thing. Some connections are
 discovered and some are created through play; the only requirement is that the
-connection be explainable. Changing the medium is itself a move — a song's tension
-can become a painting's composition, then a movement, then a scene's conflict.
+connection be explainable.
+
+A change of medium *can* be the move — a song's tension becoming a painting's
+composition, then a movement, then a scene's conflict. It is not required, and a
+connection that lives inside one medium is not a lesser one. Change medium when the
+connection is genuinely better said in another; stay when it is not. Only
+translation and embodiment demand a crossing; every other relation is free either
+way. Do not change medium merely to look inventive.
 
 THE RULES YOU ENFORCE
 - Player move: ${game.pieces.playerMove}

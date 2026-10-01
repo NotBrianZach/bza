@@ -7,7 +7,7 @@ import { ArrowRight, Loader2, Shuffle } from 'lucide-react'
 import { track } from '@/lib/analytics'
 import { timeAgo } from '@/lib/timeAgo'
 import { correlateQueries, fetchAvailableMedia } from '@/lib/queries/correlate'
-import { ACCENT_CLASSES, FEATURED_GAMES, getGame, retiredGameName } from '@/lib/correlate/games'
+import { ACCENT_CLASSES, FEATURED_GAMES, getGame } from '@/lib/correlate/games'
 import { getMedium, resolveMedia } from '@/lib/correlate/media'
 import type { CorrelationSession, MediumId } from '@/lib/correlate/types'
 
@@ -43,7 +43,14 @@ export default function CorrelationGamesSection({
     if (!isAuthenticated) return
     let cancelled = false
     correlateQueries.listSessions(6)
-      .then(s => { if (!cancelled) setSessions(s.filter(x => x.status === 'active')) })
+      // Retired games are filtered out here but NOT on /play. This strip is an
+      // invitation — a card for a game that cannot take another turn reads as
+      // "Night Radio still exists", which is exactly the wrong thing to say on the
+      // front page. /play keeps them, labelled, because there the list is a record
+      // of what you have played rather than a prompt to play it.
+      .then(s => {
+        if (!cancelled) setSessions(s.filter(x => x.status === 'active' && !!getGame(x.mode)))
+      })
       .catch(() => {})
     return () => { cancelled = true }
   }, [isAuthenticated])
@@ -75,8 +82,8 @@ export default function CorrelationGamesSection({
       </div>
       <p className="text-xs text-gray-500 dark:text-gray-400 mb-3 max-w-2xl leading-relaxed">
         Answer a song with a painting, a painting with a stretch, a stretch with a passage from
-        something you are reading. Each turn proposes a connection and makes it perceptible — and
-        changing the medium is itself the move.
+        something you are reading — or stay where you are. Each turn proposes a connection and
+        makes it perceptible, and a change of medium can be the move itself.
       </p>
 
       {error && <p className="mb-2 text-xs text-red-500 dark:text-red-400">{error}</p>}
@@ -93,7 +100,7 @@ export default function CorrelationGamesSection({
             >
               <div>
                 <p className={`text-[10px] font-semibold uppercase tracking-wide ${accent.text} mb-1`}>
-                  {game?.name ?? retiredGameName(s.mode) ?? s.mode}
+                  {game?.name ?? s.mode}
                 </p>
                 <p className="text-xs font-medium text-gray-800 dark:text-gray-100 line-clamp-2 leading-snug">{s.title}</p>
               </div>

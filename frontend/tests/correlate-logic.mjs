@@ -76,7 +76,7 @@ function build() {
 const M = build()
 const {
   parseJsonObject, normalizeInterpretation, applyWorldDelta, offeringLine, sessionScope,
-  describeRejection, salvageQueries,
+  describeRejection, salvageQueries, buildSystemPrompt,
 } = M.prompt
 const { GAME_LIST, GAMES, getGame, ACCENT_CLASSES, FEATURED_GAMES, FEATURED_GAME_IDS, retiredGameName } = M.games
 const { MEDIA, MEDIUM_LIST, ALL_MEDIUM_IDS, getMedium, isComposed, availableMedia, playableMedia, resolveMedia, replyMediaFor } = M.media
@@ -358,6 +358,44 @@ t('no single-medium game offers a relation that requires a change of medium', GA
   const media = resolveMedia(g.media)
   return media.length === 1 && resolveRelations(g.relations).some(r => RELATIONS[r].requiresMediumChange)
 }).map(g => g.id).join(', '))
+
+group('a change of medium is optional — the copy and the rules must agree')
+// The front page and the system prompt both once said a change of medium "is
+// itself the move", which asserts a requirement the rules do not impose: only
+// translation and embodiment demand a crossing, and in the prompt the
+// overstatement risked pushing the interpreter to change medium every turn.
+t('most relations do not require a change of medium',
+  RELATION_LIST.filter(r => !r.requiresMediumChange).length === 5)
+t('a same-medium answer is legal for every other relation',
+  RELATION_LIST.filter(r => !r.requiresMediumChange)
+    .every(r => relationPermitted(r.id, 'music', 'music')))
+// Translation is the deliberate exception: every relation it allows requires a
+// crossing, because answering in the same medium is not a translation. That is
+// legitimate — but a game that forbids a same-medium answer must *tell the player*
+// in its constraint, or the restriction is a trap.
+const sameMediumGames = GAME_LIST.filter(g =>
+  resolveRelations(g.relations).some(r => !RELATIONS[r].requiresMediumChange))
+const crossingOnlyGames = GAME_LIST.filter(g => !sameMediumGames.includes(g))
+t('most games permit a same-medium answer', sameMediumGames.length === GAME_LIST.length - 1)
+t('only Translation requires a crossing on every relation',
+  crossingOnlyGames.length === 1 && crossingOnlyGames[0].id === 'translation',
+  crossingOnlyGames.map(g => g.id).join(', '))
+t('a crossing-only game says so in its constraint', crossingOnlyGames.every(g =>
+  /different medium|not a translation|same medium/i.test(g.pieces.constraint)),
+  crossingOnlyGames.filter(g => !/different medium|not a translation|same medium/i.test(g.pieces.constraint))
+    .map(g => g.id).join(', '))
+t('the system prompt does not claim a medium change is the move', (() => {
+  const p = buildSystemPrompt(GAMES.tag, ALL_MEDIA, ALL_RELATIONS)
+  return !/medium is itself (a|the) move/.test(p)
+})())
+t('the system prompt says a medium change is optional', (() => {
+  const p = buildSystemPrompt(GAMES.tag, ALL_MEDIA, ALL_RELATIONS)
+  return /not required/.test(p) && /stay when it is not/.test(p)
+})())
+t('the system prompt warns against changing medium for show', (() => {
+  const p = buildSystemPrompt(GAMES.tag, ALL_MEDIA, ALL_RELATIONS)
+  return /look inventive/.test(p)
+})())
 
 group('sessionScope — a game narrows to what the deployment can serve')
 t('an all-media game narrows to the available set', JSON.stringify(sessionScope(GAMES.chain, ['music', 'artwork']).media) === '["music","artwork"]')

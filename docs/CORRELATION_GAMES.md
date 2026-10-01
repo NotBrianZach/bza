@@ -2,7 +2,7 @@
 
 The design for generalising `/listen` (AI Listen Along, music only) into a
 section where a turn can be a painting, a scene, a gesture, a stretch, or a
-passage from a book you are reading — and where **changing the medium is itself
+passage from a book you are reading — and where **a change of medium can itself be
 a move**.
 
 Status: design. Supersedes the single-medium assumption in
