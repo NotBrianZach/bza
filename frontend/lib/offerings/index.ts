@@ -24,6 +24,14 @@ import { composeOffering, type ComposedInput } from './composed'
 
 export { OfferingError } from './shared'
 export { composeOffering, checkPerformability, vocabularyFor, PROBLEM_COPY } from './composed'
+// Composed media only, and that restriction is the honesty line rather than a gap
+// waiting to be filled: drafting an instruction invents nothing, drafting a
+// catalogue record invents a record. See the header of ./suggest.
+export {
+  buildSuggestPrompt, buildSuggestSystemPrompt, describeDraftRejection, normalizeBrief,
+  normalizeRejected, parseSuggestion, titleKey, MAX_BRIEF_CHARS, MAX_REJECTED,
+  type DraftRejection, type SuggestedDraft,
+} from './suggest'
 
 /** Everything a resolver might need that is not the query itself. */
 export interface OfferingContext {

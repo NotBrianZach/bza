@@ -49,6 +49,7 @@ function build() {
     join('lib', 'offerings', 'composed.ts'),
     join('lib', 'offerings', 'shared.ts'),
     join('lib', 'offerings', 'knowledge.ts'),
+    join('lib', 'offerings', 'suggest.ts'),
   ]
   try {
     execFileSync(process.execPath, [
@@ -76,6 +77,7 @@ function build() {
     tuning:    require(join(outDir, 'correlate', 'tuning.js')),
     composed:  require(join(outDir, 'offerings', 'composed.js')),
     knowledge: require(join(outDir, 'offerings', 'knowledge.js')),
+    suggest:   require(join(outDir, 'offerings', 'suggest.js')),
   }
 }
 
@@ -102,6 +104,10 @@ const {
   weightedReplyMedia, dueMedium, describeTuning, tuningSummary, getAxis,
 } = M.tuning
 const { checkPerformability, composeOffering, vocabularyFor } = M.composed
+const {
+  buildSuggestPrompt, buildSuggestSystemPrompt, describeDraftRejection, normalizeBrief,
+  normalizeRejected, parseSuggestion, titleKey, MAX_BRIEF_CHARS, MAX_REJECTED,
+} = M.suggest
 
 let pass = 0
 const failures = []
@@ -470,6 +476,144 @@ t('every vocabulary entry is itself performable', VOCAB_MEDIA.every(m =>
     .filter(v => checkPerformability({ medium: m, ...v, intent: 'shown' }).length > 0)
     .map(v => `${m}/${v.title}: ${checkPerformability({ medium: m, ...v, intent: 'shown' }).join('+')}`)).join('; '))
 t('a catalogued medium has no vocabulary', vocabularyFor('music').length === 0)
+
+group('suggest — a draft is held to the same guard as typed input')
+const goodDraft = {
+  title: 'Weight on one side',
+  steps: ['Stand with feet hip width apart, arms loose',
+          'Shift all your weight onto the left foot over four slow counts',
+          'Stay there one breath longer than is comfortable'],
+  framing: 'The moment the right foot stops carrying anything.',
+  intent: 'shown',
+}
+const okResult = parseSuggestion(goodDraft, { medium: 'movement', rejected: [] })
+t('a performable draft is accepted', okResult.ok === true)
+t('the draft comes back in the picker\'s own shape', okResult.ok
+  && okResult.draft.title === goodDraft.title
+  && okResult.draft.steps.length === 3
+  && !!okResult.draft.framing)
+// The guard is not relaxed for a machine-written draft. This is the composed
+// medium's entire honesty story, and an exception for our own output would be the
+// hole in it.
+const mush = parseSuggestion(
+  { title: 'Longing', steps: ['move'], framing: 'the feeling', intent: 'shown' },
+  { medium: 'movement', rejected: [] })
+t('vague steps are refused exactly as a player\'s would be',
+  !mush.ok && mush.rejection.reason === 'unperformable')
+t('the refusal names the same problems checkPerformability names',
+  !mush.ok && mush.rejection.problems.includes('vague-steps'))
+t('a draft with no steps is refused', (() => {
+  const r = parseSuggestion({ title: 'A dance', steps: [], framing: 'all of it' }, { medium: 'movement', rejected: [] })
+  return !r.ok && r.rejection.problems.includes('no-steps')
+})())
+t('a draft with no framing is refused', (() => {
+  const r = parseSuggestion({ ...goodDraft, framing: '' }, { medium: 'movement', rejected: [] })
+  return !r.ok && r.rejection.problems.includes('no-framing')
+})())
+t('six steps is too many, for a draft too', (() => {
+  const r = parseSuggestion({ ...goodDraft, steps: Array(6).fill('Lift the left arm to shoulder height') },
+    { medium: 'movement', rejected: [] })
+  return !r.ok && r.rejection.problems.includes('too-many-steps')
+})())
+t('prose instead of JSON is unparseable, not unperformable',
+  (() => { const r = parseSuggestion('Here is a nice dance for you!', { medium: 'movement', rejected: [] })
+    return !r.ok && r.rejection.reason === 'unparseable' })())
+t('an array is not an object', (() => {
+  const r = parseSuggestion([goodDraft], { medium: 'movement', rejected: [] })
+  return !r.ok && r.rejection.reason === 'unparseable'
+})())
+t('intent defaults to shown rather than failing', (() => {
+  const r = parseSuggestion({ ...goodDraft, intent: 'nonsense' }, { medium: 'movement', rejected: [] })
+  return r.ok && r.draft.intent === 'shown'
+})())
+t('invited survives', (() => {
+  const r = parseSuggestion({ ...goodDraft, intent: 'invited' }, { medium: 'movement', rejected: [] })
+  return r.ok && r.draft.intent === 'invited'
+})())
+
+group('discard — the rejection has teeth, and says so honestly')
+// Without this the discard button resamples and returns the same answer, which
+// reads as a button that does nothing.
+const repeat = parseSuggestion(goodDraft, { medium: 'movement', rejected: ['Weight on one side'] })
+t('a discarded title cannot come back', !repeat.ok && repeat.rejection.reason === 'repeat')
+t('the repeat is reported as a repeat, not as bad steps',
+  !repeat.ok && repeat.rejection.reason === 'repeat' && repeat.rejection.title === goodDraft.title)
+t('casing and punctuation do not launder a repeat',
+  !parseSuggestion({ ...goodDraft, title: '  weight on ONE side.  ' },
+    { medium: 'movement', rejected: ['Weight on one side'] }).ok)
+t('titleKey normalises the way the comparison needs',
+  titleKey('The Interrupted Reach') === titleKey('the interrupted reach.'))
+t('titleKey does not collapse different titles',
+  titleKey('Falling and catching') !== titleKey('Falling, then waiting'))
+// Ordering matters: a repeat is performable, so checking performability first would
+// tell the player their draft was mush when in fact it was a duplicate.
+t('the repeat check runs before performability', (() => {
+  const r = parseSuggestion({ title: 'Already gone', steps: ['x'], framing: '' },
+    { medium: 'movement', rejected: ['Already gone'] })
+  return !r.ok && r.rejection.reason === 'repeat'
+})())
+t('every rejection has a human sentence', ['unparseable', 'repeat', 'unperformable'].every(reason => {
+  const r = reason === 'repeat' ? { reason, title: 'x' }
+    : reason === 'unperformable' ? { reason, problems: ['no-steps'] }
+    : { reason }
+  const s = describeDraftRejection(r)
+  return typeof s === 'string' && s.length > 10
+}))
+
+group('normalizeRejected / normalizeBrief — a bounded ask from an unbounded client')
+t('junk is dropped', normalizeRejected([null, 3, '', '   ', 'Real one']).length === 1)
+t('a non-array is empty', normalizeRejected('Real one').length === 0 && normalizeRejected(undefined).length === 0)
+t('duplicates collapse by key', normalizeRejected(['The Reach', 'the reach.']).length === 1)
+t(`the list is capped at ${MAX_REJECTED}`,
+  normalizeRejected(Array.from({ length: 40 }, (_, i) => `Move ${i}`)).length === MAX_REJECTED)
+// The most recent discards are the ones that still describe what the player does
+// not want, so the cap drops the oldest rather than the newest.
+t('the cap keeps the most recent discards', (() => {
+  const kept = normalizeRejected(Array.from({ length: 40 }, (_, i) => `Move ${i}`))
+  return kept[kept.length - 1] === 'Move 39' && !kept.includes('Move 0')
+})())
+t('a brief is trimmed and bounded',
+  normalizeBrief(`  ${'x'.repeat(400)}  `).length === MAX_BRIEF_CHARS)
+t('a non-string brief is empty', normalizeBrief(null) === '' && normalizeBrief(42) === '')
+
+group('the suggest prompt — the discards are what make a re-ask different')
+const promptNoDiscards = buildSuggestPrompt({
+  medium: 'movement', mediumName: 'movement',
+  framingHint: MEDIA.movement.framingHint, brief: '', rejected: [],
+})
+const promptWithDiscards = buildSuggestPrompt({
+  medium: 'movement', mediumName: 'movement',
+  framingHint: MEDIA.movement.framingHint, brief: 'something off-balance',
+  rejected: ['Falling and catching', 'One angular phrase'],
+})
+t('the medium is named in its own words', promptNoDiscards.includes('movement'))
+t('the registry framing hint is carried in, not restated',
+  promptNoDiscards.includes(MEDIA.movement.framingHint))
+t('a blank brief still asks for something with a shape',
+  promptNoDiscards.toLowerCase().includes('did not say'))
+t('the brief is carried verbatim', promptWithDiscards.includes('something off-balance'))
+t('every discard is named', promptWithDiscards.includes('Falling and catching')
+  && promptWithDiscards.includes('One angular phrase'))
+t('a re-ask differs from a first ask', promptNoDiscards !== promptWithDiscards)
+t('no discards means no discard section', !promptNoDiscards.includes('ALREADY DISCARDED'))
+// A variation on a rejected move is a rejected move. Asking only for "something
+// else" gets one step sideways.
+t('variations are refused too, not just repeats',
+  /variation/i.test(promptWithDiscards))
+const suggestSystem = buildSuggestSystemPrompt()
+t('the system prompt states the performability test', /second person/i.test(suggestSystem))
+t('it gives the negative example the guard exists for',
+  suggestSystem.includes('expressing longing'))
+t('it bounds the steps the way checkPerformability does',
+  /five steps|one and five/i.test(suggestSystem))
+t('it asks for an ordinary room rather than a studio',
+  /ordinary room/i.test(suggestSystem))
+t('accessibility is an instruction, not a hope',
+  /not everyone can do|particular body/i.test(suggestSystem))
+// The drafting prompt is for actions only. If it ever mentioned a catalogued
+// medium it would be an instruction to invent a record.
+t('the drafting prompt never reaches for a catalogue',
+  !/\b(song|track|painting|artwork|film|theorem)\b/i.test(suggestSystem))
 
 group('offeringLine — what the interpreter is allowed to reason about')
 const track = {

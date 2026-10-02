@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   Accessibility, AlertTriangle, Atom, BookOpen, Clapperboard, Dumbbell, Footprints, Frame,
-  Hand, Leaf, Loader2, Mountain, Music2, Plus, Search, Send, Sigma, Trash2, X,
+  Hand, Leaf, Loader2, Mountain, Music2, Plus, RefreshCw, Search, Send, Sigma, Sparkles,
+  Trash2, X,
 } from 'lucide-react'
 import { authedFetch } from '@/lib/authedFetch'
 import { getMedium } from '@/lib/correlate/media'
@@ -87,6 +88,16 @@ export default function OfferingPicker({
   const [intent, setIntent] = useState<ActionIntent>('shown')
   const [vocabulary, setVocabulary] = useState<{ title: string; steps: string[]; framing: string }[]>([])
 
+  // Drafting state. `rejected` is the discard button's memory: every title thrown
+  // away goes in, and the list is sent with the next ask so it reaches somewhere
+  // else instead of resampling the same few answers.
+  const [brief, setBrief] = useState('')
+  const [rejected, setRejected] = useState<string[]>([])
+  const [suggesting, setSuggesting] = useState(false)
+  const [suggestError, setSuggestError] = useState('')
+  /** Set only while a drafted title is sitting in the fields untouched. */
+  const [drafted, setDrafted] = useState<string | null>(null)
+
   const def = getMedium(medium)
   const isComposed = def?.origin === 'composed'
 
@@ -97,6 +108,10 @@ export default function OfferingPicker({
     setQ(''); setResults([]); setPicked(null); setSearchError('')
     setTitle(''); setSteps(['']); setIntent('shown')
     setFraming('')
+    // The discards go too. "Already discarded" is scoped to the medium it was
+    // discarded in — a stretch the player rejected says nothing about which
+    // movement they want.
+    setBrief(''); setRejected([]); setSuggestError(''); setDrafted(null)
   }, [medium])
 
   // Composed media have nothing to search, so the same endpoint hands back their
@@ -148,7 +163,53 @@ export default function OfferingPicker({
     setTitle(v.title)
     setSteps([...v.steps])
     setFraming(v.framing)
+    setDrafted(null)
   }, [])
+
+  /**
+   * Ask for a draft, optionally discarding what is already in the fields.
+   *
+   * `discarding` is the current title rather than a flag, because the server needs
+   * the title to avoid repeating it, and because a player who edited the draft
+   * before pressing discard has thrown away *their* version — which is the one that
+   * should not come back.
+   */
+  const suggestOne = useCallback(async (discarding: string | null) => {
+    const nextRejected = discarding?.trim()
+      ? [...rejected.filter(t => t !== discarding.trim()), discarding.trim()]
+      : rejected
+
+    setSuggesting(true)
+    setSuggestError('')
+    if (discarding) {
+      // Clear immediately. Leaving the discarded draft on screen while the next one
+      // loads makes a slow request look like a button that did nothing.
+      setTitle(''); setSteps(['']); setFraming(''); setDrafted(null)
+      setRejected(nextRejected)
+    }
+
+    try {
+      const res = await authedFetch('/api/offerings/suggest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ medium, brief: brief.trim(), rejected: nextRejected }),
+      })
+      const data = await res.json()
+      if (data.error || !data.draft) {
+        setSuggestError(data.error || 'Could not draft one. Try again, or write one yourself.')
+        return
+      }
+      setTitle(data.draft.title)
+      setSteps(data.draft.steps.length > 0 ? [...data.draft.steps] : [''])
+      setFraming(data.draft.framing)
+      setIntent(data.draft.intent === 'invited' ? 'invited' : 'shown')
+      setDrafted(data.draft.title)
+    } catch {
+      setSuggestError('Could not draft one. Try again, or write one yourself.')
+    } finally {
+      setSuggesting(false)
+    }
+  }, [medium, brief, rejected])
 
   const relationRequired = declaredRelation === 'required'
   const relationOffered = declaredRelation !== 'never'
@@ -170,6 +231,10 @@ export default function OfferingPicker({
     })
     setQ(''); setResults([]); setPicked(null)
     setTitle(''); setSteps(['']); setFraming(''); setClaimed('')
+    // A played move is not a discarded one, so the rejections do not carry over:
+    // the next turn starts from nothing rather than from a list of things the
+    // player turned down before they found one they liked.
+    setBrief(''); setRejected([]); setSuggestError(''); setDrafted(null)
   }
 
   return (
@@ -275,6 +340,66 @@ export default function OfferingPicker({
       {/* ── Composed: author something doable ──────────────────────────── */}
       {isComposed && (
         <div className="space-y-2">
+          {/* Drafting. There is no catalogue of movements to search, so the way out
+              of a blank form is to have one written for you and then keep editing
+              it — every field below stays live, and a draft is worth exactly what a
+              typed one is. Discarding costs nothing because nothing is recorded
+              until the move is played. */}
+          <div className="rounded-xl border border-dashed border-gray-200 dark:border-gray-700 p-2 space-y-2">
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={brief}
+                onChange={e => setBrief(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter' && !suggesting && !disabled) suggestOne(null) }}
+                disabled={disabled || suggesting}
+                maxLength={240}
+                placeholder={`Ask for a ${def?.name ?? 'move'} — "something off-balance", or leave blank`}
+                className="flex-1 min-w-0 px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-xs text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 disabled:opacity-50"
+              />
+              <button
+                onClick={() => suggestOne(null)}
+                disabled={disabled || suggesting}
+                className="flex items-center gap-1.5 flex-shrink-0 text-[11px] px-2.5 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-colors disabled:opacity-50"
+              >
+                {suggesting
+                  ? <Loader2 size={12} className="animate-spin" />
+                  : <Sparkles size={12} />}
+                {title ? 'Draft again' : 'Draft one'}
+              </button>
+            </div>
+
+            {/* Discard is only offered once something is there to discard, and it
+                carries the title away with it so the next draft cannot repeat it. */}
+            {drafted && !suggesting && (
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[11px] text-gray-400 dark:text-gray-500">
+                  Drafted — edit it freely, or throw it away.
+                </span>
+                <button
+                  onClick={() => suggestOne(title)}
+                  disabled={disabled}
+                  className="flex items-center gap-1 flex-shrink-0 text-[11px] text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors disabled:opacity-50"
+                >
+                  <RefreshCw size={11} /> Discard, draft another
+                </button>
+              </div>
+            )}
+
+            {rejected.length > 0 && (
+              <p className="text-[11px] text-gray-400 dark:text-gray-500">
+                {rejected.length} discarded — the next draft will not repeat {rejected.length === 1 ? 'it' : 'them'}.
+              </p>
+            )}
+
+            {suggestError && (
+              <p className="flex items-start gap-1.5 text-[11px] text-amber-600 dark:text-amber-400">
+                <AlertTriangle size={11} className="flex-shrink-0 mt-0.5" />
+                {suggestError}
+              </p>
+            )}
+          </div>
+
           <input
             type="text"
             value={title}
