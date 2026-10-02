@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import {
-  Accessibility, BookOpen, Clapperboard, Dumbbell, ExternalLink, Footprints, Frame,
-  Hand, Loader2, Music2, Pause, Play, Youtube,
+  Accessibility, Atom, BookOpen, Clapperboard, Dumbbell, ExternalLink, Footprints, Frame,
+  Hand, Leaf, Loader2, Mountain, Music2, Pause, Play, Sigma, Youtube,
 } from 'lucide-react'
 import Link from 'next/link'
 import { authedFetch } from '@/lib/authedFetch'
@@ -12,7 +12,8 @@ import type { Offering } from '@/lib/correlate/types'
 import { audioUrl, type OfferingPlayer } from './useOfferingPlayer'
 
 const ICONS: Record<string, any> = {
-  Music2, Frame, BookOpen, Clapperboard, Hand, Footprints, Accessibility, Dumbbell,
+  Music2, Frame, BookOpen, Clapperboard, Sigma, Atom, Leaf, Mountain,
+  Hand, Footprints, Accessibility, Dumbbell,
 }
 
 /**

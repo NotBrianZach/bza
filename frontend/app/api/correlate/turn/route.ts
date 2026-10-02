@@ -6,9 +6,19 @@ import { availableMedia, getMedium, isComposed, replyMediaFor } from '@/lib/corr
 import { relationPermitted, resolveRelations, spentRelations } from '@/lib/correlate/relations'
 import {
   applyWorldDelta, buildRetryPrompt, buildSystemPrompt, buildUserPrompt, describeRejection,
-  normalizeInterpretation, parseJsonObject, salvageQueries, sessionScope, type TurnContext,
+  normalizeInterpretation, parseJsonObject, salvageQueries, sessionScope,
+  type ElsewhereContext, type TurnContext,
 } from '@/lib/correlate/prompt'
-import type { ActionIntent, Interpretation, MediumId, Offering, RelationId } from '@/lib/correlate/types'
+import {
+  buildGraph, childrenOf, defaultParent, linkableTurns, offeringIdsAlong, offeringOnTable,
+  pathTo, relationsAlong, replyMediaAlong, turnByIndex, worldFor,
+} from '@/lib/correlate/graph'
+import {
+  dueMedium, mutedMedia, normalizeTuning, weightedReplyMedia,
+} from '@/lib/correlate/tuning'
+import type {
+  ActionIntent, CorrelationTurn, Interpretation, MediumId, Offering, RelationId,
+} from '@/lib/correlate/types'
 import { OfferingError, composeOffering, lookupOffering, resolveReply } from '@/lib/offerings'
 
 /**
@@ -20,21 +30,36 @@ import { OfferingError, composeOffering, lookupOffering, resolveReply } from '@/
  *      because the server is what decides which record a move is. For a composed
  *      medium there is nothing to fetch, so the move is performability-checked
  *      instead, which is the composed-medium equivalent of the same guard.
- *   2. Rule the mechanical part of legality *before* spending a model call: a
+ *   2. Find where in the graph this turn goes. A turn answers its parent, which is
+ *      whatever the player chose to go back to, defaulting to where they last were.
+ *      Everything that used to mean "the last turn" now means "the parent", and
+ *      everything that used to mean "the session" now means "this branch": the
+ *      history shown, the world played in, the relations already spent.
+ *   3. Rule the mechanical part of legality *before* spending a model call: a
  *      declared relation that requires a change of medium and did not get one is
  *      illegal on the face of it, and no interpreter needs to be consulted.
- *   3. Ask the interpreter to read the move, name the relation, and plan a reply.
- *      In a game that enforces its constraint the same call rules on whether the
- *      move connects at all, and that ruling is the only one there is.
- *   4. Make the reply real, or record a miss. A search that found nothing and a
- *      composed reply that is not performable are the same outcome.
- *   5. Persist the turn and the world delta.
+ *   4. Ask the interpreter to read the move, name the relation, plan a reply, and —
+ *      optionally — point at an earlier exchange this one rhymes with. In a game
+ *      that enforces its constraint the same call rules on whether the move
+ *      connects at all, and that ruling is the only one there is.
+ *   5. Make the reply real. A legal turn is never persisted without one.
+ *   6. Persist the turn, its delta, and the weighting it was played under.
  *
- * POST { sessionId, medium, offeringId?, composed?, framing?, claimedRelation?, prediction? }
+ * POST {
+ *   sessionId, medium, offeringId?, composed?, framing?, claimedRelation?, prediction?,
+ *   parentTurnId?,   // present-and-null starts a new thread; absent continues
+ *   tuning?,         // the weighting as of this turn; also saved to the session
+ * }
  */
 
 const MODEL = process.env.LISTEN_MODEL || process.env.CORRELATE_MODEL || 'anthropic/claude-haiku-4-5'
 const HISTORY_TURNS = 8
+/** How many off-branch exchanges the interpreter is offered to point back at. */
+const ELSEWHERE_TURNS = 12
+/** Replies looked at when working out which medium the weighting is short of. */
+const BALANCE_WINDOW = 8
+/** A hard stop on how much of a session is loaded, not an expected size. */
+const MAX_TURNS = 400
 
 let _service: ReturnType<typeof createClient> | null = null
 function serviceClient() {
@@ -72,6 +97,8 @@ export async function POST(req: NextRequest) {
     framing?: string
     claimedRelation?: RelationId
     prediction?: string
+    parentTurnId?: string | null
+    tuning?: unknown
   } | null
 
   const sessionId = body?.sessionId
@@ -146,34 +173,66 @@ export async function POST(req: NextRequest) {
     if (framing) move = { ...move, framing }
   }
 
-  // --- 2. Context -----------------------------------------------------------
-  const { data: historyRows } = await ((db.from('listen_turns') as any)
-    .select('turn_index, move_offering, reply_offering, relation, reading, narration, carried, legal')
+  // --- 2. Where in the graph this turn goes --------------------------------
+  //
+  // The whole session is loaded rather than the last eight turns, because a branch
+  // is not a suffix: the player may be answering turn 3 of a twenty-turn game, and
+  // the history that binds is the path down to turn 3, not whatever happened most
+  // recently. Sessions are small; the cap is a backstop, not a budget.
+  const { data: turnRows } = await ((db.from('listen_turns') as any)
+    .select(
+      'id, turn_index, parent_turn_id, move_offering, reply_offering, relation, reading, ' +
+      'narration, carried, facts, world_delta, link_turn_id, link_note, legal',
+    )
     .eq('session_id', sessionId)
-    .order('turn_index', { ascending: false })
-    .limit(HISTORY_TURNS) as any)
+    .order('turn_index', { ascending: true })
+    .limit(MAX_TURNS) as any)
 
-  const history: (TurnContext & { legal: boolean })[] = ((historyRows ?? []) as any[]).reverse()
+  const allTurns = (turnRows ?? []) as CorrelationTurn[]
+  const graph = buildGraph(allTurns)
 
-  // The offering on the table is the last *legal* exchange's reply, falling back
-  // to that turn's move when the reply missed. An illegal move does not advance it.
-  const lastLegal = [...history].reverse().find(t => t.legal)
-  const previous: Offering | null =
-    (lastLegal?.reply_offering as Offering | null) ?? (lastLegal?.move_offering as Offering | undefined) ?? null
+  // An explicit null means "start a new thread with nothing on the table", which is
+  // a different request from saying nothing — hence the key-presence check rather
+  // than a falsiness test.
+  const chose = body !== null && Object.prototype.hasOwnProperty.call(body, 'parentTurnId')
+  let parent: CorrelationTurn | null = null
 
-  const turnIndex = history.length > 0 ? history[history.length - 1].turn_index + 1 : 0
-
-  const inPlay = new Set<string>([move.id])
-  for (const t of history) {
-    if (t.move_offering?.id) inPlay.add(t.move_offering.id)
-    if (t.reply_offering?.id) inPlay.add(t.reply_offering.id)
+  if (chose && body?.parentTurnId) {
+    parent = graph.nodes.get(body.parentTurnId)?.turn ?? null
+    if (!parent) return err('That exchange is not part of this game.', 404)
+    // A move that was turned away established nothing and left nothing on the
+    // table, so there is no sense in which it can be answered. Branch from its
+    // parent instead — which is what the board offers.
+    if (!parent.legal) {
+      return err('That move was turned away, so there is nothing there to answer.', 400)
+    }
+  } else if (!chose) {
+    parent = defaultParent(graph)
   }
 
-  // Derived from the rows, not from world state. The music section asked the model
-  // to maintain a `threadsUsed` array itself, which made the no-repeats rule
-  // depend on it remembering to append — recording the relation per turn makes
-  // what is spent a fact about the log.
-  const spent = spentRelations(history.map(t => ({ relation: t.relation, legal: t.legal })), 1)
+  const path = pathTo(graph, parent?.id ?? null)
+  const previous: Offering | null = offeringOnTable(parent)
+
+  // Creation order, still. Once a game branches this stops being a position and
+  // becomes only a name — which is what it is used as: the handle the interpreter
+  // points at when it volunteers a link.
+  const turnIndex = graph.order.length > 0
+    ? graph.order[graph.order.length - 1].turn_index + 1
+    : 0
+
+  // Nothing already in play on this branch, and nothing a sibling already answered
+  // with. The second half is what makes going back to a turn and answering it twice
+  // worth doing: a second branch off the same offering should not come back with
+  // the same record as the first.
+  const inPlay = new Set<string>([move.id, ...offeringIdsAlong(path)])
+  for (const sibling of childrenOf(graph, parent?.id ?? null)) {
+    if (sibling.move_offering?.id) inPlay.add(sibling.move_offering.id)
+    if (sibling.reply_offering?.id) inPlay.add(sibling.reply_offering.id)
+  }
+
+  // Derived from the rows, not from world state, and from *this branch's* rows: a
+  // relation spent on a branch the player walked away from was never spent here.
+  const spent = spentRelations(relationsAlong(path), 1)
 
   const claimedRelation: RelationId | null =
     body?.claimedRelation && relations.includes(body.claimedRelation) ? body.claimedRelation : null
@@ -181,6 +240,24 @@ export async function POST(req: NextRequest) {
   if (game.declaredRelation === 'required' && !claimedRelation && previous !== null) {
     return err('This game asks you to name the relation you are claiming.', 400)
   }
+
+  // --- 2b. The weighting ---------------------------------------------------
+  //
+  // The client sends what the controls currently say and the server saves it, so
+  // the knob a player moved a second before taking a turn applies to that turn.
+  // Reading it only from the session row would have made the save a race the player
+  // could lose without ever being told.
+  const tuning = normalizeTuning(
+    body !== null && body.tuning !== undefined ? body.tuning : session.tuning,
+    media,
+  )
+  const tuningChanged = body?.tuning !== undefined &&
+    JSON.stringify(tuning) !== JSON.stringify(normalizeTuning(session.tuning, media))
+
+  const muted = mutedMedia(tuning, media)
+  // Weighted and muted-free, for the stages where the server picks the medium.
+  const answerMedia = weightedReplyMedia(tuning, replyMediaFor(media))
+  const due = dueMedium(tuning, replyMediaAlong(path).slice(-BALANCE_WINDOW), media)
 
   // --- 3. The mechanical half of legality ----------------------------------
   // Translation and embodiment only mean anything across a change of medium.
@@ -195,6 +272,8 @@ export async function POST(req: NextRequest) {
         session_id: sessionId,
         user_id: userId,
         turn_index: turnIndex,
+        parent_turn_id: parent?.id ?? null,
+        tuning,
         move_offering: move,
         reply_offering: null,
         relation: null,
@@ -214,20 +293,63 @@ export async function POST(req: NextRequest) {
   }
 
   // --- 4. The interpreter --------------------------------------------------
-  const world = (session.world_state ?? {}) as Record<string, any>
-  const systemPrompt = buildSystemPrompt(game, media, relations)
+  //
+  // The world is a property of the branch, not of the session: two branches that
+  // both establish something about the same place are each coherent and are not
+  // each other's. See worldFor() for what happens to sessions written before that
+  // was true.
+  const world = worldFor(
+    game.seedWorld,
+    (session.world_state ?? {}) as Record<string, any>,
+    graph,
+    path,
+  )
+
+  const history: TurnContext[] = path.slice(-HISTORY_TURNS).map(t => ({
+    turn_index: t.turn_index,
+    move_offering: t.move_offering,
+    reply_offering: t.reply_offering,
+    relation: t.relation,
+    reading: t.reading,
+    narration: t.narration,
+    carried: t.carried,
+  }))
+
+  // Everything the player can see but this branch did not live through. Offered so
+  // a callback has somewhere to point, and kept deliberately thin so it cannot be
+  // mistaken for context the exchange inherits.
+  const onPath = new Set(path.map(t => t.id))
+  const elsewhere: ElsewhereContext[] = graph.order
+    .filter(t => t.legal && !onPath.has(t.id))
+    .slice(-ELSEWHERE_TURNS)
+    .map(t => ({
+      turn_index: t.turn_index,
+      move_offering: t.move_offering,
+      reply_offering: t.reply_offering,
+      carried: t.carried,
+    }))
+
+  const linkable = linkableTurns(graph, parent?.id ?? null).map(t => t.turn_index)
+
+  const systemPrompt = buildSystemPrompt(game, media, relations, tuning)
   const userPrompt = buildUserPrompt({
     game,
     media,
     relations,
     world,
-    history: history.map(({ legal, ...t }) => t),
+    history,
+    elsewhere,
     move,
     previous,
+    // Said only when the player went back, because on a straight continuation it
+    // would be a sentence of prompt that tells the interpreter nothing.
+    parentIndex: parent && parent.turn_index !== turnIndex - 1 ? parent.turn_index : null,
     claimedRelation,
     spent,
     prediction: body?.prediction?.trim() || null,
     turnIndex,
+    tuning,
+    due,
   })
 
   // One place that talks to the model, because the reply pipeline below may need
@@ -272,7 +394,9 @@ export async function POST(req: NextRequest) {
   const firstRaw = await callInterpreter(systemPrompt, userPrompt)
   if (firstRaw === null) return err('Interpreter unavailable. Try that move again in a moment.', 502)
 
-  const firstPass = normalizeInterpretation(parseJsonObject(firstRaw), media, relations)
+  const firstPass = normalizeInterpretation(
+    parseJsonObject(firstRaw), media, relations, { muted, linkable },
+  )
   if (!firstPass) return err('The interpreter returned something unreadable. Try that move again.', 502)
 
   if (firstPass.replyRejection) {
@@ -327,9 +451,10 @@ export async function POST(req: NextRequest) {
     // Stage 1.
     if (interpretation.reply) reply = await tryResolve(interpretation.reply)
 
-    // Stage 2 — one re-ask, only into media that cannot fail on the player's data.
+    // Stage 2 — one re-ask, only into media that cannot fail on the player's data
+    // and that the player has not turned off.
     if (!reply) {
-      const retryMedia = replyMediaFor(media)
+      const retryMedia = answerMedia
       const problem = interpretation.replyRejection
         ? describeRejection(interpretation.replyRejection as any)
         : failure.current
@@ -342,14 +467,14 @@ export async function POST(req: NextRequest) {
       console.warn(`[correlate] retrying reply in ${game.id}: ${problem}`)
 
       const retryRaw = await callInterpreter(
-        buildSystemPrompt(game, retryMedia, relations),
+        buildSystemPrompt(game, retryMedia, relations, tuning),
         buildRetryPrompt({
           game, media: retryMedia, relations, move, previous, problem, attempted,
           reading: interpretation.reading,
         }),
       )
       const retry = retryRaw
-        ? normalizeInterpretation(parseJsonObject(retryRaw), retryMedia, relations)
+        ? normalizeInterpretation(parseJsonObject(retryRaw), retryMedia, relations, { linkable })
         : null
 
       if (retry?.reply) {
@@ -368,8 +493,10 @@ export async function POST(req: NextRequest) {
 
     // Stage 3 — the server tries on its own terms.
     if (!reply) {
+      // Weighted order, so a player who asked for mostly music gets music searched
+      // first when the interpreter has already failed twice.
       for (const seed of salvageQueries(interpretation, move)) {
-        for (const medium of replyMediaFor(media).filter(m => !isComposed(m))) {
+        for (const medium of answerMedia.filter(m => !isComposed(m))) {
           const found = await tryResolve({ medium, query: seed, framing: 'Found in answer to your move' })
           if (found) {
             reply = found
@@ -415,12 +542,29 @@ export async function POST(req: NextRequest) {
     : replySource === 'retry'     ? (reached ? `${reached} (second attempt)` : 'second attempt')
     : `salvaged: ${reached ?? 'searched from the move itself'}`
 
+  // A callback is resolved to a real turn here, not trusted as an index. The
+  // interpreter is given indexes because they read well in a prompt; the database
+  // stores an edge.
+  const linkedTurn = interpretation.link && legal
+    ? turnByIndex(graph, interpretation.link.turnIndex)
+    : null
+
   // --- 6. Persist ---------------------------------------------------------
+  //
+  // `world_delta` is written per turn because a branched game has no single world:
+  // the world anywhere is the fold of the deltas along the path that reached it.
+  // mediaVisited goes *into* the delta rather than being bolted onto the session
+  // world afterwards, so the fold reproduces it instead of losing it.
+  const storedDelta: Record<string, any> | null = legal
+    ? { ...interpretation.worldDelta, mediaVisited: visitedAfter(world, move, reply) }
+    : null
+
   const { data: turn, error: turnErr } = await ((db.from('listen_turns') as any)
     .insert({
       session_id: sessionId,
       user_id: userId,
       turn_index: turnIndex,
+      parent_turn_id: parent?.id ?? null,
       move_offering: move,
       reply_offering: reply,
       reply_query: replyNote,
@@ -431,6 +575,10 @@ export async function POST(req: NextRequest) {
       carried: interpretation.carried || null,
       lost: interpretation.lost || null,
       facts: interpretation.facts,
+      world_delta: storedDelta,
+      link_turn_id: linkedTurn?.id ?? null,
+      link_note: linkedTurn ? interpretation.link!.note : null,
+      tuning,
       legal,
     })
     .select()
@@ -439,20 +587,15 @@ export async function POST(req: NextRequest) {
   if (turnErr) return err(`Could not record that turn: ${turnErr.message}`, 500)
 
   // An illegal move leaves the world untouched — nothing was established.
-  const nextWorld = legal ? applyWorldDelta(world, interpretation) : world
-
-  // mediaVisited is bookkeeping the engine can do better than a prompt can.
-  if (legal) {
-    const visited = new Set<string>(Array.isArray(nextWorld.mediaVisited) ? nextWorld.mediaVisited : [])
-    visited.add(move.medium)
-    if (reply) visited.add(reply.medium)
-    nextWorld.mediaVisited = [...visited]
-  }
+  const nextWorld = legal ? applyWorldDelta(world, { ...interpretation, worldDelta: storedDelta! }) : world
 
   const { data: updated } = await ((db.from('listen_sessions') as any)
     .update({
+      // The world of the branch just played. Authoritative only while the game is
+      // a line; after that it is the display value and the branch head's cache.
       world_state: nextWorld,
-      turn_count: turnIndex + 1,
+      turn_count: graph.order.length + 1,
+      ...(tuningChanged ? { tuning } : {}),
       updated_at: new Date().toISOString(),
     })
     .eq('id', sessionId)
@@ -472,4 +615,22 @@ export async function POST(req: NextRequest) {
       ? describeRejection(firstPass.replyRejection as any)
       : null,
   })
+}
+
+/**
+ * Which media this branch has now touched.
+ *
+ * Bookkeeping the engine does better than a prompt can, and it belongs in the
+ * turn's delta rather than in the session world: a branch that has only ever played
+ * music should say so even while a sibling branch has crossed four media.
+ */
+function visitedAfter(
+  world: Record<string, any>,
+  move: Offering,
+  reply: Offering | null,
+): string[] {
+  const visited = new Set<string>(Array.isArray(world.mediaVisited) ? world.mediaVisited : [])
+  visited.add(move.medium)
+  if (reply) visited.add(reply.medium)
+  return [...visited]
 }

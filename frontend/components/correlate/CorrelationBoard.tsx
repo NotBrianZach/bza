@@ -1,9 +1,9 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
-  AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, Flag, Globe2, Loader2, Pause,
-  Play, Shuffle, SignalZero, SkipBack,
+  AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, CornerDownRight, Flag, GitBranch,
+  Globe2, Link2, Loader2, Pause, Play, Shuffle, SignalZero, SkipBack,
 } from 'lucide-react'
 import { authedFetch } from '@/lib/authedFetch'
 import { track } from '@/lib/analytics'
@@ -11,12 +11,19 @@ import { correlateQueries } from '@/lib/queries/correlate'
 import { ACCENT_CLASSES, getGame, retiredGameName, wantsPrediction } from '@/lib/correlate/games'
 import { getMedium } from '@/lib/correlate/media'
 import { RELATIONS, resolveRelations, spentRelations } from '@/lib/correlate/relations'
+import {
+  buildGraph, childrenOf, defaultParent, offeringOnTable, pathTo, relationsAlong,
+  subtreeSize, worldFor, type TurnGraph,
+} from '@/lib/correlate/graph'
+import { normalizeTuning, type Tuning } from '@/lib/correlate/tuning'
 import type {
   CorrelationSession, CorrelationTurn, MediumId, Offering, RelationId,
 } from '@/lib/correlate/types'
 import { useOfferingPlayer, audioUrl, type OfferingPlayer } from './useOfferingPlayer'
+import BranchMap from './BranchMap'
 import OfferingCard from './OfferingCard'
 import OfferingPicker, { type MoveDraft } from './OfferingPicker'
+import TuningPanel from './TuningPanel'
 
 /**
  * The board.
@@ -25,6 +32,12 @@ import OfferingPicker, { type MoveDraft } from './OfferingPicker'
  * world keys to show, which media and relations are in play, and whether the
  * player is asked to declare a relation. Nothing here branches on a game id except
  * through that data.
+ *
+ * The log shows one path, not the whole session. That is the consequence of the game
+ * being a graph: a player standing on turn 3 of a twenty-turn game is in a
+ * conversation that genuinely has three turns in it, and showing the other
+ * seventeen underneath would be showing them someone else's. Everything off the path
+ * is reachable from the map, one click, and clicking it is how you move.
  */
 export default function CorrelationBoard({
   session: initialSession,
@@ -43,33 +56,62 @@ export default function CorrelationBoard({
   const [problems, setProblems] = useState<string[]>([])
   const [notice, setNotice] = useState('')
   const [prediction, setPrediction] = useState('')
+  /**
+   * The turn the next move answers. Null means a thread with nothing behind it —
+   * either the game has not started, or the player asked for a fresh one.
+   */
+  const [focusId, setFocusId] = useState<string | null>(null)
+  /** Set once the player has chosen, so loading turns stops overriding them. */
+  const focusChosen = useRef(false)
 
   const player = useOfferingPlayer()
   const game = getGame(session.mode)
   const accent = ACCENT_CLASSES[game?.accent ?? 'indigo']
 
+  const media: MediumId[] = useMemo(
+    () => (Array.isArray(session.media) && session.media.length > 0 ? session.media : ['music']),
+    [session.media],
+  )
+
+  const [tuning, setTuning] = useState<Tuning>(() => normalizeTuning(session.tuning, media))
+
   useEffect(() => {
     let cancelled = false
     correlateQueries.getTurns(session.id)
-      .then(t => { if (!cancelled) setTurns(t) })
+      .then(t => {
+        if (cancelled) return
+        setTurns(t)
+        if (!focusChosen.current) setFocusId(defaultParent(buildGraph(t))?.id ?? null)
+      })
       .catch(e => { if (!cancelled) setError(e.message) })
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
   }, [session.id])
 
+  const graph: TurnGraph = useMemo(() => buildGraph(turns), [turns])
+
+  /** The conversation you are in: root → the turn you are answering. */
+  const path = useMemo(() => pathTo(graph, focusId), [graph, focusId])
+
+  const focusTurn = focusId ? graph.nodes.get(focusId)?.turn ?? null : null
+  const onTheTable = offeringOnTable(focusTurn)
+
+  /** Turns that already answer the one in focus. Each is another branch. */
+  const continuations = useMemo(() => childrenOf(graph, focusId), [graph, focusId])
+
   /**
-   * The chain, in play order: each legal turn contributes the move and then the
-   * reply it drew.
+   * The chain, in play order: each legal turn on this path contributes the move
+   * and then the reply it drew.
    *
    * Rejected turns are left out — a move that did not connect never joined the
    * chain, so it should not be in the thing you look back over.
    */
   const chain = useMemo(
-    () => turns
+    () => path
       .filter(t => t.legal)
       .flatMap(t => [t.move_offering, t.reply_offering])
       .filter((o): o is Offering => !!o?.id),
-    [turns],
+    [path],
   )
 
   /** Only the audible part can play itself; the rest is stepped through by eye. */
@@ -88,20 +130,45 @@ export default function CorrelationBoard({
     [session.relations, game],
   )
 
-  const media: MediumId[] = useMemo(
-    () => (Array.isArray(session.media) && session.media.length > 0 ? session.media : ['music']),
-    [session.media],
+  const spent = useMemo(() => spentRelations(relationsAlong(path), 1), [path])
+
+  /**
+   * The world of this branch, not of the session.
+   *
+   * Two branches that both establish something about the same place are each
+   * coherent and are not each other's, so the world is folded from the deltas along
+   * the path. Sessions written before the graph existed have no deltas to fold and
+   * fall back to the session row — see worldFor().
+   */
+  const world = useMemo(
+    () => worldFor(game?.seedWorld ?? {}, session.world_state ?? {}, graph, path),
+    [game, session.world_state, graph, path],
   )
 
-  const spent = useMemo(
-    () => spentRelations(turns.map(t => ({ relation: t.relation, legal: t.legal })), 1),
-    [turns],
+  const facts: string[] = useMemo(
+    () => (Array.isArray(world.facts) ? world.facts : []),
+    [world],
   )
 
   const updateSession = useCallback((next: CorrelationSession) => {
     setSession(next)
     onSessionChange?.(next)
   }, [onSessionChange])
+
+  const focusOn = useCallback((id: string | null) => {
+    focusChosen.current = true
+    setFocusId(id)
+    setError('')
+    setNotice('')
+    setProblems([])
+  }, [])
+
+  const changeTuning = useCallback((next: Tuning) => {
+    setTuning(next)
+    // Fire-and-forget: the turn route is sent the current value too and persists
+    // it, so losing this race costs nothing.
+    correlateQueries.saveTuning(session.id, next, media).catch(() => {})
+  }, [session.id, media])
 
   const play = useCallback(async (draft: MoveDraft) => {
     setPending(true)
@@ -114,6 +181,10 @@ export default function CorrelationBoard({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           sessionId: session.id,
+          // Always explicit, so the server never has to guess which turn a move
+          // answers — "the newest one" is only right when nobody went back.
+          parentTurnId: focusId,
+          tuning,
           ...draft,
           prediction: prediction.trim() || undefined,
         }),
@@ -124,6 +195,10 @@ export default function CorrelationBoard({
         throw new Error(data.error ?? 'That turn did not go through')
       }
       setTurns(t => [...t, data.turn])
+      // Play continues from what just happened, whether or not the player had gone
+      // back to take this turn. An illegal move established nothing, so the table
+      // stays where it was.
+      if (data.turn?.legal) focusOn(data.turn.id)
       if (data.session) updateSession(data.session)
       // Not an error any more: the pipeline guarantees a real reply, so the only
       // thing worth surfacing is that it took more than one attempt to get one.
@@ -138,7 +213,8 @@ export default function CorrelationBoard({
         relation: data.turn?.relation,
         turn: data.turn?.turn_index,
         legal: data.turn?.legal,
-        missed: !!data.missed,
+        branched: focusId !== null && focusId !== defaultParent(graph)?.id,
+        linked: !!data.turn?.link_turn_id,
       })
       setPrediction('')
     } catch (e: any) {
@@ -146,17 +222,12 @@ export default function CorrelationBoard({
     } finally {
       setPending(false)
     }
-  }, [session.id, session.mode, prediction, updateSession])
+  }, [session.id, session.mode, prediction, updateSession, focusId, tuning, graph, focusOn])
 
   const finish = useCallback(async () => {
     await correlateQueries.finishSession(session.id)
     updateSession({ ...session, status: 'finished' })
   }, [session, updateSession])
-
-  const facts: string[] = useMemo(
-    () => (Array.isArray(session.world_state?.facts) ? session.world_state.facts : []),
-    [session.world_state],
-  )
 
   // A session can outlive its game. Night Radio was retired along with the "dial"
   // concept it ran on, and telling someone their game no longer exists is better
@@ -185,8 +256,7 @@ export default function CorrelationBoard({
   }
 
   const isOver = session.status === 'finished'
-  const lastTurn = turns[turns.length - 1]
-  const onTheTable = lastTurn?.legal ? (lastTurn.reply_offering ?? lastTurn.move_offering) : null
+  const atHead = focusId === (defaultParent(graph)?.id ?? null)
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">
@@ -219,15 +289,19 @@ export default function CorrelationBoard({
             <div className="flex items-center justify-center py-16 text-gray-400">
               <Loader2 size={18} className="animate-spin" />
             </div>
-          ) : turns.length === 0 ? (
+          ) : path.length === 0 ? (
             <div className={`rounded-2xl border ${accent.ring} ${accent.bg} p-6 mb-6`}>
               <Shuffle size={22} className={`${accent.text} mb-3`} />
-              <p className="text-sm font-medium text-gray-800 dark:text-gray-200">{game.openingPrompt}</p>
+              <p className="text-sm font-medium text-gray-800 dark:text-gray-200">
+                {turns.length === 0
+                  ? game.openingPrompt
+                  : 'A new thread, with nothing on the table. Offer anything.'}
+              </p>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">{game.pieces.goal}</p>
             </div>
           ) : (
             <>
-              {/* Listen back to the audible part of the chain: one <audio> element
+              {/* Listen back to the audible part of this branch: one <audio> element
                   walks the queue, so it plays straight through without a click per
                   item. No account and no subscription. */}
               {audible.length > 1 && (
@@ -242,8 +316,8 @@ export default function CorrelationBoard({
                   </button>
                   <p className="text-[11px] text-gray-500 dark:text-gray-400 min-w-0 truncate">
                     {playingIndex >= 0
-                      ? `${playingIndex + 1} of ${audible.length} Â· ${player.current?.title ?? ''}`
-                      : `${audible.length} of ${chain.length} in the chain have audio Â· 30s previews`}
+                      ? `${playingIndex + 1} of ${audible.length} · ${player.current?.title ?? ''}`
+                      : `${audible.length} of ${chain.length} on this branch have audio · 30s previews`}
                   </p>
                   {playingIndex >= 0 && (
                     <button
@@ -264,20 +338,61 @@ export default function CorrelationBoard({
               )}
 
               <ol className="space-y-6 mb-6">
-                {turns.map(turn => (
-                  <li key={turn.id}>
-                    <TurnBlock turn={turn} player={player} accentText={accent.text} />
+                {path.map(turn => (
+                  <li key={turn.id} id={`turn-${turn.turn_index}`}>
+                    <TurnBlock
+                      turn={turn}
+                      graph={graph}
+                      player={player}
+                      accentText={accent.text}
+                      accentChip={accent.chip}
+                      isFocus={turn.id === focusId}
+                      onFocus={focusOn}
+                    />
                   </li>
                 ))}
               </ol>
             </>
           )}
 
+          {/* What already answers the turn in focus. Taking another turn here makes
+              one more of these rather than overwriting any of them. */}
+          {continuations.length > 0 && (
+            <div className="mb-6 rounded-xl border border-dashed border-gray-300 dark:border-gray-600 p-3">
+              <p className="flex items-center gap-1.5 text-[11px] font-medium text-gray-500 dark:text-gray-400 mb-2">
+                <GitBranch size={12} />
+                {continuations.length} {continuations.length === 1 ? 'answer' : 'answers'} already
+                {' '}follow{continuations.length === 1 ? 's' : ''} from here
+              </p>
+              <ul className="flex flex-wrap gap-1.5">
+                {continuations.map(c => {
+                  const beyond = subtreeSize(graph, c.id)
+                  return (
+                    <li key={c.id}>
+                      <button
+                        onClick={() => focusOn(c.id)}
+                        className="flex items-center gap-1 text-[11px] px-2 py-1 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition-colors"
+                      >
+                        <CornerDownRight size={10} />
+                        turn {c.turn_index + 1} · {c.move_offering?.title ?? 'a move'}
+                        {beyond > 0 && <span className="text-gray-400 dark:text-gray-500">+{beyond}</span>}
+                      </button>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+          )}
+
           {!isOver && (
             <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
               <div className="flex items-center justify-between mb-3 gap-3">
                 <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                  {turns.length === 0 ? 'Your opening offering' : `Your move — turn ${turns.length + 1}`}
+                  {!focusTurn
+                    ? turns.length === 0 ? 'Your opening offering' : 'A new thread, answering nothing'
+                    : atHead
+                      ? `Your move — turn ${turns.length + 1}`
+                      : `Branching from turn ${focusTurn.turn_index + 1}`}
                 </p>
                 {onTheTable && (
                   <p className="text-[11px] text-gray-400 dark:text-gray-500 truncate max-w-[55%]">
@@ -286,6 +401,21 @@ export default function CorrelationBoard({
                   </p>
                 )}
               </div>
+
+              {!atHead && turns.length > 0 && (
+                <p className="mb-3 flex items-start gap-1.5 text-[11px] text-gray-500 dark:text-gray-400">
+                  <GitBranch size={12} className="flex-shrink-0 mt-0.5" />
+                  <span>
+                    {focusTurn
+                      ? `Your move starts a new branch here. Nothing played after turn ${focusTurn.turn_index + 1} is on it, and nothing already recorded changes.`
+                      : 'Your move starts a thread with nothing behind it. The rest of the game is untouched.'}
+                    {' '}
+                    <button onClick={() => focusOn(defaultParent(graph)?.id ?? null)} className="underline hover:no-underline">
+                      Back to where you were
+                    </button>
+                  </span>
+                </p>
+              )}
 
               {wantsPrediction(game) && (
                 <input
@@ -331,10 +461,30 @@ export default function CorrelationBoard({
 
         {/* World state */}
         <aside className="lg:sticky lg:top-6 space-y-4">
+          {!isOver && (
+            <TuningPanel
+              media={media}
+              tuning={tuning}
+              onChange={changeTuning}
+              accentText={accent.text}
+              disabled={pending}
+            />
+          )}
+
+          {turns.length > 0 && (
+            <BranchMap
+              graph={graph}
+              focusId={focusId}
+              onFocus={focusOn}
+              accentChip={accent.chip}
+              accentText={accent.text}
+            />
+          )}
+
           {mediaVisited.length > 0 && (
             <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
               <p className="text-[10px] uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-2">
-                Media crossed Â· {mediaVisited.length} of {media.length}
+                Media crossed on this branch · {mediaVisited.length} of {media.length}
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {media.map(id => {
@@ -356,14 +506,16 @@ export default function CorrelationBoard({
             <div className="flex items-center gap-2 px-4 py-2.5 border-b border-gray-100 dark:border-gray-700">
               <Globe2 size={14} className={accent.text} />
               <p className="text-xs font-semibold text-gray-700 dark:text-gray-200">The world</p>
-              <span className="ml-auto text-[11px] text-gray-400">{session.turn_count} turn{session.turn_count === 1 ? '' : 's'}</span>
+              <span className="ml-auto text-[11px] text-gray-400">
+                {path.length} on this branch
+              </span>
             </div>
             <dl className="divide-y divide-gray-100 dark:divide-gray-700">
               {game.worldKeys.map(({ key, description }) => (
                 <div key={key} className="px-4 py-3">
                   <dt title={description} className="text-[10px] uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-1">{key}</dt>
                   <dd className="text-xs text-gray-700 dark:text-gray-300 leading-relaxed">
-                    <WorldValue value={session.world_state?.[key]} />
+                    <WorldValue value={world[key]} />
                   </dd>
                 </div>
               ))}
@@ -412,10 +564,15 @@ const PROBLEM_TEXT: Record<string, string> = {
 }
 
 /** One exchange: the move, how it was read, the reply, and what carried across. */
-function TurnBlock({ turn, player, accentText }: {
+function TurnBlock({ turn, graph, player, accentText, accentChip, isFocus, onFocus }: {
   turn: CorrelationTurn
+  graph: TurnGraph
   player: OfferingPlayer
   accentText: string
+  accentChip: string
+  /** True when the next move answers this turn. */
+  isFocus: boolean
+  onFocus: (id: string) => void
 }) {
   if (!turn.legal) {
     return (
@@ -436,6 +593,7 @@ function TurnBlock({ turn, player, accentText }: {
   }
 
   const crossed = turn.reply_offering && turn.reply_offering.medium !== turn.move_offering.medium
+  const linked = turn.link_turn_id ? graph.nodes.get(turn.link_turn_id)?.turn ?? null : null
 
   return (
     <div className="space-y-3">
@@ -459,6 +617,19 @@ function TurnBlock({ turn, player, accentText }: {
             <ArrowRight size={9} />
             {getMedium(turn.reply_offering!.medium)?.plural}
           </span>
+        )}
+        {isFocus ? (
+          <span className={`ml-auto text-[10px] font-medium px-1.5 py-0.5 rounded-full ${accentChip}`}>
+            answering this
+          </span>
+        ) : (
+          <button
+            onClick={() => onFocus(turn.id)}
+            title="Take your next move from here instead, as a new branch"
+            className="ml-auto flex items-center gap-1 text-[10px] text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+          >
+            <GitBranch size={10} /> branch from here
+          </button>
         )}
       </div>
 
@@ -486,17 +657,33 @@ function TurnBlock({ turn, player, accentText }: {
         <p className="text-sm text-gray-800 dark:text-gray-200 leading-relaxed pl-1">{turn.narration}</p>
       )}
 
+      {/* A correlation the player could not have seen from where they were standing:
+          an earlier exchange, possibly on a branch they have not visited since, that
+          this one rhymes with. */}
+      {linked && turn.link_note && (
+        <a
+          href={`#turn-${linked.turn_index}`}
+          className="flex items-start gap-1.5 pl-1 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+        >
+          <Link2 size={12} className="flex-shrink-0 mt-0.5" />
+          <span>
+            <span className="text-gray-400 dark:text-gray-500">rhymes with turn {linked.turn_index + 1} · </span>
+            {turn.link_note}
+          </span>
+        </a>
+      )}
+
       {/* The point of a cross-medium game: what survived, and what did not. */}
       {(turn.carried || turn.lost) && (
         <div className="pl-1 grid sm:grid-cols-2 gap-2">
           {turn.carried && (
             <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
-              <span className="text-gray-400 dark:text-gray-500">carried Â· </span>{turn.carried}
+              <span className="text-gray-400 dark:text-gray-500">carried · </span>{turn.carried}
             </p>
           )}
           {turn.lost && (
             <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
-              <span className="text-gray-400 dark:text-gray-500">lost Â· </span>{turn.lost}
+              <span className="text-gray-400 dark:text-gray-500">lost · </span>{turn.lost}
             </p>
           )}
         </div>
@@ -529,7 +716,7 @@ function WorldValue({ value }: { value: unknown }) {
       <ul className="space-y-1">
         {value.slice(-6).map((v, i) => (
           <li key={i} className="flex gap-1.5">
-            <span className="text-gray-300 dark:text-gray-600 flex-shrink-0">Â·</span>
+            <span className="text-gray-300 dark:text-gray-600 flex-shrink-0">·</span>
             <span><WorldValue value={v} /></span>
           </li>
         ))}

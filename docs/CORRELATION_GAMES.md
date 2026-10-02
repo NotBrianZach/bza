@@ -416,3 +416,249 @@ Two smaller consequences:
 
 Verified: 135 checks, 0 failed · `tsc --noEmit` 9 pre-existing errors,
 none in new code · `next build` compiles.
+
+---
+
+## 14. Third pass (2026-10-01): a graph, and an adjustable partner
+
+Two requests, and they turn out to be the same request twice: *the games
+should be more adjustable.* One about the shape of a game, one about the
+character of the partner playing it.
+
+### 14a. The chain becomes a conversation graph
+
+The chain was an unexamined default rather than a rule anyone chose. Its
+cost is specific: a move you regret is permanent, a reply you loved can
+only be followed one way, and the shape of a long game is a line through
+a space you were actually exploring.
+
+So `listen_turns` gains **`parent_turn_id`** — what this turn answers —
+and several turns may name the same one. Everything that used to mean
+"the last turn" now means "the parent", and everything that used to mean
+"the session" now means "this branch":
+
+| Was | Is |
+|---|---|
+| the last legal turn's reply is on the table | the **parent's** reply is on the table |
+| the last 8 turns are the history | the **path** root→parent is the history |
+| `spentRelations` over the session | `spentRelations` along the **path** |
+| nothing already in play in the session | nothing on the path, **and nothing a sibling already answered with** |
+| `world_state` on the session | the world **folded from the deltas along the path** |
+
+The last two rows are the ones that carry design, not bookkeeping.
+
+**Siblings are excluded from a reply.** Going back to a turn and
+answering it a second time is the whole feature; if both branches came
+back with the same record it would be a re-render, not a branch.
+
+**The world is a property of a path.** A session-wide world is coherent
+only while the game is a line — the moment two branches both establish
+something about the same place, one of them is reading the other's world
+and neither is wrong. So each turn records its own `world_delta` and the
+world anywhere is `mergeWorld` folded along the path. `mergeWorld` lives
+in `graph.ts` and is used by *both* the per-turn write and the per-path
+fold, because if those ever disagreed, reopening a game would show a
+different world than playing it did.
+
+Sessions written before this have no deltas to fold. They are lines, and
+a line has exactly one world, so `worldFor()` uses the session row for
+them — and folds, lossily and knowingly, the moment someone branches one.
+There is no branch-correct answer available from a single stored world,
+and handing both branches the same one would be worse than starting the
+new branch from less.
+
+**`turn_index` stops being a position and becomes a name.** Turn 7 may
+answer turn 3. It is kept as the handle the interpreter points at.
+
+### 14b. The AI can point at an earlier turn
+
+A second, non-structural edge: **`link_turn_id` + `link_note`**. The
+interpreter may volunteer that this exchange rhymes with an earlier one —
+the same quality surfacing again, something answered now that was left
+open then. It changes nothing about what was answered; it is an
+observation.
+
+It is also the thing the graph makes possible and a chain could not: the
+prompt asks for a turn **on another branch** by preference, because a
+correlation the player cannot see from where they are standing is the one
+worth volunteering.
+
+Validated against the turns the interpreter was actually shown, for
+exactly the reason a reply is searched rather than asserted: a link to
+turn 12 of a nine-turn game is an invented record, and being cheap to
+invent is why it has to be checked. A link with no note is dropped too —
+"this rhymes with turn 3" with nothing said about how is not an
+observation.
+
+The interpreter is therefore shown two things, and the separation is
+load-bearing: **THE PATH** (binding — what this branch established) and
+**EXCHANGES ELSEWHERE** (available to point at, *not* to reason from, and
+deliberately thinner so it cannot be mistaken for inherited context).
+
+### 14c. The partner is weighted: `lib/correlate/tuning.ts`
+
+> "maybe i want to explore music more but with an occasional stretch or
+> art piece"
+
+Media say what an offering can be made of; relations say what a reply can
+do to one. Neither says anything about **proportion**, and the only way
+to ask for mostly-music was previously to pick a music-only game — which
+is the tier §13 deleted on purpose. So proportion becomes a weighting
+rather than a game, which also makes it adjustable *mid-game*, which is
+the better version anyway: what you want from a partner changes over
+twenty turns.
+
+A third registry, in the same style as the other two — declarative data,
+prompt text derived from it, adding an axis is an edit there and nowhere
+else.
+
+**Medium weights**, four stops: `never · rarely · freely · mostly`.
+Zero is **arithmetic, not a hint**: a muted medium is dropped from the
+reply enum the interpreter is handed, removed from the retry and salvage
+media, and refused by `normalizeReply` with its own rejection reason —
+`muted-medium`, distinct from `unknown-medium` because the player did this
+deliberately and reading it as a prompt bug would send someone hunting a
+defect that is not there. Muting only stops the *partner* answering
+there; the medium stays yours to play.
+
+**Axes**, five stops each, resting in the middle: `nostalgia`
+(the unencountered ↔ the remembered), `obliquity` (plainly ↔ obliquely),
+`friction` (goes with you ↔ argues). The neutral stop says **nothing** —
+empty string — so an untouched tuning contributes no prompt and costs no
+tokens, and a test asserts the prompt with a neutral tuning is byte-identical
+to the prompt without one.
+
+**The hazard, and it is nostalgia specifically.** "Lean older" is one
+careless sentence away from "a shared decade is a connection", which is
+exactly the metadata-derived reasoning this section removed. So the
+weighting block states that it governs what you reach *for* and never what
+makes a connection hold, repeats that a shared decade is a coincidence of
+filing, and a test asserts that sentence is present.
+
+**Proportion cannot be instructed, so it is computed.** A model told
+"mostly music, occasionally art" will answer in music every turn and never
+notice, because each turn is locally correct. `dueMedium()` compares the
+expected share from the weights against the actual replies along the
+branch and names the medium owed a turn, once a whole reply is owed.
+Advisory on purpose: a weaker art answer played to satisfy a ratio is
+worse than a strong one anywhere else, and the prompt says so.
+
+Canonical form stores only what differs from the default, so `{}` is
+neutral, `isNeutral` is a key count, and dragging a control back where it
+started leaves no trace.
+
+The client sends the current tuning with the move *and* saves it
+separately, so a knob moved a second before a turn applies to that turn —
+reading it only from the session row would have made the save a race the
+player can lose without being told. Each turn also snapshots the tuning it
+was played under: a log that cannot say what the settings were cannot
+explain why a turn went the way it did.
+
+### 14d. What the board shows
+
+The log shows **one path**, not the session. A player standing on turn 3
+of a twenty-turn game is in a conversation that genuinely has three turns
+in it, and showing the other seventeen underneath would be showing them
+someone else's.
+
+Everything off the path is one click away in `BranchMap` — a tree of text,
+not a drawn graph, because what a player needs is to recognise a turn and
+get back to it, and a canvas would make that a navigation problem instead
+of a reading one. Each turn also carries *branch from here*, each focused
+turn lists the answers that already follow from it, and a link renders as
+*rhymes with turn N* that jumps.
+
+### 14e. Migration ordering, again
+
+`supabase/setup/53_conversation_graph.sql` adds five columns and
+backfills `parent_turn_id` by linking each turn to the most recent
+**legal** turn before it — legal matters, because a turned-away move left
+nothing on the table, so the turn after it was answering what the rejected
+move was answering, not the rejection.
+
+It **must run before the code**. The turn route selects `parent_turn_id,
+world_delta, link_turn_id, link_note` by name and PostgREST fails the whole
+select on an unknown column, so without the migration every turn errors
+rather than degrading. Same hazard as 52, same stance.
+
+Verified: 291 checks, 0 failed (was 172) · `tsc --noEmit` 9 pre-existing
+errors, none in new code · `next build` compiles.
+
+### 14f. Four knowledge media, and the guard that did not transfer
+
+> "would be nice to have a broader tag variety, like math theorems or
+> science facts"
+
+Eight media become twelve: **Mathematics** (`theorem`), **Science**
+(`phenomenon`), **Life** (`organism`), **Places** (`place`).
+
+**The design problem, which is the whole of this change.** A theorem is a
+*proposition*. It is the first thing offered here that can be
+**confidently wrong** rather than merely bad, and that breaks the obvious
+implementation. Composing one is the natural reach — nothing to search,
+author it on the spot, like a gesture — and it is exactly wrong, because
+the composed guard is **performability**, and performability catches
+*vague mush*. A fluent, specific, incorrect statement of Noether's
+theorem is not mush. It is the invented-track failure wearing better
+clothes, and unlike an invented track nothing downstream can catch it: a
+song that does not exist produces a search miss, and a statement that is
+not true produces prose.
+
+So these are `catalogue`, and the guard is the one `passage` already uses,
+stated strictly: **the interpreter never writes the content, only names
+the search.** The server fetches the record and quotes its text verbatim.
+A query matching nothing is an ordinary miss. No fourth honesty guard was
+needed — only the discipline of not reaching for the wrong existing one.
+
+`Medium.propositional` marks them, and it earns its own field because it
+changes what honesty means rather than how something renders. It drives an
+extra paragraph in the system prompt ("…do NOT write out what it says… a
+statement you compose yourself is a guess wearing the clothes of a fact"),
+and a test asserts both that the paragraph appears when one of these media
+is in play and that it is *absent* when none is. A second test asserts no
+composed medium is ever marked propositional — that combination would be
+licensing exactly what the flag exists to forbid.
+
+**One resolver, four scopes.** `lib/offerings/knowledge.ts`. They differ
+by *scope*, not mechanism: a search hint that biases a bare query
+("symmetry" → "symmetry mathematics theorem") plus a pattern matched
+against the page's categories, title and extract. Wikipedia because it is
+keyless and returns extract, thumbnail and categories in one call — the
+same one-request-per-search trade artwork.ts was chosen for.
+
+Scope is **curation, not honesty**, and the distinction is load-bearing:
+a page the pattern rejects is still a real page, it is simply not a
+theorem. So the pattern is generous (a strict one makes a medium feel
+broken) and it is *not* re-applied on lookup — a category edit on
+Wikipedia must not invalidate a move a player already picked from a list
+this server handed them.
+
+Two smaller consequences:
+
+- `offeringLine()` now inlines the body for **any** non-composed
+  text-perceptible medium, not just `passage`. An interpreter given only
+  "Noether's theorem" reasons about a title and guesses the content, which
+  is the failure these media exist to prevent. Composed media stay
+  excluded because their steps already print.
+- These are safe retry and salvage targets (nothing user-specific can make
+  them come back empty), which strengthens the guarantee that a legal turn
+  always carries a real reply.
+
+**A `User-Agent` is sent here**, which looks like a contradiction of the
+warning in shared.ts and is not. That warning is about a *crawler-shaped*
+UA being refused by an edge WAF (Apple's); Wikimedia's own policy asks for
+precisely this format. It is why "a provider that genuinely needs a header
+can ask for one per call" exists.
+
+**Known limit:** `listen_sessions.media` is snapshotted at creation, so
+games already in progress do not gain these four. That is the existing and
+correct rule — a game in progress should not silently change shape — but
+it does mean the new media appear only in new games.
+
+Candidates considered and not built: `poem` (PoetryDB, keyless, real full
+texts), `word` (Wiktionary etymologies), `recipe`, `chess position`,
+`birdsong` (xeno-canto). Each is a second provider rather than a fourth
+scope, which is why they are listed rather than shipped.
+
+Verified: 334 checks, 0 failed · `tsc --noEmit` 9 pre-existing errors,
+none in new code · `next build` compiles.

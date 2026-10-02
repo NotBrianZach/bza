@@ -19,6 +19,7 @@ import { lookupMusic, resolveMusic, searchMusic } from './music'
 import { lookupArtwork, resolveArtwork, searchArtwork } from './artwork'
 import { lookupPassage, resolvePassage, searchPassages } from './passage'
 import { lookupScene, resolveScene, searchScenes } from './scene'
+import { isKnowledge, lookupKnowledge, resolveKnowledge, searchKnowledge } from './knowledge'
 import { composeOffering, type ComposedInput } from './composed'
 
 export { OfferingError } from './shared'
@@ -45,6 +46,9 @@ export async function searchOfferings(
       if (!ctx.userId) throw new OfferingError('Sign in to offer a passage from your library.', 401, 'Your library')
       return searchPassages(ctx.userId, q, limit)
     default:
+      // The knowledge media share one resolver and differ only by scope, so they
+      // are matched by predicate rather than by four near-identical cases.
+      if (isKnowledge(medium)) return searchKnowledge(medium, q, limit)
       // Composed media have nothing to search. Returning empty rather than
       // throwing keeps a picker that asks every enabled medium simple.
       return []
@@ -71,6 +75,7 @@ export async function lookupOffering(
       if (!ctx.userId) return null
       return lookupPassage(ctx.userId, id)
     default:
+      if (isKnowledge(medium)) return lookupKnowledge(medium, id)
       return null
   }
 }
@@ -116,7 +121,9 @@ export async function resolveReply(
       found = ctx.userId ? await resolvePassage(ctx.userId, plan.query, exclude) : null
       break
     default:
-      return null
+      if (!isKnowledge(plan.medium)) return null
+      found = await resolveKnowledge(plan.medium, plan.query, exclude)
+      break
   }
 
   // The interpreter's framing overrides the provider's default, because the

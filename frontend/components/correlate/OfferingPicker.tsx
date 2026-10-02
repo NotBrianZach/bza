@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
-  Accessibility, AlertTriangle, BookOpen, Clapperboard, Dumbbell, Footprints, Frame,
-  Hand, Loader2, Music2, Plus, Search, Send, Trash2, X,
+  Accessibility, AlertTriangle, Atom, BookOpen, Clapperboard, Dumbbell, Footprints, Frame,
+  Hand, Leaf, Loader2, Mountain, Music2, Plus, Search, Send, Sigma, Trash2, X,
 } from 'lucide-react'
 import { authedFetch } from '@/lib/authedFetch'
 import { getMedium } from '@/lib/correlate/media'
@@ -13,7 +13,8 @@ import type {
 } from '@/lib/correlate/types'
 
 const ICONS: Record<string, any> = {
-  Music2, Frame, BookOpen, Clapperboard, Hand, Footprints, Accessibility, Dumbbell,
+  Music2, Frame, BookOpen, Clapperboard, Sigma, Atom, Leaf, Mountain,
+  Hand, Footprints, Accessibility, Dumbbell,
 }
 
 /**

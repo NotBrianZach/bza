@@ -125,13 +125,31 @@ function PlayPageInner() {
             </p>
           </div>
         </div>
-        <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed max-w-2xl mb-6">
-          Every game here runs the same loop — <em>your offering → a reading of it → a reply
-          offering → what carried across</em>. The reply is always something real, so each turn is a
-          conversation between two things rather than a claim about one. There are two choices in
-          every turn: which connection to follow, and <em>which medium can express it</em>. The
-          second is the interesting one — answering a frantic song with a stretch says “what I hear
-          in this is a need for release”.
+        {/* How to take a turn, and nothing else.
+            What was here before argued for the section rather than explaining it —
+            that the reply is always real, that the medium is the interesting choice.
+            Both are true and neither is a player's problem on arrival; the games
+            make those points by being played.
+
+            It also stated as universal two things that vary by game, which is why
+            the third line points at the cards instead of qualifying here: every card
+            already says who names the connection and whether a move can be turned
+            away, and says it from `declaredRelation` and `enforcesConstraint` rather
+            than from prose that could drift. "Which connection to follow" is kept
+            deliberately — in most games you follow one without naming it, and
+            following is not declaring. */}
+        <ul className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed max-w-2xl mb-2 space-y-1">
+          <li>
+            Every game runs the same loop — <em>your offering → a reading of it → a reply
+            offering → what carried across</em>.
+          </li>
+          <li>
+            Every turn is two choices: which connection to follow, and <em>which medium can
+            carry it</em>.
+          </li>
+        </ul>
+        <p className="text-xs text-gray-400 dark:text-gray-500 max-w-2xl mb-6">
+          Each game below says who names the connection, and whether a move can be turned away.
         </p>
 
         {/* The two registries, stated once. A player who understands these two lists

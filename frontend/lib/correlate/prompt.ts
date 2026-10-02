@@ -7,8 +7,12 @@
 import type {
   CorrelationGame, Interpretation, MediumId, Offering, RelationId, ReplyPlan,
 } from './types'
-import { getMedium, isComposed, resolveMedia } from './media'
+import { getMedium, isComposed, isPropositional, resolveMedia } from './media'
 import { RELATIONS, getRelation, resolveRelations } from './relations'
+import { mergeWorld } from './graph'
+import {
+  DEFAULT_TUNING, describeTuning, isNeutral, mutedMedia, type Tuning,
+} from './tuning'
 
 /** A previous turn, trimmed to what the interpreter needs to stay consistent. */
 export interface TurnContext {
@@ -45,14 +49,30 @@ export function offeringLine(o: Offering): string {
 
   if (o.steps?.length) bits.push(`· steps: ${o.steps.join(' / ')}`)
   if (o.intent) bits.push(`· ${o.intent}`)
-  if (o.perceptible.kind === 'text' && o.medium === 'passage') {
+  // For a text medium the words *are* the offering, so they have to be here: an
+  // interpreter given only "Noether's theorem" reasons about a title and guesses at
+  // the content, which is the failure the knowledge media exist to avoid. Composed
+  // media are excluded because their steps are already printed above.
+  if (o.perceptible.kind === 'text' && !isComposed(o.medium)) {
     bits.push(`\n    text: ${o.perceptible.body}`)
   }
 
   return bits.join(' ')
 }
 
-export function buildSystemPrompt(game: CorrelationGame, media: MediumId[], relations: RelationId[]): string {
+/**
+ * The system prompt.
+ *
+ * `tuning` is optional and contributes nothing when neutral — so a game nobody has
+ * adjusted produces exactly the prompt it produced before tuning existed, which is
+ * both the cheapest default and the one that cannot have changed anyone's play.
+ */
+export function buildSystemPrompt(
+  game: CorrelationGame,
+  media: MediumId[],
+  relations: RelationId[],
+  tuning: Tuning = DEFAULT_TUNING,
+): string {
   const worldKeys = game.worldKeys.map(k => `  - ${k.key}: ${k.description}`).join('\n')
 
   const mediaBlock = media.map(id => {
@@ -67,6 +87,20 @@ export function buildSystemPrompt(game: CorrelationGame, media: MediumId[], rela
   }).join('\n')
 
   const composedMedia = media.filter(isComposed)
+  // Media whose content is a proposition rather than a thing. They get their own
+  // sentence because the ordinary "never invent a record" warning is not enough:
+  // inventing a *track* produces a search miss, which is visible, and inventing a
+  // *statement* produces fluent text that nothing downstream can catch.
+  const propositional = media.filter(isPropositional)
+
+  // The enum the interpreter is handed is the media it may *answer* in, which is
+  // not the media in play: a muted medium stays playable by the player and stays
+  // readable here, it simply cannot be answered in. Never empty — see
+  // weightedReplyMedia.
+  const muted = mutedMedia(tuning, media)
+  const answerable = muted.length < media.length ? media.filter(m => !muted.includes(m)) : media
+
+  const tuningBlock = describeTuning(tuning, media)
 
   return `${game.persona}
 
@@ -101,11 +135,19 @@ ${relationBlock}
 
 CHOOSING YOUR REPLY
 ${game.replyRule}
-
+${tuningBlock ? `\n${tuningBlock}\n` : ''}
 A reply in a catalogued medium is a *query*, not a claim: it is searched, and if no
 real ${media.includes('music') ? 'song, work' : 'work'} matches, your turn lands nowhere. Name something you are confident
 exists, as "Attribution — Title". Never invent a record. Never reply with something
 already in play.
+${propositional.length > 0 ? `
+${propositional.map(id => getMedium(id)?.plural ?? id).join(', ')} work the same way and the rule matters more there,
+because a wrong answer in those media does not look wrong. Name the theorem, the
+effect, the creature or the place and let it be looked up — do NOT write out what it
+says. The statement you are shown is the one the record actually carries; a statement
+you compose yourself is a guess wearing the clothes of a fact, and it is the one kind
+of invention here that a reader cannot catch.
+` : ''}
 ${composedMedia.length > 0 ? `
 A reply in a composed medium (${composedMedia.join(', ')}) is authored by you, so
 nothing can search it and nothing can catch you being vague. Performability is the
@@ -133,6 +175,24 @@ image; dissonance becomes conflict in a scene; balance becomes something felt in
 body. Name what crossed and name what was dropped. The loss is not a failure to
 apologise for, it is the interesting part.
 
+THE GAME IS A GRAPH, NOT A LINE
+A player may answer any earlier exchange, not only the latest one, so several
+different turns can answer the same offering. You are shown THE PATH — the exchanges
+leading to the one being answered, which is the history that binds — and separately
+a short index of EXCHANGES ELSEWHERE, on branches that were not taken to get here.
+What the path established is binding. What happened elsewhere did not happen to this
+branch: you may notice it, you may not assume it.
+
+POINTING BACK
+If this exchange genuinely rhymes with an earlier one — the same quality surfacing
+again, a pattern completing, something answered now that was left open then — say so
+in "link" with that turn's number and one clause on what the two share. Prefer a turn
+on another branch when you have one, because a correlation the player cannot see from
+where they are standing is the observation worth volunteering. Name only a turn you
+were actually shown, and set "link" to null rather than reaching: a callback to a turn
+that does not exist is the same mistake as a reply to a record that does not exist.
+The turn being answered is never a link — the exchange already answers it.
+
 THE WORLD YOU MAINTAIN
 ${worldKeys}
   - facts: durable statements established by play.
@@ -151,8 +211,9 @@ markdown fence. Schema:
   "reading": "how you read the player's offering, 1-2 sentences. The argument, not the story.",
   "narration": "what the exchange did to the world, 2-4 sentences, in your voice.",
   "relation": ${JSON.stringify(relations)},
+  "link": null | { "turn": <the turn number of an earlier exchange this one rhymes with>, "note": "what the two share, one clause" },
   "reply": {
-    "medium": ${JSON.stringify(media)},
+    "medium": ${JSON.stringify(answerable)},
     "query": "Attribution — Title    (catalogued media only)",
     "composed": { "title": "short name", "steps": ["…", "…"], "intent": "shown" | "invited" },
     "framing": "which part of your reply is in play"
@@ -172,24 +233,43 @@ not a synonym. Write "passage", not "prose" or "text"; "artwork", not "painting"
 up, and your turn lands nowhere.`
 }
 
+/** One exchange on a branch the player is not standing on. */
+export interface ElsewhereContext {
+  turn_index: number
+  move_offering: Offering
+  reply_offering: Offering | null
+  carried: string | null
+}
+
 export function buildUserPrompt(opts: {
   game: CorrelationGame
   media: MediumId[]
   relations: RelationId[]
   world: Record<string, any>
+  /** The exchanges on the path to the one being answered, oldest first. */
   history: TurnContext[]
+  /**
+   * Exchanges on other branches, named so a callback can reach them. Deliberately
+   * thinner than the path: it is there to be pointed at, not to be reasoned from.
+   */
+  elsewhere?: ElsewhereContext[]
   move: Offering
   previous: Offering | null
+  /** The turn being answered, when it is not simply the newest one. */
+  parentIndex?: number | null
   /** What the player claimed their relation was, in games that ask. */
   claimedRelation: RelationId | null
-  /** Relations the chain has just used and may not immediately reuse. */
+  /** Relations this branch has just used and may not immediately reuse. */
   spent: RelationId[]
   prediction?: string | null
   turnIndex: number
+  tuning?: Tuning
+  /** The medium the weights say is owed a turn, if any. */
+  due?: MediumId | null
 }): string {
   const {
-    game, media, relations, world, history, move, previous,
-    claimedRelation, spent, prediction, turnIndex,
+    game, media, relations, world, history, elsewhere, move, previous, parentIndex,
+    claimedRelation, spent, prediction, turnIndex, tuning, due,
   } = opts
   const parts: string[] = []
 
@@ -204,7 +284,32 @@ export function buildUserPrompt(opts: {
       if (t.narration) lines.push(`  ${t.narration}`)
       return lines.join('\n')
     }).join('\n')
-    parts.push(`RECENT TURNS\n${log}`)
+    parts.push(`THE PATH TO HERE\n${log}`)
+  }
+
+  // Thin by design: a title, a medium and what carried is enough to recognise an
+  // exchange and point at it, and anything more would invite reasoning from a
+  // branch that did not happen here.
+  if (elsewhere && elsewhere.length > 0) {
+    const index = elsewhere.map(t => {
+      const reply = t.reply_offering
+        ? ` → ${t.reply_offering.title} (${getMedium(t.reply_offering.medium)?.plural ?? t.reply_offering.medium})`
+        : ''
+      const carried = t.carried ? ` · carried: ${t.carried}` : ''
+      return `Turn ${t.turn_index}: ${t.move_offering.title} ` +
+        `(${getMedium(t.move_offering.medium)?.plural ?? t.move_offering.medium})${reply}${carried}`
+    }).join('\n')
+    parts.push(
+      `EXCHANGES ELSEWHERE (other branches — available to point at, not to reason from)\n${index}`,
+    )
+  }
+
+  if (typeof parentIndex === 'number') {
+    parts.push(
+      `WHICH EXCHANGE IS BEING ANSWERED\nTurn ${parentIndex}. The player has gone back to it ` +
+      `rather than continuing from the newest exchange, so the offering on the table is the one ` +
+      `turn ${parentIndex} left there, and nothing played after it has happened on this branch.`,
+    )
   }
 
   parts.push(`THE PLAYER'S MOVE\n${offeringLine(move)}`)
@@ -258,6 +363,28 @@ export function buildUserPrompt(opts: {
     parts.push(
       `MEDIUM-DEPENDENT RELATIONS\n${mediumChangers.join(', ')} are only valid when your reply is in a ` +
       `different medium than the move (${move.medium}). If you want one of those, change medium.`,
+    )
+  }
+
+  // Proportion is the one instruction a single completion cannot follow: every
+  // reply looks locally right, so "mostly music with the occasional stretch"
+  // becomes all music and nothing notices. The arithmetic is done from the log and
+  // the result is stated — advisory, because a ratio is a worse reason to answer in
+  // a medium than the connection is.
+  if (due) {
+    const label = getMedium(due)?.plural ?? due
+    parts.push(
+      `THE BALANCE SO FAR\nYour recent replies on this branch are short of what the player's ` +
+      `weighting asks for in ${label}. If a connection in ${label} is available and genuinely ` +
+      `answers this move, that is the one to play. Do not force it — a weaker ${label} answer ` +
+      `is worse than a strong one anywhere else, and the shortfall will keep.`,
+    )
+  }
+
+  if (tuning && !isNeutral(tuning)) {
+    parts.push(
+      `The weighting in your instructions is what the player has set as of this turn. They may ` +
+      `have just changed it; answer to what it says now, not to what previous turns did.`,
     )
   }
 
@@ -351,6 +478,18 @@ const MEDIUM_ALIASES: Record<string, MediumId> = {
   workout: 'exercise', training: 'exercise',
   // scene
   film: 'scene', movie: 'scene', tv: 'scene', television: 'scene', series: 'scene',
+  // theorem — a model reaching for this medium reaches for the field, not the id
+  math: 'theorem', mathematics: 'theorem', proof: 'theorem', lemma: 'theorem',
+  identity: 'theorem', conjecture: 'theorem', axiom: 'theorem', equation: 'theorem',
+  // phenomenon
+  science: 'phenomenon', fact: 'phenomenon', physics: 'phenomenon', chemistry: 'phenomenon',
+  law: 'phenomenon', effect: 'phenomenon', experiment: 'phenomenon',
+  // organism
+  animal: 'organism', creature: 'organism', species: 'organism', plant: 'organism',
+  biology: 'organism', bird: 'organism', insect: 'organism', fungus: 'organism',
+  // place
+  location: 'place', city: 'place', geography: 'place', landscape: 'place',
+  mountain: 'place', river: 'place', island: 'place',
 }
 
 /**
@@ -375,6 +514,7 @@ export type ReplyRejection =
   | { reason: 'unknown-medium'; written: string }
   | { reason: 'no-query'; medium: string }
   | { reason: 'unperformable'; medium: string }
+  | { reason: 'muted-medium'; medium: string }
 
 export function describeRejection(r: ReplyRejection): string {
   switch (r.reason) {
@@ -382,6 +522,10 @@ export function describeRejection(r: ReplyRejection): string {
     case 'unknown-medium':   return `the interpreter answered in "${r.written}", which is not in play`
     case 'no-query':         return `the interpreter named no ${r.medium} to look for`
     case 'unperformable':    return `the interpreter's ${r.medium} had no followable steps`
+    // Distinct from unknown-medium on purpose: the player did this, deliberately,
+    // and probably a moment ago. It is not a bug in the prompt or the alias table,
+    // and reading it as one would send someone hunting for a defect.
+    case 'muted-medium':     return `the interpreter answered in ${r.medium}, which you have turned off`
   }
 }
 
@@ -404,12 +548,18 @@ const str = (v: any): string => (typeof v === 'string' ? v.trim() : '')
 function normalizeReply(
   parsed: any,
   media: MediumId[],
+  muted: MediumId[] = [],
 ): { ok: true; plan: ReplyPlan } | { ok: false; rejection: ReplyRejection } {
   if (!parsed || typeof parsed !== 'object') return { ok: false, rejection: { reason: 'absent' } }
 
   const written = str(parsed.medium)
   const medium = resolveReplyMedium(written, media)
   if (!medium) return { ok: false, rejection: { reason: 'unknown-medium', written: written || '(none)' } }
+
+  // A weight of zero is arithmetic, not a hint: the medium is dropped from the
+  // prompt's enum *and* refused here, because a model that answers in it anyway
+  // must not be the thing that decides.
+  if (muted.includes(medium)) return { ok: false, rejection: { reason: 'muted-medium', medium } }
 
   const framing = str(parsed.framing)
 
@@ -435,11 +585,46 @@ function normalizeReply(
   return { ok: true, plan: { medium, query, framing } }
 }
 
+/** Everything about the turn's own position that coercion has to know. */
+export interface NormalizeOptions {
+  /** Media the player has turned off. Refused rather than resolved. */
+  muted?: MediumId[]
+  /**
+   * Turn indexes the interpreter was actually shown, so a callback to a turn that
+   * does not exist is dropped rather than stored. Undefined means "do not accept
+   * links at all", which is what every caller that has no graph wants.
+   */
+  linkable?: number[]
+}
+
+/**
+ * Coerce a volunteered callback, or drop it.
+ *
+ * Validated against the turns the interpreter was shown for the same reason a reply
+ * is searched rather than asserted: a link to turn 12 of a nine-turn game is an
+ * invented record, and the fact that it is cheap to invent is exactly why it has to
+ * be checked. A link with no note is also dropped — "this rhymes with turn 3" with
+ * nothing said about how is not an observation.
+ */
+function normalizeLink(parsed: any, linkable?: number[]): Interpretation['link'] {
+  if (!parsed || typeof parsed !== 'object' || !linkable || linkable.length === 0) return null
+
+  const raw = (parsed as { turn?: unknown }).turn
+  const turnIndex = typeof raw === 'number' ? raw : typeof raw === 'string' ? Number(raw) : NaN
+  if (!Number.isInteger(turnIndex) || !linkable.includes(turnIndex)) return null
+
+  const note = str((parsed as { note?: unknown }).note)
+  if (!note) return null
+
+  return { turnIndex, note }
+}
+
 /** Coerce a parsed object into an Interpretation, dropping anything malformed. */
 export function normalizeInterpretation(
   parsed: any,
   media: MediumId[],
   relations: RelationId[],
+  opts: NormalizeOptions = {},
 ): Interpretation | null {
   if (!parsed || typeof parsed !== 'object') return null
 
@@ -459,7 +644,7 @@ export function normalizeInterpretation(
   const claimed = str(parsed.relation) as RelationId
   const relation = relations.includes(claimed) ? claimed : null
 
-  const replyResult = normalizeReply(parsed.reply, media)
+  const replyResult = normalizeReply(parsed.reply, media, opts.muted ?? [])
 
   return {
     reading,
@@ -468,6 +653,7 @@ export function normalizeInterpretation(
     replyRejection: replyResult.ok ? null : replyResult.rejection,
     replyReason: str(parsed.replyReason),
     relation,
+    link: normalizeLink(parsed.link, opts.linkable),
     carried: str(parsed.carried),
     lost: str(parsed.lost),
     facts,
@@ -477,25 +663,20 @@ export function normalizeInterpretation(
 }
 
 /**
- * Apply an interpretation to the world. Shallow merge by design: the interpreter
- * returns only changed keys, and `facts` accumulates rather than being overwritten
- * so a later turn cannot erase what play established.
+ * Apply an interpretation to the world.
+ *
+ * Shallow merge by design: the interpreter returns only changed keys, and `facts`
+ * accumulates rather than being overwritten so a later turn cannot erase what play
+ * established. The merge itself lives in graph.ts because a branched game also has
+ * to recompute a world from the deltas along a path, and those two must be the same
+ * rule — if they ever differed, reopening a game would show a different world than
+ * playing it did.
  */
 export function applyWorldDelta(
   world: Record<string, any>,
   interpretation: Interpretation,
 ): Record<string, any> {
-  const next: Record<string, any> = { ...world, ...interpretation.worldDelta }
-
-  const existingFacts: string[] = Array.isArray(world.facts) ? world.facts : []
-  // A delta may also carry facts; fold both in and drop repeats.
-  const deltaFacts: string[] = Array.isArray(interpretation.worldDelta?.facts)
-    ? interpretation.worldDelta.facts.filter((f: any) => typeof f === 'string')
-    : []
-  const merged = [...existingFacts, ...deltaFacts, ...interpretation.facts]
-  next.facts = merged.filter((f, i) => merged.indexOf(f) === i)
-
-  return next
+  return mergeWorld(world, interpretation.worldDelta, interpretation.facts)
 }
 
 /** The media and relations a session actually plays with, given the game. */
@@ -544,7 +725,8 @@ export function buildRetryPrompt(opts: {
 
   parts.push(
     `ANSWER AGAIN. Constraints for this attempt:\n` +
-    `- Your reply medium must be exactly one of: ${media.join(', ')}.\n` +
+    `- Your reply medium must be exactly one of: ${media.join(', ')}. That list already excludes ` +
+    `anything the player has turned off, so it is the whole of what is available.\n` +
     `- Your relation must be exactly one of: ${relations.join(', ')}.\n` +
     `- For a searchable medium, name something well known enough to be found — a ` +
     `famous recording, a famous painting. This is the second attempt; reach for the ` +

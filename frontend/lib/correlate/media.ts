@@ -43,6 +43,17 @@ export interface Medium {
    */
   dependsOnUserLibrary?: boolean
   /**
+   * True when an offering in this medium is a *proposition* — something that can be
+   * true or false — rather than a thing that can only be good or bad.
+   *
+   * This is the one property that changes what honesty means. Inventing a track
+   * produces a search miss, which is visible to everyone. Inventing the statement
+   * of a theorem produces fluent, specific, confident text that nothing downstream
+   * can catch. So these media get an extra sentence in the prompt: name it, never
+   * write out what it says.
+   */
+  propositional?: boolean
+  /**
    * Set when the medium needs a credential this deployment may not have. The
    * medium is hidden rather than offered-and-broken when the key is absent.
    */
@@ -102,6 +113,67 @@ export const MEDIA: Record<MediumId, Medium> = {
     icon: 'Clapperboard',
   },
 
+  // ── The knowledge media ──────────────────────────────────────────────────
+  //
+  // Catalogued, not composed, and that is the design rather than a convenience.
+  // These are the first media here whose content can be *confidently wrong*: a
+  // theorem is a proposition, and an authored statement of one is sometimes not a
+  // statement of it. Performability — the guard that makes a composed medium
+  // honest — catches vague mush, not fluent error. So the interpreter names a
+  // search and the server quotes the record, exactly as `passage` does.
+
+  theorem: {
+    id: 'theorem',
+    name: 'theorem',
+    plural: 'Mathematics',
+    origin: 'catalogue',
+    provider: 'Wikipedia — the statement as written, never paraphrased',
+    framingHint: 'The statement, the condition it needs, or the shape of the proof.',
+    searchPlaceholder: 'Search theorems, identities, paradoxes…',
+    physical: false,
+    propositional: true,
+    icon: 'Sigma',
+  },
+
+  phenomenon: {
+    id: 'phenomenon',
+    name: 'phenomenon',
+    plural: 'Science',
+    origin: 'catalogue',
+    provider: 'Wikipedia — the statement as written, never paraphrased',
+    framingHint: 'What happens, or the condition that makes it happen.',
+    searchPlaceholder: 'Search phenomena, effects, laws…',
+    physical: false,
+    propositional: true,
+    icon: 'Atom',
+  },
+
+  organism: {
+    id: 'organism',
+    name: 'living thing',
+    plural: 'Life',
+    origin: 'catalogue',
+    provider: 'Wikipedia — the statement as written, never paraphrased',
+    framingHint: 'The whole creature, or one behaviour, or one part of its body.',
+    searchPlaceholder: 'Search creatures, plants, fungi…',
+    physical: false,
+    propositional: true,
+    icon: 'Leaf',
+  },
+
+  place: {
+    id: 'place',
+    name: 'place',
+    plural: 'Places',
+    origin: 'catalogue',
+    provider: 'Wikipedia — the statement as written, never paraphrased',
+    framingHint: 'The place as a whole, or one feature — the light, the scale, the silence.',
+    searchPlaceholder: 'Search places, landforms, ruins…',
+    physical: false,
+    propositional: true,
+    icon: 'Mountain',
+  },
+
   gesture: {
     id: 'gesture',
     name: 'gesture',
@@ -151,11 +223,21 @@ export const MEDIA: Record<MediumId, Medium> = {
   },
 }
 
+/**
+ * Picker order, and it is grouped rather than arbitrary: the things you look up
+ * first, then the things you know, then the things you do. A player scanning the
+ * tabs should not have to cross a composed medium to get from one catalogue to
+ * another.
+ */
 export const MEDIUM_LIST: Medium[] = [
   MEDIA.music,
   MEDIA.artwork,
   MEDIA.passage,
   MEDIA.scene,
+  MEDIA.theorem,
+  MEDIA.phenomenon,
+  MEDIA.organism,
+  MEDIA.place,
   MEDIA.gesture,
   MEDIA.movement,
   MEDIA.stretch,
@@ -170,6 +252,11 @@ export function getMedium(id: string): Medium | null {
 
 export function isComposed(id: string): boolean {
   return getMedium(id)?.origin === 'composed'
+}
+
+/** Media whose content is a claim, and therefore can be confidently wrong. */
+export function isPropositional(id: string): boolean {
+  return getMedium(id)?.propositional === true
 }
 
 /** Resolve a game's `media` field to concrete ids. */

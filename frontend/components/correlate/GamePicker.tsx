@@ -85,6 +85,21 @@ function GameCard({ game, available, onStart, starting }: {
   const relations = resolveRelations(game.relations)
   const playable = media.length > 0
 
+  /**
+   * Whether this game's media are worth stating at all.
+   *
+   * Every game is `media: 'all'`, so the media row was the same seven or eight
+   * chips on all eleven cards — directly under a heading that had just said every
+   * game accepts any medium. A row identical across the whole list tells a reader
+   * nothing about the game they are reading about, and eleven copies of it make the
+   * cards harder to compare on the things that do differ.
+   *
+   * Derived rather than deleted: if a game is ever added that does not take
+   * everything, the row comes back for exactly that game. Nothing has to remember
+   * to turn it on.
+   */
+  const narrowed = media.length < available.length
+
   return (
     <div className={`rounded-2xl border ${accent.ring} bg-white dark:bg-gray-800 overflow-hidden flex flex-col`}>
       <div className="p-4 flex-1">
@@ -96,19 +111,21 @@ function GameCard({ game, available, onStart, starting }: {
         </div>
         <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">{game.tagline}</p>
 
-        <div className="mt-3 flex flex-wrap gap-1">
-          {media.map(id => (
-            <span key={id} className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
-              {getMedium(id)?.plural ?? id}
-            </span>
-          ))}
-        </div>
-
         <dl className="mt-3 space-y-1.5">
           <div className="flex gap-2 text-xs">
             <dt className="text-gray-400 dark:text-gray-500 flex-shrink-0 w-20">An offering is</dt>
             <dd className="text-gray-700 dark:text-gray-300">{game.offeringIs}</dd>
           </div>
+          {/* Labelled rather than a bare row of chips: on a card where the others
+              say nothing about media, unlabelled chips read as decoration. */}
+          {narrowed && (
+            <div className="flex gap-2 text-xs">
+              <dt className="text-gray-400 dark:text-gray-500 flex-shrink-0 w-20">Media</dt>
+              <dd className="text-gray-700 dark:text-gray-300">
+                {media.map(id => getMedium(id)?.plural ?? id).join(', ')} only
+              </dd>
+            </div>
+          )}
           <div className="flex gap-2 text-xs">
             <dt className="text-gray-400 dark:text-gray-500 flex-shrink-0 w-20">Relations</dt>
             <dd className="text-gray-700 dark:text-gray-300">

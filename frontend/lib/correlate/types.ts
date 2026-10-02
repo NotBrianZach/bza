@@ -25,6 +25,15 @@ export type MediumId =
   | 'exercise'
   | 'movement'
   | 'scene'
+  // The knowledge media. Catalogued rather than composed, and the reason is the
+  // most important thing about them: a theorem is a *proposition*, so its content
+  // can be confidently wrong rather than merely bad, and performability — the
+  // guard that makes a composed medium honest — catches vague mush, not fluent
+  // error. See lib/offerings/knowledge.ts.
+  | 'theorem'
+  | 'phenomenon'
+  | 'organism'
+  | 'place'
 
 /**
  * How an offering comes into being, and therefore what stops it being a lie.
@@ -205,6 +214,21 @@ export interface WorldFact {
   turn: number
 }
 
+/**
+ * What the player has asked of their partner, adjustable mid-game.
+ *
+ * Kept structurally identical to the registry's `Tuning` (lib/correlate/tuning.ts)
+ * and declared here rather than imported so the session shape stays readable in one
+ * file. Canonical form stores only what differs from the default, so `{}` means
+ * neutral.
+ */
+export interface SessionTuning {
+  /** 0 never · 1 rarely · 2 freely · 3 mostly. Absent means freely. */
+  weights?: Partial<Record<MediumId, number>>
+  /** 0–4 per axis. Absent means the axis is resting and says nothing. */
+  axes?: Record<string, number>
+}
+
 export interface CorrelationSession {
   id: string
   user_id: string
@@ -222,7 +246,18 @@ export interface CorrelationSession {
   }
   media: MediumId[]
   relations: RelationId[]
+  /**
+   * The world at the end of the branch most recently played.
+   *
+   * Authoritative only while a game is a line. Once it branches, the world is a
+   * property of a path and is folded from the turns' own deltas — see
+   * `worldFor()` in lib/correlate/graph.ts. This column stays as the display
+   * value and as the complete record for every session played before branching
+   * existed.
+   */
   world_state: Record<string, any>
+  /** What the player has asked of their partner. `{}` is neutral. */
+  tuning: SessionTuning
   status: 'active' | 'finished'
   turn_count: number
   created_at: string
@@ -233,7 +268,18 @@ export interface CorrelationTurn {
   id: string
   session_id: string
   user_id: string
+  /** Creation order within the session. Still a counter, not a position: once a
+   *  game branches, turn 7 may answer turn 3. */
   turn_index: number
+  /**
+   * The turn this one answers, or null for a thread with nothing behind it.
+   *
+   * The structural edge. It decides what was on the table, which turns the
+   * interpreter was shown, which relations counted as spent, and which world the
+   * exchange happened in. Several turns may name the same parent — that is what a
+   * branch is.
+   */
+  parent_turn_id: string | null
   move_offering: Offering
   reply_offering: Offering | null
   reply_query: string | null
@@ -253,6 +299,28 @@ export interface CorrelationTurn {
   carried: string | null
   lost: string | null
   facts: string[]
+  /**
+   * The interpreter's own merge into the world, kept per turn.
+   *
+   * Recorded because a branched game has no single world: the world at any point
+   * is the fold of the deltas along the path that reached it. Null on turns written
+   * before the graph existed.
+   */
+  world_delta: Record<string, any> | null
+  /**
+   * An earlier turn this exchange rhymes with, if the interpreter noticed one.
+   *
+   * Not structural — it changes nothing about what was answered. It exists because
+   * the observation it carries is the one a chain could not make: that turn 9 is
+   * doing again, in another medium, what turn 2 did, possibly on a branch nobody
+   * has visited since.
+   */
+  link_turn_id: string | null
+  /** Why those two turns rhyme, in the interpreter's words. */
+  link_note: string | null
+  /** The weighting in force when this turn was played, so the log stays legible
+   *  after the player changes it. Null on turns played before tuning existed. */
+  tuning: SessionTuning | null
   /** False only in games that enforce their constraint, when the move was
    *  ruled not to connect. The row is still written. */
   legal: boolean
@@ -297,6 +365,13 @@ export interface Interpretation {
   replyReason: string
   /** The relation the reply uses. */
   relation: RelationId | null
+  /**
+   * An earlier turn this exchange rhymes with, volunteered by the interpreter and
+   * validated against the turns it was actually shown. Null when it named none, or
+   * named one that does not exist — a callback to an invented turn is the same class
+   * of error as a reply to an invented record.
+   */
+  link: { turnIndex: number; note: string } | null
   carried: string
   lost: string
   facts: string[]

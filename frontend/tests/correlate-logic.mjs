@@ -44,8 +44,11 @@ function build() {
     join('lib', 'correlate', 'games.ts'),
     join('lib', 'correlate', 'media.ts'),
     join('lib', 'correlate', 'relations.ts'),
+    join('lib', 'correlate', 'graph.ts'),
+    join('lib', 'correlate', 'tuning.ts'),
     join('lib', 'offerings', 'composed.ts'),
     join('lib', 'offerings', 'shared.ts'),
+    join('lib', 'offerings', 'knowledge.ts'),
   ]
   try {
     execFileSync(process.execPath, [
@@ -69,7 +72,10 @@ function build() {
     games:     require(join(outDir, 'correlate', 'games.js')),
     media:     require(join(outDir, 'correlate', 'media.js')),
     relations: require(join(outDir, 'correlate', 'relations.js')),
+    graph:     require(join(outDir, 'correlate', 'graph.js')),
+    tuning:    require(join(outDir, 'correlate', 'tuning.js')),
     composed:  require(join(outDir, 'offerings', 'composed.js')),
+    knowledge: require(join(outDir, 'offerings', 'knowledge.js')),
   }
 }
 
@@ -79,8 +85,22 @@ const {
   describeRejection, salvageQueries, buildSystemPrompt,
 } = M.prompt
 const { GAME_LIST, GAMES, getGame, ACCENT_CLASSES, FEATURED_GAMES, FEATURED_GAME_IDS, retiredGameName } = M.games
-const { MEDIA, MEDIUM_LIST, ALL_MEDIUM_IDS, getMedium, isComposed, availableMedia, playableMedia, resolveMedia, replyMediaFor } = M.media
+const {
+  MEDIA, MEDIUM_LIST, ALL_MEDIUM_IDS, getMedium, isComposed, isPropositional,
+  availableMedia, playableMedia, resolveMedia, replyMediaFor,
+} = M.media
+const { KNOWLEDGE_MEDIA, isKnowledge, inScope, trimExtract } = M.knowledge
 const { RELATIONS, RELATION_LIST, ALL_RELATION_IDS, relationPermitted, spentRelations, resolveRelations } = M.relations
+const {
+  buildGraph, pathTo, childrenOf, parentOf, siblingsOf, leavesOf, hasBranches, subtreeSize,
+  defaultParent, offeringOnTable, offeringIdsAlong, relationsAlong, replyMediaAlong,
+  mergeWorld, worldAlong, worldFor, linkableTurns, turnByIndex,
+} = M.graph
+const {
+  TUNING_AXES, AXIS_LIST, ALL_AXIS_IDS, AXIS_STOPS, DEFAULT_WEIGHT, WEIGHT_LABELS, WEIGHT_HINTS,
+  DEFAULT_TUNING, normalizeTuning, isNeutral, weightOf, axisValue, mutedMedia,
+  weightedReplyMedia, dueMedium, describeTuning, tuningSummary, getAxis,
+} = M.tuning
 const { checkPerformability, composeOffering, vocabularyFor } = M.composed
 
 let pass = 0
@@ -114,7 +134,8 @@ t('no JSON at all yields null', parseJsonObject('there is no json here') === nul
 t('an unterminated object yields null', parseJsonObject('{"a":1') === null)
 
 group('normalizeInterpretation — refusing to store junk')
-const ni = (o, media = ALL_MEDIA, rel = ALL_RELATIONS) => normalizeInterpretation(o, media, rel)
+const ni = (o, media = ALL_MEDIA, rel = ALL_RELATIONS, opts = undefined) =>
+  normalizeInterpretation(o, media, rel, opts)
 t('an empty response is rejected', ni({}) === null)
 t('a non-object is rejected', ni(null) === null)
 t('a reading alone is enough', ni({ reading: 'r' })?.reading === 'r')
@@ -477,6 +498,501 @@ t('a passage carries its text', offeringLine({
   framing: 'the first sentence', perceptible: { kind: 'text', body: 'Call me Ishmael.' },
   sourceUrl: '/books/1?page=1', origin: 'library', meta: { book: 'Moby-Dick', page: 1 },
 }).includes('Call me Ishmael.'))
+
+// ---------------------------------------------------------------------------
+// The conversation graph
+// ---------------------------------------------------------------------------
+
+const off = (id, medium = 'music') => ({
+  medium, id, title: id, attribution: null, framing: 'f',
+  perceptible: { kind: 'none' }, sourceUrl: null, origin: 'catalogue', meta: {},
+})
+
+const mkTurn = (o = {}) => ({
+  id: o.id,
+  session_id: 's',
+  user_id: 'u',
+  turn_index: o.turn_index ?? 0,
+  parent_turn_id: o.parent_turn_id ?? null,
+  move_offering: o.move_offering ?? off(`${o.id}-move`, o.medium ?? 'music'),
+  reply_offering: o.reply_offering === undefined ? off(`${o.id}-reply`, o.replyMedium ?? 'music') : o.reply_offering,
+  reply_query: null,
+  relation: o.relation ?? 'association',
+  claimed_relation: null,
+  reading: null,
+  narration: null,
+  carried: o.carried ?? null,
+  lost: null,
+  facts: o.facts ?? [],
+  world_delta: o.world_delta ?? null,
+  link_turn_id: o.link_turn_id ?? null,
+  link_note: null,
+  tuning: null,
+  legal: o.legal !== false,
+  created_at: '',
+})
+
+//        t0
+//        └── t1
+//            ├── t2
+//            └── t3
+//                └── t4
+const FORKED = [
+  mkTurn({ id: 't0', turn_index: 0 }),
+  mkTurn({ id: 't1', turn_index: 1, parent_turn_id: 't0' }),
+  mkTurn({ id: 't2', turn_index: 2, parent_turn_id: 't1' }),
+  mkTurn({ id: 't3', turn_index: 3, parent_turn_id: 't1' }),
+  mkTurn({ id: 't4', turn_index: 4, parent_turn_id: 't3' }),
+]
+const forked = buildGraph(FORKED)
+
+const LINEAR = [
+  mkTurn({ id: 'a0', turn_index: 0 }),
+  mkTurn({ id: 'a1', turn_index: 1, parent_turn_id: 'a0' }),
+]
+const linear = buildGraph(LINEAR)
+
+group('buildGraph — a turn names what it answers')
+t('a parentless turn is a root', JSON.stringify(forked.rootIds) === '["t0"]', JSON.stringify(forked.rootIds))
+t('every turn is a node', forked.nodes.size === FORKED.length)
+t('order is creation order', forked.order.map(x => x.id).join() === 't0,t1,t2,t3,t4')
+t('two turns may answer the same one', childrenOf(forked, 't1').map(x => x.id).join() === 't2,t3')
+t('depth counts the ancestors', forked.nodes.get('t4').depth === 3 && forked.nodes.get('t0').depth === 0)
+t('a parent outside the set is treated as absent', (() => {
+  const g = buildGraph([mkTurn({ id: 'x', turn_index: 0, parent_turn_id: 'does-not-exist' })])
+  return g.rootIds.join() === 'x' && g.nodes.get('x').parentId === null
+})())
+t('a turn cannot be its own parent', (() => {
+  const g = buildGraph([mkTurn({ id: 'y', turn_index: 0, parent_turn_id: 'y' })])
+  return g.nodes.get('y').parentId === null
+})())
+t('a branched game knows it', hasBranches(forked) === true)
+t('a line knows it is a line', hasBranches(linear) === false)
+t('two roots also count as branching', hasBranches(buildGraph([
+  mkTurn({ id: 'r1', turn_index: 0 }), mkTurn({ id: 'r2', turn_index: 1 }),
+])) === true)
+
+group('pathTo — the chain is a path, not the session')
+t('the path runs root to leaf', pathTo(forked, 't4').map(x => x.id).join() === 't0,t1,t3,t4')
+t('the sibling branch is not on it', !pathTo(forked, 't4').some(x => x.id === 't2'))
+t('a root path is just the root', pathTo(forked, 't0').map(x => x.id).join() === 't0')
+t('no focus is no path', pathTo(forked, null).length === 0)
+t('an unknown id is no path', pathTo(forked, 'nope').length === 0)
+t('siblings see each other', siblingsOf(forked, 't2').map(x => x.id).join() === 't3')
+t('the parent is reachable', parentOf(forked, 't4').id === 't3')
+t('a root has no parent', parentOf(forked, 't0') === null)
+t('leaves are the live ends', leavesOf(forked).map(x => x.id).join() === 't2,t4')
+t('subtreeSize counts descendants, not self', subtreeSize(forked, 't1') === 3)
+t('a leaf has no subtree', subtreeSize(forked, 't4') === 0)
+t('turnByIndex finds a turn by its name', turnByIndex(forked, 3).id === 't3')
+t('turnByIndex refuses an index that is not there', turnByIndex(forked, 99) === null)
+
+group('defaultParent — where a player who said nothing is standing')
+t('the newest legal turn', defaultParent(forked).id === 't4')
+// An illegal move established nothing and left nothing on the table, so it can
+// never be the thing being answered — which is the rule the chain already had.
+t('an illegal newest turn is walked past', (() => {
+  const g = buildGraph([...FORKED, mkTurn({ id: 't5', turn_index: 5, parent_turn_id: 't4', legal: false })])
+  return defaultParent(g).id === 't4'
+})())
+t('two illegal turns in a row are both walked past', (() => {
+  const g = buildGraph([
+    ...FORKED,
+    mkTurn({ id: 't5', turn_index: 5, parent_turn_id: 't4', legal: false }),
+    mkTurn({ id: 't6', turn_index: 6, parent_turn_id: 't4', legal: false }),
+  ])
+  return defaultParent(g).id === 't4'
+})())
+t('an empty game has no head', defaultParent(buildGraph([])) === null)
+t('a game of nothing but rejections has no head',
+  defaultParent(buildGraph([mkTurn({ id: 'z', turn_index: 0, legal: false })])) === null)
+
+group('offeringOnTable — what a move answers')
+t('the reply is on the table', offeringOnTable(FORKED[0]).id === 't0-reply')
+t('the move stands in when no reply was recorded',
+  offeringOnTable(mkTurn({ id: 'q', reply_offering: null })).id === 'q-move')
+t('a turned-away move leaves nothing', offeringOnTable(mkTurn({ id: 'q', legal: false })) === null)
+t('no turn leaves nothing', offeringOnTable(null) === null)
+t('offeringIdsAlong collects both halves',
+  offeringIdsAlong(pathTo(forked, 't2')).length === 6)
+t('relationsAlong is what spentRelations wants', (() => {
+  const spent = spentRelations(relationsAlong(pathTo(forked, 't4')), 1)
+  return spent.length === 1 && spent[0] === 'association'
+})())
+t('replyMediaAlong lists only replies that landed', (() => {
+  const g = buildGraph([
+    mkTurn({ id: 'b0', turn_index: 0, replyMedium: 'music' }),
+    mkTurn({ id: 'b1', turn_index: 1, parent_turn_id: 'b0', replyMedium: 'artwork' }),
+    mkTurn({ id: 'b2', turn_index: 2, parent_turn_id: 'b1', reply_offering: null }),
+  ])
+  return replyMediaAlong(pathTo(g, 'b2')).join() === 'music,artwork'
+})())
+
+group('the world is a property of the branch')
+const SEED = { place: 'unset', facts: [] }
+const WORLDED = [
+  mkTurn({ id: 'w0', turn_index: 0, world_delta: { place: 'the airfield' }, facts: ['f1'] }),
+  mkTurn({ id: 'w1', turn_index: 1, parent_turn_id: 'w0', world_delta: { mood: 'held' }, facts: ['f2'] }),
+  mkTurn({ id: 'w2', turn_index: 2, parent_turn_id: 'w0', world_delta: { place: 'the hangar' }, facts: ['f3'] }),
+]
+const worlded = buildGraph(WORLDED)
+t('a delta on the path is applied', worldAlong(SEED, pathTo(worlded, 'w1')).place === 'the airfield')
+t('later keys merge over earlier ones', worldAlong(SEED, pathTo(worlded, 'w2')).place === 'the hangar')
+t('the sibling branch keeps its own world', worldAlong(SEED, pathTo(worlded, 'w1')).place !== 'the hangar')
+t('facts accumulate along the path',
+  JSON.stringify(worldAlong(SEED, pathTo(worlded, 'w1')).facts) === '["f1","f2"]')
+t('a sibling does not inherit the other branch\'s facts',
+  JSON.stringify(worldAlong(SEED, pathTo(worlded, 'w2')).facts) === '["f1","f3"]')
+t('the seed survives keys nothing touched', worldAlong({ ...SEED, anomaly: 'none' }, pathTo(worlded, 'w1')).anomaly === 'none')
+t('an illegal turn establishes nothing', (() => {
+  const g = buildGraph([
+    mkTurn({ id: 'i0', turn_index: 0, world_delta: { place: 'here' }, facts: ['kept'] }),
+    mkTurn({ id: 'i1', turn_index: 1, parent_turn_id: 'i0', legal: false, world_delta: { place: 'nowhere' }, facts: ['dropped'] }),
+  ])
+  const w = worldAlong(SEED, pathTo(g, 'i1'))
+  return w.place === 'here' && JSON.stringify(w.facts) === '["kept"]'
+})())
+t('the seed is not mutated', SEED.place === 'unset' && SEED.facts.length === 0)
+
+group('worldFor — sessions written before the graph existed')
+// Their turns have no deltas to fold, but they are lines, and a line has exactly
+// one world: the session's own. Trusting the fold there would silently empty it.
+const LEGACY = [mkTurn({ id: 'l0', turn_index: 0 }), mkTurn({ id: 'l1', turn_index: 1, parent_turn_id: 'l0' })]
+const legacy = buildGraph(LEGACY)
+t('a line with no deltas uses the session world',
+  worldFor(SEED, { place: 'the hangar' }, legacy, pathTo(legacy, 'l1')).place === 'the hangar')
+t('a complete path is folded, not read from the session',
+  worldFor(SEED, { place: 'stale' }, worlded, pathTo(worlded, 'w1')).place === 'the airfield')
+t('a branched legacy session is folded anyway, lossily', (() => {
+  // No branch-correct answer exists from one stored world, and handing both
+  // branches the same one would be worse than starting the new branch from less.
+  const g = buildGraph([...LEGACY, mkTurn({ id: 'l2', turn_index: 2, parent_turn_id: 'l0' })])
+  return worldFor(SEED, { place: 'the hangar' }, g, pathTo(g, 'l2')).place === 'unset'
+})())
+t('an empty path is the seed', worldFor(SEED, { place: 'x' }, worlded, []).place === 'unset')
+
+group('mergeWorld — one merge rule, used in both places')
+// If the per-turn merge and the per-path fold ever disagreed, reopening a game
+// would show a different world than playing it did.
+t('applyWorldDelta is mergeWorld', (() => {
+  const w = { place: 'a', facts: ['f1'] }
+  const viaInterpretation = applyWorldDelta(w, ni({ reading: 'r', facts: ['f2'], worldDelta: { place: 'b' } }))
+  const direct = mergeWorld(w, { place: 'b' }, ['f2'])
+  return JSON.stringify(viaInterpretation) === JSON.stringify(direct)
+})())
+t('a null delta is a no-op except for facts', (() => {
+  const w = mergeWorld({ place: 'a', facts: [] }, null, ['f'])
+  return w.place === 'a' && JSON.stringify(w.facts) === '["f"]'
+})())
+
+group('linkableTurns — a callback has to point at something real')
+t('every legal turn is linkable', linkableTurns(forked, null).length === 5)
+t('the turn being answered is not linkable', (() => {
+  const ids = linkableTurns(forked, 't3').map(x => x.id)
+  return !ids.includes('t3') && ids.length === 4
+})())
+t('a turned-away turn is not linkable', (() => {
+  const g = buildGraph([...FORKED, mkTurn({ id: 't5', turn_index: 5, parent_turn_id: 't4', legal: false })])
+  return !linkableTurns(g, null).some(x => x.id === 't5')
+})())
+t('a link to a turn that was not shown is dropped',
+  ni({ reading: 'r', link: { turn: 99, note: 'same reaching' } }, ALL_MEDIA, ALL_RELATIONS, { linkable: [0, 1] })?.link === null)
+t('a link to a shown turn survives', (() => {
+  const r = ni({ reading: 'r', link: { turn: 1, note: 'the same reaching' } }, ALL_MEDIA, ALL_RELATIONS, { linkable: [0, 1] })
+  return r.link?.turnIndex === 1 && r.link.note === 'the same reaching'
+})())
+t('a numeric string index is tolerated',
+  ni({ reading: 'r', link: { turn: '1', note: 'x' } }, ALL_MEDIA, ALL_RELATIONS, { linkable: [1] })?.link?.turnIndex === 1)
+// "This rhymes with turn 3" with nothing said about how is not an observation.
+t('a link with no note is dropped',
+  ni({ reading: 'r', link: { turn: 1, note: '  ' } }, ALL_MEDIA, ALL_RELATIONS, { linkable: [1] })?.link === null)
+t('links are refused outright when none were offered',
+  ni({ reading: 'r', link: { turn: 1, note: 'x' } })?.link === null)
+t('no link is null, not undefined', ni({ reading: 'r' }, ALL_MEDIA, ALL_RELATIONS, { linkable: [1] })?.link === null)
+
+// ---------------------------------------------------------------------------
+// Tuning
+// ---------------------------------------------------------------------------
+
+group('tuning registry — internal consistency')
+t('three axes are registered', AXIS_LIST.length === 3 && new Set(ALL_AXIS_IDS).size === 3)
+t('every axis is filed under its own id', AXIS_LIST.every(a => TUNING_AXES[a.id]?.id === a.id))
+t('every axis has a stop for every label', AXIS_LIST.every(a => a.stops.length === AXIS_STOPS && a.labels.length === AXIS_STOPS))
+t('every neutral is a real stop', AXIS_LIST.every(a => a.neutral >= 0 && a.neutral < AXIS_STOPS))
+// A default must not bias anything, and the cheapest guarantee is that it says
+// nothing at all.
+t('the neutral stop says nothing', AXIS_LIST.every(a => a.stops[a.neutral] === ''))
+t('every other stop says something', AXIS_LIST.every(a =>
+  a.stops.every((s, i) => (i === a.neutral) === (s === ''))))
+t('every axis names both ends and what it does',
+  AXIS_LIST.every(a => a.low && a.high && a.does))
+t('every weight has a label and a hint',
+  [0, 1, 2, 3].every(w => WEIGHT_LABELS[w]?.length > 0 && WEIGHT_HINTS[w]?.length > 0))
+t('an unknown axis yields null', getAxis('vibes') === null)
+// Same rule the games are held to: "the dial" is a retired concept and new
+// player-visible copy must not quietly bring it back.
+t('no axis copy mentions a dial', AXIS_LIST.every(a =>
+  !/\bdial\b/i.test([a.name, a.does, a.low, a.high, ...a.labels, ...a.stops].join(' '))),
+  AXIS_LIST.filter(a => /\bdial\b/i.test([a.name, a.does, ...a.labels, ...a.stops].join(' '))).map(a => a.id).join(', '))
+
+group('normalizeTuning — canonical, so neutral is a key count')
+const TU = (raw, media = ALL_MEDIA) => normalizeTuning(raw, media)
+t('an empty tuning is neutral', isNeutral(TU({})))
+t('the default tuning is neutral', isNeutral(DEFAULT_TUNING))
+t('junk is neutral', isNeutral(TU(null)) && isNeutral(TU('nope')) && isNeutral(TU(7)))
+t('a weight is kept', TU({ weights: { music: 3 } }).weights.music === 3)
+t('a weight equal to the default is dropped',
+  TU({ weights: { music: DEFAULT_WEIGHT } }).weights.music === undefined)
+t('a weight is clamped', TU({ weights: { music: 9, artwork: -4 } }).weights.music === 3 &&
+  TU({ weights: { artwork: -4 } }).weights.artwork === 0)
+t('a fractional weight is rounded', TU({ weights: { music: 2.6 } }).weights.music === 3)
+t('a numeric string weight is tolerated', TU({ weights: { music: '0' } }).weights.music === 0)
+t('a medium the session does not play is dropped',
+  TU({ weights: { artwork: 0 } }, ['music']).weights.artwork === undefined)
+t('a medium that does not exist is dropped',
+  Object.keys(TU({ weights: { interpretive_mime: 0 } }).weights).length === 0)
+t('an axis is kept', TU({ axes: { nostalgia: 4 } }).axes.nostalgia === 4)
+t('an axis at its neutral is dropped',
+  TU({ axes: { nostalgia: TUNING_AXES.nostalgia.neutral } }).axes.nostalgia === undefined)
+t('an axis is clamped to its stops', TU({ axes: { nostalgia: 11 } }).axes.nostalgia === AXIS_STOPS - 1)
+t('an invented axis is dropped', Object.keys(TU({ axes: { horniness: 4 } }).axes).length === 0)
+t('weightOf falls back to the default', weightOf(TU({}), 'music') === DEFAULT_WEIGHT)
+t('axisValue falls back to the neutral', axisValue(TU({}), 'nostalgia') === TUNING_AXES.nostalgia.neutral)
+
+group('weights are arithmetic, not a hint')
+const MOSTLY_MUSIC = TU({ weights: { music: 3, stretch: 1, artwork: 1, scene: 0, movement: 0, exercise: 0, gesture: 0, passage: 0 } })
+t('a zero weight mutes a medium', mutedMedia(MOSTLY_MUSIC, ALL_MEDIA).includes('scene'))
+t('a non-zero weight does not', !mutedMedia(MOSTLY_MUSIC, ALL_MEDIA).includes('stretch'))
+t('nothing is muted by default', mutedMedia(TU({}), ALL_MEDIA).length === 0)
+t('a muted medium cannot be answered in',
+  !weightedReplyMedia(MOSTLY_MUSIC, ALL_MEDIA).includes('scene'))
+t('the heaviest medium is tried first',
+  weightedReplyMedia(MOSTLY_MUSIC, ALL_MEDIA)[0] === 'music')
+t('weighting does not invent media',
+  weightedReplyMedia(MOSTLY_MUSIC, ['music', 'stretch']).length === 2)
+// A player who mutes everything has expressed a contradiction with the guarantee
+// that every legal turn carries a real reply. The mute loses, not the guarantee.
+t('muting everything is ignored rather than breaking the reply guarantee',
+  weightedReplyMedia(TU({ weights: Object.fromEntries(ALL_MEDIA.map(m => [m, 0])) }), ALL_MEDIA).length === ALL_MEDIA.length)
+t('a muted medium is refused even when the model names it exactly', (() => {
+  const r = ni({ reading: 'r', reply: { medium: 'artwork', query: 'Someone — Something', framing: 'f' } },
+    ALL_MEDIA, ALL_RELATIONS, { muted: ['artwork'] })
+  return r.reply === null && r.replyRejection?.reason === 'muted-medium'
+})())
+t('a muted medium is refused through an alias too', (() => {
+  const r = ni({ reading: 'r', reply: { medium: 'painting', query: 'Someone — Something', framing: 'f' } },
+    ALL_MEDIA, ALL_RELATIONS, { muted: ['artwork'] })
+  return r.replyRejection?.reason === 'muted-medium'
+})())
+// The player did this, deliberately, probably a moment ago. Reading it as a bug in
+// the prompt would send someone hunting for a defect that is not there.
+t('a mute is not reported as an unknown medium', (() => {
+  const r = ni({ reading: 'r', reply: { medium: 'artwork', query: 'x — y', framing: 'f' } },
+    ALL_MEDIA, ALL_RELATIONS, { muted: ['artwork'] })
+  return r.replyRejection?.reason !== 'unknown-medium'
+})())
+t('every rejection reason still has readable copy', (() => {
+  const cases = [
+    { reason: 'absent' }, { reason: 'unknown-medium', written: 'mime' },
+    { reason: 'no-query', medium: 'music' }, { reason: 'unperformable', medium: 'gesture' },
+    { reason: 'muted-medium', medium: 'artwork' },
+  ]
+  return cases.every(c => typeof describeRejection(c) === 'string' && describeRejection(c).length > 0)
+})())
+
+group('dueMedium — proportion is computed, not instructed')
+// A model told "mostly music, occasionally art" answers in music every turn and
+// never notices, because each turn is locally correct. So the shortfall is
+// arithmetic over the log.
+const EVEN = TU({ weights: { music: 3, artwork: 1 } }, ['music', 'artwork'])
+t('nothing is due with no history', dueMedium(EVEN, [], ['music', 'artwork']) === null)
+t('art comes due after a run of music',
+  dueMedium(EVEN, ['music', 'music', 'music', 'music', 'music', 'music'], ['music', 'artwork']) === 'artwork')
+t('nothing is due when the balance holds',
+  dueMedium(EVEN, ['music', 'music', 'music', 'artwork'], ['music', 'artwork']) === null)
+t('a rounding-sized shortfall says nothing',
+  dueMedium(EVEN, ['music', 'music'], ['music', 'artwork']) === null)
+t('a muted medium never comes due',
+  dueMedium(TU({ weights: { artwork: 0 } }), Array(8).fill('music'), ['music', 'artwork']) === null)
+t('one medium in play is never short of itself',
+  dueMedium(EVEN, Array(8).fill('music'), ['music']) === null)
+
+group('describeTuning — every sentence comes from the registry')
+t('a neutral tuning says nothing at all', describeTuning(TU({}), ALL_MEDIA) === '')
+const described = describeTuning(MOSTLY_MUSIC, ALL_MEDIA)
+t('the preferred medium is named', described.includes('Music'))
+t('the occasional media are marked occasional', /only occasionally/.test(described))
+t('the muted media are forbidden outright', /Do not answer in these/.test(described))
+// Turning a medium off must not read as "the player cannot play it" — they can,
+// and a game that silently stopped accepting their moves would be a worse product
+// than one that ignored the setting.
+t('a muted medium is still the player\'s to play', /player may still play them/.test(described))
+// Nostalgia is the axis where this can go wrong: "lean older" must not become
+// "a shared decade is a connection", which is the metadata reasoning this section
+// removed on purpose.
+t('the metadata guard is restated with the weighting', /coincidence of filing/.test(described))
+t('an axis contributes its own stop text', (() => {
+  const d = describeTuning(TU({ axes: { nostalgia: 4 } }), ALL_MEDIA)
+  return d.includes(TUNING_AXES.nostalgia.stops[4].slice(0, 40))
+})())
+t('a resting axis contributes nothing', (() => {
+  const d = describeTuning(TU({ axes: { nostalgia: 4 } }), ALL_MEDIA)
+  return !d.includes('Obliquity') && !d.includes('Friction')
+})())
+t('the summary is empty when neutral', tuningSummary(TU({}), ALL_MEDIA) === '')
+t('the summary names what was changed', (() => {
+  const s = tuningSummary(MOSTLY_MUSIC, ALL_MEDIA)
+  return /mostly music/.test(s) && /no /.test(s)
+})(), tuningSummary(MOSTLY_MUSIC, ALL_MEDIA))
+
+group('the system prompt carries the weighting, and only when there is one')
+const replyEnum = p => JSON.parse(p.match(/"medium": (\[[^\]]*\])/)[1])
+t('a neutral tuning changes nothing about the prompt',
+  buildSystemPrompt(GAMES.tag, ALL_MEDIA, ALL_RELATIONS, DEFAULT_TUNING) ===
+  buildSystemPrompt(GAMES.tag, ALL_MEDIA, ALL_RELATIONS))
+t('the reply enum is every medium when nothing is muted',
+  replyEnum(buildSystemPrompt(GAMES.tag, ALL_MEDIA, ALL_RELATIONS)).length === ALL_MEDIA.length)
+t('a muted medium is absent from the reply enum',
+  !replyEnum(buildSystemPrompt(GAMES.tag, ALL_MEDIA, ALL_RELATIONS, TU({ weights: { artwork: 0 } }))).includes('artwork'))
+t('muting does not remove the medium from the board', (() => {
+  const p = buildSystemPrompt(GAMES.tag, ALL_MEDIA, ALL_RELATIONS, TU({ weights: { artwork: 0 } }))
+  return /artwork \(Art\)/.test(p)
+})())
+t('the weighting block is present when weighted', (() => {
+  const p = buildSystemPrompt(GAMES.tag, ALL_MEDIA, ALL_RELATIONS, MOSTLY_MUSIC)
+  return /HOW THE PLAYER HAS WEIGHTED YOU/.test(p)
+})())
+t('a link field is always offered', /"link":/.test(buildSystemPrompt(GAMES.tag, ALL_MEDIA, ALL_RELATIONS)))
+t('the prompt explains that the game is a graph',
+  /graph, not a line/i.test(buildSystemPrompt(GAMES.tag, ALL_MEDIA, ALL_RELATIONS)))
+t('the prompt separates the binding path from what happened elsewhere', (() => {
+  const p = buildSystemPrompt(GAMES.tag, ALL_MEDIA, ALL_RELATIONS)
+  return /THE PATH/.test(p) && /ELSEWHERE/.test(p)
+})())
+
+// ---------------------------------------------------------------------------
+// The knowledge media
+// ---------------------------------------------------------------------------
+
+group('the knowledge media — catalogued, because a theorem can be WRONG')
+// The design claim this group exists to defend: performability is the wrong guard
+// for a proposition. Vague mush is catchable; a fluent, specific, incorrect
+// statement of Noether's theorem is not. So these must be looked up, never authored.
+t('four knowledge media are registered', KNOWLEDGE_MEDIA.length === 4)
+t('every one is in the medium registry', KNOWLEDGE_MEDIA.every(m => !!getMedium(m)),
+  KNOWLEDGE_MEDIA.filter(m => !getMedium(m)).join(', '))
+t('every one is catalogued, never composed', KNOWLEDGE_MEDIA.every(m => getMedium(m).origin === 'catalogue'),
+  KNOWLEDGE_MEDIA.filter(m => getMedium(m).origin !== 'catalogue').join(', '))
+t('none of them is composed', KNOWLEDGE_MEDIA.every(m => !isComposed(m)))
+t('every one is marked propositional', KNOWLEDGE_MEDIA.every(m => isPropositional(m)))
+t('the propositional media are exactly the knowledge media',
+  MEDIUM_LIST.filter(m => m.propositional).length === KNOWLEDGE_MEDIA.length)
+// A composed medium is authored, so marking one propositional would be claiming the
+// interpreter may assert facts outright — the exact thing this guard forbids.
+t('no composed medium is propositional',
+  !MEDIUM_LIST.some(m => m.origin === 'composed' && m.propositional))
+t('none of them depends on the player\'s library',
+  KNOWLEDGE_MEDIA.every(m => !getMedium(m).dependsOnUserLibrary))
+// Which also means they are safe retry targets, and that strengthens the
+// guarantee that a legal turn always carries a real reply.
+t('a retry may land in a knowledge medium',
+  KNOWLEDGE_MEDIA.every(m => replyMediaFor(ALL_MEDIA).includes(m)))
+t('none of them needs a credential', KNOWLEDGE_MEDIA.every(m => !getMedium(m).requiresEnv))
+t('they are available on a keyless deployment',
+  KNOWLEDGE_MEDIA.every(m => availableMedia({}).includes(m)))
+t('isKnowledge agrees with the registry', KNOWLEDGE_MEDIA.every(m => isKnowledge(m)))
+t('isKnowledge refuses a medium it does not resolve',
+  !isKnowledge('music') && !isKnowledge('gesture') && !isKnowledge('nonsense'))
+t('none of them is physical', KNOWLEDGE_MEDIA.every(m => !getMedium(m).physical))
+t('each has its own plural', new Set(KNOWLEDGE_MEDIA.map(m => getMedium(m).plural)).size === 4)
+
+group('scope — curation, not honesty: a rejected page is still a real page')
+const page = (title, cats = [], extract = '') => ({ title, extract, categories: cats.map(title => ({ title })) })
+t('a theorem page is in theorem scope',
+  inScope('theorem', page('Noether\'s theorem', ['Category:Theorems in physics'])))
+t('a category match is enough',
+  inScope('theorem', page('Symmetry', ['Category:Mathematical concepts'])))
+t('a title match is enough',
+  inScope('theorem', page('Pythagorean theorem', ['Category:Euclidean geometry'])))
+t('an extract match is enough',
+  inScope('phenomenon', page('Aurora', ['Category:Sky'], 'An optical phenomenon in the sky.')))
+t('an unrelated page is out of theorem scope',
+  !inScope('theorem', page('Cat', ['Category:Domesticated animals'], 'The cat is a domestic species.')))
+t('that same page is in organism scope',
+  inScope('organism', page('Cat', ['Category:Domesticated animals'], 'The cat is a domestic species.')))
+t('a place is in place scope',
+  inScope('place', page('Mount Erebus', ['Category:Volcanoes of Antarctica'])))
+t('a place is not a theorem',
+  !inScope('theorem', page('Mount Erebus', ['Category:Volcanoes of Antarctica'])))
+t('an unknown medium is never in scope', !inScope('music', page('Anything', ['Category:Theorems'])))
+t('a page with nothing to match is out of scope', !inScope('theorem', page('', [], '')))
+
+group('trimExtract — long enough to carry a statement, short enough to be eight of them')
+t('a short extract is untouched', trimExtract('Short and done.') === 'Short and done.')
+t('whitespace is collapsed', trimExtract('one\n\n  two   three') === 'one two three')
+t('a long extract is cut', trimExtract('x'.repeat(900)).length <= 601)
+t('a sentence boundary is preferred', (() => {
+  const text = `${'a'.repeat(450)}. ${'b'.repeat(400)}`
+  return trimExtract(text).endsWith('.')
+})())
+t('a boundary too early is ignored in favour of an ellipsis', (() => {
+  // The only full stop is in the first fifth, so honouring it would throw away
+  // most of what was asked for.
+  const text = `Tiny. ${'b'.repeat(900)}`
+  return trimExtract(text).endsWith('…')
+})())
+t('a word is never cut in half', (() => {
+  const trimmed = trimExtract(`${'word '.repeat(300)}`)
+  return !/\bwor…$/.test(trimmed)
+})())
+
+group('the prompt treats a proposition differently from a record')
+t('the interpreter is told not to write out what a theorem says', (() => {
+  // Line breaks fall wherever the paragraph wraps, so match on the flattened text.
+  const flat = buildSystemPrompt(GAMES.tag, ALL_MEDIA, ALL_RELATIONS).replace(/\s+/g, ' ')
+  return /do NOT write out what it says/.test(flat)
+})())
+t('and it names which media that applies to', (() => {
+  const flat = buildSystemPrompt(GAMES.tag, ALL_MEDIA, ALL_RELATIONS).replace(/\s+/g, ' ')
+  return /Mathematics, Science, Life, Places work the same way/.test(flat)
+})())
+t('it says why: a wrong answer there does not look wrong', (() => {
+  const p = buildSystemPrompt(GAMES.tag, ALL_MEDIA, ALL_RELATIONS)
+  return /does not look wrong/.test(p)
+})())
+t('the warning is absent when no propositional medium is in play', (() => {
+  const p = buildSystemPrompt(GAMES.tag, ['music', 'artwork'], ALL_RELATIONS)
+  return !/does not look wrong/.test(p)
+})())
+// An interpreter given only a title reasons about the title and guesses the
+// content, which is precisely what these media exist to prevent.
+t('a theorem carries its statement into the prompt', offeringLine({
+  medium: 'theorem', id: 'wiki:theorem:1', title: 'Noether\'s theorem', attribution: null,
+  framing: 'the statement itself',
+  perceptible: { kind: 'text', body: 'Every differentiable symmetry has a conservation law.' },
+  sourceUrl: null, origin: 'catalogue', meta: { kind: 'mathematics' },
+}).includes('conservation law'))
+t('a composed offering still shows steps rather than a doubled body', (() => {
+  const line = offeringLine({
+    medium: 'gesture', id: 'composed:gesture:x', title: 'The reach', attribution: null,
+    framing: 'the stopping', steps: ['Extend one arm', 'Stop it dead'], intent: 'shown',
+    perceptible: { kind: 'text', body: 'Extend one arm / Stop it dead' },
+    sourceUrl: null, origin: 'composed', meta: {},
+  })
+  return line.includes('steps:') && !line.includes('text:')
+})())
+
+group('aliases reach the knowledge media too')
+const niKnow = (written) => ni({
+  reading: 'r', reply: { medium: written, query: 'Noether — theorem', framing: 'f' },
+})
+t('"math" resolves to theorem', niKnow('math')?.reply?.medium === 'theorem')
+t('"science" resolves to phenomenon', niKnow('science')?.reply?.medium === 'phenomenon')
+t('"fact" resolves to phenomenon', niKnow('fact')?.reply?.medium === 'phenomenon')
+t('"species" resolves to organism', niKnow('species')?.reply?.medium === 'organism')
+t('"city" resolves to place', niKnow('city')?.reply?.medium === 'place')
+t('an alias cannot smuggle in a knowledge medium the game disabled',
+  ni({ reading: 'r', reply: { medium: 'math', query: 'x', framing: 'f' } }, ['music'])?.reply === null)
 
 rmSync(outDir, { recursive: true, force: true })
 

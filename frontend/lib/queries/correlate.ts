@@ -2,6 +2,7 @@ import { supabase } from '../supabase'
 import { getGame } from '../correlate/games'
 import { resolveMedia } from '../correlate/media'
 import { resolveRelations } from '../correlate/relations'
+import { normalizeTuning, type Tuning } from '../correlate/tuning'
 import type {
   CorrelationSession, CorrelationTurn, MediumId,
 } from '../correlate/types'
@@ -72,6 +73,9 @@ export const correlateQueries = {
         media,
         relations: resolveRelations(def.relations),
         world_state: def.seedWorld,
+        // Neutral. A game starts weighted the way the game describes itself, and
+        // the empty object is what "nobody has touched this" is stored as.
+        tuning: {},
       })
       .select()
       .single()
@@ -109,6 +113,23 @@ export const correlateQueries = {
 
   async deleteSession(id: string): Promise<void> {
     const { error } = await supabase.from('listen_sessions').delete().eq('id', id)
+    if (error) throw new Error(error.message)
+  },
+
+  /**
+   * Save the weighting. Fire-and-forget from the controls, because the turn route
+   * is also sent the current value and persists it — so a save that loses a race
+   * with a move costs nothing, and the move still plays under what the controls
+   * said when it was taken.
+   *
+   * `media` is needed to canonicalise: a weight for a medium this session does not
+   * play would mute nothing and should not be stored.
+   */
+  async saveTuning(id: string, tuning: Tuning, media: MediumId[]): Promise<void> {
+    const { error } = await supabase
+      .from('listen_sessions')
+      .update({ tuning: normalizeTuning(tuning, media) as any })
+      .eq('id', id)
     if (error) throw new Error(error.message)
   },
 
