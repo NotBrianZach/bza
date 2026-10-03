@@ -262,6 +262,12 @@ export interface CorrelationSession {
   turn_count: number
   created_at: string
   updated_at: string
+  /**
+   * Set when the game is in the trash: hidden from every list, intact, and
+   * restorable. Null — or absent, on a row selected before migration 54 ran —
+   * means live. Same column and same meaning as `books.deleted_at`.
+   */
+  deleted_at?: string | null
 }
 
 export interface CorrelationTurn {

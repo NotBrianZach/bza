@@ -3,7 +3,7 @@
 import { Suspense, useCallback, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Loader2, Shuffle, Trash2 } from 'lucide-react'
+import { ArrowLeft, ChevronDown, Loader2, RotateCcw, Shuffle, Trash2 } from 'lucide-react'
 import { ThemeToggle } from '@/components/ThemeProvider'
 import { ensureSession } from '@/lib/anonAuth'
 import { track } from '@/lib/analytics'
@@ -17,6 +17,10 @@ import CorrelationBoard from '@/components/correlate/CorrelationBoard'
 import GamePicker from '@/components/correlate/GamePicker'
 
 export const dynamic = 'force-dynamic'
+
+/** The order listSessions() returns, so a restored game lands back in its place. */
+const byRecency = (a: CorrelationSession, b: CorrelationSession) =>
+  b.updated_at.localeCompare(a.updated_at)
 
 /**
  * AI Play Along — correlation games.
@@ -32,6 +36,8 @@ function PlayPageInner() {
   const gameId = params.get('game')
 
   const [sessions, setSessions] = useState<CorrelationSession[]>([])
+  const [trashed, setTrashed] = useState<CorrelationSession[]>([])
+  const [showTrash, setShowTrash] = useState(false)
   const [media, setMedia] = useState<MediumId[]>(['music'])
   const [loading, setLoading] = useState(true)
   const [starting, setStarting] = useState<string | null>(null)
@@ -42,11 +48,12 @@ function PlayPageInner() {
     const load = async () => {
       await ensureSession()
       try {
-        const [list, available] = await Promise.all([
+        const [list, binned, available] = await Promise.all([
           correlateQueries.listSessions().catch(() => [] as CorrelationSession[]),
+          correlateQueries.listTrashedSessions().catch(() => [] as CorrelationSession[]),
           fetchAvailableMedia(),
         ])
-        if (!cancelled) { setSessions(list); setMedia(available) }
+        if (!cancelled) { setSessions(list); setTrashed(binned); setMedia(available) }
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -70,10 +77,57 @@ function PlayPageInner() {
     }
   }, [router, media])
 
-  const removeGame = useCallback(async (id: string) => {
-    await correlateQueries.deleteSession(id)
-    setSessions(s => s.filter(x => x.id !== id))
+  /**
+   * Move a game to the trash.
+   *
+   * This button used to hard-delete, which cascaded to every turn in the chain
+   * with no confirmation and no way back. Now it is reversible, and the only
+   * irreversible act in the section is Empty trash, which asks first.
+   */
+  const trashGame = useCallback(async (session: CorrelationSession) => {
+    setSessions(s => s.filter(x => x.id !== session.id))
+    setTrashed(t => [{ ...session, deleted_at: new Date().toISOString() }, ...t])
+    setError('')
+    try {
+      await correlateQueries.trashSession(session.id)
+      track('correlate_game_trashed', { game: session.mode, from: 'play' })
+    } catch (e: any) {
+      setTrashed(t => t.filter(x => x.id !== session.id))
+      setSessions(s => [...s, session].sort(byRecency))
+      setError(e?.message ?? 'Could not move that game to the trash')
+    }
   }, [])
+
+  const restoreGame = useCallback(async (session: CorrelationSession) => {
+    setTrashed(t => t.filter(x => x.id !== session.id))
+    setSessions(s => [...s, { ...session, deleted_at: null }].sort(byRecency))
+    setError('')
+    try {
+      await correlateQueries.restoreSession(session.id)
+    } catch (e: any) {
+      setSessions(s => s.filter(x => x.id !== session.id))
+      setTrashed(t => [...t, session].sort((a, b) => (b.deleted_at ?? '').localeCompare(a.deleted_at ?? '')))
+      setError(e?.message ?? 'Could not restore that game')
+    }
+  }, [])
+
+  const emptyTrash = useCallback(async () => {
+    const n = trashed.length
+    if (n === 0) return
+    if (!confirm(
+      `Permanently delete ${n} game${n === 1 ? '' : 's'}? Every turn in ` +
+      `${n === 1 ? 'it' : 'them'} goes too, and this cannot be undone.`
+    )) return
+    const previous = trashed
+    setTrashed([])
+    setError('')
+    try {
+      await correlateQueries.emptyTrash()
+    } catch (e: any) {
+      setTrashed(previous)
+      setError(e?.message ?? 'Could not empty the trash')
+    }
+  }, [trashed])
 
   const activeSession = gameId ? sessions.find(s => s.id === gameId) : undefined
 
@@ -218,8 +272,9 @@ function PlayPageInner() {
                           </span>
                         </Link>
                         <button
-                          onClick={() => removeGame(s.id)}
-                          title="Delete this game"
+                          onClick={() => trashGame(s)}
+                          title="Move this game to the trash"
+                          aria-label={`Move “${s.title}” to the trash`}
                           className="p-1.5 text-gray-300 dark:text-gray-600 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
                         >
                           <Trash2 size={14} />
@@ -228,6 +283,59 @@ function PlayPageInner() {
                     )
                   })}
                 </ul>
+              </section>
+            )}
+
+            {/* Trash. Collapsed, and absent entirely when empty — it is a safety
+                net, not a part of the section anyone should have to look at. The
+                shape matches the library's trash on the home page deliberately. */}
+            {trashed.length > 0 && (
+              <section className="mb-10">
+                <button
+                  onClick={() => setShowTrash(v => !v)}
+                  className="flex items-center gap-2 mb-3 group"
+                >
+                  <Trash2 size={14} className="text-gray-400" />
+                  <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-200 transition-colors">
+                    Trash
+                  </h2>
+                  <span className="text-xs text-gray-400">
+                    · {trashed.length} game{trashed.length === 1 ? '' : 's'}
+                  </span>
+                  <ChevronDown size={14} className={`text-gray-400 transition-transform ${showTrash ? 'rotate-180' : ''}`} />
+                </button>
+                {showTrash && (
+                  <div>
+                    <ul className="space-y-2 mb-3">
+                      {trashed.map(s => {
+                        const game = getGame(s.mode)
+                        return (
+                          <li key={s.id} className="flex items-center gap-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2">
+                            <span className="flex-1 min-w-0">
+                              <span className="block text-sm text-gray-500 dark:text-gray-400 truncate">{s.title}</span>
+                              <span className="block text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                                {game?.name ?? retiredGameName(s.mode) ?? s.mode} · {s.turn_count} turn{s.turn_count === 1 ? '' : 's'}
+                                {s.deleted_at && ` · trashed ${timeAgo(new Date(s.deleted_at))}`}
+                              </span>
+                            </span>
+                            <button
+                              onClick={() => restoreGame(s)}
+                              className="flex items-center gap-1 flex-shrink-0 text-xs font-medium text-fuchsia-600 dark:text-fuchsia-400 hover:underline"
+                            >
+                              <RotateCcw size={12} /> Restore
+                            </button>
+                          </li>
+                        )
+                      })}
+                    </ul>
+                    <button
+                      onClick={emptyTrash}
+                      className="flex items-center gap-1 text-xs font-medium text-red-500 hover:text-red-600 transition-colors"
+                    >
+                      <Trash2 size={12} /> Empty trash
+                    </button>
+                  </div>
+                )}
               </section>
             )}
 

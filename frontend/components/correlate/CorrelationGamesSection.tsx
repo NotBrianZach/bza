@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowRight, Loader2, Shuffle } from 'lucide-react'
+import { ArrowRight, Loader2, Shuffle, Trash2 } from 'lucide-react'
 import { track } from '@/lib/analytics'
 import { timeAgo } from '@/lib/timeAgo'
 import { correlateQueries, fetchAvailableMedia } from '@/lib/queries/correlate'
@@ -24,6 +24,10 @@ import type { CorrelationSession, MediumId } from '@/lib/correlate/types'
  * FEATURED_GAME_IDS, so reordering the picker cannot silently change what the home
  * page promotes. All eleven live on /play.
  */
+/** The order listSessions() returns, so a restored card lands back in its place. */
+const byRecency = (a: CorrelationSession, b: CorrelationSession) =>
+  b.updated_at.localeCompare(a.updated_at)
+
 export default function CorrelationGamesSection({
   isAuthenticated,
 }: {
@@ -34,6 +38,9 @@ export default function CorrelationGamesSection({
   const [media, setMedia] = useState<MediumId[]>(['music'])
   const [starting, setStarting] = useState<string | null>(null)
   const [error, setError] = useState('')
+  // The last game sent to the trash, kept only to offer an undo. Nothing on the
+  // front page lists the trash itself — that is /play's job.
+  const [trashed, setTrashed] = useState<CorrelationSession | null>(null)
 
   useEffect(() => {
     fetchAvailableMedia().then(setMedia).catch(() => {})
@@ -71,6 +78,40 @@ export default function CorrelationGamesSection({
     }
   }, [isAuthenticated, media, router])
 
+  /**
+   * Move a game to the trash.
+   *
+   * Optimistic, and reversible twice over: the card goes immediately, an Undo
+   * appears, and a failed write puts the card back where it was rather than at
+   * the front of the strip. Nothing here deletes — see /play for the trash and
+   * the one button that does.
+   */
+  const trash = useCallback(async (session: CorrelationSession) => {
+    setSessions(list => list.filter(x => x.id !== session.id))
+    setTrashed(session)
+    setError('')
+    try {
+      await correlateQueries.trashSession(session.id)
+      track('correlate_game_trashed', { game: session.mode, from: 'home' })
+    } catch (e: any) {
+      setSessions(list => [...list, session].sort(byRecency))
+      setTrashed(null)
+      setError(e?.message ?? 'Could not move that game to the trash')
+    }
+  }, [])
+
+  const undoTrash = useCallback(async () => {
+    const session = trashed
+    if (!session) return
+    setTrashed(null)
+    try {
+      await correlateQueries.restoreSession(session.id)
+      setSessions(list => [...list, session].sort(byRecency))
+    } catch (e: any) {
+      setError(e?.message ?? 'Could not restore that game')
+    }
+  }, [trashed])
+
   return (
     <div className="mb-8">
       <div className="flex items-center gap-2 mb-1">
@@ -88,26 +129,52 @@ export default function CorrelationGamesSection({
 
       {error && <p className="mb-2 text-xs text-red-500 dark:text-red-400">{error}</p>}
 
+      {trashed && (
+        <p className="mb-2 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+          <span className="truncate">Moved “{trashed.title}” to the trash.</span>
+          <button
+            onClick={undoTrash}
+            className="flex-shrink-0 font-medium text-fuchsia-600 dark:text-fuchsia-400 hover:underline"
+          >
+            Undo
+          </button>
+          <Link href="/play" className="flex-shrink-0 text-gray-400 dark:text-gray-500 hover:underline">
+            Trash
+          </Link>
+        </p>
+      )}
+
       <div className="flex gap-3 overflow-x-auto pb-1">
         {sessions.map(s => {
           const game = getGame(s.mode)
           const accent = ACCENT_CLASSES[game?.accent ?? 'indigo']
           return (
-            <Link
-              key={s.id}
-              href={`/play?game=${s.id}`}
-              className={`flex-shrink-0 flex flex-col justify-between w-44 rounded-xl border ${accent.ring} ${accent.bg} p-3 hover:brightness-95 dark:hover:brightness-110 transition-all`}
-            >
-              <div>
-                <p className={`text-[10px] font-semibold uppercase tracking-wide ${accent.text} mb-1`}>
-                  {game?.name ?? s.mode}
+            // The delete button is a sibling of the Link, not a child of it: a
+            // button inside an anchor is invalid markup and navigates on click.
+            <div key={s.id} className={`group relative flex-shrink-0 w-44 rounded-xl border ${accent.ring} ${accent.bg}`}>
+              <Link
+                href={`/play?game=${s.id}`}
+                className="flex h-full flex-col justify-between p-3 hover:brightness-95 dark:hover:brightness-110 transition-all"
+              >
+                <div>
+                  <p className={`text-[10px] font-semibold uppercase tracking-wide ${accent.text} mb-1 pr-5`}>
+                    {game?.name ?? s.mode}
+                  </p>
+                  <p className="text-xs font-medium text-gray-800 dark:text-gray-100 line-clamp-2 leading-snug">{s.title}</p>
+                </div>
+                <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-2">
+                  {s.turn_count} turn{s.turn_count === 1 ? '' : 's'} · {timeAgo(new Date(s.updated_at))}
                 </p>
-                <p className="text-xs font-medium text-gray-800 dark:text-gray-100 line-clamp-2 leading-snug">{s.title}</p>
-              </div>
-              <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-2">
-                {s.turn_count} turn{s.turn_count === 1 ? '' : 's'} · {timeAgo(new Date(s.updated_at))}
-              </p>
-            </Link>
+              </Link>
+              <button
+                onClick={() => trash(s)}
+                title="Move this game to the trash"
+                aria-label={`Move “${s.title}” to the trash`}
+                className="absolute top-1.5 right-1.5 p-1 rounded-md text-gray-400 dark:text-gray-500 hover:text-red-500 hover:bg-white/70 dark:hover:bg-gray-900/40 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
+              >
+                <Trash2 size={12} />
+              </button>
+            </div>
           )
         })}
 

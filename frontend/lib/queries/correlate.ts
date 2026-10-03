@@ -20,6 +20,8 @@ import type {
  * file can see.
  */
 export const correlateQueries = {
+  /** Live games, most recently played first. Trashed ones are excluded here
+   *  rather than by every caller, so forgetting the filter is not possible. */
   async listSessions(limit = 30): Promise<CorrelationSession[]> {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return []
@@ -27,7 +29,23 @@ export const correlateQueries = {
       .from('listen_sessions')
       .select('*')
       .eq('user_id', user.id)
+      .is('deleted_at', null)
       .order('updated_at', { ascending: false })
+      .limit(limit)
+    if (error) throw new Error(error.message)
+    return (data ?? []) as unknown as CorrelationSession[]
+  },
+
+  /** What is in the trash, most recently trashed first. */
+  async listTrashedSessions(limit = 30): Promise<CorrelationSession[]> {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return []
+    const { data, error } = await supabase
+      .from('listen_sessions')
+      .select('*')
+      .eq('user_id', user.id)
+      .not('deleted_at', 'is', null)
+      .order('deleted_at', { ascending: false })
       .limit(limit)
     if (error) throw new Error(error.message)
     return (data ?? []) as unknown as CorrelationSession[]
@@ -111,8 +129,55 @@ export const correlateQueries = {
     if (error) throw new Error(error.message)
   },
 
+  /**
+   * Move a game to the trash.
+   *
+   * `updated_at` is deliberately left alone: the trash is ordered by
+   * `deleted_at`, and bumping updated_at would mean a restored game jumped to
+   * the top of "your games" as if it had just been played.
+   */
+  async trashSession(id: string): Promise<void> {
+    const { error } = await supabase
+      .from('listen_sessions')
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('id', id)
+    if (error) throw new Error(error.message)
+  },
+
+  /** Take a game back out of the trash, exactly where it was. */
+  async restoreSession(id: string): Promise<void> {
+    const { error } = await supabase
+      .from('listen_sessions')
+      .update({ deleted_at: null })
+      .eq('id', id)
+    if (error) throw new Error(error.message)
+  },
+
+  /**
+   * Permanently delete one game. Cascades to its turns, so the chain is gone —
+   * this is the only destructive call in the file, and the trash exists so that
+   * nothing reaches it by accident.
+   */
   async deleteSession(id: string): Promise<void> {
     const { error } = await supabase.from('listen_sessions').delete().eq('id', id)
+    if (error) throw new Error(error.message)
+  },
+
+  /**
+   * Permanently delete everything in the trash.
+   *
+   * Scoped by user_id as well as by deleted_at. RLS would stop a cross-user
+   * delete anyway, but a `delete` whose only predicate is "trashed" is the kind
+   * of statement that becomes wrong the moment a policy is loosened.
+   */
+  async emptyTrash(): Promise<void> {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    const { error } = await supabase
+      .from('listen_sessions')
+      .delete()
+      .eq('user_id', user.id)
+      .not('deleted_at', 'is', null)
     if (error) throw new Error(error.message)
   },
 
