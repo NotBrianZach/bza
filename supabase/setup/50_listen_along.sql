@@ -12,19 +12,13 @@
 --
 -- LLM cost is tracked in the shared api_usage table via lib/apiQuota.ts::logUsage.
 
--- Spotify OAuth tokens. Originally created by supabase/setup/27 and left in
--- place when the old Spotify integration was deleted (commit 8d1529a5).
--- Recreated idempotently here so a fresh environment can run Listen Along
--- without replaying the historical setup files.
-create table if not exists public.spotify_tokens (
-  user_id uuid primary key references auth.users(id) on delete cascade,
-  access_token text not null,
-  refresh_token text not null,
-  expires_at timestamptz not null,
-  product text,
-  display_name text,
-  created_at timestamptz not null default now()
-);
+-- A `public.spotify_tokens` table used to be recreated here, so a fresh
+-- environment could bootstrap without replaying setup/27. It is gone: the
+-- Spotify integration was hard-deleted in 8D1529A5 and nothing has read the
+-- table since, so recreating it only ever produced an empty table for a
+-- provider the build does not have. Dropped for real in
+-- supabase/setup/55_drop_spotify_tokens.sql, which records the checks that
+-- made dropping safe.
 
 create table if not exists public.listen_sessions (
   id uuid primary key default gen_random_uuid(),
@@ -74,14 +68,8 @@ create table if not exists public.listen_turns (
 create index if not exists listen_turns_session_idx
   on public.listen_turns (session_id, turn_index);
 
-alter table public.spotify_tokens  enable row level security;
 alter table public.listen_sessions enable row level security;
 alter table public.listen_turns    enable row level security;
-
-do $$ begin
-  create policy "own spotify tokens" on public.spotify_tokens
-    for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
-exception when duplicate_object then null; end $$;
 
 do $$ begin
   create policy "own listen sessions" on public.listen_sessions
