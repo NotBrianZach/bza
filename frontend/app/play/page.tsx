@@ -207,10 +207,19 @@ function PlayPageInner() {
         </p>
 
         {/* The two registries, stated once. A player who understands these two lists
-            understands every game in the section. */}
+            understands every game in the section.
+
+            This card was headed "What an offering can be", which collided with the
+            "An offering is" row on all eleven game cards below — two labels
+            defining the same noun, fifteen centimetres apart, answering different
+            questions. They are not redundant: this one answers *what material*
+            (and is the only place the providers are named), while a game card
+            answers *what role* — a clue, an argument, a building material. The
+            overlap was in the wording, so the wording is what changed: this card
+            names the source, and the cards below say "Plays as". */}
         <div className="grid sm:grid-cols-2 gap-4 mb-8">
           <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
-            <p className="text-[10px] uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-2">What an offering can be</p>
+            <p className="text-[10px] uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-2">Where the offerings come from</p>
             <ul className="space-y-1.5">
               {MEDIUM_LIST.filter(m => media.includes(m.id)).map(m => (
                 <li key={m.id} className="text-xs text-gray-600 dark:text-gray-300">

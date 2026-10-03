@@ -58,10 +58,13 @@ export default function GamePicker({
   return (
     <section>
       <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200">Start a game</h2>
+      {/* The clause that used to open this ("every one of these accepts an
+          offering in any medium, and a reply may change medium…") was the third
+          telling of that point on the page — the intro bullets make it, and the
+          media card makes it by listing them. Dropped. What is left is the only
+          thing this paragraph knew that nothing else did. */}
       <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-3 max-w-2xl leading-relaxed">
-        Every one of these accepts an offering in any medium, and a reply may change medium whenever
-        the connection is better said in another one. Tag is the place to start; the rest are
-        variations on the exchange it sets up.
+        Tag is the place to start; the rest are variations on the exchange it sets up.
       </p>
       <div className="grid sm:grid-cols-2 gap-3">
         {GAME_LIST.map(game => (
@@ -113,7 +116,15 @@ function GameCard({ game, available, onStart, starting }: {
 
         <dl className="mt-3 space-y-1.5">
           <div className="flex gap-2 text-xs">
-            <dt className="text-gray-400 dark:text-gray-500 flex-shrink-0 w-20">An offering is</dt>
+            {/* "Plays as", not "An offering is".
+                `offeringIs` is a *role* — a clue, an argument, a building
+                material — never a list of media. Labelling it as the definition
+                of an offering put it in competition with the media card at the
+                top of /play, which defines the same noun by its material and is
+                the only place the providers appear. "Plays as" states the actual
+                relationship: the material is constant across the section, and
+                what it plays as is what the game changes. */}
+            <dt className="text-gray-400 dark:text-gray-500 flex-shrink-0 w-20">Plays as</dt>
             <dd className="text-gray-700 dark:text-gray-300">{game.offeringIs}</dd>
           </div>
           {/* Labelled rather than a bare row of chips: on a card where the others
