@@ -10,7 +10,7 @@ import { track } from '@/lib/analytics'
 import { timeAgo } from '@/lib/timeAgo'
 import { correlateQueries, fetchAvailableMedia } from '@/lib/queries/correlate'
 import { ACCENT_CLASSES, getGame, retiredGameName } from '@/lib/correlate/games'
-import { MEDIUM_LIST, getMedium } from '@/lib/correlate/media'
+import { MEDIUM_LIST, getMedium, mediaByProvider } from '@/lib/correlate/media'
 import { RELATION_LIST } from '@/lib/correlate/relations'
 import type { CorrelationSession, MediumId } from '@/lib/correlate/types'
 import CorrelationBoard from '@/components/correlate/CorrelationBoard'
@@ -220,11 +220,17 @@ function PlayPageInner() {
         <div className="grid sm:grid-cols-2 gap-4 mb-8">
           <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
             <p className="text-[10px] uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-2">Where the offerings come from</p>
+            {/* Grouped by provider, not one row per medium. Eleven rows of which
+                eight repeated one of two strings four times each read as filler,
+                and buried the only thing the list is for: there are a handful of
+                sources, and they come in three kinds. Five rows now say it. */}
             <ul className="space-y-1.5">
-              {MEDIUM_LIST.filter(m => media.includes(m.id)).map(m => (
-                <li key={m.id} className="text-xs text-gray-600 dark:text-gray-300">
-                  <span className="font-medium text-gray-800 dark:text-gray-100">{m.plural}</span>
-                  <span className="text-gray-400 dark:text-gray-500"> — {m.provider}</span>
+              {mediaByProvider(media).map(group => (
+                <li key={group.provider} className="text-xs text-gray-600 dark:text-gray-300">
+                  <span className="font-medium text-gray-800 dark:text-gray-100">
+                    {group.media.map(m => m.plural).join(', ')}
+                  </span>
+                  <span className="text-gray-400 dark:text-gray-500"> — {group.provider}</span>
                 </li>
               ))}
             </ul>

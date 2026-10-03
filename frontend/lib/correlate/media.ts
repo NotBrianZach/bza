@@ -68,7 +68,7 @@ export const MEDIA: Record<MediumId, Medium> = {
     name: 'song',
     plural: 'Music',
     origin: 'catalogue',
-    provider: 'the Deezer catalogue — 30-second previews, no account needed',
+    provider: 'the Deezer catalogue (30-second previews, no account needed)',
     framingHint: 'The whole track, or the part that matters — the opening, the drop, one line.',
     searchPlaceholder: 'Search for a song…',
     physical: false,
@@ -92,7 +92,7 @@ export const MEDIA: Record<MediumId, Medium> = {
     name: 'passage',
     plural: 'Reading',
     origin: 'library',
-    provider: 'your own library — anything you have read here',
+    provider: 'your own library (anything you have read here)',
     dependsOnUserLibrary: true,
     framingHint: 'The sentence that does the work, or the whole paragraph.',
     searchPlaceholder: 'Search your books for a passage…',
@@ -105,7 +105,7 @@ export const MEDIA: Record<MediumId, Medium> = {
     name: 'scene',
     plural: 'Film & TV',
     origin: 'catalogue',
-    provider: 'TMDB — the title resolves, the moment is yours to frame',
+    provider: 'TMDB (the title resolves, the moment is yours to frame)',
     framingHint: 'Name the moment. A scene is not a catalogue entry, so you have to describe it.',
     searchPlaceholder: 'Search films and series…',
     physical: false,
@@ -127,7 +127,7 @@ export const MEDIA: Record<MediumId, Medium> = {
     name: 'theorem',
     plural: 'Mathematics',
     origin: 'catalogue',
-    provider: 'Wikipedia — the statement as written, never paraphrased',
+    provider: 'Wikipedia (the statement as written, never paraphrased)',
     framingHint: 'The statement, the condition it needs, or the shape of the proof.',
     searchPlaceholder: 'Search theorems, identities, paradoxes…',
     physical: false,
@@ -140,7 +140,7 @@ export const MEDIA: Record<MediumId, Medium> = {
     name: 'phenomenon',
     plural: 'Science',
     origin: 'catalogue',
-    provider: 'Wikipedia — the statement as written, never paraphrased',
+    provider: 'Wikipedia (the statement as written, never paraphrased)',
     framingHint: 'What happens, or the condition that makes it happen.',
     searchPlaceholder: 'Search phenomena, effects, laws…',
     physical: false,
@@ -153,7 +153,7 @@ export const MEDIA: Record<MediumId, Medium> = {
     name: 'living thing',
     plural: 'Life',
     origin: 'catalogue',
-    provider: 'Wikipedia — the statement as written, never paraphrased',
+    provider: 'Wikipedia (the statement as written, never paraphrased)',
     framingHint: 'The whole creature, or one behaviour, or one part of its body.',
     searchPlaceholder: 'Search creatures, plants, fungi…',
     physical: false,
@@ -166,7 +166,7 @@ export const MEDIA: Record<MediumId, Medium> = {
     name: 'place',
     plural: 'Places',
     origin: 'catalogue',
-    provider: 'Wikipedia — the statement as written, never paraphrased',
+    provider: 'Wikipedia (the statement as written, never paraphrased)',
     framingHint: 'The place as a whole, or one feature — the light, the scale, the silence.',
     searchPlaceholder: 'Search places, landforms, ruins…',
     physical: false,
@@ -179,7 +179,7 @@ export const MEDIA: Record<MediumId, Medium> = {
     name: 'gesture',
     plural: 'Gesture',
     origin: 'composed',
-    provider: 'composed — you write it, and it has to be doable',
+    provider: 'composed (you write it, and it has to be doable)',
     framingHint: 'Which part carries the meaning: the reach, the pause, the way it ends.',
     searchPlaceholder: 'Name the gesture…',
     physical: true,
@@ -191,7 +191,7 @@ export const MEDIA: Record<MediumId, Medium> = {
     name: 'movement',
     plural: 'Dance',
     origin: 'composed',
-    provider: 'composed — you write it, and it has to be doable',
+    provider: 'composed (you write it, and it has to be doable)',
     framingHint: 'The shape, the rhythm, or the transition between two shapes.',
     searchPlaceholder: 'Name the movement…',
     physical: true,
@@ -203,7 +203,7 @@ export const MEDIA: Record<MediumId, Medium> = {
     name: 'stretch',
     plural: 'Stretch',
     origin: 'composed',
-    provider: 'composed — you write it, and it has to be doable',
+    provider: 'composed (you write it, and it has to be doable)',
     framingHint: 'The sensation, not the silhouette. Where it is felt, and for how long.',
     searchPlaceholder: 'Name the stretch or pose…',
     physical: true,
@@ -215,7 +215,7 @@ export const MEDIA: Record<MediumId, Medium> = {
     name: 'exercise',
     plural: 'Exercise',
     origin: 'composed',
-    provider: 'composed — you write it, and it has to be doable',
+    provider: 'composed (you write it, and it has to be doable)',
     framingHint: 'The effort and its shape: what resists, and what gives.',
     searchPlaceholder: 'Name the exercise…',
     physical: true,
@@ -248,6 +248,32 @@ export const ALL_MEDIUM_IDS: MediumId[] = MEDIUM_LIST.map(m => m.id)
 
 export function getMedium(id: string): Medium | null {
   return (MEDIA as Record<string, Medium>)[id] ?? null
+}
+
+/**
+ * Media grouped by the provider they share, in MEDIUM_LIST order of first
+ * appearance.
+ *
+ * Exists because listing one medium per row made the list mostly its own echo:
+ * eight of eleven rows read either "Wikipedia (the statement as written, never
+ * paraphrased)" or "composed (you write it, and it has to be doable)", four times
+ * each. A reader scanning that cannot see the shape of the thing — which is that
+ * there are only a handful of sources, and the three *origins* are what actually
+ * differ.
+ *
+ * Grouped on the provider string itself rather than on a hand-written grouping,
+ * so a fifth Wikipedia medium joins that line by existing and nothing has to
+ * remember to add it.
+ */
+export function mediaByProvider(media: MediumId[]): { provider: string; media: Medium[] }[] {
+  const groups: { provider: string; media: Medium[] }[] = []
+  for (const m of MEDIUM_LIST) {
+    if (!media.includes(m.id)) continue
+    const existing = groups.find(g => g.provider === m.provider)
+    if (existing) existing.media.push(m)
+    else groups.push({ provider: m.provider, media: [m] })
+  }
+  return groups
 }
 
 export function isComposed(id: string): boolean {
