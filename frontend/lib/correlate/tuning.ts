@@ -31,6 +31,9 @@
 
 import type { MediumId } from './types'
 import { getMedium } from './media'
+import {
+  describeScopes, isUnscoped, normalizeScopes, scopeSummary, type Scopes,
+} from './scope'
 
 // ---------------------------------------------------------------------------
 // Medium weights
@@ -197,9 +200,19 @@ export function getAxis(id: string): TuningAxis | null {
 export interface Tuning {
   weights: Partial<Record<MediumId, MediumWeight>>
   axes: Partial<Record<TuningAxisId, number>>
+  /**
+   * Which region of each medium the partner may reach into — see ./scope.ts.
+   *
+   * It lives inside Tuning rather than beside it because it is the same kind of
+   * thing: something the player asks of their partner, adjustable between any two
+   * turns, saved and loaded by the same plumbing. That also means it needed no
+   * migration — `listen_sessions.tuning` is already jsonb and already
+   * canonicalised on the way in.
+   */
+  scopes: Scopes
 }
 
-export const DEFAULT_TUNING: Tuning = { weights: {}, axes: {} }
+export const DEFAULT_TUNING: Tuning = { weights: {}, axes: {}, scopes: {} }
 
 const clampInt = (v: unknown, lo: number, hi: number): number | null => {
   const n = typeof v === 'number' ? v : typeof v === 'string' ? Number(v) : NaN
@@ -217,10 +230,12 @@ const clampInt = (v: unknown, lo: number, hi: number): number | null => {
  * deployment cannot serve would silently mute nothing.
  */
 export function normalizeTuning(raw: unknown, media: MediumId[]): Tuning {
-  const out: Tuning = { weights: {}, axes: {} }
+  const out: Tuning = { weights: {}, axes: {}, scopes: {} }
   if (!raw || typeof raw !== 'object') return out
 
-  const src = raw as { weights?: unknown; axes?: unknown }
+  const src = raw as { weights?: unknown; axes?: unknown; scopes?: unknown }
+
+  out.scopes = normalizeScopes(src.scopes, media)
 
   if (src.weights && typeof src.weights === 'object') {
     for (const [key, value] of Object.entries(src.weights as Record<string, unknown>)) {
@@ -246,7 +261,9 @@ export function normalizeTuning(raw: unknown, media: MediumId[]): Tuning {
 
 /** True when the tuning says nothing — the state every session starts in. */
 export function isNeutral(tuning: Tuning): boolean {
-  return Object.keys(tuning.weights).length === 0 && Object.keys(tuning.axes).length === 0
+  return Object.keys(tuning.weights).length === 0
+    && Object.keys(tuning.axes).length === 0
+    && isUnscoped(tuning.scopes ?? {})
 }
 
 export function weightOf(tuning: Tuning, medium: MediumId): MediumWeight {
@@ -368,15 +385,19 @@ export function describeTuning(tuning: Tuning, media: MediumId[]): string {
     if (text) lines.push(`- ${axis.name} (${v > axis.neutral ? axis.high : axis.low}): ${text}`)
   }
 
-  if (lines.length === 0) return ''
-
-  return `HOW THE PLAYER HAS WEIGHTED YOU
+  // Two blocks, either of which can be absent: a player may weight the media
+  // without narrowing any of them, or narrow one without touching a weight.
+  const weighting = lines.length === 0 ? '' : `HOW THE PLAYER HAS WEIGHTED YOU
 They set this during the game and may change it before the next turn, so treat it as
 the current instruction rather than a standing rule. It governs what you reach *for*.
 It does not change what makes a connection hold: a shared decade, a shared catalogue
 or a shared running time is still a coincidence of filing and still not a connection.
 
 ${lines.join('\n')}`
+
+  const scoping = describeScopes(tuning.scopes ?? {}, media)
+
+  return [weighting, scoping].filter(Boolean).join('\n\n')
 }
 
 /** One short line for the player's own display. Empty when neutral. */
@@ -396,6 +417,9 @@ export function tuningSummary(tuning: Tuning, media: MediumId[]): string {
     const v = axisValue(tuning, axis.id)
     if (v !== axis.neutral) bits.push(axis.labels[v].toLowerCase())
   }
+
+  const scoped = scopeSummary(tuning.scopes ?? {}, media)
+  if (scoped) bits.push(scoped)
 
   return bits.join(' · ')
 }

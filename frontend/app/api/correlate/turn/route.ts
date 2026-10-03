@@ -434,9 +434,28 @@ export async function POST(req: NextRequest) {
   let replySource: 'interpreter' | 'retry' | 'salvage' = 'interpreter'
   let interpretation = firstPass
 
-  const tryResolve = async (plan: NonNullable<Interpretation['reply']>): Promise<Offering | null> => {
+  /**
+   * `scoped: false` drops the player's narrowing for this attempt.
+   *
+   * Only stage 3 passes it. The engine guarantees that a legal turn carries a
+   * real reply, and a guarantee outranks a preference — the same trade
+   * `weightedReplyMedia` makes when a player mutes every medium. A player who
+   * has scoped themselves into a corner gets an answer rather than a dead chain,
+   * and the salvage note already tells them the reply was not the interpreter's
+   * own choice.
+   */
+  const scopeMiss: { current: string | null } = { current: null }
+
+  const tryResolve = async (
+    plan: NonNullable<Interpretation['reply']>,
+    scoped = true,
+  ): Promise<Offering | null> => {
     try {
-      return await resolveReply(plan, [...inPlay], { userId })
+      return await resolveReply(plan, [...inPlay], {
+        userId,
+        scopes: scoped ? tuning.scopes : {},
+        onScopeMiss: why => { scopeMiss.current = why },
+      })
     } catch (e) {
       if (e instanceof OfferingError) {
         console.warn(`[correlate] reply resolve ${e.provider} upstream=${e.upstreamStatus}: ${e.message}`)
@@ -455,11 +474,17 @@ export async function POST(req: NextRequest) {
     // and that the player has not turned off.
     if (!reply) {
       const retryMedia = answerMedia
+      // Order matters: a scope miss is checked before the generic "nothing
+      // matched", because what it named did exist — it was simply somewhere the
+      // player has ruled out, and telling the interpreter otherwise invites it to
+      // re-propose the same reply with a different query.
       const problem = interpretation.replyRejection
         ? describeRejection(interpretation.replyRejection as any)
-        : failure.current
-          ? `the catalogue could not be reached (${failure.current.provider})`
-          : 'nothing real matched what you named'
+        : scopeMiss.current
+          ? `${scopeMiss.current} — the player has narrowed where you may reach`
+          : failure.current
+            ? `the catalogue could not be reached (${failure.current.provider})`
+            : 'nothing real matched what you named'
       const attempted = interpretation.reply?.query
         ?? interpretation.reply?.composed?.title
         ?? null
@@ -487,6 +512,7 @@ export async function POST(req: NextRequest) {
           // Legality is NOT revisited — that was ruled once, on the move.
           interpretation = { ...retry, verdict: firstPass.verdict }
           failure.current = null
+          scopeMiss.current = null
         }
       }
     }
@@ -497,7 +523,10 @@ export async function POST(req: NextRequest) {
       // first when the interpreter has already failed twice.
       for (const seed of salvageQueries(interpretation, move)) {
         for (const medium of answerMedia.filter(m => !isComposed(m))) {
-          const found = await tryResolve({ medium, query: seed, framing: 'Found in answer to your move' })
+          const found = await tryResolve(
+            { medium, query: seed, framing: 'Found in answer to your move' },
+            false,
+          )
           if (found) {
             reply = found
             replySource = 'salvage'

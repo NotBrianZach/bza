@@ -14,6 +14,9 @@
 
 import type { MediumId, Offering, ReplyPlan } from '@/lib/correlate/types'
 import { getMedium, isComposed } from '@/lib/correlate/media'
+import {
+  applyScopeToQuery, describeScopeMiss, satisfiesScope, type Scopes,
+} from '@/lib/correlate/scope'
 import { OfferingError } from './shared'
 import { lookupMusic, resolveMusic, searchMusic } from './music'
 import { lookupArtwork, resolveArtwork, searchArtwork } from './artwork'
@@ -29,6 +32,27 @@ export { composeOffering, checkPerformability, vocabularyFor, PROBLEM_COPY } fro
 export interface OfferingContext {
   /** Required for the `passage` medium; that library is private to one person. */
   userId?: string
+  /**
+   * Which region of each medium the partner may reach into (lib/correlate/scope.ts).
+   *
+   * Does two things, and they are separate: the chosen options' search terms are
+   * folded into the query so the restriction reaches the provider, and the
+   * resolved offering is checked against the enforceable facets so one that slips
+   * through is treated as a miss. A miss is all it is — the caller's retry stage
+   * already knows what to do with one.
+   */
+  scopes?: Scopes
+  /**
+   * Called when a reply was real but outside the player's scope.
+   *
+   * The caller needs this, not just the log. A scope miss and a search miss both
+   * resolve to null, but they call for different corrections: "nothing matched
+   * what you named" tells an interpreter to name something else, which is the
+   * wrong advice when what it named existed and was simply a stretch for the
+   * arms in a game narrowed to legs. Told the actual reason, the retry moves;
+   * told the generic one, it rewrites the same reply.
+   */
+  onScopeMiss?: (reason: string) => void
 }
 
 /** Search a medium for offerings a player can choose from. */
@@ -95,6 +119,26 @@ export async function resolveReply(
   const medium = getMedium(plan.medium)
   if (!medium) return null
 
+  const scopes = ctx.scopes ?? {}
+
+  /**
+   * A reply the player's scope excludes is a miss, not an error.
+   *
+   * Same treatment an unperformable composed reply gets, and for the same
+   * reason: the interpreter produced something the rules do not admit, so the
+   * turn has not been answered yet and the caller should ask again. Logged
+   * because it is worth knowing how often a scope is being missed — a facet the
+   * model cannot hit is a facet whose prompt wording is wrong.
+   */
+  const inScope = (o: Offering | null): Offering | null => {
+    if (!o) return null
+    if (satisfiesScope(o, scopes)) return o
+    const why = describeScopeMiss(o, scopes)
+    console.warn(`[correlate] reply out of scope: ${why}`)
+    ctx.onScopeMiss?.(why)
+    return null
+  }
+
   if (isComposed(plan.medium)) {
     if (!plan.composed) return null
     const input: ComposedInput = {
@@ -107,24 +151,31 @@ export async function resolveReply(
     const built = composeOffering(input)
     // A composed reply that fails performability is exactly as much of a miss as
     // a search that found nothing. The interpreter wrote something undoable.
-    return built.ok ? built.offering : null
+    return built.ok ? inScope(built.offering) : null
   }
 
   if (!plan.query?.trim()) return null
 
+  // Fold the scope's search terms into the query before it reaches the provider.
+  // For a guided facet this is the only mechanism there is — nothing can verify
+  // that a Deezer track is jazz, but asking for jazz reliably returns jazz.
+  const query = applyScopeToQuery(plan.medium, plan.query, scopes)
+
   let found: Offering | null = null
   switch (plan.medium) {
-    case 'music':   found = await resolveMusic(plan.query, exclude); break
-    case 'artwork': found = await resolveArtwork(plan.query, exclude); break
-    case 'scene':   found = await resolveScene(plan.query, exclude); break
+    case 'music':   found = await resolveMusic(query, exclude); break
+    case 'artwork': found = await resolveArtwork(query, exclude); break
+    case 'scene':   found = await resolveScene(query, exclude); break
     case 'passage':
-      found = ctx.userId ? await resolvePassage(ctx.userId, plan.query, exclude) : null
+      found = ctx.userId ? await resolvePassage(ctx.userId, query, exclude) : null
       break
     default:
       if (!isKnowledge(plan.medium)) return null
-      found = await resolveKnowledge(plan.medium, plan.query, exclude)
+      found = await resolveKnowledge(plan.medium, query, exclude)
       break
   }
+
+  found = inScope(found)
 
   // The interpreter's framing overrides the provider's default, because the
   // framing is the part it actually chose.

@@ -207,6 +207,120 @@ export const correlateQueries = {
   },
 }
 
+/**
+ * Saved partner settings — see supabase/setup/56_correlate_presets.sql.
+ *
+ * A preset is a copy of a tuning under a name, not a reference to one. Recalling
+ * it writes its values onto the session and the two then diverge, which is the
+ * same rule `rules` follows: a game in progress does not change shape because
+ * something elsewhere was edited.
+ */
+export interface CorrelationPreset {
+  id: string
+  user_id: string
+  name: string
+  tuning: unknown
+  media: MediumId[]
+  created_at: string
+  updated_at: string
+  used_at: string | null
+}
+
+export const presetQueries = {
+  /** Every preset, most recently used first. Ordering matters — see `fuzzySearch`. */
+  async list(): Promise<CorrelationPreset[]> {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return []
+    const { data, error } = await supabase
+      .from('correlate_presets')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('used_at', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false })
+    if (error) throw new Error(error.message)
+    return (data ?? []) as unknown as CorrelationPreset[]
+  },
+
+  /**
+   * Save, or overwrite the one with this name.
+   *
+   * Upsert on the case-insensitive unique index, because "save" on a name that is
+   * already taken means "update that one" to everyone who has ever used a
+   * settings dialog. The tuning is normalized first so a preset can never hold a
+   * value the live controls would reject.
+   */
+  async save(name: string, tuning: Tuning, media: MediumId[]): Promise<CorrelationPreset> {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('Sign in to save a preset')
+
+    const trimmed = name.trim()
+    if (!trimmed) throw new Error('Give the preset a name')
+
+    const payload = {
+      user_id: user.id,
+      name: trimmed,
+      tuning: normalizeTuning(tuning, media) as any,
+      media,
+      updated_at: new Date().toISOString(),
+    }
+
+    // onConflict names the index's columns. `lower(name)` is an expression index,
+    // which PostgREST cannot target, so the existing row is looked up by hand and
+    // updated — one extra round trip on a rare action, in exchange for the
+    // case-insensitive behaviour the list actually needs.
+    const existing = await presetQueries.findByName(trimmed)
+    if (existing) {
+      const { data, error } = await supabase
+        .from('correlate_presets')
+        .update(payload)
+        .eq('id', existing.id)
+        .select()
+        .single()
+      if (error) throw new Error(error.message)
+      return data as unknown as CorrelationPreset
+    }
+
+    const { data, error } = await supabase
+      .from('correlate_presets')
+      .insert(payload)
+      .select()
+      .single()
+    if (error) throw new Error(error.message)
+    return data as unknown as CorrelationPreset
+  },
+
+  /** Case-insensitive lookup, so "save" can tell overwrite from create. */
+  async findByName(name: string): Promise<CorrelationPreset | null> {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return null
+    const { data, error } = await supabase
+      .from('correlate_presets')
+      .select('*')
+      .eq('user_id', user.id)
+      .ilike('name', name.trim())
+      .maybeSingle()
+    if (error) throw new Error(error.message)
+    return (data as unknown as CorrelationPreset) ?? null
+  },
+
+  /**
+   * Mark one as just used. Fire-and-forget from the UI: it only affects the
+   * order of a list the player is looking at, so losing the write costs nothing
+   * worth a spinner.
+   */
+  async touch(id: string): Promise<void> {
+    await supabase
+      .from('correlate_presets')
+      .update({ used_at: new Date().toISOString() })
+      .eq('id', id)
+  },
+
+  async remove(id: string): Promise<void> {
+    const { error } = await supabase.from('correlate_presets').delete().eq('id', id)
+    if (error) throw new Error(error.message)
+  },
+}
+
 /** Media this deployment can serve. Cached per page load; it cannot change under us. */
 let _mediaPromise: Promise<MediumId[]> | null = null
 export function fetchAvailableMedia(): Promise<MediumId[]> {
