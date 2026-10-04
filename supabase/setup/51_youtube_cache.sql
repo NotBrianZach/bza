@@ -10,7 +10,7 @@
 -- Not user data: rows are facts about the public catalogue, keyed by iTunes
 -- trackId. There is deliberately no user_id.
 --
--- Lives in schema `bza`, not `public`. Two reasons. This Supabase project is
+-- Lives in schema `bza_public`, not `public`. Two reasons. This Supabase project is
 -- shared with another app whose tables sit in `woofs`, so `public` is a commons
 -- and a commons collides. And from 2026-10-30 Supabase stops granting the Data
 -- API roles on newly created `public` objects, which makes `public` behave like
@@ -18,15 +18,15 @@
 -- left in being there. See the grants below: they are now the thing that decides
 -- reachability, in any schema.
 
-create schema if not exists bza;
+create schema if not exists bza_public;
 
 -- Usage on the schema is a door, not a key: it lets a role name objects inside
 -- without granting anything on them. All three get it so later tables in here
 -- can choose their own audience; this one grants table privileges to
 -- service_role alone.
-grant usage on schema bza to anon, authenticated, service_role;
+grant usage on schema bza_public to anon, authenticated, service_role;
 
-create table if not exists bza.youtube_tracks (
+create table if not exists bza_public.youtube_tracks (
   -- iTunes trackId (TrackRef.id). Text, not bigint: TrackRef.id is a string
   -- everywhere in the app and matching that avoids a cast on every lookup.
   track_id text primary key,
@@ -51,7 +51,7 @@ create table if not exists bza.youtube_tracks (
 -- Cheap sweep for re-resolving stale misses later: a song absent from YouTube
 -- today may be there next month.
 create index if not exists youtube_tracks_misses_idx
-  on bza.youtube_tracks (resolved_at)
+  on bza_public.youtube_tracks (resolved_at)
   where video_id is null;
 
 -- Explicit grants, service_role only. Nothing was ever auto-granted in a custom
@@ -61,9 +61,9 @@ create index if not exists youtube_tracks_misses_idx
 -- anon and authenticated are deliberately absent rather than granted-then-denied:
 -- clients never touch this table. Every read and write goes through
 -- /api/music/youtube with the service role.
-grant select, insert, update, delete on bza.youtube_tracks to service_role;
+grant select, insert, update, delete on bza_public.youtube_tracks to service_role;
 
 -- RLS on with no policies, as a second floor under the missing grants. The
 -- service role bypasses RLS, so this costs the intended caller nothing and
 -- costs an unintended one everything.
-alter table bza.youtube_tracks enable row level security;
+alter table bza_public.youtube_tracks enable row level security;

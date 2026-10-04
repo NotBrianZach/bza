@@ -38,12 +38,12 @@ function makeDb() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    // youtube_tracks lives in `bza`, not `public` — see
+    // youtube_tracks lives in `bza_public`, not `public` — see
     // supabase/setup/51_youtube_cache.sql. The schema must also be listed
     // under Settings -> API -> Exposed schemas, which is a project setting no
     // migration can set; without it every query here returns PGRST106 and
     // resolution falls back to the 30s preview.
-    { db: { schema: 'bza' } },
+    { db: { schema: 'bza_public' } },
   )
 }
 
