@@ -138,7 +138,7 @@ ${game.replyRule}
 ${tuningBlock ? `\n${tuningBlock}\n` : ''}
 A reply in a catalogued medium is a *query*, not a claim: it is searched, and if no
 real ${media.includes('music') ? 'song, work' : 'work'} matches, your turn lands nowhere. Name something you are confident
-exists, as "Attribution — Title". Never invent a record. Never reply with something
+exists, as "Attribution — Title"${propositional.length > 0 ? ' — that form is for music, art and film; the knowledge media below are named differently' : ''}. Never invent a record. Never reply with something
 already in play.
 ${propositional.length > 0 ? `
 ${propositional.map(id => getMedium(id)?.plural ?? id).join(', ')} work the same way and the rule matters more there,
@@ -147,6 +147,21 @@ effect, the creature or the place and let it be looked up — do NOT write out w
 says. The statement you are shown is the one the record actually carries; a statement
 you compose yourself is a guess wearing the clothes of a fact, and it is the one kind
 of invention here that a reader cannot catch.
+
+NAME THEM, DO NOT DESCRIBE THEM. These records have no author, so there is no
+"Attribution — " half and no gloss after a dash: the query is a proper name or an
+established term, and nothing else. "Anglerfish", not "a fish that lures prey with
+light". "Mount Erebus", not "a volcano that holds a lava lake". "Noether's theorem",
+not "the one where symmetry gives you conservation".
+
+This is the one failure in these media that does not announce itself. A query that
+describes what you want instead of naming it does not come back empty — it comes
+back with the encyclopedia's article about the *category*, because that is what
+ranks for an abstract phrase. Answering a grackle with the definition of *species*
+is the dullest move available here and it is a move you will make by accident. So:
+name a member, never the class. A creature, not "species". A mountain, not
+"geography". If your query contains "that", "which", "a kind of" or "something
+like", you have described instead of named — rewrite it as the name of one thing.
 ` : ''}
 ${composedMedia.length > 0 ? `
 A reply in a composed medium (${composedMedia.join(', ')}) is authored by you, so
@@ -214,7 +229,9 @@ markdown fence. Schema:
   "link": null | { "turn": <the turn number of an earlier exchange this one rhymes with>, "note": "what the two share, one clause" },
   "reply": {
     "medium": ${JSON.stringify(answerable)},
-    "query": "Attribution — Title    (catalogued media only)",
+    "query": "${propositional.length > 0
+      ? `Attribution — Title; for ${propositional.map(id => getMedium(id)?.plural ?? id).join(', ')} the bare name, no attribution and no gloss`
+      : 'Attribution — Title'}    (catalogued media only)",
     "composed": { "title": "short name", "steps": ["…", "…"], "intent": "shown" | "invited" },
     "framing": "which part of your reply is in play"
   },
@@ -723,38 +740,144 @@ export function buildRetryPrompt(opts: {
   if (previous) parts.push(`THE OFFERING ON THE TABLE\n${offeringLine(previous)}`)
   parts.push(`YOUR READING OF THE MOVE (unchanged — keep it)\n${reading}`)
 
-  parts.push(
-    `ANSWER AGAIN. Constraints for this attempt:\n` +
-    `- Your reply medium must be exactly one of: ${media.join(', ')}. That list already excludes ` +
-    `anything the player has turned off, so it is the whole of what is available.\n` +
-    `- Your relation must be exactly one of: ${relations.join(', ')}.\n` +
-    `- For a searchable medium, name something well known enough to be found — a ` +
-    `famous recording, a famous painting. This is the second attempt; reach for the ` +
-    `obvious rather than the obscure.\n` +
-    `- For a composed medium (gesture, movement, stretch, exercise) you author it ` +
-    `outright, so it cannot fail to be found: give a title and one to five concrete ` +
-    `ordered steps. That is the safest way to answer this turn.`,
-  )
+  // Each bullet is conditional on the media actually on offer. The first version of
+  // this prompt named recordings, paintings and composed gestures unconditionally,
+  // and in a session narrowed to one knowledge medium that is advice to answer in
+  // three media that are not there — so the retry proposed one, was refused for
+  // answering off-list, and the turn fell through to the server's own salvage
+  // search. A corrective prompt that recommends the impossible is worse than none.
+  const composed = media.filter(isComposed)
+  const knowledge = media.filter(isPropositional)
+  const catalogues = media.filter(m => !isComposed(m) && !isPropositional(m))
+  const plural = (id: MediumId) => getMedium(id)?.plural ?? id
+
+  const bullets: string[] = [
+    `- Your reply medium must be exactly one of: ${media.join(', ')}. That list already ` +
+    `excludes anything the player has turned off, so it is the whole of what is available.`,
+    `- Your relation must be exactly one of: ${relations.join(', ')}.`,
+  ]
+
+  if (media.length === 1) {
+    bullets.push(
+      `- ${plural(media[0])} is the only medium open to you on this turn, so the answer ` +
+      `has to be one. There is nothing to change medium to, and "the connection is better ` +
+      `said elsewhere" is not available — find the one that can be said here.`,
+    )
+  }
+
+  if (catalogues.length > 0) {
+    bullets.push(
+      `- For ${catalogues.map(plural).join(' and ')}, name something well known enough to be ` +
+      `found — a famous recording, a famous painting. This is the second attempt; reach for ` +
+      `the obvious rather than the obscure.`,
+    )
+  }
+
+  if (knowledge.length > 0) {
+    bullets.push(
+      `- For ${knowledge.map(plural).join(', ')}, the query is a NAME and nothing else — one ` +
+      `creature, one place, one named result. "Anglerfish", not "a fish that lures prey with ` +
+      `light"; a creature, never "species". A description does not come back empty, it comes ` +
+      `back with the article about the category, which is the dullest answer there is. Reach ` +
+      `for the well-known one.`,
+    )
+  }
+
+  if (composed.length > 0) {
+    bullets.push(
+      `- For a composed medium (${composed.join(', ')}) you author it outright, so it cannot ` +
+      `fail to be found: give a title and one to five concrete ordered steps. That is the ` +
+      `safest way to answer this turn.`,
+    )
+  }
+
+  parts.push(`ANSWER AGAIN. Constraints for this attempt:\n${bullets.join('\n')}`)
   parts.push(`Respond with the same JSON object as before, and nothing else.`)
 
   return parts.join('\n\n')
 }
 
 /**
+ * An account of the reply the server found on its own, after the interpreter's two
+ * attempts both failed to resolve.
+ *
+ * Needed because a salvaged turn used to be stored wearing the first pass's
+ * narration, `carried` and `lost` — all three of which describe the reply the
+ * interpreter *planned*, not the one that landed. Observed in production: a Life-only
+ * game read a grackle, planned an anglerfish, salvaged something else entirely, and
+ * stored prose about the anglerfish's lure underneath a record that was never played.
+ * The reading of the move survives that (it is about the move, and the move has not
+ * changed); everything that describes the crossing does not.
+ *
+ * Deliberately a small ask. The interpreter is not being invited to re-judge
+ * anything or to revise its reading — only to say what, if anything, connects the
+ * move to the record it has been handed, and to say so honestly when the answer is
+ * "not much". A salvage is already a visible event in the UI; this is so the prose
+ * agrees with it.
+ */
+export function buildSalvageAccountPrompt(opts: {
+  move: Offering
+  reply: Offering
+  reading: string
+}): string {
+  const { move, reply, reading } = opts
+
+  return [
+    `A REPLY WAS FOUND WITHOUT YOU\nTwo answers you proposed could not be found in any ` +
+    `catalogue, so the server searched on its own terms and came back with the record ` +
+    `below. It is real and it is now on the table. It was not your choice.`,
+    `THE PLAYER'S MOVE\n${offeringLine(move)}`,
+    `YOUR READING OF IT (unchanged — this still stands)\n${reading}`,
+    `THE RECORD THAT LANDED\n${offeringLine(reply)}`,
+    `Account for the exchange as it actually is. Do not re-judge the move, do not ` +
+    `revise your reading, and do not describe the answer you wanted — that one is gone ` +
+    `and saying anything about it here would be a lie about what is on the table.\n` +
+    `If something genuinely connects the move to this record, name it. If the ` +
+    `connection is thin, say it is thin. If there is none, say that plainly: a found ` +
+    `record that answers nothing is an honest outcome and pretending otherwise is not.`,
+    `Reply with a single JSON object and nothing else:\n` +
+    `{\n` +
+    `  "narration": "what this exchange is, 1-3 sentences, in your voice.",\n` +
+    `  "carried": "what connects the two, one clause — or \\"\\" if nothing does.",\n` +
+    `  "lost": "what this record does not answer, one clause — or \\"\\"."\n` +
+    `}`,
+  ].join('\n\n')
+}
+
+/**
  * Queries the server can try on its own, if two interpreter attempts both failed.
  *
  * Last resort before giving up, and ordered by how likely each is to mean
- * something: the quality the interpreter said carried across is a better seed than
- * the move's own title, which is better than nothing. The catalogues are large
- * enough that a plain-word search almost always returns something real.
+ * something — which used to be the wrong order. The quality the interpreter said
+ * carried across went first, and in a game whose readings are abstract by design
+ * that is four abstract nouns: `carried` of "the principle that survival requires
+ * both fitting and signalling" became the query "principle survival requires
+ * both", which a catalogue answers with whatever article is nearest to the words.
+ *
+ * So names first. The interpreter's own query failed to resolve in the medium it
+ * chose, but it is the one *name* anywhere in the interpretation, and a name is
+ * worth more to a catalogue than any amount of description.
  */
 export function salvageQueries(interpretation: Interpretation, move: Offering): string[] {
-  const words = (s: string) =>
-    s.replace(/[^\p{L}\p{N}\s]/gu, ' ').split(/\s+/).filter(w => w.length > 3).slice(0, 4).join(' ')
+  /**
+   * Function words outlive a length filter and mean nothing to a search. Dropping
+   * them is not enough to make a described query good — nothing is — but it stops
+   * the seed being built entirely out of grammar.
+   */
+  const STOP = /^(?:that|this|those|these|with|from|into|onto|their|there|where|which|while|what|when|than|then|them|they|also|both|each|every|some|most|more|less|only|very|just|much|many|such|same|other|another|about|against|between|through|without|within|being|been|have|has|had|does|will|would|could|should|must|requires|require|something|anything|everything|itself|while)$/i
+
+  const words = (s: string) => s
+    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+    .split(/\s+/)
+    .filter(w => w.length > 3 && !STOP.test(w))
+    .slice(0, 4)
+    .join(' ')
 
   return [
-    interpretation.carried ? words(interpretation.carried) : '',
+    // Stripped of any "Name — gloss" tail, which is the half a catalogue chokes on.
+    interpretation.reply?.query?.split(/\s+[-–—]\s+/)[0] ?? '',
     move.title,
     move.attribution ?? '',
+    interpretation.carried ? words(interpretation.carried) : '',
   ].map(s => s.trim()).filter(Boolean)
 }

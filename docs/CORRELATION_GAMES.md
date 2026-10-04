@@ -633,6 +633,98 @@ broken) and it is *not* re-applied on lookup — a category edit on
 Wikipedia must not invalidate a move a player already picked from a list
 this server handed them.
 
+**A member of the medium, not the article about the medium** (2026-10-03).
+The generous pattern had one failure mode that generosity cannot see. A
+Life-only game of Tag answered a common grackle with the Wikipedia article
+*Species* — a real page, in scope by every test that asks whether biology
+is being discussed, and the dullest sentence the medium can produce.
+Nothing was broken: Life is the only kind of medium whose catalogue holds
+articles **about the category** alongside articles about **members** of
+it, and `pattern` is built out of exactly the words — "species",
+"taxonomy", "organism" — that the category articles are about. It admits
+them more easily than it admits any actual creature.
+
+So `inScope` is now three gates rather than one, and they refuse different
+things:
+
+| gate | asks | set for |
+|---|---|---|
+| `pattern` | is this the right *subject*? | all four, still generous |
+| `rejects` | is this the medium's own *vocabulary*? | all four |
+| `member` | is this a *member* or the *class*? | organism, place |
+
+`rejects` is matched against the title alone and lists the pages that name
+the vocabulary rather than offer anything in it — *Species*, *Organism*,
+*Taxonomy*, *Geography*, *Mathematics*, *Physics* — plus a shared refusal
+of indexes, outlines and disambiguation pages.
+
+`member` is set only for the two scopes whose members are concrete things.
+A theorem and a phenomenon *are* abstractions, so there is no member test
+to run on them and `rejects` is the whole of their guard; that asymmetry
+is asserted by a test, because it looks like an omission. The organism test
+reads the title and the **first sentence only** — an essay about camouflage
+reaches its animals by sentence three, so "is a bird" has to be what the
+page is *about* rather than something it gets around to.
+
+The word that makes the member test work is **"of"**. *Crypsis* opens "is
+the ability of an animal to avoid detection" and *Convergent evolution*
+opens "is the independent evolution of similar features in species of
+different periods" — both name a creature within a few words of a copula,
+and both are essays. So the window between "is a" and the creature word is
+a tempered match that cannot cross "of", except through the collective
+nouns a real taxon page genuinely uses ("a species of birdwing butterfly",
+"a large group of swimming sea slugs", "a clonal colony of a single
+quaking aspen"). Scored 96/96 against a hand-labelled set of real pages
+(29 creatures, 36 biology essays, 15 places, 16 geography essays).
+
+A rejected page is an ordinary miss, which is the point: a miss is retried
+and told what went wrong, while a dull hit is served.
+
+**And the upstream half.** The resolver guard closes the hole; it does not
+explain why the interpreter was reaching for a category in the first
+place. Two prompt defects did that:
+
+- The output schema offered `"query": "Attribution — Title"` for every
+  catalogued medium, but these four set `attribution: null` on purpose —
+  nobody is the author of a theorem. They had a strong *honesty*
+  instruction and no *shape* instruction, so in a game whose readings are
+  abstract by design the query came out in the register of the reading.
+  They now get their own paragraph: the query is a proper name and nothing
+  else, "Anglerfish" and not "a fish that lures prey with light", and a
+  query containing "that", "which" or "a kind of" is a description that
+  needs rewriting. The attribution form is withheld from the schema line
+  for exactly these media.
+- `buildRetryPrompt` listed the available media correctly and then advised
+  naming "a famous recording, a famous painting" and composing a gesture —
+  *unconditionally*. In a session narrowed to Life that is advice to answer
+  in three media that are not on the table, so the corrective retry
+  answered off-list, was refused for an unknown medium, and the turn fell
+  through to the server's salvage search. Every bullet is now conditional
+  on the media actually passed in, and a one-medium session is told so in
+  as many words.
+
+**Salvage told the truth about the record but not about the prose.** Two
+further fixes to the last-resort path:
+
+- `salvageQueries` seeded its first attempt from `carried`, the quality the
+  interpreter said crossed. In a game of abstract readings that is four
+  abstract nouns — the real seed "principle survival requires both", which
+  resolves to an article about viral quasispecies. Names now go first: the
+  interpreter's own query stripped of any gloss, then the move's title,
+  then its attribution, and the quality words only as a last resort with
+  function words filtered out.
+- A salvaged turn was stored wearing the **first pass's** narration,
+  `carried` and `lost`, all three of which describe the reply the
+  interpreter planned rather than the one that landed. That was the one
+  place the engine asserted something untrue about what is on the table: a
+  player read genuinely good prose about an anglerfish underneath a record
+  that was never played. Stage 3b re-asks for an account of the record that
+  actually arrived — keeping the reading, which is about the move and so
+  still stands, and explicitly permitting "nothing connects these" as an
+  answer. If that call fails the three fields are cleared rather than kept,
+  because an empty `carried` says nothing and a stale one says something
+  false.
+
 Two smaller consequences:
 
 - `offeringLine()` now inlines the body for **any** non-composed
@@ -660,5 +752,86 @@ texts), `word` (Wiktionary etymologies), `recipe`, `chess position`,
 `birdsong` (xeno-canto). Each is a second provider rather than a fourth
 scope, which is why they are listed rather than shipped.
 
-Verified: 334 checks, 0 failed · `tsc --noEmit` 9 pre-existing errors,
-none in new code · `next build` compiles.
+The organism `pattern` was widened at the same time, to let the
+invertebrates in: a man o' war, a sea angel and a slime mould were all out
+of scope because none of their pages happens to use one of the original
+words. (An earlier revision of this section claimed the `phenomenon`
+pattern had the same gap and that *Bioluminescence* was out of scope. That
+was inferred from a synthetic test page and is wrong — the real article's
+categories include biological ones, and it resolves. The gap, if any, is
+not that one.)
+
+### The other three scopes had it worse
+
+Asked whether the same bug lived elsewhere, the honest answer was yes, and
+in a different and nastier form. Probed against the live API with
+description-shaped queries of the kind a correlation reading produces:
+
+| scope | query | returned |
+|---|---|---|
+| theorem | "something about symmetry giving you conservation" | **Emmy Noether** |
+| theorem | "a theorem about things that must coincide somewhere" | **Ted Kaczynski** |
+| phenomenon | "light produced by a living thing" | **The Thing (1982 film)** |
+| place | "a place whose silence is its subject" | **Jeff Bezos** |
+| place | "a landscape that looks like another planet" | **Geonosis** |
+| place | "somewhere people left and never came back to" | **Goths** |
+
+This is worse than the dull-category failure, because a reader cannot even
+tell what went wrong — the chain simply contains a person where a theorem
+should be. The cause is the same generosity seen from the other side: each
+scope's `pattern` is tested against the whole extract *and every category*,
+and Wikipedia is an encyclopedia. A mathematician's biography is in the
+theorem scope because it says "mathematician". A businessman's is in the
+place scope because it says where he is from. A Star Wars planet is in it
+because it says "desert planet".
+
+All three are the same shape — a person, a made-up thing, a nation — so one
+`NOT_AN_OFFERING` gate in front of all four scopes catches them, before any
+scope question is asked. It tests the title and first sentence together,
+because a page sometimes states its kind in only one of them (*Sea Peoples*
+says "peoples" in its title and "a purported seafaring confederation" in
+its opening). Two of these classes have a medium of their own already — a
+film is a `scene`, a song is `music` — which is the second reason they do
+not belong here.
+
+The person test leans on the parenthetical of birth and death dates rather
+than on categories, because categories do not always arrive: under the
+API's continuation limits a page can come back with none at all, which is
+how two biographies reached a live game. A test asserts the gate still
+holds with the category list empty.
+
+A shared `FIELD_TITLE` list refuses the name of a field or a practice in
+every scope — *Science*, *Photography*, *Zoology*, *Cartography*,
+*Scientific method*. Per-scope `rejects` could not have covered these,
+because the scopes overlap and neither list thought to mention the other's
+subject.
+
+**And the place member test had a hole**, shipped in the commit above and
+found by this probe an hour later. It accepted "names its kind of place" OR
+"opens by siting itself somewhere" — `is a … in …` — on the theory that
+only a real place does that. Almost everything does that; both Bezos and
+the Goths match it. The alternative is gone and the place word is now
+required. The lesson is about the sample, not the regex: the first labelled
+set was creatures and biology essays, so it could not have caught a guard
+that admits people.
+
+**What the non-Wikipedia media do instead.** Nothing, because they cannot
+have this bug. Probed with the same description-shaped queries, Deezer and
+the Cleveland collection simply **miss** — a catalogue of songs contains no
+article about the category of songs, and no biography of Deezer. The
+category-versus-member confusion is structurally confined to the media
+whose provider is an encyclopedia, which is also where `propositional`
+already pointed. A miss is the designed outcome and gets retried; the
+knowledge media were the only four that could turn a description into a
+confident wrong hit.
+
+Residual, and deliberately left: *Proof of work* still answers a
+mathematics query and *Goethean science* a phenomenon one. Both are real,
+specific, in-medium records — mediocre answers rather than category
+articles — and the prompt half of this fix is what addresses an interpreter
+writing descriptions in the first place.
+
+Verified: 394 checks, 0 failed · the scope gates scored 196/196 against
+real Wikipedia pages across all four scopes, including a never-list of 22
+people, works, fictions and nations asked of every scope · `tsc --noEmit`
+9 pre-existing errors, none in touched files.

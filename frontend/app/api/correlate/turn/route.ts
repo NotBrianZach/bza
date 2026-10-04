@@ -5,8 +5,8 @@ import { getGame } from '@/lib/correlate/games'
 import { availableMedia, getMedium, isComposed, replyMediaFor } from '@/lib/correlate/media'
 import { relationPermitted, resolveRelations, spentRelations } from '@/lib/correlate/relations'
 import {
-  applyWorldDelta, buildRetryPrompt, buildSystemPrompt, buildUserPrompt, describeRejection,
-  normalizeInterpretation, parseJsonObject, salvageQueries, sessionScope,
+  applyWorldDelta, buildRetryPrompt, buildSalvageAccountPrompt, buildSystemPrompt, buildUserPrompt,
+  describeRejection, normalizeInterpretation, parseJsonObject, salvageQueries, sessionScope,
   type ElsewhereContext, type TurnContext,
 } from '@/lib/correlate/prompt'
 import {
@@ -536,7 +536,38 @@ export async function POST(req: NextRequest) {
         }
         if (reply) break
       }
-      if (reply) console.warn(`[correlate] salvaged a reply in ${game.id} after two interpreter attempts`)
+
+      // Stage 3b — make the prose agree with the record.
+      //
+      // The interpretation still held narration, carried and lost from the first
+      // pass, and all three describe the answer that could not be found. Storing
+      // them next to a salvaged record is the one place this engine asserted
+      // something untrue about what is on the table: the player reads an account of
+      // an exchange that did not happen. So the account is re-asked for, against
+      // the record that actually landed.
+      //
+      // One extra call on a path that has already made two, and only on that path.
+      // When it fails, the fields are cleared rather than kept — an empty `carried`
+      // says nothing, and the first pass's `carried` says something false.
+      if (reply) {
+        console.warn(`[correlate] salvaged a reply in ${game.id} after two interpreter attempts`)
+
+        const accountRaw = await callInterpreter(
+          buildSystemPrompt(game, media, relations, tuning),
+          buildSalvageAccountPrompt({ move, reply, reading: interpretation.reading }),
+        )
+        const account = accountRaw ? parseJsonObject(accountRaw) : null
+        const narration = typeof account?.narration === 'string' ? account.narration.trim() : ''
+
+        interpretation = {
+          ...interpretation,
+          narration: narration ||
+            'Two answers could not be found, so this record was searched for from the move ' +
+            'itself. Nothing has been claimed about what connects them.',
+          carried: typeof account?.carried === 'string' ? account.carried.trim() : '',
+          lost: typeof account?.lost === 'string' ? account.lost.trim() : '',
+        }
+      }
     }
 
     if (!reply) {

@@ -82,14 +82,14 @@ function build() {
 const M = build()
 const {
   parseJsonObject, normalizeInterpretation, applyWorldDelta, offeringLine, sessionScope,
-  describeRejection, salvageQueries, buildSystemPrompt,
+  describeRejection, salvageQueries, buildSystemPrompt, buildRetryPrompt, buildSalvageAccountPrompt,
 } = M.prompt
 const { GAME_LIST, GAMES, getGame, ACCENT_CLASSES, FEATURED_GAMES, FEATURED_GAME_IDS, retiredGameName } = M.games
 const {
   MEDIA, MEDIUM_LIST, ALL_MEDIUM_IDS, getMedium, isComposed, isPropositional,
   availableMedia, playableMedia, resolveMedia, replyMediaFor,
 } = M.media
-const { KNOWLEDGE_MEDIA, isKnowledge, inScope, trimExtract } = M.knowledge
+const { KNOWLEDGE_MEDIA, isKnowledge, inScope, trimExtract, firstSentence } = M.knowledge
 const { RELATIONS, RELATION_LIST, ALL_RELATION_IDS, relationPermitted, spentRelations, resolveRelations } = M.relations
 const {
   buildGraph, pathTo, childrenOf, parentOf, siblingsOf, leavesOf, hasBranches, subtreeSize,
@@ -303,23 +303,36 @@ t('replyMediaFor never returns nothing', replyMediaFor(['passage']).length > 0)
 t('a composed medium survives, since it cannot fail to resolve',
   replyMediaFor(ALL_MEDIA).some(m => isComposed(m)))
 
-group('salvageQueries — the server\'s own last resort')
+group('salvageQueries — the server\'s own last resort, names before descriptions')
 const sq = (interp, move) => salvageQueries(interp, move)
 const mv = { medium: 'music', id: 'dz:1', title: 'Diaphanous', attribution: 'Ana Roxanne', framing: 'f',
              perceptible: { kind: 'audio', url: 'x' }, sourceUrl: null, origin: 'catalogue', meta: {} }
-t('the carried quality seeds the first attempt', (() => {
-  // Hyphens become spaces: a catalogue search wants words, not compounds.
-  const q = sq({ carried: 'the quality of something almost-visible', facts: [] }, mv)[0]
-  return q === 'quality something almost visible'
-})(), sq({ carried: 'the quality of something almost-visible', facts: [] }, mv)[0])
+// The ordering claim this group exists to defend. `carried` used to seed the first
+// attempt, and in a game whose readings are abstract by design that means the
+// server's last resort is four abstract nouns — "principle survival requires both",
+// which a catalogue answers with whatever article is nearest those words. The one
+// name anywhere in an interpretation is what the interpreter tried to look up.
+t('the interpreter\'s own query seeds the first attempt',
+  sq({ reply: { medium: 'organism', query: 'Anglerfish' }, carried: 'both halves of survival', facts: [] }, mv)[0] === 'Anglerfish')
+t('a gloss after a dash is stripped from it',
+  sq({ reply: { medium: 'organism', query: 'Anglerfish — the illuminated lure' }, carried: '', facts: [] }, mv)[0] === 'Anglerfish')
+t('the move title comes next', sq({ carried: '', facts: [] }, mv)[0] === 'Diaphanous')
+t('the attribution after that', sq({ carried: '', facts: [] }, mv)[1] === 'Ana Roxanne')
+t('the carried quality is the LAST resort, not the first',
+  sq({ carried: 'the quality of something almost-visible', facts: [] }, mv).at(-1) === 'quality almost visible',
+  sq({ carried: 'the quality of something almost-visible', facts: [] }, mv).join(' | '))
 t('short words are dropped from the seed',
-  !sq({ carried: 'the and of a quality', facts: [] }, mv)[0].split(' ').some(w => w.length <= 3))
-t('the move title is a later attempt', sq({ carried: '', facts: [] }, mv).includes('Diaphanous'))
-t('the attribution is the last attempt', sq({ carried: '', facts: [] }, mv).includes('Ana Roxanne'))
+  !sq({ carried: 'the and of a quality', facts: [] }, mv).at(-1).split(' ').some(w => w.length <= 3))
+// Length alone let "that", "which" and "requires" through, which is how a seed ends
+// up made entirely of grammar.
+t('function words are dropped even when they are long enough',
+  sq({ carried: 'the principle that survival requires both fitting and signalling', facts: [] }, mv).at(-1)
+    === 'principle survival fitting signalling',
+  sq({ carried: 'the principle that survival requires both fitting and signalling', facts: [] }, mv).at(-1))
 t('nothing usable yields no attempts rather than empty strings',
   sq({ carried: '', facts: [] }, { ...mv, title: '', attribution: null }).length === 0)
 t('punctuation does not leak into a query',
-  !/[—"'?!]/.test(sq({ carried: 'reaching — never "arriving"', facts: [] }, mv)[0]))
+  !/[—"'?!]/.test(sq({ carried: 'reaching — never "arriving"', facts: [] }, mv).at(-1)))
 
 group('game registry — internal consistency')
 t('GAME_LIST covers every game exactly once', GAME_LIST.length === Object.keys(GAMES).length && new Set(GAME_LIST.map(g => g.id)).size === GAME_LIST.length)
@@ -869,6 +882,72 @@ t('the prompt separates the binding path from what happened elsewhere', (() => {
   const p = buildSystemPrompt(GAMES.tag, ALL_MEDIA, ALL_RELATIONS)
   return /THE PATH/.test(p) && /ELSEWHERE/.test(p)
 })())
+// The knowledge media are the only ones where a bad query does not produce a
+// visible miss, so they are the only ones that get told what shape a query is.
+t('the knowledge media are told to name, not describe', (() => {
+  const p = buildSystemPrompt(GAMES.tag, ['organism'], ALL_RELATIONS)
+  return /NAME THEM, DO NOT DESCRIBE THEM/.test(p) &&
+    /name a member, never the class/.test(p) &&
+    /article about the \*category\*/.test(p)
+})())
+t('a game without them is not told any of that',
+  !/NAME THEM, DO NOT DESCRIBE THEM/.test(buildSystemPrompt(GAMES.tag, ['music', 'artwork'], ALL_RELATIONS)))
+t('the attribution form is not offered for a medium that has no author',
+  !/"query": "Attribution — Title +\(/.test(buildSystemPrompt(GAMES.tag, ['organism'], ALL_RELATIONS)))
+t('and is still offered for the media that do',
+  /"query": "Attribution — Title +\(/.test(buildSystemPrompt(GAMES.tag, ['music'], ALL_RELATIONS)))
+
+group('the retry prompt recommends only what is actually on the table')
+// The bug: this prompt listed the available media correctly and then advised
+// naming "a famous recording, a famous painting" and composing a gesture —
+// unconditionally. In a session narrowed to Life that is advice to answer in three
+// media that are not there, so the retry answered off-list, was refused, and the
+// turn fell through to the server's salvage search. A corrective prompt that
+// recommends the impossible is worse than no corrective prompt.
+const retry = media => buildRetryPrompt({
+  game: GAMES.tag, media, relations: ALL_RELATIONS, move: mv, previous: null,
+  problem: 'nothing real matched what you named', attempted: 'something', reading: 'a reading',
+})
+t('a one-medium retry does not mention a famous recording',
+  !/famous recording/.test(retry(['organism'])))
+t('a one-medium retry does not offer to compose a gesture',
+  !/composed medium/.test(retry(['organism'])))
+t('it says instead that there is nowhere else to go',
+  /only medium open to you/.test(retry(['organism'])))
+t('a retry into music still reaches for the obvious',
+  /famous recording/.test(retry(['music', 'artwork'])))
+t('a retry with composed media still offers to author one',
+  /composed medium \(gesture/.test(retry(['gesture', 'movement'])))
+t('a retry with every medium offers all three kinds of advice', (() => {
+  const p = retry(ALL_MEDIA)
+  return /famous recording/.test(p) && /composed medium/.test(p) && /the query is a NAME/.test(p)
+})())
+t('a knowledge retry is told to name one creature',
+  /the query is a NAME/.test(retry(['organism'])) && /never "species"/.test(retry(['organism'])))
+t('a retry with no knowledge medium is not',
+  !/the query is a NAME/.test(retry(['music'])))
+t('the media list is always stated exactly',
+  /exactly one of: organism, place/.test(retry(['organism', 'place'])))
+
+group('the salvage account — prose that agrees with the record that landed')
+// A salvaged turn used to be stored wearing the first pass's narration, carried and
+// lost, all of which describe the reply the interpreter *planned*. That is the one
+// place this engine asserted something untrue about what is on the table.
+const salvaged = { medium: 'organism', id: 'wiki:organism:1', title: 'Grackle', attribution: null,
+  framing: 'The creature', perceptible: { kind: 'text', body: 'Grackles are birds.' },
+  sourceUrl: null, origin: 'catalogue', meta: {} }
+const account = buildSalvageAccountPrompt({ move: mv, reply: salvaged, reading: 'the reading stands' })
+t('it says the reply was not the interpreter\'s choice', /was not your choice/.test(account))
+t('it carries the move and the record that landed',
+  /Diaphanous/.test(account) && /Grackle/.test(account))
+t('it keeps the reading rather than re-asking for one', /unchanged — this still stands/.test(account))
+t('it forbids describing the answer that got away', /do not describe the answer you wanted/.test(account))
+t('it permits "nothing connects these" as an answer', /a found record that answers nothing is an honest outcome/.test(account))
+t('it asks for exactly the three fields that describe a crossing', (() => {
+  const fields = [...account.matchAll(/^ {2}"(\w+)":/gm)].map(m => m[1])
+  return fields.join(',') === 'narration,carried,lost'
+})(), [...account.matchAll(/^ {2}"(\w+)":/gm)].map(m => m[1]).join(','))
+t('it does not re-open the verdict', !/verdict/.test(account))
 
 // ---------------------------------------------------------------------------
 // The knowledge media
@@ -926,6 +1005,133 @@ t('a place is not a theorem',
   !inScope('theorem', page('Mount Erebus', ['Category:Volcanoes of Antarctica'])))
 t('an unknown medium is never in scope', !inScope('music', page('Anything', ['Category:Theorems'])))
 t('a page with nothing to match is out of scope', !inScope('theorem', page('', [], '')))
+
+group('scope — a member of the medium, not the article about the medium')
+// The bug this group exists to defend against, observed in production 2026-10-03.
+// A Life-only game of Tag answered a common grackle with the Wikipedia article
+// *Species*. Nothing was broken: the page is real, and it passes a pattern built
+// out of the words "species", "taxonomy" and "organism" more easily than any actual
+// creature does. The pattern cannot refuse it, because the pattern is made of what
+// it is about. So the medium's own vocabulary is refused by title, and the scopes
+// whose members are concrete things have to see a member in the opening sentence.
+const wiki = (title, extract, cats = ['Category:Biology']) => page(title, cats, extract)
+
+t('the article "Species" is not an organism',
+  !inScope('organism', wiki('Species', 'A species is the basic unit of classification and a taxonomic rank of an organism, as well as a unit of biodiversity.')))
+t('nor is "Organism"',
+  !inScope('organism', wiki('Organism', 'An organism is any living thing that functions as an individual.')))
+t('nor is the medium\'s own grammar',
+  !inScope('organism', wiki('Taxonomy (biology)', 'Taxonomy is the practice of naming and classifying groups of organisms.')) &&
+  !inScope('organism', wiki('Binomial nomenclature', 'Binomial nomenclature is a formal system of naming species of living things.')))
+// These are the near misses — essays that name a creature within a few words of a
+// copula. "is the ability of an animal" and "is a bird" are not the same sentence,
+// and the difference is the word "of".
+t('an essay that mentions creatures is not a creature',
+  !inScope('organism', wiki('Crypsis', 'In ecology, crypsis is the ability of an animal or a plant to avoid observation or detection by other animals.')) &&
+  !inScope('organism', wiki('Camouflage', 'Camouflage is the use of any combination of materials, coloration, or illumination for concealment, either by making animals hard to see.')) &&
+  !inScope('organism', wiki('Convergent evolution', 'Convergent evolution is the independent evolution of similar features in species of different periods or epochs in time.')))
+t('a grackle is',
+  inScope('organism', wiki('Common grackle', 'The common grackle (Quiscalus quiscula) is an icterid bird found in large numbers through much of North America.')))
+t('so is a creature named only by its title',
+  inScope('organism', wiki('Anglerfish', 'The anglerfish are ray-finned fish in the order Lophiiformes.')))
+t('so is one whose opening names a collective of creatures',
+  inScope('organism', wiki('Sea angel', 'Sea angels (clade Gymnosomata) are a large group of small free-swimming sea slugs, classified into six separate families.')))
+t('so is one framed taxonomically rather than by common name',
+  inScope('organism', wiki('Linophryne arborifera', 'Linophryne arborifera is a species of deep-sea anglerfish in the family Linophrynidae.')))
+// Same shape in the place scope: the encyclopedia has an article called *Geography*.
+t('the article "Geography" is not a place',
+  !inScope('place', page('Geography', ['Category:Geography'], 'Geography is the study of the lands, features, inhabitants and phenomena of Earth.')))
+t('a volcano is', inScope('place', page('Mount Erebus', ['Category:Volcanoes of Antarctica'])))
+t('an index is never an offering in any medium',
+  !inScope('organism', wiki('List of birds', 'This article lists living orders and families of birds.')) &&
+  !inScope('theorem', page('List of theorems', ['Category:Mathematics theorems'])) &&
+  !inScope('place', page('Mount Erebus (disambiguation)', ['Category:Volcanoes'])))
+// A theorem and a phenomenon *are* abstractions, so there is no member test to run
+// on them — only the vocabulary refusal. This asserts the asymmetry is deliberate.
+t('an abstraction is still a perfectly good theorem',
+  inScope('theorem', page('Symmetry', ['Category:Mathematical concepts'])))
+t('and a perfectly good phenomenon',
+  inScope('phenomenon', page('Quantum entanglement', ['Category:Quantum mechanics'], 'Quantum entanglement is the phenomenon of a group of particles sharing spatial proximity.')))
+t('but the name of the field is not',
+  !inScope('phenomenon', page('Physics', ['Category:Physics'], 'Physics is the scientific study of matter.')) &&
+  !inScope('theorem', page('Mathematics', ['Category:Mathematics'], 'Mathematics is a field of study.')))
+
+group('scope — a person is not a theorem, and a film is not a phenomenon')
+// The larger half of the same bug, and it hits the other three scopes harder than
+// the organism one. Every scope's pattern is tested against the whole extract and
+// all the categories, and Wikipedia is an encyclopedia — so a mathematician's
+// biography is in the theorem scope because it says "mathematician", and a
+// businessman's is in the place scope because it says where he is from. Probed
+// against the live API 2026-10-03: "something about symmetry giving you
+// conservation" returned Emmy Noether, "light produced by a living thing" returned
+// The Thing (1982 film), and "a place whose silence is its subject" returned Jeff
+// Bezos. One gate in front of all four scopes, because all three are the same shape.
+const person = (title, opening, cats = []) => page(title, cats, opening)
+
+t('a mathematician is not a theorem',
+  !inScope('theorem', person('Emmy Noether', 'Amalie Emmy Noether (23 March 1882 – 14 April 1935) was a German mathematician who made many important contributions to abstract algebra.')))
+t('nor is one whose dates are a birth alone',
+  !inScope('theorem', person('Andrew Wiles', 'Sir Andrew John Wiles (born 11 April 1953) is an English mathematician who proved Fermat\'s Last Theorem.')))
+t('a naturalist is not an organism',
+  !inScope('organism', person('Charles Darwin', 'Charles Robert Darwin (12 February 1809 – 19 April 1882) was an English naturalist and biologist known for his theory of evolution by natural selection.')))
+t('a businessman is not a place',
+  !inScope('place', person('Jeff Bezos', 'Jeffrey Preston Bezos (born January 12, 1964) is an American businessman and the founder of Amazon, in Seattle.')))
+t('the person gate does not need the categories to arrive', (() => {
+  // Under the API's continuation limits a page sometimes comes back with no
+  // categories at all, which is how two biographies reached a live game.
+  const p = person('Ted Kaczynski', 'Theodore John Kaczynski (May 22, 1942 – June 10, 2023) was an American mathematician and domestic terrorist.', [])
+  return !inScope('theorem', p) && !inScope('phenomenon', p)
+})())
+t('a birth category alone is also enough',
+  !inScope('organism', person('Someone', 'Someone studies birds and their species.', ['Category:1964 births', 'Category:Ornithologists'])))
+
+t('a film is not a phenomenon',
+  !inScope('phenomenon', page('The Thing (1982 film)', ['Category:1982 films'], 'The Thing is a 1982 American science fiction horror film directed by John Carpenter.')))
+t('a novel is not a place',
+  !inScope('place', page('Watership Down', ['Category:1972 British novels'], 'Watership Down is an adventure novel by English author Richard Adams, set in the hills of Hampshire.')))
+t('a fictional planet is not a place',
+  !inScope('place', page('Geonosis', [], 'Geonosis is a desert planet in the fictional universe of Star Wars, located in the Outer Rim.')))
+t('a people is not a place',
+  !inScope('place', page('Goths', ['Category:Early Germanic peoples'], 'The Goths were a Germanic people who played a major role in the fall of the Western Roman Empire.')))
+t('nor is one that says so only in its title',
+  !inScope('place', page('Sea Peoples', [], 'The Sea Peoples were a purported seafaring confederation that attacked ancient Egypt.')))
+
+// A field is the drawer, not the thing in it — and the scopes overlap, so each
+// scope's own vocabulary list could not have covered the others'.
+t('the name of a field is refused by every scope',
+  !inScope('theorem', page('Scientific method', ['Category:Scientific method'], 'The scientific method is an empirical method for acquiring knowledge.')) &&
+  !inScope('phenomenon', page('Photography', ['Category:Optics'], 'Photography is the art and practice of creating images by recording light.')) &&
+  !inScope('organism', page('Zoology', ['Category:Biology'], 'Zoology is the scientific study of animals.')) &&
+  !inScope('place', page('Cartography', ['Category:Geography'], 'Cartography is the study and practice of making maps.')))
+t('an "Introduction to X" is an article about a topic, not an offering',
+  !inScope('theorem', page('Introduction to gauge theory', ['Category:Mathematical physics'], 'A gauge theory is a type of field theory in physics.')))
+
+// The things that must survive all of that.
+t('a theorem is still a theorem',
+  inScope('theorem', page('Hairy ball theorem', ['Category:Theorems in topology'], 'The hairy ball theorem of algebraic topology states that there is no nonvanishing continuous tangent vector field on even-dimensional n-spheres.')))
+t('an effect is still a phenomenon',
+  inScope('phenomenon', page('Doppler effect', ['Category:Wave mechanics'], 'The Doppler effect is the change in the frequency of a wave in relation to an observer who is moving relative to the source.')))
+t('a creature named after a person is still a creature',
+  inScope('organism', page('Darwin\'s finches', ['Category:Birds of the Galápagos Islands'], 'Darwin\'s finches are a group of about 18 species of passerine birds.')))
+t('a place named after a person is still a place',
+  inScope('place', page('Mount Erebus', ['Category:Volcanoes of Antarctica'], 'Mount Erebus is the second-highest volcano in Antarctica.')))
+
+group('firstSentence — the clause where a page says what it is')
+t('a plain sentence is taken whole',
+  firstSentence('An organism is any living thing. It functions as an individual.')
+    === 'An organism is any living thing.')
+t('an abbreviation does not end a sentence',
+  firstSentence('A species (pl. species) is the basic unit of classification. It can be defined otherwise.')
+    === 'A species (pl. species) is the basic unit of classification.')
+t('a single sentence with no follower is still returned',
+  firstSentence('The anglerfish are ray-finned fish in the order Lophiiformes.')
+    === 'The anglerfish are ray-finned fish in the order Lophiiformes.')
+t('whitespace is collapsed first', firstSentence('one\n\n  two. Three.') === 'one two.')
+t('nothing in yields nothing out', firstSentence('') === '' && firstSentence(null) === '')
+// The point of taking one sentence: an essay reaches its creatures later, and a
+// member test over the whole intro would admit it.
+t('a later sentence is not part of the opening',
+  !firstSentence('Camouflage is the use of materials for concealment. Many animals are birds.').includes('bird'))
 
 group('trimExtract — long enough to carry a statement, short enough to be eight of them')
 t('a short extract is untouched', trimExtract('Short and done.') === 'Short and done.')
