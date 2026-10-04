@@ -72,7 +72,7 @@ const GENERIC_TITLE = /^(?:list|lists|outline|index|glossary|timeline|history|co
  * other's subject. A field is never an offering in any of these media — it is the
  * drawer, not the thing in it.
  */
-const FIELD_TITLE = /^(?:science|sciences|natural science|scientific method|scientific law|mathematics|physics|chemistry|biology|astronomy|geology|geography|ecology|zoology|botany|medicine|technology|engineering|computing|photography|art|the arts|music|literature|philosophy|logic|linguistics|language|psychology|sociology|anthropology|archaeology|economics|research|education|knowledge|nature|culture|society|history|statistics|measurement|observation|experiment|theory|methodology)$/i
+const FIELD_TITLE = /^(?:science|sciences|natural science|scientific method|scientific law|mathematics|physics|chemistry|biology|astronomy|geology|geography|cartography|ecology|zoology|botany|medicine|technology|engineering|computing|photography|art|the arts|music|literature|philosophy|logic|linguistics|language|psychology|sociology|anthropology|archaeology|economics|research|education|knowledge|nature|culture|society|history|statistics|measurement|observation|experiment|theory|methodology)$/i
 
 /**
  * Pages that are not an offering in *any* of these media, however well they match
