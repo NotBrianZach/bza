@@ -231,7 +231,20 @@ export type MoveBy = 'player' | 'partner'
  * neutral.
  */
 export interface SessionTuning {
-  /** 0 never · 1 rarely · 2 freely · 3 mostly. Absent means freely. */
+  /**
+   * How much of the partner's answering each medium gets, 0–100. Absent means
+   * the default, and the proportions are enforced rather than requested — see
+   * `owedMedia` in lib/correlate/tuning.ts.
+   */
+  shares?: Partial<Record<MediumId, number>>
+  /**
+   * The retired four-stop scale (0 never · 1 rarely · 2 freely · 3 mostly).
+   *
+   * Still present on every row written before 2026-10-04 and still read, but only
+   * when `shares` is absent: a stored `2` means "freely" on this scale and
+   * "all but muted" on the new one, so the key is what decides which scale a
+   * value is on. Nothing writes it any more.
+   */
   weights?: Partial<Record<MediumId, number>>
   /** 0–4 per axis. Absent means the axis is resting and says nothing. */
   axes?: Record<string, number>

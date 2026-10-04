@@ -80,6 +80,8 @@ export function buildSystemPrompt(
   relations: RelationId[],
   tuning: Tuning = DEFAULT_TUNING,
   selfReply = false,
+  /** Media still within their share this turn. Omit for no proportions filter. */
+  answerIn?: MediumId[],
 ): string {
   const worldKeys = game.worldKeys.map(k => `  - ${k.key}: ${k.description}`).join('\n')
 
@@ -105,8 +107,15 @@ export function buildSystemPrompt(
   // not the media in play: a muted medium stays playable by the player and stays
   // readable here, it simply cannot be answered in. Never empty — see
   // weightedReplyMedia.
+  //
+  // `answerIn` is passed when the caller has already narrowed this further — the
+  // proportions filter, which is what makes a share binding rather than advisory.
+  // It arrives as an argument rather than being computed here because it depends
+  // on the branch's reply history, which a prompt builder has no business knowing.
   const muted = mutedMedia(tuning, media)
-  const answerable = muted.length < media.length ? media.filter(m => !muted.includes(m)) : media
+  const answerable = answerIn && answerIn.length > 0
+    ? answerIn
+    : muted.length < media.length ? media.filter(m => !muted.includes(m)) : media
 
   const tuningBlock = describeTuning(tuning, media)
 
@@ -301,7 +310,7 @@ export function buildUserPrompt(opts: {
   prediction?: string | null
   turnIndex: number
   tuning?: Tuning
-  /** The medium the weights say is owed a turn, if any. */
+  /** The medium furthest behind its share, if any is behind by a whole reply. */
   due?: MediumId | null
 }): string {
   const {
@@ -430,16 +439,17 @@ export function buildUserPrompt(opts: {
 
   // Proportion is the one instruction a single completion cannot follow: every
   // reply looks locally right, so "mostly music with the occasional stretch"
-  // becomes all music and nothing notices. The arithmetic is done from the log and
-  // the result is stated — advisory, because a ratio is a worse reason to answer in
-  // a medium than the connection is.
+  // becomes all stretches and nothing notices. That is why the enum is filtered
+  // rather than this paragraph being trusted — and why this paragraph no longer
+  // ends "do not force it", which is the sentence the model took us up on.
   if (due) {
     const label = getMedium(due)?.plural ?? due
     parts.push(
-      `THE BALANCE SO FAR\nYour recent replies on this branch are short of what the player's ` +
-      `weighting asks for in ${label}. If a connection in ${label} is available and genuinely ` +
-      `answers this move, that is the one to play. Do not force it — a weaker ${label} answer ` +
-      `is worse than a strong one anywhere else, and the shortfall will keep.`,
+      `THE BALANCE SO FAR\nThis branch is at least one whole reply short of what the player ` +
+      `asked for in ${label}, which is why ${label} is in the list you may answer in. The ` +
+      `media that are already over their share have been removed from that list, so there is ` +
+      `no need to ration yourself — answer with the best connection available from what you ` +
+      `have been given.`,
     )
   }
 
@@ -839,10 +849,17 @@ export function buildRetryPrompt(opts: {
   }
 
   if (composed.length > 0) {
+    // This bullet used to end "That is the safest way to answer this turn", and it
+    // was measurably too persuasive: four of five retries in real games landed in a
+    // composed medium, which is how a game set to mostly music filled up with
+    // stretches. A composed reply cannot miss, which is worth saying, but "cannot
+    // miss" is not "should be chosen" — the first medium listed is the one the
+    // player asked for most, and that is the one to try first.
     bullets.push(
       `- For a composed medium (${composed.join(', ')}) you author it outright, so it cannot ` +
-      `fail to be found: give a title and one to five concrete ordered steps. That is the ` +
-      `safest way to answer this turn.`,
+      `fail to be found: give a title and one to five concrete ordered steps. Use one when ` +
+      `it genuinely answers the move — not as an escape from searching. ` +
+      `${plural(media[0])} is what the player has asked for most of; try that first.`,
     )
   }
 

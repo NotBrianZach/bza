@@ -12,11 +12,26 @@
  *
  * Two properties are load-bearing:
  *
- * 1. **A weight of zero is arithmetic, not a hint.** A muted medium is removed
- *    from the reply media before the model is asked, and a reply that lands in one
- *    anyway is rejected with its own reason. Everything between 1 and 3 is
- *    guidance, because proportion over a run of turns is not something a single
- *    completion can be made to obey.
+ * 1. **A share is arithmetic, not a hint.** Every share is enforced by restricting
+ *    the media the model may answer in, before it is asked. This replaced a
+ *    four-stop weight (never/rarely/freely/mostly) where only *zero* was
+ *    arithmetic and the rest was prompt text, and the replacement was not a
+ *    refinement — the old version did not work. Measured on real games, a player
+ *    who set music to "mostly" and movement/stretch to "rarely" got 29% music and
+ *    57% stretch. Two reasons, both now fixed:
+ *
+ *      - **The old share maths drowned the setting.** Expected share was
+ *        `weight / sum(weights)` across every non-muted medium, so music at 3
+ *        against eleven media sitting at the default 2 expected 3/25 — twelve per
+ *        cent. "Mostly" was arithmetically a minority and nothing said so.
+ *      - **Nothing enforced it.** Weights 1–3 reached the model as a sentence,
+ *        plus one advisory nudge whose own wording was "do not force it". A model
+ *        answers each turn locally correctly and never notices a ratio, which is
+ *        the exact failure the nudge was written to prevent and did not.
+ *
+ *    So proportion is now a filter rather than a request: a medium already over
+ *    its share is not in the enum the model chooses from, and comes back only when
+ *    the chain has caught up. See `owedMedia`.
  *
  * 2. **Tuning governs what the partner reaches for, never what makes a connection
  *    hold.** Nostalgia is the one axis where that distinction can be lost: "lean
@@ -25,8 +40,9 @@
  *    so, and a test asserts it says so.
  *
  * Neutral is the empty object. A tuning nobody has touched stores no keys, says
- * nothing to the interpreter, and spends no tokens — so the default costs nothing
- * and "unset" never has to be told apart from "set to the default".
+ * nothing to the interpreter, spends no tokens, and — importantly — restricts
+ * nothing: enforcement is something the player opts into by setting a share, so an
+ * untouched game plays exactly as it did before any of this existed.
  */
 
 import type { MediumId } from './types'
@@ -39,33 +55,51 @@ import {
 } from './scope'
 
 // ---------------------------------------------------------------------------
-// Medium weights
+// Medium shares
 // ---------------------------------------------------------------------------
 
 /**
- * How often the partner should reach for a medium.
+ * How much of the partner's answering a medium should get, 0–100.
  *
- * Four stops, because a continuous slider here would be false precision: nobody
- * can tell 0.55 from 0.6 of a leaning, and the difference between never, rarely,
- * freely and mostly is the whole range anyone wants.
+ * A raw weight, not a percentage: what the player cares about is the *ratio*
+ * between media, and a control that forced the numbers to sum to 100 would mean
+ * moving one slider silently moved all the others. The resulting percentage is
+ * computed by `targetShares` and shown next to each slider — which is the part
+ * the four-stop version could not do, and the reason it went wrong. "Mostly
+ * music" sounds decisive; "music 12%" does not, and the player was only ever
+ * shown the first.
  */
-export type MediumWeight = 0 | 1 | 2 | 3
+export const SHARE_MAX = 100
 
-export const DEFAULT_WEIGHT: MediumWeight = 2
+/** Where every medium sits until the player moves it. */
+export const DEFAULT_SHARE = 50
 
-export const WEIGHT_LABELS: Record<MediumWeight, string> = {
-  0: 'never',
-  1: 'rarely',
-  2: 'freely',
-  3: 'mostly',
-}
+/** Zero is mute, and mute is the one share that is a prohibition. */
+export const MUTED_SHARE = 0
 
-/** Player-facing explanation of each stop, shown under the control. */
-export const WEIGHT_HINTS: Record<MediumWeight, string> = {
-  0: 'Never answers here. Still yours to play.',
-  1: 'An occasional one, when it is clearly the better answer.',
-  2: 'As often as the connection calls for it.',
-  3: 'Where it goes by default.',
+/**
+ * The retired four-stop scale, and what each stop becomes.
+ *
+ * Read only when a stored tuning has no `shares` key — old session rows, old
+ * presets, and the `tuning` snapshot on every turn played before today. The
+ * values are not a guess at intent: they are what each label was *trying* to
+ * mean, now that a share can actually express it. "Rarely" lands at 15 rather
+ * than at 25 because "an occasional one" is not one turn in four.
+ */
+const LEGACY_WEIGHT_SHARES: Record<number, number> = { 0: 0, 1: 15, 2: 50, 3: 100 }
+
+/**
+ * A rough label for a share, for places that want a word rather than a number.
+ *
+ * Derived from the number instead of being the stored value, which is the whole
+ * inversion: the number is the truth and the word is a summary of it. Previously
+ * the word was the truth and the number was hidden.
+ */
+export function shareLabel(share: number): string {
+  if (share <= MUTED_SHARE) return 'never'
+  if (share < 30) return 'rarely'
+  if (share < 70) return 'freely'
+  return 'mostly'
 }
 
 // ---------------------------------------------------------------------------
@@ -201,7 +235,16 @@ export function getAxis(id: string): TuningAxis | null {
  * with.
  */
 export interface Tuning {
-  weights: Partial<Record<MediumId, MediumWeight>>
+  /**
+   * Raw 0–100 weight per medium; absent means `DEFAULT_SHARE`.
+   *
+   * Stored under a new key rather than reusing `weights`, because a stored `2`
+   * is ambiguous between the old scale's "freely" and the new scale's
+   * all-but-muted — and silently reading one as the other would mute a medium
+   * the player had set to its default. `normalizeTuning` upgrades a legacy
+   * `weights` object only when `shares` is absent.
+   */
+  shares: Partial<Record<MediumId, number>>
   axes: Partial<Record<TuningAxisId, number>>
   /**
    * Which region of each medium the partner may reach into — see ./scope.ts.
@@ -233,7 +276,7 @@ export interface Tuning {
 }
 
 export const DEFAULT_TUNING: Tuning = {
-  weights: {}, axes: {}, scopes: {}, continuation: CONTINUATION_OFF,
+  shares: {}, axes: {}, scopes: {}, continuation: CONTINUATION_OFF,
 }
 
 const clampInt = (v: unknown, lo: number, hi: number): number | null => {
@@ -252,11 +295,12 @@ const clampInt = (v: unknown, lo: number, hi: number): number | null => {
  * deployment cannot serve would silently mute nothing.
  */
 export function normalizeTuning(raw: unknown, media: MediumId[]): Tuning {
-  const out: Tuning = { weights: {}, axes: {}, scopes: {}, continuation: CONTINUATION_OFF }
+  const out: Tuning = { shares: {}, axes: {}, scopes: {}, continuation: CONTINUATION_OFF }
   if (!raw || typeof raw !== 'object') return out
 
   const src = raw as {
-    weights?: unknown; axes?: unknown; scopes?: unknown; continuation?: unknown
+    shares?: unknown; weights?: unknown; axes?: unknown; scopes?: unknown
+    continuation?: unknown
   }
 
   out.scopes = normalizeScopes(src.scopes, media)
@@ -267,12 +311,20 @@ export function normalizeTuning(raw: unknown, media: MediumId[]): Tuning {
   const carry = clampInt(src.continuation, 0, MAX_SELF_REPLIES)
   if (carry !== null) out.continuation = carry as ContinuationDepth
 
-  if (src.weights && typeof src.weights === 'object') {
-    for (const [key, value] of Object.entries(src.weights as Record<string, unknown>)) {
+  // `shares` wins outright. A legacy `weights` object is upgraded only in its
+  // absence, so a tuning saved today and one saved last week both come out on the
+  // new scale and neither can be misread as the other.
+  const legacy = src.shares === undefined || src.shares === null
+  const sourceShares = legacy ? src.weights : src.shares
+
+  if (sourceShares && typeof sourceShares === 'object') {
+    for (const [key, value] of Object.entries(sourceShares as Record<string, unknown>)) {
       if (!media.includes(key as MediumId) || !getMedium(key)) continue
-      const w = clampInt(value, 0, 3)
-      if (w === null || w === DEFAULT_WEIGHT) continue
-      out.weights[key as MediumId] = w as MediumWeight
+      const raw = legacy
+        ? LEGACY_WEIGHT_SHARES[clampInt(value, 0, 3) ?? 2]
+        : clampInt(value, 0, SHARE_MAX)
+      if (raw === null || raw === undefined || raw === DEFAULT_SHARE) continue
+      out.shares[key as MediumId] = raw
     }
   }
 
@@ -298,9 +350,20 @@ export function normalizeTuning(raw: unknown, media: MediumId[]): Tuning {
  * byte-for-byte the prompt an untouched game produces. A test asserts it.
  */
 export function isNeutral(tuning: Tuning): boolean {
-  return Object.keys(tuning.weights).length === 0
+  return Object.keys(tuning.shares).length === 0
     && Object.keys(tuning.axes).length === 0
     && isUnscoped(tuning.scopes ?? {})
+}
+
+/**
+ * True when the player has set at least one share.
+ *
+ * The gate on enforcement, and separate from `isNeutral` because an axis is not a
+ * proportion: somebody who only turned up Friction has expressed nothing about
+ * which media they want and must not have their reply media filtered.
+ */
+export function isProportioned(tuning: Tuning): boolean {
+  return Object.keys(tuning.shares).length > 0
 }
 
 /**
@@ -313,13 +376,26 @@ export function isUntouched(tuning: Tuning): boolean {
   return isNeutral(tuning) && (tuning.continuation ?? CONTINUATION_OFF) === CONTINUATION_OFF
 }
 
+/** Every share spelled out, for a control that needs all of them. */
+export function allShares(
+  tuning: Tuning,
+  media: MediumId[],
+): { medium: MediumId; share: number; target: number }[] {
+  const targets = targetShares(tuning, media)
+  return media.map(m => ({
+    medium: m,
+    share: shareOf(tuning, m),
+    target: targets[m] ?? 0,
+  }))
+}
+
 /** How many turns in a row the partner has been asked to take by itself. */
 export function continuationOf(tuning: Tuning): ContinuationDepth {
   return tuning.continuation ?? CONTINUATION_OFF
 }
 
-export function weightOf(tuning: Tuning, medium: MediumId): MediumWeight {
-  return tuning.weights[medium] ?? DEFAULT_WEIGHT
+export function shareOf(tuning: Tuning, medium: MediumId): number {
+  return tuning.shares[medium] ?? DEFAULT_SHARE
 }
 
 export function axisValue(tuning: Tuning, id: TuningAxisId): number {
@@ -328,7 +404,106 @@ export function axisValue(tuning: Tuning, id: TuningAxisId): number {
 
 /** Media the player has muted. They remain playable by the player. */
 export function mutedMedia(tuning: Tuning, media: MediumId[]): MediumId[] {
-  return media.filter(m => weightOf(tuning, m) === 0)
+  return media.filter(m => shareOf(tuning, m) === MUTED_SHARE)
+}
+
+/**
+ * What proportion of the partner's answers each medium should get, summing to 1.
+ *
+ * The number the player is actually asking for, and the number they were never
+ * shown. Muted media are excluded from the denominator rather than contributing
+ * zero, so muting nine media really does hand their share to the three that are
+ * left — under the old maths they stayed in the sum and the survivors' shares
+ * stayed small.
+ */
+export function targetShares(
+  tuning: Tuning,
+  media: MediumId[],
+): Partial<Record<MediumId, number>> {
+  const live = media.filter(m => shareOf(tuning, m) > MUTED_SHARE)
+  const total = live.reduce((sum, m) => sum + shareOf(tuning, m), 0)
+  const out: Partial<Record<MediumId, number>> = {}
+  if (total <= 0) return out
+  for (const m of live) out[m] = shareOf(tuning, m) / total
+  return out
+}
+
+/** One medium's target against what it has actually been given. */
+export interface ShareStanding {
+  medium: MediumId
+  /** Fraction of replies this medium is asking for, 0–1. */
+  target: number
+  /** Replies it has actually had on this branch. */
+  actual: number
+  /** Fraction of replies it has actually had, 0–1. */
+  actualShare: number
+  /** True when taking this turn would still leave it at or under its target. */
+  owed: boolean
+}
+
+/**
+ * Where every medium stands against its share, given the replies so far.
+ *
+ * `owed` is the whole mechanism, and it is deliberately phrased about the turn
+ * about to happen rather than the turns already played: a medium is owed when
+ * `actual < target × (n + 1)` — if it answered now, would it still be within its
+ * share? That makes a 15% medium reachable roughly every seventh turn and a 50%
+ * one reachable every other, with no randomness and no instruction.
+ */
+export function shareStandings(
+  tuning: Tuning,
+  media: MediumId[],
+  replyMediaSoFar: MediumId[],
+): ShareStanding[] {
+  const targets = targetShares(tuning, media)
+  const n = replyMediaSoFar.length
+  return media
+    .filter(m => targets[m] !== undefined)
+    .map(m => {
+      const target = targets[m]!
+      const actual = replyMediaSoFar.filter(x => x === m).length
+      return {
+        medium: m,
+        target,
+        actual,
+        actualShare: n === 0 ? 0 : actual / n,
+        owed: actual < target * (n + 1),
+      }
+    })
+}
+
+/**
+ * The media a reply may land in this turn, enforcing the player's proportions.
+ *
+ * This is the fix. Proportion used to be a sentence in the prompt and an advisory
+ * nudge, and a model cannot follow a ratio across turns it cannot see — every
+ * individual choice is locally defensible and the aggregate drifts. So a medium
+ * that has already had more than its share is simply **not in the enum**, and it
+ * comes back as soon as the chain has caught up.
+ *
+ * Two deliberate escapes, both the same trade this file makes elsewhere:
+ *
+ *  - **Only when the player has set a share.** An untouched game is unrestricted
+ *    and produces the prompt it always did.
+ *  - **Never empty.** A perfectly balanced branch owes nothing to anybody; so does
+ *    a branch whose owed media are all unusable. The guarantee that a legal turn
+ *    carries a real reply outranks a proportion, exactly as it outranks a scope.
+ */
+export function owedMedia(
+  tuning: Tuning,
+  media: MediumId[],
+  replyMediaSoFar: MediumId[],
+): MediumId[] {
+  if (!isProportioned(tuning)) return weightedReplyMedia(tuning, media)
+  const standings = shareStandings(tuning, media, replyMediaSoFar)
+  const owed = standings.filter(s => s.owed).map(s => s.medium)
+  const usable = owed.length > 0 ? owed : standings.map(s => s.medium)
+  return orderByShare(tuning, usable.length > 0 ? usable : media)
+}
+
+/** Heaviest share first. */
+function orderByShare(tuning: Tuning, media: MediumId[]): MediumId[] {
+  return [...media].sort((a, b) => shareOf(tuning, b) - shareOf(tuning, a))
 }
 
 /**
@@ -343,47 +518,36 @@ export function mutedMedia(tuning: Tuning, media: MediumId[]): MediumId[] {
  * rather than the guarantee being broken.
  */
 export function weightedReplyMedia(tuning: Tuning, media: MediumId[]): MediumId[] {
-  const audible = media.filter(m => weightOf(tuning, m) > 0)
-  const usable = audible.length > 0 ? audible : media
-  return [...usable].sort((a, b) => weightOf(tuning, b) - weightOf(tuning, a))
+  const audible = media.filter(m => shareOf(tuning, m) > MUTED_SHARE)
+  return orderByShare(tuning, audible.length > 0 ? audible : media)
 }
 
 /**
- * The medium the weights say is overdue, or null.
+ * The medium furthest behind its share, or null when nothing is owed a whole
+ * reply.
  *
- * Proportion is the one thing a single completion cannot be instructed into: a
- * model told "mostly music, occasionally art" will answer in music every turn and
- * never notice, because each turn looks locally correct. So the balance is computed
- * from the log — expected share from the weights, actual from the replies on this
- * branch — and the interpreter is told which medium is owed a turn.
- *
- * Advisory on purpose. A connection that genuinely wants music is better than a
- * stretch played to satisfy a ratio, and the prompt says so.
+ * Kept as a *statement* for the prompt — "you are three replies short of music" —
+ * now that the enum does the enforcing. It used to be the entire mechanism and it
+ * was not enough: a nudge that ends "do not force it" is a nudge a model declines,
+ * and the measured result was 29% music in a game set to mostly music.
  */
 export function dueMedium(
   tuning: Tuning,
-  recentReplyMedia: MediumId[],
+  replyMediaSoFar: MediumId[],
   media: MediumId[],
 ): MediumId | null {
-  const eligible = media.filter(m => weightOf(tuning, m) > 0)
-  if (eligible.length < 2 || recentReplyMedia.length === 0) return null
+  if (replyMediaSoFar.length === 0) return null
 
-  const total = eligible.reduce((sum, m) => sum + weightOf(tuning, m), 0)
-  if (total === 0) return null
-
-  const n = recentReplyMedia.length
   let worst: MediumId | null = null
   let worstDeficit = 0
 
-  for (const m of eligible) {
-    const expected = (weightOf(tuning, m) / total) * n
-    const actual = recentReplyMedia.filter(x => x === m).length
-    const deficit = expected - actual
+  for (const s of shareStandings(tuning, media, replyMediaSoFar)) {
+    const deficit = s.target * replyMediaSoFar.length - s.actual
     // A whole reply has to be owed before anything is said. Below that the
-    // "shortfall" is rounding, and nudging on rounding would make every turn
-    // carry an instruction.
+    // "shortfall" is rounding, and reporting rounding would make every turn carry
+    // a sentence that means nothing.
     if (deficit >= 1 && deficit > worstDeficit) {
-      worst = m
+      worst = s.medium
       worstDeficit = deficit
     }
   }
@@ -402,8 +566,8 @@ const groupLabel = (ids: MediumId[]) =>
  * The tuning, as a block of prompt. Empty string when neutral.
  *
  * Derived entirely from the registry: every sentence here comes from a `stops`
- * entry or a `WEIGHT_LABELS` key, so changing what a setting means is an edit to
- * the data above rather than to a template.
+ * entry or from `targetShares`, so changing what a setting means is an edit to the
+ * data above rather than to a template.
  *
  * `continuation` is absent from this function by design and must stay absent — see
  * the field comment on `Tuning`. The gate is `isNeutral`, which excludes it, so a
@@ -414,18 +578,25 @@ export function describeTuning(tuning: Tuning, media: MediumId[]): string {
 
   const lines: string[] = []
 
-  const byWeight = (w: MediumWeight) => media.filter(m => weightOf(tuning, m) === w)
-  const mostly = byWeight(3)
-  const rarely = byWeight(1)
-  const never = byWeight(0)
+  // The proportions, as proportions. The old version translated them back into
+  // "by preference" and "only occasionally", which is how a 12% share came to be
+  // described to the model as the medium to answer in by default.
+  const targets = targetShares(tuning, media)
+  const asked = media
+    .filter(m => targets[m] !== undefined)
+    .sort((a, b) => targets[b]! - targets[a]!)
+  const never = mutedMedia(tuning, media)
 
-  if (mostly.length > 0) {
-    lines.push(`- Answer in these by preference: ${groupLabel(mostly)}.`)
-  }
-  if (rarely.length > 0) {
+  if (asked.length > 0) {
     lines.push(
-      `- Reach for these only occasionally, when one is clearly the better answer: ` +
-      `${groupLabel(rarely)}.`,
+      `- The player has asked for these proportions of your answers: ` +
+      `${asked.map(m => `${getMedium(m)?.plural ?? m} ${Math.round(targets[m]! * 100)}%`).join(', ')}.`,
+    )
+    lines.push(
+      `- This is enforced, not requested: the media you may answer in this turn have ` +
+      `already been filtered to the ones still within their share, so the list in your ` +
+      `instructions is the whole of what is open to you. Choose the best connection ` +
+      `available inside it rather than arguing for one that is not.`,
     )
   }
   if (never.length > 0) {
@@ -467,12 +638,18 @@ export function tuningSummary(tuning: Tuning, media: MediumId[]): string {
   if (isUntouched(tuning)) return ''
   const bits: string[] = []
 
-  const mostly = media.filter(m => weightOf(tuning, m) === 3)
-  const rarely = media.filter(m => weightOf(tuning, m) === 1)
-  const never = media.filter(m => weightOf(tuning, m) === 0)
+  // Named by the share they were actually given, biggest first, so the summary
+  // cannot disagree with the percentages in the panel.
+  const targets = targetShares(tuning, media)
+  const asked = media
+    .filter(m => tuning.shares[m] !== undefined && targets[m] !== undefined)
+    .sort((a, b) => targets[b]! - targets[a]!)
+  const never = mutedMedia(tuning, media)
 
-  if (mostly.length > 0) bits.push(`mostly ${groupLabel(mostly).toLowerCase()}`)
-  if (rarely.length > 0) bits.push(`a little ${groupLabel(rarely).toLowerCase()}`)
+  for (const m of asked.slice(0, 3)) {
+    bits.push(`${Math.round(targets[m]! * 100)}% ${(getMedium(m)?.plural ?? m).toLowerCase()}`)
+  }
+  if (asked.length > 3) bits.push(`+${asked.length - 3} more`)
   if (never.length > 0) bits.push(`no ${groupLabel(never).toLowerCase()}`)
 
   for (const axis of AXIS_LIST) {

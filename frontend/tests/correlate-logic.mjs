@@ -101,8 +101,10 @@ const {
 } = M.graph
 const {
   TUNING_AXES, AXIS_LIST, ALL_AXIS_IDS, AXIS_STOPS, DEFAULT_WEIGHT, WEIGHT_LABELS, WEIGHT_HINTS,
-  DEFAULT_TUNING, normalizeTuning, isNeutral, isUntouched, weightOf, axisValue, mutedMedia,
+  DEFAULT_TUNING, normalizeTuning, isNeutral, isUntouched, isProportioned, axisValue, mutedMedia,
   weightedReplyMedia, dueMedium, describeTuning, tuningSummary, getAxis, continuationOf,
+  SHARE_MAX, DEFAULT_SHARE, MUTED_SHARE, shareOf, shareLabel, targetShares, shareStandings,
+  owedMedia, allShares,
 } = M.tuning
 const {
   MAX_SELF_REPLIES, CONTINUATION_OFF, CONTINUATION_LABELS, CONTINUATION_HINTS,
@@ -750,8 +752,8 @@ t('every other stop says something', AXIS_LIST.every(a =>
   a.stops.every((s, i) => (i === a.neutral) === (s === ''))))
 t('every axis names both ends and what it does',
   AXIS_LIST.every(a => a.low && a.high && a.does))
-t('every weight has a label and a hint',
-  [0, 1, 2, 3].every(w => WEIGHT_LABELS[w]?.length > 0 && WEIGHT_HINTS[w]?.length > 0))
+t('every share has a word for it',
+  [0, 15, DEFAULT_SHARE, SHARE_MAX].every(w => shareLabel(w).length > 0))
 t('an unknown axis yields null', getAxis('vibes') === null)
 // Same rule the games are held to: "the dial" is a retired concept and new
 // player-visible copy must not quietly bring it back.
@@ -764,29 +766,49 @@ const TU = (raw, media = ALL_MEDIA) => normalizeTuning(raw, media)
 t('an empty tuning is neutral', isNeutral(TU({})))
 t('the default tuning is neutral', isNeutral(DEFAULT_TUNING))
 t('junk is neutral', isNeutral(TU(null)) && isNeutral(TU('nope')) && isNeutral(TU(7)))
-t('a weight is kept', TU({ weights: { music: 3 } }).weights.music === 3)
-t('a weight equal to the default is dropped',
-  TU({ weights: { music: DEFAULT_WEIGHT } }).weights.music === undefined)
-t('a weight is clamped', TU({ weights: { music: 9, artwork: -4 } }).weights.music === 3 &&
-  TU({ weights: { artwork: -4 } }).weights.artwork === 0)
-t('a fractional weight is rounded', TU({ weights: { music: 2.6 } }).weights.music === 3)
-t('a numeric string weight is tolerated', TU({ weights: { music: '0' } }).weights.music === 0)
+t('a share is kept', TU({ shares: { music: 90 } }).shares.music === 90)
+t('a share equal to the default is dropped',
+  TU({ shares: { music: DEFAULT_SHARE } }).shares.music === undefined)
+t('a share is clamped to 0..100', TU({ shares: { music: 900, artwork: -4 } }).shares.music === SHARE_MAX &&
+  TU({ shares: { artwork: -4 } }).shares.artwork === MUTED_SHARE)
+t('a fractional share is rounded', TU({ shares: { music: 90.6 } }).shares.music === 91)
+t('a numeric string share is tolerated', TU({ shares: { music: '0' } }).shares.music === 0)
 t('a medium the session does not play is dropped',
-  TU({ weights: { artwork: 0 } }, ['music']).weights.artwork === undefined)
+  TU({ shares: { artwork: 0 } }, ['music']).shares.artwork === undefined)
 t('a medium that does not exist is dropped',
-  Object.keys(TU({ weights: { interpretive_mime: 0 } }).weights).length === 0)
+  Object.keys(TU({ shares: { interpretive_mime: 0 } }).shares).length === 0)
+// Every session row, every preset and every turn's tuning snapshot written before
+// today holds the retired 0-3 scale. Read as shares they would mean "almost never".
+t('a legacy 0-3 weight is upgraded', (() => {
+  const u = TU({ weights: { music: 3, stretch: 1, scene: 0 } })
+  return u.shares.music === 100 && u.shares.stretch === 15 && u.shares.scene === 0
+})())
+t('a legacy default weight is dropped like any other default',
+  TU({ weights: { music: 2 } }).shares.music === undefined)
+// A stored 2 is "freely" on the old scale and all-but-muted on the new one. The
+// key decides which, and shares always wins, so neither can be read as the other.
+t('shares win over a legacy weights object', (() => {
+  const u = TU({ shares: { music: 2 }, weights: { music: 3 } })
+  return u.shares.music === 2
+})())
 t('an axis is kept', TU({ axes: { nostalgia: 4 } }).axes.nostalgia === 4)
 t('an axis at its neutral is dropped',
   TU({ axes: { nostalgia: TUNING_AXES.nostalgia.neutral } }).axes.nostalgia === undefined)
 t('an axis is clamped to its stops', TU({ axes: { nostalgia: 11 } }).axes.nostalgia === AXIS_STOPS - 1)
 t('an invented axis is dropped', Object.keys(TU({ axes: { horniness: 4 } }).axes).length === 0)
-t('weightOf falls back to the default', weightOf(TU({}), 'music') === DEFAULT_WEIGHT)
+t('shareOf falls back to the default', shareOf(TU({}), 'music') === DEFAULT_SHARE)
 t('axisValue falls back to the neutral', axisValue(TU({}), 'nostalgia') === TUNING_AXES.nostalgia.neutral)
 
-group('weights are arithmetic, not a hint')
-const MOSTLY_MUSIC = TU({ weights: { music: 3, stretch: 1, artwork: 1, scene: 0, movement: 0, exercise: 0, gesture: 0, passage: 0 } })
-t('a zero weight mutes a medium', mutedMedia(MOSTLY_MUSIC, ALL_MEDIA).includes('scene'))
-t('a non-zero weight does not', !mutedMedia(MOSTLY_MUSIC, ALL_MEDIA).includes('stretch'))
+group('shares are arithmetic, not a hint')
+// The weighting a real game was set to when it misbehaved: music turned up,
+// the composed media left low, everything else off. Measured outcome before the
+// fix: 29% music, 57% stretch.
+const MOSTLY_MUSIC = TU({ shares: {
+  music: 100, stretch: 15, exercise: 15, movement: 15,
+  artwork: 0, scene: 0, gesture: 0, passage: 0, theorem: 0, phenomenon: 0, organism: 0, place: 0,
+} })
+t('a zero share mutes a medium', mutedMedia(MOSTLY_MUSIC, ALL_MEDIA).includes('scene'))
+t('a non-zero share does not', !mutedMedia(MOSTLY_MUSIC, ALL_MEDIA).includes('stretch'))
 t('nothing is muted by default', mutedMedia(TU({}), ALL_MEDIA).length === 0)
 t('a muted medium cannot be answered in',
   !weightedReplyMedia(MOSTLY_MUSIC, ALL_MEDIA).includes('scene'))
@@ -797,7 +819,170 @@ t('weighting does not invent media',
 // A player who mutes everything has expressed a contradiction with the guarantee
 // that every legal turn carries a real reply. The mute loses, not the guarantee.
 t('muting everything is ignored rather than breaking the reply guarantee',
-  weightedReplyMedia(TU({ weights: Object.fromEntries(ALL_MEDIA.map(m => [m, 0])) }), ALL_MEDIA).length === ALL_MEDIA.length)
+  weightedReplyMedia(TU({ shares: Object.fromEntries(ALL_MEDIA.map(m => [m, 0])) }), ALL_MEDIA).length === ALL_MEDIA.length)
+
+group('targetShares — the number the player was never shown')
+// The headline defect. Expected share used to be weight/sum across every
+// non-muted medium, so one medium turned up against eleven defaults was a
+// minority while calling itself "mostly".
+t('a lone raised medium among defaults is honestly reported as small', (() => {
+  const pct = targetShares(TU({ shares: { music: SHARE_MAX } }), ALL_MEDIA).music
+  return pct > 0.14 && pct < 0.17
+})(), JSON.stringify(targetShares(TU({ shares: { music: SHARE_MAX } }), ALL_MEDIA).music))
+// ...and muting the rest is what actually buys a majority, which the percentage
+// now says out loud.
+t('muting the others hands their share over', (() => {
+  const pct = targetShares(MOSTLY_MUSIC, ALL_MEDIA).music
+  return pct > 0.68 && pct < 0.70
+})(), JSON.stringify(targetShares(MOSTLY_MUSIC, ALL_MEDIA).music))
+t('the shares sum to one', (() => {
+  const sum = Object.values(targetShares(MOSTLY_MUSIC, ALL_MEDIA)).reduce((a, b) => a + b, 0)
+  return Math.abs(sum - 1) < 1e-9
+})())
+t('a muted medium is not in the denominator',
+  targetShares(MOSTLY_MUSIC, ALL_MEDIA).scene === undefined)
+t('an untouched tuning is an equal split', (() => {
+  const ts = targetShares(TU({}), ALL_MEDIA)
+  return Object.values(ts).every(v => Math.abs(v - 1 / ALL_MEDIA.length) < 1e-9)
+})())
+t('everything muted yields no targets rather than NaN',
+  Object.keys(targetShares(TU({ shares: Object.fromEntries(ALL_MEDIA.map(m => [m, 0])) }), ALL_MEDIA)).length === 0)
+
+group('owedMedia — the proportion is a filter, not a request')
+const PAIR = ['music', 'stretch']
+const HALF = TU({ shares: { music: 85, stretch: 15 } }, PAIR)
+t('an empty branch owes everybody', owedMedia(HALF, PAIR, []).length === 2)
+// The actual bug, as a test: a stretch has had its share, so the next reply
+// cannot be one. Under the old code this was a sentence ending "do not force it".
+t('a medium over its share is removed from what may be answered in', (() => {
+  const owed = owedMedia(HALF, PAIR, ['stretch'])
+  return owed.includes('music') && !owed.includes('stretch')
+})(), JSON.stringify(owedMedia(HALF, PAIR, ['stretch'])))
+t('and it comes back once the chain has caught up', (() => {
+  // 15% of seven turns is just over one, so a stretch is owed again by then.
+  const owed = owedMedia(HALF, PAIR, ['stretch', 'music', 'music', 'music', 'music', 'music'])
+  return owed.includes('stretch')
+})())
+t('the heavy medium stays available throughout', (() => {
+  const history = []
+  for (let i = 0; i < 12; i++) {
+    const owed = owedMedia(HALF, PAIR, history)
+    if (!owed.includes('music') && owed.includes('stretch')) history.push('stretch')
+    else history.push(owed[0])
+  }
+  const music = history.filter(m => m === 'music').length
+  // 85/100 asked for; a greedy walk should land near it and must not invert.
+  return music >= 9 && music <= 11
+})(), (() => {
+  const history = []
+  for (let i = 0; i < 12; i++) {
+    const owed = owedMedia(HALF, PAIR, history)
+    if (!owed.includes('music') && owed.includes('stretch')) history.push('stretch')
+    else history.push(owed[0])
+  }
+  return history.join(',')
+})())
+// The real-game weighting, walked greedily: the thing the user actually asked for.
+t('mostly music really does come out mostly music', (() => {
+  const live = ['music', 'stretch', 'exercise', 'movement']
+  const history = []
+  for (let i = 0; i < 20; i++) history.push(owedMedia(MOSTLY_MUSIC, live, history)[0])
+  const music = history.filter(m => m === 'music').length
+  return music / 20 > 0.6
+})(), (() => {
+  const live = ['music', 'stretch', 'exercise', 'movement']
+  const history = []
+  for (let i = 0; i < 20; i++) history.push(owedMedia(MOSTLY_MUSIC, live, history)[0])
+  return history.filter(m => m === 'music').length + '/20 music'
+})())
+t('a muted medium is never owed',
+  !owedMedia(MOSTLY_MUSIC, ALL_MEDIA, []).includes('scene'))
+// Enforcement is opt-in. An untouched game must play exactly as it did before any
+// of this existed, which also keeps the identical-prompt guarantee below true.
+t('an untouched tuning restricts nothing',
+  owedMedia(TU({}), ALL_MEDIA, Array(9).fill('stretch')).length === ALL_MEDIA.length)
+t('an axis alone is not a proportion', (() => {
+  const axisOnly = TU({ axes: { friction: 4 } })
+  return !isProportioned(axisOnly) &&
+    owedMedia(axisOnly, ALL_MEDIA, Array(9).fill('stretch')).length === ALL_MEDIA.length
+})())
+// A perfectly balanced branch owes nobody. The guarantee that a legal turn
+// carries a real reply outranks a proportion, exactly as it outranks a scope.
+t('never empty, even when nothing is owed', (() => {
+  const even = TU({ shares: { music: 50, stretch: 50 } }, PAIR)
+  return owedMedia(even, PAIR, ['music', 'stretch']).length > 0
+})())
+t('ordering is heaviest share first',
+  owedMedia(MOSTLY_MUSIC, ['stretch', 'music'], [])[0] === 'music')
+
+// The strongest form of the claim, and the one that matters: the proportion has
+// to hold against a model that is *actively* biased the wrong way. It was —
+// composed media cannot miss and the retry prompt called them the safest answer,
+// so the interpreter reached for a stretch whenever a search looked like work.
+// Here the simulated model always picks the LEAST-weighted medium it is allowed,
+// which is the worst case, and the ratio still comes out because exclusion is
+// absolute rather than persuasive.
+const walk = (tuning, live, turns, pick) => {
+  const history = []
+  for (let i = 0; i < turns; i++) {
+    const owed = owedMedia(tuning, live, history)
+    history.push(pick(owed))
+  }
+  return history
+}
+const worst = owed => owed[owed.length - 1]
+const LIVE4 = ['music', 'stretch', 'exercise', 'movement']
+
+group('the reported bug — mostly music must not come out mostly stretches')
+t('an adversarial model still cannot exceed its share in stretches', (() => {
+  const h = walk(MOSTLY_MUSIC, LIVE4, 24, worst)
+  const composed = h.filter(m => m !== 'music').length
+  return composed / h.length < 0.4
+})(), (() => {
+  const h = walk(MOSTLY_MUSIC, LIVE4, 24, worst)
+  return `${h.filter(m => m !== 'music').length}/24 not music`
+})())
+t('and music gets most of the turns even so', (() => {
+  const h = walk(MOSTLY_MUSIC, LIVE4, 24, worst)
+  return h.filter(m => m === 'music').length / h.length > 0.6
+})(), (() => {
+  const h = walk(MOSTLY_MUSIC, LIVE4, 24, worst)
+  return `${h.filter(m => m === 'music').length}/24 music`
+})())
+// The measured failure was 57% stretch against a 15 share. Under the old code the
+// filter did not exist, so this is the assertion that would have caught it.
+t('no single low-share medium runs away with the chain', (() => {
+  const h = walk(MOSTLY_MUSIC, LIVE4, 24, worst)
+  return LIVE4.filter(m => m !== 'music')
+    .every(m => h.filter(x => x === m).length / h.length < 0.25)
+})())
+// Every medium the player left open must still appear — a filter that silenced
+// the small shares entirely would be a different bug with the same shape.
+t('the small shares are not starved to nothing', (() => {
+  const h = walk(MOSTLY_MUSIC, LIVE4, 24, worst)
+  return LIVE4.every(m => h.includes(m))
+})())
+t('a greedy model lands on the ratio from the other side', (() => {
+  const h = walk(MOSTLY_MUSIC, LIVE4, 24, owed => owed[0])
+  const music = h.filter(m => m === 'music').length / h.length
+  return music > 0.6 && music < 0.85
+})(), (() => {
+  const h = walk(MOSTLY_MUSIC, LIVE4, 24, owed => owed[0])
+  return `${h.filter(m => m === 'music').length}/24 music`
+})())
+
+group('shareStandings — what the panel and the prompt both read')
+t('actual and target are both reported', (() => {
+  const st = shareStandings(HALF, PAIR, ['music', 'stretch'])
+  const m = st.find(x => x.medium === 'music')
+  return m.actual === 1 && Math.abs(m.target - 0.85) < 1e-9 && Math.abs(m.actualShare - 0.5) < 1e-9
+})())
+t('an empty history reports a zero actual share',
+  shareStandings(HALF, PAIR, []).every(s => s.actualShare === 0))
+t('allShares covers every medium in play',
+  allShares(TU({}), ALL_MEDIA).length === ALL_MEDIA.length)
+
+group('a mute is refused, and refused distinguishably')
 t('a muted medium is refused even when the model names it exactly', (() => {
   const r = ni({ reading: 'r', reply: { medium: 'artwork', query: 'Someone — Something', framing: 'f' } },
     ALL_MEDIA, ALL_RELATIONS, { muted: ['artwork'] })
@@ -824,11 +1009,11 @@ t('every rejection reason still has readable copy', (() => {
   return cases.every(c => typeof describeRejection(c) === 'string' && describeRejection(c).length > 0)
 })())
 
-group('dueMedium — proportion is computed, not instructed')
-// A model told "mostly music, occasionally art" answers in music every turn and
-// never notices, because each turn is locally correct. So the shortfall is
-// arithmetic over the log.
-const EVEN = TU({ weights: { music: 3, artwork: 1 } }, ['music', 'artwork'])
+group('dueMedium — still computed, now only as a statement')
+// It used to be the entire enforcement mechanism and it was not enough: a nudge
+// that ends "do not force it" is one a model declines. It survives as the sentence
+// that tells the interpreter WHY a medium is in its (already filtered) enum.
+const EVEN = TU({ shares: { music: 100, artwork: 33 } }, ['music', 'artwork'])
 t('nothing is due with no history', dueMedium(EVEN, [], ['music', 'artwork']) === null)
 t('art comes due after a run of music',
   dueMedium(EVEN, ['music', 'music', 'music', 'music', 'music', 'music'], ['music', 'artwork']) === 'artwork')
@@ -837,15 +1022,26 @@ t('nothing is due when the balance holds',
 t('a rounding-sized shortfall says nothing',
   dueMedium(EVEN, ['music', 'music'], ['music', 'artwork']) === null)
 t('a muted medium never comes due',
-  dueMedium(TU({ weights: { artwork: 0 } }), Array(8).fill('music'), ['music', 'artwork']) === null)
+  dueMedium(TU({ shares: { artwork: 0 } }), Array(8).fill('music'), ['music', 'artwork']) === null)
 t('one medium in play is never short of itself',
   dueMedium(EVEN, Array(8).fill('music'), ['music']) === null)
+
+group('shareLabel — the word is derived from the number, not the other way round')
+t('zero is never', shareLabel(0) === 'never')
+t('low is rarely', shareLabel(15) === 'rarely')
+t('the default is freely', shareLabel(DEFAULT_SHARE) === 'freely')
+t('full is mostly', shareLabel(SHARE_MAX) === 'mostly')
 
 group('describeTuning — every sentence comes from the registry')
 t('a neutral tuning says nothing at all', describeTuning(TU({}), ALL_MEDIA) === '')
 const described = describeTuning(MOSTLY_MUSIC, ALL_MEDIA)
 t('the preferred medium is named', described.includes('Music'))
-t('the occasional media are marked occasional', /only occasionally/.test(described))
+// The proportions reach the model AS proportions. The old version translated them
+// into "by preference" and "only occasionally", which is how a 12% share came to
+// be described to the interpreter as the medium to answer in by default.
+t('the actual percentages are stated', /Music 6[0-9]%/.test(described), described.split('\n')[1])
+t('and it is told they are enforced rather than requested',
+  /enforced, not requested/.test(described))
 t('the muted media are forbidden outright', /Do not answer in these/.test(described))
 // Turning a medium off must not read as "the player cannot play it" — they can,
 // and a game that silently stopped accepting their moves would be a worse product
@@ -864,9 +1060,9 @@ t('a resting axis contributes nothing', (() => {
   return !d.includes('Obliquity') && !d.includes('Friction')
 })())
 t('the summary is empty when neutral', tuningSummary(TU({}), ALL_MEDIA) === '')
-t('the summary names what was changed', (() => {
+t('the summary names what was changed, as percentages', (() => {
   const s = tuningSummary(MOSTLY_MUSIC, ALL_MEDIA)
-  return /mostly music/.test(s) && /no /.test(s)
+  return /6[0-9]% music/.test(s) && /no /.test(s)
 })(), tuningSummary(MOSTLY_MUSIC, ALL_MEDIA))
 
 group('the system prompt carries the weighting, and only when there is one')
@@ -877,11 +1073,23 @@ t('a neutral tuning changes nothing about the prompt',
 t('the reply enum is every medium when nothing is muted',
   replyEnum(buildSystemPrompt(GAMES.tag, ALL_MEDIA, ALL_RELATIONS)).length === ALL_MEDIA.length)
 t('a muted medium is absent from the reply enum',
-  !replyEnum(buildSystemPrompt(GAMES.tag, ALL_MEDIA, ALL_RELATIONS, TU({ weights: { artwork: 0 } }))).includes('artwork'))
+  !replyEnum(buildSystemPrompt(GAMES.tag, ALL_MEDIA, ALL_RELATIONS, TU({ shares: { artwork: 0 } }))).includes('artwork'))
 t('muting does not remove the medium from the board', (() => {
-  const p = buildSystemPrompt(GAMES.tag, ALL_MEDIA, ALL_RELATIONS, TU({ weights: { artwork: 0 } }))
+  const p = buildSystemPrompt(GAMES.tag, ALL_MEDIA, ALL_RELATIONS, TU({ shares: { artwork: 0 } }))
   return /artwork \(Art\)/.test(p)
 })())
+// The enforcement seam: whatever the caller worked out is owed this turn IS the
+// enum. A medium over its share is not merely discouraged, it is unnameable.
+t('the proportions filter becomes the reply enum', (() => {
+  const e = replyEnum(buildSystemPrompt(GAMES.tag, ALL_MEDIA, ALL_RELATIONS, MOSTLY_MUSIC, false, ['music']))
+  return e.length === 1 && e[0] === 'music'
+})())
+t('an over-share medium cannot be answered in even via an alias', (() => {
+  const r = ni({ reading: 'r', reply: { medium: 'dance', query: 'x', framing: 'f' } }, ['music'])
+  return r.reply === null
+})())
+t('omitting the filter leaves the enum as it was',
+  replyEnum(buildSystemPrompt(GAMES.tag, ALL_MEDIA, ALL_RELATIONS)).length === ALL_MEDIA.length)
 t('the weighting block is present when weighted', (() => {
   const p = buildSystemPrompt(GAMES.tag, ALL_MEDIA, ALL_RELATIONS, MOSTLY_MUSIC)
   return /HOW THE PLAYER HAS WEIGHTED YOU/.test(p)
@@ -1332,8 +1540,8 @@ t('nothing set at all is untouched', isUntouched(TU({})))
 t('the summary names it', /carries on/.test(tuningSummary(TU({ continuation: 2 }), ALL_MEDIA)),
   tuningSummary(TU({ continuation: 2 }), ALL_MEDIA))
 t('the summary still names the weighting alongside it', (() => {
-  const s = tuningSummary(TU({ weights: { music: 3 }, continuation: 1 }), ALL_MEDIA)
-  return /mostly music/.test(s) && /carries on/.test(s)
+  const s = tuningSummary(TU({ shares: { music: 100 }, continuation: 1 }), ALL_MEDIA)
+  return /% music/.test(s) && /carries on/.test(s)
 })())
 
 group('the self-reply prompt — reading your own offering as the move')

@@ -4,8 +4,8 @@ import { useMemo, useState } from 'react'
 import { ChevronDown, Info, RotateCcw, SlidersHorizontal } from 'lucide-react'
 import { getMedium } from '@/lib/correlate/media'
 import {
-  AXIS_LIST, DEFAULT_WEIGHT, WEIGHT_HINTS, WEIGHT_LABELS, axisValue, continuationOf,
-  isUntouched, tuningSummary, weightOf, type MediumWeight, type Tuning, type TuningAxisId,
+  AXIS_LIST, DEFAULT_SHARE, MUTED_SHARE, SHARE_MAX, allShares, axisValue, continuationOf,
+  isProportioned, isUntouched, shareLabel, tuningSummary, type Tuning, type TuningAxisId,
 } from '@/lib/correlate/tuning'
 import {
   CONTINUATION_HINTS, CONTINUATION_LABELS, CONTINUATION_OFF, CONTINUATION_STOPS,
@@ -14,7 +14,9 @@ import { facetsFor, scopableMedia, selectedOptions, type Scopes } from '@/lib/co
 import type { MediumId } from '@/lib/correlate/types'
 import PresetPicker from './PresetPicker'
 
-const WEIGHTS: MediumWeight[] = [0, 1, 2, 3]
+/** Snap points on the share slider. Fine-grained values are allowed; these are
+ *  just where a drag settles, so a one-pixel wobble does not change a number. */
+const SHARE_STEP = 5
 
 /**
  * What the player asks of their partner, changeable between any two turns.
@@ -55,11 +57,17 @@ export default function TuningPanel({
   const carry = continuationOf(tuning)
   const narrowable = useMemo(() => scopableMedia(media), [media])
 
-  const setWeight = (medium: MediumId, weight: MediumWeight) => {
-    const weights = { ...tuning.weights }
-    if (weight === DEFAULT_WEIGHT) delete weights[medium]
-    else weights[medium] = weight
-    onChange({ ...tuning, weights })
+  /** Every medium's raw share plus the proportion it works out to. */
+  const shares = useMemo(() => allShares(tuning, media), [tuning, media])
+  const proportioned = isProportioned(tuning)
+
+  const setShare = (medium: MediumId, share: number) => {
+    const next = { ...tuning.shares }
+    // Dropping a value equal to the default keeps the stored object canonical, so
+    // "nobody has touched this" stays a key count rather than a comparison.
+    if (share === DEFAULT_SHARE) delete next[medium]
+    else next[medium] = share
+    onChange({ ...tuning, shares: next })
   }
 
   const setAxis = (id: TuningAxisId, value: number) => {
@@ -139,49 +147,72 @@ export default function TuningPanel({
             disabled={disabled}
           />
 
+          {/* How much of the answering each medium gets.
+              The percentage on the right is the point of this control. The raw
+              slider is a weight, and a weight on its own hides the thing the
+              player actually set: 100 on music next to eleven media left at 50
+              is fifteen per cent music, which reads as "mostly" and plays as a
+              minority. The old four-stop version could not show that, and that
+              is how a game set to mostly music filled up with stretches. */}
           <div>
-            <p className="text-[10px] uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-2">
-              What it answers in
-            </p>
-            <ul className="space-y-1.5">
-              {media.map(id => {
+            <div className="flex items-baseline gap-2 mb-1">
+              <p className="text-[10px] uppercase tracking-wide text-gray-400 dark:text-gray-500">
+                How much of its answering
+              </p>
+              <p className="ml-auto text-[10px] text-gray-400 dark:text-gray-500">
+                share of replies
+              </p>
+            </div>
+            <ul className="space-y-2">
+              {shares.map(({ medium: id, share, target }) => {
                 const medium = getMedium(id)
-                const current = weightOf(tuning, id)
+                const off = share === MUTED_SHARE
                 return (
-                  <li key={id} className="flex items-center gap-2">
-                    <span
-                      title={medium?.provider}
-                      className={`text-xs w-[5.5rem] flex-shrink-0 truncate ${
-                        current === 0
-                          ? 'text-gray-400 dark:text-gray-500 line-through'
-                          : 'text-gray-700 dark:text-gray-200'
-                      }`}
-                    >
-                      {medium?.plural ?? id}
-                    </span>
-                    <span className="flex gap-0.5 flex-wrap">
-                      {WEIGHTS.map(w => (
-                        <button
-                          key={w}
-                          disabled={disabled}
-                          onClick={() => setWeight(id, w)}
-                          title={WEIGHT_HINTS[w]}
-                          className={`text-[10px] px-1.5 py-0.5 rounded-md transition-colors disabled:opacity-50 ${
-                            current === w
-                              ? 'bg-gray-800 text-white dark:bg-gray-100 dark:text-gray-900'
-                              : 'bg-gray-100 text-gray-500 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600'
-                          }`}
-                        >
-                          {WEIGHT_LABELS[w]}
-                        </button>
-                      ))}
-                    </span>
+                  <li key={id}>
+                    <div className="flex items-center gap-2">
+                      <span
+                        title={medium?.provider}
+                        className={`text-xs w-[5.5rem] flex-shrink-0 truncate ${
+                          off
+                            ? 'text-gray-400 dark:text-gray-500 line-through'
+                            : 'text-gray-700 dark:text-gray-200'
+                        }`}
+                      >
+                        {medium?.plural ?? id}
+                      </span>
+                      <input
+                        type="range"
+                        min={MUTED_SHARE}
+                        max={SHARE_MAX}
+                        step={SHARE_STEP}
+                        value={share}
+                        disabled={disabled}
+                        onChange={e => setShare(id, Number(e.target.value))}
+                        aria-label={`${medium?.plural ?? id} share`}
+                        className="flex-1 min-w-0 accent-gray-700 dark:accent-gray-300 disabled:opacity-50"
+                      />
+                      <span
+                        title={off
+                          ? 'Never answers here. Still yours to play.'
+                          : `weight ${share} of ${SHARE_MAX} — ${shareLabel(share)}`}
+                        className={`text-[11px] w-10 text-right flex-shrink-0 tabular-nums ${
+                          off ? 'text-gray-400 dark:text-gray-500' : accentText
+                        }`}
+                      >
+                        {off ? 'off' : `${Math.round(target * 100)}%`}
+                      </span>
+                    </div>
                   </li>
                 )
               })}
             </ul>
-            <p className="mt-2 text-[11px] text-gray-400 dark:text-gray-500">
-              Turning one off only stops your partner answering there. It stays yours to play.
+            <p className="mt-2 text-[11px] text-gray-400 dark:text-gray-500 leading-relaxed">
+              {proportioned
+                ? 'Those percentages are enforced: a medium that has had more than its share ' +
+                  'is removed from what your partner may answer in until the chain catches up. ' +
+                  'Turning one to zero only stops it answering there — it stays yours to play.'
+                : 'Drag one and the rest rebalance around it. Until you do, every medium is ' +
+                  'equally available and nothing is enforced.'}
             </p>
           </div>
 
@@ -363,7 +394,7 @@ export default function TuningPanel({
           {!neutral && (
             <button
               onClick={() => onChange({
-                weights: {}, axes: {}, scopes: {}, continuation: CONTINUATION_OFF,
+                shares: {}, axes: {}, scopes: {}, continuation: CONTINUATION_OFF,
               })}
               disabled={disabled}
               className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors disabled:opacity-50"

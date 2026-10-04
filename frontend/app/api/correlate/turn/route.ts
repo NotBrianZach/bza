@@ -14,7 +14,7 @@ import {
   pathTo, relationsAlong, replyMediaAlong, turnByIndex, worldFor,
 } from '@/lib/correlate/graph'
 import {
-  dueMedium, mutedMedia, normalizeTuning, weightedReplyMedia,
+  dueMedium, mutedMedia, normalizeTuning, owedMedia, weightedReplyMedia,
 } from '@/lib/correlate/tuning'
 import { selfRepliesSince, selfReplyRefusal } from '@/lib/correlate/continuation'
 import type {
@@ -69,8 +69,6 @@ const MODEL = process.env.LISTEN_MODEL || process.env.CORRELATE_MODEL || 'anthro
 const HISTORY_TURNS = 8
 /** How many off-branch exchanges the interpreter is offered to point back at. */
 const ELSEWHERE_TURNS = 12
-/** Replies looked at when working out which medium the weighting is short of. */
-const BALANCE_WINDOW = 8
 /** A hard stop on how much of a session is loaded, not an expected size. */
 const MAX_TURNS = 400
 
@@ -317,7 +315,23 @@ export async function POST(req: NextRequest) {
   const muted = mutedMedia(tuning, media)
   // Weighted and muted-free, for the stages where the server picks the medium.
   const answerMedia = weightedReplyMedia(tuning, replyMediaFor(media))
-  const due = dueMedium(tuning, replyMediaAlong(path).slice(-BALANCE_WINDOW), media)
+
+  /**
+   * The proportions filter, and the whole reason a share means anything.
+   *
+   * Measured over the **entire branch**, not a trailing window. "More than half
+   * the answers are stretches" is a claim about a game, and a window of eight
+   * forgave anything older than that — so a long chain could sit permanently
+   * off-target while every window inside it looked fine.
+   *
+   * The result is handed to the interpreter as its reply enum. A medium already
+   * over its share is not in it and cannot be chosen; it returns on the turn the
+   * arithmetic says it is owed again. Unrestricted when the player has set no
+   * shares, and never empty — see owedMedia.
+   */
+  const replyHistory = replyMediaAlong(path)
+  const answerIn = owedMedia(tuning, replyMediaFor(media), replyHistory)
+  const due = dueMedium(tuning, replyHistory, media)
 
   // --- 3. The mechanical half of legality ----------------------------------
   // Translation and embodiment only mean anything across a change of medium.
@@ -395,7 +409,7 @@ export async function POST(req: NextRequest) {
 
   const linkable = linkableTurns(graph, parent?.id ?? null).map(t => t.turn_index)
 
-  const systemPrompt = buildSystemPrompt(game, media, relations, tuning, selfReply)
+  const systemPrompt = buildSystemPrompt(game, media, relations, tuning, selfReply, answerIn)
   const userPrompt = buildUserPrompt({
     game,
     media,
@@ -463,8 +477,12 @@ export async function POST(req: NextRequest) {
   const firstRaw = await callInterpreter(systemPrompt, userPrompt)
   if (firstRaw === null) return err('Interpreter unavailable. Try that move again in a moment.', 502)
 
+  // Coerced against the media it was actually offered, not every medium in play.
+  // Otherwise a reply landing in a medium that is over its share would be accepted
+  // here after having been excluded from the enum — which would make the filter a
+  // suggestion again, the exact failure this pass exists to remove.
   const firstPass = normalizeInterpretation(
-    parseJsonObject(firstRaw), media, relations, { muted, linkable },
+    parseJsonObject(firstRaw), answerIn, relations, { muted, linkable },
   )
   if (!firstPass) return err('The interpreter returned something unreadable. Try that move again.', 502)
 
@@ -542,7 +560,11 @@ export async function POST(req: NextRequest) {
     // Stage 2 — one re-ask, only into media that cannot fail on the player's data
     // and that the player has not turned off.
     if (!reply) {
-      const retryMedia = answerMedia
+      // The proportions filter applies to the retry too. It used to use the full
+      // weighted list, which is one of the ways a game set to mostly music filled
+      // up with stretches: the first attempt failed to find a song, and the second
+      // was free to go wherever it liked.
+      const retryMedia = answerIn
       // Order matters: a scope miss is checked before the generic "nothing
       // matched", because what it named did exist — it was simply somewhere the
       // player has ruled out, and telling the interpreter otherwise invites it to
@@ -561,7 +583,7 @@ export async function POST(req: NextRequest) {
       console.warn(`[correlate] retrying reply in ${game.id}: ${problem}`)
 
       const retryRaw = await callInterpreter(
-        buildSystemPrompt(game, retryMedia, relations, tuning, selfReply),
+        buildSystemPrompt(game, retryMedia, relations, tuning, selfReply, retryMedia),
         buildRetryPrompt({
           game, media: retryMedia, relations, move, previous, problem, attempted,
           reading: interpretation.reading, selfReply,
@@ -588,10 +610,11 @@ export async function POST(req: NextRequest) {
 
     // Stage 3 — the server tries on its own terms.
     if (!reply) {
-      // Weighted order, so a player who asked for mostly music gets music searched
-      // first when the interpreter has already failed twice.
+      // Share-ordered and share-filtered. The server picking the medium is no
+      // reason for the player's proportions to stop applying — scope is what gets
+      // dropped at this stage (see tryResolve's `scoped: false`), not the weighting.
       for (const seed of salvageQueries(interpretation, move)) {
-        for (const medium of answerMedia.filter(m => !isComposed(m))) {
+        for (const medium of answerIn.filter(m => !isComposed(m))) {
           const found = await tryResolve(
             { medium, query: seed, framing: 'Found in answer to your move' },
             false,
@@ -622,7 +645,7 @@ export async function POST(req: NextRequest) {
         console.warn(`[correlate] salvaged a reply in ${game.id} after two interpreter attempts`)
 
         const accountRaw = await callInterpreter(
-          buildSystemPrompt(game, media, relations, tuning, selfReply),
+          buildSystemPrompt(game, media, relations, tuning, selfReply, answerIn),
           buildSalvageAccountPrompt({ move, reply, reading: interpretation.reading, selfReply }),
         )
         const account = accountRaw ? parseJsonObject(accountRaw) : null

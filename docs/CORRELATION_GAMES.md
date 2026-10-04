@@ -996,3 +996,117 @@ so the helpers do not care either way.
 Verified 2026-10-04: 454 checks, 0 failed (was 394) · `tsc --noEmit` 9
 pre-existing errors, none in touched files · `next build` compiles · no
 mojibake in any touched file.
+
+## 16. Fifth pass (2026-10-04): the weighting did not work
+
+A report: *dances set to rare, music set to mostly, and more than half the
+replies are dances or stretches.* It was right, and the turn log could
+prove it — every turn stores the tuning it was played under, so the
+question "was the weighting followed?" is a query rather than an opinion.
+
+```
+weights {music:3, stretch:1, exercise:1, movement:1, rest 0}
+  → stretch 4, music 2, movement 1       29% music, 57% stretch
+```
+
+Three causes, compounding. The fix needed all three, which is why the
+0–100 slider that was asked for is necessary but was not sufficient.
+
+### 16a. The share maths drowned the setting
+
+Expected share was `weight / sum(weights)` over every non-muted medium. A
+player who raises music to 3 and leaves the other eleven media at the
+default 2 is asking, arithmetically, for **3/25 — twelve per cent.** The
+control said "mostly". The maths said "a minority". Nothing in the product
+reconciled those, and the player had no way to see the gap.
+
+So the stored value is now a 0–100 weight per medium, and **the resulting
+percentage is displayed beside each slider.** That display is not
+decoration; it is the fix for this cause. "Music 100" next to eleven media
+at 50 now reads *15%* on screen, which is an honest answer to a question
+the four-stop version could not even ask. Muting the others moves it to
+69% and the number says so as you drag.
+
+The four stops are gone. Their original justification — that a continuous
+slider would be false precision — was wrong in an interesting way: the
+precision was never the problem, the *hiding of the denominator* was.
+`shareLabel()` still derives never/rarely/freely/mostly from a number for
+the places that want a word, which is the inversion: the number is the
+truth and the word is a summary of it.
+
+### 16b. Nothing enforced it
+
+Only a weight of **zero** was arithmetic. Everything between 1 and 3
+reached the model as a sentence of prompt plus one advisory nudge —
+`dueMedium` — whose own closing words were *"Do not force it."* A model
+takes that up. Each individual reply is locally defensible, no single turn
+looks wrong, and the aggregate drifts, which is precisely the failure the
+nudge was written to prevent and did not.
+
+Proportion is now a **filter on the reply enum**, not a request:
+
+- target share per medium, from the weights, muted media out of the
+  denominator;
+- actual share over the **whole branch** — not a trailing window of eight,
+  which forgave anything older and let a long chain sit permanently
+  off-target while every window inside it looked fine;
+- a medium is **owed** when `actual < target × (n + 1)` — *if it answered
+  now, would it still be within its share?* — and only owed media are in
+  the enum the interpreter chooses from.
+
+A medium over its share is therefore not discouraged, it is unnameable,
+and it returns on the turn the arithmetic says it is owed again. This is
+also applied at the retry and salvage stages and used to coerce the reply,
+so a medium excluded from the enum cannot be accepted after the fact.
+
+Two escapes, both the trade this file makes elsewhere: enforcement is
+**opt-in** (an untouched game is unrestricted and produces the prompt it
+always did), and the owed set is **never empty** (the guarantee that a
+legal turn carries a real reply outranks a proportion, exactly as it
+outranks a scope).
+
+### 16c. The pipeline was biased toward the composed media
+
+The retry prompt ended a bullet with *"That is the safest way to answer
+this turn"* about composing a gesture or stretch. It was measurably too
+persuasive — **four of five retries in real games landed in a composed
+medium** — and retries are common because catalogue searches miss. A
+composed reply genuinely cannot miss, which is worth telling the model;
+"cannot miss" is not "should be chosen", which is what it heard.
+
+That bullet now says to use one when it answers the move rather than as an
+escape from searching, and names the player's heaviest medium as the thing
+to try first.
+
+### 16d. What it does now
+
+Asked for 69% music against three composed media at 10% each, simulated
+over 24 turns:
+
+| model behaviour | music | the rest |
+|---|---|---|
+| worst case — always picks the lightest medium it is allowed | 63% | 13% each |
+| greedy — always picks the heaviest | 71% | 13 / 13 / 4% |
+
+The worst case matters more than the average: it is a stand-in for exactly
+the bias in 16c, and the ratio survives it because exclusion is absolute
+rather than persuasive. A test asserts both ends, plus that no low-share
+medium exceeds 25% and that none is starved to zero — a filter that
+silenced the small shares would be a different bug with the same shape.
+
+### 16e. Migration: none, but the key changed
+
+Shares live in `listen_sessions.tuning`, already jsonb, under a **new
+`shares` key**. The old `weights` key is still read, but only when `shares`
+is absent, and it is upgraded on the way in (`0→0, 1→15, 2→50, 3→100`).
+
+Reusing the key was not an option: a stored `2` means "freely" on the old
+scale and "all but muted" on the new one, so the key is what decides which
+scale a value is on. Sharing it would have silently muted every medium a
+player had left at its default. Old session rows, old presets, and the
+`tuning` snapshot on every turn ever played all come out on the new scale,
+and nothing writes `weights` any more.
+
+Verified 2026-10-04: 489 checks, 0 failed (was 454) · `tsc --noEmit` 9
+pre-existing errors, none in touched files · `next build` compiles · no
+mojibake in any touched file.
