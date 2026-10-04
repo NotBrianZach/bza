@@ -23,7 +23,13 @@ SKIP_VERIFY=false
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-SHA=$(templedb vcs log bza | awk '/^commit / {print $2; exit}')
+# Drained into a variable before being parsed — see the long comment in
+# verify-live-sha.sh. Piping straight into `awk … exit` makes awk close the pipe
+# while templedb is still writing, and under `set -o pipefail` the resulting
+# SIGPIPE fails this script before it has deployed anything. It is a race on how
+# much log is left to write, so it looks like a flake rather than a bug.
+LOG=$(templedb vcs log bza || true)
+SHA=$(printf '%s\n' "$LOG" | awk '/^commit / {print $2; exit}')
 if [ -z "$SHA" ]; then
   echo "ERROR: could not read head commit sha from templedb" >&2
   exit 1

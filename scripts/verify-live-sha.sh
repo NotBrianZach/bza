@@ -11,7 +11,18 @@ set -euo pipefail
 
 URL="${1:-https://aireadalong.com/api/version}"
 
-expected=$(templedb vcs log bza 2>/dev/null | awk '/^commit / {print $2; exit}')
+# Two steps rather than one pipeline, and not a style preference.
+#
+# `templedb vcs log bza | awk '/^commit/ {print; exit}'` makes awk close the pipe
+# after the first match while templedb is still writing the rest of the log.
+# templedb gets SIGPIPE, prints "Error: [Errno 32] Broken pipe", and exits
+# non-zero — which `set -o pipefail` promotes to a failure of the whole script.
+# It is a race, so it depends on how much log there is left to write: it passed
+# for months and then started failing the day a commit arrived with a long
+# message. Draining the output into a variable first means the first command
+# always runs to EOF and there is no early reader to close anything.
+log=$(templedb vcs log bza 2>/dev/null || true)
+expected=$(printf '%s\n' "$log" | awk '/^commit / {print $2; exit}')
 if [ -z "$expected" ]; then
   echo "ERROR: could not read last bza commit sha from templedb" >&2
   exit 2
