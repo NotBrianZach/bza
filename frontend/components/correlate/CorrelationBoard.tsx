@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, CornerDownRight, Flag, GitBranch,
-  Globe2, Link2, Loader2, Pause, Play, Shuffle, SignalZero, SkipBack,
+  Globe2, Link2, Loader2, Pause, Play, Repeat, Shuffle, SignalZero, SkipBack,
 } from 'lucide-react'
 import { authedFetch } from '@/lib/authedFetch'
 import { track } from '@/lib/analytics'
@@ -15,7 +15,10 @@ import {
   buildGraph, childrenOf, defaultParent, offeringOnTable, pathTo, relationsAlong,
   subtreeSize, worldFor, type TurnGraph,
 } from '@/lib/correlate/graph'
-import { normalizeTuning, type Tuning } from '@/lib/correlate/tuning'
+import { continuationOf, normalizeTuning, type Tuning } from '@/lib/correlate/tuning'
+import {
+  isSelfReply, selfRepliesLeft, selfReplyRefusal,
+} from '@/lib/correlate/continuation'
 import type {
   CorrelationSession, CorrelationTurn, MediumId, Offering, RelationId,
 } from '@/lib/correlate/types'
@@ -109,7 +112,10 @@ export default function CorrelationBoard({
   const chain = useMemo(
     () => path
       .filter(t => t.legal)
-      .flatMap(t => [t.move_offering, t.reply_offering])
+      // A self-reply's move *is* the previous turn's answer, so counting both
+      // would put one record in the chain twice — audible as a stutter in the
+      // playback queue and visible as a doubled entry in what was crossed.
+      .flatMap(t => (isSelfReply(t) ? [t.reply_offering] : [t.move_offering, t.reply_offering]))
       .filter((o): o is Offering => !!o?.id),
     [path],
   )
@@ -170,43 +176,105 @@ export default function CorrelationBoard({
     correlateQueries.saveTuning(session.id, next, media).catch(() => {})
   }, [session.id, media])
 
+  /**
+   * One turn, whoever is taking it.
+   *
+   * A player's move and the partner answering itself are the same request to the
+   * same route with one flag different, and keeping them one function here is what
+   * guarantees they stay that way: a continuation is played under the tuning the
+   * controls currently hold, lands in the graph the same way, and is subject to
+   * the same server-side rules. Returns the new turn, or null when nothing was
+   * recorded.
+   */
+  const postTurn = useCallback(async (payload: Record<string, unknown>) => {
+    const res = await authedFetch('/api/correlate/turn', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId: session.id, tuning, ...payload })
+    })
+    const data = await res.json()
+    if (!res.ok) {
+      const failure: any = new Error(data.error ?? 'That turn did not go through')
+      failure.problems = Array.isArray(data.problems) ? data.problems : []
+      throw failure
+    }
+    return data
+  }, [session.id, tuning])
+
+  /** Fold a recorded turn into the board. */
+  const absorb = useCallback((data: any) => {
+    setTurns(t => [...t, data.turn])
+    // Play continues from what just happened, whether or not the player had gone
+    // back to take this turn. An illegal move established nothing, so the table
+    // stays where it was.
+    if (data.turn?.legal) focusOn(data.turn.id)
+    if (data.session) updateSession(data.session)
+    // Not an error any more: the pipeline guarantees a real reply, so the only
+    // thing worth surfacing is that it took more than one attempt to get one.
+    if (data.replySource && data.replySource !== 'interpreter') {
+      setNotice(data.replySource === 'retry'
+        ? 'The first answer could not be found, so it answered again.'
+        : 'Two answers could not be found, so this one was searched out from the move.')
+    }
+  }, [focusOn, updateSession])
+
+  /**
+   * The partner answers its own offering, once.
+   *
+   * `parentId` is passed rather than read from state because a continuation run
+   * chains several of these and each has to answer the one before it — state set
+   * by the previous iteration is not visible yet.
+   */
+  const continueAlone = useCallback(async (
+    parentId: string,
+    asked: 'manual' | 'run',
+  ) => {
+    const data = await postTurn({ parentTurnId: parentId, selfReply: true })
+    absorb(data)
+    track('correlate_self_reply', {
+      game: session.mode,
+      medium: data.turn?.reply_offering?.medium,
+      relation: data.turn?.relation,
+      turn: data.turn?.turn_index,
+      depth: data.selfReplyDepth,
+      // Whether the player asked for this one turn or set it going. The two are
+      // the same request, and the difference is worth keeping in the log: a
+      // standing run and a deliberate nudge are not the same behaviour.
+      asked,
+    })
+    return data
+  }, [postTurn, absorb, session.mode])
+
+  /** The one-click version, with its own error so a failed run reads as one. */
+  const continueOnce = useCallback(async () => {
+    if (!focusId) return
+    setPending(true)
+    setError('')
+    setNotice('')
+    setProblems([])
+    try {
+      await continueAlone(focusId, 'manual')
+    } catch (e: any) {
+      setError(e?.message ?? 'It could not take that turn')
+    } finally {
+      setPending(false)
+    }
+  }, [focusId, continueAlone])
+
   const play = useCallback(async (draft: MoveDraft) => {
     setPending(true)
     setError('')
     setNotice('')
     setProblems([])
     try {
-      const res = await authedFetch('/api/correlate/turn', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId: session.id,
-          // Always explicit, so the server never has to guess which turn a move
-          // answers — "the newest one" is only right when nobody went back.
-          parentTurnId: focusId,
-          tuning,
-          ...draft,
-          prediction: prediction.trim() || undefined,
-        }),
+      const data = await postTurn({
+        // Always explicit, so the server never has to guess which turn a move
+        // answers — "the newest one" is only right when nobody went back.
+        parentTurnId: focusId,
+        ...draft,
+        prediction: prediction.trim() || undefined,
       })
-      const data = await res.json()
-      if (!res.ok) {
-        if (Array.isArray(data.problems)) setProblems(data.problems)
-        throw new Error(data.error ?? 'That turn did not go through')
-      }
-      setTurns(t => [...t, data.turn])
-      // Play continues from what just happened, whether or not the player had gone
-      // back to take this turn. An illegal move established nothing, so the table
-      // stays where it was.
-      if (data.turn?.legal) focusOn(data.turn.id)
-      if (data.session) updateSession(data.session)
-      // Not an error any more: the pipeline guarantees a real reply, so the only
-      // thing worth surfacing is that it took more than one attempt to get one.
-      if (data.replySource && data.replySource !== 'interpreter') {
-        setNotice(data.replySource === 'retry'
-          ? 'The first answer could not be found, so it answered again.'
-          : 'Two answers could not be found, so this one was searched out from your move.')
-      }
+      absorb(data)
       track('correlate_turn_played', {
         game: session.mode,
         medium: draft.medium,
@@ -215,14 +283,38 @@ export default function CorrelationBoard({
         legal: data.turn?.legal,
         branched: focusId !== null && focusId !== defaultParent(graph)?.id,
         linked: !!data.turn?.link_turn_id,
+        carriesOn: continuationOf(tuning),
       })
       setPrediction('')
+
+      // The continuation run. Sequential rather than concurrent, because each
+      // turn answers the one before it — and one at a time is also what makes it
+      // worth watching rather than a block of text arriving at once.
+      //
+      // A failure here is deliberately a notice and not an error: the player's
+      // move went through and is recorded, so painting the composer red would say
+      // something untrue about the turn they actually took. The server's cap is
+      // the real bound; this loop only asks.
+      let from: string | null = data.turn?.legal ? data.turn.id : null
+      const runs = continuationOf(tuning)
+      for (let i = 0; i < runs && from; i++) {
+        try {
+          const next = await continueAlone(from, 'run')
+          from = next.turn?.legal ? next.turn.id : null
+        } catch (e: any) {
+          setNotice(e?.message ?? 'It stopped there.')
+          break
+        }
+      }
     } catch (e: any) {
+      if (Array.isArray(e?.problems) && e.problems.length > 0) setProblems(e.problems)
       setError(e?.message ?? 'That turn did not go through')
     } finally {
       setPending(false)
     }
-  }, [session.id, session.mode, prediction, updateSession, focusId, tuning, graph, focusOn])
+  }, [
+    session.mode, prediction, focusId, tuning, graph, postTurn, absorb, continueAlone,
+  ])
 
   const finish = useCallback(async () => {
     await correlateQueries.finishSession(session.id)
@@ -257,6 +349,16 @@ export default function CorrelationBoard({
 
   const isOver = session.status === 'finished'
   const atHead = focusId === (defaultParent(graph)?.id ?? null)
+
+  /**
+   * Whether the partner can answer itself here, and why not when it cannot.
+   *
+   * The same function the route refuses with, so the control and the rule cannot
+   * drift apart — and when it is refused, the player is shown the sentence the
+   * server would have sent rather than a button that fails.
+   */
+  const noContinuation = selfReplyRefusal(focusTurn, path)
+  const runsLeft = selfRepliesLeft(path)
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">
@@ -438,6 +540,33 @@ export default function CorrelationBoard({
                 onSubmit={play}
               />
 
+              {/* Standing back is a move too. The partner answers its own last
+                  offering, and you see where it takes it when nobody redirects
+                  it. Capped, and the cap is stated rather than discovered. */}
+              {focusTurn && (
+                <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                  {noContinuation ? (
+                    <p className="text-[11px] text-gray-400 dark:text-gray-500 leading-relaxed">
+                      {noContinuation}
+                    </p>
+                  ) : (
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <button
+                        onClick={continueOnce}
+                        disabled={pending}
+                        className="flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1.5 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition-colors disabled:opacity-50"
+                      >
+                        {pending ? <Loader2 size={11} className="animate-spin" /> : <Repeat size={11} />}
+                        Let it answer itself
+                      </button>
+                      <p className="text-[11px] text-gray-400 dark:text-gray-500 min-w-0">
+                        Take no turn — it answers its own offering. {runsLeft} more in a row.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {problems.length > 0 && (
                 <ul className="mt-3 space-y-1">
                   {problems.map(p => (
@@ -574,13 +703,25 @@ function TurnBlock({ turn, graph, player, accentText, accentChip, isFocus, onFoc
   isFocus: boolean
   onFocus: (id: string) => void
 }) {
+  /**
+   * Whose move this was.
+   *
+   * Load-bearing, not decorative. A turn the partner took alone must never be
+   * labelled "you offered": the player would be shown a chain they appear to have
+   * built and did not, with no way to tell. It is the same rule the reply pipeline
+   * follows about a dropped reply versus a search that found nothing — two
+   * different things must not look alike.
+   */
+  const alone = isSelfReply(turn)
+  const moveLabel = alone ? 'it offered, to itself' : 'you offered'
+
   if (!turn.legal) {
     return (
       <div className="rounded-2xl border border-dashed border-red-200 dark:border-red-900/50 bg-red-50/50 dark:bg-red-950/20 p-4">
         <p className="flex items-center gap-1.5 text-[11px] font-medium text-red-600 dark:text-red-400 mb-3">
           <SignalZero size={13} /> Turn {turn.turn_index + 1} — turned away, the connection did not hold
         </p>
-        <OfferingCard offering={turn.move_offering} player={player} label="you offered" compact />
+        <OfferingCard offering={turn.move_offering} player={player} label={moveLabel} compact />
         {turn.claimed_relation && (
           <p className="mt-2 text-[11px] text-red-500 dark:text-red-400">
             claimed <span className="font-medium">{RELATIONS[turn.claimed_relation]?.name ?? turn.claimed_relation}</span>
@@ -599,6 +740,14 @@ function TurnBlock({ turn, graph, player, accentText, accentChip, isFocus, onFoc
     <div className="space-y-3">
       <div className="flex items-center gap-2 flex-wrap">
         <p className="text-[11px] font-medium text-gray-400 dark:text-gray-500">Turn {turn.turn_index + 1}</p>
+        {alone && (
+          <span
+            title="You took no turn here — it answered its own last offering."
+            className="flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400"
+          >
+            <Repeat size={9} /> on its own
+          </span>
+        )}
         {turn.relation && (
           <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 ${accentText}`}>
             {RELATIONS[turn.relation]?.name ?? turn.relation}
@@ -633,7 +782,16 @@ function TurnBlock({ turn, graph, player, accentText, accentChip, isFocus, onFoc
         )}
       </div>
 
-      <OfferingCard offering={turn.move_offering} player={player} label="you offered" />
+      {/* Compact when the partner is answering itself: the record is the one
+          directly above, already shown in full as the answer it was. What is new
+          here is the label and the framing — it may have narrowed to one part of
+          its own offering — and both of those survive the compact card. */}
+      <OfferingCard
+        offering={turn.move_offering}
+        player={player}
+        label={moveLabel}
+        compact={alone}
+      />
 
       {turn.reading && (
         <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed pl-1 italic">{turn.reading}</p>

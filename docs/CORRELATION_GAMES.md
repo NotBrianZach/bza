@@ -835,3 +835,164 @@ Verified: 394 checks, 0 failed · the scope gates scored 196/196 against
 real Wikipedia pages across all four scopes, including a never-list of 22
 people, works, fictions and nations asked of every scope · `tsc --noEmit`
 9 pre-existing errors, none in touched files.
+
+## 15. Fourth pass (2026-10-04): the partner may answer itself
+
+One request: *there should be an option to have the conversational partner
+reply to its own response.* In Tag and in every other game here, the player
+was the only thing that could advance a chain. That was never a rule
+anybody chose — it was the shape the turn loop happened to have — and its
+cost is the same shape of cost the chain had before it became a graph. A
+chain is a conversation between two readers. Sometimes the interesting move
+is to stand back and find out where the other one's own answer takes it.
+
+### 15a. A self-reply is a turn, not an annotation
+
+The decision everything else follows from. A self-reply gets a row in
+`listen_turns` with a parent edge, a relation, a world delta, a tuning
+snapshot and a place on the branch — identical in every respect to a turn
+the player took except for who played the move.
+
+That is what makes the existing guards cover it without being rewritten:
+
+- **The no-repeated-relation rule already applies.** `relation` is a column
+  on the turn and `spentRelations` reads the log, so the partner cannot
+  answer itself twice the same way. This is the load-bearing one: a partner
+  agreeing with itself in a slowly narrowing circle is the self-reply
+  equivalent of an invented track, and the guard against it was already
+  built for another reason.
+- **The exclusion set already applies.** The move's id is in `inPlay`, so
+  the answer cannot be the offering it is answering, and nothing else on
+  the branch can come back either.
+- **The reply guarantee already applies.** Three stages, then the turn is
+  not persisted. A self-reply with no answer would be a dead end for the
+  same reason a player's would.
+
+The move needs no resolution. It is a record this engine resolved itself
+when it played it as an answer — which is also why **the client may not
+name it**. `selfReply: true` accepts no medium, no offering id and no
+composed body. A client that could name one would be able to put any
+offering on the table attributed to the partner, which is the same class of
+lie as asserting a track exists.
+
+### 15b. `previous` is null, and that is the whole structural difference
+
+On a player's turn the move answers what the parent left on the table. On a
+self-reply the move **is** what the parent left on the table, so there is
+nothing else on it. Printing a second copy of the same offering under a
+second heading would ask the interpreter to find a connection between a
+thing and itself.
+
+Setting `previous = null` then disposes of three things by arithmetic
+rather than by three new conditions that could each be forgotten: the
+ruling in a strict game, the declared-relation requirement, and the
+medium-change check. `legal` is `true` because `game.enforcesConstraint &&
+previous !== null` is false.
+
+**Nothing is ruled on a self-reply, and this is a claim about judging, not
+a shortcut.** Nobody asserted anything, so there is no claim to rule on —
+and an interpreter invited to judge its own offering is not a judge. The
+prompt says so in as many words, and the `verdict` field is withheld from
+the schema on that turn. A player's illegal move in Tag is still refused
+exactly as before.
+
+### 15c. The cap is read off the branch
+
+Three in a row, `MAX_SELF_REPLIES`, enforced by counting the trailing
+partner-authored turns on the path — `selfRepliesSince`, the same style of
+derivation as `spentRelations`. A client asking for a fourth is refused by
+arithmetic, not by trust.
+
+Three because the thing being bounded is drift, not cost. By the fourth
+consecutive turn the partner is answering its own answer to its own answer,
+every step locally reasonable, and the chain has stopped being about
+anything the player put into it. The player re-entering is not an
+interruption of the run; it is what makes the run worth having happened.
+
+Two details that are deliberate:
+
+- **A player move anywhere resets it.** The cap bounds a run, not a game,
+  and the run is a property of the *branch* — a run down one branch is not
+  a run down a sibling.
+- **An illegal self-reply still counts.** A move that was turned away is
+  still a turn the partner spent. Skipping it would let a rejected
+  self-reply buy an extra one.
+
+`selfReplyRefusal` is one function shared by the route and the board, so
+the control the player sees and the rule the server applies cannot drift
+apart — and when it refuses, the player reads the sentence the server would
+have sent. The cap is *stated* in the composer ("N more in a row") rather
+than discovered by a button that fails.
+
+### 15d. Continuation is stored in `Tuning` and told to nobody
+
+How many turns the partner takes by itself after each of yours lives in
+`listen_sessions.tuning` as `continuation`, so it needed no migration, it
+rides the existing save plumbing, and a preset carries it like everything
+else. The *rules* live in a fourth module, `lib/correlate/continuation.ts`,
+because they answer a different question from the other three registries:
+media say what an offering can be made of, relations what a reply can do to
+one, tuning what the partner reaches for — and this one says **who takes
+the next turn**.
+
+**It never reaches the interpreter, and that is the non-obvious part.** A
+model told that a run of three is under way writes toward a monologue: it
+holds material back, it sets things up, it stops answering the thing in
+front of it. So `describeTuning` omits it, the self-reply guidance never
+names a count, and four tests assert the prompt for a game set to carry on
+three times is byte-identical to the prompt for an untouched one. Each
+self-reply is asked for on its own, as a turn, with no knowledge of whether
+another is coming.
+
+Consequence worth naming because it reads like a bug: `isNeutral` ignores
+`continuation`. `isNeutral` means "says nothing to the interpreter" and is
+what the prompt builders gate on. `isUntouched` means "the player changed
+nothing" and is what the panel's summary and reset button use — a reset
+button that hid itself while continuation was on would be lying about
+there being nothing to reset.
+
+The run itself is a client-side loop, one request per turn, sequential
+because each turn answers the one before it. A failure mid-run is a
+**notice, not an error**: the player's move went through and is recorded,
+so painting the composer red would say something untrue about the turn they
+actually took.
+
+### 15e. `reframing`, and why a self-reply is not a restatement
+
+The partner may narrow what it is answering — the stopping rather than the
+reach — by returning `reframing`, which replaces the framing on the stored
+move. It never changes which record the move is. This is the same move
+choosing a framing was in the first place, which is why `framing` was never
+defaulted to "all of it", and it is the field that makes answering your own
+offering a thing you can do rather than a thing you repeat.
+
+### 15f. The display guard
+
+`move_by` is a column, not a derivation, and the board must never label a
+partner-authored move "you offered" — it reads "it offered, to itself",
+with an "on its own" chip on the turn. Same reasoning as *a dropped reply
+is our bug, a search that found nothing is the game working*: two different
+things must not look alike. This one is worse to blur, because a player
+shown a chain they appear to have built and did not has no way to notice.
+
+Two smaller consequences of the same fact:
+
+- The interpreter's `THE PATH` block says `you yourself offered` for those
+  turns. An interpreter shown its own offerings attributed to the player
+  reads a conversation it was not having.
+- The playback queue counts a self-reply's answer only. Its move is the
+  previous turn's answer, already in the chain, and counting both would be
+  audible as a stutter and visible as a doubled entry in what was crossed.
+
+### 15g. Migration ordering
+
+`supabase/setup/59_partner_self_reply.sql` **must run before the code** —
+same hazard as 52 and 53. The turn route selects `move_by` by name and
+PostgREST fails the whole select on an unknown column, so the section stops
+being playable rather than degrading. `default 'player'` is correct for
+every row written before today, and `moverOf` reads a null as a player move
+so the helpers do not care either way.
+
+Verified 2026-10-04: 454 checks, 0 failed (was 394) · `tsc --noEmit` 9
+pre-existing errors, none in touched files · `next build` compiles · no
+mojibake in any touched file.

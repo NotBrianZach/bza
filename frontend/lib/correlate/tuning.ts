@@ -32,6 +32,9 @@
 import type { MediumId } from './types'
 import { getMedium } from './media'
 import {
+  CONTINUATION_LABELS, CONTINUATION_OFF, MAX_SELF_REPLIES, type ContinuationDepth,
+} from './continuation'
+import {
   describeScopes, isUnscoped, normalizeScopes, scopeSummary, type Scopes,
 } from './scope'
 
@@ -210,9 +213,28 @@ export interface Tuning {
    * canonicalised on the way in.
    */
   scopes: Scopes
+  /**
+   * How many turns the partner takes by itself after each of yours — see
+   * ./continuation.ts. 0 is off, and off is the default.
+   *
+   * It is stored in this object and excluded from `describeTuning` on purpose. The
+   * other three fields govern what the partner reaches *for* and are therefore
+   * instructions to it; this one governs *who takes the next turn*, which is not
+   * the interpreter's business and actively harms the turn if it learns it. A model
+   * told a run of three is coming writes toward a monologue instead of answering
+   * the thing in front of it, so each self-reply is asked for as its own turn with
+   * no knowledge of the next.
+   *
+   * Consequence worth stating: `isNeutral` ignores it, because `isNeutral` means
+   * "says nothing to the interpreter". Use `isUntouched` for "the player has not
+   * changed anything", which is what a UI wants.
+   */
+  continuation: ContinuationDepth
 }
 
-export const DEFAULT_TUNING: Tuning = { weights: {}, axes: {}, scopes: {} }
+export const DEFAULT_TUNING: Tuning = {
+  weights: {}, axes: {}, scopes: {}, continuation: CONTINUATION_OFF,
+}
 
 const clampInt = (v: unknown, lo: number, hi: number): number | null => {
   const n = typeof v === 'number' ? v : typeof v === 'string' ? Number(v) : NaN
@@ -230,12 +252,20 @@ const clampInt = (v: unknown, lo: number, hi: number): number | null => {
  * deployment cannot serve would silently mute nothing.
  */
 export function normalizeTuning(raw: unknown, media: MediumId[]): Tuning {
-  const out: Tuning = { weights: {}, axes: {}, scopes: {} }
+  const out: Tuning = { weights: {}, axes: {}, scopes: {}, continuation: CONTINUATION_OFF }
   if (!raw || typeof raw !== 'object') return out
 
-  const src = raw as { weights?: unknown; axes?: unknown; scopes?: unknown }
+  const src = raw as {
+    weights?: unknown; axes?: unknown; scopes?: unknown; continuation?: unknown
+  }
 
   out.scopes = normalizeScopes(src.scopes, media)
+
+  // Clamped to the engine's own cap rather than to whatever the client sent: the
+  // cap is also enforced from the log server-side, and a stored value above it
+  // would promise a fourth turn the engine will always refuse.
+  const carry = clampInt(src.continuation, 0, MAX_SELF_REPLIES)
+  if (carry !== null) out.continuation = carry as ContinuationDepth
 
   if (src.weights && typeof src.weights === 'object') {
     for (const [key, value] of Object.entries(src.weights as Record<string, unknown>)) {
@@ -259,11 +289,33 @@ export function normalizeTuning(raw: unknown, media: MediumId[]): Tuning {
   return out
 }
 
-/** True when the tuning says nothing — the state every session starts in. */
+/**
+ * True when the tuning says nothing *to the interpreter* — which is the state
+ * every session starts in, and the thing the prompt builders branch on.
+ *
+ * `continuation` is excluded, and that is not an oversight. It never reaches the
+ * prompt, so a game where the only change is "carry on twice" must produce
+ * byte-for-byte the prompt an untouched game produces. A test asserts it.
+ */
 export function isNeutral(tuning: Tuning): boolean {
   return Object.keys(tuning.weights).length === 0
     && Object.keys(tuning.axes).length === 0
     && isUnscoped(tuning.scopes ?? {})
+}
+
+/**
+ * True when the player has changed nothing at all.
+ *
+ * What a UI means by "unweighted": a reset button that stayed hidden while
+ * continuation was set to three would be lying about there being nothing to reset.
+ */
+export function isUntouched(tuning: Tuning): boolean {
+  return isNeutral(tuning) && (tuning.continuation ?? CONTINUATION_OFF) === CONTINUATION_OFF
+}
+
+/** How many turns in a row the partner has been asked to take by itself. */
+export function continuationOf(tuning: Tuning): ContinuationDepth {
+  return tuning.continuation ?? CONTINUATION_OFF
 }
 
 export function weightOf(tuning: Tuning, medium: MediumId): MediumWeight {
@@ -352,6 +404,10 @@ const groupLabel = (ids: MediumId[]) =>
  * Derived entirely from the registry: every sentence here comes from a `stops`
  * entry or a `WEIGHT_LABELS` key, so changing what a setting means is an edit to
  * the data above rather than to a template.
+ *
+ * `continuation` is absent from this function by design and must stay absent — see
+ * the field comment on `Tuning`. The gate is `isNeutral`, which excludes it, so a
+ * game whose only setting is a continuation run produces no block at all.
  */
 export function describeTuning(tuning: Tuning, media: MediumId[]): string {
   if (isNeutral(tuning)) return ''
@@ -400,9 +456,15 @@ ${lines.join('\n')}`
   return [weighting, scoping].filter(Boolean).join('\n\n')
 }
 
-/** One short line for the player's own display. Empty when neutral. */
+/**
+ * One short line for the player's own display. Empty when nothing was changed.
+ *
+ * Gated on `isUntouched` rather than `isNeutral`: this line is for the player, and
+ * continuation is a setting the player made even though the interpreter never
+ * hears about it.
+ */
 export function tuningSummary(tuning: Tuning, media: MediumId[]): string {
-  if (isNeutral(tuning)) return ''
+  if (isUntouched(tuning)) return ''
   const bits: string[] = []
 
   const mostly = media.filter(m => weightOf(tuning, m) === 3)
@@ -420,6 +482,9 @@ export function tuningSummary(tuning: Tuning, media: MediumId[]): string {
 
   const scoped = scopeSummary(tuning.scopes ?? {}, media)
   if (scoped) bits.push(scoped)
+
+  const carry = continuationOf(tuning)
+  if (carry > CONTINUATION_OFF) bits.push(`carries on ${CONTINUATION_LABELS[carry].toLowerCase()}`)
 
   return bits.join(' · ')
 }

@@ -46,6 +46,7 @@ function build() {
     join('lib', 'correlate', 'relations.ts'),
     join('lib', 'correlate', 'graph.ts'),
     join('lib', 'correlate', 'tuning.ts'),
+    join('lib', 'correlate', 'continuation.ts'),
     join('lib', 'offerings', 'composed.ts'),
     join('lib', 'offerings', 'shared.ts'),
     join('lib', 'offerings', 'knowledge.ts'),
@@ -74,6 +75,7 @@ function build() {
     relations: require(join(outDir, 'correlate', 'relations.js')),
     graph:     require(join(outDir, 'correlate', 'graph.js')),
     tuning:    require(join(outDir, 'correlate', 'tuning.js')),
+    carry:     require(join(outDir, 'correlate', 'continuation.js')),
     composed:  require(join(outDir, 'offerings', 'composed.js')),
     knowledge: require(join(outDir, 'offerings', 'knowledge.js')),
   }
@@ -82,7 +84,8 @@ function build() {
 const M = build()
 const {
   parseJsonObject, normalizeInterpretation, applyWorldDelta, offeringLine, sessionScope,
-  describeRejection, salvageQueries, buildSystemPrompt, buildRetryPrompt, buildSalvageAccountPrompt,
+  describeRejection, salvageQueries, buildSystemPrompt, buildUserPrompt, buildRetryPrompt,
+  buildSalvageAccountPrompt,
 } = M.prompt
 const { GAME_LIST, GAMES, getGame, ACCENT_CLASSES, FEATURED_GAMES, FEATURED_GAME_IDS, retiredGameName } = M.games
 const {
@@ -98,9 +101,14 @@ const {
 } = M.graph
 const {
   TUNING_AXES, AXIS_LIST, ALL_AXIS_IDS, AXIS_STOPS, DEFAULT_WEIGHT, WEIGHT_LABELS, WEIGHT_HINTS,
-  DEFAULT_TUNING, normalizeTuning, isNeutral, weightOf, axisValue, mutedMedia,
-  weightedReplyMedia, dueMedium, describeTuning, tuningSummary, getAxis,
+  DEFAULT_TUNING, normalizeTuning, isNeutral, isUntouched, weightOf, axisValue, mutedMedia,
+  weightedReplyMedia, dueMedium, describeTuning, tuningSummary, getAxis, continuationOf,
 } = M.tuning
+const {
+  MAX_SELF_REPLIES, CONTINUATION_OFF, CONTINUATION_LABELS, CONTINUATION_HINTS,
+  CONTINUATION_STOPS, SELF_REPLY_GUIDANCE, moverOf, isSelfReply, selfRepliesSince,
+  selfRepliesLeft, selfReplyRefusal,
+} = M.carry
 const { checkPerformability, composeOffering, vocabularyFor } = M.composed
 
 let pass = 0
@@ -541,6 +549,9 @@ const mkTurn = (o = {}) => ({
   link_turn_id: o.link_turn_id ?? null,
   link_note: null,
   tuning: null,
+  // Null rather than 'player' by default, because that is what every row written
+  // before migration 59 holds and the helpers have to read it as a player move.
+  move_by: o.move_by ?? null,
   legal: o.legal !== false,
   created_at: '',
 })
@@ -1199,6 +1210,198 @@ t('"species" resolves to organism', niKnow('species')?.reply?.medium === 'organi
 t('"city" resolves to place', niKnow('city')?.reply?.medium === 'place')
 t('an alias cannot smuggle in a knowledge medium the game disabled',
   ni({ reading: 'r', reply: { medium: 'math', query: 'x', framing: 'f' } }, ['music'])?.reply === null)
+
+// ---------------------------------------------------------------------------
+// Self-reply — the partner answering its own offering
+// ---------------------------------------------------------------------------
+
+group('continuation registry — internal consistency')
+t('the stops are 0 through the cap',
+  CONTINUATION_STOPS.join() === [0, 1, 2, 3].join() &&
+  CONTINUATION_STOPS[CONTINUATION_STOPS.length - 1] === MAX_SELF_REPLIES)
+t('off is zero', CONTINUATION_OFF === 0)
+t('every stop has a label and a hint',
+  CONTINUATION_STOPS.every(s => CONTINUATION_LABELS[s]?.length > 0 && CONTINUATION_HINTS[s]?.length > 0))
+// Same lint the games and the axes are held to: the retired "dial" must not come
+// back in new player-visible copy.
+t('no continuation copy mentions a dial', !/\bdial\b/i.test(
+  [...Object.values(CONTINUATION_LABELS), ...Object.values(CONTINUATION_HINTS)].join(' ')))
+
+group('moverOf — a row with no column is a player move')
+t('null reads as player', moverOf(mkTurn({ id: 'm0' })) === 'player')
+t('an explicit player reads as player', moverOf(mkTurn({ id: 'm1', move_by: 'player' })) === 'player')
+t('partner reads as partner', moverOf(mkTurn({ id: 'm2', move_by: 'partner' })) === 'partner')
+t('junk reads as player', moverOf(mkTurn({ id: 'm3', move_by: 'the dog' })) === 'player')
+t('a missing turn reads as player', moverOf(null) === 'player')
+t('isSelfReply agrees with moverOf',
+  isSelfReply(mkTurn({ id: 'm4', move_by: 'partner' })) === true &&
+  isSelfReply(mkTurn({ id: 'm5' })) === false)
+
+group('selfRepliesSince — the cap is derived from the log, not from the request')
+const RUN = [
+  mkTurn({ id: 'c0', turn_index: 0 }),
+  mkTurn({ id: 'c1', turn_index: 1, parent_turn_id: 'c0', move_by: 'partner' }),
+  mkTurn({ id: 'c2', turn_index: 2, parent_turn_id: 'c1', move_by: 'partner' }),
+]
+const runGraph = buildGraph(RUN)
+const runPath = pathTo(runGraph, 'c2')
+t('a path of player turns has no run', selfRepliesSince(pathTo(forked, 't4')) === 0)
+t('the trailing run is counted', selfRepliesSince(runPath) === 2)
+t('what is left is the cap minus the run', selfRepliesLeft(runPath) === MAX_SELF_REPLIES - 2)
+// The whole mechanism: the cap bounds a run, not a game. A player move anywhere
+// resets it, which is why re-entering is what makes a run worth having.
+t('a player move resets the run', (() => {
+  const g = buildGraph([...RUN, mkTurn({ id: 'c3', turn_index: 3, parent_turn_id: 'c2' })])
+  return selfRepliesSince(pathTo(g, 'c3')) === 0
+})())
+t('only the tail counts, not the total', (() => {
+  const g = buildGraph([
+    ...RUN,
+    mkTurn({ id: 'd3', turn_index: 3, parent_turn_id: 'c2' }),
+    mkTurn({ id: 'd4', turn_index: 4, parent_turn_id: 'd3', move_by: 'partner' }),
+  ])
+  return selfRepliesSince(pathTo(g, 'd4')) === 1
+})())
+// A move that was turned away is still a turn the partner spent. Skipping it would
+// let a rejected self-reply buy an extra one.
+t('an illegal self-reply still counts against the run', (() => {
+  const g = buildGraph([
+    mkTurn({ id: 'e0', turn_index: 0 }),
+    mkTurn({ id: 'e1', turn_index: 1, parent_turn_id: 'e0', move_by: 'partner', legal: false }),
+  ])
+  return selfRepliesSince(pathTo(g, 'e1')) === 1
+})())
+t('the run is a property of the branch', (() => {
+  // t2 and t3 both answer t1; a run down one branch is not a run down the other.
+  const g = buildGraph([
+    mkTurn({ id: 'f0', turn_index: 0 }),
+    mkTurn({ id: 'f1', turn_index: 1, parent_turn_id: 'f0', move_by: 'partner' }),
+    mkTurn({ id: 'f2', turn_index: 2, parent_turn_id: 'f0' }),
+  ])
+  return selfRepliesSince(pathTo(g, 'f1')) === 1 && selfRepliesSince(pathTo(g, 'f2')) === 0
+})())
+
+group('selfReplyRefusal — one sentence, shared by the server and the control')
+t('nothing on the table is refused', !!selfReplyRefusal(null, []))
+t('a turned-away parent is refused',
+  !!selfReplyRefusal(mkTurn({ id: 'g0', legal: false }), []))
+// A legal turn always carries a reply now, but rows written before that guarantee
+// do not, and there is nothing in one for the partner to carry on from.
+t('a parent with no answer of its own is refused',
+  !!selfReplyRefusal(mkTurn({ id: 'g1', reply_offering: null }), []))
+t('an ordinary exchange is allowed',
+  selfReplyRefusal(mkTurn({ id: 'g2' }), []) === null)
+t('the cap refuses, and says how many it took', (() => {
+  const full = Array.from({ length: MAX_SELF_REPLIES }, (_, i) =>
+    mkTurn({ id: `h${i + 1}`, turn_index: i + 1, parent_turn_id: `h${i}`, move_by: 'partner' }))
+  const g = buildGraph([mkTurn({ id: 'h0', turn_index: 0 }), ...full])
+  const why = selfReplyRefusal(g.nodes.get(`h${MAX_SELF_REPLIES}`).turn, pathTo(g, `h${MAX_SELF_REPLIES}`))
+  return typeof why === 'string' && why.includes(String(MAX_SELF_REPLIES))
+})())
+t('one below the cap is still allowed', (() => {
+  const g = buildGraph(RUN)
+  return MAX_SELF_REPLIES === 3 && selfReplyRefusal(g.nodes.get('c2').turn, pathTo(g, 'c2')) === null
+})())
+
+group('continuation is stored like a tuning and told to nobody')
+t('off is the default', continuationOf(TU({})) === CONTINUATION_OFF)
+t('a value is kept', TU({ continuation: 2 }).continuation === 2)
+t('it is clamped to the engine\'s own cap', TU({ continuation: 9 }).continuation === MAX_SELF_REPLIES)
+t('a negative is clamped to off', TU({ continuation: -3 }).continuation === CONTINUATION_OFF)
+t('junk is off', TU({ continuation: 'lots' }).continuation === CONTINUATION_OFF)
+t('a numeric string is tolerated', TU({ continuation: '2' }).continuation === 2)
+// The load-bearing one. A model told that a run of three is coming writes toward a
+// monologue: it holds material back and stops answering the thing in front of it.
+// So continuation is excluded from `isNeutral`, which is what the prompt gates on.
+t('a continuation alone is still neutral to the interpreter', isNeutral(TU({ continuation: 3 })))
+t('it changes nothing about the system prompt',
+  buildSystemPrompt(GAMES.tag, ALL_MEDIA, ALL_RELATIONS, TU({ continuation: 3 })) ===
+  buildSystemPrompt(GAMES.tag, ALL_MEDIA, ALL_RELATIONS, DEFAULT_TUNING))
+t('it contributes no weighting block',
+  describeTuning(TU({ continuation: 3 }), ALL_MEDIA) === '')
+// Checked against the player-facing copy rather than the word "continuation",
+// which is also the name of a relation and legitimately all over the prompt.
+t('none of its player-facing copy reaches the prompt', (() => {
+  const p = buildSystemPrompt(GAMES.tag, ALL_MEDIA, ALL_RELATIONS, TU({ continuation: 3 }))
+  return Object.values(CONTINUATION_HINTS).every(h => !p.includes(h))
+})())
+// But the player did set it, so their own display says so and a reset button has
+// something to reset. That is the isNeutral / isUntouched split.
+t('it is not untouched', !isUntouched(TU({ continuation: 1 })))
+t('nothing set at all is untouched', isUntouched(TU({})))
+t('the summary names it', /carries on/.test(tuningSummary(TU({ continuation: 2 }), ALL_MEDIA)),
+  tuningSummary(TU({ continuation: 2 }), ALL_MEDIA))
+t('the summary still names the weighting alongside it', (() => {
+  const s = tuningSummary(TU({ weights: { music: 3 }, continuation: 1 }), ALL_MEDIA)
+  return /mostly music/.test(s) && /carries on/.test(s)
+})())
+
+group('the self-reply prompt — reading your own offering as the move')
+const SELF_SYS = buildSystemPrompt(GAMES.tag, ALL_MEDIA, ALL_RELATIONS, DEFAULT_TUNING, true)
+const PLAIN_SYS = buildSystemPrompt(GAMES.tag, ALL_MEDIA, ALL_RELATIONS, DEFAULT_TUNING, false)
+t('a player turn is unchanged by the flag existing',
+  PLAIN_SYS === buildSystemPrompt(GAMES.tag, ALL_MEDIA, ALL_RELATIONS))
+t('the self-reply section is present', /ANSWERING YOURSELF/.test(SELF_SYS))
+t('and absent otherwise', !/ANSWERING YOURSELF/.test(PLAIN_SYS))
+// The failure this text exists to prevent: treating the turn as a second attempt
+// at the same answer rather than as a turn.
+t('it refuses a second go at the same answer', /not another go at the same answer/i.test(SELF_SYS))
+t('it refuses agreement with itself', /Do not agree with yourself/i.test(SELF_SYS))
+t('reframing is offered in the schema', /"reframing":/.test(SELF_SYS))
+t('reframing is not offered on a player turn', !/"reframing":/.test(PLAIN_SYS))
+// Nobody claimed anything, so there is nothing to rule on — and an interpreter
+// invited to judge its own offering is not a judge.
+t('a strict game asks for no verdict on a self-reply',
+  !/"verdict"/.test(SELF_SYS) && /"verdict"/.test(PLAIN_SYS))
+t('the guidance says so in as many words', /not ruling on anything/i.test(SELF_REPLY_GUIDANCE))
+// It must not know whether another turn is coming, so it never names a count:
+// an interpreter told a run of three is under way writes toward a monologue.
+t('the guidance never names a count',
+  !/\d/.test(SELF_REPLY_GUIDANCE) && !/\b(once|twice|three times)\b/i.test(SELF_REPLY_GUIDANCE))
+
+const selfUser = (over = {}) => buildUserPrompt({
+  game: GAMES.tag, media: ALL_MEDIA, relations: ALL_RELATIONS, world: {},
+  history: [], move: off('x'), previous: null, claimedRelation: null, spent: [],
+  turnIndex: 4, selfReply: true, selfReplyFrom: 3, selfReplyDepth: 1, ...over,
+})
+t('the move is attributed to the partner', /YOUR OWN OFFERING, NOW THE MOVE/.test(selfUser()))
+// The one false sentence it could contain, and the one most likely to be believed
+// because every other turn it is true.
+t('it never calls it the player\'s move', !/THE PLAYER'S MOVE/.test(selfUser()))
+t('a player turn still does', /THE PLAYER'S MOVE/.test(buildUserPrompt({
+  game: GAMES.tag, media: ALL_MEDIA, relations: ALL_RELATIONS, world: {},
+  history: [], move: off('x'), previous: null, claimedRelation: null, spent: [], turnIndex: 4,
+})))
+t('it names the exchange the offering came from', /turn 3/.test(selfUser()))
+t('a deeper run is stated as one', /turn 3 of a run you have taken alone/.test(
+  selfUser({ selfReplyDepth: 3 })))
+t('a first turn alone is not described as a run', !/run you have taken alone/.test(selfUser()))
+// Belt and braces: the route passes previous: null, which skips the ruling by
+// arithmetic. If a caller ever passed both, the ruling must still not appear.
+t('the ruling is suppressed even if an offering on the table is supplied',
+  !/RULING ON THE MOVE/.test(selfUser({ previous: off('y', 'artwork') })))
+t('a player turn in the same game does get the ruling', /RULING ON THE MOVE/.test(buildUserPrompt({
+  game: GAMES.tag, media: ALL_MEDIA, relations: ALL_RELATIONS, world: {},
+  history: [], move: off('x'), previous: off('y', 'artwork'), claimedRelation: null,
+  spent: [], turnIndex: 4,
+})))
+// A path may now hold turns the player took no part in, and an interpreter shown
+// its own offering attributed to the player reads a conversation it was not having.
+t('the path says who played each move', (() => {
+  const p = selfUser({
+    history: [
+      { turn_index: 0, move_offering: off('p0'), reply_offering: off('p0r'), relation: 'association', reading: null, narration: null, carried: null },
+      { turn_index: 1, move_offering: off('p1'), reply_offering: off('p1r'), relation: 'counterpoint', reading: null, narration: null, carried: null, move_by: 'partner' },
+    ],
+  })
+  return /Turn 0: player offered/.test(p) && /Turn 1: you yourself offered/.test(p)
+})())
+
+group('reframing — what stops a self-reply being a restatement')
+t('a reframing is kept', ni({ reading: 'r', reframing: 'the stopping' }).reframing === 'the stopping')
+t('an absent one is empty', ni({ reading: 'r' }).reframing === '')
+t('a non-string one is empty', ni({ reading: 'r', reframing: { part: 'x' } }).reframing === '')
+t('it is trimmed', ni({ reading: 'r', reframing: '  the held note ' }).reframing === 'the held note')
 
 rmSync(outDir, { recursive: true, force: true })
 

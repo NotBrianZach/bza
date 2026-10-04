@@ -5,9 +5,10 @@
  */
 
 import type {
-  CorrelationGame, Interpretation, MediumId, Offering, RelationId, ReplyPlan,
+  CorrelationGame, Interpretation, MediumId, MoveBy, Offering, RelationId, ReplyPlan,
 } from './types'
 import { getMedium, isComposed, isPropositional, resolveMedia } from './media'
+import { SELF_REPLY_GUIDANCE } from './continuation'
 import { RELATIONS, getRelation, resolveRelations } from './relations'
 import { mergeWorld } from './graph'
 import {
@@ -23,6 +24,8 @@ export interface TurnContext {
   reading: string | null
   narration: string | null
   carried: string | null
+  /** 'partner' when that turn's move was the interpreter's own answer. */
+  move_by?: MoveBy | null
 }
 
 /**
@@ -66,12 +69,17 @@ export function offeringLine(o: Offering): string {
  * `tuning` is optional and contributes nothing when neutral — so a game nobody has
  * adjusted produces exactly the prompt it produced before tuning existed, which is
  * both the cheapest default and the one that cannot have changed anyone's play.
+ *
+ * `selfReply` adds the one section and the one schema field a turn needs when the
+ * move it is reading is the interpreter's own previous answer. Off by default, for
+ * the same reason: a player turn must produce the prompt it always produced.
  */
 export function buildSystemPrompt(
   game: CorrelationGame,
   media: MediumId[],
   relations: RelationId[],
   tuning: Tuning = DEFAULT_TUNING,
+  selfReply = false,
 ): string {
   const worldKeys = game.worldKeys.map(k => `  - ${k.key}: ${k.description}`).join('\n')
 
@@ -183,7 +191,7 @@ Every offering states which part of it is in play — the whole canvas, ten seco
 of a scene, one gesture, the sensation of a stretch. Without it two players answer
 different things without noticing. Give your reply a framing, and read the move
 according to the framing the player gave it, not the one you would have chosen.
-
+${selfReply ? `\n${SELF_REPLY_GUIDANCE}\n` : ''}
 WHAT CARRIED, AND WHAT DID NOT
 A connection across media is almost never exact. Rhythm becomes repetition in an
 image; dissonance becomes conflict in a scene; balance becomes something felt in a
@@ -223,7 +231,7 @@ Reply with a single JSON object and nothing else. No prose before or after, no
 markdown fence. Schema:
 
 {
-  "reading": "how you read the player's offering, 1-2 sentences. The argument, not the story.",
+  "reading": "how you read ${selfReply ? 'your own offering, now that you are the one answering it' : "the player's offering"}, 1-2 sentences. The argument, not the story.",
   "narration": "what the exchange did to the world, 2-4 sentences, in your voice.",
   "relation": ${JSON.stringify(relations)},
   "link": null | { "turn": <the turn number of an earlier exchange this one rhymes with>, "note": "what the two share, one clause" },
@@ -235,11 +243,13 @@ markdown fence. Schema:
     "composed": { "title": "short name", "steps": ["…", "…"], "intent": "shown" | "invited" },
     "framing": "which part of your reply is in play"
   },
-  "replyReason": "why that reply answers this move, one sentence.",
+  "replyReason": "why that reply answers this move, one sentence.",${selfReply
+    ? '\n  "reframing": "the part of your OWN offering you are now answering — omit or leave empty for the whole of it.",'
+    : ''}
   "carried": "what survived the crossing, one clause.",
   "lost": "what did not, one clause.",
   "facts": ["at most two new durable statements"],
-  "worldDelta": { "only": "changed keys" }${game.enforcesConstraint ? ',\n  "verdict": "legal" | "illegal"' : ''}
+  "worldDelta": { "only": "changed keys" }${game.enforcesConstraint && !selfReply ? ',\n  "verdict": "legal" | "illegal"' : ''}
 }
 
 Include "query" or "composed", never both — whichever the reply's medium calls for.
@@ -272,6 +282,16 @@ export function buildUserPrompt(opts: {
   elsewhere?: ElsewhereContext[]
   move: Offering
   previous: Offering | null
+  /**
+   * True when `move` is the interpreter's own previous answer and the player took
+   * no turn. Changes who the move is attributed to and suppresses everything that
+   * only makes sense about a player's claim.
+   */
+  selfReply?: boolean
+  /** Which exchange the partner's own offering came out of, for a self-reply. */
+  selfReplyFrom?: number | null
+  /** How many turns in a row the partner has now taken, including this one. */
+  selfReplyDepth?: number
   /** The turn being answered, when it is not simply the newest one. */
   parentIndex?: number | null
   /** What the player claimed their relation was, in games that ask. */
@@ -287,6 +307,7 @@ export function buildUserPrompt(opts: {
   const {
     game, media, relations, world, history, elsewhere, move, previous, parentIndex,
     claimedRelation, spent, prediction, turnIndex, tuning, due,
+    selfReply = false, selfReplyFrom, selfReplyDepth = 0,
   } = opts
   const parts: string[] = []
 
@@ -294,7 +315,11 @@ export function buildUserPrompt(opts: {
 
   if (history.length > 0) {
     const log = history.map(t => {
-      const lines = [`Turn ${t.turn_index}: player offered ${offeringLine(t.move_offering)}`]
+      // Who played each move, because a path may now contain turns the player took
+      // no part in. An interpreter shown its own offering attributed to the player
+      // reads the branch as a conversation it was not having.
+      const by = t.move_by === 'partner' ? 'you yourself offered' : 'player offered'
+      const lines = [`Turn ${t.turn_index}: ${by} ${offeringLine(t.move_offering)}`]
       if (t.relation) lines.push(`  relation: ${t.relation}`)
       if (t.reply_offering) lines.push(`  answered with ${offeringLine(t.reply_offering)}`)
       if (t.carried) lines.push(`  carried: ${t.carried}`)
@@ -329,7 +354,24 @@ export function buildUserPrompt(opts: {
     )
   }
 
-  parts.push(`THE PLAYER'S MOVE\n${offeringLine(move)}`)
+  // The move is the partner's own last answer, so saying "the player's move" here
+  // would be the one false sentence in the prompt — and the one most likely to be
+  // believed, because every other turn it is true.
+  if (selfReply) {
+    const from = typeof selfReplyFrom === 'number' ? ` from turn ${selfReplyFrom}` : ''
+    const run = selfReplyDepth > 1
+      ? ` This is turn ${selfReplyDepth} of a run you have taken alone, so the last ` +
+        `${selfReplyDepth - 1} offerings on this branch were also yours — answer outward, ` +
+        `not further in.`
+      : ''
+    parts.push(
+      `YOUR OWN OFFERING, NOW THE MOVE\n${offeringLine(move)}\n` +
+      `This is the answer you played${from}. Nobody has answered it, and you are the one ` +
+      `answering it.${run}`,
+    )
+  } else {
+    parts.push(`THE PLAYER'S MOVE\n${offeringLine(move)}`)
+  }
 
   if (claimedRelation) {
     const r = getRelation(claimedRelation)
@@ -350,7 +392,10 @@ export function buildUserPrompt(opts: {
   if (previous) {
     parts.push(`THE OFFERING ON THE TABLE\n${offeringLine(previous)}`)
 
-    if (game.enforcesConstraint) {
+    // Never on a self-reply, even if a caller somehow supplies both. There is no
+    // claim to rule on when the move was not played by anybody, and an interpreter
+    // invited to judge its own offering is not a judge.
+    if (game.enforcesConstraint && !selfReply) {
       parts.push(
         `RULING ON THE MOVE\nDecide whether the move genuinely follows from the offering on the ` +
         `table. You are the judge — nothing has been computed for you.\n` +
@@ -669,6 +714,10 @@ export function normalizeInterpretation(
     reply: replyResult.ok ? replyResult.plan : null,
     replyRejection: replyResult.ok ? null : replyResult.rejection,
     replyReason: str(parsed.replyReason),
+    // Only ever asked for on a self-reply turn, and only ever applied there. A
+    // player turn that comes back with one is ignored by the route — re-framing
+    // somebody else's offering is not a move the interpreter gets to make.
+    reframing: str(parsed.reframing),
     relation,
     link: normalizeLink(parsed.link, opts.linkable),
     carried: str(parsed.carried),
@@ -728,15 +777,21 @@ export function buildRetryPrompt(opts: {
   /** What it tried, so it does not try the same thing again. */
   attempted: string | null
   reading: string
+  /** True when the move being re-answered is the interpreter's own offering. */
+  selfReply?: boolean
 }): string {
-  const { game, media, relations, move, previous, problem, attempted, reading } = opts
+  const {
+    game, media, relations, move, previous, problem, attempted, reading, selfReply = false,
+  } = opts
   const parts: string[] = []
 
   parts.push(
     `YOUR LAST REPLY COULD NOT BE USED\n${problem}` +
     (attempted ? `\nYou tried: ${attempted}. Do not offer that again.` : ''),
   )
-  parts.push(`THE PLAYER'S MOVE\n${offeringLine(move)}`)
+  parts.push(selfReply
+    ? `YOUR OWN OFFERING, WHICH YOU ARE ANSWERING\n${offeringLine(move)}`
+    : `THE PLAYER'S MOVE\n${offeringLine(move)}`)
   if (previous) parts.push(`THE OFFERING ON THE TABLE\n${offeringLine(previous)}`)
   parts.push(`YOUR READING OF THE MOVE (unchanged — keep it)\n${reading}`)
 
@@ -819,14 +874,18 @@ export function buildSalvageAccountPrompt(opts: {
   move: Offering
   reply: Offering
   reading: string
+  /** True when the move being accounted for is the interpreter's own offering. */
+  selfReply?: boolean
 }): string {
-  const { move, reply, reading } = opts
+  const { move, reply, reading, selfReply = false } = opts
 
   return [
     `A REPLY WAS FOUND WITHOUT YOU\nTwo answers you proposed could not be found in any ` +
     `catalogue, so the server searched on its own terms and came back with the record ` +
     `below. It is real and it is now on the table. It was not your choice.`,
-    `THE PLAYER'S MOVE\n${offeringLine(move)}`,
+    selfReply
+      ? `YOUR OWN OFFERING, WHICH WAS BEING ANSWERED\n${offeringLine(move)}`
+      : `THE PLAYER'S MOVE\n${offeringLine(move)}`,
     `YOUR READING OF IT (unchanged — this still stands)\n${reading}`,
     `THE RECORD THAT LANDED\n${offeringLine(reply)}`,
     `Account for the exchange as it actually is. Do not re-judge the move, do not ` +

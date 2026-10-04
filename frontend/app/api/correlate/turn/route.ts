@@ -16,6 +16,7 @@ import {
 import {
   dueMedium, mutedMedia, normalizeTuning, weightedReplyMedia,
 } from '@/lib/correlate/tuning'
+import { selfRepliesSince, selfReplyRefusal } from '@/lib/correlate/continuation'
 import type {
   ActionIntent, CorrelationTurn, Interpretation, MediumId, Offering, RelationId,
 } from '@/lib/correlate/types'
@@ -24,12 +25,23 @@ import { OfferingError, composeOffering, lookupOffering, resolveReply } from '@/
 /**
  * Play one turn of a correlation game.
  *
+ * Two kinds of turn come through here, and only step 1 differs between them. The
+ * ordinary one: the player offers something and the partner answers it. The other
+ * one — `selfReply` — is the partner answering its own previous offering, with the
+ * player standing back. Everything from step 2 on is identical, deliberately: a
+ * self-reply is a turn in the graph, with a relation, a world delta and a place on
+ * the branch, not a second-class annotation hanging off one. That is what makes the
+ * existing guards cover it without being re-implemented — the no-repeated-relation
+ * rule, the exclusion set, and the reply guarantee all apply unchanged.
+ *
  * The loop, in order:
  *   1. Make the move real. For a catalogued or library medium the server
  *      re-fetches it by id — the client sends an id, never an offering body,
  *      because the server is what decides which record a move is. For a composed
  *      medium there is nothing to fetch, so the move is performability-checked
- *      instead, which is the composed-medium equivalent of the same guard.
+ *      instead, which is the composed-medium equivalent of the same guard. On a
+ *      self-reply there is nothing to make real: the move is a record this engine
+ *      already resolved once, when it was played as an answer.
  *   2. Find where in the graph this turn goes. A turn answers its parent, which is
  *      whatever the player chose to go back to, defaulting to where they last were.
  *      Everything that used to mean "the last turn" now means "the parent", and
@@ -49,6 +61,7 @@ import { OfferingError, composeOffering, lookupOffering, resolveReply } from '@/
  *   sessionId, medium, offeringId?, composed?, framing?, claimedRelation?, prediction?,
  *   parentTurnId?,   // present-and-null starts a new thread; absent continues
  *   tuning?,         // the weighting as of this turn; also saved to the session
+ *   selfReply?,      // the partner answers its own last offering; no move is sent
  * }
  */
 
@@ -99,14 +112,24 @@ export async function POST(req: NextRequest) {
     prediction?: string
     parentTurnId?: string | null
     tuning?: unknown
+    selfReply?: boolean
   } | null
 
   const sessionId = body?.sessionId
   const mediumId = body?.medium
-  if (!sessionId || !mediumId) return err('sessionId and medium are required', 400)
+  /**
+   * The partner answers its own last offering, and the player sends no move.
+   *
+   * No medium, no offering id and no composed body are accepted on this path, and
+   * that is a rule rather than a convenience: the move is a record this engine
+   * resolved itself when it played it as an answer. A client that could name one
+   * would be able to put any offering on the table attributed to the partner, which
+   * is the same class of lie as an invented track.
+   */
+  const selfReply = body?.selfReply === true
 
-  const medium = getMedium(mediumId)
-  if (!medium) return err(`Unknown medium "${mediumId}"`, 400)
+  if (!sessionId) return err('sessionId is required', 400)
+  if (!selfReply && !mediumId) return err('sessionId and medium are required', 400)
 
   const db = serviceClient()
 
@@ -133,47 +156,11 @@ export async function POST(req: NextRequest) {
     ? session.relations as RelationId[]
     : resolveRelations(game.relations)
 
-  if (!media.includes(mediumId)) {
-    return err(`${medium.plural} is not in play in this game`, 400)
-  }
-
-  // --- 1. Make the move real ------------------------------------------------
-  let move: Offering | null = null
-
-  if (isComposed(mediumId)) {
-    const built = composeOffering({
-      medium: mediumId,
-      title: body?.composed?.title ?? '',
-      steps: body?.composed?.steps ?? [],
-      framing: body?.framing ?? '',
-      intent: body?.composed?.intent === 'invited' ? 'invited' : 'shown',
-    })
-    if (!built.ok) {
-      return NextResponse.json(
-        { error: 'That is not performable yet.', problems: built.problems },
-        { status: 400 },
-      )
-    }
-    move = built.offering
-  } else {
-    if (!body?.offeringId) return err('offeringId is required for that medium', 400)
-    try {
-      move = await lookupOffering(mediumId, body.offeringId, { userId })
-    } catch (e) {
-      if (e instanceof OfferingError) {
-        console.warn(`[correlate] move lookup ${e.provider} upstream=${e.upstreamStatus}: ${e.message}`)
-        return err(e.message, e.status)
-      }
-      throw e
-    }
-    if (!move) return err('That offering could not be found', 404)
-    // The player's framing is the part they actually chose, so it wins over the
-    // provider's default — but an empty one must not erase a usable default.
-    const framing = body.framing?.trim()
-    if (framing) move = { ...move, framing }
-  }
-
-  // --- 2. Where in the graph this turn goes --------------------------------
+  // --- 1. Where in the graph this turn goes --------------------------------
+  //
+  // Resolved before the move rather than after, because on a self-reply the move
+  // *is* the parent's answer and there is no way to know what it is until the
+  // branch has been located.
   //
   // The whole session is loaded rather than the last eight turns, because a branch
   // is not a suffix: the player may be answering turn 3 of a twenty-turn game, and
@@ -181,8 +168,8 @@ export async function POST(req: NextRequest) {
   // recently. Sessions are small; the cap is a backstop, not a budget.
   const { data: turnRows } = await ((db.from('listen_turns') as any)
     .select(
-      'id, turn_index, parent_turn_id, move_offering, reply_offering, relation, reading, ' +
-      'narration, carried, facts, world_delta, link_turn_id, link_note, legal',
+      'id, turn_index, parent_turn_id, move_by, move_offering, reply_offering, relation, ' +
+      'reading, narration, carried, facts, world_delta, link_turn_id, link_note, legal',
     )
     .eq('session_id', sessionId)
     .order('turn_index', { ascending: true })
@@ -211,7 +198,75 @@ export async function POST(req: NextRequest) {
   }
 
   const path = pathTo(graph, parent?.id ?? null)
-  const previous: Offering | null = offeringOnTable(parent)
+
+  // --- 2. Make the move real ------------------------------------------------
+  let move: Offering | null = null
+
+  if (selfReply) {
+    // Refused by one function shared with the board, so the control the player sees
+    // and the rule the server applies cannot drift apart. The cap inside it is read
+    // off the branch, not off the request.
+    const refusal = selfReplyRefusal(parent, path)
+    if (refusal) return err(refusal, 409)
+    move = parent!.reply_offering!
+  } else if (isComposed(mediumId!)) {
+    const built = composeOffering({
+      medium: mediumId!,
+      title: body?.composed?.title ?? '',
+      steps: body?.composed?.steps ?? [],
+      framing: body?.framing ?? '',
+      intent: body?.composed?.intent === 'invited' ? 'invited' : 'shown',
+    })
+    if (!built.ok) {
+      return NextResponse.json(
+        { error: 'That is not performable yet.', problems: built.problems },
+        { status: 400 },
+      )
+    }
+    move = built.offering
+  } else {
+    if (!getMedium(mediumId!)) return err(`Unknown medium "${mediumId}"`, 400)
+    if (!body?.offeringId) return err('offeringId is required for that medium', 400)
+    try {
+      move = await lookupOffering(mediumId!, body.offeringId, { userId })
+    } catch (e) {
+      if (e instanceof OfferingError) {
+        console.warn(`[correlate] move lookup ${e.provider} upstream=${e.upstreamStatus}: ${e.message}`)
+        return err(e.message, e.status)
+      }
+      throw e
+    }
+    if (!move) return err('That offering could not be found', 404)
+    // The player's framing is the part they actually chose, so it wins over the
+    // provider's default — but an empty one must not erase a usable default.
+    const framing = body.framing?.trim()
+    if (framing) move = { ...move, framing }
+  }
+
+  // One check for both kinds of player move, after the fact: a composed offering
+  // cannot exist in a medium that does not exist, and a looked-up one came back
+  // in the medium it was asked for. A self-reply skips it — the move is a record
+  // this engine already played, and a session whose media list has since narrowed
+  // must not be told its own last answer is not in play.
+  if (!selfReply && !media.includes(move.medium)) {
+    return err(`${getMedium(move.medium)?.plural ?? move.medium} is not in play in this game`, 400)
+  }
+
+  /**
+   * What the move answers.
+   *
+   * Null on a self-reply, and that is the whole structural difference. The move is
+   * what the parent left on the table, so there is nothing *else* on the table: a
+   * second copy of the same offering under a second heading would read as a
+   * connection to be found between a thing and itself. Everything downstream that
+   * keys off `previous !== null` — the ruling, the declared-relation requirement,
+   * the medium-change check — is therefore skipped by arithmetic rather than by a
+   * second condition that could be forgotten.
+   */
+  const previous: Offering | null = selfReply ? null : offeringOnTable(parent)
+
+  /** This turn included. 1 means the partner has just started a run. */
+  const selfReplyDepth = selfReply ? selfRepliesSince(path) + 1 : 0
 
   // Creation order, still. Once a game branches this stops being a position and
   // becomes only a name — which is what it is used as: the handle the interpreter
@@ -234,8 +289,13 @@ export async function POST(req: NextRequest) {
   // relation spent on a branch the player walked away from was never spent here.
   const spent = spentRelations(relationsAlong(path), 1)
 
+  // Nobody claimed anything on a self-reply, so there is nothing to judge a move
+  // against. Ignored rather than refused: a client that keeps sending the field it
+  // always sends should not have its turn rejected over it.
   const claimedRelation: RelationId | null =
-    body?.claimedRelation && relations.includes(body.claimedRelation) ? body.claimedRelation : null
+    !selfReply && body?.claimedRelation && relations.includes(body.claimedRelation)
+      ? body.claimedRelation
+      : null
 
   if (game.declaredRelation === 'required' && !claimedRelation && previous !== null) {
     return err('This game asks you to name the relation you are claiming.', 400)
@@ -265,23 +325,25 @@ export async function POST(req: NextRequest) {
   // told something arithmetic.
   if (
     game.enforcesConstraint && previous !== null && claimedRelation &&
-    !relationPermitted(claimedRelation, previous.medium, mediumId)
+    !relationPermitted(claimedRelation, previous.medium, move.medium)
   ) {
+    const moveMedium = (getMedium(move.medium)?.plural ?? move.medium).toLowerCase()
     const { data: rejected } = await ((db.from('listen_turns') as any)
       .insert({
         session_id: sessionId,
         user_id: userId,
         turn_index: turnIndex,
         parent_turn_id: parent?.id ?? null,
+        move_by: 'player',
         tuning,
         move_offering: move,
         reply_offering: null,
         relation: null,
         claimed_relation: claimedRelation,
-        reading: `A ${claimedRelation} has to cross media, and this stayed in ${medium.plural.toLowerCase()}.`,
+        reading: `A ${claimedRelation} has to cross media, and this stayed in ${moveMedium}.`,
         narration:
           `You claimed ${claimedRelation}, which only means something when the medium changes. ` +
-          `The offering on the table was already ${medium.plural.toLowerCase()}. Answer in something else, ` +
+          `The offering on the table was already ${moveMedium}. Answer in something else, ` +
           `or claim a relation that can live inside one medium.`,
         facts: [],
         legal: false,
@@ -313,6 +375,8 @@ export async function POST(req: NextRequest) {
     reading: t.reading,
     narration: t.narration,
     carried: t.carried,
+    // So the interpreter is not shown its own offerings attributed to the player.
+    move_by: t.move_by,
   }))
 
   // Everything the player can see but this branch did not live through. Offered so
@@ -331,7 +395,7 @@ export async function POST(req: NextRequest) {
 
   const linkable = linkableTurns(graph, parent?.id ?? null).map(t => t.turn_index)
 
-  const systemPrompt = buildSystemPrompt(game, media, relations, tuning)
+  const systemPrompt = buildSystemPrompt(game, media, relations, tuning, selfReply)
   const userPrompt = buildUserPrompt({
     game,
     media,
@@ -341,12 +405,17 @@ export async function POST(req: NextRequest) {
     elsewhere,
     move,
     previous,
+    selfReply,
+    selfReplyFrom: selfReply ? parent!.turn_index : null,
+    selfReplyDepth,
     // Said only when the player went back, because on a straight continuation it
     // would be a sentence of prompt that tells the interpreter nothing.
     parentIndex: parent && parent.turn_index !== turnIndex - 1 ? parent.turn_index : null,
     claimedRelation,
     spent,
-    prediction: body?.prediction?.trim() || null,
+    // A prediction is a player's guess at what their own move will draw back.
+    // There is no move of theirs on a self-reply, so there is nothing to predict.
+    prediction: selfReply ? null : body?.prediction?.trim() || null,
     turnIndex,
     tuning,
     due,
@@ -492,10 +561,10 @@ export async function POST(req: NextRequest) {
       console.warn(`[correlate] retrying reply in ${game.id}: ${problem}`)
 
       const retryRaw = await callInterpreter(
-        buildSystemPrompt(game, retryMedia, relations, tuning),
+        buildSystemPrompt(game, retryMedia, relations, tuning, selfReply),
         buildRetryPrompt({
           game, media: retryMedia, relations, move, previous, problem, attempted,
-          reading: interpretation.reading,
+          reading: interpretation.reading, selfReply,
         }),
       )
       const retry = retryRaw
@@ -553,8 +622,8 @@ export async function POST(req: NextRequest) {
         console.warn(`[correlate] salvaged a reply in ${game.id} after two interpreter attempts`)
 
         const accountRaw = await callInterpreter(
-          buildSystemPrompt(game, media, relations, tuning),
-          buildSalvageAccountPrompt({ move, reply, reading: interpretation.reading }),
+          buildSystemPrompt(game, media, relations, tuning, selfReply),
+          buildSalvageAccountPrompt({ move, reply, reading: interpretation.reading, selfReply }),
         )
         const account = accountRaw ? parseJsonObject(accountRaw) : null
         const narration = typeof account?.narration === 'string' ? account.narration.trim() : ''
@@ -619,13 +688,27 @@ export async function POST(req: NextRequest) {
     ? { ...interpretation.worldDelta, mediaVisited: visitedAfter(world, move, reply) }
     : null
 
+  /**
+   * The move as stored, which on a self-reply may be re-framed.
+   *
+   * The partner is allowed to narrow what it is answering — the stopping rather
+   * than the reach — and when it does, the row has to say so, or the board shows
+   * the whole offering next to a reading of one part of it. The original record is
+   * untouched: this changes which part is in play, never which record it is, and a
+   * blank or missing `reframing` leaves the framing exactly as it was played.
+   */
+  const storedMove: Offering = selfReply && interpretation.reframing
+    ? { ...move, framing: interpretation.reframing }
+    : move
+
   const { data: turn, error: turnErr } = await ((db.from('listen_turns') as any)
     .insert({
       session_id: sessionId,
       user_id: userId,
       turn_index: turnIndex,
       parent_turn_id: parent?.id ?? null,
-      move_offering: move,
+      move_by: selfReply ? 'partner' : 'player',
+      move_offering: storedMove,
       reply_offering: reply,
       reply_query: replyNote,
       relation,
@@ -674,6 +757,10 @@ export async function POST(req: NextRequest) {
     replyRejected: firstPass.replyRejection
       ? describeRejection(firstPass.replyRejection as any)
       : null,
+    // How many turns the partner has now taken in a row, so a client running a
+    // continuation knows where it stands without re-deriving it from the rows it
+    // has in memory. Zero on a player's turn — which is also what resets it.
+    selfReplyDepth,
   })
 }
 

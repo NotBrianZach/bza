@@ -215,6 +215,14 @@ export interface WorldFact {
 }
 
 /**
+ * Who played the move a turn answers.
+ *
+ * 'partner' means the partner answered its own previous offering — the player
+ * stood back for that turn. See lib/correlate/continuation.ts.
+ */
+export type MoveBy = 'player' | 'partner'
+
+/**
  * What the player has asked of their partner, adjustable mid-game.
  *
  * Kept structurally identical to the registry's `Tuning` (lib/correlate/tuning.ts)
@@ -227,6 +235,16 @@ export interface SessionTuning {
   weights?: Partial<Record<MediumId, number>>
   /** 0–4 per axis. Absent means the axis is resting and says nothing. */
   axes?: Record<string, number>
+  /**
+   * How many turns the partner takes by itself after one of yours. 0 is off.
+   *
+   * Stored here because it is something the player asks of their partner and
+   * changes mid-game, which is this column's whole job. It is *not* part of the
+   * weighting: it governs who takes the next turn rather than what the partner
+   * reaches for, and it is deliberately never shown to the interpreter. See
+   * lib/correlate/continuation.ts.
+   */
+  continuation?: number
 }
 
 export interface CorrelationSession {
@@ -286,6 +304,17 @@ export interface CorrelationTurn {
    * branch is.
    */
   parent_turn_id: string | null
+  /**
+   * Who authored the move this turn answers.
+   *
+   * 'partner' is a self-reply: the move is the partner's own previous answer, and
+   * the player took no turn. Stored rather than derived because nothing else in the
+   * row distinguishes the two, and the distinction is load-bearing in both
+   * directions — the engine caps consecutive self-replies from it, and the board
+   * must never label a partner-authored move "you offered". Null on every row
+   * written before migration 59, which means 'player'.
+   */
+  move_by: MoveBy | null
   move_offering: Offering
   reply_offering: Offering | null
   reply_query: string | null
@@ -367,6 +396,16 @@ export interface Interpretation {
   /** Set when a reply was proposed but could not be used. Recorded on the turn
    *  so a dropped reply is never indistinguishable from one that found nothing. */
   replyRejection?: unknown
+  /**
+   * Self-reply turns only: which part of its own offering the partner is now
+   * answering. Empty when it is answering the whole of it.
+   *
+   * This is what stops a self-reply being a restatement. Re-framing your own
+   * offering — answering the stopping rather than the reach — is a move in the same
+   * sense choosing a framing was in the first place, and `framing` was never
+   * defaulted to "all of it" for exactly this reason.
+   */
+  reframing: string
   /** Why that reply answers this move. */
   replyReason: string
   /** The relation the reply uses. */

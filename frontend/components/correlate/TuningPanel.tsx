@@ -4,9 +4,12 @@ import { useMemo, useState } from 'react'
 import { ChevronDown, Info, RotateCcw, SlidersHorizontal } from 'lucide-react'
 import { getMedium } from '@/lib/correlate/media'
 import {
-  AXIS_LIST, DEFAULT_WEIGHT, WEIGHT_HINTS, WEIGHT_LABELS, axisValue, isNeutral,
-  tuningSummary, weightOf, type MediumWeight, type Tuning, type TuningAxisId,
+  AXIS_LIST, DEFAULT_WEIGHT, WEIGHT_HINTS, WEIGHT_LABELS, axisValue, continuationOf,
+  isUntouched, tuningSummary, weightOf, type MediumWeight, type Tuning, type TuningAxisId,
 } from '@/lib/correlate/tuning'
+import {
+  CONTINUATION_HINTS, CONTINUATION_LABELS, CONTINUATION_OFF, CONTINUATION_STOPS,
+} from '@/lib/correlate/continuation'
 import { facetsFor, scopableMedia, selectedOptions, type Scopes } from '@/lib/correlate/scope'
 import type { MediumId } from '@/lib/correlate/types'
 import PresetPicker from './PresetPicker'
@@ -44,8 +47,12 @@ export default function TuningPanel({
   /** Which medium's facets are expanded. One at a time — twelve open at once is a wall. */
   const [openScope, setOpenScope] = useState<MediumId | null>(null)
   const summary = useMemo(() => tuningSummary(tuning, media), [tuning, media])
-  const neutral = isNeutral(tuning)
+  // `isUntouched`, not `isNeutral`: continuation never reaches the interpreter, so
+  // it is not part of the weighting — but it is something the player set, and a
+  // reset button that hid itself while it was on would be lying.
+  const neutral = isUntouched(tuning)
   const scopes: Scopes = tuning.scopes ?? {}
+  const carry = continuationOf(tuning)
   const narrowable = useMemo(() => scopableMedia(media), [media])
 
   const setWeight = (medium: MediumId, weight: MediumWeight) => {
@@ -315,9 +322,49 @@ export default function TuningPanel({
             })}
           </div>
 
+          {/* How far it carries on by itself. Last, and separated, because it is
+              not part of the weighting: the three blocks above say what your
+              partner reaches for, and this one says who takes the next turn. The
+              interpreter is never told about it — it answers one turn at a time
+              and does not know whether another is coming. */}
+          <div className="pt-3 border-t border-gray-100 dark:border-gray-700">
+            <div className="flex items-baseline gap-2">
+              <p className="text-xs font-medium text-gray-700 dark:text-gray-200">On its own</p>
+              <p className={`text-[11px] ml-auto ${carry === CONTINUATION_OFF ? 'text-gray-400 dark:text-gray-500' : accentText}`}>
+                {CONTINUATION_LABELS[carry]}
+              </p>
+            </div>
+            <p className="text-[11px] text-gray-400 dark:text-gray-500 leading-relaxed mb-1.5">
+              How many turns it takes after yours, answering its own offering.
+            </p>
+            <div className="flex gap-0.5 flex-wrap">
+              {CONTINUATION_STOPS.map(stop => (
+                <button
+                  key={stop}
+                  disabled={disabled}
+                  onClick={() => onChange({ ...tuning, continuation: stop })}
+                  title={CONTINUATION_HINTS[stop]}
+                  aria-pressed={carry === stop}
+                  className={`text-[10px] px-1.5 py-0.5 rounded-md transition-colors disabled:opacity-50 ${
+                    carry === stop
+                      ? 'bg-gray-800 text-white dark:bg-gray-100 dark:text-gray-900'
+                      : 'bg-gray-100 text-gray-500 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  {CONTINUATION_LABELS[stop]}
+                </button>
+              ))}
+            </div>
+            <p className="mt-1.5 text-[11px] text-gray-400 dark:text-gray-500 leading-relaxed">
+              {CONTINUATION_HINTS[carry]}
+            </p>
+          </div>
+
           {!neutral && (
             <button
-              onClick={() => onChange({ weights: {}, axes: {}, scopes: {} })}
+              onClick={() => onChange({
+                weights: {}, axes: {}, scopes: {}, continuation: CONTINUATION_OFF,
+              })}
               disabled={disabled}
               className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors disabled:opacity-50"
             >
