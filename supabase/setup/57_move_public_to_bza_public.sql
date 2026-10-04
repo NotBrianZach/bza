@@ -150,23 +150,29 @@ alter default privileges in schema bza_public grant select on tables to anon;
 
 commit;
 
--- ── Blocked on three stale functions ─────────────────────────────────────────
+-- ── Was blocked on one stale function; no longer ─────────────────────────────
 --
--- This file does not run yet, and the reason is worth keeping: get_weekly_usage,
--- get_and_increment_overage and reconcile_all_overages all join `profiles p` and
--- read `p.stripe_customer_id`, but that column lives on billing_customers now.
--- They are already broken in production — a LANGUAGE sql body is validated when
--- it is created, not when the column underneath it moves, so they have been
--- failing at call time instead. scripts/report-usage.sh reaches
--- get_weekly_usage over /rest/v1/rpc with `curl -sf`, which swallows the error.
+-- get_weekly_usage joined `profiles p` and read `p.stripe_customer_id`, a
+-- column that moved to billing_customers. A LANGUAGE sql body is validated
+-- when it is written and not when the column underneath it moves, so it had
+-- been failing at call time rather than visibly. `create or replace`
+-- revalidates, so this migration could not avoid surfacing it: it aborted
+-- there. Migration 58 drops it — the weekly metering path it served was the one
+-- that could double-bill — so this file now runs clean.
 --
--- `create or replace` revalidates, so this migration cannot help surfacing them:
--- it aborts on the first one. Fix the join to billing_customers (or drop the
--- functions, if the weekly report is no longer wanted) and this runs clean —
--- it was validated by transaction-and-rollback against production with exactly
--- those three excluded: 66 tables moved, 123 foreign keys intact, 51 sequences
--- and 71 policies carried, and on_auth_user_created re-bound to the moved
--- handle_new_user.
+-- get_and_increment_overage and reconcile_all_overages were never broken. They
+-- read billing_customers correctly and only looked implicated because
+-- stripe_customer_id is the name of a column in their RETURNS TABLE.
+--
+-- Validated by transaction-and-rollback against production: 66 tables in
+-- bza_public, 2 left in public, 123 foreign keys intact, 51 sequences and 71
+-- policies carried, on_auth_user_created re-bound to the moved handle_new_user,
+-- and handle_new_user's body rewritten.
+--
+-- What still gates it is not SQL: the 35 client-construction sites need
+-- db: { schema: 'bza_public' } deployed in the same change, or there is a
+-- window where the app reads a schema its tables have left. Run order and the
+-- security_invoker alternative are in the rollout note above.
 
 -- ── Rollout, which is not SQL ────────────────────────────────────────────────
 --
