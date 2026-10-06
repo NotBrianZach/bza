@@ -1,7 +1,9 @@
 -- Move the application out of `public` and into `bza_public`.
 --
--- NOT YET APPLIED. See the rollout note at the bottom — the database half of
--- this and the client half have to land together, and the order matters.
+-- APPLIED 2026-10-06, together with the client half (commit 1D14CBC4BEB74F9F).
+-- The rollout note at the bottom records how. Kept in full because it is still
+-- the description of what this file does, and because it is replayable onto a
+-- fresh project.
 --
 -- Why at all: `public` in this project is shared. Another app's tables live in
 -- `woofs`/`_w`, its signup hook sits on the same `auth.users`, and one of its
@@ -203,11 +205,42 @@ commit;
 --    also fails on a hardcoded 'bza_public' outside the one module that defines
 --    it, so the next schema move is one constant. Run it from frontend/:
 --       node tests/supabase-schema.mjs
--- 3. Apply this file and deploy the client change together. Between the two the
---    app is reading a schema its tables have left. For a cutover with no such
---    window, create security_invoker views in public named after each moved
---    table first, deploy, then drop them:
+-- 3. Apply this file and deploy the client change together. DONE 2026-10-06,
+--    and the window was made small rather than eliminated.
+--
+--    What was actually run, in this order: `npm run build:cf` first, with the
+--    new client and BUILD_SHA already stamped, while production still served
+--    the old bundle and the tables were still in public — so the expensive
+--    minutes cost nothing. Then this file. Then `npx wrangler deploy` of the
+--    already-built artifact. deploy:cf is just `build:cf && wrangler deploy`,
+--    so splitting them shrank the exposed window from a whole Next build to a
+--    single upload: ~11 seconds.
+--
+--    Verified after: 66 tables in bza_public and 2 left in public, 123 foreign
+--    keys, 71 policies, 21 functions moved with rate_limit_woofs_clients_inserts
+--    correctly left behind; /api/version reporting the new sha; an authenticated
+--    PostgREST read returning real rows; get_user_quota and get_reading_stats
+--    returning real values; and `wrangler tail` clean across live traffic.
+--    `GET /rest/v1/books` without a profile header now 404s with
+--    'Could not find the table public.books', which is the proof the move is
+--    real and the reason the window mattered.
+--
+--    The security_invoker-views alternative below was costed and rejected as
+--    more dangerous than the 11 seconds it would have saved. Two reasons. It
+--    needs 66 views plus grants, each one a chance to omit security_invoker and
+--    silently bypass every RLS policy. And it does not even work as written:
+--    this file moves all 21 functions too, and a view cannot forward a function
+--    call, so the 5 functions the client reaches by name — get_monthly_api_costs,
+--    get_reading_progress, get_reading_stats, get_user_quota, get_weak_topics,
+--    across 13 call sites — would have 404'd through the whole window the views
+--    exist to remove. A real zero-window cutover needs forwarding functions in
+--    public as well, which is strictly more work than it looks:
 --       create view public.books with (security_invoker = true)
 --         as select * from bza_public.books;
 --    security_invoker is what keeps RLS evaluating as the caller instead of the
 --    view owner; without it the views would quietly bypass every policy.
+--
+--    A break-glass reverse of this file was written before it was applied and
+--    was not needed. Its one non-obvious requirement: do NOT move
+--    youtube_tracks back, because migration 51 put it in bza_public before this
+--    file existed and the deployed cache code reads it there.
