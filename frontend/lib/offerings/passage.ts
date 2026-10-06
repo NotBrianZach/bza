@@ -17,19 +17,25 @@
 
 import { createClient } from '@supabase/supabase-js'
 import type { Offering } from '@/lib/correlate/types'
+import { dbSchema } from '../supabaseSchema'
 
 const DEFAULT_PAGE_CHARS = 420
 /** Enough to be a real passage, short enough to read on a card. */
 const EXCERPT_CHARS = 320
 
-let _db: ReturnType<typeof createClient> | null = null
+// In its own function so the annotation carries the schema — see the note in
+// lib/apiQuota.ts. `ReturnType<typeof createClient>` would mean public.
+function makeDb() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { ...dbSchema },
+  )
+}
+
+let _db: ReturnType<typeof makeDb> | null = null
 function db() {
-  if (!_db) {
-    _db = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    )
-  }
+  if (!_db) _db = makeDb()
   return _db
 }
 

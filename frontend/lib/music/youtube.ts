@@ -21,6 +21,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js'
+import { dbSchema } from '../supabaseSchema'
 
 const SEARCH = 'https://www.googleapis.com/youtube/v3/search'
 const OEMBED = 'https://www.youtube.com/oembed'
@@ -38,12 +39,14 @@ function makeDb() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    // youtube_tracks lives in `bza_public`, not `public` — see
-    // supabase/setup/51_youtube_cache.sql. The schema must also be listed
-    // under Settings -> API -> Exposed schemas, which is a project setting no
-    // migration can set; without it every query here returns PGRST106 and
-    // resolution falls back to the 30s preview.
-    { db: { schema: 'bza_public' } },
+    // youtube_tracks was the first table to live outside `public` — see
+    // supabase/setup/51_youtube_cache.sql. The whole app has since followed it
+    // (setup/57), so the schema now comes from the shared constant rather than
+    // being named here. It must also be listed under Settings -> API ->
+    // Exposed schemas, which is a project setting no migration can set;
+    // without it every query here returns PGRST106 and resolution falls back
+    // to the 30s preview.
+    { ...dbSchema },
   )
 }
 

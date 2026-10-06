@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { getUserFromToken } from '@/lib/apiQuota'
+import { dbSchema } from '@/lib/supabaseSchema'
 
 /**
  * Import highlights from Kindle clippings or Readwise CSV.
@@ -13,7 +14,7 @@ export async function POST(req: NextRequest) {
   const { format, content } = await req.json() as { format: 'kindle' | 'readwise'; content: string }
   if (!content?.trim()) return NextResponse.json({ error: 'content required' }, { status: 400 })
 
-  const db = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+  const db = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { ...dbSchema })
   const { data: books } = await db.from('books').select('id, title').eq('user_id', userId).is('deleted_at', null)
   const bookMap = new Map((books ?? []).map(b => [b.title.toLowerCase(), b.id]))
 

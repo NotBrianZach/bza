@@ -1,5 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
+import { dbSchema } from '@/lib/supabaseSchema'
+import { schemaHeaders } from '@/lib/supabaseSchema'
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'poinkcompany@gmail.com'
 
@@ -10,6 +12,7 @@ async function getAuthUser(req: NextRequest): Promise<string | null> {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      ...dbSchema,
       cookies: {
         getAll() { return req.cookies.getAll() },
         setAll(cs) { cs.forEach(({ name, value, options }) => res.cookies.set(name, value, options)) },
@@ -28,6 +31,7 @@ export async function GET(req: NextRequest) {
     `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/pricing_config?select=*&order=model.asc`,
     {
       headers: {
+        ...schemaHeaders,
         apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
         Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY!}`,
       },
@@ -56,6 +60,7 @@ export async function PATCH(req: NextRequest) {
     {
       method: 'PATCH',
       headers: {
+        ...schemaHeaders,
         apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
         Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY!}`,
         'Content-Type': 'application/json',
@@ -81,6 +86,7 @@ export async function POST(req: NextRequest) {
     {
       method: 'POST',
       headers: {
+        ...schemaHeaders,
         apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
         Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY!}`,
         'Content-Type': 'application/json',

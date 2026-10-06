@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { dbSchema } from '@/lib/supabaseSchema'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
 // Admin client — bypasses RLS to read from private storage buckets
-const db = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } })
+const db = createClient(SUPABASE_URL, SERVICE_KEY, { ...dbSchema, auth: { persistSession: false } })
 
 // In-memory cache of recently signed URLs (edge function instance reuse)
 const signedUrlCache = new Map<string, { url: string; expires: number }>()

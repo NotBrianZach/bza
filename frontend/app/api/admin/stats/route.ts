@@ -1,5 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
+import { dbSchema } from '@/lib/supabaseSchema'
+import { schemaHeaders } from '@/lib/supabaseSchema'
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'poinkcompany@gmail.com'
 
@@ -9,6 +11,7 @@ async function getAuthUser(req: NextRequest): Promise<string | null> {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      ...dbSchema,
       cookies: {
         getAll() { return req.cookies.getAll() },
         setAll(cs) { cs.forEach(({ name, value, options }) => res.cookies.set(name, value, options)) },
@@ -25,7 +28,7 @@ export async function GET(req: NextRequest) {
 
   const base = process.env.NEXT_PUBLIC_SUPABASE_URL!
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY!
-  const headers = { apikey: key, Authorization: `Bearer ${key}` }
+  const headers = { ...schemaHeaders, apikey: key, Authorization: `Bearer ${key}` }
 
   // Total usage this month
   const now = new Date()

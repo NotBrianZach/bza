@@ -1,13 +1,22 @@
 import { createClient } from '@supabase/supabase-js'
+import { dbSchema } from './supabaseSchema'
 
-let _supabase: ReturnType<typeof createClient> | null = null
+// Built in its own function so the annotation below carries the schema. The
+// schema is a type parameter on SupabaseClient, so the plain
+// `ReturnType<typeof createClient>` this used to say meant "a public-schema
+// client" and would not accept a bza_public one. Same shape as
+// lib/music/youtube.ts, which hit this first.
+function makeServiceClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { ...dbSchema },
+  )
+}
+
+let _supabase: ReturnType<typeof makeServiceClient> | null = null
 function getServiceClient() {
-  if (!_supabase) {
-    _supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    )
-  }
+  if (!_supabase) _supabase = makeServiceClient()
   return _supabase
 }
 

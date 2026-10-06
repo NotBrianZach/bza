@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { dbSchema } from '@/lib/supabaseSchema'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -59,7 +60,7 @@ export async function GET(req: NextRequest) {
 
     // Clean up uploaded PDF + record billing (fire and forget)
     if (storagePath || userId) {
-      const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+      const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { ...dbSchema })
       if (storagePath) {
         adminClient.storage.from('documents').remove([storagePath]).catch(() => {})
       }

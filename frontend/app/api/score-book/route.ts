@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import type { ScoreBar } from '@/types'
+import { schemaHeaders } from '@/lib/supabaseSchema'
 
 const MAX_BARS = 5
 const ALLOWED_MODELS = ['gpt-4o-mini', 'gpt-4o']
@@ -63,6 +64,7 @@ export async function POST(req: NextRequest) {
           method: 'PATCH',
           headers: {
             'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+            ...schemaHeaders,
             'apikey': process.env.SUPABASE_SERVICE_ROLE_KEY!,
             'Content-Type': 'application/json',
             'Prefer': 'return=minimal',

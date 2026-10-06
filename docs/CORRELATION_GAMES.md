@@ -523,17 +523,35 @@ there; the medium stays yours to play.
 
 **Axes**, five stops each, resting in the middle: `nostalgia`
 (the unencountered ↔ the remembered), `obliquity` (plainly ↔ obliquely),
-`friction` (goes with you ↔ argues). The neutral stop says **nothing** —
+`friction` (goes with you ↔ argues), `abstraction` (the thing itself ↔
+the idea underneath). The neutral stop says **nothing** —
 empty string — so an untouched tuning contributes no prompt and costs no
 tokens, and a test asserts the prompt with a neutral tuning is byte-identical
 to the prompt without one.
 
-**The hazard, and it is nostalgia specifically.** "Lean older" is one
-careless sentence away from "a shared decade is a connection", which is
-exactly the metadata-derived reasoning this section removed. So the
-weighting block states that it governs what you reach *for* and never what
-makes a connection hold, repeats that a shared decade is a coincidence of
-filing, and a test asserts that sentence is present.
+**Why `abstraction` is not more stops on `obliquity`.** They look like the
+same axis and are not. Obliquity is *distance* — how many steps a reply may
+stand from the move. Abstraction is *which layer the connection lives in* —
+what both works depict, or what both works are doing. Four pairs exist, not
+two: a painting of rain answered by a song about rain is concrete and close;
+the same painting answered by a work sharing only its held breath is abstract
+and close, the quality right there in one clause; a reply three removes away
+through an object nobody else would spot is concrete and far. Fold either
+axis into the other and two of the four stop being askable. It is also the
+request players make first and previously could not phrase — "stop answering
+the subject" is not mutable media, not distance, and not disagreement.
+
+**The hazard, and it is two axes, failing in opposite directions.** "Lean
+older" is one careless sentence away from "a shared decade is a connection",
+which is exactly the metadata-derived reasoning this section removed. "Answer
+the idea" is one careless sentence away from "a shared mood is a connection" —
+the same collapse arriving from the far end, one admitting a fact nobody felt
+and the other a feeling nobody can state. So the weighting block states that
+it governs what you reach *for* and never what makes a connection hold,
+repeats that a shared decade is a coincidence of filing, and the far abstract
+stop says outright that an unnamed resemblance is vagueness rather than
+abstraction and has to survive being said in plain words. Tests assert all
+three sentences are present.
 
 **Proportion cannot be instructed, so it is computed.** A model told
 "mostly music, occasionally art" will answer in music every turn and never

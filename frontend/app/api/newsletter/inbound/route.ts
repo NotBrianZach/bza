@@ -9,6 +9,7 @@
  * Set NEWSLETTER_WEBHOOK_SECRET to verify requests (Mailgun signing key, etc.)
  */
 import { NextRequest, NextResponse } from 'next/server'
+import { schemaHeaders } from '@/lib/supabaseSchema'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SERVICE_KEY  = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -45,7 +46,7 @@ function extractToken(to: string): string | null {
 async function getUserIdByToken(token: string): Promise<string | null> {
   const res = await fetch(
     `${SUPABASE_URL}/rest/v1/newsletter_tokens?token=eq.${encodeURIComponent(token)}&select=user_id`,
-    { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
+    { headers: { ...schemaHeaders, apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
   )
   const rows: { user_id: string }[] = await res.json()
   return rows[0]?.user_id ?? null
@@ -62,6 +63,7 @@ async function createBook(userId: string, title: string, markdown: string, sourc
     {
       method: 'POST',
       headers: {
+        ...schemaHeaders,
         apikey: SERVICE_KEY,
         Authorization: `Bearer ${SERVICE_KEY}`,
         'Content-Type': 'text/markdown',
@@ -77,6 +79,7 @@ async function createBook(userId: string, title: string, markdown: string, sourc
   const bookRes = await fetch(`${SUPABASE_URL}/rest/v1/books`, {
     method: 'POST',
     headers: {
+      ...schemaHeaders,
       apikey: SERVICE_KEY,
       Authorization: `Bearer ${SERVICE_KEY}`,
       'Content-Type': 'application/json',

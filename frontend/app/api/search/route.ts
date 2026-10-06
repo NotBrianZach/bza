@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { getUserFromToken } from '@/lib/apiQuota'
+import { dbSchema } from '@/lib/supabaseSchema'
 
 /** Search across all books using Postgres full-text search + fallback to search_text */
 export async function GET(req: NextRequest) {
@@ -10,7 +11,7 @@ export async function GET(req: NextRequest) {
   const userId = await getUserFromToken(req.headers.get('authorization'))
   if (!userId) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
 
-  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { ...dbSchema })
 
   // Full-text search on title + search_text
   const tsQuery = q.split(/\s+/).filter(w => w.length >= 2).map(w => w + ':*').join(' & ')

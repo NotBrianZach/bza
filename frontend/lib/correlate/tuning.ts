@@ -34,10 +34,13 @@
  *    the chain has caught up. See `owedMedia`.
  *
  * 2. **Tuning governs what the partner reaches for, never what makes a connection
- *    hold.** Nostalgia is the one axis where that distinction can be lost: "lean
- *    older" must not become "a shared decade is a connection", which is the
- *    metadata-derived reasoning this section removed on purpose. The guidance says
- *    so, and a test asserts it says so.
+ *    hold.** Two axes can lose that distinction, and they lose it in opposite
+ *    directions. Nostalgia: "lean older" must not become "a shared decade is a
+ *    connection", which is the metadata-derived reasoning this section removed on
+ *    purpose. Abstraction: "answer the idea" must not become "a shared mood is a
+ *    connection", which is the same failure arriving from the other end — one
+ *    admits a fact nobody felt, the other a feeling nobody can state. Both stops
+ *    carry the guard in their own text, and a test asserts both still do.
  *
  * Neutral is the empty object. A tuning nobody has touched stores no keys, says
  * nothing to the interpreter, spends no tokens, and — importantly — restricts
@@ -106,7 +109,7 @@ export function shareLabel(share: number): string {
 // Axes
 // ---------------------------------------------------------------------------
 
-export type TuningAxisId = 'nostalgia' | 'obliquity' | 'friction'
+export type TuningAxisId = 'nostalgia' | 'obliquity' | 'friction' | 'abstraction'
 
 export interface TuningAxis {
   id: TuningAxisId
@@ -208,12 +211,61 @@ export const TUNING_AXES: Record<TuningAxisId, TuningAxis> = {
       'friction is disagreement about the reading, not reluctance to take a turn.',
     ],
   },
+
+  /**
+   * Not a second obliquity. Obliquity is *distance* — how many steps the reply
+   * may stand from the move. Abstraction is *which layer the connection lives
+   * in*: what both works depict, or what both works are doing. The two are
+   * independent, and the pairs that prove it are the reason this is its own axis
+   * rather than two more stops on that one. A painting of rain answered by a song
+   * about rain is concrete and close. The same painting answered by a work that
+   * shares only its held breath is abstract and close — the quality is right
+   * there, one clause says it. A reply three removes away via a shared object
+   * nobody else would spot is concrete and far. Collapsing either axis into the
+   * other makes two of those four unaskable.
+   *
+   * It is also the axis a player reaches for first and could not previously say.
+   * "Stop answering the subject" has no setting in the other three: muting media
+   * changes where a reply comes from, obliquity changes how far it travels, and
+   * friction changes whether it agrees — none of them move the connection off the
+   * surface of the move.
+   */
+  abstraction: {
+    id: 'abstraction',
+    name: 'Abstraction',
+    does: 'Whether your partner answers what the move depicts, or what it is doing underneath.',
+    low: 'the thing itself',
+    high: 'the idea underneath',
+    neutral: 2,
+    labels: ['The thing itself', 'Concrete', 'Either', 'Abstract', 'Pure idea'],
+    stops: [
+      'Answer the thing itself. Reach for what the move literally contains — its subject, its ' +
+      'setting, its objects, the event it depicts — and let the connection be between those ' +
+      'things. If your reading can only name a quality and never a thing, find another reply.',
+
+      'Lean concrete. Prefer the connection that lives in what both works depict to the one that ' +
+      'lives in what they are both about, when either is available.',
+
+      '',
+
+      'Lean abstract. Prefer the connection that lives in what both works are *doing* — their ' +
+      'shape, their pacing, the quality of attention they ask for — to the one that lives in ' +
+      'what they depict.',
+
+      'Answer the idea rather than the thing. The reply need share no subject, setting or object ' +
+      'with the move, only the quality underneath it — but name that quality outright in your ' +
+      'reading. An unnamed resemblance is not abstraction, it is vagueness: if the most you can ' +
+      'say is that the two works feel alike, you have not found a connection, you have found a ' +
+      'mood. Abstract still has to survive being said in plain words.',
+    ],
+  },
 }
 
 export const AXIS_LIST: TuningAxis[] = [
   TUNING_AXES.nostalgia,
   TUNING_AXES.obliquity,
   TUNING_AXES.friction,
+  TUNING_AXES.abstraction,
 ]
 
 export const ALL_AXIS_IDS: TuningAxisId[] = AXIS_LIST.map(a => a.id)

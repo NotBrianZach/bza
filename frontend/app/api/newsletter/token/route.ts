@@ -4,6 +4,8 @@
  */
 import { createServerClient } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
+import { dbSchema } from '@/lib/supabaseSchema'
+import { schemaHeaders } from '@/lib/supabaseSchema'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SERVICE_KEY  = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -12,7 +14,7 @@ const EMAIL_DOMAIN = process.env.NEWSLETTER_EMAIL_DOMAIN ?? 'aireadalong.com'
 async function getOrCreateToken(userId: string): Promise<string> {
   // Try to fetch existing
   const res = await fetch(`${SUPABASE_URL}/rest/v1/newsletter_tokens?user_id=eq.${userId}&select=token`, {
-    headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` },
+    headers: { ...schemaHeaders, apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` },
   })
   const rows: { token: string }[] = await res.json()
   if (rows[0]?.token) return rows[0].token
@@ -21,6 +23,7 @@ async function getOrCreateToken(userId: string): Promise<string> {
   const ins = await fetch(`${SUPABASE_URL}/rest/v1/newsletter_tokens`, {
     method: 'POST',
     headers: {
+      ...schemaHeaders,
       apikey: SERVICE_KEY,
       Authorization: `Bearer ${SERVICE_KEY}`,
       'Content-Type': 'application/json',
@@ -35,6 +38,7 @@ async function getOrCreateToken(userId: string): Promise<string> {
 async function getUser(req: NextRequest) {
   let response = NextResponse.next()
   const supabase = createServerClient(SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+    ...dbSchema,
     cookies: {
       getAll() { return req.cookies.getAll() },
       setAll(cs) { cs.forEach(({ name, value, options }) => response.cookies.set(name, value, options)) },
@@ -58,7 +62,7 @@ export async function POST(req: NextRequest) {
   // Delete existing and let getOrCreateToken make a fresh one
   await fetch(`${SUPABASE_URL}/rest/v1/newsletter_tokens?user_id=eq.${user.id}`, {
     method: 'DELETE',
-    headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` },
+    headers: { ...schemaHeaders, apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` },
   })
   const token = await getOrCreateToken(user.id)
   return NextResponse.json({ email: `${token}@${EMAIL_DOMAIN}`, token })

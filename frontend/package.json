@@ -14,7 +14,9 @@
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
-    "test:correlate": "node tests/correlate-logic.mjs"
+    "test:correlate": "node tests/correlate-logic.mjs",
+    "test:schema": "node tests/supabase-schema.mjs",
+    "test": "npm run test:correlate && npm run test:schema"
   },
   "dependencies": {
     "@codemirror/lang-markdown": "^6.3.1",

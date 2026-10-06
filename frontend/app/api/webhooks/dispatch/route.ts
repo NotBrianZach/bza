@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { dbSchema } from '@/lib/supabaseSchema'
 
 /**
  * Internal webhook dispatch endpoint.
@@ -20,6 +21,7 @@ export async function POST(req: NextRequest) {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { ...dbSchema },
   )
 
   // Get active webhooks for this user subscribed to this event

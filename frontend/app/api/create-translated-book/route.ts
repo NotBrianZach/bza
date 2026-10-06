@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { dbSchema } from '@/lib/supabaseSchema'
 
 export async function POST(req: NextRequest) {
   let response = NextResponse.next()
@@ -8,6 +9,7 @@ export async function POST(req: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      ...dbSchema,
       cookies: {
         getAll() { return req.cookies.getAll() },
         setAll(cs) { cs.forEach(({ name, value, options }) => response.cookies.set(name, value, options)) },
@@ -23,6 +25,8 @@ export async function POST(req: NextRequest) {
   const admin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
+  ,
+    { ...dbSchema },
   )
 
   const charPageLength = 420

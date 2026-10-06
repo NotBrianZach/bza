@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { getBrowserProvider } from '@/lib/browser/provider'
 import { getUserFromToken, checkQuota, logUsage } from '@/lib/apiQuota'
+import { dbSchema } from '@/lib/supabaseSchema'
 
 // Hyperbeam standard-tier hourly rate. Update if it changes; markup applied by logUsage.
 const HOURLY_COST_USD = 0.15
@@ -10,6 +11,7 @@ function getDb() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { ...dbSchema },
   )
 }
 

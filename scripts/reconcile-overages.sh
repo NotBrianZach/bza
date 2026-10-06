@@ -80,10 +80,17 @@ header "Reconciling overage"
 # error response into an empty body and a nonzero exit, and under `set -e` the
 # script died with nothing said about why — which is how a broken function went
 # unnoticed. Read the body, then decide.
+# Content-Profile names the schema. reconcile_all_overages moved to bza_public
+# with everything else (setup/57), and a raw curl has no supabase-js client to
+# carry `db.schema` for it — the header is the only way to say so. Without it
+# PostgREST looks for the function in `public`, does not find it, and answers
+# 404/PGRST202: caught by the HTTP check below rather than silently, but the
+# billing run still meters nothing.
 RESPONSE=$(curl -sS -w '\n%{http_code}' \
     "${SUPABASE_URL}/rest/v1/rpc/reconcile_all_overages" \
     -H "apikey: ${SERVICE_KEY}" \
     -H "Authorization: Bearer ${SERVICE_KEY}" \
+    -H "Content-Profile: bza_public" \
     -H "Content-Type: application/json" \
     -d '{}') || die "could not reach Supabase"
 

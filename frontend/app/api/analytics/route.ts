@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { getUserFromToken } from '@/lib/apiQuota'
+import { dbSchema } from '@/lib/supabaseSchema'
 
 export async function GET(req: NextRequest) {
   const userId = await getUserFromToken(req.headers.get('authorization'))
   if (!userId) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
 
-  const db = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+  const db = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { ...dbSchema })
 
   const [booksRes, progressRes, usageRes, streaksRes] = await Promise.all([
     db.from('books').select('id, title, content_type, total_pages, created_at').eq('user_id', userId).is('deleted_at', null),

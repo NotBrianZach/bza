@@ -741,7 +741,7 @@ t('no link is null, not undefined', ni({ reading: 'r' }, ALL_MEDIA, ALL_RELATION
 // ---------------------------------------------------------------------------
 
 group('tuning registry — internal consistency')
-t('three axes are registered', AXIS_LIST.length === 3 && new Set(ALL_AXIS_IDS).size === 3)
+t('four axes are registered', AXIS_LIST.length === 4 && new Set(ALL_AXIS_IDS).size === 4)
 t('every axis is filed under its own id', AXIS_LIST.every(a => TUNING_AXES[a.id]?.id === a.id))
 t('every axis has a stop for every label', AXIS_LIST.every(a => a.stops.length === AXIS_STOPS && a.labels.length === AXIS_STOPS))
 t('every neutral is a real stop', AXIS_LIST.every(a => a.neutral >= 0 && a.neutral < AXIS_STOPS))
@@ -1057,7 +1057,24 @@ t('an axis contributes its own stop text', (() => {
 })())
 t('a resting axis contributes nothing', (() => {
   const d = describeTuning(TU({ axes: { nostalgia: 4 } }), ALL_MEDIA)
-  return !d.includes('Obliquity') && !d.includes('Friction')
+  return !d.includes('Obliquity') && !d.includes('Friction') && !d.includes('Abstraction')
+})())
+// The far end of abstraction is where the connection guard fails from the other
+// direction: nostalgia can let a shared decade count as a connection, abstraction
+// can let a shared mood count as one. Neither is sayable, and the stop text has to
+// keep saying so — the axis is worth nothing if "answer the idea" licenses vagueness.
+t('the far abstract stop refuses an unsayable connection',
+  /vagueness/.test(TUNING_AXES.abstraction.stops[4])
+  && /plain words/.test(TUNING_AXES.abstraction.stops[4]))
+t('the far concrete stop still wants a thing, not a quality',
+  /quality/.test(TUNING_AXES.abstraction.stops[0]))
+// Abstraction is a layer and obliquity is a distance, so they have to compose: a
+// close abstract reply and a far concrete one are both askable, and each axis must
+// still contribute its own text when the other is set.
+t('abstraction and obliquity compose rather than collide', (() => {
+  const d = describeTuning(TU({ axes: { abstraction: 4, obliquity: 0 } }), ALL_MEDIA)
+  return d.includes(TUNING_AXES.abstraction.stops[4].slice(0, 40))
+    && d.includes(TUNING_AXES.obliquity.stops[0].slice(0, 40))
 })())
 t('the summary is empty when neutral', tuningSummary(TU({}), ALL_MEDIA) === '')
 t('the summary names what was changed, as percentages', (() => {

@@ -21,6 +21,7 @@ import type {
   ActionIntent, CorrelationTurn, Interpretation, MediumId, Offering, RelationId,
 } from '@/lib/correlate/types'
 import { OfferingError, composeOffering, lookupOffering, resolveReply } from '@/lib/offerings'
+import { dbSchema } from '@/lib/supabaseSchema'
 
 /**
  * Play one turn of a correlation game.
@@ -72,14 +73,19 @@ const ELSEWHERE_TURNS = 12
 /** A hard stop on how much of a session is loaded, not an expected size. */
 const MAX_TURNS = 400
 
-let _service: ReturnType<typeof createClient> | null = null
+// In its own function so the annotation carries the schema — see the note in
+// lib/apiQuota.ts. `ReturnType<typeof createClient>` would mean public.
+function makeServiceClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { ...dbSchema },
+  )
+}
+
+let _service: ReturnType<typeof makeServiceClient> | null = null
 function serviceClient() {
-  if (!_service) {
-    _service = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    )
-  }
+  if (!_service) _service = makeServiceClient()
   return _service
 }
 

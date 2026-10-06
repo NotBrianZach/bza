@@ -169,19 +169,40 @@ commit;
 -- policies carried, on_auth_user_created re-bound to the moved handle_new_user,
 -- and handle_new_user's body rewritten.
 --
--- What still gates it is not SQL: the 35 client-construction sites need
--- db: { schema: 'bza_public' } deployed in the same change, or there is a
--- window where the app reads a schema its tables have left. Run order and the
--- security_invoker alternative are in the rollout note above.
+-- What still gates it is not SQL: the client half has to be deployed in the
+-- same change, or there is a window where the app reads a schema its tables
+-- have left. The client half is now written (see step 2); what is left is the
+-- run order in step 3.
 
 -- ── Rollout, which is not SQL ────────────────────────────────────────────────
 --
 -- 1. Add bza_public to Settings -> API -> Exposed schemas. Already done.
--- 2. Point all 35 client-construction sites at it:
---       createClient(url, key, { db: { schema: 'bza_public' } })
---    583 .from() and 19 .rpc() calls then need no edit, because they resolve
---    through the client's default schema. A site that gets missed returns
---    nothing rather than erroring, so this is the step to check twice.
+-- 2. Point the client sites at it. DONE, and it was two classes of site, not
+--    one. The count in this note said 35; it was 41 client constructions plus
+--    15 raw PostgREST calls that no client inventory lists at all.
+--
+--    a. 41 createClient/createServerClient/createBrowserClient sites now
+--       spread `...dbSchema` from frontend/lib/supabaseSchema.ts. 583 .from()
+--       and 19 .rpc() calls needed no edit — they resolve through the client's
+--       default schema.
+--
+--    b. 15 hand-rolled `fetch(`${url}/rest/v1/...`)` calls across 7 routes,
+--       plus the reconcile_all_overages curl in scripts/reconcile-overages.sh.
+--       `db.schema` is a supabase-js setting and does not reach these: they
+--       resolve against the server default no matter what. They now send
+--       Accept-Profile and Content-Profile. Two of those routes — score-book
+--       and newsletter/inbound — construct no client whatsoever, so auditing
+--       client constructions would never have found them. The billing RPC was
+--       among them, which is the same path that already failed silently once
+--       when stripe_customer_id moved.
+--
+--    A missed site of class (a) returns nothing rather than erroring, which is
+--    why this is not left to having remembered. frontend/tests/supabase-schema.mjs
+--    walks the tree, finds every construction and every raw REST call, and
+--    fails on any that neither carries the schema nor says why it doesn't. It
+--    also fails on a hardcoded 'bza_public' outside the one module that defines
+--    it, so the next schema move is one constant. Run it from frontend/:
+--       node tests/supabase-schema.mjs
 -- 3. Apply this file and deploy the client change together. Between the two the
 --    app is reading a schema its tables have left. For a cutover with no such
 --    window, create security_invoker views in public named after each moved
