@@ -2,7 +2,7 @@ import { supabase } from '../supabase'
 import { getGame } from '../correlate/games'
 import { resolveMedia } from '../correlate/media'
 import { resolveRelations } from '../correlate/relations'
-import { normalizeTuning, type Tuning } from '../correlate/tuning'
+import { normalizeTuning, startingTuning, type Tuning } from '../correlate/tuning'
 import type {
   CorrelationSession, CorrelationTurn, MediumId,
 } from '../correlate/types'
@@ -91,9 +91,12 @@ export const correlateQueries = {
         media,
         relations: resolveRelations(def.relations),
         world_state: def.seedWorld,
-        // Neutral. A game starts weighted the way the game describes itself, and
-        // the empty object is what "nobody has touched this" is stored as.
-        tuning: {},
+        // The default weighting, not the empty object — see `startingTuning`.
+        // Computed against this session's own `media` rather than stored as a
+        // constant, since that list is already an intersection with what this
+        // deployment can serve. It is written at creation and never applied
+        // afterwards, so a game in progress keeps whatever it has.
+        tuning: startingTuning(media),
       })
       .select()
       .single()

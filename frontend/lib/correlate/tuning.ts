@@ -46,6 +46,13 @@
  * nothing to the interpreter, spends no tokens, and — importantly — restricts
  * nothing: enforcement is something the player opts into by setting a share, so an
  * untouched game plays exactly as it did before any of this existed.
+ *
+ * Neutral is not, however, the **default**. A new game is created already weighted
+ * — see `startingTuning` — because "evenly across twelve media" is the absence of a
+ * preference rather than anybody's preference, and the player had to state theirs
+ * again every time. The two ideas stay separate on purpose: the empty object
+ * remains the identity element the prompt builders branch on, and what changed is
+ * only which tuning a session is born holding.
  */
 
 import type { MediumId } from './types'
@@ -331,6 +338,91 @@ export const DEFAULT_TUNING: Tuning = {
   shares: {}, axes: {}, scopes: {}, continuation: CONTINUATION_OFF,
 }
 
+/**
+ * The media a new game is weighted toward, and by how much.
+ *
+ * The empty object above is the identity element: it says nothing and restricts
+ * nothing, which made it the obvious thing to create a session with. It is the
+ * wrong *default* for the same reason the four-stop scale was wrong — an unweighted
+ * game spreads the partner's answering evenly over twelve media, and nobody is
+ * asking for that. It is the absence of an ask. In practice a player wanting music
+ * with the occasional painting had to go and say so at the start of every game.
+ *
+ * Three things worth naming, because the arithmetic is the whole point of this
+ * file:
+ *
+ *  - **Muting the other nine is the only way to say 90%.** A share is a raw weight
+ *    over the non-muted media, so leaving them at 50 would hand music 90/540 —
+ *    seventeen per cent. That is exactly the gap between the control and the maths
+ *    that §16a was written about.
+ *  - **Muting stops the partner, not the player.** All twelve media stay playable;
+ *    a move in one is read normally and answered in something else.
+ *  - **The weights sum to 100, so they read as the percentages.** Not a
+ *    requirement — `targetShares` normalises anything — but a default is the one
+ *    tuning nobody opens the panel to inspect, and these are the numbers it is
+ *    described by.
+ *
+ * `passage` is here despite being the one medium that `replyMediaFor` refuses on a
+ * retry: it searches the reader's own books and can come back empty through
+ * nobody's fault, so it is not a safety net and must not be mistaken for one. It is
+ * here because answering a reader with their own library is the best connection
+ * this section can make, and 5% of turns is worth an occasional extra interpreter
+ * call on an empty shelf. The actual no-miss media — the composed four — remain
+ * muted, which means the reply guarantee rests on the two catalogues.
+ */
+export const STARTING_SHARES: Partial<Record<MediumId, number>> = {
+  music: 90,
+  artwork: 5,
+  passage: 5,
+}
+
+/**
+ * The axes a new game starts on.
+ *
+ * `friction: 0` is "Agreeable" — take the most generous available reading of the
+ * move and extend it.
+ *
+ * `abstraction: 1` is "Concrete", and it is deliberately the *leaning* stop rather
+ * than stop 0. The two differ in one clause: stop 0 ends "if your reading can only
+ * name a quality and never a thing, find another reply", which instructs the
+ * interpreter to discard its own answer. A default must not spend a retry, and a
+ * partner whose opening disposition is to reject things contradicts the friction
+ * setting sitting next to it. Lean, do not refuse.
+ */
+export const STARTING_AXES: Partial<Record<TuningAxisId, number>> = {
+  friction: 0,
+  abstraction: 1,
+}
+
+/**
+ * The tuning a session is created with, for the media that session actually plays.
+ *
+ * Computed against the session's own media list rather than written out as a
+ * constant, because that list is an intersection with what the deployment can
+ * serve. A constant would mute media that are not there — harmless — and, far
+ * worse, leave a medium the list gains sitting at the default 50, quietly taking a
+ * third of the answers nobody asked it for.
+ *
+ * Applied **at creation only**, never as a fallback for a stored `{}`. `rules`
+ * already promises a game does not change shape underneath the person playing it,
+ * and that promise covers the weighting: an old session reads as unweighted because
+ * it genuinely was one.
+ *
+ * Degrades rather than overreaching. If none of the weighted media are available
+ * the game starts unweighted, because muting nine media in favour of three that
+ * are not there is a contradiction — `weightedReplyMedia` would ignore the mute
+ * anyway to keep its guarantee, so storing it would only mislead whoever read the
+ * row.
+ */
+export function startingTuning(media: MediumId[]): Tuning {
+  const tuning: Tuning = {
+    shares: {}, axes: { ...STARTING_AXES }, scopes: {}, continuation: CONTINUATION_OFF,
+  }
+  if (!media.some(m => STARTING_SHARES[m] !== undefined)) return tuning
+  for (const m of media) tuning.shares[m] = STARTING_SHARES[m] ?? MUTED_SHARE
+  return tuning
+}
+
 const clampInt = (v: unknown, lo: number, hi: number): number | null => {
   const n = typeof v === 'number' ? v : typeof v === 'string' ? Number(v) : NaN
   if (!Number.isFinite(n)) return null
@@ -426,6 +518,24 @@ export function isProportioned(tuning: Tuning): boolean {
  */
 export function isUntouched(tuning: Tuning): boolean {
   return isNeutral(tuning) && (tuning.continuation ?? CONTINUATION_OFF) === CONTINUATION_OFF
+}
+
+/**
+ * True when a tuning is exactly what a new game of these media is created with.
+ *
+ * What a reset button means now that the default is not the empty object: "back to
+ * unweighted" would have *discarded* the default rather than restoring it, which is
+ * the one thing a reset must not do. Compared through `shareOf` and `axisValue`
+ * rather than by key, so a tuning that reached the same place by hand counts as
+ * unchanged — the canonical form is an implementation detail and a player dragging
+ * a slider to where it started should not leave the button showing.
+ */
+export function isStarting(tuning: Tuning, media: MediumId[]): boolean {
+  const start = startingTuning(media)
+  if (continuationOf(tuning) !== continuationOf(start)) return false
+  if (!isUnscoped(tuning.scopes ?? {})) return false
+  if (media.some(m => shareOf(tuning, m) !== shareOf(start, m))) return false
+  return ALL_AXIS_IDS.every(id => axisValue(tuning, id) === axisValue(start, id))
 }
 
 /** Every share spelled out, for a control that needs all of them. */
@@ -702,7 +812,13 @@ export function tuningSummary(tuning: Tuning, media: MediumId[]): string {
     bits.push(`${Math.round(targets[m]! * 100)}% ${(getMedium(m)?.plural ?? m).toLowerCase()}`)
   }
   if (asked.length > 3) bits.push(`+${asked.length - 3} more`)
-  if (never.length > 0) bits.push(`no ${groupLabel(never).toLowerCase()}`)
+  // Muted media are named only while naming them is the shorter statement. Past a
+  // few, the list is longer than the line and says less than the summary of it — a
+  // tuning that keeps two media and mutes ten would otherwise spend its whole
+  // summary enumerating what the partner will not do.
+  if (never.length > 0) {
+    bits.push(never.length > 3 ? 'nothing else' : `no ${groupLabel(never).toLowerCase()}`)
+  }
 
   for (const axis of AXIS_LIST) {
     const v = axisValue(tuning, axis.id)

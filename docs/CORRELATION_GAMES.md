@@ -1128,3 +1128,119 @@ and nothing writes `weights` any more.
 Verified 2026-10-04: 489 checks, 0 failed (was 454) · `tsc --noEmit` 9
 pre-existing errors, none in touched files · `next build` compiles · no
 mojibake in any touched file.
+
+## 17. Sixth pass (2026-10-12): the default was nobody's preference
+
+Neutral and *default* had been the same object since the registry existed,
+and the equation was never examined. It should have been. An unweighted
+game spreads the partner's answering evenly across twelve media, and
+"evenly across twelve media" is not a preference anyone holds — it is the
+absence of one. A player who wanted music with the occasional painting had
+to open the panel and say so at the start of every game, which is a
+default asking to be changed rather than a default.
+
+A new session is now created holding a real tuning:
+
+```
+shares  music 90 · artwork 5 · passage 5 · every other medium 0
+axes    friction 0 (Agreeable) · abstraction 1 (Concrete)
+```
+
+The weights sum to 100, so they read as their own percentages. Not a
+requirement — `targetShares` normalises anything — but a default is the
+one tuning nobody opens the panel to inspect, and these are the numbers it
+gets described by.
+
+### 17a. Neutral still means neutral
+
+`DEFAULT_TUNING`, `isNeutral` and the canonicalising in `normalizeTuning`
+are untouched. The empty object remains the identity element the prompt
+builders branch on, the prompt for an empty tuning is still byte-identical
+to the prompt without one, and the test asserting it did not need editing.
+What changed is one line in `createSession` and nothing about what a
+tuning *means*.
+
+That separation is the whole design. `startingTuning(media)` produces a
+tuning; it does not become a second kind of tuning the rest of the code has
+to know about. The default reaches the interpreter through `describeTuning`
+and is enforced by `owedMedia` exactly as a player's own setting is —
+which also means it is enforced from the first turn, because enforcement is
+opt-in by setting a share and the default sets shares.
+
+### 17b. Muting the other nine is the only way to say 90%
+
+A share is a raw weight over the non-muted media. Leaving nine media at the
+default 50 would hand music `90/540` — seventeen per cent. That is §16a
+again, and it is the reason the shares are written as a mute rather than as
+a lean. Muting stops the *partner* answering there; all twelve media stay
+playable, and a move in one is read normally and answered in something
+else.
+
+**`passage` is not a safety net, and must not be mistaken for one.** It is
+the single medium `replyMediaFor` refuses on a retry, because it searches
+the reader's own books and can come back empty through nobody's fault. It
+is in the default because answering a reader with their own library is the
+best connection this section can make, and 5% of turns is worth the
+occasional extra interpreter call on an empty shelf — not because it
+cannot miss. A test asserts it is still absent from the retry media.
+
+So the cost is real and worth stating: the media that genuinely cannot miss
+are the composed four, and they are muted. The reply guarantee therefore
+rests on Deezer and Cleveland being up. Salvage still ignores the mute if
+both are down, so the guarantee holds — but this is a default that leans on
+two networks.
+
+### 17c. Concrete, but the leaning stop
+
+`abstraction: 1`, not `0`. The two stops differ in one clause: stop 0 ends
+*"if your reading can only name a quality and never a thing, find another
+reply"*, which instructs the interpreter to discard its own answer. A
+default must not spend a retry, and a partner whose opening disposition is
+to reject things contradicts the `friction: 0` sitting next to it. Lean, do
+not refuse. A test asserts the default prompt contains no instruction to
+find another reply.
+
+### 17d. Two resets, because "unweighted" moved
+
+"Back to unweighted" would now *discard* the default rather than restore
+it, which is the one thing a reset must not do. So the panel has two
+controls, and only ever one of them at a time:
+
+- **Back to the default** — shown whenever the tuning is not the default,
+  restores it.
+- **Clear it — answer in anything** — shown only *at* the default, because
+  unweighted is now somewhere a game has to be taken, and a player who
+  wants it would otherwise have no control at all.
+
+`isStarting()` decides which, comparing through `shareOf`/`axisValue`
+rather than by key, so a player who drags a control back to where it
+started stops seeing the button. Canonical form is an implementation detail
+and must not be visible in the UI.
+
+`tuningSummary` also collapses a long mute list to "nothing else" past
+three media. Naming them is the shorter statement only while there are few:
+the default would otherwise spend its entire summary line enumerating the
+ten things the partner will not do.
+
+### 17e. Games in progress keep what they have
+
+Applied at creation, never as a fallback for a stored `{}`. `rules`
+already promises a game does not change shape underneath the person
+playing it, and the weighting is covered by that promise. An old session
+reads as unweighted because it genuinely was one.
+
+Computed per session rather than stored as a constant, because `media` is
+already an intersection with what the deployment can serve. A constant
+would mute media that are not there — harmless — and leave a medium the
+list *gained* sitting at 50, quietly taking a third of the answers nobody
+asked it for. If none of the weighted media are available the game starts
+unweighted: muting nine media in favour of three that are not there is a
+contradiction `weightedReplyMedia` would ignore anyway to keep its
+guarantee, so storing it would only mislead whoever read the row.
+
+Migration: none. `listen_sessions.tuning` is jsonb and already
+canonicalised; this writes a value it could always have held.
+
+Verified 2026-10-12: 528 checks, 0 failed (was 489) · `tsc --noEmit` 9
+pre-existing errors, none in touched files · `next build` compiles · no
+mojibake in any touched file.

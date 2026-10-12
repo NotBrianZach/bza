@@ -5,7 +5,8 @@ import { ChevronDown, Info, RotateCcw, SlidersHorizontal } from 'lucide-react'
 import { getMedium } from '@/lib/correlate/media'
 import {
   AXIS_LIST, DEFAULT_SHARE, MUTED_SHARE, SHARE_MAX, allShares, axisValue, continuationOf,
-  isProportioned, isUntouched, shareLabel, tuningSummary, type Tuning, type TuningAxisId,
+  isProportioned, isStarting, isUntouched, shareLabel, startingTuning, tuningSummary,
+  type Tuning, type TuningAxisId,
 } from '@/lib/correlate/tuning'
 import {
   CONTINUATION_HINTS, CONTINUATION_LABELS, CONTINUATION_OFF, CONTINUATION_STOPS,
@@ -53,6 +54,11 @@ export default function TuningPanel({
   // it is not part of the weighting — but it is something the player set, and a
   // reset button that hid itself while it was on would be lying.
   const neutral = isUntouched(tuning)
+  // Two different resets, because the default is no longer the empty object. One
+  // restores the default; the other clears it, which is a real thing to want and
+  // would otherwise have no control at all now that "unweighted" is somewhere a
+  // game has to be taken rather than where it starts.
+  const atDefault = useMemo(() => isStarting(tuning, media), [tuning, media])
   const scopes: Scopes = tuning.scopes ?? {}
   const carry = continuationOf(tuning)
   const narrowable = useMemo(() => scopableMedia(media), [media])
@@ -391,7 +397,16 @@ export default function TuningPanel({
             </p>
           </div>
 
-          {!neutral && (
+          {!atDefault && (
+            <button
+              onClick={() => onChange(startingTuning(media))}
+              disabled={disabled}
+              className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors disabled:opacity-50"
+            >
+              <RotateCcw size={11} /> Back to the default
+            </button>
+          )}
+          {atDefault && !neutral && (
             <button
               onClick={() => onChange({
                 shares: {}, axes: {}, scopes: {}, continuation: CONTINUATION_OFF,
@@ -399,7 +414,7 @@ export default function TuningPanel({
               disabled={disabled}
               className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors disabled:opacity-50"
             >
-              <RotateCcw size={11} /> Back to unweighted
+              <RotateCcw size={11} /> Clear it — answer in anything
             </button>
           )}
         </div>

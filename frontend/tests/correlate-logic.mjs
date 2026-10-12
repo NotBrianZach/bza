@@ -105,6 +105,7 @@ const {
   weightedReplyMedia, dueMedium, describeTuning, tuningSummary, getAxis, continuationOf,
   SHARE_MAX, DEFAULT_SHARE, MUTED_SHARE, shareOf, shareLabel, targetShares, shareStandings,
   owedMedia, allShares,
+  STARTING_SHARES, STARTING_AXES, startingTuning, isStarting,
 } = M.tuning
 const {
   MAX_SELF_REPLIES, CONTINUATION_OFF, CONTINUATION_LABELS, CONTINUATION_HINTS,
@@ -1079,8 +1080,164 @@ t('abstraction and obliquity compose rather than collide', (() => {
 t('the summary is empty when neutral', tuningSummary(TU({}), ALL_MEDIA) === '')
 t('the summary names what was changed, as percentages', (() => {
   const s = tuningSummary(MOSTLY_MUSIC, ALL_MEDIA)
-  return /6[0-9]% music/.test(s) && /no /.test(s)
+  return /6[0-9]% music/.test(s) && /(no |nothing else)/.test(s)
 })(), tuningSummary(MOSTLY_MUSIC, ALL_MEDIA))
+// Naming the muted media is the shorter statement only while there are few of
+// them. Eight of them is a line that says less than a summary of itself.
+t('a long mute list collapses rather than filling the line', (() => {
+  const s = tuningSummary(MOSTLY_MUSIC, ALL_MEDIA)
+  return s.includes('nothing else') && !/no artworks/.test(s)
+})(), tuningSummary(MOSTLY_MUSIC, ALL_MEDIA))
+t('a short mute list is still named', (() => {
+  const s = tuningSummary(TU({ shares: { scene: 0 } }), ALL_MEDIA)
+  return s.includes(`no ${getMedium('scene').plural.toLowerCase()}`)
+})(), tuningSummary(TU({ shares: { scene: 0 } }), ALL_MEDIA))
+
+group('startingTuning — the default is not the same thing as neutral')
+const START = startingTuning(ALL_MEDIA)
+/** The three media a new game leaves open. */
+const LIVE3 = ['music', 'artwork', 'passage']
+// The empty object stays the identity element; what changed is only what a new
+// session is created holding. Every "a neutral tuning says nothing" guarantee
+// above is therefore untouched, which is why none of them needed editing.
+t('the empty tuning is still neutral', isNeutral(TU({})) && isNeutral(DEFAULT_TUNING))
+t('the default is not', !isNeutral(START))
+// Enforcement is opt-in by setting a share, and the default sets shares — so a new
+// game is filtered from its first turn rather than from whenever the player
+// notices the panel.
+t('a new game is proportioned from turn one', isProportioned(START))
+// The headline numbers. 90/5/5 is only expressible by muting the rest: nine media
+// left at 50 would hand music 90/540, which is the seventeen per cent §16a is
+// about. The weights also sum to 100, so they read as their own percentages.
+t('a new game asks for 90% music', (() => {
+  const pct = targetShares(START, ALL_MEDIA).music
+  return pct > 0.89 && pct < 0.91
+})(), JSON.stringify(targetShares(START, ALL_MEDIA).music))
+t('and 5% art', (() => {
+  const pct = targetShares(START, ALL_MEDIA).artwork
+  return pct > 0.04 && pct < 0.06
+})(), JSON.stringify(targetShares(START, ALL_MEDIA).artwork))
+t('and 5% from the reader’s own books', (() => {
+  const pct = targetShares(START, ALL_MEDIA).passage
+  return pct > 0.04 && pct < 0.06
+})(), JSON.stringify(targetShares(START, ALL_MEDIA).passage))
+t('everything else is muted', (() => {
+  const never = mutedMedia(START, ALL_MEDIA)
+  return never.length === ALL_MEDIA.length - 3
+    && !never.some(m => m === 'music' || m === 'artwork' || m === 'passage')
+})(), mutedMedia(START, ALL_MEDIA).join(','))
+// `passage` is the one medium a retry refuses — it searches the reader's own
+// books and can come back empty through nobody's fault. Unmuting it is a choice
+// about what the partner reaches for, not a safety net, and the composed media
+// that genuinely cannot miss are still muted. If that ever stops being true by
+// accident, this is the assertion that says so.
+t('the default does not pretend passage is a safety net',
+  replyMediaFor(weightedReplyMedia(START, ALL_MEDIA)).includes('music')
+  && !replyMediaFor(weightedReplyMedia(START, ALL_MEDIA)).includes('passage'),
+  replyMediaFor(weightedReplyMedia(START, ALL_MEDIA)).join(','))
+// A share equal to DEFAULT_SHARE is dropped on the way in, so a default that
+// happened to pick 50 for anything would silently lose it. None of these do, and
+// this is the test that catches it if someone edits the constants.
+t('the default survives being stored and read back', (() => {
+  const round = TU(JSON.parse(JSON.stringify(START)))
+  return isStarting(round, ALL_MEDIA)
+    && JSON.stringify(round.shares) === JSON.stringify(START.shares)
+    && JSON.stringify(round.axes) === JSON.stringify(START.axes)
+})(), JSON.stringify(TU(JSON.parse(JSON.stringify(START)))))
+t('the default names only real media and real axes',
+  Object.keys(STARTING_SHARES).every(m => ALL_MEDIA.includes(m))
+  && Object.keys(STARTING_AXES).every(a => getAxis(a) !== null))
+// The partner's disposition: agreeable, and concrete without being a refuser.
+t('a new game is fully agreeable', axisValue(START, 'friction') === 0)
+t('and leans concrete', axisValue(START, 'abstraction') === 1)
+t('the other two axes are left alone',
+  axisValue(START, 'nostalgia') === TUNING_AXES.nostalgia.neutral
+  && axisValue(START, 'obliquity') === TUNING_AXES.obliquity.neutral)
+t('the prompt carries the agreeable and concrete stops', (() => {
+  const d = describeTuning(START, ALL_MEDIA)
+  return d.includes(TUNING_AXES.friction.stops[0].slice(0, 40))
+    && d.includes(TUNING_AXES.abstraction.stops[1].slice(0, 40))
+})(), describeTuning(START, ALL_MEDIA))
+// Concrete stop 0 ends "find another reply" — it tells the interpreter to discard
+// its own answer, which is a retry spent by default and a partner whose opening
+// disposition contradicts the agreeable setting next to it.
+t('the default never tells the interpreter to reject its own reply',
+  !describeTuning(START, ALL_MEDIA).includes('find another reply'))
+t('the default asks for no abstraction and no nostalgia', (() => {
+  const d = describeTuning(START, ALL_MEDIA)
+  return !d.includes(TUNING_AXES.nostalgia.stops[3].slice(0, 30))
+    && !d.includes(TUNING_AXES.abstraction.stops[3].slice(0, 30))
+})())
+// Muting nine of twelve media leaves the reply guarantee resting on the two
+// catalogues, so both had better actually be reachable.
+t('the default leaves music, art and the library answerable', (() => {
+  const live = weightedReplyMedia(START, ALL_MEDIA)
+  return live[0] === 'music' && live.includes('artwork') && live.includes('passage')
+    && live.length === 3
+})(), weightedReplyMedia(START, ALL_MEDIA).join(','))
+// 5% is small enough to wonder whether it ever arrives. Both small shares are owed
+// on the first turn and roughly every twentieth after, and an adversarial model
+// that always picks the lightest medium it is allowed cannot turn one into the
+// chain.
+t('art is answerable from the first turn',
+  owedMedia(START, ALL_MEDIA, []).includes('artwork'))
+t('so is the reader’s own library',
+  owedMedia(START, ALL_MEDIA, []).includes('passage'))
+t('but a biased model cannot make the game about either', (() => {
+  const h = walk(START, LIVE3, 20, worst)
+  return ['artwork', 'passage'].every(m => h.includes(m) && h.filter(x => x === m).length <= 2)
+})(), walk(START, LIVE3, 20, worst).join(','))
+t('and a greedy one still comes out mostly music', (() => {
+  const h = walk(START, LIVE3, 20, owed => owed[0])
+  return h.filter(m => m === 'music').length / h.length >= 0.85
+})(), walk(START, LIVE3, 20, owed => owed[0]).join(','))
+// Computed per session, because `media` is already an intersection with what the
+// deployment can serve: a constant would leave a medium the list gained sitting at
+// the default 50 and taking a third of the answers nobody asked it for.
+t('a session that can only serve music gives music all of it',
+  targetShares(startingTuning(['music']), ['music']).music === 1)
+t('a medium absent from the session is not weighted',
+  startingTuning(['music', 'artwork']).shares.scene === undefined)
+t('the shares of a partial session still sum to one', (() => {
+  const noArt = ALL_MEDIA.filter(m => m !== 'artwork')
+  const sum = Object.values(targetShares(startingTuning(noArt), noArt)).reduce((a, b) => a + b, 0)
+  return Math.abs(sum - 1) < 1e-9 && targetShares(startingTuning(noArt), noArt).artwork === undefined
+})())
+// Muting nine media in favour of three that are not there is a contradiction:
+// weightedReplyMedia would ignore the mute anyway to keep the reply guarantee, so
+// storing it would only mislead whoever read the row.
+t('a session with none of the weighted media starts unweighted', (() => {
+  const odd = ['gesture', 'stretch', 'exercise']
+  const s = startingTuning(odd)
+  return Object.keys(s.shares).length === 0 && !isProportioned(s)
+})())
+t('but it still starts agreeable and concrete', (() => {
+  const s = startingTuning(['gesture', 'movement'])
+  return axisValue(s, 'friction') === 0 && axisValue(s, 'abstraction') === 1
+})())
+
+group('isStarting — a reset has to restore the default, not discard it')
+t('the default is at the default', isStarting(START, ALL_MEDIA))
+t('an unweighted game is not', !isStarting(TU({}), ALL_MEDIA))
+t('moving a share leaves it', !isStarting(
+  TU({ ...START, shares: { ...START.shares, scene: 40 } }), ALL_MEDIA))
+t('moving an axis leaves it', !isStarting(
+  TU({ ...START, axes: { ...START.axes, nostalgia: 4 } }), ALL_MEDIA))
+// Compared through shareOf/axisValue rather than by key, so a player who drags a
+// control back to where it started stops seeing the button — canonical form is an
+// implementation detail and must not be visible in the UI.
+t('dragging a control back counts as unchanged', isStarting(
+  TU({ ...START, shares: { ...START.shares, scene: 0 } }), ALL_MEDIA))
+t('a scope narrows it away from the default', !isStarting(
+  { ...START, scopes: { music: { genre: ['jazz'] } } }, ALL_MEDIA))
+// Continuation is a setting the player made even though the interpreter never
+// hears about it, and a reset that left it on would be lying.
+t('a continuation run counts as changed',
+  !isStarting({ ...START, continuation: 2 }, ALL_MEDIA))
+t('it is judged against the session media, not all of them', (() => {
+  const pair = ['music', 'artwork']
+  return isStarting(startingTuning(pair), pair) && !isStarting(TU({}, pair), pair)
+})())
 
 group('the system prompt carries the weighting, and only when there is one')
 const replyEnum = p => JSON.parse(p.match(/"medium": (\[[^\]]*\])/)[1])
