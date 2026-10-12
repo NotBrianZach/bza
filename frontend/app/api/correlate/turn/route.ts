@@ -518,13 +518,23 @@ export async function POST(req: NextRequest) {
   //      fail for reasons it cannot see (so never back into the player's library)
   //   3. a server-side salvage search seeded from what the interpreter said
   //      carried across, then from the move itself
+  //   4. the floor: a composed reply, which is authored rather than searched and
+  //      therefore cannot miss, even in a medium the player has muted
   //
-  // If all three fail the catalogues are unreachable, and then the turn is NOT
-  // recorded — better to ask the player to try again than to write a permanent
-  // hole into their chain.
+  // Stages 1-3 all reach the same places. Every one of them is restricted to media
+  // the player has left on, and under the weighted default that is two catalogues
+  // (Deezer, Cleveland) — so a single bad minute at either provider took all three
+  // down together and the guarantee in this comment was really a guarantee about
+  // somebody else's uptime. Stage 4 is the floor that makes it ours: a composed
+  // medium is authored in the reply itself, so it is reachable whenever the
+  // interpreter is, and the interpreter has already answered twice by the time we
+  // get here.
+  //
+  // If the floor fails too, the turn is NOT recorded — better to ask the player to
+  // try again than to write a permanent hole into their chain.
   let reply: Offering | null = null
   const failure: { current: ProviderFailure | null } = { current: null }
-  let replySource: 'interpreter' | 'retry' | 'salvage' = 'interpreter'
+  let replySource: 'interpreter' | 'retry' | 'salvage' | 'floor' = 'interpreter'
   let interpretation = firstPass
 
   /**
@@ -668,6 +678,70 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Stage 4 — the floor.
+    //
+    // Drawn from `media` (what the session can play) rather than `answerIn` (what
+    // the player has asked for), because the mute is exactly what is being stepped
+    // over. That is a stronger override than stage 3's: a scope is a preference
+    // about where to reach, while tuning.ts calls a mute "the one share that is a
+    // prohibition". It is justified by the alternative, not by the weighting — the
+    // choice here is not "muted medium vs. chosen medium", it is "muted medium vs.
+    // no turn at all", and a dead chain respects the player's mute by giving them
+    // nothing. It is the same trade `weightedReplyMedia` already makes for a player
+    // who mutes every medium, applied to the player who muted only the reachable
+    // ones.
+    //
+    // The debt this incurs is honesty, and it is paid in three places: `replySource`
+    // is 'floor' so the client can say a muted medium was used and why, `replyNote`
+    // records it on the row, and the interpreter is told in the prompt that it is
+    // answering where it was told not to. A silent floor would be worse than none —
+    // the player would read a stretch in a game set to music and conclude the shares
+    // do not work.
+    //
+    // Its own account is adopted wholesale, like stage 2 and unlike stage 3: the
+    // floor authors the offering *and* describes it in one response, so there is no
+    // gap between the record and the prose about it, and no third call to close one.
+    if (!reply) {
+      const floorMedia = media.filter(isComposed)
+
+      if (floorMedia.length > 0) {
+        console.warn(
+          `[correlate] falling to the composed floor in ${game.id}: ` +
+          `nothing reachable in ${answerIn.join(', ')}`,
+        )
+
+        const floorRaw = await callInterpreter(
+          buildSystemPrompt(game, floorMedia, relations, tuning, selfReply, floorMedia),
+          buildRetryPrompt({
+            game, media: floorMedia, relations, move, previous, selfReply, floor: true,
+            problem: failure.current
+              ? `nothing could be reached in ${answerIn.join(', ')} — the catalogue was ` +
+                `unreachable (${failure.current.provider})`
+              : `two attempts and a search found nothing real in ${answerIn.join(', ')}`,
+            attempted: interpretation.reply?.query
+              ?? interpretation.reply?.composed?.title ?? null,
+            reading: interpretation.reading,
+          }),
+        )
+        const floored = floorRaw
+          ? normalizeInterpretation(parseJsonObject(floorRaw), floorMedia, relations, { linkable })
+          : null
+
+        if (floored?.reply) {
+          // `scoped: false` for the same reason stage 3 passes it: a guarantee that
+          // has already overridden the mute cannot coherently stop at the scope.
+          const last = await tryResolve(floored.reply, false)
+          if (last) {
+            reply = last
+            replySource = 'floor'
+            interpretation = { ...floored, verdict: firstPass.verdict }
+            failure.current = null
+            scopeMiss.current = null
+          }
+        }
+      }
+    }
+
     if (!reply) {
       // Everything is down. Do not persist a turn that can never be answered.
       return err(
@@ -695,9 +769,13 @@ export async function POST(req: NextRequest) {
   // actually arrived at. A salvaged reply is real but it was not the interpreter's
   // choice, and the log should not pretend otherwise.
   const reached = interpretation.reply?.query ?? interpretation.reply?.composed?.title ?? null
+  // A floored reply names the mute when it broke one, because that is the part a
+  // player reading the row back will want explained — "composed floor" alone looks
+  // like a medium they picked.
   const replyNote =
     replySource === 'interpreter' ? reached
     : replySource === 'retry'     ? (reached ? `${reached} (second attempt)` : 'second attempt')
+    : replySource === 'floor'     ? `floor${reply && muted.includes(reply.medium) ? ', muted medium' : ''}: ${reached ?? 'composed from the move itself'}`
     : `salvaged: ${reached ?? 'searched from the move itself'}`
 
   // A callback is resolved to a real turn here, not trusted as an index. The
@@ -783,6 +861,11 @@ export async function POST(req: NextRequest) {
     // report. What the client still wants to know is whether the answer was the
     // interpreter's first choice.
     replySource,
+    // Whether the floor had to answer in a medium the player turned off. Computed
+    // here rather than client-side because the server already holds both the
+    // normalized tuning and the reply; re-deriving it from the row and the session
+    // would be the same arithmetic done twice, and wrong the moment they disagree.
+    replyBrokeMute: replySource === 'floor' && !!reply && muted.includes(reply.medium),
     replyRejected: firstPass.replyRejection
       ? describeRejection(firstPass.replyRejection as any)
       : null,

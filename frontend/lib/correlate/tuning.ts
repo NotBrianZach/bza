@@ -368,7 +368,14 @@ export const DEFAULT_TUNING: Tuning = {
  * here because answering a reader with their own library is the best connection
  * this section can make, and 5% of turns is worth an occasional extra interpreter
  * call on an empty shelf. The actual no-miss media — the composed four — remain
- * muted, which means the reply guarantee rests on the two catalogues.
+ * muted, so nothing in this default can answer without reaching a catalogue.
+ *
+ * That is survivable only because the turn route does not stop at the tuning. Its
+ * last stage reaches the composed four *through* this mute, on the grounds that a
+ * muted medium beats an unanswered turn, and says so to the player when it does.
+ * Without that floor these three numbers would quietly hand the reply guarantee to
+ * Deezer's and Cleveland's uptime — so if the floor is ever removed, this default
+ * has to be reconsidered with it. They are one design, written in two files.
  */
 export const STARTING_SHARES: Partial<Record<MediumId, number>> = {
   music: 90,

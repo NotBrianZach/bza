@@ -789,9 +789,23 @@ export function buildRetryPrompt(opts: {
   reading: string
   /** True when the move being re-answered is the interpreter's own offering. */
   selfReply?: boolean
+  /**
+   * True on the last attempt, where `media` is the composed floor rather than what
+   * the player asked for.
+   *
+   * It changes what the prompt may claim. Two bullets below are true of a retry and
+   * false of the floor: that the medium list excludes what the player turned off
+   * (the floor is *made of* media they turned off), and that a composed reply should
+   * not be "an escape from searching" (searching is what already failed twice).
+   * Left unflagged, the floor would arrive carrying a retry's advice to prefer the
+   * player's top medium — which is not on the list — and an instruction not to do
+   * the only thing it is there to do.
+   */
+  floor?: boolean
 }): string {
   const {
-    game, media, relations, move, previous, problem, attempted, reading, selfReply = false,
+    game, media, relations, move, previous, problem, attempted, reading,
+    selfReply = false, floor = false,
   } = opts
   const parts: string[] = []
 
@@ -817,8 +831,14 @@ export function buildRetryPrompt(opts: {
   const plural = (id: MediumId) => getMedium(id)?.plural ?? id
 
   const bullets: string[] = [
-    `- Your reply medium must be exactly one of: ${media.join(', ')}. That list already ` +
-    `excludes anything the player has turned off, so it is the whole of what is available.`,
+    floor
+      ? `- Your reply medium must be exactly one of: ${media.join(', ')}. This is the last ` +
+        `attempt. Two reaches into the media the player asked for came back with nothing real, ` +
+        `and these are the media you author rather than search, so an answer here exists by ` +
+        `construction. The player has these turned off — you are here because the game owes ` +
+        `them an answer that exists more than it owes them one in the medium they chose.`
+      : `- Your reply medium must be exactly one of: ${media.join(', ')}. That list already ` +
+        `excludes anything the player has turned off, so it is the whole of what is available.`,
     `- Your relation must be exactly one of: ${relations.join(', ')}.`,
   ]
 
@@ -855,11 +875,15 @@ export function buildRetryPrompt(opts: {
     // stretches. A composed reply cannot miss, which is worth saying, but "cannot
     // miss" is not "should be chosen" — the first medium listed is the one the
     // player asked for most, and that is the one to try first.
-    bullets.push(
-      `- For a composed medium (${composed.join(', ')}) you author it outright, so it cannot ` +
-      `fail to be found: give a title and one to five concrete ordered steps. Use one when ` +
-      `it genuinely answers the move — not as an escape from searching. ` +
-      `${plural(media[0])} is what the player has asked for most of; try that first.`,
+    bullets.push(floor
+      ? `- You author a composed reply outright, so it cannot fail to be found: give a title ` +
+        `and one to five concrete ordered steps. Make it genuinely answer the move — it is ` +
+        `the record the player will be left holding, and "it was all that could be reached" ` +
+        `does not excuse one that answers nothing.`
+      : `- For a composed medium (${composed.join(', ')}) you author it outright, so it cannot ` +
+        `fail to be found: give a title and one to five concrete ordered steps. Use one when ` +
+        `it genuinely answers the move — not as an escape from searching. ` +
+        `${plural(media[0])} is what the player has asked for most of; try that first.`,
     )
   }
 

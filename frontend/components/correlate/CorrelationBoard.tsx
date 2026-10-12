@@ -211,10 +211,21 @@ export default function CorrelationBoard({
     if (data.session) updateSession(data.session)
     // Not an error any more: the pipeline guarantees a real reply, so the only
     // thing worth surfacing is that it took more than one attempt to get one.
+    // The floor message names the broken mute on purpose. A muted medium appearing
+    // unannounced in a game tuned to music reads as the shares not working, which
+    // is a worse thing to believe than "the catalogues were down" — so the one
+    // case where the engine overrides the tuning is the one case it says so.
     if (data.replySource && data.replySource !== 'interpreter') {
-      setNotice(data.replySource === 'retry'
-        ? 'The first answer could not be found, so it answered again.'
-        : 'Two answers could not be found, so this one was searched out from the move.')
+      setNotice(
+        data.replySource === 'retry'
+          ? 'The first answer could not be found, so it answered again.'
+        : data.replySource === 'floor'
+          ? (data.replyBrokeMute
+              ? 'Nothing could be reached in the media you asked for, so it wrote one ' +
+                'in a medium you had turned off rather than leave the turn unanswered.'
+              : 'Nothing could be found to answer with, so it wrote this one instead.')
+          : 'Two answers could not be found, so this one was searched out from the move.',
+      )
     }
   }, [focusOn, updateSession])
 

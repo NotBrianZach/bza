@@ -1322,6 +1322,59 @@ t('a retry with no knowledge medium is not',
 t('the media list is always stated exactly',
   /exactly one of: organism, place/.test(retry(['organism', 'place'])))
 
+group('the floor — the last stage, which cannot miss')
+// Stages 1-3 of the reply pipeline are all restricted to media the player left on,
+// and under the weighted default that is two catalogues. The floor is the stage that
+// reaches the composed media *through* a mute, so the reply guarantee belongs to this
+// codebase rather than to Deezer's and Cleveland's uptime. These assert the two
+// things it rests on: that there is always something composed to fall to, and that
+// the prompt does not repeat a retry's claims, which are false of the floor.
+const floorPrompt = media => buildRetryPrompt({
+  game: GAMES.tag, media, relations: ALL_RELATIONS, move: mv, previous: null,
+  problem: 'nothing real matched what you named', attempted: 'something',
+  reading: 'a reading', floor: true,
+})
+const FLOOR = ALL_MEDIA.filter(isComposed)
+// The floor draws from the session's media, not the tuning's — so what makes it
+// non-empty is the registry, and this is the assertion that catches the day someone
+// removes the last composed medium and silently takes the guarantee with it.
+t('the composed floor is never empty', FLOOR.length > 0, FLOOR.join(','))
+t('nothing in the floor can miss on the player\'s own data',
+  FLOOR.every(m => !MEDIA[m].dependsOnUserLibrary))
+t('nothing in the floor needs a credential to serve',
+  FLOOR.every(m => !MEDIA[m].requiresEnv), FLOOR.filter(m => MEDIA[m].requiresEnv).join(','))
+// The whole point: under the default the floor is exactly the media the tuning has
+// turned off. If these ever intersect, the floor has stopped adding anything.
+t('the default leaves the floor entirely muted — which is what it is for',
+  FLOOR.every(m => !replyMediaFor(weightedReplyMedia(START, ALL_MEDIA)).includes(m)),
+  replyMediaFor(weightedReplyMedia(START, ALL_MEDIA)).join(','))
+t('a floor prompt does not claim the list excludes what the player turned off',
+  !/already excludes anything the player has turned off/.test(floorPrompt(FLOOR)))
+t('it says the opposite — that these are turned off and it is answering anyway',
+  /The player has these turned off/.test(floorPrompt(FLOOR)))
+// A retry tells the interpreter to prefer media[0] because it is "what the player has
+// asked for most of". On the floor media[0] is a muted medium, so that sentence would
+// be false — and advice to prefer the thing the player least asked for.
+t('it does not call a muted medium what the player asked for most',
+  !/asked for most of/.test(floorPrompt(FLOOR)))
+// "Not as an escape from searching" is correct advice on a retry and incoherent here:
+// searching is precisely what has already failed twice.
+t('it does not forbid the only thing it is there to do',
+  !/not as an escape from searching/.test(floorPrompt(FLOOR)))
+t('it still demands a reply that answers the move',
+  /does not excuse one that answers nothing/.test(floorPrompt(FLOOR)))
+t('it still states the media list exactly',
+  floorPrompt(FLOOR).includes(`exactly one of: ${FLOOR.join(', ')}`))
+// The floor is one attempt, not a loop — so it must not be told to avoid searching
+// *and* given catalogue advice, which is what happens if a caller passes it a
+// catalogue medium. Nothing stops that, so the prompt stays honest if it does.
+t('a retry prompt is unchanged when the flag is absent',
+  retry(FLOOR) === buildRetryPrompt({
+    game: GAMES.tag, media: FLOOR, relations: ALL_RELATIONS, move: mv, previous: null,
+    problem: 'nothing real matched what you named', attempted: 'something',
+    reading: 'a reading', floor: false,
+  }))
+
 group('the salvage account — prose that agrees with the record that landed')
 // A salvaged turn used to be stored wearing the first pass's narration, carried and
 // lost, all of which describe the reply the interpreter *planned*. That is the one

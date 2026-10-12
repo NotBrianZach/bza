@@ -752,7 +752,10 @@ Two smaller consequences:
   excluded because their steps already print.
 - These are safe retry and salvage targets (nothing user-specific can make
   them come back empty), which strengthens the guarantee that a legal turn
-  always carries a real reply.
+  always carries a real reply. They are not *floor* targets, though —
+  "cannot come back empty for reasons the interpreter cannot see" is a
+  weaker property than "cannot miss", and only the composed media have the
+  latter. See §17b.
 
 **A `User-Agent` is sent here**, which looks like a contradiction of the
 warning in shared.ts and is not. That warning is about a *crawler-shaped*
@@ -882,7 +885,7 @@ That is what makes the existing guards cover it without being rewritten:
 - **The exclusion set already applies.** The move's id is in `inPlay`, so
   the answer cannot be the offering it is answering, and nothing else on
   the branch can come back either.
-- **The reply guarantee already applies.** Three stages, then the turn is
+- **The reply guarantee already applies.** Four stages, then the turn is
   not persisted. A self-reply with no answer would be a dead end for the
   same reason a player's would.
 
@@ -1185,10 +1188,53 @@ occasional extra interpreter call on an empty shelf — not because it
 cannot miss. A test asserts it is still absent from the retry media.
 
 So the cost is real and worth stating: the media that genuinely cannot miss
-are the composed four, and they are muted. The reply guarantee therefore
-rests on Deezer and Cleveland being up. Salvage still ignores the mute if
-both are down, so the guarantee holds — but this is a default that leans on
-two networks.
+are the composed four, and this default mutes them. Nothing in it can
+answer without reaching a catalogue.
+
+An earlier version of this section closed that gap by saying *"salvage
+still ignores the mute if both are down, so the guarantee holds"*. That was
+wrong, and worth recording as wrong, because it is the sentence that made
+the gap look handled. Salvage drops the player's **scope** — the
+`scoped: false` on its `tryResolve` — and nothing else. Its medium loop is
+`answerIn.filter(m => !isComposed(m))`: mute-filtered like every other
+stage, and then explicitly stripped of exactly the media that cannot miss,
+because salvage is a query-seeded *search* and a composed offering is not
+searched for. So all three stages reached the same two providers, and one
+bad minute at either took the whole pipeline down together. The guarantee
+was really a guarantee about somebody else's uptime.
+
+**Stage 4 — the floor.** The fix is a fourth stage that runs only when the
+first three have all failed: one interpreter call restricted to the
+composed media, drawn from the session's `media` rather than from the
+tuning, so it reaches *through* the mute. A composed reply is authored in
+the response itself, so it is reachable whenever the interpreter is — and
+the interpreter has already answered twice by the time we get there.
+
+Overriding a mute is a stronger step than overriding a scope, and the docs
+should not pretend otherwise: §16 calls a mute "the one share that is a
+prohibition", while a scope is a preference about where to reach. What
+justifies it is the alternative, not the weighting. The choice at stage 4
+is not *muted medium vs. chosen medium* — stages 1-3 already tried that and
+lost — it is *muted medium vs. no turn at all*, and a dead chain respects
+the mute by handing the player nothing. It is the same trade
+`weightedReplyMedia` already makes for a player who mutes every medium,
+applied to the player who muted only the reachable ones.
+
+The debt it incurs is honesty, paid in three places. `replySource` comes
+back as `'floor'` alongside `replyBrokeMute`, so the board can say a muted
+medium was used *and why*; `reply_query` records it on the row as
+`floor, muted medium: …`; and the prompt tells the interpreter outright
+that it is answering where it was told not to, rather than handing it a
+medium list described — falsely, at this stage — as "what the player has
+left on". A silent floor would be worse than no floor: a stretch appearing
+unannounced in a game tuned to 90% music teaches the player that the shares
+do not work, which is a worse thing to come away believing than "the
+catalogues were down".
+
+This leaves the default and the floor as one design written in two files.
+If the floor is ever removed, §17b has to be reconsidered with it; a test
+asserts the composed floor is non-empty and that the default mutes all of
+it, which is the pair of facts that makes it load-bearing.
 
 ### 17c. Concrete, but the leaning stop
 
