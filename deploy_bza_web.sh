@@ -15,6 +15,9 @@ NC='\033[0m'
 error() { echo -e "${RED}❌ $1${NC}" >&2; }
 success() { echo -e "${GREEN}✓ $1${NC}"; }
 info() { echo -e "${YELLOW}→ $1${NC}"; }
+# Goes to stderr: a warning that scrolls past in a 200-line deploy log has not
+# warned anyone, and this script's output is routinely tailed.
+warn() { echo -e "${YELLOW}⚠ $1${NC}" >&2; }
 header() { echo -e "${BLUE}━━━ $1 ━━━${NC}"; }
 
 # Parse arguments
@@ -115,6 +118,52 @@ _source_secrets woofs_projects   # provides CLOUDFLARE_PAGES_API_TOKEN (encrypte
 
 # wrangler reads CLOUDFLARE_API_TOKEN; alias from the Pages token if needed
 [ -z "${CLOUDFLARE_API_TOKEN}" ] && export CLOUDFLARE_API_TOKEN="${CLOUDFLARE_PAGES_API_TOKEN}"
+
+# ── The build stamp ───────────────────────────────────────────────────────────
+#
+# Derived here rather than trusted from the DB, because this script is reachable
+# two ways and only one of them stamps. `scripts/deploy.sh` sets BUILD_SHA as a
+# TempleDB var and then goes through `templedb deploy project`, which injects the
+# env from the DB — correct. Running *this* script directly skips that, so the
+# BUILD_SHA that `_source_vars bza` just exported is whatever the last stamped
+# deploy left behind. The code ships correctly either way; it is the stamp that
+# goes stale, which is worse than it sounds: /api/version is the only
+# machine-readable claim about what is running, and verify-live-sha.sh compares it
+# against the graph head. A stale stamp fails that check on a perfectly good
+# deploy, indistinguishably from a broken one. Happened 2026-10-03 and again
+# 2026-10-12.
+#
+# So: compute from the graph head, export for the build, and write the var back so
+# the two entry points cannot disagree about what was deployed.
+#
+# Drained into a variable before parsing rather than piped. `templedb vcs log |
+# grep -m1` makes the reader close the pipe mid-write, templedb takes SIGPIPE, and
+# how much log was left to write decides whether that happened — so it presents as
+# a flake. In scripts/deploy.sh, which sets `pipefail`, that aborts the deploy
+# outright; here it is quieter and worse, because this script sets only `set -e`,
+# so the pipeline's status is grep's and the failure arrives as an *empty* sha that
+# looks like "templedb has no commits". Draining first means the producer always
+# runs to EOF. Same note in verify-live-sha.sh.
+_TDB_LOG=$(templedb vcs log bza 2>/dev/null || true)
+BUILD_SHA=$(printf '%s\n' "$_TDB_LOG" | grep -m1 '^commit ' | cut -d' ' -f2)
+if [ -z "$BUILD_SHA" ]; then
+    error "Could not read head commit sha from templedb — refusing to deploy an unstamped build"
+    exit 1
+fi
+export BUILD_SHA
+templedb var set bza BUILD_SHA "$BUILD_SHA" >/dev/null 2>&1 || \
+    warn "Could not write BUILD_SHA back to TempleDB; this build is stamped correctly regardless"
+info "Build stamp: BUILD_SHA=$BUILD_SHA"
+
+# BUILD_TIME is deliberately NOT set, here or in scripts/deploy.sh.
+#
+# next.config.js already falls back to `new Date().toISOString()` at build time,
+# which is exactly the right value and needs no maintenance. It used to be a
+# pinned TempleDB var, which meant the fallback never fired and /api/version
+# reported the *previous* deploy's builtAt forever — 2026-10-12 shipped a new sha
+# wearing a 29-minute-old timestamp. A value that must be manually refreshed on
+# every deploy, where a correct automatic one already exists, is strictly worse.
+unset BUILD_TIME
 
 # Determine APP_ENV from target
 APP_ENV="development"
@@ -222,7 +271,18 @@ echo
 cd "$SCRIPT_DIR/frontend"
 
 info "Installing npm dependencies..."
-npm install --prefer-offline --no-audit
+# --no-save, because $SCRIPT_DIR is normally the canonical TempleDB checkout and
+# its files are 0444 — publish made canonical checkouts read-only (templedb
+# 7cdbaaa8). npm opens package-lock.json for write even when the tree is already
+# in sync, so without this the deploy dies on EACCES before building anything.
+#
+# Nothing is lost by refusing to write it: the lock is a tracked source file, so a
+# deploy is the wrong place to regenerate one. If npm *wants* to change it, that is
+# a drift between package.json and the lock that should be fixed and committed in a
+# workspace — not silently absorbed into a release and then reverted by the next
+# materialise. (That drift was real once: the committed lock was missing a declared
+# puppeteer-core and still carrying @opennextjs/aws, fixed in EBF34E5A.)
+npm install --prefer-offline --no-audit --no-save
 success "Dependencies installed"
 
 if [ "$PROFILE_BEHAVIOR" = "production" ]; then

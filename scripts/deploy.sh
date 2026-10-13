@@ -3,12 +3,16 @@
 #
 # What it does that raw `templedb deploy project bza` does not:
 #   1. Reads head commit sha from templedb vcs log
-#   2. Sets BUILD_SHA and BUILD_TIME as templedb vars (they're inlined
-#      into the frontend build by next.config.js and exposed at
-#      /api/version so scripts/verify-live-sha.sh can prove the live
-#      deployment matches the graph)
+#   2. Sets BUILD_SHA as a templedb var (inlined into the frontend build by
+#      next.config.js and exposed at /api/version so
+#      scripts/verify-live-sha.sh can prove the live deployment matches the
+#      graph). BUILD_TIME is *unset* — next.config.js computes it at build
+#      time, which is both correct and maintenance-free.
 #   3. Runs templedb deploy project
 #   4. Verifies live sha matches graph (exits non-zero on drift)
+#
+# This is the path to use. deploy_bza_web.sh is the inner script and now stamps
+# BUILD_SHA itself, but only this one verifies the result afterwards.
 #
 # Usage:
 #   bash scripts/deploy.sh                 # deploys to production
@@ -35,11 +39,20 @@ if [ -z "$SHA" ]; then
   exit 1
 fi
 
-TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-
-echo "→ Setting BUILD_SHA=$SHA BUILD_TIME=$TIME"
+# BUILD_SHA has to be a var on this path: `templedb deploy project` builds in its
+# own working dir with env injected from the DB, so exporting it in this shell
+# would not reach the build. deploy_bza_web.sh takes the other route and exports it
+# directly; both end up stamping the same value.
+echo "→ Setting BUILD_SHA=$SHA"
 templedb var set bza BUILD_SHA "$SHA" >/dev/null
-templedb var set bza BUILD_TIME "$TIME" >/dev/null
+
+# BUILD_TIME is deliberately not set. It used to be stamped here, which was
+# accurate for this path and poison for the other: the var persisted, so
+# next.config.js's `|| new Date().toISOString()` fallback never fired, and any
+# deploy that did not come through this script served the previous deploy's
+# builtAt. The fallback is already the right value and cannot go stale, so the
+# correct number of places to compute it is zero. See deploy_bza_web.sh.
+templedb var unset bza BUILD_TIME >/dev/null 2>&1 || true
 
 echo "→ Deploying bza to $TARGET"
 templedb deploy project bza --target "$TARGET"
