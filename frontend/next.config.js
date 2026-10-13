@@ -24,9 +24,14 @@ const nextConfig = {
     // half won whenever a stamp existed — so a value left behind by an earlier
     // deploy silently outranked the correct one, and /api/version served the
     // *previous* deploy's builtAt indefinitely. 2026-10-12 shipped a new sha
-    // wearing a 29-minute-old timestamp that way. (The old expression is spelled
-    // out nowhere on purpose: TempleDB's env-reference scan is a substring match,
-    // so quoting it here would keep listing this as a referenced-but-unset var.)
+    // wearing a 29-minute-old timestamp that way.
+    //
+    // Every deploy still logs BUILD_TIME under "Referenced but no value in
+    // TempleDB env", and that is correct and permanent: api/version/route.ts reads
+    // process.env.BUILD_TIME, and the value it gets is the one inlined *here* at
+    // build time rather than anything from the DB. The warning means "no DB var
+    // backs this", which is the intended design, not a gap to close by re-adding
+    // one. It shares that list with genuinely-unset keys like TMDB_API_KEY.
     //
     // The deeper problem was that the two were indistinguishable in the output: the
     // only way to tell a real build time from a stale pin was that `new Date()`
