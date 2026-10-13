@@ -20,11 +20,13 @@ const nextConfig = {
     BUILD_SHA: process.env.BUILD_SHA || 'unknown',
     // BUILD_TIME is computed here and is NOT read from the environment, deliberately.
     //
-    // This used to be `process.env.BUILD_TIME || new Date().toISOString()`, and the
-    // env half won whenever a BUILD_TIME var existed — so a stamp left behind by an
-    // earlier deploy silently outranked the correct value, and /api/version served
-    // the *previous* deploy's builtAt indefinitely. 2026-10-12 shipped a new sha
-    // wearing a 29-minute-old timestamp that way.
+    // This used to read the env var first and fall back to new Date(), and the env
+    // half won whenever a stamp existed — so a value left behind by an earlier
+    // deploy silently outranked the correct one, and /api/version served the
+    // *previous* deploy's builtAt indefinitely. 2026-10-12 shipped a new sha
+    // wearing a 29-minute-old timestamp that way. (The old expression is spelled
+    // out nowhere on purpose: TempleDB's env-reference scan is a substring match,
+    // so quoting it here would keep listing this as a referenced-but-unset var.)
     //
     // The deeper problem was that the two were indistinguishable in the output: the
     // only way to tell a real build time from a stale pin was that `new Date()`
