@@ -155,15 +155,10 @@ templedb var set bza BUILD_SHA "$BUILD_SHA" >/dev/null 2>&1 || \
     warn "Could not write BUILD_SHA back to TempleDB; this build is stamped correctly regardless"
 info "Build stamp: BUILD_SHA=$BUILD_SHA"
 
-# BUILD_TIME is deliberately NOT set, here or in scripts/deploy.sh.
-#
-# next.config.js already falls back to `new Date().toISOString()` at build time,
-# which is exactly the right value and needs no maintenance. It used to be a
-# pinned TempleDB var, which meant the fallback never fired and /api/version
-# reported the *previous* deploy's builtAt forever — 2026-10-12 shipped a new sha
-# wearing a 29-minute-old timestamp. A value that must be manually refreshed on
-# every deploy, where a correct automatic one already exists, is strictly worse.
-unset BUILD_TIME
+# BUILD_TIME is not stamped here, and cannot be. next.config.js computes it with
+# `new Date().toISOString()` and no longer reads the environment at all, precisely
+# so a leftover var cannot outrank the real build time the way it did until
+# 2026-10-12. Nothing to set; nothing to unset.
 
 # Determine APP_ENV from target
 APP_ENV="development"
@@ -268,6 +263,58 @@ if ! $ANY_ONLY || $ONLY_FRONTEND; then
 header "Deploying Next.js Frontend"
 echo
 
+# ── Does the tree match the database? ─────────────────────────────────────────
+#
+# This script builds whatever is sitting in $SCRIPT_DIR. `scripts/deploy.sh` goes
+# through `templedb deploy project`, which materialises the checkout from the DB
+# first and builds in its own working dir — so that path cannot ship a stale tree
+# and this one silently can. That asymmetry is the actual hazard in having two
+# entry points; the read-only/EACCES difference was only its most visible symptom.
+#
+# It has nearly bitten before: the canonical checkout sat a day behind the DB while
+# `vcs status` called 38 DB-newer files "modified", and building from it would have
+# shipped the tree *without* the schema cutover while reporting success.
+#
+# checkout-diff is the authority, and it is read-only. Three things about it:
+#   - it exits 0 whether or not there are differences, so the exit status is
+#     useless and the output has to be read instead
+#   - the verdict is the LAST non-empty line: "No differences between checkout and
+#     the database." or "N files differ from the database." Match it there and
+#     nowhere else. Grepping the whole output for the clean sentinel is a trap
+#     this guard fell into on its first draft: when the drift includes this file,
+#     the diff *quotes this very line*, the grep matches its own source and the
+#     tree is pronounced clean. Self-defeating exactly when it matters most.
+#   - `checkout-pull` is NOT the fix. On a tree checkout-diff calls identical it
+#     reports "Conflicts: 111" and updates nothing, so it cannot be used to
+#     reconcile automatically. `templedb publish run bza` is what materialises.
+#
+# Anything unrecognised counts as drift: this gate is only worth having if an
+# unparsed answer fails closed.
+if [ "$PROFILE_BEHAVIOR" = "production" ]; then
+    info "Checking the tree matches the database..."
+    _TREE_DIFF=$(templedb project checkout-diff bza "$SCRIPT_DIR" 2>&1 || true)
+    _TREE_VERDICT=$(printf '%s\n' "$_TREE_DIFF" | grep -v '^[[:space:]]*$' | tail -1)
+    if [ "$_TREE_VERDICT" = "No differences between checkout and the database." ]; then
+        success "Tree matches the database"
+    else
+        error "$SCRIPT_DIR differs from the database — refusing to deploy it."
+        echo "  Building from a stale tree ships something other than what the graph" >&2
+        echo "  says is released, and verify-live-sha.sh cannot detect that: it only" >&2
+        echo "  compares the stamp, and this script now stamps correctly either way." >&2
+        echo >&2
+        echo "  Reconcile, then retry:   templedb publish run bza" >&2
+        echo "  Or use the verified path: bash scripts/deploy.sh production" >&2
+        echo "  Deliberately shipping uncommitted code: ALLOW_TREE_DRIFT=1 $0 …" >&2
+        echo >&2
+        printf '%s\n' "$_TREE_DIFF" | head -40 >&2
+        if [ "${ALLOW_TREE_DRIFT:-}" != "1" ]; then
+            exit 1
+        fi
+        warn "ALLOW_TREE_DRIFT=1 — deploying a tree that does not match the database"
+    fi
+    echo
+fi
+
 cd "$SCRIPT_DIR/frontend"
 
 info "Installing npm dependencies..."
@@ -305,6 +352,29 @@ if [ "$PROFILE_BEHAVIOR" = "production" ]; then
         echo "$value" | npx wrangler secret put "$key" --name aireadalong 2>&1 | grep -v "^$" | tail -1
     done < <(templedb env secret export bza --format dotenv 2>/dev/null)
     success "Worker secrets pushed"
+
+    # Ask the live worker what it thinks it is running.
+    #
+    # The other half of the two-entry-point asymmetry: scripts/deploy.sh ended in
+    # this check and running this script by hand ended in "✓ Deployment complete"
+    # and nothing else — so the one path a human reaches for was the one that never
+    # confirmed anything. The deploy log saying success is not evidence; wrangler
+    # can upload happily while the stamp, the bundle or the route is wrong.
+    #
+    # Non-fatal on purpose. The deploy has already happened by this point, so
+    # exiting non-zero here would report a *deployment* failure for what is really
+    # a post-deploy discrepancy — and the fix for a genuine mismatch is to look, not
+    # to assume the push failed. It is loud enough to not be missed.
+    if [ -x "$SCRIPT_DIR/scripts/verify-live-sha.sh" ] || [ -f "$SCRIPT_DIR/scripts/verify-live-sha.sh" ]; then
+        info "Verifying the live sha matches the graph..."
+        if bash "$SCRIPT_DIR/scripts/verify-live-sha.sh" https://aireadalong.com/api/version; then
+            success "Live deployment matches the graph"
+        else
+            warn "Live sha does NOT match the graph — the deploy landed but is not what the graph says is released. Investigate before assuming this is released."
+        fi
+    else
+        warn "scripts/verify-live-sha.sh not found — deployed without verifying"
+    fi
 else
     npm run dev &
     NEXT_PID=$!

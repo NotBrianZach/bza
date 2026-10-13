@@ -46,13 +46,12 @@ fi
 echo "→ Setting BUILD_SHA=$SHA"
 templedb var set bza BUILD_SHA "$SHA" >/dev/null
 
-# BUILD_TIME is deliberately not set. It used to be stamped here, which was
-# accurate for this path and poison for the other: the var persisted, so
-# next.config.js's `|| new Date().toISOString()` fallback never fired, and any
-# deploy that did not come through this script served the previous deploy's
-# builtAt. The fallback is already the right value and cannot go stale, so the
-# correct number of places to compute it is zero. See deploy_bza_web.sh.
-templedb var unset bza BUILD_TIME >/dev/null 2>&1 || true
+# BUILD_TIME is not stamped, here or anywhere. next.config.js computes it with
+# `new Date().toISOString()` at build time and no longer consults the environment,
+# so there is nothing to set and nothing that could go stale. It used to be stamped
+# here, which was accurate for this path and poison for the other: the var
+# persisted and outranked the fallback, so any deploy not coming through this
+# script served the previous deploy's builtAt.
 
 echo "→ Deploying bza to $TARGET"
 templedb deploy project bza --target "$TARGET"
