@@ -644,6 +644,32 @@ export async function POST(req: NextRequest) {
       try { url = await resolveGoogleNews(url) } catch { /* use original */ }
     }
 
+    // A YouTube *channel* is a feed, not a transcript.
+    //
+    // This has to sit above the Supadata branch, not below it: isSupadataUrl
+    // matches on host, so youtube.com was claimed there and a channel URL
+    // never reached the feed path -- it came back as type 'webpage'. Fixing
+    // the same host check on the client was not enough, because the server
+    // keeps its own independent copy of that decision.
+    //
+    // `method === 'supadata'` still wins, so explicitly choosing the
+    // transcript parser for a channel URL does what it says. Single videos
+    // are not channels and fall through to Supadata as before.
+    if (method !== 'supadata') {
+      const ytFeed = await youtubeChannelFeedUrl(url)
+      if (ytFeed) {
+        const res = await fetch(ytFeed, { headers: { 'User-Agent': UA } })
+        if (res.ok) {
+          const { feedTitle, items } = parseRSSFeed(await res.text())
+          return NextResponse.json({ type: 'rss', feedTitle, items, feedUrl: ytFeed })
+        }
+        return NextResponse.json(
+          { error: `Found the channel feed at ${ytFeed} but it returned HTTP ${res.status}` },
+          { status: 502 },
+        )
+      }
+    }
+
     // Explicit Supadata method OR auto-detect social media URLs
     if (method === 'supadata' || isSupadataUrl(url)) {
       const pro = await checkProTier(req)
@@ -659,23 +685,6 @@ export async function POST(req: NextRequest) {
     if (/\.wikipedia\.org\/wiki\//.test(url)) {
       const result = await fetchWikipediaArticle(url)
       return NextResponse.json({ type: 'wikipedia', ...result })
-    }
-
-    // A YouTube *channel* is a feed, not a transcript. Resolved before the
-    // generic path because youtube.com would otherwise be handled as a
-    // webpage, and the channel page is a JS shell with no article in it.
-    // Single videos fall through untouched to the Supadata transcript route.
-    const ytFeed = await youtubeChannelFeedUrl(url)
-    if (ytFeed) {
-      const res = await fetch(ytFeed, { headers: { 'User-Agent': UA } })
-      if (res.ok) {
-        const { feedTitle, items } = parseRSSFeed(await res.text())
-        return NextResponse.json({ type: 'rss', feedTitle, items, feedUrl: ytFeed })
-      }
-      return NextResponse.json(
-        { error: `Found the channel feed at ${ytFeed} but it returned HTTP ${res.status}` },
-        { status: 502 },
-      )
     }
 
     // Feed URLs: always try direct fetch first regardless of domain
