@@ -19,6 +19,28 @@ import {
   STATUS_PROGRESS,
 } from './types'
 
+/**
+ * A YouTube channel, as opposed to a single video.
+ *
+ * Both halves matter. Every youtube.com URL used to be forced down the
+ * Supadata path, so pasting a channel asked for the transcript of a channel
+ * and there was no way to follow one. But a *video* still belongs to Supadata,
+ * so this has to exclude watch?v=, youtu.be, shorts, live and embed rather
+ * than just matching the host.
+ *
+ * The server resolves such a URL to the channel's Atom feed; see
+ * youtubeChannelFeedUrl in app/api/fetch-url/route.ts.
+ */
+export function isYouTubeChannelUrl(raw: string): boolean {
+  let u: URL
+  try { u = new URL(raw) } catch { return false }
+  const host = u.hostname.replace(/^www\./, '')
+  if (host !== 'youtube.com' && host !== 'm.youtube.com') return false
+  if (u.searchParams.has('v')) return false
+  if (/^\/(shorts|live|embed)\//.test(u.pathname)) return false
+  return /^\/(@[^/]+|c\/[^/]+|user\/[^/]+|channel\/[^/]+)\/?$/.test(u.pathname)
+}
+
 interface UrlTabProps {
   useLocalStorage: boolean
   isPro: boolean
@@ -250,10 +272,12 @@ export function UrlTab({
             onChange={e => {
               const v = e.target.value
               setUrlInput(v); setFetchResult(null); setMathpixJob(null); setMathpixMarkdown(null)
-              // Auto-switch to Supadata for YouTube/social URLs
+              // Auto-switch to Supadata for YouTube/social URLs — except a
+              // YouTube channel, which is a feed rather than a transcript.
               try {
                 const host = new URL(v).hostname.replace(/^www\./, '')
-                if (['youtube.com', 'youtu.be', 'tiktok.com', 'twitter.com', 'x.com', 'instagram.com'].some(d => host === d || host.endsWith('.' + d))) {
+                if (!isYouTubeChannelUrl(v)
+                    && ['youtube.com', 'youtu.be', 'tiktok.com', 'twitter.com', 'x.com', 'instagram.com'].some(d => host === d || host.endsWith('.' + d))) {
                   setUrlMethod('supadata')
                 }
               } catch {}
@@ -276,7 +300,8 @@ export function UrlTab({
           let requiresSupadata = false
           try {
             const host = new URL(urlInput).hostname.replace(/^www\./, '')
-            requiresSupadata = ['youtube.com', 'youtu.be', 'tiktok.com', 'twitter.com', 'x.com', 'instagram.com'].some(d => host === d || host.endsWith('.' + d))
+            requiresSupadata = !isYouTubeChannelUrl(urlInput)
+              && ['youtube.com', 'youtu.be', 'tiktok.com', 'twitter.com', 'x.com', 'instagram.com'].some(d => host === d || host.endsWith('.' + d))
           } catch {}
           return (
         <div className="mt-2 flex items-center gap-2">

@@ -152,6 +152,66 @@ async function fetchViaWayback(url: string): Promise<{ title: string; markdown: 
   return { title: meta.title || 'Article', markdown }
 }
 
+// ─── YouTube channels as feeds ────────────────────────────────────────────────
+
+/** True for a single video, which belongs to the transcript path, not here. */
+function isYouTubeVideoUrl(u: URL): boolean {
+  if (u.hostname.replace(/^www\./, '') === 'youtu.be') return true
+  return u.searchParams.has('v')
+    || /^\/(shorts|live|embed)\//.test(u.pathname)
+}
+
+/**
+ * The Atom feed for a YouTube channel, or null if this is not a channel URL.
+ *
+ * Every channel exposes one at /feeds/videos.xml?channel_id=UC..., which needs
+ * no API key and so costs none of the 100/day search quota the full-playback
+ * path spends. Two cases:
+ *
+ *   /channel/UC...  — the id is in the path, so no network call.
+ *   /@handle, /c/x, /user/x — the id is not derivable from the URL. The
+ *     channel page carries a <link type="application/rss+xml"> pointing at
+ *     the feed, so one fetch gets it. Preferred over resolving the handle
+ *     through the Data API because that would spend quota on something the
+ *     page gives away.
+ */
+async function youtubeChannelFeedUrl(raw: string): Promise<string | null> {
+  let u: URL
+  try { u = new URL(raw) } catch { return null }
+  const host = u.hostname.replace(/^www\./, '')
+  if (host !== 'youtube.com' && host !== 'm.youtube.com') return null
+  if (isYouTubeVideoUrl(u)) return null
+
+  const byId = u.pathname.match(/^\/channel\/(UC[\w-]{20,})/)
+  if (byId) {
+    return `https://www.youtube.com/feeds/videos.xml?channel_id=${byId[1]}`
+  }
+  if (!/^\/(@[^/]+|c\/[^/]+|user\/[^/]+)\/?/.test(u.pathname)) return null
+
+  const controller = new AbortController()
+  const t = setTimeout(() => controller.abort(), 15000)
+  try {
+    const res = await fetch(u.toString(), {
+      signal: controller.signal,
+      headers: { 'User-Agent': UA, 'Accept-Language': 'en-US,en;q=0.9' },
+    })
+    if (!res.ok) return null
+    const html = await res.text()
+    const href = html.match(
+      /<link[^>]+type="application\/rss\+xml"[^>]*href="([^"]+)"/i
+    )?.[1]
+      ?? html.match(/"channelId":"(UC[\w-]{20,})"/)?.[1]
+    if (!href) return null
+    return href.startsWith('http')
+      ? decodeEntities(href)
+      : `https://www.youtube.com/feeds/videos.xml?channel_id=${href}`
+  } catch {
+    return null
+  } finally {
+    clearTimeout(t)
+  }
+}
+
 // ─── RSS / Atom ───────────────────────────────────────────────────────────────
 
 export interface FeedItem {
@@ -174,9 +234,14 @@ function parseRSSFeed(xml: string): { feedTitle: string; items: FeedItem[] } {
       feedTitle,
       items: entries.slice(0, 30).map(e => ({
         title: decodeEntities(cdata(e[1].match(/<title[^>]*>([\s\S]*?)<\/title>/)?.[1] ?? '')),
+        // media:description last: YouTube channel feeds are Atom but carry
+        // neither <content> nor <summary>, so without this every entry came
+        // back with an empty body. The description is inside <media:group>,
+        // which is Media RSS rather than Atom proper.
         content: htmlToMarkdown(cdata(
           e[1].match(/<content[^>]*>([\s\S]*?)<\/content>/)?.[1] ??
-          e[1].match(/<summary[^>]*>([\s\S]*?)<\/summary>/)?.[1] ?? ''
+          e[1].match(/<summary[^>]*>([\s\S]*?)<\/summary>/)?.[1] ??
+          e[1].match(/<media:description[^>]*>([\s\S]*?)<\/media:description>/)?.[1] ?? ''
         )),
         url: e[1].match(/<link[^>]+href="([^"]+)"/)?.[1] ?? cdata(e[1].match(/<link>([\s\S]*?)<\/link>/)?.[1] ?? ''),
         date: cdata(e[1].match(/<published>([\s\S]*?)<\/published>/)?.[1] ?? e[1].match(/<updated>([\s\S]*?)<\/updated>/)?.[1] ?? ''),
@@ -594,6 +659,23 @@ export async function POST(req: NextRequest) {
     if (/\.wikipedia\.org\/wiki\//.test(url)) {
       const result = await fetchWikipediaArticle(url)
       return NextResponse.json({ type: 'wikipedia', ...result })
+    }
+
+    // A YouTube *channel* is a feed, not a transcript. Resolved before the
+    // generic path because youtube.com would otherwise be handled as a
+    // webpage, and the channel page is a JS shell with no article in it.
+    // Single videos fall through untouched to the Supadata transcript route.
+    const ytFeed = await youtubeChannelFeedUrl(url)
+    if (ytFeed) {
+      const res = await fetch(ytFeed, { headers: { 'User-Agent': UA } })
+      if (res.ok) {
+        const { feedTitle, items } = parseRSSFeed(await res.text())
+        return NextResponse.json({ type: 'rss', feedTitle, items, feedUrl: ytFeed })
+      }
+      return NextResponse.json(
+        { error: `Found the channel feed at ${ytFeed} but it returned HTTP ${res.status}` },
+        { status: 502 },
+      )
     }
 
     // Feed URLs: always try direct fetch first regardless of domain
