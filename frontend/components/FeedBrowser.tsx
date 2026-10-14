@@ -59,6 +59,10 @@ export default function FeedBrowser({ isAuthenticated, onBookAdded }: Props) {
   const [urlInput, setUrlInput] = useState('')
   const [activeId, setActiveId] = useState<string | null>(null)
   const [posts, setPosts] = useState<FeedPost[]>([])
+  // The feed's own title, used to label it when pinned. Without this a
+  // YouTube channel is saved as "www.youtube.com", and a second one is
+  // saved as "www.youtube.com" too.
+  const [feedTitle, setFeedTitle] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [adding, setAdding] = useState<Set<string>>(new Set())
@@ -78,8 +82,9 @@ export default function FeedBrowser({ isAuthenticated, onBookAdded }: Props) {
     setDiscoveredFeeds([])
     setActiveId(id)
     setPinned(isFeedPinned(trimmed))
+    setFeedTitle('')
     try {
-      setPosts(await fetchFeed(trimmed))
+      setPosts(await fetchFeed(trimmed, m => setFeedTitle(m.feedTitle ?? '')))
     } catch (e: any) {
       if (e instanceof FeedDiscoveryError && e.feedLinks.length > 0) {
         setDiscoveredFeeds(e.feedLinks)
@@ -356,6 +361,10 @@ export default function FeedBrowser({ isAuthenticated, onBookAdded }: Props) {
               const label = PRESETS.find(p => p.url === url)?.label
                 ?? url.match(/^feed:\/\/4chan\/(.+)/)?.[1] && `4chan/${url.match(/^feed:\/\/4chan\/(.+)/)![1]}`
                 ?? url.match(/^feed:\/\/reddit\/(.+)/)?.[1] && `r/${url.match(/^feed:\/\/reddit\/(.+)/)![1]}`
+                // The feed's own title beats its hostname, which is what made
+                // every YouTube channel read "www.youtube.com". Still behind
+                // the presets and feed:// patterns, which name themselves.
+                ?? (feedTitle.trim() || null)
                 ?? url.replace(/^feed:\/\//, '').replace(/^https?:\/\//, '').split('/')[0]
               pinFeed(label, urlInput.trim())
               setPinned(true)

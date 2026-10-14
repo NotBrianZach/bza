@@ -123,7 +123,18 @@ export class FeedDiscoveryError extends Error {
   }
 }
 
-async function fetchRss(url: string): Promise<FeedPost[]> {
+/** What the proxy knows about a feed that is not one of its posts. */
+export interface FeedMeta {
+  /** The feed's own title, e.g. a YouTube channel's name. */
+  feedTitle?: string
+  /** The resolved feed URL, when it differs from what was requested. */
+  feedUrl?: string
+}
+
+async function fetchRss(
+  url: string,
+  onMeta?: (meta: FeedMeta) => void,
+): Promise<FeedPost[]> {
   const res = await fetch('/api/fetch-url', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -140,6 +151,7 @@ async function fetchRss(url: string): Promise<FeedPost[]> {
     }
     throw new Error('URL did not return an RSS feed')
   }
+  onMeta?.({ feedTitle: d.feedTitle, feedUrl: d.feedUrl })
   return (d.items ?? []).map((item: any, i: number) => ({
     id: String(i),
     title: item.title,
@@ -189,8 +201,18 @@ export async function fetch4chanThreadMarkdown(board: string, threadId: string):
 
 // ── Public API ───────────────────────────────────────────────────────────────
 
-export async function fetchFeed(url: string): Promise<FeedPost[]> {
-  if (!url.startsWith('feed://')) return fetchRss(url)
+/**
+ * `onMeta` is optional and only fires for real RSS/Atom URLs — the feed://
+ * sources are named by their own preset. It exists so a caller can label a
+ * pinned feed with the feed's title instead of its hostname: every YouTube
+ * channel would otherwise be saved as "www.youtube.com", and several of them
+ * would be indistinguishable on the home page.
+ */
+export async function fetchFeed(
+  url: string,
+  onMeta?: (meta: FeedMeta) => void,
+): Promise<FeedPost[]> {
+  if (!url.startsWith('feed://')) return fetchRss(url, onMeta)
   const [, rest] = url.split('feed://')
   const [type, param = ''] = rest.split('/')
   if (type === 'hn') return fetchHN()
