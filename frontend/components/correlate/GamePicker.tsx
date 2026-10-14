@@ -7,9 +7,20 @@ import { getMedium, resolveMedia } from '@/lib/correlate/media'
 import { RELATIONS, resolveRelations } from '@/lib/correlate/relations'
 import type { CorrelationGame, MediumId } from '@/lib/correlate/types'
 
+/**
+ * Kept exhaustive rather than `Partial`, which is why `verifier` is spelled here
+ * despite being unreachable from this picker.
+ *
+ * No game in `GAMES` sets `verifier` and none can: the practice engine is a
+ * sibling that does not use the turn route (see lib/concepts/verify.ts), so it
+ * never appears in `GAME_LIST`. The exhaustive `Record` is still the right type,
+ * because it makes adding a judge a compile error here instead of a blank line in
+ * the UI — which is exactly how this entry came to be written.
+ */
 const JUDGE_LABEL: Record<CorrelationGame['judge'], string> = {
   player: 'Social — you judge the connection',
   narrator: 'Story — an interpreter turns the offering into an event',
+  verifier: 'Mechanical — a worker rules, and may rule it unsettled',
 }
 
 const DECLARATION_LABEL: Record<CorrelationGame['declaredRelation'], string> = {

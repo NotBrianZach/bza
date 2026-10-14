@@ -513,6 +513,39 @@ export function normalizeScopes(raw: unknown, media: MediumId[]): Scopes {
 // ---------------------------------------------------------------------------
 
 /**
+ * The chosen options of one facet that can actually decide anything.
+ *
+ * Empty means "this facet cannot reject", and the three ways to get there are
+ * different in kind but identical in consequence: a guided facet (no field to
+ * check against), no selection (unrestricted), or a selection whose options carry
+ * no pattern. Collapsing them here is what keeps the permissiveness rule in one
+ * place instead of repeated at every call site.
+ */
+export function checkableOptions(facet: Facet, chosen: string[]): FacetOption[] {
+  if (facet.enforcement !== 'checked' || chosen.length === 0) return []
+  return facet.options.filter(opt => chosen.includes(opt.id) && opt.match)
+}
+
+/**
+ * Does this offering fall inside one facet's chosen options?
+ *
+ * Split out of `satisfiesScope` so the mechanism is reachable by a facet that is
+ * **not** in `FACETS`. The concept ontology (lib/concepts) is exactly that: a
+ * scope ontology over the theorem medium, assembled per subject rather than
+ * registered per medium, because registering it would put a mathematics
+ * curriculum into the scope picker of all eleven correlation games. Same hint,
+ * same pattern, same honesty rules — different owner.
+ *
+ * Options within a facet are an OR. True when there is nothing to check.
+ */
+export function facetAdmits(facet: Facet, chosen: string[], o: Offering): boolean {
+  const options = checkableOptions(facet, chosen)
+  if (options.length === 0) return true
+  const hay = (facet.haystack ?? offeringHaystack)(o)
+  return options.some(opt => opt.match!.test(hay))
+}
+
+/**
  * Does this offering satisfy the scope set for its medium?
  *
  * True when there is nothing to check — no scope, or only guided facets, or a
@@ -527,15 +560,9 @@ export function satisfiesScope(o: Offering, scopes: Scopes): boolean {
 
   for (const [facetId, chosen] of Object.entries(perMedium)) {
     const facet = getFacet(o.medium, facetId)
-    if (!facet || facet.enforcement !== 'checked' || chosen.length === 0) continue
-
-    const options = facet.options.filter(opt => chosen.includes(opt.id) && opt.match)
-    if (options.length === 0) continue
-
-    const hay = (facet.haystack ?? offeringHaystack)(o)
-    // Options within a facet are an OR; facets are an AND. One facet failing is
-    // enough to make the whole thing a miss.
-    if (!options.some(opt => opt.match!.test(hay))) return false
+    if (!facet) continue
+    // Facets are an AND. One facet failing is enough to make the whole thing a miss.
+    if (!facetAdmits(facet, chosen, o)) return false
   }
 
   return true
@@ -548,8 +575,8 @@ export function describeScopeMiss(o: Offering, scopes: Scopes): string {
 
   for (const [facetId, chosen] of Object.entries(perMedium)) {
     const facet = getFacet(o.medium, facetId)
-    if (!facet || facet.enforcement !== 'checked') continue
-    const options = facet.options.filter(opt => chosen.includes(opt.id) && opt.match)
+    if (!facet) continue
+    const options = checkableOptions(facet, chosen)
     if (options.length === 0) continue
     const hay = (facet.haystack ?? offeringHaystack)(o)
     if (!options.some(opt => opt.match!.test(hay))) {

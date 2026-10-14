@@ -141,8 +141,23 @@ export interface Relation {
  *                does not rule.
  *  - 'narrator'  story. An in-fiction interpreter turns the offering into an
  *                event, and the event sticks.
+ *  - 'verifier'  mechanical. A worker rules, and its ruling may be
+ *                *inconclusive* — which is a first-class outcome and never
+ *                scored against the player.
+ *
+ * The first two are interpretive, and the difference between them is who the
+ * ruling binds. The third is a different kind altogether, and it does not belong
+ * to any of the eleven correlation games: no game in games.ts sets it, nothing in
+ * app/api/correlate/turn/route.ts branches on it, and the reply guarantee the turn
+ * route makes would be a lie under it — when a learner is wrong the correct
+ * response is "wrong, and here is the step that broke", not a salvaged offering
+ * that keeps the chain alive.
+ *
+ * It is declared here rather than in lib/concepts because this is the enum, and a
+ * second judge enum living somewhere else is how two subsystems end up disagreeing
+ * about what a judge is. See lib/concepts/verify.ts for the engine that uses it.
  */
-export type Judge = 'player' | 'narrator'
+export type Judge = 'player' | 'narrator' | 'verifier'
 
 /** The six pieces every game has to answer for. */
 export interface GamePieces {
