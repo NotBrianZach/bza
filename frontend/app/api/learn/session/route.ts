@@ -3,7 +3,7 @@ import { getUserFromToken } from '@/lib/apiQuota'
 import { RATIONAL_EXPRESSIONS } from '@/lib/concepts/ontology'
 import { conceptById } from '@/lib/concepts/registry'
 import { assemble, summarise } from '@/lib/concepts/scheduling'
-import { loadStrengths, loadTraversal } from '@/lib/concepts/store'
+import { loadStrengths, loadTraversal, pendingReviewCount } from '@/lib/concepts/store'
 import { frontier, openingDoors, traversalProgress } from '@/lib/concepts/traversal'
 import { verifierConfig } from '@/lib/concepts/verify'
 
@@ -38,10 +38,15 @@ export async function GET(req: NextRequest) {
 
   let strengths
   let world
+  let awaitingReview = 0
   try {
-    ;[strengths, world] = await Promise.all([
+    ;[strengths, world, awaitingReview] = await Promise.all([
       loadStrengths(userId),
       loadTraversal(userId, ONTOLOGY.subject.id),
+      // Counted here so the tab can carry a badge. A review queue nobody can see
+      // the size of is a review queue nobody works, and the rows in it are the
+      // engine's own failures — the most informative ones in the table.
+      pendingReviewCount(userId),
     ])
   } catch (e) {
     return NextResponse.json(
@@ -62,6 +67,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     subject: ONTOLOGY.subject,
     verifier: { configured: !!verifierConfig().url },
+    awaitingReview,
     tasks: assembly.tasks.map(t => ({
       // The reference answer is withheld. It is the right-hand side of an
       // equivalence check and the client has no use for it until after a ruling —

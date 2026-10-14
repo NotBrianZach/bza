@@ -10,6 +10,7 @@ import { TRAVERSAL_GAME } from '@/lib/concepts/traversal'
 import { MASTERY_FLOOR } from '@/lib/concepts/scheduling'
 import ConceptBrowser from '@/components/concepts/ConceptBrowser'
 import PracticePanel, { type PracticeTaskView } from '@/components/concepts/PracticePanel'
+import ReviewQueue from '@/components/concepts/ReviewQueue'
 import RpnCalculator from '@/components/concepts/RpnCalculator'
 import TraversalMap, { type TraversalView } from '@/components/concepts/TraversalMap'
 
@@ -31,13 +32,15 @@ export const dynamic = 'force-dynamic'
  * scratchpad is the surface feature with no CAS behind it.
  */
 
-type Tab = 'practice' | 'concepts' | 'tools'
+type Tab = 'practice' | 'concepts' | 'review' | 'tools'
 
 interface Named { conceptId: string; conceptName: string }
 
 interface SessionResponse {
   subject?: { id: string; name: string; covers: string }
   verifier?: { configured: boolean }
+  /** How many rulings the engine could not settle and nobody has adjudicated. */
+  awaitingReview?: number
   tasks?: PracticeTaskView[]
   skipped?: { taskId: string; reason: string }[]
   blocked?: { conceptId: string; conceptName: string; missing: Named[] }[]
@@ -88,6 +91,7 @@ export default function LearnPage() {
           {([
             ['practice', 'Practice'],
             ['concepts', 'Concepts'],
+            ['review', 'Review'],
             ['tools', 'Scratchpad'],
           ] as [Tab, string][]).map(([id, label]) => (
             <button
@@ -99,6 +103,13 @@ export default function LearnPage() {
                   : 'border-transparent text-gray-500 hover:text-gray-300'}`}
             >
               {label}
+              {/* The badge is the whole point of surfacing the count: an
+                  unsettled ruling that nobody can see is one nobody adjudicates. */}
+              {id === 'review' && (state?.awaitingReview ?? 0) > 0 && (
+                <span className='ml-1.5 rounded-full bg-sky-900 px-1.5 py-0.5 text-[10px] font-semibold text-sky-200'>
+                  {state!.awaitingReview}
+                </span>
+              )}
             </button>
           ))}
         </nav>
@@ -188,6 +199,11 @@ export default function LearnPage() {
         )}
 
         {tab === 'concepts' && <ConceptBrowser ontology={RATIONAL_EXPRESSIONS} />}
+
+        {/* Reloading the session on resolve keeps the badge and the practice set
+            honest: settling a review can move strength, which changes what is
+            introducible and therefore what the next set contains. */}
+        {tab === 'review' && <ReviewQueue onResolved={load} />}
 
         {tab === 'tools' && (
           <>

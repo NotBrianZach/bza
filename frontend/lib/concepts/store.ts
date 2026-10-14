@@ -165,18 +165,101 @@ export async function recordObservation(
   return (data as { id?: string } | null)?.id ?? null
 }
 
-/** The review queue: inconclusive rulings an engine actually attempted. */
-export async function pendingReview(userId: string, limit = 50) {
+export interface ReviewRow {
+  id: string
+  knowledge_point_id: string
+  task_id: string
+  ruling: string
+  method: string | null
+  answer: string | null
+  answer_as_read: string | null
+  conditions: string[] | null
+  evidence: Record<string, unknown> | null
+  assistance: string | null
+  created_at: string
+}
+
+/**
+ * The review queue: inconclusive rulings an engine actually attempted.
+ *
+ * Oldest first, which is the opposite of what a feed would do and is right
+ * here. A review queue sorted newest-first lets the tail rot invisibly — the
+ * rows nobody ever reaches are precisely the ones that have been waiting
+ * longest, and those are the ones most likely to be a real gap in the engine
+ * rather than a one-off.
+ */
+export async function pendingReview(userId: string, limit = 50): Promise<ReviewRow[]> {
   const { data, error } = await db()
     .from('concept_observations')
-    .select('id, knowledge_point_id, task_id, ruling, method, answer, answer_as_read, conditions, evidence, created_at')
+    .select('id, knowledge_point_id, task_id, ruling, method, answer, answer_as_read, conditions, evidence, assistance, created_at')
     .eq('user_id', userId)
     .eq('needs_review', true)
     .is('reviewed_at', null)
-    .order('created_at', { ascending: false })
+    .order('created_at', { ascending: true })
     .limit(limit)
   if (error) throw new Error(`could not load the review queue: ${error.message}`)
-  return data ?? []
+  return (data ?? []) as ReviewRow[]
+}
+
+/** How many are waiting. Separate from the list so a badge costs no rows. */
+export async function pendingReviewCount(userId: string): Promise<number> {
+  const { count, error } = await db()
+    .from('concept_observations')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .eq('needs_review', true)
+    .is('reviewed_at', null)
+  if (error) throw new Error(`could not count the review queue: ${error.message}`)
+  return count ?? 0
+}
+
+/**
+ * Settle one reviewed observation.
+ *
+ * THE ORIGINAL RULING IS NOT OVERWRITTEN, and this is the whole design of the
+ * function. `ruling` stays 'inconclusive' and `scored` stays false, because
+ * that is what the engine did and when. `reviewed_ruling` records what a human
+ * decided afterwards, and the strength change is applied from *that*.
+ *
+ * The alternative — flip `ruling` to the reviewed value and set `scored` — is
+ * one line shorter and rewrites history: the row would then claim the engine
+ * settled something it could not, and the count of "how often does this engine
+ * fail to decide" (the single most useful number this table holds) would fall
+ * every time somebody worked the queue.
+ *
+ * A human who looks and still cannot tell passes 'inconclusive'. That closes
+ * the row without scoring it, which is the honest outcome and is enforced by
+ * the CHECK constraint from migration 61 as well as here.
+ *
+ * Returns the row as it was, so the caller can build the Observation that the
+ * scheduler folds in. The write is guarded on `reviewed_at is null` so two
+ * concurrent resolutions cannot both score: the second matches no row and
+ * returns null.
+ */
+export async function resolveReview(
+  userId: string,
+  observationId: string,
+  reviewedRuling: 'correct' | 'incorrect' | 'inconclusive',
+  note: string | null,
+): Promise<ReviewRow | null> {
+  const scored = reviewedRuling === 'correct' || reviewedRuling === 'incorrect'
+
+  const { data, error } = await db()
+    .from('concept_observations')
+    .update({
+      reviewed_at: new Date().toISOString(),
+      reviewed_ruling: reviewedRuling,
+      reviewed_note: note,
+      review_scored: scored,
+    })
+    .eq('id', observationId)
+    .eq('user_id', userId)
+    .is('reviewed_at', null)
+    .select('id, knowledge_point_id, task_id, ruling, method, answer, answer_as_read, conditions, evidence, assistance, created_at')
+    .maybeSingle()
+
+  if (error) throw new Error(`could not resolve the review: ${error.message}`)
+  return (data as ReviewRow | null) ?? null
 }
 
 // ---------------------------------------------------------------------------
