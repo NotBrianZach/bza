@@ -141,6 +141,56 @@ for file in "${FILES[@]}"; do
         continue
     fi
 
+    # ── Refuse a new table in `public` without explicit GRANTs ────────────
+    #
+    # Supabase auto-grants anon/authenticated on the public schema, and that
+    # ends 2026-10-30. Existing tables are grandfathered, so this only bites
+    # NEW ones -- and it bites as empty 200s rather than errors, which is the
+    # worst possible shape: the app looks healthy and returns nothing.
+    #
+    # bza is already safe by construction: migration 57 moved the app into
+    # bza_public and installed
+    #     alter default privileges in schema bza_public grant ... on tables
+    # as `postgres`, which is the role this script connects as, so every new
+    # table there is granted automatically. Nothing needs adding per-file.
+    #
+    # The exposure that remains is habit -- a migration written against
+    # `public` out of muscle memory, which rides the auto-grant and breaks
+    # after the cutoff. The convention is already documented; this makes it
+    # enforced, because a silent empty result is not something review
+    # reliably catches.
+    #
+    # Deliberately narrow: only CREATE TABLE landing in public, only when the
+    # same file has no GRANT. Comments are stripped first so that prose about
+    # public.foo (every one of these files discusses the old schema) cannot
+    # trip it.
+    #
+    # Both spellings count. An unqualified `create table foo (...)` resolves
+    # through search_path, which for this connection's role is public -- so it
+    # is the same hazard wearing different clothes, and the easier one to
+    # write by accident. 49_analytics_events.sql is exactly that shape.
+    SQL_CODE=$(sed -e 's/--.*$//' "$file")
+    HAS_PUBLIC_TARGET=$(printf '%s' "$SQL_CODE" \
+        | grep -icE 'create[[:space:]]+table([[:space:]]+if[[:space:]]+not[[:space:]]+exists)?[[:space:]]+(public\.|[a-z_][a-z0-9_]*[[:space:]]*\()' \
+        || true)
+    HAS_GRANT=$(printf '%s' "$SQL_CODE" | grep -icE '^[[:space:]]*grant[[:space:]]' || true)
+    if [[ "$HAS_PUBLIC_TARGET" -gt 0 && "$HAS_GRANT" -eq 0 ]]; then
+        echo -e "${RED}✗  $name creates a table in public with no GRANT${NC}" >&2
+        echo "   Supabase's automatic grants on public end 2026-10-30. A new" >&2
+        echo "   table without explicit GRANTs will return empty results, not" >&2
+        echo "   errors, so nothing will look broken." >&2
+        echo "   Put it in bza_public instead: migration 57 set default" >&2
+        echo "   privileges there, so grants are automatic. Remember to add the" >&2
+        echo "   schema to Settings->API->Exposed schemas, or queries get" >&2
+        echo "   PGRST106." >&2
+        echo "   To apply as written anyway: ALLOW_PUBLIC_SCHEMA=1" >&2
+        if [[ "${ALLOW_PUBLIC_SCHEMA:-0}" != "1" ]]; then
+            FAILED=$((FAILED + 1))
+            die "Refusing to apply $name."
+        fi
+        info "ALLOW_PUBLIC_SCHEMA=1 set — applying anyway."
+    fi
+
     if psql "$DSN" -v ON_ERROR_STOP=1 -f "$file" 2>&1; then
         # Record successful application
         psql "$DSN" -q -c \
