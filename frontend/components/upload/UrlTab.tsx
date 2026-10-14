@@ -140,6 +140,11 @@ export function UrlTab({
       else onTitleChange(data.title ?? '')
       if (data.type === 'pdf') onContentTypeChange('academic_paper')
       if (data.type === 'wikipedia') onContentTypeChange('wikipedia_article')
+      // A transcript is spoken long-form prose, so 'essay' is the closest of
+      // the eleven options. Without this branch a YouTube import kept the
+      // picker's initial 'fiction', which is how five lectures and a Rich
+      // Hickey talk ended up filed as novels.
+      if (data.type === 'youtube') onContentTypeChange('essay')
       setSelectedRssItems(new Set())
     } catch (err: any) {
       onError(err.message)

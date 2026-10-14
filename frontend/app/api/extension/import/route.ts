@@ -6,6 +6,17 @@ const SUPABASE_URL      = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 const CHAR_PAGE_LENGTH  = 1800
 
+// Mirrors books_content_type_check. Deliberately spelled out here rather than
+// imported from components/upload/types.ts: that union is the *picker's*
+// vocabulary and is missing 'chat_book', which the constraint allows. The
+// database is the authority for what an insert will accept, so this list
+// tracks the constraint.
+const ALLOWED_CONTENT_TYPES = new Set([
+  'fiction', 'textbook', 'academic_paper', 'math_textbook',
+  'wikipedia_article', 'news_article', 'forum_thread', 'essay',
+  'reference', 'biography', 'chat_book', 'manga',
+])
+
 export async function POST(req: NextRequest) {
   // ── Auth ──────────────────────────────────────────────────────────────────
   const authHeader = req.headers.get('authorization') ?? ''
@@ -57,11 +68,35 @@ export async function POST(req: NextRequest) {
   // ── Create books record ───────────────────────────────────────────────────
   const totalPages = Math.ceil(content.length / CHAR_PAGE_LENGTH)
 
-  // Derive content_type from source
-  let contentType = 'non-fiction'
-  if (source_type === 'youtube') contentType = 'non-fiction'
+  // Derive content_type from source.
+  //
+  // 'non-fiction' was not one of the values books.content_type accepts. The
+  // column carries a CHECK constraint (books_content_type_check) and that
+  // string is absent from it, so three of the four branches here produced an
+  // insert the database rejected outright: YouTube captures, Hacker News
+  // captures, and the default. Only the wikipedia.org branch ever wrote a
+  // legal row, which is why 350 books contain zero 'non-fiction' and why the
+  // capture extension looked like it did nothing for everything else.
+  //
+  // Every value below is checked against the constraint's list by
+  // ALLOWED_CONTENT_TYPES before the insert, so the next typo fails here
+  // with a named error instead of as a 500 from Postgres.
+  let contentType = 'essay'
+  if (source_type === 'youtube') contentType = 'essay'
   else if (source_url?.includes('wikipedia.org')) contentType = 'wikipedia_article'
-  else if (source_url?.includes('news.ycombinator.com')) contentType = 'non-fiction'
+  else if (source_url?.includes('news.ycombinator.com')) contentType = 'forum_thread'
+
+  if (!ALLOWED_CONTENT_TYPES.has(contentType)) {
+    return NextResponse.json(
+      {
+        error:
+          `Refusing to import: derived content_type '${contentType}' is not ` +
+          `one of ${[...ALLOWED_CONTENT_TYPES].join(', ')}. The insert would ` +
+          `violate books_content_type_check.`,
+      },
+      { status: 500 },
+    )
+  }
 
   const { data: book, error: dbErr } = await supabase
     .from('books')
