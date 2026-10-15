@@ -16,7 +16,8 @@
     "type-check": "tsc --noEmit",
     "test:correlate": "node tests/correlate-logic.mjs",
     "test:schema": "node tests/supabase-schema.mjs",
-    "test": "npm run test:correlate && npm run test:concepts && npm run test:schema",
+    "test:discharge": "node tests/discharge-logic.mjs",
+    "test": "npm run test:correlate && npm run test:concepts && npm run test:schema && npm run test:discharge",
     "test:concepts": "node tests/concepts-logic.mjs"
   },
   "dependencies": {

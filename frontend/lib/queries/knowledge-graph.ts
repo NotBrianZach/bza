@@ -1,8 +1,58 @@
 import { supabase } from '../supabase'
+import { planDischarge } from './discharge'
+import type { DischargeCandidate, DischargeEdge, DischargeWrite } from './discharge'
 
 const FUNCTIONS_BASE =
   (process.env.NEXT_PUBLIC_FUNCTIONS_URL || process.env.NEXT_PUBLIC_SUPABASE_URL) +
   '/functions/v1'
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Prerequisite discharge — the IO half. The decision is in ./discharge.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Apply `planDischarge` to the prerequisites of a node just mastered.
+ *
+ * The whole book's edges and nodes are loaded in two queries rather than walked
+ * level by level. A book's graph is 8–15 nodes by construction — the extractor
+ * prompt asks for that many — so a breadth-first walk over the database would be
+ * several round trips to avoid reading a few dozen rows, and it would put the
+ * traversal somewhere a test cannot reach it.
+ *
+ * RLS does the scoping. Both tables are owner-policied, so these selects return
+ * only this user's rows and the discharge cannot cross into another learner's
+ * graph even though node ids are global.
+ */
+async function dischargePrerequisites(
+  nodeId: number,
+  bookId: number,
+  intervalDays: number,
+  dependentNextReviewAt: string,
+): Promise<DischargeWrite[]> {
+  const [{ data: edges }, { data: nodes }] = await Promise.all([
+    supabase.from('knowledge_edges').select('from_node, to_node').eq('book_id', bookId),
+    supabase.from('knowledge_nodes').select('id, next_review_at, mastered').eq('book_id', bookId),
+  ])
+  if (!edges || !nodes) return []
+
+  const writes = planDischarge({
+    startId: nodeId,
+    edges: edges as DischargeEdge[],
+    candidates: nodes as DischargeCandidate[],
+    intervalDays,
+    dependentNextReviewAt,
+    now: Date.now(),
+  })
+
+  for (const w of writes) {
+    await supabase
+      .from('knowledge_nodes')
+      .update({ next_review_at: w.newNextReviewAt })
+      .eq('id', w.nodeId)
+  }
+
+  return writes
+}
 
 // ===========================================
 
@@ -61,6 +111,7 @@ export const knowledgeGraphQueries = {
   async updateMastery(
     nodeId: number,
     node: {
+      book_id: number
       interval_days: number
       ease_factor: number
       repetitions: number
@@ -118,6 +169,16 @@ export const knowledgeGraphQueries = {
         last_reviewed_at: new Date().toISOString(),
       })
       .eq('id', nodeId)
+
+    // Demonstrating a concept exercised its prerequisites. Say so.
+    //
+    // Gated on `mastered` rather than on `passed`: since migration 66 that means
+    // two consecutive passes, so discharge rests on the same evidence as
+    // unlocking. A single pass — ~10% reachable by guessing on a 5-question,
+    // 4-option quiz — moves nothing underneath it.
+    if (mastered) {
+      await dischargePrerequisites(nodeId, node.book_id, interval_days, next_review_at)
+    }
   },
 
   /** Count mastered nodes due for review across all books. */
