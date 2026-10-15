@@ -136,9 +136,27 @@ export async function POST(req: NextRequest) {
           }
         }
 
-        // Log usage
+        // Log usage.
+        //
+        // This call was `logUsage(userId, modelId, 0, totalContent.length)` — the
+        // signature it was written against, (userId, model, inputTokens,
+        // outputTokens), no longer exists. logUsage now takes
+        // (userId, baseCost, meta), so modelId landed in baseCost and `0` landed
+        // in meta, making `meta.model.includes('/')` a TypeError on undefined.
+        // logUsage swallows its own exceptions and the call site adds
+        // `.catch(() => {})`, so it failed in complete silence: api_usage has no
+        // chat row after 2026-07-06, while other endpoints kept logging.
+        //
+        // That is a quota hole, not just missing telemetry — get_user_quota reads
+        // api_usage and checkQuota gates free-tier users on spend_this_month, so
+        // chat, the highest-volume endpoint, stopped counting against the limit.
+        //
+        // The flat estimate is the convention here (library-chat uses 0.002, tts
+        // 0.015) because logUsage hardcodes input_tokens/output_tokens to 0 and
+        // has nowhere to put a real count. 0.0002 rather than a guess: it is the
+        // mean of the 1063 chat rows logged while this worked (0.2007 total).
         if (userId && totalContent) {
-          logUsage(userId, modelId, 0, totalContent.length).catch(() => {})
+          logUsage(userId, 0.0002, { model: modelId, endpoint: 'chat' }).catch(() => {})
         }
       } catch (err) {
         controller.enqueue(

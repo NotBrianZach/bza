@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { Book as BookType, ScoreBar } from '@/types'
 import { imageQueries, toImgProxyUrl } from '@/lib/queries'
 import { BookOpen, Trash2, Calendar, FileText, Sparkles, Loader2, Pin, PinOff, Pencil, Check, X, ExternalLink, Bell, BellOff, Download, Tag, Languages, Volume2, BookImage, ChevronUp, ChevronDown } from 'lucide-react'
-import { PICTUREBOOK_PRESETS, PicturebookPreset, OPENROUTER_IMAGE_MODELS, TRANSLATE_MODELS, TTS_MODELS, TTS_VOICES } from '@/lib/supabase-queries'
+import { PICTUREBOOK_PRESETS, PicturebookPreset, PicturebookProvider, OPENROUTER_IMAGE_MODELS, TRANSLATE_MODELS, TTS_MODELS, TTS_VOICES } from '@/lib/supabase-queries'
 import { booksQueries } from '@/lib/queries'
 import { authedFetch } from '@/lib/authedFetch'
 import { wikiNewsQueries } from '@/lib/queries'
@@ -64,8 +64,8 @@ export default function BookCard({ book, onDelete, onPinToggled, onRenamed, onRe
   const [convertResult, setConvertResult] = useState<string | null>(null)
   const [convertProgress, setConvertProgress] = useState<{ done: number; total: number } | null>(null)
   const [translateModel, setTranslateModel] = useState('deepseek/deepseek-chat-v3')
-  const [ttsModel, setTtsModel] = useState(TTS_MODELS[0].id)
-  const [ttsVoice, setTtsVoice] = useState(TTS_VOICES[4].id) // nova
+  const [ttsModel, setTtsModel] = useState<(typeof TTS_MODELS)[number]['id']>(TTS_MODELS[0].id)
+  const [ttsVoice, setTtsVoice] = useState<(typeof TTS_VOICES)[number]['id']>(TTS_VOICES[4].id) // nova
   const [ttsSpeed, setTtsSpeed] = useState(1.0)
   const pb = usePicturebook(book.id)
 
@@ -608,7 +608,14 @@ export default function BookCard({ book, onDelete, onPinToggled, onRenamed, onRe
               <div className="grid grid-cols-2 gap-2 mb-2">
                 <div>
                   <p className="text-[10px] text-gray-500 dark:text-gray-400 mb-1">Quality</p>
-                  <select value={ttsModel} onChange={e => setTtsModel(e.target.value)} className="input text-xs w-full">
+                  {/* The cast is safe because the only options rendered below are
+                      TTS_MODELS' own ids; a <select>'s value is typed as plain
+                      string, so there is nothing narrower to read it as. */}
+                  <select
+                    value={ttsModel}
+                    onChange={e => setTtsModel(e.target.value as (typeof TTS_MODELS)[number]['id'])}
+                    className="input text-xs w-full"
+                  >
                     {TTS_MODELS.map(m => (
                       <option key={m.id} value={m.id}>{m.label}</option>
                     ))}

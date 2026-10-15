@@ -65,10 +65,13 @@ const CARD_SIZES_KEY = 'bza-card-sizes'
 export type CardSize = 'small' | 'medium' | 'large'
 export interface CardSizes { books: CardSize; feeds: CardSize; flashcards: CardSize }
 const DEFAULT_CARD_SIZES: CardSizes = { books: 'medium', feeds: 'medium', flashcards: 'medium' }
-export function getCardSizes(): CardSizes {
+// Not exported: Next.js validates page modules' export surface and rejects any
+// field that is not a recognised Page export, so a helper living in page.tsx must
+// stay local. Both of these are only used in this file anyway.
+function getCardSizes(): CardSizes {
   try { return { ...DEFAULT_CARD_SIZES, ...JSON.parse(localStorage.getItem(CARD_SIZES_KEY) ?? '{}') } } catch { return DEFAULT_CARD_SIZES }
 }
-export function saveCardSizes(sizes: CardSizes) { localStorage.setItem(CARD_SIZES_KEY, JSON.stringify(sizes)) }
+function saveCardSizes(sizes: CardSizes) { localStorage.setItem(CARD_SIZES_KEY, JSON.stringify(sizes)) }
 // Grid classes per card size
 const BOOK_GRID: Record<CardSize, string> = {
   small:  'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3',

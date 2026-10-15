@@ -10,7 +10,9 @@ const adminSupabase = createClient(
 )
 
 export async function POST(req: NextRequest) {
-  let response = NextResponse.json({})
+  // Annotated: the setter below receives NextResponse<unknown> from the cookie
+  // helper, which is not assignable to the NextResponse<{}> that json({}) infers.
+  let response: NextResponse<unknown> = NextResponse.json({})
   const supabase = createSupabaseServerClient(req, () => response, (r) => { response = r })
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })

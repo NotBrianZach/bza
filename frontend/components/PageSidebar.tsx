@@ -352,7 +352,7 @@ function ChatPanelContent({
   }
 
   // Slash command expansion
-  const expandSlashCommand = (text: string): string | null => {
+  const expandSlashCommand = (text: string): string | null | undefined => {
     const cmd = text.trim().toLowerCase()
     if (cmd === '/summarize' || cmd === '/summary') return `Summarize what's on this page in a few bullet points.`
     if (cmd === '/explain') return `Explain the key concepts on this page in simple terms.`

@@ -1,7 +1,22 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  typescript: { ignoreBuildErrors: true },
+  // Type errors fail the build again, as of 2026-10-15.
+  //
+  // This was `ignoreBuildErrors: true` and the repo carried nine of them. One was
+  // not cosmetic: app/api/chat/route.ts called logUsage against a signature that
+  // no longer existed, which made `meta.model.includes('/')` a TypeError on
+  // undefined. logUsage swallows its own exceptions and the call site added
+  // `.catch(() => {})`, so nothing surfaced — api_usage logged no chat row after
+  // 2026-07-06, and since get_user_quota reads that table, free-tier chat stopped
+  // counting against the monthly limit for three months. app/api/manga-parse had
+  // the same break and had never logged once.
+  //
+  // tsc knew about both the whole time. The flag is why nobody heard.
+  //
+  // All nine are fixed and `tsc --noEmit` is clean, so this is now a gate rather
+  // than a backlog. If it starts failing a deploy, that is it working.
+  typescript: { ignoreBuildErrors: false },
   // Prevent Typst WASM packages from being bundled for server/edge — they're browser-only
   experimental: {
     serverComponentsExternalPackages: [

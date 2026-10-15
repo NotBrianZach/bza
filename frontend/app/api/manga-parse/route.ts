@@ -100,7 +100,17 @@ Return valid JSON in this format:
     const content = data.choices?.[0]?.message?.content || '{}'
 
     if (userId) {
-      logUsage(userId, modelId, 0, content.length).catch(() => {})
+      // Same stale-signature bug as app/api/chat/route.ts — see the note there.
+      // This one never logged at all: api_usage has no 'manga-parse' endpoint_type
+      // row in its entire history, so unlike chat there is no observed mean to
+      // anchor an estimate to.
+      //
+      // 0.002, matching library-chat, rather than chat's 0.0002: this is a
+      // vision call over a page image and is the more expensive request of the
+      // two. Deliberately the conservative direction — over-estimating spends a
+      // free-tier user's quota slightly fast, under-estimating lets it leak,
+      // which is the failure that has been running for months.
+      logUsage(userId, 0.002, { model: modelId, endpoint: 'manga-parse' }).catch(() => {})
     }
 
     try {

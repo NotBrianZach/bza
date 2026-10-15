@@ -34,8 +34,16 @@ let transformersModule: any = null
 async function loadTransformersFromCDN(): Promise<any> {
   if (transformersModule) return transformersModule
   // Dynamic import from CDN — avoids webpack bundling onnxruntime-node
+  //
+  // TypeScript cannot resolve a URL specifier and there is no module to point it
+  // at: the whole purpose is that this is fetched by the browser at runtime and
+  // never enters the bundle (hence webpackIgnore). So the error is suppressed
+  // narrowly here rather than by leaving typescript.ignoreBuildErrors on for the
+  // entire project, which is what used to hide it — along with a stale-signature
+  // bug that silently broke chat usage logging for three months.
   transformersModule = await import(
     /* webpackIgnore: true */
+    // @ts-expect-error -- URL specifier, resolved by the browser at runtime
     'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3/dist/transformers.min.js'
   )
   return transformersModule
