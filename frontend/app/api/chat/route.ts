@@ -155,8 +155,29 @@ export async function POST(req: NextRequest) {
         // 0.015) because logUsage hardcodes input_tokens/output_tokens to 0 and
         // has nowhere to put a real count. 0.0002 rather than a guess: it is the
         // mean of the 1063 chat rows logged while this worked (0.2007 total).
+        //
+        // AWAITED, and that is the second half of the bug. Fixing the signature
+        // alone changed nothing: this sits immediately before
+        // `finally { controller.close() }`, so a fire-and-forget promise is
+        // started and the response then completes. On Cloudflare Workers the
+        // isolate may be torn down at that point and un-awaited work is simply
+        // dropped — there is no ctx.waitUntil registration here to keep it
+        // alive. Verified empirically: with the signature fixed but the call
+        // still floating, a successful chat request produced no api_usage row.
+        //
+        // Awaiting delays only the stream's close, not the content — every
+        // chunk including [DONE] has already been enqueued by this point, so
+        // the client sees the full reply either way.
+        //
+        // app/api/correlate/turn/route.ts gets away with not awaiting because
+        // its call is followed by more awaits inside the handler, which keeps
+        // the isolate alive long enough. That is luck rather than design.
         if (userId && totalContent) {
-          logUsage(userId, 0.0002, { model: modelId, endpoint: 'chat' }).catch(() => {})
+          try {
+            await logUsage(userId, 0.0002, { model: modelId, endpoint: 'chat' })
+          } catch {
+            // Usage logging must never fail a reply the user already received.
+          }
         }
       } catch (err) {
         controller.enqueue(

@@ -110,7 +110,15 @@ Return valid JSON in this format:
       // two. Deliberately the conservative direction — over-estimating spends a
       // free-tier user's quota slightly fast, under-estimating lets it leak,
       // which is the failure that has been running for months.
-      logUsage(userId, 0.002, { model: modelId, endpoint: 'manga-parse' }).catch(() => {})
+      // Awaited for the same reason as chat: an un-awaited promise here depends
+      // on the isolate outliving the response, which on Workers is not
+      // guaranteed. There is work after this call today, so it would probably
+      // survive — "probably" being exactly what made the chat break invisible.
+      try {
+        await logUsage(userId, 0.002, { model: modelId, endpoint: 'manga-parse' })
+      } catch {
+        // Never fail a parse the caller already paid for.
+      }
     }
 
     try {
