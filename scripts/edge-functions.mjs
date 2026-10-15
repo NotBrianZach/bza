@@ -166,6 +166,11 @@ function readJsonStringArray(text, pos) {
  */
 function repoPathFor(slug, name) {
   let clean = name.replace(/^\.\//, '')
+  // A third prefix, from functions deployed through the management API rather
+  // than the CLI: its multipart upload lands under source/, so sourcemaps read
+  // `source/<slug>/index.ts`. generate-picturebook has this shape as of
+  // 2026-10-15. Strip it before the functions/ case, since both can appear.
+  if (clean.startsWith('source/')) clean = clean.slice('source/'.length)
   if (clean.startsWith('functions/')) clean = clean.slice('functions/'.length)
   const first = clean.split('/')[0]
   if (first !== slug && first !== '_shared') return null
