@@ -1,0 +1,91 @@
+-- Permit cycles in the prerequisite graph. Reverts 64's trigger; keeps its CHECK.
+--
+-- ── 64 WAS OVER-CONSTRAINED, AND THE CONSTRAINT WAS NOT THE DOMAIN'S ──────
+--
+-- 64 added a BEFORE ROW trigger rejecting any edge that would close a loop,
+-- reasoning that the scheduling work in reports/2026-10-14-0804 wants to
+-- traverse these edges and a traversal over a cyclic graph does not terminate.
+--
+-- The second half of that is true and the conclusion does not follow.
+-- Termination is a property of the traversal, not of the data: a visited-set
+-- gives it, and the revised scheduling plan already called for one. Requiring
+-- the data to be acyclic so that a naive traversal can be written is solving
+-- the wrong layer's problem, and it throws away information to do it.
+--
+-- Nothing actually required a DAG. The only consumer of these edges today is
+-- computeLayout in frontend/components/KnowledgeGraph.tsx, which is a bounded
+-- relaxation -- `for (let iter = 0; iter < nodes.length; iter++)` with an early
+-- break when a pass changes nothing. On a cycle it terminates after at most
+-- nodes.length passes and produces a layering. It was already cycle-tolerant
+-- before 64 and is unaffected by this revert.
+--
+-- ── CYCLES ARE ORDINARY HERE, NOT CORRUPT ─────────────────────────────────
+--
+-- Three ways a cycle arrives through the front door:
+--
+--   * Co-requisites. Limits and continuity, matrices and linear
+--     transformations, probability and counting -- pairs that bootstrap each
+--     other. There is no fact of the matter about which comes first, and
+--     forcing a direction records a decision the subject does not contain.
+--
+--   * Spiral curricula. Partial understanding of A enables B, and B deepens A.
+--     With concept-level nodes -- which is what knowledge_nodes holds, one row
+--     per concept rather than per mastery-level -- that is a two-cycle and it
+--     is good pedagogy, not bad data.
+--
+--   * The extractor reads prose. build-knowledge-graph is handed book excerpts
+--     and asked for relationships; a book's exposition order is not a
+--     prerequisite order, and mutual references between concepts are the
+--     expected shape of that output.
+--
+-- Its prompt does say "No cycles allowed", so a cycle means the model departed
+-- from instruction -- but the right response to that is not a constraint that
+-- discards the whole batch. Which brings up the concrete harm 64 did.
+--
+-- ── WHAT 64 ACTUALLY BROKE ────────────────────────────────────────────────
+--
+-- The extractor deletes a book's edges and re-inserts them as one batch. A row
+-- trigger sees rows already inserted by the same statement, so one cyclic pair
+-- aborted the entire insert -- failing the graph build for that book outright,
+-- where previously it stored the cycle and carried on. 64's own comments argued
+-- that was better because it is louder. It is louder; it is also a regression
+-- for every book whose extraction happens to contain a mutual pair, which this
+-- file now expects to be common rather than exceptional. No book had hit it yet
+-- -- the data was clean when 64 landed and still is -- so nothing needs
+-- repairing, only unblocking.
+--
+-- ── WHAT IS KEPT ──────────────────────────────────────────────────────────
+--
+-- knowledge_edges_no_self_loop stays. "A must be understood before A" is not a
+-- cycle in the interesting sense, it is a row that asserts nothing: there is no
+-- reading of co-requisite or spiral structure that a self-edge expresses and a
+-- two-cycle between distinct nodes does not express better. The extractor
+-- already filters self-loops in JavaScript, so the CHECK costs nothing and
+-- keeps the one malformation that is genuinely meaningless out of the table.
+
+drop trigger if exists knowledge_edges_no_cycle on bza_public.knowledge_edges;
+drop function if exists bza_public.knowledge_edges_reject_cycle();
+
+-- ── CONSEQUENCES FOR ANYTHING THAT WALKS THESE EDGES ──────────────────────
+--
+-- Cycles are now representable, so every consumer owns its own termination.
+-- For the prerequisite-discharge work this is a one-line obligation and a
+-- semantic clarification:
+--
+--   * Carry a visited-set. Required, not advisory -- a recursive CTE over this
+--     table needs either a visited-set or a depth cap or it will not return.
+--
+--   * Mutual discharge is the correct behaviour, not a degenerate case. If A
+--     and B are mutually prerequisite, an independent success at either is
+--     evidence about both, and refreshing both is what a co-requisite pair
+--     means. A visited-set makes that terminate while still crediting each node
+--     once.
+--
+-- A FUTURE OPTION, deliberately not taken here: add a `relationship` column
+-- ('prerequisite' | 'corequisite' | …) and scope any ordering claim to the
+-- prerequisite subset, which would let a mutual pair be labelled rather than
+-- inferred from the presence of a cycle. That is a real improvement and it is
+-- also a vocabulary decision affecting the extractor prompt, the UI legend and
+-- the scheduler at once. Permitting cycles does not depend on it: an untyped
+-- cyclic graph is strictly more faithful than an untyped graph with the cycles
+-- rejected.
