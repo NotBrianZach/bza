@@ -1,0 +1,61 @@
+-- Finish what 63 started: the `public` schema.
+--
+-- 63 aligned bza_public and said explicitly that public was out of scope --
+-- "the same hole in a schema nobody is watching". This is that follow-up.
+--
+-- ── WHAT IS LEFT IN public ────────────────────────────────────────────────
+--
+-- Two tables, both internal migration bookkeeping:
+--
+--   public._schema_migrations
+--   public._applied_migrations
+--
+-- Nothing of the application lives there any more (migration 57 moved it all to
+-- bza_public). Both nonetheless carry the stock Supabase ACL --
+-- anon=arwdDxtm, authenticated=arwdDxtm -- and the schema is exposed to
+-- PostgREST: an anonymous GET /rest/v1/_applied_migrations answers 200, not 404.
+--
+-- RLS is enabled on both and returns no rows, so reads are already blocked. The
+-- gap is the one 63 was about: PostgreSQL does not apply row-level security to
+-- TRUNCATE, which is checked against table privilege alone, and `anon` holds it.
+--
+-- ── WHY IT IS WORTH CLOSING ON BOOKKEEPING TABLES ─────────────────────────
+--
+-- The instinct is that these do not matter because they hold no user data. What
+-- they hold is the record of which migrations have run, which is what
+-- scripts/db-migrate.sh consults to decide what to apply. Emptying them does not
+-- leak anything; it makes the next migration run believe nothing has ever been
+-- applied. That is a worse Monday than losing a row.
+--
+-- Not reachable today — PostgREST exposes no TRUNCATE verb — so this is latent,
+-- exactly as it was in 63.
+--
+-- ── SCOPE ─────────────────────────────────────────────────────────────────
+--
+-- Revokes everything from both browser-assumable roles rather than narrowing to
+-- SELECT as 63 did for bza_public. The difference is deliberate: bza_public's
+-- tables are read by the app through PostgREST under RLS, so anon needs SELECT
+-- there. These two are read only by a migration script connecting as postgres.
+-- No browser-reachable role has any business with them at all.
+--
+-- db-migrate.sh is unaffected: it connects as postgres.<ref> over the session
+-- pooler, not as anon or authenticated.
+
+revoke all on public._schema_migrations from anon, authenticated;
+revoke all on public._applied_migrations from anon, authenticated;
+
+-- The stock defaults in this schema still hand out arwdDxtm, including the
+-- TRUNCATE bit, to both roles on every new table. Nothing should be created here
+-- again, but leaving the default in place means the next thing that is created
+-- arrives with the same hole -- which is precisely how bza_public inherited it.
+alter default privileges in schema public revoke all on tables from anon, authenticated;
+
+-- ── AFTER ─────────────────────────────────────────────────────────────────
+--
+--   select count(*) from information_schema.role_table_grants
+--    where table_schema='public' and grantee in ('anon','authenticated');
+--   → 0
+--
+-- And the REST endpoint that answered 200 with an empty array should now answer
+-- 401 permission denied, which is the honest response to a request for a table
+-- the caller may not touch.
