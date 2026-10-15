@@ -97,6 +97,12 @@ export interface KnowledgeNode {
   page_refs: number[]
   mastered: boolean
   mastery_score: number
+  /**
+   * Consecutive quizzes at score >= 0.6, reset to 0 by any failure. `mastered`
+   * is derived from this reaching 2 — distinct from `repetitions`, which is
+   * SM-2's own counter and treats a 0.5 score as a pass.
+   */
+  consecutive_passes: number
   interval_days: number
   ease_factor: number
   repetitions: number

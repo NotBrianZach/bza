@@ -60,12 +60,34 @@ export const knowledgeGraphQueries = {
   /** Update mastery for a node after a quiz session. Applies SM-2. */
   async updateMastery(
     nodeId: number,
-    node: { interval_days: number; ease_factor: number; repetitions: number },
+    node: {
+      interval_days: number
+      ease_factor: number
+      repetitions: number
+      consecutive_passes?: number
+    },
     correctCount: number,
     totalCount: number
   ): Promise<void> {
     const score = totalCount > 0 ? correctCount / totalCount : 0
-    const mastered = score >= 0.6
+    const passed = score >= 0.6
+
+    // Two passes in a row, not one.
+    //
+    // getNodeState locks a node until every prerequisite is mastered, so this
+    // boolean is the mastery-learning gate rather than a label. generate-quiz
+    // emits 5 questions of 4 options, which makes one 0.6 pass ~10.4% reachable
+    // by pure guessing, and nothing limits attempts — so a single-observation
+    // gate opens after about ten blind tries. Two independent passes is ~1%, and
+    // more to the point it is evidence of retention instead of evidence of one
+    // good moment.
+    //
+    // `consecutive_passes` is optional above only so a caller holding a node
+    // fetched before migration 66 still type-checks; `?? 0` then treats it as no
+    // progress, which is the safe direction — it delays mastery by one quiz
+    // rather than granting it early.
+    const consecutive_passes = passed ? (node.consecutive_passes ?? 0) + 1 : 0
+    const mastered = consecutive_passes >= 2
 
     // SM-2 quality: map 0.0-1.0 score to 0-5 quality scale
     const quality = Math.round(score * 5)
@@ -88,6 +110,7 @@ export const knowledgeGraphQueries = {
       .update({
         mastery_score: score,
         mastered,
+        consecutive_passes,
         interval_days,
         ease_factor,
         repetitions,

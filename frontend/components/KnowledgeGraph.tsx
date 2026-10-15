@@ -511,12 +511,20 @@ function NodeQuizView({
             <p className="font-semibold text-gray-800 dark:text-gray-200 mb-1">
               {correctCount}/{questions.length} correct
             </p>
+            {/* Mirrors updateMastery's rule rather than restating it loosely:
+                mastery needs two passes in a row, so a first pass must not be
+                announced as mastery. Saying "concept mastered" and then leaving
+                the node locked is the specific confusion this wording avoids. */}
             <p className="text-sm text-gray-500 dark:text-gray-400">
               {passed
                 ? node.mastered
                   ? 'Mastery maintained! Next review scheduled.'
-                  : 'Concept mastered!'
-                : 'Keep studying — you need 60% to master this node.'}
+                  : (node.consecutive_passes ?? 0) + 1 >= 2
+                    ? 'Concept mastered!'
+                    : 'Passed. Pass once more in a row to master this concept.'
+                : (node.consecutive_passes ?? 0) > 0
+                  ? 'Keep studying — you need 60%, and that reset your streak.'
+                  : 'Keep studying — you need 60% twice in a row to master this node.'}
             </p>
           </div>
           <div className="flex gap-2">
