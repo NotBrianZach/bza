@@ -115,8 +115,18 @@ export default function CorrelationGamesSection({
   return (
     <div className="mb-8">
       <div className="flex items-center gap-2 mb-1">
-        <Shuffle size={16} className="text-fuchsia-500" />
-        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Correlation games</h2>
+        {/* The heading is the link people actually aim at. "All eleven" was the
+            only way through to the list, and a section title that looks like a
+            title but is not clickable reads as a dead end — so the icon and the
+            words go to the same place the affordance on the right does. One
+            Link wrapping both, rather than two, so the hover is a single target
+            and `ml-auto` on the sibling still pushes it to the edge. */}
+        <Link href="/play" className="group flex items-center gap-2">
+          <Shuffle size={16} className="text-fuchsia-500" />
+          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-gray-100 transition-colors">
+            Correlation games
+          </h2>
+        </Link>
         <Link href="/play" className="ml-auto flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
           All eleven <ArrowRight size={12} />
         </Link>
