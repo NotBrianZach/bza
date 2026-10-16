@@ -51,7 +51,12 @@ interface SessionResponse {
     strongConcepts: number
     concepts: { conceptId: string; strength: number; introducible: boolean }[]
   }
-  traversal?: TraversalView & { frontier: Named[] }
+  // `openings` as its own field rather than intersecting `frontier` with
+  // Named[]. That intersection resolved to `never`, which is assignable to the
+  // `number` TraversalView declares — so tsc accepted passing an array of
+  // objects where a count was expected, and the practice tab crashed with React
+  // error #31 instead. The type now says what the route sends.
+  traversal?: TraversalView & { openings: Named[] }
   error?: string
 }
 
@@ -133,7 +138,7 @@ export default function LearnPage() {
             {state.traversal && (
               <TraversalMap
                 traversal={state.traversal}
-                openings={state.traversal.frontier ?? []}
+                openings={state.traversal.openings ?? []}
                 onChanged={load}
               />
             )}

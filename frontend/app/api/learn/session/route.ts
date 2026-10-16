@@ -94,7 +94,19 @@ export async function GET(req: NextRequest) {
       here: world.here,
       hereName: world.here ? name(world.here) : null,
       route: world.route.map(id => ({ conceptId: id, conceptName: name(id) })),
-      frontier: (world.route.length === 0 ? openingDoors(ONTOLOGY, world) : frontier(ONTOLOGY, world))
+      // `openings`, NOT `frontier`. traversalProgress() spread above already
+      // returns `frontier` as a COUNT, and naming this list `frontier` silently
+      // overwrote it with an array of {conceptId, conceptName}. TraversalMap
+      // renders `{traversal.frontier} open`, so the practice tab — the default
+      // tab — crashed with React error #31, "objects are not valid as a React
+      // child", naming those exact two keys.
+      //
+      // It typechecked because the page declared the shape as
+      // `TraversalView & { frontier: Named[] }`: an intersection makes frontier
+      // `number & Named[]`, which is `never`, and `never` is assignable to the
+      // `number` the component wants. The lie was in the type, so tsc agreed
+      // with it.
+      openings: (world.route.length === 0 ? openingDoors(ONTOLOGY, world) : frontier(ONTOLOGY, world))
         .map(id => ({ conceptId: id, conceptName: name(id) })),
     },
   })

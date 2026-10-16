@@ -67,7 +67,12 @@ function shape(world: TraversalWorld, extra: Record<string, unknown>) {
       hereName: world.here ? name(world.here) : null,
       reached: world.reached.map(r => ({ ...r, conceptName: name(r.conceptId) })),
       route: world.route,
-      frontier: (world.route.length === 0 ? openingDoors(ONTOLOGY, world) : frontier(ONTOLOGY, world))
+      // Same clobber as session/route.ts had, and renamed for the same reason:
+      // traversalProgress() above returns `frontier` as a count. Nothing
+      // rendered THIS one as a number, so it was dormant rather than broken —
+      // but leaving one route shadowing the count and the other not is how the
+      // next reader concludes frontier means an array.
+      openings: (world.route.length === 0 ? openingDoors(ONTOLOGY, world) : frontier(ONTOLOGY, world))
         .map(id => ({ conceptId: id, conceptName: name(id) })),
     },
   })
