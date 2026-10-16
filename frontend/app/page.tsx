@@ -198,12 +198,15 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
     try { return localStorage.getItem('bza-feed-images') === '1' } catch { return false }
   })
   const [sections, setSections] = useState<SectionConfig[]>(DEFAULT_SECTIONS)
-  // Exactly one band open, Read to begin with. Not useState(localStorage...)
-  // directly: this component server-renders, and reading localStorage during
-  // the first render makes the server and client disagree about which band is
-  // open, which React reports as a hydration mismatch. Read it in the same
-  // effect that loads the layout instead.
-  const [openBand, setOpenBand] = useState<GroupId>('read')
+  // At most one band open, Read to begin with. null is all-collapsed, which is
+  // a real state: three headings and nothing else is the most compact the page
+  // gets, and someone who wants that should be able to have it.
+  //
+  // Not useState(localStorage...) directly: this component server-renders, and
+  // reading localStorage during the first render makes the server and client
+  // disagree about which band is open, which React reports as a hydration
+  // mismatch. Read it in the same effect that loads the layout instead.
+  const [openBand, setOpenBand] = useState<GroupId | null>('read')
   const [customizing, setCustomizing] = useState(false)
   const [srVersion, setSrVersion] = useState(0) // bump to re-evaluate due books after SR advance
   const [autoCover, setAutoCover] = useState(true)
@@ -241,7 +244,12 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
     setSections(getHomeLayout())
     try {
       const b = localStorage.getItem(BAND_KEY)
-      if (b === 'read' || b === 'play' || b === 'learn') setOpenBand(b)
+      // 'none' is stored rather than removing the key: an absent key means
+      // "never chose" and should keep the Read default, while all-collapsed is
+      // a choice and has to survive a reload. Removing the key would make the
+      // two indistinguishable and quietly re-open Read every visit.
+      if (b === 'none') setOpenBand(null)
+      else if (b === 'read' || b === 'play' || b === 'learn') setOpenBand(b)
     } catch {}
     setCardSizes(getCardSizes())
     setAutoCover(localStorage.getItem(AUTO_COVER_KEY) !== 'false')
@@ -1317,10 +1325,15 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
             separate card row this started as: with the headers doing the
             choosing, cards above them said the same three things twice.
 
-            Exactly one open, Read by default, remembered per browser. Clicking
-            the open band does nothing rather than collapsing it: "one is
-            selected" is a simpler thing to hold than "between zero and one",
-            and there is no useful empty state for this page.
+            At most one open, Read by default, remembered per browser. Clicking
+            the open band collapses it, so all-collapsed is reachable: three
+            headings and nothing else is the most compact this page gets.
+
+            That state is stored as 'none' rather than by clearing the key. An
+            absent key means "never chose" and should keep the Read default,
+            while all-collapsed is a choice and has to survive a reload —
+            clearing the key would make the two indistinguishable and quietly
+            re-open Read on every visit.
 
             UNLIKE THE EARLIER VERSION, A BAND WITH NOTHING TO SHOW STILL
             RENDERS. When these were only groupings, an empty heading was
@@ -1339,12 +1352,12 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
               <div key={group.id}>
                 <button
                   onClick={() => {
-                    if (open) return
-                    setOpenBand(group.id)
-                    try { localStorage.setItem(BAND_KEY, group.id) } catch {}
+                    const next = open ? null : group.id
+                    setOpenBand(next)
+                    try { localStorage.setItem(BAND_KEY, next ?? 'none') } catch {}
                   }}
                   aria-expanded={open}
-                  className={`w-full flex items-baseline gap-2 text-left py-3 transition-colors ${open ? '' : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'}`}
+                  className="w-full flex items-baseline gap-2 text-left py-3 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50"
                 >
                   <ChevronDown
                     size={16}
