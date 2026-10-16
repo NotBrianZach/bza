@@ -61,6 +61,46 @@ if [ "$SKIP_VERIFY" = true ] || [ "$TARGET" != "production" ]; then
   exit 0
 fi
 
+# ── Edge functions: are the repo and production still the same? ─────────────
+#
+# Non-fatal on purpose, and it has to come BEFORE the exec below, which replaces
+# this process and would never return.
+#
+# Why non-fatal: edge functions and the Worker bundle are independent artifacts.
+# A divergent function does not make the frontend build wrong, so failing a
+# frontend release on it couples two things that are not coupled. What it must
+# not do is stay quiet -- the failure mode here was never that drift was
+# unfixable, it was that nobody knew. supabase/functions/ held one file while 25
+# were deployed, including stripe-webhook, and generate-picturebook ran an auth
+# helper without the blacklist check for months.
+#
+# The token comes from system_config, which is where deploy credentials live
+# (deploy_bza_web.sh sources that project for the same reason). Deliberately NOT
+# added to bza's own secrets: the Worker secret push iterates bza's export and
+# would ship a Supabase management token -- which can deploy functions and read
+# project config -- into the frontend Worker's runtime environment.
+#
+# ~10s for all 25 functions.
+echo "→ Checking edge functions match the repo"
+if [ -f "$SCRIPT_DIR/edge-functions.mjs" ]; then
+  EF_TOKEN="${SUPABASE_ACCESS_TOKEN:-$(templedb env secret get system_config SUPABASE_ACCESS_TOKEN 2>/dev/null || true)}"
+  if [ -z "$EF_TOKEN" ]; then
+    echo "   ⚠ SUPABASE_ACCESS_TOKEN unavailable — edge functions NOT checked" >&2
+  elif SUPABASE_ACCESS_TOKEN="$EF_TOKEN" \
+       SUPABASE_URL="${SUPABASE_URL:-$(templedb env secret get bza SUPABASE_URL 2>/dev/null || true)}" \
+       node "$SCRIPT_DIR/edge-functions.mjs" check; then
+    echo "   ✓ edge functions match the repo"
+  else
+    echo "   ⚠ edge functions DIFFER from the repo — production is running code this" >&2
+    echo "     repo does not contain, or the repo has changes never deployed." >&2
+    echo "     Inspect:  node scripts/edge-functions.mjs check" >&2
+    echo "     Recover:  node scripts/edge-functions.mjs pull" >&2
+    echo "     Ship:     node scripts/edge-functions.mjs deploy <slug>" >&2
+  fi
+else
+  echo "   ⚠ scripts/edge-functions.mjs not found — edge functions NOT checked" >&2
+fi
+
 echo "→ Verifying live sha matches graph"
 # Was `templedb reconcile deployment bza --url …`, which is not a subcommand —
 # reconcile only has machine/history/schedule, so every production deploy ended in
