@@ -8,9 +8,8 @@ import { booksQueries } from '@/lib/queries'
 import { getLocalBooks, deleteLocalBook, getStorageUsage } from '@/lib/localStorage'
 import BookCard from '@/components/BookCard'
 import BookUpload from '@/components/BookUpload'
-import SessionCard from '@/components/SessionCard'
 import { authedFetch } from '@/lib/authedFetch'
-import { Plus, BookOpen, TrendingUp, Image as ImageIcon, Users, AlertCircle, HardDrive, Cloud, CreditCard, Loader2, Globe } from 'lucide-react'
+import { Plus, BookOpen, TrendingUp, Image as ImageIcon, Users, AlertCircle, HardDrive, Cloud, CreditCard, Loader2 } from 'lucide-react'
 import { billingQueries } from '@/lib/queries'
 import { ThemeToggle } from '@/components/ThemeProvider'
 import DiveBackIn from '@/components/DiveBackIn'
@@ -18,7 +17,6 @@ import DiveBackIn from '@/components/DiveBackIn'
 export default function DashboardPage() {
   const router = useRouter()
   const [books, setBooks] = useState<Book[]>([])
-  const [sessions, setSessions] = useState<any[]>([])
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [showUpload, setShowUpload] = useState(false)
@@ -50,10 +48,6 @@ export default function DashboardPage() {
         setIsAuthenticated(true)
         const books = await booksQueries.list()
         setBooks(books)
-        try {
-          const sr = await authedFetch('/api/browser-session/list')
-          if (sr.ok) { const sd = await sr.json(); setSessions(sd.sessions ?? []) }
-        } catch {}
       } else {
         setIsAuthenticated(false)
         setBooks(getLocalBooks())
@@ -251,10 +245,8 @@ export default function DashboardPage() {
         {(() => {
           type LibItem =
             | { kind: 'book'; id: number; item: any; ts: number }
-            | { kind: 'session'; id: string; item: any; ts: number }
           const items: LibItem[] = [
             ...books.map(b => ({ kind: 'book' as const, id: b.id, item: b, ts: new Date((b as any).updated_at ?? (b as any).created_at ?? 0).getTime() })),
-            ...(isAuthenticated ? sessions.map(s => ({ kind: 'session' as const, id: s.id, item: s, ts: new Date(s.started_at ?? 0).getTime() })) : []),
           ].sort((a, b) => b.ts - a.ts)
 
           if (items.length === 0) {
@@ -274,10 +266,9 @@ export default function DashboardPage() {
           }
           return (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {items.map(it => it.kind === 'book'
-                ? <BookCard key={'b-' + it.id} book={it.item} onDelete={handleDelete} />
-                : <SessionCard key={'s-' + it.id} session={it.item} />
-              )}
+              {items.map(it => (
+                <BookCard key={'b-' + it.id} book={it.item} onDelete={handleDelete} />
+              ))}
             </div>
           )
         })()}
