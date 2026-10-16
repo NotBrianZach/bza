@@ -1,71 +1,74 @@
--- bza_public: the live schema, transcribed.
+-- bza_public, as of the cutover. The chain starts here.
 --
--- GENERATED FILE. Do not hand-edit; regenerate with the command at the bottom.
+-- GENERATED. Do not hand-edit; regenerate with the command at the bottom.
 --
--- ── WHY THIS EXISTS ───────────────────────────────────────────────────────
+-- ── WHAT HAPPENED TO MIGRATIONS 1-67 ──────────────────────────────────────
+--
+-- They are in archive/ and db-migrate.sh no longer sees them: it globs
+-- supabase/setup/*.sql, which does not recurse. Nothing was deleted; the files
+-- and the reasoning in their headers are still readable, they are just out of
+-- the chain.
+--
+-- They had to leave, because this file creates the same tables they do. With
+-- both present, a fresh database would run 00 first and then collide on every
+-- CREATE TABLE in 44-67. Only 24 of the 67 still existed on disk anyway -- 41
+-- were recorded in public._applied_migrations with no file, pruned at some
+-- earlier point -- so the chain was already a partial history rather than a
+-- reproducible one.
+--
+-- ── WHY A BASELINE AT ALL ─────────────────────────────────────────────────
 --
 -- 62 of the 69 tables in bza_public had their DDL in no file anywhere in this
--- repo. Only 7 were covered by supabase/setup/. books, api_usage,
--- billing_customers, chat_messages -- the core of the application -- existed
--- only inside the running database. Nobody could review them, diff them, or
--- rebuild them, and the one way to learn the shape of a table was to query
--- production.
+-- repo. books, api_usage, billing_customers, chat_messages -- the core of the
+-- application -- existed only inside the running database. The schema could not
+-- be reviewed, diffed, or rebuilt, and the only way to learn a table's shape was
+-- to query production. Same failure the edge functions were in (25 deployed, 1
+-- in the repo), invisible for the same reason: nothing compared the repo against
+-- what was live, so the absence had no symptom.
 --
--- That is the same failure the edge functions were in: 25 deployed, 1 in the
--- repo. Both were invisible for the same reason -- nothing ever compared the
--- repo against what was live, so the absence had no symptom.
+-- ── THIS FILE IS ALREADY APPLIED IN PRODUCTION ────────────────────────────
 --
--- ── WHY IT IS HERE AND NOT IN supabase/setup/ ─────────────────────────────
+-- Recorded in public._applied_migrations at cutover, so db-migrate.sh skips it
+-- there. It is not idempotent -- pg_dump emits bare CREATE statements -- and it
+-- is not meant to be: it runs once, against an empty database, and everything
+-- after it is an ordinary forward migration numbered 70 and up.
 --
--- scripts/db-migrate.sh globs supabase/setup/*.sql, applies them in sort order,
--- and skips what public._applied_migrations already records. A baseline dropped
--- in there as 00_*.sql would sort FIRST and then be followed by migrations 1-61,
--- many of which create the very tables the baseline just created. On a fresh
--- database that collides; on the existing one it only stays quiet because the
--- tracking table would have to be hand-seeded to suppress it.
+-- ── WHAT IT CONTAINS ──────────────────────────────────────────────────────
 --
--- Making it genuinely runnable would mean retiring 61 migration files into an
--- archive and cutting the chain over to start from this snapshot. That is a real
--- piece of surgery with its own failure modes, and it is not needed for the
--- problem at hand: the problem was that the schema could not be read.
+-- 69 tables, 74 policies with RLS enabled on all 69, 211 indexes, 21 functions,
+-- 51 sequences, 2 views, 1 materialized view, and the grants -- including the
+-- ALTER DEFAULT PRIVILEGES that decide what a NEW table in this schema gets
+-- (anon SELECT; authenticated SELECT/INSERT/UPDATE/DELETE). Privileges are
+-- included here rather than left to a follow-up migration, because a baseline
+-- that produced a schema PostgREST cannot read would not be a baseline.
 --
--- So this file is deliberately outside the runner's reach. It is for review, for
--- diffing, and for bootstrapping a fresh environment by hand. It is not part of
--- the migration chain and nothing applies it automatically.
+-- Those ACLs are the corrected ones: no TRUNCATE and no MAINTAIN for anon or
+-- authenticated, anon limited to SELECT on tables, and no PUBLIC EXECUTE on the
+-- reporting and trigger functions. See archive/63, 67, 68 and 69 for why each of
+-- those is the way it is -- the dump records the result, not the argument.
 --
--- ── WHAT IT CONTAINS, AND WHAT IT DOES NOT ────────────────────────────────
+-- Still true and deliberately not fixed here: anon and authenticated hold ALL on
+-- all 51 sequences, which includes setval. Not reachable through PostgREST.
 --
--- Dumped with --no-privileges, so there are no GRANT statements. That is not an
--- omission: grants are owned by supabase/setup/63_align_legacy_acls_to_schema_defaults.sql
--- and 67_public_schema_acls.sql, which set anon to SELECT-only and withdraw
--- TRUNCATE from both browser-assumable roles. Baking a GRANT snapshot in here
--- would give two files an opinion about the same thing.
---
--- Row-level security IS included -- 69 ENABLE ROW LEVEL SECURITY statements and
--- 74 policies -- because those are structure rather than privilege, and because
--- a schema snapshot that silently dropped them would describe a database with no
--- access control as though it were this one.
---
--- 63 foreign keys reference the `auth` schema, which Supabase provides and this
--- file does not create.
+-- 63 foreign keys reference the `auth` schema, which Supabase provides.
 --
 -- ── VERIFIED ──────────────────────────────────────────────────────────────
 --
 -- Replayed against production inside a transaction with every `bza_public`
--- rewritten to a throwaway schema name, then rolled back. The result matched
--- live exactly: 69 tables, 74 policies, 69 with RLS enabled, 211 indexes. A
--- dump is machine-generated and still worth checking, because the thing being
--- claimed is that it reproduces production and nothing else establishes that.
+-- rewritten to a throwaway schema name, then rolled back -- matching live
+-- exactly on tables, policies, RLS-enabled count and indexes.
 --
 -- ── REGENERATE ────────────────────────────────────────────────────────────
 --
 --   export PGPASSWORD=$(templedb env secret get bza SUPABASE_DB_PASSWORD)
 --   pg_dump -h "$(templedb env secret get bza SUPABASE_DB_HOST)" -p 5432 \
 --           -U postgres.<project-ref> -d postgres \
---           --schema-only --schema=bza_public --no-owner --no-privileges --no-comments \
---     > supabase/schema/bza_public.sql
+--           --schema-only --schema=bza_public --no-owner --no-comments \
+--     > supabase/setup/00_baseline_bza_public.sql
 --
--- Then re-apply this header, which pg_dump does not preserve.
+-- Then re-apply this header, which pg_dump does not preserve. Regenerating is
+-- only correct when every migration after it has been applied in production;
+-- otherwise the baseline would absorb a change that is still pending elsewhere.
 --
 -- ──────────────────────────────────────────────────────────────────────────
 
@@ -73,7 +76,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict nxTpl33gvb41suUaDXAeMbyZFfN38lGSeuT4WEZTElNlQElNIwlbDXOJylmpcym
+\restrict PjuFgc1wr4LFm9OpkDzqq566xB6QqtXwMZGTQ3xUwcNOOyhqX8WKnEF7BNmfOLP
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.11
@@ -6995,8 +6998,1312 @@ ALTER TABLE bza_public.wiki_updates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE bza_public.youtube_tracks ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: SCHEMA bza_public; Type: ACL; Schema: -; Owner: -
+--
+
+GRANT USAGE ON SCHEMA bza_public TO anon;
+GRANT USAGE ON SCHEMA bza_public TO authenticated;
+GRANT USAGE ON SCHEMA bza_public TO service_role;
+
+
+--
+-- Name: FUNCTION calculate_page_count(content_text text, chars_per_page integer); Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON FUNCTION bza_public.calculate_page_count(content_text text, chars_per_page integer) TO anon;
+GRANT ALL ON FUNCTION bza_public.calculate_page_count(content_text text, chars_per_page integer) TO authenticated;
+GRANT ALL ON FUNCTION bza_public.calculate_page_count(content_text text, chars_per_page integer) TO service_role;
+
+
+--
+-- Name: FUNCTION check_quota_before_insert(); Type: ACL; Schema: bza_public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION bza_public.check_quota_before_insert() FROM PUBLIC;
+GRANT ALL ON FUNCTION bza_public.check_quota_before_insert() TO service_role;
+
+
+--
+-- Name: FUNCTION get_and_increment_overage(p_user_id uuid, p_included_cents bigint); Type: ACL; Schema: bza_public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION bza_public.get_and_increment_overage(p_user_id uuid, p_included_cents bigint) FROM PUBLIC;
+GRANT ALL ON FUNCTION bza_public.get_and_increment_overage(p_user_id uuid, p_included_cents bigint) TO service_role;
+GRANT ALL ON FUNCTION bza_public.get_and_increment_overage(p_user_id uuid, p_included_cents bigint) TO authenticated;
+
+
+--
+-- Name: FUNCTION get_anonymous_usage_stats(); Type: ACL; Schema: bza_public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION bza_public.get_anonymous_usage_stats() FROM PUBLIC;
+GRANT ALL ON FUNCTION bza_public.get_anonymous_usage_stats() TO service_role;
+
+
+--
+-- Name: FUNCTION get_book_statistics(book_uuid bigint); Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON FUNCTION bza_public.get_book_statistics(book_uuid bigint) TO anon;
+GRANT ALL ON FUNCTION bza_public.get_book_statistics(book_uuid bigint) TO authenticated;
+GRANT ALL ON FUNCTION bza_public.get_book_statistics(book_uuid bigint) TO service_role;
+
+
+--
+-- Name: FUNCTION get_monthly_api_costs(user_uuid uuid, month_start timestamp with time zone); Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON FUNCTION bza_public.get_monthly_api_costs(user_uuid uuid, month_start timestamp with time zone) TO anon;
+GRANT ALL ON FUNCTION bza_public.get_monthly_api_costs(user_uuid uuid, month_start timestamp with time zone) TO authenticated;
+GRANT ALL ON FUNCTION bza_public.get_monthly_api_costs(user_uuid uuid, month_start timestamp with time zone) TO service_role;
+
+
+--
+-- Name: FUNCTION get_reading_progress(book_uuid bigint); Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON FUNCTION bza_public.get_reading_progress(book_uuid bigint) TO anon;
+GRANT ALL ON FUNCTION bza_public.get_reading_progress(book_uuid bigint) TO authenticated;
+GRANT ALL ON FUNCTION bza_public.get_reading_progress(book_uuid bigint) TO service_role;
+
+
+--
+-- Name: FUNCTION get_reading_stats(p_user_id uuid, p_days integer); Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON FUNCTION bza_public.get_reading_stats(p_user_id uuid, p_days integer) TO anon;
+GRANT ALL ON FUNCTION bza_public.get_reading_stats(p_user_id uuid, p_days integer) TO authenticated;
+GRANT ALL ON FUNCTION bza_public.get_reading_stats(p_user_id uuid, p_days integer) TO service_role;
+
+
+--
+-- Name: FUNCTION get_storage_usage(user_uuid uuid); Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON FUNCTION bza_public.get_storage_usage(user_uuid uuid) TO anon;
+GRANT ALL ON FUNCTION bza_public.get_storage_usage(user_uuid uuid) TO authenticated;
+GRANT ALL ON FUNCTION bza_public.get_storage_usage(user_uuid uuid) TO service_role;
+
+
+--
+-- Name: FUNCTION get_user_quota(user_uuid uuid); Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON FUNCTION bza_public.get_user_quota(user_uuid uuid) TO anon;
+GRANT ALL ON FUNCTION bza_public.get_user_quota(user_uuid uuid) TO authenticated;
+GRANT ALL ON FUNCTION bza_public.get_user_quota(user_uuid uuid) TO service_role;
+
+
+--
+-- Name: FUNCTION get_weak_topics(p_user_id uuid, p_book_id bigint, p_limit integer); Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON FUNCTION bza_public.get_weak_topics(p_user_id uuid, p_book_id bigint, p_limit integer) TO anon;
+GRANT ALL ON FUNCTION bza_public.get_weak_topics(p_user_id uuid, p_book_id bigint, p_limit integer) TO authenticated;
+GRANT ALL ON FUNCTION bza_public.get_weak_topics(p_user_id uuid, p_book_id bigint, p_limit integer) TO service_role;
+
+
+--
+-- Name: FUNCTION handle_new_user(); Type: ACL; Schema: bza_public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION bza_public.handle_new_user() FROM PUBLIC;
+GRANT ALL ON FUNCTION bza_public.handle_new_user() TO service_role;
+
+
+--
+-- Name: FUNCTION is_blacklisted(check_user_id uuid, check_ip inet); Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON FUNCTION bza_public.is_blacklisted(check_user_id uuid, check_ip inet) TO anon;
+GRANT ALL ON FUNCTION bza_public.is_blacklisted(check_user_id uuid, check_ip inet) TO authenticated;
+GRANT ALL ON FUNCTION bza_public.is_blacklisted(check_user_id uuid, check_ip inet) TO service_role;
+
+
+--
+-- Name: FUNCTION reconcile_all_overages(p_included_cents bigint); Type: ACL; Schema: bza_public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION bza_public.reconcile_all_overages(p_included_cents bigint) FROM PUBLIC;
+GRANT ALL ON FUNCTION bza_public.reconcile_all_overages(p_included_cents bigint) TO service_role;
+GRANT ALL ON FUNCTION bza_public.reconcile_all_overages(p_included_cents bigint) TO authenticated;
+
+
+--
+-- Name: FUNCTION record_api_usage(p_user_id uuid, p_provider text, p_model text, p_endpoint_type text, p_request_type text, p_input_tokens integer, p_output_tokens integer, p_base_cost numeric, p_book_id bigint, p_page_num integer, p_metadata jsonb); Type: ACL; Schema: bza_public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION bza_public.record_api_usage(p_user_id uuid, p_provider text, p_model text, p_endpoint_type text, p_request_type text, p_input_tokens integer, p_output_tokens integer, p_base_cost numeric, p_book_id bigint, p_page_num integer, p_metadata jsonb) FROM PUBLIC;
+GRANT ALL ON FUNCTION bza_public.record_api_usage(p_user_id uuid, p_provider text, p_model text, p_endpoint_type text, p_request_type text, p_input_tokens integer, p_output_tokens integer, p_base_cost numeric, p_book_id bigint, p_page_num integer, p_metadata jsonb) TO service_role;
+GRANT ALL ON FUNCTION bza_public.record_api_usage(p_user_id uuid, p_provider text, p_model text, p_endpoint_type text, p_request_type text, p_input_tokens integer, p_output_tokens integer, p_base_cost numeric, p_book_id bigint, p_page_num integer, p_metadata jsonb) TO authenticated;
+
+
+--
+-- Name: FUNCTION refresh_monthly_usage(); Type: ACL; Schema: bza_public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION bza_public.refresh_monthly_usage() FROM PUBLIC;
+GRANT ALL ON FUNCTION bza_public.refresh_monthly_usage() TO service_role;
+GRANT ALL ON FUNCTION bza_public.refresh_monthly_usage() TO authenticated;
+
+
+--
+-- Name: FUNCTION set_updated_at(); Type: ACL; Schema: bza_public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION bza_public.set_updated_at() FROM PUBLIC;
+GRANT ALL ON FUNCTION bza_public.set_updated_at() TO service_role;
+
+
+--
+-- Name: FUNCTION update_app_config_updated_at(); Type: ACL; Schema: bza_public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION bza_public.update_app_config_updated_at() FROM PUBLIC;
+GRANT ALL ON FUNCTION bza_public.update_app_config_updated_at() TO service_role;
+
+
+--
+-- Name: FUNCTION update_pricing_config_updated_at(); Type: ACL; Schema: bza_public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION bza_public.update_pricing_config_updated_at() FROM PUBLIC;
+GRANT ALL ON FUNCTION bza_public.update_pricing_config_updated_at() TO service_role;
+
+
+--
+-- Name: FUNCTION update_updated_at(); Type: ACL; Schema: bza_public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION bza_public.update_updated_at() FROM PUBLIC;
+GRANT ALL ON FUNCTION bza_public.update_updated_at() TO service_role;
+
+
+--
+-- Name: FUNCTION update_updated_at_column(); Type: ACL; Schema: bza_public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION bza_public.update_updated_at_column() FROM PUBLIC;
+GRANT ALL ON FUNCTION bza_public.update_updated_at_column() TO service_role;
+
+
+--
+-- Name: TABLE analytics_events; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.analytics_events TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.analytics_events TO authenticated;
+GRANT ALL ON TABLE bza_public.analytics_events TO service_role;
+
+
+--
+-- Name: SEQUENCE analytics_events_id_seq; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON SEQUENCE bza_public.analytics_events_id_seq TO anon;
+GRANT ALL ON SEQUENCE bza_public.analytics_events_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE bza_public.analytics_events_id_seq TO service_role;
+
+
+--
+-- Name: TABLE api_usage; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.api_usage TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.api_usage TO authenticated;
+GRANT ALL ON TABLE bza_public.api_usage TO service_role;
+
+
+--
+-- Name: SEQUENCE api_usage_id_seq; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON SEQUENCE bza_public.api_usage_id_seq TO anon;
+GRANT ALL ON SEQUENCE bza_public.api_usage_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE bza_public.api_usage_id_seq TO service_role;
+
+
+--
+-- Name: TABLE app_config; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.app_config TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.app_config TO authenticated;
+GRANT ALL ON TABLE bza_public.app_config TO service_role;
+
+
+--
+-- Name: TABLE billing_customers; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.billing_customers TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.billing_customers TO authenticated;
+GRANT ALL ON TABLE bza_public.billing_customers TO service_role;
+
+
+--
+-- Name: SEQUENCE billing_customers_id_seq; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON SEQUENCE bza_public.billing_customers_id_seq TO anon;
+GRANT ALL ON SEQUENCE bza_public.billing_customers_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE bza_public.billing_customers_id_seq TO service_role;
+
+
+--
+-- Name: TABLE book_structure; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.book_structure TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.book_structure TO authenticated;
+GRANT ALL ON TABLE bza_public.book_structure TO service_role;
+
+
+--
+-- Name: SEQUENCE book_structure_id_seq; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON SEQUENCE bza_public.book_structure_id_seq TO anon;
+GRANT ALL ON SEQUENCE bza_public.book_structure_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE bza_public.book_structure_id_seq TO service_role;
+
+
+--
+-- Name: TABLE book_translations; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.book_translations TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.book_translations TO authenticated;
+GRANT ALL ON TABLE bza_public.book_translations TO service_role;
+
+
+--
+-- Name: SEQUENCE book_translations_id_seq; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON SEQUENCE bza_public.book_translations_id_seq TO anon;
+GRANT ALL ON SEQUENCE bza_public.book_translations_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE bza_public.book_translations_id_seq TO service_role;
+
+
+--
+-- Name: TABLE bookmarks; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.bookmarks TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.bookmarks TO authenticated;
+GRANT ALL ON TABLE bza_public.bookmarks TO service_role;
+
+
+--
+-- Name: SEQUENCE bookmarks_id_seq; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON SEQUENCE bza_public.bookmarks_id_seq TO anon;
+GRANT ALL ON SEQUENCE bza_public.bookmarks_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE bza_public.bookmarks_id_seq TO service_role;
+
+
+--
+-- Name: TABLE books; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.books TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.books TO authenticated;
+GRANT ALL ON TABLE bza_public.books TO service_role;
+
+
+--
+-- Name: SEQUENCE books_id_seq; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON SEQUENCE bza_public.books_id_seq TO anon;
+GRANT ALL ON SEQUENCE bza_public.books_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE bza_public.books_id_seq TO service_role;
+
+
+--
+-- Name: TABLE browser_extractions; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.browser_extractions TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.browser_extractions TO authenticated;
+GRANT ALL ON TABLE bza_public.browser_extractions TO service_role;
+
+
+--
+-- Name: TABLE browser_session_bookmarks; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.browser_session_bookmarks TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.browser_session_bookmarks TO authenticated;
+GRANT ALL ON TABLE bza_public.browser_session_bookmarks TO service_role;
+
+
+--
+-- Name: TABLE browser_session_chats; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.browser_session_chats TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.browser_session_chats TO authenticated;
+GRANT ALL ON TABLE bza_public.browser_session_chats TO service_role;
+
+
+--
+-- Name: TABLE browser_sessions; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.browser_sessions TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.browser_sessions TO authenticated;
+GRANT ALL ON TABLE bza_public.browser_sessions TO service_role;
+
+
+--
+-- Name: TABLE character_identities; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.character_identities TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.character_identities TO authenticated;
+GRANT ALL ON TABLE bza_public.character_identities TO service_role;
+
+
+--
+-- Name: SEQUENCE character_identities_id_seq; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON SEQUENCE bza_public.character_identities_id_seq TO anon;
+GRANT ALL ON SEQUENCE bza_public.character_identities_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE bza_public.character_identities_id_seq TO service_role;
+
+
+--
+-- Name: TABLE character_mentions; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.character_mentions TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.character_mentions TO authenticated;
+GRANT ALL ON TABLE bza_public.character_mentions TO service_role;
+
+
+--
+-- Name: SEQUENCE character_mentions_id_seq; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON SEQUENCE bza_public.character_mentions_id_seq TO anon;
+GRANT ALL ON SEQUENCE bza_public.character_mentions_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE bza_public.character_mentions_id_seq TO service_role;
+
+
+--
+-- Name: TABLE character_names; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.character_names TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.character_names TO authenticated;
+GRANT ALL ON TABLE bza_public.character_names TO service_role;
+
+
+--
+-- Name: SEQUENCE character_names_id_seq; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON SEQUENCE bza_public.character_names_id_seq TO anon;
+GRANT ALL ON SEQUENCE bza_public.character_names_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE bza_public.character_names_id_seq TO service_role;
+
+
+--
+-- Name: TABLE character_relationships; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.character_relationships TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.character_relationships TO authenticated;
+GRANT ALL ON TABLE bza_public.character_relationships TO service_role;
+
+
+--
+-- Name: SEQUENCE character_relationships_id_seq; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON SEQUENCE bza_public.character_relationships_id_seq TO anon;
+GRANT ALL ON SEQUENCE bza_public.character_relationships_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE bza_public.character_relationships_id_seq TO service_role;
+
+
+--
+-- Name: TABLE characters; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.characters TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.characters TO authenticated;
+GRANT ALL ON TABLE bza_public.characters TO service_role;
+
+
+--
+-- Name: SEQUENCE characters_id_seq; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON SEQUENCE bza_public.characters_id_seq TO anon;
+GRANT ALL ON SEQUENCE bza_public.characters_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE bza_public.characters_id_seq TO service_role;
+
+
+--
+-- Name: TABLE chat_messages; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.chat_messages TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.chat_messages TO authenticated;
+GRANT ALL ON TABLE bza_public.chat_messages TO service_role;
+
+
+--
+-- Name: SEQUENCE chat_messages_id_seq; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON SEQUENCE bza_public.chat_messages_id_seq TO anon;
+GRANT ALL ON SEQUENCE bza_public.chat_messages_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE bza_public.chat_messages_id_seq TO service_role;
+
+
+--
+-- Name: TABLE comprehension_checkpoints; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.comprehension_checkpoints TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.comprehension_checkpoints TO authenticated;
+GRANT ALL ON TABLE bza_public.comprehension_checkpoints TO service_role;
+
+
+--
+-- Name: SEQUENCE comprehension_checkpoints_id_seq; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON SEQUENCE bza_public.comprehension_checkpoints_id_seq TO anon;
+GRANT ALL ON SEQUENCE bza_public.comprehension_checkpoints_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE bza_public.comprehension_checkpoints_id_seq TO service_role;
+
+
+--
+-- Name: TABLE concept_observations; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.concept_observations TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.concept_observations TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.concept_observations TO service_role;
+
+
+--
+-- Name: TABLE concept_pins; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.concept_pins TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.concept_pins TO authenticated;
+GRANT ALL ON TABLE bza_public.concept_pins TO service_role;
+
+
+--
+-- Name: SEQUENCE concept_pins_id_seq; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON SEQUENCE bza_public.concept_pins_id_seq TO anon;
+GRANT ALL ON SEQUENCE bza_public.concept_pins_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE bza_public.concept_pins_id_seq TO service_role;
+
+
+--
+-- Name: TABLE concept_point_strength; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.concept_point_strength TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.concept_point_strength TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.concept_point_strength TO service_role;
+
+
+--
+-- Name: TABLE concept_traversals; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.concept_traversals TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.concept_traversals TO authenticated;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.concept_traversals TO service_role;
+
+
+--
+-- Name: TABLE contexts; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.contexts TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.contexts TO authenticated;
+GRANT ALL ON TABLE bza_public.contexts TO service_role;
+
+
+--
+-- Name: SEQUENCE contexts_id_seq; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON SEQUENCE bza_public.contexts_id_seq TO anon;
+GRANT ALL ON SEQUENCE bza_public.contexts_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE bza_public.contexts_id_seq TO service_role;
+
+
+--
+-- Name: TABLE conversation_prompts; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.conversation_prompts TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.conversation_prompts TO authenticated;
+GRANT ALL ON TABLE bza_public.conversation_prompts TO service_role;
+
+
+--
+-- Name: SEQUENCE conversation_prompts_id_seq; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON SEQUENCE bza_public.conversation_prompts_id_seq TO anon;
+GRANT ALL ON SEQUENCE bza_public.conversation_prompts_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE bza_public.conversation_prompts_id_seq TO service_role;
+
+
+--
+-- Name: TABLE conversations; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.conversations TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.conversations TO authenticated;
+GRANT ALL ON TABLE bza_public.conversations TO service_role;
+
+
+--
+-- Name: SEQUENCE conversations_id_seq; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON SEQUENCE bza_public.conversations_id_seq TO anon;
+GRANT ALL ON SEQUENCE bza_public.conversations_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE bza_public.conversations_id_seq TO service_role;
+
+
+--
+-- Name: TABLE convert_jobs; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.convert_jobs TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.convert_jobs TO authenticated;
+GRANT ALL ON TABLE bza_public.convert_jobs TO service_role;
+
+
+--
+-- Name: TABLE correlate_presets; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.correlate_presets TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.correlate_presets TO authenticated;
+GRANT ALL ON TABLE bza_public.correlate_presets TO service_role;
+
+
+--
+-- Name: TABLE current_month_usage; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.current_month_usage TO anon;
+GRANT SELECT ON TABLE bza_public.current_month_usage TO authenticated;
+GRANT ALL ON TABLE bza_public.current_month_usage TO service_role;
+
+
+--
+-- Name: TABLE cyoa_nodes; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.cyoa_nodes TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.cyoa_nodes TO authenticated;
+GRANT ALL ON TABLE bza_public.cyoa_nodes TO service_role;
+
+
+--
+-- Name: SEQUENCE cyoa_nodes_id_seq; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON SEQUENCE bza_public.cyoa_nodes_id_seq TO anon;
+GRANT ALL ON SEQUENCE bza_public.cyoa_nodes_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE bza_public.cyoa_nodes_id_seq TO service_role;
+
+
+--
+-- Name: TABLE cyoa_sessions; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.cyoa_sessions TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.cyoa_sessions TO authenticated;
+GRANT ALL ON TABLE bza_public.cyoa_sessions TO service_role;
+
+
+--
+-- Name: SEQUENCE cyoa_sessions_id_seq; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON SEQUENCE bza_public.cyoa_sessions_id_seq TO anon;
+GRANT ALL ON SEQUENCE bza_public.cyoa_sessions_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE bza_public.cyoa_sessions_id_seq TO service_role;
+
+
+--
+-- Name: TABLE cyoa_stories; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.cyoa_stories TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.cyoa_stories TO authenticated;
+GRANT ALL ON TABLE bza_public.cyoa_stories TO service_role;
+
+
+--
+-- Name: SEQUENCE cyoa_stories_id_seq; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON SEQUENCE bza_public.cyoa_stories_id_seq TO anon;
+GRANT ALL ON SEQUENCE bza_public.cyoa_stories_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE bza_public.cyoa_stories_id_seq TO service_role;
+
+
+--
+-- Name: TABLE document_jobs; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.document_jobs TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.document_jobs TO authenticated;
+GRANT ALL ON TABLE bza_public.document_jobs TO service_role;
+
+
+--
+-- Name: TABLE extension_tokens; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.extension_tokens TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.extension_tokens TO authenticated;
+GRANT ALL ON TABLE bza_public.extension_tokens TO service_role;
+
+
+--
+-- Name: SEQUENCE extension_tokens_id_seq; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON SEQUENCE bza_public.extension_tokens_id_seq TO anon;
+GRANT ALL ON SEQUENCE bza_public.extension_tokens_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE bza_public.extension_tokens_id_seq TO service_role;
+
+
+--
+-- Name: TABLE flashcards; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.flashcards TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.flashcards TO authenticated;
+GRANT ALL ON TABLE bza_public.flashcards TO service_role;
+
+
+--
+-- Name: SEQUENCE flashcards_id_seq; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON SEQUENCE bza_public.flashcards_id_seq TO anon;
+GRANT ALL ON SEQUENCE bza_public.flashcards_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE bza_public.flashcards_id_seq TO service_role;
+
+
+--
+-- Name: TABLE identity_mentions; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.identity_mentions TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.identity_mentions TO authenticated;
+GRANT ALL ON TABLE bza_public.identity_mentions TO service_role;
+
+
+--
+-- Name: SEQUENCE identity_mentions_id_seq; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON SEQUENCE bza_public.identity_mentions_id_seq TO anon;
+GRANT ALL ON SEQUENCE bza_public.identity_mentions_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE bza_public.identity_mentions_id_seq TO service_role;
+
+
+--
+-- Name: TABLE invoice_line_items; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.invoice_line_items TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.invoice_line_items TO authenticated;
+GRANT ALL ON TABLE bza_public.invoice_line_items TO service_role;
+
+
+--
+-- Name: SEQUENCE invoice_line_items_id_seq; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON SEQUENCE bza_public.invoice_line_items_id_seq TO anon;
+GRANT ALL ON SEQUENCE bza_public.invoice_line_items_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE bza_public.invoice_line_items_id_seq TO service_role;
+
+
+--
+-- Name: TABLE invoices; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.invoices TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.invoices TO authenticated;
+GRANT ALL ON TABLE bza_public.invoices TO service_role;
+
+
+--
+-- Name: SEQUENCE invoices_id_seq; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON SEQUENCE bza_public.invoices_id_seq TO anon;
+GRANT ALL ON SEQUENCE bza_public.invoices_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE bza_public.invoices_id_seq TO service_role;
+
+
+--
+-- Name: TABLE key_concepts; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.key_concepts TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.key_concepts TO authenticated;
+GRANT ALL ON TABLE bza_public.key_concepts TO service_role;
+
+
+--
+-- Name: SEQUENCE key_concepts_id_seq; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON SEQUENCE bza_public.key_concepts_id_seq TO anon;
+GRANT ALL ON SEQUENCE bza_public.key_concepts_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE bza_public.key_concepts_id_seq TO service_role;
+
+
+--
+-- Name: TABLE knowledge_edges; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.knowledge_edges TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.knowledge_edges TO authenticated;
+GRANT ALL ON TABLE bza_public.knowledge_edges TO service_role;
+
+
+--
+-- Name: SEQUENCE knowledge_edges_id_seq; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON SEQUENCE bza_public.knowledge_edges_id_seq TO anon;
+GRANT ALL ON SEQUENCE bza_public.knowledge_edges_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE bza_public.knowledge_edges_id_seq TO service_role;
+
+
+--
+-- Name: TABLE knowledge_nodes; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.knowledge_nodes TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.knowledge_nodes TO authenticated;
+GRANT ALL ON TABLE bza_public.knowledge_nodes TO service_role;
+
+
+--
+-- Name: SEQUENCE knowledge_nodes_id_seq; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON SEQUENCE bza_public.knowledge_nodes_id_seq TO anon;
+GRANT ALL ON SEQUENCE bza_public.knowledge_nodes_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE bza_public.knowledge_nodes_id_seq TO service_role;
+
+
+--
+-- Name: TABLE listen_sessions; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.listen_sessions TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.listen_sessions TO authenticated;
+GRANT ALL ON TABLE bza_public.listen_sessions TO service_role;
+
+
+--
+-- Name: TABLE listen_turns; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.listen_turns TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.listen_turns TO authenticated;
+GRANT ALL ON TABLE bza_public.listen_turns TO service_role;
+
+
+--
+-- Name: TABLE location_mentions; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.location_mentions TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.location_mentions TO authenticated;
+GRANT ALL ON TABLE bza_public.location_mentions TO service_role;
+
+
+--
+-- Name: SEQUENCE location_mentions_id_seq; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON SEQUENCE bza_public.location_mentions_id_seq TO anon;
+GRANT ALL ON SEQUENCE bza_public.location_mentions_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE bza_public.location_mentions_id_seq TO service_role;
+
+
+--
+-- Name: TABLE locations; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.locations TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.locations TO authenticated;
+GRANT ALL ON TABLE bza_public.locations TO service_role;
+
+
+--
+-- Name: SEQUENCE locations_id_seq; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON SEQUENCE bza_public.locations_id_seq TO anon;
+GRANT ALL ON SEQUENCE bza_public.locations_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE bza_public.locations_id_seq TO service_role;
+
+
+--
+-- Name: TABLE monthly_usage_summary; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON TABLE bza_public.monthly_usage_summary TO service_role;
+
+
+--
+-- Name: TABLE newsletter_tokens; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.newsletter_tokens TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.newsletter_tokens TO authenticated;
+GRANT ALL ON TABLE bza_public.newsletter_tokens TO service_role;
+
+
+--
+-- Name: TABLE page_bookmarks; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.page_bookmarks TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.page_bookmarks TO authenticated;
+GRANT ALL ON TABLE bza_public.page_bookmarks TO service_role;
+
+
+--
+-- Name: SEQUENCE page_bookmarks_id_seq; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON SEQUENCE bza_public.page_bookmarks_id_seq TO anon;
+GRANT ALL ON SEQUENCE bza_public.page_bookmarks_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE bza_public.page_bookmarks_id_seq TO service_role;
+
+
+--
+-- Name: TABLE page_discussions; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.page_discussions TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.page_discussions TO authenticated;
+GRANT ALL ON TABLE bza_public.page_discussions TO service_role;
+
+
+--
+-- Name: SEQUENCE page_discussions_id_seq; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON SEQUENCE bza_public.page_discussions_id_seq TO anon;
+GRANT ALL ON SEQUENCE bza_public.page_discussions_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE bza_public.page_discussions_id_seq TO service_role;
+
+
+--
+-- Name: TABLE page_images; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.page_images TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.page_images TO authenticated;
+GRANT ALL ON TABLE bza_public.page_images TO service_role;
+
+
+--
+-- Name: SEQUENCE page_images_id_seq; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON SEQUENCE bza_public.page_images_id_seq TO anon;
+GRANT ALL ON SEQUENCE bza_public.page_images_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE bza_public.page_images_id_seq TO service_role;
+
+
+--
+-- Name: TABLE picturebook_moments; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.picturebook_moments TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.picturebook_moments TO authenticated;
+GRANT ALL ON TABLE bza_public.picturebook_moments TO service_role;
+
+
+--
+-- Name: SEQUENCE picturebook_moments_id_seq; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON SEQUENCE bza_public.picturebook_moments_id_seq TO anon;
+GRANT ALL ON SEQUENCE bza_public.picturebook_moments_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE bza_public.picturebook_moments_id_seq TO service_role;
+
+
+--
+-- Name: TABLE picturebook_runs; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.picturebook_runs TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.picturebook_runs TO authenticated;
+GRANT ALL ON TABLE bza_public.picturebook_runs TO service_role;
+
+
+--
+-- Name: SEQUENCE picturebook_runs_id_seq; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON SEQUENCE bza_public.picturebook_runs_id_seq TO anon;
+GRANT ALL ON SEQUENCE bza_public.picturebook_runs_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE bza_public.picturebook_runs_id_seq TO service_role;
+
+
+--
+-- Name: TABLE picturebook_settings; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.picturebook_settings TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.picturebook_settings TO authenticated;
+GRANT ALL ON TABLE bza_public.picturebook_settings TO service_role;
+
+
+--
+-- Name: SEQUENCE picturebook_settings_id_seq; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON SEQUENCE bza_public.picturebook_settings_id_seq TO anon;
+GRANT ALL ON SEQUENCE bza_public.picturebook_settings_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE bza_public.picturebook_settings_id_seq TO service_role;
+
+
+--
+-- Name: TABLE pricing_config; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.pricing_config TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.pricing_config TO authenticated;
+GRANT ALL ON TABLE bza_public.pricing_config TO service_role;
+
+
+--
+-- Name: SEQUENCE pricing_config_id_seq; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON SEQUENCE bza_public.pricing_config_id_seq TO anon;
+GRANT ALL ON SEQUENCE bza_public.pricing_config_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE bza_public.pricing_config_id_seq TO service_role;
+
+
+--
+-- Name: TABLE problem_sets; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.problem_sets TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.problem_sets TO authenticated;
+GRANT ALL ON TABLE bza_public.problem_sets TO service_role;
+
+
+--
+-- Name: SEQUENCE problem_sets_id_seq; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON SEQUENCE bza_public.problem_sets_id_seq TO anon;
+GRANT ALL ON SEQUENCE bza_public.problem_sets_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE bza_public.problem_sets_id_seq TO service_role;
+
+
+--
+-- Name: TABLE profiles; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.profiles TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.profiles TO authenticated;
+GRANT ALL ON TABLE bza_public.profiles TO service_role;
+
+
+--
+-- Name: TABLE quiz_attempts; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.quiz_attempts TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.quiz_attempts TO authenticated;
+GRANT ALL ON TABLE bza_public.quiz_attempts TO service_role;
+
+
+--
+-- Name: SEQUENCE quiz_attempts_id_seq; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON SEQUENCE bza_public.quiz_attempts_id_seq TO anon;
+GRANT ALL ON SEQUENCE bza_public.quiz_attempts_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE bza_public.quiz_attempts_id_seq TO service_role;
+
+
+--
+-- Name: TABLE quiz_cards; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.quiz_cards TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.quiz_cards TO authenticated;
+GRANT ALL ON TABLE bza_public.quiz_cards TO service_role;
+
+
+--
+-- Name: SEQUENCE quiz_cards_id_seq; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON SEQUENCE bza_public.quiz_cards_id_seq TO anon;
+GRANT ALL ON SEQUENCE bza_public.quiz_cards_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE bza_public.quiz_cards_id_seq TO service_role;
+
+
+--
+-- Name: TABLE quotes; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.quotes TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.quotes TO authenticated;
+GRANT ALL ON TABLE bza_public.quotes TO service_role;
+
+
+--
+-- Name: SEQUENCE quotes_id_seq; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON SEQUENCE bza_public.quotes_id_seq TO anon;
+GRANT ALL ON SEQUENCE bza_public.quotes_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE bza_public.quotes_id_seq TO service_role;
+
+
+--
+-- Name: TABLE reading_features; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.reading_features TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.reading_features TO authenticated;
+GRANT ALL ON TABLE bza_public.reading_features TO service_role;
+
+
+--
+-- Name: SEQUENCE reading_features_id_seq; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON SEQUENCE bza_public.reading_features_id_seq TO anon;
+GRANT ALL ON SEQUENCE bza_public.reading_features_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE bza_public.reading_features_id_seq TO service_role;
+
+
+--
+-- Name: TABLE reading_notes; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.reading_notes TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.reading_notes TO authenticated;
+GRANT ALL ON TABLE bza_public.reading_notes TO service_role;
+
+
+--
+-- Name: SEQUENCE reading_notes_id_seq; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON SEQUENCE bza_public.reading_notes_id_seq TO anon;
+GRANT ALL ON SEQUENCE bza_public.reading_notes_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE bza_public.reading_notes_id_seq TO service_role;
+
+
+--
+-- Name: TABLE reading_progress; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.reading_progress TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.reading_progress TO authenticated;
+GRANT ALL ON TABLE bza_public.reading_progress TO service_role;
+
+
+--
+-- Name: TABLE reading_sessions; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.reading_sessions TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.reading_sessions TO authenticated;
+GRANT ALL ON TABLE bza_public.reading_sessions TO service_role;
+
+
+--
+-- Name: SEQUENCE reading_sessions_id_seq; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON SEQUENCE bza_public.reading_sessions_id_seq TO anon;
+GRANT ALL ON SEQUENCE bza_public.reading_sessions_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE bza_public.reading_sessions_id_seq TO service_role;
+
+
+--
+-- Name: TABLE session_blacklist; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.session_blacklist TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.session_blacklist TO authenticated;
+GRANT ALL ON TABLE bza_public.session_blacklist TO service_role;
+
+
+--
+-- Name: SEQUENCE session_blacklist_id_seq; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON SEQUENCE bza_public.session_blacklist_id_seq TO anon;
+GRANT ALL ON SEQUENCE bza_public.session_blacklist_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE bza_public.session_blacklist_id_seq TO service_role;
+
+
+--
+-- Name: TABLE theme_mentions; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.theme_mentions TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.theme_mentions TO authenticated;
+GRANT ALL ON TABLE bza_public.theme_mentions TO service_role;
+
+
+--
+-- Name: SEQUENCE theme_mentions_id_seq; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON SEQUENCE bza_public.theme_mentions_id_seq TO anon;
+GRANT ALL ON SEQUENCE bza_public.theme_mentions_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE bza_public.theme_mentions_id_seq TO service_role;
+
+
+--
+-- Name: TABLE themes; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.themes TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.themes TO authenticated;
+GRANT ALL ON TABLE bza_public.themes TO service_role;
+
+
+--
+-- Name: SEQUENCE themes_id_seq; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON SEQUENCE bza_public.themes_id_seq TO anon;
+GRANT ALL ON SEQUENCE bza_public.themes_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE bza_public.themes_id_seq TO service_role;
+
+
+--
+-- Name: TABLE typst_scratchpad; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.typst_scratchpad TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.typst_scratchpad TO authenticated;
+GRANT ALL ON TABLE bza_public.typst_scratchpad TO service_role;
+
+
+--
+-- Name: TABLE user_usage_summary; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.user_usage_summary TO anon;
+GRANT SELECT ON TABLE bza_public.user_usage_summary TO authenticated;
+GRANT ALL ON TABLE bza_public.user_usage_summary TO service_role;
+
+
+--
+-- Name: TABLE webhook_deliveries; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.webhook_deliveries TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.webhook_deliveries TO authenticated;
+GRANT ALL ON TABLE bza_public.webhook_deliveries TO service_role;
+
+
+--
+-- Name: SEQUENCE webhook_deliveries_id_seq; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON SEQUENCE bza_public.webhook_deliveries_id_seq TO anon;
+GRANT ALL ON SEQUENCE bza_public.webhook_deliveries_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE bza_public.webhook_deliveries_id_seq TO service_role;
+
+
+--
+-- Name: TABLE webhooks; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.webhooks TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.webhooks TO authenticated;
+GRANT ALL ON TABLE bza_public.webhooks TO service_role;
+
+
+--
+-- Name: SEQUENCE webhooks_id_seq; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON SEQUENCE bza_public.webhooks_id_seq TO anon;
+GRANT ALL ON SEQUENCE bza_public.webhooks_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE bza_public.webhooks_id_seq TO service_role;
+
+
+--
+-- Name: TABLE wiki_updates; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT ON TABLE bza_public.wiki_updates TO anon;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.wiki_updates TO authenticated;
+GRANT ALL ON TABLE bza_public.wiki_updates TO service_role;
+
+
+--
+-- Name: SEQUENCE wiki_updates_id_seq; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT ALL ON SEQUENCE bza_public.wiki_updates_id_seq TO anon;
+GRANT ALL ON SEQUENCE bza_public.wiki_updates_id_seq TO authenticated;
+GRANT ALL ON SEQUENCE bza_public.wiki_updates_id_seq TO service_role;
+
+
+--
+-- Name: TABLE youtube_tracks; Type: ACL; Schema: bza_public; Owner: -
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.youtube_tracks TO service_role;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE bza_public.youtube_tracks TO authenticated;
+GRANT SELECT ON TABLE bza_public.youtube_tracks TO anon;
+
+
+--
+-- Name: DEFAULT PRIVILEGES FOR TABLES; Type: DEFAULT ACL; Schema: bza_public; Owner: -
+--
+
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA bza_public GRANT SELECT ON TABLES TO anon;
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA bza_public GRANT SELECT,INSERT,DELETE,UPDATE ON TABLES TO authenticated;
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA bza_public GRANT SELECT,INSERT,DELETE,UPDATE ON TABLES TO service_role;
+
+
+--
 -- PostgreSQL database dump complete
 --
 
-\unrestrict nxTpl33gvb41suUaDXAeMbyZFfN38lGSeuT4WEZTElNlQElNIwlbDXOJylmpcym
+\unrestrict PjuFgc1wr4LFm9OpkDzqq566xB6QqtXwMZGTQ3xUwcNOOyhqX8WKnEF7BNmfOLP
 
