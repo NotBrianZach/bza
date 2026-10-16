@@ -11,7 +11,7 @@ import { booksQueries } from '@/lib/queries'
 import { getLocalBooks, deleteLocalBook, getStorageUsage } from '@/lib/localStorage'
 import BookCard from '@/components/BookCard'
 import Link from 'next/link'
-import { Plus, BookOpen, Image as ImageIcon, HardDrive, CreditCard, Search, PuzzleIcon, GraduationCap, Clock, SlidersHorizontal, Eye, EyeOff, ChevronUp, ChevronDown, Trash2, Calculator, Download, Settings, Menu, LayoutGrid, List, Loader2, Shuffle, Sigma } from 'lucide-react'
+import { Plus, BookOpen, Image as ImageIcon, HardDrive, CreditCard, Search, PuzzleIcon, GraduationCap, Clock, SlidersHorizontal, Eye, EyeOff, ChevronUp, ChevronDown, Trash2, Calculator, Download, Settings, Menu, LayoutGrid, List, Loader2, Shuffle, Sigma, ArrowRight } from 'lucide-react'
 import { billingQueries, quizQueries, settingsQueries, UserPrefs } from '@/lib/queries'
 import { bookmarksQueries } from '@/lib/queries/bookmarks'
 import type { PageBookmark } from '@/lib/queries/types'
@@ -26,6 +26,37 @@ import { getPinnedFeeds, savePinnedFeeds, PinnedFeed } from '@/lib/pinnedFeeds'
 import { AUTO_COVER_KEY } from '@/lib/queries/images'
 
 type SectionId = 'streaks' | 'revisit' | 'games' | 'practice' | 'books' | 'feeds' | 'classics'
+
+/**
+ * Read, Play, Learn — the three things this app does.
+ *
+ * The bands exist because the flat section list buried two of them. Five of the
+ * seven sections are reading, so Play (one strip) and Learn (one strip) read as
+ * afterthoughts between library shelves, and /learn had no entry point at all
+ * until yesterday.
+ *
+ * Order is fixed rather than user-reorderable. Sections still move and hide
+ * freely WITHIN a band — the arrows operate on the flat list and the bands
+ * partition it, so a section's position inside its own band is whatever the user
+ * chose. Letting the bands themselves reorder would mean a second ordering
+ * concept for three items, and the Customize panel already labels which band
+ * each section belongs to, which is the part that was actually confusing.
+ */
+type GroupId = 'read' | 'play' | 'learn'
+const GROUPS: { id: GroupId; label: string; blurb: string; href: string }[] = [
+  { id: 'read', label: 'Read', blurb: 'your library, feeds and what is due', href: '/dashboard' },
+  { id: 'play', label: 'Play', blurb: 'correlation games', href: '/play' },
+  { id: 'learn', label: 'Learn', blurb: 'practice, verified', href: '/learn' },
+]
+const SECTION_GROUP: Record<SectionId, GroupId> = {
+  revisit: 'read',
+  feeds: 'read',
+  streaks: 'read',
+  books: 'read',
+  classics: 'read',
+  games: 'play',
+  practice: 'learn',
+}
 interface SectionConfig { id: SectionId; label: string; visible: boolean }
 const DEFAULT_SECTIONS: SectionConfig[] = [
   { id: 'revisit', label: 'Due for Revisit (SR)', visible: true },
@@ -388,6 +419,368 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
         </div>
       </div>
     )
+  }
+
+  // Per-section renderer. Lifted out of the inline sections.map it used to
+  // live in so the Read/Play/Learn bands can each call it and decide, from
+  // what it RETURNS, whether their heading has anything to sit above.
+  // Body is unchanged from the map callback.
+  const renderSection = (section: SectionConfig) => {
+          if (!section.visible) return null
+
+          if (section.id === 'streaks') return isAuthenticated ? (
+            <ReadingStreaks key="streaks" />
+          ) : null
+
+          // Shown to signed-out visitors too: the games need no account to read
+          // about, and the section hands off to /play, which makes an anonymous
+          // session on load.
+          if (section.id === 'games') return (
+            <CorrelationGamesSection key="games" isAuthenticated={isAuthenticated} />
+          )
+
+          // Signed-in only, unlike games: /learn has no anonymous mode — every
+          // /api/learn route 401s without a user and the page renders that as an
+          // error. The component guards internally too; this is belt and braces
+          // so the reason is visible from the layout as well.
+          if (section.id === 'practice') return isAuthenticated ? (
+            <MathPracticeSection key="practice" isAuthenticated={isAuthenticated} />
+          ) : null
+
+          if (section.id === 'revisit') {
+            if (!isAuthenticated) return null
+            // srVersion in dep list ensures re-render after advancing schedule
+            void srVersion
+            const dueBooks = books.filter(b => isSRDue(b.id, b.last_read_at ?? null, b.created_at))
+            if (dueBooks.length === 0) return null
+            return (
+              <div key="revisit" className="mb-8">
+                <div className="flex items-center gap-2 mb-3">
+                  <Clock size={16} className="text-amber-500" />
+                  <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Due for revisit</h2>
+                  <span className="text-xs text-gray-400">· spaced repetition</span>
+                </div>
+                <div className="flex gap-3 overflow-x-auto pb-1">
+                  {/* Jump to last read — most recently read book */}
+                  {(() => {
+                    const lastRead = [...books].filter(b => b.last_read_at).sort((a, b) => new Date(b.last_read_at!).getTime() - new Date(a.last_read_at!).getTime())[0]
+                    if (!lastRead) return null
+                    return (
+                      <Link
+                        key="jump-last-read"
+                        href={`/books/${lastRead.id}`}
+                        className="flex-shrink-0 flex flex-col justify-center items-start w-36 bg-white dark:bg-gray-800 border border-indigo-200 dark:border-indigo-800/50 rounded-xl p-3 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20 transition-colors"
+                      >
+                        <p className="text-[10px] font-semibold uppercase tracking-wide text-indigo-500 dark:text-indigo-400 mb-1">Jump to last read</p>
+                        <p className="text-xs font-medium text-gray-800 dark:text-gray-100 line-clamp-2 leading-snug">{lastRead.title}</p>
+                        <p className="text-[10px] text-gray-400 mt-1">{timeAgo(new Date(lastRead.last_read_at!))}</p>
+                      </Link>
+                    )
+                  })()}
+                  {dueBooks.slice(0, 8).map(book => (
+                    <div key={book.id} className="flex-shrink-0 w-36 bg-white dark:bg-gray-800 border border-amber-200 dark:border-amber-800/50 rounded-xl overflow-hidden group">
+                      <Link
+                        href={`/books/${book.id}`}
+                        onClick={() => { advanceSR(book.id); setSrVersion(v => v + 1) }}
+                        className="block p-3 hover:bg-amber-50/50 dark:hover:bg-amber-900/20 transition-colors"
+                      >
+                        <p className="text-xs font-medium text-gray-800 dark:text-gray-100 line-clamp-2 mb-1 leading-snug">{book.title}</p>
+                        <p className="text-xs text-amber-600 dark:text-amber-400">
+                          {book.last_read_at ? timeAgo(new Date(book.last_read_at)) : 'Never opened'}
+                        </p>
+                        <p className="text-[10px] text-gray-400 mt-0.5">{srInterval(book.id)}d cycle</p>
+                      </Link>
+                      <div className="flex border-t border-amber-100 dark:border-amber-900/30">
+                        <button
+                          onClick={() => { advanceSR(book.id); setSrVersion(v => v + 1) }}
+                          title="Mark reviewed (advance schedule)"
+                          className="flex-1 text-[10px] py-1 text-gray-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
+                        >
+                          ✓ done
+                        </button>
+                        <button
+                          onClick={() => handleDelete(book.id)}
+                          title="Delete from library"
+                          className="px-2 py-1 text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors border-l border-amber-100 dark:border-amber-900/30"
+                        >
+                          <Trash2 size={10} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )
+          }
+
+          if (section.id === 'books') return (
+            <div key="books">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+                My Library
+              </h2>
+              {/* Books Grid */}
+              {(() => {
+                const q = search.toLowerCase().trim()
+                const fuzzy = (text: string, query: string) => {
+                  const t = text.toLowerCase()
+                  if (t.includes(query)) return true
+                  if (query.split(/\s+/).every(w => t.includes(w))) return true
+                  // char-sequence fuzzy
+                  let qi = 0
+                  for (let i = 0; i < t.length && qi < query.length; i++) {
+                    if (t[i] === query[qi]) qi++
+                  }
+                  return qi === query.length
+                }
+                const filtered = books.filter(b =>
+                  (!q || fuzzy(b.title, q) || fuzzy(b.summary ?? '', q)) &&
+                  (!typeFilter || b.content_type === typeFilter)
+                )
+                return filtered.length === 0 ? (
+                  <div className="text-center py-12 px-4 max-w-lg mx-auto">
+                    {q || typeFilter ? (
+                      <>
+                        <BookOpen size={48} className="mx-auto text-gray-300 mb-3" />
+                        <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">No results</h2>
+                      </>
+                    ) : (
+                      <>
+                        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">Welcome to your Library</h2>
+                        <p className="text-gray-500 dark:text-gray-400 mb-6">Add your first book, article, or PDF to get started.</p>
+                        <Link href="/upload" className="btn btn-primary inline-flex mb-8">
+                          <Plus size={20} className="mr-2 flex-shrink-0" />Add Your First Text
+                        </Link>
+                        <div className="text-left space-y-4">
+                          <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">What you can do</p>
+                          {[
+                            { icon: '📖', title: 'Read with AI', desc: 'Chat about any page, get explanations, create flashcards' },
+                            { icon: '📝', title: 'Problem Sets', desc: 'Extract exercises from textbooks, work through them with hints' },
+                            { icon: '🎭', title: 'AI Personas', desc: 'Choose a librarian personality — Sensei, Rival, Professor, and more' },
+                            { icon: '🔊', title: 'Listen', desc: 'Convert any text to audiobook with AI narration' },
+                            { icon: '🌐', title: 'Translate', desc: 'Translate entire books or read side-by-side with the original' },
+                            { icon: '🧠', title: 'Flashcards', desc: 'Auto-generated flashcards with spaced-repetition review' },
+                          ].map(f => (
+                            <div key={f.title} className="flex items-start gap-3">
+                              <span className="text-xl flex-shrink-0">{f.icon}</span>
+                              <div>
+                                <p className="text-sm font-medium text-gray-800 dark:text-gray-200">{f.title}</p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">{f.desc}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3">
+                    {filtered.map(book => (
+                      <BookCard
+                        key={book.id}
+                        book={book}
+                        onDelete={handleDelete}
+                        onPinToggled={(id, p) => setBooks(bs => bs.map(b => b.id === id ? { ...b, pinned: p } : b).sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0)))}
+                        onRenamed={(id, t) => setBooks(bs => bs.map(b => b.id === id ? { ...b, title: t } : b))}
+                        onReclassified={isAuthenticated ? (id, type) => setBooks(bs => bs.map(b => b.id === id ? { ...b, content_type: type } : b)) : undefined}
+                      />
+                    ))}
+                  </div>
+                )
+              })()}
+              {/* Math Notes — bookmarks with attached Typst problem sets */}
+              {isAuthenticated && typstNotes.length > 0 && (
+                <div className="mt-8">
+                  <button
+                    onClick={() => setShowTypstNotes(v => !v)}
+                    className="flex items-center gap-2 mb-3 group"
+                  >
+                    <Calculator size={16} className="text-teal-500" />
+                    <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+                      Math Notes
+                    </h2>
+                    <span className="text-xs text-gray-400">· {typstNotes.length} problem set{typstNotes.length !== 1 ? 's' : ''}</span>
+                    <ChevronDown size={14} className={`text-gray-400 transition-transform ${showTypstNotes ? 'rotate-180' : ''}`} />
+                  </button>
+                  {showTypstNotes && (
+                    <div className="space-y-2">
+                      {typstNotes.map(note => {
+                        const slug = (note.typst_title || `p${note.page_num}`).replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase().slice(0, 50)
+                        const handleDownloadNote = () => {
+                          const blob = new Blob([note.typst_content!], { type: 'text/plain' })
+                          const url = URL.createObjectURL(blob)
+                          const a = document.createElement('a'); a.href = url; a.download = `${slug}.typ`; a.click()
+                          URL.revokeObjectURL(url)
+                        }
+                        return (
+                          <div key={note.id} className="flex items-start justify-between gap-3 p-3 bg-white dark:bg-gray-800 border border-teal-100 dark:border-teal-900/40 rounded-xl">
+                            <div className="min-w-0 flex-1">
+                              <p className="text-xs font-medium text-gray-800 dark:text-gray-200 truncate">
+                                {note.typst_title || `p.${note.page_num}`}
+                              </p>
+                              {note.book_title && (
+                                <p className="text-xs text-gray-400 dark:text-gray-500 truncate mt-0.5">
+                                  {note.book_title} · p.{note.page_num}
+                                </p>
+                              )}
+                              <pre className="mt-1.5 text-[10px] text-gray-500 dark:text-gray-400 line-clamp-2 font-mono whitespace-pre-wrap break-all">
+                                {note.typst_content!.slice(0, 120)}{note.typst_content!.length > 120 ? '…' : ''}
+                              </pre>
+                            </div>
+                            <div className="flex items-center gap-1.5 flex-shrink-0">
+                              <a
+                                href={`/books/${note.book_id}?page=${note.page_num}`}
+                                className="text-xs text-teal-600 dark:text-teal-400 hover:underline whitespace-nowrap"
+                              >
+                                Open
+                              </a>
+                              <button onClick={handleDownloadNote} title="Download .typ" className="text-gray-300 hover:text-teal-500 transition-colors">
+                                <Download size={13} />
+                              </button>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Trash */}
+              {isAuthenticated && trashedBooks.length > 0 && (
+                <div className="mt-8">
+                  <button
+                    onClick={() => setShowTrash(v => !v)}
+                    className="flex items-center gap-2 mb-3 group"
+                  >
+                    <Trash2 size={16} className="text-gray-400" />
+                    <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-200 transition-colors">
+                      Trash
+                    </h2>
+                    <span className="text-xs text-gray-400">· {trashedBooks.length} book{trashedBooks.length !== 1 ? 's' : ''}</span>
+                    <ChevronDown size={14} className={`text-gray-400 transition-transform ${showTrash ? 'rotate-180' : ''}`} />
+                  </button>
+                  {showTrash && (
+                    <div>
+                      <div className="space-y-1 mb-3">
+                        {trashedBooks.map(book => (
+                          <div key={book.id} className="flex items-center justify-between gap-3 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+                            <span className="text-sm text-gray-500 dark:text-gray-400 truncate flex-1">{book.title}</span>
+                            <span className="text-xs text-gray-400 shrink-0">{book.deleted_at ? timeAgo(new Date(book.deleted_at)) : ''}</span>
+                            <button
+                              onClick={() => handleRestore(book.id)}
+                              className="text-xs text-primary-600 hover:text-primary-700 shrink-0 font-medium"
+                            >
+                              Restore
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                      <button
+                        onClick={handleEmptyTrash}
+                        className="text-xs text-red-500 hover:text-red-600 font-medium flex items-center gap-1 transition-colors"
+                      >
+                        <Trash2 size={12} />Empty Trash
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Storage gauge */}
+              {isAuthenticated && quota && quota.storage_limit_bytes > 0 && (() => {
+                const used = quota.storage_bytes_used
+                const limit = quota.storage_limit_bytes
+                const pct = Math.min(100, Math.round((used / limit) * 100))
+                const usedGB = (used / (1024 ** 3)).toFixed(2)
+                const limitGB = (limit / (1024 ** 3)).toFixed(1)
+                const isWarning = pct >= 80
+                return (
+                  <div className="mt-8 p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Cloud Storage — {usedGB} GB of {limitGB} GB used ({pct}%)</span>
+                      <a href="/billing" className="text-xs text-primary-600 hover:underline">{isWarning ? 'Buy more →' : 'Manage'}</a>
+                    </div>
+                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+                      <div className={'h-2 rounded-full transition-all duration-500 ' + (isWarning ? 'bg-amber-500' : 'bg-primary-500')} style={{ width: pct + '%' }} />
+                    </div>
+                    {isWarning && <p className="mt-1.5 text-xs text-amber-600 dark:text-amber-400">Running low on storage.{' '}<a href="/billing" className="underline font-medium">Add 2 GB for $1/mo →</a></p>}
+                  </div>
+                )
+              })()}
+            </div>
+          )
+
+          if (section.id === 'feeds') {
+            if (pinnedFeeds.length === 0) return null
+            return (
+              <div key="feeds" className="mt-8">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+                  My Feeds <span className="text-gray-400 dark:text-gray-500 font-normal text-base">· Recent Posts</span>
+                  <button
+                    onClick={() => setFeedsSignal(s => ({ open: !s.open, v: s.v + 1 }))}
+                    className="ml-2 text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 inline-flex items-center gap-0.5 font-normal transition-colors"
+                  >
+                    {feedsSignal.open ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                    {feedsSignal.open ? 'close all' : 'open all'}
+                  </button>
+                  <button
+                    onClick={() => setGlobalCatalog(v => {
+                      const next = !v
+                      localStorage.setItem('bza-feed-catalog', next ? '1' : '0')
+                      if (isAuthenticated) settingsQueries.setPref('feed_catalog_view', next).catch(() => {})
+                      return next
+                    })}
+                    title={globalCatalog ? 'List view all' : 'Catalog view all'}
+                    className={`ml-2 inline-flex items-center gap-0.5 text-xs font-normal transition-colors ${globalCatalog ? 'text-blue-500 hover:text-blue-600' : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'}`}
+                  >
+                    {globalCatalog ? <List size={13} /> : <LayoutGrid size={13} />}
+                  </button>
+                  <button
+                    onClick={() => setGlobalImages(v => {
+                      const next = !v
+                      localStorage.setItem('bza-feed-images', next ? '1' : '0')
+                      if (isAuthenticated) settingsQueries.setPref('feed_show_images', next).catch(() => {})
+                      return next
+                    })}
+                    title={globalImages ? 'Hide images' : 'Show images'}
+                    className={`ml-1 inline-flex items-center gap-0.5 text-xs font-normal transition-colors ${globalImages ? 'text-green-500 hover:text-green-600' : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'}`}
+                  >
+                    <ImageIcon size={13} />
+                  </button>
+                </h2>
+                <div className={`grid ${FEED_GRID[cardSizes.feeds]}`}>
+                  {pinnedFeeds.map(feed => (
+                    <HomeFeedSection
+                      key={feed.id}
+                      feed={feed}
+                      isAuthenticated={!!isAuthenticated}
+                      onUnpinned={refreshFeeds}
+                      onRenamed={() => {
+                        const updated = getPinnedFeeds()
+                        setPinnedFeeds(updated)
+                        syncFeedsToDB(updated)
+                      }}
+                      onBookAdded={(book) => book ? setBooks(bs => [book, ...bs]) : checkAuthAndLoadData()}
+                      expandSignal={feedsSignal}
+                      globalCatalog={globalCatalog}
+                      globalImages={globalImages}
+                    />
+                  ))}
+                </div>
+              </div>
+            )
+          }
+
+          if (section.id === 'classics') return prefs?.show_classics_library !== false ? (
+            <ClassicLibrary
+              key="classics"
+              books={books}
+              isAuthenticated={!!isAuthenticated}
+              onBookAdded={(book) => book ? setBooks(bs => [book, ...bs]) : checkAuthAndLoadData()}
+            />
+          ) : null
+
+          return null
   }
 
   return (
@@ -825,6 +1218,14 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
                       <ChevronDown size={20} />
                     </button>
                   </div>
+                  {/* Which band this section sits in. Without it the arrows look
+                      broken: moving a section past a band boundary changes its
+                      place in the flat list but it still renders under its own
+                      heading, so the row appears not to have moved. Naming the
+                      band makes that legible instead of mysterious. */}
+                  <span className="w-12 flex-shrink-0 text-[10px] uppercase tracking-wide text-gray-400 dark:text-gray-500">
+                    {GROUPS.find(g => g.id === SECTION_GROUP[s.id])?.label}
+                  </span>
                   <button
                     onClick={() => updateSections(sections.map(x => x.id === s.id ? { ...x, visible: !x.visible } : x))}
                     className={`flex items-center gap-2 text-sm py-1 ${s.visible ? 'text-gray-800 dark:text-gray-200' : 'text-gray-400 dark:text-gray-600'}`}
@@ -862,363 +1263,71 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
           </div>
         )}
 
-        {/* Sections rendered in user-defined order */}
-        {sections.map(section => {
-          if (!section.visible) return null
+        {/* The three doors, above everything.
 
-          if (section.id === 'streaks') return isAuthenticated ? (
-            <ReadingStreaks key="streaks" />
-          ) : null
+            Prominence by position: a card row at the top says what the app is
+            for before any content loads, which is the thing five reading strips
+            and two lonely ones could not say. The bands below repeat the three
+            names as headings so the page reads the same way twice — chooser
+            first, then the content under the same labels.
 
-          // Shown to signed-out visitors too: the games need no account to read
-          // about, and the section hands off to /play, which makes an anonymous
-          // session on load.
-          if (section.id === 'games') return (
-            <CorrelationGamesSection key="games" isAuthenticated={isAuthenticated} />
-          )
-
-          // Signed-in only, unlike games: /learn has no anonymous mode — every
-          // /api/learn route 401s without a user and the page renders that as an
-          // error. The component guards internally too; this is belt and braces
-          // so the reason is visible from the layout as well.
-          if (section.id === 'practice') return isAuthenticated ? (
-            <MathPracticeSection key="practice" isAuthenticated={isAuthenticated} />
-          ) : null
-
-          if (section.id === 'revisit') {
-            if (!isAuthenticated) return null
-            // srVersion in dep list ensures re-render after advancing schedule
-            void srVersion
-            const dueBooks = books.filter(b => isSRDue(b.id, b.last_read_at ?? null, b.created_at))
-            if (dueBooks.length === 0) return null
-            return (
-              <div key="revisit" className="mb-8">
-                <div className="flex items-center gap-2 mb-3">
-                  <Clock size={16} className="text-amber-500" />
-                  <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Due for revisit</h2>
-                  <span className="text-xs text-gray-400">· spaced repetition</span>
-                </div>
-                <div className="flex gap-3 overflow-x-auto pb-1">
-                  {/* Jump to last read — most recently read book */}
-                  {(() => {
-                    const lastRead = [...books].filter(b => b.last_read_at).sort((a, b) => new Date(b.last_read_at!).getTime() - new Date(a.last_read_at!).getTime())[0]
-                    if (!lastRead) return null
-                    return (
-                      <Link
-                        key="jump-last-read"
-                        href={`/books/${lastRead.id}`}
-                        className="flex-shrink-0 flex flex-col justify-center items-start w-36 bg-white dark:bg-gray-800 border border-indigo-200 dark:border-indigo-800/50 rounded-xl p-3 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20 transition-colors"
-                      >
-                        <p className="text-[10px] font-semibold uppercase tracking-wide text-indigo-500 dark:text-indigo-400 mb-1">Jump to last read</p>
-                        <p className="text-xs font-medium text-gray-800 dark:text-gray-100 line-clamp-2 leading-snug">{lastRead.title}</p>
-                        <p className="text-[10px] text-gray-400 mt-1">{timeAgo(new Date(lastRead.last_read_at!))}</p>
-                      </Link>
-                    )
-                  })()}
-                  {dueBooks.slice(0, 8).map(book => (
-                    <div key={book.id} className="flex-shrink-0 w-36 bg-white dark:bg-gray-800 border border-amber-200 dark:border-amber-800/50 rounded-xl overflow-hidden group">
-                      <Link
-                        href={`/books/${book.id}`}
-                        onClick={() => { advanceSR(book.id); setSrVersion(v => v + 1) }}
-                        className="block p-3 hover:bg-amber-50/50 dark:hover:bg-amber-900/20 transition-colors"
-                      >
-                        <p className="text-xs font-medium text-gray-800 dark:text-gray-100 line-clamp-2 mb-1 leading-snug">{book.title}</p>
-                        <p className="text-xs text-amber-600 dark:text-amber-400">
-                          {book.last_read_at ? timeAgo(new Date(book.last_read_at)) : 'Never opened'}
-                        </p>
-                        <p className="text-[10px] text-gray-400 mt-0.5">{srInterval(book.id)}d cycle</p>
-                      </Link>
-                      <div className="flex border-t border-amber-100 dark:border-amber-900/30">
-                        <button
-                          onClick={() => { advanceSR(book.id); setSrVersion(v => v + 1) }}
-                          title="Mark reviewed (advance schedule)"
-                          className="flex-1 text-[10px] py-1 text-gray-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
-                        >
-                          ✓ done
-                        </button>
-                        <button
-                          onClick={() => handleDelete(book.id)}
-                          title="Delete from library"
-                          className="px-2 py-1 text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors border-l border-amber-100 dark:border-amber-900/30"
-                        >
-                          <Trash2 size={10} />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+            Learn is omitted when signed out rather than shown and broken:
+            /learn has no anonymous mode, every /api/learn route answers 401, and
+            the page turns that into an error banner. Read and Play both work
+            signed out — /play makes an anonymous session on load. */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-8">
+          {GROUPS.filter(g => g.id !== 'learn' || isAuthenticated === true).map(group => (
+            <Link
+              key={group.id}
+              href={group.href}
+              className="group/door rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 hover:border-indigo-300 dark:hover:border-indigo-600 hover:shadow-sm transition-all"
+            >
+              <div className="flex items-center gap-2">
+                {group.id === 'read' && <BookOpen size={16} className="text-indigo-500" />}
+                {group.id === 'play' && <Shuffle size={16} className="text-fuchsia-500" />}
+                {group.id === 'learn' && <Sigma size={16} className="text-sky-500" />}
+                <span className="text-base font-semibold text-gray-900 dark:text-gray-100 group-hover/door:text-indigo-600 dark:group-hover/door:text-indigo-400 transition-colors">
+                  {group.label}
+                </span>
+                <ArrowRight size={14} className="ml-auto text-gray-300 dark:text-gray-600 group-hover/door:text-indigo-500 transition-colors" />
               </div>
-            )
-          }
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 leading-snug">{group.blurb}</p>
+            </Link>
+          ))}
+        </div>
 
-          if (section.id === 'books') return (
-            <div key="books">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-3">
-                My Library
-              </h2>
-              {/* Books Grid */}
-              {(() => {
-                const q = search.toLowerCase().trim()
-                const fuzzy = (text: string, query: string) => {
-                  const t = text.toLowerCase()
-                  if (t.includes(query)) return true
-                  if (query.split(/\s+/).every(w => t.includes(w))) return true
-                  // char-sequence fuzzy
-                  let qi = 0
-                  for (let i = 0; i < t.length && qi < query.length; i++) {
-                    if (t[i] === query[qi]) qi++
-                  }
-                  return qi === query.length
-                }
-                const filtered = books.filter(b =>
-                  (!q || fuzzy(b.title, q) || fuzzy(b.summary ?? '', q)) &&
-                  (!typeFilter || b.content_type === typeFilter)
-                )
-                return filtered.length === 0 ? (
-                  <div className="text-center py-12 px-4 max-w-lg mx-auto">
-                    {q || typeFilter ? (
-                      <>
-                        <BookOpen size={48} className="mx-auto text-gray-300 mb-3" />
-                        <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">No results</h2>
-                      </>
-                    ) : (
-                      <>
-                        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">Welcome to your Library</h2>
-                        <p className="text-gray-500 dark:text-gray-400 mb-6">Add your first book, article, or PDF to get started.</p>
-                        <Link href="/upload" className="btn btn-primary inline-flex mb-8">
-                          <Plus size={20} className="mr-2 flex-shrink-0" />Add Your First Text
-                        </Link>
-                        <div className="text-left space-y-4">
-                          <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">What you can do</p>
-                          {[
-                            { icon: '📖', title: 'Read with AI', desc: 'Chat about any page, get explanations, create flashcards' },
-                            { icon: '📝', title: 'Problem Sets', desc: 'Extract exercises from textbooks, work through them with hints' },
-                            { icon: '🎭', title: 'AI Personas', desc: 'Choose a librarian personality — Sensei, Rival, Professor, and more' },
-                            { icon: '🔊', title: 'Listen', desc: 'Convert any text to audiobook with AI narration' },
-                            { icon: '🌐', title: 'Translate', desc: 'Translate entire books or read side-by-side with the original' },
-                            { icon: '🧠', title: 'Flashcards', desc: 'Auto-generated flashcards with spaced-repetition review' },
-                          ].map(f => (
-                            <div key={f.title} className="flex items-start gap-3">
-                              <span className="text-xl flex-shrink-0">{f.icon}</span>
-                              <div>
-                                <p className="text-sm font-medium text-gray-800 dark:text-gray-200">{f.title}</p>
-                                <p className="text-xs text-gray-500 dark:text-gray-400">{f.desc}</p>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3">
-                    {filtered.map(book => (
-                      <BookCard
-                        key={book.id}
-                        book={book}
-                        onDelete={handleDelete}
-                        onPinToggled={(id, p) => setBooks(bs => bs.map(b => b.id === id ? { ...b, pinned: p } : b).sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0)))}
-                        onRenamed={(id, t) => setBooks(bs => bs.map(b => b.id === id ? { ...b, title: t } : b))}
-                        onReclassified={isAuthenticated ? (id, type) => setBooks(bs => bs.map(b => b.id === id ? { ...b, content_type: type } : b)) : undefined}
-                      />
-                    ))}
-                  </div>
-                )
-              })()}
-              {/* Math Notes — bookmarks with attached Typst problem sets */}
-              {isAuthenticated && typstNotes.length > 0 && (
-                <div className="mt-8">
-                  <button
-                    onClick={() => setShowTypstNotes(v => !v)}
-                    className="flex items-center gap-2 mb-3 group"
-                  >
-                    <Calculator size={16} className="text-teal-500" />
-                    <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
-                      Math Notes
-                    </h2>
-                    <span className="text-xs text-gray-400">· {typstNotes.length} problem set{typstNotes.length !== 1 ? 's' : ''}</span>
-                    <ChevronDown size={14} className={`text-gray-400 transition-transform ${showTypstNotes ? 'rotate-180' : ''}`} />
-                  </button>
-                  {showTypstNotes && (
-                    <div className="space-y-2">
-                      {typstNotes.map(note => {
-                        const slug = (note.typst_title || `p${note.page_num}`).replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase().slice(0, 50)
-                        const handleDownloadNote = () => {
-                          const blob = new Blob([note.typst_content!], { type: 'text/plain' })
-                          const url = URL.createObjectURL(blob)
-                          const a = document.createElement('a'); a.href = url; a.download = `${slug}.typ`; a.click()
-                          URL.revokeObjectURL(url)
-                        }
-                        return (
-                          <div key={note.id} className="flex items-start justify-between gap-3 p-3 bg-white dark:bg-gray-800 border border-teal-100 dark:border-teal-900/40 rounded-xl">
-                            <div className="min-w-0 flex-1">
-                              <p className="text-xs font-medium text-gray-800 dark:text-gray-200 truncate">
-                                {note.typst_title || `p.${note.page_num}`}
-                              </p>
-                              {note.book_title && (
-                                <p className="text-xs text-gray-400 dark:text-gray-500 truncate mt-0.5">
-                                  {note.book_title} · p.{note.page_num}
-                                </p>
-                              )}
-                              <pre className="mt-1.5 text-[10px] text-gray-500 dark:text-gray-400 line-clamp-2 font-mono whitespace-pre-wrap break-all">
-                                {note.typst_content!.slice(0, 120)}{note.typst_content!.length > 120 ? '…' : ''}
-                              </pre>
-                            </div>
-                            <div className="flex items-center gap-1.5 flex-shrink-0">
-                              <a
-                                href={`/books/${note.book_id}?page=${note.page_num}`}
-                                className="text-xs text-teal-600 dark:text-teal-400 hover:underline whitespace-nowrap"
-                              >
-                                Open
-                              </a>
-                              <button onClick={handleDownloadNote} title="Download .typ" className="text-gray-300 hover:text-teal-500 transition-colors">
-                                <Download size={13} />
-                              </button>
-                            </div>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  )}
-                </div>
-              )}
+        {/* Read / Play / Learn.
 
-              {/* Trash */}
-              {isAuthenticated && trashedBooks.length > 0 && (
-                <div className="mt-8">
-                  <button
-                    onClick={() => setShowTrash(v => !v)}
-                    className="flex items-center gap-2 mb-3 group"
-                  >
-                    <Trash2 size={16} className="text-gray-400" />
-                    <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-200 transition-colors">
-                      Trash
-                    </h2>
-                    <span className="text-xs text-gray-400">· {trashedBooks.length} book{trashedBooks.length !== 1 ? 's' : ''}</span>
-                    <ChevronDown size={14} className={`text-gray-400 transition-transform ${showTrash ? 'rotate-180' : ''}`} />
-                  </button>
-                  {showTrash && (
-                    <div>
-                      <div className="space-y-1 mb-3">
-                        {trashedBooks.map(book => (
-                          <div key={book.id} className="flex items-center justify-between gap-3 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
-                            <span className="text-sm text-gray-500 dark:text-gray-400 truncate flex-1">{book.title}</span>
-                            <span className="text-xs text-gray-400 shrink-0">{book.deleted_at ? timeAgo(new Date(book.deleted_at)) : ''}</span>
-                            <button
-                              onClick={() => handleRestore(book.id)}
-                              className="text-xs text-primary-600 hover:text-primary-700 shrink-0 font-medium"
-                            >
-                              Restore
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                      <button
-                        onClick={handleEmptyTrash}
-                        className="text-xs text-red-500 hover:text-red-600 font-medium flex items-center gap-1 transition-colors"
-                      >
-                        <Trash2 size={12} />Empty Trash
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
+            Three bands rather than one flat list. The sections are unchanged and
+            still hide and reorder individually; this groups them under the three
+            things the app does, so Play and Learn stop being two strips lost
+            among five reading ones.
 
-              {/* Storage gauge */}
-              {isAuthenticated && quota && quota.storage_limit_bytes > 0 && (() => {
-                const used = quota.storage_bytes_used
-                const limit = quota.storage_limit_bytes
-                const pct = Math.min(100, Math.round((used / limit) * 100))
-                const usedGB = (used / (1024 ** 3)).toFixed(2)
-                const limitGB = (limit / (1024 ** 3)).toFixed(1)
-                const isWarning = pct >= 80
-                return (
-                  <div className="mt-8 p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Cloud Storage — {usedGB} GB of {limitGB} GB used ({pct}%)</span>
-                      <a href="/billing" className="text-xs text-primary-600 hover:underline">{isWarning ? 'Buy more →' : 'Manage'}</a>
-                    </div>
-                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
-                      <div className={'h-2 rounded-full transition-all duration-500 ' + (isWarning ? 'bg-amber-500' : 'bg-primary-500')} style={{ width: pct + '%' }} />
-                    </div>
-                    {isWarning && <p className="mt-1.5 text-xs text-amber-600 dark:text-amber-400">Running low on storage.{' '}<a href="/billing" className="underline font-medium">Add 2 GB for $1/mo →</a></p>}
-                  </div>
-                )
-              })()}
-            </div>
-          )
-
-          if (section.id === 'feeds') {
-            if (pinnedFeeds.length === 0) return null
-            return (
-              <div key="feeds" className="mt-8">
-                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-3">
-                  My Feeds <span className="text-gray-400 dark:text-gray-500 font-normal text-base">· Recent Posts</span>
-                  <button
-                    onClick={() => setFeedsSignal(s => ({ open: !s.open, v: s.v + 1 }))}
-                    className="ml-2 text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 inline-flex items-center gap-0.5 font-normal transition-colors"
-                  >
-                    {feedsSignal.open ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-                    {feedsSignal.open ? 'close all' : 'open all'}
-                  </button>
-                  <button
-                    onClick={() => setGlobalCatalog(v => {
-                      const next = !v
-                      localStorage.setItem('bza-feed-catalog', next ? '1' : '0')
-                      if (isAuthenticated) settingsQueries.setPref('feed_catalog_view', next).catch(() => {})
-                      return next
-                    })}
-                    title={globalCatalog ? 'List view all' : 'Catalog view all'}
-                    className={`ml-2 inline-flex items-center gap-0.5 text-xs font-normal transition-colors ${globalCatalog ? 'text-blue-500 hover:text-blue-600' : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'}`}
-                  >
-                    {globalCatalog ? <List size={13} /> : <LayoutGrid size={13} />}
-                  </button>
-                  <button
-                    onClick={() => setGlobalImages(v => {
-                      const next = !v
-                      localStorage.setItem('bza-feed-images', next ? '1' : '0')
-                      if (isAuthenticated) settingsQueries.setPref('feed_show_images', next).catch(() => {})
-                      return next
-                    })}
-                    title={globalImages ? 'Hide images' : 'Show images'}
-                    className={`ml-1 inline-flex items-center gap-0.5 text-xs font-normal transition-colors ${globalImages ? 'text-green-500 hover:text-green-600' : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'}`}
-                  >
-                    <ImageIcon size={13} />
-                  </button>
-                </h2>
-                <div className={`grid ${FEED_GRID[cardSizes.feeds]}`}>
-                  {pinnedFeeds.map(feed => (
-                    <HomeFeedSection
-                      key={feed.id}
-                      feed={feed}
-                      isAuthenticated={!!isAuthenticated}
-                      onUnpinned={refreshFeeds}
-                      onRenamed={() => {
-                        const updated = getPinnedFeeds()
-                        setPinnedFeeds(updated)
-                        syncFeedsToDB(updated)
-                      }}
-                      onBookAdded={(book) => book ? setBooks(bs => [book, ...bs]) : checkAuthAndLoadData()}
-                      expandSignal={feedsSignal}
-                      globalCatalog={globalCatalog}
-                      globalImages={globalImages}
-                    />
-                  ))}
-                </div>
+            A band renders nothing when none of its sections produced output, and
+            that has to be decided from what each section RETURNED rather than
+            from section.visible — several decide at runtime: revisit yields null
+            with no due books, streaks and practice yield null when signed out.
+            Deciding from the config would print a heading over nothing, which is
+            how you get an empty "Learn" on the signed-out home page. */}
+        {GROUPS.map(group => {
+          const rendered = sections
+            .filter(s => SECTION_GROUP[s.id] === group.id)
+            .map(s => renderSection(s))
+            .filter(Boolean)
+          if (rendered.length === 0) return null
+          return (
+            <section key={group.id} className="mb-10">
+              <div className="flex items-baseline gap-2 mb-4 pb-2 border-b border-gray-200 dark:border-gray-700">
+                <Link href={group.href} className="group/band flex items-baseline gap-2">
+                  <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 group-hover/band:text-indigo-600 dark:group-hover/band:text-indigo-400 transition-colors">
+                    {group.label}
+                  </h2>
+                </Link>
+                <span className="text-xs text-gray-400 dark:text-gray-500">{group.blurb}</span>
               </div>
-            )
-          }
-
-          if (section.id === 'classics') return prefs?.show_classics_library !== false ? (
-            <ClassicLibrary
-              key="classics"
-              books={books}
-              isAuthenticated={!!isAuthenticated}
-              onBookAdded={(book) => book ? setBooks(bs => [book, ...bs]) : checkAuthAndLoadData()}
-            />
-          ) : null
-
-          return null
+              {rendered}
+            </section>
+          )
         })}
       </div>
 
