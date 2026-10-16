@@ -43,11 +43,48 @@ type SectionId = 'streaks' | 'revisit' | 'games' | 'practice' | 'books' | 'feeds
  * each section belongs to, which is the part that was actually confusing.
  */
 type GroupId = 'read' | 'play' | 'learn'
-const GROUPS: { id: GroupId; label: string; blurb: string; href: string }[] = [
-  { id: 'read', label: 'Read', blurb: 'your library, feeds and what is due', href: '/dashboard' },
-  { id: 'play', label: 'Play', blurb: 'correlation games', href: '/play' },
-  { id: 'learn', label: 'Learn', blurb: 'practice, verified', href: '/learn' },
+const GROUPS: {
+  id: GroupId
+  label: string
+  blurb: string
+  href: string
+  /** Shown when the band is open. Only real routes — /learn keeps its tab in
+   *  local state with no searchParams, so there is no honest way to deep-link
+   *  its review or concepts tab and this does not pretend otherwise. */
+  links: { label: string; href: string }[]
+  /** What an open band says when it has nothing to show. */
+  empty: string
+}[] = [
+  {
+    id: 'read', label: 'Read',
+    blurb: 'your library, your feeds, and whatever is due to revisit',
+    href: '/dashboard',
+    links: [
+      { label: 'Library', href: '/dashboard' },
+      { label: 'Add a book', href: '/upload' },
+      { label: 'Reader settings', href: '/settings' },
+    ],
+    empty: 'Nothing here yet — add a book to get started.',
+  },
+  {
+    id: 'play', label: 'Play',
+    blurb: 'answer a song with a painting, a painting with a passage',
+    href: '/play',
+    links: [{ label: 'All games', href: '/play' }],
+    empty: 'No games in progress.',
+  },
+  {
+    id: 'learn', label: 'Learn',
+    blurb: 'work problems and have the answer checked, not string-compared',
+    href: '/learn',
+    links: [
+      { label: 'Practice', href: '/learn' },
+      { label: 'Flashcards', href: '/quiz' },
+    ],
+    empty: 'Nothing due right now.',
+  },
 ]
+const BAND_KEY = 'bza-home-band'
 const SECTION_GROUP: Record<SectionId, GroupId> = {
   revisit: 'read',
   feeds: 'read',
@@ -161,6 +198,12 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
     try { return localStorage.getItem('bza-feed-images') === '1' } catch { return false }
   })
   const [sections, setSections] = useState<SectionConfig[]>(DEFAULT_SECTIONS)
+  // Exactly one band open, Read to begin with. Not useState(localStorage...)
+  // directly: this component server-renders, and reading localStorage during
+  // the first render makes the server and client disagree about which band is
+  // open, which React reports as a hydration mismatch. Read it in the same
+  // effect that loads the layout instead.
+  const [openBand, setOpenBand] = useState<GroupId>('read')
   const [customizing, setCustomizing] = useState(false)
   const [srVersion, setSrVersion] = useState(0) // bump to re-evaluate due books after SR advance
   const [autoCover, setAutoCover] = useState(true)
@@ -196,6 +239,10 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
     setPinnedFeeds(getPinnedFeeds())
 
     setSections(getHomeLayout())
+    try {
+      const b = localStorage.getItem(BAND_KEY)
+      if (b === 'read' || b === 'play' || b === 'learn') setOpenBand(b)
+    } catch {}
     setCardSizes(getCardSizes())
     setAutoCover(localStorage.getItem(AUTO_COVER_KEY) !== 'false')
     try {
@@ -1263,72 +1310,79 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
           </div>
         )}
 
-        {/* The three doors, above everything.
+        {/* Read / Play / Learn, as an accordion.
 
-            Prominence by position: a card row at the top says what the app is
-            for before any content loads, which is the thing five reading strips
-            and two lonely ones could not say. The bands below repeat the three
-            names as headings so the page reads the same way twice — chooser
-            first, then the content under the same labels.
+            The collapsed headers ARE the chooser — three rows naming what the
+            app does, always visible, one of them open. That replaces the
+            separate card row this started as: with the headers doing the
+            choosing, cards above them said the same three things twice.
 
-            Learn is omitted when signed out rather than shown and broken:
-            /learn has no anonymous mode, every /api/learn route answers 401, and
-            the page turns that into an error banner. Read and Play both work
-            signed out — /play makes an anonymous session on load. */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-8">
-          {GROUPS.filter(g => g.id !== 'learn' || isAuthenticated === true).map(group => (
-            <Link
-              key={group.id}
-              href={group.href}
-              className="group/door rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 hover:border-indigo-300 dark:hover:border-indigo-600 hover:shadow-sm transition-all"
-            >
-              <div className="flex items-center gap-2">
-                {group.id === 'read' && <BookOpen size={16} className="text-indigo-500" />}
-                {group.id === 'play' && <Shuffle size={16} className="text-fuchsia-500" />}
-                {group.id === 'learn' && <Sigma size={16} className="text-sky-500" />}
-                <span className="text-base font-semibold text-gray-900 dark:text-gray-100 group-hover/door:text-indigo-600 dark:group-hover/door:text-indigo-400 transition-colors">
-                  {group.label}
-                </span>
-                <ArrowRight size={14} className="ml-auto text-gray-300 dark:text-gray-600 group-hover/door:text-indigo-500 transition-colors" />
-              </div>
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 leading-snug">{group.blurb}</p>
-            </Link>
-          ))}
-        </div>
+            Exactly one open, Read by default, remembered per browser. Clicking
+            the open band does nothing rather than collapsing it: "one is
+            selected" is a simpler thing to hold than "between zero and one",
+            and there is no useful empty state for this page.
 
-        {/* Read / Play / Learn.
-
-            Three bands rather than one flat list. The sections are unchanged and
-            still hide and reorder individually; this groups them under the three
-            things the app does, so Play and Learn stop being two strips lost
-            among five reading ones.
-
-            A band renders nothing when none of its sections produced output, and
-            that has to be decided from what each section RETURNED rather than
-            from section.visible — several decide at runtime: revisit yields null
-            with no due books, streaks and practice yield null when signed out.
-            Deciding from the config would print a heading over nothing, which is
-            how you get an empty "Learn" on the signed-out home page. */}
-        {GROUPS.map(group => {
-          const rendered = sections
-            .filter(s => SECTION_GROUP[s.id] === group.id)
-            .map(s => renderSection(s))
-            .filter(Boolean)
-          if (rendered.length === 0) return null
-          return (
-            <section key={group.id} className="mb-10">
-              <div className="flex items-baseline gap-2 mb-4 pb-2 border-b border-gray-200 dark:border-gray-700">
-                <Link href={group.href} className="group/band flex items-baseline gap-2">
-                  <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 group-hover/band:text-indigo-600 dark:group-hover/band:text-indigo-400 transition-colors">
+            UNLIKE THE EARLIER VERSION, A BAND WITH NOTHING TO SHOW STILL
+            RENDERS. When these were only groupings, an empty heading was
+            clutter and got dropped. They are navigation now, so dropping
+            "Learn" because nothing is due would remove the door to it — which
+            is the problem this whole change exists to fix. An open band with no
+            content says so in a line instead. */}
+        <div className="mb-8 divide-y divide-gray-200 dark:divide-gray-700 border-y border-gray-200 dark:border-gray-700">
+          {GROUPS.filter(g => g.id !== 'learn' || isAuthenticated === true).map(group => {
+            const open = openBand === group.id
+            const rendered = sections
+              .filter(s => SECTION_GROUP[s.id] === group.id)
+              .map(s => renderSection(s))
+              .filter(Boolean)
+            return (
+              <div key={group.id}>
+                <button
+                  onClick={() => {
+                    if (open) return
+                    setOpenBand(group.id)
+                    try { localStorage.setItem(BAND_KEY, group.id) } catch {}
+                  }}
+                  aria-expanded={open}
+                  className={`w-full flex items-baseline gap-2 text-left py-3 transition-colors ${open ? '' : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'}`}
+                >
+                  <ChevronDown
+                    size={16}
+                    className={`flex-shrink-0 mt-0.5 text-gray-400 transition-transform ${open ? '' : '-rotate-90'}`}
+                  />
+                  {group.id === 'read' && <BookOpen size={16} className="flex-shrink-0 mt-0.5 text-indigo-500" />}
+                  {group.id === 'play' && <Shuffle size={16} className="flex-shrink-0 mt-0.5 text-fuchsia-500" />}
+                  {group.id === 'learn' && <Sigma size={16} className="flex-shrink-0 mt-0.5 text-sky-500" />}
+                  <span className={`font-bold ${open ? 'text-lg text-gray-900 dark:text-gray-100' : 'text-base text-gray-600 dark:text-gray-400'}`}>
                     {group.label}
-                  </h2>
-                </Link>
-                <span className="text-xs text-gray-400 dark:text-gray-500">{group.blurb}</span>
+                  </span>
+                  <span className="text-xs text-gray-400 dark:text-gray-500 truncate">{group.blurb}</span>
+                </button>
+
+                {open && (
+                  <div className="pb-6">
+                    {/* Quick links only when open. On a collapsed row they would
+                        compete with the heading for the same click. */}
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-5 pl-8">
+                      {group.links.map(l => (
+                        <Link
+                          key={l.href + l.label}
+                          href={l.href}
+                          className="flex items-center gap-1 text-xs text-indigo-600 dark:text-indigo-400 hover:underline"
+                        >
+                          {l.label} <ArrowRight size={11} />
+                        </Link>
+                      ))}
+                    </div>
+                    {rendered.length > 0
+                      ? rendered
+                      : <p className="pl-8 text-xs text-gray-400 dark:text-gray-500">{group.empty}</p>}
+                  </div>
+                )}
               </div>
-              {rendered}
-            </section>
-          )
-        })}
+            )
+          })}
+        </div>
       </div>
 
       {isAuthenticated && (
