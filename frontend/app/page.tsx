@@ -11,7 +11,7 @@ import { booksQueries } from '@/lib/queries'
 import { getLocalBooks, deleteLocalBook, getStorageUsage } from '@/lib/localStorage'
 import BookCard from '@/components/BookCard'
 import Link from 'next/link'
-import { Plus, BookOpen, Image as ImageIcon, HardDrive, CreditCard, Search, PuzzleIcon, GraduationCap, Clock, SlidersHorizontal, Eye, EyeOff, ChevronUp, ChevronDown, Trash2, Calculator, Download, Settings, Menu, LayoutGrid, List, Loader2, Shuffle } from 'lucide-react'
+import { Plus, BookOpen, Image as ImageIcon, HardDrive, CreditCard, Search, PuzzleIcon, GraduationCap, Clock, SlidersHorizontal, Eye, EyeOff, ChevronUp, ChevronDown, Trash2, Calculator, Download, Settings, Menu, LayoutGrid, List, Loader2, Shuffle, Sigma } from 'lucide-react'
 import { billingQueries, quizQueries, settingsQueries, UserPrefs } from '@/lib/queries'
 import { bookmarksQueries } from '@/lib/queries/bookmarks'
 import type { PageBookmark } from '@/lib/queries/types'
@@ -21,10 +21,11 @@ import MetaDrawer from '@/components/MetaDrawer'
 import ReadingStreaks from '@/components/ReadingStreaks'
 import HomeFeedSection from '@/components/HomeFeedSection'
 import CorrelationGamesSection from '@/components/correlate/CorrelationGamesSection'
+import MathPracticeSection from '@/components/concepts/MathPracticeSection'
 import { getPinnedFeeds, savePinnedFeeds, PinnedFeed } from '@/lib/pinnedFeeds'
 import { AUTO_COVER_KEY } from '@/lib/queries/images'
 
-type SectionId = 'streaks' | 'revisit' | 'games' | 'books' | 'feeds' | 'classics'
+type SectionId = 'streaks' | 'revisit' | 'games' | 'practice' | 'books' | 'feeds' | 'classics'
 interface SectionConfig { id: SectionId; label: string; visible: boolean }
 const DEFAULT_SECTIONS: SectionConfig[] = [
   { id: 'revisit', label: 'Due for Revisit (SR)', visible: true },
@@ -32,6 +33,10 @@ const DEFAULT_SECTIONS: SectionConfig[] = [
   // ignored. High on the page, but below the spaced-repetition prompt — that is the
   // one thing a returning reader came here to act on.
   { id: 'games', label: 'Correlation Games', visible: true },
+  // After games, before feeds. getHomeLayout() sorts ids it has never seen to
+  // the end, so anyone with a stored layout gets this appended rather than
+  // losing their order — no migration, and nobody has to clear localStorage.
+  { id: 'practice', label: 'Maths Practice', visible: true },
   { id: 'feeds', label: 'My Feeds', visible: true },
   { id: 'streaks', label: 'Reading Streaks', visible: true },
   { id: 'books', label: 'My Library', visible: true },
@@ -523,6 +528,14 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
                       <Link href="/play" onClick={() => setMobileMenuOpen(false)} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2">
                         <Shuffle size={15} /> Play Along
                       </Link>
+                      {/* Signed-in only: /learn 401s without a user. The home
+                          section is gated the same way, so the two entry points
+                          agree about who can use it. */}
+                      {isAuthenticated === true && (
+                        <Link href="/learn" onClick={() => setMobileMenuOpen(false)} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2">
+                          <Sigma size={15} /> Maths Practice
+                        </Link>
+                      )}
                       <Link href="/settings" onClick={() => setMobileMenuOpen(false)} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2">
                         <Settings size={15} /> Settings
                       </Link>
@@ -863,6 +876,14 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
           if (section.id === 'games') return (
             <CorrelationGamesSection key="games" isAuthenticated={isAuthenticated} />
           )
+
+          // Signed-in only, unlike games: /learn has no anonymous mode — every
+          // /api/learn route 401s without a user and the page renders that as an
+          // error. The component guards internally too; this is belt and braces
+          // so the reason is visible from the layout as well.
+          if (section.id === 'practice') return isAuthenticated ? (
+            <MathPracticeSection key="practice" isAuthenticated={isAuthenticated} />
+          ) : null
 
           if (section.id === 'revisit') {
             if (!isAuthenticated) return null
