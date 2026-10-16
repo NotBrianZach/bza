@@ -20,18 +20,27 @@
  * situation is recoverable, and this script is what recovers it — and then keeps
  * the two honest about each other.
  *
- * ── WHAT IT DOES NOT DO ───────────────────────────────────────────────────
+ * ── IT DOES DEPLOY, WHICH THIS FILE PREVIOUSLY DENIED ─────────────────────
  *
- * It does not deploy. Writing a deploy path means choosing how the project ships
- * functions (management API vs a CLI in the nix closure) and that is a decision,
- * not a script. Until one exists, `check` is what stops the repo and production
- * from quietly disagreeing again.
+ * An earlier version of this comment said deploying was out of scope because
+ * the project had no way to ship a function. That was wrong, and wrong in a way
+ * worth recording: the supabase CLI is genuinely absent, and that was taken as
+ * the end of it, while the management API the sources were recovered THROUGH
+ * also writes them back. POST /v1/projects/{ref}/functions/deploy, multipart,
+ * one `file` part per source plus a `metadata` JSON.
+ *
+ * The cost of believing otherwise was concrete: generate-picturebook ran an
+ * auth helper without the blacklist check for as long as it took to notice,
+ * and the first answer was "the repo is right, production can't be fixed".
  *
  * ── USAGE ─────────────────────────────────────────────────────────────────
  *
- *   node scripts/edge-functions.mjs check     # diff repo vs deployed; exits 1 on drift
- *   node scripts/edge-functions.mjs pull      # write deployed sources into the repo
+ *   node scripts/edge-functions.mjs check            # diff repo vs deployed; exits 1 on drift
+ *   node scripts/edge-functions.mjs pull             # write deployed sources into the repo
  *   node scripts/edge-functions.mjs pull <slug>
+ *   node scripts/edge-functions.mjs deploy <slug>    # ship repo sources to production
+ *   node scripts/edge-functions.mjs deploy <slug> --validate-only
+ *   node scripts/edge-functions.mjs deploy --all     # every function `check` calls drifted
  *
  * Needs SUPABASE_ACCESS_TOKEN (system_config holds it) and SUPABASE_URL, or pass
  * --ref <project-ref>.
@@ -194,7 +203,158 @@ function normalize(src) {
     .join('\n')
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Deploy
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Every repo file a function needs, found by following its relative imports.
+ *
+ * Not "the slug's directory plus all of _shared": that would ship files the
+ * function does not import, and — worse — would silently succeed when a file it
+ * DOES import is missing from the repo, because the bundler would resolve it
+ * from nowhere and fail server-side with a message about a path rather than
+ * about an absent source. Following the imports means a missing file is named
+ * here, before anything is uploaded.
+ *
+ * Only relative specifiers are followed. https:// imports are Deno's business
+ * and are fetched during bundling.
+ */
+function collectSources(slug) {
+  const entry = join(FUNCTIONS_DIR, slug, 'index.ts')
+  if (!existsSync(entry)) die(`${slug}: no repo source at ${entry.slice(ROOT.length + 1)} — pull it first`)
+
+  const out = new Map()
+  const missing = []
+  const queue = [entry]
+
+  while (queue.length) {
+    const abs = queue.shift()
+    const rel = abs.slice(FUNCTIONS_DIR.length + 1)
+    if (out.has(rel)) continue
+    if (!existsSync(abs)) { missing.push(rel); continue }
+    const src = readFileSync(abs, 'utf8')
+    out.set(rel, src)
+
+    for (const m of src.matchAll(/from\s+['"](\.[^'"]+)['"]/g)) {
+      queue.push(resolve(dirname(abs), m[1]))
+    }
+  }
+
+  if (missing.length) die(`${slug}: imports missing from the repo: ${missing.join(', ')}`)
+  return out
+}
+
+/**
+ * Ship a function's repo sources to production.
+ *
+ * Two things are read from the live function rather than assumed, because
+ * guessing either is how a deploy quietly changes behaviour it was not asked to
+ * change:
+ *
+ *   verify_jwt — guess it false and the function becomes callable without a
+ *                token; guess it true and an intentionally public one breaks.
+ *   existence  — this refuses to create a function that is not already
+ *                deployed. Creating one by typo would publish an endpoint, and
+ *                this command's job is to reconcile, not to introduce.
+ *
+ * Always validated with bundleOnly=true first. That returns a PROSPECTIVE
+ * version record — same shape as a real deploy, including an incremented
+ * `version` and `"status":"ACTIVE"` — without activating anything, which reads
+ * exactly like success and is worth not misreading. The live config is re-read
+ * after validation to prove nothing moved.
+ */
+async function deployFunction(slug, { validateOnly }) {
+  const live = await fetch(`${API}/projects/${ref}/functions/${slug}`, { headers: auth })
+  if (live.status === 404) die(`${slug} is not deployed; refusing to create it (reconcile only)`)
+  if (!live.ok) die(`${slug}: reading live config: HTTP ${live.status}`)
+  const cfg = await live.json()
+
+  const sources = collectSources(slug)
+  const metadata = {
+    entrypoint_path: `${slug}/index.ts`,
+    name: slug,
+    verify_jwt: cfg.verify_jwt,
+  }
+
+  console.log(`${slug}: live v${cfg.version}, verify_jwt=${cfg.verify_jwt}`)
+  for (const rel of sources.keys()) console.log(`  + ${rel}`)
+
+  const send = async (bundleOnly) => {
+    const fd = new FormData()
+    fd.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }))
+    for (const [rel, src] of sources) {
+      fd.append('file', new Blob([src], { type: 'text/typescript' }), rel)
+    }
+    const url = `${API}/projects/${ref}/functions/deploy?slug=${slug}`
+      + (bundleOnly ? '&bundleOnly=true' : '')
+    const res = await fetch(url, { method: 'POST', headers: auth, body: fd })
+    return { ok: res.ok, status: res.status, body: await res.text() }
+  }
+
+  const check1 = await send(true)
+  if (!check1.ok) { console.log(`  ✗ bundle failed: HTTP ${check1.status}`); console.log(`    ${check1.body.slice(0, 300)}`); return false }
+
+  // Prove the validation did not activate, rather than trusting the flag.
+  const after = await (await fetch(`${API}/projects/${ref}/functions/${slug}`, { headers: auth })).json()
+  if (after.version !== cfg.version) {
+    console.log(`  ✗ bundleOnly CHANGED the live version (${cfg.version} -> ${after.version}); not continuing`)
+    return false
+  }
+  console.log(`  ✓ bundle validates, live still v${cfg.version}`)
+
+  if (validateOnly) return true
+
+  const real = await send(false)
+  if (!real.ok) { console.log(`  ✗ deploy failed: HTTP ${real.status}`); console.log(`    ${real.body.slice(0, 300)}`); return false }
+  const now = await (await fetch(`${API}/projects/${ref}/functions/${slug}`, { headers: auth })).json()
+  console.log(`  ✓ deployed: v${cfg.version} -> v${now.version}, status ${now.status}, verify_jwt=${now.verify_jwt}`)
+  return true
+}
+
 const deployed = await listDeployed()
+
+if (cmd === 'deploy') {
+  const all = argv.includes('--all')
+  const validateOnly = argv.includes('--validate-only')
+  if (!slugArg && !all) die('deploy needs a slug, or --all')
+
+  let targets
+  if (all) {
+    // --all means "the ones check calls drifted", not "all of them". Shipping
+    // every function because one changed is a much larger blast radius than the
+    // request, and redeploying an untouched function still bumps its version
+    // and re-resolves its remote imports.
+    targets = []
+    for (const { slug } of deployed) {
+      const { sources } = await pullSources(slug)
+      if (!sources) continue
+      let drifted = false
+      for (const [name, body] of sources) {
+        const path = repoPathFor(slug, name)
+        if (!path) continue
+        if (!existsSync(path) || normalize(readFileSync(path, 'utf8')) !== normalize(body)) drifted = true
+      }
+      if (drifted) targets.push(slug)
+    }
+    if (targets.length === 0) { console.log('nothing drifted; nothing to deploy'); process.exit(0) }
+    console.log(`drifted: ${targets.join(', ')}\n`)
+  } else {
+    targets = [slugArg]
+  }
+
+  let bad = 0
+  for (const slug of targets) {
+    const ok = await deployFunction(slug, { validateOnly })
+    if (!ok) bad++
+    console.log('')
+  }
+  console.log(validateOnly
+    ? `validated ${targets.length - bad}/${targets.length}`
+    : `deployed ${targets.length - bad}/${targets.length}`)
+  process.exit(bad ? 1 : 0)
+}
+
 const slugs = slugArg ? deployed.filter(d => d.slug === slugArg) : deployed
 if (slugArg && slugs.length === 0) die(`no deployed function named ${slugArg}`)
 
