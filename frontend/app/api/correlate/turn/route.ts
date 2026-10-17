@@ -14,7 +14,7 @@ import {
   pathTo, relationsAlong, replyMediaAlong, turnByIndex, worldFor,
 } from '@/lib/correlate/graph'
 import {
-  dueMedium, mutedMedia, normalizeTuning, owedMedia, weightedReplyMedia,
+  dueMedium, mutedMedia, normalizeTuning, owedMedia, readingLengths, weightedReplyMedia,
 } from '@/lib/correlate/tuning'
 import { selfRepliesSince, selfReplyRefusal } from '@/lib/correlate/continuation'
 import type {
@@ -450,6 +450,12 @@ export async function POST(req: NextRequest) {
     : 'https://api.openai.com/v1/chat/completions'
   const modelId = useOpenRouter ? MODEL : 'gpt-4o-mini'
 
+  // From the Breadth axis, because the whole response is one JSON object: a budget
+  // that runs out truncates the *object*, not the prose, so the turn comes back
+  // unparseable rather than merely short. A flat 1400 was already marginal for a
+  // neutral turn on a model that writes long. See `ReadingLengths.maxTokens`.
+  const { maxTokens } = readingLengths(tuning)
+
   const callInterpreter = async (system: string, user: string): Promise<string | null> => {
     const res = await fetch(apiUrl, {
       method: 'POST',
@@ -466,7 +472,7 @@ export async function POST(req: NextRequest) {
           { role: 'system', content: system },
           { role: 'user', content: user },
         ],
-        max_tokens: 1400,
+        max_tokens: maxTokens,
         temperature: 0.9,
       }),
     })

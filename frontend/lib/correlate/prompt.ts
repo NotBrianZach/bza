@@ -12,7 +12,8 @@ import { SELF_REPLY_GUIDANCE } from './continuation'
 import { RELATIONS, getRelation, resolveRelations } from './relations'
 import { mergeWorld } from './graph'
 import {
-  DEFAULT_TUNING, describeTuning, isNeutral, mutedMedia, type Tuning,
+  DEFAULT_TUNING, describeTuning, isNeutral, mutedMedia, readingLengths, restateTuning,
+  type Tuning,
 } from './tuning'
 
 /** A previous turn, trimmed to what the interpreter needs to stay consistent. */
@@ -160,6 +161,11 @@ export function buildSystemPrompt(
     : muted.length < media.length ? media.filter(m => !muted.includes(m)) : media
 
   const tuningBlock = describeTuning(tuning, media)
+
+  // From the Breadth axis, because the schema is where a length instruction
+  // actually binds — see `readingLengths`. The neutral stop returns the strings
+  // this schema has always carried, so an untouched game's prompt is unchanged.
+  const lengths = readingLengths(tuning)
 
   return `${game.persona}
 
@@ -318,8 +324,8 @@ markdown fence. Schema:
 
 {${unperceived.length > 0 ? `
   "recognised": "what you actually know of ${selfReply ? 'your own offering above' : "THE PLAYER'S MOVE above — that record, not the one on the table"} — its subject, who is speaking, what happens in it — or \\"\\" if you do not know it. One or two sentences, no quotation, before you read anything.",` : ''}
-  "reading": "how you read ${selfReply ? 'your own offering, now that you are the one answering it' : "the player's offering"}, 1-2 sentences. The argument, not the story.",
-  "narration": "what the exchange did to the world, 2-4 sentences, in your voice.",
+  "reading": "how you read ${selfReply ? 'your own offering, now that you are the one answering it' : "the player's offering"}, ${lengths.reading}. The argument, not the story.",
+  "narration": "what the exchange did to the world, ${lengths.narration}, in your voice.",
   "relation": ${relations.map(r => JSON.stringify(r)).join(' | ')},    (exactly one of these, as a bare string — not an array)
   "link": null | { "turn": <the turn number of an earlier exchange this one rhymes with>, "note": "what the two share, one clause" },
   "reply": {
@@ -543,6 +549,12 @@ export function buildUserPrompt(opts: {
       `The weighting in your instructions is what the player has set as of this turn. They may ` +
       `have just changed it; answer to what it says now, not to what previous turns did.`,
     )
+    // And the half of it that nothing enforces, said again here rather than only in
+    // the system prompt — see `restateTuning` for the measurement that made this
+    // necessary. Position is the whole point: this lands next to the decision it is
+    // trying to change, not four hundred lines above it.
+    const standing = restateTuning(tuning)
+    if (standing) parts.push(standing)
   }
 
   if (prediction) {

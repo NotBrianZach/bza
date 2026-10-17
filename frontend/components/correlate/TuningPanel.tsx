@@ -4,9 +4,9 @@ import { useMemo, useState } from 'react'
 import { ChevronDown, Info, RotateCcw, SlidersHorizontal } from 'lucide-react'
 import { getMedium } from '@/lib/correlate/media'
 import {
-  AXIS_LIST, DEFAULT_SHARE, MUTED_SHARE, SHARE_MAX, allShares, axisValue, continuationOf,
-  isProportioned, isStarting, isUntouched, shareLabel, startingTuning, tuningSummary,
-  type Tuning, type TuningAxisId,
+  AXIS_LIST, DEFAULT_SHARE, MUTED_SHARE, NOTES_MAX, SHARE_MAX, allShares, axisValue,
+  continuationOf, isProportioned, isStarting, isUntouched, shareLabel, startingTuning,
+  tuningSummary, type Tuning, type TuningAxisId,
 } from '@/lib/correlate/tuning'
 import {
   CONTINUATION_HINTS, CONTINUATION_LABELS, CONTINUATION_OFF, CONTINUATION_STOPS,
@@ -61,6 +61,10 @@ export default function TuningPanel({
   const atDefault = useMemo(() => isStarting(tuning, media), [tuning, media])
   const scopes: Scopes = tuning.scopes ?? {}
   const carry = continuationOf(tuning)
+  // Held raw rather than normalized, so typing a space does not have the cursor
+  // jump. `normalizeTuning` collapses and trims it server-side, which is the
+  // coercion point every path goes through anyway.
+  const notes = tuning.notes ?? ''
   const narrowable = useMemo(() => scopableMedia(media), [media])
 
   /** Every medium's raw share plus the proportion it works out to. */
@@ -359,6 +363,37 @@ export default function TuningPanel({
             })}
           </div>
 
+          {/* The escape hatch, after the controls rather than before them: it is
+              for what they could not say, and a player who meets a text box first
+              will type what a slider already does. Deliberately not a chat input —
+              it is a standing instruction that rides every turn until changed, and
+              the character count is there because its cap is real. */}
+          <div className="pt-3 border-t border-gray-100 dark:border-gray-700">
+            <div className="flex items-baseline gap-2">
+              <p className="text-xs font-medium text-gray-700 dark:text-gray-200">In your own words</p>
+              <p className={`text-[11px] ml-auto ${notes ? accentText : 'text-gray-400 dark:text-gray-500'}`}>
+                {notes ? `${notes.length}/${NOTES_MAX}` : 'nothing yet'}
+              </p>
+            </div>
+            <p className="text-[11px] text-gray-400 dark:text-gray-500 leading-relaxed mb-1.5">
+              Anything the controls above cannot say. It is asked of your partner on every
+              turn until you change it.
+            </p>
+            <textarea
+              value={notes}
+              disabled={disabled}
+              maxLength={NOTES_MAX}
+              rows={2}
+              onChange={e => onChange({ ...tuning, notes: e.target.value })}
+              placeholder="No sad songs tonight · I'm reading Moby-Dick, lean nautical · stop answering with film scores"
+              className="w-full text-xs rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 px-2 py-1.5 text-gray-700 dark:text-gray-200 placeholder:text-gray-400 dark:placeholder:text-gray-500 resize-y disabled:opacity-50"
+            />
+            <p className="mt-1.5 text-[11px] text-gray-400 dark:text-gray-500 leading-relaxed">
+              It leans your partner; it cannot make a shared decade into a connection, and
+              it does not outrank the proportions above.
+            </p>
+          </div>
+
           {/* How far it carries on by itself. Last, and separated, because it is
               not part of the weighting: the three blocks above say what your
               partner reaches for, and this one says who takes the next turn. The
@@ -409,7 +444,7 @@ export default function TuningPanel({
           {atDefault && !neutral && (
             <button
               onClick={() => onChange({
-                shares: {}, axes: {}, scopes: {}, continuation: CONTINUATION_OFF,
+                shares: {}, axes: {}, scopes: {}, continuation: CONTINUATION_OFF, notes: '',
               })}
               disabled={disabled}
               className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors disabled:opacity-50"
