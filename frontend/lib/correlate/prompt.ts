@@ -36,6 +36,16 @@ export interface TurnContext {
  * rather than things you can perceive, and feeding them in is what made "same
  * decade" and "similar running time" feel like legal moves in the music game
  * before they were ruled out.
+ *
+ * That rule got applied one step too widely, though, and the casualty was
+ * *content*. A resolver is free to put anything in `meta`, and two of them put the
+ * only description of the record they have there — `album` for a track, `overview`
+ * for a film, the latter already truncated to 400 characters for exactly this
+ * purpose — and this function printed neither. So a film arrived as `"Stalker"
+ * (1979, film)` with its plot summary sitting one key away unread, and the
+ * interpreter did the only thing left: reasoned about the title. A plot summary is
+ * not catalogue trivia, it is what the thing is *about*, and the whole complaint
+ * this fixes — readings that never touch what a work says — starts here.
  */
 export function offeringLine(o: Offering): string {
   const medium = getMedium(o.medium)
@@ -43,7 +53,13 @@ export function offeringLine(o: Offering): string {
 
   bits.push(o.attribution ? `"${o.title}" — ${o.attribution}` : `"${o.title}"`)
 
-  const context = [o.meta.year, o.meta.date, o.meta.genre, o.meta.medium, o.meta.book, o.meta.kind]
+  const context = [
+    o.meta.year, o.meta.date, o.meta.genre, o.meta.medium, o.meta.book, o.meta.kind,
+    // Last, and labelled, because it is the one that is not a bare fact about the
+    // filing: "from the album X" tells you a track's company, which is often the
+    // only context a 30-second preview has.
+    o.meta.album ? `from the album "${o.meta.album}"` : null,
+  ]
     .filter(v => v !== null && v !== undefined && v !== '')
     .join(', ')
   if (context) bits.push(`(${context})`)
@@ -59,6 +75,9 @@ export function offeringLine(o: Offering): string {
   if (o.perceptible.kind === 'text' && !isComposed(o.medium)) {
     bits.push(`\n    text: ${o.perceptible.body}`)
   }
+  // Same principle, for the medium that ships a synopsis instead of its text. On
+  // its own line because it is a sentence or two, not a parenthetical.
+  if (o.meta.overview) bits.push(`\n    about: ${o.meta.overview}`)
 
   return bits.join(' ')
 }
@@ -102,6 +121,29 @@ export function buildSystemPrompt(
   // inventing a *track* produces a search miss, which is visible, and inventing a
   // *statement* produces fluent text that nothing downstream can catch.
   const propositional = media.filter(isPropositional)
+
+  /**
+   * Media that arrive here as a *name* rather than as their content.
+   *
+   * Every other class of medium hands the interpreter the thing itself: a passage
+   * and the knowledge media print their text, a composed medium prints its steps.
+   * These do not and cannot — nobody can put thirty seconds of audio or a painting
+   * into a prompt — so a track reaches this model as `"Idioteque" — Radiohead` and
+   * that is the whole of it.
+   *
+   * It is derived rather than listed so a fifth catalogue joins it by existing,
+   * which matters because the failure it causes is invisible from inside the
+   * prompt. A model with no content to be concrete *about* does not report that;
+   * it writes the one kind of reading that is always available without content,
+   * which is a reading of mood. That is the "everything is abstract and nothing
+   * answers the song" complaint, and no tuning fixes it: the Abstraction axis sits
+   * at Concrete by default, and "reach for what the move literally contains" is an
+   * instruction a model cannot follow when it has not been told what the move
+   * contains.
+   */
+  const unperceived = media.filter(
+    m => !isComposed(m) && !isPropositional(m) && !getMedium(m)?.dependsOnUserLibrary,
+  )
 
   // The enum the interpreter is handed is the media it may *answer* in, which is
   // not the media in play: a muted medium stays playable by the player and stays
@@ -149,7 +191,42 @@ ${mediaBlock}
 
 RELATIONS A REPLY MAY USE
 ${relationBlock}
+${unperceived.length > 0 ? `
+READING A RECORD YOU CANNOT PERCEIVE
+${unperceived.map(id => getMedium(id)?.plural ?? id).join(', ')} arrive as a name, an attribution and at most a line
+of description. You cannot hear the track or see the canvas, and the words of the
+thing itself are never printed for you. That limit has one honest answer and one
+dishonest one, and the dishonest one is the easier sentence to write.
 
+- Honest: reach for what you actually know of *that* record — the one in THE
+  PLAYER'S MOVE, not the one it answers. A song is its words as much as its sound:
+  what it says, who is speaking, who they are speaking to, what happens in it, how
+  it ends. Its title is a phrase in a language, so read it as one — Hallelujah is a
+  word with a history, Idioteque is a coinage, A Case of You is half an idiom. Lead
+  your reading with whatever of that you have.
+- Dishonest: step past the record to the mood nearest it and connect moods. "Both
+  hold a tension that never resolves", "each one circles a loss" — those are
+  readings of nothing. They would be true of ten thousand records, which is how you
+  can tell you have not committed to this one. If your reading would survive
+  swapping the title out for another title, it is not a reading of this offering.
+
+Name the words, the subject, the scene, the speaker. A referee who answers the
+*theme* of a song is doing the job; one who answers its atmosphere is filing it.
+
+DO NOT QUOTE. Say what the words are about; never put them in quotation marks as
+though you were reading them off the sleeve. This is a flat prohibition rather than
+a matter of confidence, because here you cannot tell the difference: these records
+carry no text in this prompt, so nothing downstream can catch a misquote, and the
+misquote you will actually make is not an invention from nothing — it is a real line
+by the right artist attached to the wrong song of theirs, which is the most
+convincing wrong thing available to you. Recounting what happens in a song is the
+job. Reciting it is not, and you are not in a position to.
+
+And if you do not know the record, say so plainly in "recognised" and read what you
+genuinely have — the title, the artist, the album, the player's framing. A thin
+reading of the real thing beats a confident reading of a mood, and both beat a
+fluent reading of a record you have confused with another one.
+` : ''}
 CHOOSING YOUR REPLY
 ${game.replyRule}
 ${tuningBlock ? `\n${tuningBlock}\n` : ''}
@@ -239,13 +316,14 @@ OUTPUT
 Reply with a single JSON object and nothing else. No prose before or after, no
 markdown fence. Schema:
 
-{
+{${unperceived.length > 0 ? `
+  "recognised": "what you actually know of ${selfReply ? 'your own offering above' : "THE PLAYER'S MOVE above — that record, not the one on the table"} — its subject, who is speaking, what happens in it — or \\"\\" if you do not know it. One or two sentences, no quotation, before you read anything.",` : ''}
   "reading": "how you read ${selfReply ? 'your own offering, now that you are the one answering it' : "the player's offering"}, 1-2 sentences. The argument, not the story.",
   "narration": "what the exchange did to the world, 2-4 sentences, in your voice.",
-  "relation": ${JSON.stringify(relations)},
+  "relation": ${relations.map(r => JSON.stringify(r)).join(' | ')},    (exactly one of these, as a bare string — not an array)
   "link": null | { "turn": <the turn number of an earlier exchange this one rhymes with>, "note": "what the two share, one clause" },
   "reply": {
-    "medium": ${JSON.stringify(answerable)},
+    "medium": ${answerable.map(m => JSON.stringify(m)).join(' | ')},    (exactly one of these, as a bare string — not an array)
     "query": "${propositional.length > 0
       ? `Attribution — Title; for ${propositional.map(id => getMedium(id)?.plural ?? id).join(', ')} the bare name, no attribution and no gloss`
       : 'Attribution — Title'}    (catalogued media only)",
@@ -262,6 +340,13 @@ markdown fence. Schema:
 }
 
 Include "query" or "composed", never both — whichever the reply's medium calls for.
+${unperceived.length > 0 ? `
+Write the fields in the order they are listed. "recognised" is first because it is
+what the rest is built on: naming the record before you read it is what stops the
+reading being about a mood, and a reading written first will not go back and become
+concrete. An empty "recognised" is a legitimate answer and costs you nothing — a
+fabricated one costs the whole turn.
+` : ''}
 
 The "medium" field of your reply must be EXACTLY one of the strings listed above —
 not a synonym. Write "passage", not "prose" or "text"; "artwork", not "painting";
@@ -604,6 +689,25 @@ export function describeRejection(r: ReplyRejection): string {
 const str = (v: any): string => (typeof v === 'string' ? v.trim() : '')
 
 /**
+ * A field the schema offers as a choice, which the model sometimes returns as a
+ * one-element list of that choice.
+ *
+ * Two fields printed their options as a JSON array — `"relation":
+ * ["association","translation",…]` and `"medium": ["music","artwork"]` — meaning
+ * "pick one" and reading, reasonably, as "here is the value". `str()` returns ''
+ * for an array, so both failures were silent in the worst way available: a wrapped
+ * `relation` stored null and stopped Tag's no-repeated-connection rule from being
+ * enforced, and a wrapped `medium` was rejected as "not in play", which spends the
+ * corrective re-ask on an interpreter that had answered correctly the first time.
+ * Observed intermittently on claude-haiku-4-5 at temperature 0.9.
+ *
+ * Both schema lines now read `"a" | "b"` instead, which is the actual fix. This is
+ * the one that holds when the next model does it anyway.
+ */
+const oneOf = (v: any): string =>
+  str(Array.isArray(v) && v.length === 1 ? v[0] : v)
+
+/**
  * Coerce a reply plan, dropping anything the game does not permit.
  *
  * A medium the game never enabled is not a reply, and a composed plan without
@@ -624,7 +728,7 @@ function normalizeReply(
 ): { ok: true; plan: ReplyPlan } | { ok: false; rejection: ReplyRejection } {
   if (!parsed || typeof parsed !== 'object') return { ok: false, rejection: { reason: 'absent' } }
 
-  const written = str(parsed.medium)
+  const written = oneOf(parsed.medium)
   const medium = resolveReplyMedium(written, media)
   if (!medium) return { ok: false, rejection: { reason: 'unknown-medium', written: written || '(none)' } }
 
@@ -700,6 +804,13 @@ export function normalizeInterpretation(
 ): Interpretation | null {
   if (!parsed || typeof parsed !== 'object') return null
 
+  // `recognised` is asked for and deliberately not kept. It is a thinking field:
+  // its whole job is to be written *before* the reading, so the reading has a
+  // record in front of it rather than a mood. There is no column for it on
+  // listen_turns and it is not worth a migration to store a sentence the reading
+  // is supposed to have absorbed — but it is also the one field that would show a
+  // player *why* a turn was vague ("recognised": ""), so if that ever wants
+  // showing, this is the line that drops it.
   const reading = str(parsed.reading)
   const narration = str(parsed.narration)
   if (!reading && !narration) return null
@@ -713,7 +824,11 @@ export function normalizeInterpretation(
       ? parsed.worldDelta as Record<string, any>
       : {}
 
-  const claimed = str(parsed.relation) as RelationId
+  // `oneOf` rather than `str`, and the reason is in its comment: a wrapped relation
+  // used to store null, and a null relation is not a missing label — it is
+  // `spentRelations` finding nothing spent, which is Tag's one rule silently not
+  // being enforced.
+  const claimed = oneOf(parsed.relation) as RelationId
   const relation = relations.includes(claimed) ? claimed : null
 
   const replyResult = normalizeReply(parsed.reply, media, opts.muted ?? [])
