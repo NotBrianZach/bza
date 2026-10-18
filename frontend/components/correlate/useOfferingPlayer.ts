@@ -71,6 +71,23 @@ export interface OfferingPlayer {
    */
   advance: () => void
   /**
+   * Skip to the next item, as a deliberate act rather than a track ending.
+   *
+   * The same move as `advance` and a different thing to the listener, which is why
+   * it is its own name: at the end of the queue this is "I am done with this one,
+   * find me another" and the exhausted callback is what answers that. Radio
+   * therefore makes skip-at-the-tail generate, rather than stop.
+   */
+  skip: () => void
+  /**
+   * Back to the previous item, or restart this one when there is nothing behind it.
+   *
+   * What a listener means by a back button, and what the bar's control did not do —
+   * it restarted the whole queue from the first item, which on a long chain is not
+   * "back", it is "start over".
+   */
+  previous: () => void
+  /**
    * How the thing playing right now is being played.
    *
    * 'full' means a resolved YouTube video and the whole record; 'preview' means the
@@ -293,6 +310,18 @@ export function useOfferingPlayer(opts: OfferingPlayerOptions = {}): OfferingPla
     playQueue([offering])
   }, [playQueue])
 
+  const skip = useCallback(() => {
+    if (indexRef.current < 0) return
+    advance()
+  }, [advance])
+
+  const previous = useCallback(() => {
+    if (indexRef.current < 0) return
+    // Restarting the current item when there is nothing behind it is what every
+    // media player does, and it keeps the control from being a no-op at the top.
+    playAt(Math.max(0, indexRef.current - 1))
+  }, [playAt])
+
   const toggle = useCallback(() => {
     if (!current) return
     // Routed by what is actually playing. Pausing the <audio> element while a video
@@ -327,6 +356,6 @@ export function useOfferingPlayer(opts: OfferingPlayerOptions = {}): OfferingPla
 
   return {
     current, paused, error, progress, queueIndex, queueLength, lookahead, via,
-    playOne, playQueue, append, toggle, stop, advance,
+    playOne, playQueue, append, toggle, stop, advance, skip, previous,
   }
 }

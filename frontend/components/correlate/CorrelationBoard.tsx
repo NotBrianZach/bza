@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, CornerDownRight, Flag, GitBranch,
   Globe2, Link2, Loader2, Pause, Play, Radio, Repeat, Shuffle, SignalZero, SkipBack,
+  SkipForward,
 } from 'lucide-react'
 import { authedFetch } from '@/lib/authedFetch'
 import { track } from '@/lib/analytics'
@@ -54,6 +55,20 @@ const RADIO_LOOKAHEAD = 2
  * spending a model call on the same answer.
  */
 const RADIO_SILENT_LIMIT = 3
+
+/**
+ * How many turns must fail in a row before the run gives up.
+ *
+ * Three, because the two failure shapes need telling apart and this is what does
+ * it. A transient one — interpreter 502, a timeout, a dropped connection — almost
+ * never repeats three times, so it costs a gap in the audio and the run continues.
+ * A genuine refusal fails identically every time, so it reaches three in a few
+ * seconds and the run ends with the real reason attached.
+ */
+const RADIO_FAILURE_LIMIT = 3
+
+/** Linear backoff between retries: 1.5s, then 3s. */
+const RADIO_RETRY_MS = 1500
 
 /**
  * The board.
@@ -412,10 +427,38 @@ export default function CorrelationBoard({
    * all that comes back.
    */
   const radioSilent = useRef(0)
+  /**
+   * Consecutive turns that failed outright, and why the last one did.
+   *
+   * The bug this fixes: radio used to stop on the *first* failure, on the
+   * reasoning that leaving it on would retry the same refusal forever. That was
+   * right about the refusals and wrong about everything else. A turn is a model call
+   * plus two catalogue lookups, so the common failure is transient — a 502 from the
+   * interpreter, a timeout, a dropped connection — and ending an open-ended run on
+   * one of those is what made radio look like it only worked for a single song.
+   *
+   * So: retry, and stop only when it fails `RADIO_FAILURE_LIMIT` times in a row. A
+   * genuine refusal still ends the run quickly, because a refusal fails every time,
+   * while a hiccup costs one gap in the audio and nothing else.
+   */
+  const radioFailures = useRef(0)
+  const [radioStopped, setRadioStopped] = useState('')
+  /** Bumped to re-run the pump when nothing else would have. */
+  const [radioNudge, setRadioNudge] = useState(0)
 
+  /**
+   * End the run and say so where it will actually be read.
+   *
+   * `notice` renders as small grey text under the composer, which is the right
+   * weight for "the first answer could not be found, so it answered again" and the
+   * wrong weight for "the thing you switched on has switched itself off". A player
+   * who does not see this concludes radio works for one song.
+   */
   const stopRadio = useCallback((why: string) => {
     changeTuning({ ...tuning, radio: false })
-    if (why) setNotice(why)
+    radioFailures.current = 0
+    radioSilent.current = 0
+    setRadioStopped(why)
   }, [changeTuning, tuning])
 
   /**
@@ -445,10 +488,10 @@ export default function CorrelationBoard({
       // `perceptible`, so a turn that came back without an answer at all would throw
       // here rather than count as the silence it is.
       const answer: Offering | null = data?.turn?.reply_offering ?? null
+      radioFailures.current = 0
       if (answer && audioUrl(answer)) {
         radioSilent.current = 0
       } else if (++radioSilent.current >= RADIO_SILENT_LIMIT) {
-        radioSilent.current = 0
         stopRadio(
           `The last ${RADIO_SILENT_LIMIT} answers had nothing to hear, so the radio ` +
           `stopped rather than keep asking into silence. The chain is still here to ` +
@@ -456,15 +499,34 @@ export default function CorrelationBoard({
         )
       }
     } catch (e: any) {
-      // A failed turn ends the run and says so. Leaving radio on would retry the
-      // same refusal against the same offering every time the effect re-ran.
-      stopRadio(e?.message ?? 'The radio stopped there.')
+      const why = e?.message ?? 'that turn did not go through'
+      if (++radioFailures.current >= RADIO_FAILURE_LIMIT) {
+        stopRadio(
+          `The radio stopped after ${RADIO_FAILURE_LIMIT} turns in a row failed. ` +
+          `The last reason was: ${why}`,
+        )
+      } else {
+        // Kept quiet and retried. One slow or dropped turn is a gap in the audio,
+        // not the end of the run, and announcing each one would make a working
+        // radio look broken.
+        console.warn(`[radio] turn failed (${radioFailures.current}/${RADIO_FAILURE_LIMIT}): ${why}`)
+        // Woken explicitly, because a failure changes none of the pump's inputs —
+        // no turn landed and the playhead did not move — so nothing else would
+        // ever re-run it and the retry would never happen. Backed off linearly so
+        // a provider having a bad minute is not hammered.
+        window.setTimeout(
+          () => setRadioNudge(n => n + 1),
+          RADIO_RETRY_MS * radioFailures.current,
+        )
+      }
     } finally {
       selfReplyBusy.current = false
     }
   }, [
     radio, radioBlocked, session.status, player.lookahead,
     focusTurn, path, continueAlone, stopRadio,
+    // Not read in the body — it exists only to make a retry re-run this.
+    radioNudge,
   ])
 
   useEffect(() => { pumpRef.current = () => { void pump() } }, [pump])
@@ -663,13 +725,30 @@ export default function CorrelationBoard({
                       : `${audible.length} of ${chain.length} on this branch have audio`}
                   </p>
                   {playingIndex >= 0 && (
-                    <button
-                      onClick={() => player.playQueue(audible)}
-                      title="Start again from the first"
-                      className="ml-auto flex-shrink-0 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
-                    >
-                      <SkipBack size={13} />
-                    </button>
+                    <div className="ml-auto flex-shrink-0 flex items-center">
+                      <button
+                        onClick={player.previous}
+                        title="The one before this"
+                        className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+                      >
+                        <SkipBack size={13} />
+                      </button>
+                      {/* The missing half of the pair. At the end of the queue this
+                          is also how you ask radio for the next one early, rather
+                          than sitting through a record you are done with — skip
+                          runs the same `advance` a track ending does, so the
+                          exhausted callback wakes the pump exactly the same way. */}
+                      <button
+                        onClick={player.skip}
+                        title={player.lookahead > 0
+                          ? 'The next one'
+                          : radio ? 'Find the next one now' : 'Nothing queued after this'}
+                        disabled={player.lookahead === 0 && !radio}
+                        className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                      >
+                        <SkipForward size={13} />
+                      </button>
+                    </div>
                   )}
                   {/* The one control that turns a chain you are listening back to
                       into one that is still being written. Stored in the tuning, so
@@ -685,7 +764,13 @@ export default function CorrelationBoard({
                         player.playQueue(audible, audible.length - 1)
                       }
                       if (!next) setNotice('')
+                      // Both counters and the last stop reason reset on a
+                      // deliberate toggle: switching it back on is a fresh run,
+                      // and carrying a stale failure into it would end the new run
+                      // early on the strength of the old one's bad luck.
                       radioSilent.current = 0
+                      radioFailures.current = 0
+                      setRadioStopped('')
                       track('correlate_radio_toggled', { game: session.mode, on: next })
                     }}
                     disabled={!!radioBlocked}
@@ -714,6 +799,16 @@ export default function CorrelationBoard({
                  >
                    <div ref={ytMount} className="w-full h-full" />
                  </div>
+                 {/* Where a self-stopped run says so. Amber and in the bar, next to
+                     the control that is now off, rather than as grey text under the
+                     composer — a player who does not notice this concludes the
+                     button only ever worked once. */}
+                 {radioStopped && !radio && (
+                   <p className="mt-1.5 pt-1.5 border-t border-gray-100 dark:border-gray-700 flex items-start gap-1.5 text-[11px] text-amber-600 dark:text-amber-400">
+                     <AlertTriangle size={12} className="flex-shrink-0 mt-0.5" />
+                     <span>{radioStopped} Press {RADIO_LABEL} to start it again.</span>
+                   </p>
+                 )}
                  {quotaSpent && (
                    <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-1.5">
                      Today&rsquo;s full-length lookups are used up, so the rest of this run
@@ -727,11 +822,18 @@ export default function CorrelationBoard({
                      switched off instead of played into. */}
                  {radio && (
                    <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1.5 pt-1.5 border-t border-gray-100 dark:border-gray-700">
+                     {/* Three states, and telling them apart is the difference
+                         between a radio that looks idle and one that looks ready.
+                         With full-length records a full buffer means several
+                         minutes of nothing happening, which is correct and reads
+                         as broken unless it says what it is waiting for. */}
                      {selfReplyRefusal(focusTurn, path, { radio: true })
                        ? 'Waiting for something to answer — play anything and it takes over.'
-                       : player.lookahead > 0
-                         ? `${player.lookahead} queued ahead · your move whenever you want it back`
-                         : 'Finding the next one · your move whenever you want it back'}
+                       : player.lookahead >= RADIO_LOOKAHEAD
+                         ? `${player.lookahead} queued ahead · the next one is found when this finishes, or skip ahead`
+                         : selfReplyBusy.current || player.lookahead === 0
+                           ? 'Finding the next one · your move whenever you want it back'
+                           : `${player.lookahead} queued ahead · your move whenever you want it back`}
                    </p>
                  )}
                 </div>
