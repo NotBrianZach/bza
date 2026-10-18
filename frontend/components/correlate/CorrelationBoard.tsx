@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, CornerDownRight, Flag, GitBranch,
-  Globe2, Link2, Loader2, Pause, Play, Repeat, Shuffle, SignalZero, SkipBack,
+  Globe2, Link2, Loader2, Pause, Play, Radio, Repeat, Shuffle, SignalZero, SkipBack,
 } from 'lucide-react'
 import { authedFetch } from '@/lib/authedFetch'
 import { track } from '@/lib/analytics'
@@ -15,18 +15,45 @@ import {
   buildGraph, childrenOf, defaultParent, offeringOnTable, pathTo, relationsAlong,
   subtreeSize, worldFor, type TurnGraph,
 } from '@/lib/correlate/graph'
-import { continuationOf, normalizeTuning, type Tuning } from '@/lib/correlate/tuning'
+import { continuationOf, normalizeTuning, radioOf, type Tuning } from '@/lib/correlate/tuning'
 import {
-  isSelfReply, selfRepliesLeft, selfReplyRefusal,
+  isSelfReply, radioRefusal, selfRepliesLeft, selfReplyRefusal, RADIO_HINT, RADIO_LABEL,
 } from '@/lib/correlate/continuation'
 import type {
   CorrelationSession, CorrelationTurn, MediumId, Offering, RelationId,
 } from '@/lib/correlate/types'
 import { useOfferingPlayer, audioUrl, type OfferingPlayer } from './useOfferingPlayer'
+import { useYouTubePlayer } from './useYouTubePlayer'
+import { useFullLengthResolver } from './useFullLengthResolver'
 import BranchMap from './BranchMap'
 import OfferingCard from './OfferingCard'
 import OfferingPicker, { type MoveDraft } from './OfferingPicker'
 import TuningPanel from './TuningPanel'
+
+/**
+ * How many answers radio keeps queued in front of the one playing.
+ *
+ * Two, counted in items rather than seconds because the two backends are an order of
+ * magnitude apart: two 30-second previews is a minute of cover, two full records is
+ * closer to eight. A minute is already comfortably longer than a turn takes, so the
+ * smaller case sets the floor and the larger one is simply slack.
+ *
+ * The failure at one is audible — a gap whenever a turn is slow. The failure at five
+ * is not audible at all, which is worse: the radio would be minutes ahead of the
+ * player, every move they made would land into a chain they had not caught up with,
+ * and on full tracks it would also mean resolving records nobody ever reaches.
+ */
+const RADIO_LOOKAHEAD = 2
+
+/**
+ * How many silent answers in a row end the run.
+ *
+ * Three, the same number and for a related reason as the cap radio lifts: one is a
+ * medium change, two is a stretch, three with nothing audible in them means the
+ * chain has gone somewhere radio cannot follow and asking a fourth time is just
+ * spending a model call on the same answer.
+ */
+const RADIO_SILENT_LIMIT = 3
 
 /**
  * The board.
@@ -66,8 +93,61 @@ export default function CorrelationBoard({
   const [focusId, setFocusId] = useState<string | null>(null)
   /** Set once the player has chosen, so loading turns stops overriding them. */
   const focusChosen = useRef(false)
+  /**
+   * Where focus stands *now*, readable between two awaits in the same run.
+   *
+   * A run of self-replies chains several requests, and React state set by one
+   * iteration is not visible to the next — so a loop that wants to know whether the
+   * player has moved in the meantime cannot ask `focusId`. Written synchronously by
+   * `focusOn` for exactly that reason, and mirrored from state below so the initial
+   * load agrees with it.
+   */
+  const focusRef = useRef<string | null>(null)
+  useEffect(() => { focusRef.current = focusId }, [focusId])
 
-  const player = useOfferingPlayer()
+  /**
+   * One self-reply in flight at a time, across every path that asks for one.
+   *
+   * Shared by the radio pump, the manual nudge and the continuation run rather than
+   * owned by radio, because the thing being prevented is two of them answering the
+   * *same* offering: that records two answers to one move, which the graph correctly
+   * reads as a branch, and a radio that quietly forked the chain every time the
+   * player pressed the button would be writing a tree nobody asked for.
+   *
+   * A ref and not state because two passes can run before React re-renders either.
+   */
+  const selfReplyBusy = useRef(false)
+
+  /**
+   * The radio pump, reachable from the player before it is defined.
+   *
+   * The queue running dry is one of the two things that should ask for another turn,
+   * and the hook that notices it is created here while the function that answers it
+   * needs most of the board. A ref is the join: the player calls whatever the latest
+   * render installed, so neither has to be hoisted above the other.
+   */
+  const pumpRef = useRef<() => void>(() => {})
+
+  /**
+   * The two backends and the queue that drives them, joined here.
+   *
+   * None of the three can be built knowing the others: the video player reports
+   * finishing to the queue, the queue plays through the video player, and the
+   * resolver is consulted by the queue. Two refs break the cycle — `advanceRef` for
+   * "a video ended" and the player's own options for the rest — and this component
+   * is the only place that needs to know all three exist.
+   */
+  const advanceRef = useRef<() => void>(() => {})
+  const ytMount = useRef<HTMLDivElement | null>(null)
+  const yt = useYouTubePlayer({ mount: ytMount, onEnded: () => advanceRef.current() })
+  const { resolve: resolveFull, quotaSpent } = useFullLengthResolver()
+
+  const player = useOfferingPlayer({
+    onExhausted: () => pumpRef.current(),
+    resolveFull,
+    full: yt,
+  })
+  useEffect(() => { advanceRef.current = player.advance }, [player.advance])
   const game = getGame(session.mode)
   const accent = ACCENT_CLASSES[game?.accent ?? 'indigo']
 
@@ -163,6 +243,7 @@ export default function CorrelationBoard({
 
   const focusOn = useCallback((id: string | null) => {
     focusChosen.current = true
+    focusRef.current = id
     setFocusId(id)
     setError('')
     setNotice('')
@@ -201,13 +282,22 @@ export default function CorrelationBoard({
     return data
   }, [session.id, tuning])
 
-  /** Fold a recorded turn into the board. */
-  const absorb = useCallback((data: any) => {
+  /**
+   * Fold a recorded turn into the board.
+   *
+   * `takeFocus` defaults to true because a turn the player just took is the turn
+   * they want to be standing on. It is false when the turn arrived from a run the
+   * player has already walked away from: a radio answer that lands two seconds after
+   * they clicked a different branch must not drag them back out of it. Callers pass
+   * the rule rather than this function guessing, since only the caller knows which
+   * offering it asked from.
+   */
+  const absorb = useCallback((data: any, takeFocus = true) => {
     setTurns(t => [...t, data.turn])
     // Play continues from what just happened, whether or not the player had gone
     // back to take this turn. An illegal move established nothing, so the table
     // stays where it was.
-    if (data.turn?.legal) focusOn(data.turn.id)
+    if (data.turn?.legal && takeFocus) focusOn(data.turn.id)
     if (data.session) updateSession(data.session)
     // Not an error any more: the pipeline guarantees a real reply, so the only
     // thing worth surfacing is that it took more than one attempt to get one.
@@ -238,10 +328,14 @@ export default function CorrelationBoard({
    */
   const continueAlone = useCallback(async (
     parentId: string,
-    asked: 'manual' | 'run',
+    asked: 'manual' | 'run' | 'radio',
   ) => {
     const data = await postTurn({ parentTurnId: parentId, selfReply: true })
-    absorb(data)
+    // Focus follows this answer only if the player is still standing where it was
+    // asked from. True by construction for a manual nudge and for each step of a
+    // run; false when they moved while it was in flight, which radio makes ordinary
+    // rather than rare because a radio run is long and unattended.
+    absorb(data, focusRef.current === parentId)
     track('correlate_self_reply', {
       game: session.mode,
       medium: data.turn?.reply_offering?.medium,
@@ -259,6 +353,11 @@ export default function CorrelationBoard({
   /** The one-click version, with its own error so a failed run reads as one. */
   const continueOnce = useCallback(async () => {
     if (!focusId) return
+    // Dropped rather than queued when a radio answer is already in flight: the
+    // button means "answer what is on the table", and what is on the table is about
+    // to change. Asking twice would fork the chain instead of extending it.
+    if (selfReplyBusy.current) return
+    selfReplyBusy.current = true
     setPending(true)
     setError('')
     setNotice('')
@@ -268,9 +367,125 @@ export default function CorrelationBoard({
     } catch (e: any) {
       setError(e?.message ?? 'It could not take that turn')
     } finally {
+      selfReplyBusy.current = false
       setPending(false)
     }
   }, [focusId, continueAlone])
+
+  /**
+   * Radio — the chain feeding itself for as long as it is left on.
+   *
+   * Three things make this different from the continuation run in `play` below, and
+   * all three come from the run being open-ended rather than three turns long.
+   *
+   *  1. **It generates ahead of the playback, not after the player.** A preview is
+   *     thirty seconds and a turn is a model call plus a catalogue lookup, so a run
+   *     that waited for the audio to end before asking for the next answer would be
+   *     silent between every track. The pump keeps `RADIO_LOOKAHEAD` answers queued
+   *     in front of the one playing and is woken by the queue draining, which makes
+   *     generation a buffer rather than a step.
+   *  2. **It does not hold the composer.** `pending` stays false, so a player can
+   *     play a move into a running radio. If they do it while an answer is in
+   *     flight, both land, and they land as two answers to the same offering — which
+   *     is a branch, which this board already models and draws. Nothing is lost and
+   *     nothing has to be locked.
+   *  3. **It asks from where the player is standing**, re-read on every pass rather
+   *     than captured when radio was switched on. So moving to another branch
+   *     mid-run moves the radio with you, which is the behaviour that matches what
+   *     the control says: it carries on from whatever is on the table.
+   *
+   * One answer in flight at a time, and that guard is a ref rather than state
+   * because two passes of this effect can run before React has re-rendered either.
+   */
+  const radio = radioOf(tuning)
+  /** Why radio cannot run in this session at all, or null. */
+  const radioBlocked = radioRefusal(media)
+  /**
+   * Consecutive answers that came back with nothing to hear.
+   *
+   * The runaway this exists to stop: the pump is woken by the audio buffer being
+   * short, so an answer with no audio does not lengthen it, and in a session with
+   * music *and* paintings in play a stretch of paintings would have the pump asking
+   * for turn after turn with the queue never filling and nothing ever playing. A
+   * model call per pass, in a loop, silently. Counted rather than forbidden, because
+   * one painting mid-run is the chain doing its job — it is only a fault when it is
+   * all that comes back.
+   */
+  const radioSilent = useRef(0)
+
+  const stopRadio = useCallback((why: string) => {
+    changeTuning({ ...tuning, radio: false })
+    if (why) setNotice(why)
+  }, [changeTuning, tuning])
+
+  /**
+   * One pass: take a turn if the buffer is short and there is something to answer.
+   *
+   * Every reason to do nothing is a quiet return rather than an error. Radio idles
+   * before the player's first move because there is nothing on the table yet, and
+   * saying so would be shouting about a state that fixes itself.
+   */
+  const pump = useCallback(async () => {
+    if (!radio || radioBlocked) return
+    if (session.status !== 'active') return
+    if (selfReplyBusy.current) return
+    if (player.lookahead >= RADIO_LOOKAHEAD) return
+
+    const from = focusRef.current
+    if (!from) return
+    // The same refusal the server would send, so the pump stops asking for turns
+    // that would come back 409 — and stops for the reasons that are about the
+    // branch, which radio does not lift.
+    if (selfReplyRefusal(focusTurn, path, { radio: true })) return
+
+    selfReplyBusy.current = true
+    try {
+      const data = await continueAlone(from, 'radio')
+      // Checked for existence first: `audioUrl` reads straight through
+      // `perceptible`, so a turn that came back without an answer at all would throw
+      // here rather than count as the silence it is.
+      const answer: Offering | null = data?.turn?.reply_offering ?? null
+      if (answer && audioUrl(answer)) {
+        radioSilent.current = 0
+      } else if (++radioSilent.current >= RADIO_SILENT_LIMIT) {
+        radioSilent.current = 0
+        stopRadio(
+          `The last ${RADIO_SILENT_LIMIT} answers had nothing to hear, so the radio ` +
+          `stopped rather than keep asking into silence. The chain is still here to ` +
+          `carry on by hand.`,
+        )
+      }
+    } catch (e: any) {
+      // A failed turn ends the run and says so. Leaving radio on would retry the
+      // same refusal against the same offering every time the effect re-ran.
+      stopRadio(e?.message ?? 'The radio stopped there.')
+    } finally {
+      selfReplyBusy.current = false
+    }
+  }, [
+    radio, radioBlocked, session.status, player.lookahead,
+    focusTurn, path, continueAlone, stopRadio,
+  ])
+
+  useEffect(() => { pumpRef.current = () => { void pump() } }, [pump])
+
+  // Woken by anything that could have changed the answer to "is the buffer short":
+  // a turn landing, the playhead advancing, the control being switched on. The pass
+  // itself is guarded, so running it more often than necessary costs nothing.
+  useEffect(() => { void pump() }, [pump])
+
+  /**
+   * Feed the playback queue from the chain, without restarting it.
+   *
+   * Derived from `audible` rather than pushed from the pump, so a radio answer and a
+   * move the player made reach the queue by the same route — and so the queue is
+   * rebuilt correctly if the chain is reloaded. `append` ignores what it already
+   * holds, which is what makes handing it the whole branch every time safe.
+   */
+  useEffect(() => {
+    if (!radio || audible.length === 0) return
+    player.append(audible)
+  }, [radio, audible, player.append])
 
   const play = useCallback(async (draft: MoveDraft) => {
     setPending(true)
@@ -306,8 +521,13 @@ export default function CorrelationBoard({
       // move went through and is recorded, so painting the composer red would say
       // something untrue about the turn they actually took. The server's cap is
       // the real bound; this loop only asks.
-      let from: string | null = data.turn?.legal ? data.turn.id : null
+      // Skipped entirely while radio is on. Both answer "who takes the next turn"
+      // and radio is the one in force, so running a fixed-length run here as well
+      // would spend the stored stop *and* hand over to the pump — two runs racing
+      // for the same offering, and the panel says the stop is not being applied.
+      let from: string | null = data.turn?.legal && !radio ? data.turn.id : null
       const runs = continuationOf(tuning)
+      if (from) selfReplyBusy.current = true
       for (let i = 0; i < runs && from; i++) {
         try {
           const next = await continueAlone(from, 'run')
@@ -317,6 +537,7 @@ export default function CorrelationBoard({
           break
         }
       }
+      selfReplyBusy.current = false
     } catch (e: any) {
       if (Array.isArray(e?.problems) && e.problems.length > 0) setProblems(e.problems)
       setError(e?.message ?? 'That turn did not go through')
@@ -368,8 +589,8 @@ export default function CorrelationBoard({
    * drift apart — and when it is refused, the player is shown the sentence the
    * server would have sent rather than a button that fails.
    */
-  const noContinuation = selfReplyRefusal(focusTurn, path)
-  const runsLeft = selfRepliesLeft(path)
+  const noContinuation = selfReplyRefusal(focusTurn, path, { radio })
+  const runsLeft = selfRepliesLeft(path, { radio })
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">
@@ -417,8 +638,12 @@ export default function CorrelationBoard({
               {/* Listen back to the audible part of this branch: one <audio> element
                   walks the queue, so it plays straight through without a click per
                   item. No account and no subscription. */}
-              {audible.length > 1 && (
-                <div className="mb-4 flex items-center gap-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2">
+              {/* One audible item is enough once radio can grow the queue: the bar is
+                  where the control lives, so gating it on a chain that is already
+                  long would hide the thing that makes a chain long. */}
+              {(audible.length > 1 || (audible.length > 0 && !radioBlocked)) && (
+                <div className="mb-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2">
+                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => (playingIndex >= 0 ? player.toggle() : player.playQueue(audible))}
                     className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full ${accent.bg} ${accent.text} hover:brightness-95 dark:hover:brightness-110 transition-all`}
@@ -428,9 +653,14 @@ export default function CorrelationBoard({
                       : <><Play size={13} /> Play what can be heard</>}
                   </button>
                   <p className="text-[11px] text-gray-500 dark:text-gray-400 min-w-0 truncate">
+                    {/* Which backend got it is stated rather than left to be
+                        inferred from how long the track lasts. A chain that
+                        alternates between whole records and thirty-second
+                        fragments reads as a broken player unless it says so. */}
                     {playingIndex >= 0
                       ? `${playingIndex + 1} of ${audible.length} · ${player.current?.title ?? ''}`
-                      : `${audible.length} of ${chain.length} on this branch have audio · 30s previews`}
+                        + (player.via === 'full' ? ' · in full' : player.via ? ' · 30s preview' : '')
+                      : `${audible.length} of ${chain.length} on this branch have audio`}
                   </p>
                   {playingIndex >= 0 && (
                     <button
@@ -441,6 +671,69 @@ export default function CorrelationBoard({
                       <SkipBack size={13} />
                     </button>
                   )}
+                  {/* The one control that turns a chain you are listening back to
+                      into one that is still being written. Stored in the tuning, so
+                      it survives a reload and the server sees it on every turn. */}
+                  <button
+                    onClick={() => {
+                      const next = !radio
+                      changeTuning({ ...tuning, radio: next })
+                      // From the end of what is already here, not the top. Switching
+                      // radio on is an ask for what comes next; replaying an hour of
+                      // chain first would bury the new material behind the old.
+                      if (next && playingIndex < 0 && audible.length > 0) {
+                        player.playQueue(audible, audible.length - 1)
+                      }
+                      if (!next) setNotice('')
+                      radioSilent.current = 0
+                      track('correlate_radio_toggled', { game: session.mode, on: next })
+                    }}
+                    disabled={!!radioBlocked}
+                    title={radioBlocked ?? RADIO_HINT}
+                    className={`${playingIndex >= 0 ? '' : 'ml-auto '}flex-shrink-0 flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
+                      radio
+                        ? `${accent.bg} ${accent.text}`
+                        : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                    }`}
+                  >
+                    <Radio size={13} className={radio && selfReplyBusy.current ? 'animate-pulse' : ''} />
+                    {RADIO_LABEL}
+                  </button>
+                 </div>
+                 {/* The video player's permanent home.
+                     It cannot be mounted and unmounted per track: `new YT.Player`
+                     consumes the node it is given, and a fresh node each time would
+                     mean a fresh player, which loses both the queue's autoplay
+                     permission and the ENDED event the queue advances on. So the
+                     node always exists and the wrapper collapses instead — visible
+                     at a usable size while a full track plays, which is also what
+                     the embed terms ask for, and zero-height otherwise. */}
+                 <div className={player.via === 'full'
+                   ? 'mt-2 aspect-video rounded-lg overflow-hidden bg-black'
+                   : 'h-0 overflow-hidden'}
+                 >
+                   <div ref={ytMount} className="w-full h-full" />
+                 </div>
+                 {quotaSpent && (
+                   <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-1.5">
+                     Today&rsquo;s full-length lookups are used up, so the rest of this run
+                     plays as 30-second previews. Anything looked up before is still played
+                     in full.
+                   </p>
+                 )}
+                 {/* Said under the bar rather than in a tooltip while it is running,
+                     because the one thing a player needs to know mid-run is that
+                     their move is still welcome — a radio that looks sealed gets
+                     switched off instead of played into. */}
+                 {radio && (
+                   <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1.5 pt-1.5 border-t border-gray-100 dark:border-gray-700">
+                     {selfReplyRefusal(focusTurn, path, { radio: true })
+                       ? 'Waiting for something to answer — play anything and it takes over.'
+                       : player.lookahead > 0
+                         ? `${player.lookahead} queued ahead · your move whenever you want it back`
+                         : 'Finding the next one · your move whenever you want it back'}
+                   </p>
+                 )}
                 </div>
               )}
 
@@ -571,7 +864,12 @@ export default function CorrelationBoard({
                         Let it answer itself
                       </button>
                       <p className="text-[11px] text-gray-400 dark:text-gray-500 min-w-0">
-                        Take no turn — it answers its own offering. {runsLeft} more in a row.
+                        Take no turn — it answers its own offering.
+                        {/* Radio makes `runsLeft` infinite, and "Infinity more in a
+                            row" is not a sentence. The count is the thing the cap
+                            exists to communicate, so with no cap there is nothing
+                            to count and the button is simply still there. */}
+                        {Number.isFinite(runsLeft) ? ` ${runsLeft} more in a row.` : ''}
                       </p>
                     </div>
                   )}

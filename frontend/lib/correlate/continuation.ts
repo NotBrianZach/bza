@@ -56,6 +56,62 @@ export const CONTINUATION_OFF: ContinuationDepth = 0
  */
 export const MAX_SELF_REPLIES = 3
 
+/**
+ * Radio — the partner carrying on with nobody waiting to stop it.
+ *
+ * `MAX_SELF_REPLIES` bounds a *run*: a stretch the partner takes between two of the
+ * player's moves. The bound exists because the player coming back is what makes the
+ * run worth having happened. Radio is the case where the player has said in advance
+ * that they are not coming back for a while — they want the chain to keep playing
+ * the way a station keeps playing. Capping that at three is not protecting them from
+ * drift; it is refusing the thing they asked for.
+ *
+ * So radio lifts the cap, and the honest thing to record is what that costs.
+ *
+ *  - **The arithmetic guard becomes advisory.** The cap was derived from the log
+ *    rather than taken from the request precisely so that no client could talk its
+ *    way past it. Radio arrives *in* the request, inside the tuning, like every
+ *    other thing a player asks of their partner — so under radio the server is
+ *    taking the client's word for it. That is a real reduction in what this module
+ *    guarantees, chosen deliberately, not an oversight to be tidied up later.
+ *  - **The relation rule is what is left.** It still applies to every self-reply,
+ *    because a self-reply is a turn and the relation it used is recorded on it. The
+ *    partner still cannot answer itself the same way twice in a row, and that is now
+ *    the only structural thing between a long run and a slowly narrowing circle.
+ *
+ * It is a separate flag rather than a fifth `ContinuationDepth` because it answers a
+ * different question. Continuation asks "how many turns after mine"; radio asks "do
+ * you need me at all". Widening the depth union would also have put a non-numeric
+ * value into the arithmetic that reads it as a count.
+ */
+export interface ContinuationOptions {
+  /** The player has asked the partner to carry on without them. */
+  radio?: boolean
+}
+
+export const RADIO_LABEL = 'Keep going'
+
+export const RADIO_HINT =
+  'It answers itself for as long as you let it, and plays each answer as it arrives. ' +
+  'Your move whenever you want it back — anything you play lands in the chain and it ' +
+  'carries on from there.'
+
+/**
+ * What radio needs from the session before it can play anything.
+ *
+ * Audio is the only medium with a timeline of its own, so it is the only one a run
+ * can advance by itself; a radio over paintings and passages is a slideshow nobody
+ * asked for. Returned as a sentence rather than a boolean because the fix is a
+ * specific thing the player has to go and do — turn music back on — and a disabled
+ * control that does not say why is the worse failure.
+ */
+export function radioRefusal(media: readonly string[]): string | null {
+  return media.includes('music')
+    ? null
+    : 'Radio plays what it finds, and music is the only thing here with sound. Put ' +
+      'music back in play for this game and it can start.'
+}
+
 export const CONTINUATION_LABELS: Record<ContinuationDepth, string> = {
   0: 'Off',
   1: 'Once',
@@ -103,8 +159,17 @@ export function selfRepliesSince(path: CorrelationTurn[]): number {
   return n
 }
 
-/** What the player may still ask for, given where the branch stands. */
-export function selfRepliesLeft(path: CorrelationTurn[]): number {
+/**
+ * What the player may still ask for, given where the branch stands.
+ *
+ * `Infinity` under radio rather than a large number, so a caller that wants to show
+ * a count has to notice the case and say something else instead of rendering it.
+ */
+export function selfRepliesLeft(
+  path: CorrelationTurn[],
+  opts: ContinuationOptions = {},
+): number {
+  if (opts.radio) return Infinity
   return Math.max(0, MAX_SELF_REPLIES - selfRepliesSince(path))
 }
 
@@ -118,6 +183,7 @@ export function selfRepliesLeft(path: CorrelationTurn[]): number {
 export function selfReplyRefusal(
   parent: CorrelationTurn | null,
   path: CorrelationTurn[],
+  opts: ContinuationOptions = {},
 ): string | null {
   if (!parent) {
     return 'There is nothing on the table for it to answer. Open with something first.'
@@ -128,7 +194,11 @@ export function selfReplyRefusal(
   if (!parent.reply_offering) {
     return 'That exchange has no answer of its own, so there is nothing for it to carry on from.'
   }
-  if (selfRepliesSince(path) >= MAX_SELF_REPLIES) {
+  // Skipped under radio, which is the one case where the player has already said
+  // they are not waiting to take the next turn. The three refusals above still
+  // apply: they are about there being nothing on the table to answer, which radio
+  // does not change.
+  if (!opts.radio && selfRepliesSince(path) >= MAX_SELF_REPLIES) {
     return `It has taken ${MAX_SELF_REPLIES} turns in a row. Your move next — a run any longer ` +
       `than this stops being about anything you put in.`
   }

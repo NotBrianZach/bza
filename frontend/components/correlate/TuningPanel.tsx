@@ -5,8 +5,8 @@ import { ChevronDown, Info, RotateCcw, SlidersHorizontal } from 'lucide-react'
 import { getMedium } from '@/lib/correlate/media'
 import {
   AXIS_LIST, DEFAULT_SHARE, MUTED_SHARE, NOTES_MAX, SHARE_MAX, allShares, axisValue,
-  continuationOf, isProportioned, isStarting, isUntouched, shareLabel, startingTuning,
-  tuningSummary, type Tuning, type TuningAxisId,
+  continuationOf, isProportioned, isStarting, isUntouched, radioOf, shareLabel,
+  startingTuning, tuningSummary, type Tuning, type TuningAxisId,
 } from '@/lib/correlate/tuning'
 import {
   CONTINUATION_HINTS, CONTINUATION_LABELS, CONTINUATION_OFF, CONTINUATION_STOPS,
@@ -428,7 +428,14 @@ export default function TuningPanel({
               ))}
             </div>
             <p className="mt-1.5 text-[11px] text-gray-400 dark:text-gray-500 leading-relaxed">
-              {CONTINUATION_HINTS[carry]}
+              {/* While radio is on these stops are stored but not in force, and a
+                  control that reads "Twice" next to a partner taking twenty turns is
+                  worse than no control. Said here rather than by disabling them,
+                  because the stop is what it falls back to when radio goes off. */}
+              {radioOf(tuning)
+                ? 'Keep going is on, down by the player, so it is not stopping after a ' +
+                  'set number of turns. This is where it lands when you switch that off.'
+                : CONTINUATION_HINTS[carry]}
             </p>
           </div>
 
@@ -444,7 +451,8 @@ export default function TuningPanel({
           {atDefault && !neutral && (
             <button
               onClick={() => onChange({
-                shares: {}, axes: {}, scopes: {}, continuation: CONTINUATION_OFF, notes: '',
+                shares: {}, axes: {}, scopes: {}, continuation: CONTINUATION_OFF,
+                radio: false, notes: '',
               })}
               disabled={disabled}
               className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors disabled:opacity-50"

@@ -273,6 +273,15 @@ export interface SessionTuning {
    * lib/correlate/continuation.ts.
    */
   continuation?: number
+  /**
+   * Whether the partner keeps taking turns without being asked again.
+   *
+   * The open-ended form of the field above, stored beside it for the same reason and
+   * kept from the interpreter for the same reason. It lifts the server-side cap on
+   * consecutive self-replies, which makes it the one tuning field that changes what
+   * the engine will refuse — see lib/correlate/continuation.ts.
+   */
+  radio?: boolean
 }
 
 export interface CorrelationSession {

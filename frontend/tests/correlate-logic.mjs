@@ -102,7 +102,7 @@ const {
 const {
   TUNING_AXES, AXIS_LIST, ALL_AXIS_IDS, AXIS_STOPS, DEFAULT_WEIGHT, WEIGHT_LABELS, WEIGHT_HINTS,
   DEFAULT_TUNING, normalizeTuning, isNeutral, isUntouched, isProportioned, axisValue, mutedMedia,
-  weightedReplyMedia, dueMedium, describeTuning, tuningSummary, getAxis, continuationOf,
+  weightedReplyMedia, dueMedium, describeTuning, tuningSummary, getAxis, continuationOf, radioOf,
   SHARE_MAX, DEFAULT_SHARE, MUTED_SHARE, shareOf, shareLabel, targetShares, shareStandings,
   owedMedia, allShares,
   STARTING_SHARES, STARTING_AXES, startingTuning, isStarting,
@@ -111,7 +111,7 @@ const {
 const {
   MAX_SELF_REPLIES, CONTINUATION_OFF, CONTINUATION_LABELS, CONTINUATION_HINTS,
   CONTINUATION_STOPS, SELF_REPLY_GUIDANCE, moverOf, isSelfReply, selfRepliesSince,
-  selfRepliesLeft, selfReplyRefusal,
+  selfRepliesLeft, selfReplyRefusal, RADIO_HINT, RADIO_LABEL, radioRefusal,
 } = M.carry
 const { checkPerformability, composeOffering, vocabularyFor } = M.composed
 
@@ -1913,6 +1913,75 @@ t('the summary still names the weighting alongside it', (() => {
   const s = tuningSummary(TU({ shares: { music: 100 }, continuation: 1 }), ALL_MEDIA)
   return /% music/.test(s) && /carries on/.test(s)
 })())
+
+group('radio — the one flag that lifts a cap')
+t('off is the default', radioOf(TU({})) === false)
+t('it is kept when set', radioOf(TU({ radio: true })) === true)
+// Strictly `=== true`, because this is the field that decides what the server
+// refuses: a form posting the string "false" must not switch it on.
+t('the string "false" is off', radioOf(TU({ radio: 'false' })) === false)
+t('the string "true" is off too', radioOf(TU({ radio: 'true' })) === false)
+t('a truthy number is off', radioOf(TU({ radio: 1 })) === false)
+t('junk is off', radioOf(TU({ radio: {} })) === false)
+
+const FULL_RUN = (() => {
+  const run = Array.from({ length: MAX_SELF_REPLIES }, (_, i) =>
+    mkTurn({ id: `r${i + 1}`, turn_index: i + 1, parent_turn_id: `r${i}`, move_by: 'partner' }))
+  return buildGraph([mkTurn({ id: 'r0', turn_index: 0 }), ...run])
+})()
+const AT_CAP = FULL_RUN.nodes.get(`r${MAX_SELF_REPLIES}`).turn
+const AT_CAP_PATH = pathTo(FULL_RUN, `r${MAX_SELF_REPLIES}`)
+
+t('the cap still refuses without radio',
+  !!selfReplyRefusal(AT_CAP, AT_CAP_PATH))
+t('radio lifts it',
+  selfReplyRefusal(AT_CAP, AT_CAP_PATH, { radio: true }) === null)
+t('the run is still counted while radio is on — only the bound is gone',
+  selfRepliesSince(AT_CAP_PATH) === MAX_SELF_REPLIES)
+t('what is left is unbounded under radio',
+  selfRepliesLeft(AT_CAP_PATH, { radio: true }) === Infinity)
+t('and bounded without it',
+  selfRepliesLeft(AT_CAP_PATH) === 0)
+// The three refusals radio does NOT lift: they are facts about the branch rather
+// than bounds on how long the partner may hold the floor, and a radio that asked
+// for a turn against nothing on the table would just collect 409s.
+t('radio does not invent something to answer',
+  !!selfReplyRefusal(null, [], { radio: true }))
+t('radio does not resurrect a turned-away move',
+  !!selfReplyRefusal(mkTurn({ id: 'r9', legal: false }), [], { radio: true }))
+t('radio does not answer an exchange with no answer',
+  !!selfReplyRefusal(mkTurn({ id: 'r8', reply_offering: null }), [], { radio: true }))
+
+// Same reasoning as continuation, and it matters more: a radio run is long, so a
+// leak here would reach every turn of the longest chains the engine makes.
+t('radio is still neutral to the interpreter', isNeutral(TU({ radio: true })))
+t('it changes nothing about the system prompt',
+  buildSystemPrompt(GAMES.tag, ALL_MEDIA, ALL_RELATIONS, TU({ radio: true })) ===
+  buildSystemPrompt(GAMES.tag, ALL_MEDIA, ALL_RELATIONS, DEFAULT_TUNING))
+t('it contributes no weighting block', describeTuning(TU({ radio: true }), ALL_MEDIA) === '')
+t('none of its player-facing copy reaches the prompt', (() => {
+  const p = buildSystemPrompt(GAMES.tag, ALL_MEDIA, ALL_RELATIONS, TU({ radio: true }))
+  return !p.includes(RADIO_HINT) && !p.includes(RADIO_LABEL)
+})())
+// But the player set it, so their own display says so.
+t('it is not untouched', !isUntouched(TU({ radio: true })))
+t('the summary names it', /keeps going/.test(tuningSummary(TU({ radio: true }), ALL_MEDIA)),
+  tuningSummary(TU({ radio: true }), ALL_MEDIA))
+// Radio replaces the count in the summary rather than sitting beside it: both
+// answer "who takes the next turn" and only one of them is in force.
+t('the summary does not also print a bound that is not being applied', (() => {
+  const s = tuningSummary(TU({ radio: true, continuation: 2 }), ALL_MEDIA)
+  return /keeps going/.test(s) && !/carries on/.test(s)
+})())
+t('and the stored stop comes back when radio goes off',
+  /carries on twice/.test(tuningSummary(TU({ radio: false, continuation: 2 }), ALL_MEDIA)))
+
+// Audio is the only medium with a timeline of its own, so it is the only one a run
+// can advance by itself.
+t('radio needs music in play', radioRefusal(['artwork', 'passage']) !== null)
+t('and runs when it is there', radioRefusal(['music', 'artwork']) === null)
+t('an empty session is refused', radioRefusal([]) !== null)
+t('the refusal says what to do about it', /music/i.test(radioRefusal(['passage'])))
 
 group('the self-reply prompt — reading your own offering as the move')
 const SELF_SYS = buildSystemPrompt(GAMES.tag, ALL_MEDIA, ALL_RELATIONS, DEFAULT_TUNING, true)

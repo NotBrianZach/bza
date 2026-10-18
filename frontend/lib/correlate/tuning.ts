@@ -472,6 +472,22 @@ export interface Tuning {
    */
   continuation: ContinuationDepth
   /**
+   * Whether the partner carries on without waiting to be asked again — see
+   * ./continuation.ts, where the cap it lifts is documented alongside it.
+   *
+   * Here for the same reason `continuation` is, and excluded from `describeTuning`
+   * for the same reason too: it governs who takes the next turn, which the
+   * interpreter must not learn. A model told the player has walked away writes for
+   * an empty room — it stops answering and starts broadcasting, which is precisely
+   * the failure radio has the most of and can least afford, since there is nobody
+   * taking a turn to pull it back.
+   *
+   * A boolean and not a count because the ask is open-ended. "Carry on until I stop
+   * you" has no number in it, and inventing one for storage would put a promise in
+   * the row that the player never made.
+   */
+  radio: boolean
+  /**
    * Whatever the controls above cannot say, in the player's own words.
    *
    * Seven axes, twelve shares and a scope per medium is a lot of expressive range
@@ -503,7 +519,7 @@ export interface Tuning {
 export const NOTES_MAX = 600
 
 export const DEFAULT_TUNING: Tuning = {
-  shares: {}, axes: {}, scopes: {}, continuation: CONTINUATION_OFF, notes: '',
+  shares: {}, axes: {}, scopes: {}, continuation: CONTINUATION_OFF, radio: false, notes: '',
 }
 
 /**
@@ -592,6 +608,10 @@ export const STARTING_AXES: Partial<Record<TuningAxisId, number>> = {
 export function startingTuning(media: MediumId[]): Tuning {
   const tuning: Tuning = {
     shares: {}, axes: { ...STARTING_AXES }, scopes: {}, continuation: CONTINUATION_OFF,
+    // Off, like continuation. A game that started by playing itself would have made
+    // the player's first move optional, and the first move is the seed everything
+    // after it answers.
+    radio: false,
     // A new game starts with nothing in the player's own words, and that is not a
     // placeholder for something better — an empty field is the only honest default
     // for a free-text instruction. Pre-filling it would put words in the prompt
@@ -620,13 +640,13 @@ const clampInt = (v: unknown, lo: number, hi: number): number | null => {
  */
 export function normalizeTuning(raw: unknown, media: MediumId[]): Tuning {
   const out: Tuning = {
-    shares: {}, axes: {}, scopes: {}, continuation: CONTINUATION_OFF, notes: '',
+    shares: {}, axes: {}, scopes: {}, continuation: CONTINUATION_OFF, radio: false, notes: '',
   }
   if (!raw || typeof raw !== 'object') return out
 
   const src = raw as {
     shares?: unknown; weights?: unknown; axes?: unknown; scopes?: unknown
-    continuation?: unknown; notes?: unknown
+    continuation?: unknown; radio?: unknown; notes?: unknown
   }
 
   out.scopes = normalizeScopes(src.scopes, media)
@@ -645,6 +665,11 @@ export function normalizeTuning(raw: unknown, media: MediumId[]): Tuning {
   // would promise a fourth turn the engine will always refuse.
   const carry = clampInt(src.continuation, 0, MAX_SELF_REPLIES)
   if (carry !== null) out.continuation = carry as ContinuationDepth
+
+  // Strict `=== true` rather than truthiness, because this is the one field that
+  // lifts a server-side cap: a stray "false" string or a 0 arriving from a form
+  // must read as off, and only something that meant it gets through.
+  out.radio = src.radio === true
 
   // `shares` wins outright. A legacy `weights` object is upgraded only in its
   // absence, so a tuning saved today and one saved last week both come out on the
@@ -683,6 +708,10 @@ export function normalizeTuning(raw: unknown, media: MediumId[]): Tuning {
  * `continuation` is excluded, and that is not an oversight. It never reaches the
  * prompt, so a game where the only change is "carry on twice" must produce
  * byte-for-byte the prompt an untouched game produces. A test asserts it.
+ *
+ * `radio` is excluded on the same test and for the same reason, and it matters more
+ * there than here: a radio run is long, so a prompt that leaked it would leak it
+ * into every turn of the longest chains this engine makes.
  */
 export function isNeutral(tuning: Tuning): boolean {
   return Object.keys(tuning.shares).length === 0
@@ -713,7 +742,9 @@ export function isProportioned(tuning: Tuning): boolean {
  * continuation was set to three would be lying about there being nothing to reset.
  */
 export function isUntouched(tuning: Tuning): boolean {
-  return isNeutral(tuning) && (tuning.continuation ?? CONTINUATION_OFF) === CONTINUATION_OFF
+  return isNeutral(tuning)
+    && (tuning.continuation ?? CONTINUATION_OFF) === CONTINUATION_OFF
+    && !radioOf(tuning)
 }
 
 /**
@@ -729,6 +760,7 @@ export function isUntouched(tuning: Tuning): boolean {
 export function isStarting(tuning: Tuning, media: MediumId[]): boolean {
   const start = startingTuning(media)
   if (continuationOf(tuning) !== continuationOf(start)) return false
+  if (radioOf(tuning) !== radioOf(start)) return false
   if (!isUnscoped(tuning.scopes ?? {})) return false
   if ((tuning.notes ?? '').trim() !== start.notes) return false
   if (media.some(m => shareOf(tuning, m) !== shareOf(start, m))) return false
@@ -751,6 +783,11 @@ export function allShares(
 /** How many turns in a row the partner has been asked to take by itself. */
 export function continuationOf(tuning: Tuning): ContinuationDepth {
   return tuning.continuation ?? CONTINUATION_OFF
+}
+
+/** Whether the partner has been asked to carry on without being asked again. */
+export function radioOf(tuning: Tuning): boolean {
+  return tuning.radio === true
 }
 
 export function shareOf(tuning: Tuning, medium: MediumId): number {
@@ -1139,8 +1176,15 @@ export function tuningSummary(tuning: Tuning, media: MediumId[]): string {
   const scoped = scopeSummary(tuning.scopes ?? {}, media)
   if (scoped) bits.push(scoped)
 
-  const carry = continuationOf(tuning)
-  if (carry > CONTINUATION_OFF) bits.push(`carries on ${CONTINUATION_LABELS[carry].toLowerCase()}`)
+  // Radio instead of the count, not alongside it. They are both answers to "who
+  // takes the next turn" and radio is the one in force, so printing a stored "twice"
+  // next to it would describe a bound that is not being applied.
+  if (radioOf(tuning)) {
+    bits.push('keeps going')
+  } else {
+    const carry = continuationOf(tuning)
+    if (carry > CONTINUATION_OFF) bits.push(`carries on ${CONTINUATION_LABELS[carry].toLowerCase()}`)
+  }
 
   // The note itself, truncated, rather than the words "has a note". The summary is
   // what a player sees without opening the panel, and the whole value of a

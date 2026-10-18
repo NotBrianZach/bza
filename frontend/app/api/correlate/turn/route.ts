@@ -14,7 +14,8 @@ import {
   pathTo, relationsAlong, replyMediaAlong, turnByIndex, worldFor,
 } from '@/lib/correlate/graph'
 import {
-  dueMedium, mutedMedia, normalizeTuning, owedMedia, readingLengths, weightedReplyMedia,
+  dueMedium, mutedMedia, normalizeTuning, owedMedia, radioOf, readingLengths,
+  weightedReplyMedia,
 } from '@/lib/correlate/tuning'
 import { selfRepliesSince, selfReplyRefusal } from '@/lib/correlate/continuation'
 import type {
@@ -160,6 +161,19 @@ export async function POST(req: NextRequest) {
     ? session.relations as RelationId[]
     : resolveRelations(game.relations)
 
+  // The client sends what the controls currently say and the server saves it, so
+  // the knob a player moved a second before taking a turn applies to that turn.
+  // Reading it only from the session row would have made the save a race the player
+  // could lose without ever being told.
+  //
+  // Resolved up here, before the graph and the move, because the self-reply refusal
+  // below now depends on it: radio is the one tuning field that decides what the
+  // engine refuses rather than what it reaches for.
+  const tuning = normalizeTuning(
+    body !== null && body.tuning !== undefined ? body.tuning : session.tuning,
+    media,
+  )
+
   // --- 1. Where in the graph this turn goes --------------------------------
   //
   // Resolved before the move rather than after, because on a self-reply the move
@@ -210,7 +224,10 @@ export async function POST(req: NextRequest) {
     // Refused by one function shared with the board, so the control the player sees
     // and the rule the server applies cannot drift apart. The cap inside it is read
     // off the branch, not off the request.
-    const refusal = selfReplyRefusal(parent, path)
+    // Radio lifts the depth cap and nothing else — the refusals about there being
+    // nothing on the table to answer still stand, because those are facts about the
+    // branch rather than bounds on how long the partner may hold the floor.
+    const refusal = selfReplyRefusal(parent, path, { radio: radioOf(tuning) })
     if (refusal) return err(refusal, 409)
     move = parent!.reply_offering!
   } else if (isComposed(mediumId!)) {
@@ -307,14 +324,6 @@ export async function POST(req: NextRequest) {
 
   // --- 2b. The weighting ---------------------------------------------------
   //
-  // The client sends what the controls currently say and the server saves it, so
-  // the knob a player moved a second before taking a turn applies to that turn.
-  // Reading it only from the session row would have made the save a race the player
-  // could lose without ever being told.
-  const tuning = normalizeTuning(
-    body !== null && body.tuning !== undefined ? body.tuning : session.tuning,
-    media,
-  )
   const tuningChanged = body?.tuning !== undefined &&
     JSON.stringify(tuning) !== JSON.stringify(normalizeTuning(session.tuning, media))
 

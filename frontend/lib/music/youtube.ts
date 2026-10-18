@@ -105,6 +105,55 @@ export async function isEmbeddable(videoId: string): Promise<boolean> {
   }
 }
 
+/**
+ * Does this video plausibly contain the record we asked for?
+ *
+ * Search's top hit for "artist title" is often not the record: covers, live takes,
+ * sped-up edits, reactions and hour-long compilations all rank. Playing one of those
+ * was survivable while full playback was a button someone pressed on one card — they
+ * can see what came up. It is not survivable as the default listening path of a game
+ * whose entire premise is a perceivable connection between two real records: the
+ * interpreter reasons about the track the catalogue named while the listener hears
+ * somebody else playing it in a bedroom, and every ruling after that is about a
+ * record nobody heard.
+ *
+ * Deliberately a containment check and not a similarity score. A real upload title
+ * is the track title plus decoration — "(Official Video)", a label, a year, the
+ * artist again — so containment accepts the normal case and rejects the ones that
+ * have renamed the thing entirely, which is exactly the class that is wrong. Being
+ * strict here is cheap: a rejection falls back to a preview, which always works.
+ */
+function plausible(wanted: string, artist: string, snippet: any): boolean {
+  const found = snippet?.title
+  if (typeof found !== 'string') return false
+  // Punctuation and case vary freely between a catalogue and an upload, and
+  // collapsing both is the difference between matching "Don't Stop" and not.
+  const flatten = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
+  const a = flatten(wanted)
+  const b = flatten(found)
+  if (!a || !b) return false
+  // Either direction: an upload may trim a long catalogue title ("- Remastered
+  // 2011") just as often as it pads a short one.
+  if (!b.includes(a) && !a.includes(b)) return false
+
+  /**
+   * The artist has to show up somewhere, and this is not belt-and-braces.
+   *
+   * Containment alone is close to no check at all for short titles — "Nude" is
+   * inside "nude reaction video omg", and one-word titles are common. The artist is
+   * what disambiguates them.
+   *
+   * Checked against the channel as well as the title because an official artist
+   * channel routinely omits the artist from the video title: the channel is called
+   * "Radiohead" and the video is called "Nude". Requiring it in the title alone
+   * would reject the single most trustworthy kind of result there is.
+   */
+  const who = flatten(artist)
+  if (!who) return true
+  const channel = flatten(typeof snippet?.channelTitle === 'string' ? snippet.channelTitle : '')
+  return b.includes(who) || channel.includes(who) || who.includes(channel)
+}
+
 /** True when YouTube refused for quota reasons rather than anything about the query. */
 function isQuotaError(body: any): boolean {
   const reasons = (body?.error?.errors ?? []).map((e: any) => e.reason)
@@ -151,6 +200,7 @@ export async function resolveVideo(
   }
 
   const videoId: string | undefined = (body?.items ?? [])
+    .filter((i: any) => plausible(title, artist, i?.snippet))
     .map((i: any) => i?.id?.videoId)
     .find((v: any) => typeof v === 'string' && v.length > 0)
 
