@@ -24,7 +24,7 @@ import type {
   CorrelationSession, CorrelationTurn, MediumId, Offering, RelationId,
 } from '@/lib/correlate/types'
 import { useOfferingPlayer, audioUrl, type OfferingPlayer } from './useOfferingPlayer'
-import { useYouTubePlayer } from './useYouTubePlayer'
+import { useYouTubePlayer, YT_ALLOW } from './useYouTubePlayer'
 import { useFullLengthResolver } from './useFullLengthResolver'
 import BranchMap from './BranchMap'
 import OfferingCard from './OfferingCard'
@@ -153,8 +153,13 @@ export default function CorrelationBoard({
    * is the only place that needs to know all three exist.
    */
   const advanceRef = useRef<() => void>(() => {})
-  const ytMount = useRef<HTMLDivElement | null>(null)
-  const yt = useYouTubePlayer({ mount: ytMount, onEnded: () => advanceRef.current() })
+  const ytFrame = useRef<HTMLIFrameElement | null>(null)
+  const stalledRef = useRef<() => void>(() => {})
+  const yt = useYouTubePlayer({
+    frame: ytFrame,
+    onEnded: () => advanceRef.current(),
+    onStalled: () => stalledRef.current(),
+  })
   const { resolve: resolveFull, quotaSpent } = useFullLengthResolver()
 
   const player = useOfferingPlayer({
@@ -163,6 +168,9 @@ export default function CorrelationBoard({
     full: yt,
   })
   useEffect(() => { advanceRef.current = player.advance }, [player.advance])
+  useEffect(() => {
+    stalledRef.current = player.fallbackToPreview
+  }, [player.fallbackToPreview])
   const game = getGame(session.mode)
   const accent = ACCENT_CLASSES[game?.accent ?? 'indigo']
 
@@ -707,7 +715,11 @@ export default function CorrelationBoard({
                 <div className="mb-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2">
                  <div className="flex items-center gap-3">
                   <button
-                    onClick={() => (playingIndex >= 0 ? player.toggle() : player.playQueue(audible))}
+                    onClick={() => {
+                      yt.prime()
+                      if (playingIndex >= 0) player.toggle()
+                      else player.playQueue(audible)
+                    }}
                     className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full ${accent.bg} ${accent.text} hover:brightness-95 dark:hover:brightness-110 transition-all`}
                   >
                     {playingIndex >= 0 && !player.paused
@@ -756,6 +768,9 @@ export default function CorrelationBoard({
                   <button
                     onClick={() => {
                       const next = !radio
+                      // Fetched inside the gesture that starts the run, so the
+                      // first track is not also waiting on a script download.
+                      if (next) yt.prime()
                       changeTuning({ ...tuning, radio: next })
                       // From the end of what is already here, not the top. Switching
                       // radio on is an ask for what comes next; replaying an hour of
@@ -786,18 +801,25 @@ export default function CorrelationBoard({
                   </button>
                  </div>
                  {/* The video player's permanent home.
-                     It cannot be mounted and unmounted per track: `new YT.Player`
-                     consumes the node it is given, and a fresh node each time would
-                     mean a fresh player, which loses both the queue's autoplay
-                     permission and the ENDED event the queue advances on. So the
-                     node always exists and the wrapper collapses instead — visible
-                     at a usable size while a full track plays, which is also what
-                     the embed terms ask for, and zero-height otherwise. */}
+                     Rendered here, with `allow`, rather than left to the IFrame API
+                     to create — a cross-origin embed without autoplay permission
+                     will not start a track nobody clicked, which is what stopped an
+                     unattended run after its first song. It also cannot be mounted
+                     per track: re-creating the element drops the attached player,
+                     the ENDED event the queue advances on, and that permission. So
+                     it always exists and the wrapper collapses instead — visible at
+                     a usable size while a full track plays, which is what the embed
+                     terms ask for, and zero-height otherwise. */}
                  <div className={player.via === 'full'
                    ? 'mt-2 aspect-video rounded-lg overflow-hidden bg-black'
                    : 'h-0 overflow-hidden'}
                  >
-                   <div ref={ytMount} className="w-full h-full" />
+                   <iframe
+                     ref={ytFrame}
+                     title="Full-length playback"
+                     allow={YT_ALLOW}
+                     className="w-full h-full border-0"
+                   />
                  </div>
                  {/* Where a self-stopped run says so. Amber and in the bar, next to
                      the control that is now off, rather than as grey text under the

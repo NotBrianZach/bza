@@ -79,6 +79,8 @@ export interface OfferingPlayer {
    * therefore makes skip-at-the-tail generate, rather than stop.
    */
   skip: () => void
+  /** Give up on the full-length attempt for the current item and play its preview. */
+  fallbackToPreview: () => void
   /**
    * Back to the previous item, or restart this one when there is nothing behind it.
    *
@@ -315,6 +317,30 @@ export function useOfferingPlayer(opts: OfferingPlayerOptions = {}): OfferingPla
     advance()
   }, [advance])
 
+  /**
+   * Play the current item as a preview after the full-length attempt came to
+   * nothing.
+   *
+   * Called by the video backend's watchdog. Guarded on `via` so it cannot interrupt
+   * a preview that is already playing happily — the watchdog is keyed on a video
+   * having been *asked* to start, and by the time it fires the queue may have moved
+   * on by itself.
+   */
+  const fallbackToPreview = useCallback(() => {
+    if (viaRef.current !== 'full' || indexRef.current < 0) return
+    const offering = queueRef.current[indexRef.current]
+    if (!offering) return
+    fullRef.current?.stop()
+    setVia('preview')
+    setError('')
+    const el = audio()
+    el.src = audioUrl(offering)!
+    el.play().then(
+      () => setPaused(false),
+      () => { setPaused(true); setError('Playback was blocked — press play to start it.') },
+    )
+  }, [audio])
+
   const previous = useCallback(() => {
     if (indexRef.current < 0) return
     // Restarting the current item when there is nothing behind it is what every
@@ -356,6 +382,6 @@ export function useOfferingPlayer(opts: OfferingPlayerOptions = {}): OfferingPla
 
   return {
     current, paused, error, progress, queueIndex, queueLength, lookahead, via,
-    playOne, playQueue, append, toggle, stop, advance, skip, previous,
+    playOne, playQueue, append, toggle, stop, advance, skip, previous, fallbackToPreview,
   }
 }
