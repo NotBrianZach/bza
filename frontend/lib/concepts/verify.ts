@@ -36,8 +36,9 @@
  * reason to wire it this way round.
  */
 
-import { renderExpr, tryParse } from './expr'
+import { renderExpr, symbolsIn, tryParse, type ExprNode } from './expr'
 import { checkDenominatorDegree, checkForm, FORM_LABELS, type FormCheck } from './forms'
+import { exact, type Exact } from './rpn'
 import { primaryVariable } from './tasks'
 import type { PracticeTask, Verdict } from './types'
 
@@ -378,6 +379,413 @@ export async function ruleTransform(
       conditions,
       evidence: evidenceOf(reply),
     },
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Ruling an evaluate answer
+// ---------------------------------------------------------------------------
+
+/**
+ * Substitution, as pure tree surgery.
+ *
+ * Not a computation — nothing is folded, nothing is simplified, and a symbol the
+ * table does not mention is left exactly where it was. That restraint is what
+ * keeps this out of CAS territory: replacing a leaf with a numeral is a rewrite
+ * the parser's own grammar already permits, whereas deciding what the result
+ * *equals* is the worker's job.
+ */
+export function substitute(node: ExprNode, at: Record<string, ExprNode>): ExprNode {
+  switch (node.kind) {
+    case 'symbol':
+      return at[node.name] ?? node
+    case 'add':
+      return { kind: 'add', args: node.args.map(a => substitute(a, at)) }
+    case 'multiply':
+      return { kind: 'multiply', args: node.args.map(a => substitute(a, at)) }
+    case 'function':
+      return { kind: 'function', name: node.name, args: node.args.map(a => substitute(a, at)) }
+    case 'subtract':
+      return { kind: 'subtract', left: substitute(node.left, at), right: substitute(node.right, at) }
+    case 'equation':
+      return { kind: 'equation', left: substitute(node.left, at), right: substitute(node.right, at) }
+    case 'divide':
+      return {
+        kind: 'divide',
+        numerator: substitute(node.numerator, at),
+        denominator: substitute(node.denominator, at),
+      }
+    case 'power':
+      return { kind: 'power', base: substitute(node.base, at), exponent: substitute(node.exponent, at) }
+    case 'negate':
+      return { kind: 'negate', operand: substitute(node.operand, at) }
+    default:
+      return node
+  }
+}
+
+/** The largest exponent this will expand. Beyond it, a bigint pow is a denial of service. */
+const MAX_EXPONENT = 64n
+
+/**
+ * A tree's exact rational value, or `null` when it does not have one.
+ *
+ * `null` is the important half of the contract and it is not a failure: `pi`,
+ * `sqrt(2)` and `1/0` are all perfectly good expressions with no rational value,
+ * and the caller's correct response is to ask the worker rather than to rule.
+ * Returning 0 or NaN for any of them would turn "I cannot settle this" into a
+ * ruling against the learner, which is the one thing the whole verdict design
+ * exists to prevent.
+ *
+ * Exact throughout — bigint numerator over bigint denominator, reduced by rpn's
+ * own `exact` so the sign normalisation and the zero-denominator refusal are
+ * shared rather than reimplemented. Decimals are read as the fraction they
+ * literally are (`1.5` is `15/10`), which is what makes a learner who answers
+ * `1.5` and a learner who answers `3/2` get the same ruling.
+ */
+export function exactValue(node: ExprNode): Exact | null {
+  const ratio = (n: bigint, d: bigint): Exact | null => {
+    if (d === 0n) return null
+    const value = exact(n, d)
+    return value.kind === 'exact' ? value.v : null
+  }
+
+  switch (node.kind) {
+    case 'integer':
+      return ratio(BigInt(node.value), 1n)
+    case 'rational':
+      return ratio(BigInt(node.numerator), BigInt(node.denominator))
+    case 'decimal': {
+      const [whole, frac = ''] = node.value.split('.')
+      // `${whole}${frac}` rather than arithmetic, so '.5' and '1.' both work and
+      // no precision is lost on the way through a float.
+      return ratio(BigInt(`${whole || '0'}${frac}` || '0'), 10n ** BigInt(frac.length))
+    }
+    case 'negate': {
+      const v = exactValue(node.operand)
+      return v ? ratio(-v.n, v.d) : null
+    }
+    case 'add': {
+      let acc: Exact | null = { n: 0n, d: 1n }
+      for (const arg of node.args) {
+        const v = exactValue(arg)
+        if (!v || !acc) return null
+        acc = ratio(acc.n * v.d + v.n * acc.d, acc.d * v.d)
+      }
+      return acc
+    }
+    case 'multiply': {
+      let acc: Exact | null = { n: 1n, d: 1n }
+      for (const arg of node.args) {
+        const v = exactValue(arg)
+        if (!v || !acc) return null
+        acc = ratio(acc.n * v.n, acc.d * v.d)
+      }
+      return acc
+    }
+    case 'subtract': {
+      const l = exactValue(node.left)
+      const r = exactValue(node.right)
+      return l && r ? ratio(l.n * r.d - r.n * l.d, l.d * r.d) : null
+    }
+    case 'divide': {
+      const n = exactValue(node.numerator)
+      const d = exactValue(node.denominator)
+      if (!n || !d || d.n === 0n) return null
+      return ratio(n.n * d.d, n.d * d.n)
+    }
+    case 'power': {
+      const base = exactValue(node.base)
+      const exponent = exactValue(node.exponent)
+      // A non-integer exponent is a root, and a root is generally irrational.
+      if (!base || !exponent || exponent.d !== 1n) return null
+      const e = exponent.n < 0n ? -exponent.n : exponent.n
+      if (e > MAX_EXPONENT) return null
+      const pow = (x: bigint) => x ** e
+      if (exponent.n < 0n) {
+        if (base.n === 0n) return null
+        return ratio(pow(base.d), pow(base.n))
+      }
+      return ratio(pow(base.n), pow(base.d))
+    }
+    default:
+      // symbol, constant, function — no rational value, and saying so is the point.
+      return null
+  }
+}
+
+const sameValue = (a: Exact, b: Exact) => a.n === b.n && a.d === b.d
+
+/** `n/d`, or just `n` when the denominator is 1. For feedback, not for parsing. */
+export function showExact(value: Exact): string {
+  return value.d === 1n ? `${value.n}` : `${value.n}/${value.d}`
+}
+
+/** An authoring fault is inconclusive and says whose fault it is. Never scored. */
+function authoringFault(detail: string, asRead: string, conditions: string[]): Ruling {
+  return {
+    status: 'ruled',
+    asRead,
+    verdict: {
+      ruling: 'inconclusive',
+      method: `${detail} — this is an authoring fault, not yours`,
+      conditions,
+    },
+  }
+}
+
+/**
+ * Rule one `evaluate` submission.
+ *
+ * ── Why this one is settled locally and `transform_to_form` is not ─────────
+ *
+ * `transform_to_form` accepts *any* expression equivalent to the reference, so
+ * deciding it needs a CAS. An `evaluate` task asks for one number, and two
+ * rational numbers can be compared exactly with bigint arithmetic — which is not
+ * CAS work, and pretending it were would make every evaluate task rule
+ * `inconclusive` on a deployment with no worker.
+ *
+ * That matters more than it sounds, because of a specific property of the worker:
+ * `op_equivalent` only looks for a counterexample when the difference still has a
+ * free symbol (`ops.py`: `_sample_counterexample(...) if symbol is not None`).
+ * After substituting the inputs there is no free symbol left, so a plainly wrong
+ * numeric answer would come back `inconclusive` rather than `incorrect` — "not
+ * settled" for answering 3 when the value is 0. Routing the rational case through
+ * local exact arithmetic is what avoids that, and the worker remains the fallback
+ * for the answers that genuinely need it (`sqrt(4)`, `pi - pi`).
+ *
+ * ── It checks the author too ───────────────────────────────────────────────
+ *
+ * Because the value is computable here, the task's own `reference` can be
+ * *re-derived* from its `given` at its `at` rather than trusted. A disagreement
+ * rules `inconclusive` and blames the author. `ruleTransform` can only do this
+ * for a reference that fails to parse; here a reference that parses and is simply
+ * wrong is caught as well, which is the stronger check and the one an authored
+ * task set actually needs.
+ *
+ * Three steps, and `brokeAt.step` names which:
+ *
+ *   0  the submission could not be read              → not a ruling at all
+ *   1  the answer is not a number                    → settled locally
+ *   2  the answer is the wrong number                → settled locally, exactly
+ */
+export async function ruleEvaluate(
+  task: PracticeTask,
+  answer: string,
+  config: VerifierConfig = verifierConfig(),
+): Promise<Ruling> {
+  const symbols = task.variables.map(v => v.name)
+  const parsed = tryParse(answer, symbols)
+  if (!parsed.ok) {
+    return { status: 'unreadable', message: parsed.message, position: parsed.position }
+  }
+  const asRead = renderExpr(parsed.tree)
+  const authored = task.domainConditions ?? []
+
+  // ── step 1: it has to be a number ─────────────────────────────────────
+  //
+  // Local, and the analogue of the form check: a learner who hands back an
+  // expression in x has not evaluated anything, and "that is not a number yet"
+  // is the whole feedback. No worker call, and no route to inconclusive.
+  const mentioned = symbolsIn(parsed.tree)
+  if (mentioned.length > 0) {
+    return {
+      status: 'ruled',
+      asRead,
+      verdict: {
+        ruling: 'incorrect',
+        method: 'the answer still contains a variable — equivalence was not checked',
+        brokeAt: {
+          step: 1,
+          detail:
+            `an evaluate task asks for a value, and this still mentions ` +
+            `${mentioned.join(' and ')}. Substitute the stated inputs and compute.`,
+        },
+        conditions: authored,
+      },
+    }
+  }
+
+  // ── the author's side of the task, validated before the learner's ──────
+  const at = task.at ?? {}
+  const names = Object.keys(at)
+  if (names.length === 0) {
+    return authoringFault('an evaluate task that states no inputs has no value to ask for', asRead, authored)
+  }
+
+  const atTrees: Record<string, ExprNode> = {}
+  for (const [name, raw] of Object.entries(at)) {
+    // No symbols declared: an input must be an exact numeral, not an expression.
+    const value = tryParse(raw, [])
+    if (!value.ok || exactValue(value.tree) === null) {
+      return authoringFault(`the input ${name} = ${raw} is not an exact numeral`, asRead, authored)
+    }
+    atTrees[name] = value.tree
+  }
+
+  const given = tryParse(task.given, symbols)
+  if (!given.ok) {
+    return authoringFault(`the task's own expression does not parse (${given.message})`, asRead, authored)
+  }
+
+  // Every symbol in the expression has to be given a value, or there is no single
+  // number to ask for. A missing input is an authoring fault and not a hard
+  // question.
+  const uncovered = symbolsIn(given.tree).filter(s => !(s in atTrees))
+  if (uncovered.length > 0) {
+    return authoringFault(
+      `the expression mentions ${uncovered.join(' and ')}, which the task's inputs do not give a value`,
+      asRead,
+      authored,
+    )
+  }
+
+  const reference = tryParse(task.reference, symbols)
+  if (!reference.ok) {
+    return authoringFault(`the task's own reference answer does not parse (${reference.message})`, asRead, authored)
+  }
+
+  const target = substitute(given.tree, atTrees)
+  const truth = exactValue(target)
+  const claimed = exactValue(reference.tree)
+
+  // The author re-derived rather than trusted. Only possible when both sides are
+  // rational, which is every task in the shipped set.
+  if (truth && claimed && !sameValue(truth, claimed)) {
+    return authoringFault(
+      `the task claims the answer is ${showExact(claimed)}, but its own expression at its own ` +
+        `inputs is ${showExact(truth)}`,
+      asRead,
+      authored,
+    )
+  }
+
+  // ── step 2: the right number, compared exactly ────────────────────────
+  const answered = exactValue(parsed.tree)
+  const expected = truth ?? claimed
+  if (answered && expected) {
+    const where = names.map(n => `${n} = ${at[n]}`).join(', ')
+    if (sameValue(answered, expected)) {
+      return {
+        status: 'ruled',
+        asRead,
+        verdict: {
+          ruling: 'correct',
+          method: `exact rational comparison at ${where}`,
+          conditions: authored,
+        },
+      }
+    }
+    return {
+      status: 'ruled',
+      asRead,
+      verdict: {
+        ruling: 'incorrect',
+        method: `exact rational comparison at ${where}`,
+        brokeAt: {
+          step: 2,
+          detail: `the value at ${where} is ${showExact(expected)}, and this is ${showExact(answered)}`,
+        },
+        conditions: authored,
+      },
+    }
+  }
+
+  // ── the fallback: an answer with no rational value ────────────────────
+  //
+  // `sqrt(4)` is a correct answer to a task whose value is 2 and has no rational
+  // value here, so it goes to the worker. A wrong answer on this path can only
+  // rule inconclusive, for the `_sample_counterexample` reason in the header —
+  // which is honest, because nothing settled it.
+  const call = await callWorker('equivalent', {
+    expression: parsed.tree as unknown as Record<string, unknown>,
+    other: target as unknown as Record<string, unknown>,
+    variables: task.variables.map(v => ({ name: v.name, assumptions: v.assumptions ?? {} })),
+    domain_conditions: authored,
+  }, config)
+
+  if (!call.ok) {
+    return {
+      status: 'ruled',
+      asRead,
+      verdict: {
+        ruling: 'inconclusive',
+        method:
+          `the answer has no exact rational value here, so it was sent for an equivalence ` +
+          `check, which did not run: ${call.reason}`,
+        conditions: authored,
+      },
+    }
+  }
+
+  const { reply } = call
+  const result = reply.result ?? {}
+  const conditions = mergeConditions(authored, result.retained_conditions ?? [])
+
+  if (result.verdict === 'supported') {
+    return {
+      status: 'ruled',
+      asRead,
+      verdict: {
+        ruling: 'correct',
+        method: result.method ?? 'simplify(difference) == 0',
+        conditions,
+        evidence: evidenceOf(reply),
+      },
+    }
+  }
+  if (result.verdict === 'counterexample_found') {
+    return {
+      status: 'ruled',
+      asRead,
+      verdict: {
+        ruling: 'incorrect',
+        method: result.method ?? 'substitution at sampled points',
+        brokeAt: { step: 2, detail: 'the answer differs from the value of the expression at the stated inputs' },
+        conditions,
+        evidence: evidenceOf(reply),
+      },
+    }
+  }
+
+  const obligations = result.unresolved_obligations ?? []
+  return {
+    status: 'ruled',
+    asRead,
+    verdict: {
+      ruling: 'inconclusive',
+      method:
+        `${result.method ?? 'the engine did not settle whether this is the value'}` +
+        (obligations.length > 0 ? ` — ${obligations.join('; ')}` : ''),
+      conditions,
+      evidence: evidenceOf(reply),
+    },
+  }
+}
+
+/**
+ * Rule any submission the engine can rule, by kind.
+ *
+ * The dispatch lives here rather than in the route so there is one place that
+ * knows which kinds are wired, and it throws for a kind rather than guessing —
+ * `isVerifiableKind` says what *could* be ruled in principle, which is a
+ * different claim from what has an implementation.
+ */
+export async function rule(
+  task: PracticeTask,
+  answer: string,
+  config: VerifierConfig = verifierConfig(),
+): Promise<Ruling | { status: 'unruled'; reason: string }> {
+  switch (task.kind) {
+    case 'transform_to_form':
+      return ruleTransform(task, answer, config)
+    case 'evaluate':
+      return ruleEvaluate(task, answer, config)
+    default:
+      return {
+        status: 'unruled',
+        reason: `kind "${task.kind}" has no verifier, so a submission cannot be ruled`,
+      }
   }
 }
 

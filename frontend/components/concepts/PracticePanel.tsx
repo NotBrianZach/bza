@@ -40,6 +40,8 @@ export interface PracticeTaskView {
   given: string
   form: NamedForm | null
   variables: { name: string; assumptions?: Record<string, boolean> }[]
+  /** `evaluate` only: the inputs to substitute. Null on every other kind. */
+  at: Record<string, string> | null
   domainConditions: string[]
   conceptId: string | null
 }
@@ -137,12 +139,28 @@ export default function PracticePanel({
 
   return (
     <div className='space-y-3'>
+      {/*
+        Kind-aware, because the unconditional version of this warning became false
+        when `evaluate` shipped. An evaluate answer is ruled by exact rational
+        arithmetic here, with no worker in the path — telling a learner their
+        answer will come back "not settled" when it will in fact be marked
+        correctly is the same category of lie the inconclusive ruling exists to
+        avoid, just pointed the other way.
+      */}
       {!verifierConfigured && (
-        <p className='rounded border-l-2 border-amber-600 bg-amber-950/30 px-3 py-2 text-xs text-amber-200'>
-          No computation worker is configured, so equivalence cannot be checked and every
-          submission will rule <strong>not settled</strong>. Form checks still work — they run here
-          rather than on the worker. Set <code>MATH_WORKBENCH_URL</code> to get real rulings.
-        </p>
+        task.kind === 'evaluate' ? (
+          <p className='rounded border-l-2 border-sky-700 bg-sky-950/30 px-3 py-2 text-xs text-sky-200'>
+            No computation worker is configured, but this task asks for a value and is ruled
+            here by exact arithmetic — so it will be marked normally. Tasks that ask you to
+            rewrite an expression need the worker and will rule <strong>not settled</strong>.
+          </p>
+        ) : (
+          <p className='rounded border-l-2 border-amber-600 bg-amber-950/30 px-3 py-2 text-xs text-amber-200'>
+            No computation worker is configured, so equivalence cannot be checked and every
+            submission will rule <strong>not settled</strong>. Form checks still work — they run here
+            rather than on the worker. Set <code>MATH_WORKBENCH_URL</code> to get real rulings.
+          </p>
+        )
       )}
 
       <div className='rounded-lg border border-gray-800 bg-gray-900 p-4'>
@@ -163,6 +181,17 @@ export default function PracticePanel({
         {task.domainConditions.length > 0 && (
           <p className='mt-2 text-[11px] text-gray-500'>
             Stated conditions: {task.domainConditions.join(', ')}
+          </p>
+        )}
+
+        {/*
+          Shown as its own line rather than left in the prompt. The prompt names
+          the inputs too, but hunting a substitution out of a sentence is not the
+          skill being practised, and an evaluate task is unanswerable without them.
+        */}
+        {task.at && Object.keys(task.at).length > 0 && (
+          <p className='mt-2 font-mono text-xs text-sky-300'>
+            at {Object.entries(task.at).map(([name, value]) => `${name} = ${value}`).join(', ')}
           </p>
         )}
         <p className='mt-1 text-[11px] text-gray-600'>
@@ -227,6 +256,11 @@ export default function PracticePanel({
             {task.form === 'factored' && <>Find the pair that multiplies to a·c and adds to b.</>}
             {task.form === 'expanded' && <>Every term of the first bracket against every term of the second.</>}
             {task.form === 'single_fraction' && <>Find a denominator both divide, then add the numerators only.</>}
+            {task.kind === 'evaluate' && (
+              <>Substitute each stated input and compute exactly. A fraction is a fine answer —
+              <code> 2/3</code> and <code>0.666…</code> are not the same, and only the exact one
+              is right.</>
+            )}
           </div>
         )}
       </div>

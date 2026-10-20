@@ -6,7 +6,7 @@ import { applyObservation } from '@/lib/concepts/scheduling'
 import { loadStrengths, recordObservation, saveStrengths } from '@/lib/concepts/store'
 import { taskById } from '@/lib/concepts/tasks'
 import type { Assistance, Observation } from '@/lib/concepts/types'
-import { isScorable, rulingHeadline, ruleTransform, verifierConfig } from '@/lib/concepts/verify'
+import { isScorable, rule, rulingHeadline, verifierConfig } from '@/lib/concepts/verify'
 
 /**
  * Rule one practice submission.
@@ -76,17 +76,14 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  if (task.kind !== 'transform_to_form') {
-    // Refused rather than attempted. `transform_to_form` is the one kind wired
-    // end to end; serving another and then not scoring it would look like
-    // practice and record nothing. See the note at the top of tasks.ts.
-    return NextResponse.json(
-      { error: `kind "${task.kind}" has no verifier yet; only transform_to_form is ruled mechanically` },
-      { status: 400 },
-    )
+  // Dispatched by kind in verify.ts rather than branched here, so one place knows
+  // which kinds have an implementation. A kind without one is refused rather than
+  // attempted: serving it and then not scoring it would look like practice and
+  // record nothing. See the note at the top of tasks.ts.
+  const ruling = await rule(task, answer, verifierConfig())
+  if (ruling.status === 'unruled') {
+    return NextResponse.json({ error: ruling.reason }, { status: 400 })
   }
-
-  const ruling = await ruleTransform(task, answer, verifierConfig())
 
   // An answer that does not parse has made no mathematical claim. Nothing is
   // ruled, nothing is recorded, and the learner is shown where it stopped making

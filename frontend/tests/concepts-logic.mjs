@@ -99,7 +99,10 @@ const {
   seedTraversal, hasReached, frontier, unmetPrerequisites, openingDoors, offerKey, arrive,
   traversalProgress, TRAVERSAL_GAME,
 } = M.traversal
-const { isScorable, needsReview, rulingHeadline, verifierConfig } = M.verify
+const {
+  isScorable, needsReview, rulingHeadline, verifierConfig,
+  exactValue, substitute, showExact, ruleEvaluate, rule,
+} = M.verify
 const {
   importArchive, importedEdges, candidateCycles, draftMaterialFor, draftBlockers,
   importPromotionRate, summariseImport, emitDraftModule, latexToInfix, parseFragment,
@@ -809,6 +812,175 @@ t('exact() reduces', (() => {
   return v.v.n === 3n && v.v.d === 2n
 })())
 t('a zero denominator throws', (() => { try { exact(1n, 0n); return false } catch { return true } })())
+
+// ---------------------------------------------------------------------------
+// The evaluate ruler
+// ---------------------------------------------------------------------------
+
+/** No worker is reachable from a unit test, which is exactly the point below. */
+const NO_WORKER = { url: null, token: null, timeoutMs: 1000 }
+const val = s => exactValue(p(s))
+const show = s => { const v = val(s); return v === null ? null : showExact(v) }
+
+group('exactValue — exact, or honestly absent')
+t('an integer', show('7') === '7')
+t('a quotient reduces', show('4/6') === '2/3')
+t('a decimal is the fraction it literally is', show('1.5') === '3/2')
+t('a decimal and a quotient agree', show('0.25') === show('1/4'))
+t('a negative', show('-1/8') === '-1/8')
+t('a sum', show('9 + 6 - 15') === '0')
+t('a product with a negative factor', show('4*(0 - 15)') === '-60')
+t('an integer power of a negative base', show('(0 - 2)^2') === '4')
+t('a negative exponent inverts', show('2^(0 - 2)') === '1/4')
+t('nested arithmetic', show('(4 + 6 + 5)/3') === '5')
+t('a symbol has no rational value', exactValue({ kind: 'symbol', name: 'x' }) === null)
+t('pi has no rational value', exactValue({ kind: 'constant', name: 'pi' }) === null)
+t('a function call has no rational value', val('sqrt(4)') === null)
+t('division by zero is not a value, rather than a crash', val('1/(3 - 3)') === null)
+t('a fractional exponent is not expanded', val('4^(1/2)') === null)
+t('an absurd exponent is refused rather than computed', val('2^999') === null)
+
+group('substitute — tree surgery, not computation')
+t('it replaces a declared symbol', renderExpr(substitute(p('x + 1'), { x: p('5') })) === renderExpr(p('5 + 1')))
+t('it leaves a symbol the table does not mention', (() => {
+  const out = substitute(parseExpression('x + y', ['x', 'y']), { x: p('2') })
+  return symbolsIn(out).join(',') === 'y'
+})())
+t('it does not fold anything', renderExpr(substitute(p('x + 1'), { x: p('5') })) !== '6')
+t('it reaches into a quotient', exactValue(substitute(p('1/(x - 5)'), { x: p('-3') })).n === -1n)
+t('it reaches into a power', showExact(exactValue(substitute(p('x^2'), { x: p('-3') }))) === '9')
+
+group('ruleEvaluate — settled locally, and exactly')
+const evalTask = (over = {}) => ({
+  id: 'ev', knowledgePointId: 'excluded-points', kind: 'evaluate',
+  prompt: 'Evaluate.', given: 'x^2 - 2*x - 15',
+  variables: [{ name: 'x', assumptions: { real: true } }],
+  at: { x: '5' }, reference: '0', ...over,
+})
+const ruled = async (over, answer) => ruleEvaluate(evalTask(over), answer, NO_WORKER)
+
+t('a correct answer is correct with no worker at all', (await ruled({}, '0')).verdict.ruling === 'correct')
+t('and says how it was decided', /exact rational comparison at x = 5/.test((await ruled({}, '0')).verdict.method))
+t('a wrong answer is incorrect, NOT inconclusive', (await ruled({}, '3')).verdict.ruling === 'incorrect')
+const wrong = await ruled({}, '3')
+t('it names the value and what was submitted',
+  /the value at x = 5 is 0, and this is 3/.test(wrong.verdict.brokeAt.detail))
+t('it broke at step 2', wrong.verdict.brokeAt.step === 2)
+t('a truncated decimal is not the exact value and is marked wrong',
+  (await ruleEvaluate(evalTask({ at: { x: '1' }, reference: '2/3', given: '(x + 3)/(x + 5)' }), '0.666', NO_WORKER))
+    .verdict.ruling === 'incorrect')
+t('a decimal that IS exact is accepted',
+  (await ruleEvaluate(evalTask({ at: { x: '1' }, reference: '3/2', given: '(x + 2)/(x + 1)' }), '1.5', NO_WORKER))
+    .verdict.ruling === 'correct')
+t('an unreadable answer is not a ruling', (await ruled({}, '0 +')).status === 'unreadable')
+const stillSymbolic = await ruled({}, 'x - 5')
+t('an answer that is still an expression breaks at step 1', stillSymbolic.verdict.brokeAt.step === 1)
+t('and is told it asked for a value', /asks for a value, and this still mentions x/.test(stillSymbolic.verdict.brokeAt.detail))
+t('a step-1 failure never reaches the worker', stillSymbolic.verdict.ruling === 'incorrect')
+
+group('ruleEvaluate — it checks the author, not just the learner')
+const badRef = await ruleEvaluate(evalTask({ reference: '1' }), '0', NO_WORKER)
+t('a reference that disagrees with the given is an authoring fault', badRef.verdict.ruling === 'inconclusive')
+t('and blames the author explicitly', /authoring fault, not yours/.test(badRef.verdict.method))
+t('and shows both numbers', /claims the answer is 1, but its own expression at its own inputs is 0/.test(badRef.verdict.method))
+t('an authoring fault is never scored', !isScorable(badRef.verdict))
+t('a task with no inputs is an authoring fault',
+  (await ruleEvaluate(evalTask({ at: {} }), '0', NO_WORKER)).verdict.ruling === 'inconclusive')
+const badAt = await ruleEvaluate(evalTask({ at: { x: 'pi' } }), '0', NO_WORKER)
+t('a non-numeral input is refused as an authoring fault',
+  badAt.verdict.ruling === 'inconclusive' && /not an exact numeral/.test(badAt.verdict.method))
+const uncovered = await ruleEvaluate(
+  evalTask({ given: 'x + y', variables: [{ name: 'x' }, { name: 'y' }], at: { x: '1' }, reference: '2' }),
+  '2', NO_WORKER)
+t('a symbol with no stated input is an authoring fault',
+  uncovered.verdict.ruling === 'inconclusive' && /which the task's inputs do not give a value/.test(uncovered.verdict.method))
+t('an unparseable given is an authoring fault',
+  (await ruleEvaluate(evalTask({ given: 'x +' }), '0', NO_WORKER)).verdict.ruling === 'inconclusive')
+
+group('ruleEvaluate — the non-rational fallback needs the worker and says so')
+const irrational = await ruleEvaluate(
+  evalTask({ given: 'x^2', at: { x: '2' }, reference: '4' }), 'sqrt(16)', NO_WORKER)
+t('an answer with no rational value is inconclusive when no worker is configured',
+  irrational.verdict.ruling === 'inconclusive')
+t('and names why it needed one', /no exact rational value/.test(irrational.verdict.method))
+t('an unconfigured inconclusive is not queued for human review', !needsReview(irrational.verdict))
+
+group('rule — dispatch by kind')
+t('it routes transform_to_form', (await rule(taskById('expand-binomials-1'), '(', NO_WORKER)).status === 'unreadable')
+t('it routes evaluate', (await rule(taskById('excluded-points-1'), '0', NO_WORKER)).verdict.ruling === 'correct')
+const unruled = await rule({ ...taskById('excluded-points-1'), kind: 'justify' }, 'because', NO_WORKER)
+t('an unimplemented kind comes back unruled', unruled.status === 'unruled')
+t('and says which kind', /kind "justify" has no verifier/.test(unruled.reason))
+
+group('the shipped evaluate tasks')
+const EVALS = TASKS.filter(task => task.kind === 'evaluate')
+t('there are eight', EVALS.length === 8, `${EVALS.length}`)
+t('they cover the six knowledge points that had no task at all', (() => {
+  const previouslyBare = [
+    'irreducible-quadratic', 'improper-first', 'excluded-points',
+    'cancelling-keeps-the-hole', 'terms-are-not-factors', 'why-substitution-is-legal',
+  ]
+  return previouslyBare.every(id => tasksForPoint(id).length > 0)
+})())
+t('every one states its inputs', EVALS.every(task => task.at && Object.keys(task.at).length > 0))
+t('every input is an exact numeral', EVALS.every(task =>
+  Object.values(task.at).every(raw => {
+    const parsedAt = tryParse(raw, [])
+    return parsedAt.ok && exactValue(parsedAt.tree) !== null
+  })))
+t('every symbol in the given has a stated input', EVALS.every(task => {
+  const tree = parseExpression(task.given, task.variables.map(v => v.name))
+  return symbolsIn(tree).every(s => s in task.at)
+}))
+t('no evaluate task declares a form — that is a transform claim',
+  EVALS.every(task => task.form === undefined))
+/**
+ * The load-bearing one. Each task's reference is re-derived from its own `given`
+ * at its own `at`, so a typo in an authored answer fails here rather than marking
+ * a correct learner wrong in production.
+ */
+t('every reference equals the given evaluated at the stated inputs', (() => {
+  const bad = []
+  for (const task of EVALS) {
+    const symbols = task.variables.map(v => v.name)
+    const at = {}
+    for (const [name, raw] of Object.entries(task.at)) at[name] = parseExpression(raw, [])
+    const truth = exactValue(substitute(parseExpression(task.given, symbols), at))
+    const claimed = exactValue(parseExpression(task.reference, symbols))
+    if (!truth || !claimed || showExact(truth) !== showExact(claimed)) {
+      bad.push(`${task.id}: given=${truth ? showExact(truth) : 'null'} reference=${claimed ? showExact(claimed) : 'null'}`)
+    }
+  }
+  return bad.length === 0
+})(), (() => {
+  const bad = []
+  for (const task of EVALS) {
+    const symbols = task.variables.map(v => v.name)
+    const at = {}
+    for (const [name, raw] of Object.entries(task.at)) at[name] = parseExpression(raw, [])
+    const truth = exactValue(substitute(parseExpression(task.given, symbols), at))
+    const claimed = exactValue(parseExpression(task.reference, symbols))
+    if (!truth || !claimed || showExact(truth) !== showExact(claimed)) {
+      bad.push(`${task.id}: given=${truth ? showExact(truth) : 'null'} reference=${claimed ? showExact(claimed) : 'null'}`)
+    }
+  }
+  return bad.join('; ')
+})())
+const selfRulings = await Promise.all(EVALS.map(task => ruleEvaluate(task, task.reference, NO_WORKER)))
+t('each one rules its own reference correct without a worker',
+  selfRulings.every(r => r.status === 'ruled' && r.verdict.ruling === 'correct'),
+  selfRulings.map((r, i) => `${EVALS[i].id}:${r.status === 'ruled' ? r.verdict.ruling : r.status}`).join(', '))
+
+group('coverage — the gap the evaluate tasks were added to close')
+t('every knowledge point in the ontology now has at least one task', (() => {
+  const missing = allKnowledgePoints(O).filter(point => tasksForPoint(point.id).length === 0)
+  return missing.length === 0
+})(), allKnowledgePoints(O).filter(point => tasksForPoint(point.id).length === 0).map(p => p.id).join(', '))
+t('every task still names a real knowledge point', TASKS.every(task => !!knowledgePointById(O, task.knowledgePointId)))
+t('every task kind shipped is one the dispatcher implements', (() => {
+  const implemented = new Set(['transform_to_form', 'evaluate'])
+  return TASKS.every(task => implemented.has(task.kind))
+})())
 
 // ---------------------------------------------------------------------------
 // The importer

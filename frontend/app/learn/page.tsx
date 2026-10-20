@@ -9,6 +9,7 @@ import { RATIONAL_EXPRESSIONS } from '@/lib/concepts/ontology'
 import { TRAVERSAL_GAME } from '@/lib/concepts/traversal'
 import { MASTERY_FLOOR } from '@/lib/concepts/scheduling'
 import ConceptBrowser from '@/components/concepts/ConceptBrowser'
+import ImportReview from '@/components/concepts/ImportReview'
 import PracticePanel, { type PracticeTaskView } from '@/components/concepts/PracticePanel'
 import ReviewQueue from '@/components/concepts/ReviewQueue'
 import RpnCalculator from '@/components/concepts/RpnCalculator'
@@ -32,7 +33,7 @@ export const dynamic = 'force-dynamic'
  * scratchpad is the surface feature with no CAS behind it.
  */
 
-type Tab = 'practice' | 'concepts' | 'review' | 'tools'
+type Tab = 'practice' | 'concepts' | 'review' | 'tools' | 'import'
 
 interface Named { conceptId: string; conceptName: string }
 
@@ -98,6 +99,7 @@ export default function LearnPage() {
             ['concepts', 'Concepts'],
             ['review', 'Review'],
             ['tools', 'Scratchpad'],
+            ['import', 'Import'],
           ] as [Tab, string][]).map(([id, label]) => (
             <button
               key={id}
@@ -220,6 +222,10 @@ export default function LearnPage() {
             </p>
           </>
         )}
+
+        {/* Not wired to `load`: an import writes nothing, so there is no state it
+            could invalidate. A refresh here would imply otherwise. */}
+        {tab === 'import' && <ImportReview />}
       </div>
     </main>
   )

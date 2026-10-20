@@ -79,6 +79,11 @@ export async function GET(req: NextRequest) {
       given: t.given,
       form: t.form ?? null,
       variables: t.variables,
+      // `evaluate` only, and the learner cannot answer without it — the prompt
+      // names the inputs in prose but the panel shows them next to the
+      // expression, because reading an input out of a sentence is not the skill
+      // being practised.
+      at: t.at ?? null,
       domainConditions: t.domainConditions ?? [],
       conceptId: ONTOLOGY.concepts.find(c => c.knowledgePoints.some(p => p.id === t.knowledgePointId))?.id ?? null,
     })),
