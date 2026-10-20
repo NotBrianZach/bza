@@ -59,7 +59,7 @@ export function UnauthReader({
         {book.file_path === 'local' ? (
           <>
             <p className="text-sm font-medium mb-2">No content available</p>
-            <p className="text-xs text-center max-w-xs">Content couldn't be loaded. Try refreshing, or create a free account to read from the cloud.</p>
+            <p className="text-xs text-center max-w-xs">Content couldn&apos;t be loaded. Try refreshing, or create a free account to read from the cloud.</p>
           </>
         ) : (
           <div className="spinner" />

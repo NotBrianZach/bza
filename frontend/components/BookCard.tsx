@@ -524,7 +524,7 @@ export default function BookCard({ book, onDelete, onPinToggled, onRenamed, onRe
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
               <Languages size={16} className="text-violet-500" />
-              Convert "{displayTitle}"
+              Convert &quot;{displayTitle}&quot;
             </h3>
             <button onClick={() => setShowConvertMenu(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
               <X size={16} />

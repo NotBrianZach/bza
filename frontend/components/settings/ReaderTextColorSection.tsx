@@ -51,7 +51,7 @@ export default function ReaderTextColorSection() {
         🎨 Dark Mode Text Color
       </h2>
       <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
-        Customize the reading text color in dark mode. Pick a color that's easy on your eyes.
+        Customize the reading text color in dark mode. Pick a color that&apos;s easy on your eyes.
       </p>
       <div className="flex items-center gap-3 flex-wrap">
         {PRESETS.map(({ color: c, label }) => (

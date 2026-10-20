@@ -75,7 +75,7 @@ export default function ExtensionPage() {
               className="btn btn-primary inline-flex"
             >
               <PuzzleIcon size={18} className="mr-2" />
-              Add to Chrome — it's free
+              Add to Chrome — it&apos;s free
             </a>
           )}
           <div className="flex items-center justify-center gap-4">

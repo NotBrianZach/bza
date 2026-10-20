@@ -174,7 +174,7 @@ export default function DashboardPage() {
               <HardDrive className="text-blue-600 flex-shrink-0 mt-0.5" size={20} />
               <div className="flex-1">
                 <p className="text-sm font-medium text-blue-900">
-                  You're using the <strong>Free Tier</strong> - books stored in your browser
+                  You&apos;re using the <strong>Free Tier</strong> - books stored in your browser
                 </p>
                 <p className="text-sm text-blue-700 mt-1">
                   Storage: {(storageUsage.used / 1024 / 1024).toFixed(2)} MB used locally

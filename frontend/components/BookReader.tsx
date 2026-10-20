@@ -1,30 +1,46 @@
 'use client'
 
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { Book, Page } from '@/types'
 import { booksQueries, imageQueries } from '@/lib/queries'
 import { getBookContent, getLocalProgress, saveLocalProgress } from '@/lib/localStorage'
-import { ChevronLeft, ChevronRight, ArrowLeft, Image as ImageIcon, ImageOff, PanelRight, Maximize2, X as XIcon, ExternalLink, Columns2, Search, RefreshCw, BookOpen, Volume2, VolumeX, AlignJustify, Languages, BookDown, Loader2 } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
 import rehypeKatex from 'rehype-katex'
 import rehypeRaw from 'rehype-raw'
-import { getTtsEngine, getPersonaInfo } from '@/lib/persona'
 import { useReading } from './reader/useReading'
 import { useWikiUpdate } from './reader/useWikiUpdate'
 import { useSerendipity } from './reader/useSerendipity'
-import { toPlainText } from './reader/utils'
 import { StorageImage } from './reader/StorageImage'
-import { TranslatedPaneHeader } from './reader/TranslatedPaneHeader'
 import { TranslationPanel } from './reader/TranslationPanel'
 import { MangaReader } from './reader/MangaReader'
 import { ChatBookReader } from './reader/ChatBookReader'
 import { UnauthReader } from './reader/UnauthReader'
 import { AuthReader } from './reader/AuthReader'
+import { ReaderToolbar } from './reader/ReaderToolbar'
+import { ImagesDrawer } from './reader/ImagesDrawer'
+import { WikiDiffModal } from './reader/WikiDiffModal'
+import { MobilePageNav, DesktopPageNav } from './reader/PageNav'
+import {
+  DEFAULT_CHAR_PAGE_LENGTH,
+  addPostAnchors,
+  citedReferences,
+  computePageBreaks,
+  extractInlineImages,
+  footnoteBlock,
+  parseFootnotes,
+  parseReferences,
+  parseToc,
+  preprocessContent as preprocessWithRefs,
+  searchPages as searchText,
+  sliceForPage,
+  type InlineImage,
+  type TocEntry,
+} from './reader/textPipeline'
 
-export interface TocEntry { title: string; level: number; page: number }
-export interface InlineImage { url: string; alt: string; page: number }
+// Re-exported: PageSidebar, ImagePanel and the book page import these from here.
+export type { TocEntry, InlineImage }
 
 interface BookReaderProps {
   book: Book
@@ -96,6 +112,33 @@ export default function BookReader({ book, onBack, onToggleSidebar, sidebarMode,
     const next = (imageMode + 1) % 4
     try { localStorage.setItem('bza-image-mode', String(next)) } catch {}
     setImageMode(next)
+  }
+
+  const closeSearch = () => {
+    setSearchOpen(false)
+    setSearchQuery('')
+    setSearchResults([])
+  }
+
+  /**
+   * Opening the translation pane forces paginated 1-up, because side-by-side is
+   * only side-by-side against a single fixed page — in scroll mode the two
+   * panes have nothing to line up on. Closing it leaves the mode alone rather
+   * than restoring what was there before: the reader has been looking at a
+   * paginated page and snapping them back out of it on close is more
+   * disorienting than leaving them where they are.
+   */
+  const toggleTranslatePanel = () => {
+    const next = !showTranslatePanel
+    setShowTranslatePanel(next)
+    if (next) {
+      setScrollMode(false)
+      setPagesPerView(1)
+      try {
+        localStorage.setItem('bza-scroll-mode', 'false')
+        localStorage.setItem('bza-pages-per-view', '1')
+      } catch {}
+    }
   }
 
   const toggleScrollMode = () => {
@@ -230,203 +273,43 @@ export default function BookReader({ book, onBack, onToggleSidebar, sidebarMode,
   }
   const refsMapRef = useRef<Record<number, string>>({}) // parsed bibliography: num → full text
 
+  const charPageLength = book.char_page_length ?? DEFAULT_CHAR_PAGE_LENGTH
 
-  function extractInlineImages(text: string, breaks: number[]): Array<{ url: string; alt: string; page: number }> {
-    const results: Array<{ url: string; alt: string; page: number }> = []
-    const re = /!\[([^\]]*)\]\((https?:\/\/[^)\s]+)\)/gi
-    let m: RegExpExecArray | null
-    while ((m = re.exec(text)) !== null) {
-      const idx = m.index
-      let page = 1
-      if (breaks.length > 1) {
-        const i = breaks.findIndex((b, j) => b <= idx && (breaks[j + 1] ?? Infinity) > idx)
-        page = Math.max(1, i + 1)
-      }
-      results.push({ url: m[2], alt: m[1], page })
-    }
-    return results
-  }
-
-  function computePageBreaks(text: string, len: number): number[] {
-    // Heading pattern — prefer breaking before headings
-    const headingRe = /^(?:#{1,6}\s|\\(?:section|chapter)|(?:CHAPTER|Chapter|PART|Part)\s+[IVXLCDM\d])/gm
-    const headingOffsets = new Set<number>()
-    let hm: RegExpExecArray | null
-    while ((hm = headingRe.exec(text)) !== null) headingOffsets.add(hm.index)
-
-    const breaks = [0]
-    let pos = 0
-    while (pos < text.length) {
-      const target = pos + len
-      if (target >= text.length) break
-
-      // First: check if there's a heading in the ±20% window around target
-      const minPos = pos + Math.floor(len * 0.8)
-      const maxPos = Math.min(pos + Math.ceil(len * 1.2), text.length)
-      let end = -1
-
-      for (const ho of headingOffsets) {
-        if (ho > minPos && ho <= maxPos) { end = ho; break }
-      }
-
-      // Second: look for paragraph break (\n\n) near target
-      if (end === -1) {
-        const look = Math.min(target + 300, text.length)
-        for (let i = target; i < look; i++) {
-          if (text[i] === '\n' && text[i + 1] === '\n') { end = i + 2; break }
-        }
-      }
-
-      // Third: sentence boundary
-      if (end === -1) {
-        const look = Math.min(target + 200, text.length)
-        for (let i = target; i < look; i++) {
-          if (('.!?'.includes(text[i])) && /[\s"']/.test(text[i + 1] ?? '')) { end = i + 1; break }
-        }
-      }
-
-      // Last resort: hard break at target
-      if (end === -1) end = target
-
-      breaks.push(end)
-      pos = end
-    }
-    return breaks
-  }
-
-  function parseToc(text: string, breaks: number[]): { title: string; level: number; page: number }[] {
-    const entries: { title: string; level: number; page: number }[] = []
-
-    const patterns: Array<{ re: RegExp; level: (m: RegExpExecArray) => number; title: (m: RegExpExecArray) => string }> = [
-      { re: /^(#{1,4})\s+(.+)$/gm, level: m => m[1].length, title: m => m[2].trim() },
-      { re: /^\\chapter\*?\{(.+?)\}/gm, level: () => 1, title: m => m[1] },
-      { re: /^\\section\*?\{(.+?)\}/gm, level: () => 2, title: m => m[1] },
-      { re: /^\\subsection\*?\{(.+?)\}/gm, level: () => 3, title: m => m[1] },
-      { re: /^(?:CHAPTER|Chapter)\s+([IVXLCDM\d]+)[\s.:—–-]*(.*)$/gm, level: () => 1, title: m => `Chapter ${m[1]}${m[2]?.trim() ? ': ' + m[2].trim() : ''}` },
-      { re: /^(?:PART|Part)\s+([IVXLCDM\d]+)[\s.:—–-]*(.*)$/gm, level: () => 1, title: m => `Part ${m[1]}${m[2]?.trim() ? ': ' + m[2].trim() : ''}` },
-    ]
-
-    const findPage = (offset: number) => {
-      let lo = 0, hi = breaks.length - 1
-      while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (breaks[mid] <= offset) lo = mid; else hi = mid - 1 }
-      return lo + 1
-    }
-
-    for (const pat of patterns) {
-      pat.re.lastIndex = 0
-      let m: RegExpExecArray | null
-      while ((m = pat.re.exec(text)) !== null) {
-        const title = pat.title(m)
-        if (title.length < 2 || title.length > 100) continue
-        entries.push({ title, level: pat.level(m), page: findPage(m.index) })
-      }
-    }
-
-    // Sort by page, deduplicate same-page same-title
-    entries.sort((a, b) => a.page - b.page || a.level - b.level)
-    const seen = new Set<string>()
-    return entries.filter(e => { const k = `${e.page}-${e.title}`; if (seen.has(k)) return false; seen.add(k); return true })
-  }
-
-  function parseReferences(text: string): Record<number, string> {
-    // Find a references/bibliography section near the end of the book
-    const sectionMatch = text.match(/\n#{1,3}\s*(?:References|Bibliography|Works Cited|Further Reading|Notes)\s*\n([\s\S]{0,20000})$/i)
-    if (!sectionMatch) return {}
-    const section = sectionMatch[1]
-    const refs: Record<number, string> = {}
-    // Match [N] entry lines, possibly spanning multiple lines until the next [N] or blank line
-    const entryRe = /\[(\d+)\]\s+([\s\S]+?)(?=\n\s*\[\d+\]|\n{2,}|$)/g
-    for (const m of section.matchAll(entryRe)) {
-      const num = parseInt(m[1])
-      if (!isNaN(num)) refs[num] = m[2].replace(/\n\s*/g, ' ').trim()
-    }
-    return refs
-  }
+  // Bound forms of the text pipeline. Both are passed down to the reader
+  // components as props, so they close over the refs the pipeline needs rather
+  // than making every child reach for them.
+  const preprocessContent = (content: string) => preprocessWithRefs(content, refsMapRef.current)
 
   function getSliceForPage(pageNum: number): string {
-    const charPageLength = book.char_page_length ?? 420
-    const breaks = pageBreaksRef.current
-    const start = breaks[pageNum - 1] ?? (pageNum - 1) * charPageLength
-    const end = breaks[pageNum] ?? contentCacheRef.current!.length
-    return contentCacheRef.current!.substring(start, end)
+    return sliceForPage(contentCacheRef.current!, pageNum, pageBreaksRef.current, charPageLength)
   }
 
-  function searchPages(query: string): Array<{ pageNum: number; snippet: string }> {
-    if (!contentCacheRef.current || !query.trim()) return []
-    const text = contentCacheRef.current
-    const q = query.toLowerCase()
-    const charPageLength = book.char_page_length ?? 420
-    const breaks = pageBreaksRef.current.length > 0
-      ? pageBreaksRef.current
-      : Array.from({ length: Math.ceil(text.length / charPageLength) }, (_, i) => i * charPageLength)
-    const results: Array<{ pageNum: number; snippet: string }> = []
-    for (let i = 0; i < breaks.length; i++) {
-      const start = breaks[i]
-      const end = breaks[i + 1] ?? text.length
-      const pageText = text.substring(start, end)
-      const idx = pageText.toLowerCase().indexOf(q)
-      if (idx !== -1) {
-        const snipStart = Math.max(0, idx - 40)
-        const snipEnd = Math.min(pageText.length, idx + q.length + 80)
-        const raw = pageText.substring(snipStart, snipEnd).replace(/\n+/g, ' ')
-        const snippet = (snipStart > 0 ? '…' : '') + raw + (snipEnd < pageText.length ? '…' : '')
-        results.push({ pageNum: i + 1, snippet })
-        if (results.length >= 20) break
-      }
-    }
-    return results
+  /**
+   * Everything derived from a freshly loaded book, in one place.
+   *
+   * Called from three paths that each used to repeat this sequence (local
+   * init, the auth-path first page load, and the Wikipedia update) — and the
+   * order is load-bearing: the breaks have to exist before the TOC and the
+   * inline images, since both report which page a thing is on.
+   */
+  const ingestContent = (content: string) => {
+    pageBreaksRef.current = computePageBreaks(content, charPageLength)
+    setAuthTotalPages(pageBreaksRef.current.length)
+    refsMapRef.current = parseReferences(content)
+    setInlineImages(extractInlineImages(content, pageBreaksRef.current))
+    const entries = parseToc(content, pageBreaksRef.current)
+    if (entries.length > 0) onTocReady?.(entries)
   }
 
   // Debounced search
   useEffect(() => {
     if (!searchOpen) return
-    const t = setTimeout(() => setSearchResults(searchPages(searchQuery)), 200)
+    const t = setTimeout(
+      () => setSearchResults(searchText(contentCacheRef.current ?? '', searchQuery, pageBreaksRef.current, charPageLength)),
+      200,
+    )
     return () => clearTimeout(t)
   }, [searchQuery, searchOpen])
-
-  // Parse %%fn%%\nN|text\n%%/fn%% blocks out of page content.
-  // Returns cleaned text and a map of footnote number → text.
-  function parseFootnotes(content: string): { text: string; footnotes: Record<number, string> } {
-    const match = content.match(/%%fn%%\n?([\s\S]*?)\n?%%\/fn%%/)
-    if (!match) return { text: content, footnotes: {} }
-    const text = content.replace(/\n*%%fn%%[\s\S]*?%%\/fn%%/, '').trim()
-    const footnotes: Record<number, string> = {}
-    for (const line of match[1].trim().split('\n')) {
-      const pipe = line.indexOf('|')
-      if (pipe > 0) {
-        const num = parseInt(line.slice(0, pipe))
-        const fnText = line.slice(pipe + 1).trim()
-        if (!isNaN(num) && fnText) footnotes[num] = fnText
-      }
-    }
-    return { text, footnotes }
-  }
-
-  // Convert [[N]] inline markers → markdown link [ⁿ](fn:N) for custom rendering.
-  // Also normalize LaTeX delimiters: \(...\) → $...$, \[...\] → $$...$$
-  const SUPERSCRIPT_CHARS = '⁰¹²³⁴⁵⁶⁷⁸⁹'
-  function preprocessContent(content: string): string {
-    const refs = refsMapRef.current
-    return content
-      .replace(/\\\[([^]*?)\\\]/g, (_, m) => `$$${m}$$`)
-      .replace(/\\\(([^]*?)\\\)/g, (_, m) => `$${m}$`)
-      .replace(/\[\[(\d+)\]\]/g, (_, n: string) => {
-        const sup = n.split('').map((d: string) => SUPERSCRIPT_CHARS[parseInt(d)] ?? d).join('')
-        return `[${sup}](fn:${n})`
-      })
-      // Convert bare [N] reference citations to clickable superscripts
-      .replace(/(?<!\[)\[(\d+)\](?!\])/g, (match, n: string) => {
-        if (!refs[parseInt(n)]) return match
-        const sup = n.split('').map((d: string) => SUPERSCRIPT_CHARS[parseInt(d)] ?? d).join('')
-        return `[${sup}](fn:${n})`
-      })
-      // Inject anchor spans for 4chan post numbers so reply links can scroll+highlight
-      .replace(/\bNo\.(\d+)\b/g, '<span id="post-$1">No.$1</span>')
-  }
-
-  function addPostAnchors(content: string): string {
-    return content.replace(/\bNo\.(\d+)\b/g, '<span id="post-$1">No.$1</span>')
-  }
 
   // Track container width for CSS columns column-width and page stride
   useEffect(() => {
@@ -511,13 +394,7 @@ export default function BookReader({ book, onBack, onToggleSidebar, sidebarMode,
         if (content) {
           setFullContent(content)
           contentCacheRef.current = content
-          const charPageLength = book.char_page_length ?? 420
-          pageBreaksRef.current = computePageBreaks(content, charPageLength)
-          setAuthTotalPages(pageBreaksRef.current.length)
-          refsMapRef.current = parseReferences(content)
-          setInlineImages(extractInlineImages(content, pageBreaksRef.current))
-          const entries = parseToc(content, pageBreaksRef.current)
-          if (entries.length > 0) onTocReady?.(entries)
+          ingestContent(content)
         }
       })
     }
@@ -737,41 +614,20 @@ export default function BookReader({ book, onBack, onToggleSidebar, sidebarMode,
       if (!contentCacheRef.current) {
         contentCacheRef.current = await booksQueries.getContent(book.file_path)
         if (isChatBook) setChatBookContent(contentCacheRef.current)
-        const charPageLength = book.char_page_length ?? 420
-        pageBreaksRef.current = computePageBreaks(contentCacheRef.current, charPageLength)
-        setAuthTotalPages(pageBreaksRef.current.length)
-        refsMapRef.current = parseReferences(contentCacheRef.current)
-        setInlineImages(extractInlineImages(contentCacheRef.current, pageBreaksRef.current))
-        // Always generate TOC from detected headings
-        const entries = parseToc(contentCacheRef.current, pageBreaksRef.current)
-        if (entries.length > 0) onTocReady?.(entries)
+        ingestContent(contentCacheRef.current)
       }
       const rawSlice = getSliceForPage(pageNum)
       const { text, footnotes } = parseFootnotes(rawSlice)
-      // Inject bibliography references cited on this page into the footnotes map
+      // Inject bibliography references cited on this page into the footnotes map.
+      // An authored footnote wins — a [[N]] marker carries its own text.
       const refs = refsMapRef.current
-      if (Object.keys(refs).length > 0) {
-        const cited = new Set<number>()
-        // Match bare [N] citations (not already [[N]] footnote markers)
-        for (const m of text.matchAll(/(?<!\[)\[(\d+)\](?!\])/g)) {
-          const n = parseInt(m[1])
-          if (refs[n]) cited.add(n)
-        }
-        for (const n of cited) {
-          if (!footnotes[n]) footnotes[n] = refs[n]
-        }
+      for (const n of citedReferences(text, refs)) {
+        if (!footnotes[n]) footnotes[n] = refs[n]
       }
-      // footnotes injected inline
-      
       // Append footnotes inline at bottom of page content
       let finalContent = preprocessContent(text)
-      const fnEntries = Object.entries(footnotes).sort(([a], [b]) => Number(a) - Number(b))
-      if (fnEntries.length > 0) {
-        const fnBlock = fnEntries
-          .map(([num, fnText]) => `**${num}.** ${fnText}`)
-          .join('\n\n')
-        finalContent += `\n\n---\n\n${fnBlock}`
-      }
+      const fnBlock = footnoteBlock(footnotes)
+      if (fnBlock) finalContent += `\n\n---\n\n${fnBlock}`
       setPageContent({ page_num: pageNum, content: finalContent, book_id: book.id, word_count: 0, has_images: false })
       saveProgressDebounced(pageNum)
       if (!scrollMode) setProgressPercent((pageNum / book.total_pages) * 100)
@@ -790,7 +646,8 @@ export default function BookReader({ book, onBack, onToggleSidebar, sidebarMode,
     setChatInput('')
     setChatSending(true)
     try {
-      const charPageLength = book.char_page_length ?? 2000
+      // Chat books paginate far longer than prose — a turn is not a page.
+      const chatCharPageLength = book.char_page_length ?? 2000
       const existing = chatBookContent || contentCacheRef.current || fullContent || ''
 
       // Use the simple API route — works for all users, no conversation setup needed
@@ -819,7 +676,7 @@ export default function BookReader({ book, onBack, onToggleSidebar, sidebarMode,
 
       // Persist in background (non-blocking)
       if (isAuthenticated) {
-        booksQueries.appendContent(book.id, book.file_path, newContent, charPageLength).catch(() => {})
+        booksQueries.appendContent(book.id, book.file_path, newContent, chatCharPageLength).catch(() => {})
       } else {
         import('@/lib/localStorage').then(({ saveBookContent: save }) => save(book.id, updated)).catch(() => {})
         setFullContent(updated)
@@ -911,197 +768,55 @@ export default function BookReader({ book, onBack, onToggleSidebar, sidebarMode,
   // contentCacheRef is a ref — use isLoading as proxy for when content changes
   }, [isLoading, scrollMode, isAuthenticated, showInlineImages])
 
+  // Page 0 is the cover slot and is not counted — it belongs to the library card.
+  const sideImageCount = bookImages.filter(img => (img.page_num ?? img.page_number ?? 1) > 0).length
 
   return (
     <>
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <div style={{ position: 'relative' }}>
-      {/* Single merged header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center gap-1 px-2 py-2" style={{ paddingTop: 'max(8px, env(safe-area-inset-top))' }}>
-        {/* Back */}
-        <button onClick={onBack} className="btn btn-secondary p-2 flex-shrink-0" title="Library">
-          <ArrowLeft size={18} />
-        </button>
+      <ReaderToolbar
+        title={book.title}
+        onBack={onBack}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        progressPercent={progressPercent}
+        pageDisplayRef={pageDisplayRef}
+        searchOpen={searchOpen}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        searchInputRef={searchInputRef}
+        onOpenSearch={() => setSearchOpen(true)}
+        onCloseSearch={closeSearch}
+        scrollMode={scrollMode}
+        pagesPerView={pagesPerView}
+        setPagesPerView={setPagesPerView}
+        toggleScrollMode={toggleScrollMode}
+        imageMode={imageMode}
+        cycleImageMode={cycleImageMode}
+        imagesDrawerOpen={imagesDrawerOpen}
+        onOpenImagesDrawer={() => setImagesDrawerOpen(true)}
+        imageCount={sideImageCount + inlineImages.length}
+        isAuthenticated={isAuthenticated}
+        showTranslatePanel={showTranslatePanel}
+        onToggleTranslate={toggleTranslatePanel}
+        narrating={narrating}
+        narrateLoading={narrateLoading}
+        onToggleNarration={() => narrating || narrateLoading ? stopNarration() : narratePage(currentPage, true)}
+        isWiki={isWiki}
+        wikiChecking={wikiChecking}
+        onCheckWikiUpdates={checkWikiUpdates}
+        sidebarMode={sidebarMode}
+        onToggleSidebar={onToggleSidebar}
+      />
 
-        {/* Title + progress OR search input */}
-        {searchOpen ? (
-          <input
-            ref={searchInputRef}
-            autoFocus
-            type="text"
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Escape') { setSearchOpen(false); setSearchQuery(''); setSearchResults([]) } }}
-            placeholder="Search pages…"
-            className="flex-1 min-w-0 input text-sm py-1.5"
-          />
-        ) : (
-          <div className="flex-1 min-w-0 px-1">
-            <p className="font-semibold text-sm text-gray-900 dark:text-gray-100 truncate leading-tight">{book.title}</p>
-            {scrollMode ? (
-              <span ref={pageDisplayRef} className="text-xs text-gray-500 dark:text-gray-400 leading-tight">
-                p.{currentPage}/{totalPages}{progressPercent > 0 ? ` · ${progressPercent.toFixed(0)}%` : ''}
-              </span>
-            ) : (
-              <p className="text-xs text-gray-500 dark:text-gray-400 leading-tight">
-                p.{currentPage}/{totalPages}{progressPercent > 0 ? ` · ${progressPercent.toFixed(0)}%` : ''}
-              </p>
-            )}
-          </div>
-        )}
-
-        {/* Search */}
-        <button
-          onClick={() => {
-            if (searchOpen) { setSearchOpen(false); setSearchQuery(''); setSearchResults([]) }
-            else { setSearchOpen(true) }
-          }}
-          title="Search book"
-          className={`btn btn-secondary p-2 flex-shrink-0 ${searchOpen ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-300 text-blue-600 dark:text-blue-400' : ''}`}
-        >
-          {searchOpen ? <XIcon size={18} /> : <Search size={18} />}
-        </button>
-
-        {/* View mode: mobile = scroll ↔ paginated; desktop = scroll → 1-up → 2-up → 3-up → scroll */}
-        <button
-          onClick={() => {
-            const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
-            if (isMobile) {
-              // Mobile: just toggle scroll ↔ paginated (1-up only)
-              toggleScrollMode()
-              setPagesPerView(1)
-              try { localStorage.setItem('bza-pages-per-view', '1') } catch {}
-            } else if (scrollMode) {
-              toggleScrollMode()
-              setPagesPerView(1)
-              try { localStorage.setItem('bza-pages-per-view', '1') } catch {}
-            } else if (pagesPerView < 3) {
-              const next = (pagesPerView + 1) as 2 | 3
-              setPagesPerView(next)
-              try { localStorage.setItem('bza-pages-per-view', String(next)) } catch {}
-            } else {
-              toggleScrollMode()
-              setPagesPerView(1)
-              try { localStorage.setItem('bza-pages-per-view', '1') } catch {}
-            }
-          }}
-          title={scrollMode ? 'Scroll mode — click for paginated' : `${pagesPerView}-up — click to cycle`}
-          className={`btn btn-secondary p-2 flex-shrink-0 flex items-center gap-0.5 ${!scrollMode ? 'bg-indigo-50 dark:bg-indigo-900/30 border-indigo-300 text-indigo-600 dark:text-indigo-400' : ''}`}
-        >
-          {scrollMode ? <AlignJustify size={18} /> : <Columns2 size={18} />}
-          {!scrollMode && pagesPerView > 1 && <span className="text-xs leading-none">{pagesPerView}</span>}
-        </button>
-
-        {/* Image mode cycle: 0=both, 1=side only, 2=inline only, 3=none */}
-        <button
-          onClick={() => { cycleImageMode(); if (imageMode === 3) setImagesDrawerOpen(true) }}
-          title={['All images — click to cycle', 'Side images only', 'Inline images only', 'No images — click to show'][imageMode]}
-          className={`btn btn-secondary p-2 flex-shrink-0 relative flex items-center gap-0.5 ${imageMode === 3 ? 'bg-orange-50 dark:bg-orange-900/30 border-orange-300 text-orange-600 dark:text-orange-400' : imagesDrawerOpen ? 'bg-green-50 dark:bg-green-900/30 border-green-300 text-green-700 dark:text-green-400' : ''}`}
-        >
-          {imageMode === 3 ? <ImageOff size={18} /> : <ImageIcon size={18} />}
-          {imageMode > 0 && imageMode < 3 && (
-            <span className="text-[9px] leading-none font-bold">{imageMode === 1 ? 'S' : 'I'}</span>
-          )}
-          {imageMode < 3 && (bookImages.filter(img => (img.page_num ?? img.page_number ?? 1) > 0).length + inlineImages.length) > 0 && (
-            <span className="absolute -top-1 -right-1 text-xs w-4 h-4 rounded-full flex items-center justify-center font-bold bg-green-600 text-white">
-              {bookImages.filter(img => (img.page_num ?? img.page_number ?? 1) > 0).length + inlineImages.length}
-            </span>
-          )}
-        </button>
-
-        {/* Translation toggle (auth only) — switches to paginated 1-up + shows translation pane */}
-        {isAuthenticated && (
-          <button
-            onClick={() => {
-              const next = !showTranslatePanel
-              setShowTranslatePanel(next)
-              if (next) {
-                // Switch to paginated 1-up mode so we get a true side-by-side layout
-                setScrollMode(false)
-                setPagesPerView(1)
-                try {
-                  localStorage.setItem('bza-scroll-mode', 'false')
-                  localStorage.setItem('bza-pages-per-view', '1')
-                } catch {}
-              }
-            }}
-            title="Translation"
-            className={`btn btn-secondary p-2 flex-shrink-0 ${showTranslatePanel ? 'bg-violet-50 dark:bg-violet-900/30 border-violet-300 text-violet-600 dark:text-violet-400' : ''}`}
-          >
-            <Languages size={18} />
-          </button>
-        )}
-
-        {/* Narration */}
-        <button
-          onClick={() => narrating || narrateLoading ? stopNarration() : narratePage(currentPage, true)}
-          title={narrating ? 'Stop narration' : narrateLoading ? 'Loading voice…' : 'Start narration (auto-advance)'}
-          className={`btn btn-secondary p-2 flex-shrink-0 ${narrating ? 'bg-purple-50 dark:bg-purple-900/30 border-purple-300 text-purple-600 dark:text-purple-400' : narrateLoading ? 'bg-amber-50 dark:bg-amber-900/30 border-amber-300 text-amber-600' : ''}`}
-        >
-          {narrateLoading ? <Loader2 size={18} className="animate-spin" /> : narrating ? <Volume2 size={18} /> : <VolumeX size={18} />}
-        </button>
-
-        {/* Wikipedia: check for updates */}
-        {isWiki && (
-          <button
-            onClick={checkWikiUpdates}
-            disabled={wikiChecking}
-            title="Check for Wikipedia updates"
-            className="btn btn-secondary p-2 flex-shrink-0 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/30 disabled:opacity-50"
-          >
-            <RefreshCw size={18} className={wikiChecking ? 'animate-spin' : ''} />
-          </button>
-        )}
-
-        {/* Sidebar toggle — cycles hidden → normal → wide on desktop */}
-        <button
-          onClick={onToggleSidebar}
-          title={sidebarMode === 'hidden' ? 'Open sidebar' : sidebarMode === 'normal' ? 'Expand sidebar' : 'Close sidebar'}
-          className={`btn btn-secondary p-2 flex-shrink-0 ${
-            sidebarMode === 'wide'
-              ? 'bg-blue-100 dark:bg-blue-900/50 border-blue-400 text-blue-700 dark:text-blue-300'
-              : sidebarMode === 'normal'
-              ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-300 text-blue-600'
-              : ''
-          }`}
-        >
-          {sidebarMode === 'wide' ? <Maximize2 size={18} /> : <PanelRight size={18} />}
-        </button>
-      </div>
-
-      {/* Mobile-only page nav — bottom bar can be hidden by browser chrome / tab-close popups */}
       {!scrollMode && (
-        <div className="md:hidden flex items-center justify-center gap-2 px-2 py-1.5 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-          <button
-            onClick={() => goToPage(currentPage - pagesPerView)}
-            disabled={currentPage <= 1}
-            className="btn btn-secondary flex items-center justify-center py-1.5 px-3 text-sm disabled:opacity-40"
-            aria-label="Previous page"
-          >
-            <ChevronLeft size={18} />
-          </button>
-          <input
-            type="number"
-            value={currentPage}
-            onChange={(e) => {
-              const page = parseInt(e.target.value)
-              if (page >= 1 && page <= totalPages) goToPage(page)
-            }}
-            className="input w-20 text-center py-1.5 text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-            min={1}
-            max={totalPages}
-            aria-label="Current page"
-          />
-          <span className="text-gray-500 dark:text-gray-400 text-sm whitespace-nowrap">/ {totalPages}</span>
-          <button
-            onClick={() => goToPage(currentPage + pagesPerView)}
-            disabled={currentPage + pagesPerView - 1 >= totalPages}
-            className="btn btn-secondary flex items-center justify-center py-1.5 px-3 text-sm disabled:opacity-40"
-            aria-label="Next page"
-          >
-            <ChevronRight size={18} />
-          </button>
-        </div>
+        <MobilePageNav
+          currentPage={currentPage}
+          totalPages={totalPages}
+          pagesPerView={pagesPerView}
+          onGoToPage={goToPage}
+        />
       )}
 
       {/* Progress Bar */}
@@ -1119,7 +834,7 @@ export default function BookReader({ book, onBack, onToggleSidebar, sidebarMode,
           ) : searchResults.map(r => (
             <button
               key={r.pageNum}
-              onClick={() => { goToPage(r.pageNum); setSearchOpen(false); setSearchQuery(''); setSearchResults([]) }}
+              onClick={() => { goToPage(r.pageNum); closeSearch() }}
               className="w-full text-left px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700 last:border-0 flex items-baseline gap-3"
             >
               <span className="text-xs font-bold text-blue-600 dark:text-blue-400 shrink-0 w-10">p.{r.pageNum}</span>
@@ -1201,67 +916,14 @@ export default function BookReader({ book, onBack, onToggleSidebar, sidebarMode,
           />
         )}
 
-        {/* Images drawer */}
         {imagesDrawerOpen && (
-          <div className="absolute right-0 top-0 bottom-0 w-72 max-w-full bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 shadow-xl overflow-y-auto z-20 flex flex-col">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700 sticky top-0 bg-white dark:bg-gray-800">
-              <h3 className="font-semibold text-sm text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
-                <ImageIcon size={15} />
-                Images
-              </h3>
-              <button onClick={() => setImagesDrawerOpen(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
-                <XIcon size={18} />
-              </button>
-            </div>
-            {!showSideImages ? (
-              <p className="px-4 py-6 text-sm text-gray-400 dark:text-gray-500 text-center">Images are hidden. Toggle the image button in the toolbar to show them.</p>
-            ) : bookImages.length === 0 && inlineImages.length === 0 ? (
-              <p className="px-4 py-6 text-sm text-gray-400 dark:text-gray-500 text-center">No images for this book.</p>
-            ) : (
-              <div className="px-4 py-3 space-y-5">
-                {[...bookImages].filter(img => (img.page_num ?? img.page_number ?? 1) > 0).sort((a, b) => (a.page_num ?? a.page_number ?? 0) - (b.page_num ?? b.page_number ?? 0)).map((img, i) => {
-                  const pageNum = img.page_num ?? img.page_number
-                  return (
-                    <figure key={img.id}>
-                      <img src={img.image_url} alt={img.prompt} className="w-full rounded-lg shadow-sm border border-gray-200 dark:border-gray-700" />
-                      <figcaption className="mt-1.5 text-xs text-gray-500 dark:text-gray-400 leading-snug flex items-start gap-1">
-                        <span className="font-semibold text-gray-700 dark:text-gray-300 shrink-0">Fig. {i + 1}.</span>
-                        <span className="flex-1">{img.prompt}</span>
-                        {pageNum && (
-                          <button
-                            onClick={() => { goToPage(pageNum); setImagesDrawerOpen(false) }}
-                            className="shrink-0 text-blue-600 dark:text-blue-400 hover:underline font-medium"
-                          >
-                            p.{pageNum}
-                          </button>
-                        )}
-                      </figcaption>
-                    </figure>
-                  )
-                })}
-                {inlineImages.map((img, i) => (
-                  <figure key={`inline-${i}`}>
-                    <img
-                      src={img.url}
-                      alt={img.alt}
-                      referrerPolicy="no-referrer"
-                      className="w-full rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
-                    />
-                    {img.page > 0 && (
-                      <figcaption className="mt-1 text-xs text-gray-400 dark:text-gray-500 flex justify-end">
-                        <button
-                          onClick={() => { goToPage(img.page); setImagesDrawerOpen(false) }}
-                          className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
-                        >
-                          p.{img.page}
-                        </button>
-                      </figcaption>
-                    )}
-                  </figure>
-                ))}
-              </div>
-            )}
-          </div>
+          <ImagesDrawer
+            bookImages={bookImages}
+            inlineImages={inlineImages}
+            showSideImages={showSideImages}
+            onGoToPage={goToPage}
+            onClose={() => setImagesDrawerOpen(false)}
+          />
         )}
 
         {/* Footnotes drawer removed — footnotes now render inline at bottom of page content */}
@@ -1341,128 +1003,24 @@ export default function BookReader({ book, onBack, onToggleSidebar, sidebarMode,
         )}
       </div>
 
-      {/* Wikipedia diff modal */}
       {wikiDiffOpen && wikiDiff && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50" onClick={() => setWikiDiffOpen(false)}>
-          <div
-            className="bg-white dark:bg-gray-900 w-full sm:max-w-2xl max-h-[80vh] rounded-t-2xl sm:rounded-2xl flex flex-col shadow-xl"
-            onClick={e => e.stopPropagation()}
-          >
-            {/* Modal header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-              <div className="flex items-center gap-2">
-                <BookOpen size={18} className="text-blue-600 dark:text-blue-400" />
-                <span className="font-semibold text-sm text-gray-900 dark:text-gray-100">
-                  {wikiDiff.hasUpdate ? 'Wikipedia article updated' : 'No updates found'}
-                </span>
-              </div>
-              <button onClick={() => setWikiDiffOpen(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-1">
-                <XIcon size={18} />
-              </button>
-            </div>
-
-            {/* Revid info */}
-            <div className="px-4 py-2 text-xs text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-800">
-              {wikiDiff.hasUpdate
-                ? <>Revision {book.wiki_revid} → {wikiDiff.latestRevid}</>
-                : <>Already at latest revision ({wikiDiff.latestRevid})</>
-              }
-              {wikiDiff.diffUrl && (
-                <a href={wikiDiff.diffUrl} target="_blank" rel="noopener noreferrer" className="ml-3 text-blue-500 hover:underline inline-flex items-center gap-1">
-                  Full diff <ExternalLink size={11} />
-                </a>
-              )}
-            </div>
-
-            {/* Diff rows */}
-            {wikiDiff.hasUpdate && wikiDiff.diffRows && wikiDiff.diffRows.length > 0 ? (
-              <div className="overflow-y-auto flex-1 font-mono text-xs p-3 space-y-0.5">
-                {wikiDiff.diffRows.map((row, i) => (
-                  <div
-                    key={i}
-                    className={
-                      row.type === 1 ? 'bg-green-50 dark:bg-green-900/30 text-green-800 dark:text-green-200 px-2 py-0.5 rounded' :
-                      row.type === 2 ? 'bg-red-50 dark:bg-red-900/30 text-red-800 dark:text-red-200 px-2 py-0.5 rounded' :
-                      row.type === 3 ? 'font-bold text-gray-700 dark:text-gray-300 px-2 py-1' :
-                      'text-gray-500 dark:text-gray-400 px-2 py-0.5'
-                    }
-                  >
-                    {row.type === 1 ? '+ ' : row.type === 2 ? '− ' : ''}{row.content || ' '}
-                  </div>
-                ))}
-              </div>
-            ) : wikiDiff.hasUpdate ? (
-              <div className="p-4 text-sm text-gray-500 dark:text-gray-400 text-center">
-                Update detected but diff details unavailable.
-                {wikiDiff.diffUrl && (
-                  <a href={wikiDiff.diffUrl} target="_blank" rel="noopener noreferrer" className="ml-1 text-blue-500 hover:underline">View on Wikipedia</a>
-                )}
-              </div>
-            ) : (
-              <div className="p-6 text-sm text-gray-500 dark:text-gray-400 text-center">
-                Your copy is up to date.
-              </div>
-            )}
-
-            {/* Update to latest button */}
-            {wikiDiff.hasUpdate && (
-              <div className="px-4 py-3 border-t border-gray-100 dark:border-gray-800 flex justify-end">
-                <button
-                  onClick={updateWikiToLatest}
-                  disabled={wikiUpdating}
-                  className="btn btn-primary text-sm flex items-center gap-2 disabled:opacity-50"
-                >
-                  <RefreshCw size={14} className={wikiUpdating ? 'animate-spin' : ''} />
-                  {wikiUpdating ? 'Updating…' : 'Update to latest'}
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
+        <WikiDiffModal
+          diff={wikiDiff}
+          currentRevid={book.wiki_revid}
+          updating={wikiUpdating}
+          onUpdate={updateWikiToLatest}
+          onClose={() => setWikiDiffOpen(false)}
+        />
       )}
 
-      {!scrollMode && <div
-        className="hidden md:block bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700"
-        style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}
-      >
-        <div className="flex items-center justify-between max-w-prose mx-auto px-2 py-2 gap-2">
-          <button
-            onClick={() => goToPage(currentPage - pagesPerView)}
-            disabled={currentPage <= 1}
-            className="btn btn-secondary flex items-center gap-1 flex-1 justify-center py-3 text-base disabled:opacity-40"
-          >
-            <ChevronLeft size={22} />
-            <span className="hidden sm:inline">Prev</span>
-          </button>
-
-          <div className="flex items-center gap-1.5 shrink-0">
-            <input
-              type="number"
-              value={currentPage}
-              onChange={(e) => {
-                const page = parseInt(e.target.value)
-                if (page >= 1 && page <= totalPages) goToPage(page)
-              }}
-              className="input w-20 text-center py-2 text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-              min={1}
-              max={totalPages}
-            />
-            {pagesPerView > 1 && currentPage + pagesPerView - 1 <= totalPages && (
-              <span className="text-gray-400 dark:text-gray-500 text-sm">–{currentPage + pagesPerView - 1}</span>
-            )}
-            <span className="text-gray-500 dark:text-gray-400 text-sm whitespace-nowrap">/ {totalPages}</span>
-          </div>
-
-          <button
-            onClick={() => goToPage(currentPage + pagesPerView)}
-            disabled={currentPage + pagesPerView - 1 >= totalPages}
-            className="btn btn-secondary flex items-center gap-1 flex-1 justify-center py-3 text-base disabled:opacity-40"
-          >
-            <span className="hidden sm:inline">Next</span>
-            <ChevronRight size={22} />
-          </button>
-        </div>
-      </div>}
+      {!scrollMode && (
+        <DesktopPageNav
+          currentPage={currentPage}
+          totalPages={totalPages}
+          pagesPerView={pagesPerView}
+          onGoToPage={goToPage}
+        />
+      )}
     </div>
 
     </>

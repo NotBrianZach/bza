@@ -23,7 +23,7 @@ export default function PrivacyPage() {
         <h2>Browser extension</h2>
         <p>
           The aireadalong browser extension captures text content from web pages and YouTube transcripts
-          <strong> only when you explicitly click "Add to Library" or "Download Markdown"</strong>.
+          <strong> only when you explicitly click &quot;Add to Library&quot; or &quot;Download Markdown&quot;</strong>.
           It does not run in the background, track your browsing, or collect data from pages you simply visit.
         </p>
         <p>

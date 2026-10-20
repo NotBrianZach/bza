@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { Book } from '@/types'
-import { X, Loader2, ChevronDown, ChevronRight, BookOpen, Image } from 'lucide-react'
+import { X, Loader2, ChevronDown, ChevronRight, BookOpen, Image as ImageIcon } from 'lucide-react'
 import { authedFetch } from '@/lib/authedFetch'
 import { getModelChoice } from '@/lib/persona'
 import { imageQueries } from '@/lib/queries/images'
@@ -635,7 +635,7 @@ export default function ProblemMapWidget({ book, getPageSource, onClose, onNavig
                 )}
                 {narrative.length > 0 && !narrative.some(n => n.imageUrl) && (
                   <button onClick={() => generateImages()} className="text-violet-500 hover:underline flex items-center gap-1">
-                    <Image size={10} /> Generate images
+                    <ImageIcon size={10} /> Generate images
                   </button>
                 )}
                 <button onClick={() => { localStorage.removeItem(SCAN_CACHE_KEY); setProblems([]); setTree([]); setEdges([]); setNarrative([]); setStage('idle') }} className="text-gray-400 hover:text-red-500 hover:underline ml-auto">

@@ -1102,7 +1102,7 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
               <HardDrive className="text-blue-600 flex-shrink-0 mt-0.5" size={20} />
               <div className="flex-1">
                 <p className="text-sm font-medium text-blue-900">
-                  You're using the <strong>Free Tier</strong> - texts stored in your browser
+                  You&apos;re using the <strong>Free Tier</strong> - texts stored in your browser
                 </p>
                 <p className="text-sm text-blue-700 mt-1">
                   Storage: {(storageUsage.used / 1024 / 1024).toFixed(2)} MB used locally
@@ -1144,7 +1144,7 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
               <p className="text-sm font-medium text-purple-900 dark:text-purple-200">
                 {dueCardCount} flashcard{dueCardCount !== 1 ? 's' : ''} due for review
               </p>
-              <p className="text-xs text-purple-600 dark:text-purple-400">Start today's study session →</p>
+              <p className="text-xs text-purple-600 dark:text-purple-400">Start today&apos;s study session →</p>
             </div>
           </Link>
         )}
@@ -1227,7 +1227,7 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
               return (
                 <div className="mt-3">
                   {filtered.length === 0 ? (
-                    <p className="text-sm text-gray-400 dark:text-gray-500 py-4">No results for "{search}"</p>
+                    <p className="text-sm text-gray-400 dark:text-gray-500 py-4">No results for &quot;{search}&quot;</p>
                   ) : (
                     <div className={`grid ${BOOK_GRID[cardSizes.books]} `}>
                       {filtered.map(book => (

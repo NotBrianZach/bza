@@ -50,7 +50,7 @@ export default function ResetPasswordPage() {
           <CheckCircle className="mx-auto text-green-600 mb-4" size={48} />
           <h2 className="text-2xl font-bold mb-2">Check Your Email</h2>
           <p className="text-gray-600 dark:text-gray-300 mb-6">
-            We've sent you a password reset link. Click the link in the email to reset your password.
+            We&apos;ve sent you a password reset link. Click the link in the email to reset your password.
           </p>
           <Link href="/auth/login" className="btn btn-primary">
             Return to Login

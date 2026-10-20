@@ -1,0 +1,40 @@
+// ESLint config, added 2026-10-20. `eslint` and `eslint-config-next` had been
+// devDependencies with a `lint` script since the repo was set up, but no config
+// file existed — so `next lint` dropped into its interactive setup prompt and
+// `next build` linted nothing. Nothing was ever checked.
+//
+// `next build` fails on errors and passes on warnings, so this file is now a
+// gate in the same sense next.config.js's `ignoreBuildErrors: false` is. It
+// starts at 0 errors.
+//
+// (ESLint strips comments from .eslintrc.json, so this is legal.)
+{
+  "extends": "next/core-web-vitals",
+  "rules": {
+    // OFF, and not as a backlog deferral — the rule's advice is wrong for this
+    // app. All 19 sites are images on hosts we do not control: artwork from the
+    // Cleveland Museum of Art, cover art from Deezer, posters from TMDB, plus
+    // signed Supabase storage URLs. next/image only accepts hosts enumerated in
+    // next.config.js `images.remotePatterns`, so adopting it would mean a
+    // pattern per provider and a build change every time one is added.
+    //
+    // It is also a measured hazard rather than a hypothetical one: the Art
+    // Institute of Chicago was dropped as an artwork provider precisely because
+    // its image host bot-walls hotlinked requests. Routing provider images
+    // through an optimizer is the kind of change that breaks them silently.
+    //
+    // Re-enable for any image we host ourselves and can describe.
+    "@next/next/no-img-element": "off"
+
+    // DELIBERATELY still "warn" (47 of them): react-hooks/exhaustive-deps.
+    //
+    // Not silenced, because the rule finds real bugs and this codebase has the
+    // exact shape it catches — effects that read refs and callbacks captured
+    // from a parent. But it must NOT be mass-fixed: adding a missing dep to an
+    // effect that writes state derived from that dep is how you get a render
+    // loop, and several of these omissions are load-bearing (BookReader's
+    // registration effects use `[]` on purpose so they register once).
+    //
+    // Work them one at a time, each with a reason, in a session with a browser.
+  }
+}

@@ -1,7 +1,7 @@
 'use client'
 
 import { UsageStats as UsageStatsType } from '@/types'
-import { TrendingUp, Image, BookOpen, DollarSign } from 'lucide-react'
+import { TrendingUp, Image as ImageIcon, BookOpen, DollarSign } from 'lucide-react'
 
 interface UsageStatsProps {
   stats: UsageStatsType
@@ -19,7 +19,7 @@ export default function UsageStats({ stats }: UsageStatsProps) {
       />
 
       <StatCard
-        icon={<Image size={24} />}
+        icon={<ImageIcon size={24} />}
         title="Images Generated"
         value={`${stats.images_used} / ${stats.images_limit}`}
         percentage={stats.images_percentage}

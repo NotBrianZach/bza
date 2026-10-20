@@ -596,7 +596,7 @@ export default function MetaDrawer({ books, isOpen, onClose, dueCardCount }: Met
                     <div className="mb-3"><PersonaAvatar state="idle" size="lg" /></div>
                     <MessageSquare size={36} className="mb-3 text-gray-300" />
                     <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Chat with your library</p>
-                    <p className="text-xs mt-1">Ask anything about your books — connections between them, things you've read, or ideas to explore.</p>
+                    <p className="text-xs mt-1">Ask anything about your books — connections between them, things you&apos;ve read, or ideas to explore.</p>
                     <div className="mt-4 space-y-2 w-full max-w-xs">
                       {[
                         'What themes connect my books?',
