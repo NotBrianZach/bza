@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { ArrowRight, Loader2, Sparkles } from 'lucide-react'
 import { authedFetch } from '@/lib/authedFetch'
 import DigestList, { DigestItem } from './DigestList'
+import { getPinnedFeeds } from '@/lib/pinnedFeeds'
 
 /**
  * The suggested feed, on the front page.
@@ -90,7 +91,22 @@ export default function SuggestedFeedSection({
    */
   useEffect(() => {
     if (!isAuthenticated) return
-    authedFetch('/api/suggest/maintain', { method: 'POST' }).catch(() => {})
+    /**
+     * The pinned list goes with it, because adoption is opt-OUT.
+     *
+     * Your feeds are in the digest without you doing anything; the server adds
+     * a subscription for any pinned feed it has no row for, and leaves alone
+     * every feed you have already decided about — including the ones you turned
+     * off. The list has to be sent because it lives in localStorage and the
+     * server has never seen it.
+     */
+    authedFetch('/api/suggest/maintain', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        pinned: getPinnedFeeds().map(f => ({ url: f.url, label: f.label })),
+      }),
+    }).catch(() => {})
   }, [isAuthenticated])
 
   if (!isAuthenticated) return null

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserFromToken } from '@/lib/apiQuota'
-import { buildDigest, ingestFeed } from '@/lib/suggest/pipeline'
+import { adoptPinned, buildDigest, ingestFeed } from '@/lib/suggest/pipeline'
 import { decayByElapsed, MIN_DECAY_INTERVAL_MS } from '@/lib/suggest/feedback'
 import {
   feedsDueForPoll, loadFeeds, loadInterests, loadSettings,
@@ -71,6 +71,38 @@ export async function POST(req: NextRequest) {
   const did: string[] = []
   const errors: string[] = []
   let pending = 0
+
+  const body = await req.json().catch(() => ({})) as {
+    /**
+     * The caller's pinned feeds, so the digest can adopt them.
+     *
+     * Sent on every visit because the list lives in localStorage and the server
+     * has never seen it. Adoption is opt-OUT: anything here with no
+     * subscription row is added, and anything with a row — on OR deliberately
+     * off — is left exactly as it is.
+     */
+    pinned?: { url?: string; label?: string }[]
+  }
+
+  // ── adopt ───────────────────────────────────────────────────────────────
+  //
+  // FIRST, before the poll, so a feed adopted on this visit is polled on this
+  // visit rather than the next one. Otherwise somebody turning a feed on would
+  // see nothing from it until they reloaded, which reads as the toggle not
+  // working.
+  if (body.pinned && body.pinned.length > 0) {
+    try {
+      const r = await adoptPinned(userId, body.pinned)
+      if (r.added.length > 0) {
+        did.push(`added ${r.added.length} feed(s) from your feed list: ${r.added.map(a => a.name).join(', ')}`)
+      }
+      // Skipped sources are reported, not swallowed. The pinned list
+      // legitimately contains things the digest cannot score.
+      for (const s of r.skipped) did.push(`cannot use ${s.url}: ${s.reason}`)
+    } catch (e) {
+      errors.push(`adopt: ${e instanceof Error ? e.message : 'failed'}`)
+    }
+  }
 
   let settings
   try {

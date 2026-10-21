@@ -296,6 +296,56 @@ export async function unsubscribe(userId: string, feedId: string): Promise<void>
 }
 
 /**
+ * Turn a source off WITHOUT forgetting that it was turned off.
+ *
+ * This exists because the pinned feeds are opt-OUT: every feed on the home
+ * page is considered by the digest unless the user says otherwise, and the
+ * auto-adopt on each visit inserts a subscription for anything it has no row
+ * for.
+ *
+ * Which makes `unsubscribe` — a plain DELETE — actively wrong as the "turn
+ * this off" action. Deleting the row removes the only evidence that the user
+ * made a decision, so the next page visit would see a pinned feed with no
+ * subscription, conclude it was new, and add it back. The toggle would appear
+ * not to work, intermittently, depending on when the user next loaded the
+ * page: the single most confusing class of bug a settings screen can have.
+ *
+ * So off means `enabled = false`, and the row is the record. `loadFeeds` with
+ * `enabledOnly` already excludes it from every digest, and auto-adopt skips
+ * any feed it has a row for — on or off.
+ *
+ * `unsubscribe` is kept for genuinely forgetting a source that is NOT in the
+ * pinned list, where there is nothing to come back from.
+ */
+export async function setSubscriptionEnabled(
+  userId: string, feedId: string, enabled: boolean,
+): Promise<void> {
+  const { error } = await db()
+    .from('suggest_subscriptions')
+    .update({ enabled })
+    .eq('user_id', userId)
+    .eq('feed_id', feedId)
+  if (error) {
+    throw new Error(`could not ${enabled ? 'include' : 'exclude'} that source: ${error.message}`)
+  }
+}
+
+/**
+ * Subscriptions for a user keyed by canonical URL, including disabled ones.
+ *
+ * Auto-adopt needs to distinguish three states and only two of them are
+ * visible from `loadFeeds(userId, true)`: never seen, on, and deliberately
+ * off. The third is the one that matters — it is what stops an excluded feed
+ * being re-added — so this returns them all.
+ */
+export async function subscriptionStateByUrl(
+  userId: string,
+): Promise<Map<string, { feedId: string; enabled: boolean }>> {
+  const all = await loadFeeds(userId, false)
+  return new Map(all.map(f => [f.url, { feedId: f.feedId, enabled: f.enabled }]))
+}
+
+/**
  * The source type each subscriber assigned to a feed, for a global poll.
  *
  * A scheduled poll has no user, so it cannot read "the" source type — several

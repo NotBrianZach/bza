@@ -175,12 +175,27 @@ export default function SuggestPage() {
 
   async function toggleAdopt(url: string, label: string, currentlyOn: boolean) {
     // Optimistic, because a checkbox that waits on a round trip feels broken.
-    setAdoptState(s => ({ ...s, [url]: { ...s[url], subscribed: !currentlyOn } }))
+    setAdoptState(s => ({ ...s, [url]: { ...s[url], enabled: !currentlyOn } }))
     try {
+      /**
+       * Three shapes, because a pinned feed can be in three states.
+       *
+       * Off → on is `include` when a row already exists and `feeds` when it
+       * does not; on → off is always `remove`, which sets enabled=false rather
+       * than deleting, so the auto-adopt on the next page visit does not undo
+       * it. Sending `feeds` for a feed that already has a disabled row would
+       * do nothing at all — adopt deliberately leaves known feeds alone — which
+       * is exactly why the include branch has to exist.
+       */
+      const body = currentlyOn
+        ? { remove: [url] }
+        : adoptState[url]?.subscribed
+          ? { include: [url] }
+          : { feeds: [{ url, label }] }
       await authedFetch('/api/suggest/adopt', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(currentlyOn ? { remove: [url] } : { feeds: [{ url, label }] }),
+        body: JSON.stringify(body),
       })
     } finally {
       // Re-read rather than trusting the optimistic flip: the server owns the
@@ -194,10 +209,16 @@ export default function SuggestPage() {
     setBusy('adopt')
     setError(null)
     try {
+      // `include` as well as `feeds`: adopt leaves a known feed alone, on
+      // purpose, so a feed the user previously excluded would not come back
+      // from `feeds` alone — and coming back is exactly what this button is for.
       const res = await authedFetch('/api/suggest/adopt', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ feeds: pinned.map(p => ({ url: p.url, label: p.label })) }),
+        body: JSON.stringify({
+          feeds: pinned.map(p => ({ url: p.url, label: p.label })),
+          include: pinned.map(p => p.url),
+        }),
       })
       const d = await res.json()
       if (d.error) { setError(d.error); return }
@@ -291,9 +312,37 @@ export default function SuggestPage() {
     await loadSources()
   }
 
-  async function removeFeed(feedId: string) {
-    await authedFetch(`/api/suggest/sources?feedId=${encodeURIComponent(feedId)}`, { method: 'DELETE' })
-    await loadSources()
+  /**
+   * Turn a source off — by excluding it if it is pinned, deleting it if not.
+   *
+   * The branch is necessary and the client is the only place that can make it,
+   * because it is the only side that knows the pinned list.
+   *
+   * A PINNED feed must not be deleted: the auto-adopt on the next page visit
+   * adds any pinned feed with no subscription row, so deleting would re-add it
+   * — a remove button that undoes itself whenever you next load the page.
+   * Setting `enabled = false` keeps the row as the record of the decision.
+   *
+   * A feed that is NOT pinned has nothing to come back from, so deleting it is
+   * right and leaves no permanently-disabled row cluttering the list.
+   */
+  async function removeFeed(feedId: string, url: string) {
+    const isPinned = pinned.some(p => p.url === url)
+      // Also match canonicalised equivalents, since `feed://hn/top` in the
+      // pinned list is the same source as the stored `feed://hn`.
+      || Object.entries(adoptState).some(([raw, st]) =>
+        st.feedId === feedId && pinned.some(p => p.url === raw))
+
+    if (isPinned) {
+      await authedFetch('/api/suggest/adopt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ remove: [url] }),
+      })
+    } else {
+      await authedFetch(`/api/suggest/sources?feedId=${encodeURIComponent(feedId)}`, { method: 'DELETE' })
+    }
+    await Promise.all([loadSources(), loadAdoptState(pinned)])
   }
 
   async function addInterest() {
@@ -495,13 +544,24 @@ export default function SuggestPage() {
                   Your feeds
                 </h3>
                 <p className="mb-2 text-[11px] leading-snug text-gray-400 dark:text-gray-500">
-                  The feeds from your home page. Toggle one on to let the digest
-                  consider it — it stays in your feed list either way.
+                  Everything on your home page is already in the digest. Untick one
+                  to leave it out — it stays in your feed list either way, and
+                  staying out sticks.
                 </p>
                 <ul className="space-y-1">
                   {pinned.map(p => {
                     const st = adoptState[p.url]
-                    const on = !!st?.subscribed
+                    /**
+                     * Ticked means INCLUDED, which is `enabled` and not merely
+                     * `subscribed`.
+                     *
+                     * Those came apart when adoption became opt-out: every
+                     * pinned feed gets a subscription row on the first visit, so
+                     * `subscribed` is true for all of them and would show every
+                     * box ticked whatever the user had chosen. `enabled` is the
+                     * decision.
+                     */
+                    const on = !!st?.enabled
                     return (
                       <li key={p.id} className="flex items-center gap-2 text-xs">
                         <input
@@ -535,7 +595,7 @@ export default function SuggestPage() {
                   className="mt-2 inline-flex items-center gap-1 rounded border border-gray-300 px-2 py-1 text-xs text-gray-600 disabled:opacity-50 dark:border-gray-600 dark:text-gray-300"
                 >
                   {busy === 'adopt' ? <Loader2 size={12} className="animate-spin" /> : null}
-                  Use all of them
+                  Include all of them again
                 </button>
               </div>
             )}
@@ -621,9 +681,9 @@ export default function SuggestPage() {
                         </div>
                       </div>
                       <button
-                        onClick={() => removeFeed(f.feedId)}
+                        onClick={() => removeFeed(f.feedId, f.url)}
                         className="shrink-0 rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-red-600 dark:hover:bg-gray-700"
-                        title="Unsubscribe. The collected items are kept — they are shared with other subscribers for duplicate detection."
+                        title="Leave this out of the digest. A feed from your home-page list stays there and stays remembered as excluded; one added here is removed outright. Collected items are kept either way — they are shared with other subscribers for duplicate detection."
                       >
                         <Trash2 size={12} />
                       </button>

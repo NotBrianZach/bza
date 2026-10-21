@@ -3,7 +3,7 @@ import { getUserFromToken } from '@/lib/apiQuota'
 import { canonicalFeedUrl, labelForFeedUrl, parseFeedUrl } from '@/lib/feedSources'
 import { canonicalUrl, publisherFromUrl } from '@/lib/suggest/normalize'
 import { PSEUDO_SOURCE_TYPE } from '@/lib/suggest/pseudo'
-import { loadFeeds, subscribe, unsubscribe } from '@/lib/suggest/store'
+import { loadFeeds, setSubscriptionEnabled, subscribe } from '@/lib/suggest/store'
 import type { SourceType } from '@/lib/suggest/types'
 
 /**
@@ -88,17 +88,20 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json().catch(() => null) as {
     feeds?: { url?: string; label?: string }[]
-    /** Urls to UNSUBSCRIBE. Lets one call express a whole toggle list. */
+    /** Urls to EXCLUDE from the digest. Sets enabled=false and keeps the row. */
     remove?: string[]
+    /** Urls to re-include after an exclusion. */
+    include?: string[]
   } | null
-  if (!body?.feeds && !body?.remove) {
-    return NextResponse.json({ error: 'pass feeds to adopt, or remove' }, { status: 400 })
+  if (!body?.feeds && !body?.remove && !body?.include) {
+    return NextResponse.json({ error: 'pass feeds to adopt, to remove, or to include' }, { status: 400 })
   }
 
   const adopted: { url: string; feedId: string; name: string }[] = []
   const already: string[] = []
   const skipped: { url: string; reason: string }[] = []
   const removed: string[] = []
+  const included: string[] = []
 
   try {
     const existing = await loadFeeds(userId, false)
@@ -160,13 +163,31 @@ export async function POST(req: NextRequest) {
       })
     }
 
+    /**
+     * "Remove" sets enabled = false; it does NOT delete the row.
+     *
+     * Adoption is opt-out, so the auto-adopt on each page visit adds any pinned
+     * feed it has no row for. Deleting the row would therefore make this
+     * un-toggle itself on the next page load — intermittently, depending on
+     * when the user next reloads, which is the worst kind of settings bug.
+     *
+     * The row IS the record of the decision. `loadFeeds(userId, true)` already
+     * excludes a disabled feed from every digest, so nothing it was keeping out
+     * gets back in.
+     */
     for (const r of body.remove ?? []) {
       const key = keyFor(r)
       const hit = key ? byKey.get(key) : undefined
-      if (hit) { await unsubscribe(userId, hit.feedId); removed.push(key!) }
+      if (hit) { await setSubscriptionEnabled(userId, hit.feedId, false); removed.push(key!) }
     }
 
-    return NextResponse.json({ adopted, already, skipped, removed })
+    for (const r of body.include ?? []) {
+      const key = keyFor(r)
+      const hit = key ? byKey.get(key) : undefined
+      if (hit) { await setSubscriptionEnabled(userId, hit.feedId, true); included.push(key!) }
+    }
+
+    return NextResponse.json({ adopted, already, skipped, removed, included })
   } catch (e) {
     return NextResponse.json(
       { error: e instanceof Error ? e.message : 'could not adopt those feeds' },

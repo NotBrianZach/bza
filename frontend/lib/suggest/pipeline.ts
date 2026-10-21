@@ -28,7 +28,7 @@ import { DEFAULT_BUCKET_PLAN } from './types'
 import { normalizeEntry, type RawEntry } from './normalize'
 import { parseFeed } from './parse'
 import { fetchPseudoFeed, parseFeedUrl } from '@/lib/feedSources'
-import { postToEntry } from './pseudo'
+import { defaultSourceType, postToEntry, sourceKey, sourceName } from './pseudo'
 import {
   assignTopicTags, classifyArticleType, contentTokens, extractEntities, typeHintFromSource,
 } from './tags'
@@ -379,6 +379,87 @@ export async function buildDigest(
     : null
 
   return { digest, digestId, blockers }
+}
+
+// ---------------------------------------------------------------------------
+// Adopting the pinned feeds
+// ---------------------------------------------------------------------------
+
+export interface AdoptResult {
+  added: { url: string; name: string }[]
+  /** Already known — on or deliberately off. Either way, left alone. */
+  known: string[]
+  skipped: { url: string; reason: string }[]
+}
+
+/**
+ * Bring any pinned feed the user has no row for into the digest.
+ *
+ * This is the opt-OUT half of the integration: a feed on the home page is
+ * considered by the digest unless the user has said otherwise, so there is no
+ * setup step at all. The alternative — a checkbox per feed, defaulting off —
+ * still makes somebody do the work of re-declaring a list they already have,
+ * which was the whole thing to avoid.
+ *
+ * ── The rule that makes opt-out safe ──────────────────────────────────────
+ *
+ * A feed is added only when there is NO subscription row for it. A row with
+ * `enabled = false` is a decision the user made and is left strictly alone.
+ *
+ * That is why turning a source off sets `enabled = false` rather than deleting
+ * the row (see `setSubscriptionEnabled`). Delete it and this function sees a
+ * pinned feed with no subscription, concludes it is new, and adds it back on
+ * the next page load — a toggle that un-toggles itself whenever you happen to
+ * reload, which is the worst kind of settings bug because it is intermittent.
+ *
+ * ── The pinned list has to be passed in ───────────────────────────────────
+ *
+ * It lives in localStorage and the server has never seen it. That is the right
+ * home for it — a UI preference, works signed out, needs no server — so the
+ * only way this can know what somebody has pinned is to be told, on each call.
+ * Nothing is migrated: the pinned list stays where it is and keeps working as a
+ * bookmark list.
+ */
+export async function adoptPinned(
+  userId: string, pinned: { url?: string; label?: string }[],
+): Promise<AdoptResult> {
+  const result: AdoptResult = { added: [], known: [], skipped: [] }
+  if (pinned.length === 0) return result
+
+  const state = await store.subscriptionStateByUrl(userId)
+
+  for (const entry of pinned) {
+    const key = sourceKey(entry.url ?? '')
+    if (!key) {
+      result.skipped.push({
+        url: entry.url ?? '',
+        reason: 'not an http(s) feed URL or a recognised feed:// source',
+      })
+      continue
+    }
+    // On OR off: both mean the user has a relationship with this feed already.
+    if (state.has(key)) { result.known.push(key); continue }
+
+    const name = sourceName(key, entry.label)
+    // No validating fetch. These are feeds the user already reads, so they are
+    // known-good by use, and fetching twenty inline would make a page load take
+    // a minute. A dead one surfaces at the next poll with its own status.
+    await store.subscribe(userId, {
+      url: key,
+      name,
+      language: null,
+      label: entry.label?.trim() || null,
+      topicTags: [],
+      sourceType: defaultSourceType(key) as Feed['sourceType'],
+    })
+    // Recorded as we go, so two spellings of one source in the same list — and
+    // `feed://hn` plus `feed://hn/top` really do both ship in this codebase —
+    // do not adopt twice and overwrite each other's label.
+    state.set(key, { feedId: '', enabled: true })
+    result.added.push({ url: key, name })
+  }
+
+  return result
 }
 
 /**
