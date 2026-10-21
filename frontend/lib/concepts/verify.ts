@@ -36,11 +36,18 @@
  * reason to wire it this way round.
  */
 
-import { renderExpr, symbolsIn, tryParse, type ExprNode } from './expr'
+import { parseFailure, parsedTree, renderExpr, symbolsIn, tryParse, type ExprNode } from './expr'
 import { checkDenominatorDegree, checkForm, FORM_LABELS, type FormCheck } from './forms'
-import { exact, type Exact } from './rpn'
+import { exactValue, sameValue, showExact, substitute } from './numerals'
 import { primaryVariable } from './tasks'
 import type { PracticeTask, Verdict } from './types'
+
+/**
+ * Re-exported because the exact-arithmetic helpers were defined here before the
+ * generators needed them too, and a caller asking the verifier what a tree is
+ * worth is still asking a reasonable question of the right module.
+ */
+export { exactValue, sameValue, showExact, substitute } from './numerals'
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -162,6 +169,17 @@ export async function callWorker(
   }
 }
 
+export type WorkerCall = { ok: true; reply: WorkerReply } | { ok: false; reason: string }
+
+/**
+ * Accessors for a `callWorker` result, for the reason given on `parsedTree` in
+ * expr.ts: this union does not narrow on `.ok` when these modules are compiled
+ * standalone, which the test harness does, and the resulting TS2339 wall makes a
+ * passing suite look broken.
+ */
+const callReason = (call: WorkerCall): string | null => ('reason' in call ? call.reason : null)
+const callReply = (call: WorkerCall): WorkerReply | null => ('reply' in call ? call.reply : null)
+
 /** Dedupe while keeping order: the author's own conditions first, the engine's after. */
 function mergeConditions(authored: string[], retained: string[]): string[] {
   const out: string[] = []
@@ -204,10 +222,11 @@ export async function ruleTransform(
 ): Promise<Ruling> {
   const symbols = task.variables.map(v => v.name)
   const parsed = tryParse(answer, symbols)
-  if (!parsed.ok) {
-    return { status: 'unreadable', message: parsed.message, position: parsed.position }
-  }
-  const asRead = renderExpr(parsed.tree)
+  const failure = parseFailure(parsed)
+  if (failure) return { status: 'unreadable', ...failure }
+  const tree = parsedTree(parsed)
+  if (!tree) return { status: 'unreadable', message: 'could not be read', position: 0 }
+  const asRead = renderExpr(tree)
   const authored = task.domainConditions ?? []
 
   // ── step 1: the form, and the reduction bound if the task asserts one ──
@@ -216,9 +235,9 @@ export async function ruleTransform(
   // worker call — so an answer that has not been rewritten at all never costs a
   // round trip and never degrades to inconclusive.
   const checks: FormCheck[] = []
-  if (task.form) checks.push(checkForm(parsed.tree, task.form, primaryVariable(task)))
+  if (task.form) checks.push(checkForm(tree, task.form, primaryVariable(task)))
   if (typeof task.maxDenominatorDegree === 'number') {
-    checks.push(checkDenominatorDegree(parsed.tree, primaryVariable(task), task.maxDenominatorDegree))
+    checks.push(checkDenominatorDegree(tree, primaryVariable(task), task.maxDenominatorDegree))
   }
 
   const refused = checks.find(c => c.held === false)
@@ -242,7 +261,9 @@ export async function ruleTransform(
 
   // ── step 2: equivalence ───────────────────────────────────────────────
   const reference = tryParse(task.reference, symbols)
-  if (!reference.ok) {
+  const referenceFailure = parseFailure(reference)
+  const referenceTree = parsedTree(reference)
+  if (referenceFailure || !referenceTree) {
     // An authoring fault, not a learner fault. Ruling it against the learner
     // would be the worst available outcome, so it is inconclusive and says whose
     // fault it is.
@@ -251,33 +272,37 @@ export async function ruleTransform(
       asRead,
       verdict: {
         ruling: 'inconclusive',
-        method: `the task's own reference answer does not parse (${reference.message}) — this is an authoring fault, not yours`,
+        method: `the task's own reference answer does not parse (${referenceFailure?.message ?? 'unreadable'}) — this is an authoring fault, not yours`,
         conditions: authored,
       },
     }
   }
 
   const call = await callWorker('equivalent', {
-    expression: parsed.tree as unknown as Record<string, unknown>,
-    other: reference.tree as unknown as Record<string, unknown>,
+    expression: tree as unknown as Record<string, unknown>,
+    other: referenceTree as unknown as Record<string, unknown>,
     variables: task.variables.map(v => ({ name: v.name, assumptions: v.assumptions ?? {} })),
     domain_conditions: authored,
     params: { symbol: primaryVariable(task) },
   }, config)
 
-  if (!call.ok) {
+  const failedBecause = callReason(call)
+  const reply = callReply(call)
+  // An empty body is folded in here rather than thrown. A worker that answered
+  // with nothing has settled nothing, which is precisely an inconclusive ruling —
+  // raising would turn a strange response into a 500 and lose the ruling.
+  if (failedBecause || !reply) {
     return {
       status: 'ruled',
       asRead,
       verdict: {
         ruling: 'inconclusive',
-        method: `equivalence was not checked: ${call.reason}`,
+        method: `equivalence was not checked: ${failedBecause ?? 'the worker answered with an empty body'}`,
         conditions: authored,
       },
     }
   }
 
-  const { reply } = call
   const result = reply.result ?? {}
   const conditions = mergeConditions(authored, result.retained_conditions ?? [])
 
@@ -386,141 +411,6 @@ export async function ruleTransform(
 // Ruling an evaluate answer
 // ---------------------------------------------------------------------------
 
-/**
- * Substitution, as pure tree surgery.
- *
- * Not a computation — nothing is folded, nothing is simplified, and a symbol the
- * table does not mention is left exactly where it was. That restraint is what
- * keeps this out of CAS territory: replacing a leaf with a numeral is a rewrite
- * the parser's own grammar already permits, whereas deciding what the result
- * *equals* is the worker's job.
- */
-export function substitute(node: ExprNode, at: Record<string, ExprNode>): ExprNode {
-  switch (node.kind) {
-    case 'symbol':
-      return at[node.name] ?? node
-    case 'add':
-      return { kind: 'add', args: node.args.map(a => substitute(a, at)) }
-    case 'multiply':
-      return { kind: 'multiply', args: node.args.map(a => substitute(a, at)) }
-    case 'function':
-      return { kind: 'function', name: node.name, args: node.args.map(a => substitute(a, at)) }
-    case 'subtract':
-      return { kind: 'subtract', left: substitute(node.left, at), right: substitute(node.right, at) }
-    case 'equation':
-      return { kind: 'equation', left: substitute(node.left, at), right: substitute(node.right, at) }
-    case 'divide':
-      return {
-        kind: 'divide',
-        numerator: substitute(node.numerator, at),
-        denominator: substitute(node.denominator, at),
-      }
-    case 'power':
-      return { kind: 'power', base: substitute(node.base, at), exponent: substitute(node.exponent, at) }
-    case 'negate':
-      return { kind: 'negate', operand: substitute(node.operand, at) }
-    default:
-      return node
-  }
-}
-
-/** The largest exponent this will expand. Beyond it, a bigint pow is a denial of service. */
-const MAX_EXPONENT = 64n
-
-/**
- * A tree's exact rational value, or `null` when it does not have one.
- *
- * `null` is the important half of the contract and it is not a failure: `pi`,
- * `sqrt(2)` and `1/0` are all perfectly good expressions with no rational value,
- * and the caller's correct response is to ask the worker rather than to rule.
- * Returning 0 or NaN for any of them would turn "I cannot settle this" into a
- * ruling against the learner, which is the one thing the whole verdict design
- * exists to prevent.
- *
- * Exact throughout — bigint numerator over bigint denominator, reduced by rpn's
- * own `exact` so the sign normalisation and the zero-denominator refusal are
- * shared rather than reimplemented. Decimals are read as the fraction they
- * literally are (`1.5` is `15/10`), which is what makes a learner who answers
- * `1.5` and a learner who answers `3/2` get the same ruling.
- */
-export function exactValue(node: ExprNode): Exact | null {
-  const ratio = (n: bigint, d: bigint): Exact | null => {
-    if (d === 0n) return null
-    const value = exact(n, d)
-    return value.kind === 'exact' ? value.v : null
-  }
-
-  switch (node.kind) {
-    case 'integer':
-      return ratio(BigInt(node.value), 1n)
-    case 'rational':
-      return ratio(BigInt(node.numerator), BigInt(node.denominator))
-    case 'decimal': {
-      const [whole, frac = ''] = node.value.split('.')
-      // `${whole}${frac}` rather than arithmetic, so '.5' and '1.' both work and
-      // no precision is lost on the way through a float.
-      return ratio(BigInt(`${whole || '0'}${frac}` || '0'), 10n ** BigInt(frac.length))
-    }
-    case 'negate': {
-      const v = exactValue(node.operand)
-      return v ? ratio(-v.n, v.d) : null
-    }
-    case 'add': {
-      let acc: Exact | null = { n: 0n, d: 1n }
-      for (const arg of node.args) {
-        const v = exactValue(arg)
-        if (!v || !acc) return null
-        acc = ratio(acc.n * v.d + v.n * acc.d, acc.d * v.d)
-      }
-      return acc
-    }
-    case 'multiply': {
-      let acc: Exact | null = { n: 1n, d: 1n }
-      for (const arg of node.args) {
-        const v = exactValue(arg)
-        if (!v || !acc) return null
-        acc = ratio(acc.n * v.n, acc.d * v.d)
-      }
-      return acc
-    }
-    case 'subtract': {
-      const l = exactValue(node.left)
-      const r = exactValue(node.right)
-      return l && r ? ratio(l.n * r.d - r.n * l.d, l.d * r.d) : null
-    }
-    case 'divide': {
-      const n = exactValue(node.numerator)
-      const d = exactValue(node.denominator)
-      if (!n || !d || d.n === 0n) return null
-      return ratio(n.n * d.d, n.d * d.n)
-    }
-    case 'power': {
-      const base = exactValue(node.base)
-      const exponent = exactValue(node.exponent)
-      // A non-integer exponent is a root, and a root is generally irrational.
-      if (!base || !exponent || exponent.d !== 1n) return null
-      const e = exponent.n < 0n ? -exponent.n : exponent.n
-      if (e > MAX_EXPONENT) return null
-      const pow = (x: bigint) => x ** e
-      if (exponent.n < 0n) {
-        if (base.n === 0n) return null
-        return ratio(pow(base.d), pow(base.n))
-      }
-      return ratio(pow(base.n), pow(base.d))
-    }
-    default:
-      // symbol, constant, function — no rational value, and saying so is the point.
-      return null
-  }
-}
-
-const sameValue = (a: Exact, b: Exact) => a.n === b.n && a.d === b.d
-
-/** `n/d`, or just `n` when the denominator is 1. For feedback, not for parsing. */
-export function showExact(value: Exact): string {
-  return value.d === 1n ? `${value.n}` : `${value.n}/${value.d}`
-}
-
 /** An authoring fault is inconclusive and says whose fault it is. Never scored. */
 function authoringFault(detail: string, asRead: string, conditions: string[]): Ruling {
   return {
@@ -576,10 +466,11 @@ export async function ruleEvaluate(
 ): Promise<Ruling> {
   const symbols = task.variables.map(v => v.name)
   const parsed = tryParse(answer, symbols)
-  if (!parsed.ok) {
-    return { status: 'unreadable', message: parsed.message, position: parsed.position }
-  }
-  const asRead = renderExpr(parsed.tree)
+  const failure = parseFailure(parsed)
+  if (failure) return { status: 'unreadable', ...failure }
+  const answerTree = parsedTree(parsed)
+  if (!answerTree) return { status: 'unreadable', message: 'could not be read', position: 0 }
+  const asRead = renderExpr(answerTree)
   const authored = task.domainConditions ?? []
 
   // ── step 1: it has to be a number ─────────────────────────────────────
@@ -587,7 +478,7 @@ export async function ruleEvaluate(
   // Local, and the analogue of the form check: a learner who hands back an
   // expression in x has not evaluated anything, and "that is not a number yet"
   // is the whole feedback. No worker call, and no route to inconclusive.
-  const mentioned = symbolsIn(parsed.tree)
+  const mentioned = symbolsIn(answerTree)
   if (mentioned.length > 0) {
     return {
       status: 'ruled',
@@ -616,22 +507,25 @@ export async function ruleEvaluate(
   const atTrees: Record<string, ExprNode> = {}
   for (const [name, raw] of Object.entries(at)) {
     // No symbols declared: an input must be an exact numeral, not an expression.
-    const value = tryParse(raw, [])
-    if (!value.ok || exactValue(value.tree) === null) {
+    const valueTree = parsedTree(tryParse(raw, []))
+    if (!valueTree || exactValue(valueTree) === null) {
       return authoringFault(`the input ${name} = ${raw} is not an exact numeral`, asRead, authored)
     }
-    atTrees[name] = value.tree
+    atTrees[name] = valueTree
   }
 
   const given = tryParse(task.given, symbols)
-  if (!given.ok) {
-    return authoringFault(`the task's own expression does not parse (${given.message})`, asRead, authored)
+  const givenTree = parsedTree(given)
+  if (!givenTree) {
+    return authoringFault(
+      `the task's own expression does not parse (${parseFailure(given)?.message ?? 'unreadable'})`,
+      asRead, authored)
   }
 
   // Every symbol in the expression has to be given a value, or there is no single
   // number to ask for. A missing input is an authoring fault and not a hard
   // question.
-  const uncovered = symbolsIn(given.tree).filter(s => !(s in atTrees))
+  const uncovered = symbolsIn(givenTree).filter(s => !(s in atTrees))
   if (uncovered.length > 0) {
     return authoringFault(
       `the expression mentions ${uncovered.join(' and ')}, which the task's inputs do not give a value`,
@@ -641,13 +535,16 @@ export async function ruleEvaluate(
   }
 
   const reference = tryParse(task.reference, symbols)
-  if (!reference.ok) {
-    return authoringFault(`the task's own reference answer does not parse (${reference.message})`, asRead, authored)
+  const refTree = parsedTree(reference)
+  if (!refTree) {
+    return authoringFault(
+      `the task's own reference answer does not parse (${parseFailure(reference)?.message ?? 'unreadable'})`,
+      asRead, authored)
   }
 
-  const target = substitute(given.tree, atTrees)
+  const target = substitute(givenTree, atTrees)
   const truth = exactValue(target)
-  const claimed = exactValue(reference.tree)
+  const claimed = exactValue(refTree)
 
   // The author re-derived rather than trusted. Only possible when both sides are
   // rational, which is every task in the shipped set.
@@ -661,7 +558,7 @@ export async function ruleEvaluate(
   }
 
   // ── step 2: the right number, compared exactly ────────────────────────
-  const answered = exactValue(parsed.tree)
+  const answered = exactValue(answerTree)
   const expected = truth ?? claimed
   if (answered && expected) {
     const where = names.map(n => `${n} = ${at[n]}`).join(', ')
@@ -698,13 +595,15 @@ export async function ruleEvaluate(
   // rule inconclusive, for the `_sample_counterexample` reason in the header —
   // which is honest, because nothing settled it.
   const call = await callWorker('equivalent', {
-    expression: parsed.tree as unknown as Record<string, unknown>,
+    expression: answerTree as unknown as Record<string, unknown>,
     other: target as unknown as Record<string, unknown>,
     variables: task.variables.map(v => ({ name: v.name, assumptions: v.assumptions ?? {} })),
     domain_conditions: authored,
   }, config)
 
-  if (!call.ok) {
+  const failedBecause = callReason(call)
+  const reply = callReply(call)
+  if (failedBecause || !reply) {
     return {
       status: 'ruled',
       asRead,
@@ -712,13 +611,12 @@ export async function ruleEvaluate(
         ruling: 'inconclusive',
         method:
           `the answer has no exact rational value here, so it was sent for an equivalence ` +
-          `check, which did not run: ${call.reason}`,
+          `check, which did not run: ${failedBecause ?? 'the worker answered with an empty body'}`,
         conditions: authored,
       },
     }
   }
 
-  const { reply } = call
   const result = reply.result ?? {}
   const conditions = mergeConditions(authored, result.retained_conditions ?? [])
 

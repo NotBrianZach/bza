@@ -39,7 +39,9 @@ function build() {
   const entries = [
     join('lib', 'concepts', 'expr.ts'),
     join('lib', 'concepts', 'forms.ts'),
+    join('lib', 'concepts', 'generators.ts'),
     join('lib', 'concepts', 'import.ts'),
+    join('lib', 'concepts', 'numerals.ts'),
     join('lib', 'concepts', 'ontology.ts'),
     join('lib', 'concepts', 'registry.ts'),
     join('lib', 'concepts', 'rpn.ts'),
@@ -68,7 +70,9 @@ function build() {
   return {
     expr: require(join(outDir, 'concepts', 'expr.js')),
     forms: require(join(outDir, 'concepts', 'forms.js')),
+    generators: require(join(outDir, 'concepts', 'generators.js')),
     importer: require(join(outDir, 'concepts', 'import.js')),
+    numerals: require(join(outDir, 'concepts', 'numerals.js')),
     ontology: require(join(outDir, 'concepts', 'ontology.js')),
     registry: require(join(outDir, 'concepts', 'registry.js')),
     rpn: require(join(outDir, 'concepts', 'rpn.js')),
@@ -103,6 +107,16 @@ const {
   isScorable, needsReview, rulingHeadline, verifierConfig,
   exactValue, substitute, showExact, ruleEvaluate, rule,
 } = M.verify
+const { agreeAtPoints } = M.numerals
+const {
+  GENERATORS, generate, generateFrom, generatedTaskById, generatorById, generatorsForPoint,
+  validateInstance, explain, rngFrom, variantSeedFor, taskIdFor, parseTaskId,
+  polynomial, linear, fraction, sumOfFractions, factorFor, variantsForPoint,
+} = M.generators
+
+/** The instance ids a point would be served at a given scored-attempt count. */
+const variantsForPointIds = (pointId, attempts) =>
+  variantsForPoint(pointId, 1, attempts).map(task => task.id)
 const {
   importArchive, importedEdges, candidateCycles, draftMaterialFor, draftBlockers,
   importPromotionRate, summariseImport, emitDraftModule, latexToInfix, parseFragment,
@@ -980,6 +994,231 @@ t('every task still names a real knowledge point', TASKS.every(task => !!knowled
 t('every task kind shipped is one the dispatcher implements', (() => {
   const implemented = new Set(['transform_to_form', 'evaluate'])
   return TASKS.every(task => implemented.has(task.kind))
+})())
+
+// ---------------------------------------------------------------------------
+// Generators
+// ---------------------------------------------------------------------------
+
+group('rendering restricted infix')
+t('a polynomial omits unit coefficients', polynomial([1, -2, -15]) === 'x^2 - 2x - 15')
+t('it folds signs onto the operator', polynomial([2, 7, -4]) === '2x^2 + 7x - 4')
+t('it drops zero terms', polynomial([1, 0, -25]) === 'x^2 - 25')
+t('a leading negative has no operator', polynomial([-6, 24]) === '-6x + 24')
+t('an all-zero polynomial is 0', polynomial([0, 0]) === '0')
+t('a linear factor from its root', factorFor(5) === '(x - 5)' && factorFor(-3) === '(x + 3)')
+t('a fraction reduces', fraction(4, 6) === '2/3')
+t('a fraction normalises the sign onto the front', fraction(1, -8) === '-1/8')
+t('an integral fraction loses its denominator', fraction(10, 5) === '2')
+t('a sum of fractions puts the sign on the operator',
+  sumOfFractions([{ numerator: -3, denominator: '(x + 1)' }, { numerator: -3, denominator: '(x - 9)' }])
+  === '-3/(x + 1) - 3/(x - 9)')
+t('a positive second term still gets a plus',
+  sumOfFractions([{ numerator: 1, denominator: '(x - 2)' }, { numerator: 5, denominator: '(x - 2)^2' }])
+  === '1/(x - 2) + 5/(x - 2)^2')
+t('everything rendered parses back', [
+  polynomial([1, -2, -15]), polynomial([2, 7, -4]), polynomial([-6, 24]),
+  sumOfFractions([{ numerator: -3, denominator: '(x + 1)' }, { numerator: -2, denominator: '(x - 9)' }]),
+].every(s => tryParse(s, X).ok))
+
+group('the generator PRNG is deterministic and unbiased')
+t('the same seed gives the same draw', (() => {
+  const a = rngFrom(1234), b = rngFrom(1234)
+  return [0, 1, 2, 3, 4].every(() => a.int(1, 100) === b.int(1, 100))
+})())
+t('different seeds give different draws', rngFrom(1).int(1, 1000) !== rngFrom(2).int(1, 1000))
+t('nonZero is never zero', (() => {
+  for (let s = 0; s < 500; s += 1) if (rngFrom(s).nonZero(1, 5) === 0) return false
+  return true
+})())
+t('nonZero takes both signs roughly evenly', (() => {
+  let neg = 0
+  for (let s = 0; s < 2000; s += 1) if (rngFrom(s).nonZero(1, 5) < 0) neg += 1
+  return neg > 850 && neg < 1150
+})(), 'a biased sign would make every instance look alike')
+t('variantSeedFor separates points', variantSeedFor(1, 'a', 0) !== variantSeedFor(1, 'b', 0))
+t('variantSeedFor separates attempts — this is what makes a re-attempt different',
+  variantSeedFor(1, 'factor-monic', 0) !== variantSeedFor(1, 'factor-monic', 1))
+t('variantSeedFor is stable across calls',
+  variantSeedFor(1, 'factor-monic', 3) === variantSeedFor(1, 'factor-monic', 3))
+
+group('agreeAtPoints — a proof for bounded degree, not a spot check')
+t('two spellings of the same quadratic agree',
+  agreeAtPoints(p('x^2 - 2x - 15'), p('(x + 3)(x - 5)'), 'x').agree)
+t('a sign error is caught', !agreeAtPoints(p('x^2 - 2x - 15'), p('x^2 + 2x - 15'), 'x').agree)
+t('and it names where', agreeAtPoints(p('x^2 + 1'), p('x^2 + 2'), 'x').disagreedAt !== undefined)
+t('the inverse pair agrees',
+  agreeAtPoints(p('1/(x + 3) + 2/(x - 5)'), p('(3x + 1)/((x + 3)(x - 5))'), 'x').agree)
+t('poles are skipped rather than failed', (() => {
+  const r = agreeAtPoints(p('1/(x - 2)'), p('1/(x - 2)'), 'x')
+  return r.agree && r.skipped >= 1
+})())
+t('too few usable points refuses rather than passing',
+  !agreeAtPoints(p('1/(x - 2)'), p('1/(x - 2)'), 'x', 100).agree)
+
+/**
+ * The load-bearing test for this whole feature. Every generator, swept across
+ * many seeds: an instance is either declined by the generator or passes every
+ * check in validateInstance. A formatting bug in `polynomial`, a sign error in a
+ * construction, or a degenerate draw that slipped through all surface here
+ * rather than in front of a learner.
+ */
+group('every generator, swept')
+const SWEEP = 250
+for (const g of GENERATORS) {
+  let valid = 0
+  let declined = 0
+  const invalid = []
+  for (let s = 0; s < SWEEP; s += 1) {
+    const task = generate(g.id, s)
+    if (task) { valid += 1; continue }
+    const why = explain(g.id, s)
+    if (why.length === 1 && /degenerate/.test(why[0])) declined += 1
+    else invalid.push(`seed ${s}: ${why.join('; ')}`)
+  }
+  t(`${g.id} produces only valid instances`, invalid.length === 0, invalid.slice(0, 2).join(' | '))
+  t(`${g.id} produces some instances`, valid > SWEEP / 4, `only ${valid} of ${SWEEP}`)
+  void declined
+}
+
+group('generated instances are reconstructible from their id alone')
+t('an id round-trips', (() => {
+  const parsed = parseTaskId(taskIdFor('gen-factor-monic', 42))
+  return parsed.generatorId === 'gen-factor-monic' && parsed.seed === 42
+})())
+t('an authored id is not mistaken for a generated one', parseTaskId('factor-monic-1') === null)
+t('a generated id contains an @ and no authored id does',
+  GENERATORS.every(g => taskIdFor(g.id, 1).includes('@')) && TASKS.every(task => !task.id.includes('@')))
+t('rebuilding from the id gives a byte-identical task', (() => {
+  for (const g of GENERATORS) {
+    const first = generateFrom(g.id, 9000)
+    if (!first) return false
+    const again = generatedTaskById(first.id)
+    if (JSON.stringify(again) !== JSON.stringify(first)) return false
+  }
+  return true
+})(), 'the verify route depends on this')
+t('taskById resolves a generated id', (() => {
+  const made = generateFrom('gen-factor-monic', 77)
+  return taskById(made.id)?.given === made.given
+})())
+t('taskById still resolves an authored id', taskById('factor-monic-1')?.given === 'x^2 - 2x - 15')
+t('an unknown generator resolves to nothing', generatedTaskById('gen-nope@1') === null)
+t('a malformed seed resolves to nothing', generatedTaskById('gen-factor-monic@notanumber') === null)
+t('generate does not silently walk to another seed — the id must mean one instance', (() => {
+  // Find a seed the generator declines, and confirm generate() returns null for it
+  // rather than quietly producing the next valid draw.
+  for (let s = 0; s < 400; s += 1) {
+    if (generate('gen-factor-monic', s) === null) return generate('gen-factor-monic', s) === null
+  }
+  return false
+})())
+t('generateFrom reports the seed it landed on, inside the id', (() => {
+  const made = generateFrom('gen-factor-monic', 0)
+  const parsed = parseTaskId(made.id)
+  return generate(parsed.generatorId, parsed.seed) !== null
+})())
+
+group('generated instances satisfy every invariant the authored ones do')
+const SAMPLE = GENERATORS.map(g => generateFrom(g.id, 31337)).filter(Boolean)
+t('one instance per generator was produced', SAMPLE.length === GENERATORS.length)
+t('every one names a real knowledge point',
+  SAMPLE.every(task => !!knowledgePointById(O, task.knowledgePointId)))
+t('every one declares its symbols', SAMPLE.every(task => task.variables.length > 0))
+t('every given parses under its own declarations',
+  SAMPLE.every(task => tryParse(task.given, task.variables.map(v => v.name)).ok))
+t('every reference parses under its own declarations',
+  SAMPLE.every(task => tryParse(task.reference, task.variables.map(v => v.name)).ok))
+t('every reference satisfies its own demanded shape',
+  SAMPLE.filter(task => task.form && shapeHolds(task, task.reference) !== true).length === 0,
+  SAMPLE.filter(task => task.form && shapeHolds(task, task.reference) !== true).map(t2 => t2.id).join(', '))
+t('no given already has the shape it asks for',
+  SAMPLE.filter(task => task.form && shapeHolds(task, task.given) === true).length === 0,
+  SAMPLE.filter(task => task.form && shapeHolds(task, task.given) === true).map(t2 => t2.id).join(', '))
+t('only verifiable kinds are generated', SAMPLE.every(task => isVerifiableKind(task.kind)))
+t('every generated id is unique', new Set(SAMPLE.map(task => task.id)).size === SAMPLE.length)
+t('no generated id collides with an authored one', (() => {
+  const authored = new Set(TASKS.map(task => task.id))
+  return SAMPLE.every(task => !authored.has(task.id))
+})())
+
+group('a generated evaluate instance is ruled correctly, with no worker')
+const GEN_EVALS = SAMPLE.filter(task => task.kind === 'evaluate')
+t('there are some', GEN_EVALS.length >= 3, `${GEN_EVALS.length}`)
+const genRulings = await Promise.all(GEN_EVALS.map(task => ruleEvaluate(task, task.reference, NO_WORKER)))
+t('each rules its own reference correct',
+  genRulings.every(r => r.status === 'ruled' && r.verdict.ruling === 'correct'),
+  genRulings.map((r, i) => `${GEN_EVALS[i].id}:${r.status === 'ruled' ? r.verdict.ruling : r.status}`).join(', '))
+t('a wrong answer to a generated instance is incorrect, not inconclusive',
+  (await ruleEvaluate(GEN_EVALS[0], '999999', NO_WORKER)).verdict.ruling === 'incorrect')
+t('no generated evaluate instance is an authoring fault — the re-derivation agrees',
+  genRulings.every(r => r.verdict.ruling !== 'inconclusive'))
+
+group('the scheduler serves variants only when asked')
+const freshTable = {}
+t('without a variant seed the set is authored-only', (() => {
+  const a = assemble({ ontology: O, strengths: freshTable, now: NOW, size: 20 })
+  return a.tasks.length > 0 && a.tasks.every(task => !task.id.includes('@'))
+})())
+t('with a variant seed, generated instances appear', (() => {
+  const a = assemble({ ontology: O, strengths: freshTable, now: NOW, size: 20, variantSeed: 1 })
+  return a.tasks.some(task => task.id.includes('@'))
+})())
+t('the same history gives the same set, so an instance can be rebuilt from a report', (() => {
+  const a = assemble({ ontology: O, strengths: freshTable, now: NOW, size: 20, variantSeed: 1 })
+  const b = assemble({ ontology: O, strengths: freshTable, now: NOW, size: 20, variantSeed: 1 })
+  return JSON.stringify(a.tasks.map(x => x.id)) === JSON.stringify(b.tasks.map(x => x.id))
+})())
+/**
+ * SPEC-LEARNING §7, made executable: a learner who has attempted a point gets a
+ * different instance of the same objective next time, not the same numbers.
+ */
+t('a scored attempt changes the instance for that point', (() => {
+  const before = variantsForPointIds('expand-binomials', 0)
+  const after = variantsForPointIds('expand-binomials', 1)
+  return before.length > 0 && after.length > 0 && before.join() !== after.join()
+})())
+t('and the problem text actually differs, not just the id', (() => {
+  const a = generateFrom('gen-expand-binomials', variantSeedFor(1, 'expand-binomials', 0))
+  const b = generateFrom('gen-expand-binomials', variantSeedFor(1, 'expand-binomials', 1))
+  return a.given !== b.given
+})())
+t('an unchanged attempt count serves the same instance, so an inconclusive ruling does not discard the work',
+  variantsForPointIds('expand-binomials', 2).join() === variantsForPointIds('expand-binomials', 2).join())
+
+group('every knowledge point with a generator keeps its coverage')
+t('each generator names a knowledge point that exists',
+  GENERATORS.every(g => !!knowledgePointById(O, g.knowledgePointId)))
+t('generatorsForPoint finds them',
+  GENERATORS.every(g => generatorsForPoint(g.knowledgePointId).some(x => x.id === g.id)))
+t('no two generators share an id', new Set(GENERATORS.map(g => g.id)).size === GENERATORS.length)
+t('every generator says what varies', GENERATORS.every(g => g.varies.length > 10))
+t('validateInstance refuses an instance whose reference is wrong', (() => {
+  const broken = { ...taskById('factor-monic-1'), reference: '(x + 3)(x - 6)' }
+  return validateInstance(broken, 2).some(s => /differ at/.test(s))
+})())
+t('validateInstance refuses a task that asks for nothing', (() => {
+  const trivial = {
+    id: 'x', knowledgePointId: 'factor-monic', kind: 'transform_to_form',
+    prompt: '', given: '(x + 3)(x - 5)', reference: '(x + 3)(x - 5)',
+    form: 'factored', variables: [{ name: 'x' }],
+  }
+  return validateInstance(trivial, 2).some(s => /asks for nothing|same string/.test(s))
+})())
+t('validateInstance accepts every authored task, which is the cross-check', (() => {
+  const bad = []
+  for (const task of TASKS) {
+    const problems = validateInstance(task, 6)
+    if (problems.length > 0) bad.push(`${task.id}: ${problems.join('; ')}`)
+  }
+  return bad.length === 0
+})(), (() => {
+  const bad = []
+  for (const task of TASKS) {
+    const problems = validateInstance(task, 6)
+    if (problems.length > 0) bad.push(`${task.id}: ${problems.join('; ')}`)
+  }
+  return bad.join(' | ')
 })())
 
 // ---------------------------------------------------------------------------

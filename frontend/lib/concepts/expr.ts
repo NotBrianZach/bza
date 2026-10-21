@@ -312,9 +312,30 @@ function flatMultiply(left: ExprNode, right: ExprNode): ExprNode {
  * exception — a malformed answer is an ordinary thing a learner submits and is not
  * an error in the sense a 500 is.
  */
-export function tryParse(input: string, symbols: string[]):
+export type ParseResult =
   | { ok: true; tree: ExprNode }
-  | { ok: false; message: string; position: number } {
+  | { ok: false; message: string; position: number }
+
+/**
+ * Accessors for a `tryParse` result that do not rely on discriminant narrowing.
+ *
+ * `if (!result.ok)` narrows perfectly under the project's `strict` config. It
+ * does **not** narrow when these modules are compiled standalone — which
+ * tests/concepts-logic.mjs and scripts/import-bza.mjs both do — because with
+ * `strictNullChecks` off the literal types `true` and `false` widen to `boolean`
+ * and the union stops being discriminable. tsc then reports a wall of TS2339 on
+ * every test run, which makes a green suite look broken.
+ *
+ * An `in` check is unaffected by that, so callers reach the tree and the failure
+ * through these and the same source compiles cleanly under both configs.
+ */
+export const parsedTree = (result: ParseResult): ExprNode | null =>
+  'tree' in result ? result.tree : null
+
+export const parseFailure = (result: ParseResult): { message: string; position: number } | null =>
+  'message' in result ? { message: result.message, position: result.position } : null
+
+export function tryParse(input: string, symbols: string[]): ParseResult {
   try {
     if (!input.trim()) return { ok: false, message: 'nothing was submitted', position: 0 }
     return { ok: true, tree: parseExpression(input, symbols) }

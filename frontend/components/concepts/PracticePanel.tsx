@@ -44,6 +44,8 @@ export interface PracticeTaskView {
   at: Record<string, string> | null
   domainConditions: string[]
   conceptId: string | null
+  /** Generated from a seed rather than authored — the numbers change next time. */
+  generated?: boolean
 }
 
 interface Propagation { knowledgePointId: string; conceptName: string; distance: number; credit: number }
@@ -169,6 +171,9 @@ export default function PracticePanel({
             <p className='text-xs text-gray-500'>
               {index + 1} of {tasks.length}
               {task.form && <> · answer as {FORM_LABELS[task.form]}</>}
+              {/* Said so a learner can tell "I have seen this" from "I am being
+                  drilled on the same numbers". */}
+              {task.generated && <> · fresh numbers</>}
             </p>
             <p className='mt-1 text-sm text-gray-200'>{task.prompt}</p>
           </div>

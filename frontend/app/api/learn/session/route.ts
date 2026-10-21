@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserFromToken } from '@/lib/apiQuota'
 import { RATIONAL_EXPRESSIONS } from '@/lib/concepts/ontology'
+import { parseTaskId } from '@/lib/concepts/generators'
 import { conceptById } from '@/lib/concepts/registry'
 import { assemble, summarise } from '@/lib/concepts/scheduling'
 import { loadStrengths, loadTraversal, pendingReviewCount } from '@/lib/concepts/store'
@@ -60,7 +61,18 @@ export async function GET(req: NextRequest) {
   // practice usable without walking the graph first. Supplying `reached` is
   // strictly narrower, never wider.
   const reached = world.route.length > 0 ? world.route : undefined
-  const assembly = assemble({ ontology: ONTOLOGY, strengths, now, size, reached })
+  /**
+   * A fixed number, not a clock read.
+   *
+   * What makes a re-attempt a different instance is the learner's own attempt
+   * count, which `assemble` mixes in per knowledge point — so determinism here is
+   * free and worth having: the same history yields the same set, which means a
+   * learner can be asked what they saw and the instance can be rebuilt from its
+   * id. Bump this to reshuffle everybody's variants at once.
+   */
+  const VARIANT_SEED = 1
+
+  const assembly = assemble({ ontology: ONTOLOGY, strengths, now, size, reached, variantSeed: VARIANT_SEED })
   const progress = summarise(ONTOLOGY, strengths, now)
   const name = (id: string) => conceptById(ONTOLOGY, id)?.name ?? id
 
@@ -85,6 +97,15 @@ export async function GET(req: NextRequest) {
       // being practised.
       at: t.at ?? null,
       domainConditions: t.domainConditions ?? [],
+      /**
+       * Whether this instance was generated rather than authored.
+       *
+       * Told to the client because it changes what a learner should expect: a
+       * generated task's numbers will be different next time, and knowing that
+       * is the difference between "I have seen this before" and "I am being
+       * drilled on the same thing".
+       */
+      generated: parseTaskId(t.id) !== null,
       conceptId: ONTOLOGY.concepts.find(c => c.knowledgePoints.some(p => p.id === t.knowledgePointId))?.id ?? null,
     })),
     skipped: assembly.skipped,

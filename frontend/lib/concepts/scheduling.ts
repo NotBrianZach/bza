@@ -47,6 +47,7 @@ import {
   allKnowledgePoints, conceptById, conceptOfPoint, encompassedClosure, interferesWith,
   isVerifiableKind, prerequisitesOf,
 } from './registry'
+import { variantsForPoint } from './generators'
 import { TASKS } from './tasks'
 import { isScorable } from './verify'
 import type { ConceptOntology, Observation, PracticeTask } from './types'
@@ -356,6 +357,20 @@ export interface AssemblyOptions {
    * stricter, never looser: a concept must be both reached and introducible.
    */
   reached?: string[]
+  /**
+   * Serve generated variants alongside the authored tasks.
+   *
+   * Opt-in, and absent means authored-only — the behaviour before generators
+   * existed. When supplied, each knowledge point's instance is seeded from this
+   * number *and* the learner's scored-attempt count on that point, which is what
+   * makes SPEC-LEARNING §7 true: a re-attempt draws different numbers without
+   * any new storage, because the counters are already in the strength table.
+   *
+   * It is a fixed number rather than a clock read on purpose. Two sessions with
+   * the same history produce the same set, so a learner can be asked what they
+   * saw and a bug can be reproduced from the id alone.
+   */
+  variantSeed?: number
 }
 
 export interface Assembly {
@@ -412,8 +427,22 @@ export function assemble(opts: AssemblyOptions): Assembly {
 
   const pointConcept = new Map(allKnowledgePoints(o).map(p => [p.id, p.conceptId]))
 
+  /**
+   * Authored instances, plus one generated variant per generator when a seed was
+   * supplied. Generated first within each point is not meaningful — the ordering
+   * below is by due-ness and position, and both kinds carry the same point id.
+   */
+  const pool: PracticeTask[] = [...TASKS]
+  if (typeof opts.variantSeed === 'number') {
+    for (const point of allKnowledgePoints(o)) {
+      const entry = entryFor(strengths, point.id)
+      const attempts = entry.unaidedSuccesses + entry.assistedSuccesses + entry.failures
+      pool.push(...variantsForPoint(point.id, opts.variantSeed, attempts))
+    }
+  }
+
   const candidates: { task: PracticeTask; conceptId: string; due: number; position: number }[] = []
-  for (const task of TASKS) {
+  for (const task of pool) {
     const conceptId = pointConcept.get(task.knowledgePointId)
     if (!conceptId) {
       skipped.push({ taskId: task.id, reason: `names an unknown knowledge point ${task.knowledgePointId}` })

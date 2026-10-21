@@ -42,6 +42,7 @@
  * re-check the algebra without the worker, which is the point of the worker.
  */
 
+import { generatedTaskById } from './generators'
 import type { PracticeTask } from './types'
 
 /** Every task declares its symbols. Most of them are one real variable. */
@@ -380,8 +381,18 @@ export const TASKS: PracticeTask[] = [
   },
 ]
 
+/**
+ * An authored task, or a generated one rebuilt from its id.
+ *
+ * The verify route looks a submission up by id and has no other handle on it, so
+ * a generated instance has to be reconstructible from its id alone — which is
+ * exactly what `generatedTaskById` does. Authored ids are checked first and
+ * cannot collide: a generated id contains an `@` and no authored one does.
+ */
 export function taskById(id: string): PracticeTask | null {
-  return TASKS.find(t => t.id === id) ?? null
+  const authored = TASKS.find(t => t.id === id)
+  if (authored) return authored
+  return generatedTaskById(id)
 }
 
 export function tasksForPoint(knowledgePointId: string): PracticeTask[] {
