@@ -661,6 +661,161 @@ export async function ruleEvaluate(
   }
 }
 
+// ---------------------------------------------------------------------------
+// Ruling a counterexample answer
+// ---------------------------------------------------------------------------
+
+/**
+ * Rule one `counterexample` submission.
+ *
+ * ── Why this kind is cheap here and expensive in general ──────────────────
+ *
+ * types.ts says `counterexample` is "machine-rulable when the claim is an
+ * identity", and that qualifier is the whole design. Refuting an arbitrary
+ * claim needs a theorem prover. Refuting a claimed *identity* needs only
+ * substitution: hand back a point where the two sides differ. The parser
+ * already produces an `equation` node, so the task's `given` carries the claim
+ * verbatim and both sides are available as trees.
+ *
+ * So this is settled locally and exactly, for the same reason `ruleEvaluate` is
+ * — comparing two rationals is arithmetic, not CAS work. And the asymmetry is
+ * genuine rather than a shortcut: **a counterexample is cheap to verify and
+ * expensive to find**, which is exactly the shape of task worth asking a learner
+ * for.
+ *
+ * ── What counts as breaking the claim ─────────────────────────────────────
+ *
+ * The answer is a point. The claim breaks at that point when both sides have a
+ * value there and the values differ. Three things are *not* counterexamples and
+ * each is ruled separately rather than lumped into "wrong":
+ *
+ *   - a point where the two sides agree. The claim survives it.
+ *   - a point where either side is undefined. `(x+3)/(x+5) = 3/5` is not refuted
+ *     by x = −5; the left side has no value there, so nothing was compared. A
+ *     learner who offers the excluded point has made a real and interesting
+ *     error and deserves to be told which one it is.
+ *   - an answer that is not a point at all.
+ *
+ * The middle one is why this does not simply reuse `agreeAtPoints`: that function
+ * skips undefined points by design, which is right for proving an identity and
+ * wrong for grading a single proposed witness.
+ */
+export async function ruleCounterexample(
+  task: PracticeTask,
+  answer: string,
+  _config: VerifierConfig = verifierConfig(),
+): Promise<Ruling> {
+  const symbols = task.variables.map(v => v.name)
+  const variable = primaryVariable(task)
+  const parsed = tryParse(answer, symbols)
+  const failure = parseFailure(parsed)
+  if (failure) return { status: 'unreadable', ...failure }
+  const point = parsedTree(parsed)
+  if (!point) return { status: 'unreadable', message: 'could not be read', position: 0 }
+  const asRead = renderExpr(point)
+  const authored = task.domainConditions ?? []
+
+  // ── step 1: the answer has to be a point ──────────────────────────────
+  const mentioned = symbolsIn(point)
+  if (mentioned.length > 0) {
+    return {
+      status: 'ruled',
+      asRead,
+      verdict: {
+        ruling: 'incorrect',
+        method: 'the answer is not a single point',
+        brokeAt: {
+          step: 1,
+          detail:
+            `a counterexample is one value of ${variable}, and this still mentions ` +
+            `${mentioned.join(' and ')}. Give a number that breaks the claim.`,
+        },
+        conditions: authored,
+      },
+    }
+  }
+  const at = exactValue(point)
+  if (at === null) {
+    return {
+      status: 'ruled',
+      asRead,
+      verdict: {
+        ruling: 'inconclusive',
+        method: `"${asRead}" has no exact rational value, so it could not be substituted`,
+        conditions: authored,
+      },
+    }
+  }
+
+  // ── the author's side: the claim has to be an identity ────────────────
+  const claim = parsedTree(tryParse(task.given, symbols))
+  if (!claim) {
+    return authoringFault(
+      `the task's own claim does not parse (${parseFailure(tryParse(task.given, symbols))?.message ?? 'unreadable'})`,
+      asRead, authored)
+  }
+  if (claim.kind !== 'equation') {
+    return authoringFault(
+      'a counterexample task must state an equation to be broken, and this claim is not one',
+      asRead, authored)
+  }
+
+  // ── step 2: does the claim actually break there ───────────────────────
+  const substitution = { [variable]: point }
+  const left = exactValue(substitute(claim.left, substitution))
+  const right = exactValue(substitute(claim.right, substitution))
+
+  if (left === null || right === null) {
+    const which = left === null && right === null ? 'both sides' : left === null ? 'the left side' : 'the right side'
+    return {
+      status: 'ruled',
+      asRead,
+      verdict: {
+        ruling: 'incorrect',
+        method: 'substitution at the proposed point',
+        brokeAt: {
+          step: 2,
+          detail:
+            `at ${variable} = ${showExact(at)}, ${which} is undefined, so the two were never ` +
+            `compared. An excluded point does not refute the claim — it is outside what the ` +
+            `claim is about. Find a point where both sides have a value and they disagree.`,
+        },
+        conditions: authored,
+      },
+    }
+  }
+
+  if (sameValue(left, right)) {
+    return {
+      status: 'ruled',
+      asRead,
+      verdict: {
+        ruling: 'incorrect',
+        method: 'substitution at the proposed point',
+        brokeAt: {
+          step: 2,
+          detail:
+            `at ${variable} = ${showExact(at)} both sides equal ${showExact(left)}, so the claim ` +
+            `survives this point. A counterexample has to make them differ.`,
+        },
+        conditions: authored,
+      },
+    }
+  }
+
+  return {
+    status: 'ruled',
+    asRead,
+    verdict: {
+      ruling: 'correct',
+      method:
+        `substitution at ${variable} = ${showExact(at)}: the left side is ${showExact(left)} ` +
+        `and the right side is ${showExact(right)}, so the claim is false`,
+      conditions: authored,
+    },
+  }
+}
+
 /**
  * Rule any submission the engine can rule, by kind.
  *
@@ -679,6 +834,8 @@ export async function rule(
       return ruleTransform(task, answer, config)
     case 'evaluate':
       return ruleEvaluate(task, answer, config)
+    case 'counterexample':
+      return ruleCounterexample(task, answer, config)
     default:
       return {
         status: 'unruled',

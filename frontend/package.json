@@ -17,8 +17,10 @@
     "test:correlate": "node tests/correlate-logic.mjs",
     "test:schema": "node tests/supabase-schema.mjs",
     "test:discharge": "node tests/discharge-logic.mjs",
-    "test": "npm run test:correlate && npm run test:concepts && npm run test:schema && npm run test:discharge",
-    "test:concepts": "node tests/concepts-logic.mjs"
+    "test": "npm run test:correlate && npm run test:concepts && npm run test:schema && npm run test:discharge && npm run test:suggest && npm run test:librarian",
+    "test:concepts": "node tests/concepts-logic.mjs",
+    "test:suggest": "node tests/suggest-logic.mjs",
+    "test:librarian": "node tests/librarian-logic.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.3",

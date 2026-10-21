@@ -21,7 +21,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js'
-import { dbSchema } from '../supabaseSchema'
+import { serverData } from '../supabaseSchema'
 
 const SEARCH = 'https://www.googleapis.com/youtube/v3/search'
 const OEMBED = 'https://www.youtube.com/oembed'
@@ -46,7 +46,7 @@ function makeDb() {
     // Exposed schemas, which is a project setting no migration can set;
     // without it every query here returns PGRST106 and resolution falls back
     // to the 30s preview.
-    { ...dbSchema },
+    { ...serverData },
   )
 }
 

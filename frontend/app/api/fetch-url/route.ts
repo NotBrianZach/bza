@@ -1,8 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
 import { isSupadataUrl } from '@/lib/supadata'
-import { dbSchema } from '@/lib/supabaseSchema'
-import { schemaHeaders } from '@/lib/supabaseSchema'
+import { schemaHeaders, serverData } from '@/lib/supabaseSchema'
 
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
 
@@ -575,7 +574,7 @@ async function checkProTier(req: NextRequest): Promise<{ userId: string } | null
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
-      ...dbSchema,
+      ...serverData,
       cookies: {
         getAll() { return req.cookies.getAll() },
         setAll(cs) { cs.forEach(({ name, value, options }) => res.cookies.set(name, value, options)) },

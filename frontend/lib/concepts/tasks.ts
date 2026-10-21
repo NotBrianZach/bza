@@ -379,6 +379,210 @@ export const TASKS: PracticeTask[] = [
     // one and excludes nothing, which is what licenses substituting the root.
     reference: '16',
   },
+
+  // ── counterexample ──────────────────────────────────────────────────────
+  //
+  // `given` is an `equation` node — the claim to be broken — rather than an
+  // expression to be rewritten. That is the one place a task's `given` is not
+  // the thing the learner manipulates, and `ruleCounterexample` reads both of
+  // its sides.
+  //
+  // `reference` is *an* answer and emphatically not *the* answer: any point where
+  // the two sides differ is correct, and the ruler never compares against this.
+  // It is here so the shipped set can be checked for having a witness at all.
+  {
+    id: 'break-terms-are-not-factors-1',
+    knowledgePointId: 'terms-are-not-factors',
+    kind: 'counterexample',
+    prompt:
+      'Somebody cancelled the x out of the top and bottom and claims this. Give a value of x ' +
+      'that proves them wrong.',
+    given: '(x + 3)/(x + 5) = 3/5',
+    variables: REAL_X,
+    domainConditions: ['x != -5'],
+    // At x = 1 the left side is 4/6 = 2/3 and the right is 3/5. Any x other than
+    // 0 works, which is the point — the claim is false almost everywhere, and a
+    // learner who finds x = 0 (where it happens to hold) has learned something
+    // sharper than one who finds x = 1.
+    reference: '1',
+  },
+  // NOT AUTHORED, and the reason is worth keeping where the next author will see
+  // it. `cancelling-keeps-the-hole` looks like the best counterexample task in
+  // the subject — "(x+3)/((x+3)(x−5)) and 1/(x−5) are the same function" is a
+  // claim worth breaking. It cannot be one here.
+  //
+  // Those two expressions are equal at *every* point where both are defined. The
+  // only thing separating them is x = −3, where the left side is undefined — and
+  // `ruleCounterexample` correctly refuses an undefined-side point, because an
+  // excluded point does not refute a claim about values. So the task would have
+  // no answer the engine accepts, which is precisely the "looks like practice and
+  // records nothing" failure the kind registry exists to prevent.
+  //
+  // The gap is real and is in the *claim language*, not the ruler: refuting a
+  // claim about domains needs a task kind that compares domains, and this engine
+  // has none. `state` already covers the point for a human reader.
+
+  // ── exponents-and-logarithms ────────────────────────────────────────────
+  //
+  // Mostly `evaluate`, which exact arithmetic rules with no worker — that is
+  // what makes this the first subject fully gradable on a deployment with none.
+  //
+  // `given` on an `evaluate` task carries a *numeric* instance rather than the
+  // general rule, because `evaluate` substitutes and compares values.
+  //
+  // THE FORM TASKS BELOW ARE NEW, and they are the thing the subject was
+  // originally unable to ask for. `NamedForm` held only rational-expression
+  // forms, so "write this as a single power" had nowhere to go; the subject
+  // shipped evaluate-only and recorded that as a schema defect rather than
+  // inventing a form that half-fitted. The union is now open and
+  // `FORM_CHECKS` is total over it, so the demand this subject actually makes
+  // is expressible and rulable.
+  //
+  // These three need the worker for equivalence, unlike their evaluate
+  // neighbours — so on a deployment with none they rule inconclusive and the
+  // learner is told so up front by `verifier.configured`.
+  {
+    id: 'add-exponents-1',
+    knowledgePointId: 'add-exponents-on-product',
+    kind: 'evaluate',
+    prompt:
+      'Evaluate 2³ · 2⁴ by adding the exponents first. The answer is a single power of 2 — give its value.',
+    given: 'b^m * b^n',
+    variables: [
+      { name: 'b', assumptions: { real: true } },
+      { name: 'm', assumptions: { real: true } },
+      { name: 'n', assumptions: { real: true } },
+    ],
+    at: { b: '2', m: '3', n: '4' },
+    // 2^3 · 2^4 = 2^7 = 128.
+    reference: '128',
+  },
+  {
+    id: 'multiply-exponents-1',
+    knowledgePointId: 'multiply-exponents-on-power',
+    kind: 'evaluate',
+    prompt: 'Evaluate (3²)⁴. Multiply the exponents rather than expanding the inside first.',
+    given: '(b^m)^n',
+    variables: [
+      { name: 'b', assumptions: { real: true } },
+      { name: 'm', assumptions: { real: true } },
+      { name: 'n', assumptions: { real: true } },
+    ],
+    at: { b: '3', m: '2', n: '4' },
+    // (3^2)^4 = 3^8 = 6561.
+    reference: '6561',
+  },
+  {
+    id: 'zero-exponent-1',
+    knowledgePointId: 'zero-exponent',
+    kind: 'evaluate',
+    prompt: 'Evaluate 7⁰.',
+    given: 'b^0',
+    variables: [{ name: 'b', assumptions: { real: true } }],
+    at: { b: '7' },
+    reference: '1',
+  },
+  {
+    id: 'negative-exponent-1',
+    knowledgePointId: 'negative-is-reciprocal',
+    kind: 'evaluate',
+    prompt:
+      'Evaluate 2⁻³. Give the exact value as a fraction — a negative exponent is a reciprocal, ' +
+      'not a negative number.',
+    given: 'b^n',
+    variables: [
+      { name: 'b', assumptions: { real: true } },
+      { name: 'n', assumptions: { real: true } },
+    ],
+    at: { b: '2', n: '-3' },
+    // 1/8, and emphatically not -8.
+    reference: '1/8',
+  },
+  {
+    id: 'root-as-exponent-1',
+    knowledgePointId: 'root-as-exponent',
+    kind: 'evaluate',
+    prompt: 'Evaluate 9^(1/2), then 16^(1/2) in your head to check you have the right reading.',
+    given: 'b^(1/2)',
+    variables: [{ name: 'b', assumptions: { real: true } }],
+    at: { b: '9' },
+    // This task is why `exactValue` grew exact rational roots. It used to be
+    // unverifiable locally, which made `ruleEvaluate` fall through to comparing
+    // the learner against the author's *unverified* reference — losing exactly
+    // the re-derivation check that kind was built around. 9^(1/2) is exactly 3,
+    // so there was no reason to refuse it. 2^(1/2) still returns null, which is
+    // the honest answer for an irrational root.
+    reference: '3',
+  },
+
+  // ── the form tasks this subject could not previously ask for ────────────
+
+  {
+    id: 'combine-powers-form-1',
+    knowledgePointId: 'add-exponents-on-product',
+    kind: 'transform_to_form',
+    // The general rule, not a numeric instance. That is the whole difference
+    // this form makes: `evaluate` could only ask "what is 2³·2⁴", which is
+    // answerable by multiplying it out and never demonstrates the rule. This
+    // asks for the rule applied, and the form check refuses `x^3 * x^5`
+    // handed straight back.
+    prompt: 'Write this as a single power of x.',
+    given: 'x^3 * x^5',
+    form: 'single_power',
+    variables: REAL_X,
+    reference: 'x^8',
+  },
+  {
+    id: 'multiply-exponents-form-1',
+    knowledgePointId: 'multiply-exponents-on-power',
+    kind: 'transform_to_form',
+    prompt: 'Write this as a single power of x.',
+    given: '(x^2)^4',
+    form: 'single_power',
+    variables: REAL_X,
+    reference: 'x^8',
+  },
+  {
+    id: 'negative-exponent-form-1',
+    knowledgePointId: 'negative-is-reciprocal',
+    kind: 'transform_to_form',
+    // The one place the form IS the whole content of the task. `x^-2` and
+    // `1/x^2` are equal everywhere they are defined, so no equivalence check
+    // can distinguish the answer from the question — only the shape ruling can,
+    // which is exactly the independence argued for in the header of forms.ts.
+    prompt: 'Rewrite this with no negative exponents.',
+    given: 'x^-2',
+    form: 'no_negative_exponents',
+    variables: REAL_X,
+    reference: '1/x^2',
+  },
+  {
+    id: 'radical-to-exponent-form-1',
+    knowledgePointId: 'root-as-exponent',
+    kind: 'transform_to_form',
+    // The first draft of this task asked to "rewrite using a fractional
+    // exponent instead of a root sign" and gave `x^(3/2)` as the reference —
+    // against the `radical_free` form, which a fractional exponent VIOLATES.
+    // A fractional exponent is a radical written the other way round; that is
+    // the whole point of `move-between-roots-and-exponents`. The task
+    // validator caught it, which is what it is for.
+    //
+    // So the demand runs the other way: clear the radical entirely, which is
+    // possible here because the index divides the exponent.
+    prompt: 'Rewrite this with no root sign and no fractional exponent.',
+    // `(x^4)^(1/2)` rather than `sqrt(x^4)`, and this is a limitation of the
+    // local checker rather than a pedagogical choice. The validator wants the
+    // reference to agree with the given at sample points, and `sqrt` as a
+    // function call is not something `exactValue` evaluates — so a `sqrt`
+    // given yields zero usable points and the reference goes unverified,
+    // which is the one thing an authored task must not do. A rational
+    // exponent it CAN evaluate exactly, after that capability was added for
+    // `root-as-exponent-1`.
+    given: '(x^4)^(1/2)',
+    form: 'radical_free',
+    variables: REAL_X,
+    reference: 'x^2',
+  },
 ]
 
 /**

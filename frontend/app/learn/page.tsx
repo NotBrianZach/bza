@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { ArrowLeft, Loader2 } from 'lucide-react'
 import { ThemeToggle } from '@/components/ThemeProvider'
 import { authedFetch } from '@/lib/authedFetch'
-import { RATIONAL_EXPRESSIONS } from '@/lib/concepts/ontology'
+import { getOntology, RATIONAL_EXPRESSIONS } from '@/lib/concepts/ontology'
 import { TRAVERSAL_GAME } from '@/lib/concepts/traversal'
 import { MASTERY_FLOOR } from '@/lib/concepts/scheduling'
 import ConceptBrowser from '@/components/concepts/ConceptBrowser'
@@ -39,6 +39,8 @@ interface Named { conceptId: string; conceptName: string }
 
 interface SessionResponse {
   subject?: { id: string; name: string; covers: string }
+  /** Every shipped subject, so the picker does not have to hardcode the list. */
+  subjects?: { id: string; name: string }[]
   verifier?: { configured: boolean }
   /** How many rulings the engine could not settle and nobody has adjudicated. */
   awaitingReview?: number
@@ -65,18 +67,27 @@ export default function LearnPage() {
   const [tab, setTab] = useState<Tab>('practice')
   const [state, setState] = useState<SessionResponse | null>(null)
   const [loading, setLoading] = useState(true)
+  /**
+   * Which subject to practise. Null means "whatever the route defaults to", so
+   * the first load does not have to know the subject list before asking for it.
+   *
+   * The build ships two subjects and without this the second was authored,
+   * tested, and reachable only by hand-editing a URL.
+   */
+  const [subject, setSubject] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const response = await authedFetch('/api/learn/session?size=8')
+      const query = subject ? `?size=8&subject=${encodeURIComponent(subject)}` : '?size=8'
+      const response = await authedFetch(`/api/learn/session${query}`)
       setState((await response.json()) as SessionResponse)
     } catch (e) {
       setState({ error: e instanceof Error ? e.message : 'could not load the session' })
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [subject])
 
   useEffect(() => { load() }, [load])
 
@@ -91,7 +102,28 @@ export default function LearnPage() {
             <h1 className='text-base font-semibold'>{TRAVERSAL_GAME.name}</h1>
             <p className='truncate text-xs text-gray-500'>{TRAVERSAL_GAME.tagline}</p>
           </div>
-          <ThemeToggle />
+          <div className='flex items-center gap-2'>
+            {/*
+              Only rendered once the route has told us there is a choice. A picker
+              with one option is noise, and hardcoding the list here would mean
+              adding a subject in two places.
+            */}
+            {(state?.subjects?.length ?? 0) > 1 && (
+              <label className='flex items-center gap-1.5 text-xs text-gray-400'>
+                <span className='sr-only'>Subject</span>
+                <select
+                  value={subject ?? state?.subject?.id ?? ''}
+                  onChange={e => setSubject(e.target.value)}
+                  className='rounded border border-gray-700 bg-gray-900 px-2 py-1 text-xs text-gray-200 focus:border-emerald-700 focus:outline-none'
+                >
+                  {state?.subjects?.map(s => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </select>
+              </label>
+            )}
+            <ThemeToggle />
+          </div>
         </div>
         <nav className='mx-auto flex max-w-4xl gap-1 px-4'>
           {([
@@ -205,7 +237,13 @@ export default function LearnPage() {
           </>
         )}
 
-        {tab === 'concepts' && <ConceptBrowser ontology={RATIONAL_EXPRESSIONS} />}
+        {/* Follows the picker, or the browser would show one subject's graph
+            while the practice tab served another's tasks. */}
+        {tab === 'concepts' && (
+          <ConceptBrowser
+            ontology={getOntology(subject ?? state?.subject?.id ?? '') ?? RATIONAL_EXPRESSIONS}
+          />
+        )}
 
         {/* Reloading the session on resolve keeps the badge and the practice set
             honest: settling a review can move strength, which changes what is

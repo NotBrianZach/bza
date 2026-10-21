@@ -22,7 +22,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js'
-import { dbSchema } from '@/lib/supabaseSchema'
+import { serverData } from '@/lib/supabaseSchema'
 import type { Observation } from './types'
 import type { PointStrength, StrengthTable } from './scheduling'
 import { emptyStrength } from './scheduling'
@@ -30,11 +30,27 @@ import type { TraversalWorld } from './traversal'
 import { seedTraversal } from './traversal'
 import { needsReview } from './verify'
 
+/**
+ * `serverData` rather than `dbSchema`, and the difference is not cosmetic: it
+ * carries a no-store fetch, without which Next can serve a PostgREST read from
+ * a response captured before a write. See `noStoreFetch` in
+ * lib/supabaseSchema.ts for the full account and the bug that found it.
+ *
+ * Why it matters more here than it looks: the practice engine does
+ * read-after-write constantly — `/api/learn/verify` loads strengths, folds in
+ * an observation, saves, and the next session read must see it. A stale read
+ * would silently serve a learner the same point at the same strength, and "the
+ * scheduler is not advancing" is a much harder thing to diagnose than an error
+ * would have been.
+ */
 function makeServiceClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { ...dbSchema },
+    {
+      ...serverData,
+      auth: { persistSession: false, autoRefreshToken: false },
+    },
   )
 }
 

@@ -54,13 +54,36 @@
  */
 
 import { degreeIn, parsedTree, tryParse, type ExprNode } from './expr'
-import { checkForm } from './forms'
+import { DISCRIMINATING_FORMS, checkForm } from './forms'
 import { generatorsForPoint, generateFrom } from './generators'
 import { allKnowledgePoints, conceptOfPoint, edgesOfKind } from './registry'
 import { TASKS } from './tasks'
 import type { ConceptEdge, ConceptOntology, NamedForm, PracticeTask } from './types'
 
-const ALL_FORMS: NamedForm[] = ['expanded', 'factored', 'single_fraction', 'partial_fractions']
+/**
+ * Every form, from the registry rather than written out here.
+ *
+ * It used to be a hand-written list of the four rational forms, which was fine
+ * while four was all there were. Opening `NamedForm` for a second subject made
+ * it a list that would silently fall behind: three new forms would have been
+ * absent from every shape signature, so a task distinguished only by one of
+ * them would have looked structurally identical to its neighbours and the
+ * derivation would have quietly lost edges it could otherwise find.
+ *
+ * DISCRIMINATING forms only, not all of them. `no_negative_exponents` and
+ * `radical_free` are absence properties satisfied by nearly every expression —
+ * including `x^2 - 2x - 15` — so as signature dimensions they carry no
+ * information while making every signature look more alike. Taking all seven
+ * broke these tests the moment the union opened, which is the clearest
+ * possible demonstration of the point.
+ *
+ * The signature still gains a dimension whenever a *positive* form is added,
+ * which is right: more structure is more signal. It does mean the figures
+ * recorded in commit 4FC9E474 (prerequisite 10%/8%, encompasses 33%/17%,
+ * interferes_with 50%/17%) were measured over four forms and are not directly
+ * comparable to a run over five. Re-measure before quoting them.
+ */
+const ALL_FORMS: NamedForm[] = DISCRIMINATING_FORMS
 
 // ---------------------------------------------------------------------------
 // Shape signatures

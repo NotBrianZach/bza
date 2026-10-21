@@ -279,6 +279,51 @@ export function candidates(o: ConceptOntology): ConceptEdge[] {
   return edgesOfKind(o, 'candidate_prerequisite')
 }
 
+/** Candidates nobody has ruled on yet — the actual review worklist. */
+export function pendingCandidates(o: ConceptOntology): ConceptEdge[] {
+  return candidates(o).filter(e => !e.rejectedBy)
+}
+
+/** Candidates a person looked at and declined, with their reasons. */
+export function rejectedCandidates(o: ConceptOntology): ConceptEdge[] {
+  return candidates(o).filter(e => !!e.rejectedBy)
+}
+
+/**
+ * The three-way state of the quarantine.
+ *
+ * Reported alongside `promotionRate` rather than replacing it, because they
+ * answer different questions and the single number could not distinguish them:
+ *
+ *   promotionRate   of everything proposed, how much survived review. A
+ *                   measurement of the *proposal mechanism* — and the reason
+ *                   rejected edges stay in the denominator. Deleting them would
+ *                   make a bad importer look good.
+ *   reviewed        how much of the backlog anybody has actually opened. A low
+ *                   promotion rate with a low review rate means "nobody looked",
+ *                   which is a completely different fact from "looked and said no".
+ */
+export function reviewStatus(o: ConceptOntology): {
+  promoted: number
+  rejected: number
+  pending: number
+  proposed: number
+  /** Fraction of proposals that have been ruled on either way. */
+  reviewedRate: number | null
+} {
+  const promoted = edgesOfKind(o, 'prerequisite').length
+  const rejected = rejectedCandidates(o).length
+  const pending = pendingCandidates(o).length
+  const proposed = promoted + rejected + pending
+  return {
+    promoted,
+    rejected,
+    pending,
+    proposed,
+    reviewedRate: proposed === 0 ? null : (promoted + rejected) / proposed,
+  }
+}
+
 /**
  * What fraction of proposed prerequisite structure a human has promoted.
  *
@@ -384,6 +429,17 @@ export function ontologyProblems(o: ConceptOntology): string[] {
     }
     if (edge.kind === 'candidate_prerequisite' && edge.promotedBy) {
       out.push(`edge ${edge.id}: a candidate naming a promoter is neither one thing nor the other`)
+    }
+    if (edge.promotedBy && edge.rejectedBy) {
+      out.push(`edge ${edge.id}: is both promoted and rejected, so its state is unreadable`)
+    }
+    if (edge.rejectedBy && !edge.rationale) {
+      out.push(`edge ${edge.id}: a rejection with no stated reason cannot be revisited`)
+    }
+    if (edge.rejectedBy && edge.kind !== 'candidate_prerequisite') {
+      out.push(
+        `edge ${edge.id}: only a candidate can be rejected — a ${edge.kind} edge is already in force`,
+      )
     }
   }
 

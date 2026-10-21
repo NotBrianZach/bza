@@ -36,11 +36,33 @@ export interface FormCheck {
   detail: string
 }
 
-export const FORM_LABELS: Record<NamedForm, string> = {
-  partial_fractions: 'a sum of partial fractions',
-  single_fraction: 'a single fraction',
-  factored: 'a product of factors',
-  expanded: 'expanded, as a sum of terms',
+/** One form: how to say it, and how to rule it. */
+export interface FormSpec {
+  label: string
+  check: (node: ExprNode, symbol: string) => FormCheck
+  /**
+   * Whether satisfying this form says something specific about the shape.
+   *
+   * A POSITIVE form makes a structural claim: `factored` means the tree is a
+   * product, `partial_fractions` means a sum of constant-over-power terms. An
+   * ABSENCE form says only that something is missing — `no_negative_exponents`
+   * and `radical_free` are satisfied by `x^2 - 2x - 15`, by `7`, and by almost
+   * every expression anyone will ever type.
+   *
+   * The distinction exists because derive.ts uses the set of forms a tree
+   * satisfies as a shape signature, and a dimension that is true of nearly
+   * everything carries no information while making every signature look more
+   * alike. Adding the three new forms to the signature immediately broke the
+   * derive tests for exactly that reason: an expanded quadratic started
+   * reporting `["expanded", "no_negative_exponents", "radical_free"]`, and two
+   * thirds of that is noise.
+   *
+   * So `discriminating: false` keeps a form fully askable and fully rulable
+   * while keeping it out of the structural signature. It is not a quality
+   * ranking of forms — `no_negative_exponents` is the ONLY thing that can rule
+   * its task, since `x^-2` and `1/x^2` are equivalent everywhere.
+   */
+  discriminating: boolean
 }
 
 /** The terms of a top-level sum. A non-sum is one term, which is the useful reading. */
@@ -317,6 +339,307 @@ function checkExpanded(node: ExprNode, symbol: string): FormCheck {
 }
 
 // ---------------------------------------------------------------------------
+// Exponents and logarithms
+// ---------------------------------------------------------------------------
+//
+// These three exist because the exponents-and-logarithms ontology could not ask
+// for `transform_to_form` without them. They are the demands that subject
+// actually makes — "as a single power", "with no negative exponents",
+// "radical-free" — and none of the four rational forms expresses any of them.
+
+/** Every `power` node in the tree, outermost first. */
+function powers(node: ExprNode, out: ExprNode[] = []): ExprNode[] {
+  if (node.kind === 'power') out.push(node)
+  for (const child of children(node)) powers(child, out)
+  return out
+}
+
+/** The subtrees of a node, whatever its kind. One place, so a new kind is one edit. */
+function children(node: ExprNode): ExprNode[] {
+  switch (node.kind) {
+    case 'add': case 'multiply': case 'function': return node.args
+    case 'subtract': return [node.left, node.right]
+    case 'divide': return [node.numerator, node.denominator]
+    case 'power': return [node.base, node.exponent]
+    case 'negate': return [node.operand]
+    case 'equation': return [node.left, node.right]
+    default: return []
+  }
+}
+
+/**
+ * The numeric value of an exponent, when it has one.
+ *
+ * `null` for anything symbolic — `x^n` with `n` a declared variable has no
+ * knowable value, and a checker that assumed one would mark a correct answer
+ * wrong, which is the outcome this file's header forbids.
+ *
+ * The `divide` branch is not optional and was missing from the first version.
+ * `x^(1/2)` does NOT parse to a `rational` node: the parser produces
+ * `power(x, divide(1, 2))`, because `rational` is for literals the tokenizer
+ * reads as one. Without this branch both checkers below abstained on every
+ * fractional exponent written the way a learner writes it — which is to say,
+ * `radical_free` could not detect a radical.
+ *
+ * One function rather than a sign test and an integer test, so the two cannot
+ * disagree about what a tree means.
+ */
+function exponentValue(node: ExprNode): number | null {
+  switch (node.kind) {
+    case 'integer': {
+      const v = Number(node.value)
+      return Number.isFinite(v) ? v : null
+    }
+    case 'decimal': {
+      const v = Number(node.value)
+      return Number.isFinite(v) ? v : null
+    }
+    case 'rational': {
+      const n = Number(node.numerator), d = Number(node.denominator)
+      return Number.isFinite(n) && Number.isFinite(d) && d !== 0 ? n / d : null
+    }
+    case 'divide': {
+      const n = exponentValue(node.numerator), d = exponentValue(node.denominator)
+      return n !== null && d !== null && d !== 0 ? n / d : null
+    }
+    case 'negate': {
+      const v = exponentValue(node.operand)
+      return v === null ? null : -v
+    }
+    default:
+      return null
+  }
+}
+
+/** The sign of an exponent, when it can be known. */
+function numericSign(node: ExprNode): 'negative' | 'non-negative' | null {
+  const v = exponentValue(node)
+  if (v === null) return null
+  return v < 0 ? 'negative' : 'non-negative'
+}
+
+/** Whether an exponent is a whole number. `null` when it cannot be told. */
+function isIntegerExponent(node: ExprNode): boolean | null {
+  const v = exponentValue(node)
+  // 4/2 is a whole-number exponent even though it is written as a quotient,
+  // which is why this asks about the VALUE and not about the spelling.
+  return v === null ? null : Number.isInteger(v)
+}
+
+/**
+ * The whole expression is one power.
+ *
+ * A bare numeral or symbol passes: `x` is `x^1`, and `128` is the combined
+ * value of `2^3 · 2^4`, so demanding the exponent be written out would be a
+ * notational preference rather than a form.
+ *
+ * ── Why this is strict, after a first draft that was not ──────────────────
+ *
+ * The first version also accepted "a product of powers of distinct bases", on
+ * the reasoning that `2^3 · 3^2` cannot be combined further. That let through
+ * anything merely CONTAINING one power, and the derive tests caught it
+ * immediately: `(x + 4)/(x + 1)^2` was ruled a single power, because the
+ * denominator is one and nothing rejected the surrounding quotient. A form
+ * whose label is "a single power" should not accept a quotient.
+ *
+ * So the rule is literal — one exponentiation, at the top, nothing around it —
+ * which is also exactly what the tasks asking for it mean. The same-base
+ * message below is kept ahead of the general one only because it names the
+ * thing still to be done, which is more use to a learner than "this is not a
+ * single power".
+ */
+function checkSinglePower(node: ExprNode, _symbol: string): FormCheck {
+  /**
+   * A power whose base is itself a power is NOT a single power.
+   *
+   * `(x^2)^4` is one `power` node, so the first version of this check passed
+   * it — and the task validator caught the consequence immediately: a
+   * "write as a single power" task whose given is `(x^2)^4` was asking for
+   * nothing, because the given already satisfied the form. Which is correct
+   * about the syntax and wrong about the skill: the exponents have not been
+   * multiplied, and multiplying them is the entire content of
+   * `multiply-exponents-on-power`.
+   *
+   * So "single" means one exponentiation, not one node.
+   */
+  const nestedPower = (n: ExprNode): ExprNode | null => {
+    if (n.kind === 'power' && unsigned(n.base).kind === 'power') return n
+    for (const c of children(n)) {
+      const hit = nestedPower(c)
+      if (hit) return hit
+    }
+    return null
+  }
+  const nested = nestedPower(node)
+  if (nested) {
+    return {
+      held: false,
+      detail: `${describe(nested)} is a power of a power — multiply the exponents to get one power`,
+    }
+  }
+
+  const bases = new Map<string, number>()
+  let sawCombinable = false
+
+  const scan = (n: ExprNode, inDenominator: boolean) => {
+    if (n.kind === 'multiply') { n.args.forEach(a => scan(a, inDenominator)); return }
+    if (n.kind === 'divide') { scan(n.numerator, inDenominator); scan(n.denominator, !inDenominator); return }
+    if (n.kind === 'negate') { scan(n.operand, inDenominator); return }
+    const base = n.kind === 'power' ? renderExpr(n.base) : null
+    if (base !== null) {
+      const seen = bases.get(base) ?? 0
+      if (seen > 0) sawCombinable = true
+      bases.set(base, seen + 1)
+    }
+  }
+  scan(node, false)
+
+  if (sawCombinable) {
+    const repeated = [...bases.entries()].find(([, n]) => n > 1)?.[0]
+    return {
+      held: false,
+      detail: `there is still more than one power of ${repeated} to combine`,
+    }
+  }
+  const top = unsigned(node)
+  if (top.kind === 'power') return { held: true, detail: 'a single power' }
+  if (isNumeral(top)) return { held: true, detail: 'a single value, with nothing left to combine' }
+  if (top.kind === 'symbol') return { held: true, detail: `${renderExpr(top)}, which is a single power` }
+
+  if (terms(top).length > 1) {
+    return { held: false, detail: 'this is a sum, not a single power' }
+  }
+  if (top.kind === 'divide') {
+    return { held: false, detail: 'this is a quotient, not a single power' }
+  }
+  if (top.kind === 'multiply') {
+    return { held: false, detail: 'this is a product, not a single power' }
+  }
+  return { held: null, detail: 'this is not a shape this checker can read as a power' }
+}
+
+/**
+ * No negative exponents anywhere.
+ *
+ * Abstains on a symbolic exponent rather than passing it. `x^n` is not evidence
+ * that the learner avoided a negative exponent — it is evidence the checker
+ * cannot tell, and routing it to review is the honest outcome.
+ */
+function checkNoNegativeExponents(node: ExprNode, _symbol: string): FormCheck {
+  let unknown: string | null = null
+  for (const p of powers(node)) {
+    if (p.kind !== 'power') continue
+    const sign = numericSign(p.exponent)
+    if (sign === 'negative') {
+      return {
+        held: false,
+        detail: `${describe(p)} still has a negative exponent — write it as a reciprocal instead`,
+      }
+    }
+    if (sign === null) unknown = describe(p)
+  }
+  if (unknown) {
+    return {
+      held: null,
+      detail: `the exponent in ${unknown} is not a number, so this checker cannot tell its sign`,
+    }
+  }
+  return { held: true, detail: 'every exponent is non-negative' }
+}
+
+/**
+ * No radicals: no `sqrt` call and no fractional exponent.
+ *
+ * Both spellings, because they are the same thing written two ways and a check
+ * that caught only one would be trivially satisfiable by using the other.
+ */
+function checkRadicalFree(node: ExprNode, _symbol: string): FormCheck {
+  const findSqrt = (n: ExprNode): boolean => {
+    if (n.kind === 'function' && n.name === 'sqrt') return true
+    return children(n).some(findSqrt)
+  }
+  if (findSqrt(node)) {
+    return { held: false, detail: 'this still contains a square root' }
+  }
+  let unknown: string | null = null
+  for (const p of powers(node)) {
+    if (p.kind !== 'power') continue
+    const whole = isIntegerExponent(p.exponent)
+    if (whole === false) {
+      return { held: false, detail: `${describe(p)} has a fractional exponent, which is a radical` }
+    }
+    if (whole === null) unknown = describe(p)
+  }
+  if (unknown) {
+    return {
+      held: null,
+      detail: `the exponent in ${unknown} is not a number, so this checker cannot tell whether it is a whole number`,
+    }
+  }
+  return { held: true, detail: 'no roots and no fractional exponents' }
+}
+
+// ---------------------------------------------------------------------------
+// The registry
+// ---------------------------------------------------------------------------
+
+/**
+ * Every form, with its label and its checker.
+ *
+ * `Record<NamedForm, FormSpec>` and not a switch, and that is the whole point
+ * of the refactor: the type makes the table TOTAL, so adding a member to
+ * `NamedForm` fails to compile until a checker for it exists here. A switch
+ * only warned about this if someone remembered to keep it exhaustive, and the
+ * failure it allowed — a form that can be asked for and never ruled — is
+ * precisely the one worth making impossible.
+ *
+ * It also replaces the old `FORM_LABELS` constant, which was a second table
+ * keyed by the same union and therefore a second thing to forget.
+ */
+export const FORM_CHECKS: Record<NamedForm, FormSpec> = {
+  partial_fractions: {
+    label: 'a sum of partial fractions', check: checkPartialFractions, discriminating: true,
+  },
+  single_fraction: {
+    label: 'a single fraction', check: checkSingleFraction, discriminating: true,
+  },
+  factored: {
+    label: 'a product of factors', check: checkFactored, discriminating: true,
+  },
+  expanded: {
+    label: 'expanded, as a sum of terms', check: checkExpanded, discriminating: true,
+  },
+  single_power: {
+    label: 'a single power', check: checkSinglePower, discriminating: true,
+  },
+  // Absence forms. See `discriminating` on FormSpec: satisfied by nearly every
+  // expression, so useless in a shape signature and essential as a demand.
+  no_negative_exponents: {
+    label: 'with no negative exponents', check: checkNoNegativeExponents, discriminating: false,
+  },
+  radical_free: {
+    label: 'without radicals', check: checkRadicalFree, discriminating: false,
+  },
+}
+
+/** Every form name. Derived, so it cannot fall behind the union. */
+export const ALL_NAMED_FORMS = Object.keys(FORM_CHECKS) as NamedForm[]
+
+/** The forms worth putting in a shape signature. See `FormSpec.discriminating`. */
+export const DISCRIMINATING_FORMS = (Object.keys(FORM_CHECKS) as NamedForm[])
+  .filter(f => FORM_CHECKS[f].discriminating)
+
+/**
+ * How to say each form, for a prompt or a review row.
+ *
+ * Kept as an export because `ReviewQueue.tsx` and `verify.ts` both read it, but
+ * now derived from the registry rather than maintained beside it.
+ */
+export const FORM_LABELS: Record<NamedForm, string> = Object.fromEntries(
+  Object.entries(FORM_CHECKS).map(([id, spec]) => [id, spec.label]),
+) as Record<NamedForm, string>
+
+// ---------------------------------------------------------------------------
 // Entry point
 // ---------------------------------------------------------------------------
 
@@ -334,12 +657,15 @@ export function checkForm(node: ExprNode, form: NamedForm, symbol: string): Form
       detail: 'this is an equation. Submit the rewritten expression, not an equation about it.',
     }
   }
-  switch (form) {
-    case 'partial_fractions': return checkPartialFractions(node, symbol)
-    case 'single_fraction': return checkSingleFraction(node, symbol)
-    case 'factored': return checkFactored(node, symbol)
-    case 'expanded': return checkExpanded(node, symbol)
+  const spec = FORM_CHECKS[form]
+  if (!spec) {
+    // Unreachable through the type system, and handled anyway: `form` arrives
+    // from a stored task row, and a row written by an older build could name a
+    // form this one has dropped. Abstaining sends it to review; throwing would
+    // lose the learner's answer.
+    return { held: null, detail: `"${form}" is not a form this build knows how to check` }
   }
+  return spec.check(node, symbol)
 }
 
 /**

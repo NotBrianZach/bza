@@ -17,7 +17,7 @@
 
 import { createClient } from '@supabase/supabase-js'
 import type { Offering } from '@/lib/correlate/types'
-import { dbSchema } from '../supabaseSchema'
+import { serverData } from '../supabaseSchema'
 
 const DEFAULT_PAGE_CHARS = 420
 /** Enough to be a real passage, short enough to read on a card. */
@@ -29,7 +29,7 @@ function makeDb() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { ...dbSchema },
+    { ...serverData },
   )
 }
 

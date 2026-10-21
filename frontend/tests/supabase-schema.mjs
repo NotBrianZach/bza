@@ -95,6 +95,12 @@ for (const file of files) {
       const lineStart = src.lastIndexOf('\n', m.index) + 1
       const line = src.slice(lineStart, src.indexOf('\n', m.index))
       if (/^\s*import\b/.test(line)) continue
+      // Skip constructions inside comments. lib/supabaseSchema.ts documents
+      // itself with a usage example, and that example was being counted as a
+      // real client — it passed the schema check only because the example
+      // mentions dbSchema, and it failed the cache check outright. A doc
+      // example is not a call site.
+      if (/^\s*(\*|\/\/)/.test(line)) continue
 
       const openParen = m.index + m[0].length - 1
       const body = sliceCall(src, openParen)
@@ -118,7 +124,10 @@ const exempted = []
 let ok = 0
 
 for (const s of sites) {
-  const hasSchema = /\bDB_SCHEMA\b/.test(s.body) || /\bdbSchema\b/.test(s.body)
+  // `serverData` is dbSchema + noStoreFetch, so it satisfies this too.
+  const hasSchema = /\bDB_SCHEMA\b/.test(s.body)
+    || /\bdbSchema\b/.test(s.body)
+    || /\bserverData\b/.test(s.body)
   const exempt = s.body.match(EXEMPT_RE)
   if (hasSchema && exempt) {
     failures.push({ ...s, why: 'claims both a schema and an exemption — pick one' })
@@ -130,6 +139,58 @@ for (const s of sites) {
     failures.push({
       ...s,
       why: 'no db.schema and no exemption — this client reads `public`, which is empty',
+    })
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Second invariant: a server-side client must not let Next cache its reads
+// ---------------------------------------------------------------------------
+
+/**
+ * supabase-js issues its queries through the GLOBAL `fetch`, and Next
+ * instruments that fetch with its own data cache. So two identical PostgREST
+ * GETs can be served from a response captured earlier — including one captured
+ * before a write that has since landed.
+ *
+ * This is checked here, next to the schema check, because it is the SAME class
+ * of bug and it is invisible in exactly the same way: there is no error at any
+ * layer. PostgREST answers 200, supabase-js returns `{data: null, error: null}`,
+ * and `maybeSingle()` on an empty set is legitimately null. A stale read and an
+ * empty table are indistinguishable from the outside.
+ *
+ * Found in production code on 2026-10-21: `/api/suggest/metrics` reported "no
+ * digest has been generated yet" while psql showed the digest in the table,
+ * because an earlier call had cached the empty result against that URL.
+ *
+ * `createBrowserClient` is exempt by construction — there is no Next fetch
+ * cache in a browser. Everything else must spread `serverData` (or
+ * `noStoreFetch`), or say in-band why it is choosing to be cacheable.
+ *
+ * NOTE for whoever adds `export const dynamic = 'force-dynamic'` and expects
+ * that to cover it: it does not. That governs the route's own render, not the
+ * fetches made inside it.
+ */
+const CACHE_EXEMPT_RE = /cache-exempt:\s*(.+)/
+const cacheFailures = []
+const cacheExempted = []
+let cacheOk = 0
+
+for (const s of sites) {
+  if (s.ctor === 'createBrowserClient') continue
+  const guarded = /\bserverData\b/.test(s.body) || /\bnoStoreFetch\b/.test(s.body)
+    || /cache:\s*['"]no-store['"]/.test(s.body)
+  const exempt = s.body.match(CACHE_EXEMPT_RE)
+  if (guarded && exempt) {
+    cacheFailures.push({ ...s, why: 'claims both no-store and a cache exemption — pick one' })
+  } else if (guarded) {
+    cacheOk++
+  } else if (exempt) {
+    cacheExempted.push({ ...s, reason: exempt[1].trim().replace(/\s*\*\/\s*$/, '') })
+  } else {
+    cacheFailures.push({
+      ...s,
+      why: 'server-side client with no no-store fetch — Next may serve its reads from a stale cache, with no error',
     })
   }
 }
@@ -205,7 +266,18 @@ if (exempted.length) {
 }
 
 console.log(`  ✓ ${ok} construction(s) set the schema via DB_SCHEMA`)
+console.log(`  ✓ ${cacheOk} server-side construction(s) disable Next's fetch cache`)
 console.log(`  ✓ ${rawCalls.length - rawBad.length}/${rawCalls.length} raw /rest/v1/ call(s) send a profile header`)
+
+if (cacheExempted.length) {
+  console.log(`\n  cache-exempt (${cacheExempted.length}):`)
+  for (const e of cacheExempted) console.log(`    · ${e.file}:${e.line} — ${e.reason}`)
+}
+
+if (cacheFailures.length) {
+  console.log(`\n  ✗ ${cacheFailures.length} server-side construction(s) whose reads Next may cache:`)
+  for (const f of cacheFailures) console.log(`    · ${f.file}:${f.line} (${f.ctor}) — ${f.why}`)
+}
 
 if (rawBad.length) {
   console.log(`\n  ✗ ${rawBad.length} raw PostgREST call(s) with no profile header:`)
@@ -222,9 +294,12 @@ if (failures.length) {
   for (const f of failures) console.log(`    · ${f.file}:${f.line} (${f.ctor}) — ${f.why}`)
 }
 
-const bad = failures.length + strays.length + rawBad.length
+const bad = failures.length + strays.length + rawBad.length + cacheFailures.length
 if (bad === 0 && sites.length > 0) {
-  console.log(`\n${ok} guarded, ${exempted.length} exempt, 0 failed\n`)
+  console.log(
+    `\n${ok} schema-guarded, ${cacheOk} cache-guarded, ` +
+    `${exempted.length + cacheExempted.length} exempt, 0 failed\n`,
+  )
   process.exit(0)
 }
 if (sites.length === 0) {

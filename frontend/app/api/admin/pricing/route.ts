@@ -1,6 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
-import { dbSchema } from '@/lib/supabaseSchema'
+import { serverData } from '@/lib/supabaseSchema'
 import { schemaHeaders } from '@/lib/supabaseSchema'
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'poinkcompany@gmail.com'
@@ -12,7 +12,7 @@ async function getAuthUser(req: NextRequest): Promise<string | null> {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
-      ...dbSchema,
+      ...serverData,
       cookies: {
         getAll() { return req.cookies.getAll() },
         setAll(cs) { cs.forEach(({ name, value, options }) => res.cookies.set(name, value, options)) },

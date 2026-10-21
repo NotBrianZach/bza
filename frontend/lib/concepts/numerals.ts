@@ -130,8 +130,32 @@ export function exactValue(node: ExprNode): Exact | null {
     case 'power': {
       const base = exactValue(node.base)
       const exponent = exactValue(node.exponent)
-      // A non-integer exponent is a root, and a root is generally irrational.
-      if (!base || !exponent || exponent.d !== 1n) return null
+      if (!base || !exponent) return null
+
+      // A rational exponent is a root, and a root is *sometimes* rational.
+      //
+      // Taking it seriously rather than refusing outright is what lets the
+      // exponents subject be graded locally. Returning null here instead made
+      // `ruleEvaluate` fall through to `truth ?? claimed` and grade a learner
+      // against the author's *unverified* assertion — the one thing the
+      // re-derivation check exists to prevent. 9^(1/2) is exactly 3 and there is
+      // no reason to pretend otherwise; 2^(1/2) is not rational and still
+      // returns null, which is the honest answer for it.
+      if (exponent.d !== 1n) {
+        if (exponent.d > MAX_EXPONENT) return null
+        const root = exactRoot(base, exponent.d)
+        if (!root) return null
+        const e = exponent.n < 0n ? -exponent.n : exponent.n
+        if (e > MAX_EXPONENT) return null
+        const powered = ratio(root.n ** e, root.d ** e)
+        if (!powered) return null
+        if (exponent.n < 0n) {
+          if (powered.n === 0n) return null
+          return ratio(powered.d, powered.n)
+        }
+        return powered
+      }
+
       const e = exponent.n < 0n ? -exponent.n : exponent.n
       if (e > MAX_EXPONENT) return null
       const pow = (x: bigint) => x ** e
@@ -145,6 +169,53 @@ export function exactValue(node: ExprNode): Exact | null {
       // symbol, constant, function — no rational value, and saying so is the point.
       return null
   }
+}
+
+/**
+ * The exact `r`th root of a rational, or null when it is not rational.
+ *
+ * Numerator and denominator are rooted separately, which is valid because the
+ * fraction is already reduced: if p/q is in lowest terms then so is any exact
+ * root of it, and a rational root therefore requires *both* parts to be perfect
+ * `r`th powers. That is why checking them independently does not miss a case.
+ *
+ * An even root of a negative is not a real number and returns null. An odd root
+ * of a negative is fine and keeps its sign.
+ */
+export function exactRoot(value: Exact, r: bigint): Exact | null {
+  if (r < 1n) return null
+  if (r === 1n) return value
+  const negative = value.n < 0n
+  if (negative && r % 2n === 0n) return null
+
+  const top = integerRoot(negative ? -value.n : value.n, r)
+  const bottom = integerRoot(value.d, r)
+  if (top === null || bottom === null) return null
+  return { n: negative ? -top : top, d: bottom }
+}
+
+/**
+ * The exact integer `r`th root of a non-negative bigint, or null.
+ *
+ * Binary search rather than `Math.pow` on a Number: these are bigints precisely
+ * so that nothing silently loses precision, and round-tripping through a double
+ * would defeat that for values above 2^53. The final multiply-back is the
+ * exactness check — a search that lands near the root is not good enough, it has
+ * to land *on* it.
+ */
+function integerRoot(value: bigint, r: bigint): bigint | null {
+  if (value < 0n) return null
+  if (value === 0n || value === 1n) return value
+  let low = 1n
+  let high = value
+  while (low <= high) {
+    const mid = (low + high) / 2n
+    const raised = mid ** r
+    if (raised === value) return mid
+    if (raised < value) low = mid + 1n
+    else high = mid - 1n
+  }
+  return null
 }
 
 export const sameValue = (a: Exact, b: Exact) => a.n === b.n && a.d === b.d

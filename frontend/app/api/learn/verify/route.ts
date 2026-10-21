@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserFromToken } from '@/lib/apiQuota'
-import { RATIONAL_EXPRESSIONS } from '@/lib/concepts/ontology'
+import { ontologyForPoint, RATIONAL_EXPRESSIONS } from '@/lib/concepts/ontology'
 import { conceptOfPoint, knowledgePointById } from '@/lib/concepts/registry'
 import { applyObservation } from '@/lib/concepts/scheduling'
 import { loadStrengths, recordObservation, saveStrengths } from '@/lib/concepts/store'
@@ -38,7 +38,7 @@ import { isScorable, rule, rulingHeadline, verifierConfig } from '@/lib/concepts
 
 export const dynamic = 'force-dynamic'
 
-const ONTOLOGY = RATIONAL_EXPRESSIONS
+const FALLBACK_ONTOLOGY = RATIONAL_EXPRESSIONS
 
 const ASSISTANCES: Assistance[] = ['none', 'hint', 'worked_example']
 
@@ -68,6 +68,11 @@ export async function POST(req: NextRequest) {
   // The task names its knowledge point and the ontology has to agree, or the
   // observation would be filed against nothing and the scheduler would never
   // read it back.
+  // Resolved from the task rather than assumed. TASKS is one pool across every
+  // shipped subject, so hardcoding a single ontology here made any submission
+  // against the second subject fail with "names a knowledge point that is not in
+  // the ontology" — a latent single-subject assumption, found by authoring one.
+  const ONTOLOGY = ontologyForPoint(task.knowledgePointId) ?? FALLBACK_ONTOLOGY
   const point = knowledgePointById(ONTOLOGY, task.knowledgePointId)
   if (!point) {
     return NextResponse.json(

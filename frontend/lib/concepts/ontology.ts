@@ -32,8 +32,11 @@
  * a learner that a form is a choice rather than a fact.
  */
 
+import { EXPONENTS_AND_LOGARITHMS } from './ontology-exponentials'
 import type { ConceptEdge, ConceptOntology, Subject } from './types'
 import type { Concept } from './types'
+
+export { EXPONENTS_AND_LOGARITHMS } from './ontology-exponentials'
 
 const subject: Subject = {
   id: 'rational-expressions',
@@ -759,36 +762,57 @@ const EDGES: ConceptEdge[] = [
   },
 
   // ── candidate_prerequisite ──────────────────────────────────────────────
-  // Unpromoted on purpose. Both are plausible and neither has been reviewed, and
-  // leaving them here is what makes `promotionRate` a measurement rather than a
-  // tautology. They gate nothing and appear in no walk.
+  //
+  // All three have now been reviewed and all three declined. They stay in the
+  // file rather than being deleted, which is the point of `rejectedBy`: a
+  // deleted edge shrinks `promotionRate`'s denominator and would make the
+  // proposal mechanism look better than it was, while a rejected one still
+  // counts as something that was proposed and did not survive. They gate
+  // nothing and appear in no walk, exactly as before.
+  //
+  // Two of the three fell to the same test — *is the claim already carried by a
+  // path?* — which is worth naming because it is the test most import-produced
+  // candidates will fail. A prerequisite that duplicates a transitive path adds
+  // no gating and is read by a human as a second, independent fact.
   {
     id: 'c1',
     from: 'factoring-quadratics',
     to: 'polynomial-division',
     kind: 'candidate_prerequisite',
+    rejectedBy: 'author',
     rationale:
-      'Plausible — division is often taught after factoring — but factoring is not used by ' +
-      'the division algorithm, so this may be curriculum habit rather than dependency.',
+      'Declined. The division algorithm divides leading term by leading term and subtracts; ' +
+      'it never factors anything, and nothing in long division needs a factorisation to exist. ' +
+      'Division is usually *taught* after factoring, and that is a fact about textbook order ' +
+      'rather than about dependency — which is exactly the confusion this edge kind is meant ' +
+      'to keep out of the graph.',
   },
   {
     id: 'c2',
     from: 'polynomial-division',
     to: 'partial-fractions-quadratic',
     kind: 'candidate_prerequisite',
+    rejectedBy: 'author',
     rationale:
-      'Already implied through partial-fractions-linear. Kept as a candidate rather than ' +
-      'promoted because a redundant prerequisite edge gates twice and is read as two facts.',
+      'Declined as redundant. polynomial-division already gates partial-fractions-linear (p8), ' +
+      'which gates partial-fractions-quadratic (p10), so the ordering this asks for is already ' +
+      'enforced. A redundant prerequisite edge gates twice, and a reader counts it as a second ' +
+      'reason when there is only one.',
   },
   {
     id: 'c3',
     from: 'rational-domain',
     to: 'partial-fractions-linear',
     kind: 'candidate_prerequisite',
+    rejectedBy: 'author',
     rationale:
-      'The decomposition inherits the original exclusions, so arguably required. Unpromoted ' +
-      'because it is already reachable through simplifying-rational and nobody has decided ' +
-      'whether the direct edge says anything the path does not.',
+      'Declined on the same ground as c2, though it was the closest call of the three. The ' +
+      'claim is true — a decomposition does inherit the original exclusions, and a learner who ' +
+      'does not know that will write an answer they cannot justify. But rational-domain already ' +
+      'reaches partial-fractions-linear through simplifying-rational (p5) and combining-rational ' +
+      '(p6, p7), so the direct edge changes no gating. What it was really asking for is that ' +
+      'the *decomposition* concept restate the domain caveat, and that belongs in a knowledge ' +
+      'point — `why-substitution-is-legal` already carries it — not in an edge.',
   },
 ]
 
@@ -798,9 +822,62 @@ export const RATIONAL_EXPRESSIONS: ConceptOntology = {
   edges: EDGES,
 }
 
-/** Every subject ontology the build ships. One, for now, and that is step 1's point. */
-export const ONTOLOGIES: ConceptOntology[] = [RATIONAL_EXPRESSIONS]
+/**
+ * Every subject ontology the build ships.
+ *
+ * Two, which is the first time this array and `getOntology` have been exercised
+ * for what they were written for. The second subject lives in
+ * ontology-exponentials.ts and its header records what the schema survived and
+ * what it did not.
+ *
+ * The one thing it broke — `NamedForm` being a closed union of *this* subject's
+ * forms, so the second subject could not ask for a `transform_to_form` answer
+ * at all — has since been fixed: the union carries `single_power`,
+ * `no_negative_exponents` and `radical_free`, and `FORM_CHECKS` in forms.ts is
+ * total over it so a form name cannot exist without a checker.
+ */
+export const ONTOLOGIES: ConceptOntology[] = [RATIONAL_EXPRESSIONS, EXPONENTS_AND_LOGARITHMS]
 
 export function getOntology(subjectId: string): ConceptOntology | null {
   return ONTOLOGIES.find(o => o.subject.id === subjectId) ?? null
+}
+
+/**
+ * Which shipped subject owns a knowledge point.
+ *
+ * Added because the second subject broke something immediately, and the break is
+ * worth recording: `TASKS` is one global pool keyed by knowledge-point id, while
+ * every route hardcoded `RATIONAL_EXPRESSIONS` as *the* ontology. A submission
+ * against an exponents task therefore looked up its point in the wrong subject,
+ * found nothing, and returned a 500 saying the task named a point that is not in
+ * the ontology.
+ *
+ * That was a latent single-subject assumption, not a bug in either subject, and
+ * it is exactly the kind of thing authoring a second one exists to find. The
+ * routes now resolve the ontology from the task rather than assuming it.
+ *
+ * Point ids are assumed unique across subjects; `pointIdCollisions` is the test
+ * that keeps that true, because the failure mode if it stops being true is a
+ * silent mis-attribution of credit rather than an error.
+ */
+export function ontologyForPoint(pointId: string): ConceptOntology | null {
+  for (const o of ONTOLOGIES) {
+    if (o.concepts.some(c => c.knowledgePoints.some(p => p.id === pointId))) return o
+  }
+  return null
+}
+
+/** Knowledge-point ids used by more than one subject. Must stay empty. */
+export function pointIdCollisions(): string[] {
+  const seen = new Map<string, string[]>()
+  for (const o of ONTOLOGIES) {
+    for (const concept of o.concepts) {
+      for (const point of concept.knowledgePoints) {
+        const subjects = seen.get(point.id) ?? []
+        subjects.push(o.subject.id)
+        seen.set(point.id, subjects)
+      }
+    }
+  }
+  return [...seen.entries()].filter(([, s]) => s.length > 1).map(([id]) => id)
 }

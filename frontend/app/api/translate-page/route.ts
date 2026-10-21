@@ -1,6 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
-import { dbSchema } from '@/lib/supabaseSchema'
+import { serverData } from '@/lib/supabaseSchema'
 
 export async function POST(req: NextRequest) {
   let response = NextResponse.next()
@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
-      ...dbSchema,
+      ...serverData,
       cookies: {
         getAll() { return req.cookies.getAll() },
         setAll(cs) { cs.forEach(({ name, value, options }) => response.cookies.set(name, value, options)) },

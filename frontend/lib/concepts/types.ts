@@ -89,8 +89,30 @@ export interface TaskKindSpec {
  * the worker: "write this as a sum of partial fractions" is not satisfied by
  * handing back the original expression, however equivalent it is. Equivalence and
  * form are two independent rulings and both have to pass — see verify.ts.
+ *
+ * ── This union was the one part of the schema a second subject broke ──────
+ *
+ * It used to hold four members, all of them rational-expression forms. The
+ * exponents-and-logarithms ontology could therefore not ask for
+ * `transform_to_form` AT ALL — the natural demands in that subject are "as a
+ * single power", "with no negative exponents" and "radical-free", and none
+ * existed. So it shipped `evaluate`-only tasks and recorded the gap in its own
+ * header rather than inventing a form that half-fitted.
+ *
+ * The forms are no longer one subject's. What makes this safe to extend is in
+ * forms.ts: `FORM_CHECKS` is a `Record<NamedForm, FormSpec>`, so the compiler
+ * refuses a new member here until a checker for it exists. Adding a form name
+ * without a way to rule it is the failure that matters, and it is now
+ * impossible rather than merely discouraged.
+ *
+ * A form is NOT tagged with a subject, deliberately. "No negative exponents" is
+ * a syntactic property of an expression, not a fact about a curriculum, and
+ * tagging would rebuild the same coupling one level up — an ontology would then
+ * be restricted to its own forms, and a rational-expression task that wanted a
+ * radical-free answer could not say so.
  */
 export type NamedForm =
+  // ── Rational expressions ──
   /** A sum of terms, each a constant over a power of a factor. */
   | 'partial_fractions'
   /** One quotient. No top-level sum. */
@@ -99,6 +121,13 @@ export type NamedForm =
   | 'factored'
   /** A sum of monomials. No unexpanded product of sums, no quotient by a non-constant. */
   | 'expanded'
+  // ── Exponents and logarithms ──
+  /** One power, or a plain numeral or symbol. No product or quotient of powers of one base. */
+  | 'single_power'
+  /** Every exponent non-negative. `x^-2` must be written as `1/x^2`. */
+  | 'no_negative_exponents'
+  /** No `sqrt` and no fractional exponent. */
+  | 'radical_free'
 
 // ---------------------------------------------------------------------------
 // Knowledge points
@@ -229,7 +258,34 @@ export interface ConceptEdge {
   kind: ConceptEdgeKind
   /** Who promoted it. Absent on a candidate, and that absence is the quarantine. */
   promotedBy?: string
-  /** Why. Required on `interferes_with`, because an unexplained one is unreviewable. */
+  /**
+   * Who reviewed it and said no.
+   *
+   * The quarantine had only two states — unreviewed candidate, or promoted edge —
+   * and no way to record that a person looked and declined. That gap costs more
+   * than it sounds:
+   *
+   *  - A rejected proposal is indistinguishable from one nobody has opened, so
+   *    the same bad edge is re-reviewed forever.
+   *  - Derivation and import produce candidates in bulk (derive.ts proposes
+   *    eleven at 8% precision). Without a way to dismiss one, the pending list
+   *    only grows and stops being a worklist.
+   *  - "Looked and said no" is *evidence about the proposal mechanism* and the
+   *    most valuable kind. Deleting the edge instead would throw it away, and
+   *    would also inflate `promotionRate` by shrinking its denominator — turning
+   *    a measurement of whether structure is importable into a measurement of
+   *    how much got deleted.
+   *
+   * So a rejected edge stays in the file, still `candidate_prerequisite`, still
+   * gating nothing, with its reason attached. It is excluded from the pending
+   * worklist and counted in full by the rate.
+   *
+   * Mutually exclusive with `promotedBy`; `ontologyProblems` enforces that, and
+   * `rationale` is required here because an unexplained rejection cannot be
+   * revisited.
+   */
+  rejectedBy?: string
+  /** Why. Required on `interferes_with` and on a rejection; an unexplained one is unreviewable. */
   rationale?: string
 }
 

@@ -590,6 +590,112 @@ export const GENERATORS: TaskGenerator[] = [
       }
     },
   },
+
+  // ── terms-are-not-factors, as a claim to break ──────────────────────────
+  {
+    id: 'gen-break-terms-are-not-factors',
+    knowledgePointId: 'terms-are-not-factors',
+    kind: 'counterexample',
+    varies: 'both constants, and therefore which points refute the claim',
+    build(rng) {
+      const m = rng.nonZero(1, 8)
+      const n = rng.nonZero(1, 8)
+      if (m === n) return null
+      // The claim (x+m)/(x+n) = m/n is false everywhere except x = 0, where both
+      // sides are exactly m/n. So any nonzero x that is not the pole refutes it,
+      // and the witness below is the smallest such positive integer.
+      let witness = 1
+      while (witness + n === 0) witness += 1
+      return {
+        prompt:
+          `Somebody cancelled the x out of the top and bottom and claims this. Give a value of ` +
+          `x that proves them wrong.`,
+        given: `${bracket(linear(1, m))}/${bracket(linear(1, n))} = ${fraction(m, n)}`,
+        variables: REAL_X,
+        domainConditions: [`x != ${-n}`],
+        reference: `${witness}`,
+        degreeBound: 0,
+      }
+    },
+  },
+
+  // ── partial-fractions-quadratic ─────────────────────────────────────────
+  {
+    id: 'gen-linear-numerator',
+    knowledgePointId: 'linear-numerator',
+    kind: 'transform_to_form',
+    varies: 'the linear factor, the irreducible quadratic, and all three residues',
+    build(rng) {
+      const r = rng.nonZero(1, 5)
+      const A = rng.nonZero(1, 4)
+      const B = rng.nonZero(1, 4)
+      const C = rng.nonZero(1, 5)
+      // The quadratic is x² + c with c > 0, so its discriminant is -4c < 0 and it
+      // is irreducible over the reals. Picking it this way rather than drawing
+      // coefficients and testing keeps every instance valid by construction —
+      // there is no rejected-draw path to get wrong.
+      const c = rng.int(1, 6)
+      // A/(x-r) + (Bx+C)/(x²+c)
+      //   = [A(x²+c) + (Bx+C)(x-r)] / ((x-r)(x²+c))
+      //   = [(A+B)x² + (C - Br)x + (Ac - Cr)] / ((x-r)(x²+c))
+      const numerator = polynomial([A + B, C - B * r, A * c - C * r])
+      const quadratic = bracket(polynomial([1, 0, c]))
+      return {
+        prompt:
+          'Decompose into partial fractions. Check whether the quadratic factor is irreducible ' +
+          'before choosing a template.',
+        given: `${bracket(numerator)}/(${factorFor(r)}${quadratic})`,
+        reference: `${A}/${factorFor(r)} + ${bracket(linear(B, C))}/${quadratic}`,
+        form: 'partial_fractions',
+        variables: REAL_X,
+        // x² + c never vanishes for c > 0, so the linear factor is the only exclusion.
+        domainConditions: [`x != ${r}`],
+        degreeBound: 5,
+      }
+    },
+  },
+
+  // ── partial-fractions-linear ────────────────────────────────────────────
+  {
+    id: 'gen-why-substitution-is-legal',
+    knowledgePointId: 'why-substitution-is-legal',
+    kind: 'evaluate',
+    varies: 'both factors, both residues, and which root is substituted',
+    build(rng) {
+      const roots = twoRoots(rng)
+      if (!roots) return null
+      const [p, q] = roots
+      const A = rng.nonZero(1, 5)
+      const B = rng.nonZero(1, 5)
+      // Declined: with B = -A the identity's left side is A(x-q) - A(x-p), which
+      // collapses to the constant A(p-q). Substituting a root into a constant
+      // demonstrates nothing about why substitution is legal, and the task would
+      // hand back its own given. The validator catches it either way; declining
+      // here is the honest place, because the draw is degenerate rather than the
+      // construction wrong.
+      if (A + B === 0) return null
+      // Clearing denominators in N/((x-p)(x-q)) = A/(x-p) + B/(x-q) gives the
+      // polynomial identity N(x) = A(x-q) + B(x-p). Substituting a root isolates
+      // one residue: at x = p it leaves A(p-q), at x = q it leaves B(q-p).
+      const numerator = polynomial([A + B, -(A * q + B * p)])
+      const askAtP = rng.int(0, 1) === 0
+      const root = askAtP ? p : q
+      return {
+        prompt:
+          `Clearing denominators in (${numerator})/(${factorFor(p)}${factorFor(q)}) gives the ` +
+          `identity ${numerator} = A${factorFor(q)} + B${factorFor(p)}. Evaluate its left side ` +
+          `at x = ${root} — the point the original fraction excluded.`,
+        given: numerator,
+        variables: REAL_X,
+        at: { x: `${root}` },
+        // No domain conditions, and that absence is the knowledge point: the
+        // cleared identity is a polynomial one and excludes nothing, which is
+        // exactly what licenses substituting a root.
+        reference: `${askAtP ? A * (p - q) : B * (q - p)}`,
+        degreeBound: 0,
+      }
+    },
+  },
 ]
 
 export function generatorById(id: string): TaskGenerator | null {
@@ -680,6 +786,35 @@ export function validateInstance(task: PracticeTask, degreeBound: number): strin
   }
 
   // ── the mathematics ────────────────────────────────────────────────────
+  //
+  // `counterexample` first, because the generic path below would compare the
+  // claim against the witness and conclude the task is broken: a `given` that is
+  // an equation and a `reference` that is a single point are not supposed to be
+  // the same function.
+  if (task.kind === 'counterexample') {
+    if (givenTree.kind !== 'equation') {
+      problems.push('a counterexample task must state an equation to be broken')
+      return problems
+    }
+    const witness = exactValue(referenceTree)
+    if (witness === null) {
+      problems.push('the reference witness is not an exact rational point')
+      return problems
+    }
+    const at = { [variable]: referenceTree }
+    const left = exactValue(substitute(givenTree.left, at))
+    const right = exactValue(substitute(givenTree.right, at))
+    // The witness has to actually work, and for the reason the shipped set's
+    // comment gives: a claim whose only separating point is an excluded one has
+    // no acceptable answer, and that must fail here rather than reach a learner.
+    if (left === null || right === null) {
+      problems.push('at the reference witness one side is undefined, so it refutes nothing')
+    } else if (sameValue(left, right)) {
+      problems.push('at the reference witness both sides agree, so the claim survives it')
+    }
+    return problems
+  }
+
   if (task.kind === 'evaluate') {
     const at = task.at ?? {}
     if (Object.keys(at).length === 0) {

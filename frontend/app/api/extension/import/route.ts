@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { dbSchema } from '@/lib/supabaseSchema'
+import { serverData } from '@/lib/supabaseSchema'
 
 const SUPABASE_URL      = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -26,8 +26,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Create a per-request client scoped to this user's JWT
-  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    ...dbSchema,
+  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { ...serverData,
     global: { headers: { Authorization: `Bearer ${jwt}` } },
   })
 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getUserFromToken } from '@/lib/apiQuota'
 import { RATIONAL_EXPRESSIONS } from '@/lib/concepts/ontology'
 import { parseTaskId } from '@/lib/concepts/generators'
+import { getOntology, ONTOLOGIES } from '@/lib/concepts/ontology'
 import { conceptById } from '@/lib/concepts/registry'
 import { assemble, summarise } from '@/lib/concepts/scheduling'
 import { loadStrengths, loadTraversal, pendingReviewCount } from '@/lib/concepts/store'
@@ -27,7 +28,7 @@ import { verifierConfig } from '@/lib/concepts/verify'
 
 export const dynamic = 'force-dynamic'
 
-const ONTOLOGY = RATIONAL_EXPRESSIONS
+const DEFAULT_ONTOLOGY = RATIONAL_EXPRESSIONS
 
 export async function GET(req: NextRequest) {
   const userId = await getUserFromToken(req.headers.get('authorization'))
@@ -36,6 +37,27 @@ export async function GET(req: NextRequest) {
   const requested = Number(req.nextUrl.searchParams.get('size') ?? 8)
   const size = Number.isFinite(requested) ? Math.max(1, Math.min(Math.trunc(requested), 20)) : 8
   const now = new Date().toISOString()
+
+  /**
+   * Which subject to practise. The build ships two, and without this parameter
+   * the second was unreachable — authored, tested, and served to nobody.
+   *
+   * An unknown subject is a 404 rather than a silent fall back to the default: a
+   * learner who asked for logarithms and silently got rational expressions would
+   * have no way to tell, and the traversal state is keyed by subject id, so the
+   * wrong one would be loaded and saved under the right-looking name.
+   */
+  const requestedSubject = req.nextUrl.searchParams.get('subject')
+  const ONTOLOGY = requestedSubject ? getOntology(requestedSubject) : DEFAULT_ONTOLOGY
+  if (!ONTOLOGY) {
+    return NextResponse.json(
+      {
+        error: `No subject "${requestedSubject}"`,
+        subjects: ONTOLOGIES.map(o => ({ id: o.subject.id, name: o.subject.name })),
+      },
+      { status: 404 },
+    )
+  }
 
   let strengths
   let world
@@ -78,6 +100,8 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({
     subject: ONTOLOGY.subject,
+    /** Every shipped subject, so the client can offer the choice rather than guess. */
+    subjects: ONTOLOGIES.map(o => ({ id: o.subject.id, name: o.subject.name })),
     verifier: { configured: !!verifierConfig().url },
     awaitingReview,
     tasks: assembly.tasks.map(t => ({

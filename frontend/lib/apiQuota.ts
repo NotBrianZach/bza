@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import { dbSchema } from './supabaseSchema'
+import { serverData } from './supabaseSchema'
 
 // Built in its own function so the annotation below carries the schema. The
 // schema is a type parameter on SupabaseClient, so the plain
@@ -10,7 +10,7 @@ function makeServiceClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { ...dbSchema },
+    { ...serverData },
   )
 }
 

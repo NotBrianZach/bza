@@ -11,7 +11,7 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import type { NextRequest, NextResponse } from 'next/server'
 import { YEAR_IN_SECONDS, supabaseCookieOptions as sharedCookieOptions } from './supabaseCookieOptions'
-import { dbSchema } from './supabaseSchema'
+import { serverData } from './supabaseSchema'
 
 export { YEAR_IN_SECONDS }
 
@@ -37,7 +37,7 @@ export function createSupabaseServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
-      ...dbSchema,
+      ...serverData,
       cookieOptions,
       cookies: {
         getAll() {

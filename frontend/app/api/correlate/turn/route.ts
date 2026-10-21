@@ -22,7 +22,7 @@ import type {
   ActionIntent, CorrelationTurn, Interpretation, MediumId, Offering, RelationId,
 } from '@/lib/correlate/types'
 import { OfferingError, composeOffering, lookupOffering, resolveReply } from '@/lib/offerings'
-import { dbSchema } from '@/lib/supabaseSchema'
+import { serverData } from '@/lib/supabaseSchema'
 
 /**
  * Play one turn of a correlation game.
@@ -80,7 +80,7 @@ function makeServiceClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { ...dbSchema },
+    { ...serverData },
   )
 }
 

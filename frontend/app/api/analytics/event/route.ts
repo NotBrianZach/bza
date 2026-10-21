@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { dbSchema } from '@/lib/supabaseSchema'
+import { serverData } from '@/lib/supabaseSchema'
 
 /**
  * Write endpoint for the analytics_events table (see
@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
       const auth = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        { ...dbSchema },
+        { ...serverData },
       )
       const { data } = await auth.auth.getUser(token)
       userId = data?.user?.id ?? null
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
   const db = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { ...dbSchema },
+    { ...serverData },
   )
   try {
     await db.from('analytics_events').insert({

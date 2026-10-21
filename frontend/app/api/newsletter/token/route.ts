@@ -4,7 +4,7 @@
  */
 import { createServerClient } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
-import { dbSchema } from '@/lib/supabaseSchema'
+import { serverData } from '@/lib/supabaseSchema'
 import { schemaHeaders } from '@/lib/supabaseSchema'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -38,7 +38,7 @@ async function getOrCreateToken(userId: string): Promise<string> {
 async function getUser(req: NextRequest) {
   let response = NextResponse.next()
   const supabase = createServerClient(SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
-    ...dbSchema,
+    ...serverData,
     cookies: {
       getAll() { return req.cookies.getAll() },
       setAll(cs) { cs.forEach(({ name, value, options }) => response.cookies.set(name, value, options)) },

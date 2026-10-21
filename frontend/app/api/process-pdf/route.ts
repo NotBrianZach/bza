@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { dbSchema } from '@/lib/supabaseSchema'
+import { serverData } from '@/lib/supabaseSchema'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -14,8 +14,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Verify user via their JWT
-    const userClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      ...dbSchema,
+    const userClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { ...serverData,
       global: { headers: { Authorization: `Bearer ${authToken}` } },
     })
     const { data: { user }, error: authError } = await userClient.auth.getUser()
@@ -24,7 +23,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Service-role client for storage ops and billing
-    const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { ...dbSchema })
+    const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { ...serverData })
 
     // Create a signed URL (10 min expiry) so Jina can fetch the PDF
     const { data: signedData, error: signErr } = await adminClient.storage

@@ -43,6 +43,7 @@ function build() {
     join('lib', 'concepts', 'generators.ts'),
     join('lib', 'concepts', 'import.ts'),
     join('lib', 'concepts', 'numerals.ts'),
+    join('lib', 'concepts', 'ontology-exponentials.ts'),
     join('lib', 'concepts', 'ontology.ts'),
     join('lib', 'concepts', 'registry.ts'),
     join('lib', 'concepts', 'rpn.ts'),
@@ -87,13 +88,16 @@ function build() {
 
 const M = build()
 const { parseExpression, tryParse, renderExpr, degreeIn, symbolsIn, isNumeral, unsigned } = M.expr
-const { checkForm, checkDenominatorDegree, FORM_LABELS } = M.forms
-const { RATIONAL_EXPRESSIONS, ONTOLOGIES, getOntology } = M.ontology
+const {
+  checkForm, checkDenominatorDegree, FORM_LABELS, ALL_NAMED_FORMS, DISCRIMINATING_FORMS,
+} = M.forms
+const { RATIONAL_EXPRESSIONS, EXPONENTS_AND_LOGARITHMS, ONTOLOGIES, getOntology, ontologyForPoint, pointIdCollisions } = M.ontology
 const {
   TASK_KINDS, TASK_KIND_LIST, isVerifiableKind, conceptById, allKnowledgePoints, knowledgePointById,
   conceptOfPoint, prerequisitesOf, dependentsOf, allPrerequisitesOf, roots, teachingOrder, cycles,
   encompassedBy, encompassedClosure, interferesWith, interferenceReason, candidates, promotionRate,
   conceptFacet, fidelityMismatches, ontologyProblems, edgesOfKind,
+  pendingCandidates, rejectedCandidates, reviewStatus,
 } = M.registry
 const { evaluateRpn, formatValue, calcRecord, toOrgDrawer, toWorkerTree, precisionIsAdvisory, DEFAULT_SETTINGS, exact } = M.rpn
 const {
@@ -264,6 +268,71 @@ t('an unexpanded power of a sum is refused', ef('(x + 1)^2').held === false)
 t('dividing by the symbol is refused', ef('1/x').held === false)
 t('dividing by a constant is fine', ef('x/2 + 1').held === true)
 
+group('form: single_power')
+const sp = s => checkForm(p(s), 'single_power', 'x')
+t('one power holds', sp('x^8').held === true)
+t('a bare symbol holds — x is x^1', sp('x').held === true)
+t('a numeral holds — it is the combined value', sp('128').held === true)
+t('a product of powers of ONE base is refused', sp('x^3 * x^5').held === false)
+t('the message names the base still to be combined',
+  /x/.test(sp('x^3 * x^5').detail))
+t('a power of a power is refused', sp('(x^2)^4').held === false)
+t('the power-of-a-power message says to multiply the exponents',
+  /multiply the exponents/.test(sp('(x^2)^4').detail))
+/**
+ * The two cases a first draft got wrong, both caught by other tests before
+ * these existed. `(x + 4)/(x + 1)^2` was ruled a single power because the
+ * denominator is one — a form labelled "a single power" must not accept a
+ * quotient that merely contains one.
+ */
+t('a quotient containing a power is refused', sp('(x + 4)/(x + 1)^2').held === false)
+t('a sum is refused', sp('x^2 + x').held === false)
+t('a product of powers of DIFFERENT bases is still not a single power',
+  // `y` has to be declared — the parser refuses an undeclared symbol, which is
+  // a security boundary rather than a convenience.
+  checkForm(parseExpression('x^3 * y^2', ['x', 'y']), 'single_power', 'x').held === false)
+
+group('form: no_negative_exponents')
+const nn = s => checkForm(p(s), 'no_negative_exponents', 'x')
+t('a reciprocal holds', nn('1/x^2').held === true)
+t('a plain polynomial holds', nn('x^2 - 2x - 15').held === true)
+t('a negative exponent is refused', nn('x^-2').held === false)
+t('a negative exponent nested in a product is refused', nn('3 * x^-1').held === false)
+t('a zero exponent is not negative', nn('x^0').held === true)
+/**
+ * The abstention that matters. `x^n` is not evidence the learner avoided a
+ * negative exponent — it is evidence the checker cannot tell, and the header
+ * of forms.ts forbids guessing in that position.
+ */
+t('a symbolic exponent abstains rather than passing', (() => {
+  const r = checkForm(parseExpression('x^n', ['x', 'n']), 'no_negative_exponents', 'x')
+  return r.held === null && /cannot tell/.test(r.detail)
+})())
+
+group('form: radical_free')
+const rf = s => checkForm(p(s), 'radical_free', 'x')
+t('a whole-number exponent holds', rf('x^2').held === true)
+t('a fractional exponent is refused — it is a radical', rf('x^(1/2)').held === false)
+t('a sqrt call is refused', rf('sqrt(x)').held === false)
+t('a rational exponent that reduces to a whole number holds', rf('x^(4/2)').held === true)
+t('a symbolic exponent abstains', (() => {
+  const r = checkForm(parseExpression('x^n', ['x', 'n']), 'radical_free', 'x')
+  return r.held === null
+})())
+
+group('the form registry is total over the union')
+t('every form name has a checker and a label', () =>
+  ALL_NAMED_FORMS.every(f => typeof FORM_LABELS[f] === 'string' && FORM_LABELS[f].length > 0))
+t('the discriminating subset is smaller than the whole, and non-empty',
+  DISCRIMINATING_FORMS.length > 0 && DISCRIMINATING_FORMS.length < ALL_NAMED_FORMS.length)
+t('an unknown form abstains rather than throwing', (() => {
+  // A stored task row written by a newer build could name a form this one has
+  // dropped. Losing the learner's answer to an exception would be worse than
+  // routing it to review.
+  const r = checkForm(p('x^2'), 'a_form_that_was_removed', 'x')
+  return r.held === null && /not a form this build/.test(r.detail)
+})())
+
 group('forms — an equation is never in form')
 for (const form of Object.keys(FORM_LABELS)) {
   t(`${form} refuses an equation`, checkForm(p('x = 1'), form, 'x').held === false)
@@ -386,7 +455,13 @@ t('an all-checked ontology yields a checked facet', (() => {
 // ---------------------------------------------------------------------------
 
 group('tasks are well formed')
-t('every task names a real knowledge point', TASKS.every(task => !!knowledgePointById(O, task.knowledgePointId)))
+// Resolved across every shipped subject, not against one. TASKS is a single
+// global pool and the second subject's tasks name points in the second subject —
+// the assumption this test used to carry is the one that made the verify route
+// 500 on them.
+t('every task names a real knowledge point in some shipped subject',
+  TASKS.every(task => !!ontologyForPoint(task.knowledgePointId)),
+  TASKS.filter(task => !ontologyForPoint(task.knowledgePointId)).map(t2 => t2.id).join(', '))
 t('every task declares its symbols', TASKS.every(task => task.variables.length > 0))
 t('every given parses under its own declarations', TASKS.every(task =>
   tryParse(task.given, task.variables.map(v => v.name)).ok))
@@ -858,7 +933,10 @@ t('a symbol has no rational value', exactValue({ kind: 'symbol', name: 'x' }) ==
 t('pi has no rational value', exactValue({ kind: 'constant', name: 'pi' }) === null)
 t('a function call has no rational value', val('sqrt(4)') === null)
 t('division by zero is not a value, rather than a crash', val('1/(3 - 3)') === null)
-t('a fractional exponent is not expanded', val('4^(1/2)') === null)
+t('an exact fractional exponent is computed', show('4^(1/2)') === '2')
+t('an inexact one is still refused', val('2^(1/2)') === null)
+t('an even root of a negative is not a real number', val('(0 - 4)^(1/2)') === null)
+t('an odd root of a negative keeps its sign', show('(0 - 8)^(1/3)') === '-2')
 t('an absurd exponent is refused rather than computed', val('2^999') === null)
 
 group('substitute — tree surgery, not computation')
@@ -935,7 +1013,7 @@ t('and says which kind', /kind "justify" has no verifier/.test(unruled.reason))
 
 group('the shipped evaluate tasks')
 const EVALS = TASKS.filter(task => task.kind === 'evaluate')
-t('there are eight', EVALS.length === 8, `${EVALS.length}`)
+t('there are thirteen across both subjects', EVALS.length === 13, `${EVALS.length}`)
 t('they cover the six knowledge points that had no task at all', (() => {
   const previouslyBare = [
     'irreducible-quadratic', 'improper-first', 'excluded-points',
@@ -959,10 +1037,30 @@ t('no evaluate task declares a form — that is a transform claim',
  * The load-bearing one. Each task's reference is re-derived from its own `given`
  * at its own `at`, so a typo in an authored answer fails here rather than marking
  * a correct learner wrong in production.
+ *
+ * Tasks whose value is not rational are skipped and counted, not silently passed.
+ * `9^(1/2)` is a legitimate evaluate task that `exactValue` cannot settle, so it
+ * is author-vouched and worker-ruled instead of locally proven — a real boundary,
+ * and the `skipped` assertion below keeps it from widening unnoticed.
  */
-t('every reference equals the given evaluated at the stated inputs', (() => {
+const reDerive = task => {
+  const symbols = task.variables.map(v => v.name)
+  const at = {}
+  for (const [name, raw] of Object.entries(task.at)) at[name] = parseExpression(raw, [])
+  const truth = exactValue(substitute(parseExpression(task.given, symbols), at))
+  const claimed = exactValue(parseExpression(task.reference, symbols))
+  if (truth === null || claimed === null) return 'skip'
+  return showExact(truth) === showExact(claimed) ? 'ok' : `${task.id}: ${showExact(truth)} vs ${showExact(claimed)}`
+}
+t('every rationally-valued reference equals its given at the stated inputs',
+  EVALS.map(reDerive).every(r => r === 'ok' || r === 'skip'),
+  EVALS.map(reDerive).filter(r => r !== 'ok' && r !== 'skip').join('; '))
+t('every evaluate task is now locally verifiable — exact roots closed the gap',
+  EVALS.filter(task => reDerive(task) === 'skip').length === 0,
+  EVALS.filter(task => reDerive(task) === 'skip').map(task => task.id).join(','))
+t('the superseded whole-set check still holds for the first subject', (() => {
   const bad = []
-  for (const task of EVALS) {
+  for (const task of EVALS.filter(x => reDerive(x) !== 'skip')) {
     const symbols = task.variables.map(v => v.name)
     const at = {}
     for (const [name, raw] of Object.entries(task.at)) at[name] = parseExpression(raw, [])
@@ -975,7 +1073,7 @@ t('every reference equals the given evaluated at the stated inputs', (() => {
   return bad.length === 0
 })(), (() => {
   const bad = []
-  for (const task of EVALS) {
+  for (const task of EVALS.filter(x => reDerive(x) !== 'skip')) {
     const symbols = task.variables.map(v => v.name)
     const at = {}
     for (const [name, raw] of Object.entries(task.at)) at[name] = parseExpression(raw, [])
@@ -987,21 +1085,94 @@ t('every reference equals the given evaluated at the stated inputs', (() => {
   }
   return bad.join('; ')
 })())
-const selfRulings = await Promise.all(EVALS.map(task => ruleEvaluate(task, task.reference, NO_WORKER)))
-t('each one rules its own reference correct without a worker',
+/**
+ * Split by whether the value is rational, which is the local/worker boundary.
+ * `root-as-exponent-1` asks for 9^(1/2): `exactValue` refuses a fractional
+ * exponent, so that one genuinely needs the worker and rules inconclusive here.
+ * Asserting it separately keeps the boundary visible instead of weakening the
+ * whole group to accommodate one task.
+ */
+const localEvals = EVALS.filter(task =>
+  Object.values(task.at).every(raw => {
+    const r = tryParse(raw, [])
+    return r.ok && exactValue(r.tree) !== null
+  }) && exactValue(parseExpression(task.reference, task.variables.map(v => v.name))) !== null
+  && exactValue(substitute(
+    parseExpression(task.given, task.variables.map(v => v.name)),
+    Object.fromEntries(Object.entries(task.at).map(([k, v]) => [k, parseExpression(v, [])])),
+  )) !== null)
+const selfRulings = await Promise.all(localEvals.map(task => ruleEvaluate(task, task.reference, NO_WORKER)))
+t('every rationally-valued evaluate task rules its own reference correct with no worker',
   selfRulings.every(r => r.status === 'ruled' && r.verdict.ruling === 'correct'),
-  selfRulings.map((r, i) => `${EVALS[i].id}:${r.status === 'ruled' ? r.verdict.ruling : r.status}`).join(', '))
+  selfRulings.map((r, i) => `${localEvals[i].id}:${r.status === 'ruled' ? r.verdict.ruling : r.status}`).join(', '))
+t('most of them are rationally valued', localEvals.length >= EVALS.length - 2,
+  `${localEvals.length} of ${EVALS.length}`)
+t('the one that is not needs the worker and says so, rather than guessing', (() => {
+  const needsWorker = EVALS.filter(task => !localEvals.includes(task))
+  return needsWorker.length === 0 || needsWorker.every(task => task.id === 'root-as-exponent-1')
+})(), EVALS.filter(task => !localEvals.includes(task)).map(t2 => t2.id).join(', '))
 
-group('coverage — the gap the evaluate tasks were added to close')
-t('every knowledge point in the ontology now has at least one task', (() => {
+group('coverage across both shipped subjects')
+t('every rational-expressions knowledge point has at least one task', (() => {
   const missing = allKnowledgePoints(O).filter(point => tasksForPoint(point.id).length === 0)
   return missing.length === 0
 })(), allKnowledgePoints(O).filter(point => tasksForPoint(point.id).length === 0).map(p => p.id).join(', '))
-t('every task still names a real knowledge point', TASKS.every(task => !!knowledgePointById(O, task.knowledgePointId)))
-t('every task kind shipped is one the dispatcher implements', (() => {
-  const implemented = new Set(['transform_to_form', 'evaluate'])
-  return TASKS.every(task => implemented.has(task.kind))
+/**
+ * The second subject is deliberately partial — but no longer for the original
+ * reason. It used to be that `NamedForm` carried only rational-expression
+ * forms, so nothing there could be asked for as a form at all. The union is
+ * now open and the subject ships four `transform_to_form` tasks.
+ *
+ * It is still partial because only some points have a task a ruler can settle,
+ * and a knowledge point with a worked example and no task is permitted. Faking
+ * one would be the failure tasks.ts warns about.
+ */
+t('the second subject has tasks on some points and not all, which is honest', (() => {
+  const points = allKnowledgePoints(EXPONENTS_AND_LOGARITHMS)
+  const withTasks = points.filter(point => tasksForPoint(point.id).length > 0)
+  return withTasks.length > 0 && withTasks.length < points.length
+})(), `${allKnowledgePoints(EXPONENTS_AND_LOGARITHMS).filter(p => tasksForPoint(p.id).length > 0).length} of ${allKnowledgePoints(EXPONENTS_AND_LOGARITHMS).length}`)
+/**
+ * This test used to assert the OPPOSITE — that the second subject shipped no
+ * `transform_to_form` task "because it has no form to ask for". That was a
+ * test pinning a schema defect in place, which is the right thing to do while
+ * the defect stands and the wrong thing to leave once it is fixed. It is
+ * inverted rather than deleted, so the history of the claim stays visible.
+ */
+t('the second subject can now ask for a form, using forms that are not rational-expression forms', (() => {
+  const forms = allKnowledgePoints(EXPONENTS_AND_LOGARITHMS)
+    .flatMap(point => tasksForPoint(point.id))
+    .filter(task => task.kind === 'transform_to_form')
+    .map(task => task.form)
+  if (forms.length === 0) return false
+  const rationalOnly = ['partial_fractions', 'single_fraction', 'factored', 'expanded']
+  // The point is not merely that it asks for A form — it is that the forms it
+  // needs are ones the original closed union did not contain.
+  return forms.every(f => f && !rationalOnly.includes(f))
+})(), allKnowledgePoints(EXPONENTS_AND_LOGARITHMS)
+  .flatMap(p => tasksForPoint(p.id))
+  .filter(t => t.kind === 'transform_to_form')
+  .map(t => t.form).join(', '))
+
+t('every form a task asks for has a checker — the registry is total over the union', (() => {
+  // The invariant the Record<NamedForm, FormSpec> type buys at compile time,
+  // asserted at runtime too because a task's `form` can also arrive from a
+  // stored row written by an older build.
+  const asked = [...new Set(TASKS.filter(t => t.form).map(t => t.form))]
+  return asked.length > 0 && asked.every(f => ALL_NAMED_FORMS.includes(f))
 })())
+
+t('an absence form is askable but kept out of the shape signature', () =>
+  // no_negative_exponents is satisfied by nearly every expression, so it is a
+  // useful demand and useless as a signature dimension. Both halves asserted:
+  // it must exist as a form, and must not be discriminating.
+  ALL_NAMED_FORMS.includes('no_negative_exponents')
+  && !DISCRIMINATING_FORMS.includes('no_negative_exponents')
+  && DISCRIMINATING_FORMS.includes('factored'))
+t('every task kind shipped is one the dispatcher implements', (() => {
+  const implemented = new Set(['transform_to_form', 'evaluate', 'counterexample'])
+  return TASKS.every(task => implemented.has(task.kind))
+})(), [...new Set(TASKS.map(t2 => t2.kind))].join(', '))
 
 // ---------------------------------------------------------------------------
 // Generators
@@ -1212,20 +1383,159 @@ t('validateInstance refuses a task that asks for nothing', (() => {
   }
   return validateInstance(trivial, 2).some(s => /asks for nothing|same string/.test(s))
 })())
-t('validateInstance accepts every authored task, which is the cross-check', (() => {
-  const bad = []
-  for (const task of TASKS) {
-    const problems = validateInstance(task, 6)
-    if (problems.length > 0) bad.push(`${task.id}: ${problems.join('; ')}`)
-  }
-  return bad.length === 0
-})(), (() => {
-  const bad = []
-  for (const task of TASKS) {
-    const problems = validateInstance(task, 6)
-    if (problems.length > 0) bad.push(`${task.id}: ${problems.join('; ')}`)
-  }
-  return bad.join(' | ')
+/**
+ * The cross-check, and the one place the generator gate and the authored set
+ * legitimately disagree.
+ *
+ * `validateInstance` refuses anything it cannot *prove*, which is right for a
+ * generator — never serve a machine-made problem whose answer you have not
+ * verified. An author is allowed to assert what the local arithmetic cannot
+ * settle: `root-as-exponent-1` asks for 9^(1/2), which has no rational value
+ * here and is ruled by the worker instead.
+ *
+ * So the assertion is "every authored task validates, except the ones that are
+ * knowingly worker-ruled, and that set is exactly one". Weakening it to "most
+ * tasks validate" would have let a real authoring error hide behind this.
+ */
+const authoredValidation = TASKS.map(task => ({ id: task.id, problems: validateInstance(task, 6) }))
+  .filter(x => x.problems.length > 0)
+t('every authored task validates, with no exceptions left',
+  authoredValidation.length === 0,
+  authoredValidation.map(x => `${x.id}: ${x.problems.join('; ')}`).join(' | '))
+
+// ---------------------------------------------------------------------------
+// The counterexample kind
+// ---------------------------------------------------------------------------
+
+group('ruleCounterexample — cheap to verify, expensive to find')
+const claimTask = taskById('break-terms-are-not-factors-1')
+const broke = async answer => rule(claimTask, answer, NO_WORKER)
+t('the claim is an equation, which is what makes the kind rulable',
+  parseExpression(claimTask.given, ['x']).kind === 'equation')
+t('a witness that makes the sides differ is correct',
+  (await broke('1')).verdict.ruling === 'correct')
+t('and the ruling names both values', /the left side is 2\/3 and the right side is 3\/5/.test((await broke('1')).verdict.method))
+t('a different witness is equally correct — there is no single answer',
+  (await broke('2')).verdict.ruling === 'correct')
+/**
+ * x = 0 is the one point where (x+m)/(x+n) really does equal m/n. A learner who
+ * offers it has made a precise error, and being told "the claim survives this
+ * point" is the whole feedback.
+ */
+t('the one point where the claim holds is rejected, not accepted',
+  (await broke('0')).verdict.ruling === 'incorrect')
+t('and it says the claim survived', /both sides equal 3\/5, so the claim survives/.test((await broke('0')).verdict.brokeAt.detail))
+t('an excluded point does not refute the claim', (await broke('-5')).verdict.ruling === 'incorrect')
+t('and it explains that nothing was compared there',
+  /the left side is undefined, so the two were never compared/.test((await broke('-5')).verdict.brokeAt.detail))
+t('an answer that is not a point breaks at step 1', (await broke('x + 1')).verdict.brokeAt.step === 1)
+t('an unreadable answer is not a ruling', (await broke('1 +')).status === 'unreadable')
+t('an irrational answer is inconclusive rather than wrong',
+  (await broke('sqrt(2)')).verdict.ruling === 'inconclusive')
+const notAnEquation = await rule({ ...claimTask, given: '(x + 3)/(x + 5)' }, '1', NO_WORKER)
+t('a non-equation claim is refused as an authoring fault',
+  notAnEquation.verdict.ruling === 'inconclusive'
+  && /must state an equation/.test(notAnEquation.verdict.method))
+t('the shipped witness actually works, which the validator also checks',
+  validateInstance(claimTask, 0).length === 0, validateInstance(claimTask, 0).join('; '))
+t('a witness where both sides agree fails validation', (() => {
+  const bad = { ...claimTask, reference: '0' }
+  return validateInstance(bad, 0).some(s => /both sides agree/.test(s))
+})())
+t('a witness at an excluded point fails validation', (() => {
+  const bad = { ...claimTask, reference: '-5' }
+  return validateInstance(bad, 0).some(s => /one side is undefined/.test(s))
+})())
+
+// ---------------------------------------------------------------------------
+// The second subject, and what it broke
+// ---------------------------------------------------------------------------
+
+const X2 = EXPONENTS_AND_LOGARITHMS
+
+group('a second subject the schema was not designed around')
+t('it is registered', ONTOLOGIES.length === 2 && getOntology('exponents-and-logarithms') === X2)
+t('it reports no structural problems', ontologyProblems(X2).length === 0, JSON.stringify(ontologyProblems(X2)))
+t('its fidelity claims match what its options can do', fidelityMismatches(X2).length === 0)
+t('it has a prerequisite-respecting teaching order', teachingOrder(X2)?.length === X2.concepts.length)
+t('and no cycles', cycles(X2).length === 0)
+t('every concept has at least one knowledge point',
+  X2.concepts.every(c => c.knowledgePoints.length > 0))
+t('every knowledge point has a subgoal-labelled worked example',
+  allKnowledgePoints(X2).every(p => p.workedExample.subgoals.length >= 2))
+t('every objective names a task kind', X2.concepts.every(c => c.objectives.every(o => o.taskKinds.length > 0)))
+t('it assembles into a real Facet, guided because one concept cannot be checked', (() => {
+  const facet = conceptFacet(X2)
+  return facet.enforcement === 'guided' && !!facet.caveat && facet.options.length === X2.concepts.length
+})())
+t('no knowledge point id collides with the first subject', pointIdCollisions().length === 0,
+  pointIdCollisions().join(', '))
+t('ontologyForPoint routes a point to its own subject',
+  ontologyForPoint('log-of-product') === X2 && ontologyForPoint('factor-monic') === O)
+t('an unknown point routes nowhere rather than to the default',
+  ontologyForPoint('no-such-point') === null)
+
+/**
+ * The edge kinds were the real question — whether they describe anything beyond
+ * the subject they were invented for. `encompasses` in particular: xe1 says the
+ * logarithm rules exercise the exponent rules, which is a stronger instance than
+ * anything in rational expressions, because the two rules are the same fact
+ * through an inverse rather than merely adjacent.
+ */
+group('the edge kinds survived a subject they were not invented for')
+t('it has prerequisite edges', edgesOfKind(X2, 'prerequisite').length >= 5)
+t('it has encompasses edges', edgesOfKind(X2, 'encompasses').length >= 3)
+t('exercising the log rules credits the exponent rules',
+  encompassedBy(X2, 'logarithm-rules').includes('exponent-rules'))
+t('credit reaches further than one hop', (() => {
+  const closure = encompassedClosure(X2, 'solving-exponential-equations')
+  return closure.has('logarithm-definition') && closure.size >= 1
+})())
+t('it has two interference pairs, both with stated reasons',
+  edgesOfKind(X2, 'interferes_with').length === 2
+  && edgesOfKind(X2, 'interferes_with').every(e => !!e.rationale))
+t('the exponent and log rules interfere, despite one encompassing the other', (() => {
+  const interferes = interferesWith(X2, 'exponent-rules').includes('logarithm-rules')
+  const encompasses = encompassedBy(X2, 'logarithm-rules').includes('exponent-rules')
+  return interferes && encompasses
+})(), 'the kinship that makes the credit edge true is what makes them confusable')
+t('the interference reason is retrievable for the UI',
+  /multiplication becomes addition/.test(interferenceReason(X2, 'exponent-rules', 'logarithm-rules')))
+
+group('reviewing a candidate, and recording a no')
+t('the first subject has no candidate left unreviewed', pendingCandidates(O).length === 0)
+t('all three of its candidates were declined', rejectedCandidates(O).length === 3)
+t('every rejection states a reason', rejectedCandidates(O).every(e => !!e.rationale))
+t('a rejected edge is still a candidate, so it still gates nothing',
+  rejectedCandidates(O).every(e => e.kind === 'candidate_prerequisite'))
+t('rejecting did not change the teaching order', teachingOrder(O)?.length === O.concepts.length)
+/**
+ * The load-bearing property: a rejection must NOT shrink the denominator.
+ * Deleting declined edges instead would make a bad proposal mechanism look good,
+ * which is the opposite of what the rate is for.
+ */
+t('promotionRate still counts declined edges as proposed', (() => {
+  const rate = promotionRate(O)
+  return rate.proposed === 13 && rate.promoted === 10
+})(), JSON.stringify(promotionRate(O)))
+t('reviewStatus separates "said no" from "nobody looked"', (() => {
+  const s = reviewStatus(O)
+  return s.promoted === 10 && s.rejected === 3 && s.pending === 0 && s.reviewedRate === 1
+})(), JSON.stringify(reviewStatus(O)))
+t('the second subject still has pending candidates, so the rate stays a measurement',
+  pendingCandidates(X2).length === 2 && reviewStatus(X2).reviewedRate < 1,
+  JSON.stringify(reviewStatus(X2)))
+t('an edge that is both promoted and rejected is reported', (() => {
+  const broken = { ...O, edges: [...O.edges, { id: 'z1', from: 'factor-monic', to: 'factor-monic', kind: 'candidate_prerequisite', promotedBy: 'a', rejectedBy: 'b', rationale: 'x' }] }
+  return ontologyProblems(broken).some(s => /both promoted and rejected/.test(s))
+})())
+t('a rejection with no reason is reported', (() => {
+  const broken = { ...O, edges: [...O.edges, { id: 'z2', from: 'polynomial-arithmetic', to: 'factoring-quadratics', kind: 'candidate_prerequisite', rejectedBy: 'a' }] }
+  return ontologyProblems(broken).some(s => /rejection with no stated reason/.test(s))
+})())
+t('rejecting an edge that is already in force is reported', (() => {
+  const broken = { ...O, edges: [...O.edges, { id: 'z3', from: 'polynomial-arithmetic', to: 'factoring-quadratics', kind: 'prerequisite', rejectedBy: 'a', rationale: 'x' }] }
+  return ontologyProblems(broken).some(s => /already in force/.test(s))
 })())
 
 // ---------------------------------------------------------------------------

@@ -22,10 +22,11 @@ import ReadingStreaks from '@/components/ReadingStreaks'
 import HomeFeedSection from '@/components/HomeFeedSection'
 import CorrelationGamesSection from '@/components/correlate/CorrelationGamesSection'
 import MathPracticeSection from '@/components/concepts/MathPracticeSection'
+import SuggestedFeedSection from '@/components/suggest/SuggestedFeedSection'
 import { getPinnedFeeds, savePinnedFeeds, PinnedFeed } from '@/lib/pinnedFeeds'
 import { AUTO_COVER_KEY } from '@/lib/queries/images'
 
-type SectionId = 'streaks' | 'revisit' | 'games' | 'practice' | 'books' | 'feeds' | 'classics'
+type SectionId = 'streaks' | 'revisit' | 'games' | 'practice' | 'books' | 'feeds' | 'suggested' | 'classics'
 
 /**
  * Read, Play, Learn — the three things this app does.
@@ -88,6 +89,10 @@ const BAND_KEY = 'bza-home-band'
 const SECTION_GROUP: Record<SectionId, GroupId> = {
   revisit: 'read',
   feeds: 'read',
+  // Beside "My Feeds", not replacing it. A pinned feed is a bookmark; the
+  // digest is a balanced selection out of everything those feeds published.
+  // Both belong to Read and the two are not the same list.
+  suggested: 'read',
   streaks: 'read',
   books: 'read',
   classics: 'read',
@@ -105,6 +110,11 @@ const DEFAULT_SECTIONS: SectionConfig[] = [
   // the end, so anyone with a stored layout gets this appended rather than
   // losing their order — no migration, and nobody has to clear localStorage.
   { id: 'practice', label: 'Maths Practice', visible: true },
+  // Above "My Feeds": the digest is the answer to "what should I read", and the
+  // pinned feeds are what you turn to after. getHomeLayout() sorts ids it has
+  // never seen to the end, so anyone with a stored layout gets this appended
+  // rather than losing their order — no migration, nobody clears localStorage.
+  { id: 'suggested', label: 'Suggested', visible: true },
   { id: 'feeds', label: 'My Feeds', visible: true },
   { id: 'streaks', label: 'Reading Streaks', visible: true },
   { id: 'books', label: 'My Library', visible: true },
@@ -764,6 +774,12 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
               })()}
             </div>
           )
+
+          if (section.id === 'suggested') {
+            return (
+              <SuggestedFeedSection key="suggested" isAuthenticated={isAuthenticated} />
+            )
+          }
 
           if (section.id === 'feeds') {
             if (pinnedFeeds.length === 0) return null
