@@ -25,12 +25,13 @@
 
 import type { Digest, Feed, FeedItem, Interest, ScoreWeights } from './types'
 import { DEFAULT_BUCKET_PLAN } from './types'
-import { normalizeEntry, type RawEntry } from './normalize'
+import { normalizeEntry, splitTitlePublisher, type RawEntry } from './normalize'
 import { parseFeed } from './parse'
 import { fetchPseudoFeed, parseFeedUrl } from '@/lib/feedSources'
 import { defaultSourceType, postToEntry, sourceKey, sourceName } from './pseudo'
 import {
-  assignTopicTags, classifyArticleType, contentTokens, extractEntities, typeHintFromSource,
+  assignTopicTags, classifyArticleType, CLASSIFIER_VERSION, contentTokens,
+  extractEntities, typeHintFromSource,
 } from './tags'
 import { clusterStories, dedupeExact } from './cluster'
 import { DEFAULT_WEIGHTS, scoreAll } from './score'
@@ -379,6 +380,97 @@ export async function buildDigest(
     : null
 
   return { digest, digestId, blockers }
+}
+
+// ---------------------------------------------------------------------------
+// Re-classification
+// ---------------------------------------------------------------------------
+
+export interface ReclassifyResult {
+  examined: number
+  changed: number
+  /** Still behind after this batch. Reported so a backlog cannot look drained. */
+  remaining: number
+  /** A sample of what moved, for the caller to show rather than assert. */
+  examples: { title: string; from: string; to: string }[]
+}
+
+/**
+ * Re-run the classifier over stored items that are behind it.
+ *
+ * Incremental and bounded: one batch per call, oldest classifier version first,
+ * skipping anything a human has adjudicated. Safe to call repeatedly — a corpus
+ * converges over successive calls rather than needing one long run — which is
+ * what lets it hang off a page visit like the rest of the upkeep.
+ *
+ * ── Why this cannot re-derive everything ──────────────────────────────────
+ *
+ * It recomputes from what is STORED: the title, summary, text and the
+ * publisher's declared categories. It does not re-fetch the document, so a
+ * classifier improvement that needed a field never captured at ingest is out of
+ * reach and would need a re-poll. That is a real limit and the honest one to
+ * have — the alternative is a pass that crawls every publisher again.
+ *
+ * Entities and the article type ARE fully recoverable this way, which is where
+ * both of the fixes that motivated this landed.
+ *
+ * ── It writes even when nothing changed ───────────────────────────────────
+ *
+ * The version stamp advances regardless, or an item the current classifier
+ * labels identically would be re-examined on every pass forever and the backlog
+ * would never drain.
+ */
+export async function reclassifyBatch(
+  opts: { limit?: number; sourceTypeByFeed?: Map<string, string> } = {},
+): Promise<ReclassifyResult> {
+  const limit = opts.limit ?? 50
+  const stale = await store.staleItems(CLASSIFIER_VERSION, limit)
+  const result: ReclassifyResult = {
+    examined: stale.length, changed: 0, remaining: 0, examples: [],
+  }
+  if (stale.length === 0) return result
+
+  for (const item of stale) {
+    const { headline } = splitTitlePublisher(item.title)
+    /**
+     * No source-type hint, for every item rather than only aggregators.
+     *
+     * At ingest the hint is available because the caller knows which
+     * subscription it is polling. Here there is no user and no subscription —
+     * source type is a PER-SUBSCRIBER judgement, so a shared row has no single
+     * one to consult. Using the majority would make a row's article type
+     * change when somebody else re-tagged their copy of the feed, which is the
+     * shared-row hazard again.
+     *
+     * So the pass labels from the item's own text alone. That can only move a
+     * row from a hinted type to `unclassified`, never to a wrong type — and
+     * `unclassified` is the honest value for "nobody has said what this is".
+     */
+    const articleType = classifyArticleType({ title: headline, summary: item.summary })
+    const topicTags = assignTopicTags({
+      title: headline,
+      summary: item.summary,
+      text: item.text,
+      declaredTags: item.declaredTags,
+      // Never the user's feed tags: this is a shared row. See ingestFeed.
+      feedTags: [],
+    })
+    const entities = extractEntities(headline, item.summary)
+
+    const before = await store.loadItemLabelSummary(item.itemId)
+    await store.saveLabels(item.itemId, { topicTags, entities, articleType }, CLASSIFIER_VERSION)
+
+    const after = `${articleType.value}/${entities.length}e/${topicTags.length}t`
+    if (before && before !== after) {
+      result.changed++
+      if (result.examples.length < 5) {
+        result.examples.push({ title: headline.slice(0, 60), from: before, to: after })
+      }
+    }
+  }
+
+  result.remaining = await store.staleItemCount(CLASSIFIER_VERSION)
+  return result
 }
 
 // ---------------------------------------------------------------------------

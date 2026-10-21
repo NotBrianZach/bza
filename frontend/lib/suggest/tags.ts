@@ -27,6 +27,26 @@
 
 import type { ArticleType, Labelled } from './types'
 
+/**
+ * Which generation of this file's logic produced a row's labels.
+ *
+ * BUMP THIS whenever the cue lists, the entity extraction, the stopwords or the
+ * tagging change in a way that would label an existing item differently. Stored
+ * on every item as `classifier_version`, and the re-classification pass picks
+ * up anything behind the current value — so a bump is the whole mechanism by
+ * which a fix reaches the corpus.
+ *
+ * Forgetting to bump it is the failure mode, and it is quiet: the fix works for
+ * new items and silently never reaches old ones, which is exactly the situation
+ * this was added to end.
+ *
+ * History:
+ *   1 — first versioned classifier. Covers the two fixes made before versioning
+ *       existed: taxonomy codes excluded from bridge material, and Title Case
+ *       headlines no longer yielding an entity per capitalised run.
+ */
+export const CLASSIFIER_VERSION = 1
+
 // ---------------------------------------------------------------------------
 // Tokens
 // ---------------------------------------------------------------------------

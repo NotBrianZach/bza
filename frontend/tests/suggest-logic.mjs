@@ -457,6 +457,58 @@ test('entity extraction does not treat a sentence-initial capital as a name', ()
   assert(!names.includes('the'), 'stop-capitals filtered')
 })
 
+test('the classifier is versioned, and the version is a positive integer', () => {
+  // The version is how a classifier fix reaches items already stored: the
+  // re-classification pass picks up anything behind it. A zero or a float
+  // would make the `< version` comparison in staleItems meaningless.
+  assert(Number.isInteger(M.tags.CLASSIFIER_VERSION), 'must be an integer')
+  assert(M.tags.CLASSIFIER_VERSION >= 1, 'must be at least 1 — 0 is the pre-versioning default')
+})
+
+test('classification is deterministic, which is what makes versioning mean anything', () => {
+  // If the same input produced different labels on two runs, every
+  // re-classification pass would rewrite every row and report changes
+  // forever — the backlog would drain but the "changed" count would be pure
+  // noise, and nobody could tell a real classifier improvement from churn.
+  const title = 'Grid batteries reach cost parity in Texas, ERCOT says'
+  const summary = 'According to the filing, the Department of Energy disagrees.'
+  const once = {
+    type: M.tags.classifyArticleType({ title, summary }),
+    entities: M.tags.extractEntities(title, summary),
+    tags: M.tags.assignTopicTags({ title, summary, text: null, declaredTags: ['energy'], feedTags: [] }),
+  }
+  const twice = {
+    type: M.tags.classifyArticleType({ title, summary }),
+    entities: M.tags.extractEntities(title, summary),
+    tags: M.tags.assignTopicTags({ title, summary, text: null, declaredTags: ['energy'], feedTags: [] }),
+  }
+  eq(JSON.stringify(once), JSON.stringify(twice))
+})
+
+test('re-classifying from stored fields reproduces the ingest-time labels', () => {
+  // What the pass actually relies on: it recomputes from the title, summary,
+  // text and declared tags that are ON THE ROW, with no source-type hint and
+  // no feed tags. So for an item ingested without a hint, a pass must land on
+  // exactly the same labels — otherwise the first run over an unchanged
+  // classifier would churn the whole corpus.
+  const entry = M.normalize.normalizeEntry({
+    title: 'What is a capacity market? - Reuters',
+    url: 'https://example.com/x',
+    summary: 'A primer on how storage bids work.',
+    categories: ['energy'],
+  }, NOW)
+
+  const atIngest = M.tags.classifyArticleType({ title: entry.headline, summary: entry.summary })
+  const atReclassify = M.tags.classifyArticleType({
+    // The pass re-derives the headline from the stored title with the same
+    // splitTitlePublisher, which is why the aggregator suffix cannot drift.
+    title: M.normalize.splitTitlePublisher(entry.title).headline,
+    summary: entry.summary,
+  })
+  eq(atReclassify.value, atIngest.value)
+  eq(atReclassify.reason, atIngest.reason)
+})
+
 test('CONTEXT_TYPES excludes opinion', () => {
   // Argument about events is not background on them, and letting it in would
   // make the context bucket the cheapest one to fill.

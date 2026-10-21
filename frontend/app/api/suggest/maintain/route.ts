@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserFromToken } from '@/lib/apiQuota'
-import { adoptPinned, buildDigest, ingestFeed } from '@/lib/suggest/pipeline'
+import { adoptPinned, buildDigest, ingestFeed, reclassifyBatch } from '@/lib/suggest/pipeline'
 import { decayByElapsed, MIN_DECAY_INTERVAL_MS } from '@/lib/suggest/feedback'
 import {
   feedsDueForPoll, loadFeeds, loadInterests, loadSettings,
@@ -14,32 +14,39 @@ import {
  *
  * ── Why a page visit is the right trigger ─────────────────────────────────
  *
- * The upkeep is three jobs: poll the sources, decay the learned weights, and
- * rebuild the digest when it is stale. A scheduler would do all three on a
- * clock, which means doing them for people who are not there — polling feeds
- * nobody will read, and building digests nobody opens. A visit does the work
- * exactly when the result is about to be used, needs no infrastructure, and
- * needs no secret because there is a real user on the request.
+ * The upkeep is five jobs: adopt the pinned feeds, poll the sources,
+ * re-classify items whose labels are behind the classifier, decay the learned
+ * weights, and rebuild the digest when it is stale. A scheduler would do them
+ * on a clock, which means doing them for people who are not there — polling
+ * feeds nobody will read, and building digests nobody opens. A visit does the
+ * work exactly when the result is about to be used, needs no infrastructure,
+ * and needs no secret because there is a real user on the request.
  *
  * It also settles a question a cron could not. A built digest enters the
  * novelty history and the next window's duplicate rate, so building weekly
  * regardless of attendance would make next week's novelty measured against
  * items nobody ever saw. Building on arrival cannot have that problem.
  *
- * ── The three gates ───────────────────────────────────────────────────────
+ * ── The gates ─────────────────────────────────────────────────────────────
  *
- * Every job is gated on elapsed time, so this is cheap to call on every page
- * load and correct when called at any frequency:
+ * Every job is gated, so this is cheap to call on every page load and correct
+ * when called at any frequency:
  *
- *   poll   — `feedsDueForPoll`'s age floor. A feed polled in the last 30
- *            minutes is not polled again, so the common case is one query and
- *            zero fetches.
- *   decay  — `decayByElapsed`, which derives the fraction from the interval
- *            since `decayed_at`. THIS IS THE LOAD-BEARING ONE: decay is
- *            defined per unit of time, and applying a fixed fraction per call
- *            would make a daily visitor decay seven times faster than a weekly
- *            one. The elapsed-time form is independent of visit frequency.
- *   digest — rebuilt only when the stored one is older than STALE_AFTER_MS.
+ *   adopt      — only pinned feeds with NO subscription row. A row, enabled or
+ *                deliberately disabled, is a decision and is left alone.
+ *   poll       — `feedsDueForPoll`'s age floor. A feed polled in the last 30
+ *                minutes is not polled again, so the common case is one query
+ *                and zero fetches.
+ *   reclassify — only items behind CLASSIFIER_VERSION, and never one a human
+ *                has reviewed. A bounded batch per visit.
+ *   decay      — `decayByElapsed`, which derives the fraction from the interval
+ *                since `decayed_at`. THIS IS THE LOAD-BEARING ONE: decay is
+ *                defined per unit of time, and applying a fixed fraction per
+ *                call would make a daily visitor decay seven times faster than
+ *                a weekly one. The elapsed-time form is independent of visit
+ *                frequency.
+ *   digest     — rebuilt only when the stored one is stale AND something could
+ *                have changed it.
  *
  * ── It never throws a visitor's page away ─────────────────────────────────
  *
@@ -62,6 +69,16 @@ const STALE_AFTER_MS = 12 * 3_600_000
  * visits, and `pending` says how much is left rather than letting it look done.
  */
 const MAX_FEEDS_PER_VISIT = 8
+
+/**
+ * Items re-classified per visit.
+ *
+ * Small, because each one is a read and a write and this runs on a page load.
+ * A backlog of thousands drains over a few dozen visits, which is acceptable
+ * for what it is — a labelling improvement, not a correctness fix — and the
+ * remaining count is reported so the drain is visible rather than assumed.
+ */
+const RECLASSIFY_PER_VISIT = 15
 
 export async function POST(req: NextRequest) {
   const userId = await getUserFromToken(req.headers.get('authorization'))
@@ -138,6 +155,32 @@ export async function POST(req: NextRequest) {
     errors.push(`poll: ${e instanceof Error ? e.message : 'failed'}`)
   }
 
+  // ── re-classify ─────────────────────────────────────────────────────────
+  //
+  // A small batch of items whose labels are behind the current classifier.
+  //
+  // Here rather than only in an ops script for the same reason the poll is:
+  // incremental, bounded, and it drains over successive visits with no
+  // infrastructure. Unlike the poll this benefits EVERYONE — `suggest_items` is
+  // shared, so one person's visit improves the labels every subscriber reads,
+  // which is the right asymmetry: a label is a fact about the document.
+  //
+  // AFTER the poll, so freshly-ingested items (already stamped at the current
+  // version) are not counted into the backlog this call just measured.
+  let reclassified = 0
+  try {
+    const r = await reclassifyBatch({ limit: RECLASSIFY_PER_VISIT })
+    reclassified = r.changed
+    if (r.examined > 0) {
+      did.push(
+        `re-classified ${r.examined} item(s), ${r.changed} changed` +
+        (r.remaining > 0 ? `, ${r.remaining} still behind` : ''),
+      )
+    }
+  } catch (e) {
+    errors.push(`reclassify: ${e instanceof Error ? e.message : 'failed'}`)
+  }
+
   // ── decay ───────────────────────────────────────────────────────────────
   try {
     const before = await loadInterests(userId)
@@ -166,9 +209,14 @@ export async function POST(req: NextRequest) {
     const builtMs = settings.digestBuiltAt ? Date.parse(settings.digestBuiltAt) : NaN
     const stale = !Number.isFinite(builtMs) || Date.now() - builtMs > STALE_AFTER_MS
     // Rebuilt only if something could actually have changed it. A stale digest
-    // with no new items and no moved weights would rebuild to the same thing,
+    // with no new items and no relabelled ones would rebuild to the same thing,
     // and storing that would advance the novelty history for nothing.
-    const worthIt = inserted > 0 || !Number.isFinite(builtMs)
+    //
+    // `reclassified` counts here because a label change really does move
+    // scores: the article type sets the freshness half-life and decides the
+    // context bucket, so a batch that relabelled anything can reorder the
+    // digest without a single new item arriving.
+    const worthIt = inserted > 0 || reclassified > 0 || !Number.isFinite(builtMs)
     if (stale && worthIt) {
       const { digest, digestId } = await buildDigest(userId, { persist: true })
       if (digestId) {

@@ -34,6 +34,7 @@ import type {
   Interest, Labelled, ScoreWeights, SourceType,
 } from './types'
 import type { ShownItem } from './metrics'
+import { CLASSIFIER_VERSION } from './tags'
 
 /**
  * A service-role client whose reads are never cached.
@@ -477,13 +478,83 @@ export async function insertItems(items: NewItem[]): Promise<{ inserted: number;
     entities: i.entities,
     article_type: i.articleType,
     content_hash: i.contentHash,
+    // Stamped at insert, or every freshly-ingested item would be immediately
+    // behind the current classifier and the re-classification backlog would
+    // grow as fast as the corpus — a queue that can never drain.
+    classifier_version: CLASSIFIER_VERSION,
   }))
+
+  /**
+   * TWO unique indexes guard this table, and `on conflict` can only name one.
+   *
+   * `suggest_items` is unique on `canonical_url` AND on `content_hash` — the
+   * second is what catches the same article arriving from two feeds at
+   * different URLs, which is the whole point of having it. But Postgres applies
+   * `on conflict (canonical_url)` to that one constraint, so a row that
+   * collides on the HASH raises 23505 and takes the entire batch with it.
+   *
+   * Observed as a poll failing outright with `duplicate key value violates
+   * unique constraint "suggest_items_content_hash_idx"` the moment two
+   * subscribed feeds carried the same story. That is not an edge case: it is
+   * the normal condition for anyone following both an aggregator and the
+   * publications it links.
+   *
+   * So the hash collisions are filtered out BEFORE the insert, in two steps —
+   * within the batch, and against what is already stored.
+   */
+  const seen = new Set<string>()
+  const deduped = rows.filter(r => {
+    if (seen.has(r.content_hash)) return false
+    seen.add(r.content_hash)
+    return true
+  })
+
+  const hashes = [...seen]
+  const { data: existing, error: existingErr } = await db()
+    .from('suggest_items')
+    .select('content_hash')
+    .in('content_hash', hashes)
+  if (existingErr) throw new Error(`could not check for duplicates: ${existingErr.message}`)
+  const already = new Set(
+    ((existing ?? []) as { content_hash: string }[]).map(r => r.content_hash),
+  )
+  const fresh = deduped.filter(r => !already.has(r.content_hash))
+
+  if (fresh.length === 0) return { inserted: 0, skipped: items.length }
 
   const { data, error } = await db()
     .from('suggest_items')
-    .upsert(rows, { onConflict: 'canonical_url', ignoreDuplicates: true })
+    .upsert(fresh, { onConflict: 'canonical_url', ignoreDuplicates: true })
     .select('id')
-  if (error) throw new Error(`could not store the items: ${error.message}`)
+
+  if (error) {
+    /**
+     * A hash collision can still land here, because the pre-filter is a check
+     * and a write with a gap between them — two concurrent polls of feeds
+     * carrying the same story will race through it.
+     *
+     * Falling back to row-by-row rather than failing: the batch is already
+     * known to be mostly insertable, and losing a whole poll to one racing
+     * duplicate is the behaviour being fixed. Slower, but only on the rare
+     * path that actually hits the race.
+     */
+    if (error.code !== '23505') throw new Error(`could not store the items: ${error.message}`)
+
+    let inserted = 0
+    for (const row of fresh) {
+      const { error: rowErr } = await db()
+        .from('suggest_items')
+        .upsert([row], { onConflict: 'canonical_url', ignoreDuplicates: true })
+      // 23505 here is the hash constraint: this row is a duplicate of
+      // something stored since the pre-filter ran. Skipping it IS the
+      // deduplication working.
+      if (!rowErr) inserted++
+      else if (rowErr.code !== '23505') {
+        throw new Error(`could not store an item: ${rowErr.message}`)
+      }
+    }
+    return { inserted, skipped: items.length - inserted }
+  }
 
   const inserted = (data ?? []).length
   return { inserted, skipped: items.length - inserted }
@@ -553,6 +624,129 @@ export async function loadCandidates(
     .limit(limit)
   if (error) throw new Error(`could not load the candidates: ${error.message}`)
   return ((data ?? []) as unknown as ItemRow[]).map(fromItemRow)
+}
+
+// ---------------------------------------------------------------------------
+// Re-classification
+// ---------------------------------------------------------------------------
+
+/** An item whose labels are behind the current classifier. */
+export interface StaleItem {
+  itemId: string
+  feedId: string
+  title: string
+  summary: string | null
+  text: string | null
+  /** The publisher's own categories, re-derived from the stored declared tags. */
+  declaredTags: string[]
+}
+
+/**
+ * Items classified by an older version of the classifier.
+ *
+ * Excludes anything a human has adjudicated — see migration 73. That exclusion
+ * is the reason a re-classification pass is safe to run at all: without it, the
+ * pass would overwrite corrections and defeat the whole reason classification
+ * happens at ingest rather than at read time.
+ *
+ * Oldest version first, so a corpus spanning several classifier generations
+ * converges from the back rather than leaving the oldest rows forever behind a
+ * steady trickle of nearly-current ones.
+ *
+ * The declared tags are recovered from the stored labels rather than re-fetched
+ * from the publisher: `confidence: 'declared'` is exactly the set that came
+ * from the feed's own categories, and re-fetching the document to learn
+ * something already on the row would turn a local pass into a crawl.
+ */
+export async function staleItems(version: number, limit = 50): Promise<StaleItem[]> {
+  const { data, error } = await db()
+    .from('suggest_items')
+    .select('id, feed_id, title, summary, text_content, topic_tags')
+    .lt('classifier_version', version)
+    .is('labels_reviewed_at', null)
+    .order('classifier_version', { ascending: true })
+    .limit(limit)
+  if (error) throw new Error(`could not list items needing re-classification: ${error.message}`)
+
+  return ((data ?? []) as Record<string, unknown>[]).map(r => ({
+    itemId: String(r.id),
+    feedId: String(r.feed_id),
+    title: String(r.title ?? ''),
+    summary: typeof r.summary === 'string' ? r.summary : null,
+    text: typeof r.text_content === 'string' ? r.text_content : null,
+    declaredTags: coerceLabels(r.topic_tags)
+      .filter(t => t.confidence === 'declared')
+      .map(t => t.value),
+  }))
+}
+
+/** How many items are still behind, so a draining backlog is visible. */
+export async function staleItemCount(version: number): Promise<number> {
+  const { count, error } = await db()
+    .from('suggest_items')
+    .select('id', { count: 'exact', head: true })
+    .lt('classifier_version', version)
+    .is('labels_reviewed_at', null)
+  if (error) throw new Error(`could not count stale items: ${error.message}`)
+  return count ?? 0
+}
+
+/**
+ * A one-line fingerprint of an item's current labels.
+ *
+ * Read before a re-classification writes, purely so the pass can report how
+ * many rows it actually CHANGED rather than how many it examined. Those two
+ * numbers differ a lot — most rows re-label identically — and reporting only
+ * the second would make every pass look like it did a great deal of work.
+ *
+ * A fingerprint rather than the full labels: the comparison only needs to know
+ * whether something moved, and holding two complete label sets per row for that
+ * is memory spent on a log line.
+ */
+export async function loadItemLabelSummary(itemId: string): Promise<string | null> {
+  const { data, error } = await db()
+    .from('suggest_items')
+    .select('article_type, entities, topic_tags')
+    .eq('id', itemId)
+    .maybeSingle()
+  if (error || !data) return null
+  const r = data as Record<string, unknown>
+  const type = coerceArticleType(r.article_type).value
+  const entities = coerceLabels(r.entities).length
+  const tags = coerceLabels(r.topic_tags).length
+  return `${type}/${entities}e/${tags}t`
+}
+
+/**
+ * Write re-computed labels, and stamp the version that produced them.
+ *
+ * One row at a time rather than a bulk upsert, and that is deliberate: an
+ * upsert over `suggest_items` would need every NOT NULL column in the payload
+ * (canonical_url, original_url, content_hash), so a partial object would either
+ * fail or, worse, blank them. An UPDATE touches only what it names.
+ *
+ * `labels_reviewed_at` is never written here. A pass cannot promote its own
+ * output to human-reviewed.
+ */
+export async function saveLabels(
+  itemId: string,
+  labels: {
+    topicTags: Labelled<string>[]
+    entities: Labelled<string>[]
+    articleType: Labelled<ArticleType>
+  },
+  version: number,
+): Promise<void> {
+  const { error } = await db()
+    .from('suggest_items')
+    .update({
+      topic_tags: labels.topicTags,
+      entities: labels.entities,
+      article_type: labels.articleType,
+      classifier_version: version,
+    })
+    .eq('id', itemId)
+  if (error) throw new Error(`could not save the re-computed labels: ${error.message}`)
 }
 
 /** Write back the cluster ids a clustering run assigned. */
