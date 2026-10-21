@@ -73,7 +73,20 @@ const UA = 'bza-suggest/1.0 (reading companion; +https://aireadalong.com)'
  */
 export async function ingestFeed(
   target: store.PollTarget,
-  opts: { sourceType?: string; feedTags?: string[]; maxEntries?: number } = {},
+  /**
+   * No `feedTags` here, deliberately, and it used to be a parameter.
+   *
+   * A user's tags on a feed are THEIR annotation, and `suggest_items` rows are
+   * SHARED across every subscriber. Passing them in meant whoever polled first
+   * imprinted their private vocabulary onto a row everyone else reads — so one
+   * user tagging a feed "energy" would make every other subscriber's relevance
+   * score for those items react to a word they never typed.
+   *
+   * It showed up the moment a global scheduled poll was designed, because then
+   * the question "whose tags?" has no answer at all. The tags now enter at
+   * SCORING time, per user, in `buildDigest`.
+   */
+  opts: { sourceType?: string; maxEntries?: number } = {},
 ): Promise<IngestResult> {
   const base: IngestResult = {
     feedId: target.feedId, url: target.url, status: 'unknown',
@@ -155,7 +168,9 @@ export async function ingestFeed(
         summary: n.summary,
         text: n.text,
         declaredTags: n.declaredTags,
-        feedTags: opts.feedTags ?? [],
+        // Empty: only the PUBLISHER's categories and the item's own keywords
+        // belong on a shared row. See the note on this function's options.
+        feedTags: [],
       }),
       entities: extractEntities(n.headline, n.summary),
       articleType: classifyArticleType({ title: n.headline, summary: n.summary, sourceTypeHint: hint }),
@@ -263,7 +278,29 @@ export async function buildDigest(
     // enabled set already — this catches the race where a feed is disabled
     // between the two reads.
     .filter((i): i is FeedItem => feedById.has(i.feedId))
-    .map(item => ({ item, feed: feedById.get(item.feedId) as Feed }))
+    .map(item => {
+      const feed = feedById.get(item.feedId) as Feed
+      /**
+       * The user's own tags on this feed, applied HERE rather than at ingest.
+       *
+       * They are a per-user annotation and `suggest_items` is shared, so
+       * storing them would let one subscriber's vocabulary shape everybody
+       * else's relevance scores. Merged into a COPY of the item, never
+       * persisted, and marked `declared` with a reason that says the user is
+       * the source — which is what the disclosure panel then shows.
+       */
+      if (feed.topicTags.length === 0) return { item, feed }
+      const existing = new Set(item.topicTags.map(t => t.value))
+      const mine = feed.topicTags
+        .filter(t => !existing.has(t))
+        .map(t => ({
+          value: t,
+          reason: `your own tag on ${feed.name}`,
+          confidence: 'declared' as const,
+        }))
+      if (mine.length === 0) return { item, feed }
+      return { item: { ...item, topicTags: [...mine, ...item.topicTags] }, feed }
+    })
 
   const scored = scoreAll(pairs, {
     interests,

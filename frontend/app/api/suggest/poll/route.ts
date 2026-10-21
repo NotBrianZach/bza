@@ -75,10 +75,9 @@ export async function POST(req: NextRequest) {
       const feed = byId.get(target.feedId)
       // ingestFeed never throws for a network or parse problem — it records the
       // failure and returns a status — so one bad publisher cannot end the loop.
-      const result = await ingestFeed(target, {
-        sourceType: feed?.sourceType,
-        feedTags: feed?.topicTags,
-      })
+      // No feedTags: those are this user's annotation and the item rows are
+      // shared. They are applied per user at scoring time instead.
+      const result = await ingestFeed(target, { sourceType: feed?.sourceType })
       polled.push({ ...result, name: feed?.name ?? result.url })
     }
 

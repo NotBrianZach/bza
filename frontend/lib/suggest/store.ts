@@ -295,6 +295,60 @@ export async function unsubscribe(userId: string, feedId: string): Promise<void>
   if (error) throw new Error(`could not unsubscribe: ${error.message}`)
 }
 
+/**
+ * The source type each subscriber assigned to a feed, for a global poll.
+ *
+ * A scheduled poll has no user, so it cannot read "the" source type — several
+ * subscribers may disagree, since it is a per-subscription judgement. This
+ * returns the COMMONEST one per feed, which is the only defensible answer: it
+ * is used solely as the article-type hint when nothing in the item's own text
+ * fires, and a hint drawn from the majority of subscribers is better than
+ * either picking arbitrarily or dropping the signal.
+ *
+ * Feeds with no subscriber at all are absent from the map, and the caller
+ * falls back to 'specialist' — the neutral type that implies no article type.
+ */
+export async function majoritySourceTypes(): Promise<Map<string, string>> {
+  const { data, error } = await db()
+    .from('suggest_subscriptions')
+    .select('feed_id, source_type')
+    .eq('enabled', true)
+  if (error) throw new Error(`could not read the source types: ${error.message}`)
+
+  const tally = new Map<string, Map<string, number>>()
+  for (const row of (data ?? []) as { feed_id: string; source_type: string | null }[]) {
+    const type = row.source_type ?? 'specialist'
+    const counts = tally.get(row.feed_id) ?? new Map<string, number>()
+    counts.set(type, (counts.get(type) ?? 0) + 1)
+    tally.set(row.feed_id, counts)
+  }
+
+  const out = new Map<string, string>()
+  for (const [feedId, counts] of tally) {
+    // Ties broken alphabetically rather than by iteration order, so the same
+    // data gives the same answer on every run.
+    const best = [...counts.entries()]
+      .sort((a, b) => (b[1] === a[1] ? a[0].localeCompare(b[0]) : b[1] - a[1]))[0]
+    if (best) out.set(feedId, best[0])
+  }
+  return out
+}
+
+/**
+ * Every user with at least one enabled subscription.
+ *
+ * The scheduled run needs this for the weekly decay, which is per-user — unlike
+ * polling, which is global because the feed and item tables are shared.
+ */
+export async function usersWithSubscriptions(): Promise<string[]> {
+  const { data, error } = await db()
+    .from('suggest_subscriptions')
+    .select('user_id')
+    .eq('enabled', true)
+  if (error) throw new Error(`could not list the subscribers: ${error.message}`)
+  return [...new Set(((data ?? []) as { user_id: string }[]).map(r => r.user_id))]
+}
+
 /** Record the outcome of a poll, successful or not. */
 export async function recordPoll(
   feedId: string,
