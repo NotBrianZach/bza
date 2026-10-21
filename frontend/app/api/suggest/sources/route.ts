@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getUserFromToken } from '@/lib/apiQuota'
 import { canonicalUrl, publisherFromUrl } from '@/lib/suggest/normalize'
 import { parseFeed } from '@/lib/suggest/parse'
+import { canonicalFeedUrl, labelForFeedUrl, parseFeedUrl } from '@/lib/feedSources'
+import { PSEUDO_SOURCE_TYPE } from '@/lib/suggest/pseudo'
 import {
   loadFeeds, loadInterests, loadSettings, saveSettings, subscribe,
   unsubscribe, updateSubscription,
@@ -114,9 +116,42 @@ export async function POST(req: NextRequest) {
     }
 
     // ── a new feed ────────────────────────────────────────────────────────
+    //
+    // Two shapes. A `feed://` URL names Hacker News, a subreddit or a 4chan
+    // board — most of the pinned-feed list is these, so refusing them would
+    // make "use my existing feeds" import almost nothing. They need no
+    // validating fetch: the grammar either parses or it does not, and
+    // `fetchPseudoFeed` is the only thing that could fail, at poll time, where
+    // the failure is already recorded on the feed row.
+    const pseudo = parseFeedUrl(body.url)
+    if (pseudo) {
+      const url = canonicalFeedUrl(body.url)
+      const feedId = await subscribe(userId, {
+        url,
+        name: body.label?.trim() || labelForFeedUrl(url) || url,
+        language: null,
+        label: body.label?.trim() || null,
+        region: body.region?.trim() || null,
+        topicTags: body.topicTags ?? [],
+        // `commentary` by default: all three are aggregators of other people's
+        // writing, so an item's own evidence is structurally elsewhere. The
+        // user can change it, and an explicit sourceType in the request wins.
+        sourceType: (body.sourceType as SourceType) ?? PSEUDO_SOURCE_TYPE,
+        userDesignated: body.userDesignated ?? false,
+      })
+      return NextResponse.json({
+        feedId, name: labelForFeedUrl(url), language: null, entryCount: null,
+        warnings: [
+          'this source has no conditional-request support, so every poll is a full fetch',
+        ],
+      })
+    }
+
     const url = canonicalUrl(body.url)
     if (!/^https?:\/\//i.test(url)) {
-      return NextResponse.json({ error: 'only http and https feed URLs can be added' }, { status: 400 })
+      return NextResponse.json({
+        error: 'a source must be an http(s) feed URL, or a feed:// source (feed://hn, feed://reddit/<sub>, feed://4chan/<board>)',
+      }, { status: 400 })
     }
     if (body.sourceType && !SOURCE_TYPES.has(body.sourceType)) {
       return NextResponse.json({

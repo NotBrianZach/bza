@@ -25,8 +25,10 @@
 
 import type { Digest, Feed, FeedItem, Interest, ScoreWeights } from './types'
 import { DEFAULT_BUCKET_PLAN } from './types'
-import { normalizeEntry } from './normalize'
+import { normalizeEntry, type RawEntry } from './normalize'
 import { parseFeed } from './parse'
+import { fetchPseudoFeed, parseFeedUrl } from '@/lib/feedSources'
+import { postToEntry } from './pseudo'
 import {
   assignTopicTags, classifyArticleType, contentTokens, extractEntities, typeHintFromSource,
 } from './tags'
@@ -93,62 +95,112 @@ export async function ingestFeed(
     parsed: 0, normalized: 0, inserted: 0, skipped: 0, notes: [],
   }
 
-  let res: Response
-  const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), POLL_TIMEOUT_MS)
-  try {
-    const headers: Record<string, string> = { 'User-Agent': UA, Accept: 'application/rss+xml, application/atom+xml, application/xml, text/xml, */*' }
-    if (target.etag) headers['If-None-Match'] = target.etag
-    if (target.lastModified) headers['If-Modified-Since'] = target.lastModified
-    res = await fetch(target.url, { headers, signal: controller.signal, cache: 'no-store' })
-  } catch (e) {
-    const status = e instanceof Error && e.name === 'AbortError'
-      ? `timed out after ${POLL_TIMEOUT_MS / 1000}s`
-      : `fetch failed: ${e instanceof Error ? e.message : 'unknown'}`
-    await store.recordPoll(target.feedId, { status, ok: false })
-    return { ...base, status }
-  } finally {
-    clearTimeout(timer)
-  }
-
-  if (res.status === 304) {
-    await store.recordPoll(target.feedId, { status: 'not modified', ok: true })
-    return { ...base, status: 'not modified' }
-  }
-  if (!res.ok) {
-    const status = `HTTP ${res.status}`
-    await store.recordPoll(target.feedId, { status, ok: false })
-    return { ...base, status }
-  }
-
-  const xml = await res.text()
-  const doc = parseFeed(xml)
   const now = new Date().toISOString()
 
-  const etag = res.headers.get('etag')
-  const lastModified = res.headers.get('last-modified')
+  /**
+   * Two kinds of source reach this function, and only the fetch differs.
+   *
+   * An http(s) URL is RSS or Atom: conditional-request headers, one GET, one
+   * parse. A `feed://` URL is Hacker News, a subreddit or a 4chan board,
+   * fetched through lib/feedSources and mapped to the same `RawEntry` shape by
+   * lib/suggest/pseudo — which is what lets everything downstream of here, the
+   * normalizing, classifying, dedup and scoring, stay completely unaware of
+   * which kind it was.
+   *
+   * The pseudo sources support NO conditional requests: they are JSON APIs
+   * with no ETag, so every poll is a full fetch. That is the cost of having
+   * them, and it is why the age floor in `feedsDueForPoll` matters more for
+   * them than for RSS.
+   */
+  let entries: RawEntry[]
+  let etag: string | null = null
+  let lastModified: string | null = null
 
-  if (doc.entries.length === 0) {
-    // An empty document is a successful poll of a feed with nothing in it, and
-    // it is also what an unparseable document looks like from here. Said in
-    // the status rather than guessed at.
+  const pseudo = parseFeedUrl(target.url)
+  if (pseudo) {
+    try {
+      const posts = await fetchPseudoFeed(target.url, opts.maxEntries ?? 60)
+      entries = posts.map(postToEntry)
+    } catch (e) {
+      const status = `fetch failed: ${e instanceof Error ? e.message : 'unknown'}`
+      await store.recordPoll(target.feedId, { status, ok: false })
+      return { ...base, status }
+    }
+  } else {
+    let res: Response
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), POLL_TIMEOUT_MS)
+    try {
+      const headers: Record<string, string> = { 'User-Agent': UA, Accept: 'application/rss+xml, application/atom+xml, application/xml, text/xml, */*' }
+      if (target.etag) headers['If-None-Match'] = target.etag
+      if (target.lastModified) headers['If-Modified-Since'] = target.lastModified
+      res = await fetch(target.url, { headers, signal: controller.signal, cache: 'no-store' })
+    } catch (e) {
+      const status = e instanceof Error && e.name === 'AbortError'
+        ? `timed out after ${POLL_TIMEOUT_MS / 1000}s`
+        : `fetch failed: ${e instanceof Error ? e.message : 'unknown'}`
+      await store.recordPoll(target.feedId, { status, ok: false })
+      return { ...base, status }
+    } finally {
+      clearTimeout(timer)
+    }
+
+    if (res.status === 304) {
+      await store.recordPoll(target.feedId, { status: 'not modified', ok: true })
+      return { ...base, status: 'not modified' }
+    }
+    if (!res.ok) {
+      const status = `HTTP ${res.status}`
+      await store.recordPoll(target.feedId, { status, ok: false })
+      return { ...base, status }
+    }
+
+    const doc = parseFeed(await res.text())
+    entries = doc.entries
+    etag = res.headers.get('etag')
+    lastModified = res.headers.get('last-modified')
+  }
+
+  if (entries.length === 0) {
+    // An empty document is a successful poll of a source with nothing in it,
+    // and it is also what an unparseable one looks like from here. Said in the
+    // status rather than guessed at.
     await store.recordPoll(target.feedId, { status: 'parsed, no entries', etag, lastModified, ok: true })
     return { ...base, status: 'parsed, no entries' }
   }
 
-  const hint = typeHintFromSource(opts.sourceType ?? 'specialist')
+  /**
+   * No article-type hint for an aggregator, because it did not write the item.
+   *
+   * `typeHintFromSource` exists to fill in the article type when nothing in the
+   * item's own text fires a cue, on the reasoning that a research feed's
+   * unclassifiable item is probably research. That reasoning fails completely
+   * for HN, Reddit and 4chan: the default source type for those is
+   * `commentary`, which hints `opinion`, and the thing being linked was written
+   * by somebody else entirely.
+   *
+   * Observed on the first real ingest: a Hacker News link to a Quanta magazine
+   * article came out classified `opinion`, which is both wrong about the piece
+   * and consequential — `opinion` carries a four-day freshness half-life, so a
+   * durable article would have decayed like a column.
+   *
+   * So a pseudo-feed's items fall through to `unclassified`, which is the
+   * honest answer: nobody has said what this is. The cue list still applies
+   * and still catches the ones it can.
+   */
+  const hint = pseudo ? null : typeHintFromSource(opts.sourceType ?? 'specialist')
   const cap = opts.maxEntries ?? 200
-  const entries = doc.entries.slice(0, cap)
+  const kept = entries.slice(0, cap)
   const notes: string[] = []
-  if (doc.entries.length > cap) {
+  if (entries.length > cap) {
     // No silent caps: a feed whose archive exceeds the limit must say so, or a
     // first poll of a long archive looks like a complete one.
-    notes.push(`kept the newest ${cap} of ${doc.entries.length} entries`)
+    notes.push(`kept the newest ${cap} of ${entries.length} entries`)
   }
 
   const items: store.NewItem[] = []
   let dropped = 0
-  for (const raw of entries) {
+  for (const raw of kept) {
     const n = normalizeEntry(raw, now)
     if (!n) { dropped++; continue }
     items.push({
@@ -185,7 +237,7 @@ export async function ingestFeed(
 
   return {
     ...base, status,
-    parsed: doc.entries.length, normalized: items.length, inserted, skipped, notes,
+    parsed: entries.length, normalized: items.length, inserted, skipped, notes,
   }
 }
 

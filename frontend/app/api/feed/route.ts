@@ -1,138 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
+/**
+ * The HN / Reddit / 4chan fetchers moved to lib/feedSources.ts so the
+ * suggested feed's ingest can use the same ones. "Fetch HN's top stories as
+ * posts" is one job with one right answer, unlike the RSS parsing, where the
+ * two consumers genuinely want different things — see the header of
+ * lib/suggest/parse.ts for why that one is duplicated on purpose.
+ */
+import {
+  fetch4chan, fetchHN, fetchReddit, redditFetch, UA, type FeedPost,
+} from '@/lib/feedSources'
 
-// Reddit requires a descriptive bot UA — browser UAs get 403'd server-side
-const REDDIT_UA = 'bza-reader/1.0 (read-along app; +https://aireadalong.com)'
-// Generic UA for non-Reddit fetches
-const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
+export type { FeedPost }
 
-async function redditFetch(url: string, attempt = 0): Promise<Response> {
-  const res = await fetch(url, {
-    headers: { 'User-Agent': REDDIT_UA, 'Accept': 'application/json' },
-    cache: 'no-store',
-  })
-  // Retry once on 429/5xx/403
-  if (!res.ok && attempt === 0 && (res.status === 429 || res.status >= 500 || res.status === 403)) {
-    await new Promise(r => setTimeout(r, 800))
-    return redditFetch(url, 1)
-  }
-  return res
-}
-
-export interface FeedPost {
-  id: string
-  title: string
-  url: string          // link to the actual article/thread
-  commentsUrl?: string // link to discussion thread
-  score?: number
-  numComments?: number
-  author?: string
-  date?: string
-  body?: string        // OP body text (for 4chan/reddit self-posts)
-  source: string       // 'hn' | 'reddit' | '4chan' | 'rss'
-  subreddit?: string
-  board?: string
-  thumbnail?: string
-}
-
-// ─── Hacker News ─────────────────────────────────────────────────────────────
-
-async function fetchHN(limit = 30): Promise<FeedPost[]> {
-  const ids: number[] = await fetch(
-    'https://hacker-news.firebaseio.com/v0/topstories.json'
-  ).then(r => r.json())
-
-  const top = ids.slice(0, limit)
-  const stories = await Promise.all(
-    top.map(id =>
-      fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`)
-        .then(r => r.json())
-        .catch(() => null)
-    )
-  )
-
-  return stories
-    .filter(Boolean)
-    .filter(s => s.type === 'story' && s.title)
-    .map(s => ({
-      id: String(s.id),
-      title: s.title,
-      url: s.url ?? `https://news.ycombinator.com/item?id=${s.id}`,
-      commentsUrl: `https://news.ycombinator.com/item?id=${s.id}`,
-      score: s.score,
-      numComments: s.descendants,
-      author: s.by,
-      date: s.time ? new Date(s.time * 1000).toISOString() : undefined,
-      body: s.text ?? undefined,
-      source: 'hn',
-    }))
-}
-
-// ─── Reddit ───────────────────────────────────────────────────────────────────
-
-async function fetchReddit(subreddit: string, sort: string, limit = 30): Promise<FeedPost[]> {
-  const url = `https://www.reddit.com/r/${subreddit}/${sort}.json?limit=${limit}&raw_json=1`
-  const res = await redditFetch(url)
-  if (!res.ok) throw new Error(`Reddit API error: ${res.status}`)
-  const json = await res.json()
-  const posts = json?.data?.children ?? []
-
-  return posts
-    .filter((c: any) => c.kind === 't3')
-    .map((c: any) => {
-      const p = c.data
-      const isExternal = !p.is_self && p.url && !p.url.includes('reddit.com')
-      return {
-        id: p.id,
-        title: p.title,
-        url: isExternal ? p.url : `https://www.reddit.com${p.permalink}`,
-        commentsUrl: `https://www.reddit.com${p.permalink}`,
-        score: p.score,
-        numComments: p.num_comments,
-        author: p.author,
-        date: p.created_utc ? new Date(p.created_utc * 1000).toISOString() : undefined,
-        body: p.selftext || undefined,
-        source: 'reddit',
-        subreddit: p.subreddit,
-        thumbnail: p.thumbnail && !['self', 'default', 'nsfw', 'spoiler', ''].includes(p.thumbnail) ? p.thumbnail : undefined,
-      }
-    })
-}
-
-// ─── 4chan ─────────────────────────────────────────────────────────────────────
-
-async function fetch4chan(board: string, limit = 30): Promise<FeedPost[]> {
-  const res = await fetch(`https://a.4cdn.org/${board}/catalog.json`, {
-    headers: {
-      'User-Agent': UA,
-      'Accept': 'application/json',
-      'Referer': `https://boards.4chan.org/${board}/`,
-    },
-  })
-  if (!res.ok) throw new Error(`4chan API error: ${res.status}`)
-  const pages: any[] = await res.json()
-
-  const threads: any[] = pages.flatMap(p => p.threads ?? [])
-  return threads
-    .filter(t => t.replies > 0)
-    .sort((a, b) => b.replies - a.replies)
-    .slice(0, limit)
-    .map(t => ({
-      id: String(t.no),
-      title: t.sub
-        ? t.sub.replace(/<[^>]+>/g, '').slice(0, 120)
-        : (t.com ?? '').replace(/<[^>]+>/g, '').slice(0, 80) || `Thread #${t.no}`,
-      url: `https://boards.4chan.org/${board}/thread/${t.no}`,
-      commentsUrl: `https://boards.4chan.org/${board}/thread/${t.no}`,
-      score: undefined,
-      numComments: t.replies,
-      author: t.name ?? 'Anonymous',
-      date: t.time ? new Date(t.time * 1000).toISOString() : undefined,
-      body: t.com ? t.com.replace(/<[^>]+>/g, '').slice(0, 300) : undefined,
-      source: '4chan',
-      board,
-      thumbnail: t.tim && t.ext ? `https://i.4cdn.org/${board}/${t.tim}s.jpg` : undefined,
-    }))
-}
 
 // ─── 4chan thread ──────────────────────────────────────────────────────────────
 

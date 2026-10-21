@@ -8,6 +8,7 @@ import {
 import { authedFetch } from '@/lib/authedFetch'
 import { supabase } from '@/lib/supabase'
 import DigestList, { DigestGap, DigestItem } from '@/components/suggest/DigestList'
+import { getPinnedFeeds, type PinnedFeed } from '@/lib/pinnedFeeds'
 
 /**
  * The suggested feed: the digest, its sources, your interests, the weights, and
@@ -100,6 +101,19 @@ export default function SuggestPage() {
   const [pollResult, setPollResult] = useState<{ name: string; status: string; notes?: string[] }[] | null>(null)
   const [health, setHealth] = useState<{ prose?: string[]; reason?: string } | null>(null)
 
+  /**
+   * The pinned feeds, read from localStorage, and what the server knows of them.
+   *
+   * `adoptState` is keyed on the RAW pinned url rather than the canonical key,
+   * because that is what the UI has in hand. The canonicalisation —
+   * `feed://hn` and `feed://hn/top` being one source — stays on the server, so
+   * the client never has to know the rule and the two cannot disagree about it.
+   */
+  const [pinned, setPinned] = useState<PinnedFeed[]>([])
+  const [adoptState, setAdoptState] = useState<Record<string, {
+    usable: boolean; subscribed: boolean; enabled: boolean; feedId: string | null
+  }>>({})
+
   const [newUrl, setNewUrl] = useState('')
   const [newType, setNewType] = useState('specialist')
   const [newRegion, setNewRegion] = useState('')
@@ -134,11 +148,73 @@ export default function SuggestPage() {
     setIsPreview(false)
   }, [])
 
+  /** Which of the pinned feeds the digest already uses. One request. */
+  const loadAdoptState = useCallback(async (feeds: PinnedFeed[]) => {
+    if (feeds.length === 0) return
+    const urls = feeds.map(f => f.url).join(',')
+    const res = await authedFetch(`/api/suggest/adopt?urls=${encodeURIComponent(urls)}`)
+    const d = await res.json()
+    if (d.error || !Array.isArray(d.state)) return
+    const next: typeof adoptState = {}
+    for (const s of d.state) {
+      next[s.url] = {
+        usable: !!s.usable, subscribed: !!s.subscribed, enabled: !!s.enabled, feedId: s.feedId,
+      }
+    }
+    setAdoptState(next)
+  }, [])
+
   useEffect(() => {
     if (!authed) return
+    const feeds = getPinnedFeeds()
+    setPinned(feeds)
     loadSources()
     loadStored()
-  }, [authed, loadSources, loadStored])
+    loadAdoptState(feeds)
+  }, [authed, loadSources, loadStored, loadAdoptState])
+
+  async function toggleAdopt(url: string, label: string, currentlyOn: boolean) {
+    // Optimistic, because a checkbox that waits on a round trip feels broken.
+    setAdoptState(s => ({ ...s, [url]: { ...s[url], subscribed: !currentlyOn } }))
+    try {
+      await authedFetch('/api/suggest/adopt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(currentlyOn ? { remove: [url] } : { feeds: [{ url, label }] }),
+      })
+    } finally {
+      // Re-read rather than trusting the optimistic flip: the server owns the
+      // canonicalisation, so it is the only thing that knows whether this URL
+      // collapsed onto a subscription that already existed.
+      await Promise.all([loadAdoptState(pinned), loadSources()])
+    }
+  }
+
+  async function adoptAll() {
+    setBusy('adopt')
+    setError(null)
+    try {
+      const res = await authedFetch('/api/suggest/adopt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ feeds: pinned.map(p => ({ url: p.url, label: p.label })) }),
+      })
+      const d = await res.json()
+      if (d.error) { setError(d.error); return }
+      // Skipped feeds are surfaced, not swallowed. The pinned list legitimately
+      // contains things the digest cannot score, and "it vanished" is a worse
+      // answer than the reason.
+      if (Array.isArray(d.skipped) && d.skipped.length > 0) {
+        setNotes(n => [
+          ...d.skipped.map((s: { url: string; reason: string }) => `${s.url}: ${s.reason}`),
+          ...n,
+        ])
+      }
+      await Promise.all([loadAdoptState(pinned), loadSources()])
+    } finally {
+      setBusy(null)
+    }
+  }
 
   async function build(preview: boolean) {
     setBusy(preview ? 'preview' : 'build')
@@ -407,6 +483,62 @@ export default function SuggestPage() {
         {/* ── Sources ──────────────────────────────────────────────────── */}
         {tab === 'sources' && sources && (
           <div>
+            {/* Your existing feeds, adoptable with a toggle rather than retyped.
+                The pinned list lives in localStorage and the server has never
+                seen it, so the client has to tell it — which is also why this
+                is not a migration: nothing moves, the pinned list keeps working
+                as a bookmark list, and this records the separate fact "also
+                consider this when building my digest". */}
+            {pinned.length > 0 && (
+              <div className="mb-4 rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-800">
+                <h3 className="mb-1 text-xs font-semibold text-gray-700 dark:text-gray-300">
+                  Your feeds
+                </h3>
+                <p className="mb-2 text-[11px] leading-snug text-gray-400 dark:text-gray-500">
+                  The feeds from your home page. Toggle one on to let the digest
+                  consider it — it stays in your feed list either way.
+                </p>
+                <ul className="space-y-1">
+                  {pinned.map(p => {
+                    const st = adoptState[p.url]
+                    const on = !!st?.subscribed
+                    return (
+                      <li key={p.id} className="flex items-center gap-2 text-xs">
+                        <input
+                          type="checkbox"
+                          checked={on}
+                          disabled={st ? !st.usable : true}
+                          onChange={() => toggleAdopt(p.url, p.label, on)}
+                        />
+                        <span className={st?.usable === false
+                          ? 'text-gray-400 line-through dark:text-gray-600'
+                          : 'text-gray-800 dark:text-gray-200'}>
+                          {p.label}
+                        </span>
+                        {/* A pinned feed the digest genuinely cannot score says
+                            so, rather than just not appearing. */}
+                        {st?.usable === false && (
+                          <span
+                            className="text-[11px] text-gray-400"
+                            title="Not an http(s) feed URL or a recognised feed:// source, so there is nothing to ingest"
+                          >
+                            can’t be scored
+                          </span>
+                        )}
+                      </li>
+                    )
+                  })}
+                </ul>
+                <button
+                  onClick={adoptAll}
+                  disabled={!!busy}
+                  className="mt-2 inline-flex items-center gap-1 rounded border border-gray-300 px-2 py-1 text-xs text-gray-600 disabled:opacity-50 dark:border-gray-600 dark:text-gray-300"
+                >
+                  {busy === 'adopt' ? <Loader2 size={12} className="animate-spin" /> : null}
+                  Use all of them
+                </button>
+              </div>
+            )}
             <div className="mb-4 rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-800">
               <h3 className="mb-2 text-xs font-semibold text-gray-700 dark:text-gray-300">Add a feed</h3>
               <div className="flex flex-wrap gap-2">
