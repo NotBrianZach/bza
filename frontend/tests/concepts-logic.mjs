@@ -39,6 +39,7 @@ function build() {
   const entries = [
     join('lib', 'concepts', 'expr.ts'),
     join('lib', 'concepts', 'forms.ts'),
+    join('lib', 'concepts', 'derive.ts'),
     join('lib', 'concepts', 'generators.ts'),
     join('lib', 'concepts', 'import.ts'),
     join('lib', 'concepts', 'numerals.ts'),
@@ -70,6 +71,7 @@ function build() {
   return {
     expr: require(join(outDir, 'concepts', 'expr.js')),
     forms: require(join(outDir, 'concepts', 'forms.js')),
+    derive: require(join(outDir, 'concepts', 'derive.js')),
     generators: require(join(outDir, 'concepts', 'generators.js')),
     importer: require(join(outDir, 'concepts', 'import.js')),
     numerals: require(join(outDir, 'concepts', 'numerals.js')),
@@ -108,6 +110,11 @@ const {
   exactValue, substitute, showExact, ruleEvaluate, rule,
 } = M.verify
 const { agreeAtPoints } = M.numerals
+const {
+  signatureOf, sameShape, sameCoarseShape, isDiscriminating, properSubtrees, describeShape,
+  shapedTasks, deriveEdges, deriveInterference, compareWithAuthored, asCandidateEdges,
+  summariseDerivation,
+} = M.derive
 const {
   GENERATORS, generate, generateFrom, generatedTaskById, generatorById, generatorsForPoint,
   validateInstance, explain, rngFrom, variantSeedFor, taskIdFor, parseTaskId,
@@ -1220,6 +1227,142 @@ t('validateInstance accepts every authored task, which is the cross-check', (() 
   }
   return bad.join(' | ')
 })())
+
+// ---------------------------------------------------------------------------
+// Deriving the graph from task structure
+// ---------------------------------------------------------------------------
+
+const sig = s => signatureOf(p(s), 'x')
+
+group('shape signatures')
+t('a factored quadratic', (() => {
+  const s = sig('(x + 3)(x - 5)')
+  return s.forms.join() === 'factored' && !s.isQuotient && s.numeratorDegree === 2 && s.topLevelFactors === 2
+})())
+t('an expanded quadratic', (() => {
+  const s = sig('x^2 - 2x - 15')
+  return s.forms.join() === 'expanded' && s.topLevelTerms === 3 && s.numeratorDegree === 2
+})(), JSON.stringify(sig('x^2 - 2x - 15')))
+t('a quotient reports both degrees', (() => {
+  const s = sig('(3x + 1)/((x + 3)(x - 5))')
+  return s.isQuotient && s.numeratorDegree === 1 && s.denominatorDegree === 2
+})())
+t('a sum of fractions is partial_fractions and not a quotient', (() => {
+  const s = sig('1/(x + 3) + 2/(x - 5)')
+  return s.forms.join() === 'partial_fractions' && !s.isQuotient
+})())
+t('a bare linear is in BOTH expanded and factored — the ambiguity the guard exists for',
+  sig('x + 3').forms.length === 2)
+
+group('the discriminating guard — without it every concept encompasses every other')
+t('a bare linear is not discriminating', !isDiscriminating(sig('x + 3')))
+t('a bare monomial is not discriminating, despite being degree 2',
+  !isDiscriminating(sig('x^2')), JSON.stringify(sig('x^2')))
+t('a real expanded quadratic is', isDiscriminating(sig('x^2 - 2x - 15')))
+t('a real product of two factors is', isDiscriminating(sig('(x + 3)(x - 5)')))
+t('a quotient with a non-constant denominator is', isDiscriminating(sig('(x + 3)/(x + 5)')))
+t('a shape in no named form is not', !isDiscriminating(sig('(x + 1)^2')))
+
+group('subtrees and shape comparison')
+t('properSubtrees excludes the root', (() => {
+  const subs = properSubtrees(p('(x + 3)(x - 5)'))
+  return !subs.some(n => n.kind === 'multiply')
+})())
+t('it reaches into a quotient on both sides', (() => {
+  const subs = properSubtrees(p('(3x + 1)/((x + 3)(x - 5))')).map(n => describeShape(signatureOf(n, 'x')))
+  return subs.length >= 4
+})())
+t('sameShape distinguishes expanded from factored',
+  !sameShape(sig('x^2 - 2x - 15'), sig('(x + 3)(x - 5)')))
+t('sameShape distinguishes a monomial from a polynomial of the same degree',
+  !sameShape(sig('x^2'), sig('x^2 - 2x - 15')))
+t('sameShape matches two factored quadratics',
+  sameShape(sig('(x + 3)(x - 5)'), sig('(x - 2)(x - 7)')))
+t('sameCoarseShape ignores degree, which sameShape does not', (() => {
+  const a = sig('(x + 4)/(x + 1)^2')
+  const b = sig('(2x + 1)/((x - 1)(x^2 + 1))')
+  return sameCoarseShape(a, b) && !sameShape(a, b)
+})())
+
+group('shapedTasks — the evidence base')
+t('it shapes the authored transform tasks', shapedTasks(O, 0).length > 10)
+t('it excludes evaluate tasks, whose reference is a bare number',
+  shapedTasks(O, 0).every(x => !x.taskId.startsWith('discriminant')))
+t('generated variants multiply the evidence',
+  shapedTasks(O, 10).length > shapedTasks(O, 0).length * 3)
+t('every shaped task names a concept in the ontology',
+  shapedTasks(O, 5).every(x => !!conceptById(O, x.conceptId)))
+
+/**
+ * These lock in the derivation's actual result. They are regression locks on a
+ * measurement, not aspirations — if a generator or a form checker changes, the
+ * numbers move and these should be re-read rather than patched.
+ */
+group('what structure actually recovers')
+const DERIVED = deriveEdges(O, 20)
+const INTERFERENCE = deriveInterference(O, 20)
+const CMP = {
+  encompasses: compareWithAuthored(O, DERIVED, 'encompasses'),
+  prerequisite: compareWithAuthored(O, DERIVED, 'candidate_prerequisite'),
+  interference: compareWithAuthored(O, INTERFERENCE, 'interferes_with'),
+}
+t('it recovers that simplifying a fraction exercises factoring',
+  CMP.encompasses.confirmed.some(e => e.from === 'simplifying-rational' && e.to === 'factoring-quadratics'))
+t('and that decomposing one does too',
+  CMP.encompasses.confirmed.some(e => e.from === 'partial-fractions-linear' && e.to === 'factoring-quadratics'))
+t('encompasses recall is partial, not total', CMP.encompasses.recall > 0.2 && CMP.encompasses.recall < 0.9,
+  `${CMP.encompasses.recall}`)
+t('it recovers the authored interference between the two decomposition templates',
+  CMP.interference.confirmed.some(e =>
+    [e.from, e.to].sort().join('|') === 'partial-fractions-quadratic|partial-fractions-repeated'))
+/**
+ * The headline finding, asserted so it cannot quietly change: structure is much
+ * better at "what does this exercise" than at "what must come first". That is
+ * SPEC-LEARNING §2's own warning — a dependency edge is not a pedagogical
+ * prerequisite — showing up as a number.
+ */
+t('prerequisite recall is far worse than encompasses recall',
+  CMP.prerequisite.recall < CMP.encompasses.recall,
+  `prereq ${CMP.prerequisite.recall} vs encompasses ${CMP.encompasses.recall}`)
+t('most authored prerequisite edges have no structural trace at all',
+  CMP.prerequisite.authoredOnly.length >= 7, `${CMP.prerequisite.authoredOnly.length}`)
+t('both precision and recall are reported, so neither can flatter the method',
+  [CMP.encompasses, CMP.prerequisite, CMP.interference].every(c =>
+    typeof c.recall === 'number' && (c.precision === null || typeof c.precision === 'number')))
+t('precision is low, which is why nothing is promoted',
+  CMP.encompasses.precision < 0.5 && CMP.prerequisite.precision < 0.5)
+t('a rate over an empty denominator is null rather than zero', (() => {
+  const empty = compareWithAuthored({ ...O, edges: [] }, [], 'encompasses')
+  return empty.recall === null && empty.precision === null
+})())
+
+group('derived edges are quarantined like every other import')
+const CANDIDATES = asCandidateEdges(DERIVED)
+t('there are some', CANDIDATES.length > 5)
+t('every one is a candidate', CANDIDATES.every(e => e.kind === 'candidate_prerequisite'))
+t('not one names a promoter — a derivation is not a promoter',
+  CANDIDATES.every(e => e.promotedBy === undefined))
+t('every rationale names the criterion and the support count',
+  CANDIDATES.every(e => /Derived from task structure by/.test(e.rationale) && /observation\(s\)/.test(e.rationale)))
+t('every rationale admits the blind spot',
+  CANDIDATES.every(e => /may name the wrong concept/.test(e.rationale)))
+t('both endpoints are real concepts, unlike the scrape importer\'s edges',
+  CANDIDATES.every(e => !!conceptById(O, e.from) && !!conceptById(O, e.to)))
+t('merging them into the ontology reports no problems', (() => {
+  const merged = { ...O, edges: [...O.edges, ...CANDIDATES] }
+  return ontologyProblems(merged).length === 0
+})(), JSON.stringify(ontologyProblems({ ...O, edges: [...O.edges, ...CANDIDATES] })))
+t('and changes no walk, because candidates gate nothing', (() => {
+  const merged = { ...O, edges: [...O.edges, ...CANDIDATES] }
+  return JSON.stringify(teachingOrder(merged)) === JSON.stringify(teachingOrder(O))
+    && cycles(merged).length === 0
+})())
+t('but it does move the promotion rate, since they are proposals', (() => {
+  const merged = { ...O, edges: [...O.edges, ...CANDIDATES] }
+  return promotionRate(merged).rate < promotionRate(O).rate
+})())
+t('the summary refuses to present the derivation as settled',
+  summariseDerivation([CMP.encompasses]).some(l => /Nothing here is promoted/.test(l)))
 
 // ---------------------------------------------------------------------------
 // The importer
