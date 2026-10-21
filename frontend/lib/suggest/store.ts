@@ -570,6 +570,10 @@ export interface SuggestSettings {
   regions: string[]
   desiredTopics: string[]
   qualityFloor: number | null
+  /** When learned weights were last decayed. Null = never. See migration 72. */
+  decayedAt: string | null
+  /** When a digest was last BUILT and stored. Previews do not count. */
+  digestBuiltAt: string | null
 }
 
 /**
@@ -584,7 +588,7 @@ export interface SuggestSettings {
 export async function loadSettings(userId: string): Promise<SuggestSettings> {
   const { data, error } = await db()
     .from('suggest_settings')
-    .select('weights, plan, regions, desired_topics, quality_floor')
+    .select('weights, plan, regions, desired_topics, quality_floor, decayed_at, digest_built_at')
     .eq('user_id', userId)
     .maybeSingle()
   if (error) throw new Error(`could not load the feed settings: ${error.message}`)
@@ -596,7 +600,31 @@ export async function loadSettings(userId: string): Promise<SuggestSettings> {
     regions: Array.isArray(r.regions) ? (r.regions as string[]) : [],
     desiredTopics: Array.isArray(r.desired_topics) ? (r.desired_topics as string[]) : [],
     qualityFloor: typeof r.quality_floor === 'number' ? r.quality_floor : null,
+    decayedAt: typeof r.decayed_at === 'string' ? r.decayed_at : null,
+    digestBuiltAt: typeof r.digest_built_at === 'string' ? r.digest_built_at : null,
   }
+}
+
+/**
+ * Stamp a maintenance step as done.
+ *
+ * Separate from `saveSettings` because it is written on a page visit and must
+ * not be able to clobber a preference: a `saveSettings` call carrying a partial
+ * patch is a user editing their settings, and this is housekeeping. Keeping
+ * them apart means a bug in one cannot silently reset the other.
+ */
+export async function stampMaintenance(
+  userId: string, patch: { decayedAt?: string; digestBuiltAt?: string },
+): Promise<void> {
+  const row: Record<string, unknown> = { user_id: userId }
+  if (patch.decayedAt) row.decayed_at = patch.decayedAt
+  if (patch.digestBuiltAt) row.digest_built_at = patch.digestBuiltAt
+  if (Object.keys(row).length === 1) return
+
+  const { error } = await db()
+    .from('suggest_settings')
+    .upsert(row, { onConflict: 'user_id' })
+  if (error) throw new Error(`could not record the maintenance run: ${error.message}`)
 }
 
 export async function saveSettings(

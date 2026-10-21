@@ -168,6 +168,65 @@ export function decayWeights(interests: Interest[], fraction = WEEKLY_DECAY): In
   })
 }
 
+/**
+ * The decay fraction for a given elapsed time.
+ *
+ * REQUIRED as soon as decay runs on a page visit rather than on a timer, which
+ * is the only sane trigger for an app nobody schedules. A per-invocation
+ * `WEEKLY_DECAY` makes the decay rate a function of how often somebody opens
+ * the site: a daily visitor would decay seven times a week and a weekly
+ * visitor once, so two people with identical feedback would end up with
+ * different weights for no reason but their browsing habits.
+ *
+ * Compounding, not linear. One week at 0.15 closes 15% of the distance to the
+ * prior; two weeks closes `1 - 0.85²` ≈ 28%, not 30%, because the second week
+ * acts on what the first week left. Linear would overshoot and, past about
+ * six weeks, would cross the prior and start pushing the weight out the other
+ * side — which is not decay at all.
+ *
+ * Clamped to one year. A weight untouched for five years should land on the
+ * prior, not be driven to a number that depends on floating-point behaviour at
+ * extreme exponents.
+ */
+export function decayFractionForElapsed(ms: number): number {
+  if (!Number.isFinite(ms) || ms <= 0) return 0
+  const WEEK_MS = 7 * 86_400_000
+  const weeks = Math.min(52, ms / WEEK_MS)
+  return 1 - Math.pow(1 - WEEKLY_DECAY, weeks)
+}
+
+/**
+ * How long must pass before a decay run is worth doing.
+ *
+ * Below this the movement is too small to be worth a write, and writing anyway
+ * would touch `updated_at` on every page visit — which would destroy the one
+ * cheap signal for "when did this weight last actually change".
+ */
+export const MIN_DECAY_INTERVAL_MS = 24 * 3_600_000
+
+/**
+ * Decay by elapsed time, returning what moved and whether it ran at all.
+ *
+ * `null` for `since` means never decayed: treated as one week, not as the
+ * beginning of time. A user whose account is a year old but whose interests
+ * were added yesterday should not have them yanked to the prior on first visit.
+ */
+export function decayByElapsed(
+  interests: Interest[], since: string | null, now: string,
+): { interests: Interest[]; ran: boolean; fraction: number; elapsedMs: number } {
+  const nowMs = Date.parse(now)
+  const sinceMs = since ? Date.parse(since) : NaN
+  const elapsedMs = Number.isFinite(sinceMs) && Number.isFinite(nowMs)
+    ? Math.max(0, nowMs - sinceMs)
+    : 7 * 86_400_000
+
+  if (elapsedMs < MIN_DECAY_INTERVAL_MS) {
+    return { interests: interests.map(i => ({ ...i })), ran: false, fraction: 0, elapsedMs }
+  }
+  const fraction = decayFractionForElapsed(elapsedMs)
+  return { interests: decayWeights(interests, fraction), ran: true, fraction, elapsedMs }
+}
+
 /** The minimum share of a digest reserved for the two discovery buckets. */
 export const MIN_DISCOVERY_SHARE = 0.15
 

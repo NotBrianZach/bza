@@ -18,12 +18,25 @@ import DigestList, { DigestItem } from './DigestList'
  * a database. The feeds you browse and the feeds you want curated are not the
  * same list, so both exist and neither was migrated into the other.
  *
- * ── It never builds a digest on page load ─────────────────────────────────
+ * ── A visit is what keeps the feed current ────────────────────────────────
  *
- * Reads the stored one only. Building has consequences — a stored digest enters
- * the novelty history and the next window's duplicate rate — so a page view
- * must not trigger one, or simply visiting the home page twice would make the
- * second digest look stale to itself. Building is an action on /suggest.
+ * There is no scheduler, deliberately. This mounts, reads the stored digest,
+ * and then fires `/api/suggest/maintain` — which polls any feed due a poll,
+ * decays the learned weights by the elapsed interval, and rebuilds the digest
+ * if it has gone stale AND new items arrived. Every one of those is gated on
+ * elapsed time, so calling it on every page load is cheap and calling it at any
+ * frequency is correct.
+ *
+ * Doing the upkeep on arrival rather than on a clock is not a shortcut, and it
+ * settles something a cron could not: a stored digest enters the novelty
+ * history and the next window's duplicate rate, so building weekly regardless
+ * of attendance would make next week's novelty measured against items nobody
+ * ever saw. Building when somebody turns up cannot have that problem.
+ *
+ * The maintenance call is NOT awaited before rendering and its result is not
+ * shown. The strip paints from the stored digest immediately; if maintenance
+ * changed anything, the user sees it next time. A reading app's home page must
+ * not wait on four RSS publishers.
  *
  * ── Signed out it renders nothing ─────────────────────────────────────────
  *
@@ -53,13 +66,31 @@ export default function SuggestedFeedSection({
     if (!isAuthenticated) return
     let cancelled = false
     setLoading(true)
-    // No ?build=1. See the header — a page view must not create a digest.
+    // No ?build=1 here: the strip renders the STORED digest so it paints at
+    // once. Building, if it is needed, is maintenance's job below.
     authedFetch('/api/suggest/digest')
       .then(r => r.json())
       .then((d: DigestPeek) => { if (!cancelled) setPeek(d) })
       .catch(() => { if (!cancelled) setPeek({ error: 'unavailable' }) })
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
+  }, [isAuthenticated])
+
+  /**
+   * Upkeep, fired after mount and deliberately ignored.
+   *
+   * Not awaited, not rendered, and its failure is swallowed — a separate effect
+   * from the read above so that a slow publisher cannot delay the strip, and so
+   * that `cancelled` on the read does not abort it. The route itself reports
+   * per-job errors; nothing here needs them, because every job is idempotent
+   * and the next visit retries.
+   *
+   * `.catch(() => {})` rather than no catch at all: an unhandled rejection in a
+   * mount effect is a console error on a page that is working fine.
+   */
+  useEffect(() => {
+    if (!isAuthenticated) return
+    authedFetch('/api/suggest/maintain', { method: 'POST' }).catch(() => {})
   }, [isAuthenticated])
 
   if (!isAuthenticated) return null

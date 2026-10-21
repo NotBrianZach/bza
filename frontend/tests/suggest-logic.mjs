@@ -1146,6 +1146,84 @@ test('decay pulls a learned weight back but leaves an explicit one alone', () =>
   eq(after[1].weight, 0.9, 'a weight the user typed is a statement, not an estimate')
 })
 
+test('decay by elapsed time is independent of how often it is called', () => {
+  // THE WHOLE POINT of decayByElapsed. With a page visit as the trigger, a
+  // fixed per-call fraction would make a daily visitor decay seven times a
+  // week and a weekly visitor once — two people with identical feedback
+  // ending up with different weights because of their browsing habits.
+  const start = Date.parse('2026-01-01T00:00:00Z')
+  const day = 86_400_000
+  const base = [interest('a', { weight: 0.9, explicitFeedback: false })]
+
+  // Seven daily runs.
+  let daily = base
+  let last = new Date(start).toISOString()
+  for (let d = 1; d <= 7; d++) {
+    const now = new Date(start + d * day).toISOString()
+    const r = M.feedback.decayByElapsed(daily, last, now)
+    daily = r.interests
+    if (r.ran) last = now
+  }
+
+  // One run after the same seven days.
+  const weekly = M.feedback.decayByElapsed(
+    base, new Date(start).toISOString(), new Date(start + 7 * day).toISOString(),
+  ).interests
+
+  near(daily[0].weight, weekly[0].weight, 0.02,
+    `daily ${daily[0].weight} vs weekly ${weekly[0].weight} — must agree over the same elapsed time`)
+})
+
+test('decay compounds rather than scaling linearly', () => {
+  // Linear would overshoot and, past about six weeks, cross the prior and
+  // start pushing the weight out the other side — which is not decay.
+  const one = M.feedback.decayFractionForElapsed(7 * 86_400_000)
+  const two = M.feedback.decayFractionForElapsed(14 * 86_400_000)
+  near(one, 0.15, 0.001)
+  near(two, 1 - 0.85 * 0.85, 0.001)
+  assert(two < one * 2, 'two weeks must close less than twice one week')
+})
+
+test('decay never crosses the prior, however long the gap', () => {
+  const ten = M.feedback.decayByElapsed(
+    [interest('a', { weight: 0.9, explicitFeedback: false })],
+    '2016-01-01T00:00:00Z', '2026-01-01T00:00:00Z',
+  ).interests[0].weight
+  assert(ten >= M.feedback.PRIOR_WEIGHT - 1e-9 && ten <= 0.9,
+    `a decade should land on or above the prior, got ${ten}`)
+  near(ten, M.feedback.PRIOR_WEIGHT, 0.01)
+})
+
+test('a short interval does not run at all', () => {
+  // Below the floor the movement is too small to be worth a write, and writing
+  // would touch updated_at on every page visit.
+  const r = M.feedback.decayByElapsed(
+    [interest('a', { weight: 0.9 })],
+    '2026-01-01T00:00:00Z', '2026-01-01T01:00:00Z',
+  )
+  eq(r.ran, false)
+  eq(r.interests[0].weight, 0.9, 'nothing moves when it does not run')
+})
+
+test('never-decayed is treated as one week, not as the beginning of time', () => {
+  // A user whose account is old but whose interests were added yesterday must
+  // not have them yanked to the prior on first visit.
+  const r = M.feedback.decayByElapsed(
+    [interest('a', { weight: 0.9, explicitFeedback: false })], null, '2026-01-01T00:00:00Z',
+  )
+  eq(r.ran, true)
+  near(r.fraction, 0.15, 0.001)
+})
+
+test('elapsed decay still exempts a weight the user typed', () => {
+  const r = M.feedback.decayByElapsed(
+    [interest('a', { weight: 0.9, explicitFeedback: true })],
+    '2026-01-01T00:00:00Z', '2026-03-01T00:00:00Z',
+  )
+  eq(r.ran, true)
+  eq(r.interests[0].weight, 0.9, 'an explicit weight is a statement, whatever the interval')
+})
+
 test('the discovery floor survives a run of negative feedback', () => {
   let interests = [interest('energy storage', { weight: 0.5 })]
   for (let i = 0; i < 40; i++) {
