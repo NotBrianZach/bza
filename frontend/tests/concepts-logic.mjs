@@ -462,6 +462,50 @@ group('tasks are well formed')
 t('every task names a real knowledge point in some shipped subject',
   TASKS.every(task => !!ontologyForPoint(task.knowledgePointId)),
   TASKS.filter(task => !ontologyForPoint(task.knowledgePointId)).map(t2 => t2.id).join(', '))
+/**
+ * The pool is scoped to the subject being assembled.
+ *
+ * `TASKS` is one global array across every shipped subject, and `assemble`
+ * used to take all of it. Observed in production: an
+ * exponents-and-logarithms session walked all sixteen rational-expression
+ * knowledge points and reported each as "names an unknown knowledge point" —
+ * 24 of 25 entries in `skipped`, burying the real reasons the report exists
+ * to surface.
+ */
+const POOL_NOW = '2026-10-14T12:00:00.000Z'
+/**
+ * Asserted as an invariant over task IDS, not by grepping for a message.
+ *
+ * The first version of this test looked for the string "unknown knowledge
+ * point" in `skipped`. That was worthless: the same change that scoped the
+ * pool also deleted the message, so the test could not fail for either the
+ * right or the wrong reason. The durable claim is about WHICH tasks the report
+ * is entitled to mention.
+ */
+t('the skip report only ever mentions tasks belonging to the subject assembled', (() => {
+  for (const ontology of [O, EXPONENTS_AND_LOGARITHMS]) {
+    const own = new Set(allKnowledgePoints(ontology).flatMap(p =>
+      TASKS.filter(t2 => t2.knowledgePointId === p.id).map(t2 => t2.id)))
+    const a = assemble({ ontology, strengths: {}, now: POOL_NOW, size: 12 })
+    // Generated variants carry ids not in TASKS, so only authored ids are
+    // checked — those are the ones that could have come from another subject.
+    const authored = a.skipped.filter(s => TASKS.some(t2 => t2.id === s.taskId))
+    if (!authored.every(s => own.has(s.taskId))) return false
+  }
+  return true
+})(), JSON.stringify(
+  assemble({ ontology: EXPONENTS_AND_LOGARITHMS, strengths: {}, now: POOL_NOW, size: 12 })
+    .skipped.slice(0, 4)))
+
+t('every task a subject assembles belongs to that subject', (() => {
+  for (const ontology of [O, EXPONENTS_AND_LOGARITHMS]) {
+    const points = new Set(allKnowledgePoints(ontology).map(p => p.id))
+    const a = assemble({ ontology, strengths: {}, now: POOL_NOW, size: 20, variantSeed: 1 })
+    if (!a.tasks.every(t2 => points.has(t2.knowledgePointId))) return false
+  }
+  return true
+})())
+
 t('every task declares its symbols', TASKS.every(task => task.variables.length > 0))
 t('every given parses under its own declarations', TASKS.every(task =>
   tryParse(task.given, task.variables.map(v => v.name)).ok))

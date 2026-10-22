@@ -432,7 +432,23 @@ export function assemble(opts: AssemblyOptions): Assembly {
    * supplied. Generated first within each point is not meaningful — the ordering
    * below is by due-ness and position, and both kinds carry the same point id.
    */
-  const pool: PracticeTask[] = [...TASKS]
+  /**
+   * THIS SUBJECT'S tasks, not every task in the build.
+   *
+   * `TASKS` is one global array covering every shipped subject, and this used
+   * to take all of it. With one subject that was harmless. With two it is a
+   * bug, and a loud one: assembling an exponents-and-logarithms set walked all
+   * sixteen rational-expression knowledge points, failed to find any of them in
+   * this ontology, and reported each as `names an unknown knowledge point` —
+   * 24 of 25 entries in `skipped`.
+   *
+   * Two separate harms. The pool was mostly irrelevant, and the honest
+   * reporting that `skipped` exists for was buried under two dozen false
+   * alarms, hiding the real reasons (the per-concept cap, cooldowns,
+   * interference) that a learner or an author would actually act on.
+   */
+  const ownPoints = new Set(pointConcept.keys())
+  const pool: PracticeTask[] = TASKS.filter(t => ownPoints.has(t.knowledgePointId))
   if (typeof opts.variantSeed === 'number') {
     for (const point of allKnowledgePoints(o)) {
       const entry = entryFor(strengths, point.id)
@@ -443,11 +459,18 @@ export function assemble(opts: AssemblyOptions): Assembly {
 
   const candidates: { task: PracticeTask; conceptId: string; due: number; position: number }[] = []
   for (const task of pool) {
+    /**
+     * Unreachable now, and kept as a type guard rather than a check.
+     *
+     * The pool is filtered to this ontology's own points above, so every task
+     * here has a concept. A task naming a point in NO shipped subject — a real
+     * authoring typo — is caught at test time by "every task names a real
+     * knowledge point in some shipped subject" in tests/concepts-logic.mjs,
+     * which is the stronger place for it: a typo fails the build instead of
+     * silently serving one task fewer.
+     */
     const conceptId = pointConcept.get(task.knowledgePointId)
-    if (!conceptId) {
-      skipped.push({ taskId: task.id, reason: `names an unknown knowledge point ${task.knowledgePointId}` })
-      continue
-    }
+    if (!conceptId) continue
     if (!eligibleConcepts.has(conceptId)) continue    // already reported in `blocked`
     if (!isVerifiableKind(task.kind)) {
       skipped.push({ taskId: task.id, reason: `kind "${task.kind}" cannot be ruled mechanically` })
