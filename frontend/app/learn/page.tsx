@@ -10,9 +10,11 @@ import { TRAVERSAL_GAME } from '@/lib/concepts/traversal'
 import { MASTERY_FLOOR } from '@/lib/concepts/scheduling'
 import ConceptBrowser from '@/components/concepts/ConceptBrowser'
 import ImportReview from '@/components/concepts/ImportReview'
+import PracticeChat from '@/components/concepts/PracticeChat'
 import PracticePanel, { type PracticeTaskView } from '@/components/concepts/PracticePanel'
 import ReviewQueue from '@/components/concepts/ReviewQueue'
 import RpnCalculator from '@/components/concepts/RpnCalculator'
+import Scratchpad, { type ScratchpadHandle } from '@/components/concepts/Scratchpad'
 import TraversalMap, { type TraversalView } from '@/components/concepts/TraversalMap'
 
 export const dynamic = 'force-dynamic'
@@ -75,6 +77,19 @@ export default function LearnPage() {
    * tested, and reachable only by hand-editing a URL.
    */
   const [subject, setSubject] = useState<string | null>(null)
+
+  /**
+   * What the scratchpad and the tutor need from the practice panel.
+   *
+   * `currentTask` is reported up by PracticePanel rather than tracked here —
+   * the index lives there, and a second copy would drift. `pad` is the handle
+   * the tutor writes through. `padEmpty` is the only piece of scratchpad state
+   * the page holds, because disabling "check my working" is a render-time
+   * question while the text itself is pulled at call time.
+   */
+  const [currentTask, setCurrentTask] = useState<PracticeTaskView | null>(null)
+  const [pad, setPad] = useState<ScratchpadHandle | null>(null)
+  const [padEmpty, setPadEmpty] = useState(true)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -182,7 +197,39 @@ export default function LearnPage() {
               verifierConfigured={state.verifier?.configured ?? false}
               onAdvance={load}
               onRefresh={load}
+              onTaskChange={setCurrentTask}
             />
+
+            {/* The scratchpad and the tutor sit WITH the problem rather than on
+                a separate tab. Working something out is part of answering, and
+                a scratchpad you have to navigate away to reach is a scratchpad
+                nobody uses — which is what the old `tools` tab was. */}
+            <div className='grid grid-cols-1 gap-3 xl:grid-cols-2'>
+              <Scratchpad
+                // Keyed on the subject so switching subjects remounts rather
+                // than showing one subject's working under another's heading.
+                key={subject ?? state.subject?.id ?? 'default'}
+                subject={subject ?? state.subject?.id ?? RATIONAL_EXPRESSIONS.subject.id}
+                onHandle={setPad}
+                onEmptyChange={setPadEmpty}
+              />
+              <PracticeChat
+                // The tutor is given the prompt, the given and the demanded
+                // form — the same three things the learner can see. Not the
+                // reference answer: the panel withholds it from the client on
+                // purpose, and a tutor that had it would hand it over.
+                problem={currentTask
+                  ? [
+                      currentTask.prompt,
+                      currentTask.given ? `Given: ${currentTask.given}` : null,
+                      currentTask.form ? `The answer must be in the form: ${currentTask.form}` : null,
+                    ].filter(Boolean).join('\n')
+                  : 'No task is on screen.'}
+                hasWorking={!padEmpty}
+                pad={pad}
+                subjectName={state.subject?.name}
+              />
+            </div>
 
             {/* Nothing is dropped silently. A short set has a reason, and the
                 reason is the most useful thing the scheduler knows. */}
@@ -253,10 +300,14 @@ export default function LearnPage() {
         {tab === 'tools' && (
           <>
             <RpnCalculator />
+            {/* Reworded: this used to call ITSELF the scratchpad, which is no
+                longer true now that there is a real one beside the problem.
+                Leaving that would have sent somebody here looking for their
+                working. */}
             <p className='text-xs text-gray-500'>
-              The workbench editor — Emacs or vim keys, LaTeX preview, and exact computation back
-              into the buffer — lives in the browsing-session workspace. This scratchpad is the
-              low-latency half: no round trip, and the record it emits is the one Emacs Calc writes.
+              An RPN calculator, for arithmetic you want exact rather than typed into a
+              problem. Your working belongs in the scratchpad on the Practice tab — it is
+              saved, it renders LaTeX, and the tutor there can read it.
             </p>
           </>
         )}

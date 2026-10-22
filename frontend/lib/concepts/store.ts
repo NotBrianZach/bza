@@ -279,6 +279,41 @@ export async function resolveReview(
 }
 
 // ---------------------------------------------------------------------------
+// Scratchpad
+// ---------------------------------------------------------------------------
+
+/**
+ * The working buffer for one subject. Empty string when there is none.
+ *
+ * Empty rather than null, because every caller wants to put it in a textarea
+ * and a null there becomes the literal string "null" on first render. Absence
+ * of a buffer and an empty buffer are also genuinely the same thing here —
+ * unlike a missing strength row, there is nothing to distinguish.
+ */
+export async function loadScratchpad(userId: string, subjectId: string): Promise<string> {
+  const { data, error } = await db()
+    .from('concept_scratchpads')
+    .select('content')
+    .eq('user_id', userId)
+    .eq('subject_id', subjectId)
+    .maybeSingle()
+  if (error) throw new Error(`could not load the scratchpad: ${error.message}`)
+  return (data as { content?: string } | null)?.content ?? ''
+}
+
+export async function saveScratchpad(
+  userId: string, subjectId: string, content: string,
+): Promise<void> {
+  const { error } = await db()
+    .from('concept_scratchpads')
+    .upsert(
+      { user_id: userId, subject_id: subjectId, content, updated_at: new Date().toISOString() },
+      { onConflict: 'user_id,subject_id' },
+    )
+  if (error) throw new Error(`could not save the scratchpad: ${error.message}`)
+}
+
+// ---------------------------------------------------------------------------
 // Traversal
 // ---------------------------------------------------------------------------
 

@@ -65,13 +65,22 @@ interface RulingResponse {
 }
 
 export default function PracticePanel({
-  tasks, verifierConfigured, onAdvance, onRefresh,
+  tasks, verifierConfigured, onAdvance, onRefresh, onTaskChange,
 }: {
   tasks: PracticeTaskView[]
   verifierConfigured: boolean
   /** Called when a task is settled either way, so the parent can refresh progress. */
   onAdvance?: () => void
   onRefresh?: () => void
+  /**
+   * Which task is on screen.
+   *
+   * Reported upward rather than letting the parent track the index itself,
+   * because the index lives here and two copies of "which task is current"
+   * would drift the moment either side changed how it advances. The tutor
+   * panel needs the current problem, and this is the only place that knows it.
+   */
+  onTaskChange?: (task: PracticeTaskView | null) => void
 }) {
   const [index, setIndex] = useState(0)
   const [answer, setAnswer] = useState('')
@@ -87,6 +96,11 @@ export default function PracticePanel({
     setAssistance('none')
     setResult(null)
     shownAt.current = Date.now()
+    onTaskChange?.(task)
+    // `task` is intentionally keyed on its id: the object identity changes on
+    // every parent refresh, and depending on it would reset the answer box
+    // under somebody mid-typing.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [task?.id])
 
   const submit = useCallback(async () => {
