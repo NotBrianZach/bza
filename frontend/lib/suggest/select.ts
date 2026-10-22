@@ -142,15 +142,30 @@ interface SelectionState {
  * and is still a repeat. What the penalty is defending against is the specific
  * pair, not the average of the set.
  */
-function repeatPenalty(s: ScoredItem, state: SelectionState): number {
+function repeatPenalty(mine: Set<string>, state: SelectionState): number {
   if (state.chosenTokens.length === 0) return 0
-  const mine = new Set([
-    ...contentTokens(s.item.title),
-    ...s.item.topicTags.map(t => t.value),
-  ])
   let worst = 0
   for (const prev of state.chosenTokens) worst = Math.max(worst, jaccard(mine, prev))
   return worst
+}
+
+/**
+ * Token set per candidate, built once for the whole selection.
+ *
+ * The greedy loop re-penalises every remaining candidate on every round, so
+ * tokenizing inside `repeatPenalty` meant each candidate's title was tokenized
+ * once per slot — twenty times over a twenty-item digest, and for a seven
+ * hundred item window that is fourteen thousand tokenizations to do the work of
+ * seven hundred.
+ *
+ * Smaller than the clustering version of the same mistake, which is what
+ * actually exhausted the Worker, but the same mistake.
+ */
+function tokenSets(candidates: ScoredItem[]): Map<string, Set<string>> {
+  return new Map(candidates.map(s => [
+    s.item.itemId,
+    new Set([...contentTokens(s.item.title), ...s.item.topicTags.map(t => t.value)]),
+  ]))
 }
 
 /**
@@ -299,6 +314,8 @@ export function selectDigest(
   // the final reason is kept, because the earlier ones were about a state that
   // no longer exists and reporting them would be noise.
   const lastBlock = new Map<string, string>()
+  // Built once, outside the greedy loop. See `tokenSets`.
+  const tokens = tokenSets(eligible)
   const remaining = new Set(eligible.map(s => s.item.itemId))
   const byId = new Map(eligible.map(s => [s.item.itemId, s]))
 
@@ -346,7 +363,7 @@ export function selectDigest(
       }
 
       const p = {
-        repeat: repeatPenalty(s, state),
+        repeat: repeatPenalty(tokens.get(id) ?? new Set(), state),
         source: sourcePenalty(s, state),
         topic: topicPenalty(s, state),
       }
@@ -370,10 +387,9 @@ export function selectDigest(
       alsoQualifiedFor: qualifyingBuckets(s, thresholds).filter(b => b !== bucket),
       backfilled: false,
     })
-    state.chosenTokens.push(new Set([
-      ...contentTokens(s.item.title),
-      ...s.item.topicTags.map(t => t.value),
-    ]))
+    // The same precomputed set, not a fresh one — identical contents, and
+    // rebuilding it here would re-tokenize once per chosen item for no gain.
+    state.chosenTokens.push(tokens.get(s.item.itemId) ?? new Set())
     state.sourceCount.set(s.feed.feedId, (state.sourceCount.get(s.feed.feedId) ?? 0) + 1)
     for (const tag of s.item.topicTags.map(t => t.value)) {
       state.topicCount.set(tag, (state.topicCount.get(tag) ?? 0) + 1)

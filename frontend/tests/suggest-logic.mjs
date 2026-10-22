@@ -607,6 +607,144 @@ test('a cluster id is stable across runs for the same inputs', () => {
   )
 })
 
+test('the inverted-index pre-filter yields IDENTICAL clusters to brute force', () => {
+  // The pre-filter is the fix for a production outage: clustering was
+  // re-tokenizing both titles on every pair, 1,668ms of CPU at 698 items, and
+  // the Worker answered "exceeded resource limits" for every digest operation.
+  //
+  // It is only legitimate if it is EXACT. A pair sharing no headline token and
+  // no entity cannot clear the threshold — the remaining term is
+  // usable.time × time ≤ 0.15 against a threshold of 0.62 — so skipping those
+  // pairs must change nothing. This asserts that on a corpus built to cluster,
+  // by forcing the brute-force path with weights that defeat the pre-filter's
+  // own precondition and comparing.
+  /**
+   * What it actually takes to cluster under DEFAULT_SIMILARITY, derived rather
+   * than guessed — the first version of this fixture clustered nothing because
+   * the arithmetic was done wrong.
+   *
+   *   0.5·headline + 0.35·entity + 0.15·time ≥ 0.62
+   *
+   * Simultaneous items have time = 1, which leaves 0.5·h + 0.35·e ≥ 0.47. So
+   * with NO entity overlap a pair needs headline jaccard ≥ 0.94 — practically
+   * identical titles — and with full entity overlap it needs only ≥ 0.24.
+   *
+   * These variants share four words and an acronym, so headline ≈ 0.29 and
+   * entity = 1, scoring ≈ 0.65. They cluster, and they cluster for a reason
+   * this file can state.
+   */
+  const corpus = []
+  const filler = 'alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu nu xi omicron pi rho sigma tau upsilon phi chi psi omega'.split(' ')
+  const code = n => `Q${String.fromCharCode(65 + (n % 26))}${String.fromCharCode(65 + ((n * 3) % 26))}`
+  for (let story = 0; story < 20; story++) {
+    const shared = [code(story), `subject${story}`, `matter${story}`, `report${story}`, `case${story}`]
+    for (let variant = 0; variant < 3; variant++) {
+      const unique = Array.from({ length: 6 }, (_, k) => filler[(story * 7 + variant * 11 + k) % filler.length])
+      corpus.push(item({
+        itemId: `s${story}v${variant}`,
+        feedId: `f${(story + variant) % 4}`,
+        title: [...shared, ...unique].join(' '),
+        publishedAt: new Date(Date.parse(NOW) - story * 600_000).toISOString(),
+      }))
+    }
+  }
+
+  const fast = M.cluster.clusterStories(corpus)
+  // `exhaustive` skips the pre-filter and leaves the weights and threshold
+  // alone, which is the only way to compare the two paths on equal terms. The
+  // first version of this test passed both calls the same weights, took the
+  // fast path twice, and asserted a tautology.
+  const brute = M.cluster.clusterStories(corpus, { exhaustive: true })
+
+  const shape = r => [...r.clusters]
+    .map(c => [...c.itemIds].sort().join(','))
+    .sort()
+    .join(' | ')
+
+  // Same inputs, same weights: the two calls differ only in which internal
+  // path ran, so the clusters must match exactly.
+  eq(shape(fast), shape(brute))
+  // And the fixture must actually cluster, or this asserts nothing.
+  assert(fast.clusters.length < corpus.length,
+    `fixture precondition: something must cluster, got ${fast.clusters.length} of ${corpus.length}`)
+  assert(fast.clusters.some(c => c.itemIds.length >= 3),
+    'the variants of a story should land in one cluster')
+})
+
+test('the pre-filter indexes ENTITIES too, which entity-heavy weights need', () => {
+  // Under the default weights the title postings alone are exact: a pair with
+  // no shared headline token maxes out at 0.35 + 0.15 = 0.50, below the 0.62
+  // threshold, so it cannot cluster and the entity postings are redundant.
+  // That is why sabotaging them changes nothing by default — and why it would
+  // be wrong to conclude they are dead code.
+  //
+  // Make entity the dominant term and they become load-bearing: a pair sharing
+  // an entity and NO title token scores 0.8 + 0.1 = 0.9 and must cluster, and
+  // only the entity posting list can find it.
+  const weights = { headline: 0.1, time: 0.1, entity: 0.8, embedding: 0 }
+  // The shared entity is in the SUMMARY, not the title — and that detail is the
+  // whole fixture. `similarityPrepared` compares `contentTokens(item.title)`,
+  // while entities are extracted from title AND summary. Put the acronym in
+  // the title and it becomes a shared TITLE token too, so the title postings
+  // find the pair and sabotaging the entity postings changes nothing. An
+  // earlier version of this test did exactly that and could not fail.
+  const a = item({
+    itemId: 'ea', title: 'Zebra quartz vellum', publishedAt: NOW,
+    summary: 'Figures published by NIESR this morning.',
+  })
+  const b = item({
+    itemId: 'eb', title: 'Plumbago syzygy wainscot', publishedAt: NOW,
+    summary: 'A revision from NIESR follows.',
+  })
+  const ta = new Set(M.tags.contentTokens(a.title))
+  const tb = new Set(M.tags.contentTokens(b.title))
+  assert([...ta].every(t => !tb.has(t)), 'fixture: titles must share no content word')
+  const ea = new Set(a.entities.map(e => e.value))
+  const eb = new Set(b.entities.map(e => e.value))
+  assert([...ea].some(e => eb.has(e)), `fixture: must share an entity — ${[...ea]} vs ${[...eb]}`)
+
+  const fast = M.cluster.clusterStories([a, b], { weights })
+  const brute = M.cluster.clusterStories([a, b], { weights, exhaustive: true })
+  eq(fast.clusters.length, 1, 'a shared entity under entity-heavy weights must cluster')
+  eq(fast.clusters.length, brute.clusters.length)
+})
+
+test('a weight config that defeats the pre-filter falls back rather than breaking', () => {
+  // If time alone could clear the threshold, a pair sharing no vocabulary
+  // COULD cluster, so the pre-filter is invalid and the code must compare
+  // everything. Two items with nothing in common, published together, and a
+  // threshold below the time weight: they must cluster.
+  const a = item({ itemId: 'a', title: 'Byzantine ceramics in Ravenna', publishedAt: NOW })
+  const b = item({ itemId: 'b', title: 'Lithium brine permits in Chile', publishedAt: NOW })
+  const r = M.cluster.clusterStories([a, b], {
+    weights: { headline: 0, time: 1, entity: 0, embedding: 0 },
+    threshold: 0.5,
+  })
+  eq(r.clusters.length, 1, 'with all weight on time, simultaneous items are one story')
+})
+
+test('clustering stays fast as the corpus grows', () => {
+  // A regression guard with teeth. The outage was quadratic re-tokenization,
+  // so this asserts the shape of the cost rather than an absolute number:
+  // tripling the corpus must not multiply the time by anything like nine.
+  const mk = n => Array.from({ length: n }, (_, i) => item({
+    itemId: `b${i}`, feedId: `f${i % 6}`,
+    title: `report number ${i} concerning subject ${i % 40} and matter ${i % 17}`,
+    publishedAt: new Date(Date.parse(NOW) - i * 60_000).toISOString(),
+  }))
+  const time = n => {
+    const corpus = mk(n)
+    const t0 = process.cpuUsage()
+    M.cluster.clusterStories(corpus)
+    return process.cpuUsage(t0).user / 1000
+  }
+  time(150) // warm, so JIT compilation is not charged to the first measurement
+  const small = Math.max(1, time(150))
+  const large = Math.max(1, time(450))
+  assert(large < small * 9,
+    `tripling the corpus should not be ~9x the work: ${small.toFixed(0)}ms → ${large.toFixed(0)}ms`)
+})
+
 test('addsDistinctContribution refuses a second item unless the story is contested', () => {
   const a = item({ itemId: 'a', feedId: 'f1', articleType: 'news' })
   const b = item({ itemId: 'b', feedId: 'f2', articleType: 'analysis' })

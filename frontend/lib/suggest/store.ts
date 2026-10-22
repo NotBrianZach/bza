@@ -639,6 +639,15 @@ export interface StaleItem {
   text: string | null
   /** The publisher's own categories, re-derived from the stored declared tags. */
   declaredTags: string[]
+  /**
+   * A fingerprint of the labels as they stand, so the pass can report how many
+   * rows it CHANGED rather than how many it examined.
+   *
+   * Returned from the same query that fetched the row. It used to be a separate
+   * `loadItemLabelSummary` call per item — a textbook N+1 that doubled the
+   * round trips of every batch to produce one number for a log line.
+   */
+  labelFingerprint: string
 }
 
 /**
@@ -661,24 +670,32 @@ export interface StaleItem {
 export async function staleItems(version: number, limit = 50): Promise<StaleItem[]> {
   const { data, error } = await db()
     .from('suggest_items')
-    .select('id, feed_id, title, summary, text_content, topic_tags')
+    .select('id, feed_id, title, summary, text_content, topic_tags, entities, article_type')
     .lt('classifier_version', version)
     .is('labels_reviewed_at', null)
     .order('classifier_version', { ascending: true })
     .limit(limit)
   if (error) throw new Error(`could not list items needing re-classification: ${error.message}`)
 
-  return ((data ?? []) as Record<string, unknown>[]).map(r => ({
-    itemId: String(r.id),
-    feedId: String(r.feed_id),
-    title: String(r.title ?? ''),
-    summary: typeof r.summary === 'string' ? r.summary : null,
-    text: typeof r.text_content === 'string' ? r.text_content : null,
-    declaredTags: coerceLabels(r.topic_tags)
-      .filter(t => t.confidence === 'declared')
-      .map(t => t.value),
-  }))
+  return ((data ?? []) as Record<string, unknown>[]).map(r => {
+    const tags = coerceLabels(r.topic_tags)
+    return {
+      itemId: String(r.id),
+      feedId: String(r.feed_id),
+      title: String(r.title ?? ''),
+      summary: typeof r.summary === 'string' ? r.summary : null,
+      text: typeof r.text_content === 'string' ? r.text_content : null,
+      declaredTags: tags.filter(t => t.confidence === 'declared').map(t => t.value),
+      labelFingerprint: fingerprint(
+        coerceArticleType(r.article_type).value, coerceLabels(r.entities).length, tags.length,
+      ),
+    }
+  })
 }
+
+/** One shape for the fingerprint, so the before and after cannot be computed differently. */
+export const fingerprint = (type: string, entities: number, tags: number) =>
+  `${type}/${entities}e/${tags}t`
 
 /** How many items are still behind, so a draining backlog is visible. */
 export async function staleItemCount(version: number): Promise<number> {
@@ -689,32 +706,6 @@ export async function staleItemCount(version: number): Promise<number> {
     .is('labels_reviewed_at', null)
   if (error) throw new Error(`could not count stale items: ${error.message}`)
   return count ?? 0
-}
-
-/**
- * A one-line fingerprint of an item's current labels.
- *
- * Read before a re-classification writes, purely so the pass can report how
- * many rows it actually CHANGED rather than how many it examined. Those two
- * numbers differ a lot — most rows re-label identically — and reporting only
- * the second would make every pass look like it did a great deal of work.
- *
- * A fingerprint rather than the full labels: the comparison only needs to know
- * whether something moved, and holding two complete label sets per row for that
- * is memory spent on a log line.
- */
-export async function loadItemLabelSummary(itemId: string): Promise<string | null> {
-  const { data, error } = await db()
-    .from('suggest_items')
-    .select('article_type, entities, topic_tags')
-    .eq('id', itemId)
-    .maybeSingle()
-  if (error || !data) return null
-  const r = data as Record<string, unknown>
-  const type = coerceArticleType(r.article_type).value
-  const entities = coerceLabels(r.entities).length
-  const tags = coerceLabels(r.topic_tags).length
-  return `${type}/${entities}e/${tags}t`
 }
 
 /**
@@ -755,6 +746,13 @@ export async function saveClusterIds(assignment: Map<string, string>): Promise<v
   if (entries.length === 0) return
   // One update per distinct cluster rather than per item: a developing story of
   // twelve items is one statement instead of twelve.
+  //
+  // THE CALLER MUST PASS ONLY WHAT CHANGED. One statement per cluster is still
+  // one HTTP round trip per cluster, and almost every cluster is a singleton —
+  // so handing this the full assignment for a 698-item corpus meant ~690
+  // sequential requests to Supabase. Measured at 16.7s wall for a digest build
+  // whose actual computation was 79ms, and comfortably past a Worker's
+  // subrequest limit. See `changedClusterIds`.
   const byCluster = new Map<string, string[]>()
   for (const [itemId, clusterId] of entries) {
     const list = byCluster.get(clusterId) ?? []
@@ -768,6 +766,45 @@ export async function saveClusterIds(assignment: Map<string, string>): Promise<v
       .in('id', itemIds)
     if (error) throw new Error(`could not save the story clusters: ${error.message}`)
   }
+}
+
+/**
+ * The subset of an assignment actually worth writing.
+ *
+ * Two reductions, and together they take a routine run from ~690 writes to
+ * approximately none:
+ *
+ *  - **Singletons are not persisted at all.** An item in a cluster of one needs
+ *    no stored id, because every reader already treats a null `story_cluster_id`
+ *    as "its own cluster" — `selectDigest` falls back to
+ *    `clusters.get(id) ?? storyClusterId ?? itemId`, and `recordDigest`
+ *    snapshots the in-memory assignment regardless. So writing them buys
+ *    nothing and costs a round trip each.
+ *  - **Unchanged ids are skipped.** Clustering is deterministic over the same
+ *    window, so a steady corpus re-derives the same ids every run. Only a
+ *    genuine change is a write.
+ *
+ * The digest's own snapshot is unaffected: `suggest_digest_items` records the
+ * cluster id from the in-memory assignment, so the duplicate-rate measurement
+ * still sees every item's cluster whether or not it was persisted.
+ */
+export function changedClusterIds(
+  items: FeedItem[], assignment: Map<string, string>,
+): Map<string, string> {
+  const sizes = new Map<string, number>()
+  for (const clusterId of assignment.values()) {
+    sizes.set(clusterId, (sizes.get(clusterId) ?? 0) + 1)
+  }
+
+  const changed = new Map<string, string>()
+  for (const item of items) {
+    const clusterId = assignment.get(item.itemId)
+    if (!clusterId) continue
+    if ((sizes.get(clusterId) ?? 0) < 2) continue
+    if (item.storyClusterId === clusterId) continue
+    changed.set(item.itemId, clusterId)
+  }
+  return changed
 }
 
 // ---------------------------------------------------------------------------

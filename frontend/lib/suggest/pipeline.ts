@@ -304,7 +304,24 @@ export async function buildDigest(
   }
 
   const windowDays = opts.windowDays ?? 14
-  const raw = await store.loadCandidates(feeds.map(f => f.feedId), windowDays)
+  /**
+   * The candidate window, with its cap reported.
+   *
+   * `loadCandidates` has always had a 1000-row limit and never said when it hit
+   * it — a silent cap, which is the one thing the rest of this pipeline refuses
+   * to do. It did not matter while the corpus was small; at 698 items and
+   * growing it is about to, and a digest quietly drawn from the newest 1000 of
+   * 3000 items would look like a ranking problem rather than a window problem.
+   *
+   * Asking for `CANDIDATE_LIMIT + 1` is how the cap becomes detectable: if the
+   * extra row comes back, there was more.
+   */
+  const CANDIDATE_LIMIT = 1000
+  const fetched = await store.loadCandidates(
+    feeds.map(f => f.feedId), windowDays, CANDIDATE_LIMIT + 1,
+  )
+  const capped = fetched.length > CANDIDATE_LIMIT
+  const raw = capped ? fetched.slice(0, CANDIDATE_LIMIT) : fetched
   if (raw.length === 0) {
     blockers.push(`no items were collected in the last ${windowDays} days — poll the feeds first`)
     return {
@@ -319,7 +336,11 @@ export async function buildDigest(
   // pull two genuinely distinct stories into one cluster through it.
   const { unique, duplicates } = dedupeExact(raw)
   const { assignment } = clusterStories(unique)
-  await store.saveClusterIds(assignment)
+  // Only what changed, and never a singleton. Writing the whole assignment was
+  // one HTTP round trip per cluster — ~690 of them on a 698-item corpus, which
+  // is what made a digest build take 16.7 seconds against 79ms of actual
+  // computation. See `changedClusterIds`.
+  await store.saveClusterIds(store.changedClusterIds(unique, assignment))
 
   const shown = await store.recentlyShown(userId)
   const recentlyShown = shown.map(s => new Set([...contentTokens(s.title), ...s.topicTags]))
@@ -371,6 +392,11 @@ export async function buildDigest(
   if (duplicates.length > 0) {
     digest.notes.push(
       `${duplicates.length} item${duplicates.length === 1 ? '' : 's'} were the same article arriving from more than one feed, and were collapsed`,
+    )
+  }
+  if (capped) {
+    digest.notes.push(
+      `only the newest ${CANDIDATE_LIMIT} items from the last ${windowDays} days were considered — there are more, so narrow the window or disable a very busy feed if you want the rest in scope`,
     )
   }
 
@@ -457,11 +483,12 @@ export async function reclassifyBatch(
     })
     const entities = extractEntities(headline, item.summary)
 
-    const before = await store.loadItemLabelSummary(item.itemId)
     await store.saveLabels(item.itemId, { topicTags, entities, articleType }, CLASSIFIER_VERSION)
 
-    const after = `${articleType.value}/${entities.length}e/${topicTags.length}t`
-    if (before && before !== after) {
+    // The "before" came back with the row, so this costs no extra round trip.
+    const before = item.labelFingerprint
+    const after = store.fingerprint(articleType.value, entities.length, topicTags.length)
+    if (before !== after) {
       result.changed++
       if (result.examples.length < 5) {
         result.examples.push({ title: headline.slice(0, 60), from: before, to: after })
