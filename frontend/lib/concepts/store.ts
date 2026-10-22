@@ -279,6 +279,121 @@ export async function resolveReview(
 }
 
 // ---------------------------------------------------------------------------
+// Claims
+// ---------------------------------------------------------------------------
+
+export interface Claim {
+  id: string
+  subjectId: string
+  conceptId: string
+  claimedAt: string
+  note: string | null
+  verifiedAt: string | null
+  revokedAt: string | null
+  revokedReason: string | null
+}
+
+/**
+ * Concept ids with a LIVE claim — asserted, not yet revoked, not yet verified.
+ *
+ * A verified claim is deliberately excluded. Once an unaided success has put
+ * the concept's real strength over the floor, the strength table says it and
+ * the claim grants nothing further; leaving it live would mean a concept stayed
+ * "open because you said so" forever after it became open on merit.
+ */
+export async function liveClaims(userId: string, subjectId: string): Promise<Set<string>> {
+  const { data, error } = await db()
+    .from('concept_claims')
+    .select('concept_id')
+    .eq('user_id', userId)
+    .eq('subject_id', subjectId)
+    .is('revoked_at', null)
+    .is('verified_at', null)
+  if (error) throw new Error(`could not load the claims: ${error.message}`)
+  return new Set(((data ?? []) as { concept_id: string }[]).map(r => r.concept_id))
+}
+
+/** Every claim for a subject, including dead ones — the history is the point. */
+export async function allClaims(userId: string, subjectId: string): Promise<Claim[]> {
+  const { data, error } = await db()
+    .from('concept_claims')
+    .select('id, subject_id, concept_id, claimed_at, note, verified_at, revoked_at, revoked_reason')
+    .eq('user_id', userId)
+    .eq('subject_id', subjectId)
+    .order('claimed_at', { ascending: false })
+  if (error) throw new Error(`could not load the claims: ${error.message}`)
+  return ((data ?? []) as Record<string, unknown>[]).map(r => ({
+    id: String(r.id),
+    subjectId: String(r.subject_id),
+    conceptId: String(r.concept_id),
+    claimedAt: String(r.claimed_at),
+    note: typeof r.note === 'string' ? r.note : null,
+    verifiedAt: typeof r.verified_at === 'string' ? r.verified_at : null,
+    revokedAt: typeof r.revoked_at === 'string' ? r.revoked_at : null,
+    revokedReason: typeof r.revoked_reason === 'string' ? r.revoked_reason : null,
+  }))
+}
+
+/**
+ * Assert that you already know a concept.
+ *
+ * Returns false when a live claim already exists, rather than throwing: the
+ * unique partial index makes a second one impossible, and "you have already
+ * claimed this" is an answer rather than an error.
+ */
+export async function claimConcept(
+  userId: string, subjectId: string, conceptId: string, note: string | null,
+): Promise<boolean> {
+  const { error } = await db()
+    .from('concept_claims')
+    .insert({ user_id: userId, subject_id: subjectId, concept_id: conceptId, note })
+  if (error) {
+    if (error.code === '23505') return false
+    throw new Error(`could not record the claim: ${error.message}`)
+  }
+  return true
+}
+
+/**
+ * Settle a live claim — revoked because it failed, or verified because it held.
+ *
+ * Guarded on both `revoked_at` and `verified_at` being null, so two concurrent
+ * rulings cannot both settle one claim and the second quietly overwrite the
+ * first's reason.
+ */
+export async function settleClaim(
+  userId: string, conceptId: string,
+  outcome: { verified: true } | { verified: false; reason: string },
+): Promise<boolean> {
+  const patch = outcome.verified
+    ? { verified_at: new Date().toISOString() }
+    : { revoked_at: new Date().toISOString(), revoked_reason: outcome.reason }
+
+  const { data, error } = await db()
+    .from('concept_claims')
+    .update(patch)
+    .eq('user_id', userId)
+    .eq('concept_id', conceptId)
+    .is('revoked_at', null)
+    .is('verified_at', null)
+    .select('id')
+  if (error) throw new Error(`could not settle the claim: ${error.message}`)
+  return (data ?? []).length > 0
+}
+
+/** Drop a claim the learner withdrew themselves. Not a failure; no reason kept. */
+export async function withdrawClaim(userId: string, conceptId: string): Promise<void> {
+  const { error } = await db()
+    .from('concept_claims')
+    .update({ revoked_at: new Date().toISOString(), revoked_reason: 'withdrawn by you' })
+    .eq('user_id', userId)
+    .eq('concept_id', conceptId)
+    .is('revoked_at', null)
+    .is('verified_at', null)
+  if (error) throw new Error(`could not withdraw the claim: ${error.message}`)
+}
+
+// ---------------------------------------------------------------------------
 // Scratchpad
 // ---------------------------------------------------------------------------
 

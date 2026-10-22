@@ -709,6 +709,58 @@ t('it becomes introducible once its prerequisite is strong', (() => {
   }
   return introducible(O, strong, 'factoring-quadratics', NOW)
 })())
+/**
+ * Claims. The safety argument is entirely in these four assertions.
+ *
+ * A claim is a request to be tested: it opens its OWN concept and nothing else.
+ * If any of these fail, claiming has become a way to skip the gate rather than
+ * a way to be tested early, and the ordering guarantee is gone.
+ */
+group('scheduling — a claim opens its own concept and nothing else')
+t('claiming a blocked concept makes it introducible', (() => {
+  const claimed = new Set(['factoring-quadratics'])
+  return !introducible(O, {}, 'factoring-quadratics', NOW)
+    && introducible(O, {}, 'factoring-quadratics', NOW, claimed)
+})())
+
+t('a claim does NOT satisfy that concept as somebody else\'s prerequisite', (() => {
+  // THE central property. Claiming factoring must not open the things that
+  // rest on factoring — that would serve partial fractions to somebody who
+  // cannot factor, which is the exact failure the ordering prevents.
+  const claimed = new Set(['factoring-quadratics'])
+  const dependents = O.concepts.filter(c =>
+    prerequisitesOf(O, c.id).includes('factoring-quadratics'))
+  if (dependents.length === 0) return false   // fixture precondition
+  return dependents.every(c => !introducible(O, {}, c.id, NOW, claimed))
+})(), O.concepts.filter(c => prerequisitesOf(O, c.id).includes('factoring-quadratics'))
+  .map(c => c.id).join(', '))
+
+t('a claim writes no strength and counts as no demonstration', (() => {
+  // `summarise` reports it as introducible AND claimed, but `strongConcepts`
+  // counts strength — so a claim must not move that number at all.
+  const bare = summarise(O, {}, NOW)
+  const withClaim = summarise(O, {}, NOW, new Set(['factoring-quadratics']))
+  const c = withClaim.concepts.find(x => x.conceptId === 'factoring-quadratics')
+  return withClaim.strongConcepts === bare.strongConcepts
+    && withClaim.demonstrated === bare.demonstrated
+    && c.introducible === true
+    && c.claimed === true
+})())
+
+t('assemble serves a claimed concept\'s tasks, and still blocks its dependents', (() => {
+  const a = assemble({
+    ontology: O, strengths: {}, now: NOW, size: 20,
+    claimed: new Set(['factoring-quadratics']),
+  })
+  const points = new Set(conceptById(O, 'factoring-quadratics').knowledgePoints.map(p => p.id))
+  const served = a.tasks.some(t2 => points.has(t2.knowledgePointId))
+  const dependents = O.concepts
+    .filter(c => prerequisitesOf(O, c.id).includes('factoring-quadratics'))
+    .map(c => c.id)
+  const stillBlocked = dependents.every(id => a.blocked.some(b => b.conceptId === id))
+  return served && stillBlocked
+})())
+
 t('…and stops being introducible once that strength decays away', (() => {
   const strong = {}
   for (const point of conceptById(O, 'polynomial-arithmetic').knowledgePoints) {

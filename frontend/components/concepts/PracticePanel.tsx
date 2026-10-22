@@ -60,6 +60,8 @@ interface RulingResponse {
   scored?: boolean
   propagated?: Propagation[]
   concept?: string | null
+  /** Set when this ruling settled a claim on the concept. See /api/learn/verify. */
+  claim?: 'revoked' | 'verified' | null
   warning?: string
   error?: string
 }
@@ -364,6 +366,26 @@ function VerdictCard({ verdict, result }: { verdict: Verdict; result: RulingResp
 
       {result.scored === false && verdict.ruling !== 'inconclusive' && result.warning && (
         <p className='mt-2 text-[11px] text-amber-300'>{result.warning}</p>
+      )}
+
+      {/* A settled claim is reported here, at the ruling, because that is the
+          moment it happened. Discovering a withdrawn claim later, from a
+          shorter task list, would be baffling. Worded without reproach: a
+          wrong answer after claiming is ordinary, and the useful content is
+          what changed. */}
+      {result.claim === 'revoked' && (
+        <p className='mt-2 rounded border border-amber-900/50 bg-amber-950/30 px-2 py-1.5 text-[11px] text-amber-200'>
+          Your claim on this concept has been withdrawn — it is back behind its
+          prerequisites. Nothing else changed, and you can claim it again once you
+          want another go at it.
+        </p>
+      )}
+      {result.claim === 'verified' && (
+        <p className='mt-2 rounded border border-emerald-900/50 bg-emerald-950/30 px-2 py-1.5 text-[11px] text-emerald-200'>
+          Claim made good — this concept is now at or above the mastery floor on
+          its own evidence, so it no longer rests on the claim and what depends
+          on it has opened.
+        </p>
       )}
 
       {/* Named, not just counted — it is only reassuring if it says which. */}

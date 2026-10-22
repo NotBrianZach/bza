@@ -91,6 +91,37 @@ export default function LearnPage() {
   const [pad, setPad] = useState<ScratchpadHandle | null>(null)
   const [padEmpty, setPadEmpty] = useState(true)
 
+  const [claiming, setClaiming] = useState<string | null>(null)
+  const [claimNote, setClaimNote] = useState<string | null>(null)
+
+  /**
+   * Claim a concept, then reload so its tasks appear immediately.
+   *
+   * The reload is the point: a claim that did not visibly open anything would
+   * look like it had failed. The note returned by the route is shown verbatim
+   * rather than reworded here, so the one explanation of what a claim does and
+   * does not do lives in exactly one place.
+   */
+  const claim = useCallback(async (conceptId: string, conceptName: string) => {
+    setClaiming(conceptId)
+    setClaimNote(null)
+    try {
+      const res = await authedFetch('/api/learn/claims', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subject: subject ?? undefined, conceptId }),
+      })
+      const d = await res.json()
+      setClaimNote(d.error ? `could not claim ${conceptName}: ${d.error}` : d.effect)
+      if (!d.error) await load()
+    } catch {
+      setClaimNote(`could not claim ${conceptName}`)
+    } finally {
+      setClaiming(null)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subject])
+
   const load = useCallback(async () => {
     setLoading(true)
     try {
@@ -241,13 +272,34 @@ export default function LearnPage() {
                   {Math.round(MASTERY_FLOOR * 100)}% strength. This gate does not relax — serving a
                   problem whose prerequisites are unmet is the failure the ordering exists to prevent.
                 </p>
-                <ul className='mt-1.5 space-y-0.5 text-gray-400'>
+                {/* Each blocked concept can be CLAIMED. That is the escape
+                    hatch for somebody who already knows this material and is
+                    otherwise made to start at the bottom of the subject — the
+                    real reason /learn looked like it had three concepts in it.
+                    A claim opens the concept and nothing below it, and one
+                    unaided wrong answer withdraws it. */}
+                <ul className='mt-1.5 space-y-1 text-gray-400'>
                   {state.blocked!.map(b => (
-                    <li key={b.conceptId}>
-                      {b.conceptName} — needs {b.missing.map(m => m.conceptName).join(', ') || 'nothing (already open)'}
+                    <li key={b.conceptId} className='flex flex-wrap items-center gap-2'>
+                      <span>
+                        {b.conceptName} — needs {b.missing.map(m => m.conceptName).join(', ') || 'nothing (already open)'}
+                      </span>
+                      <button
+                        onClick={() => claim(b.conceptId, b.conceptName)}
+                        disabled={claiming === b.conceptId}
+                        title='Say you already know this. It opens the problems now — it does not mark you as knowing it, and getting one wrong unaided withdraws the claim.'
+                        className='rounded-full border border-gray-600 px-2 py-0.5 text-[11px] text-gray-300 hover:bg-gray-800 disabled:opacity-40'
+                      >
+                        {claiming === b.conceptId ? 'claiming…' : 'I already know this'}
+                      </button>
                     </li>
                   ))}
                 </ul>
+                {claimNote && (
+                  <p className='mt-2 rounded border border-sky-900/50 bg-sky-950/30 px-2 py-1.5 text-[11px] text-sky-200'>
+                    {claimNote}
+                  </p>
+                )}
               </div>
             )}
 

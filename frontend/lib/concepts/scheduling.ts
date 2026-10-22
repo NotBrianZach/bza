@@ -203,7 +203,26 @@ export function conceptStrength(
  */
 export function introducible(
   o: ConceptOntology, table: StrengthTable, conceptId: string, now: string | number | Date,
+  /**
+   * Concepts the learner has CLAIMED to know already.
+   *
+   * A claim makes its own concept introducible and does nothing else. It writes
+   * no strength, counts as no demonstration, and — critically — does not appear
+   * in the recursion below, so it never unblocks anything DOWNSTREAM of itself.
+   *
+   * That asymmetry is the whole safety argument. Claiming "I can factor" gets
+   * you factoring problems at once; it does not get you partial fractions,
+   * because those still require factoring's real strength to be over the floor.
+   * The worst a bluff achieves is being served problems it cannot do, which the
+   * ordinary ruling path then handles.
+   *
+   * Omitted means no claims, which is the previous behaviour exactly.
+   */
+  claimed?: ReadonlySet<string>,
 ): boolean {
+  if (claimed?.has(conceptId)) return true
+  // NOTE: `claimed` is deliberately NOT passed down. A prerequisite being
+  // claimed does not satisfy it — only strength does.
   return prerequisitesOf(o, conceptId).every(p => conceptStrength(o, table, p, now) >= MASTERY_FLOOR)
 }
 
@@ -371,6 +390,14 @@ export interface AssemblyOptions {
    * saw and a bug can be reproduced from the id alone.
    */
   variantSeed?: number
+  /**
+   * Concepts the learner has claimed to know, so their tasks are served now.
+   *
+   * See the note on `introducible`. A claim opens its own concept and nothing
+   * below it, so this cannot be used to skip ahead — only to stop being made
+   * to start at the bottom of a subject you already know part of.
+   */
+  claimed?: ReadonlySet<string>
 }
 
 export interface Assembly {
@@ -414,7 +441,7 @@ export function assemble(opts: AssemblyOptions): Assembly {
   const eligibleConcepts = new Set<string>()
   for (const concept of o.concepts) {
     if (reachedSet && !reachedSet.has(concept.id)) continue
-    if (!introducible(o, strengths, concept.id, now)) {
+    if (!introducible(o, strengths, concept.id, now, opts.claimed)) {
       blocked.push({
         conceptId: concept.id,
         missing: prerequisitesOf(o, concept.id)
@@ -538,18 +565,30 @@ export function assemble(opts: AssemblyOptions): Assembly {
  */
 export function summarise(
   o: ConceptOntology, table: StrengthTable, now: string | number | Date,
+  /** Claimed concepts, so the display agrees with what the scheduler will serve. */
+  claimed?: ReadonlySet<string>,
 ): {
   points: number
   demonstrated: number
   assistedOnly: number
   strongConcepts: number
-  concepts: { conceptId: string; strength: number; introducible: boolean }[]
+  concepts: { conceptId: string; strength: number; introducible: boolean; claimed: boolean }[]
 } {
   const points = allKnowledgePoints(o)
   const concepts = o.concepts.map(c => ({
     conceptId: c.id,
     strength: conceptStrength(o, table, c.id, now),
-    introducible: introducible(o, table, c.id, now),
+    introducible: introducible(o, table, c.id, now, claimed),
+    /**
+     * Reported separately from `introducible`, never merged into it.
+     *
+     * "Open because you earned it" and "open because you said so" are
+     * different facts, and a learner looking at their own map should be able to
+     * tell which concepts are standing on a claim they have not yet backed up.
+     * `strongConcepts` below is unaffected — that counts strength, and a claim
+     * is not strength.
+     */
+    claimed: !!claimed?.has(c.id),
   }))
   return {
     points: points.length,

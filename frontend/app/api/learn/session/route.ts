@@ -5,7 +5,7 @@ import { parseTaskId } from '@/lib/concepts/generators'
 import { getOntology, ONTOLOGIES } from '@/lib/concepts/ontology'
 import { conceptById } from '@/lib/concepts/registry'
 import { assemble, summarise } from '@/lib/concepts/scheduling'
-import { loadStrengths, loadTraversal, pendingReviewCount } from '@/lib/concepts/store'
+import { liveClaims, loadStrengths, loadTraversal, pendingReviewCount } from '@/lib/concepts/store'
 import { frontier, openingDoors, traversalProgress } from '@/lib/concepts/traversal'
 import { verifierConfig } from '@/lib/concepts/verify'
 
@@ -62,6 +62,8 @@ export async function GET(req: NextRequest) {
   let strengths
   let world
   let awaitingReview = 0
+  /** Concepts the learner says they already know. See /api/learn/claims. */
+  let claimed: Set<string> = new Set()
   try {
     ;[strengths, world, awaitingReview] = await Promise.all([
       loadStrengths(userId),
@@ -71,6 +73,7 @@ export async function GET(req: NextRequest) {
       // engine's own failures — the most informative ones in the table.
       pendingReviewCount(userId),
     ])
+    claimed = await liveClaims(userId, ONTOLOGY.subject.id)
   } catch (e) {
     return NextResponse.json(
       { error: e instanceof Error ? e.message : 'could not load the practice state' },
@@ -94,8 +97,8 @@ export async function GET(req: NextRequest) {
    */
   const VARIANT_SEED = 1
 
-  const assembly = assemble({ ontology: ONTOLOGY, strengths, now, size, reached, variantSeed: VARIANT_SEED })
-  const progress = summarise(ONTOLOGY, strengths, now)
+  const assembly = assemble({ ontology: ONTOLOGY, strengths, now, size, reached, variantSeed: VARIANT_SEED, claimed })
+  const progress = summarise(ONTOLOGY, strengths, now, claimed)
   const name = (id: string) => conceptById(ONTOLOGY, id)?.name ?? id
 
   return NextResponse.json({

@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getUserFromToken } from '@/lib/apiQuota'
 import { ontologyForPoint, RATIONAL_EXPRESSIONS } from '@/lib/concepts/ontology'
 import { conceptOfPoint, knowledgePointById } from '@/lib/concepts/registry'
-import { applyObservation } from '@/lib/concepts/scheduling'
-import { loadStrengths, recordObservation, saveStrengths } from '@/lib/concepts/store'
+import { applyObservation, conceptStrength, MASTERY_FLOOR } from '@/lib/concepts/scheduling'
+import { loadStrengths, recordObservation, saveStrengths, settleClaim } from '@/lib/concepts/store'
 import { taskById } from '@/lib/concepts/tasks'
 import type { Assistance, Observation } from '@/lib/concepts/types'
 import { isScorable, rule, rulingHeadline, verifierConfig } from '@/lib/concepts/verify'
@@ -117,6 +117,8 @@ export async function POST(req: NextRequest) {
 
   const scored = isScorable(verdict)
   let propagated: { knowledgePointId: string; conceptId: string; distance: number; credit: number }[] = []
+  /** Whether a claim on this concept was settled by this ruling, and how. */
+  let claimOutcome: 'revoked' | 'verified' | null = null
 
   try {
     // The observation first. If the strength write fails afterwards, the evidence
@@ -132,6 +134,43 @@ export async function POST(req: NextRequest) {
         task.knowledgePointId,
         ...applied.propagated.map(p => p.knowledgePointId),
       ])
+
+      /**
+       * Settle any claim on this concept. This is where a bluff is called.
+       *
+       * A claim opens a concept for practice without writing strength, so the
+       * only thing that can settle it is an actual ruling — which is what this
+       * is. Three cases:
+       *
+       *  - incorrect, unaided: the claim is REVOKED. The concept returns to
+       *    blocked, and the reason records what happened rather than just
+       *    deleting the row.
+       *  - correct, unaided, strength now over the floor: VERIFIED. The claim
+       *    stops granting anything because the strength table is now saying it.
+       *  - anything else: left alone. An assisted success is not evidence of
+       *    prior knowledge — it is evidence of being helped — and one unaided
+       *    success below the floor is not yet a demonstration of fluency.
+       *
+       * Deliberately only on an UNAIDED observation. Revoking on an assisted
+       * failure would punish somebody for taking a hint, and verifying on an
+       * assisted success would let the hint do the claiming.
+       */
+      const conceptId = conceptOfPoint(ONTOLOGY, task.knowledgePointId)?.id
+      if (conceptId && assistance === 'none') {
+        if (verdict.ruling === 'incorrect') {
+          claimOutcome = (await settleClaim(userId, conceptId, {
+            verified: false,
+            reason: `an unaided answer to ${task.id} was ruled incorrect`,
+          })) ? 'revoked' : null
+        } else if (verdict.ruling === 'correct') {
+          const strengthNow = conceptStrength(ONTOLOGY, applied.table, conceptId, at)
+          if (strengthNow >= MASTERY_FLOOR) {
+            claimOutcome = (await settleClaim(userId, conceptId, { verified: true }))
+              ? 'verified'
+              : null
+          }
+        }
+      }
     }
   } catch (e) {
     // The ruling is still returned. It was correctly computed, and withholding it
@@ -153,6 +192,15 @@ export async function POST(req: NextRequest) {
     asRead,
     headline: rulingHeadline(verdict),
     scored,
+    /**
+     * Whether this ruling settled a claim, and which way.
+     *
+     * Returned so a revocation is never silent. Somebody who claimed a concept
+     * and then got one wrong has just had it closed again, and discovering that
+     * from a shorter task list next time would be baffling — the ruling is the
+     * moment to say it.
+     */
+    claim: claimOutcome,
     // Named, not just counted. "This also counted as practice of factoring
     // quadratics" is the single most reassuring thing this scheduler can say, and
     // it is only credible if it says which.
