@@ -135,9 +135,16 @@ export default function SuggestedFeedSection({
         </Link>
       </div>
 
+      {/* The tagline, then what it means. In that order on purpose: the
+          distinctive thing about this feed is not that it is balanced, it is
+          that the weights are yours and every item will tell you which one put
+          it there. The second line is the proof of the first. */}
       <p className="mb-3 max-w-2xl text-xs leading-relaxed text-gray-500 dark:text-gray-400">
-        A balanced set from your sources — core interests, two kinds of discovery,
-        background, and local. Every item can say why it is here.
+        <span className="font-medium text-gray-600 dark:text-gray-300">
+          Tune your own recommendation algorithm.
+        </span>{' '}
+        Core interests, two kinds of discovery, background and local — in
+        proportions you set. Every item can say why it is here.
       </p>
 
       {loading && (

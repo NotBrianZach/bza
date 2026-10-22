@@ -421,9 +421,17 @@ export default function SuggestPage() {
           <Link href="/" className="mb-2 inline-flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
             <ArrowLeft size={12} /> Home
           </Link>
-          <div className="flex items-center gap-2">
-            <Sparkles size={18} className="text-violet-500" />
-            <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Suggested</h1>
+          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+            <span className="flex items-center gap-2">
+              <Sparkles size={18} className="text-violet-500" />
+              <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Suggested</h1>
+            </span>
+            {/* The tagline sits with the title rather than buried in the body
+                copy below, because it is the one line that says what makes this
+                different from any other feed reader. */}
+            <span className="text-sm text-gray-500 dark:text-gray-400">
+              — tune your own recommendation algorithm
+            </span>
           </div>
           <p className="mt-1 max-w-2xl text-xs leading-relaxed text-gray-500 dark:text-gray-400">
             Relevance, quality and discovery are kept separate on purpose, so you can
