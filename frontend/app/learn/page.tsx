@@ -5,7 +5,8 @@ import Link from 'next/link'
 import { ArrowLeft, Loader2 } from 'lucide-react'
 import { ThemeToggle } from '@/components/ThemeProvider'
 import { authedFetch } from '@/lib/authedFetch'
-import { getOntology, RATIONAL_EXPRESSIONS } from '@/lib/concepts/ontology'
+import { getOntology, ONTOLOGIES, RATIONAL_EXPRESSIONS } from '@/lib/concepts/ontology'
+import { AREAS, MATHEMATICS, atlasCoverage } from '@/lib/concepts/atlas'
 import { TRAVERSAL_GAME } from '@/lib/concepts/traversal'
 import { MASTERY_FLOOR } from '@/lib/concepts/scheduling'
 import ConceptBrowser from '@/components/concepts/ConceptBrowser'
@@ -37,6 +38,21 @@ export const dynamic = 'force-dynamic'
  */
 
 type Tab = 'practice' | 'concepts' | 'review' | 'tools' | 'import'
+
+/**
+ * Display names for every subject in the composed atlas — the mapped areas and
+ * the two with problems written for them.
+ *
+ * Computed once at module scope because the atlas is a static document; nothing
+ * about it depends on the session, and recomputing it per render would be work
+ * done for no possible change in the answer.
+ */
+const AREA_NAMES: Record<string, string> = {
+  ...Object.fromEntries(ONTOLOGIES.map(o => [o.subject.id, `${o.subject.name} — has problems`])),
+  ...Object.fromEntries(AREAS.map(a => [a.id, a.name])),
+}
+
+const COVERAGE = atlasCoverage(MATHEMATICS)
 
 interface Named { conceptId: string; conceptName: string }
 
@@ -91,6 +107,15 @@ export default function LearnPage() {
    * tested, and reachable only by hand-editing a URL.
    */
   const [subject, setSubject] = useState<string | null>(null)
+  /**
+   * Whether the Concepts tab draws the practised subject or the whole atlas.
+   *
+   * Not persisted and not in the URL. It is a way of looking at one page rather
+   * than a place, and a remembered value would mean a learner who once glanced
+   * at the map comes back next week to three hundred nodes instead of their
+   * fifteen.
+   */
+  const [scope, setScope] = useState<'subject' | 'atlas'>('subject')
 
   /**
    * What the scratchpad and the tutor need from the practice panel.
@@ -116,6 +141,17 @@ export default function LearnPage() {
    * rather than reworded here, so the one explanation of what a claim does and
    * does not do lives in exactly one place.
    */
+  /**
+   * The subject whose graph and browser are shown.
+   *
+   * Follows the practice picker, or the Concepts tab would show one subject's
+   * graph while the practice tab served another's tasks. Falls back to the
+   * session's own subject before the hard-coded default, so a first load that
+   * has not chosen anything still agrees with what it is about to serve.
+   */
+  const subjectOntology =
+    getOntology(subject ?? state?.subject?.id ?? '') ?? RATIONAL_EXPRESSIONS
+
   const claim = useCallback(async (conceptId: string, conceptName: string) => {
     setClaiming(conceptId)
     setClaimNote(null)
@@ -354,16 +390,50 @@ export default function LearnPage() {
             while the practice tab served another's tasks. */}
         {tab === 'concepts' && (
           <>
+            {/* The scope switch, and the honest figure beside it.
+                Default is the subject being practised rather than the whole
+                map: the map is 95% unwritten, and opening on it would answer
+                "what can I do now" with three hundred things the learner
+                cannot do. The map is one click away and says what it is. */}
+            <div className='flex flex-wrap items-center gap-2 text-[11px]'>
+              <span className='text-gray-500'>showing</span>
+              {([['subject', 'the subject I am practising'], ['atlas', 'the whole map']] as const)
+                .map(([id, label]) => (
+                  <button
+                    key={id}
+                    onClick={() => setScope(id)}
+                    className={`rounded-full border px-2 py-0.5 ${
+                      scope === id
+                        ? 'border-gray-500 bg-gray-800 text-gray-100'
+                        : 'border-gray-700 text-gray-400 hover:bg-gray-800/60'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              {scope === 'atlas' && (
+                <span className='text-gray-600'>
+                  {COVERAGE.concepts} concepts across {COVERAGE.areas} areas,{' '}
+                  {COVERAGE.prerequisiteEdges} prerequisite edges — {COVERAGE.teachable} have
+                  problems written for them ({Math.round(100 * COVERAGE.teachable / COVERAGE.concepts)}%).
+                  The rest are named and ordered only, and gate nothing.
+                </span>
+              )}
+            </div>
             {/* The graph first, the list below. They answer different
                 questions — the graph answers "what is the shape of this
                 subject and where am I", which is what people arrive with; the
                 list answers "what exactly does this one concept say", which is
                 what they want next. Neither replaces the other. */}
             <ConceptGraph
-              ontology={getOntology(subject ?? state?.subject?.id ?? '') ?? RATIONAL_EXPRESSIONS}
+              ontology={scope === 'atlas' ? MATHEMATICS : subjectOntology}
               concepts={state?.progress?.concepts ?? []}
               masteryFloor={MASTERY_FLOOR}
               onClaim={claim}
+              // The area filter only appears on the map. A nine-concept subject
+              // has one area, and a filter with one option is furniture.
+              areaNames={scope === 'atlas' ? AREA_NAMES : undefined}
+              initialArea={scope === 'atlas' ? subjectOntology.subject.id : undefined}
             />
             {!state?.progress && (
               <p className='text-[11px] text-gray-500'>
@@ -371,9 +441,11 @@ export default function LearnPage() {
                 from your strengths, not from the ontology.
               </p>
             )}
-            <ConceptBrowser
-              ontology={getOntology(subject ?? state?.subject?.id ?? '') ?? RATIONAL_EXPRESSIONS}
-            />
+            {/* The browser stays on the subject in both scopes. It prints every
+                concept's full text, which is right for nine and unreadable for
+                291 — and the 276 mapped ones have a one-line description and
+                nothing else, so there would be nothing to read. */}
+            <ConceptBrowser ontology={subjectOntology} />
             {claimNote && (
               <p className='rounded border border-sky-900/50 bg-sky-950/30 px-2 py-1.5 text-[11px] text-sky-200'>
                 {claimNote}

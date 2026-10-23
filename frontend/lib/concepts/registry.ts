@@ -108,6 +108,62 @@ export function dependentsOf(o: ConceptOntology, id: string): string[] {
 }
 
 /**
+ * Whether a concept has any practice material at all.
+ *
+ * MAPPED and TEACHABLE are different things, and separating them is what lets
+ * this ontology grow into a map of a subject rather than only a syllabus of
+ * what has been written up. A concept with no knowledge points is on the map:
+ * it has a name, a place in the order, and prerequisite edges. It simply cannot
+ * be practised yet.
+ *
+ * Derived, never stored. A `teachable: true` field could disagree with the
+ * knowledge points beside it, and then the scheduler and the display would
+ * answer differently about the same concept.
+ */
+export function isTeachable(o: ConceptOntology, id: string): boolean {
+  return (conceptById(o, id)?.knowledgePoints.length ?? 0) > 0
+}
+
+/**
+ * The prerequisites that can actually GATE this concept.
+ *
+ * A concept with no practice material can never gain strength —
+ * `conceptStrength` returns 0 for it by construction, since there are no points
+ * to average. So if such a concept could gate, it would gate FOREVER, and
+ * everything behind it on the map would be permanently unreachable. Adding a
+ * single unwritten node in the middle of a chain would wall off the whole tail.
+ *
+ * The rule, therefore: **a concept with no material makes no claim about
+ * mastery, so it cannot gate.** Gating passes through it to its own
+ * prerequisites, and you are gated by the nearest TEACHABLE ancestors.
+ *
+ * It degrades in the right direction. The day somebody authors a worked example
+ * for a mapped node, it becomes teachable and starts gating — tightening the
+ * ordering rather than loosening it. The alternatives are both wrong: treating
+ * unteachable nodes as satisfied in place would skip whatever real
+ * prerequisites sit behind them, and treating them as gates would make the map
+ * unusable.
+ *
+ * Cycle-safe via `seen`, like `allPrerequisitesOf` — a cyclic ontology is a bug
+ * that must not hang the page that would show it to you.
+ */
+export function gatingPrerequisitesOf(o: ConceptOntology, id: string): string[] {
+  const out = new Set<string>()
+  const seen = new Set<string>([id])
+  const walk = (current: string) => {
+    for (const prereq of prerequisitesOf(o, current)) {
+      if (seen.has(prereq)) continue
+      seen.add(prereq)
+      if (isTeachable(o, prereq)) out.add(prereq)
+      // Unteachable: look through it, not at it.
+      else walk(prereq)
+    }
+  }
+  walk(id)
+  return [...out]
+}
+
+/**
  * Every prerequisite, transitively, nearest first.
  *
  * Breadth-first so the returned order is by depth rather than by discovery, which
@@ -444,8 +500,27 @@ export function ontologyProblems(o: ConceptOntology): string[] {
   }
 
   for (const concept of o.concepts) {
-    if (concept.knowledgePoints.length === 0) {
-      out.push(`${concept.id}: has no knowledge points, so nothing can be practised`)
+    /**
+     * A concept with no knowledge points is MAPPED, not broken.
+     *
+     * This used to be a problem, and that rule was right while the ontology
+     * existed only to serve practice: a concept you could not practise was a
+     * concept with nothing in it. It is exactly wrong for an ontology meant to
+     * grow into a map of a subject, where most of the map will be named and
+     * ordered long before anybody writes a worked example for it — and where
+     * requiring one up front means the map cannot be drawn at all.
+     *
+     * What IS still a problem is a concept that promises practice it cannot
+     * deliver. An objective names task kinds an observation could satisfy, so
+     * an objective on a concept with no points is a claim with nothing behind
+     * it — and `assemble` would never serve anything against it, silently.
+     */
+    if (concept.knowledgePoints.length === 0 && concept.objectives.length > 0) {
+      out.push(
+        `${concept.id}: has objectives but no knowledge points, so it promises practice ` +
+        `that can never be served — either add a knowledge point or drop the objectives ` +
+        `and leave it as a mapped-only concept`,
+      )
     }
     for (const objective of concept.objectives) {
       if (objective.taskKinds.length === 0) {

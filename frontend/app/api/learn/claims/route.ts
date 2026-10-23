@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getUserFromToken } from '@/lib/apiQuota'
 import { getOntology, RATIONAL_EXPRESSIONS } from '@/lib/concepts/ontology'
 import { conceptById } from '@/lib/concepts/registry'
+import { MATHEMATICS } from '@/lib/concepts/atlas'
 import { allClaims, claimConcept, withdrawClaim } from '@/lib/concepts/store'
 
 /**
@@ -20,8 +21,8 @@ import { allClaims, claimConcept, withdrawClaim } from '@/lib/concepts/store'
  *
  * So the mastery gate is not weakened. What changes is that somebody who
  * already knows half a subject stops being made to start at the bottom of it,
- * which is the actual reason /learn looked like it had three concepts when it
- * ships twenty-four.
+ * which is the actual reason /learn looked like it had three concepts when the
+ * two authored subjects ship fifteen.
  *
  * ── Why the concept is validated ──────────────────────────────────────────
  *
@@ -83,6 +84,29 @@ export async function POST(req: NextRequest) {
 
   const concept = conceptById(resolved.ontology, conceptId)
   if (!concept) {
+    /**
+     * Distinguish "no such concept" from "on the map, nothing written".
+     *
+     * The atlas named roughly 276 concepts that no authored subject contains,
+     * and a learner browsing the map will reach for a claim on one of them.
+     * `getOntology` only resolves the two subjects with material, so every one
+     * of those arrives here as a miss — and "has no concept" would be false,
+     * since it is on the map and visible on the very page they clicked from.
+     * The UI already suppresses the button; this is for anyone posting directly
+     * and for the day the UI regresses.
+     */
+    const mapped = conceptById(MATHEMATICS, conceptId)
+    if (mapped) {
+      return NextResponse.json(
+        {
+          error:
+            `"${mapped.name}" is on the map but has no problems written for it, so there is ` +
+            `nothing a claim could open. It also gates nothing, so claiming it would not ` +
+            `unblock anything either.`,
+        },
+        { status: 409 },
+      )
+    }
     return NextResponse.json(
       { error: `${resolved.ontology.subject.name} has no concept "${conceptId}"` },
       { status: 404 },

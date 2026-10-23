@@ -97,7 +97,7 @@ const {
   conceptOfPoint, prerequisitesOf, dependentsOf, allPrerequisitesOf, roots, teachingOrder, cycles,
   encompassedBy, encompassedClosure, interferesWith, interferenceReason, candidates, promotionRate,
   conceptFacet, fidelityMismatches, ontologyProblems, edgesOfKind,
-  pendingCandidates, rejectedCandidates, reviewStatus,
+  pendingCandidates, rejectedCandidates, reviewStatus, isTeachable, gatingPrerequisitesOf,
 } = M.registry
 const { evaluateRpn, formatValue, calcRecord, toOrgDrawer, toWorkerTree, precisionIsAdvisory, DEFAULT_SETTINGS, exact } = M.rpn
 const {
@@ -716,6 +716,85 @@ t('it becomes introducible once its prerequisite is strong', (() => {
  * If any of these fail, claiming has become a way to skip the gate rather than
  * a way to be tested early, and the ordering guarantee is gone.
  */
+/**
+ * Mapped vs teachable — the rule that lets the ontology become a MAP.
+ *
+ * A concept with no knowledge points can never gain strength (`conceptStrength`
+ * averages over zero points and returns 0), so if it could gate it would gate
+ * forever and everything behind it on the map would be permanently
+ * unreachable. One unwritten node in the middle of a chain would wall off the
+ * entire tail.
+ *
+ * So gating passes THROUGH an unteachable concept to its own prerequisites.
+ * These tests pin that, and pin that it tightens rather than loosens as
+ * material gets written.
+ */
+group('the map: a concept with no material cannot gate')
+
+/** A synthetic three-chain: root → middle → leaf, with `middle` unwritten. */
+const mapOntology = (() => {
+  const base = conceptById(O, 'polynomial-arithmetic')
+  const mk = (id, points) => ({
+    id, name: id, subjectId: 'map-test',
+    scope: base.scope, fidelity: base.fidelity,
+    objectives: [], knowledgePoints: points,
+  })
+  // The root reuses real knowledge points so it can actually be made strong.
+  return {
+    subject: { id: 'map-test', name: 'Map test', covers: 'x', medium: 'theorem' },
+    concepts: [
+      mk('root', base.knowledgePoints),
+      mk('middle', []),                       // mapped, not teachable
+      mk('leaf', base.knowledgePoints.slice(0, 1)),
+    ],
+    edges: [
+      { id: 'e1', from: 'root', to: 'middle', kind: 'prerequisite' },
+      { id: 'e2', from: 'middle', to: 'leaf', kind: 'prerequisite' },
+    ],
+  }
+})()
+
+t('a concept with no knowledge points is not teachable',
+  !isTeachable(mapOntology, 'middle') && isTeachable(mapOntology, 'root'))
+
+t('gating looks THROUGH an unteachable concept to its own prerequisites', (() => {
+  // The literal edge says leaf rests on middle. Gating must say it rests on
+  // root, because middle can never be demonstrated.
+  const literal = prerequisitesOf(mapOntology, 'leaf')
+  const gating = gatingPrerequisitesOf(mapOntology, 'leaf')
+  return literal.join() === 'middle' && gating.join() === 'root'
+})())
+
+t('so the tail of the chain is reachable rather than walled off forever', (() => {
+  // With the old rule (gate on the literal edge) `leaf` could NEVER open,
+  // because middle's strength is pinned at 0 by having no points.
+  const strong = {}
+  for (const point of conceptById(O, 'polynomial-arithmetic').knowledgePoints) {
+    strong[point.id] = {
+      ...emptyStrength(point.id), strength: 1, streak: 5, unaidedSuccesses: 5,
+      lastDemonstratedAt: NOW,
+    }
+  }
+  return introducible(mapOntology, strong, 'leaf', NOW)
+})())
+
+t('…and is still gated: a weak root keeps the tail shut',
+  !introducible(mapOntology, {}, 'leaf', NOW))
+
+t('an unteachable concept is legal, but one promising practice is not', (() => {
+  const mapped = { ...mapOntology }
+  if (ontologyProblems(mapped).some(p => /no knowledge points/.test(p))) return false
+  // Give the unwritten concept an objective: now it claims practice it can
+  // never serve, which must be reported.
+  const promising = {
+    ...mapOntology,
+    concepts: mapOntology.concepts.map(c => c.id === 'middle'
+      ? { ...c, objectives: [{ id: 'o1', statement: 'x', taskKinds: ['evaluate'] }] }
+      : c),
+  }
+  return ontologyProblems(promising).some(p => /promises practice/.test(p))
+})())
+
 group('scheduling — a claim opens its own concept and nothing else')
 t('claiming a blocked concept makes it introducible', (() => {
   const claimed = new Set(['factoring-quadratics'])

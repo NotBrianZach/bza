@@ -45,7 +45,7 @@
 
 import {
   allKnowledgePoints, conceptById, conceptOfPoint, encompassedClosure, interferesWith,
-  isVerifiableKind, prerequisitesOf,
+  gatingPrerequisitesOf, isVerifiableKind, prerequisitesOf,
 } from './registry'
 import { variantsForPoint } from './generators'
 import { TASKS } from './tasks'
@@ -223,7 +223,7 @@ export function introducible(
   if (claimed?.has(conceptId)) return true
   // NOTE: `claimed` is deliberately NOT passed down. A prerequisite being
   // claimed does not satisfy it — only strength does.
-  return prerequisitesOf(o, conceptId).every(p => conceptStrength(o, table, p, now) >= MASTERY_FLOOR)
+  return gatingPrerequisitesOf(o, conceptId).every(p => conceptStrength(o, table, p, now) >= MASTERY_FLOOR)
 }
 
 // ---------------------------------------------------------------------------
@@ -444,7 +444,10 @@ export function assemble(opts: AssemblyOptions): Assembly {
     if (!introducible(o, strengths, concept.id, now, opts.claimed)) {
       blocked.push({
         conceptId: concept.id,
-        missing: prerequisitesOf(o, concept.id)
+        // The nearest TEACHABLE ancestors, not the literal edges: naming a
+        // mapped-but-unwritten concept as the thing blocking you would be
+        // naming something you cannot possibly go and do.
+        missing: gatingPrerequisitesOf(o, concept.id)
           .filter(p => conceptStrength(o, strengths, p, now) < MASTERY_FLOOR),
       })
       continue

@@ -3,7 +3,8 @@
 import { useMemo, useState } from 'react'
 import type { ConceptOntology } from '@/lib/concepts/types'
 import {
-  conceptById, dependentsOf, edgesOfKind, interferesWith, prerequisitesOf,
+  conceptById, dependentsOf, edgesOfKind, gatingPrerequisitesOf, interferesWith, isTeachable,
+  prerequisitesOf,
 } from '@/lib/concepts/registry'
 
 /**
@@ -13,7 +14,8 @@ import {
  * prose, which is the right surface for reading one concept carefully. It is
  * the wrong surface for the question people actually arrive with — "what is
  * the shape of this subject, and where am I in it" — because a reader has to
- * reconstruct the topology in their head from twenty-four separate sentences.
+ * reconstruct the topology in their head from one sentence per concept. That
+ * was already true of fifteen; it is hopeless for the atlas, which is 291.
  *
  * ── Layered by longest prerequisite path ──────────────────────────────────
  *
@@ -52,6 +54,9 @@ interface ConceptState {
   claimed?: boolean
 }
 
+/** The filter's "no filter" value. A sentinel rather than '' so it can be read. */
+const ALL_AREAS = '__all__'
+
 const LAYER_W = 196
 const NODE_W = 160
 const NODE_H = 44
@@ -63,6 +68,8 @@ export default function ConceptGraph({
   concepts,
   masteryFloor,
   onClaim,
+  areaNames,
+  initialArea,
 }: {
   ontology: ConceptOntology
   /** Per-concept state from the session's `progress.concepts`. */
@@ -70,8 +77,45 @@ export default function ConceptGraph({
   masteryFloor: number
   /** Offered on a blocked node. Omit to render read-only. */
   onClaim?: (conceptId: string, conceptName: string) => void
+  /**
+   * Display names for the `subjectId`s present in the ontology. Supplying this
+   * turns on the area filter, which a single-subject graph does not want and a
+   * 291-node atlas cannot do without.
+   */
+  areaNames?: Record<string, string>
+  /** Which area to open on. Ignored without `areaNames`. */
+  initialArea?: string
 }) {
   const [selected, setSelected] = useState<string | null>(null)
+  const [area, setArea] = useState<string>(initialArea ?? ALL_AREAS)
+
+  /**
+   * Which nodes are drawn.
+   *
+   * One area at a time plus ONE HOP of context in both directions, and the
+   * context is the part worth arguing for. An area drawn strictly alone loses
+   * every edge that leaves it — which in this atlas is 192 of 498 prerequisite
+   * edges, including the ones that are the whole reason for a map rather than a
+   * shelf of syllabi. Showing the immediate neighbours keeps "this area rests
+   * on that one" visible while still cutting the drawing down to something a
+   * reader can hold.
+   *
+   * Two hops was tried mentally and rejected: on this graph it pulls in most of
+   * the map, which is the thing the filter exists to avoid.
+   */
+  const visible = useMemo(() => {
+    if (area === ALL_AREAS || !areaNames) return null
+    const own = ontology.concepts.filter(c => c.subjectId === area).map(c => c.id)
+    const out = new Set(own)
+    for (const id of own) {
+      for (const n of prerequisitesOf(ontology, id)) out.add(n)
+      for (const n of dependentsOf(ontology, id)) out.add(n)
+    }
+    return out
+  }, [ontology, area, areaNames])
+
+  const isContext = (id: string) =>
+    visible !== null && ontology.concepts.find(c => c.id === id)?.subjectId !== area
 
   const { positions, width, height, cyclic } = useMemo(() => {
     /**
@@ -98,33 +142,51 @@ export default function ConceptGraph({
     }
     for (const c of ontology.concepts) depthOf(c.id, new Set())
 
+    // Depth is computed over the WHOLE graph even when a filter is on, so a
+    // concept does not slide left when its prerequisites are hidden. Left is
+    // earlier has to mean the same thing in every view or the layout is
+    // actively misleading.
+    const shown = ontology.concepts.filter(c => visible === null || visible.has(c.id))
+
     // Group by layer, preserving the ontology's own order within a layer —
     // which is the author's teaching order, and more meaningful than anything
     // this could compute.
     const byLayer = new Map<number, string[]>()
-    for (const c of ontology.concepts) {
+    for (const c of shown) {
       const d = depth.get(c.id) ?? 0
       const list = byLayer.get(d) ?? []
       list.push(c.id)
       byLayer.set(d, list)
     }
 
+    /**
+     * Columns are compacted to the layers actually in use.
+     *
+     * A filtered view typically occupies six or seven of the thirty-two layers,
+     * scattered. Drawing them at their true layer index leaves twenty empty
+     * columns of whitespace between the nodes, and the reader has to scroll
+     * past nothing to find the next thing. Order is preserved, so the left-is-
+     * earlier promise survives the compaction; only the gaps go.
+     */
+    const usedLayers = [...byLayer.keys()].sort((a, b) => a - b)
+    const column = new Map(usedLayers.map((layer, i) => [layer, i]))
+
     const pos = new Map<string, { x: number; y: number }>()
     let maxRows = 0
     for (const [layer, ids] of byLayer) {
       maxRows = Math.max(maxRows, ids.length)
       ids.forEach((id, row) => {
-        pos.set(id, { x: PAD + layer * LAYER_W, y: PAD + row * ROW_H })
+        pos.set(id, { x: PAD + (column.get(layer) ?? 0) * LAYER_W, y: PAD + row * ROW_H })
       })
     }
 
     return {
       positions: pos,
-      width: PAD * 2 + (byLayer.size === 0 ? 0 : (Math.max(...byLayer.keys()) * LAYER_W + NODE_W)),
+      width: PAD * 2 + (usedLayers.length === 0 ? 0 : ((usedLayers.length - 1) * LAYER_W + NODE_W)),
       height: PAD * 2 + Math.max(1, maxRows) * ROW_H,
       cyclic: sawCycle,
     }
-  }, [ontology])
+  }, [ontology, visible])
 
   const stateOf = useMemo(() => {
     const m = new Map<string, ConceptState>()
@@ -133,26 +195,51 @@ export default function ConceptGraph({
   }, [concepts])
 
   /**
-   * Four states, and the order of these checks matters.
+   * Five states, and the order of these checks matters.
    *
-   * `strong` is tested before `claimed` because a concept that has been earned
-   * should read as earned even if a stale claim row still exists; and `claimed`
-   * before `open` because "open because you said so" is the more important fact
-   * of the two to show.
+   * `mapped` is tested FIRST because it is the one state that is about the
+   * material rather than about the learner. A concept nobody has written
+   * problems for is not blocked — there is nothing to be blocked from — and
+   * drawing it in the blocked grey would say the learner is missing a
+   * prerequisite when what is actually missing is the content. It is also why
+   * it must not carry a claim button: claiming opens problems, and there are
+   * none to open.
+   *
+   * After that, `strong` is tested before `claimed` because a concept that has
+   * been earned should read as earned even if a stale claim row still exists;
+   * and `claimed` before `open` because "open because you said so" is the more
+   * important fact of the two to show.
    */
   function appearance(id: string) {
     const s = stateOf.get(id)
-    if (!s) return { fill: '#1f2937', stroke: '#374151', text: '#9ca3af', label: 'unknown' }
+    // `short` is what fits inside the node at 9px in 160px; `label` is what
+    // the detail panel and the tooltip say. Kept as two fields rather than one
+    // truncated string because an ellipsed "on the map — no problems writ…" is
+    // worse than either.
+    if (!isTeachable(ontology, id)) {
+      return {
+        fill: '#111827', stroke: '#3f3f46', text: '#71717a',
+        short: 'mapped only',
+        label: 'on the map — no problems written for it yet',
+      }
+    }
+    if (!s) return { fill: '#1f2937', stroke: '#374151', text: '#9ca3af', short: 'unknown', label: 'unknown' }
     if (s.strength >= masteryFloor) {
-      return { fill: '#064e3b', stroke: '#10b981', text: '#d1fae5', label: 'strong' }
+      return { fill: '#064e3b', stroke: '#10b981', text: '#d1fae5', short: 'strong', label: 'strong' }
     }
     if (s.claimed) {
-      return { fill: '#422006', stroke: '#f59e0b', text: '#fde68a', label: 'claimed — not yet shown' }
+      return {
+        fill: '#422006', stroke: '#f59e0b', text: '#fde68a',
+        short: 'claimed', label: 'claimed — not yet shown',
+      }
     }
     if (s.introducible) {
-      return { fill: '#1e3a5f', stroke: '#3b82f6', text: '#dbeafe', label: 'open to practise' }
+      return {
+        fill: '#1e3a5f', stroke: '#3b82f6', text: '#dbeafe',
+        short: 'open', label: 'open to practise',
+      }
     }
-    return { fill: '#1f2937', stroke: '#4b5563', text: '#9ca3af', label: 'blocked' }
+    return { fill: '#1f2937', stroke: '#4b5563', text: '#9ca3af', short: 'blocked', label: 'blocked' }
   }
 
   const prereqEdges = useMemo(() => edgesOfKind(ontology, 'prerequisite'), [ontology])
@@ -178,13 +265,43 @@ export default function ConceptGraph({
     <div className='rounded-lg border border-gray-800 bg-gray-900'>
       <div className='flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-gray-800 px-3 py-2'>
         <h3 className='text-xs font-medium text-gray-300'>The graph</h3>
-        <span className='text-[11px] text-gray-500'>left to right — a prerequisite is always left of what needs it</span>
+        {areaNames && (
+          <select
+            value={area}
+            onChange={e => { setArea(e.target.value); setSelected(null) }}
+            className='rounded border border-gray-700 bg-gray-800 px-1.5 py-0.5 text-[11px] text-gray-200'
+          >
+            <option value={ALL_AREAS}>
+              every area ({ontology.concepts.length} concepts)
+            </option>
+            {Object.entries(areaNames)
+              .sort((a, b) => a[1].localeCompare(b[1]))
+              .map(([id, name]) => (
+                <option key={id} value={id}>
+                  {name} ({ontology.concepts.filter(c => c.subjectId === id).length})
+                </option>
+              ))}
+          </select>
+        )}
+        <span className='text-[11px] text-gray-500'>
+          left to right — a prerequisite is always left of what needs it
+        </span>
+        {visible !== null && (
+          // Said out loud, because a filtered graph that does not announce
+          // itself is a graph the reader believes is the whole thing.
+          <span className='text-[11px] text-gray-600'>
+            showing {ontology.concepts.filter(c => c.subjectId === area).length} in this area,
+            plus {visible.size - ontology.concepts.filter(c => c.subjectId === area).length} neighbours
+            — of {ontology.concepts.length}
+          </span>
+        )}
         <span className='ml-auto flex flex-wrap items-center gap-2 text-[10px]'>
           {[
             ['strong', '#10b981'],
             ['open', '#3b82f6'],
             ['claimed', '#f59e0b'],
             ['blocked', '#4b5563'],
+            ['mapped only', '#3f3f46'],
           ].map(([label, colour]) => (
             <span key={label} className='inline-flex items-center gap-1 text-gray-400'>
               <span className='inline-block h-2 w-2 rounded-full' style={{ background: colour as string }} />
@@ -257,14 +374,20 @@ export default function ConceptGraph({
             if (!p) return null
             const a = appearance(c.id)
             const isSel = selected === c.id
+            const context = isContext(c.id)
             return (
               <g
                 key={c.id}
                 transform={`translate(${p.x},${p.y})`}
                 onClick={() => setSelected(isSel ? null : c.id)}
                 style={{ cursor: 'pointer' }}
+                // Dimmed, not hidden: these are the neighbours that make the
+                // cross-area edges visible, and they are not what you asked for.
+                opacity={context ? 0.45 : 1}
               >
-                <title>{`${c.name} — ${a.label}`}</title>
+                <title>
+                  {`${c.name} — ${a.label}${context ? ` (in ${areaNames?.[c.subjectId] ?? c.subjectId})` : ''}`}
+                </title>
                 <rect
                   width={NODE_W} height={NODE_H} rx={6}
                   fill={a.fill} stroke={isSel ? '#e5e7eb' : a.stroke} strokeWidth={isSel ? 2 : 1.25}
@@ -275,7 +398,7 @@ export default function ConceptGraph({
                   {c.name.length > 24 ? `${c.name.slice(0, 23)}…` : c.name}
                 </text>
                 <text x={8} y={33} fontSize={9} fill={a.text} opacity={0.75}>
-                  {a.label}
+                  {a.short}
                 </text>
               </g>
             )
@@ -294,7 +417,15 @@ export default function ConceptGraph({
           <div className='flex flex-wrap items-center gap-2'>
             <h4 className='font-medium text-gray-200'>{sel.name}</h4>
             <span className='text-[11px] text-gray-500'>{appearance(sel.id).label}</span>
-            {onClaim && !stateOf.get(sel.id)?.introducible && (
+            {/* Three conditions, and the middle one is the atlas-scope guard.
+                `stateOf` is the session progress, which covers only the
+                subject being practised — so a concept absent from it is one
+                this session cannot claim, whether because it is mapped-only
+                or because it belongs to the other authored subject.
+                Offering the button there posts a claim the route is right to
+                refuse. */}
+            {onClaim && isTeachable(ontology, sel.id) && stateOf.has(sel.id)
+              && !stateOf.get(sel.id)?.introducible && (
               <button
                 onClick={() => onClaim(sel.id, sel.name)}
                 title='Say you already know this. It opens the problems now — it does not mark you as knowing it, and one unaided wrong answer withdraws the claim.'
@@ -306,12 +437,21 @@ export default function ConceptGraph({
           </div>
           {/* The concept's own scope hint, not a `covers` field — that is on the
               SUBJECT. A concept describes itself through its facet option. */}
+          {/* Said rather than left as a missing button. A node drawn in the
+              earned green with no way to act on it reads as a bug. */}
+          {isTeachable(ontology, sel.id) && !stateOf.has(sel.id) && (
+            <p className='mt-1 text-[11px] text-amber-200/80'>
+              This has problems written for it, but in another subject — switch the practice
+              subject to {areaNames?.[sel.subjectId] ?? sel.subjectId} to work on it.
+            </p>
+          )}
           {sel.scope?.hint && (
             <p className='mt-1 text-[11px] leading-snug text-gray-400'>{sel.scope.hint}</p>
           )}
           <p className='mt-0.5 text-[10px] text-gray-500'>
-            {sel.knowledgePoints.length} knowledge point
-            {sel.knowledgePoints.length === 1 ? '' : 's'}
+            {sel.knowledgePoints.length === 0
+              ? 'no knowledge points yet — on the map, but nothing to practise, and it gates nothing'
+              : `${sel.knowledgePoints.length} knowledge point${sel.knowledgePoints.length === 1 ? '' : 's'}`}
           </p>
           <dl className='mt-1.5 space-y-0.5 text-[11px] text-gray-400'>
             <div>
@@ -320,6 +460,20 @@ export default function ConceptGraph({
                 {prerequisitesOf(ontology, sel.id).map(p => conceptById(ontology, p)?.name ?? p).join(', ') || 'nothing'}
               </dd>
             </div>
+            {/* Only shown when it DIFFERS from the drawn edges. The two agree
+                for most concepts, and printing the same list twice would
+                suggest a distinction where there is none. When they disagree
+                it is because an edge runs through a mapped-only concept, and
+                then the gating list is the one that decides what opens. */}
+            {gatingPrerequisitesOf(ontology, sel.id).join() !== prerequisitesOf(ontology, sel.id).join() && (
+              <div>
+                <dt className='inline text-gray-500'>gated by: </dt>
+                <dd className='inline'>
+                  {gatingPrerequisitesOf(ontology, sel.id).map(g => conceptById(ontology, g)?.name ?? g).join(', ') || 'nothing'}
+                  <span className='text-gray-600'> — looking through concepts with no problems written</span>
+                </dd>
+              </div>
+            )}
             <div>
               <dt className='inline text-gray-500'>opens: </dt>
               <dd className='inline'>
@@ -334,12 +488,14 @@ export default function ConceptGraph({
                 </dd>
               </div>
             )}
-            <div>
-              <dt className='inline text-gray-500'>strength: </dt>
-              <dd className='inline'>
-                {Math.round((stateOf.get(sel.id)?.strength ?? 0) * 100)}% — the floor is {Math.round(masteryFloor * 100)}%
-              </dd>
-            </div>
+            {isTeachable(ontology, sel.id) && (
+              <div>
+                <dt className='inline text-gray-500'>strength: </dt>
+                <dd className='inline'>
+                  {Math.round((stateOf.get(sel.id)?.strength ?? 0) * 100)}% — the floor is {Math.round(masteryFloor * 100)}%
+                </dd>
+              </div>
+            )}
           </dl>
         </div>
       )}
