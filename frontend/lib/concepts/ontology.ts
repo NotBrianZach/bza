@@ -18,13 +18,9 @@
  *     prevent.
  *
  * WHAT THIS IS NOT. It is hand-authored, nine concepts wide, and it is not an
- * import of anybody's curriculum. The design note mentioned the
- * `math-academy-scraper` project as a seed; that project is a browser extension
- * that *can* capture a prerequisite graph, and no captured graph is checked into
- * it, so there was nothing to import. Authoring one subject by hand is also the
- * honest version of step 1's question: the promotion rate below is a real number
- * precisely because the candidate edges were left unpromoted rather than waved
- * through.
+ * import of anybody's curriculum. Every concept, edge and worked example below
+ * was written here. The promotion rate further down is a real number precisely
+ * because the candidate edges were left unpromoted rather than waved through.
  *
  * Every worked example here was checked by hand. Two of them are deliberate
  * inverses of each other (`expand-binomials` and `factor-monic`, `combine-two`

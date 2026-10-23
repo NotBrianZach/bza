@@ -5,10 +5,9 @@
  *
  * ontology.ts carries 10 `prerequisite` edges and 6 `encompasses` edges, every
  * one hand-authored. The open question from SPEC-LEARNING §13 is whether that
- * structure can come from somewhere other than a person's judgement. The Math
- * Academy scrape was one answer and a weak one — its edges were CSS-class
- * guesses. This is a different answer: derive the structure from the tasks,
- * which exist for another reason entirely.
+ * structure can come from somewhere other than a person's judgement. This is one
+ * answer: derive the structure from the tasks, which exist for another reason
+ * entirely.
  *
  * **What makes this non-circular.** Nothing here declares an edge. The inputs
  * are the tasks (authored and generated) and the four form checkers in forms.ts,
@@ -542,8 +541,8 @@ function dedupePairs(edges: DerivedEdge[]): DerivedEdge[] {
  * Every one is a `candidate_prerequisite` with **no** `promotedBy`, whatever kind
  * it was derived as. A derivation is not a promoter: the whole value of the
  * quarantine is that a human decided, and a mechanism that promoted its own
- * output would be the scraper's mistake with better arithmetic. The rationale
- * names the criterion and the support count so a reviewer can weigh it.
+ * output would just be a guess with better arithmetic. The rationale names the
+ * criterion and the support count so a reviewer can weigh it.
  */
 export function asCandidateEdges(derived: DerivedEdge[]): ConceptEdge[] {
   return dedupePairs(derived.filter(e => e.kind === 'candidate_prerequisite')).map(edge => ({
