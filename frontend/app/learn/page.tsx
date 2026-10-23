@@ -9,6 +9,7 @@ import { getOntology, RATIONAL_EXPRESSIONS } from '@/lib/concepts/ontology'
 import { TRAVERSAL_GAME } from '@/lib/concepts/traversal'
 import { MASTERY_FLOOR } from '@/lib/concepts/scheduling'
 import ConceptBrowser from '@/components/concepts/ConceptBrowser'
+import ConceptGraph from '@/components/concepts/ConceptGraph'
 import ImportReview from '@/components/concepts/ImportReview'
 import PracticeChat from '@/components/concepts/PracticeChat'
 import PracticePanel, { type PracticeTaskView } from '@/components/concepts/PracticePanel'
@@ -54,7 +55,20 @@ interface SessionResponse {
     demonstrated: number
     assistedOnly: number
     strongConcepts: number
-    concepts: { conceptId: string; strength: number; introducible: boolean }[]
+    concepts: {
+      conceptId: string
+      strength: number
+      introducible: boolean
+      /**
+       * Open because you SAID so, rather than because you earned it.
+       *
+       * Declared here even though it is only read by the graph: the route
+       * started sending it and an interface that omits a field the server
+       * sends is how it gets silently dropped by the next person who maps over
+       * this array.
+       */
+      claimed?: boolean
+    }[]
   }
   // `openings` as its own field rather than intersecting `frontier` with
   // Named[]. That intersection resolved to `never`, which is assignable to the
@@ -339,9 +353,33 @@ export default function LearnPage() {
         {/* Follows the picker, or the browser would show one subject's graph
             while the practice tab served another's tasks. */}
         {tab === 'concepts' && (
-          <ConceptBrowser
-            ontology={getOntology(subject ?? state?.subject?.id ?? '') ?? RATIONAL_EXPRESSIONS}
-          />
+          <>
+            {/* The graph first, the list below. They answer different
+                questions — the graph answers "what is the shape of this
+                subject and where am I", which is what people arrive with; the
+                list answers "what exactly does this one concept say", which is
+                what they want next. Neither replaces the other. */}
+            <ConceptGraph
+              ontology={getOntology(subject ?? state?.subject?.id ?? '') ?? RATIONAL_EXPRESSIONS}
+              concepts={state?.progress?.concepts ?? []}
+              masteryFloor={MASTERY_FLOOR}
+              onClaim={claim}
+            />
+            {!state?.progress && (
+              <p className='text-[11px] text-gray-500'>
+                Every node reads as blocked until the session loads — the colours come
+                from your strengths, not from the ontology.
+              </p>
+            )}
+            <ConceptBrowser
+              ontology={getOntology(subject ?? state?.subject?.id ?? '') ?? RATIONAL_EXPRESSIONS}
+            />
+            {claimNote && (
+              <p className='rounded border border-sky-900/50 bg-sky-950/30 px-2 py-1.5 text-[11px] text-sky-200'>
+                {claimNote}
+              </p>
+            )}
+          </>
         )}
 
         {/* Reloading the session on resolve keeps the badge and the practice set
