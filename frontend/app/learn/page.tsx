@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { ArrowLeft, Loader2 } from 'lucide-react'
 import { ThemeToggle } from '@/components/ThemeProvider'
 import { authedFetch } from '@/lib/authedFetch'
-import { getOntology, ONTOLOGIES, RATIONAL_EXPRESSIONS } from '@/lib/concepts/ontology'
+import { getOntology, ONTOLOGIES } from '@/lib/concepts/ontology'
 import { AREAS, MATHEMATICS, atlasCoverage } from '@/lib/concepts/atlas'
 import { TRAVERSAL_GAME } from '@/lib/concepts/traversal'
 import { MASTERY_FLOOR } from '@/lib/concepts/scheduling'
@@ -53,6 +53,20 @@ const AREA_NAMES: Record<string, string> = {
 }
 
 const COVERAGE = atlasCoverage(MATHEMATICS)
+
+/**
+ * The subject shown before the session response names one.
+ *
+ * `ONTOLOGIES[0]`, which is the same expression /api/learn/session uses for its
+ * own default, because these two defaults have to be the SAME subject: this one
+ * decides which graph the Concepts tab draws on a first paint, and a mismatch
+ * would show one subject's map above another's tasks for as long as the request
+ * is in flight.
+ *
+ * It was `RATIONAL_EXPRESSIONS`, hard-coded in three places. That stopped being
+ * right when arithmetic was authored underneath it — see the route's own note.
+ */
+const DEFAULT_SUBJECT = ONTOLOGIES[0]
 
 interface Named { conceptId: string; conceptName: string }
 
@@ -150,7 +164,7 @@ export default function LearnPage() {
    * has not chosen anything still agrees with what it is about to serve.
    */
   const subjectOntology =
-    getOntology(subject ?? state?.subject?.id ?? '') ?? RATIONAL_EXPRESSIONS
+    getOntology(subject ?? state?.subject?.id ?? '') ?? DEFAULT_SUBJECT
 
   const claim = useCallback(async (conceptId: string, conceptName: string) => {
     setClaiming(conceptId)
@@ -290,7 +304,7 @@ export default function LearnPage() {
                 // Keyed on the subject so switching subjects remounts rather
                 // than showing one subject's working under another's heading.
                 key={subject ?? state.subject?.id ?? 'default'}
-                subject={subject ?? state.subject?.id ?? RATIONAL_EXPRESSIONS.subject.id}
+                subject={subject ?? state.subject?.id ?? DEFAULT_SUBJECT.subject.id}
                 onHandle={setPad}
                 onEmptyChange={setPadEmpty}
               />

@@ -43,6 +43,7 @@ function build() {
     join('lib', 'concepts', 'generators.ts'),
     join('lib', 'concepts', 'import.ts'),
     join('lib', 'concepts', 'numerals.ts'),
+    join('lib', 'concepts', 'ontology-arithmetic.ts'),
     join('lib', 'concepts', 'ontology-exponentials.ts'),
     join('lib', 'concepts', 'ontology.ts'),
     join('lib', 'concepts', 'registry.ts'),
@@ -91,7 +92,10 @@ const { parseExpression, tryParse, renderExpr, degreeIn, symbolsIn, isNumeral, u
 const {
   checkForm, checkDenominatorDegree, FORM_LABELS, ALL_NAMED_FORMS, DISCRIMINATING_FORMS,
 } = M.forms
-const { RATIONAL_EXPRESSIONS, EXPONENTS_AND_LOGARITHMS, ONTOLOGIES, getOntology, ontologyForPoint, pointIdCollisions } = M.ontology
+const {
+  RATIONAL_EXPRESSIONS, EXPONENTS_AND_LOGARITHMS, ARITHMETIC_FOUNDATIONS,
+  ONTOLOGIES, getOntology, ontologyForPoint, pointIdCollisions,
+} = M.ontology
 const {
   TASK_KINDS, TASK_KIND_LIST, isVerifiableKind, conceptById, allKnowledgePoints, knowledgePointById,
   conceptOfPoint, prerequisitesOf, dependentsOf, allPrerequisitesOf, roots, teachingOrder, cycles,
@@ -1188,7 +1192,9 @@ t('and says which kind', /kind "justify" has no verifier/.test(unruled.reason))
 
 group('the shipped evaluate tasks')
 const EVALS = TASKS.filter(task => task.kind === 'evaluate')
-t('there are thirteen across both subjects', EVALS.length === 13, `${EVALS.length}`)
+// Twenty-eight: thirteen across the two algebra subjects, plus one per
+// knowledge point in arithmetic-foundations, which is `evaluate`-only.
+t('there are twenty-eight across the three subjects', EVALS.length === 28, `${EVALS.length}`)
 t('they cover the six knowledge points that had no task at all', (() => {
   const previouslyBare = [
     'irreducible-quadratic', 'improper-first', 'excluded-points',
@@ -1629,7 +1635,7 @@ t('a witness at an excluded point fails validation', (() => {
 const X2 = EXPONENTS_AND_LOGARITHMS
 
 group('a second subject the schema was not designed around')
-t('it is registered', ONTOLOGIES.length === 2 && getOntology('exponents-and-logarithms') === X2)
+t('it is registered', ONTOLOGIES.length === 3 && getOntology('exponents-and-logarithms') === X2)
 t('it reports no structural problems', ontologyProblems(X2).length === 0, JSON.stringify(ontologyProblems(X2)))
 t('its fidelity claims match what its options can do', fidelityMismatches(X2).length === 0)
 t('it has a prerequisite-respecting teaching order', teachingOrder(X2)?.length === X2.concepts.length)
@@ -2180,6 +2186,176 @@ t('an empty archive imports to nothing rather than throwing', (() => {
   const empty = importArchive({}, 'rational-expressions')
   return empty.concepts.length === 0 && empty.edges.length === 0 && empty.parseRate === null
 })())
+
+// ---------------------------------------------------------------------------
+// The third subject: the arithmetic underneath, and what authoring it did
+// ---------------------------------------------------------------------------
+
+/**
+ * These assert the CLAIMS IN THE HEADERS, not the shape of the data.
+ *
+ * ontology-arithmetic.ts says three things that are easy to assert and easy to
+ * get wrong by a later edit: that authoring a foundation tightens the gate
+ * rather than widening it, that the session becomes a full one exactly one
+ * concept in, and that the subject is rulable with no worker. Each is checked
+ * here against the real registry, because each is the kind of claim that would
+ * otherwise rot into a comment that used to be true.
+ */
+const A = ARITHMETIC_FOUNDATIONS
+const COLD = {}
+
+group('arithmetic-foundations, the subject underneath the other two')
+t('it is registered FIRST — registry order is the curriculum order', ONTOLOGIES[0] === A)
+
+/**
+ * THE DEFAULT SUBJECT MUST BE PRACTISABLE FROM NOTHING.
+ *
+ * `ONTOLOGIES[0]` is what /api/learn/session, /learn and the scratchpad route
+ * all use when no subject is asked for, so whatever sits at index 0 is the
+ * first thing a new account is served. It therefore has to assemble a non-empty
+ * set against an empty strength table.
+ *
+ * This is a guard against a regression that already happened once rather than a
+ * hypothetical: authoring arithmetic put real gates under the previous default,
+ * and the symptom was an empty practice tab on a fresh account — zero tasks and
+ * a `blocked` list, which is `assemble` behaving correctly and the product
+ * being broken. Stated against index 0 rather than against this subject by
+ * name, so it keeps holding when a fourth subject is authored below this one.
+ */
+const defaultSet = assemble({
+  ontology: ONTOLOGIES[0], strengths: {}, now: '2026-10-23T12:00:00Z',
+})
+t('the default subject serves a non-empty set on a cold account',
+  defaultSet.tasks.length > 0,
+  `${defaultSet.tasks.length} tasks; blocked: ${defaultSet.blocked.map(b => b.conceptId).join(', ')}`)
+t('and it is the subject with a root that needs nothing',
+  roots(ONTOLOGIES[0]).some(id => gatingPrerequisitesOf(ONTOLOGIES[0], id).length === 0))
+t('and resolves by id', getOntology('arithmetic-foundations') === A)
+t('it has no internal faults', ontologyProblems(A).length === 0, ontologyProblems(A).join('; '))
+t('five concepts, fifteen knowledge points',
+  A.concepts.length === 5 && allKnowledgePoints(A).length === 15,
+  `${A.concepts.length} concepts, ${allKnowledgePoints(A).length} points`)
+t('every concept is teachable — this is a syllabus, not a map',
+  A.concepts.every(c => isTeachable(A, c.id)))
+t('every knowledge point has a task, which neither older subject manages',
+  allKnowledgePoints(A).every(p => tasksForPoint(p.id).length > 0),
+  allKnowledgePoints(A).filter(p => tasksForPoint(p.id).length === 0).map(p => p.id).join(', '))
+
+t('place value is the only root', (() => {
+  const r = roots(A)
+  return r.length === 1 && r[0] === 'place-value'
+})(), roots(A).join(', '))
+t('the curriculum order starts at place value and is acyclic',
+  teachingOrder(A)?.[0] === 'place-value' && cycles(A).length === 0)
+
+/**
+ * The entry point, before and after — the claim the whole file rests on.
+ *
+ * `size` and `maxPerConcept` are left at their defaults (8 and 3) because the
+ * claim is about what a learner actually gets, not about what the scheduler
+ * could be configured to give.
+ */
+group('what authoring a foundation did to the first session')
+const coldSet = assemble({ ontology: A, strengths: COLD, now: '2026-10-23T12:00:00Z' })
+t('a cold account gets three tasks, all from place value',
+  coldSet.tasks.length === 3 && coldSet.tasks.every(x => conceptOfPoint(A, x.knowledgePointId).id === 'place-value'),
+  `${coldSet.tasks.length} tasks`)
+t('and the other four concepts are reported blocked rather than silently absent',
+  coldSet.blocked.length === 4,
+  coldSet.blocked.map(b => b.conceptId).join(', '))
+t('each blocked concept names a TEACHABLE thing to go and do', coldSet.blocked.every(b =>
+  b.missing.length > 0 && b.missing.every(m => isTeachable(A, m))))
+
+/**
+ * A CLAIM OPENS ITS OWN CONCEPT AND NOTHING ELSE, INCLUDING NOTHING ABOVE IT.
+ *
+ * Worth asserting on this subject specifically, because it is the subject an
+ * adult is most likely to want to skip, and because the obvious reading of the
+ * claim feature is the wrong one: claiming `place-value` does NOT open
+ * `integer-arithmetic`. `introducible` deliberately does not pass `claimed`
+ * into its own recursion, so a claim is never evidence about anything
+ * downstream — the only thing that satisfies a prerequisite is strength.
+ *
+ * So skipping arithmetic is a per-concept act: you claim each concept you want
+ * to be served problems from. That is more friction than it first appears and
+ * it is the safe direction — the worst a bluff achieves is being handed
+ * problems you cannot do.
+ */
+t('claiming place value opens place value', introducible(
+  A, COLD, 'place-value', '2026-10-23T12:00:00Z', new Set(['place-value'])))
+t('but does NOT open integer arithmetic above it — a claim never propagates', !introducible(
+  A, COLD, 'integer-arithmetic', '2026-10-23T12:00:00Z', new Set(['place-value'])))
+
+/**
+ * The three-wide band, and the first full session in the build.
+ *
+ * Claiming the three siblings opens them, and `place-value` is a root so it was
+ * never shut — four open concepts, twelve candidate tasks, and the session
+ * comes back FULL at the default size of 8. This is the first place anywhere in
+ * the build where `size` binds before the per-concept cap of 3, and it is the
+ * reason the three were authored as siblings rather than as a chain: a chain
+ * would have yielded 3 tasks at every step of it.
+ *
+ * Both limits are visible in `skipped`, which is why that field exists: two
+ * tasks are dropped by the interference and the rest because the set was
+ * already full. A scheduler that returned 8 without saying which cause stopped
+ * it would read as "that is all there is".
+ */
+const BAND = ['order-of-operations', 'negative-numbers', 'divisibility']
+const bandSet = assemble({
+  ontology: A, strengths: COLD, now: '2026-10-23T12:00:00Z', claimed: new Set(BAND),
+})
+const bandConcepts = new Set(bandSet.tasks.map(x => conceptOfPoint(A, x.knowledgePointId).id))
+t('claiming the band opens all three', BAND.every(id =>
+  introducible(A, COLD, id, '2026-10-23T12:00:00Z', new Set(BAND))))
+t('the session is full at eight — the first time size binds before the cap',
+  bandSet.tasks.length === 8, `${bandSet.tasks.length}`)
+t('drawn from three concepts, so the cap is no longer what decides the set',
+  bandConcepts.size === 3, [...bandConcepts].join(', '))
+t('the interference holds: signs and precedence are never in one set',
+  !(bandConcepts.has('negative-numbers') && bandConcepts.has('order-of-operations')),
+  [...bandConcepts].join(', '))
+t('and both limits are named in skipped, not just the one that happened to bind', (() => {
+  const reasons = bandSet.skipped.map(s => s.reason)
+  return reasons.some(r => /must not be practised alongside/.test(r))
+    && reasons.some(r => /already full at 8/.test(r))
+})(), bandSet.skipped.map(s => s.reason).join(' | '))
+
+/**
+ * Every task in this subject is settled locally.
+ *
+ * `ruleEvaluate` against a verifier config with no worker — if any of these
+ * came back inconclusive the subject would be ungradable on a deployment
+ * without one, which is the one property its header claims that a reader cannot
+ * check by eye.
+ */
+group('the third subject is gradable with no worker')
+const ARITH_TASKS = allKnowledgePoints(A).flatMap(p => tasksForPoint(p.id))
+t('fifteen tasks, one per point', ARITH_TASKS.length === 15, `${ARITH_TASKS.length}`)
+t('all of them are evaluate', ARITH_TASKS.every(x => x.kind === 'evaluate'))
+t('every one declares integer symbols rather than real ones',
+  ARITH_TASKS.every(x => x.variables.every(v => v.assumptions?.integer === true)))
+t('every reference is exactly reproducible from the given — no worker consulted',
+  ARITH_TASKS.every(x => {
+    const at = {}
+    for (const [name, raw] of Object.entries(x.at)) at[name] = parseExpression(raw, [])
+    const truth = exactValue(substitute(parseExpression(x.given, x.variables.map(v => v.name)), at))
+    const claimed = exactValue(parseExpression(x.reference, x.variables.map(v => v.name)))
+    return truth !== null && claimed !== null && showExact(truth) === showExact(claimed)
+  }))
+const arithRulings = await Promise.all(ARITH_TASKS.map(x => ruleEvaluate(x, x.reference, NO_WORKER)))
+t('a correct answer is ruled correct with no worker configured',
+  arithRulings.every(r => r.verdict.ruling === 'correct'),
+  arithRulings.map((r, i) => `${ARITH_TASKS[i].id}:${r.verdict.ruling}`)
+    .filter((_, i) => arithRulings[i].verdict.ruling !== 'correct').join(', '))
+t('and a wrong one is ruled incorrect rather than inconclusive — the engine settled it',
+  (await ruleEvaluate(taskById('precedence-1'), '20', NO_WORKER)).verdict.ruling === 'incorrect')
+
+// NOTE: the companion claim — that authoring these five TIGHTENED the gate on
+// the two algebra subjects, so neither is introducible on a cold account any
+// more — is asserted in tests/atlas.mjs, which is the harness that builds the
+// composed map. It cannot be checked here: the gates run through
+// `algebra-foundations.links`, and those edges only exist in `MATHEMATICS`.
 
 rmSync(outDir, { recursive: true, force: true })
 

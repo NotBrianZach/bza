@@ -55,6 +55,32 @@ const REAL_ABC = [
   { name: 'c', assumptions: { real: true } },
 ]
 
+/**
+ * The arithmetic tasks declare `integer`, not `real`.
+ *
+ * It is a stronger assumption than the algebra tasks make and it is the honest
+ * one: every symbol in that subject stands for a whole number, and a remainder
+ * or a digit sum is not a statement about the reals. `integer` is in the
+ * worker's own `ALLOWED_ASSUMPTIONS` (worker/mathwb/exprtree.py), so the
+ * declaration survives the round trip even though these tasks are settled
+ * locally and never reach it.
+ */
+const WHOLE_ABC = [
+  { name: 'a', assumptions: { integer: true } },
+  { name: 'b', assumptions: { integer: true } },
+  { name: 'c', assumptions: { integer: true } },
+]
+
+const WHOLE_ABCD = [...WHOLE_ABC, { name: 'd', assumptions: { integer: true } }]
+
+/** Four digits, most significant first. Shared by the two four-digit tasks. */
+const WHOLE_DIGITS = [
+  { name: 'd3', assumptions: { integer: true } },
+  { name: 'd2', assumptions: { integer: true } },
+  { name: 'd1', assumptions: { integer: true } },
+  { name: 'd0', assumptions: { integer: true } },
+]
+
 export const TASKS: PracticeTask[] = [
   // ── polynomial-arithmetic ───────────────────────────────────────────────
   {
@@ -582,6 +608,246 @@ export const TASKS: PracticeTask[] = [
     form: 'radical_free',
     variables: REAL_X,
     reference: 'x^2',
+  },
+
+  // ── arithmetic-foundations ──────────────────────────────────────────────
+  //
+  // Fifteen tasks, one per knowledge point, every one `evaluate` and every one
+  // settled by `ruleEvaluate`'s exact rational arithmetic with no worker in the
+  // loop. Arithmetic is the one subject where that is total rather than
+  // partial, so this is the first syllabus in the build that is fully gradable
+  // on a deployment with no worker configured.
+  //
+  // `given` is symbolic with an `at` table even where the mathematics is a bare
+  // numeral, and the reason is the test suite rather than the schema: the
+  // re-derivation check recomputes each `reference` from `given` at `at`, and a
+  // literal answer in `given` would make it compare a number with itself. The
+  // concrete numbers are repeated in the prompt so the learner sees the problem
+  // and not the template.
+  {
+    id: 'digit-position-1',
+    knowledgePointId: 'digit-position-is-a-multiplier',
+    kind: 'evaluate',
+    prompt:
+      'Here is 4073 written out as its places: 4·10³ + 0·10² + 7·10¹ + 3·10⁰. Evaluate that sum. ' +
+      'Getting the original number back is the check that the decomposition was right.',
+    given: 'd3*10^3 + d2*10^2 + d1*10^1 + d0*10^0',
+    variables: WHOLE_DIGITS,
+    at: { d3: '4', d2: '0', d1: '7', d0: '3' },
+    reference: '4073',
+  },
+  {
+    id: 'carrying-1',
+    knowledgePointId: 'carrying-is-regrouping',
+    kind: 'evaluate',
+    prompt:
+      'Add 78 and 45 by their places: (7·10 + 8) + (4·10 + 5). Evaluate it. The tens column comes ' +
+      'to 11 and the units to 13, so both have to be exchanged before the answer is a numeral.',
+    given: '(a1*10 + a0) + (b1*10 + b0)',
+    variables: [
+      { name: 'a1', assumptions: { integer: true } },
+      { name: 'a0', assumptions: { integer: true } },
+      { name: 'b1', assumptions: { integer: true } },
+      { name: 'b0', assumptions: { integer: true } },
+    ],
+    at: { a1: '7', a0: '8', b1: '4', b0: '5' },
+    reference: '123',
+  },
+  {
+    id: 'places-rightwards-1',
+    knowledgePointId: 'places-continue-rightwards',
+    kind: 'evaluate',
+    prompt:
+      'Evaluate 2·10⁰ + 3·10⁻¹ + 7·10⁻², which is 2.37 written out as its places. Give the exact ' +
+      'value as a fraction — a terminating decimal is a fraction over a power of ten.',
+    given: 'd0*10^0 + d1*10^(-1) + d2*10^(-2)',
+    variables: [
+      { name: 'd0', assumptions: { integer: true } },
+      { name: 'd1', assumptions: { integer: true } },
+      { name: 'd2', assumptions: { integer: true } },
+    ],
+    at: { d0: '2', d1: '3', d2: '7' },
+    // 2 + 3/10 + 7/100 = 237/100. A learner answering 2.37 is ruled correct:
+    // `exactValue` reads a decimal as the fraction it literally is.
+    reference: '237/100',
+  },
+  {
+    id: 'distribute-over-places-1',
+    knowledgePointId: 'multiplication-distributes-over-the-places',
+    kind: 'evaluate',
+    prompt:
+      'Multiply 23 by 47 the way the places say to: (20 + 3)(40 + 7). Evaluate it. There are four ' +
+      'partial products, and the written method\'s two rows are those four grouped in pairs.',
+    given: '(a + b)*(c + d)',
+    variables: WHOLE_ABCD,
+    at: { a: '20', b: '3', c: '40', d: '7' },
+    // 800 + 140 + 120 + 21 = 1081.
+    reference: '1081',
+  },
+  {
+    id: 'division-remainder-1',
+    knowledgePointId: 'division-leaves-a-remainder',
+    kind: 'evaluate',
+    prompt:
+      'Dividing 137 by 19 gives a quotient of 7. Find the remainder by evaluating 137 − 19·7, then ' +
+      'check it is less than 19 — that check is what makes the quotient the right one rather than ' +
+      'merely a small one.',
+    // Not a proxy task. Verifying a division by multiplying back is the fourth
+    // subgoal of the worked example, and it is the step that is independent of
+    // whatever mistake the division itself might have made. The quotient is
+    // supplied because `exactValue` has no remainder operation — there is no
+    // tree whose exact rational value is 137 mod 19 — so the alternative was
+    // not a harder task but an unrulable one.
+    given: 'a - q*b',
+    variables: [
+      { name: 'a', assumptions: { integer: true } },
+      { name: 'q', assumptions: { integer: true } },
+      { name: 'b', assumptions: { integer: true } },
+    ],
+    at: { a: '137', q: '7', b: '19' },
+    reference: '4',
+  },
+  {
+    id: 'regrouping-1',
+    knowledgePointId: 'regrouping-makes-arithmetic-easier',
+    kind: 'evaluate',
+    prompt:
+      'Evaluate 8 · 7 · 125. Taken left to right this needs a long multiplication; reordered it ' +
+      'does not, because one of the three pairs makes a round thousand.',
+    given: 'a*b*c',
+    variables: WHOLE_ABC,
+    at: { a: '8', b: '7', c: '125' },
+    // (8 · 125) · 7 = 1000 · 7.
+    reference: '7000',
+  },
+  {
+    id: 'precedence-1',
+    knowledgePointId: 'precedence-is-a-convention',
+    kind: 'evaluate',
+    prompt:
+      'Evaluate 2 + 3 · 4. The other reading of the same symbols gives 20, so this is a question ' +
+      'about the convention rather than about the arithmetic.',
+    given: 'a + b*c',
+    variables: WHOLE_ABC,
+    at: { a: '2', b: '3', c: '4' },
+    reference: '14',
+  },
+  {
+    id: 'brackets-override-1',
+    knowledgePointId: 'brackets-override-precedence',
+    kind: 'evaluate',
+    prompt:
+      'Evaluate (2 + 3) · 4. Compare your answer with 2 + 3 · 4: one pair of brackets, two ' +
+      'different numbers.',
+    given: '(a + b)*c',
+    variables: WHOLE_ABC,
+    at: { a: '2', b: '3', c: '4' },
+    reference: '20',
+  },
+  {
+    id: 'left-to-right-1',
+    knowledgePointId: 'equal-rank-goes-left-to-right',
+    kind: 'evaluate',
+    prompt:
+      'Evaluate 20 − 8 − 5. Grouping to the right instead gives 17, so the left-to-right rule is ' +
+      'deciding the answer here rather than breaking a tie that does not matter.',
+    given: 'a - b - c',
+    variables: WHOLE_ABC,
+    at: { a: '20', b: '8', c: '5' },
+    reference: '7',
+  },
+  {
+    id: 'subtraction-total-1',
+    knowledgePointId: 'subtraction-becomes-total',
+    kind: 'evaluate',
+    prompt:
+      'Evaluate 4 − 9. Among the whole numbers this has no answer at all; the negatives are the ' +
+      'extension that gives it one.',
+    given: 'a - b',
+    variables: [
+      { name: 'a', assumptions: { integer: true } },
+      { name: 'b', assumptions: { integer: true } },
+    ],
+    at: { a: '4', b: '9' },
+    reference: '-5',
+  },
+  {
+    id: 'two-negatives-1',
+    knowledgePointId: 'two-negatives-make-a-positive',
+    kind: 'evaluate',
+    prompt:
+      'Evaluate (−3) · (−7). The distributive law leaves exactly one possible answer — see the ' +
+      'worked example for why it is forced rather than agreed.',
+    given: '(-a)*(-b)',
+    variables: [
+      { name: 'a', assumptions: { integer: true, positive: true } },
+      { name: 'b', assumptions: { integer: true, positive: true } },
+    ],
+    at: { a: '3', b: '7' },
+    reference: '21',
+  },
+  {
+    id: 'minus-before-bracket-1',
+    knowledgePointId: 'a-minus-before-a-bracket-distributes',
+    kind: 'evaluate',
+    prompt:
+      'Evaluate 5 − (3 − 8). Distributing the minus flips the sign of BOTH terms in the bracket; ' +
+      'flipping only the first is the commonest error in arithmetic and gives −6.',
+    given: 'a - (b - c)',
+    variables: WHOLE_ABC,
+    at: { a: '5', b: '3', c: '8' },
+    reference: '10',
+  },
+  {
+    id: 'divides-exactly-1',
+    knowledgePointId: 'divides-exactly-means-no-remainder',
+    kind: 'evaluate',
+    prompt:
+      'Evaluate 1274 / 7. It comes out whole, which is what "7 divides 1274" means — and the ' +
+      'answer is the second factor of the pair.',
+    given: 'a/b',
+    variables: [
+      { name: 'a', assumptions: { integer: true } },
+      { name: 'b', assumptions: { integer: true, nonzero: true } },
+    ],
+    at: { a: '1274', b: '7' },
+    reference: '182',
+  },
+  {
+    id: 'digit-sum-nine-1',
+    knowledgePointId: 'the-digit-sum-test-for-nine',
+    kind: 'evaluate',
+    prompt:
+      'Is 4581 divisible by 9? Evaluate its digit sum 4 + 5 + 8 + 1 — the test says the number is ' +
+      'divisible by 9 exactly when this is, and the worked example shows why that is not a ' +
+      'coincidence.',
+    // A proxy, and named as one: "is it divisible by 9" wants a yes or a no, and
+    // no tree has a rational value of yes. The digit sum is the one question in
+    // the vicinity with a checkable answer, and it is also the step the learner
+    // actually has to perform, so the proxy is tight. The decision that 9
+    // divides 18 is left to the learner and is not scored.
+    given: 'd3 + d2 + d1 + d0',
+    variables: WHOLE_DIGITS,
+    at: { d3: '4', d2: '5', d1: '8', d0: '1' },
+    reference: '18',
+  },
+  {
+    id: 'common-factor-1',
+    knowledgePointId: 'a-common-factor-comes-out',
+    kind: 'evaluate',
+    prompt:
+      'Taking 12 out of 84 + 36 leaves 12 · (? + ?). Evaluate (84 + 36) / 12 to get what is inside ' +
+      'the bracket. This is the distributive law read right-to-left, and it is what cancelling a ' +
+      'fraction will later be.',
+    given: '(a + b)/g',
+    variables: [
+      { name: 'a', assumptions: { integer: true } },
+      { name: 'b', assumptions: { integer: true } },
+      { name: 'g', assumptions: { integer: true, nonzero: true } },
+    ],
+    at: { a: '84', b: '36', g: '12' },
+    // 120/12 = 10, which is the 7 + 3 of the worked example.
+    reference: '10',
   },
 ]
 

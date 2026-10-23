@@ -28,7 +28,24 @@ import { verifierConfig } from '@/lib/concepts/verify'
 
 export const dynamic = 'force-dynamic'
 
-const DEFAULT_ONTOLOGY = RATIONAL_EXPRESSIONS
+/**
+ * The subject a learner lands on with no `?subject=`.
+ *
+ * It MUST be the one at the bottom of the prerequisite order, and since
+ * ontology-arithmetic.ts was authored that is no longer rational expressions.
+ * Leaving the old default in place was an outright regression rather than a
+ * stale preference: arithmetic now gates both algebra subjects through
+ * `algebra-foundations.links`, so a cold account asking for rational
+ * expressions gets an assembly of ZERO tasks and a `blocked` list — a correct
+ * answer from `assemble`, and an empty page as a first impression.
+ *
+ * Taken from `ONTOLOGIES[0]` rather than named directly, because that array's
+ * order is already documented as the curriculum order and two places
+ * disagreeing about which subject comes first is the bug this comment exists
+ * to prevent. `RATIONAL_EXPRESSIONS` is still imported — the verify and review
+ * routes use it as their own fallback.
+ */
+const DEFAULT_ONTOLOGY = ONTOLOGIES[0] ?? RATIONAL_EXPRESSIONS
 
 export async function GET(req: NextRequest) {
   const userId = await getUserFromToken(req.headers.get('authorization'))

@@ -195,6 +195,50 @@ t('the atlas proposes no unreviewed candidate edges',
 
 // ---------------------------------------------------------------------------
 
+/**
+ * AUTHORING ARITHMETIC TIGHTENED THE GATE, AND THIS IS WHERE THAT IS CHECKED.
+ *
+ * It belongs here rather than in concepts-logic.mjs because the gates run
+ * through `algebra-foundations.links`, and those edges exist only in the
+ * composed map.
+ *
+ * Before ontology-arithmetic.ts, `polynomial-arithmetic` and `exponent-rules`
+ * were introducible on a cold account: everything behind them was mapped-only,
+ * so `gatingPrerequisitesOf` looked through the lot and returned nothing. The
+ * first thing /learn could serve was expanding a product of binomials. Now the
+ * five arithmetic concepts are teachable and therefore gate.
+ *
+ * This is the test that notices if a later edit un-authors, renames or
+ * re-mapped one of the five — the symptom would be the algebra subjects
+ * quietly becoming entry points again, which looks like nothing at all from
+ * the outside.
+ */
+group('authoring arithmetic tightened the gate on the algebra subjects')
+
+const COLD = {}
+t('exponent rules now gate on integer arithmetic',
+  gatingPrerequisitesOf(MATHEMATICS, 'exponent-rules').includes('integer-arithmetic'),
+  gatingPrerequisitesOf(MATHEMATICS, 'exponent-rules').join(', '))
+t('polynomial arithmetic now gates on order of operations and signed numbers', (() => {
+  const g = gatingPrerequisitesOf(MATHEMATICS, 'polynomial-arithmetic')
+  return g.includes('order-of-operations') && g.includes('negative-numbers')
+})(), gatingPrerequisitesOf(MATHEMATICS, 'polynomial-arithmetic').join(', '))
+t('every gate named is a concept the learner can actually go and practise',
+  ['exponent-rules', 'polynomial-arithmetic', 'combining-rational'].every(id =>
+    gatingPrerequisitesOf(MATHEMATICS, id).every(p => isTeachable(MATHEMATICS, p))))
+t('place value is a root of the whole map, and was not teachable before',
+  roots(MATHEMATICS).includes('place-value') && isTeachable(MATHEMATICS, 'place-value'))
+t('the five authored ids appear exactly once each in the composed concept list',
+  ['place-value', 'integer-arithmetic', 'order-of-operations', 'negative-numbers', 'divisibility']
+    .every(id => MATHEMATICS.concepts.filter(c => c.id === id).length === 1))
+t('and they carry their own subject, not the area they left',
+  MATHEMATICS.concepts.filter(c => c.subjectId === 'arithmetic-foundations').length === 5)
+t('the nodes that used to need them still do, across the file boundary',
+  prerequisitesOf(MATHEMATICS, 'absolute-value').includes('negative-numbers')
+  && prerequisitesOf(MATHEMATICS, 'prime-factorisation').includes('divisibility'))
+
+// ---------------------------------------------------------------------------
+
 const cov = atlasCoverage(MATHEMATICS)
 console.log(`\ncoverage — and it is meant to look small`)
 console.log(`  areas:              ${cov.areas}`)

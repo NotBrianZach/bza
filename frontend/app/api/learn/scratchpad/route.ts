@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserFromToken } from '@/lib/apiQuota'
-import { getOntology, RATIONAL_EXPRESSIONS } from '@/lib/concepts/ontology'
+import { getOntology, ONTOLOGIES, RATIONAL_EXPRESSIONS } from '@/lib/concepts/ontology'
 import { loadScratchpad, saveScratchpad } from '@/lib/concepts/store'
 
 /**
@@ -39,7 +39,11 @@ const MAX_CHARS = 200_000
 
 function resolveSubject(raw: string | null | undefined) {
   const id = (raw ?? '').trim()
-  if (!id) return RATIONAL_EXPRESSIONS.subject.id
+  // `ONTOLOGIES[0]`, matching /api/learn/session and the /learn page. A
+  // scratchpad is stored per subject, so a default that disagreed with the one
+  // actually being practised would file the learner's working under a subject
+  // they never opened — and they would not find it again.
+  if (!id) return (ONTOLOGIES[0] ?? RATIONAL_EXPRESSIONS).subject.id
   return getOntology(id) ? id : null
 }
 

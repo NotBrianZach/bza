@@ -32,10 +32,12 @@
  * a learner that a form is a choice rather than a fact.
  */
 
+import { ARITHMETIC_FOUNDATIONS } from './ontology-arithmetic'
 import { EXPONENTS_AND_LOGARITHMS } from './ontology-exponentials'
 import type { ConceptEdge, ConceptOntology, Subject } from './types'
 import type { Concept } from './types'
 
+export { ARITHMETIC_FOUNDATIONS } from './ontology-arithmetic'
 export { EXPONENTS_AND_LOGARITHMS } from './ontology-exponentials'
 
 const subject: Subject = {
@@ -825,18 +827,29 @@ export const RATIONAL_EXPRESSIONS: ConceptOntology = {
 /**
  * Every subject ontology the build ships.
  *
- * Two, which is the first time this array and `getOntology` have been exercised
- * for what they were written for. The second subject lives in
- * ontology-exponentials.ts and its header records what the schema survived and
- * what it did not.
+ * Three. The second, in ontology-exponentials.ts, exists to test whether the
+ * schema was a schema or one worked example's shape, and its header records
+ * what survived. The one thing it broke — `NamedForm` being a closed union of
+ * *this* subject's forms, so the second subject could not ask for a
+ * `transform_to_form` answer at all — has since been fixed: the union carries
+ * `single_power`, `no_negative_exponents` and `radical_free`, and `FORM_CHECKS`
+ * in forms.ts is total over it so a form name cannot exist without a checker.
  *
- * The one thing it broke — `NamedForm` being a closed union of *this* subject's
- * forms, so the second subject could not ask for a `transform_to_form` answer
- * at all — has since been fixed: the union carries `single_power`,
- * `no_negative_exponents` and `radical_free`, and `FORM_CHECKS` in forms.ts is
- * total over it so a form name cannot exist without a checker.
+ * ARITHMETIC_FOUNDATIONS IS FIRST IN THE ARRAY, AND THE ORDER IS LOAD-BEARING.
+ * `roots()` and `teachingOrder()` both break ties by registry order, declaring
+ * it "an authoring decision about what to meet first", and arithmetic genuinely
+ * is met first — it is underneath both of the others via
+ * `algebra-foundations.links`. Appending it would have put place value after
+ * partial fractions in the curriculum order for no reason a learner could see.
+ *
+ * The third subject is also the first one that is gradable with no math worker
+ * configured: every one of its tasks is `evaluate`, and `ruleEvaluate` settles
+ * those by exact rational arithmetic. See its header for why that is a property
+ * of arithmetic rather than a win that generalises.
  */
-export const ONTOLOGIES: ConceptOntology[] = [RATIONAL_EXPRESSIONS, EXPONENTS_AND_LOGARITHMS]
+export const ONTOLOGIES: ConceptOntology[] = [
+  ARITHMETIC_FOUNDATIONS, RATIONAL_EXPRESSIONS, EXPONENTS_AND_LOGARITHMS,
+]
 
 export function getOntology(subjectId: string): ConceptOntology | null {
   return ONTOLOGIES.find(o => o.subject.id === subjectId) ?? null

@@ -28,50 +28,37 @@ const NUMBER_AND_ARITHMETIC: MapArea = {
   id: 'number-and-arithmetic',
   name: 'Number and arithmetic',
   covers:
-    'Whole numbers through rational numbers: place value, the four operations, divisibility, ' +
-    'fractions, ratio and percent. Nothing symbolic — the moment a letter stands for an ' +
-    'unknown, it is algebra.',
+    'Whole numbers through rational numbers: divisibility, primes, fractions, ratio and ' +
+    'percent, and the step out to the irrationals. The arithmetic underneath — place value, ' +
+    'the written algorithms, order of operations, signed numbers and divisibility itself — now ' +
+    'has problems written for it and lives in the arithmetic-foundations syllabus; this area ' +
+    'points at those concepts rather than restating them. Nothing symbolic — the moment a ' +
+    'letter stands for an unknown, it is algebra.',
+  /**
+   * FIVE NODES LEFT THIS AREA WHEN THEY WERE AUTHORED, AND HAD TO.
+   *
+   * `place-value`, `integer-arithmetic`, `order-of-operations`,
+   * `negative-numbers` and `divisibility` are now real concepts with worked
+   * examples and tasks, in ontology-arithmetic.ts. `atlasProblems` rejects a
+   * map node whose id collides with an authored concept — not as tidiness, but
+   * because the composed concept list would then hold two entries for the id
+   * and the shadowing copy has no knowledge points, so a fully authored
+   * concept would silently read as unteachable.
+   *
+   * The `needs` below still name them. That is the intended way for the map to
+   * meet a syllabus: the edge resolves in `composeAtlas`, where both endpoints
+   * exist. It is dropped by `areaOntology`, which keeps only edges internal to
+   * the area — so this area viewed alone now shows `absolute-value` and
+   * `divisibility`-dependent nodes as roots. That is the area view being
+   * honest about its own boundary rather than a fault.
+   */
   nodes: [
-    {
-      id: 'place-value',
-      name: 'Place value',
-      is: 'A digit\'s meaning depends on its position, so the same ten symbols write every number.',
-      terms: 'place value positional notation base ten',
-    },
-    {
-      id: 'integer-arithmetic',
-      name: 'Adding and multiplying whole numbers',
-      is: 'The four operations on whole numbers, and why the written algorithms work rather than just how to run them.',
-      needs: ['place-value'],
-      terms: 'addition multiplication long division carrying',
-    },
-    {
-      id: 'negative-numbers',
-      name: 'Negative numbers',
-      is: 'Extending arithmetic below zero, where subtraction becomes total and the sign rules need a reason.',
-      needs: ['integer-arithmetic'],
-      terms: 'negative number signed arithmetic integers',
-    },
     {
       id: 'absolute-value',
       name: 'Absolute value',
       is: 'Distance from zero, which is why it is a function of sign rather than an instruction to delete a minus.',
       needs: ['negative-numbers'],
       terms: 'absolute value modulus distance from zero',
-    },
-    {
-      id: 'order-of-operations',
-      name: 'Order of operations',
-      is: 'A convention, not a theorem: which of several readings of an unbracketed expression everyone agrees to take.',
-      needs: ['integer-arithmetic'],
-      terms: 'order of operations precedence brackets',
-    },
-    {
-      id: 'divisibility',
-      name: 'Divisibility and factors',
-      is: 'When one whole number divides another exactly, and the tests that decide it without dividing.',
-      needs: ['integer-arithmetic'],
-      terms: 'divisibility factor multiple divisor',
     },
     {
       id: 'prime-factorisation',
