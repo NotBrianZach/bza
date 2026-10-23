@@ -186,6 +186,49 @@ export default function LearnPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [subject])
 
+  /**
+   * Claim a concept and everything teachable it rests on.
+   *
+   * Confirmed before posting, which the single claim is not. The difference is
+   * that this writes a row per concept across subjects the learner is not
+   * looking at, and the honest moment to say how many is before rather than
+   * after. The graph's own disclosure list names them; this names the count and
+   * the one consequence that matters.
+   *
+   * `subject` is still sent, but only so an unknown-subject request 404s the
+   * same way. The route files each row under the concept's OWN subject — see
+   * its note on why anything else would be invisible.
+   */
+  const claimChain = useCallback(async (
+    conceptId: string, conceptName: string, chain: string[],
+  ) => {
+    const ok = window.confirm(
+      `Claim ${chain.length} concepts — ${conceptName} and the ${chain.length - 1} it rests on?\n\n`
+      + `Each becomes available to practise now. None of them is marked as known: a claim `
+      + `counts for nothing until you answer that concept's problems unaided, and the first `
+      + `unaided wrong answer withdraws that one concept's claim.`,
+    )
+    if (!ok) return
+
+    setClaiming(conceptId)
+    setClaimNote(null)
+    try {
+      const res = await authedFetch('/api/learn/claims', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subject: subject ?? undefined, conceptId, scope: 'chain' }),
+      })
+      const d = await res.json()
+      setClaimNote(d.error ? `could not claim the chain under ${conceptName}: ${d.error}` : d.effect)
+      if (!d.error) await load()
+    } catch {
+      setClaimNote(`could not claim the chain under ${conceptName}`)
+    } finally {
+      setClaiming(null)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subject])
+
   const load = useCallback(async () => {
     setLoading(true)
     try {
@@ -444,6 +487,7 @@ export default function LearnPage() {
               concepts={state?.progress?.concepts ?? []}
               masteryFloor={MASTERY_FLOOR}
               onClaim={claim}
+              onClaimChain={claimChain}
               // The area filter only appears on the map. A nine-concept subject
               // has one area, and a filter with one option is furniture.
               areaNames={scope === 'atlas' ? AREA_NAMES : undefined}

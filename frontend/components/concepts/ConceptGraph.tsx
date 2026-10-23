@@ -3,9 +3,10 @@
 import { useMemo, useState } from 'react'
 import type { ConceptOntology } from '@/lib/concepts/types'
 import {
-  conceptById, dependentsOf, edgesOfKind, gatingPrerequisitesOf, interferesWith, isTeachable,
-  prerequisitesOf,
+  claimableChainFor, conceptById, dependentsOf, edgesOfKind, gatingPrerequisitesOf, interferesWith,
+  isTeachable, prerequisitesOf,
 } from '@/lib/concepts/registry'
+import { MATHEMATICS } from '@/lib/concepts/atlas'
 
 /**
  * The concept graph, drawn as a graph.
@@ -68,6 +69,7 @@ export default function ConceptGraph({
   concepts,
   masteryFloor,
   onClaim,
+  onClaimChain,
   areaNames,
   initialArea,
 }: {
@@ -77,6 +79,16 @@ export default function ConceptGraph({
   masteryFloor: number
   /** Offered on a blocked node. Omit to render read-only. */
   onClaim?: (conceptId: string, conceptName: string) => void
+  /**
+   * Claim the concept and everything teachable it rests on.
+   *
+   * Separate from `onClaim` rather than a flag on it, because the two have
+   * different preconditions: a plain claim is only useful on a node this
+   * session could serve, while a chain claim is useful on any teachable node
+   * and deliberately writes rows into OTHER subjects. Folding them into one
+   * callback would mean one visibility rule for two different offers.
+   */
+  onClaimChain?: (conceptId: string, conceptName: string, chain: string[]) => void
   /**
    * Display names for the `subjectId`s present in the ontology. Supplying this
    * turns on the area filter, which a single-subject graph does not want and a
@@ -261,6 +273,22 @@ export default function ConceptGraph({
 
   const sel = selected ? conceptById(ontology, selected) : null
 
+  /**
+   * What a chain claim on the selected node would cover.
+   *
+   * Over `MATHEMATICS`, not `ontology` — the same walk the route performs, so
+   * the count on the button is the number of rows that will actually be
+   * written. Taking it from a single-subject `ontology` would stop at the
+   * subject boundary and promise fewer concepts than it claims.
+   *
+   * Memoised on the id alone: the atlas is a static document, so for a given
+   * selection this is a constant.
+   */
+  const selChain = useMemo(
+    () => (sel ? claimableChainFor(MATHEMATICS, sel.id) : []),
+    [sel?.id], // eslint-disable-line react-hooks/exhaustive-deps
+  )
+
   return (
     <div className='rounded-lg border border-gray-800 bg-gray-900'>
       <div className='flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-gray-800 px-3 py-2'>
@@ -434,7 +462,62 @@ export default function ConceptGraph({
                 I already know this
               </button>
             )}
+            {/* The chain offer, and its conditions are deliberately NOT the
+                plain claim's.
+
+                No `stateOf` guard: the whole point is to write claims into
+                other subjects, so requiring the concept to be in THIS
+                session's progress would disable the button exactly where it is
+                most useful. No `introducible` guard either — a concept you can
+                already practise can still have twenty unclaimed prerequisites
+                beneath it.
+
+                `selChain` is computed over MATHEMATICS rather than `ontology`,
+                because the route walks the composed map and a count taken from
+                a single subject would stop at the boundary and under-report.
+                Offered only when the chain reaches past the concept itself;
+                with a chain of one it would be the button above, relabelled. */}
+            {onClaimChain && selChain.length > 1 && (
+              <button
+                onClick={() => onClaimChain(sel.id, sel.name, selChain)}
+                title={
+                  `Claims ${selChain.length} concepts: ${sel.name} and the ${selChain.length - 1} `
+                  + `it rests on, across every subject they belong to. Each is a separate claim — `
+                  + `each opens its own problems, and each is withdrawn on its own first unaided `
+                  + `wrong answer. It does not mark you as knowing any of them.`
+                }
+                className='rounded-full border border-sky-700/60 px-2 py-0.5 text-[11px] text-sky-200 hover:bg-sky-900/40'
+              >
+                I know this and the {selChain.length - 1} under it
+              </button>
+            )}
           </div>
+          {/* Named, not just counted. A button that writes twenty rows should
+              say which twenty before it is pressed, and the subject labels are
+              the part a learner cannot infer — these concepts are mostly not
+              in the subject they are looking at. */}
+          {onClaimChain && selChain.length > 1 && (
+            <details className='mt-1'>
+              <summary className='cursor-pointer text-[11px] text-sky-300/70 hover:text-sky-200'>
+                what that would claim
+              </summary>
+              <ul className='mt-1 space-y-0.5 pl-3 text-[11px] leading-snug text-gray-400'>
+                {selChain.map(id => {
+                  const c = conceptById(MATHEMATICS, id)
+                  return (
+                    <li key={id}>
+                      {c?.name ?? id}
+                      {c && c.subjectId !== sel.subjectId && (
+                        <span className='text-gray-600'>
+                          {' '}— {areaNames?.[c.subjectId] ?? c.subjectId}
+                        </span>
+                      )}
+                    </li>
+                  )
+                })}
+              </ul>
+            </details>
+          )}
           {/* The concept's own scope hint, not a `covers` field — that is on the
               SUBJECT. A concept describes itself through its facet option. */}
           {/* Said rather than left as a missing button. A node drawn in the

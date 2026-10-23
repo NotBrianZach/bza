@@ -73,7 +73,7 @@ const {
 } = atlas
 const {
   ontologyProblems, cycles, prerequisitesOf, gatingPrerequisitesOf, isTeachable, roots,
-  teachingOrder,
+  teachingOrder, claimableChainFor, dependentsOf,
 } = registry
 const { ONTOLOGIES } = ontology
 
@@ -236,6 +236,99 @@ t('and they carry their own subject, not the area they left',
 t('the nodes that used to need them still do, across the file boundary',
   prerequisitesOf(MATHEMATICS, 'absolute-value').includes('negative-numbers')
   && prerequisitesOf(MATHEMATICS, 'prime-factorisation').includes('divisibility'))
+
+// ---------------------------------------------------------------------------
+
+/**
+ * `claimableChainFor` — what one "I already know this" covers.
+ *
+ * Checked on the composed map because that is the ontology the claims route
+ * walks, and the cross-subject reach is the entire point: a chain confined to
+ * one subject would claim none of the arithmetic beneath an algebra concept,
+ * which is exactly the part somebody saying "I know this" means.
+ */
+group('a chain claim walks down, across subjects, and only over material')
+
+const chainFor = id => claimableChainFor(MATHEMATICS, id)
+
+t('the concept itself heads its own chain', chainFor('partial-fractions-linear')[0] === 'partial-fractions-linear')
+t('every concept in a chain is teachable — an unclaimable row is never proposed',
+  MATHEMATICS.concepts.every(c => chainFor(c.id).every(id => isTeachable(MATHEMATICS, id))))
+
+/**
+ * DOWNWARDS. The direction is the safety property: claiming a root must not
+ * assert knowledge of everything built on it.
+ */
+t('a chain contains no dependent of its own concept', (() => {
+  const chain = new Set(chainFor('integer-arithmetic'))
+  return dependentsOf(MATHEMATICS, 'integer-arithmetic').every(d => !chain.has(d))
+})())
+t('claiming place value claims only place value — nothing rests beneath it',
+  chainFor('place-value').length === 1)
+t('and does NOT reach the 19 teachable concepts above it', (() => {
+  const teachable = MATHEMATICS.concepts.filter(c => isTeachable(MATHEMATICS, c.id)).length
+  return chainFor('place-value').length === 1 && teachable === 20
+})(), `${MATHEMATICS.concepts.filter(c => isTeachable(MATHEMATICS, c.id)).length} teachable`)
+
+/**
+ * The cross-subject reach, named concept by concept rather than counted. These
+ * are the edges that only exist in the composed map, via
+ * `algebra-foundations.links`.
+ */
+t('exponent rules reach down into arithmetic', (() => {
+  const chain = chainFor('exponent-rules')
+  return chain.includes('integer-arithmetic') && chain.includes('place-value')
+})(), chainFor('exponent-rules').join(', '))
+t('combining rational expressions reaches arithmetic through the fractions link', (() => {
+  const chain = chainFor('combining-rational')
+  // `fraction-arithmetic` is the link's own endpoint and is mapped-only, so it
+  // must NOT appear — but the walk has to pass THROUGH it to the arithmetic
+  // below, which is the behaviour `gatingPrerequisitesOf` could not give us.
+  return !chain.includes('fraction-arithmetic')
+    && chain.includes('divisibility') && chain.includes('integer-arithmetic')
+})(), chainFor('combining-rational').join(', '))
+t('a chain spans more than one subject, which is why rows are filed per concept',
+  new Set(chainFor('partial-fractions-linear')
+    .map(id => MATHEMATICS.concepts.find(c => c.id === id).subjectId)).size > 1,
+  [...new Set(chainFor('partial-fractions-linear')
+    .map(id => MATHEMATICS.concepts.find(c => c.id === id).subjectId))].join(', '))
+
+/**
+ * A chain on a mapped-only node is empty rather than partial.
+ *
+ * `integration-partial-fractions` has nothing written for it, so the node
+ * itself is dropped — but everything it rests on is authored, so an
+ * unteachable-aware walk still has plenty to return. Asserting the node is
+ * absent while its ancestors are present is what distinguishes "filter the
+ * list" from "refuse the walk".
+ */
+t('a mapped-only node is dropped from its own chain but its ancestors are not', (() => {
+  const chain = chainFor('integration-partial-fractions')
+  return !chain.includes('integration-partial-fractions')
+    && chain.includes('partial-fractions-linear')
+})(), chainFor('integration-partial-fractions').join(', '))
+
+t('no chain contains a duplicate', MATHEMATICS.concepts.every(c => {
+  const chain = chainFor(c.id)
+  return new Set(chain).size === chain.length
+}))
+t('every chain terminates — the map is acyclic and the walk carries a seen set',
+  MATHEMATICS.concepts.every(c => chainFor(c.id).length <= MATHEMATICS.concepts.length))
+
+/**
+ * The chain is prerequisite-closed over teachable concepts.
+ *
+ * The property that makes it correct: if a concept is in the chain, everything
+ * teachable that IT rests on is in the chain too. A walk that missed a branch
+ * would leave a claimed concept gated behind an unclaimed one, so the learner
+ * would press the button and still be blocked — the failure mode that looks
+ * like the feature not working at all.
+ */
+t('a chain is closed under teachable prerequisites', MATHEMATICS.concepts.every(c => {
+  const chain = new Set(chainFor(c.id))
+  return [...chain].every(id =>
+    gatingPrerequisitesOf(MATHEMATICS, id).every(p => chain.has(p)))
+}))
 
 // ---------------------------------------------------------------------------
 

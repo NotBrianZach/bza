@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserFromToken } from '@/lib/apiQuota'
 import { getOntology, RATIONAL_EXPRESSIONS } from '@/lib/concepts/ontology'
-import { conceptById } from '@/lib/concepts/registry'
+import { claimableChainFor, conceptById } from '@/lib/concepts/registry'
 import { MATHEMATICS } from '@/lib/concepts/atlas'
 import { allClaims, claimConcept, withdrawClaim } from '@/lib/concepts/store'
 
@@ -68,13 +68,118 @@ export async function GET(req: NextRequest) {
   }
 }
 
+/**
+ * Claim a concept and every teachable concept it rests on.
+ *
+ * ── THE WALK IS OVER THE COMPOSED MAP, NOT THE REQUESTED SUBJECT ──────────
+ *
+ * Deliberate, and it is the whole value of the feature. The prerequisite chain
+ * under an authored concept leaves its subject almost immediately —
+ * `combining-rational` rests on `fraction-arithmetic`, `exponent-rules` on
+ * `integer-arithmetic`, both by way of `algebra-foundations.links`. A walk
+ * confined to the requested subject would stop at the boundary and claim none
+ * of the arithmetic, which is precisely the chain somebody says they already
+ * know.
+ *
+ * ── EACH ROW IS FILED UNDER THE CONCEPT'S OWN SUBJECT, NOT THE REQUEST'S ──
+ *
+ * `allClaims` and `liveClaims` both filter on `subject_id`, and the session
+ * route loads only the subject being practised. So a claim on
+ * `integer-arithmetic` filed under `rational-expressions` — the subject the
+ * learner happened to be looking at — would be invisible for ever: never
+ * loaded while practising arithmetic, and useless while practising rational
+ * expressions, because a claim only ever opens its own concept.
+ *
+ * `composeAtlas` preserves each concept's `subjectId` through the union
+ * expressly so this is answerable; the atlas header calls that disagreement
+ * with `subject.id` load-bearing, and this is what it is load-bearing for.
+ *
+ * ── Sequential, and partial success is reported rather than rolled back ───
+ *
+ * `claimConcept` already returns false on a duplicate, so re-claiming a chain
+ * that overlaps an earlier one is a no-op per concept rather than an error.
+ * There is no transaction: a chain is at most a few dozen inserts, and if the
+ * eleventh fails the right answer is to say ten were claimed — rolling back
+ * work the learner correctly asserted, because a later unrelated insert failed,
+ * would be worse than reporting it.
+ */
+async function claimTheChain(
+  userId: string, conceptId: string, conceptName: string, note: string | null,
+) {
+  const chain = claimableChainFor(MATHEMATICS, conceptId)
+
+  const claimed: string[] = []
+  const already: string[] = []
+  const failed: { conceptId: string; reason: string }[] = []
+
+  for (const id of chain) {
+    const c = conceptById(MATHEMATICS, id)
+    // Cannot happen — `claimableChainFor` draws from this ontology's own
+    // concepts — but a claim filed under the wrong subject is invisible rather
+    // than loud, so the impossible case is skipped instead of guessed at.
+    if (!c) {
+      failed.push({ conceptId: id, reason: 'not in the composed map' })
+      continue
+    }
+    try {
+      const created = await claimConcept(userId, c.subjectId, id, note)
+      if (created) claimed.push(id); else already.push(id)
+    } catch (e) {
+      failed.push({ conceptId: id, reason: e instanceof Error ? e.message : 'insert failed' })
+    }
+  }
+
+  const name = (id: string) => conceptById(MATHEMATICS, id)?.name ?? id
+  const bySubject = new Map<string, number>()
+  for (const id of claimed) {
+    const s = conceptById(MATHEMATICS, id)?.subjectId ?? 'unknown'
+    bySubject.set(s, (bySubject.get(s) ?? 0) + 1)
+  }
+
+  return NextResponse.json({
+    claimed: claimed.length > 0,
+    conceptName,
+    scope: 'chain',
+    /** Named, not just counted — a learner should be able to see what they just asserted. */
+    chain: chain.map(id => ({
+      conceptId: id,
+      conceptName: name(id),
+      subjectId: conceptById(MATHEMATICS, id)?.subjectId ?? null,
+      outcome: claimed.includes(id) ? 'claimed'
+        : already.includes(id) ? 'already claimed'
+        : 'failed',
+    })),
+    counts: {
+      claimed: claimed.length,
+      alreadyClaimed: already.length,
+      failed: failed.length,
+      subjects: [...bySubject].map(([subjectId, n]) => ({ subjectId, claimed: n })),
+    },
+    failed,
+    effect: claimed.length === 0 && already.length > 0
+      ? `you already had live claims on all ${already.length} concepts under ${conceptName}`
+      : `${claimed.length} concept(s) under and including ${conceptName} are open to practise now`
+        + `${already.length > 0 ? `, ${already.length} were already claimed` : ''}`
+        + `. None of them counts for anything until you answer its problems unaided, and one`
+        + ` unaided wrong answer withdraws that concept's claim — each is settled on its own.`,
+  })
+}
+
 export async function POST(req: NextRequest) {
   const userId = await getUserFromToken(req.headers.get('authorization'))
   if (!userId) return NextResponse.json({ error: 'Not signed in' }, { status: 401 })
 
   const body = await req.json().catch(() => null) as {
-    subject?: string; conceptId?: string; note?: string
+    subject?: string; conceptId?: string; note?: string; scope?: string
   } | null
+
+  /**
+   * `'chain'` claims the concept AND every teachable concept it rests on.
+   *
+   * Default is `'concept'`, so every existing caller keeps its exact behaviour
+   * — this is an added affordance and not a change to what a plain claim means.
+   */
+  const chain = (body?.scope ?? 'concept') === 'chain'
 
   const resolved = resolve(body?.subject)
   if (!resolved) return NextResponse.json({ error: 'Unknown subject' }, { status: 404 })
@@ -116,6 +221,8 @@ export async function POST(req: NextRequest) {
   const note = (body?.note ?? '').trim().slice(0, MAX_NOTE) || null
 
   try {
+    if (chain) return await claimTheChain(userId, conceptId, concept.name, note)
+
     const created = await claimConcept(userId, resolved.id, conceptId, note)
     return NextResponse.json({
       claimed: created,

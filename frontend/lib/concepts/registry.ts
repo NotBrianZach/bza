@@ -190,6 +190,52 @@ export function allPrerequisitesOf(o: ConceptOntology, id: string): string[] {
 }
 
 /**
+ * Everything one "I already know this" should cover: the concept, and every
+ * teachable concept it rests on.
+ *
+ * ── Why this is a list to be claimed, and not a change to the gate ────────
+ *
+ * `introducible` will not let a claim propagate — claiming a concept opens that
+ * concept and is never evidence about anything above it. That asymmetry is the
+ * entire safety argument for letting anybody claim anything, and it is not
+ * being relaxed here.
+ *
+ * What this function does instead is answer "which concepts would a person who
+ * knows this one also claim?", so the caller can write one explicit claim row
+ * per concept. Twenty real claims instead of twenty clicks. Each row is still
+ * individually settleable, individually revocable by a single unaided wrong
+ * answer, and individually visible in the claims list — a bulk claim is a bulk
+ * of claims, not a new kind of thing.
+ *
+ * ── DOWNWARDS, NOT UPWARDS ────────────────────────────────────────────────
+ *
+ * Prerequisites, transitively. "I know partial fractions" licenses an inference
+ * about factoring, which it rests on; it licenses nothing whatever about
+ * integration by partial fractions, which rests on IT. Walking dependents
+ * instead would let one click on a root assert knowledge of most of
+ * mathematics, which is the one claim a learner is in no position to make.
+ *
+ * ── Only teachable concepts, and that is why the walk is the long one ─────
+ *
+ * `allPrerequisitesOf`, not `gatingPrerequisitesOf`. The gating walk stops at
+ * the nearest teachable ancestor, which is right for deciding whether to serve
+ * a problem and wrong here: a mapped-only node mid-chain would hide every
+ * teachable concept behind it. So the full chain is walked and the unteachable
+ * ones are then dropped, because a concept with no material has nothing to
+ * open and gates nothing — claiming it would write a row that can never be
+ * settled.
+ *
+ * Nearest-first, inheriting `allPrerequisitesOf`'s breadth-first order, with
+ * the concept itself at the head. A caller showing this to somebody is showing
+ * them a list that reads outward from what they clicked.
+ *
+ * Cycle-safety comes from `allPrerequisitesOf`'s own `seen` set.
+ */
+export function claimableChainFor(o: ConceptOntology, id: string): string[] {
+  return [id, ...allPrerequisitesOf(o, id)].filter(c => isTeachable(o, c))
+}
+
+/**
  * Concepts with no prerequisites — where a learner can start.
  *
  * In registry order, not alphabetical: the ontology's own order is an authoring
