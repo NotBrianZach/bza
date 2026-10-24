@@ -34,9 +34,33 @@ export default function BookPage() {
     if (window.innerWidth >= 1024) setSidebarMode('normal')
   }, [])
 
-  // Auto-open sidebar for wiki articles (TOC is the primary nav)
+  /**
+   * Auto-open the sidebar for wiki articles, where the TOC is the primary nav.
+   *
+   * DESKTOP ONLY, and the guard is the whole point. Below `lg` the sidebar is
+   * not a panel beside the text — it is `fixed inset-y-0 right-0 z-50` with a
+   * `bg-black/50` backdrop over everything else. So on a phone this effect did
+   * not reveal a table of contents next to the article; it covered the article
+   * completely, and what a reader saw on opening a Wikipedia book was the chat
+   * pane, with the reader and its whole toolbar behind an overlay.
+   *
+   * Caught by driving a real browser at 390×844 — it is invisible to every
+   * test that renders at a desktop width, and invisible on desktop entirely.
+   *
+   * `>= 1024` matches the `lg:` breakpoint the sidebar's own classes switch on,
+   * and matches the two sibling guards: the mount effect above and
+   * `openProblemSet` below.
+   *
+   * The other openers — `openTutor`, create-card, explain-selection — stay
+   * unconditional on purpose. They run because somebody pressed something, and
+   * a full-screen sidebar is the correct answer to "open the tutor" on a phone.
+   * The distinction is automatic versus asked for, not mobile versus desktop:
+   * an effect that fires on load has no such permission.
+   */
   useEffect(() => {
-    if (book?.content_type === 'wikipedia_article') setSidebarMode('normal')
+    if (book?.content_type === 'wikipedia_article' && window.innerWidth >= 1024) {
+      setSidebarMode('normal')
+    }
   }, [book?.content_type])
 
   // Analytics: fire once per book open

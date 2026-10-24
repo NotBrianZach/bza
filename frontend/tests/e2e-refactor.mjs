@@ -246,6 +246,274 @@ async function run() {
       test('View-mode toggle title changes after click', after !== before, `${before} → ${after}`)
     }
 
+    /**
+     * ─── THE FOUR BRANCHES OF cycleViewMode, WALKED ──────────────────
+     *
+     * The one click above proves the button is wired. It does not touch the
+     * thing the refactor actually risked: `cycleViewMode` collapsed four
+     * separate view-mode branches into one condition,
+     *
+     *   if (isMobile || scrollMode || pagesPerView >= 3) { toggle; ppv = 1 }
+     *   else { ppv = ppv + 1 }
+     *
+     * and a single click exercises exactly one arm of it. Three of the four
+     * paths through that condition could be broken and the assertion above
+     * would still pass.
+     *
+     * The title is the whole observable: `scrollMode ? 'Scroll mode — click
+     * for paginated' : '{pagesPerView}-up — click to cycle'`. So on desktop
+     * four clicks must read scroll → 1-up → 2-up → 3-up and land back on
+     * scroll, which pins every arm — the scrollMode arm, the two increments,
+     * and the `>= 3` wrap. Asserted as a SEQUENCE rather than a set: the
+     * order is the claim, and a cycle that visited 1-up twice and never 3-up
+     * would satisfy a set comparison.
+     *
+     * Breakpoint is read from `innerWidth` at click time, not from a media
+     * query, so the viewport has to be set before clicking rather than at
+     * page load. That is also why mobile is a separate pass below.
+     */
+    console.log('\n--- cycleViewMode: all four branches (desktop) ---')
+    const titleNow = () => page.evaluate(() => {
+      const b = document.querySelector('button[title*="Scroll mode" i], button[title*="up" i]')
+      return b?.getAttribute('title') ?? null
+    })
+    const clickMode = async () => {
+      const b = await page.$('button[title*="Scroll mode" i], button[title*="up" i]')
+      if (!b) return null
+      await b.click()
+      await sleep(400)
+      return titleNow()
+    }
+
+    await page.setViewport({ width: 1280, height: 900 })
+    await sleep(300)
+
+    // Normalise to scroll mode first, so the walk starts from a known arm —
+    // at most four clicks reaches it from anywhere in the cycle.
+    for (let i = 0; i < 4; i++) {
+      const t = await titleNow()
+      if (t && /Scroll mode/i.test(t)) break
+      await clickMode()
+    }
+    const startTitle = await titleNow()
+    test('Normalised to scroll mode before the walk',
+      !!startTitle && /Scroll mode/i.test(startTitle), String(startTitle))
+
+    const walk = []
+    for (let i = 0; i < 4; i++) walk.push(await clickMode())
+    console.log(`      walk: ${walk.join(' → ')}`)
+
+    test('Desktop click 1: scroll → 1-up', /\b1-up/.test(walk[0] ?? ''), String(walk[0]))
+    test('Desktop click 2: 1-up → 2-up', /\b2-up/.test(walk[1] ?? ''), String(walk[1]))
+    test('Desktop click 3: 2-up → 3-up', /\b3-up/.test(walk[2] ?? ''), String(walk[2]))
+    test('Desktop click 4: 3-up wraps back to scroll',
+      /Scroll mode/i.test(walk[3] ?? ''), String(walk[3]))
+    test('The cycle is closed — four clicks return to the start',
+      walk[3] === startTitle, `${startTitle} vs ${walk[3]}`)
+
+    /**
+     * Mobile takes the `isMobile` arm on every click, so the cycle is two
+     * states wide and must never reach 2-up or 3-up. A spread of pages on a
+     * phone is the thing that arm exists to prevent.
+     */
+    console.log('\n--- cycleViewMode: the mobile arm ---')
+    await page.setViewport({ width: 390, height: 844 })
+    await sleep(300)
+
+    /**
+     * Below `lg` the sidebar is a full-screen `z-50` overlay, so if anything
+     * has opened it the toolbar is behind a backdrop and a coordinate click
+     * lands on the overlay instead of the button. That is a real condition a
+     * phone user meets — it is how the wiki auto-open bug was found — but it
+     * is not what this section is testing, so it is closed first and asserted
+     * separately below.
+     */
+    const closeSidebarIfOpen = async () => {
+      const open = await page.$('.fixed.inset-0.bg-black\\/50')
+      if (!open) return false
+      const btn = await page.$('button[title="Close sidebar"], button[title="Expand sidebar"]')
+      if (btn) await btn.click().catch(() => {})
+      await sleep(400)
+      // 'Expand sidebar' means it was 'normal'; one more press closes it.
+      const still = await page.$('.fixed.inset-0.bg-black\\/50')
+      if (still) {
+        const b2 = await page.$('button[title="Close sidebar"]')
+        if (b2) await b2.click().catch(() => {})
+        await sleep(400)
+      }
+      return true
+    }
+    await closeSidebarIfOpen()
+    test('Toolbar is reachable at phone width (no overlay over it)',
+      await page.evaluate(() => {
+        const b = Array.from(document.querySelectorAll('button[title]'))
+          .find(x => /Scroll mode|-up/.test(x.getAttribute('title') || ''))
+        if (!b) return false
+        const r = b.getBoundingClientRect()
+        const top = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)
+        return top === b || b.contains(top)
+      }))
+
+    for (let i = 0; i < 2; i++) {
+      const t = await titleNow()
+      if (t && /Scroll mode/i.test(t)) break
+      await clickMode()
+    }
+    const mStart = await titleNow()
+    const mWalk = [await clickMode(), await clickMode()]
+    console.log(`      walk: ${mStart} → ${mWalk.join(' → ')}`)
+    test('Mobile click 1: scroll → 1-up', /\b1-up/.test(mWalk[0] ?? ''), String(mWalk[0]))
+    test('Mobile click 2: back to scroll, never 2-up',
+      /Scroll mode/i.test(mWalk[1] ?? ''), String(mWalk[1]))
+    test('Mobile never reaches a multi-page spread',
+      !mWalk.some(t => /\b[23]-up/.test(t ?? '')), mWalk.join(' → '))
+
+    await page.setViewport({ width: 1280, height: 900 })
+    await sleep(300)
+
+    /**
+     * ─── The controls the suite never clicked ────────────────────────
+     *
+     * Search, the image-mode cycle and the sidebar cycle are all in the
+     * extracted toolbar and none of them had a test. Each is a cycle with a
+     * title that names its own state, so each can be walked the same way.
+     */
+    console.log('\n--- Search ---')
+    const searchBtn = await page.$('button[title*="Search" i]')
+    test('Search button present', !!searchBtn)
+    if (searchBtn) {
+      await searchBtn.click()
+      await sleep(400)
+      const input = await page.$('input[placeholder*="earch" i]')
+      test('Search opens an input', !!input)
+      if (input) {
+        await input.type('the')
+        await sleep(600)
+        const typed = await input.evaluate(el => el.value)
+        test('Search input accepts typing', typed === 'the', typed)
+      }
+      // Escape is the documented close; fall back to the close button.
+      await page.keyboard.press('Escape')
+      await sleep(400)
+      const stillOpen = await page.$('input[placeholder*="earch" i]')
+      if (stillOpen) {
+        const closeBtn = await page.$('button[title*="Close" i]')
+        if (closeBtn) await closeBtn.click().catch(() => {})
+        await sleep(300)
+      }
+      test('Search closes again', !(await page.$('input[placeholder*="earch" i]')))
+    }
+
+    console.log('\n--- Image-mode cycle ---')
+    /**
+     * Four states: all → side only → inline only → none → all. The last arm
+     * also fires `onOpenImagesDrawer` (clicking "No images" opens the drawer
+     * so the images are still reachable), which is the one branch here with a
+     * side effect beyond its own title.
+     */
+    const IMG_TITLES = [
+      'All images — click to cycle',
+      'Side images only',
+      'Inline images only',
+      'No images — click to show',
+    ]
+    const imgTitleNow = () => page.evaluate(titles => {
+      const b = Array.from(document.querySelectorAll('button[title]'))
+        .find(x => titles.includes(x.getAttribute('title')))
+      return b?.getAttribute('title') ?? null
+    }, IMG_TITLES)
+    const imgBtn0 = await imgTitleNow()
+    test('Image-mode button present', !!imgBtn0, String(imgBtn0))
+    if (imgBtn0) {
+      const seen = [imgBtn0]
+      for (let i = 0; i < 4; i++) {
+        const b = await page.evaluateHandle(titles => Array.from(document.querySelectorAll('button[title]'))
+          .find(x => titles.includes(x.getAttribute('title'))) ?? null, IMG_TITLES)
+        const el = b.asElement()
+        if (!el) break
+        await el.click().catch(() => {})
+        await sleep(400)
+        seen.push(await imgTitleNow())
+      }
+      console.log(`      cycle: ${seen.join(' → ')}`)
+      test('Image mode visits all four states',
+        new Set(seen.filter(Boolean)).size === 4, seen.join(' → '))
+      test('Image mode returns to where it started', seen[0] === seen[4], `${seen[0]} vs ${seen[4]}`)
+    }
+
+    console.log('\n--- Sidebar cycle ---')
+    /** hidden → normal → wide → hidden, each naming the NEXT action. */
+    const SIDEBAR_TITLES = ['Open sidebar', 'Expand sidebar', 'Close sidebar']
+    const sideTitleNow = () => page.evaluate(titles => {
+      const b = Array.from(document.querySelectorAll('button[title]'))
+        .find(x => titles.includes(x.getAttribute('title')))
+      return b?.getAttribute('title') ?? null
+    }, SIDEBAR_TITLES)
+    const side0 = await sideTitleNow()
+    test('Sidebar button present', !!side0, String(side0))
+    if (side0) {
+      const seen = [side0]
+      for (let i = 0; i < 3; i++) {
+        const b = await page.evaluateHandle(titles => Array.from(document.querySelectorAll('button[title]'))
+          .find(x => titles.includes(x.getAttribute('title'))) ?? null, SIDEBAR_TITLES)
+        const el = b.asElement()
+        if (!el) break
+        await el.click().catch(() => {})
+        await sleep(400)
+        seen.push(await sideTitleNow())
+      }
+      console.log(`      cycle: ${seen.join(' → ')}`)
+      test('Sidebar visits all three states',
+        new Set(seen.filter(Boolean)).size === 3, seen.join(' → '))
+      test('Sidebar returns to where it started', seen[0] === seen[3], `${seen[0]} vs ${seen[3]}`)
+    }
+
+    /**
+     * ─── Every control once in PAGINATED mode too ────────────────────
+     *
+     * The todo this suite was extended for asks for each control in both
+     * scroll and paginated mode, and the reason is specific: paginated mode
+     * slices content by character offset and re-mounts the pane, so a control
+     * that reads the live DOM can work in one mode and not the other. Clicked
+     * rather than merely found, and the assertion is that the toolbar is
+     * still mounted and nothing threw — a control that detached the toolbar
+     * is the failure worth catching here.
+     */
+    console.log('\n--- Each control once in paginated mode ---')
+    // The sidebar cycle above leaves it open, and an open sidebar narrows the
+    // toolbar enough to matter. Shut it so this section starts from the same
+    // layout the desktop walk ran in.
+    const sbClose = await page.$('button[title="Close sidebar"]')
+    if (sbClose) { await sbClose.click().catch(() => {}); await sleep(400) }
+    for (let i = 0; i < 5; i++) {
+      const t = await titleNow()
+      if (t && /\b1-up/.test(t)) break
+      await clickMode()
+    }
+    const pagTitle = await titleNow()
+    test('Switched into paginated (1-up)', /\b1-up/.test(pagTitle ?? ''), String(pagTitle))
+
+    for (const [label, selector] of [
+      ['Search', 'button[title*="Search" i]'],
+      ['Translate', 'button[title="Translation"]'],
+      ['Narrate', 'button[title*="narration" i]'],
+      ['Wiki', 'button[title*="Wikipedia" i]'],
+    ]) {
+      const b = await page.$(selector)
+      if (!b) { test(`${label} present in paginated mode`, false, 'not found'); continue }
+      let threw = false
+      await b.click().catch(() => { threw = true })
+      await sleep(600)
+      const toolbarAlive = !!(await page.$('button[title*="Search" i]'))
+      test(`${label} clicked in paginated mode without detaching the toolbar`,
+        !threw && toolbarAlive, threw ? 'click threw' : 'toolbar gone')
+      // Put things back: close search, stop narration, leave panels shut.
+      await page.keyboard.press('Escape').catch(() => {})
+      const stop = await page.$('button[title="Stop narration"]')
+      if (stop) await stop.click().catch(() => {})
+      await sleep(300)
+    }
+
     // ─── No console errors during the flow ───────────────────────────
     console.log('\n--- Console health ---')
     // Filter noise — third-party scripts, expected supabase auth chatter,

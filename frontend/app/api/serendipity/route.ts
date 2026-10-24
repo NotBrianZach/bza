@@ -191,6 +191,32 @@ export async function GET(req: NextRequest) {
     const card = await fetchCard(source)
     return NextResponse.json(card)
   } catch (err: any) {
-    return NextResponse.json({ error: err.message ?? 'fetch failed' }, { status: 500 })
+    /**
+     * A THIRD PARTY BEING DOWN IS NOT A FAULT OF THIS SERVER.
+     *
+     * Every branch of `fetchCard` calls `res.json()` on a response it has not
+     * checked — twelve of them — so when an upstream answers with an error
+     * PAGE rather than JSON, the parse throws and this used to return 500.
+     * Found live: shibe.online was serving a Cloudflare 520 whose body is the
+     * text `error code: 520`, which produced
+     *
+     *   500 {"error":"Unexpected token 'e', \"error code: 520\" is not valid JSON"}
+     *
+     * on every reader page that asked for a shibe — a console error on a
+     * reading page, blamed on us, for a decorative image.
+     *
+     * Classified here at the boundary rather than guarded at all twelve parse
+     * sites, because the boundary is the only place that knows the request is
+     * over and every one of those sites shares exactly this hazard. 502 is the
+     * honest code: the request was fine, the thing we asked on your behalf was
+     * not, and a client can tell the difference from a genuine bug in here.
+     * The source is named so the log says which one is down.
+     */
+    const message = err?.message ?? 'fetch failed'
+    const upstream = /is not valid JSON|Unexpected token|fetch failed|ENOTFOUND|ETIMEDOUT|socket hang up/i.test(message)
+    return NextResponse.json(
+      { error: upstream ? `${source} is not answering right now` : message, source, upstream },
+      { status: upstream ? 502 : 500 },
+    )
   }
 }
