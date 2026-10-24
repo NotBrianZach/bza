@@ -52,6 +52,21 @@ const AREA_NAMES: Record<string, string> = {
   ...Object.fromEntries(AREAS.map(a => [a.id, a.name])),
 }
 
+/**
+ * The same ids without the "— has problems" suffix.
+ *
+ * That suffix earns its place in the subject PICKER, where the question is
+ * which of twenty-four things is worth selecting and most of them have nothing
+ * to practise. It is noise anywhere the answer is already known: a row in the
+ * claims list is a concept you have claimed, so it necessarily has problems,
+ * and "Arithmetic foundations — has problems" reads as a label nobody wrote on
+ * purpose.
+ */
+const SUBJECT_NAMES: Record<string, string> = {
+  ...Object.fromEntries(ONTOLOGIES.map(o => [o.subject.id, o.subject.name])),
+  ...Object.fromEntries(AREAS.map(a => [a.id, a.name])),
+}
+
 const COVERAGE = atlasCoverage(MATHEMATICS)
 
 /**
@@ -510,7 +525,7 @@ export default function LearnPage() {
                 reaches across subjects whichever scope the graph is in, so the
                 rows need names for subjects the current view does not show. */}
             <div className='rounded-lg border border-gray-800 bg-gray-900 px-3 py-2'>
-              <ClaimsList subjectNames={AREA_NAMES} refreshKey={claimsVersion} onChanged={load} />
+              <ClaimsList subjectNames={SUBJECT_NAMES} refreshKey={claimsVersion} onChanged={load} />
             </div>
             {/* The browser stays on the subject in both scopes. It prints every
                 concept's full text, which is right for nine and unreadable for
