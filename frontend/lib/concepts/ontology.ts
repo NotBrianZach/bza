@@ -29,11 +29,13 @@
  */
 
 import { ARITHMETIC_FOUNDATIONS } from './ontology-arithmetic'
+import { FUNCTIONS_AND_INVERSES } from './ontology-functions'
 import { EXPONENTS_AND_LOGARITHMS } from './ontology-exponentials'
 import type { ConceptEdge, ConceptOntology, Subject } from './types'
 import type { Concept } from './types'
 
 export { ARITHMETIC_FOUNDATIONS } from './ontology-arithmetic'
+export { FUNCTIONS_AND_INVERSES } from './ontology-functions'
 export { EXPONENTS_AND_LOGARITHMS } from './ontology-exponentials'
 
 const subject: Subject = {
@@ -831,6 +833,12 @@ export const RATIONAL_EXPRESSIONS: ConceptOntology = {
  * `single_power`, `no_negative_exponents` and `radical_free`, and `FORM_CHECKS`
  * in forms.ts is total over it so a form name cannot exist without a checker.
  *
+ * FUNCTIONS_AND_INVERSES is LAST, and for the mirror of the reason arithmetic
+ * is first: it sits above the algebra rather than beneath it, so it is the
+ * last thing met rather than the first. Authoring it moved nobody's entry
+ * point — a concept gates only what depends on it, and nothing that already
+ * existed depends on functions.
+ *
  * ARITHMETIC_FOUNDATIONS IS FIRST IN THE ARRAY, AND THE ORDER IS LOAD-BEARING.
  * `roots()` and `teachingOrder()` both break ties by registry order, declaring
  * it "an authoring decision about what to meet first", and arithmetic genuinely
@@ -845,6 +853,7 @@ export const RATIONAL_EXPRESSIONS: ConceptOntology = {
  */
 export const ONTOLOGIES: ConceptOntology[] = [
   ARITHMETIC_FOUNDATIONS, RATIONAL_EXPRESSIONS, EXPONENTS_AND_LOGARITHMS,
+  FUNCTIONS_AND_INVERSES,
 ]
 
 export function getOntology(subjectId: string): ConceptOntology | null {

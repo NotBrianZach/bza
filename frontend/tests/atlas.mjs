@@ -265,10 +265,17 @@ t('a chain contains no dependent of its own concept', (() => {
 })())
 t('claiming place value claims only place value — nothing rests beneath it',
   chainFor('place-value').length === 1)
-t('and does NOT reach the 19 teachable concepts above it', (() => {
+/**
+ * Stated as "every teachable concept except itself" rather than a literal
+ * count, so authoring a fifth subject does not fail an assertion that was
+ * never about the number. The claim is about DIRECTION: place value is the
+ * root of the whole map, so a downward walk from it reaches nothing, however
+ * much is written above.
+ */
+t('and does NOT reach any of the teachable concepts above it', (() => {
   const teachable = MATHEMATICS.concepts.filter(c => isTeachable(MATHEMATICS, c.id)).length
-  return chainFor('place-value').length === 1 && teachable === 20
-})(), `${MATHEMATICS.concepts.filter(c => isTeachable(MATHEMATICS, c.id)).length} teachable`)
+  return chainFor('place-value').length === 1 && teachable > 1
+})(), `${MATHEMATICS.concepts.filter(c => isTeachable(MATHEMATICS, c.id)).length} teachable, chain=${chainFor('place-value').length}`)
 
 /**
  * The cross-subject reach, named concept by concept rather than counted. These
@@ -329,6 +336,76 @@ t('a chain is closed under teachable prerequisites', MATHEMATICS.concepts.every(
   return [...chain].every(id =>
     gatingPrerequisitesOf(MATHEMATICS, id).every(p => chain.has(p)))
 }))
+
+// ---------------------------------------------------------------------------
+
+/**
+ * AUTHORING ABOVE THE ALGEBRA GATED NOTHING ANYBODY CAN PRACTISE.
+ *
+ * The first version of this group asserted that it gated nothing AT ALL, and
+ * that was wrong — the test is what found it. `graphs-of-functions` rests on
+ * `domain-and-range`, so making that teachable gates the graph node and
+ * transitively every one of the ~170 nodes above it, which is most of the map.
+ *
+ * The claim that survives is narrower and is the one that matters to a
+ * learner: everything that gained a gate is mapped-only, with no task to
+ * serve, so no session changes. Asserted over TEACHABLE concepts, which is
+ * exactly the set that can appear in an assembly.
+ *
+ * Stated as a property over every concept rather than a spot-check, so it
+ * keeps holding as more is authored — and it will start failing honestly the
+ * day somebody authors `graphs-of-functions` without meaning to gate the
+ * algebra, which is the kind of mistake worth a loud failure.
+ */
+group('authoring functions gated nothing anybody can practise')
+
+const FN_IDS = new Set(
+  MATHEMATICS.concepts.filter(c => c.subjectId === 'functions-and-inverses').map(c => c.id),
+)
+const offenders = MATHEMATICS.concepts
+  .filter(c => !FN_IDS.has(c.id) && isTeachable(MATHEMATICS, c.id))
+  .filter(c => gatingPrerequisitesOf(MATHEMATICS, c.id).some(p => FN_IDS.has(p)))
+
+t('the subject contributes four concepts to the map', FN_IDS.size === 4, `${FN_IDS.size}`)
+t('no TEACHABLE concept outside it gates on one of its concepts',
+  offenders.length === 0, offenders.map(c => c.id).join(', '))
+t('the gates it did create are all on mapped-only nodes', (() => {
+  const gained = MATHEMATICS.concepts
+    .filter(c => !FN_IDS.has(c.id))
+    .filter(c => gatingPrerequisitesOf(MATHEMATICS, c.id).some(p => FN_IDS.has(p)))
+  return gained.length > 0 && gained.every(c => !isTeachable(MATHEMATICS, c.id))
+})(), 'expected some mapped nodes to gain a gate, and none that is teachable')
+t('the algebra subjects gate exactly as they did — on arithmetic, not functions', (() => {
+  const g = gatingPrerequisitesOf(MATHEMATICS, 'polynomial-arithmetic')
+  return g.includes('order-of-operations') && g.includes('negative-numbers')
+    && g.every(p => !FN_IDS.has(p))
+})(), gatingPrerequisitesOf(MATHEMATICS, 'polynomial-arithmetic').join(', '))
+
+/**
+ * The other direction: the subject is connected to what is below it. A
+ * syllabus authored above the map but joined to nothing would be practisable
+ * from a cold account, which would make it a second entry point rather than a
+ * continuation.
+ */
+/**
+ * A non-empty gating set of TEACHABLE concepts is exactly "not introducible on
+ * a cold account" — `introducible` is every gate at or above the mastery
+ * floor, and on an empty strength table every one of them is at zero. Asserted
+ * that way rather than by calling the scheduler, which this harness does not
+ * build.
+ */
+t('but functions itself IS gated, reaching down into arithmetic', (() => {
+  const g = gatingPrerequisitesOf(MATHEMATICS, 'function-concept')
+  return g.length > 0 && g.every(p => isTeachable(MATHEMATICS, p))
+})(), gatingPrerequisitesOf(MATHEMATICS, 'function-concept').join(', '))
+
+t('the nodes left in the functions area still reach the authored ones',
+  prerequisitesOf(MATHEMATICS, 'graphs-of-functions').includes('domain-and-range'),
+  prerequisitesOf(MATHEMATICS, 'graphs-of-functions').join(', '))
+t('and a chain from a graph node now reaches real material', (() => {
+  const chain = claimableChainFor(MATHEMATICS, 'rational-functions')
+  return chain.includes('domain-and-range') && chain.includes('function-concept')
+})(), claimableChainFor(MATHEMATICS, 'rational-functions').join(', '))
 
 // ---------------------------------------------------------------------------
 

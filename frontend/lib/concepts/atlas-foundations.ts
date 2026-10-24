@@ -280,43 +280,37 @@ const FUNCTIONS: MapArea = {
   id: 'functions',
   name: 'Functions',
   covers:
-    'The function concept and the standard families: domain and range, composition, inverses, ' +
-    'transformations, and the linear, polynomial, rational, exponential and logarithmic shapes.',
+    'The standard families and what you can read off a picture of them: graphs, transformations, ' +
+    'piecewise definitions, and the linear, polynomial, rational, exponential and logarithmic ' +
+    'shapes. The function concept itself — what a function is, where it is defined, composition ' +
+    'and inverses — now has problems written for it and lives in the functions-and-inverses ' +
+    'syllabus; this area points at those concepts rather than restating them.',
+  /**
+   * FOUR NODES LEFT THIS AREA WHEN THEY WERE AUTHORED.
+   *
+   * `function-concept`, `domain-and-range`, `function-composition` and
+   * `inverse-functions` are real concepts now, in ontology-functions.ts.
+   * `atlasProblems` rejects a map node colliding with an authored concept —
+   * the composed list would hold two entries for the id and the shadowing copy
+   * has no knowledge points, so a fully authored concept would read as
+   * unteachable.
+   *
+   * The boundary is the verifier rather than the curriculum: everything left
+   * here either IS a picture (`graphs-of-functions`, `transformations`) or
+   * rests on one, and "the graph is increasing here" is not a claim exact
+   * rational arithmetic can rule. See the header of ontology-functions.ts.
+   *
+   * `graphs-of-functions` still names `domain-and-range` below. That edge now
+   * crosses into the syllabus and resolves in `composeAtlas`, which is the
+   * intended way for the map to meet authored material.
+   */
   nodes: [
-    {
-      id: 'function-concept',
-      name: 'What a function is',
-      is: 'A rule assigning exactly one output to each input — the uniqueness is the content, and it is what the vertical-line test tests.',
-      needs: ['variables-and-expressions'],
-      terms: 'function mapping input output well defined',
-    },
-    {
-      id: 'domain-and-range',
-      name: 'Domain and range',
-      is: 'Where a function is defined and what it actually reaches, which is a question about the rule rather than about the formula.',
-      needs: ['function-concept'],
-      terms: 'domain range codomain',
-    },
     {
       id: 'graphs-of-functions',
       name: 'Reading a graph',
       is: 'The graph as the set of input–output pairs, so every feature of the picture is a statement about the rule.',
       needs: ['domain-and-range', 'cartesian-plane'],
       terms: 'graph of a function intercept increasing decreasing',
-    },
-    {
-      id: 'function-composition',
-      name: 'Composition',
-      is: 'Feeding one function into another, where the order matters and the domain of the composite is smaller than you expect.',
-      needs: ['domain-and-range'],
-      terms: 'composition composite function',
-    },
-    {
-      id: 'inverse-functions',
-      name: 'Inverse functions',
-      is: 'Undoing a function, which requires it to be one-to-one — so most inverses exist only after the domain is restricted.',
-      needs: ['function-composition'],
-      terms: 'inverse function one to one injective restrict domain',
     },
     {
       id: 'transformations-of-graphs',
@@ -390,6 +384,29 @@ const FUNCTIONS: MapArea = {
       is: 'Curves that are not graphs of functions, given by a parameter or by an equation in both variables.',
       needs: ['graphs-of-functions', 'nonlinear-systems'],
       terms: 'parametric equations implicit curve',
+    },
+  ],
+  links: [
+    {
+      /**
+       * THE EDGE THAT WAS LOST WHEN `function-concept` WAS AUTHORED.
+       *
+       * It used to be a `needs` on the node, and removing the node to make room
+       * for the syllabus removed the edge with it — which made
+       * `function-concept` a ROOT of the whole map. A syllabus authored above
+       * the algebra but joined to nothing beneath it is a second entry point:
+       * practisable from a cold account, in parallel with arithmetic, by
+       * somebody who has never met a letter standing for a number.
+       *
+       * `links` is the right home for it precisely because both endpoints now
+       * live outside this area — a mapped node in algebra-foundations and an
+       * authored concept in functions-and-inverses.
+       */
+      from: 'variables-and-expressions',
+      to: 'function-concept',
+      because:
+        'f(x) = 3x − 2 is a letter standing for any number before it is anything else, so the ' +
+        'function concept presupposes the expression it is written with.',
     },
   ],
 }

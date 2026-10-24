@@ -73,6 +73,20 @@ const WHOLE_ABC = [
 
 const WHOLE_ABCD = [...WHOLE_ABC, { name: 'd', assumptions: { integer: true } }]
 
+/**
+ * Coefficients plus the variable, for the functions subject.
+ *
+ * Real rather than integer: these stand for the parameters of an arbitrary
+ * linear or quadratic rule, and nothing in those concepts is about whole
+ * numbers. The arithmetic subject declares `integer` for the opposite reason.
+ */
+const REAL_ABC_X = [
+  { name: 'a', assumptions: { real: true } },
+  { name: 'b', assumptions: { real: true } },
+  { name: 'c', assumptions: { real: true } },
+  { name: 'x', assumptions: { real: true } },
+]
+
 /** Four digits, most significant first. Shared by the two four-digit tasks. */
 const WHOLE_DIGITS = [
   { name: 'd3', assumptions: { integer: true } },
@@ -848,6 +862,189 @@ export const TASKS: PracticeTask[] = [
     at: { a: '84', b: '36', g: '12' },
     // 120/12 = 10, which is the 7 + 3 of the worked example.
     reference: '10',
+  },
+
+  // ── functions-and-inverses ──────────────────────────────────────────────
+  //
+  // Twelve tasks, one per knowledge point, all `evaluate` and all settled by
+  // exact rational arithmetic — so this subject, like arithmetic, is gradable
+  // with no worker configured.
+  //
+  // TWO THINGS SHAPE EVERY ONE OF THEM, and both are properties of the engine
+  // rather than of the mathematics:
+  //
+  //  1. There are no user-defined functions in the expression language. `f`
+  //     means nothing to the parser, so a composition is written as the
+  //     already-substituted expression and the PROMPT names the two rules it
+  //     came from. Substituting the inner rule where the outer variable was is
+  //     what composition is, so this is the task rather than a dodge.
+  //  2. `exactValue` returns null for a `function` node, so `sqrt(9)` cannot
+  //     be ruled locally and `9^(1/2)` can. Nothing here uses a named
+  //     function; the circle's two branches are written with `^(1/2)`.
+  {
+    id: 'one-output-1',
+    knowledgePointId: 'one-output-per-input',
+    kind: 'evaluate',
+    prompt:
+      'f(x) = 3x − 2. Find f(4). The definition guarantees there is exactly one answer, which is ' +
+      'what makes "f(4)" the name of a number.',
+    given: 'a*x + b',
+    variables: REAL_ABC_X,
+    at: { a: '3', b: '-2', x: '4' },
+    reference: '10',
+  },
+  {
+    id: 'input-expression-1',
+    knowledgePointId: 'the-input-can-be-an-expression',
+    kind: 'evaluate',
+    prompt:
+      'f(x) = 3x − 2. Find f(x + 1) at x = 4 — so the input is 5, not 4. Substituting gives ' +
+      '3(x + 1) − 2; dropping those brackets is the commonest error here.',
+    given: 'a*(x + h) + b',
+    variables: [...REAL_ABC_X, { name: 'h', assumptions: { real: true } }],
+    at: { a: '3', b: '-2', x: '4', h: '1' },
+    // 3·5 − 2 = 13, and f(4) = 10 — the two differ, which is the point.
+    reference: '13',
+  },
+  {
+    id: 'not-a-function-1',
+    knowledgePointId: 'not-every-rule-is-a-function',
+    kind: 'evaluate',
+    prompt:
+      'The unit circle gives y = ±(1 − x²)^(1/2) — two branches. Measure the gap between them at ' +
+      'x = 0 by evaluating (1 − x²)^(1/2) − (−(1 − x²)^(1/2)). A gap of 0 would mean one output; ' +
+      'anything else means this is not a function.',
+    // A proxy, and named as one: "is this a function" wants yes or no, and no
+    // tree has a rational value of yes. The gap between the branches is the
+    // computation the vertical-line test performs, and it is checkable.
+    given: '(1 - x^2)^(1/2) - (-(1 - x^2)^(1/2))',
+    variables: REAL_X,
+    at: { x: '0' },
+    // 1 − (−1) = 2. `exactValue` settles 1^(1/2) through `exactRoot`.
+    reference: '2',
+  },
+  {
+    id: 'domain-excluded-1',
+    knowledgePointId: 'the-domain-is-where-the-rule-works',
+    kind: 'evaluate',
+    prompt:
+      'f(x) = 1/(x − 3) is undefined somewhere. Evaluate the denominator x − 3 at x = 3 to show ' +
+      'what goes wrong there.',
+    // The same proxy the rational-domain tasks use: "name the excluded points"
+    // asks for a set in prose, and the reason a point is excluded is that the
+    // denominator vanishes — which is exactly this arithmetic.
+    given: 'x - c',
+    variables: [...REAL_X, { name: 'c', assumptions: { real: true } }],
+    at: { x: '3', c: '3' },
+    reference: '0',
+  },
+  {
+    id: 'range-floor-1',
+    knowledgePointId: 'the-range-is-what-it-reaches',
+    kind: 'evaluate',
+    prompt:
+      'f(x) = x² + 4. Evaluate f(0). Since x² is never negative this value is the smallest the ' +
+      'rule reaches, so the range starts here.',
+    given: 'x^2 + c',
+    variables: [...REAL_X, { name: 'c', assumptions: { real: true } }],
+    at: { x: '0', c: '4' },
+    reference: '4',
+  },
+  {
+    id: 'hole-1',
+    knowledgePointId: 'a-hole-is-not-a-simplification',
+    kind: 'evaluate',
+    prompt:
+      'Evaluate (x² − 4)/(x − 2) at x = 5. The cancelled form x + 2 gives the same answer here — ' +
+      'and a different one at x = 2, where the original is undefined.',
+    given: '(x^2 - 4)/(x - 2)',
+    variables: REAL_X,
+    at: { x: '5' },
+    // 21/3 = 7, and x + 2 at 5 is also 7. They part company only at x = 2.
+    reference: '7',
+  },
+  {
+    id: 'compose-1',
+    knowledgePointId: 'composition-is-substitution',
+    kind: 'evaluate',
+    prompt:
+      'f(x) = x² + 1 and g(x) = 2x − 3. Find f(g(2)) — inner rule first. Written as one ' +
+      'expression that is (2x − 3)² + 1.',
+    given: '(a*x + b)^2 + c',
+    variables: REAL_ABC_X,
+    at: { a: '2', b: '-3', c: '1', x: '2' },
+    // g(2) = 1, f(1) = 2.
+    reference: '2',
+  },
+  {
+    id: 'compose-order-1',
+    knowledgePointId: 'the-order-matters',
+    kind: 'evaluate',
+    prompt:
+      'Same f(x) = x² + 1 and g(x) = 2x − 3, the other way round: find g(f(2)), which is ' +
+      '2(x² + 1) − 3. Compare it with f(g(2)) = 2.',
+    given: 'a*(x^2 + c) + b',
+    variables: REAL_ABC_X,
+    at: { a: '2', b: '-3', c: '1', x: '2' },
+    // f(2) = 5, g(5) = 7. Emphatically not 2.
+    reference: '7',
+  },
+  {
+    id: 'composite-domain-1',
+    knowledgePointId: 'the-composite-domain-can-shrink',
+    kind: 'evaluate',
+    prompt:
+      'f(x) = 1/x and g(x) = x − 1, so f(g(x)) = 1/(x − 1). Evaluate it at x = 3. The composite ' +
+      'is undefined at x = 1 even though g(1) = 0 is fine and f is fine everywhere but 0.',
+    given: '1/(x - b)',
+    variables: [...REAL_X, { name: 'b', assumptions: { real: true } }],
+    at: { x: '3', b: '1' },
+    reference: '1/2',
+  },
+  {
+    id: 'inverse-apply-1',
+    knowledgePointId: 'an-inverse-undoes-the-rule',
+    kind: 'evaluate',
+    prompt:
+      'f(x) = 3x − 2, so f⁻¹(y) = (y + 2)/3. Find f⁻¹(10). Note this is not 1/f(10) = 1/28 — ' +
+      'the superscript means inverse function here, not reciprocal.',
+    given: '(y + b)/a',
+    variables: [
+      { name: 'y', assumptions: { real: true } },
+      { name: 'a', assumptions: { real: true, nonzero: true } },
+      { name: 'b', assumptions: { real: true } },
+    ],
+    at: { y: '10', a: '3', b: '2' },
+    reference: '4',
+  },
+  {
+    id: 'inverse-identity-1',
+    knowledgePointId: 'the-pair-composes-to-the-identity',
+    kind: 'evaluate',
+    prompt:
+      'With f(x) = 3x − 2 and f⁻¹(y) = (y + 2)/3, evaluate f(f⁻¹(7)) — written out, ' +
+      '3·((y + 2)/3) − 2. Getting 7 back is what makes it the inverse.',
+    given: 'a*((y + b)/a) - b',
+    variables: [
+      { name: 'y', assumptions: { real: true } },
+      { name: 'a', assumptions: { real: true, nonzero: true } },
+      { name: 'b', assumptions: { real: true } },
+    ],
+    at: { y: '7', a: '3', b: '2' },
+    // The composite is the identity, so the answer is the input.
+    reference: '7',
+  },
+  {
+    id: 'not-one-to-one-1',
+    knowledgePointId: 'it-has-to-be-one-to-one',
+    kind: 'evaluate',
+    prompt:
+      'Squaring sends 3 and −3 to the same place. Evaluate x² − (−x)² at x = 3: a difference of ' +
+      '0 between two different inputs is exactly why no inverse exists.',
+    given: 'x^2 - (-x)^2',
+    variables: REAL_X,
+    at: { x: '3' },
+    reference: '0',
   },
 ]
 
