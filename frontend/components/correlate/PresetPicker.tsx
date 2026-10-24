@@ -5,6 +5,9 @@ import { Bookmark, Check, Loader2, Search, Trash2, X } from 'lucide-react'
 import { fuzzySearch } from '@/lib/fuzzy'
 import { presetQueries, type CorrelationPreset } from '@/lib/queries/correlate'
 import { normalizeTuning, tuningSummary, isNeutral, type Tuning } from '@/lib/correlate/tuning'
+import {
+  PARTNER_PRESETS, presetMissingMedia, presetTuning, type PartnerPreset,
+} from '@/lib/correlate/presets'
 import { getMedium } from '@/lib/correlate/media'
 import type { MediumId } from '@/lib/correlate/types'
 
@@ -88,6 +91,30 @@ export default function PresetPicker({
     }
   }
 
+  /**
+   * Recall a shipped starter.
+   *
+   * Through `normalizeTuning` like everything else, even though `presetTuning`
+   * already returns a well-formed object. It is the single coercion point every
+   * path goes through, and a starter that skipped it would be the one tuning in
+   * the build that had not been canonicalised — so a value equal to the default
+   * would survive and `isNeutral` would start answering wrongly.
+   *
+   * `tuning` is passed as the base so the player's own notes, and their choice
+   * about who takes the next turn, survive a change of partner. See the header
+   * in lib/correlate/presets.ts for why a preset is not allowed to touch those.
+   */
+  const recallStarter = (preset: PartnerPreset) => {
+    onRecall(normalizeTuning(presetTuning(preset, media, tuning), media))
+    setQuery('')
+    setJustSaved('')
+  }
+
+  const starterMatches = useMemo(
+    () => fuzzySearch(PARTNER_PRESETS, query, p => `${p.name} ${p.is}`),
+    [query],
+  )
+
   const recall = (preset: CorrelationPreset) => {
     // Normalized against *this* session's media, not the ones it was saved
     // under: a preset built in a twelve-medium game carries weights a four-medium
@@ -118,7 +145,55 @@ export default function PresetPicker({
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center gap-2">
+      {/* The starters come FIRST, and that ordering is the whole fix.
+          Everything below this block already worked; the list it renders just
+          starts empty, so on a first game the only visible affordance was
+          "Save current" — which needs settings you have not built yet. Putting
+          eight pickable partners above it means "select from presets" is
+          reachable before you have made one. */}
+      <div>
+        <p className="text-[10px] uppercase tracking-wide text-gray-400 dark:text-gray-500">
+          Partners
+        </p>
+        {starterMatches.length === 0 ? (
+          <p className="mt-1 text-[11px] text-gray-400 dark:text-gray-500">
+            No partner matches “{query}”.
+          </p>
+        ) : (
+          <ul className="mt-1 space-y-1 max-h-44 overflow-y-auto">
+            {starterMatches.map(({ item: preset }) => {
+              const absent = presetMissingMedia(preset, media)
+              return (
+                <li key={preset.id}>
+                  <button
+                    onClick={() => recallStarter(preset)}
+                    disabled={disabled}
+                    title={preset.is}
+                    className="w-full text-left px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors disabled:opacity-50"
+                  >
+                    <span className={`block text-xs font-medium truncate ${accentText}`}>
+                      {preset.name}
+                    </span>
+                    {/* The sentence, not a tuning summary. A starter is picked by
+                        what it is like to play against; "obliquity 0, register 0"
+                        is the thing it was written to save somebody reading. */}
+                    <span className="block text-[10px] text-gray-400 dark:text-gray-500 leading-snug">
+                      {preset.is}
+                      {absent.length > 0 && (
+                        <span className="text-amber-600/80 dark:text-amber-500/80">
+                          {' '}· {absent.join(', ')} not in this game
+                        </span>
+                      )}
+                    </span>
+                  </button>
+                </li>
+              )
+            })}
+          </ul>
+        )}
+      </div>
+
+      <div className="flex items-center gap-2 pt-1 border-t border-gray-100 dark:border-gray-700/50">
         <p className="text-[10px] uppercase tracking-wide text-gray-400 dark:text-gray-500">
           Saved settings
         </p>
@@ -179,8 +254,14 @@ export default function PresetPicker({
       )}
 
       {/* The search field appears only once there is enough to search. Below that
-          the list IS the interface and a filter above three rows is furniture. */}
-      {(presets?.length ?? 0) > 4 && (
+          the list IS the interface and a filter above three rows is furniture.
+
+          Counted across BOTH lists now, and the eight starters clear the
+          threshold on their own — so the field is present from the first game,
+          which is correct: it filters the partners too. Keyed off the total
+          rather than hard-coded to true so that if the starter list is ever
+          trimmed, the furniture rule still applies. */}
+      {(presets?.length ?? 0) + PARTNER_PRESETS.length > 4 && (
         <div className="relative">
           <Search size={11} className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
           <input
@@ -200,8 +281,8 @@ export default function PresetPicker({
         </p>
       ) : presets.length === 0 ? (
         <p className="text-[11px] text-gray-400 dark:text-gray-500 leading-relaxed">
-          Nothing saved yet. Set the controls below to something you would want again, then
-          save it under a name.
+          Nothing saved yet. Pick a partner above, adjust it below, then save it under your
+          own name — a starter is a copy, so changing it changes nothing for next time.
         </p>
       ) : matches.length === 0 ? (
         <p className="text-[11px] text-gray-400 dark:text-gray-500">

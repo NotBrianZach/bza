@@ -47,6 +47,7 @@ function build() {
     join('lib', 'correlate', 'graph.ts'),
     join('lib', 'correlate', 'tuning.ts'),
     join('lib', 'correlate', 'continuation.ts'),
+    join('lib', 'correlate', 'presets.ts'),
     join('lib', 'offerings', 'composed.ts'),
     join('lib', 'offerings', 'shared.ts'),
     join('lib', 'offerings', 'knowledge.ts'),
@@ -76,6 +77,7 @@ function build() {
     graph:     require(join(outDir, 'correlate', 'graph.js')),
     tuning:    require(join(outDir, 'correlate', 'tuning.js')),
     carry:     require(join(outDir, 'correlate', 'continuation.js')),
+    presets:   require(join(outDir, 'correlate', 'presets.js')),
     composed:  require(join(outDir, 'offerings', 'composed.js')),
     knowledge: require(join(outDir, 'offerings', 'knowledge.js')),
   }
@@ -114,6 +116,10 @@ const {
   selfRepliesLeft, selfReplyRefusal, RADIO_HINT, RADIO_LABEL, radioRefusal,
 } = M.carry
 const { checkPerformability, composeOffering, vocabularyFor } = M.composed
+const {
+  PARTNER_PRESETS, getPreset, presetTuning, presetMissingMedia, presetShareSummary,
+  presetSaysNothing,
+} = M.presets
 
 let pass = 0
 const failures = []
@@ -2049,6 +2055,168 @@ t('a reframing is kept', ni({ reading: 'r', reframing: 'the stopping' }).reframi
 t('an absent one is empty', ni({ reading: 'r' }).reframing === '')
 t('a non-string one is empty', ni({ reading: 'r', reframing: { part: 'x' } }).reframing === '')
 t('it is trimmed', ni({ reading: 'r', reframing: '  the held note ' }).reframing === 'the held note')
+
+// ---------------------------------------------------------------------------
+// Partner presets — the starters you can pick before you have built one
+// ---------------------------------------------------------------------------
+
+group('partner presets are well-formed')
+
+// Reuses ALL_MEDIA, declared at the top of the file with the other fixtures.
+const BASE = startingTuning(ALL_MEDIA)
+
+t('there are some', PARTNER_PRESETS.length >= 6, `${PARTNER_PRESETS.length}`)
+t('ids are unique', new Set(PARTNER_PRESETS.map(p => p.id)).size === PARTNER_PRESETS.length)
+t('names are unique', new Set(PARTNER_PRESETS.map(p => p.name)).size === PARTNER_PRESETS.length)
+t('getPreset round-trips every one', PARTNER_PRESETS.every(p => getPreset(p.id) === p))
+t('an unknown id is null, not a throw', getPreset('no-such-partner') === null)
+t('every one has a sentence saying what it is like to play against',
+  PARTNER_PRESETS.every(p => typeof p.is === 'string' && p.is.trim().length > 20))
+
+/**
+ * Authored values are checked rather than clamped — `presetTuning` skips a bad
+ * one silently, so without this a typo would ship as a partner that quietly
+ * ignores one of its own axes.
+ */
+t('every axis named is a real axis', PARTNER_PRESETS.every(p =>
+  Object.keys(p.axes ?? {}).every(id => !!getAxis(id))),
+  PARTNER_PRESETS.flatMap(p => Object.keys(p.axes ?? {}).filter(id => !getAxis(id))).join(', '))
+t('every axis value is an integer stop in range', PARTNER_PRESETS.every(p =>
+  Object.values(p.axes ?? {}).every(v => Number.isInteger(v) && v >= 0 && v < AXIS_STOPS)))
+t('every medium named is a real medium', PARTNER_PRESETS.every(p =>
+  Object.keys(p.leans ?? {}).every(m => !!getMedium(m))),
+  PARTNER_PRESETS.flatMap(p => Object.keys(p.leans ?? {}).filter(m => !getMedium(m))).join(', '))
+t('every lean weight is in range', PARTNER_PRESETS.every(p =>
+  Object.values(p.leans ?? {}).every(v => Number.isInteger(v) && v >= 0 && v <= SHARE_MAX)))
+t('no preset says nothing — a pickable partner that changes nothing is furniture',
+  PARTNER_PRESETS.every(p => !presetSaysNothing(p)),
+  PARTNER_PRESETS.filter(p => presetSaysNothing(p)).map(p => p.id).join(', '))
+t('and none is neutral once resolved', PARTNER_PRESETS.every(p =>
+  !isNeutral(normalizeTuning(presetTuning(p, ALL_MEDIA, BASE), ALL_MEDIA))),
+  PARTNER_PRESETS.filter(p => isNeutral(normalizeTuning(presetTuning(p, ALL_MEDIA, BASE), ALL_MEDIA)))
+    .map(p => p.id).join(', '))
+
+/**
+ * THE SHARE ARITHMETIC. This is the one that matters.
+ *
+ * A share is a raw weight over the non-muted media, so "lean toward passages"
+ * only means anything if the media it does not name are muted. Leave them at
+ * the default 50 and a 50-weighted passage gets 50/(50+550) — eight per cent,
+ * the opposite of the ask. `presetTuning` mutes the rest; these assert it,
+ * because the bug it prevents is invisible (the control says one thing and the
+ * maths does another, which is what tuning.ts §16a was written about).
+ */
+group('a lean mutes everything it does not name')
+
+const COMPANION = getPreset('reading-companion')
+const leaned = presetTuning(COMPANION, ALL_MEDIA, BASE)
+
+t('the media it names keep their weights',
+  Object.entries(COMPANION.leans).every(([m, v]) => leaned.shares[m] === v))
+t('every other medium is muted, not left at the default',
+  ALL_MEDIA.filter(m => COMPANION.leans[m] === undefined)
+    .every(m => leaned.shares[m] === MUTED_SHARE),
+  ALL_MEDIA.filter(m => COMPANION.leans[m] === undefined && leaned.shares[m] !== MUTED_SHARE).join(', '))
+t('so the target shares are the weights as percentages, not a fraction of 600', (() => {
+  const targets = targetShares(leaned, ALL_MEDIA)
+  // passage 50 of (50+25+15+10) = 50%. If the other eight were at 50 it would be 8%.
+  return Math.round(100 * targets.passage) === 50
+})(), JSON.stringify(targetShares(leaned, ALL_MEDIA)))
+t('a base weighting is replaced, never merged', (() => {
+  // `music: 90` from startingTuning must not survive a preset that does not name music
+  const withMusic = startingTuning(ALL_MEDIA)
+  const after = presetTuning(getPreset('body'), ALL_MEDIA, withMusic)
+  return after.shares.music === MUTED_SHARE
+})())
+
+/**
+ * Degrading rather than overreaching, on the same grounds `startingTuning`
+ * degrades: muting eleven media in favour of one that is not there is a
+ * contradiction, and `weightedReplyMedia` would ignore the mute anyway.
+ */
+group('a lean on media this game does not play is dropped, and said')
+
+const MUSIC_ONLY = ['music']
+t('the weighting is left alone when none of its media are here', (() => {
+  const base = { ...DEFAULT_TUNING, shares: { music: 70 } }
+  const after = presetTuning(getPreset('body'), MUSIC_ONLY, base)
+  return after.shares.music === 70
+})())
+t('but the axes still apply — how it answers is true whatever it answers in', (() => {
+  const after = presetTuning(getPreset('body'), MUSIC_ONLY, DEFAULT_TUNING)
+  return after.axes.abstraction === 0
+})())
+t('and the absent media are named rather than silently dropped', (() => {
+  const absent = presetMissingMedia(getPreset('body'), MUSIC_ONLY)
+  return absent.length === 4
+})(), presetMissingMedia(getPreset('body'), MUSIC_ONLY).join(', '))
+t('a preset with no lean reports no missing media',
+  presetMissingMedia(getPreset('sceptic'), MUSIC_ONLY).length === 0)
+t('a partial overlap keeps only what is playable', (() => {
+  const after = presetTuning(getPreset('reading-companion'), ['passage', 'music'], DEFAULT_TUNING)
+  return after.shares.passage === 50 && after.shares.music === 10
+    && after.shares.artwork === undefined
+})(), JSON.stringify(presetTuning(getPreset('reading-companion'), ['passage', 'music'], DEFAULT_TUNING).shares))
+
+/**
+ * The three fields a preset must not touch. Each is a promise in the header of
+ * lib/correlate/presets.ts and each would be a real surprise if broken:
+ * continuation and radio hand the partner the wheel, and notes is the player's
+ * own words with a budget the preset would be spending for them.
+ */
+group('a preset sets what the partner reaches for, and nothing else')
+
+const PLAYERS_OWN = {
+  ...DEFAULT_TUNING,
+  continuation: 2,
+  radio: true,
+  notes: 'I am reading Moby-Dick, lean nautical',
+  scopes: { music: { era: ['1970s'] } },
+}
+for (const preset of PARTNER_PRESETS) {
+  const after = presetTuning(preset, ALL_MEDIA, PLAYERS_OWN)
+  t(`${preset.id} keeps the player's continuation, radio, notes and scope`,
+    after.continuation === 2 && after.radio === true
+    && after.notes === 'I am reading Moby-Dick, lean nautical'
+    && after.scopes === PLAYERS_OWN.scopes)
+}
+
+t('picking two presets in a row gives the second, not a blend of both', (() => {
+  const first = presetTuning(getPreset('essayist'), ALL_MEDIA, BASE)
+  const second = presetTuning(getPreset('plain-speaker'), ALL_MEDIA, first)
+  // `essayist` sets register 4 and breadth 4; `plain-speaker` sets register 0
+  // and breadth 1 and says nothing about provenance. Nothing of the essayist
+  // may survive except through plain-speaker's own values.
+  return second.axes.register === 0 && second.axes.breadth === 1
+    && second.axes.provenance === undefined
+})())
+
+t('every preset survives normalizeTuning unchanged — it is already canonical',
+  PARTNER_PRESETS.every(p => {
+    const once = normalizeTuning(presetTuning(p, ALL_MEDIA, BASE), ALL_MEDIA)
+    const twice = normalizeTuning(once, ALL_MEDIA)
+    return JSON.stringify(once) === JSON.stringify(twice)
+  }))
+
+t('the share summary reads as percentages that sum to about 100', (() => {
+  const summary = presetShareSummary(COMPANION, ALL_MEDIA)
+  const total = summary.reduce((s, r) => s + r.percent, 0)
+  return summary.length === 4 && total >= 99 && total <= 101
+})(), JSON.stringify(presetShareSummary(COMPANION, ALL_MEDIA)))
+t('and is empty for a preset that does not weight media',
+  presetShareSummary(getPreset('sceptic'), ALL_MEDIA).length === 0)
+
+/**
+ * The two presets that exist to answer a known complaint: readings drift
+ * abstract because music and artwork reach the interpreter as a NAME, with no
+ * audio and no pixels to hold on to. Low abstraction is the only lever against
+ * it, so if these two ever stop pushing that way the complaint is unanswered
+ * and nothing else in the UI says so.
+ */
+t('plain-speaker and concrete both push against the abstraction drift',
+  ['plain-speaker', 'concrete'].every(id => getPreset(id).axes.abstraction === 0))
+t('and the sceptic is a real counterweight to the game opening at friction 0',
+  STARTING_AXES.friction === 0 && getPreset('sceptic').axes.friction > 2)
 
 rmSync(outDir, { recursive: true, force: true })
 
