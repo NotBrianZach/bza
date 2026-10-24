@@ -118,6 +118,51 @@ const MATRIX_ABCD = [
   { name: 'd', assumptions: { real: true } },
 ]
 
+/**
+ * Vector components, subscripted by position.
+ *
+ * `u1`/`u2` rather than `a`/`b` for the same reason the matrix entries are
+ * `a11`: which component goes with which is the thing being learned, and
+ * single letters would hide it. Real rather than integer — a displacement is
+ * not a whole-number object even when these examples happen to use them.
+ */
+const VEC_V = [
+  { name: 'v1', assumptions: { real: true } },
+  { name: 'v2', assumptions: { real: true } },
+]
+
+const VEC_U = [
+  { name: 'u1', assumptions: { real: true } },
+  { name: 'u2', assumptions: { real: true } },
+]
+
+const VEC_UV = [
+  { name: 'u1', assumptions: { real: true } },
+  { name: 'v1', assumptions: { real: true } },
+]
+
+const VEC_UV_FULL = [...VEC_U, ...VEC_V.map(v => ({ ...v, name: v.name }))]
+
+const VEC_UW = [
+  ...VEC_U,
+  { name: 'w1', assumptions: { real: true } },
+  { name: 'w2', assumptions: { real: true } },
+]
+
+const VEC_WEIGHTED = [
+  { name: 'c1', assumptions: { real: true } },
+  { name: 'c2', assumptions: { real: true } },
+  { name: 'u1', assumptions: { real: true } },
+  { name: 'v1', assumptions: { real: true } },
+]
+
+const VEC_WEIGHTED_2 = [
+  { name: 'c1', assumptions: { real: true } },
+  { name: 'c2', assumptions: { real: true } },
+  { name: 'u2', assumptions: { real: true } },
+  { name: 'v2', assumptions: { real: true } },
+]
+
 /** Four digits, most significant first. Shared by the two four-digit tasks. */
 const WHOLE_DIGITS = [
   { name: 'd3', assumptions: { integer: true } },
@@ -1283,6 +1328,132 @@ export const TASKS: PracticeTask[] = [
     given: 'a*d - b*c',
     variables: MATRIX_ABCD,
     at: { a: '6', b: '3', c: '4', d: '2' },
+    reference: '0',
+  },
+
+  // ── vectors-and-independence ────────────────────────────────────────────
+  //
+  // Nine tasks on components, all exactly rulable. Two vector pairs run
+  // through the whole subject — u = (2,-1) with v = (1,3) independent, and
+  // u with w = (6,-3) dependent — so the same numbers answer "is it in the
+  // span", "is it independent" and "what does it cost", and a learner can see
+  // the cross-check give 7 and then 0 on pairs they already know the shape of.
+  {
+    id: 'magnitude-1',
+    knowledgePointId: 'a-vector-is-a-displacement',
+    kind: 'evaluate',
+    prompt:
+      'v = (3, 4). Find |v| — the components are the legs of a right triangle and the vector is ' +
+      'the hypotenuse, so this is (3² + 4²)^(1/2).',
+    // `^(1/2)` rather than `sqrt(...)`: `exactValue` returns null for a
+    // `function` node, so sqrt cannot be settled locally while a rational
+    // exponent goes through `exactRoot`. 25^(1/2) is exactly 5.
+    given: '(v1^2 + v2^2)^(1/2)',
+    variables: VEC_V,
+    at: { v1: '3', v2: '4' },
+    reference: '5',
+  },
+  {
+    id: 'vector-add-1',
+    knowledgePointId: 'adding-is-tip-to-tail',
+    kind: 'evaluate',
+    prompt:
+      'u = (3, 4) and v = (−1, 2). Find the first component of u + v. The components never ' +
+      'interact — going across does not change how far up you are.',
+    given: 'u1 + v1',
+    variables: VEC_UV,
+    at: { u1: '3', v1: '-1' },
+    reference: '2',
+  },
+  {
+    id: 'vector-scale-1',
+    knowledgePointId: 'scaling-stretches-and-flips',
+    kind: 'evaluate',
+    prompt:
+      'u = (2, −1). Find the first component of 3u. Every scalar multiple of u lies on one line ' +
+      'through the origin, which is what the next concept calls its span.',
+    given: 'c*u1',
+    variables: [{ name: 'c', assumptions: { real: true } }, ...VEC_U],
+    at: { c: '3', u1: '2' },
+    reference: '6',
+  },
+  {
+    id: 'combination-1',
+    knowledgePointId: 'a-linear-combination',
+    kind: 'evaluate',
+    prompt:
+      'u = (2, −1) and v = (1, 3). Find the first component of 2u + 3v — scale each, then add.',
+    given: 'c1*u1 + c2*v1',
+    variables: VEC_WEIGHTED,
+    at: { c1: '2', c2: '3', u1: '2', v1: '1' },
+    // 4 + 3 = 7.
+    reference: '7',
+  },
+  {
+    id: 'span-line-1',
+    knowledgePointId: 'one-vector-spans-a-line',
+    kind: 'evaluate',
+    prompt:
+      'Is w = (6, −3) in the span of u = (2, −1)? The first components force the multiple to be ' +
+      '6/2; evaluate 6/2 − (−3)/(−1) to check the second agrees. Zero means yes.',
+    // A proxy, named as one: "is it in the span" wants yes or no. The ratio
+    // difference is the computation that decides it, and it is checkable.
+    given: 'w1/u1 - w2/u2',
+    variables: VEC_UW,
+    at: { w1: '6', w2: '-3', u1: '2', u2: '-1' },
+    // 3 − 3 = 0, so w = 3u.
+    reference: '0',
+  },
+  {
+    id: 'span-plane-1',
+    knowledgePointId: 'two-vectors-usually-span-the-plane',
+    kind: 'evaluate',
+    prompt:
+      'u = (2, −1), v = (1, 3). Show 3u + 1v reaches (7, 0) by evaluating its SECOND component. ' +
+      'The first comes to 7.',
+    given: 'c1*u2 + c2*v2',
+    variables: VEC_WEIGHTED_2,
+    at: { c1: '3', c2: '1', u2: '-1', v2: '3' },
+    // −3 + 3 = 0.
+    reference: '0',
+  },
+  {
+    id: 'dependent-1',
+    knowledgePointId: 'dependent-means-redundant',
+    kind: 'evaluate',
+    prompt:
+      'u = (2, −1) and w = (6, −3). Evaluate the first component of w − 3u. Vanishing means w ' +
+      'was already reachable from u, so it added nothing.',
+    given: 'w1 - c*u1',
+    variables: [...VEC_UW, { name: 'c', assumptions: { real: true } }],
+    at: { w1: '6', w2: '-3', u1: '2', u2: '-1', c: '3' },
+    reference: '0',
+  },
+  {
+    id: 'cross-check-independent-1',
+    knowledgePointId: 'the-cross-check',
+    kind: 'evaluate',
+    prompt:
+      'Apply the cross-check u₁v₂ − u₂v₁ to u = (2, −1) and v = (1, 3). Non-zero means ' +
+      'independent. No division is needed, which matters when a component is zero.',
+    given: 'u1*v2 - u2*v1',
+    variables: VEC_UV_FULL,
+    at: { u1: '2', u2: '-1', v1: '1', v2: '3' },
+    // 6 + 1 = 7. This is the 2x2 determinant, met properly in the matrices
+    // subject — deliberately with no prerequisite edge, which would cycle.
+    reference: '7',
+  },
+  {
+    id: 'cross-check-dependent-1',
+    knowledgePointId: 'dependence-costs-a-dimension',
+    kind: 'evaluate',
+    prompt:
+      'Same cross-check on u = (2, −1) and w = (6, −3). A zero here means two vectors still only ' +
+      'reach a line, so (7, 0) is unreachable however the weights are chosen.',
+    given: 'u1*v2 - u2*v1',
+    variables: VEC_UV_FULL,
+    at: { u1: '2', u2: '-1', v1: '6', v2: '-3' },
+    // −6 + 6 = 0.
     reference: '0',
   },
 ]

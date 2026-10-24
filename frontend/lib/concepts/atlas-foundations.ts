@@ -570,13 +570,6 @@ const COORDINATE_GEOMETRY: MapArea = {
       terms: 'conic parabola ellipse hyperbola focus directrix eccentricity',
     },
     {
-      id: 'plane-vectors',
-      name: 'Vectors in the plane',
-      is: 'A displacement with length and direction, added tip-to-tail, which is a different object from a point with coordinates.',
-      needs: ['cartesian-plane'],
-      terms: 'vector magnitude direction components resultant',
-    },
-    {
       id: 'dot-product-geometry',
       name: 'The dot product',
       is: 'A product of two vectors that returns a number, equal to the product of lengths times the cosine — so it measures angle.',
@@ -589,6 +582,25 @@ const COORDINATE_GEOMETRY: MapArea = {
       is: 'Coordinates, lines and planes in space, where the cross product appears because orientation becomes a question.',
       needs: ['dot-product-geometry', 'solid-geometry'],
       terms: 'three dimensional coordinates plane equation cross product normal',
+    },
+  ],
+  links: [
+    {
+      /**
+       * `plane-vectors` was authored into ontology-vectors.ts and left this
+       * area, taking its own `needs` with it. Restated here for the reason
+       * that is now a pattern: removing a node deletes every edge declared on
+       * it, and the first time that happened it made a whole syllabus a root
+       * of the map.
+       *
+       * `dot-product-geometry` above still names `plane-vectors` and needs no
+       * help — that edge is declared on the node that stayed.
+       */
+      from: 'cartesian-plane',
+      to: 'plane-vectors',
+      because:
+        'Components are coordinates read as a displacement, so the plane and its axes have to ' +
+        'mean something before a vector can be written as a pair.',
     },
   ],
 }

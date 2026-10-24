@@ -73,7 +73,7 @@ const {
 } = atlas
 const {
   ontologyProblems, cycles, prerequisitesOf, gatingPrerequisitesOf, isTeachable, roots,
-  teachingOrder, claimableChainFor, dependentsOf,
+  teachingOrder, claimableChainFor, dependentsOf, allPrerequisitesOf,
 } = registry
 const { ONTOLOGIES } = ontology
 
@@ -423,6 +423,68 @@ t('and a chain from a graph node now reaches real material', (() => {
   const chain = claimableChainFor(MATHEMATICS, 'rational-functions')
   return chain.includes('domain-and-range') && chain.includes('function-concept')
 })(), claimableChainFor(MATHEMATICS, 'rational-functions').join(', '))
+
+// ---------------------------------------------------------------------------
+
+/**
+ * VECTORS WENT UNDERNEATH TEACHABLE MATERIAL, AND THAT IS THE POINT.
+ *
+ * Functions and matrices were authored above the algebra and gated only
+ * mapped-only nodes. This subject is the first since arithmetic to go BELOW
+ * something people can already practise: `matrices-and-maps` rests on
+ * `vectors-and-spans` by a link written when matrices was authored, so making
+ * vectors teachable puts a real gate under a real subject.
+ *
+ * Asserted rather than assumed, because the whole value of the link is that it
+ * starts gating the day the material exists — and a silent failure here looks
+ * like nothing at all: matrices would simply stay open and nobody would learn
+ * that vectors came first.
+ */
+group('vectors gated matrices, which is what authoring underneath means')
+
+const VEC_IDS = new Set(
+  MATHEMATICS.concepts.filter(c => c.subjectId === 'vectors-and-independence').map(c => c.id),
+)
+t('the subject contributes three concepts', VEC_IDS.size === 3, `${VEC_IDS.size}`)
+t('matrices now gates on vectors, not through them',
+  gatingPrerequisitesOf(MATHEMATICS, 'matrices-and-maps').includes('vectors-and-spans'),
+  gatingPrerequisitesOf(MATHEMATICS, 'matrices-and-maps').join(', '))
+t('and the gate it names is teachable, so it is somewhere to go',
+  gatingPrerequisitesOf(MATHEMATICS, 'matrices-and-maps').every(p => isTeachable(MATHEMATICS, p)))
+
+/**
+ * The same backwards check the functions group makes: authoring must not reach
+ * back and gate the subjects that existed before it.
+ */
+const BEFORE_VECTORS = [
+  'arithmetic-foundations', 'rational-expressions', 'exponents-and-logarithms',
+  'functions-and-inverses',
+]
+t('nothing authored before it gained a gate on it', MATHEMATICS.concepts
+  .filter(c => BEFORE_VECTORS.includes(c.subjectId))
+  .every(c => gatingPrerequisitesOf(MATHEMATICS, c.id).every(p => !VEC_IDS.has(p))),
+  MATHEMATICS.concepts
+    .filter(c => BEFORE_VECTORS.includes(c.subjectId))
+    .filter(c => gatingPrerequisitesOf(MATHEMATICS, c.id).some(p => VEC_IDS.has(p)))
+    .map(c => c.id).join(', '))
+
+/**
+ * NO CYCLE THROUGH THE CROSS-CHECK.
+ *
+ * `the-cross-check` IS the 2×2 determinant and says so, but no prerequisite
+ * edge was drawn to `determinant` — one would close a loop through
+ * `matrices-and-maps` and `matrix-multiplication`, and `teachingOrder` returns
+ * null on a cyclic ontology rather than a partial order, so every subject
+ * would lose its ordering to record a piece of foreshadowing.
+ *
+ * The acyclicity assertion at the top of this file would catch the cycle; this
+ * names the specific edge somebody will one day be tempted to add.
+ */
+t('linear-independence does not depend on the determinant',
+  !allPrerequisitesOf(MATHEMATICS, 'linear-independence').includes('determinant'),
+  allPrerequisitesOf(MATHEMATICS, 'linear-independence').join(', '))
+t('and the teaching order still exists, so nothing has cycled',
+  teachingOrder(MATHEMATICS) !== null)
 
 // ---------------------------------------------------------------------------
 

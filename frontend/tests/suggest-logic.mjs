@@ -732,17 +732,37 @@ test('clustering stays fast as the corpus grows', () => {
     title: `report number ${i} concerning subject ${i % 40} and matter ${i % 17}`,
     publishedAt: new Date(Date.parse(NOW) - i * 60_000).toISOString(),
   }))
-  const time = n => {
+  const once = n => {
     const corpus = mk(n)
     const t0 = process.cpuUsage()
     M.cluster.clusterStories(corpus)
     return process.cpuUsage(t0).user / 1000
   }
-  time(150) // warm, so JIT compilation is not charged to the first measurement
-  const small = Math.max(1, time(150))
-  const large = Math.max(1, time(450))
+  /**
+   * Best of three, on a corpus big enough to measure.
+   *
+   * This failed about one run in three with `1ms → 10ms`, and the cause was
+   * the `Math.max(1, …)` floor it used to carry: at 150 items the work takes
+   * well under a millisecond, the floor rounded it up to 1, and the assertion
+   * then compared a real 10ms against a fabricated 1ms. It was reporting the
+   * clock's resolution, not the algorithm's shape.
+   *
+   * 1200 → 3600 puts the baseline in the tens of milliseconds, where the ratio
+   * means something and no floor is needed. MINIMUM rather than mean because
+   * the quantity of interest is the work done — a sample inflated by GC or by
+   * the scheduler is noise in one direction only, and the fastest run is the
+   * one least contaminated by it.
+   *
+   * The assertion itself is unchanged and is still the point: the outage this
+   * guards was quadratic re-tokenisation, so it tests the SHAPE of the cost.
+   * Tripling the corpus must not multiply the time by anything like nine.
+   */
+  const time = n => Math.min(once(n), once(n), once(n))
+  once(1200) // warm, so JIT compilation is not charged to the first measurement
+  const small = time(1200)
+  const large = time(3600)
   assert(large < small * 9,
-    `tripling the corpus should not be ~9x the work: ${small.toFixed(0)}ms → ${large.toFixed(0)}ms`)
+    `tripling the corpus should not be ~9x the work: ${small.toFixed(1)}ms → ${large.toFixed(1)}ms`)
 })
 
 test('addsDistinctContribution refuses a second item unless the story is contested', () => {

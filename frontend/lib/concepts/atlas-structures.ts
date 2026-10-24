@@ -25,20 +25,6 @@ const LINEAR_ALGEBRA: MapArea = {
     'and the singular value decomposition.',
   nodes: [
     {
-      id: 'vectors-and-spans',
-      name: 'Vectors, linear combinations and span',
-      is: 'Adding vectors and scaling them, and the set of everything you can reach that way.',
-      needs: ['plane-vectors', 'three-dimensional-coordinates'],
-      terms: 'vector linear combination span scalar multiple',
-    },
-    {
-      id: 'linear-independence',
-      name: 'Linear independence',
-      is: 'When no vector in a set is reachable from the others — the condition that makes a description non-redundant.',
-      needs: ['vectors-and-spans'],
-      terms: 'linear independence dependence redundant nontrivial combination',
-    },
-    {
       id: 'gaussian-elimination',
       name: 'Gaussian elimination',
       is: 'Row reduction as a systematic solve, with the reduced form telling you the solution set rather than a solution.',
@@ -142,6 +128,23 @@ const LINEAR_ALGEBRA: MapArea = {
    * both outside the area declaring it.
    */
   links: [
+    {
+      /**
+       * `vectors-and-spans` left this area too, when it was authored into
+       * ontology-vectors.ts — so this edge now joins two authored subjects
+       * rather than a mapped node to one. It did not need changing: `links`
+       * never cared which side was which.
+       *
+       * The incoming edge it used to declare — `three-dimensional-coordinates
+       * → vectors-and-spans` — is restated below, for the usual reason that
+       * removing a node removes its own `needs`.
+       */
+      from: 'three-dimensional-coordinates',
+      to: 'vectors-and-spans',
+      because:
+        'Span is stated for vectors in any dimension, and the step past the plane is where it ' +
+        'stops being obvious that the reachable set is a line or a plane rather than everything.',
+    },
     {
       from: 'vectors-and-spans',
       to: 'matrices-and-maps',
