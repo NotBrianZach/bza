@@ -10,6 +10,7 @@ import { AREAS, MATHEMATICS, atlasCoverage } from '@/lib/concepts/atlas'
 import { TRAVERSAL_GAME } from '@/lib/concepts/traversal'
 import { MASTERY_FLOOR } from '@/lib/concepts/scheduling'
 import ConceptBrowser from '@/components/concepts/ConceptBrowser'
+import ClaimsList from '@/components/concepts/ClaimsList'
 import ConceptGraph from '@/components/concepts/ConceptGraph'
 import PracticeChat from '@/components/concepts/PracticeChat'
 import PracticePanel, { type PracticeTaskView } from '@/components/concepts/PracticePanel'
@@ -497,6 +498,18 @@ export default function LearnPage() {
                 from your strengths, not from the ontology.
               </p>
             )}
+            {/* Directly under the graph, because the graph is where a claim is
+                MADE and this is the only place one can be taken back. Keeping
+                them apart would mean the affordance for asserting fifteen
+                concepts at once lived on a different screen from the only list
+                that shows what was asserted.
+
+                `AREA_NAMES` unconditionally, not gated on scope: a claim chain
+                reaches across subjects whichever scope the graph is in, so the
+                rows need names for subjects the current view does not show. */}
+            <div className='rounded-lg border border-gray-800 bg-gray-900 px-3 py-2'>
+              <ClaimsList subjectNames={AREA_NAMES} onChanged={load} />
+            </div>
             {/* The browser stays on the subject in both scopes. It prints every
                 concept's full text, which is right for nine and unreadable for
                 291 — and the 276 mapped ones have a one-line description and

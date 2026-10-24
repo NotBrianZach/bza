@@ -3,7 +3,7 @@ import { getUserFromToken } from '@/lib/apiQuota'
 import { getOntology, RATIONAL_EXPRESSIONS } from '@/lib/concepts/ontology'
 import { claimableChainFor, conceptById } from '@/lib/concepts/registry'
 import { MATHEMATICS } from '@/lib/concepts/atlas'
-import { allClaims, claimConcept, withdrawClaim } from '@/lib/concepts/store'
+import { allClaims, claimConcept, claimsEverywhere, withdrawClaim } from '@/lib/concepts/store'
 
 /**
  * Claiming to already know a concept.
@@ -45,6 +45,35 @@ function resolve(rawSubject: string | null | undefined) {
 export async function GET(req: NextRequest) {
   const userId = await getUserFromToken(req.headers.get('authorization'))
   if (!userId) return NextResponse.json({ error: 'Not signed in' }, { status: 401 })
+
+  /**
+   * `?subject=all` — every claim, in every subject.
+   *
+   * The default stays per-subject so nothing that already calls this changes.
+   * But a chain claim writes rows under several subjects at once, each filed
+   * under the concept's own, so a review screen asking for one subject would
+   * show a fraction of what the learner just asserted and offer no route to
+   * the rest. Names are resolved against the composed map here rather than a
+   * single ontology, for the same reason.
+   */
+  if ((req.nextUrl.searchParams.get('subject') ?? '').trim() === 'all') {
+    try {
+      const claims = await claimsEverywhere(userId)
+      return NextResponse.json({
+        subject: 'all',
+        claims: claims.map(c => ({
+          ...c,
+          conceptName: conceptById(MATHEMATICS, c.conceptId)?.name ?? c.conceptId,
+          live: !c.revokedAt && !c.verifiedAt,
+        })),
+      })
+    } catch (e) {
+      return NextResponse.json(
+        { error: e instanceof Error ? e.message : 'could not load the claims' },
+        { status: 500 },
+      )
+    }
+  }
 
   const resolved = resolve(req.nextUrl.searchParams.get('subject'))
   if (!resolved) return NextResponse.json({ error: 'Unknown subject' }, { status: 404 })

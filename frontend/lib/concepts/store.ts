@@ -313,6 +313,36 @@ export async function liveClaims(userId: string, subjectId: string): Promise<Set
   return new Set(((data ?? []) as { concept_id: string }[]).map(r => r.concept_id))
 }
 
+/**
+ * Every claim this learner has made, in every subject.
+ *
+ * Needed because a chain claim deliberately writes ACROSS subjects: claiming
+ * `partial-fractions-quadratic` files rows under rational-expressions AND
+ * arithmetic-foundations, each under the concept's own `subjectId`, because a
+ * claim only ever opens its own concept and has to be loaded by the subject
+ * being practised.
+ *
+ * That filing rule makes `allClaims(userId, subjectId)` the wrong query for a
+ * review screen. A learner who claimed thirteen concepts in one press and then
+ * opened a per-subject list would see five of them and have no way to reach the
+ * other eight — the list would quietly under-report the thing it exists to
+ * show, which is the same class of bug as filing the rows wrongly in the first
+ * place.
+ *
+ * One query rather than one per subject: the subject count is a registry
+ * detail, and fanning out would make the screen slower every time a subject is
+ * authored.
+ */
+export async function claimsEverywhere(userId: string): Promise<Claim[]> {
+  const { data, error } = await db()
+    .from('concept_claims')
+    .select('id, subject_id, concept_id, claimed_at, note, verified_at, revoked_at, revoked_reason')
+    .eq('user_id', userId)
+    .order('claimed_at', { ascending: false })
+  if (error) throw new Error(`could not load the claims: ${error.message}`)
+  return ((data ?? []) as Record<string, unknown>[]).map(toClaim)
+}
+
 /** Every claim for a subject, including dead ones — the history is the point. */
 export async function allClaims(userId: string, subjectId: string): Promise<Claim[]> {
   const { data, error } = await db()
@@ -322,7 +352,16 @@ export async function allClaims(userId: string, subjectId: string): Promise<Clai
     .eq('subject_id', subjectId)
     .order('claimed_at', { ascending: false })
   if (error) throw new Error(`could not load the claims: ${error.message}`)
-  return ((data ?? []) as Record<string, unknown>[]).map(r => ({
+  return ((data ?? []) as Record<string, unknown>[]).map(toClaim)
+}
+
+/**
+ * One row to a `Claim`. Shared by the two readers so they cannot drift — a
+ * per-subject list and an every-subject list disagreeing about what `live`
+ * means would be a bug nobody would look for.
+ */
+function toClaim(r: Record<string, unknown>): Claim {
+  return {
     id: String(r.id),
     subjectId: String(r.subject_id),
     conceptId: String(r.concept_id),
@@ -331,7 +370,7 @@ export async function allClaims(userId: string, subjectId: string): Promise<Clai
     verifiedAt: typeof r.verified_at === 'string' ? r.verified_at : null,
     revokedAt: typeof r.revoked_at === 'string' ? r.revoked_at : null,
     revokedReason: typeof r.revoked_reason === 'string' ? r.revoked_reason : null,
-  }))
+  }
 }
 
 /**
