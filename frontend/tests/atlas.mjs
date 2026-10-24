@@ -362,19 +362,36 @@ group('authoring functions gated nothing anybody can practise')
 const FN_IDS = new Set(
   MATHEMATICS.concepts.filter(c => c.subjectId === 'functions-and-inverses').map(c => c.id),
 )
-const offenders = MATHEMATICS.concepts
-  .filter(c => !FN_IDS.has(c.id) && isTeachable(MATHEMATICS, c.id))
+/**
+ * Stated against the subjects that EXISTED when functions was authored.
+ *
+ * The first version asserted that no teachable concept anywhere gates on
+ * functions, and it went red the moment `matrices-and-determinants` was
+ * authored — because matrices rests on `function-concept` and
+ * `function-composition` deliberately, by links written on purpose. The test
+ * was right to fail; the claim was just the wrong shape. "Nothing teachable
+ * depends on this" is a fact about a moment, and any later subject built on
+ * functions falsifies it while doing exactly what it should.
+ *
+ * The durable claim is about what came BEFORE: authoring functions must not
+ * have reached back and gated the arithmetic or the two algebra syllabi,
+ * because those are what people were already practising. Material authored
+ * afterwards resting on functions is the map working.
+ */
+const PRE_EXISTING = ['arithmetic-foundations', 'rational-expressions', 'exponents-and-logarithms']
+const regressed = MATHEMATICS.concepts
+  .filter(c => PRE_EXISTING.includes(c.subjectId))
   .filter(c => gatingPrerequisitesOf(MATHEMATICS, c.id).some(p => FN_IDS.has(p)))
 
 t('the subject contributes four concepts to the map', FN_IDS.size === 4, `${FN_IDS.size}`)
-t('no TEACHABLE concept outside it gates on one of its concepts',
-  offenders.length === 0, offenders.map(c => c.id).join(', '))
-t('the gates it did create are all on mapped-only nodes', (() => {
+t('nothing that existed before it gained a gate on it',
+  regressed.length === 0, regressed.map(c => c.id).join(', '))
+t('the gates it created reach mapped nodes and later subjects, never backwards', (() => {
   const gained = MATHEMATICS.concepts
     .filter(c => !FN_IDS.has(c.id))
     .filter(c => gatingPrerequisitesOf(MATHEMATICS, c.id).some(p => FN_IDS.has(p)))
-  return gained.length > 0 && gained.every(c => !isTeachable(MATHEMATICS, c.id))
-})(), 'expected some mapped nodes to gain a gate, and none that is teachable')
+  return gained.length > 0 && gained.every(c => !PRE_EXISTING.includes(c.subjectId))
+})(), 'expected gates on mapped nodes and on matrices, and none on the three older subjects')
 t('the algebra subjects gate exactly as they did — on arithmetic, not functions', (() => {
   const g = gatingPrerequisitesOf(MATHEMATICS, 'polynomial-arithmetic')
   return g.includes('order-of-operations') && g.includes('negative-numbers')

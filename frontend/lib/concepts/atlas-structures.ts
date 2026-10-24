@@ -39,40 +39,12 @@ const LINEAR_ALGEBRA: MapArea = {
       terms: 'linear independence dependence redundant nontrivial combination',
     },
     {
-      id: 'matrices-and-maps',
-      name: 'Matrices as linear maps',
-      is: 'A matrix is a function that respects addition and scaling, and its columns are where the basis vectors go.',
-      needs: ['vectors-and-spans', 'function-concept'],
-      terms: 'matrix linear transformation columns image',
-    },
-    {
-      id: 'matrix-multiplication',
-      name: 'Matrix multiplication',
-      is: 'Composition of maps, which is why it is associative and not commutative — the row-by-column rule is a consequence, not the definition.',
-      needs: ['matrices-and-maps', 'function-composition'],
-      terms: 'matrix multiplication composition associative noncommutative',
-    },
-    {
       id: 'gaussian-elimination',
       name: 'Gaussian elimination',
       is: 'Row reduction as a systematic solve, with the reduced form telling you the solution set rather than a solution.',
       needs: ['matrices-and-maps', 'systems-of-linear-equations'],
       exercises: ['systems-of-linear-equations'],
       terms: 'gaussian elimination row echelon pivot free variable rank',
-    },
-    {
-      id: 'determinant',
-      name: 'The determinant',
-      is: 'The signed volume scaling of a map, zero exactly when the map collapses a dimension.',
-      needs: ['gaussian-elimination', 'matrix-multiplication'],
-      terms: 'determinant volume scaling singular cofactor expansion',
-    },
-    {
-      id: 'matrix-inverse',
-      name: 'Invertibility',
-      is: 'When a map can be undone, and the half-dozen equivalent conditions that all say the same thing.',
-      needs: ['determinant'],
-      terms: 'inverse matrix invertible nonsingular identity',
     },
     {
       id: 'vector-spaces',
@@ -143,6 +115,61 @@ const LINEAR_ALGEBRA: MapArea = {
       is: 'Conditioning, LU and QR factorisation, iterative methods — where floating point makes the exact theory insufficient.',
       needs: ['singular-value-decomposition', 'gaussian-elimination'],
       terms: 'condition number lu decomposition qr iterative method stability',
+    },
+  ],
+  /**
+   * THE FOUR EDGES THAT CAME IN TO THE AUTHORED NODES.
+   *
+   * `matrices-and-maps`, `matrix-multiplication`, `determinant` and
+   * `matrix-inverse` are real concepts now, in ontology-matrices.ts, so they
+   * had to leave this area — `atlasProblems` rejects a node colliding with an
+   * authored concept.
+   *
+   * Removing a node removes every edge declared on its OWN `needs`, and that
+   * is the whole reason this block exists. It was learned the hard way one
+   * subject ago: authoring `function-concept` silently deleted
+   * `variables-and-expressions → function-concept` and made that syllabus a
+   * root of the entire map, practisable from a cold account by somebody who
+   * had never met a letter standing for a number.
+   *
+   * Edges pointing the other way — `eigenvalues` needs `determinant`,
+   * `gaussian-elimination` needs `matrices-and-maps` — are declared on the
+   * nodes that REMAIN, so they survive untouched and resolve across the file
+   * boundary in `composeAtlas`. Only the incoming ones are restated here.
+   *
+   * Two of the four reach into another authored subject rather than into the
+   * map, which is exactly what `links` is for: an edge whose endpoints are
+   * both outside the area declaring it.
+   */
+  links: [
+    {
+      from: 'vectors-and-spans',
+      to: 'matrices-and-maps',
+      because:
+        'A matrix acts on vectors and its columns ARE vectors, so adding and scaling them has ' +
+        'to mean something before a matrix can.',
+    },
+    {
+      from: 'function-concept',
+      to: 'matrices-and-maps',
+      because:
+        'A matrix is a function before it is a grid — the content of "linear map" is that it is ' +
+        'a rule with exactly one output, which is the function concept itself.',
+    },
+    {
+      from: 'function-composition',
+      to: 'matrix-multiplication',
+      because:
+        'Matrix multiplication IS composition: AB means do B then A, and the row-by-column rule ' +
+        'is derived from that rather than stated alongside it. A learner who has not composed ' +
+        'two functions has no reason the rule is not arbitrary.',
+    },
+    {
+      from: 'gaussian-elimination',
+      to: 'determinant',
+      because:
+        'Row reduction is how a determinant is computed at any size past 3×3, and the effect of ' +
+        'each row operation on it is the standard derivation.',
     },
   ],
 }

@@ -44,6 +44,7 @@ function build() {
     join('lib', 'concepts', 'numerals.ts'),
     join('lib', 'concepts', 'ontology-arithmetic.ts'),
     join('lib', 'concepts', 'ontology-functions.ts'),
+    join('lib', 'concepts', 'ontology-matrices.ts'),
     join('lib', 'concepts', 'ontology-exponentials.ts'),
     join('lib', 'concepts', 'ontology.ts'),
     join('lib', 'concepts', 'registry.ts'),
@@ -1188,7 +1189,7 @@ const EVALS = TASKS.filter(task => task.kind === 'evaluate')
 // Forty: thirteen across the two algebra subjects, plus one per
 // knowledge point in arithmetic-foundations (15) and functions-and-inverses
 // (12), both of which are `evaluate`-only.
-t('there are forty across the four subjects', EVALS.length === 40, `${EVALS.length}`)
+t('there are fifty-two across the five subjects', EVALS.length === 52, `${EVALS.length}`)
 t('they cover the six knowledge points that had no task at all', (() => {
   const previouslyBare = [
     'irreducible-quadratic', 'improper-first', 'excluded-points',
@@ -1629,7 +1630,7 @@ t('a witness at an excluded point fails validation', (() => {
 const X2 = EXPONENTS_AND_LOGARITHMS
 
 group('a second subject the schema was not designed around')
-t('it is registered', ONTOLOGIES.length === 4 && getOntology('exponents-and-logarithms') === X2)
+t('it is registered', ONTOLOGIES.length === 5 && getOntology('exponents-and-logarithms') === X2)
 t('it reports no structural problems', ontologyProblems(X2).length === 0, JSON.stringify(ontologyProblems(X2)))
 t('its fidelity claims match what its options can do', fidelityMismatches(X2).length === 0)
 t('it has a prerequisite-respecting teaching order', teachingOrder(X2)?.length === X2.concepts.length)

@@ -30,12 +30,14 @@
 
 import { ARITHMETIC_FOUNDATIONS } from './ontology-arithmetic'
 import { FUNCTIONS_AND_INVERSES } from './ontology-functions'
+import { MATRICES_AND_DETERMINANTS } from './ontology-matrices'
 import { EXPONENTS_AND_LOGARITHMS } from './ontology-exponentials'
 import type { ConceptEdge, ConceptOntology, Subject } from './types'
 import type { Concept } from './types'
 
 export { ARITHMETIC_FOUNDATIONS } from './ontology-arithmetic'
 export { FUNCTIONS_AND_INVERSES } from './ontology-functions'
+export { MATRICES_AND_DETERMINANTS } from './ontology-matrices'
 export { EXPONENTS_AND_LOGARITHMS } from './ontology-exponentials'
 
 const subject: Subject = {
@@ -853,7 +855,7 @@ export const RATIONAL_EXPRESSIONS: ConceptOntology = {
  */
 export const ONTOLOGIES: ConceptOntology[] = [
   ARITHMETIC_FOUNDATIONS, RATIONAL_EXPRESSIONS, EXPONENTS_AND_LOGARITHMS,
-  FUNCTIONS_AND_INVERSES,
+  FUNCTIONS_AND_INVERSES, MATRICES_AND_DETERMINANTS,
 ]
 
 export function getOntology(subjectId: string): ConceptOntology | null {

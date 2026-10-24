@@ -87,6 +87,37 @@ const REAL_ABC_X = [
   { name: 'x', assumptions: { real: true } },
 ]
 
+/**
+ * Matrix entries, named by position rather than by letter.
+ *
+ * `a11` rather than `a` because the subject's whole difficulty is which entry
+ * goes with which — row 1 against column 1 — and a task whose symbols were
+ * `a, b, c, d` would hide the one thing being drilled. The determinant tasks
+ * are the exception and use `a, b, c, d`, because `ad − bc` is universally
+ * written that way and renaming it would make the formula unrecognisable.
+ */
+const MATRIX_ROW_VEC = [
+  { name: 'a11', assumptions: { real: true } },
+  { name: 'a12', assumptions: { real: true } },
+  { name: 'x1', assumptions: { real: true } },
+  { name: 'x2', assumptions: { real: true } },
+]
+
+const MATRIX_AB = [
+  { name: 'a11', assumptions: { real: true } },
+  { name: 'a12', assumptions: { real: true } },
+  { name: 'b11', assumptions: { real: true } },
+  { name: 'b21', assumptions: { real: true } },
+]
+
+/** The determinant's own lettering, kept because `ad − bc` is how it is read. */
+const MATRIX_ABCD = [
+  { name: 'a', assumptions: { real: true } },
+  { name: 'b', assumptions: { real: true } },
+  { name: 'c', assumptions: { real: true } },
+  { name: 'd', assumptions: { real: true } },
+]
+
 /** Four digits, most significant first. Shared by the two four-digit tasks. */
 const WHOLE_DIGITS = [
   { name: 'd3', assumptions: { integer: true } },
@@ -1044,6 +1075,214 @@ export const TASKS: PracticeTask[] = [
     given: 'x^2 - (-x)^2',
     variables: REAL_X,
     at: { x: '3' },
+    reference: '0',
+  },
+
+  // ── matrices-and-determinants ───────────────────────────────────────────
+  //
+  // EVERY TASK ASKS FOR ONE ENTRY, because the engine has no matrix type.
+  // `parseExpression` knows numbers, symbols and five operators; there is no
+  // way to write a matrix, so no way for an answer to be a grid.
+  //
+  // That is how the subject is performed anyway — nobody multiplies two
+  // matrices in one step, they compute entry (1,1) and then (1,2), and the
+  // rule being drilled is "row i against column j". Asking for one entry asks
+  // for exactly that rule. The matrices live in the prompt and their entries
+  // are the symbols.
+  //
+  // The honest gap: nothing here tests laying a product out. A learner could
+  // get every entry right and still not produce the grid. That is the
+  // verifier's limit, not the curriculum's, and it is why `gaussian-elimination`
+  // is left mapped — its answer IS a matrix in a normal form.
+  //
+  // One matrix pair runs through the whole subject — A = [[2,-1],[3,4]] and
+  // B = [[5,0],[3,1]] — so a learner meets the same numbers in every concept
+  // and can see det(A) = 11 reappear as the denominator of the inverse.
+  {
+    id: 'columns-basis-1',
+    knowledgePointId: 'the-columns-are-where-the-basis-goes',
+    kind: 'evaluate',
+    prompt:
+      'A = [[2, −1], [3, 4]]. Find the first component of A·e₁ where e₁ = (1, 0) — that is, ' +
+      'evaluate a₁₁·1 + a₁₂·0. The answer is the top of column 1, which is the point.',
+    given: 'a11*x1 + a12*x2',
+    variables: MATRIX_ROW_VEC,
+    at: { a11: '2', a12: '-1', x1: '1', x2: '0' },
+    reference: '2',
+  },
+  {
+    id: 'linearity-1',
+    knowledgePointId: 'a-matrix-respects-addition-and-scaling',
+    kind: 'evaluate',
+    prompt:
+      'A = [[2, −1], [3, 4]], u = (1, 2), v = (3, −1). Find the first component of A(u + v) by ' +
+      'adding the vectors first. Computing Au + Av instead must give the same answer — that is ' +
+      'linearity.',
+    given: 'a11*(u1 + v1) + a12*(u2 + v2)',
+    variables: [
+      { name: 'a11', assumptions: { real: true } },
+      { name: 'a12', assumptions: { real: true } },
+      { name: 'u1', assumptions: { real: true } },
+      { name: 'u2', assumptions: { real: true } },
+      { name: 'v1', assumptions: { real: true } },
+      { name: 'v2', assumptions: { real: true } },
+    ],
+    at: { a11: '2', a12: '-1', u1: '1', u2: '2', v1: '3', v2: '-1' },
+    // u + v = (4, 1); 2·4 − 1 = 7. And Au + Av = 0 + 7 = 7.
+    reference: '7',
+  },
+  {
+    id: 'image-span-1',
+    knowledgePointId: 'the-image-is-the-span-of-the-columns',
+    kind: 'evaluate',
+    prompt:
+      'A = [[2, −1], [3, 4]]. Find the first component of 2·(column 1) + 3·(column 2). This is ' +
+      'the same thing as applying A to the vector (2, 3) — combining columns and feeding in a ' +
+      'vector are one operation.',
+    given: 'c1*a11 + c2*a12',
+    variables: [
+      { name: 'c1', assumptions: { real: true } },
+      { name: 'c2', assumptions: { real: true } },
+      { name: 'a11', assumptions: { real: true } },
+      { name: 'a12', assumptions: { real: true } },
+    ],
+    at: { c1: '2', c2: '3', a11: '2', a12: '-1' },
+    // 4 − 3 = 1.
+    reference: '1',
+  },
+  {
+    id: 'row-by-column-1',
+    knowledgePointId: 'row-against-column',
+    kind: 'evaluate',
+    prompt:
+      'A = [[2, −1], [3, 4]] and B = [[5, 0], [3, 1]]. Find entry (1,1) of AB: row 1 of A ' +
+      'against column 1 of B.',
+    given: 'a11*b11 + a12*b21',
+    variables: MATRIX_AB,
+    at: { a11: '2', a12: '-1', b11: '5', b21: '3' },
+    // 10 − 3 = 7.
+    reference: '7',
+  },
+  {
+    id: 'order-matters-ab-1',
+    knowledgePointId: 'matrix-order-matters',
+    kind: 'evaluate',
+    prompt:
+      'Same A and B, the other way round: find entry (1,1) of BA — row 1 of B against column 1 ' +
+      'of A. Compare with 7, which is what AB gave.',
+    given: 'b11*a11 + b12*a21',
+    variables: [
+      { name: 'b11', assumptions: { real: true } },
+      { name: 'b12', assumptions: { real: true } },
+      { name: 'a11', assumptions: { real: true } },
+      { name: 'a21', assumptions: { real: true } },
+    ],
+    at: { b11: '5', b12: '0', a11: '2', a21: '3' },
+    // 10 + 0 = 10. One differing entry proves AB ≠ BA.
+    reference: '10',
+  },
+  {
+    id: 'associative-1',
+    knowledgePointId: 'grouping-does-not-matter',
+    kind: 'evaluate',
+    prompt:
+      'A = [[2, −1], [3, 4]], B = [[5, 0], [3, 1]], C = the column (1, 2). Find the first ' +
+      'component of A(BC) — innermost first. Grouping as (AB)C does different arithmetic and ' +
+      'must reach the same number.',
+    given: 'a11*(b11*c1 + b12*c2) + a12*(b21*c1 + b22*c2)',
+    variables: [
+      ...MATRIX_AB,
+      { name: 'b12', assumptions: { real: true } },
+      { name: 'b22', assumptions: { real: true } },
+      { name: 'c1', assumptions: { real: true } },
+      { name: 'c2', assumptions: { real: true } },
+    ],
+    at: { a11: '2', a12: '-1', b11: '5', b12: '0', b21: '3', b22: '1', c1: '1', c2: '2' },
+    // BC = (5, 5); 2·5 − 5 = 5. And (AB)C = 7·1 − 1·2 = 5.
+    reference: '5',
+  },
+  {
+    id: 'det-2x2-1',
+    knowledgePointId: 'ad-minus-bc',
+    kind: 'evaluate',
+    prompt:
+      'Find the determinant of [[2, −1], [3, 4]] — that is ad − bc. It is the factor every area ' +
+      'is multiplied by, and its sign says whether orientation survived.',
+    given: 'a*d - b*c',
+    variables: MATRIX_ABCD,
+    at: { a: '2', b: '-1', c: '3', d: '4' },
+    // 8 + 3 = 11. This number reappears as the inverse's denominator.
+    reference: '11',
+  },
+  {
+    id: 'det-zero-1',
+    knowledgePointId: 'zero-means-collapse',
+    kind: 'evaluate',
+    prompt:
+      'Find the determinant of [[2, 4], [1, 2]]. Its columns are (2,1) and (4,2) — one is twice ' +
+      'the other, so the map crushes the plane onto a line and the answer should say so.',
+    given: 'a*d - b*c',
+    variables: MATRIX_ABCD,
+    at: { a: '2', b: '4', c: '1', d: '2' },
+    reference: '0',
+  },
+  {
+    id: 'det-multiplies-1',
+    knowledgePointId: 'the-determinant-multiplies',
+    kind: 'evaluate',
+    prompt:
+      'A = [[2, −1], [3, 4]] and B = [[5, 0], [3, 1]]. Find det(A)·det(B), which is det(AB) — so ' +
+      'you get the determinant of the product without computing a single entry of it.',
+    given: '(a*d - b*c)*(p*s - q*r)',
+    variables: [
+      ...MATRIX_ABCD,
+      { name: 'p', assumptions: { real: true } },
+      { name: 'q', assumptions: { real: true } },
+      { name: 'r', assumptions: { real: true } },
+      { name: 's', assumptions: { real: true } },
+    ],
+    at: { a: '2', b: '-1', c: '3', d: '4', p: '5', q: '0', r: '3', s: '1' },
+    // 11 · 5 = 55.
+    reference: '55',
+  },
+  {
+    id: 'inverse-entry-1',
+    knowledgePointId: 'swap-negate-divide',
+    kind: 'evaluate',
+    prompt:
+      'A = [[2, −1], [3, 4]]. Find entry (1,1) of A⁻¹, which is d/det — swap the diagonal, ' +
+      'negate the other two, divide by ad − bc. Give the exact fraction.',
+    given: 'd/(a*d - b*c)',
+    variables: MATRIX_ABCD,
+    at: { a: '2', b: '-1', c: '3', d: '4' },
+    // 4/11. The division is the only step that can fail.
+    reference: '4/11',
+  },
+  {
+    id: 'inverse-identity-matrix-1',
+    knowledgePointId: 'it-composes-to-the-identity',
+    kind: 'evaluate',
+    prompt:
+      'With A = [[2, −1], [3, 4]] and A⁻¹ = (1/11)[[4, 1], [−3, 2]], verify entry (1,1) of A⁻¹A: ' +
+      'row 1 of the adjugate against column 1 of A, over the determinant. The identity has 1 there.',
+    given: '(d*a + (-b)*c)/(a*d - b*c)',
+    variables: MATRIX_ABCD,
+    at: { a: '2', b: '-1', c: '3', d: '4' },
+    // (8 + 3)/11 = 1. The numerator IS the determinant — that cancellation is
+    // the reason the formula divides by det at all.
+    reference: '1',
+  },
+  {
+    id: 'singular-no-inverse-1',
+    knowledgePointId: 'singular-means-no-inverse',
+    kind: 'evaluate',
+    prompt:
+      'Find the determinant of [[6, 3], [4, 2]]. A zero here is why no inverse exists — not ' +
+      'because the formula divides by zero, but because the map sent two different vectors to ' +
+      'the same place.',
+    given: 'a*d - b*c',
+    variables: MATRIX_ABCD,
+    at: { a: '6', b: '3', c: '4', d: '2' },
     reference: '0',
   },
 ]
