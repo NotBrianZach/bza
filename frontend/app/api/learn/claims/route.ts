@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserFromToken } from '@/lib/apiQuota'
-import { getOntology, RATIONAL_EXPRESSIONS } from '@/lib/concepts/ontology'
-import { claimableChainFor, conceptById } from '@/lib/concepts/registry'
+import { getOntology, ONTOLOGIES, RATIONAL_EXPRESSIONS } from '@/lib/concepts/ontology'
+import { claimableChainFor, conceptById, isTeachable } from '@/lib/concepts/registry'
 import { MATHEMATICS } from '@/lib/concepts/atlas'
 import { allClaims, claimConcept, claimsEverywhere, withdrawClaim } from '@/lib/concepts/store'
 
@@ -37,7 +37,11 @@ export const dynamic = 'force-dynamic'
 const MAX_NOTE = 500
 
 function resolve(rawSubject: string | null | undefined) {
-  const id = (rawSubject ?? '').trim() || RATIONAL_EXPRESSIONS.subject.id
+  // `ONTOLOGIES[0]`, matching /api/learn/session, the /learn page and the
+  // scratchpad route. This site was missed when the default moved off
+  // RATIONAL_EXPRESSIONS and it broke claiming outright — see the note on the
+  // concept lookup below for what the mismatch actually produced.
+  const id = (rawSubject ?? '').trim() || (ONTOLOGIES[0] ?? RATIONAL_EXPRESSIONS).subject.id
   const ontology = getOntology(id)
   return ontology ? { id, ontology } : null
 }
@@ -216,34 +220,52 @@ export async function POST(req: NextRequest) {
   const conceptId = body?.conceptId?.trim()
   if (!conceptId) return NextResponse.json({ error: 'conceptId is required' }, { status: 400 })
 
-  const concept = conceptById(resolved.ontology, conceptId)
+  /**
+   * THE CONCEPT IS LOOKED UP ON THE MAP, NOT IN THE REQUESTED SUBJECT.
+   *
+   * It used to be looked up in `resolved.ontology`, and that coupling produced
+   * a bug which said the opposite of the truth. The learner was practising
+   * arithmetic-foundations and claimed `order-of-operations`, which has three
+   * knowledge points and is plainly authored. But `resolve()` was still
+   * defaulting to rational-expressions, so the lookup missed, fell through to
+   * the atlas branch, and answered 409 "is on the map but has no problems
+   * written for it" about a concept whose problems the page was displaying.
+   *
+   * Fixing the default alone would have left the coupling: a claim would still
+   * fail whenever the subject sent and the concept's own subject disagreed,
+   * which is routine on the whole-map scope where a learner can select any node
+   * in the graph regardless of what they are practising.
+   *
+   * So the concept is resolved against the composed map and the row is filed
+   * under `concept.subjectId` — exactly the rule `claimTheChain` already
+   * follows, and for the same reason: a claim only ever opens its own concept,
+   * so it has to be stored where the subject that owns it will load it.
+   * `subject` in the body now only decides which subject a 404 is reported
+   * against.
+   *
+   * What remains a 409 is the one case that was always meant to be one: a
+   * concept with no material. The atlas names ~271 of those, a learner
+   * browsing the map will reach for one, and "has no concept" would be false
+   * since it is visible on the page they clicked from. `isTeachable` is the
+   * authority — the same predicate the gate uses — rather than membership of
+   * any particular ontology.
+   */
+  const concept = conceptById(MATHEMATICS, conceptId)
   if (!concept) {
-    /**
-     * Distinguish "no such concept" from "on the map, nothing written".
-     *
-     * The atlas named roughly 276 concepts that no authored subject contains,
-     * and a learner browsing the map will reach for a claim on one of them.
-     * `getOntology` only resolves the two subjects with material, so every one
-     * of those arrives here as a miss — and "has no concept" would be false,
-     * since it is on the map and visible on the very page they clicked from.
-     * The UI already suppresses the button; this is for anyone posting directly
-     * and for the day the UI regresses.
-     */
-    const mapped = conceptById(MATHEMATICS, conceptId)
-    if (mapped) {
-      return NextResponse.json(
-        {
-          error:
-            `"${mapped.name}" is on the map but has no problems written for it, so there is ` +
-            `nothing a claim could open. It also gates nothing, so claiming it would not ` +
-            `unblock anything either.`,
-        },
-        { status: 409 },
-      )
-    }
     return NextResponse.json(
-      { error: `${resolved.ontology.subject.name} has no concept "${conceptId}"` },
+      { error: `No concept "${conceptId}" anywhere on the map` },
       { status: 404 },
+    )
+  }
+  if (!isTeachable(MATHEMATICS, conceptId)) {
+    return NextResponse.json(
+      {
+        error:
+          `"${concept.name}" is on the map but has no problems written for it, so there is ` +
+          `nothing a claim could open. It also gates nothing, so claiming it would not ` +
+          `unblock anything either.`,
+      },
+      { status: 409 },
     )
   }
 
@@ -252,7 +274,12 @@ export async function POST(req: NextRequest) {
   try {
     if (chain) return await claimTheChain(userId, conceptId, concept.name, note)
 
-    const created = await claimConcept(userId, resolved.id, conceptId, note)
+    // `concept.subjectId`, not `resolved.id` — the concept's own subject, for
+    // the reason in `claimTheChain`'s header: `liveClaims` filters on
+    // subject_id and the session loads only the subject being practised, so a
+    // row filed under the subject the learner happened to be looking at would
+    // never be loaded by anything.
+    const created = await claimConcept(userId, concept.subjectId, conceptId, note)
     return NextResponse.json({
       claimed: created,
       conceptName: concept.name,

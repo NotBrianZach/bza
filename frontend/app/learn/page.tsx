@@ -145,6 +145,8 @@ export default function LearnPage() {
   const [padEmpty, setPadEmpty] = useState(true)
 
   const [claiming, setClaiming] = useState<string | null>(null)
+  /** Bumped after any successful claim, so ClaimsList re-reads. See its prop note. */
+  const [claimsVersion, setClaimsVersion] = useState(0)
   const [claimNote, setClaimNote] = useState<string | null>(null)
 
   /**
@@ -177,7 +179,7 @@ export default function LearnPage() {
       })
       const d = await res.json()
       setClaimNote(d.error ? `could not claim ${conceptName}: ${d.error}` : d.effect)
-      if (!d.error) await load()
+      if (!d.error) { setClaimsVersion(v => v + 1); await load() }
     } catch {
       setClaimNote(`could not claim ${conceptName}`)
     } finally {
@@ -220,7 +222,7 @@ export default function LearnPage() {
       })
       const d = await res.json()
       setClaimNote(d.error ? `could not claim the chain under ${conceptName}: ${d.error}` : d.effect)
-      if (!d.error) await load()
+      if (!d.error) { setClaimsVersion(v => v + 1); await load() }
     } catch {
       setClaimNote(`could not claim the chain under ${conceptName}`)
     } finally {
@@ -508,7 +510,7 @@ export default function LearnPage() {
                 reaches across subjects whichever scope the graph is in, so the
                 rows need names for subjects the current view does not show. */}
             <div className='rounded-lg border border-gray-800 bg-gray-900 px-3 py-2'>
-              <ClaimsList subjectNames={AREA_NAMES} onChanged={load} />
+              <ClaimsList subjectNames={AREA_NAMES} refreshKey={claimsVersion} onChanged={load} />
             </div>
             {/* The browser stays on the subject in both scopes. It prints every
                 concept's full text, which is right for nine and unreadable for

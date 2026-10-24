@@ -61,10 +61,24 @@ export interface ClaimRow {
 
 export default function ClaimsList({
   subjectNames,
+  refreshKey,
   onChanged,
 }: {
   /** Display names per subject id, so a row can say where its concept lives. */
   subjectNames?: Record<string, string>
+  /**
+   * Bumped by the page whenever a claim is made elsewhere on it.
+   *
+   * This list owns its own fetch, so a claim made in the graph above does not
+   * reach it — the page's own `load()` reloads the SESSION, which is a
+   * different thing. Without this, pressing "I know this and the 12 under it"
+   * left the list reading "Nothing claimed" directly beneath the button that
+   * had just claimed twelve concepts, until a manual page reload.
+   *
+   * A counter rather than the claims themselves: the page does not hold them
+   * and should not have to. It only knows that something changed.
+   */
+  refreshKey?: number
   /**
    * Called after a successful withdrawal.
    *
@@ -91,7 +105,7 @@ export default function ClaimsList({
     }
   }, [])
 
-  useEffect(() => { load() }, [load])
+  useEffect(() => { load() }, [load, refreshKey])
 
   const withdraw = useCallback(async (row: ClaimRow) => {
     setBusy(row.conceptId)
