@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { serverData } from '@/lib/supabaseSchema'
+import { classifyImport } from '@/lib/classifyImport'
 
 const SUPABASE_URL      = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -67,23 +68,27 @@ export async function POST(req: NextRequest) {
   // ── Create books record ───────────────────────────────────────────────────
   const totalPages = Math.ceil(content.length / CHAR_PAGE_LENGTH)
 
-  // Derive content_type from source.
-  //
-  // 'non-fiction' was not one of the values books.content_type accepts. The
-  // column carries a CHECK constraint (books_content_type_check) and that
-  // string is absent from it, so three of the four branches here produced an
-  // insert the database rejected outright: YouTube captures, Hacker News
-  // captures, and the default. Only the wikipedia.org branch ever wrote a
-  // legal row, which is why 350 books contain zero 'non-fiction' and why the
-  // capture extension looked like it did nothing for everything else.
-  //
-  // Every value below is checked against the constraint's list by
-  // ALLOWED_CONTENT_TYPES before the insert, so the next typo fails here
-  // with a named error instead of as a 500 from Postgres.
-  let contentType = 'essay'
-  if (source_type === 'youtube') contentType = 'essay'
-  else if (source_url?.includes('wikipedia.org')) contentType = 'wikipedia_article'
-  else if (source_url?.includes('news.ycombinator.com')) contentType = 'forum_thread'
+  /**
+   * Derive content_type from the source, via the shared classifier.
+   *
+   * The rules used to live here as a chain of `includes()` tests, and a second
+   * divergent copy lived in components/upload/UrlTab — so the same Hacker News
+   * link became a `forum_thread` through the extension and a `fiction` through
+   * the URL tab. lib/classifyImport is now the only place that decides, and it
+   * matches hosts as suffixes of the parsed hostname rather than substrings of
+   * the whole URL, so a page ABOUT Hacker News is no longer filed as a thread
+   * on it.
+   *
+   * ALLOWED_CONTENT_TYPES is still checked below and still earns its place.
+   * This route once wrote `'non-fiction'`, which is absent from
+   * books_content_type_check, so three of its four branches produced an insert
+   * Postgres rejected outright — YouTube captures, Hacker News captures and
+   * the default — and only the wikipedia.org branch ever wrote a legal row.
+   * That is why the capture extension looked like it did nothing for
+   * everything else. The guard turns the next such typo into a named error
+   * here instead of a 500 from the database.
+   */
+  const contentType = classifyImport({ sourceUrl: source_url, sourceType: source_type }) ?? 'essay'
 
   if (!ALLOWED_CONTENT_TYPES.has(contentType)) {
     return NextResponse.json(

@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Youtube, Rss, Globe, Check, FileText, BookOpen } from 'lucide-react'
 import { booksQueries } from '@/lib/queries'
+import { classifyImport } from '@/lib/classifyImport'
 import { maybeAutoCover } from '@/lib/queries/images'
 import { maybeAutoScore } from '@/lib/queries/scores'
 import { supabase } from '@/lib/supabase'
@@ -161,43 +162,21 @@ export function UrlTab({
       if (data.type === 'rss') onTitleChange(data.feedTitle ?? '')
       else onTitleChange(data.title ?? '')
       /**
-       * EVERY TYPE /api/fetch-url CAN RETURN IS MAPPED HERE.
+       * One classifier, shared with /api/extension/import.
        *
-       * It returns six — pdf, rss, transcript, webpage, wikipedia, youtube —
-       * and only three had a branch. The other three fell through and kept the
-       * picker's initial value, which `BookUpload` sets to 'fiction'.
+       * This used to branch on the fetch type alone — pdf, wikipedia, youtube
+       * — and three of the six types /api/fetch-url can return had no branch
+       * at all, so they kept the picker's initial 'fiction'. `webpage` is the
+       * common case, which is how 61 of the library's 79 fiction books came to
+       * have a source_url.
        *
-       * `webpage` is the common case: any news item, blog post or docs page.
-       * So four of the five most recent imports were filed as fiction —
-       * two news wires, a Simons Foundation announcement and a Quanta article.
-       * This is the same bug the YouTube branch below was added to fix, left
-       * unfixed for the case it happens to most.
-       *
-       * Written as a total map rather than a run of `if`s so that a seventh
-       * fetch type cannot be added without a decision being made about it:
-       * an unmapped key here now falls to `null` and leaves the picker alone
-       * deliberately, rather than by omission.
+       * It also knew nothing about the URL, while the extension route decided
+       * on the URL and knew nothing about the fetch type. The same Hacker News
+       * link became a forum_thread one way and a novel the other. Both now ask
+       * lib/classifyImport, which sees both signals.
        */
-      const TYPE_TO_CONTENT: Record<string, ContentType | null> = {
-        pdf: 'academic_paper',
-        wikipedia: 'wikipedia_article',
-        // A transcript is spoken long-form prose, so 'essay' is the closest of
-        // the eleven options. Without this branch a YouTube import kept the
-        // picker's initial 'fiction', which is how five lectures and a Rich
-        // Hickey talk ended up filed as novels.
-        youtube: 'essay',
-        transcript: 'essay',
-        // Prose from the open web, of unknown shape. 'essay' is the neutral
-        // long-form bucket on the same reasoning as a transcript — and it is
-        // reachable by the picker, which the learner can still correct.
-        // 'news_article' would be a guess that is wrong for every blog post.
-        webpage: 'essay',
-        // A feed is a list of items the reader then chooses from, and a feed
-        // item is a news article far more often than it is anything else.
-        rss: 'news_article',
-      }
-      const derived = TYPE_TO_CONTENT[data.type as string]
-      if (derived) onContentTypeChange(derived)
+      const derived = classifyImport({ fetchType: data.type, sourceUrl: urlInput.trim() })
+      if (derived) onContentTypeChange(derived as ContentType)
       setSelectedRssItems(new Set())
     } catch (err: any) {
       onError(err.message)

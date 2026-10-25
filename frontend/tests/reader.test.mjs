@@ -468,6 +468,100 @@ test('a link longer than a whole page does not stall pagination', () => {
   assert(breaks[breaks.length - 1] <= huge.length, 'a break ran past the end of the text')
 })
 
+// ─── Import classification (the real module) ─────────────────────────────────
+
+console.log('\n--- classifyImport (the real module) ---')
+
+const clsDir = mkdtempSync(join(tmpdir(), 'cls-'))
+const { classifyImport } = (() => {
+  try {
+    execFileSync(process.execPath, [
+      join(FRONTEND, 'node_modules', 'typescript', 'bin', 'tsc'),
+      join('lib', 'classifyImport.ts'),
+      '--outDir', clsDir, '--module', 'commonjs', '--target', 'es2020',
+      '--moduleResolution', 'node', '--esModuleInterop', '--skipLibCheck',
+      '--rootDir', join(FRONTEND, 'lib'),
+    ], { cwd: FRONTEND, stdio: 'pipe' })
+  } catch (e) {
+    const out = `${e.stdout ?? ''}${e.stderr ?? ''}`
+    if (out.trim()) console.error(out.trim())
+  }
+  writeFileSync(join(clsDir, 'package.json'), JSON.stringify({ type: 'commonjs' }))
+  return createRequire(import.meta.url)(join(clsDir, 'classifyImport.js'))
+})()
+
+const cls = (sourceUrl, fetchType) => classifyImport({ sourceUrl, fetchType })
+
+test('a Hacker News thread is a forum thread, not a novel', () => {
+  assert(cls('https://news.ycombinator.com/item?id=50094694', 'webpage') === 'forum_thread',
+    cls('https://news.ycombinator.com/item?id=50094694', 'webpage'))
+})
+
+test('the other forums too', () => {
+  for (const u of ['https://boards.4chan.org/pol/thread/1', 'https://lobste.rs/s/abc',
+    'https://old.reddit.com/r/x/comments/y']) {
+    assert(cls(u, 'webpage') === 'forum_thread', `${u} → ${cls(u, 'webpage')}`)
+  }
+})
+
+test('a page ABOUT Hacker News is not a thread on it', () => {
+  // The old `includes('news.ycombinator.com')` matched this. A suffix test on
+  // the parsed hostname does not.
+  const u = 'https://example.com/blog?ref=news.ycombinator.com'
+  assert(cls(u, 'webpage') === 'essay', cls(u, 'webpage'))
+})
+
+test('Wikipedia wins over the referrer', () => {
+  assert(cls('https://en.wikipedia.org/wiki/Borromean_rings', 'wikipedia') === 'wikipedia_article')
+  // Reached by fetch type alone, with no URL.
+  assert(classifyImport({ fetchType: 'wikipedia' }) === 'wikipedia_article')
+})
+
+test('video and transcript are long-form prose', () => {
+  assert(cls('https://www.youtube.com/watch?v=-6BsiVyC1kM', 'youtube') === 'essay')
+  assert(classifyImport({ fetchType: 'transcript' }) === 'essay')
+})
+
+test('pdf and rss keep their own answers', () => {
+  assert(classifyImport({ fetchType: 'pdf' }) === 'academic_paper')
+  assert(classifyImport({ fetchType: 'rss' }) === 'news_article')
+})
+
+test('an unknown web page is an essay, never fiction', () => {
+  for (const u of ['https://oilprice.com/Energy/x', 'https://gwern.net/guardian-angel',
+    'https://www.quantamagazine.org/x-20251014/']) {
+    assert(cls(u, 'webpage') === 'essay', `${u} → ${cls(u, 'webpage')}`)
+  }
+})
+
+test('no signal at all leaves the picker alone', () => {
+  // The file-upload case: the reader's own choice must not be overwritten.
+  assert(classifyImport({}) === null)
+  assert(classifyImport({ sourceUrl: null, fetchType: null }) === null)
+})
+
+test('a malformed URL does not throw', () => {
+  assert(cls('not a url', 'webpage') === 'essay')
+})
+
+test('every value it can return is one books_content_type_check allows', () => {
+  const allowed = new Set(['fiction', 'textbook', 'academic_paper', 'math_textbook',
+    'wikipedia_article', 'news_article', 'forum_thread', 'essay', 'reference',
+    'biography', 'chat_book', 'manga'])
+  const samples = [
+    ['https://news.ycombinator.com/item?id=1', 'webpage'],
+    ['https://en.wikipedia.org/wiki/X', 'wikipedia'],
+    ['https://youtu.be/abc', 'youtube'],
+    ['https://example.com/a', 'webpage'],
+    [null, 'pdf'], [null, 'rss'], [null, 'transcript'],
+  ]
+  for (const [u, t] of samples) {
+    const got = classifyImport({ sourceUrl: u, fetchType: t })
+    assert(got === null || allowed.has(got), `${u} / ${t} → ${got}`)
+  }
+})
+
+rmSync(clsDir, { recursive: true, force: true })
 rmSync(outDir, { recursive: true, force: true })
 
 // ─── Final Summary ───────────────────────────────────────────────────────────
