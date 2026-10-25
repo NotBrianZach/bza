@@ -108,7 +108,11 @@ export async function POST(req: NextRequest) {
       user_id: user.id,
       file_path: filePath,
       title: title.slice(0, 300),
-      article_type: 'non-fiction',
+      // Was `'non-fiction'`, which is the value the comment above describes as
+      // never having been legal. It only survived because nothing reads this
+      // column except as a fallback — but a legacy mirror that mirrors nothing
+      // is just a second wrong answer waiting to be read.
+      article_type: contentType,
       content_type: contentType,
       source_url: source_url ?? null,
       char_page_length: CHAR_PAGE_LENGTH,
