@@ -42,6 +42,36 @@ export function computePageBreaks(text: string, len: number): number[] {
   let hm: RegExpExecArray | null
   while ((hm = headingRe.exec(text)) !== null) headingOffsets.add(hm.index)
 
+  /**
+   * Spans that must never be split, because half of one is not text.
+   *
+   * A markdown image or link is a single token to a reader and a meaningless
+   * pair of fragments when cut. The three negotiated breaks above cannot avoid
+   * this on their own: a heading, a paragraph break and a sentence end are all
+   * absent from the inside of a URL, so a long link is exactly the input that
+   * falls through to "hard break at target" — and that lands wherever it lands.
+   *
+   * Found on the Borromean rings article from Wikipedia, where every formula
+   * is served as an image (`![{\displaystyle n^{3}-n}](…/math/render/svg/…)`)
+   * and the longest link is 281 characters against a 420-character page. Three
+   * of its eighteen links were severed, so the reader showed
+   * `…/250px-Borromean` at the foot of one page and
+   * `Rings-Trinity.svg.png?utm_source=…` at the head of the next, with no
+   * image on either.
+   *
+   * Matched here rather than guarded at the break sites so the cost is one
+   * pass over the text instead of a search per page.
+   */
+  const unsplittable: { start: number; end: number }[] = []
+  const linkRe = /!?\[[^\]\n]*\]\([^)\s]*(?:\s+"[^"]*")?\)/g
+  let lm: RegExpExecArray | null
+  while ((lm = linkRe.exec(text)) !== null) {
+    unsplittable.push({ start: lm.index, end: lm.index + lm[0].length })
+  }
+  /** The span containing `i`, if `i` is strictly inside one. */
+  const spanAt = (i: number) =>
+    unsplittable.find(s => i > s.start && i < s.end) ?? null
+
   const breaks = [0]
   let pos = 0
   while (pos < text.length) {
@@ -75,6 +105,23 @@ export function computePageBreaks(text: string, len: number): number[] {
 
     // Last resort: hard break at target
     if (end === -1) end = target
+
+    /**
+     * Never leave a break inside a link or image.
+     *
+     * Pushed FORWARD to the end of the span rather than pulled back to its
+     * start, for two reasons. Forward always makes progress, so the loop
+     * cannot stall on a span beginning at or before `pos` — a link longer than
+     * a whole page is possible here and 281 characters against 420 is already
+     * most of one. And it keeps the image with the paragraph that introduces
+     * it, which is usually its caption.
+     *
+     * The cost is a page that overruns its target by up to the span's length.
+     * That is the right trade: `len` is documented as a target rather than a
+     * rule, and a slightly long page reads fine where a severed URL does not.
+     */
+    const span = spanAt(end)
+    if (span) end = span.end
 
     breaks.push(end)
     pos = end

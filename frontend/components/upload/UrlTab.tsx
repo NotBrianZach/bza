@@ -160,13 +160,44 @@ export function UrlTab({
       setFetchResult(data)
       if (data.type === 'rss') onTitleChange(data.feedTitle ?? '')
       else onTitleChange(data.title ?? '')
-      if (data.type === 'pdf') onContentTypeChange('academic_paper')
-      if (data.type === 'wikipedia') onContentTypeChange('wikipedia_article')
-      // A transcript is spoken long-form prose, so 'essay' is the closest of
-      // the eleven options. Without this branch a YouTube import kept the
-      // picker's initial 'fiction', which is how five lectures and a Rich
-      // Hickey talk ended up filed as novels.
-      if (data.type === 'youtube') onContentTypeChange('essay')
+      /**
+       * EVERY TYPE /api/fetch-url CAN RETURN IS MAPPED HERE.
+       *
+       * It returns six — pdf, rss, transcript, webpage, wikipedia, youtube —
+       * and only three had a branch. The other three fell through and kept the
+       * picker's initial value, which `BookUpload` sets to 'fiction'.
+       *
+       * `webpage` is the common case: any news item, blog post or docs page.
+       * So four of the five most recent imports were filed as fiction —
+       * two news wires, a Simons Foundation announcement and a Quanta article.
+       * This is the same bug the YouTube branch below was added to fix, left
+       * unfixed for the case it happens to most.
+       *
+       * Written as a total map rather than a run of `if`s so that a seventh
+       * fetch type cannot be added without a decision being made about it:
+       * an unmapped key here now falls to `null` and leaves the picker alone
+       * deliberately, rather than by omission.
+       */
+      const TYPE_TO_CONTENT: Record<string, ContentType | null> = {
+        pdf: 'academic_paper',
+        wikipedia: 'wikipedia_article',
+        // A transcript is spoken long-form prose, so 'essay' is the closest of
+        // the eleven options. Without this branch a YouTube import kept the
+        // picker's initial 'fiction', which is how five lectures and a Rich
+        // Hickey talk ended up filed as novels.
+        youtube: 'essay',
+        transcript: 'essay',
+        // Prose from the open web, of unknown shape. 'essay' is the neutral
+        // long-form bucket on the same reasoning as a transcript — and it is
+        // reachable by the picker, which the learner can still correct.
+        // 'news_article' would be a guess that is wrong for every blog post.
+        webpage: 'essay',
+        // A feed is a list of items the reader then chooses from, and a feed
+        // item is a news article far more often than it is anything else.
+        rss: 'news_article',
+      }
+      const derived = TYPE_TO_CONTENT[data.type as string]
+      if (derived) onContentTypeChange(derived)
       setSelectedRssItems(new Set())
     } catch (err: any) {
       onError(err.message)
