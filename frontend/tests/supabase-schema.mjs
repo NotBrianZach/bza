@@ -254,6 +254,101 @@ for (const file of files) {
 const rawBad = rawCalls.filter(r => !r.guarded)
 
 // ---------------------------------------------------------------------------
+// Every literal written to a CHECK-constrained column must be legal
+// ---------------------------------------------------------------------------
+
+/**
+ * THREE BUGS IN ONE DAY SHARED THIS SIGNATURE.
+ *
+ * A hard-coded string assigned to a column carrying a CHECK constraint, where
+ * the string is not in the constraint's list. Postgres rejects the insert, the
+ * route returns a 500, and the feature "looks like it does nothing":
+ *
+ *   /api/extension/import      wrote `article_type: 'non-fiction'`
+ *   /api/create-translated-book wrote `content_type: 'translation'` — so that
+ *                              route could never insert a row at all, and the
+ *                              table holds zero translated books
+ *
+ * Both survived for months because nothing READS those columns carefully
+ * enough to notice, and because the failure is at the database rather than in
+ * the type system: `content_type` is `string` to TypeScript, so every illegal
+ * value typechecks perfectly.
+ *
+ * The constraint is the authority, so it is parsed out of the baseline SQL
+ * rather than restated here. Restating it would be a fourth copy of the list
+ * and the copies are the problem.
+ *
+ * Only literals are checked. `content_type: contentType` is a variable and
+ * this cannot see its value — that is what ALLOWED_CONTENT_TYPES does at
+ * runtime in the extension route. The two guards are complementary: this one
+ * catches what is written in the source, that one catches what arrives at
+ * runtime.
+ *
+ * COMMENTS ARE STRIPPED FIRST, and that is not a nicety. The guard's first run
+ * failed on `content_type: 'translation'` inside the doc comment that explains
+ * the bug it was written to catch — so describing a past mistake would have
+ * been enough to break the build, and the only way to keep it green would have
+ * been to delete the explanation. A guard that punishes documentation gets the
+ * documentation deleted.
+ */
+
+/**
+ * Block comments, and line comments that begin a line.
+ *
+ * A trailing `// …` after code is left alone deliberately: stripping it would
+ * mean deciding whether a `//` sits inside a string literal, and a URL in
+ * quotes is common enough that getting it wrong would hide real assignments.
+ * The realistic false positive is prose — a doc comment or a commented-out
+ * block — and both start their line.
+ */
+const stripComments = (src) =>
+  src
+    // Replaced by their own newlines rather than by nothing, so every
+    // reported line number still points at the real file.
+    .replace(/\/\*[\s\S]*?\*\//g, c => c.replace(/[^\n]/g, ''))
+    .replace(/^[ \t]*\/\/.*$/gm, '')
+const CONSTRAINED = ['content_type', 'article_type']
+const BASELINE = join(ROOT, '..', 'supabase', 'setup', '00_baseline_bza_public.sql')
+
+const allowedValues = (() => {
+  const sql = readFileSync(BASELINE, 'utf8')
+  const m = sql.match(/books_content_type_check\s+CHECK\s*\(\((.*?)\)\)/s)
+  if (!m) return null
+  return new Set([...m[1].matchAll(/'([a-z_]+)'::text/g)].map(x => x[1]))
+})()
+
+const literalFailures = []
+let literalOk = 0
+
+if (!allowedValues || allowedValues.size === 0) {
+  literalFailures.push({
+    file: '00_baseline_bza_public.sql',
+    value: '(none)',
+    why: 'could not parse books_content_type_check — the guard is blind, fix the parser',
+  })
+} else {
+  for (const file of files) {
+    // Newlines are preserved by the stripper, so reported line numbers still
+    // point at the real file.
+    const src = stripComments(readFileSync(file, 'utf8'))
+    for (const col of CONSTRAINED) {
+      const re = new RegExp(`${col}\\s*:\\s*'([^']*)'`, 'g')
+      let m
+      while ((m = re.exec(src)) !== null) {
+        const value = m[1]
+        if (allowedValues.has(value)) { literalOk++; continue }
+        const line = src.slice(0, m.index).split('\n').length
+        literalFailures.push({
+          file: `${relative(ROOT, file)}:${line}`,
+          value: `${col}: '${value}'`,
+          why: `not in books_content_type_check (${[...allowedValues].join(', ')})`,
+        })
+      }
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Report
 // ---------------------------------------------------------------------------
 
@@ -294,10 +389,17 @@ if (failures.length) {
   for (const f of failures) console.log(`    · ${f.file}:${f.line} (${f.ctor}) — ${f.why}`)
 }
 
+if (literalFailures.length) {
+  console.log(`\n  ✗ ${literalFailures.length} literal(s) the database would reject:`)
+  for (const l of literalFailures) console.log(`    · ${l.file}  ${l.value} — ${l.why}`)
+}
+
 const bad = failures.length + strays.length + rawBad.length + cacheFailures.length
+  + literalFailures.length
 if (bad === 0 && sites.length > 0) {
   console.log(
-    `\n${ok} schema-guarded, ${cacheOk} cache-guarded, ` +
+    `\n${ok} schema-guarded, ${cacheOk} cache-guarded, ${literalOk} literal(s) checked ` +
+    `against books_content_type_check, ` +
     `${exempted.length + cacheExempted.length} exempt, 0 failed\n`,
   )
   process.exit(0)
