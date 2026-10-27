@@ -307,46 +307,203 @@ const stripComments = (src) =>
     // reported line number still points at the real file.
     .replace(/\/\*[\s\S]*?\*\//g, c => c.replace(/[^\n]/g, ''))
     .replace(/^[ \t]*\/\/.*$/gm, '')
-const CONSTRAINED = ['content_type', 'article_type']
 const BASELINE = join(ROOT, '..', 'supabase', 'setup', '00_baseline_bza_public.sql')
 
-const allowedValues = (() => {
+/**
+ * Every enum-shaped CHECK in the schema, as table → column → legal values.
+ *
+ * The first version of this guard parsed one constraint by name
+ * (`books_content_type_check`) because one constraint was where the bugs were.
+ * There are twenty of them. `document_jobs.status` alone has eight legal values
+ * including `enqueued`, `converted` and `retrying`, which is exactly the shape
+ * that invites a route to write `complete` or `error` and 500 forever.
+ *
+ * Parsed from the CREATE TABLE block rather than from the constraint's NAME,
+ * because the names are not a reliable index: `no_self_relationship` and
+ * `concept_observations_review_scored_is_settled` carry neither their table nor
+ * their column, and deriving a column from `<table>_<column>_check` would be a
+ * guess that silently drops constraints when it is wrong. The enclosing block
+ * gives the table and the `=  ANY (ARRAY[…])` gives the column for free.
+ *
+ * Range and cross-column CHECKs (`strength >= 1`, `character_a_id <> b`,
+ * `end_page >= start_page`) are not enum-shaped and are skipped. They cannot be
+ * violated by a hard-coded string, which is the only thing this guard reads.
+ */
+const CONSTRAINTS = (() => {
   const sql = readFileSync(BASELINE, 'utf8')
-  const m = sql.match(/books_content_type_check\s+CHECK\s*\(\((.*?)\)\)/s)
-  if (!m) return null
-  return new Set([...m[1].matchAll(/'([a-z_]+)'::text/g)].map(x => x[1]))
+  const byTable = new Map()
+  const tableRe = /CREATE TABLE (?:[\w]+\.)?(\w+) \(([\s\S]*?)\n\);/g
+  let t
+  while ((t = tableRe.exec(sql)) !== null) {
+    const [, table, block] = t
+    const checkRe = /CHECK\s*\(\(\s*(\w+)\s*=\s*ANY\s*\(ARRAY\[([^\]]*)\]/g
+    let c
+    while ((c = checkRe.exec(block)) !== null) {
+      const values = new Set([...c[2].matchAll(/'([^']*)'::text/g)].map(x => x[1]))
+      if (values.size === 0) continue
+      if (!byTable.has(table)) byTable.set(table, new Map())
+      byTable.get(table).set(c[1], values)
+    }
+  }
+  return byTable
 })()
+
+/**
+ * Columns the app also uses as ordinary object keys, everywhere.
+ *
+ * `status`, `type`, `role` and `theme` are real constrained columns AND the most
+ * common keys in the codebase: React state (`status: 'idle'`), Anthropic
+ * messages (`role: 'tool'`), the reader's own theme setting, ARIA. Scanning a
+ * whole file for them would report hundreds of literals that never go near
+ * Postgres, and a guard that cries wolf gets deleted or `--force`d past.
+ *
+ * They are not dropped — they move to the table-scoped pass below, which only
+ * reads literals inside a write chained off `.from('<that table>')`. Narrower
+ * reach, no false positives, and it is the only way to tell `document_jobs`'
+ * `status` from `invoices`' when the two lists disagree.
+ */
+const AMBIGUOUS_KEYS = new Set(['status', 'type', 'role', 'theme', 'name', 'value', 'id'])
+
+/**
+ * A legacy column checked against the constraint it shadows.
+ *
+ * `books.article_type` carries no CHECK of its own — it is read in exactly one
+ * place as `content_type ?? article_type`, so the only values that make sense in
+ * it are content_type's. 101 of 358 rows had drifted off that list, 37 of them
+ * to `'article'`, which content_type does not accept. Nothing enforces this at
+ * the database, so it is enforced here or nowhere.
+ */
+const MIRRORS = [{ table: 'books', column: 'article_type', mirrors: 'content_type' }]
+
+/**
+ * `col: 'v'` or `col: "v"`.
+ *
+ * Both quote styles, even though eslint means the codebase is single-quoted
+ * throughout and a search for a double-quoted constrained value finds nothing
+ * today. The first draft matched `'` only, and the cost of that is not a missed
+ * report — it is a SILENT pass: a double-quoted illegal value is invisible to
+ * the guard while looking exactly like a checked one in the count. A guard whose
+ * coverage depends on a lint rule staying switched on is not a guard.
+ *
+ * Template literals are not matched. `status: \`done\`` is interpolation-shaped
+ * and this cannot evaluate it, which puts it in the same class as a variable.
+ */
+const literalAssignment = (col) => new RegExp(`\\b${col}\\s*:\\s*['"]([^'"]*)['"]`, 'g')
+
+// column → the one legal value set, for columns a file-wide scan can resolve
+// without knowing the table. A column qualifies only if every table declaring
+// it agrees on the values; two tables disagreeing means the table matters, so
+// it falls through to the scoped pass.
+const unscoped = new Map()
+{
+  const seen = new Map()
+  for (const [table, cols] of CONSTRAINTS) {
+    for (const [col, values] of cols) {
+      if (!seen.has(col)) seen.set(col, [])
+      seen.get(col).push({ table, values })
+    }
+  }
+  for (const [col, decls] of seen) {
+    if (AMBIGUOUS_KEYS.has(col)) continue
+    const first = [...decls[0].values].sort().join(',')
+    const agree = decls.every(d => [...d.values].sort().join(',') === first)
+    if (!agree) continue
+    unscoped.set(col, {
+      values: decls[0].values,
+      source: decls.map(d => `${d.table}.${col}`).join(' / '),
+    })
+  }
+  for (const m of MIRRORS) {
+    const values = CONSTRAINTS.get(m.table)?.get(m.mirrors)
+    if (values) unscoped.set(m.column, { values, source: `${m.table}.${m.mirrors} (mirrored)` })
+  }
+}
 
 const literalFailures = []
 let literalOk = 0
 
-if (!allowedValues || allowedValues.size === 0) {
+// The guard going blind must fail the build, not pass it quietly. Both halves
+// are asserted: a parser that finds no constraints at all, and one that finds
+// some but loses the constraint the known bugs were written against.
+if (CONSTRAINTS.size === 0 || !unscoped.has('content_type')) {
   literalFailures.push({
     file: '00_baseline_bza_public.sql',
     value: '(none)',
-    why: 'could not parse books_content_type_check — the guard is blind, fix the parser',
+    why: CONSTRAINTS.size === 0
+      ? 'parsed zero CHECK constraints out of the baseline — the guard is blind, fix the parser'
+      : 'parsed constraints but not books.content_type — the parser regressed, fix it',
   })
 } else {
   for (const file of files) {
     // Newlines are preserved by the stripper, so reported line numbers still
     // point at the real file.
     const src = stripComments(readFileSync(file, 'utf8'))
-    for (const col of CONSTRAINED) {
-      const re = new RegExp(`${col}\\s*:\\s*'([^']*)'`, 'g')
+    const lineOf = (i) => src.slice(0, i).split('\n').length
+    const report = (col, value, index, why) => literalFailures.push({
+      file: `${relative(ROOT, file)}:${lineOf(index)}`,
+      value: `${col}: '${value}'`,
+      why,
+    })
+
+    // ---- Pass 1: distinctive columns, anywhere in the file ----------------
+    //
+    // File-wide on purpose. Both original bugs built a plain object several
+    // lines above the `.insert()` that wrote it — `/api/extension/import`
+    // assembles `bookData` and passes it by name — so a guard that only read
+    // the argument of a write call would have missed every one of them. The
+    // price of that reach is that it can only be taken for a column name that
+    // means a database column and nothing else.
+    for (const [col, { values, source }] of unscoped) {
+      const re = literalAssignment(col)
       let m
       while ((m = re.exec(src)) !== null) {
-        const value = m[1]
-        if (allowedValues.has(value)) { literalOk++; continue }
-        const line = src.slice(0, m.index).split('\n').length
-        literalFailures.push({
-          file: `${relative(ROOT, file)}:${line}`,
-          value: `${col}: '${value}'`,
-          why: `not in books_content_type_check (${[...allowedValues].join(', ')})`,
-        })
+        if (values.has(m[1])) { literalOk++; continue }
+        report(col, m[1], m.index, `not in ${source} (${[...values].join(', ')})`)
+      }
+    }
+
+    // ---- Pass 2: ambiguous columns, scoped to their table ----------------
+    //
+    // Only literals inside an `.insert()` / `.update()` / `.upsert()` chained
+    // off `.from('<table>')`, so `status` is read against the constraint on the
+    // table actually being written. A write whose payload is a named variable
+    // is invisible here — that is the trade for zero false positives on the
+    // four keys the UI uses constantly, and it is why pass 1 exists.
+    const fromRe = /\bfrom\(\s*['"](\w+)['"]\s*\)/g
+    let f
+    while ((f = fromRe.exec(src)) !== null) {
+      const cols = CONSTRAINTS.get(f[1])
+      if (!cols) continue
+      const scoped = [...cols].filter(([col]) => AMBIGUOUS_KEYS.has(col))
+      if (scoped.length === 0) continue
+      // Bound the search at the next `from(` so a later chain in the same file
+      // cannot be attributed to this table.
+      const nextFrom = src.indexOf('from(', f.index + f[0].length)
+      const limit = nextFrom === -1 ? src.length : nextFrom
+      const writeRe = /\.(insert|update|upsert)\(/g
+      writeRe.lastIndex = f.index + f[0].length
+      const w = writeRe.exec(src)
+      if (!w || w.index >= limit) continue
+      // Offsets inside `payload` are relative to its start, so they are rebased
+      // onto `src` before a line is computed from them. Adding `w.index` alone
+      // reads the right line for a single-line write and drifts for a multiline
+      // one, which is the shape most real writes have.
+      const base = w.index + w[0].length - 1
+      const payload = sliceCall(src, base)
+      for (const [col, values] of scoped) {
+        const re = literalAssignment(col)
+        let m
+        while ((m = re.exec(payload)) !== null) {
+          if (values.has(m[1])) { literalOk++; continue }
+          report(col, m[1], base + m.index,
+            `not in ${f[1]}.${col} (${[...values].join(', ')})`)
+        }
       }
     }
   }
 }
+
+const constraintCount = [...CONSTRAINTS.values()].reduce((n, c) => n + c.size, 0)
 
 // ---------------------------------------------------------------------------
 // Report
@@ -399,7 +556,7 @@ const bad = failures.length + strays.length + rawBad.length + cacheFailures.leng
 if (bad === 0 && sites.length > 0) {
   console.log(
     `\n${ok} schema-guarded, ${cacheOk} cache-guarded, ${literalOk} literal(s) checked ` +
-    `against books_content_type_check, ` +
+    `against ${constraintCount} CHECK constraint(s) in ${CONSTRAINTS.size} table(s), ` +
     `${exempted.length + cacheExempted.length} exempt, 0 failed\n`,
   )
   process.exit(0)
