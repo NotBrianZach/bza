@@ -477,6 +477,16 @@ export default function CorrelationBoard({
    * saying so would be shouting about a state that fixes itself.
    */
   const pump = useCallback(async () => {
+    // Read for its effect on THIS callback's identity, not for its value. A
+    // failed turn schedules `setRadioNudge` precisely because a failure changes
+    // none of the pump's real inputs, so bumping the counter is the only thing
+    // that rebuilds this callback and re-runs the pass.
+    //
+    // Stated as a read rather than carried as an unread dependency with a
+    // `eslint-disable`: suppressing the rule on this hook would also hide any
+    // dependency genuinely missing from it later, and this hook reads eleven
+    // things. A `void` keeps the retry working and keeps the rule armed.
+    void radioNudge
     if (!radio || radioBlocked) return
     if (session.status !== 'active') return
     if (selfReplyBusy.current) return
@@ -533,7 +543,8 @@ export default function CorrelationBoard({
   }, [
     radio, radioBlocked, session.status, player.lookahead,
     focusTurn, path, continueAlone, stopRadio,
-    // Not read in the body — it exists only to make a retry re-run this.
+    // Not used for its value — it exists only to make a retry re-run this. See
+    // the `void` at the top of the body.
     radioNudge,
   ])
 
@@ -552,10 +563,19 @@ export default function CorrelationBoard({
    * rebuilt correctly if the chain is reloaded. `append` ignores what it already
    * holds, which is what makes handing it the whole branch every time safe.
    */
+  // Destructured because the dependency has to be `append` itself. The linter
+  // asks for the whole `player` here — it cannot tell that a method it sees
+  // called is stable — and giving it that would be wrong: `useOfferingPlayer`
+  // returns a fresh object literal every render, so `player` changes identity
+  // constantly and this effect would re-run on every render of the board.
+  // `append` is a `useCallback` over a stable `playAt`, so this is the narrow
+  // dependency the effect actually has, now stated in a form that can be
+  // statically checked.
+  const { append: appendAudible } = player
   useEffect(() => {
     if (!radio || audible.length === 0) return
-    player.append(audible)
-  }, [radio, audible, player.append])
+    appendAudible(audible)
+  }, [radio, audible, appendAudible])
 
   const play = useCallback(async (draft: MoveDraft) => {
     setPending(true)
@@ -616,6 +636,14 @@ export default function CorrelationBoard({
     }
   }, [
     session.mode, prediction, focusId, tuning, graph, postTurn, absorb, continueAlone,
+    // `radio` IS read above, to decide whether the continuation run is skipped.
+    // Leaving it out pinned this callback to radio's value at first memoisation:
+    // switch the radio on and the next move still ran the fixed-length run,
+    // because `radio` was false in here while true everywhere else. That is the
+    // exact race the comment above says must not happen — the run and the pump
+    // both answering the same offering, and the panel reporting a stop that is
+    // not being applied.
+    radio,
   ])
 
   const finish = useCallback(async () => {
