@@ -2038,6 +2038,62 @@ t('a player turn in the same game does get the ruling', /RULING ON THE MOVE/.tes
   history: [], move: off('x'), previous: off('y', 'artwork'), claimedRelation: null,
   spent: [], turnIndex: 4,
 })))
+
+group('the ruling bends with Friction, and the floor does not')
+// Reported from a real game: a player at Agreeable had a move turned away and
+// said that should not be possible. It was, at every setting — this block was
+// static, so Agreeable and Adversarial judged identically. At the default it also
+// contradicted the tuning block in one word: "take the most generous available
+// reading" there against "do not invent a connection to be generous" here.
+//
+// Untested interactions are how that survived, so the axis is pinned to the
+// ruling in both directions now, and the floor is pinned against the axis.
+const ruling = (axes) => buildUserPrompt({
+  game: GAMES.tag, media: ALL_MEDIA, relations: ALL_RELATIONS, world: {},
+  history: [], move: off('x'), previous: off('y', 'artwork'), claimedRelation: null,
+  spent: [], turnIndex: 4, ...(axes ? { tuning: TU({ axes }) } : {}),
+})
+const FRICTIONS = [0, 1, 2, 3, 4]
+
+t('agreeable resolves genuine doubt for the player',
+  /in the player's favour/.test(ruling({ friction: 0 })))
+t('and rules a barely-holding move legal rather than turning it away',
+  /barely holds still holds/.test(ruling({ friction: 0 })))
+t('warm rules the same way', /in the player's favour/.test(ruling({ friction: 1 })))
+t('adversarial holds the move to what it earned',
+  /did not earn/.test(ruling({ friction: 4 })))
+t('sceptical does too', /did not earn/.test(ruling({ friction: 3 })))
+t('neutral does neither',
+  !/in the player's favour/.test(ruling({ friction: 2 }))
+  && !/did not earn/.test(ruling({ friction: 2 })))
+t('an absent tuning rules as neutral rather than throwing',
+  /RULING ON THE MOVE/.test(ruling(null)) && !/in the player's favour/.test(ruling(null)))
+
+// The contradiction that started this. No setting may tell the judge to withhold
+// generosity, because the tuning block is asking for it two sections earlier.
+t('no setting tells the judge not to be generous',
+  FRICTIONS.every(friction => !/to be generous/.test(ruling({ friction }))))
+
+// The one rule this game has. A referee that accepts anything is not a lenient
+// referee, it is the end of the game — so generosity decides a doubtful reading
+// and never promotes a coincidence of filing into a connection.
+t('the filing-coincidence floor holds at every setting',
+  FRICTIONS.every(friction => {
+    const u = ruling({ friction })
+    return /coincidences of filing/.test(u) && /rule it illegal/.test(u)
+  }))
+t('and the floor says outright that agreeableness does not lift it',
+  /however agreeable you have been asked to be/.test(ruling({ friction: 0 })))
+t('a real connection is never rejected for being obvious, at any setting',
+  FRICTIONS.every(friction => /for being obvious/.test(ruling({ friction }))))
+
+// The default is what a player gets without touching anything, and STARTING_AXES
+// is friction 0 — so ruling generously is the default, not something to opt into.
+t('a new game rules generously by default', /in the player's favour/.test(buildUserPrompt({
+  game: GAMES.tag, media: ALL_MEDIA, relations: ALL_RELATIONS, world: {},
+  history: [], move: off('x'), previous: off('y', 'artwork'), claimedRelation: null,
+  spent: [], turnIndex: 4, tuning: START,
+})))
 // A path may now hold turns the player took no part in, and an interpreter shown
 // its own offering attributed to the player reads a conversation it was not having.
 t('the path says who played each move', (() => {

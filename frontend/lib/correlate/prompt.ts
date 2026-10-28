@@ -12,7 +12,8 @@ import { SELF_REPLY_GUIDANCE } from './continuation'
 import { RELATIONS, getRelation, resolveRelations } from './relations'
 import { mergeWorld } from './graph'
 import {
-  DEFAULT_TUNING, describeTuning, isNeutral, mutedMedia, readingLengths, restateTuning,
+  DEFAULT_TUNING, TUNING_AXES, axisValue, describeTuning, isNeutral, mutedMedia,
+  readingLengths, restateTuning,
   type Tuning,
 } from './tuning'
 
@@ -496,6 +497,37 @@ export function buildUserPrompt(opts: {
     // claim to rule on when the move was not played by anybody, and an interpreter
     // invited to judge its own offering is not a judge.
     if (game.enforcesConstraint && !selfReply) {
+      /**
+       * HOW STRICTLY TO RULE IS THE FRICTION AXIS'S BUSINESS.
+       *
+       * This block used to be static, which had two consequences. "Agreeable" and
+       * "Adversarial" ruled identically — the axis that exists to say whether the
+       * partner goes with the player or argues had no bearing on the sharpest form
+       * that choice takes. And at the default the prompt contradicted itself in one
+       * word: the tuning block asks for "the most generous available reading of the
+       * move" while this block said "do not invent a connection to be generous".
+       *
+       * Reported from a real game: a player at Agreeable had a move turned away and
+       * said it should not have been possible. It was, at every setting.
+       *
+       * THE FLOOR DOES NOT MOVE WITH IT. Filing coincidences stay illegal at every
+       * setting, because that is the one rule this game has — an agreeable referee
+       * that accepts anything is not a lenient referee, it is the end of the game.
+       * Generosity decides a doubtful reading; it cannot turn a coincidence of
+       * filing into a connection.
+       */
+      const friction = tuning ? axisValue(tuning, 'friction') : TUNING_AXES.friction.neutral
+      const howToRule =
+        friction <= 1
+          ? `- The player has asked you to go with them. Where a perceivable connection can ` +
+            `honestly be read into the move, take it and name the reading you took: resolve ` +
+            `genuine doubt in the player's favour rather than against it. A move that only ` +
+            `barely holds still holds — say that it barely holds, and rule it legal.`
+          : friction >= 3
+            ? `- The player has asked you to push back. Hold the move to the connection it ` +
+              `actually makes rather than the best one available to it, and do not supply a ` +
+              `reading it did not earn.`
+            : `- Do not invent a connection that is not there.`
       parts.push(
         `RULING ON THE MOVE\nDecide whether the move genuinely follows from the offering on the ` +
         `table. You are the judge — nothing has been computed for you.\n` +
@@ -503,8 +535,10 @@ export function buildUserPrompt(opts: {
         `read, felt or done. Name it.\n` +
         `- Shared catalogue metadata is NOT a connection. A shared release year, a similar running ` +
         `time, comparable fame, the same accession decade: those are coincidences of filing. If that ` +
-        `is all two offerings share, rule it illegal.\n` +
-        `- Do not invent a connection to be generous, and do not reject a real one for being obvious.` +
+        `is all two offerings share, rule it illegal. This holds however agreeable you have been ` +
+        `asked to be.\n` +
+        `- Do not reject a real connection for being obvious.\n` +
+        howToRule +
         (claimedRelation
           ? `\n- The player named their relation. Claiming one relation and delivering another is the ` +
             `specific failure this game is about: rule it illegal and say which relation they actually made.`
