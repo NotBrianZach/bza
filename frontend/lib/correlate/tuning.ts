@@ -799,6 +799,33 @@ export function axisValue(tuning: Tuning, id: TuningAxisId): number {
 }
 
 /**
+ * Whether the partner may rule a move illegal at all.
+ *
+ * False on the agreeable side of Friction, and that is a STRUCTURAL guarantee
+ * rather than a request. The first attempt at this asked the interpreter nicely,
+ * in prompt text, to resolve doubt in the player's favour — which is the same
+ * kind of instruction as the one that had been quietly losing to a contradictory
+ * line for months. A player who turns the dial to Agreeable and is told they
+ * cannot be turned away should not be relying on a model's compliance for that
+ * to be true, so at this setting no verdict is requested, none is read, and the
+ * turn is legal by construction. There is nothing left to disobey.
+ *
+ * What the player loses is nothing they asked to keep: the referee still names
+ * the thread it perceives, which is the part Tag calls most of the pleasure —
+ * "finding out whether it saw what you saw". It simply cannot refuse the move
+ * while doing it.
+ *
+ * Both callers must agree, which is why this is here rather than inline in
+ * either: the prompt decides whether to ask for a verdict, the route decides
+ * whether to believe one. If those two disagreed, the route would read a field
+ * the interpreter was never asked to produce.
+ */
+export function gatesLegality(tuning?: Tuning): boolean {
+  if (!tuning) return true
+  return axisValue(tuning, 'friction') >= TUNING_AXES.friction.neutral
+}
+
+/**
  * The lengths the OUTPUT schema asks for, which the Breadth axis sets.
  *
  * Every other axis reaches the model as advice in the weighting block and nothing

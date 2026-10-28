@@ -14,7 +14,7 @@ import {
   pathTo, relationsAlong, replyMediaAlong, turnByIndex, worldFor,
 } from '@/lib/correlate/graph'
 import {
-  dueMedium, mutedMedia, normalizeTuning, owedMedia, radioOf, readingLengths,
+  dueMedium, gatesLegality, mutedMedia, normalizeTuning, owedMedia, radioOf, readingLengths,
   weightedReplyMedia,
 } from '@/lib/correlate/tuning'
 import { selfRepliesSince, selfReplyRefusal } from '@/lib/correlate/continuation'
@@ -517,7 +517,14 @@ export async function POST(req: NextRequest) {
   // ruling. An opening move has nothing to connect to, so it cannot be illegal,
   // and a game that never gatekeeps is always legal regardless of what the model
   // volunteers. Ruled once, on the first pass — a retry answers, it does not judge.
-  const legal = game.enforcesConstraint && previous !== null
+  // `gatesLegality` is the third condition, and it is the one that makes
+  // "Agreeable means you cannot be turned away" true rather than requested. On
+  // the agreeable side of Friction the prompt asks for no verdict, so there is
+  // none to read, and reading `firstPass.verdict` here would be consulting a
+  // field the interpreter was never given — a volunteered 'illegal' would then
+  // reject a move at the exact setting that promises it will not be. Must stay
+  // in step with the two `gatesLegality` calls in prompt.ts.
+  const legal = game.enforcesConstraint && previous !== null && gatesLegality(tuning)
     ? firstPass.verdict !== 'illegal'
     : true
 

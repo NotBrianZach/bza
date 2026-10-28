@@ -12,8 +12,8 @@ import { SELF_REPLY_GUIDANCE } from './continuation'
 import { RELATIONS, getRelation, resolveRelations } from './relations'
 import { mergeWorld } from './graph'
 import {
-  DEFAULT_TUNING, TUNING_AXES, axisValue, describeTuning, isNeutral, mutedMedia,
-  readingLengths, restateTuning,
+  DEFAULT_TUNING, TUNING_AXES, axisValue, describeTuning, gatesLegality, isNeutral,
+  mutedMedia, readingLengths, restateTuning,
   type Tuning,
 } from './tuning'
 
@@ -343,7 +343,7 @@ markdown fence. Schema:
   "carried": "what survived the crossing, one clause.",
   "lost": "what did not, one clause.",
   "facts": ["at most two new durable statements"],
-  "worldDelta": { "only": "changed keys" }${game.enforcesConstraint && !selfReply ? ',\n  "verdict": "legal" | "illegal"' : ''}
+  "worldDelta": { "only": "changed keys" }${game.enforcesConstraint && !selfReply && gatesLegality(tuning) ? ',\n  "verdict": "legal" | "illegal"' : ''}
 }
 
 Include "query" or "composed", never both — whichever the reply's medium calls for.
@@ -516,39 +516,56 @@ export function buildUserPrompt(opts: {
        * Generosity decides a doubtful reading; it cannot turn a coincidence of
        * filing into a connection.
        */
-      const friction = tuning ? axisValue(tuning, 'friction') : TUNING_AXES.friction.neutral
-      const howToRule =
-        friction <= 1
-          ? `- The player has asked you to go with them. Where a perceivable connection can ` +
-            `honestly be read into the move, take it and name the reading you took: resolve ` +
-            `genuine doubt in the player's favour rather than against it. A move that only ` +
-            `barely holds still holds — say that it barely holds, and rule it legal.`
-          : friction >= 3
-            ? `- The player has asked you to push back. Hold the move to the connection it ` +
-              `actually makes rather than the best one available to it, and do not supply a ` +
-              `reading it did not earn.`
-            : `- Do not invent a connection that is not there.`
-      parts.push(
-        `RULING ON THE MOVE\nDecide whether the move genuinely follows from the offering on the ` +
-        `table. You are the judge — nothing has been computed for you.\n` +
-        `- The connection must be one a person could perceive or recognise: something heard, seen, ` +
-        `read, felt or done. Name it.\n` +
-        `- Shared catalogue metadata is NOT a connection. A shared release year, a similar running ` +
-        `time, comparable fame, the same accession decade: those are coincidences of filing. If that ` +
-        `is all two offerings share, rule it illegal. This holds however agreeable you have been ` +
-        `asked to be.\n` +
-        `- Do not reject a real connection for being obvious.\n` +
-        howToRule +
-        (claimedRelation
-          ? `\n- The player named their relation. Claiming one relation and delivering another is the ` +
-            `specific failure this game is about: rule it illegal and say which relation they actually made.`
-          : ''),
-      )
-      parts.push(
-        `If it holds: set verdict "legal", name the relation you see in "relation", and play your answer.\n` +
-        `If it does not: set verdict "illegal", say plainly what the player seemed to be reaching for and ` +
-        `why it does not carry, set "reply" to null, and do not extend the chain.`,
-      )
+      if (!gatesLegality(tuning)) {
+        // The agreeable side. Not a lenient ruling — no ruling. The player asked
+        // the partner to go with them, so finding the thread is the partner's
+        // job here rather than a test the move has to pass.
+        parts.push(
+          `NAMING THE THREAD\nThe player has asked you to go with them, so this move is not on ` +
+          `trial and you are not judging it. Find the connection and name it: take the most ` +
+          `generous perceivable reading available, and where the player has not spelled one out, ` +
+          `make one — at this setting the work of finding the thread is yours, not theirs.\n` +
+          `- Name something a person could perceive or recognise: something heard, seen, read, ` +
+          `felt or done.\n` +
+          `- Shared catalogue metadata is still not a thread. A shared release year, a similar ` +
+          `running time, the same accession decade: if a coincidence of filing is the only thing ` +
+          `you can see, look again for something perceivable rather than naming the coincidence. ` +
+          `Look harder — do not refuse.\n` +
+          `- There is no verdict to set and nothing to turn away. Name the thread and extend the ` +
+          `chain.` +
+          (claimedRelation
+            ? `\n- The player named their relation. If what they made reads as a different one, ` +
+              `say which, and set "relation" to the one they actually made — but play on either way.`
+            : ''),
+        )
+      } else {
+        const friction = tuning ? axisValue(tuning, 'friction') : TUNING_AXES.friction.neutral
+        const howToRule = friction >= 3
+          ? `- The player has asked you to push back. Hold the move to the connection it ` +
+            `actually makes rather than the best one available to it, and do not supply a ` +
+            `reading it did not earn.`
+          : `- Do not invent a connection that is not there.`
+        parts.push(
+          `RULING ON THE MOVE\nDecide whether the move genuinely follows from the offering on the ` +
+          `table. You are the judge — nothing has been computed for you.\n` +
+          `- The connection must be one a person could perceive or recognise: something heard, seen, ` +
+          `read, felt or done. Name it.\n` +
+          `- Shared catalogue metadata is NOT a connection. A shared release year, a similar running ` +
+          `time, comparable fame, the same accession decade: those are coincidences of filing. If that ` +
+          `is all two offerings share, rule it illegal.\n` +
+          `- Do not reject a real connection for being obvious.\n` +
+          howToRule +
+          (claimedRelation
+            ? `\n- The player named their relation. Claiming one relation and delivering another is the ` +
+              `specific failure this game is about: rule it illegal and say which relation they actually made.`
+            : ''),
+        )
+        parts.push(
+          `If it holds: set verdict "legal", name the relation you see in "relation", and play your answer.\n` +
+          `If it does not: set verdict "illegal", say plainly what the player seemed to be reaching for and ` +
+          `why it does not carry, set "reply" to null, and do not extend the chain.`,
+        )
+      }
     }
   }
 

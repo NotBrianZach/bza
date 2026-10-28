@@ -106,7 +106,7 @@ const {
   DEFAULT_TUNING, normalizeTuning, isNeutral, isUntouched, isProportioned, axisValue, mutedMedia,
   weightedReplyMedia, dueMedium, describeTuning, tuningSummary, getAxis, continuationOf, radioOf,
   SHARE_MAX, DEFAULT_SHARE, MUTED_SHARE, shareOf, shareLabel, targetShares, shareStandings,
-  owedMedia, allShares,
+  owedMedia, allShares, gatesLegality,
   STARTING_SHARES, STARTING_AXES, startingTuning, isStarting,
   NOTES_MAX, readingLengths, restateTuning,
 } = M.tuning
@@ -2055,45 +2055,82 @@ const ruling = (axes) => buildUserPrompt({
 })
 const FRICTIONS = [0, 1, 2, 3, 4]
 
-t('agreeable resolves genuine doubt for the player',
-  /in the player's favour/.test(ruling({ friction: 0 })))
-t('and rules a barely-holding move legal rather than turning it away',
-  /barely holds still holds/.test(ruling({ friction: 0 })))
-t('warm rules the same way', /in the player's favour/.test(ruling({ friction: 1 })))
+// The agreeable side does not get a lenient ruling — it gets no ruling. Asking
+// the interpreter nicely to be generous is the same kind of instruction that had
+// already been losing to a contradictory line for months, so at this setting the
+// verdict is not requested, not read, and cannot be reached.
+t('agreeable does not rule on the move at all', !/RULING ON THE MOVE/.test(ruling({ friction: 0 })))
+t('it names the thread instead', /NAMING THE THREAD/.test(ruling({ friction: 0 })))
+t('and warm does the same', /NAMING THE THREAD/.test(ruling({ friction: 1 })))
+t('it says outright there is nothing to turn away',
+  /nothing to turn away/.test(ruling({ friction: 0 })))
+t('and tells the partner to make a connection where the player did not spell one out',
+  /make one/.test(ruling({ friction: 0 }))
+  && /the work of finding the thread is yours/.test(ruling({ friction: 0 })))
+
+t('sceptical still rules', /RULING ON THE MOVE/.test(ruling({ friction: 3 })))
 t('adversarial holds the move to what it earned',
   /did not earn/.test(ruling({ friction: 4 })))
-t('sceptical does too', /did not earn/.test(ruling({ friction: 3 })))
-t('neutral does neither',
-  !/in the player's favour/.test(ruling({ friction: 2 }))
-  && !/did not earn/.test(ruling({ friction: 2 })))
+t('neutral rules without being told to push back',
+  /RULING ON THE MOVE/.test(ruling({ friction: 2 })) && !/did not earn/.test(ruling({ friction: 2 })))
 t('an absent tuning rules as neutral rather than throwing',
-  /RULING ON THE MOVE/.test(ruling(null)) && !/in the player's favour/.test(ruling(null)))
+  /RULING ON THE MOVE/.test(ruling(null)))
 
 // The contradiction that started this. No setting may tell the judge to withhold
 // generosity, because the tuning block is asking for it two sections earlier.
 t('no setting tells the judge not to be generous',
   FRICTIONS.every(friction => !/to be generous/.test(ruling({ friction }))))
 
-// The one rule this game has. A referee that accepts anything is not a lenient
-// referee, it is the end of the game — so generosity decides a doubtful reading
-// and never promotes a coincidence of filing into a connection.
-t('the filing-coincidence floor holds at every setting',
-  FRICTIONS.every(friction => {
+// The honesty floor survives, but on the agreeable side it stops being grounds
+// for rejection and becomes a constraint on what may be NAMED: look harder for a
+// perceivable thread rather than citing a coincidence — and still do not refuse.
+t('filing coincidences are refused as a thread at every setting',
+  FRICTIONS.every(friction => /accession decade/.test(ruling({ friction }))))
+t('on the gated side that means ruling it illegal',
+  [2, 3, 4].every(friction => /rule it illegal/.test(ruling({ friction }))))
+t('on the agreeable side it means looking again, not refusing',
+  [0, 1].every(friction => {
     const u = ruling({ friction })
-    return /coincidences of filing/.test(u) && /rule it illegal/.test(u)
+    return /look again for something perceivable/.test(u) && /do not refuse/.test(u)
+      && !/rule it illegal/.test(u)
   }))
-t('and the floor says outright that agreeableness does not lift it',
-  /however agreeable you have been asked to be/.test(ruling({ friction: 0 })))
-t('a real connection is never rejected for being obvious, at any setting',
-  FRICTIONS.every(friction => /for being obvious/.test(ruling({ friction }))))
+t('a real connection is never rejected for being obvious where rejection is possible',
+  [2, 3, 4].every(friction => /for being obvious/.test(ruling({ friction }))))
 
 // The default is what a player gets without touching anything, and STARTING_AXES
-// is friction 0 — so ruling generously is the default, not something to opt into.
-t('a new game rules generously by default', /in the player's favour/.test(buildUserPrompt({
-  game: GAMES.tag, media: ALL_MEDIA, relations: ALL_RELATIONS, world: {},
-  history: [], move: off('x'), previous: off('y', 'artwork'), claimedRelation: null,
-  spent: [], turnIndex: 4, tuning: START,
-})))
+// is friction 0 — so "you cannot be turned away" is the default, not an opt-in.
+t('a new game cannot turn a move away at all', (() => {
+  const u = buildUserPrompt({
+    game: GAMES.tag, media: ALL_MEDIA, relations: ALL_RELATIONS, world: {},
+    history: [], move: off('x'), previous: off('y', 'artwork'), claimedRelation: null,
+    spent: [], turnIndex: 4, tuning: START,
+  })
+  return /NAMING THE THREAD/.test(u) && !/RULING ON THE MOVE/.test(u)
+})())
+
+group('gatesLegality — the prompt and the route must agree')
+// They are separate decisions in separate files: the prompt decides whether to
+// ASK for a verdict, the route decides whether to BELIEVE one. If they drifted,
+// the route would read a field the interpreter was never given, and a
+// volunteered 'illegal' would reject a move at the setting that promises it
+// cannot be.
+t('the agreeable side is ungated', !gatesLegality(TU({ axes: { friction: 0 } })))
+t('warm too', !gatesLegality(TU({ axes: { friction: 1 } })))
+t('neutral and up are gated',
+  [2, 3, 4].every(friction => gatesLegality(TU({ axes: { friction } }))))
+t('a new game is ungated, because it opens agreeable', !gatesLegality(START))
+t('an absent tuning is gated, so nothing loses its ruling by accident',
+  gatesLegality(undefined))
+// The schema has to drop the field it is no longer asking about, or the
+// interpreter is handed a verdict slot in a turn it was told it is not judging.
+t('the verdict field is dropped when ungated', (() => {
+  const s = buildSystemPrompt(GAMES.tag, ALL_MEDIA, ALL_RELATIONS, TU({ axes: { friction: 0 } }))
+  return !s.includes('"verdict"')
+})())
+t('and kept when gated', (() => {
+  const s = buildSystemPrompt(GAMES.tag, ALL_MEDIA, ALL_RELATIONS, TU({ axes: { friction: 3 } }))
+  return s.includes('"verdict"')
+})())
 // A path may now hold turns the player took no part in, and an interpreter shown
 // its own offering attributed to the player reads a conversation it was not having.
 t('the path says who played each move', (() => {
