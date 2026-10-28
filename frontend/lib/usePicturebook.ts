@@ -74,23 +74,21 @@ export function usePicturebook(bookId: number): UsePicturebookReturn {
 
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  // Check for active/unfinished run on mount
-  useEffect(() => {
-    picturebookQueries.getLatestRun(bookId).then(run => {
-      if (!run) return
-      const isActive = run.status === 'analyzing' || run.status === 'generating'
-      const isStale = isActive && Date.now() - new Date(run.started_at).getTime() > 300_000
-      if (isActive && !isStale) {
-        setRunStatus({ status: run.status, done: run.completed_moments, total: run.total_moments })
-        setIsGenerating(true)
-        startPolling()
-      } else if (isStale || run.status === 'failed' || (run.status === 'completed' && run.completed_moments < run.total_moments)) {
-        setRunStatus({ status: 'failed', done: run.completed_moments, total: run.total_moments, error: isStale ? 'Timed out' : run.error || undefined })
-      }
-    }).catch(() => {})
-    return () => { if (pollRef.current) clearInterval(pollRef.current) }
-  }, [bookId])
-
+  /**
+   * Declared BEFORE the mount effect that calls it, and that order is load-bearing.
+   *
+   * The effect below needs `startPolling` in its dependency array. A dependency
+   * array is an ordinary array literal evaluated during render, so naming a
+   * `const` declared further down the component body throws
+   * "Cannot access 'startPolling' before initialization" on mount — the
+   * component would not render at all. Calling it from inside the effect's
+   * `.then()` was always fine, because that runs long after the body; it is only
+   * naming it as a dependency that forces the move.
+   *
+   * Worth stating because the obvious fix for the warning — adding the missing
+   * dependency and leaving the declaration where it was — replaces a warning
+   * with a crash.
+   */
   const startPolling = useCallback(() => {
     if (pollRef.current) clearInterval(pollRef.current)
     pollRef.current = setInterval(async () => {
@@ -105,6 +103,28 @@ export function usePicturebook(bookId: number): UsePicturebookReturn {
       } catch {}
     }, 3000)
   }, [bookId])
+
+  // Check for active/unfinished run on mount
+  //
+  // `startPolling` is listed and changes on exactly the same cadence as `bookId`
+  // — it is a useCallback over `[bookId]` — so this effect re-runs no more often
+  // than it did before, and the function it calls is guaranteed to be the one
+  // built for the book it is polling.
+  useEffect(() => {
+    picturebookQueries.getLatestRun(bookId).then(run => {
+      if (!run) return
+      const isActive = run.status === 'analyzing' || run.status === 'generating'
+      const isStale = isActive && Date.now() - new Date(run.started_at).getTime() > 300_000
+      if (isActive && !isStale) {
+        setRunStatus({ status: run.status, done: run.completed_moments, total: run.total_moments })
+        setIsGenerating(true)
+        startPolling()
+      } else if (isStale || run.status === 'failed' || (run.status === 'completed' && run.completed_moments < run.total_moments)) {
+        setRunStatus({ status: 'failed', done: run.completed_moments, total: run.total_moments, error: isStale ? 'Timed out' : run.error || undefined })
+      }
+    }).catch(() => {})
+    return () => { if (pollRef.current) clearInterval(pollRef.current) }
+  }, [bookId, startPolling])
 
   const generate = useCallback(async (): Promise<{ result?: string; reload?: boolean }> => {
     if (isGenerating) return { result: 'Already generating' }
@@ -173,7 +193,14 @@ export function usePicturebook(bookId: number): UsePicturebookReturn {
       setRunStatus(null)
       return { result: err.message || 'Generation failed' }
     }
-  }, [bookId, preset, contentFilter, provider, imageModel, analysisModel, guidance, isGenerating])
+    // Only what the body actually reads. The six settings — preset,
+    // contentFilter, provider, imageModel, analysisModel, guidance — are read
+    // through `latestRef.current`, not from this closure, which is the entire
+    // reason `latestRef` exists. Listing them as well asked React to rebuild
+    // this callback on every settings keystroke to produce a function that
+    // behaves identically, and it read as though the closure depended on them
+    // when the ref had been introduced to make sure it did not.
+  }, [bookId, isGenerating])
 
   const generateWebGPU = useCallback(async (): Promise<{ result?: string; reload?: boolean }> => {
     if (isGenerating) return { result: 'Already generating' }
@@ -244,7 +271,8 @@ export function usePicturebook(bookId: number): UsePicturebookReturn {
       setRunStatus(null)
       return { result: err.message || 'WebGPU generation failed' }
     }
-  }, [bookId, preset, contentFilter, analysisModel, guidance, isGenerating])
+    // Same as `generate` above: the settings arrive via `latestRef.current`.
+  }, [bookId, isGenerating])
 
   const retryFailed = useCallback(async () => {
     setIsGenerating(true)
