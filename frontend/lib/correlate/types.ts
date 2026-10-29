@@ -393,6 +393,20 @@ export interface CorrelationTurn {
   /** The weighting in force when this turn was played, so the log stays legible
    *  after the player changes it. Null on turns played before tuning existed. */
   tuning: SessionTuning | null
+  /**
+   * The game this turn was played under, which is not necessarily the session's.
+   *
+   * Exactly the same arrangement as `tuning` one line up, for exactly the same
+   * reason: the game as of this turn is a property of the turn, because a player
+   * may switch games mid-session and the record of what they actually played
+   * must survive it. Null means the session's own `mode` — true of every row
+   * written before migration 76 and of nothing written after.
+   *
+   * Resolved only through lib/correlate/switching.ts, which also owns what a
+   * change in this column means: a replay boundary for the world, and the point
+   * at which spent relations lapse.
+   */
+  mode: string | null
   /** False only in games that enforce their constraint, when the move was
    *  ruled not to connect. The row is still written. */
   legal: boolean

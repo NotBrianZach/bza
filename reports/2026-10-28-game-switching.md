@@ -1,7 +1,10 @@
 # Switching games mid-session
 
 **Date:** 2026-10-28
-**Status:** design only — nothing built
+**Status:** built 2026-10-29 — see `docs/CORRELATION_GAMES.md` §19 for what
+landed, and for the one place the tier table below contradicts this document's
+own seeding rule (`construction` is empty-seeded, so switching into it is tier
+2, not tier 3). The analysis is otherwise unchanged from the design pass.
 **Code read:** `frontend/lib/correlate/{games,tuning,graph,prompt}.ts`,
 `frontend/app/api/correlate/turn/route.ts`,
 `supabase/setup/00_baseline_bza_public.sql`

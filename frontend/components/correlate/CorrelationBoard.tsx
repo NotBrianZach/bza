@@ -20,6 +20,7 @@ import { continuationOf, normalizeTuning, radioOf, type Tuning } from '@/lib/cor
 import {
   isSelfReply, radioRefusal, selfRepliesLeft, selfReplyRefusal, RADIO_HINT, RADIO_LABEL,
 } from '@/lib/correlate/continuation'
+import { activeBranch, playedUnder } from '@/lib/correlate/switching'
 import type {
   CorrelationSession, CorrelationTurn, MediumId, Offering, RelationId,
 } from '@/lib/correlate/types'
@@ -29,6 +30,7 @@ import { useFullLengthResolver } from './useFullLengthResolver'
 import BranchMap from './BranchMap'
 import OfferingCard from './OfferingCard'
 import OfferingPicker, { type MoveDraft } from './OfferingPicker'
+import GameSwitch from './GameSwitch'
 import TuningPanel from './TuningPanel'
 
 /**
@@ -102,6 +104,16 @@ export default function CorrelationBoard({
   const [notice, setNotice] = useState('')
   const [prediction, setPrediction] = useState('')
   /**
+   * The game the next move will be played under, when the player has asked to
+   * change it. Null means carry on with whatever this branch is.
+   *
+   * Armed rather than applied, because a switch *is* a turn: there is no
+   * zero-turn boundary for the graph to hold, so the switch happens when the
+   * move carrying it is played and not before. Nothing is posted here, and a
+   * player who arms one and walks away has changed nothing.
+   */
+  const [armedSwitch, setArmedSwitch] = useState<string | null>(null)
+  /**
    * The turn the next move answers. Null means a thread with nothing behind it —
    * either the game has not started, or the player asked for a fresh one.
    */
@@ -171,9 +183,6 @@ export default function CorrelationBoard({
   useEffect(() => {
     stalledRef.current = player.fallbackToPreview
   }, [player.fallbackToPreview])
-  const game = getGame(session.mode)
-  const accent = ACCENT_CLASSES[game?.accent ?? 'indigo']
-
   const media: MediumId[] = useMemo(
     () => (Array.isArray(session.media) && session.media.length > 0 ? session.media : ['music']),
     [session.media],
@@ -201,6 +210,34 @@ export default function CorrelationBoard({
 
   const focusTurn = focusId ? graph.nodes.get(focusId)?.turn ?? null : null
   const onTheTable = offeringOnTable(focusTurn)
+
+  /**
+   * Which game this branch is, and which game the next move will be.
+   *
+   * Two resolutions of the same arithmetic, and the split is the whole of what
+   * arming a switch means to this component:
+   *
+   *  - `branch` is what has been *played*. It supplies the accent, the world and
+   *    its keys, the header, and the per-turn labels — everything describing the
+   *    record, which an armed switch has not touched.
+   *  - `next` is what the composer is for. Arming Correlation Chain from Tag
+   *    flips `declaredRelation` to 'required', so the move that carries the
+   *    switch must name its relation — and the composer has to ask for it on
+   *    that move, not the one after, or the server refuses a turn the player was
+   *    never given a chance to form correctly.
+   *
+   * Neither reads `session.mode` for the game. That column stays as the game the
+   * session started as; the branch's game is a fact about the branch. See
+   * lib/correlate/switching.ts.
+   */
+  const branch = useMemo(() => activeBranch(path, session.mode, null), [path, session.mode])
+  const nextBranch = useMemo(
+    () => activeBranch(path, session.mode, armedSwitch),
+    [path, session.mode, armedSwitch],
+  )
+  const game = branch.game
+  const nextGame = nextBranch.game ?? game
+  const accent = ACCENT_CLASSES[game?.accent ?? 'indigo']
 
   /** Turns that already answer the one in focus. Each is another branch. */
   const continuations = useMemo(() => childrenOf(graph, focusId), [graph, focusId])
@@ -232,14 +269,31 @@ export default function CorrelationBoard({
     [chain],
   )
 
+  /**
+   * The relations the composer may offer, which belong to the game the next move
+   * is played under.
+   *
+   * The session's snapshot only while the branch is still the game the session
+   * started as — that snapshot is the promise that a game does not change shape
+   * underneath its player, and a switch the player armed themselves is not that
+   * case. Mirrors the same decision in app/api/correlate/turn/route.ts, which is
+   * the one that binds; a disagreement here would show a relation the server
+   * then rejects.
+   */
   const relations: RelationId[] = useMemo(
-    () => (Array.isArray(session.relations) && session.relations.length > 0
+    () => (nextBranch.mode === session.mode && Array.isArray(session.relations) && session.relations.length > 0
       ? session.relations
-      : resolveRelations(game?.relations ?? 'all')),
-    [session.relations, game],
+      : resolveRelations(nextGame?.relations ?? 'all')),
+    [session.relations, session.mode, nextBranch.mode, nextGame],
   )
 
-  const spent = useMemo(() => spentRelations(relationsAlong(path), 1), [path])
+  /**
+   * Relations this branch has just spent, from `nextBranch.since` rather than the path.
+   *
+   * Which is what empties it across a switch — and the picker has to agree with
+   * the server about that or it greys out the only relation Translation has.
+   */
+  const spent = useMemo(() => spentRelations(relationsAlong(nextBranch.since), 1), [nextBranch.since])
 
   /**
    * The world of this branch, not of the session.
@@ -250,8 +304,17 @@ export default function CorrelationBoard({
    * fall back to the session row — see worldFor().
    */
   const world = useMemo(
-    () => worldFor(game?.seedWorld ?? {}, session.world_state ?? {}, graph, path),
-    [game, session.world_state, graph, path],
+    () => worldFor(
+      game?.seedWorld ?? {},
+      // The session cache is only offered when this branch has never switched.
+      // On a switched branch that column holds the *old* game's world, so the
+      // legacy fallback inside worldFor would hand it over whole — the one case
+      // where folding from less is the honest answer. Same rule as the route.
+      branch.boundaries.length > 0 ? {} : session.world_state ?? {},
+      graph,
+      branch.since,
+    ),
+    [game, session.world_state, graph, branch],
   )
 
   const facts: string[] = useMemo(
@@ -360,7 +423,10 @@ export default function CorrelationBoard({
     // rather than rare because a radio run is long and unattended.
     absorb(data, focusRef.current === parentId)
     track('correlate_self_reply', {
-      game: session.mode,
+      // What the partner actually answered under. A self-reply never carries a
+      // switch — it is not the player's turn to change the game in — but it can
+      // happen on a branch that has already switched.
+      game: data.mode ?? branch.mode,
       medium: data.turn?.reply_offering?.medium,
       relation: data.turn?.relation,
       turn: data.turn?.turn_index,
@@ -371,7 +437,7 @@ export default function CorrelationBoard({
       asked,
     })
     return data
-  }, [postTurn, absorb, session.mode])
+  }, [postTurn, absorb, branch.mode])
 
   /** The one-click version, with its own error so a failed run reads as one. */
   const continueOnce = useCallback(async () => {
@@ -589,10 +655,21 @@ export default function CorrelationBoard({
         parentTurnId: focusId,
         ...draft,
         prediction: prediction.trim() || undefined,
+        switchTo: armedSwitch ?? undefined,
       })
       absorb(data)
+      // Disarmed on a legal turn only. A move turned away under the new rules
+      // did not switch anything — an illegal turn is on nobody's path, so the
+      // branch is still the old game — and making the player re-arm to try
+      // again would be charging them for the engine's own rule.
+      if (data.turn?.legal) setArmedSwitch(null)
       track('correlate_turn_played', {
-        game: session.mode,
+        // The game actually played, which is the branch's and not the session's.
+        // `startedAs` keeps the old field's meaning available rather than
+        // redefining `game` under existing charts.
+        game: data.mode ?? branch.mode,
+        startedAs: session.mode,
+        switchedFrom: data.switchedFrom ?? undefined,
         medium: draft.medium,
         relation: data.turn?.relation,
         turn: data.turn?.turn_index,
@@ -635,7 +712,8 @@ export default function CorrelationBoard({
       setPending(false)
     }
   }, [
-    session.mode, prediction, focusId, tuning, graph, postTurn, absorb, continueAlone,
+    session.mode, branch.mode, armedSwitch,
+    prediction, focusId, tuning, graph, postTurn, absorb, continueAlone,
     // `radio` IS read above, to decide whether the continuation run is skipped.
     // Leaving it out pinned this callback to radio's value at first memoisation:
     // switch the radio on and the next move still ran the fixed-length run,
@@ -655,8 +733,12 @@ export default function CorrelationBoard({
   // concept it ran on, and telling someone their game no longer exists is better
   // than showing them a lookup failure — or worse, silently rehoming the session
   // into a game with different rules, which would rewrite a chain they played.
+  // `branch.mode`, not `session.mode`: for an unswitched game they are the same
+  // string, and for a switched one the branch's game is the one that cannot take
+  // another turn. Naming the session's starting game here would explain the wrong
+  // absence.
   if (!game) {
-    const retired = retiredGameName(session.mode)
+    const retired = retiredGameName(branch.mode)
     const plural = session.turn_count === 1 ? '' : 's'
     return (
       <div className="max-w-xl mx-auto px-4 py-10">
@@ -681,6 +763,18 @@ export default function CorrelationBoard({
   const atHead = focusId === (defaultParent(graph)?.id ?? null)
 
   /**
+   * The game the composer asks for, re-resolved past the guard above so it is
+   * known not to be null.
+   *
+   * `nextGame` exists for the hooks, which must run before that guard and
+   * therefore have to tolerate a null. Everything rendered below is downstream of
+   * `game` being real, and a switch target always resolves — `switchTargets` is
+   * built from the registry — so the fallback here is for the type, not for a
+   * case that happens.
+   */
+  const composerGame = nextBranch.game ?? game
+
+  /**
    * Whether the partner can answer itself here, and why not when it cannot.
    *
    * The same function the route refuses with, so the control and the rule cannot
@@ -701,6 +795,21 @@ export default function CorrelationBoard({
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 truncate">{session.title}</h1>
             <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${accent.chip}`}>{game.name}</span>
+            {/* The game this branch became, not the one the session is filed
+                under. Saying where it started is what keeps the chip honest: a
+                player looking at "Embodiment" on a session their library calls
+                Tag should be able to see why from here rather than from the log. */}
+            {branch.boundaries.length > 0 && (
+              <span
+                title={branch.boundaries
+                  .map(b => `turn ${b.turn.turn_index + 1}: ${getGame(b.from)?.name ?? b.from} → ${getGame(b.to)?.name ?? b.to}`)
+                  .join(' · ')}
+                className="flex items-center gap-1 text-[11px] text-gray-400 dark:text-gray-500"
+              >
+                <Shuffle size={10} />
+                started as {getGame(session.mode)?.name ?? session.mode}
+              </span>
+            )}
             {isOver && <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400">Finished</span>}
           </div>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
@@ -814,7 +923,7 @@ export default function CorrelationBoard({
                       radioSilent.current = 0
                       radioFailures.current = 0
                       setRadioStopped('')
-                      track('correlate_radio_toggled', { game: session.mode, on: next })
+                      track('correlate_radio_toggled', { game: branch.mode, on: next })
                     }}
                     disabled={!!radioBlocked}
                     title={radioBlocked ?? RADIO_HINT}
@@ -906,6 +1015,11 @@ export default function CorrelationBoard({
                       accentChip={accent.chip}
                       isFocus={turn.id === focusId}
                       onFocus={focusOn}
+                      // Null — and therefore absent — on every turn played under
+                      // the game being played now, which is every turn in a game
+                      // nobody switched. A marker on all of them would make the
+                      // real ones invisible.
+                      playedAs={playedUnder(turn, session.mode, branch.mode)?.name ?? null}
                     />
                   </li>
                 ))}
@@ -975,7 +1089,14 @@ export default function CorrelationBoard({
                 </p>
               )}
 
-              {wantsPrediction(game) && (
+              {/* `nextGame`, not `game`, for everything in the composer from
+                  here down. The move being composed is played under the armed
+                  game, so it is that game's demands the player has to be able to
+                  meet: Prediction wants a guess typed, Correlation Chain wants
+                  the relation named. Showing the current game's form and posting
+                  it as the new game's move is how a player gets a 400 for a
+                  field they were never shown. */}
+              {wantsPrediction(composerGame) && (
                 <input
                   type="text"
                   value={prediction}
@@ -989,12 +1110,26 @@ export default function CorrelationBoard({
               <OfferingPicker
                 media={media}
                 relations={relations}
-                declaredRelation={game.declaredRelation}
+                declaredRelation={composerGame.declaredRelation}
                 spentRelations={spent}
                 previousMedium={onTheTable?.medium ?? null}
                 disabled={pending}
                 onSubmit={play}
               />
+
+              {/* Under the composer rather than beside the game chip in the
+                  header, because arming a switch is a decision about the move
+                  you are about to make — it belongs next to the form it changes,
+                  not next to the label it will eventually change. */}
+              <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                <GameSwitch
+                  from={branch.mode}
+                  armed={armedSwitch}
+                  onArm={setArmedSwitch}
+                  disabled={pending}
+                  onTable={!!onTheTable}
+                />
+              </div>
 
               {/* Standing back is a move too. The partner answers its own last
                   offering, and you see where it takes it when nobody redirects
@@ -1154,7 +1289,7 @@ const PROBLEM_TEXT: Record<string, string> = {
 }
 
 /** One exchange: the move, how it was read, the reply, and what carried across. */
-function TurnBlock({ turn, graph, player, accentText, accentChip, isFocus, onFocus }: {
+function TurnBlock({ turn, graph, player, accentText, accentChip, isFocus, onFocus, playedAs }: {
   turn: CorrelationTurn
   graph: TurnGraph
   player: OfferingPlayer
@@ -1163,6 +1298,15 @@ function TurnBlock({ turn, graph, player, accentText, accentChip, isFocus, onFoc
   /** True when the next move answers this turn. */
   isFocus: boolean
   onFocus: (id: string) => void
+  /**
+   * The name of the game this turn was played under, when it was not the game
+   * being played now. Null otherwise, and the marker is then not drawn.
+   *
+   * Load-bearing in the same way `move_by` is: a turn ruled by Tag's referee
+   * must not read as a turn the current game ruled. The player would be looking
+   * at a chain that appears to have been judged by rules it never met.
+   */
+  playedAs?: string | null
 }) {
   /**
    * Whose move this was.
@@ -1201,6 +1345,14 @@ function TurnBlock({ turn, graph, player, accentText, accentChip, isFocus, onFoc
     <div className="space-y-3">
       <div className="flex items-center gap-2 flex-wrap">
         <p className="text-[11px] font-medium text-gray-400 dark:text-gray-500">Turn {turn.turn_index + 1}</p>
+        {playedAs && (
+          <span
+            title={`This exchange was played and ruled under ${playedAs}. The game was switched after it.`}
+            className="flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400"
+          >
+            <Shuffle size={9} /> {playedAs}
+          </span>
+        )}
         {alone && (
           <span
             title="You took no turn here — it answered its own last offering."

@@ -1296,7 +1296,7 @@ mojibake in any touched file.
 ## 18. Seventh pass (2026-10-28): switching games mid-session — design
 
 Switching the game mid-session — Tag handing off to Embodiment partway
-through a chain. Design only; nothing built.
+through a chain. **Built in §19**; this section is the design that preceded it.
 
 Written up in full as **`reports/2026-10-28-game-switching.md`** rather than
 inline, and deliberately not summarised here: the analysis turns on specific
@@ -1314,3 +1314,109 @@ The three results worth carrying in your head:
   Embodiment is in the clean class, Tag → Duel is not.
 - **The switch should be a branch**, which the graph already supports and
   which makes `worldFor`'s delta replay start in the right place for free.
+
+## 19. Eighth pass (2026-10-29): switching, as built
+
+All three phases the report named, plus the UI it left unexamined. Tag hands
+off to Embodiment mid-chain; the chain's last offering is the new game's
+opening move; both halves stay on the record as what they were.
+
+New: `supabase/setup/76_listen_turn_mode.sql`,
+`lib/correlate/switching.ts`, `components/correlate/GameSwitch.tsx`.
+Changed: the turn route, `prompt.ts`, `types.ts`, `CorrelationBoard.tsx`.
+
+### 19a. The tiers are derived, not listed
+
+`switching.ts` computes the seeding split from `seedWorld` rather than holding
+a table of it. A seed key is *authored* when it is a non-empty string or a
+non-empty array; numbers are counters, not premises, which is what puts
+Prediction's `{hits: 0, misses: 0}` in the empty class. So a twelfth game with
+an authored premise lands in tier 4 by existing, and no table has to be
+remembered.
+
+Deriving it caught one thing the report got wrong about its own rule:
+`navigation ↔ construction` was listed as tier 3 on the strength of both being
+place-shaped, but `construction` starts empty (`placeName: null`, three empty
+arrays), so switching *into* it is an ordinary clean handoff. The pair is
+asymmetric — navigation → construction is tier 2, the reverse is tier 4 — and
+a test now asserts that so it cannot drift back.
+
+Tiers 1 and 2 are offered. Tier 3 is computed and withheld: both members ship a
+premise, so each direction needs a decision about whose scene survives, and
+that decision still has not been made.
+
+### 19b. One boundary, two consequences
+
+The report treated the replay restart and the spent-relation clearing as two
+rules. They are one, and tying them together is what makes the tier-1 case
+correct: `pathSinceSwitch` returns the suffix from the last switch *that
+changed the world's shape*, and both the world fold and `spentRelations` read
+it.
+
+So Tag → Chain keeps the whole chain and keeps the no-repeat rule, because both
+games have the same shape and the same rule. Tag → Translation restarts the fold
+and releases the spent relation, because Translation's relation set is exactly
+`['translation']` and not releasing it would hand the new game a prompt that
+demands a relation and forbids the only one available. Two tests cover both
+directions of that.
+
+The prompt *states* the release rather than letting it vanish. A prompt that
+silently stops forbidding what it forbade last turn is indistinguishable from
+one that forgot, and an interpreter with no way to tell will avoid the released
+relation out of caution — which is the opposite of releasing it.
+
+### 19c. A switch is armed, not applied
+
+There is no zero-turn boundary in the graph, so the switch happens when the move
+carrying it is played. `GameSwitch` therefore sets what the composer *sends*; it
+posts nothing, and a player who arms one and walks away has changed nothing.
+
+The consequence worth knowing: arming changes the composer, not just the label.
+Tag → Chain flips `declaredRelation` from `never` to `required`, so the move
+that carries the switch is the first one that has to name its relation. The
+board resolves two branches for this — `branch` for what has been played (the
+accent, the world, the per-turn labels) and `nextBranch` for what the composer
+asks (the relations, the declaration, the prediction field). Showing the current
+game's form and posting it as the new game's move is how a player would
+otherwise get a 400 for a field they were never shown.
+
+An illegal switching turn does not stick, and that falls out of the graph rather
+than being special-cased: a move that was turned away is on nobody's path, so
+`pathTo` never contains it and the branch is still the game it was. The control
+stays armed in that case — the switch did not happen, and making the player
+re-arm would be charging them for the engine's own rule.
+
+### 19d. Both questions the report left open
+
+**The judge flip** is surfaced. `switchChanges` is computed from the two
+registry entries and names everything a switch changes that a player would
+otherwise discover by playing into it: the world, who rules, whether the
+relation is theirs to name, whether a move can be turned away at all, and which
+relations are left. It is shown before arming and again while armed.
+
+**`gatesLegality` vs `enforcesConstraint`** needed no new copy. The two reasons a
+move cannot be turned away are already distinct in the UI — the Friction axis
+lives in the tuning panel and says so there — so the switch control says only
+what the switch itself changes: that `enforcesConstraint` is going from true to
+false, or the reverse. Stating both in one sentence would have put the tuning
+panel's explanation in a second place, which §16 and §17b are about.
+
+### 19e. What `session.mode` still means
+
+Unchanged: the game the session *started* as. Nothing writes it on a switch.
+That is what keeps every existing read of it correct — the home-page strip, the
+session list, `createSession`'s rules snapshot — and it is why the board shows
+"started as Tag" beside a branch playing Embodiment rather than silently
+relabelling the session.
+
+`listen_turns.mode` is written on every new row, switched or not, so `null`
+keeps meaning exactly one thing: written before migration 76.
+
+### 19f. Still open
+
+`prediction` reads less like an eleventh game than like a modifier — empty-
+seeded, `relations: 'all'`, `judge: 'player'`, and distinguished only by
+`wantsPrediction(game)` returning true for its id. It is a switch target here
+because it is mechanically clean, and the modifier question is untouched. If it
+is ever answered the right way, it stops being a target and becomes something
+that can apply to any of the others.

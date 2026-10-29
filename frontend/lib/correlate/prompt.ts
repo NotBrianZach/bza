@@ -28,6 +28,18 @@ export interface TurnContext {
   carried: string | null
   /** 'partner' when that turn's move was the interpreter's own answer. */
   move_by?: MoveBy | null
+  /**
+   * The name of the game that turn was played under, when it is not the game
+   * being played now.
+   *
+   * Set only across a switch, and absent otherwise so an unswitched game
+   * produces exactly the prompt it produced before switching existed. The path
+   * is deliberately not truncated at the boundary: truncating loses the
+   * continuity that makes switching worth doing, and per-turn `mode` is what
+   * makes the alternative sayable — the history can be shown while being
+   * labelled as somebody else's rules.
+   */
+  played_as?: string | null
 }
 
 /**
@@ -399,6 +411,10 @@ export function buildUserPrompt(opts: {
   claimedRelation: RelationId | null
   /** Relations this branch has just used and may not immediately reuse. */
   spent: RelationId[]
+  /**
+   * The game being left behind, on the turn a switch happens. See `switchedTo`.
+   */
+  switchedFrom?: { name: string; keptWorld: boolean; released: RelationId[] } | null
   prediction?: string | null
   turnIndex: number
   tuning?: Tuning
@@ -407,7 +423,7 @@ export function buildUserPrompt(opts: {
 }): string {
   const {
     game, media, relations, world, history, elsewhere, move, previous, parentIndex,
-    claimedRelation, spent, prediction, turnIndex, tuning, due,
+    claimedRelation, spent, switchedFrom, prediction, turnIndex, tuning, due,
     selfReply = false, selfReplyFrom, selfReplyDepth = 0,
   } = opts
   const parts: string[] = []
@@ -421,6 +437,10 @@ export function buildUserPrompt(opts: {
       // reads the branch as a conversation it was not having.
       const by = t.move_by === 'partner' ? 'you yourself offered' : 'player offered'
       const lines = [`Turn ${t.turn_index}: ${by} ${offeringLine(t.move_offering)}`]
+      // Which turns were a different game. Said per turn rather than as one
+      // sentence about the boundary, because an interpreter reading a long path
+      // needs to know of each exchange whether its rules were these rules.
+      if (t.played_as) lines.push(`  played as ${t.played_as}, not the game you are reading now`)
       if (t.relation) lines.push(`  relation: ${t.relation}`)
       if (t.reply_offering) lines.push(`  answered with ${offeringLine(t.reply_offering)}`)
       if (t.carried) lines.push(`  carried: ${t.carried}`)
@@ -444,6 +464,43 @@ export function buildUserPrompt(opts: {
     }).join('\n')
     parts.push(
       `EXCHANGES ELSEWHERE (other branches — available to point at, not to reason from)\n${index}`,
+    )
+  }
+
+  /**
+   * THE SWITCH, EXPLAINED TO THE INTERPRETER.
+   *
+   * Placed here on purpose: immediately after the path it has just read, and
+   * before the move it is about to read. Everything above this block belongs to
+   * the game being left — the exchanges, their readings, their relations — and
+   * everything below belongs to the one being entered. Said in the other order,
+   * or left unsaid, the prompt reads as a world that inexplicably emptied.
+   *
+   * It states the lifted constraint rather than letting it vanish. A prompt that
+   * silently stops forbidding the relation it forbade last turn is
+   * indistinguishable from a prompt that forgot, and the interpreter has no way
+   * to tell which — so a reply that avoids the released relation out of caution
+   * is the likely outcome, which is the opposite of what releasing it was for.
+   */
+  if (switchedFrom) {
+    const released = switchedFrom.released.length > 0
+      ? `\n- ${switchedFrom.released.join(', ')} ${switchedFrom.released.length === 1 ? 'was' : 'were'} ` +
+        `spent in ${switchedFrom.name} and ${switchedFrom.released.length === 1 ? 'is' : 'are'} ` +
+        `released, deliberately: "do not reuse the connection you just used" was that game's rule, ` +
+        `not this one's. You may use ${switchedFrom.released.length === 1 ? 'it' : 'them'} if ` +
+        `${switchedFrom.released.length === 1 ? 'it is' : 'they are'} the right answer.`
+      : ''
+    parts.push(
+      `THE GAME HAS JUST CHANGED\nThis branch was being played as ${switchedFrom.name}. The player ` +
+      `has switched it to ${game.name}, and this move is the first one under your rules.\n` +
+      `- The exchanges in THE PATH TO HERE happened under ${switchedFrom.name}. They are real and ` +
+      `they are theirs — read them as context you have inherited, not as turns you ruled on.\n` +
+      (switchedFrom.keptWorld
+        ? `- The world carries over: ${game.name} keeps the same shape, so nothing was reset.`
+        : `- The world starts empty, which is where ${game.name} is supposed to start. The offering ` +
+          `on the table is the opening move: treat it the way you would treat a first offering, and ` +
+          `establish the world concretely from it rather than importing anything from above.`) +
+      released,
     )
   }
 

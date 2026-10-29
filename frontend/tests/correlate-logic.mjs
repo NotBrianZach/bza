@@ -45,6 +45,7 @@ function build() {
     join('lib', 'correlate', 'media.ts'),
     join('lib', 'correlate', 'relations.ts'),
     join('lib', 'correlate', 'graph.ts'),
+    join('lib', 'correlate', 'switching.ts'),
     join('lib', 'correlate', 'tuning.ts'),
     join('lib', 'correlate', 'continuation.ts'),
     join('lib', 'correlate', 'presets.ts'),
@@ -75,6 +76,7 @@ function build() {
     media:     require(join(outDir, 'correlate', 'media.js')),
     relations: require(join(outDir, 'correlate', 'relations.js')),
     graph:     require(join(outDir, 'correlate', 'graph.js')),
+    switching: require(join(outDir, 'correlate', 'switching.js')),
     tuning:    require(join(outDir, 'correlate', 'tuning.js')),
     carry:     require(join(outDir, 'correlate', 'continuation.js')),
     presets:   require(join(outDir, 'correlate', 'presets.js')),
@@ -101,6 +103,11 @@ const {
   defaultParent, offeringOnTable, offeringIdsAlong, relationsAlong, replyMediaAlong,
   mergeWorld, worldAlong, worldFor, linkableTurns, turnByIndex,
 } = M.graph
+const {
+  ENGINE_WORLD_KEYS, authoredSeedKeys, isEmptySeeded, switchTier, switchTargets, canSwitch,
+  modeOf, modeAlong, switchesAlong, pathSinceSwitch, activeBranch, switchRefusal,
+  switchChanges, playedUnder,
+} = M.switching
 const {
   TUNING_AXES, AXIS_LIST, ALL_AXIS_IDS, AXIS_STOPS, DEFAULT_WEIGHT, WEIGHT_LABELS, WEIGHT_HINTS,
   DEFAULT_TUNING, normalizeTuning, isNeutral, isUntouched, isProportioned, axisValue, mutedMedia,
@@ -562,6 +569,9 @@ const mkTurn = (o = {}) => ({
   // Null rather than 'player' by default, because that is what every row written
   // before migration 59 holds and the helpers have to read it as a player move.
   move_by: o.move_by ?? null,
+  // Same reasoning one migration later: null is what every row written before 76
+  // holds, and it has to read as "the session's own game".
+  mode: o.mode ?? null,
   legal: o.legal !== false,
   created_at: '',
 })
@@ -2310,6 +2320,229 @@ t('plain-speaker and concrete both push against the abstraction drift',
   ['plain-speaker', 'concrete'].every(id => getPreset(id).axes.abstraction === 0))
 t('and the sceptic is a real counterweight to the game opening at friction 0',
   STARTING_AXES.friction === 0 && getPreset('sceptic').axes.friction > 2)
+
+/**
+ * Switching games mid-session — lib/correlate/switching.ts.
+ *
+ * All of it is derived from the two registries rather than hand-assigned, which
+ * is the property worth testing: a twelfth game with an authored premise has to
+ * land in tier 4 by existing, and a change to any `seedWorld` has to move its
+ * game between classes without anybody editing a table. So the assertions here
+ * are mostly about the *shape* of the answer across the whole registry, not
+ * about eleven remembered verdicts.
+ */
+group('switching — the seeding split')
+t('seven games start empty and four ship a premise',
+  GAME_LIST.filter(isEmptySeeded).length === 7 && GAME_LIST.filter(g => !isEmptySeeded(g)).length === 4)
+t('and the four are the ones whose worlds are authored',
+  ['duel', 'transformation', 'investigation', 'navigation']
+    .every(id => !isEmptySeeded(GAMES[id])))
+t('a zeroed scoreboard is not a premise — prediction starts empty',
+  isEmptySeeded(GAMES.prediction) && authoredSeedKeys(GAMES.prediction).length === 0)
+t('a standing invariant is one — transformation ships scene and invariants',
+  authoredSeedKeys(GAMES.transformation).join(',') === 'scene,invariants')
+t('construction is empty-seeded despite being place-shaped',
+  isEmptySeeded(GAMES.construction))
+t('every game declares facts or inherits it, and facts never counts as authored',
+  GAME_LIST.every(g => !authoredSeedKeys(g).includes('facts')))
+
+group('switching — tiers')
+t('tag and chain carry verbatim, in both directions',
+  switchTier('tag', 'chain') === 1 && switchTier('chain', 'tag') === 1)
+t('and they are the only tier-1 pair in the registry',
+  GAME_LIST.flatMap(a => GAME_LIST.map(b => [a.id, b.id]))
+    .filter(([a, b]) => switchTier(a, b) === 1)
+    .map(p => p.join('→')).sort().join(',') === 'chain→tag,tag→chain')
+t('tag to embodiment — the request that prompted this — is a clean handoff',
+  switchTier('tag', 'embodiment') === 2)
+t('tag to duel is not offerable', switchTier('tag', 'duel') === 4)
+t('duel and transformation share a scene, so they are tier 3',
+  switchTier('duel', 'transformation') === 3 && switchTier('transformation', 'duel') === 3)
+t('two premise-seeded games with no shared shape are still tier 4',
+  switchTier('investigation', 'duel') === 4)
+/**
+ * The documented deviation from the report, asserted so it cannot drift back
+ * silently. The report's tier table listed navigation ↔ construction as tier 3
+ * on the strength of both being place-shaped; its own seeding rule says
+ * construction starts empty, which makes the switch into it ordinary.
+ */
+t('into construction is clean, out of navigation is not — the pair is asymmetric',
+  switchTier('navigation', 'construction') === 2 && switchTier('construction', 'navigation') === 4)
+t('a game cannot be switched into itself', switchTier('tag', 'tag') === null)
+t('an unknown id has no tier', switchTier('tag', 'nonesuch') === null && switchTier('nonesuch', 'tag') === null)
+t('every ordered pair resolves to a tier or to null, never undefined',
+  GAME_LIST.flatMap(a => GAME_LIST.map(b => switchTier(a.id, b.id)))
+    .every(tier => tier === null || [1, 2, 3, 4].includes(tier)))
+
+group('switching — what is offered')
+t('no premise-seeded game is ever a target',
+  GAME_LIST.every(from => switchTargets(from.id).every(isEmptySeeded)))
+t('every offered target agrees with canSwitch',
+  GAME_LIST.every(from => switchTargets(from.id).every(to => canSwitch(from.id, to.id))))
+t('a game is never offered as a switch into itself',
+  GAME_LIST.every(from => !switchTargets(from.id).some(to => to.id === from.id)))
+t('from tag there are six targets: the other six empty-seeded games',
+  switchTargets('tag').length === 6 && switchTargets('tag').some(g => g.id === 'embodiment'))
+t('and duel is not among them', !switchTargets('tag').some(g => g.id === 'duel'))
+t('tier 3 is computable but not offered',
+  switchTier('duel', 'transformation') === 3 && !canSwitch('duel', 'transformation'))
+
+group('switching — reading the mode off a path')
+const PRE_76 = [
+  mkTurn({ id: 'm0', turn_index: 0 }),
+  mkTurn({ id: 'm1', turn_index: 1, parent_turn_id: 'm0' }),
+]
+const SWITCHED = [
+  mkTurn({ id: 's0', turn_index: 0, mode: 'tag' }),
+  mkTurn({ id: 's1', turn_index: 1, parent_turn_id: 's0', mode: 'tag' }),
+  mkTurn({ id: 's2', turn_index: 2, parent_turn_id: 's1', mode: 'embodiment', relation: 'embodiment' }),
+  mkTurn({ id: 's3', turn_index: 3, parent_turn_id: 's2', mode: 'embodiment' }),
+]
+t('a null mode reads as the session’s own', modeOf(PRE_76[0], 'tag') === 'tag')
+t('an empty path is the session’s game', modeAlong([], 'tag') === 'tag')
+t('a path of pre-76 rows never switched anything', switchesAlong(PRE_76, 'tag').length === 0)
+t('and reads as the session’s game throughout', modeAlong(PRE_76, 'tag') === 'tag')
+t('rows stating the session’s own game are not a switch either',
+  switchesAlong(SWITCHED.slice(0, 2), 'tag').length === 0)
+t('a changed mode is one boundary, at the turn that changed it', (() => {
+  const found = switchesAlong(SWITCHED, 'tag')
+  return found.length === 1 && found[0].turn.id === 's2' && found[0].from === 'tag' &&
+    found[0].to === 'embodiment' && found[0].tier === 2
+})())
+t('the branch’s game is the last turn’s, not the session’s',
+  modeAlong(SWITCHED, 'tag') === 'embodiment')
+
+group('switching — where replay restarts')
+t('an unswitched path folds whole, and is the same array',
+  pathSinceSwitch(PRE_76, 'tag') === PRE_76)
+t('a tier-2 switch restarts the fold at the switching turn', (() => {
+  const since = pathSinceSwitch(SWITCHED, 'tag')
+  return since.length === 2 && since[0].id === 's2'
+})())
+/**
+ * The tier-1 case, and the reason it is not just "a switch restarts the fold".
+ * Tag and Chain have the same world shape, so the deltas apply and the chain the
+ * destination is about to keep playing must not be thrown away.
+ */
+const TIER1 = [
+  mkTurn({ id: 'o0', turn_index: 0, mode: 'tag' }),
+  mkTurn({ id: 'o1', turn_index: 1, parent_turn_id: 'o0', mode: 'chain' }),
+]
+t('a tier-1 switch does not restart it — the chain genuinely continues',
+  pathSinceSwitch(TIER1, 'tag').length === 2)
+t('but it is still recorded as a switch', switchesAlong(TIER1, 'tag').length === 1)
+t('with two switches the fold starts at the last one that changed shape', (() => {
+  const path = [...TIER1, mkTurn({ id: 'o2', turn_index: 2, parent_turn_id: 'o1', mode: 'translation' })]
+  const since = pathSinceSwitch(path, 'tag')
+  return since.length === 1 && since[0].id === 'o2'
+})())
+
+group('switching — activeBranch, the one resolver')
+t('with nothing armed it reports the path’s game and the whole path', (() => {
+  const b = activeBranch(SWITCHED, 'tag', null)
+  return b.mode === 'embodiment' && b.switchedFrom === null && b.since.length === 2
+})())
+t('arming a tier-2 switch empties the world and names what was left', (() => {
+  const b = activeBranch(PRE_76, 'tag', 'embodiment')
+  return b.mode === 'embodiment' && b.switchedFrom === 'tag' && b.since.length === 0
+})())
+t('arming a tier-1 switch keeps the path', (() => {
+  const b = activeBranch(PRE_76, 'tag', 'chain')
+  return b.mode === 'chain' && b.switchedFrom === 'tag' && b.since === PRE_76
+})())
+t('an impossible switch is ignored rather than honoured', (() => {
+  const b = activeBranch(PRE_76, 'tag', 'duel')
+  return b.mode === 'tag' && b.switchedFrom === null
+})())
+t('arming the game already being played changes nothing',
+  activeBranch(PRE_76, 'tag', 'tag').switchedFrom === null)
+t('the game is resolved alongside the mode', activeBranch(PRE_76, 'tag', null).game?.id === 'tag')
+
+/**
+ * The spent-relation dead end, which is the hazard that only shows up in the
+ * code. Translation's relation set is exactly ['translation'], so a switch into
+ * it on a turn that just used `translation` would otherwise hand the new game a
+ * prompt demanding a relation and forbidding the only one it has.
+ *
+ * Asserted as the composition the route actually performs — spentRelations over
+ * `since` — rather than by inspecting a flag, because that composition is the
+ * thing that must hold.
+ */
+group('switching — the spent-relation dead end')
+const SPENT_TRANSLATION = [
+  mkTurn({ id: 'p0', turn_index: 0, mode: 'tag', relation: 'translation' }),
+]
+t('without a switch, translation is spent and translation has nothing left',
+  spentRelations(relationsAlong(activeBranch(SPENT_TRANSLATION, 'tag', null).since), 1)
+    .join(',') === 'translation')
+t('switching into Translation releases it, so the game has a legal relation',
+  spentRelations(relationsAlong(activeBranch(SPENT_TRANSLATION, 'tag', 'translation').since), 1)
+    .length === 0)
+t('a tier-1 switch does NOT release it — both games enforce the same rule',
+  spentRelations(relationsAlong(activeBranch(SPENT_TRANSLATION, 'tag', 'chain').since), 1)
+    .join(',') === 'translation')
+t('and every narrow-relation game is reachable without emptying its set',
+  switchTargets('tag')
+    .map(g => resolveRelations(g.relations))
+    .every(rs => rs.length > spentRelations(
+      relationsAlong(activeBranch(SPENT_TRANSLATION, 'tag', 'translation').since), 1).length))
+
+group('switching — refusals')
+t('with nothing on the table there is nothing to carry',
+  typeof switchRefusal('tag', 'embodiment', { onTable: false }) === 'string')
+t('with something on it, a clean switch is allowed',
+  switchRefusal('tag', 'embodiment', { onTable: true }) === null)
+t('a self-reply is not the player’s turn to change the game in',
+  typeof switchRefusal('tag', 'embodiment', { onTable: true, selfReply: true }) === 'string')
+t('a premise-seeded destination is refused by naming what it ships', (() => {
+  const why = switchRefusal('tag', 'duel', { onTable: true })
+  return typeof why === 'string' && why.includes('scene')
+})())
+t('a tier-3 pair is refused with the reason it is unresolved, not as unknown', (() => {
+  const why = switchRefusal('duel', 'transformation', { onTable: true })
+  return typeof why === 'string' && !why.includes('no game called')
+})())
+t('an unknown game is refused as unknown', (() => {
+  const why = switchRefusal('tag', 'nonesuch', { onTable: true })
+  return typeof why === 'string' && why.includes('nonesuch')
+})())
+t('switching to the game you are in is refused',
+  typeof switchRefusal('tag', 'tag', { onTable: true }) === 'string')
+t('every offered target is one the refusal would permit',
+  GAME_LIST.every(from => switchTargets(from.id)
+    .every(to => switchRefusal(from.id, to.id, { onTable: true }) === null)))
+
+group('switching — what the player is told changes')
+t('every pair that can be switched says something about the world',
+  GAME_LIST.every(from => switchTargets(from.id)
+    .every(to => switchChanges(from.id, to.id).some(c => c.what === 'The world'))))
+t('tier 1 says the world carries, tier 2 says it starts fresh',
+  /[Cc]arries over/.test(switchChanges('tag', 'chain')[0].detail) &&
+  /fresh/.test(switchChanges('tag', 'embodiment')[0].detail))
+t('tag to chain warns that the relation now has to be named',
+  switchChanges('tag', 'chain').some(c => c.what === 'Naming the relation'))
+t('tag to counterpoint warns that the ruling moves to the player — the judge flip',
+  switchChanges('tag', 'counterpoint').some(c => c.what === 'Who rules'))
+t('and tag to embodiment warns that nothing can be turned away any more',
+  switchChanges('tag', 'embodiment').some(c =>
+    c.what === 'Being turned away' && /No longer possible/.test(c.detail)))
+t('a narrowing destination says which relations are left',
+  switchChanges('tag', 'translation').some(c =>
+    c.what === 'Relations in play' && c.detail.includes('translation')))
+t('and says the released relation was released on purpose',
+  switchChanges('tag', 'translation').some(c => /released/.test(c.detail)))
+t('switching between two games that differ in nothing listed says only the world',
+  switchChanges('tag', 'nonesuch').length === 0)
+
+group('switching — labelling the log')
+t('a turn played under the game being played now gets no marker',
+  playedUnder(SWITCHED[0], 'tag', 'tag') === null)
+t('one played under another game names it',
+  playedUnder(SWITCHED[0], 'tag', 'embodiment')?.name === 'Tag')
+t('a pre-76 row is read as the session’s game, so it marks correctly too',
+  playedUnder(PRE_76[0], 'tag', 'embodiment')?.name === 'Tag')
+t('engine-maintained world keys are excluded from every shape comparison',
+  ENGINE_WORLD_KEYS.includes('facts') && ENGINE_WORLD_KEYS.includes('mediaVisited'))
 
 rmSync(outDir, { recursive: true, force: true })
 

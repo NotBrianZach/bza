@@ -18,6 +18,9 @@ import {
   weightedReplyMedia,
 } from '@/lib/correlate/tuning'
 import { selfRepliesSince, selfReplyRefusal } from '@/lib/correlate/continuation'
+import {
+  activeBranch, modeAlong, playedUnder, switchRefusal,
+} from '@/lib/correlate/switching'
 import type {
   ActionIntent, CorrelationTurn, Interpretation, MediumId, Offering, RelationId,
 } from '@/lib/correlate/types'
@@ -64,7 +67,17 @@ import { serverData } from '@/lib/supabaseSchema'
  *   parentTurnId?,   // present-and-null starts a new thread; absent continues
  *   tuning?,         // the weighting as of this turn; also saved to the session
  *   selfReply?,      // the partner answers its own last offering; no move is sent
+ *   switchTo?,       // play this move under another game; see step 1b
  * }
+ *
+ * A third kind of turn joins the two above once `switchTo` is sent, and it is a
+ * variation on the ordinary one rather than a fourth path: the move is made and
+ * answered exactly as always, under a different game. What changes is which game
+ * `step 1b` resolves, and the three things that hang off it — the relation set,
+ * the world the deltas fold onto, and which relations count as spent. The switch
+ * is a move, so it is a turn in the graph and nothing else; there is no
+ * zero-turn boundary and no session-level mutation. See
+ * lib/correlate/switching.ts.
  */
 
 const MODEL = process.env.LISTEN_MODEL || process.env.CORRELATE_MODEL || 'anthropic/claude-haiku-4-5'
@@ -118,6 +131,7 @@ export async function POST(req: NextRequest) {
     parentTurnId?: string | null
     tuning?: unknown
     selfReply?: boolean
+    switchTo?: string
   } | null
 
   const sessionId = body?.sessionId
@@ -147,19 +161,29 @@ export async function POST(req: NextRequest) {
   if (!session) return err('Session not found', 404)
   if (session.status !== 'active') return err('This game is finished', 409)
 
-  const game = getGame(session.mode)
-  if (!game) return err(`Unknown game "${session.mode}"`, 500)
+  // The game the session *started* as. Still the right thing to resolve the
+  // session's own columns against — its media scope, its relation snapshot — and
+  // still what `session.mode` means. Which game is being played *now* is a fact
+  // about the branch and is resolved below, once the graph exists.
+  const sessionGame = getGame(session.mode)
+  if (!sessionGame) return err(`Unknown game "${session.mode}"`, 500)
 
   // The session snapshots its scope at creation, but fall back to recomputing it
   // so a session created before a medium was enabled is not stuck without it.
   const available = availableMedia(process.env as Record<string, string | undefined>)
-  const fallback = sessionScope(game, available)
+  const fallback = sessionScope(sessionGame, available)
+  //
+  // Media are session-level even across a switch, and that is a fact about the
+  // registry rather than a simplification: all eleven games are `media: 'all'`,
+  // so a switch cannot narrow what is in play. The session's list is already
+  // "what the game wanted at creation ∩ what this deployment can serve", and
+  // re-deriving it per branch would produce the same list. A future game that
+  // narrows its media would need this intersected with the branch's game — and
+  // would need a decision about a session whose media list the switch empties,
+  // which is why it is not pre-emptively written here.
   const media: MediumId[] = Array.isArray(session.media) && session.media.length > 0
     ? (session.media as MediumId[]).filter(m => available.includes(m))
     : fallback.media
-  const relations: RelationId[] = Array.isArray(session.relations) && session.relations.length > 0
-    ? session.relations as RelationId[]
-    : resolveRelations(game.relations)
 
   // The client sends what the controls currently say and the server saves it, so
   // the knob a player moved a second before taking a turn applies to that turn.
@@ -186,8 +210,12 @@ export async function POST(req: NextRequest) {
   // recently. Sessions are small; the cap is a backstop, not a budget.
   const { data: turnRows } = await ((db.from('listen_turns') as any)
     .select(
+      // `mode` is what makes a branch's game knowable. Omitting it from this
+      // list would not fail — every read of it goes through `modeOf`, which
+      // treats absent and null alike as "the session's mode" — it would silently
+      // un-switch every switched branch on the next turn.
       'id, turn_index, parent_turn_id, move_by, move_offering, reply_offering, relation, ' +
-      'reading, narration, carried, facts, world_delta, link_turn_id, link_note, legal',
+      'reading, narration, carried, facts, world_delta, link_turn_id, link_note, legal, mode',
     )
     .eq('session_id', sessionId)
     .order('turn_index', { ascending: true })
@@ -216,6 +244,52 @@ export async function POST(req: NextRequest) {
   }
 
   const path = pathTo(graph, parent?.id ?? null)
+
+  /**
+   * What the parent left on the table. Resolved here, before the move, because
+   * the switch below needs it: the last offering is the whole of what a switch
+   * carries, so with nothing on the table there is nothing to switch *into*.
+   */
+  const onTable = offeringOnTable(parent)
+
+  // --- 1b. Which game this turn is played under ----------------------------
+  //
+  // Not `session.mode`. A branch may have been switched, and a turn's game is a
+  // property of the turn — see lib/correlate/switching.ts and migration 76.
+  // `session.mode` deliberately stays as the game the session started as, which
+  // is what keeps every other read of that column correct.
+  const switchTo = typeof body?.switchTo === 'string' ? body.switchTo.trim() : ''
+  const currentMode = modeAlong(path, session.mode)
+
+  if (switchTo && switchTo !== currentMode) {
+    // Refused before the move is made real and before any model call, by the
+    // same function the board's control is disabled by — so the player is shown
+    // the sentence the server would have sent rather than a button that fails.
+    const refusal = switchRefusal(currentMode, switchTo, {
+      onTable: !!onTable,
+      selfReply,
+    })
+    if (refusal) return err(refusal, 400)
+  }
+
+  const branch = activeBranch(path, session.mode, switchTo || null)
+  const game = branch.game
+  if (!game) return err(`Unknown game "${branch.mode}"`, 500)
+
+  /**
+   * The relations in play.
+   *
+   * The session's snapshot while the branch is playing the game it started as —
+   * that snapshot is the "a game does not change shape underneath you" promise,
+   * and a switched branch is not that case. Once switched, the relation set is
+   * the new game's, because playing Translation with Tag's seven relations would
+   * be playing neither.
+   */
+  const relations: RelationId[] = branch.mode === session.mode
+    ? (Array.isArray(session.relations) && session.relations.length > 0
+        ? session.relations as RelationId[]
+        : resolveRelations(sessionGame.relations))
+    : resolveRelations(game.relations)
 
   // --- 2. Make the move real ------------------------------------------------
   let move: Offering | null = null
@@ -284,7 +358,7 @@ export async function POST(req: NextRequest) {
    * the medium-change check — is therefore skipped by arithmetic rather than by a
    * second condition that could be forgotten.
    */
-  const previous: Offering | null = selfReply ? null : offeringOnTable(parent)
+  const previous: Offering | null = selfReply ? null : onTable
 
   /** This turn included. 1 means the partner has just started a run. */
   const selfReplyDepth = selfReply ? selfRepliesSince(path) + 1 : 0
@@ -308,7 +382,17 @@ export async function POST(req: NextRequest) {
 
   // Derived from the rows, not from world state, and from *this branch's* rows: a
   // relation spent on a branch the player walked away from was never spent here.
-  const spent = spentRelations(relationsAlong(path), 1)
+  //
+  // `branch.since` rather than `path`, which is what clears spent relations
+  // across a switch. The motivating case is mechanical rather than aesthetic:
+  // Translation's relation set is exactly `['translation']`, so switching into it
+  // on a turn whose parent used `translation` would otherwise leave the new game
+  // with zero legal relations while the prompt demanded one and forbade the only
+  // one available. Unswitched, and across a tier-1 switch, `since` is the whole
+  // path and nothing changes.
+  const spent = spentRelations(relationsAlong(branch.since), 1)
+  /** What the switch released, so the prompt can say it was deliberate. */
+  const released = branch.switchedFrom ? spentRelations(relationsAlong(path), 1) : []
 
   // Nobody claimed anything on a self-reply, so there is nothing to judge a move
   // against. Ignored rather than refused: a client that keeps sending the field it
@@ -365,6 +449,11 @@ export async function POST(req: NextRequest) {
         parent_turn_id: parent?.id ?? null,
         move_by: 'player',
         tuning,
+        // Written on a rejected turn too. The move was judged under this game's
+        // rules and refused by them, so the row has to say which rules those
+        // were — and the switch itself does not stick, because an illegal turn
+        // is not on anybody's path. See `pathSinceSwitch`.
+        mode: branch.mode,
         move_offering: move,
         reply_offering: null,
         relation: null,
@@ -389,13 +478,30 @@ export async function POST(req: NextRequest) {
   // both establish something about the same place are each coherent and are not
   // each other's. See worldFor() for what happens to sessions written before that
   // was true.
+  // Folded along `branch.since`, not the whole path. `worldFor` replays deltas
+  // from the game's seed, and replaying Tag's `chain` deltas onto Embodiment's
+  // `{learned, sensations}` seed produces a world that is neither game's — so
+  // after a switch the replay has to start at the switch. That is what
+  // `pathSinceSwitch` computes, and it is also the strongest argument for the
+  // switch being a branch: the boundary is a thing the replay can see.
+  //
+  // The session cache is passed only when this branch has never switched. For a
+  // switched branch `session.world_state` is the *old* game's world, so the
+  // legacy fallback inside `worldFor` would hand it over wholesale — the one
+  // case where trusting that column is worse than folding from less.
   const world = worldFor(
     game.seedWorld,
-    (session.world_state ?? {}) as Record<string, any>,
+    branch.boundaries.length > 0 || branch.switchedFrom
+      ? {}
+      : (session.world_state ?? {}) as Record<string, any>,
     graph,
-    path,
+    branch.since,
   )
 
+  // The whole path, not `branch.since`: an interpreter shown only the turns
+  // played under its own rules loses the continuity that makes switching worth
+  // doing. The ones from before the boundary are labelled rather than hidden —
+  // which is a sentence per-turn `mode` is what makes sayable.
   const history: TurnContext[] = path.slice(-HISTORY_TURNS).map(t => ({
     turn_index: t.turn_index,
     move_offering: t.move_offering,
@@ -406,6 +512,7 @@ export async function POST(req: NextRequest) {
     carried: t.carried,
     // So the interpreter is not shown its own offerings attributed to the player.
     move_by: t.move_by,
+    played_as: playedUnder(t, session.mode, branch.mode)?.name ?? null,
   }))
 
   // Everything the player can see but this branch did not live through. Offered so
@@ -442,6 +549,15 @@ export async function POST(req: NextRequest) {
     parentIndex: parent && parent.turn_index !== turnIndex - 1 ? parent.turn_index : null,
     claimedRelation,
     spent,
+    switchedFrom: branch.switchedFrom
+      ? {
+          name: getGame(branch.switchedFrom)?.name ?? branch.switchedFrom,
+          // True only on a tier-1 switch, where the shapes match and nothing was
+          // reset. `since` holding the whole path is what that looks like here.
+          keptWorld: branch.since.length > 0,
+          released,
+        }
+      : null,
     // A prediction is a player's guess at what their own move will draw back.
     // There is no move of theirs on a self-reply, so there is nothing to predict.
     prediction: selfReply ? null : body?.prediction?.trim() || null,
@@ -837,6 +953,11 @@ export async function POST(req: NextRequest) {
       turn_index: turnIndex,
       parent_turn_id: parent?.id ?? null,
       move_by: selfReply ? 'partner' : 'player',
+      // Always stated, switched or not. A row that names its own game needs no
+      // resolution against a session that may since have been read differently,
+      // and `null` keeps meaning exactly one thing — "written before migration
+      // 76" — rather than two.
+      mode: branch.mode,
       move_offering: storedMove,
       reply_offering: reply,
       reply_query: replyNote,
@@ -895,6 +1016,12 @@ export async function POST(req: NextRequest) {
     // continuation knows where it stands without re-deriving it from the rows it
     // has in memory. Zero on a player's turn — which is also what resets it.
     selfReplyDepth,
+    // The game this turn was played under, and the one it left. Sent rather than
+    // left to the client to re-derive, because the turn row already carries
+    // `mode` and the board folds the row in — this is only here so an armed
+    // switch can be cleared on confirmation rather than on optimism.
+    mode: branch.mode,
+    switchedFrom: branch.switchedFrom,
   })
 }
 
