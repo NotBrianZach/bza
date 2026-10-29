@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { ChevronDown, Loader2, Plus } from 'lucide-react'
-import { ACCENT_CLASSES, GAME_LIST } from '@/lib/correlate/games'
+import { ChevronDown, Loader2, Plus, Shuffle } from 'lucide-react'
+import { ACCENT_CLASSES } from '@/lib/correlate/games'
+import { startableGames, switchOnlyGames } from '@/lib/correlate/switching'
 import { getMedium, resolveMedia } from '@/lib/correlate/media'
 import { RELATIONS, resolveRelations } from '@/lib/correlate/relations'
 import type { CorrelationGame, MediumId } from '@/lib/correlate/types'
@@ -44,14 +45,23 @@ const PIECE_ROWS = [
 /**
  * Start a game.
  *
- * One list, in GAME_LIST order, with Tag first — its rules fit in a sentence and
- * every other game is a variation on the exchange it sets up.
+ * Five cards, not eleven, and the cut is `startableGames()`' decision rather than
+ * this component's: Tag plus the four games a game of Tag cannot become. The
+ * other six are empty-seeded, which means switching into one mid-chain is strictly
+ * better than starting it — the last offering on the table becomes its opening
+ * move instead of the player having to supply one cold.
  *
- * This used to be two groups, "Across media" and "Music only". That split was a
- * quarantine for the games this section grew out of, and it was doing two bad
- * things at once: implying the music games were a lesser tier, and making a reader
- * scroll past a heading to find out that most of them were medium-agnostic all
- * along. Every game is cross-medium now, so there is nothing to separate.
+ * Eleven cards also misdescribed the section. Seven of the eleven are one exchange
+ * with different rules, and presenting them as eleven unrelated choices asked the
+ * player to commit, up front and uninformed, to a decision they can now make from
+ * inside a chain with something concrete to carry into it.
+ *
+ * This is the third shape this list has had. It used to be two groups, "Across
+ * media" and "Music only" — a quarantine for the games the section grew out of,
+ * doing two bad things at once: implying the music games were a lesser tier, and
+ * making a reader scroll past a heading to find out most of them were
+ * medium-agnostic all along. Then one flat list of eleven. Now one list of what is
+ * worth starting, and a note naming what is reached instead.
  *
  * Each card shows its media and its relations, because that pairing is what
  * actually changes play — the same offerings produce very different games depending
@@ -66,6 +76,9 @@ export default function GamePicker({
   onStart: (gameId: string) => void
   starting: string | null
 }) {
+  const startable = startableGames()
+  const inside = switchOnlyGames()
+
   return (
     <section>
       <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200">Start a game</h2>
@@ -75,13 +88,36 @@ export default function GamePicker({
           media card makes it by listing them. Dropped. What is left is the only
           thing this paragraph knew that nothing else did. */}
       <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-3 max-w-2xl leading-relaxed">
-        Tag is the place to start; the rest are variations on the exchange it sets up.
+        Tag is the place to start. The rest of these each open on a scene of their own, which is
+        why they are separate games rather than something Tag can turn into.
       </p>
       <div className="grid sm:grid-cols-2 gap-3">
-        {GAME_LIST.map(game => (
+        {startable.map(game => (
           <GameCard key={game.id} game={game} available={available} onStart={onStart} starting={starting} />
         ))}
       </div>
+
+      {/*
+        Where the other six went, said plainly.
+        This list is not decoration and it is not a consolation: dropping six
+        games from the picker without naming them would leave a player who knows
+        Embodiment exists with nothing to go on, which is a worse failure than the
+        eleven cards this replaced. Naming them *and* saying they are inside Tag
+        teaches the mechanism in one sentence.
+      */}
+      {inside.length > 0 && (
+        <div className="mt-4 rounded-2xl border border-dashed border-gray-300 dark:border-gray-600 p-4">
+          <p className="flex items-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-300">
+            <Shuffle size={13} className="text-gray-400 dark:text-gray-500" />
+            {inside.length} more are inside a game of Tag
+          </p>
+          <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1.5 leading-relaxed">
+            {inside.map(g => g.name).join(', ')}. These start from nothing, so there is no scene to
+            set up — switch into one mid-chain and your last offering becomes its opening move.
+            Nothing you have played changes, and you can switch back.
+          </p>
+        </div>
+      )}
     </section>
   )
 }

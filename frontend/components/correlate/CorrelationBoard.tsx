@@ -1189,6 +1189,10 @@ export default function CorrelationBoard({
           {!isOver && (
             <TuningPanel
               media={media}
+              // The branch's game, not the session's: a switch into Embodiment
+              // changes which media are load-bearing, so the reset target has to
+              // follow it or "back to the default" means the wrong default.
+              coreMedia={game.coreMedia ?? []}
               tuning={tuning}
               onChange={changeTuning}
               accentText={accent.text}

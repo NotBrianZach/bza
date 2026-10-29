@@ -22,7 +22,8 @@ import type { CorrelationSession, MediumId } from '@/lib/correlate/types'
  * Games in progress come first, because a half-finished chain is a stronger
  * invitation than an empty one. Four featured games follow — named explicitly in
  * FEATURED_GAME_IDS, so reordering the picker cannot silently change what the home
- * page promotes. All eleven live on /play.
+ * page promotes, and all four are games you can actually *start*. The other six
+ * are reached by switching from inside a chain; /play says so.
  */
 /** The order listSessions() returns, so a restored card lands back in its place. */
 const byRecency = (a: CorrelationSession, b: CorrelationSession) =>

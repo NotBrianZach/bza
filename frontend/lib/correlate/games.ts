@@ -213,6 +213,18 @@ export const GAMES: Record<string, CorrelationGame> = {
     tagline: 'Turn a reading into something a body does — then read the body back.',
     offeringIs: 'An interpretation you can feel from the inside',
     media: 'all',
+    /**
+     * The one game in the registry that is *made of* particular media.
+     *
+     * `replyRule` below says the answer is "either a real offering that reads the
+     * action just made, or a composed action that reads the offering just made",
+     * and a composed action is a gesture, a movement, a stretch or an exercise.
+     * All four sit at 0 in the 90/5/5 starting shares, so before this field
+     * existed Embodiment began every game unable to do the only thing that
+     * distinguishes it — the reply enum was music, art and reading, exactly like
+     * Tag's. See `startingTuning`.
+     */
+    coreMedia: ['gesture', 'movement', 'stretch', 'exercise'],
     relations: ['embodiment', 'translation', 'transformation'],
     judge: 'narrator',
     declaredRelation: 'optional',
@@ -545,8 +557,15 @@ export const GAME_LIST: CorrelationGame[] = [
 /**
  * What the front-page strip shows, as explicit data rather than a slice of
  * GAME_LIST — so reordering the picker cannot silently change the home page.
+ *
+ * Every id here must be one `startableGames()` offers, because this strip's
+ * buttons *create a session*. It used to be `['tag', 'chain', 'translation',
+ * 'embodiment']` and three of those are now reached by switching rather than by
+ * starting, so the home page would have been offering a cold start to games the
+ * picker had just explained you enter from inside Tag. A test asserts the subset
+ * rather than this comment being the only guard.
  */
-export const FEATURED_GAME_IDS = ['tag', 'chain', 'translation', 'embodiment'] as const
+export const FEATURED_GAME_IDS = ['tag', 'duel', 'transformation', 'investigation'] as const
 
 export const FEATURED_GAMES: CorrelationGame[] = FEATURED_GAME_IDS.map(id => GAMES[id])
 

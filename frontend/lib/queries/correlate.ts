@@ -96,7 +96,7 @@ export const correlateQueries = {
         // constant, since that list is already an intersection with what this
         // deployment can serve. It is written at creation and never applied
         // afterwards, so a game in progress keeps whatever it has.
-        tuning: startingTuning(media),
+        tuning: startingTuning(media, def.coreMedia ?? []),
       })
       .select()
       .single()

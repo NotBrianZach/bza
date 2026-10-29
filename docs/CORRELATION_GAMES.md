@@ -1538,3 +1538,145 @@ rather than about the ordered pair.
 Tier 4 stays closed. There the destination's premise is about a scene that has
 nothing to do with what you were playing, so there is nothing to derive it *from*
 — the input this whole mechanism depends on does not exist.
+
+## 21. Tenth pass (2026-10-29): why the eleven games felt the same
+
+Reported, in one sentence: the game types are all same-y, the
+transformation/content rules do not seem respected, possibly conflicting with the
+narrator settings. All three halves of that turned out to be right, and the
+third one was the cause.
+
+### 21a. The measurement
+
+The system prompt is 14.6–16.3k characters depending on the game, and **93% of
+its lines are identical between any two games**. Tag's own content is 3.1k of
+16.3k, and almost all of it sits in the first 11% — after which come eleven
+thousand characters that every game shares.
+
+The user prompt, which the model reads last, was **576–1,361 characters and said
+nothing about which game it was**: the world, the move, the offering on the
+table, the medium-dependent relations, a tuning sentence, "respond with the JSON
+object only". At the moment of answering, the nearest thing in context
+distinguishing Transformation from Tag was fifteen thousand characters back,
+behind everything true of all eleven.
+
+### 21b. The default weighting muted the media some games are made of
+
+This is the one that was doing the most damage, and it is the "conflict with the
+narrator settings" the report guessed at.
+
+`startingTuning` applied one 90/5/5 default across all eleven games, and 90/5/5
+**mutes nine of twelve media**. So every game's reply enum was music, art and
+reading — which is most of why eleven games produced the same kind of answer.
+
+For Embodiment it was not a flavour problem but a broken game. Its `replyRule`
+is "either a real offering that reads the action just made, or a composed action
+that reads the offering just made", and a composed action is a gesture, a
+movement, a stretch or an exercise. All four started muted. The game whose whole
+subject is doing rather than saying could not answer with a body.
+
+Nothing reported it, and that is the interesting part: a muted medium does not
+error, it produces a perfectly good song instead. The symptom is a complaint
+about sameness rather than a bug report.
+
+`coreMedia` on `CorrelationGame` is the fix — the media a game's own `replyRule`
+cannot be followed without, as opposed to the ones it will accept. `media: 'all'`
+could never say this, which is why the gap existed. A core medium gets a floor
+(`CORE_MEDIUM_SHARE`, 15) instead of the mute, so Embodiment opens at roughly
+56% music and 9% each across the four physical media. It is a floor, not a new
+default: the music-first shape survives, and a player may still mute them
+themselves.
+
+Only Embodiment declares any today, and the test is deliberately strict — not a
+medium a game *suits*, but one without which `replyRule` is impossible.
+Transformation's world is a scene; its reply can be anything.
+
+**Sessions already in progress keep what they have**, per §17e and the promise
+`rules` makes. The route to fixing an existing Embodiment game is the panel's
+"Back to the default" button, which now resets to the core-media-aware default —
+one click, and visible, rather than a silent rewrite of a stored tuning.
+
+### 21c. Friction's default told eight games to prefer relations they forbid
+
+Friction stop 0 — the stop every game *opens* on — used to end "prefer
+continuation and association over anything that contradicts them". Eight of
+eleven games narrow their relation set: Counterpoint has `[counterpoint,
+reinterpretation]`, Translation has `[translation]` alone.
+
+The model cannot emit an illegal relation, because the schema enum is the game's
+own list. So it resolves the contradiction the only way left — by reaching for
+whichever legal relation reads most like association. Which is a mechanism for
+making every game sound like Tag, running at the default setting, in eight games
+out of eleven.
+
+The stop now states the same disposition without naming a relation, so it
+composes with any game's set instead of arguing with most of them. A test
+asserts it names no relation id.
+
+### 21d. `restateGame`
+
+The game's four binding rules, restated last in the user prompt: what an offering
+is here, how it is read, what must come back, what makes a turn hold, and which
+world keys it may move. ~980 characters, and it takes Transformation's user
+prompt from 730 to 1,716 — from saying nothing about the game to being mostly
+about it.
+
+Not a new idea in `prompt.ts`. It is the move `restateTuning` already made, whose
+comment says why: *"Position is the whole point: this lands next to the decision
+it is trying to change, not four hundred lines above it."* The same was never
+done for the game itself, which is the stranger of the two omissions.
+Suppressed on a self-reply, where `SELF_REPLY_GUIDANCE` already holds that slot.
+
+### 21e. The retries were a missing retry
+
+Also reported: the interpreter often fails and the move has to be retaken once or
+twice. The cause is an asymmetry — the reply pipeline has a **four-stage** ladder
+for an answer that will not resolve, and a response that would not *parse* had
+**none**. It returned 502 and told the player to take the move again, which is
+what they were doing by hand. The engine was asking a person to perform the
+retry it already knew how to perform everywhere else.
+
+Three changes, all wanted:
+
+- **`parseJsonObject` salvages a truncation.** A completion that hits
+  `max_tokens` mid-object is cut at the last completed top-level member and
+  closed. Deliberately lossy in one direction: a partially-written value is
+  *discarded*, never closed. Closing the string would be easier and is wrong —
+  `"worldDelta": {"scene": "A bus sh` would become a world whose scene is the
+  string "A bus sh", folded into every later turn on the branch. A missing key is
+  recoverable; a truncated one is a lie that persists. What is usually lost is
+  `worldDelta`, because it is last, so the exchange is recorded and the world
+  simply does not advance that turn.
+- **One re-ask**, with an output-discipline paragraph appended. It says nothing
+  about the failed attempt, because this is a fresh completion with no memory of
+  it — "your last response was malformed" would be a sentence about a
+  conversation it was not part of.
+- **The budget ladder rose** (1000/1200/1800/2600/4000 →
+  1600/2000/2800/4000/6000). The arithmetic is one-sided: a cap is not a spend,
+  you pay for tokens generated, whereas a truncation costs a full generation
+  *and* the retry after it. The schema had also grown `called` since the comment
+  that already called 1400 marginal.
+
+And the unparseable path now **logs** — length, budget, head and tail of the raw.
+Before this, the two 502s were indistinguishable in production, which is why the
+rate was only ever known from someone noticing.
+
+### 21f. Five cards, not eleven
+
+The picker offered all eleven. Six of them are reachable from a game of Tag by
+switching, and switching into one is strictly better than starting it — the last
+offering on the table becomes its opening move instead of the player supplying
+one cold.
+
+So `startableGames()` is Tag plus the games a game of Tag *cannot* become, which
+derives to Tag and the four premise-seeded ones. Derived from `canSwitch` rather
+than listed, so the two lists cannot disagree and a twelfth game files itself.
+
+The six held back are **named** in the picker, with one line saying they are
+inside Tag. Dropping them silently would be worse than the eleven cards: a player
+who knows Embodiment exists and cannot find it has been told nothing.
+
+`FEATURED_GAME_IDS` changed too — it was `['tag', 'chain', 'translation',
+'embodiment']` and three of those are now switch-only, so the home strip would
+have offered a cold start to games /play had just explained you enter from
+inside Tag. A test asserts the subset.

@@ -210,8 +210,22 @@ export const TUNING_AXES: Record<TuningAxisId, TuningAxis> = {
     neutral: 2,
     labels: ['Agreeable', 'Warm', 'Either', 'Sceptical', 'Adversarial'],
     stops: [
-      'Go with the player. Take the most generous available reading of the move, extend it, and ' +
-      'prefer continuation and association over anything that contradicts them.',
+      // Deliberately does NOT name relations any more. It used to end "prefer
+      // continuation and association over anything that contradicts them", and
+      // eight of eleven games narrow their relation set: Counterpoint has
+      // [counterpoint, reinterpretation] and Translation has [translation] alone,
+      // so at the *default* friction those games were told to prefer two
+      // relations they do not have. The model cannot emit one — the schema enum is
+      // the game's own list — so it resolves the contradiction by reaching for
+      // whichever legal relation reads most like association, which is a
+      // mechanism for making every game sound like Tag.
+      //
+      // The instruction this replaces it with is the same disposition stated
+      // without naming a relation, so it composes with any game's set instead of
+      // arguing with eight of them.
+      'Go with the player. Take the most generous available reading of the move and build on what ' +
+      'it established, rather than looking for where it falls short — within whichever relations ' +
+      'this game actually permits.',
 
       'Lean warm. Build on what the move established rather than questioning it.',
 
@@ -604,8 +618,34 @@ export const STARTING_AXES: Partial<Record<TuningAxisId, number>> = {
  * are not there is a contradiction — `weightedReplyMedia` would ignore the mute
  * anyway to keep its guarantee, so storing it would only mislead whoever read the
  * row.
+ *
+ * `coreMedia` is the game's own, and it is a correction to a real defect rather
+ * than a refinement. This function used to take only `media`, which meant one
+ * default across eleven games that are about different things — and at 90/5/5
+ * that default mutes nine of twelve media. For Embodiment it muted all four media
+ * a composed action can be made in, so the game whose subject is doing rather than
+ * saying could not answer with a body. Nothing reported it, because a muted
+ * medium produces a perfectly good song instead; the symptom is eleven games that
+ * feel the same, which is a complaint about flavour rather than a bug report.
  */
-export function startingTuning(media: MediumId[]): Tuning {
+/**
+ * What a game's own media are worth when the default would have muted them.
+ *
+ * Set beside `artwork` and `passage` rather than above them, so a game with core
+ * media reads as "mostly music, and the thing this game is made of" rather than
+ * as a different default wearing the same name. With music at 90 and four core
+ * media at 15 each, `targetShares` normalises to roughly 60% music and 10% per
+ * core medium — about one answer in ten reaching for each, which is what
+ * "Embodiment can use a body" needs to mean to be true at all.
+ *
+ * Deliberately not `DEFAULT_SHARE`. 50 each would put the four physical media at
+ * two thirds of the answers between them and make Embodiment a movement game that
+ * occasionally plays a song, which is not what its own `replyRule` describes
+ * either.
+ */
+export const CORE_MEDIUM_SHARE = 15
+
+export function startingTuning(media: MediumId[], coreMedia: MediumId[] = []): Tuning {
   const tuning: Tuning = {
     shares: {}, axes: { ...STARTING_AXES }, scopes: {}, continuation: CONTINUATION_OFF,
     // Off, like continuation. A game that started by playing itself would have made
@@ -618,8 +658,20 @@ export function startingTuning(media: MediumId[]): Tuning {
     // that nobody asked for and that every subsequent turn would carry.
     notes: '',
   }
-  if (!media.some(m => STARTING_SHARES[m] !== undefined)) return tuning
-  for (const m of media) tuning.shares[m] = STARTING_SHARES[m] ?? MUTED_SHARE
+  // A game whose own media are all the deployment has is not a game to apply a
+  // music-first default to. Checked against core media too, so Embodiment on a
+  // build with no catalogues starts unweighted rather than muting itself.
+  const weightable = media.some(m => STARTING_SHARES[m] !== undefined || coreMedia.includes(m))
+  if (!weightable) return tuning
+
+  for (const m of media) {
+    // The game's own media take the floor rather than the mute. `??` rather than
+    // `Math.max`: a core medium that the default already weights keeps the
+    // default's number, because the default is a statement about proportion and
+    // the floor is only a statement about not being silenced.
+    tuning.shares[m] = STARTING_SHARES[m]
+      ?? (coreMedia.includes(m) ? CORE_MEDIUM_SHARE : MUTED_SHARE)
+  }
   return tuning
 }
 
@@ -757,8 +809,8 @@ export function isUntouched(tuning: Tuning): boolean {
  * unchanged — the canonical form is an implementation detail and a player dragging
  * a slider to where it started should not leave the button showing.
  */
-export function isStarting(tuning: Tuning, media: MediumId[]): boolean {
-  const start = startingTuning(media)
+export function isStarting(tuning: Tuning, media: MediumId[], coreMedia: MediumId[] = []): boolean {
+  const start = startingTuning(media, coreMedia)
   if (continuationOf(tuning) !== continuationOf(start)) return false
   if (radioOf(tuning) !== radioOf(start)) return false
   if (!isUnscoped(tuning.scopes ?? {})) return false
@@ -853,16 +905,30 @@ export interface ReadingLengths {
    *
    * Scaled rather than simply raised everywhere because the budget is also a cost
    * ceiling, and a game set to "barely speak" has no business paying for a long one.
+   *
+   * Raised across the board on 2026-10-29 (1000/1200/1800/2600/4000 →
+   * 1600/2000/2800/4000/6000) after reports of having to retake a move once or
+   * twice. The ceiling is the wrong thing to economise on, and the arithmetic says
+   * so: a cap is not a spend — you pay for tokens generated, not for headroom —
+   * whereas a truncated object costs one full generation *and* the retry that
+   * follows it. Raising it is strictly cheaper than hitting it. The schema had also
+   * grown a field (`called`) since the comment above was written, and the comment
+   * already recorded the flat 1400 as marginal.
+   *
+   * `parseJsonObject` now salvages a truncation rather than discarding it, so this
+   * being too low is no longer fatal. Both fixes are wanted: the salvage keeps a
+   * turn alive, and the headroom keeps `worldDelta` — the thing a truncation eats
+   * first — from going missing.
    */
   maxTokens: number
 }
 
 const BREADTH_LENGTHS: [ReadingLengths, ReadingLengths, ReadingLengths, ReadingLengths, ReadingLengths] = [
-  { reading: '1 sentence',    narration: '1 sentence',       maxTokens: 1000 },
-  { reading: '1 sentence',    narration: '1-2 sentences',    maxTokens: 1200 },
-  { reading: '1-2 sentences', narration: '2-4 sentences',    maxTokens: 1800 },
-  { reading: '2-4 sentences', narration: 'a full paragraph', maxTokens: 2600 },
-  { reading: '4-6 sentences', narration: '2-3 paragraphs',   maxTokens: 4000 },
+  { reading: '1 sentence',    narration: '1 sentence',       maxTokens: 1600 },
+  { reading: '1 sentence',    narration: '1-2 sentences',    maxTokens: 2000 },
+  { reading: '1-2 sentences', narration: '2-4 sentences',    maxTokens: 2800 },
+  { reading: '2-4 sentences', narration: 'a full paragraph', maxTokens: 4000 },
+  { reading: '4-6 sentences', narration: '2-3 paragraphs',   maxTokens: 6000 },
 ]
 
 export function readingLengths(tuning: Tuning = DEFAULT_TUNING): ReadingLengths {

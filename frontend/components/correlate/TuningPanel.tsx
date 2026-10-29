@@ -35,12 +35,23 @@ const SHARE_STEP = 5
  */
 export default function TuningPanel({
   media,
+  coreMedia = [],
   tuning,
   onChange,
   accentText,
   disabled,
 }: {
   media: MediumId[]
+  /**
+   * The media this game cannot be played without, so "the default" means the same
+   * thing here as it did at creation.
+   *
+   * Without it the reset button would mute the game's own media — `startingTuning`
+   * gives them a floor and `isStarting` compares against it, so a panel that did
+   * not know about them would both reset *away* from the default and report a
+   * freshly created Embodiment game as already modified.
+   */
+  coreMedia?: MediumId[]
   tuning: Tuning
   onChange: (next: Tuning) => void
   accentText: string
@@ -58,7 +69,7 @@ export default function TuningPanel({
   // restores the default; the other clears it, which is a real thing to want and
   // would otherwise have no control at all now that "unweighted" is somewhere a
   // game has to be taken rather than where it starts.
-  const atDefault = useMemo(() => isStarting(tuning, media), [tuning, media])
+  const atDefault = useMemo(() => isStarting(tuning, media, coreMedia), [tuning, media, coreMedia])
   const scopes: Scopes = tuning.scopes ?? {}
   const carry = continuationOf(tuning)
   // Held raw rather than normalized, so typing a space does not have the cursor
@@ -441,7 +452,7 @@ export default function TuningPanel({
 
           {!atDefault && (
             <button
-              onClick={() => onChange(startingTuning(media))}
+              onClick={() => onChange(startingTuning(media, coreMedia))}
               disabled={disabled}
               className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors disabled:opacity-50"
             >

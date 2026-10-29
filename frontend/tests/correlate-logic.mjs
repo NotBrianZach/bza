@@ -89,7 +89,7 @@ const M = build()
 const {
   parseJsonObject, normalizeInterpretation, applyWorldDelta, offeringLine, sessionScope,
   describeRejection, salvageQueries, buildSystemPrompt, buildUserPrompt, buildRetryPrompt,
-  buildSalvageAccountPrompt, buildSeedPrompt, buildSeedSystemPrompt, normalizeSeed,
+  buildSalvageAccountPrompt, buildSeedPrompt, buildSeedSystemPrompt, normalizeSeed, restateGame,
 } = M.prompt
 const { GAME_LIST, GAMES, getGame, ACCENT_CLASSES, FEATURED_GAMES, FEATURED_GAME_IDS, retiredGameName } = M.games
 const {
@@ -108,6 +108,7 @@ const {
   modeOf, modeAlong, switchesAlong, pathSinceSwitch, activeBranch, switchRefusal,
   switchChanges, playedUnder,
   carriedSeedKeys, derivedSeedKeys, derivedSeedSpec, switchSeed,
+  ENTRY_GAME_ID, startableGames, switchOnlyGames,
 } = M.switching
 const {
   TUNING_AXES, AXIS_LIST, ALL_AXIS_IDS, AXIS_STOPS, DEFAULT_WEIGHT, WEIGHT_LABELS, WEIGHT_HINTS,
@@ -116,7 +117,7 @@ const {
   SHARE_MAX, DEFAULT_SHARE, MUTED_SHARE, shareOf, shareLabel, targetShares, shareStandings,
   owedMedia, allShares, gatesLegality,
   STARTING_SHARES, STARTING_AXES, startingTuning, isStarting,
-  NOTES_MAX, readingLengths, restateTuning,
+  NOTES_MAX, readingLengths, restateTuning, CORE_MEDIUM_SHARE,
 } = M.tuning
 const {
   MAX_SELF_REPLIES, CONTINUATION_OFF, CONTINUATION_LABELS, CONTINUATION_HINTS,
@@ -2768,6 +2769,209 @@ t('the only game a change names is the one being switched into',
   GAME_LIST.flatMap(from => switchTargets(from.id).map(to => ({ to, changes: switchChanges(from.id, to.id) })))
     .every(({ to, changes }) => changes.every(c =>
       GAME_LIST.filter(g => g.id !== to.id).every(other => !c.detail.includes(other.name)))))
+
+/**
+ * Why the eleven games felt the same, part one: the default weighting muted the
+ * media some of them are made of.
+ *
+ * `startingTuning` applied one 90/5/5 default across all eleven, and 90/5/5 mutes
+ * nine of twelve media. For Embodiment that is all four media a composed action
+ * can be made in, so the game whose subject is doing rather than saying began
+ * every session unable to answer with a body — its reply enum was music, art and
+ * reading, exactly like Tag's.
+ */
+group('core media — a game is not muted by a default it did not set')
+const EVERY_MEDIUM = ALL_MEDIUM_IDS
+const startFor = id => startingTuning(EVERY_MEDIUM, GAMES[id].coreMedia ?? [])
+t('Embodiment declares the media it cannot be played without',
+  (GAMES.embodiment.coreMedia ?? []).join(',') === 'gesture,movement,stretch,exercise')
+t('and none of them start muted',
+  (GAMES.embodiment.coreMedia ?? []).every(m => shareOf(startFor('embodiment'), m) > MUTED_SHARE))
+t('which is a change — they all did before',
+  (GAMES.embodiment.coreMedia ?? []).every(m => shareOf(startingTuning(EVERY_MEDIUM), m) === MUTED_SHARE))
+/**
+ * The invariant, over the whole registry rather than over the one game that has
+ * the field today. A twelfth game declaring core media gets this for free.
+ */
+t('no game starts with any of its own core media muted',
+  GAME_LIST.every(g => (g.coreMedia ?? [])
+    .every(m => shareOf(startFor(g.id), m) > MUTED_SHARE)))
+t('a game with no core media is left exactly as it was',
+  JSON.stringify(startFor('tag')) === JSON.stringify(startingTuning(EVERY_MEDIUM)))
+t('the music-first shape survives — it is a floor, not a new default',
+  shareOf(startFor('embodiment'), 'music') === 90 &&
+  Math.round(targetShares(startFor('embodiment'), EVERY_MEDIUM).music * 100) > 50)
+t('and the floor is below the weighted media rather than above them',
+  CORE_MEDIUM_SHARE < STARTING_SHARES.music)
+t('a core medium the default already weights keeps the default’s number', (() => {
+  // Nothing in the registry does this today, so it is asserted against a
+  // hypothetical: the `??` in startingTuning must not let a floor overwrite 90.
+  const t2 = startingTuning(EVERY_MEDIUM, ['music'])
+  return shareOf(t2, 'music') === 90
+})())
+t('core media are always media the game actually plays',
+  GAME_LIST.every(g => (g.coreMedia ?? []).every(m => resolveMedia(g.media).includes(m))))
+/**
+ * The reset button. `isStarting` and `startingTuning` have to be told the same
+ * thing or a freshly created Embodiment game reads as already modified, and
+ * "back to the default" resets to a default that would mute it again.
+ */
+t('a fresh game reads as being at its default, core media and all',
+  GAME_LIST.every(g => isStarting(startFor(g.id), EVERY_MEDIUM, g.coreMedia ?? [])))
+t('and it does not, if the core media are withheld from the comparison',
+  !isStarting(startFor('embodiment'), EVERY_MEDIUM))
+
+/**
+ * Part two: the default Friction setting named relations that eight of the eleven
+ * games forbid.
+ */
+group('friction at the default no longer names a relation')
+t('stop 0 names no relation id',
+  ALL_RELATION_IDS.every(id => !TUNING_AXES.friction.stops[0].includes(id)))
+t('it still says to go with the player',
+  /generous/.test(TUNING_AXES.friction.stops[0]))
+t('and it defers to whatever the game permits',
+  /this game actually permits/.test(TUNING_AXES.friction.stops[0]))
+/**
+ * The pairs that made it wrong, kept as the reason rather than as prose: at the
+ * starting friction these games were told to prefer relations they do not have.
+ */
+t('Translation has one relation and Counterpoint two, which is why that mattered',
+  resolveRelations(GAMES.translation.relations).length === 1 &&
+  resolveRelations(GAMES.counterpoint.relations).length === 2)
+t('and the game opens at friction 0, so it was the default that said it',
+  STARTING_AXES.friction === 0)
+
+/**
+ * Part three: the game's own rules were fifteen thousand characters behind the
+ * decision.
+ *
+ * The measurement that motivated `restateGame`: the system prompt is ~15k chars
+ * and 93% of its lines are identical between any two games, with the
+ * game-specific part in the first 11%. The user prompt — what the model reads
+ * last — said nothing about which game it was.
+ */
+group('restateGame — the rules land next to the decision')
+const RG = restateGame(GAMES.transformation)
+t('it names the game', RG.includes('TRANSFORMATION'))
+t('it carries what an offering is here', RG.includes(GAMES.transformation.offeringIs.toLowerCase()))
+t('how it is read', RG.includes(GAMES.transformation.pieces.interpreter))
+t('what must come back', RG.includes(GAMES.transformation.replyRule))
+t('and the constraint that makes a turn hold', RG.includes(GAMES.transformation.pieces.constraint))
+t('it names the world keys it may move',
+  GAMES.transformation.worldKeys.every(k => RG.includes(k.key)))
+t('every game produces a different one',
+  new Set(GAME_LIST.map(g => restateGame(g))).size === GAME_LIST.length)
+const upFor = (id, extra = {}) => buildUserPrompt({
+  game: GAMES[id], media: EVERY_MEDIUM, relations: resolveRelations(GAMES[id].relations),
+  world: GAMES[id].seedWorld, history: [], move: off('m', 'music'), previous: off('p', 'artwork'),
+  claimedRelation: null, spent: [], turnIndex: 3, ...extra,
+})
+t('it is in the user prompt', upFor('transformation').includes('YOU ARE PLAYING TRANSFORMATION'))
+/**
+ * Position is the whole point — the same thing `restateTuning`'s comment says.
+ * It has to be the last thing before the output instruction, not another entry
+ * in the middle of the prompt.
+ */
+t('and it is the last thing before the output instruction', (() => {
+  const blocks = upFor('transformation').split('\n\n')
+  return blocks[blocks.length - 1] === 'Respond with the JSON object only.' &&
+    blocks[blocks.length - 2].startsWith('YOU ARE PLAYING')
+})())
+t('a self-reply gets SELF_REPLY_GUIDANCE instead, not both',
+  !upFor('transformation', { selfReply: true }).includes('YOU ARE PLAYING'))
+t('the user prompt is now substantially about this game rather than about nothing', (() => {
+  const a = upFor('tag').split('\n'), b = upFor('transformation').split('\n')
+  const sa = new Set(a)
+  const differing = b.filter(l => !sa.has(l)).join('\n').length
+  return differing > 900
+})())
+
+/**
+ * Why a move had to be retaken once or twice: a response that would not parse had
+ * no retry anywhere, while a reply that would not resolve had four stages.
+ */
+group('parseJsonObject — a truncated object is salvaged, not discarded')
+t('a complete object is untouched by any of this',
+  parseJsonObject('{"reading":"a","narration":"b"}')?.narration === 'b')
+t('a truncation keeps every member that arrived complete', (() => {
+  const got = parseJsonObject('{"reading":"a","narration":"b","worldDelta":{"scene":"A bus sh')
+  return got?.reading === 'a' && got?.narration === 'b'
+})())
+/**
+ * The repair that was NOT chosen, and the reason. Closing the open string would
+ * be easier and would make `worldDelta.scene` the string "A bus sh" — a corrupted
+ * world folded into every later turn on the branch. A missing key is recoverable;
+ * a truncated one is a lie that persists.
+ */
+t('and discards the partial one rather than closing its string',
+  parseJsonObject('{"reading":"a","narration":"b","worldDelta":{"scene":"A bus sh')
+    ?.worldDelta === undefined)
+t('a value truncated mid-string is dropped, not half-kept',
+  parseJsonObject('{"reading":"a","narration":"b bbb')?.narration === undefined)
+t('nothing complete at all is still a failure',
+  parseJsonObject('{"reading":"only this one, incompl') === null)
+t('an array is not mistaken for a member boundary', (() => {
+  const got = parseJsonObject('{"facts":["a","b"],"reading":"x')
+  return Array.isArray(got?.facts) && got.facts.length === 2 && got.reading === undefined
+})())
+t('a brace inside a string still does not end the object',
+  parseJsonObject('{"a":"}{","b":2}')?.b === 2)
+t('a salvaged object still has to survive normalizeInterpretation',
+  normalizeInterpretation(
+    parseJsonObject('{"reading":"a","narration":"b","worldDelta":{"scene":"A bus sh'),
+    ALL_MEDIA, ALL_RELATIONS,
+  )?.reading === 'a')
+/**
+ * What a salvage costs, stated so nobody has to rediscover it: the reply plan is
+ * usually gone, which drops the turn into the retry ladder — the correct path,
+ * and the one that was never reachable when the whole response was thrown away.
+ */
+t('a salvage with no reply plan becomes a rejection the ladder can answer', (() => {
+  const i = normalizeInterpretation(
+    parseJsonObject('{"reading":"a","narration":"b","reply":{"medium":"mus'),
+    ALL_MEDIA, ALL_RELATIONS,
+  )
+  return i !== null && i.reply === null && !!i.replyRejection
+})())
+
+group('the completion budget')
+t('every stop clears the flat 1400 the route used to send',
+  [0, 1, 2, 3, 4].every(b => readingLengths({ axes: { breadth: b } }).maxTokens > 1400))
+t('and the ladder still rises with the axis',
+  [0, 1, 2, 3].every(b =>
+    readingLengths({ axes: { breadth: b } }).maxTokens <
+    readingLengths({ axes: { breadth: b + 1 } }).maxTokens))
+t('the default has real headroom now',
+  readingLengths(startingTuning(EVERY_MEDIUM)).maxTokens >= 2800)
+
+/**
+ * The picker. Six of the eleven games are reachable from a game of Tag, so
+ * offering them as cold starts asks for a decision the player can now make from
+ * inside a chain with something on the table to carry into it.
+ */
+group('what is worth starting, as opposed to what is worth playing')
+t('Tag plus the games a game of Tag cannot become',
+  startableGames().map(g => g.id).join(',') === 'tag,duel,transformation,investigation,navigation')
+t('and that is exactly Tag plus the premise-seeded four',
+  startableGames().every(g => g.id === ENTRY_GAME_ID || !isEmptySeeded(g)))
+t('everything held back is reachable by switching from Tag',
+  switchOnlyGames().every(g => canSwitch(ENTRY_GAME_ID, g.id)))
+t('nothing startable is also switch-only, and together they are the registry', (() => {
+  const a = startableGames().map(g => g.id), b = switchOnlyGames().map(g => g.id)
+  return a.every(id => !b.includes(id)) && a.length + b.length === GAME_LIST.length
+})())
+t('Tag is always startable, whatever else moves',
+  startableGames().some(g => g.id === ENTRY_GAME_ID))
+/**
+ * The home strip's buttons create a session, so every featured game has to be one
+ * you can start. Three of the four it used to name are now switch-only.
+ */
+t('every featured game is one the picker offers',
+  FEATURED_GAME_IDS.every(id => startableGames().some(g => g.id === id)))
+t('and Embodiment is no longer among them, because you cannot start it',
+  !FEATURED_GAME_IDS.includes('embodiment') &&
+  switchOnlyGames().some(g => g.id === 'embodiment'))
 
 rmSync(outDir, { recursive: true, force: true })
 

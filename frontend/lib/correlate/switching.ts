@@ -170,6 +170,49 @@ export function canSwitch(fromId: string, toId: string): boolean {
 }
 
 /**
+ * The game every chain starts as, and the one the picker leads with.
+ *
+ * Tag, because its rules land in one sentence and because every other
+ * empty-seeded game is now reachable from inside it. That second clause is what
+ * makes this a structural fact rather than an editorial preference.
+ */
+export const ENTRY_GAME_ID = 'tag'
+
+/**
+ * The games worth *starting*, as opposed to the games worth playing.
+ *
+ * Before switching existed these were the same set and the picker was eleven
+ * cards. They are not the same set any more: six of the eleven are reachable from
+ * a game of Tag by switching, so offering them as separate starts asks the player
+ * to make a decision up front that they can now make mid-chain, with the
+ * advantage of having something on the table to carry into it. Eleven cards also
+ * read as eleven unrelated games, which is the opposite of what the seeding split
+ * says is true — seven of them are one exchange with different rules.
+ *
+ * So: Tag, plus everything a game of Tag cannot become. Derived from `canSwitch`
+ * rather than listed, which means the two lists cannot disagree and a twelfth
+ * game lands in whichever is correct by existing. Today that is Tag and the four
+ * premise-seeded games, because a premise cannot be conjured mid-chain — exactly
+ * the tier-4 refusal, read as a product decision instead of an error message.
+ */
+export function startableGames(): CorrelationGame[] {
+  return GAME_LIST.filter(g => g.id === ENTRY_GAME_ID || !canSwitch(ENTRY_GAME_ID, g.id))
+}
+
+/**
+ * The games you reach by switching rather than by starting.
+ *
+ * Named for the picker, which has to say where they went. A list that silently
+ * dropped six games would be worse than the eleven-card version: a player who
+ * knows Embodiment exists and cannot find it has been told nothing, whereas
+ * "these are inside Tag" is the whole mechanism in four words.
+ */
+export function switchOnlyGames(): CorrelationGame[] {
+  const startable = new Set(startableGames().map(g => g.id))
+  return GAME_LIST.filter(g => !startable.has(g.id))
+}
+
+/**
  * The destination's world keys that the source also keeps, and therefore has a
  * live value for.
  *

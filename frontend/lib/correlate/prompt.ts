@@ -720,8 +720,61 @@ export function buildUserPrompt(opts: {
     )
   }
 
+  // Last, which is the whole of why it works. See `restateGame`.
+  if (!selfReply) parts.push(restateGame(game))
+
   parts.push('Respond with the JSON object only.')
   return parts.join('\n\n')
+}
+
+/**
+ * The game's own rules, restated at the point of deciding.
+ *
+ * Measured rather than guessed at, because the number is the argument. The system
+ * prompt is 14.6–16.3k characters depending on the game, and **93% of its lines
+ * are identical between any two games**: 3.1k characters of Tag's prompt are
+ * Tag's, and almost all of that sits in the first 11%. After it come eleven
+ * thousand characters of instruction every game shares — how to read a record you
+ * cannot perceive, framing, what carried, the graph, pointing back, the world
+ * rules, the output schema.
+ *
+ * The user prompt, which is what the model reads last, is 576–1,361 characters
+ * and contains nothing about which game it is: the world, the move, the offering
+ * on the table, the medium-dependent relations, and "respond with the JSON object
+ * only". So at the moment of answering, the nearest thing in context saying this
+ * is Transformation and not Tag was fifteen thousand characters ago, behind
+ * everything that is true of all eleven. The reported symptom is that the games
+ * feel same-y and the content rules are not respected, which is exactly what that
+ * shape predicts.
+ *
+ * This is not a new idea in this file — it is the move `restateTuning` already
+ * made, and its comment says why: "Position is the whole point: this lands next
+ * to the decision it is trying to change, not four hundred lines above it." The
+ * same was never done for the game itself, which is the stranger omission of the
+ * two.
+ *
+ * Kept short and phrased as instruction rather than reference. The system prompt
+ * lists the six pieces so they can be consulted; this restates the four that bind
+ * a single answer, which is a different job. Suppressed on a self-reply, where the
+ * prompt is already carrying `SELF_REPLY_GUIDANCE` and a second block about whose
+ * rules apply would compete with it.
+ */
+export function restateGame(game: CorrelationGame): string {
+  const keys = game.worldKeys.map(k => k.key).join(', ')
+  return (
+    `YOU ARE PLAYING ${game.name.toUpperCase()}, NOT A CORRELATION GAME IN GENERAL\n` +
+    `Everything above about media, framing and the graph is true of all eleven games. These five ` +
+    `lines are what makes this one itself, and they are the ones that bind the answer you are ` +
+    `about to give.\n` +
+    `- An offering here is ${game.offeringIs.toLowerCase()}. The move above is one of those, ` +
+    `whatever else it also is.\n` +
+    `- You read it as: ${game.pieces.interpreter}\n` +
+    `- What must come back: ${game.replyRule}\n` +
+    `- A turn holds only if: ${game.pieces.constraint}\n` +
+    `- The world you move is ${keys} — change what this exchange actually changed, nothing else.\n` +
+    `A reading that would have fitted any of the other ten games is the failure to avoid here. ` +
+    `Answer in ${game.name}'s own terms.`
+  )
 }
 
 /**
@@ -742,13 +795,23 @@ export function parseJsonObject(raw: string): any | null {
   let depth = 0
   let inString = false
   let escaped = false
+  /**
+   * The index just past the last comma at the root object's own level.
+   *
+   * Where a truncated response can be cut so that every value left in it arrived
+   * complete. See the salvage below.
+   */
+  let lastMemberEnd = -1
+
   for (let i = start; i < text.length; i++) {
     const ch = text[i]
     if (escaped) { escaped = false; continue }
     if (ch === '\\') { escaped = true; continue }
     if (ch === '"') { inString = !inString; continue }
     if (inString) continue
-    if (ch === '{') depth++
+    if (ch === '{' || ch === '[') depth++
+    else if (ch === ']') depth--
+    else if (ch === ',' && depth === 1) lastMemberEnd = i
     else if (ch === '}') {
       depth--
       if (depth === 0) {
@@ -758,6 +821,42 @@ export function parseJsonObject(raw: string): any | null {
           return null
         }
       }
+    }
+  }
+
+  /**
+   * SALVAGE A TRUNCATED OBJECT.
+   *
+   * Depth never returned to zero, which in practice means one thing: the
+   * completion hit `max_tokens` mid-object. Before this, that was fatal — the
+   * whole response was discarded and the turn came back as "the interpreter
+   * returned something unreadable", with no retry anywhere (the three-stage
+   * ladder in the turn route retries a *reply* that would not resolve, and has
+   * never covered a response that would not parse). The player's recourse was to
+   * press the button again, which is the reported symptom.
+   *
+   * The repair is deliberately lossy in one specific way: it cuts at the last
+   * completed top-level member and closes the object, **discarding** any
+   * partially-written value rather than closing its string. Closing the string
+   * would be the easier repair and it is the wrong one — `"worldDelta": {"scene":
+   * "A bus sh` would become a world whose scene is the string "A bus sh", and
+   * that corruption would then be folded into every later turn on the branch. A
+   * missing key is recoverable; a truncated one is a lie that persists.
+   *
+   * What is usually lost is `worldDelta` and whatever follows it in schema order,
+   * because they are last — so the exchange is recorded and the world simply does
+   * not advance on that turn. An absent `verdict` reads as legal, which is the
+   * generous direction and matches what the default Friction setting already
+   * promises.
+   *
+   * Returns null when nothing complete arrived at all, which is still a real
+   * failure and still handled by the caller.
+   */
+  if (lastMemberEnd > start) {
+    try {
+      return JSON.parse(`${text.slice(start, lastMemberEnd)}}`)
+    } catch {
+      return null
     }
   }
   return null

@@ -191,6 +191,28 @@ export interface CorrelationGame {
   offeringIs: string
   /** Media in play. 'all' means every medium the build supports. */
   media: MediumId[] | 'all'
+  /**
+   * Media this game cannot be *played* without, as opposed to the ones it will
+   * accept.
+   *
+   * The distinction `media` could not make, and the gap it left was real. Every
+   * game is `media: 'all'`, so the registry said nothing about which media a game
+   * is actually made of — and `startingTuning` therefore applied one default
+   * weighting to all eleven. At 90/5/5 that default mutes nine of twelve media,
+   * which for Embodiment mutes every medium it can compose an action in: the game
+   * whose whole subject is "turn a reading into something a body does" started
+   * unable to answer with a body.
+   *
+   * A medium listed here gets a floor in `startingTuning` and is never muted by a
+   * default the player did not set. They may still mute it themselves — the panel
+   * is theirs — but that is then a choice, and a visible one.
+   *
+   * Absent for most games, and absent means something precise: this game's
+   * `replyRule` can be followed in any medium, so no medium is load-bearing. Do
+   * not list a medium a game merely *suits*; the test is whether `replyRule`
+   * becomes impossible without it.
+   */
+  coreMedia?: MediumId[]
   /** Relations a reply may use. 'all' means all seven. */
   relations: RelationId[] | 'all'
   judge: Judge

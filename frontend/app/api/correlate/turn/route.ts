@@ -105,6 +105,21 @@ function serviceClient() {
   return _service
 }
 
+/**
+ * Appended to the user prompt on the one re-ask after an unreadable response.
+ *
+ * Says nothing about the failed attempt, deliberately — see the re-ask below.
+ * What it does is name the one property the first response lacked and the one
+ * behaviour most likely to have caused it, which is prose running long enough to
+ * cost the object its closing brace.
+ */
+const STRICT_OUTPUT_NOTE =
+  'OUTPUT DISCIPLINE FOR THIS TURN\n' +
+  'The response must be one complete JSON object, closing brace included. An object that stops ' +
+  'early is worth less than a short one: keep every prose field at the short end of the lengths ' +
+  'given above, put nothing outside the braces, and do not restate the world — only the keys this ' +
+  'exchange changed.'
+
 /** A catalogue refusing or rate-limiting us, as opposed to simply not matching. */
 type ProviderFailure = { message: string; provider: string; upstreamStatus: number | null }
 
@@ -710,16 +725,52 @@ export async function POST(req: NextRequest) {
   })
 
 
-  const firstRaw = await callInterpreter(systemPrompt, userPrompt)
-  if (firstRaw === null) return err('Interpreter unavailable. Try that move again in a moment.', 502)
-
   // Coerced against the media it was actually offered, not every medium in play.
   // Otherwise a reply landing in a medium that is over its share would be accepted
   // here after having been excluded from the enum — which would make the filter a
   // suggestion again, the exact failure this pass exists to remove.
-  const firstPass = normalizeInterpretation(
-    parseJsonObject(firstRaw), answerIn, relations, { muted, linkable },
+  const read = (raw: string) => normalizeInterpretation(
+    parseJsonObject(raw), answerIn, relations, { muted, linkable },
   )
+
+  const firstRaw = await callInterpreter(systemPrompt, userPrompt)
+  if (firstRaw === null) return err('Interpreter unavailable. Try that move again in a moment.', 502)
+
+  let firstPass = read(firstRaw)
+
+  /**
+   * ONE RE-ASK ON AN UNREADABLE RESPONSE.
+   *
+   * The asymmetry this closes: the reply pipeline below has a four-stage ladder
+   * for an answer that will not resolve, and a response that will not *parse* had
+   * none at all — it returned 502 and told the player to take the move again.
+   * Which is what they were doing, by hand, once or twice a session. The engine
+   * was asking a person to perform the retry it already knew how to perform
+   * everywhere else.
+   *
+   * Identical prompts but for one appended paragraph, which is the only honest
+   * form: this is a fresh completion with no memory of the first, so "your last
+   * response was malformed" would be a sentence about a conversation it was not
+   * part of. What it gets instead is a stronger output discipline, which is
+   * actionable without reference to anything it cannot see.
+   *
+   * Exactly one. Two re-asks would be most of a turn's latency spent on a
+   * response that is probably failing for a reason a third sample will not fix,
+   * and `parseJsonObject` now salvages the common cause before it gets here.
+   */
+  if (!firstPass) {
+    console.warn(
+      `[correlate] unreadable interpretation in ${game.id} ` +
+      `(${firstRaw.length} chars, maxTokens ${maxTokens}); re-asking once. ` +
+      `head: ${JSON.stringify(firstRaw.slice(0, 120))} tail: ${JSON.stringify(firstRaw.slice(-120))}`,
+    )
+    const secondRaw = await callInterpreter(systemPrompt, `${userPrompt}\n\n${STRICT_OUTPUT_NOTE}`)
+    firstPass = secondRaw ? read(secondRaw) : null
+    if (!firstPass) {
+      console.warn(`[correlate] still unreadable in ${game.id} after a re-ask`)
+    }
+  }
+
   if (!firstPass) return err('The interpreter returned something unreadable. Try that move again.', 502)
 
   if (firstPass.replyRejection) {
