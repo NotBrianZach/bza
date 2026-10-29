@@ -1680,3 +1680,159 @@ who knows Embodiment exists and cannot find it has been told nothing.
 'embodiment']` and three of those are now switch-only, so the home strip would
 have offered a cold start to games /play had just explained you enter from
 inside Tag. A test asserts the subset.
+
+## 22. Eleventh pass (2026-10-29): stakes, an ending, and a reader
+
+Asked for directly, after a round of "what would make this funner". Five of the
+answers plus one. Migration 78: one table, four columns.
+
+### 22a. It can see the pictures
+
+The deepest quality ceiling in the section, and the one no prompt work could
+raise. §21a measured the prompt; this is about what the prompt was *about*.
+
+`buildSystemPrompt` has carried a block called READING A RECORD YOU CANNOT
+PERCEIVE since the knowledge media landed, explaining that artwork and film
+arrive "as a name, an attribution and at most a line of description" and asking
+for honesty about a record the interpreter cannot see. For anything with a
+picture that limit was never real:
+
+- `Perceptible` has carried `{kind: 'image', url}` since artwork existed
+  (`lib/offerings/artwork.ts`), and film carries a poster.
+- Two other routes in this app — `manga-parse` and `site-extract` — have been
+  sending `image_url` content blocks to the same provider all along.
+
+So `lookAt` attaches the move and the offering on the table when they have
+pictures. Two at most, and which two is not arbitrary: they are the records the
+reading is *about*. The path stays textual — it is context, each exchange has
+already been read, and a dozen images would cost more than the turn.
+
+**The prompt had to be told**, or it would hold a canvas while asserting it
+could not see one. That is the lie that matters, because an interpreter told it
+cannot see writes the reading-of-a-mood it writes when it has nothing, with the
+picture unread in the same message. `seen` subtracts those media from the
+unperceived list for that turn — *subtracts*, not suppresses: with a painting
+attached and a song on the table, the warning is still true of the song.
+
+A text-only fallback covers the failure outside our control. The provider
+fetches these URLs itself, so a catalogue that starts bot-walling hotlinked
+images takes the vision call down with it — this app has been there, which is
+why artwork is Cleveland and not Chicago. The fallback rebuilds the system
+prompt *without* `seen`, because a prompt claiming an attachment that just
+failed is the same lie from the other direction.
+
+Audio stays out of reach. A song cannot go in a prompt, which leaves its words
+as the equivalent unlock and Deezer does not carry them.
+
+### 22b. Now you can be right
+
+Nine of eleven games cannot turn a move away, and the two that can do not at the
+default Friction (§21c). So there was no way to be wrong, and therefore none to
+be right — which is most of what "no stakes" meant.
+
+`listen_claims` reverses the direction: instead of avoiding refusal, you reach
+for credit. The player points at an earlier exchange, says what runs through
+both, and is ruled on. It is the same edge as `listen_turns.link_turn_id` — the
+best observation this engine makes, that turn 9 is doing again in another medium
+what turn 2 did — claimed from the other side rather than volunteered and
+rendered as grey text.
+
+Three verdicts: `holds` / `thin` / `no`. Not a boolean, because "thin, but real"
+is the ruling this engine produces best and the whole section is built on
+connections that are explainable rather than exact. The UI colours `thin` amber
+and not red for the same reason — red would be the interface disagreeing with
+the ruling.
+
+`buildClaimPrompt` is **the one ruling in the engine that is deliberately not
+generous**, and it says why in the prompt rather than simply being strict: the
+player is reaching for credit here rather than committing to a move, and credit
+given for nothing is worth nothing. It still cannot punish, and a stronger rhyme
+it can see gets volunteered without changing the verdict on the claim actually
+made.
+
+A claim is its own row and not a column, because it is symmetric — a column
+would have to pick one of the two turns to live on. Unique on `(from, to)`, so a
+ruling cannot be re-rolled.
+
+### 22c. A game can end, and the ending says something
+
+Every registry entry has carried a `goal` from the beginning — "exhaust a
+subject from every side it has", "map somewhere real enough to come back to" —
+and nothing in this engine had ever read one. `status = 'finished'` was a flag
+the player set by hand with nothing on the other side of it.
+
+`turn_limit` gives the arc: three lengths at the picker, a countdown that says
+"a branch spends one too" because that is what makes a branch cost something,
+and a server-side refusal at the limit — the board's count is a display of the
+server's number, not the number itself.
+
+`closing_reading` gives the payoff. `/api/correlate/close` reads the whole line
+at once and asks two questions in a deliberate order. What the chain *became*
+first, because the player chose every move and therefore cannot see the shape
+from outside — that is the entire value of the paragraph. The verdict against
+the goal second, in the register everything else rules in, where a thin success
+is a success. "It went everywhere and settled nowhere" is offered as a real
+finding, because an invented theme is worse than none.
+
+Its own route rather than a branch in the turn loop: it is not a turn, and it
+reads the *arc* where the turn loop reads an eight-turn window. Idempotent, and
+best-effort about the reading while absolute about the close — pressing Finish
+lands on a finished game whatever the interpreter does, and a null
+`closing_reading` then means exactly what it says. The quota check sits inside
+that block for the same reason: being out of quota must not block closing a game.
+
+### 22d. Two answers to the same move
+
+The turn loop had no decision in it. You chose which record to submit; the
+answer was handed to you.
+
+"Answer it again" re-posts the same move against the same parent, which records
+a second answer. Not a re-roll — the first is kept, both are playable, and a
+chooser appears on any turn with siblings.
+
+It needed no new engine concept, because two turns answering the same parent
+*is* a branch here, and `inPlay` already excludes everything a sibling answered
+with. The comment there says why: "a second branch off the same offering should
+not come back with the same record as the first" — a rule written for a feature
+nothing had yet asked for.
+
+Availability is derived, not tracked: the button shows while the player stands on
+one of the answers to the move they just made, compared by parent. That survives
+`absorb` moving focus itself, and needs no clearing anywhere.
+
+### 22e. Somebody can read it
+
+"Do you see what I see" is what a correlation game is for, and three of the
+eleven (`judge: 'player'`) are explicitly arguing with somebody — who, until
+now, was a model, because there was no way to show a chain to a person.
+
+`share_token`, a service-client route, a read-only page. **Not an RLS policy**,
+and the reason is worth keeping: `using (share_token is not null)` would let
+anyone enumerate every shared game, because a policy can see the row but not the
+token in the caller's URL. The token has to be matched server-side against one
+row, which means a service client, which means a route.
+
+**Not `CorrelationBoard` in a disabled state**, either, and that is not about
+code size. That component is fourteen hundred lines of things a reader of
+somebody else's game must not have — composer, tuning panel, radio, self-reply,
+the switch control, branch focus — and rendering it inert would mean carrying
+every one and trusting a flag, with the failure mode being a stranger playing a
+turn into your game.
+
+A switch over the live row, not a snapshot: a game still being played keeps
+updating for whoever holds the link, and turning sharing off kills every link
+rather than leaving stale copies behind. A trashed game stops being shared
+without the token needing revocation, because the trash is the one list a public
+link would otherwise have kept it visible in. The payload withholds `user_id`,
+`tuning` and the token itself, and the closing reading goes at the *top* for a
+reader — the opposite of the owner's order, who lived through it.
+
+### 22f. Deliberately not here
+
+- **The cross-session view.** "Which relations you reach for, which media you
+  avoid, how well you read your partner" wants its own page, and the material
+  for the last of those (`prediction_called`, §20c) is two days old. Nothing to
+  show yet.
+- **The shared view's branch map**, and full-length playback in it. A shared
+  chain is a line, and full playback is quota'd against an account that a reader
+  does not have.

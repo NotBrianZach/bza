@@ -67,17 +67,41 @@ const PIECE_ROWS = [
  * actually changes play — the same offerings produce very different games depending
  * on which connections are legal and who gets to rule on them.
  */
+/**
+ * How long a game runs for.
+ *
+ * Three options and open-ended first, because open-ended is what every game
+ * played before limits existed was and the default must not quietly change under
+ * anyone. The two lengths are chosen to be different *kinds* of game rather than
+ * two points on a scale: eight is one sitting with no room to wander, and
+ * sixteen is long enough that the chain develops a shape the closing reading can
+ * find — which is the thing a limit exists to produce.
+ */
+const LENGTHS: { label: string; limit?: number; hint: string }[] = [
+  { label: 'Open-ended', hint: 'Play until you stop. Close it whenever you like.' },
+  { label: '8 turns', limit: 8, hint: 'One sitting. Every move counts and a branch costs you one.' },
+  { label: '16 turns', limit: 16, hint: 'Long enough to develop a shape worth naming at the end.' },
+]
+
 export default function GamePicker({
   available,
   onStart,
   starting,
 }: {
   available: MediumId[]
-  onStart: (gameId: string) => void
+  onStart: (gameId: string, turnLimit?: number) => void
   starting: string | null
 }) {
   const startable = startableGames()
   const inside = switchOnlyGames()
+  /**
+   * One control above the grid rather than one per card.
+   *
+   * The length is orthogonal to the game — any of the five can be played to a
+   * limit — so five copies of the same three buttons would be five chances to
+   * read it as a property of the game it sits on.
+   */
+  const [length, setLength] = useState(0)
 
   return (
     <section>
@@ -91,9 +115,41 @@ export default function GamePicker({
         Tag is the place to start. The rest of these each open on a scene of their own, which is
         why they are separate games rather than something Tag can turn into.
       </p>
+      <div className="mb-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-3">
+        <p className="text-[10px] uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-2">
+          How long
+        </p>
+        <div className="flex flex-wrap gap-1.5">
+          {LENGTHS.map((l, i) => (
+            <button
+              key={l.label}
+              onClick={() => setLength(i)}
+              className={`text-[11px] font-medium px-2.5 py-1 rounded-full transition-colors ${
+                i === length
+                  ? 'bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+              }`}
+            >
+              {l.label}
+            </button>
+          ))}
+        </div>
+        <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-2 leading-relaxed">
+          {LENGTHS[length].hint}
+          {LENGTHS[length].limit !== undefined &&
+            ' At the end it tells you what the chain turned out to be about.'}
+        </p>
+      </div>
+
       <div className="grid sm:grid-cols-2 gap-3">
         {startable.map(game => (
-          <GameCard key={game.id} game={game} available={available} onStart={onStart} starting={starting} />
+          <GameCard
+            key={game.id}
+            game={game}
+            available={available}
+            onStart={id => onStart(id, LENGTHS[length].limit)}
+            starting={starting}
+          />
         ))}
       </div>
 

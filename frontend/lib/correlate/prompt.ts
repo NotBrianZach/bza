@@ -124,6 +124,21 @@ export function buildSystemPrompt(
    * not the registry. See the PREDICTION block in `buildUserPrompt`.
    */
   predicted = false,
+  /**
+   * Media whose records are attached to *this* turn as images, so the prompt can
+   * stop claiming they cannot be seen.
+   *
+   * Load-bearing rather than cosmetic. The READING A RECORD YOU CANNOT PERCEIVE
+   * block below says in so many words "You cannot hear the track or see the
+   * canvas" — with a canvas attached that is the one false sentence in the
+   * prompt, and false in the direction that matters: an interpreter told it
+   * cannot see will write the reading-of-a-mood it writes when it has nothing,
+   * while the picture sits unread in the same message.
+   *
+   * Per turn, not per game, because it depends on whether the particular records
+   * in play have pictures. See `lookAt` in the turn route.
+   */
+  seen: MediumId[] = [],
 ): string {
   const worldKeys = game.worldKeys.map(k => `  - ${k.key}: ${k.description}`).join('\n')
 
@@ -166,7 +181,11 @@ export function buildSystemPrompt(
    */
   const unperceived = media.filter(
     m => !isComposed(m) && !isPropositional(m) && !getMedium(m)?.dependsOnUserLibrary,
-  )
+    // A medium whose record is attached as an image this turn is not one of
+    // these, for this turn. Subtracted rather than the block being suppressed
+    // wholesale: with a painting attached and a song on the table, the warning is
+    // still true of the song and still needed.
+  ).filter(m => !seen.includes(m))
 
   // The enum the interpreter is handed is the media it may *answer* in, which is
   // not the media in play: a muted medium stays playable by the player and stays
@@ -219,6 +238,22 @@ ${mediaBlock}
 
 RELATIONS A REPLY MAY USE
 ${relationBlock}
+${seen.length > 0 ? `
+YOU CAN SEE THEM
+The records in play this turn are attached to this message as images. Look at them
+before you write anything. This is not a courtesy — it is the difference between
+the two kinds of reading you can give, and only one of them is worth having:
+
+- What is actually there. The composition, where the weight sits, what is cropped
+  out, what the light is doing, who is looking at whom, what the picture is of.
+  Name something a person standing in front of it would notice.
+- What a title suggests. Available without looking, fluent, and the thing you
+  write when you have nothing — a reading of mood, filed under the subject the
+  name implies.
+
+Reach for the first. If the picture contradicts what its title led you to expect,
+say so; that is usually the most interesting sentence available about it.
+` : ''}
 ${unperceived.length > 0 ? `
 READING A RECORD YOU CANNOT PERCEIVE
 ${unperceived.map(id => getMedium(id)?.plural ?? id).join(', ')} arrive as a name, an attribution and at most a line
@@ -1401,6 +1436,141 @@ export function buildSeedPrompt(opts: {
     `${keys.length === 1 ? 'this key' : 'these keys'} and no others:\n` +
     `{\n${keys.map(k => `  "${k.key}": …`).join(',\n')}\n}`,
   ].join('\n\n')
+}
+
+/**
+ * Rule on a rhyme the player claims between two exchanges.
+ *
+ * The inverse of every other ruling in this engine, and the reason it needed its
+ * own prompt rather than a flag on the turn loop: everywhere else the
+ * interpreter judges a move the player *made*, and here it judges a reading the
+ * player *noticed*. Those pull in opposite directions. A move is generously read
+ * because the player committed to it and the chain has to continue; a claim is
+ * ruled on squarely, because the player is reaching for credit and credit handed
+ * out for nothing is worth nothing.
+ *
+ * So this is the one place in the section that does not take the most generous
+ * available reading. It still does not punish: `thin` exists, it is a real
+ * outcome, and a thin rhyme that is genuinely there beats a confident one that
+ * is not.
+ *
+ * Shown both exchanges whole — move, reply, reading, what carried — because a
+ * rhyme is a claim about the *shape* of two exchanges and the titles alone would
+ * make it a claim about two records.
+ */
+export function buildClaimPrompt(opts: {
+  game: CorrelationGame
+  from: { turn_index: number; move_offering: Offering; reply_offering: Offering | null; reading: string | null; carried: string | null; relation: RelationId | null }
+  to: { turn_index: number; move_offering: Offering; reply_offering: Offering | null; reading: string | null; carried: string | null; relation: RelationId | null }
+  note: string
+}): string {
+  const { game, from, to, note } = opts
+
+  const describe = (t: typeof from) => [
+    `  move: ${offeringLine(t.move_offering)}`,
+    t.reply_offering ? `  answered with: ${offeringLine(t.reply_offering)}` : '  nothing came back',
+    t.relation ? `  relation: ${t.relation}` : '',
+    t.reading ? `  how it was read: ${t.reading}` : '',
+    t.carried ? `  carried: ${t.carried}` : '',
+  ].filter(Boolean).join('\n')
+
+  return [
+    `A CLAIM, NOT A MOVE\nThe player is not playing a turn. They are pointing at two exchanges ` +
+    `already on the record and saying the two rhyme — that one is doing again, in its own terms, ` +
+    `what the other did. Your job is to rule on whether they are right.`,
+    `EXCHANGE ${to.turn_index} (the earlier one)\n${describe(to)}`,
+    `EXCHANGE ${from.turn_index} (the one they are standing on)\n${describe(from)}`,
+    `WHAT THEY SAY THE TWO SHARE\n"${note}"`,
+    `HOW TO RULE\nThis is the one ruling in this game you do NOT make generously, and the reason ` +
+    `is not strictness: the player is reaching for credit here rather than committing to a move, ` +
+    `and credit given for nothing is worth nothing. Judge the claim they actually made, not the ` +
+    `best claim available about these two exchanges.\n` +
+    `- "holds" — the thing they named is really running through both, and a second person shown ` +
+    `the two would recognise it.\n` +
+    `- "thin" — something is there and it is less than they said, or it is there for a different ` +
+    `reason than they gave. Say which. A thin rhyme that is genuinely present is a real result ` +
+    `and you should not grudge it.\n` +
+    `- "no" — the two exchanges do not share what they claim. Say plainly what each one is ` +
+    `actually doing, so the miss teaches them something.\n` +
+    `Shared catalogue metadata is not a rhyme, at any verdict: a shared decade, a shared ` +
+    `provider, comparable fame. Neither is "both are about loss" where the two losses have ` +
+    `nothing perceivable in common — that is the vaguest claim available and it is always ` +
+    `technically true.\n` +
+    `If you can see a stronger rhyme between these two than the one they named, say so in your ` +
+    `ruling. It does not change the verdict on their claim, and it is the most useful thing you ` +
+    `can tell them.`,
+    `Reply with a single JSON object and nothing else:\n` +
+    `{\n` +
+    `  "verdict": "holds" | "thin" | "no",\n` +
+    `  "ruling": "one or two sentences, in your voice, on what the two do and do not share."\n` +
+    `}`,
+  ].join('\n\n')
+}
+
+/**
+ * What the chain turned out to be about, once it is over.
+ *
+ * The payoff a game had no way to produce. Every entry in the registry carries a
+ * `goal` — "exhaust a subject from every side it has", "map somewhere real enough
+ * to come back to", "find out which interpretations only make sense once
+ * something does them" — and nothing in this engine has ever measured one or
+ * closed one. `status = 'finished'` was a flag the player set by hand, with
+ * nothing on the other side of it.
+ *
+ * Two questions, deliberately in this order. What the chain became comes first,
+ * because it is the interesting one and because it is the one a player cannot
+ * answer for themselves: they chose every move and therefore cannot see the shape
+ * from outside. The verdict on the goal comes second, and is asked for in the
+ * same register the rest of the engine rules in — a thin success is a real one
+ * here, the way a thin connection is.
+ *
+ * It is told the whole line rather than a window. This is the one call where the
+ * *arc* is the subject, so the eight-turn history the turn loop uses would defeat
+ * the question being asked.
+ */
+export function buildClosingPrompt(opts: {
+  game: CorrelationGame
+  world: Record<string, any>
+  /** Every legal exchange on the line that was played, oldest first. */
+  line: TurnContext[]
+  /** How many turns went somewhere else, so the reading can acknowledge them. */
+  elsewhereCount: number
+  /** True when the game ran out of turns rather than being stopped by hand. */
+  reachedLimit: boolean
+}): string {
+  const { game, world, line, elsewhereCount, reachedLimit } = opts
+
+  const log = line.map(t => {
+    const bits = [`Turn ${t.turn_index}: ${offeringLine(t.move_offering)}`]
+    if (t.relation) bits.push(`  relation: ${t.relation}`)
+    if (t.reply_offering) bits.push(`  answered with ${offeringLine(t.reply_offering)}`)
+    if (t.carried) bits.push(`  carried: ${t.carried}`)
+    return bits.join('\n')
+  }).join('\n')
+
+  return [
+    `THE GAME IS OVER\n${reachedLimit
+      ? `It ran to the end of its turns. Nobody stopped it early — this is the full length of it.`
+      : `The player has closed it here.`}`,
+    `THE LINE IT TOOK (${line.length} exchange${line.length === 1 ? '' : 's'})\n${log}`,
+    elsewhereCount > 0
+      ? `ELSEWHERE\n${elsewhereCount} other exchange${elsewhereCount === 1 ? '' : 's'} were played ` +
+        `on branches this line did not go down. They happened; they are not what this line is.`
+      : '',
+    `THE WORLD AT THE END\n${JSON.stringify(world, null, 2)}`,
+    `WHAT THIS GAME WAS FOR\n${game.pieces.goal}`,
+    `Write the closing reading. Two short paragraphs, no headings, no list.\n\n` +
+    `First: what this chain turned out to be *about* — the thing running through it that nobody ` +
+    `stated, including the player. They chose every move and so cannot see the shape from outside; ` +
+    `that is the whole value of this paragraph. Name it concretely, from what is actually in the ` +
+    `log, and do not flatter it. If the chain wandered without a thread, say that — "it went ` +
+    `everywhere and settled nowhere" is a real finding and a more useful one than an invented ` +
+    `theme.\n\n` +
+    `Second: how it did against what the game was for, in the same register you have ruled in all ` +
+    `game. A thin success is a success here. Say what it reached and what it never got to.`,
+    `Reply with a single JSON object and nothing else:\n` +
+    `{\n  "closing": "the two paragraphs, separated by a blank line."\n}`,
+  ].filter(Boolean).join('\n\n')
 }
 
 /**

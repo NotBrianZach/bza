@@ -4,7 +4,7 @@ import { resolveMedia } from '../correlate/media'
 import { resolveRelations } from '../correlate/relations'
 import { normalizeTuning, startingTuning, type Tuning } from '../correlate/tuning'
 import type {
-  CorrelationSession, CorrelationTurn, MediumId,
+  CorrelationClaim, CorrelationSession, CorrelationTurn, MediumId,
 } from '../correlate/types'
 
 /**
@@ -19,6 +19,20 @@ import type {
  * would cost a migration plus four RLS policies and buy nothing a reader of this
  * file can see.
  */
+/**
+ * A share token: 18 random bytes as base64url.
+ *
+ * base64url rather than base64 because this goes in a path segment, and `+` and
+ * `/` would need escaping there — a token that survives a copy-paste intact is
+ * most of what a share link has to do.
+ */
+function shareToken(): string {
+  const bytes = new Uint8Array(18)
+  crypto.getRandomValues(bytes)
+  return btoa(String.fromCharCode(...bytes))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+}
+
 export const correlateQueries = {
   /** Live games, most recently played first. Trashed ones are excluded here
    *  rather than by every caller, so forgetting the filter is not possible. */
@@ -64,6 +78,15 @@ export const correlateQueries = {
     gameId: string,
     available: MediumId[],
     title?: string,
+    /**
+     * How many turns to play to. Undefined is open-ended, which is what every
+     * game created before migration 78 was and what the picker still defaults to.
+     *
+     * Chosen at creation and never afterwards, like `rules` and the starting
+     * tuning, and for the same reason: a limit that could be moved mid-game is
+     * not a limit, it is a suggestion with extra steps.
+     */
+    turnLimit?: number,
   ): Promise<CorrelationSession> {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) throw new Error('Sign in to start a game')
@@ -97,6 +120,10 @@ export const correlateQueries = {
         // deployment can serve. It is written at creation and never applied
         // afterwards, so a game in progress keeps whatever it has.
         tuning: startingTuning(media, def.coreMedia ?? []),
+        // Omitted rather than written as null when open-ended, so the column's
+        // default is the thing that decides and there is one fewer way for a
+        // client to accidentally assert "no limit" as a value.
+        ...(typeof turnLimit === 'number' && turnLimit > 0 ? { turn_limit: turnLimit } : {}),
       })
       .select()
       .single()
@@ -112,6 +139,22 @@ export const correlateQueries = {
       .maybeSingle()
     if (error) throw new Error(error.message)
     return (data as unknown as CorrelationSession) ?? null
+  },
+
+  /**
+   * The rhymes the player has claimed in this game, oldest first.
+   *
+   * Read directly under RLS like everything else here; only the *ruling* needs a
+   * server route, because that is the part that holds an API key.
+   */
+  async getClaims(sessionId: string): Promise<CorrelationClaim[]> {
+    const { data, error } = await supabase
+      .from('listen_claims')
+      .select('*')
+      .eq('session_id', sessionId)
+      .order('created_at', { ascending: true })
+    if (error) throw new Error(error.message)
+    return (data ?? []) as unknown as CorrelationClaim[]
   },
 
   async getTurns(sessionId: string): Promise<CorrelationTurn[]> {
@@ -199,6 +242,34 @@ export const correlateQueries = {
       .update({ tuning: normalizeTuning(tuning, media) as any })
       .eq('id', id)
     if (error) throw new Error(error.message)
+  },
+
+  /**
+   * Turn sharing on or off for one game.
+   *
+   * A switch, not a copy: the token points at the live row, so a game that is
+   * still being played keeps updating for whoever holds the link, and turning it
+   * off makes every existing link dead rather than stale. That is the honest
+   * shape for this — a "share" that forked a snapshot would quietly diverge from
+   * the game it claimed to be.
+   *
+   * The token is minted in the browser from `crypto.getRandomValues`, which is
+   * the same source `crypto.randomUUID` draws on and is available in every
+   * runtime this app targets. 18 bytes is 144 bits of base64url: not a secret
+   * worth attacking, and far past guessing.
+   *
+   * `updated_at` is deliberately untouched. Sharing a game is not playing it, and
+   * bumping it would push the game to the top of "your games" as though a turn
+   * had been taken — the same reasoning as `trashSession`.
+   */
+  async setShared(id: string, on: boolean): Promise<string | null> {
+    const token = on ? shareToken() : null
+    const { error } = await supabase
+      .from('listen_sessions')
+      .update({ share_token: token })
+      .eq('id', id)
+    if (error) throw new Error(error.message)
+    return token
   },
 
   async renameSession(id: string, title: string): Promise<void> {

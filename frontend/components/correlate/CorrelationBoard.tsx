@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, CornerDownRight, Flag, GitBranch,
   Globe2, Link2, Loader2, Pause, Play, Radio, Repeat, Shuffle, SignalZero, SkipBack,
-  SkipForward, Target,
+  SkipForward, Target, Dices, Share2, Hourglass,
 } from 'lucide-react'
 import { authedFetch } from '@/lib/authedFetch'
 import { track } from '@/lib/analytics'
@@ -13,7 +13,7 @@ import { ACCENT_CLASSES, getGame, retiredGameName, wantsPrediction } from '@/lib
 import { getMedium } from '@/lib/correlate/media'
 import { RELATIONS, resolveRelations, spentRelations } from '@/lib/correlate/relations'
 import {
-  buildGraph, childrenOf, defaultParent, offeringOnTable, pathTo, relationsAlong,
+  buildGraph, childrenOf, defaultParent, offeringOnTable, pathTo, relationsAlong, siblingsOf,
   subtreeSize, worldFor, type TurnGraph,
 } from '@/lib/correlate/graph'
 import { continuationOf, normalizeTuning, radioOf, type Tuning } from '@/lib/correlate/tuning'
@@ -22,7 +22,7 @@ import {
 } from '@/lib/correlate/continuation'
 import { activeBranch, playedUnder } from '@/lib/correlate/switching'
 import type {
-  CorrelationSession, CorrelationTurn, MediumId, Offering, RelationId,
+  CorrelationClaim, CorrelationSession, CorrelationTurn, MediumId, Offering, RelationId,
 } from '@/lib/correlate/types'
 import { useOfferingPlayer, audioUrl, type OfferingPlayer } from './useOfferingPlayer'
 import { useYouTubePlayer, YT_ALLOW } from './useYouTubePlayer'
@@ -114,6 +114,28 @@ export default function CorrelationBoard({
    */
   const [armedSwitch, setArmedSwitch] = useState<string | null>(null)
   /**
+   * The last move the player made, and what it answered.
+   *
+   * Kept so it can be played *again* against the same parent, which records a
+   * second answer to the same move. Both the draft and the parent are needed and
+   * the parent is the one that is easy to get wrong: focus has already moved to
+   * the turn that just landed, so re-posting against `focusId` would answer the
+   * answer rather than re-ask the question.
+   *
+   * Cleared whenever the player moves elsewhere, because "again" is only
+   * meaningful where it was asked.
+   */
+  const [lastMove, setLastMove] = useState<{ draft: MoveDraft; parentId: string | null } | null>(null)
+  const [closing, setClosing] = useState(false)
+  const [sharing, setSharing] = useState(false)
+  /** Rhymes the player has claimed, loaded with the turns and appended as they land. */
+  const [claims, setClaims] = useState<CorrelationClaim[]>([])
+  const [claiming, setClaiming] = useState(false)
+  /** The claim being composed: which turn it is made from, which it points at, and why. */
+  const [claimFrom, setClaimFrom] = useState<string | null>(null)
+  const [claimTo, setClaimTo] = useState<string | null>(null)
+  const [claimNote, setClaimNote] = useState('')
+  /**
    * The turn the next move answers. Null means a thread with nothing behind it —
    * either the game has not started, or the player asked for a fresh one.
    */
@@ -200,6 +222,12 @@ export default function CorrelationBoard({
       })
       .catch(e => { if (!cancelled) setError(e.message) })
       .finally(() => { if (!cancelled) setLoading(false) })
+    // Separately and tolerantly: claims are an ornament on the chain, so failing
+    // to load them must not stop the game from opening. A deployment whose
+    // migration 78 has not run yet lands here.
+    correlateQueries.getClaims(session.id)
+      .then(c => { if (!cancelled) setClaims(c) })
+      .catch(() => {})
     return () => { cancelled = true }
   }, [session.id])
 
@@ -439,6 +467,53 @@ export default function CorrelationBoard({
     return data
   }, [postTurn, absorb, branch.mode])
 
+  /**
+   * Ask for a different answer to the move just made.
+   *
+   * Not a re-roll, and the difference is the whole point: it does not replace the
+   * first answer, it records a second one. Two turns answering the same parent is
+   * what a branch *is* in this graph, so this needed no new engine concept at all
+   * — it is the same request with the same body, sent against the same parent.
+   *
+   * The engine was already built for it. `inPlay` excludes everything a sibling
+   * already answered with, and the comment there says why: "a second branch off
+   * the same offering should not come back with the same record as the first".
+   * That rule existed for a feature nothing had yet asked for.
+   *
+   * What it buys is the decision the turn loop did not have. Before this the
+   * player's only choice was which record to submit; the answer was handed to
+   * them. Now the answer can be two, both kept, and walking one is a move.
+   */
+  const answerAgain = useCallback(async () => {
+    if (!lastMove) return
+    setPending(true)
+    setError('')
+    setNotice('')
+    setProblems([])
+    try {
+      const data = await postTurn({
+        parentTurnId: lastMove.parentId,
+        ...lastMove.draft,
+        // Deliberately not re-sent. A prediction is a guess about what one
+        // particular ask will draw back, and this is a different ask — carrying
+        // the old guess across would score it against an answer it was not made
+        // about. The switch is dropped for the same reason: it already happened
+        // on the first of these two turns.
+      })
+      absorb(data)
+      track('correlate_answered_again', {
+        game: data.mode ?? branch.mode,
+        medium: data.turn?.reply_offering?.medium,
+        relation: data.turn?.relation,
+        turn: data.turn?.turn_index,
+      })
+    } catch (e: any) {
+      setError(e?.message ?? 'It could not answer that again')
+    } finally {
+      setPending(false)
+    }
+  }, [lastMove, postTurn, absorb, branch.mode])
+
   /** The one-click version, with its own error so a failed run reads as one. */
   const continueOnce = useCallback(async () => {
     if (!focusId) return
@@ -658,6 +733,9 @@ export default function CorrelationBoard({
         switchTo: armedSwitch ?? undefined,
       })
       absorb(data)
+      // Remembered before focus moves, and only for a turn that landed: a move
+      // that was turned away established nothing to re-ask.
+      if (data.turn?.legal) setLastMove({ draft, parentId: focusId })
       // Disarmed on a legal turn only. A move turned away under the new rules
       // did not switch anything — an illegal turn is on nobody's path, so the
       // branch is still the old game — and making the player re-arm to try
@@ -724,10 +802,106 @@ export default function CorrelationBoard({
     radio,
   ])
 
+  /**
+   * Close the game, and find out what it was.
+   *
+   * Goes through the close route rather than `finishSession`, which is what gives
+   * finishing a payoff instead of a greyed-out board. The route is best-effort
+   * about the reading and absolute about the close, so this always lands on a
+   * finished game — see its own comment.
+   */
   const finish = useCallback(async () => {
-    await correlateQueries.finishSession(session.id)
-    updateSession({ ...session, status: 'finished' })
-  }, [session, updateSession])
+    setClosing(true)
+    setError('')
+    try {
+      const res = await authedFetch('/api/correlate/close', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId: session.id }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'It could not be closed')
+      if (data.session) updateSession(data.session)
+      else updateSession({ ...session, status: 'finished' })
+      track('correlate_game_closed', {
+        game: branch.mode,
+        turns: session.turn_count,
+        limit: session.turn_limit ?? null,
+        reading: !!data.closing,
+      })
+    } catch (e: any) {
+      setError(e?.message ?? 'It could not be closed')
+    } finally {
+      setClosing(false)
+    }
+  }, [session, updateSession, branch.mode])
+
+  /**
+   * Share, or stop sharing.
+   *
+   * A switch over the live row rather than a snapshot, so a game still being
+   * played keeps updating for whoever holds the link. The clipboard write is
+   * best-effort: it needs a user gesture and a permission that some browsers
+   * decline, and the URL is shown either way so the button is never a dead end.
+   */
+  const toggleShare = useCallback(async () => {
+    setSharing(true)
+    setError('')
+    try {
+      const token = await correlateQueries.setShared(session.id, !session.share_token)
+      updateSession({ ...session, share_token: token })
+      if (token) {
+        const url = `${window.location.origin}/play/shared/${token}`
+        await navigator.clipboard?.writeText(url).catch(() => {})
+        setNotice('Link copied. Anyone with it can read this chain — turn it off any time.')
+      } else {
+        setNotice('Sharing is off. Every link that was out there is now dead.')
+      }
+      track('correlate_share_toggled', { game: branch.mode, on: !!token })
+    } catch (e: any) {
+      setError(e?.message ?? 'That could not be shared')
+    } finally {
+      setSharing(false)
+    }
+  }, [session, updateSession, branch.mode])
+
+  /**
+   * Claim that two exchanges rhyme, and get ruled on.
+   *
+   * The one place the player can be *right* about something. Nine of the eleven
+   * games cannot turn a move away, and the two that can do not at the default
+   * Friction, so until this existed there was no way to be wrong — and therefore
+   * none to be right. This reverses the direction: you reach for credit instead
+   * of avoiding refusal.
+   */
+  const submitClaim = useCallback(async () => {
+    if (!claimFrom || !claimTo || !claimNote.trim()) return
+    setClaiming(true)
+    setError('')
+    try {
+      const res = await authedFetch('/api/correlate/claim', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: session.id,
+          fromTurnId: claimFrom,
+          toTurnId: claimTo,
+          note: claimNote.trim(),
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'That could not be ruled on')
+      setClaims(c => [...c, data.claim])
+      setClaimFrom(null)
+      setClaimTo(null)
+      setClaimNote('')
+      track('correlate_rhyme_claimed', { game: branch.mode, verdict: data.claim?.verdict })
+    } catch (e: any) {
+      setError(e?.message ?? 'That could not be ruled on')
+    } finally {
+      setClaiming(false)
+    }
+  }, [claimFrom, claimTo, claimNote, session.id, branch.mode])
 
   // A session can outlive its game. Night Radio was retired along with the "dial"
   // concept it ran on, and telling someone their game no longer exists is better
@@ -784,6 +958,39 @@ export default function CorrelationBoard({
   const noContinuation = selfReplyRefusal(focusTurn, path, { radio })
   const runsLeft = selfRepliesLeft(path, { radio })
 
+  /**
+   * Whether "answer it again" is available, derived rather than cleared.
+   *
+   * True while the player is standing on one of the answers to the move they
+   * just made — which is exactly when asking for another one means something.
+   * Comparing parents instead of tracking focus changes is what makes this
+   * survive `absorb`, which moves focus itself: the new sibling has the same
+   * parent as the first answer, so the button stays, and wandering anywhere else
+   * in the graph removes it with no bookkeeping.
+   */
+  const canAnswerAgain = !!lastMove && !!focusTurn &&
+    (graph.nodes.get(focusTurn.id)?.parentId ?? null) === lastMove.parentId
+
+  /** The other answers to the same move. Each one is a line the player could walk. */
+  const otherAnswers = focusTurn ? siblingsOf(graph, focusTurn.id) : []
+
+  /**
+   * How many turns are left, and whether there are none.
+   *
+   * Read off `turn_count` rather than counted from the rows, because that is the
+   * number the server guards against — a board counting its own loaded turns
+   * would disagree with the refusal the route gives, and the route is the one
+   * that binds.
+   */
+  const turnsLeft = typeof session.turn_limit === 'number'
+    ? Math.max(0, session.turn_limit - (session.turn_count ?? 0))
+    : null
+  const outOfTurns = turnsLeft === 0
+
+  const shareUrl = session.share_token && typeof window !== 'undefined'
+    ? `${window.location.origin}/play/shared/${session.share_token}`
+    : null
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">
       {/* Header */}
@@ -815,13 +1022,102 @@ export default function CorrelationBoard({
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             An offering here is {game.offeringIs.toLowerCase()}. {game.pieces.constraint}
           </p>
+          {/* The countdown, as a sentence rather than a bare number: "4 left of
+              12" is what a player needs to pace against, and the second clause is
+              what makes a branch feel expensive — which is the point of a limit. */}
+          {turnsLeft !== null && !isOver && (
+            <p className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 mt-1.5">
+              <Hourglass size={12} className="flex-shrink-0" />
+              {turnsLeft === 0
+                ? `All ${session.turn_limit} turns played.`
+                : `${turnsLeft} turn${turnsLeft === 1 ? '' : 's'} left of ${session.turn_limit} — a branch spends one too.`}
+            </p>
+          )}
         </div>
-        {!isOver && turns.length > 0 && (
-          <button onClick={finish} title="End this game" className="btn btn-secondary text-sm flex items-center gap-1.5 flex-shrink-0">
-            <Flag size={14} /> Finish
-          </button>
-        )}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Sharing stays available on a finished game — a closed chain with its
+              closing reading is the most shareable thing this section makes. */}
+          {turns.length > 0 && (
+            <button
+              onClick={toggleShare}
+              disabled={sharing}
+              title={session.share_token
+                ? 'Sharing is on. Click to turn it off and kill every link.'
+                : 'Make a read-only link anyone can open'}
+              className="btn btn-secondary text-sm flex items-center gap-1.5 disabled:opacity-50"
+            >
+              {sharing ? <Loader2 size={14} className="animate-spin" /> : <Share2 size={14} />}
+              {session.share_token ? 'Shared' : 'Share'}
+            </button>
+          )}
+          {!isOver && turns.length > 0 && (
+            <button
+              onClick={finish}
+              disabled={closing}
+              title={outOfTurns
+                ? 'Out of turns. Close it and find out what it was.'
+                : 'End this game and find out what it was'}
+              className={`text-sm flex items-center gap-1.5 disabled:opacity-50 ${
+                // Emphasised only once the turns have run out, because that is
+                // the one moment closing is the *only* thing left to do. Before
+                // then it is one option among several and should not look like
+                // the call to action.
+                outOfTurns ? 'btn btn-primary' : 'btn btn-secondary'
+              }`}
+            >
+              {closing ? <Loader2 size={14} className="animate-spin" /> : <Flag size={14} />}
+              {closing ? 'Closing…' : outOfTurns ? 'Close it' : 'Finish'}
+            </button>
+          )}
+        </div>
       </div>
+
+      {/* The share link, shown rather than only copied: the clipboard write needs
+          a permission some browsers decline, and a button whose whole output went
+          to a clipboard that refused it would be a silent failure. */}
+      {session.share_token && (
+        <div className="mb-6 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 flex items-center gap-2">
+          <Share2 size={12} className="text-gray-400 dark:text-gray-500 flex-shrink-0" />
+          <code className="text-[11px] text-gray-600 dark:text-gray-300 truncate flex-1">
+            {shareUrl}
+          </code>
+          <button
+            onClick={() => { void navigator.clipboard?.writeText(shareUrl ?? '') }}
+            className="text-[11px] font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors flex-shrink-0"
+          >
+            Copy
+          </button>
+        </div>
+      )}
+
+      {/* The closing reading. Top of the board on a finished game, because it is
+          the answer to the thing the player just spent the whole game on. */}
+      {session.closing_reading && (
+        <div className={`mb-6 rounded-2xl border ${accent.ring} ${accent.bg} p-4`}>
+          <p className="flex items-center gap-1.5 text-[11px] font-medium text-gray-500 dark:text-gray-400 mb-2">
+            <Globe2 size={12} /> What it turned out to be
+          </p>
+          {session.closing_reading.split('\n\n').filter(Boolean).map((para, i) => (
+            <p key={i} className="text-sm text-gray-700 dark:text-gray-200 leading-relaxed mb-2 last:mb-0">
+              {para}
+            </p>
+          ))}
+        </div>
+      )}
+
+      {/* Out of turns, and nothing else to do. Said once, loudly, rather than as
+          a count that quietly reaches zero. */}
+      {outOfTurns && !isOver && (
+        <div className="mb-6 rounded-xl border border-amber-200 dark:border-amber-900/50 bg-amber-50/60 dark:bg-amber-950/20 p-3">
+          <p className="flex items-start gap-1.5 text-xs text-amber-700 dark:text-amber-300 leading-relaxed">
+            <Hourglass size={13} className="flex-shrink-0 mt-0.5" />
+            <span>
+              That was turn {session.turn_limit} of {session.turn_limit}. The game is played out —
+              close it to find out what the chain turned out to be about.
+            </span>
+          </p>
+        </div>
+      )}
 
       <div className="grid lg:grid-cols-[1fr_20rem] gap-6 items-start">
         {/* Turn log + composer */}
@@ -1020,11 +1316,131 @@ export default function CorrelationBoard({
                       // nobody switched. A marker on all of them would make the
                       // real ones invisible.
                       playedAs={playedUnder(turn, session.mode, branch.mode)?.name ?? null}
+                      claims={claims.filter(c => c.from_turn_id === turn.id || c.to_turn_id === turn.id)}
+                      graphIndexOf={id => graph.nodes.get(id)?.turn.turn_index ?? null}
+                      // Claimable against anything earlier on this path that is
+                      // not itself — a rhyme needs two exchanges and the earlier
+                      // one has to have happened before the claim.
+                      onClaim={
+                        isOver || path.indexOf(turn) < 1
+                          ? undefined
+                          : () => { setClaimFrom(turn.id); setClaimTo(null); setClaimNote('') }
+                      }
                     />
                   </li>
                 ))}
               </ol>
+
+              {/*
+                The claim form. Opened from a turn, which is what fixes one half
+                of the pair — so the form only has to ask for the other half and
+                the reason, and the reason is the claim.
+              */}
+              {claimFrom && (
+                <div className={`mb-6 rounded-2xl border ${accent.ring} ${accent.bg} p-4`}>
+                  <p className="flex items-center gap-1.5 text-xs font-medium text-gray-700 dark:text-gray-200 mb-1">
+                    <Link2 size={13} className={accent.text} />
+                    Turn {(graph.nodes.get(claimFrom)?.turn.turn_index ?? 0) + 1} rhymes with…
+                  </p>
+                  <p className="text-[11px] text-gray-500 dark:text-gray-400 leading-relaxed mb-3">
+                    Point at an earlier exchange and say what runs through both. This is the one
+                    thing here you can be straightforwardly right about — and it is ruled on
+                    squarely rather than generously, so name the thread you actually see.
+                  </p>
+                  <div className="flex flex-wrap gap-1.5 mb-3">
+                    {path
+                      .filter(t => t.legal && t.id !== claimFrom &&
+                        t.turn_index < (graph.nodes.get(claimFrom)?.turn.turn_index ?? 0))
+                      .map(t => (
+                        <button
+                          key={t.id}
+                          onClick={() => setClaimTo(t.id)}
+                          className={`text-[11px] px-2 py-1 rounded-full transition-colors ${
+                            claimTo === t.id
+                              ? `${accent.chip} font-medium`
+                              : 'bg-white/70 text-gray-600 hover:bg-white dark:bg-gray-800/70 dark:text-gray-300 dark:hover:bg-gray-800'
+                          }`}
+                        >
+                          turn {t.turn_index + 1} · {t.reply_offering?.title ?? t.move_offering.title}
+                        </button>
+                      ))}
+                  </div>
+                  <input
+                    type="text"
+                    value={claimNote}
+                    onChange={e => setClaimNote(e.target.value)}
+                    disabled={claiming}
+                    maxLength={400}
+                    placeholder="What runs through both of them?"
+                    className="w-full mb-3 px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-gray-600 disabled:opacity-50"
+                  />
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={submitClaim}
+                      disabled={claiming || !claimTo || !claimNote.trim()}
+                      className="flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1.5 rounded-full bg-gray-900 text-white hover:bg-gray-700 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-gray-300 transition-colors disabled:opacity-40"
+                    >
+                      {claiming ? <Loader2 size={11} className="animate-spin" /> : <Link2 size={11} />}
+                      Claim it
+                    </button>
+                    <button
+                      onClick={() => { setClaimFrom(null); setClaimTo(null); setClaimNote('') }}
+                      className="text-[11px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+                    >
+                      Never mind
+                    </button>
+                    {!claimTo && (
+                      <p className="text-[11px] text-gray-400 dark:text-gray-500">Pick an earlier turn.</p>
+                    )}
+                  </div>
+                </div>
+              )}
             </>
+          )}
+
+          {/*
+            The other answers to the *same* move — the choice the turn loop did
+            not have.
+            Distinct from the block below it, and the distinction is the one the
+            graph makes: `continuations` are answers to the turn in focus, which
+            is where the chain goes *next*; these are rival answers to the move in
+            focus, which is a decision about what just happened. Shown only when
+            there is more than one, so an ordinary turn is unchanged.
+          */}
+          {otherAnswers.length > 0 && focusTurn && (
+            <div className="mb-6 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-3">
+              <p className="flex items-center gap-1.5 text-[11px] font-medium text-gray-500 dark:text-gray-400 mb-2">
+                <Dices size={12} />
+                {otherAnswers.length + 1} answers to this move — carry on from whichever you like
+              </p>
+              <ul className="flex flex-wrap gap-1.5">
+                {[focusTurn, ...otherAnswers]
+                  .sort((a, b) => a.turn_index - b.turn_index)
+                  .map(t => {
+                    const here = t.id === focusTurn.id
+                    const beyond = subtreeSize(graph, t.id)
+                    return (
+                      <li key={t.id}>
+                        <button
+                          onClick={() => focusOn(t.id)}
+                          disabled={here}
+                          className={`flex items-center gap-1 text-[11px] px-2 py-1 rounded-full transition-colors ${
+                            here
+                              ? `${accent.chip} font-medium`
+                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+                          }`}
+                        >
+                          {t.reply_offering?.title ?? 'no answer'}
+                          <span className="text-gray-400 dark:text-gray-500">
+                            ({getMedium(t.reply_offering?.medium ?? 'music')?.plural})
+                          </span>
+                          {beyond > 0 && <span className="text-gray-400 dark:text-gray-500">+{beyond}</span>}
+                        </button>
+                      </li>
+                    )
+                  })}
+              </ul>
+            </div>
           )}
 
           {/* What already answers the turn in focus. Taking another turn here makes
@@ -1142,6 +1558,21 @@ export default function CorrelationBoard({
                     </p>
                   ) : (
                     <div className="flex items-center gap-2 flex-wrap">
+                      {/* Beside "let it answer itself" because the two are the
+                          same family of move: both hand the next turn to the
+                          partner. This one asks it to answer the same question
+                          differently; that one asks it to answer its own answer. */}
+                      {canAnswerAgain && (
+                        <button
+                          onClick={answerAgain}
+                          disabled={pending}
+                          title="Keep this answer and get a second one to the same move. Both stay; you choose which to carry on from."
+                          className="flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1.5 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition-colors disabled:opacity-50"
+                        >
+                          {pending ? <Loader2 size={11} className="animate-spin" /> : <Dices size={11} />}
+                          Answer it again
+                        </button>
+                      )}
                       <button
                         onClick={continueOnce}
                         disabled={pending}
@@ -1293,7 +1724,10 @@ const PROBLEM_TEXT: Record<string, string> = {
 }
 
 /** One exchange: the move, how it was read, the reply, and what carried across. */
-function TurnBlock({ turn, graph, player, accentText, accentChip, isFocus, onFocus, playedAs }: {
+function TurnBlock({
+  turn, graph, player, accentText, accentChip, isFocus, onFocus, playedAs,
+  claims = [], graphIndexOf, onClaim,
+}: {
   turn: CorrelationTurn
   graph: TurnGraph
   player: OfferingPlayer
@@ -1311,6 +1745,12 @@ function TurnBlock({ turn, graph, player, accentText, accentChip, isFocus, onFoc
    * at a chain that appears to have been judged by rules it never met.
    */
   playedAs?: string | null
+  /** Every rhyme claimed that touches this turn, either end. */
+  claims?: CorrelationClaim[]
+  /** Turn index for a claim's other end, so a claim can name it. */
+  graphIndexOf?: (id: string) => number | null
+  /** Open the claim form from this turn. Absent when a claim is not possible here. */
+  onClaim?: () => void
 }) {
   /**
    * Whose move this was.
@@ -1470,6 +1910,63 @@ function TurnBlock({ turn, graph, player, accentText, accentChip, isFocus, onFoc
             {turn.link_note}
           </span>
         </a>
+      )}
+
+      {/*
+        The player's own claimed rhymes, beside the interpreter's volunteered one.
+        Same edge, claimed from the other side — so they belong in the same place,
+        visually distinguished by carrying a verdict. Three verdicts and three
+        colours, with `thin` deliberately *not* red: "something is there and it is
+        less than you said" is a real result and the one this engine produces
+        best, and colouring it as failure would be the UI disagreeing with the
+        ruling.
+      */}
+      {claims.map(claim => {
+        const otherId = claim.from_turn_id === turn.id ? claim.to_turn_id : claim.from_turn_id
+        const otherIndex = graphIndexOf?.(otherId) ?? null
+        const mine = claim.from_turn_id === turn.id
+        const tone = claim.verdict === 'holds'
+          ? 'text-emerald-600 dark:text-emerald-400'
+          : claim.verdict === 'thin'
+            ? 'text-amber-600 dark:text-amber-400'
+            : claim.verdict === 'no'
+              ? 'text-gray-500 dark:text-gray-400'
+              : 'text-gray-400 dark:text-gray-500'
+        return (
+          <div key={claim.id} className="flex items-start gap-1.5 pl-1 text-xs">
+            <Link2 size={12} className={`flex-shrink-0 mt-0.5 ${tone}`} />
+            <span className="min-w-0">
+              <span className={`font-medium ${tone}`}>
+                {claim.verdict === 'holds' ? 'holds'
+                  : claim.verdict === 'thin' ? 'thin, but there'
+                  : claim.verdict === 'no' ? 'does not hold'
+                  : 'unruled'}
+              </span>
+              <span className="text-gray-400 dark:text-gray-500">
+                {' · '}{mine ? 'you claimed' : 'claimed from'} turn{' '}
+                {otherIndex !== null ? otherIndex + 1 : '?'}
+                {' · '}
+              </span>
+              <span className="text-gray-600 dark:text-gray-300">&ldquo;{claim.note}&rdquo;</span>
+              {claim.ruling && (
+                <span className="block text-gray-500 dark:text-gray-400 mt-0.5 leading-relaxed">
+                  {claim.ruling}
+                </span>
+              )}
+            </span>
+          </div>
+        )
+      })}
+
+      {/* Offered quietly and only where a claim is possible, because most turns
+          will never carry one and a button on all of them is noise. */}
+      {onClaim && claims.length === 0 && (
+        <button
+          onClick={onClaim}
+          className="flex items-center gap-1.5 pl-1 text-[11px] text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+        >
+          <Link2 size={11} /> this rhymes with an earlier turn
+        </button>
       )}
 
       {/* The point of a cross-medium game: what survived, and what did not. */}

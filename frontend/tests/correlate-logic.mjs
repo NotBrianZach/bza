@@ -90,6 +90,7 @@ const {
   parseJsonObject, normalizeInterpretation, applyWorldDelta, offeringLine, sessionScope,
   describeRejection, salvageQueries, buildSystemPrompt, buildUserPrompt, buildRetryPrompt,
   buildSalvageAccountPrompt, buildSeedPrompt, buildSeedSystemPrompt, normalizeSeed, restateGame,
+  buildClaimPrompt, buildClosingPrompt,
 } = M.prompt
 const { GAME_LIST, GAMES, getGame, ACCENT_CLASSES, FEATURED_GAMES, FEATURED_GAME_IDS, retiredGameName } = M.games
 const {
@@ -2972,6 +2973,120 @@ t('every featured game is one the picker offers',
 t('and Embodiment is no longer among them, because you cannot start it',
   !FEATURED_GAME_IDS.includes('embodiment') &&
   switchOnlyGames().some(g => g.id === 'embodiment'))
+
+/**
+ * Looking at the thing instead of reading its name.
+ *
+ * `buildSystemPrompt` carries a long block — READING A RECORD YOU CANNOT
+ * PERCEIVE — which says in so many words "You cannot hear the track or see the
+ * canvas". With a canvas attached that is the one false sentence in the prompt,
+ * and false in the direction that matters: an interpreter told it cannot see
+ * writes the reading-of-a-mood it writes when it has nothing.
+ */
+group('seen media — the prompt stops claiming it cannot see')
+const sysFor = (seen = []) => buildSystemPrompt(
+  GAMES.tag, ALL_MEDIA, ALL_RELATIONS, DEFAULT_TUNING, false, undefined, false, seen,
+)
+t('with nothing attached the unperceived warning stands',
+  /CANNOT PERCEIVE/.test(sysFor()) && !/YOU CAN SEE THEM/.test(sysFor()))
+t('with an image attached it says so', /YOU CAN SEE THEM/.test(sysFor(['artwork'])))
+t('and the attached medium drops out of the unperceived list', (() => {
+  const block = sysFor(['artwork']).split('CANNOT PERCEIVE')[1]?.split('\n\n')[0] ?? ''
+  return !block.includes('Art') && block.length > 0
+})())
+/**
+ * Subtracted rather than suppressed wholesale: with a painting attached and a
+ * song on the table the warning is still true of the song, and still needed.
+ */
+t('the warning survives for the media that really did arrive as a name',
+  /CANNOT PERCEIVE/.test(sysFor(['artwork'])))
+t('and goes entirely when every unperceived medium is attached',
+  !/CANNOT PERCEIVE/.test(buildSystemPrompt(
+    GAMES.tag, ['artwork'], ALL_RELATIONS, DEFAULT_TUNING, false, undefined, false, ['artwork'],
+  )))
+t('it tells the interpreter which reading to reach for, not merely that it may look',
+  /composition|cropped|light is doing/.test(sysFor(['artwork'])))
+t('an unperceived-free game is unaffected by any of this',
+  buildSystemPrompt(GAMES.tag, ['gesture'], ALL_RELATIONS, DEFAULT_TUNING, false, undefined, false) ===
+  buildSystemPrompt(GAMES.tag, ['gesture'], ALL_RELATIONS, DEFAULT_TUNING, false, undefined, false, []))
+
+/**
+ * The claim — the one ruling in the engine that is deliberately NOT generous.
+ */
+group('buildClaimPrompt — reaching for credit, not avoiding refusal')
+const CLAIM_TURN = i => ({
+  turn_index: i,
+  move_offering: off(`m${i}`, 'music'),
+  reply_offering: off(`r${i}`, 'artwork'),
+  reading: `reading ${i}`,
+  carried: `carried ${i}`,
+  relation: 'association',
+})
+const CLAIM = buildClaimPrompt({
+  game: GAMES.tag, from: CLAIM_TURN(7), to: CLAIM_TURN(2),
+  note: 'both end on someone leaving a room',
+})
+t('it says plainly that this is not a move', /A CLAIM, NOT A MOVE/.test(CLAIM))
+t('both exchanges are shown whole, not as two titles',
+  CLAIM.includes('reading 7') && CLAIM.includes('reading 2') &&
+  CLAIM.includes('carried 7') && CLAIM.includes('carried 2'))
+t('the player’s own words are quoted', CLAIM.includes('both end on someone leaving a room'))
+t('all three verdicts are offered',
+  /"holds"/.test(CLAIM) && /"thin"/.test(CLAIM) && /"no"/.test(CLAIM))
+/**
+ * The inversion, asserted because it is the whole reason this prompt exists
+ * separately: every other ruling in the engine takes the most generous available
+ * reading, and this one must not.
+ */
+t('it rules on the claim made, not the best claim available',
+  /not the best claim available/.test(CLAIM))
+t('and it says why, so the asymmetry does not read as arbitrary strictness',
+  /credit given for nothing is worth nothing/.test(CLAIM))
+t('a thin verdict is explicitly not a failure', /should not grudge it/.test(CLAIM))
+t('the filing-coincidence floor holds here too, at every verdict',
+  /shared decade/.test(CLAIM) && /not a rhyme, at any verdict/.test(CLAIM))
+t('and the vaguest always-true claim is named and excluded',
+  /both are about loss/.test(CLAIM))
+t('a better rhyme it can see is volunteered without changing the verdict',
+  /does not change the verdict/.test(CLAIM))
+
+group('buildClosingPrompt — the arc, which no other call reads')
+const CLOSE_LINE = [0, 1, 2].map(CLAIM_TURN)
+const CLOSING = buildClosingPrompt({
+  game: GAMES.counterpoint,
+  world: { subject: 'leaving', perspectives: ['hers'], excluded: [] },
+  line: CLOSE_LINE,
+  elsewhereCount: 2,
+  reachedLimit: true,
+})
+t('it carries the whole line, not a window',
+  CLOSE_LINE.every(t2 => CLOSING.includes(`Turn ${t2.turn_index}`)))
+t('it says whether the game ran out or was stopped',
+  /ran to the end of its turns/.test(CLOSING) &&
+  /closed it here/.test(buildClosingPrompt({
+    game: GAMES.tag, world: {}, line: CLOSE_LINE, elsewhereCount: 0, reachedLimit: false,
+  })))
+t('abandoned branches are acknowledged rather than hidden',
+  /2 other exchanges/.test(CLOSING))
+t('and are not mentioned when there are none',
+  !/ELSEWHERE/.test(buildClosingPrompt({
+    game: GAMES.tag, world: {}, line: CLOSE_LINE, elsewhereCount: 0, reachedLimit: false,
+  })))
+/**
+ * The registry's `goal` has existed on all eleven games since the beginning and
+ * nothing has ever read it. This is the first call that does.
+ */
+t('it rules against the game’s own goal', CLOSING.includes(GAMES.counterpoint.pieces.goal))
+t('the shape question comes before the verdict question',
+  CLOSING.indexOf('turned out to be') < CLOSING.indexOf('how it did against'))
+t('a chain with no thread is a real finding, not something to invent around',
+  /settled nowhere/.test(CLOSING))
+t('and a thin success is still a success, as everywhere else',
+  /A thin success is a success/.test(CLOSING))
+t('every game produces a closing prompt that names its own goal',
+  GAME_LIST.every(g => buildClosingPrompt({
+    game: g, world: {}, line: CLOSE_LINE, elsewhereCount: 0, reachedLimit: false,
+  }).includes(g.pieces.goal)))
 
 rmSync(outDir, { recursive: true, force: true })
 

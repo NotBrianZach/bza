@@ -120,6 +120,47 @@ const STRICT_OUTPUT_NOTE =
   'given above, put nothing outside the braces, and do not restate the world — only the keys this ' +
   'exchange changed.'
 
+/** One image put in front of the interpreter, with what it is of. */
+type InterpreterImage = { url: string; of: string; medium: MediumId }
+
+/**
+ * The images in play this turn, so the interpreter can look at them.
+ *
+ * The deepest quality ceiling in this section, and the one no amount of prompt
+ * work could raise. `buildSystemPrompt` has a long block — READING A RECORD YOU
+ * CANNOT PERCEIVE — explaining that artwork and film arrive "as a name, an
+ * attribution and at most a line of description", and asking the interpreter to
+ * reason honestly about a record it cannot see. For anything with a picture, that
+ * limit was never real: `Perceptible` has carried `{kind: 'image', url}` since
+ * artwork existed, and two other routes in this app (manga-parse, site-extract)
+ * have been sending `image_url` content blocks to the same provider all along.
+ *
+ * So a painting on the table stops being the string "Sunflowers — Van Gogh,
+ * 1888" and becomes the painting. Every axis in tuning.ts is downstream of that:
+ * Abstraction sits at Concrete by default, and "reach for what the move literally
+ * contains" is an instruction nothing could follow while the contents were
+ * withheld.
+ *
+ * Two images at most, and which two is not arbitrary — the move and the thing it
+ * answers are the two records the reading is *about*. The path's history stays
+ * textual: it is context, the exchange has already been read, and a dozen images
+ * would cost more than the turn.
+ *
+ * Audio is not reachable the same way. A song cannot be put in a prompt at all,
+ * which leaves its words as the equivalent unlock and Deezer does not carry them.
+ */
+function lookAt(move: Offering, previous: Offering | null): InterpreterImage[] {
+  const images: InterpreterImage[] = []
+  const add = (o: Offering | null, of: string) => {
+    if (o?.perceptible?.kind === 'image' && o.perceptible.url) {
+      images.push({ url: o.perceptible.url, of, medium: o.medium })
+    }
+  }
+  add(move, 'the move')
+  add(previous, 'the offering on the table')
+  return images
+}
+
 /** A catalogue refusing or rate-limiting us, as opposed to simply not matching. */
 type ProviderFailure = { message: string; provider: string; upstreamStatus: number | null }
 
@@ -177,6 +218,23 @@ export async function POST(req: NextRequest) {
 
   if (!session) return err('Session not found', 404)
   if (session.status !== 'active') return err('This game is finished', 409)
+
+  /**
+   * A limited game stops at its limit, here and not only in the board.
+   *
+   * Server-side because the board's countdown is a display of this number and not
+   * the number itself — and because the limit is the only thing in the section
+   * that makes a branch cost something. Counted against `turn_count`, which is
+   * the whole session: going back and taking a different line spends the
+   * allowance rather than getting a fresh one.
+   */
+  if (typeof session.turn_limit === 'number' && (session.turn_count ?? 0) >= session.turn_limit) {
+    return err(
+      `This game was set to ${session.turn_limit} turns and has played them all. Close it to find ` +
+      `out what it was.`,
+      409,
+    )
+  }
 
   // The game the session *started* as. Still the right thing to resolve the
   // session's own columns against — its media scope, its relation snapshot — and
@@ -508,7 +566,26 @@ export async function POST(req: NextRequest) {
   // neutral turn on a model that writes long. See `ReadingLengths.maxTokens`.
   const { maxTokens } = readingLengths(tuning)
 
-  const callInterpreter = async (system: string, user: string): Promise<string | null> => {
+  const callInterpreter = async (
+    system: string,
+    user: string,
+    /**
+     * Images to put in front of it, when the offerings in play have any.
+     *
+     * Omitted on every call but the first pass. The retry, the salvage account
+     * and the composed floor are all about *finding an answer*, and none of them
+     * re-reads the move — so paying for two images on each of them would buy
+     * nothing. See `lookAt`.
+     */
+    images: InterpreterImage[] = [],
+  ): Promise<string | null> => {
+    const content = images.length > 0
+      ? [
+          { type: 'text', text: user },
+          ...images.map(i => ({ type: 'image_url', image_url: { url: i.url } })),
+        ]
+      : user
+
     const res = await fetch(apiUrl, {
       method: 'POST',
       headers: {
@@ -522,7 +599,7 @@ export async function POST(req: NextRequest) {
         model: modelId,
         messages: [
           { role: 'system', content: system },
-          { role: 'user', content: user },
+          { role: 'user', content },
         ],
         max_tokens: maxTokens,
         temperature: 0.9,
@@ -689,8 +766,16 @@ export async function POST(req: NextRequest) {
    */
   const prediction = selfReply ? null : body?.prediction?.trim() || null
 
+  /**
+   * The pictures in play, resolved once and used twice: the prompt has to claim
+   * they are attached and the request has to attach them, and those two must come
+   * from the same place or the prompt lies about what it is holding.
+   */
+  const seeing = lookAt(move, previous)
+  const seenMedia = [...new Set(seeing.map(i => i.medium))]
+
   const systemPrompt = buildSystemPrompt(
-    game, media, relations, tuning, selfReply, answerIn, !!prediction,
+    game, media, relations, tuning, selfReply, answerIn, !!prediction, seenMedia,
   )
   const userPrompt = buildUserPrompt({
     game,
@@ -733,7 +818,34 @@ export async function POST(req: NextRequest) {
     parseJsonObject(raw), answerIn, relations, { muted, linkable },
   )
 
-  const firstRaw = await callInterpreter(systemPrompt, userPrompt)
+  /**
+   * One pass with the pictures attached, and a text-only pass if that fails.
+   *
+   * The fallback is not defensive habit — it covers a failure mode that is real
+   * and outside our control. The provider fetches these URLs itself, so a
+   * catalogue that starts bot-walling hotlinked images takes the vision call down
+   * with it while the rest of the turn is perfectly playable. (This app has been
+   * there: artwork moved from Chicago to Cleveland for exactly that reason.) The
+   * right behaviour then is a slightly worse reading, not a refused turn.
+   *
+   * The second pass drops `seeing` from the system prompt too, which matters —
+   * `buildSystemPrompt` branches on it, and a prompt that claims a picture is
+   * attached when the attempt to attach it just failed would be the one lie the
+   * block exists to prevent.
+   */
+  let firstRaw = await callInterpreter(systemPrompt, userPrompt, seeing)
+
+  if (firstRaw === null && seeing.length > 0) {
+    console.warn(
+      `[correlate] vision pass failed in ${game.id} (${seeing.length} image(s): ` +
+      `${seeing.map(i => i.of).join(', ')}); retrying without them`,
+    )
+    firstRaw = await callInterpreter(
+      buildSystemPrompt(game, media, relations, tuning, selfReply, answerIn, !!prediction),
+      userPrompt,
+    )
+  }
+
   if (firstRaw === null) return err('Interpreter unavailable. Try that move again in a moment.', 502)
 
   let firstPass = read(firstRaw)

@@ -62,12 +62,12 @@ function PlayPageInner() {
     return () => { cancelled = true }
   }, [])
 
-  const startGame = useCallback(async (id: string) => {
+  const startGame = useCallback(async (id: string, turnLimit?: number) => {
     setStarting(id)
     setError('')
     try {
-      const session = await correlateQueries.createSession(id, media)
-      track('correlate_game_started', { game: id, from: 'play' })
+      const session = await correlateQueries.createSession(id, media, undefined, turnLimit)
+      track('correlate_game_started', { game: id, from: 'play', turnLimit: turnLimit ?? null })
       setSessions(s => [session, ...s])
       router.push(`/play?game=${session.id}`)
     } catch (e: any) {

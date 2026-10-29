@@ -345,6 +345,51 @@ export interface CorrelationSession {
    * means live. Same column and same meaning as `books.deleted_at`.
    */
   deleted_at?: string | null
+  /**
+   * How many turns this game is played to. Null is open-ended.
+   *
+   * Counted against `turn_count`, which is the whole session and not the branch —
+   * so going back and taking a different line spends the allowance rather than
+   * getting a fresh one. That is deliberate: it is what makes a branch cost
+   * something, and a limit nobody could overspend would not be a limit.
+   */
+  turn_limit?: number | null
+  /** What the chain turned out to be about, written once when it closes. */
+  closing_reading?: string | null
+  /** Opaque token for read-only public access. Null means private. */
+  share_token?: string | null
+}
+
+/**
+ * A rhyme the *player* claims between two turns.
+ *
+ * The other half of `listen_turns.link_turn_id`. That column holds the same kind
+ * of edge, volunteered by the interpreter and rendered as a footnote; this is the
+ * player asserting one and being ruled on. See migration 78 for why it is a row
+ * of its own rather than a column on either turn.
+ */
+export interface CorrelationClaim {
+  id: string
+  session_id: string
+  user_id: string
+  /** The turn the claim was made from. */
+  from_turn_id: string
+  /** The earlier turn it is said to rhyme with. */
+  to_turn_id: string
+  /** The player's own words for what the two share. */
+  note: string
+  /**
+   * How it was ruled.
+   *
+   * Three-valued, and not a boolean. "Thin, but real" is the most interesting
+   * ruling this engine produces — the section is built on connections that are
+   * explainable rather than exact — and a boolean would file it as a failure.
+   * Null means the ruling itself failed, which is not the same as 'no'.
+   */
+  verdict: 'holds' | 'thin' | 'no' | null
+  /** The interpreter's sentence on the claim. The part the player is owed. */
+  ruling: string | null
+  created_at: string
 }
 
 export interface CorrelationTurn {
