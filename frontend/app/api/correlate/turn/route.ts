@@ -5,8 +5,9 @@ import { getGame } from '@/lib/correlate/games'
 import { availableMedia, getMedium, isComposed, replyMediaFor } from '@/lib/correlate/media'
 import { relationPermitted, resolveRelations, spentRelations } from '@/lib/correlate/relations'
 import {
-  applyWorldDelta, buildRetryPrompt, buildSalvageAccountPrompt, buildSystemPrompt, buildUserPrompt,
-  describeRejection, normalizeInterpretation, parseJsonObject, salvageQueries, sessionScope,
+  applyWorldDelta, buildRetryPrompt, buildSalvageAccountPrompt, buildSeedPrompt,
+  buildSeedSystemPrompt, buildSystemPrompt, buildUserPrompt, describeRejection,
+  normalizeInterpretation, normalizeSeed, parseJsonObject, salvageQueries, sessionScope,
   type ElsewhereContext, type TurnContext,
 } from '@/lib/correlate/prompt'
 import {
@@ -19,7 +20,8 @@ import {
 } from '@/lib/correlate/tuning'
 import { selfRepliesSince, selfReplyRefusal } from '@/lib/correlate/continuation'
 import {
-  activeBranch, modeAlong, playedUnder, switchRefusal,
+  activeBranch, carriedSeedKeys, derivedSeedSpec, modeAlong, pathSinceSwitch, playedUnder,
+  switchRefusal, switchSeed,
 } from '@/lib/correlate/switching'
 import type {
   ActionIntent, CorrelationTurn, Interpretation, MediumId, Offering, RelationId,
@@ -215,7 +217,8 @@ export async function POST(req: NextRequest) {
       // treats absent and null alike as "the session's mode" — it would silently
       // un-switch every switched branch on the next turn.
       'id, turn_index, parent_turn_id, move_by, move_offering, reply_offering, relation, ' +
-      'reading, narration, carried, facts, world_delta, link_turn_id, link_note, legal, mode',
+      'reading, narration, carried, facts, world_delta, link_turn_id, link_note, legal, mode, ' +
+      'prediction, prediction_called',
     )
     .eq('session_id', sessionId)
     .order('turn_index', { ascending: true })
@@ -472,103 +475,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ turn: rejected, session, missed: false })
   }
 
-  // --- 4. The interpreter --------------------------------------------------
-  //
-  // The world is a property of the branch, not of the session: two branches that
-  // both establish something about the same place are each coherent and are not
-  // each other's. See worldFor() for what happens to sessions written before that
-  // was true.
-  // Folded along `branch.since`, not the whole path. `worldFor` replays deltas
-  // from the game's seed, and replaying Tag's `chain` deltas onto Embodiment's
-  // `{learned, sensations}` seed produces a world that is neither game's — so
-  // after a switch the replay has to start at the switch. That is what
-  // `pathSinceSwitch` computes, and it is also the strongest argument for the
-  // switch being a branch: the boundary is a thing the replay can see.
-  //
-  // The session cache is passed only when this branch has never switched. For a
-  // switched branch `session.world_state` is the *old* game's world, so the
-  // legacy fallback inside `worldFor` would hand it over wholesale — the one
-  // case where trusting that column is worse than folding from less.
-  const world = worldFor(
-    game.seedWorld,
-    branch.boundaries.length > 0 || branch.switchedFrom
-      ? {}
-      : (session.world_state ?? {}) as Record<string, any>,
-    graph,
-    branch.since,
-  )
-
-  // The whole path, not `branch.since`: an interpreter shown only the turns
-  // played under its own rules loses the continuity that makes switching worth
-  // doing. The ones from before the boundary are labelled rather than hidden —
-  // which is a sentence per-turn `mode` is what makes sayable.
-  const history: TurnContext[] = path.slice(-HISTORY_TURNS).map(t => ({
-    turn_index: t.turn_index,
-    move_offering: t.move_offering,
-    reply_offering: t.reply_offering,
-    relation: t.relation,
-    reading: t.reading,
-    narration: t.narration,
-    carried: t.carried,
-    // So the interpreter is not shown its own offerings attributed to the player.
-    move_by: t.move_by,
-    played_as: playedUnder(t, session.mode, branch.mode)?.name ?? null,
-  }))
-
-  // Everything the player can see but this branch did not live through. Offered so
-  // a callback has somewhere to point, and kept deliberately thin so it cannot be
-  // mistaken for context the exchange inherits.
-  const onPath = new Set(path.map(t => t.id))
-  const elsewhere: ElsewhereContext[] = graph.order
-    .filter(t => t.legal && !onPath.has(t.id))
-    .slice(-ELSEWHERE_TURNS)
-    .map(t => ({
-      turn_index: t.turn_index,
-      move_offering: t.move_offering,
-      reply_offering: t.reply_offering,
-      carried: t.carried,
-    }))
-
-  const linkable = linkableTurns(graph, parent?.id ?? null).map(t => t.turn_index)
-
-  const systemPrompt = buildSystemPrompt(game, media, relations, tuning, selfReply, answerIn)
-  const userPrompt = buildUserPrompt({
-    game,
-    media,
-    relations,
-    world,
-    history,
-    elsewhere,
-    move,
-    previous,
-    selfReply,
-    selfReplyFrom: selfReply ? parent!.turn_index : null,
-    selfReplyDepth,
-    // Said only when the player went back, because on a straight continuation it
-    // would be a sentence of prompt that tells the interpreter nothing.
-    parentIndex: parent && parent.turn_index !== turnIndex - 1 ? parent.turn_index : null,
-    claimedRelation,
-    spent,
-    switchedFrom: branch.switchedFrom
-      ? {
-          name: getGame(branch.switchedFrom)?.name ?? branch.switchedFrom,
-          // True only on a tier-1 switch, where the shapes match and nothing was
-          // reset. `since` holding the whole path is what that looks like here.
-          keptWorld: branch.since.length > 0,
-          released,
-        }
-      : null,
-    // A prediction is a player's guess at what their own move will draw back.
-    // There is no move of theirs on a self-reply, so there is nothing to predict.
-    prediction: selfReply ? null : body?.prediction?.trim() || null,
-    turnIndex,
-    tuning,
-    due,
-  })
-
   // One place that talks to the model, because the reply pipeline below may need
   // to ask twice and the second ask must be identical in every respect but its
   // prompt. Returns raw content, or null when the provider itself failed.
+  //
+  // Hoisted above the world because a tier-3 switch has to author part of the
+  // new game's seed before there is a world to play in — see step 3b.
   const useOpenRouter = !!process.env.OPENROUTER_API_KEY
   const apiUrl = useOpenRouter
     ? 'https://openrouter.ai/api/v1/chat/completions'
@@ -610,6 +522,193 @@ export async function POST(req: NextRequest) {
     const data = await res.json()
     return data?.choices?.[0]?.message?.content ?? ''
   }
+
+  // --- 3b. A seed, for a switch between two games that both have a premise --
+  //
+  // Only tier 3 reaches this, which today is `duel` ↔ `transformation`: two games
+  // that both turn on a `scene`. The scene the player built crosses over, and
+  // whatever the destination declares *about* a scene has to be written for the
+  // one that arrived — Transformation's `invariants` is "what has survived every
+  // transformation so far", and its canned value is a true statement about a bus
+  // shelter and a meaningless one about anywhere else.
+  //
+  // This is the engine's only call that produces seed rather than delta content,
+  // and it fails closed. A premise that cannot be authored means the switch does
+  // not happen, because the only alternative is the canned one — which is exactly
+  // the dishonesty the tier existed to avoid. The move is not recorded, so the
+  // player can simply take it again.
+  //
+  // Nothing durable is written here. The result goes into the switching turn's
+  // `world_delta` further down, the way `mediaVisited` does, so every later fold
+  // reproduces it from the row instead of needing this call repeated.
+  let authoredSeed: Record<string, unknown> = {}
+  const needsSeed = branch.switchedFrom ? derivedSeedSpec(branch.switchedFrom, branch.mode) : []
+
+  /**
+   * The world as it stood under the game being left.
+   *
+   * What there is to carry, and null when nothing is being left. Folded the old
+   * way on purpose: this is the departing branch's own world, so the departing
+   * game's seed and the departing game's sub-path are the right inputs — using
+   * the new game's seed here would ask what Transformation's world was on turns
+   * that were Duel.
+   */
+  const worldBefore = branch.switchedFrom
+    ? worldFor(
+        getGame(branch.switchedFrom)!.seedWorld,
+        branch.boundaries.length > 0 ? {} : (session.world_state ?? {}) as Record<string, any>,
+        graph,
+        pathSinceSwitch(path, session.mode),
+      )
+    : null
+
+  if (branch.switchedFrom && worldBefore && needsSeed.length > 0) {
+    const leaving = getGame(branch.switchedFrom)!
+    const carried: Record<string, any> = {}
+    for (const key of carriedSeedKeys(branch.switchedFrom, branch.mode)) {
+      if (worldBefore[key] !== undefined) carried[key] = worldBefore[key]
+    }
+
+    const seedRaw = await callInterpreter(
+      buildSeedSystemPrompt(game),
+      buildSeedPrompt({ from: leaving, to: game, carried, keys: needsSeed }),
+    )
+    const authored = seedRaw
+      ? normalizeSeed(parseJsonObject(seedRaw), game, needsSeed.map(k => k.key))
+      : null
+
+    if (!authored) {
+      console.warn(
+        `[correlate] could not author ${needsSeed.map(k => k.key).join(', ')} for ` +
+        `${leaving.id} → ${game.id}`,
+      )
+      return err(
+        `${game.name} could not be set up on this scene. Your move was not recorded — try it again.`,
+        502,
+      )
+    }
+    authoredSeed = authored
+  }
+
+  /**
+   * The seed this turn's world folds onto.
+   *
+   * Identical to `game.seedWorld` for every switch but tier 3, and for every turn
+   * that is not a switch at all. Tier 3 is where it differs: the carried keys come
+   * from the world as it stood and the authored ones from the call above.
+   */
+  const seed = branch.switchedFrom && worldBefore
+    ? switchSeed(branch.switchedFrom, branch.mode, worldBefore, authoredSeed)
+    : game.seedWorld
+
+  // --- 4. The interpreter --------------------------------------------------
+  //
+  // The world is a property of the branch, not of the session: two branches that
+  // both establish something about the same place are each coherent and are not
+  // each other's. See worldFor() for what happens to sessions written before that
+  // was true.
+  // Folded along `branch.since`, not the whole path. `worldFor` replays deltas
+  // from the game's seed, and replaying Tag's `chain` deltas onto Embodiment's
+  // `{learned, sensations}` seed produces a world that is neither game's — so
+  // after a switch the replay has to start at the switch. That is what
+  // `pathSinceSwitch` computes, and it is also the strongest argument for the
+  // switch being a branch: the boundary is a thing the replay can see.
+  //
+  // The session cache is passed only when this branch has never switched. For a
+  // switched branch `session.world_state` is the *old* game's world, so the
+  // legacy fallback inside `worldFor` would hand it over wholesale — the one
+  // case where trusting that column is worse than folding from less.
+  const world = worldFor(
+    seed,
+    branch.boundaries.length > 0 || branch.switchedFrom
+      ? {}
+      : (session.world_state ?? {}) as Record<string, any>,
+    graph,
+    branch.since,
+  )
+
+  // The whole path, not `branch.since`: an interpreter shown only the turns
+  // played under its own rules loses the continuity that makes switching worth
+  // doing. The ones from before the boundary are labelled rather than hidden —
+  // which is a sentence per-turn `mode` is what makes sayable.
+  const history: TurnContext[] = path.slice(-HISTORY_TURNS).map(t => ({
+    turn_index: t.turn_index,
+    move_offering: t.move_offering,
+    reply_offering: t.reply_offering,
+    relation: t.relation,
+    reading: t.reading,
+    narration: t.narration,
+    carried: t.carried,
+    // So the interpreter is not shown its own offerings attributed to the player.
+    move_by: t.move_by,
+    played_as: playedUnder(t, session.mode, branch.mode)?.name ?? null,
+  }))
+
+  // Everything the player can see but this branch did not live through. Offered so
+  // a callback has somewhere to point, and kept deliberately thin so it cannot be
+  // mistaken for context the exchange inherits.
+  const onPath = new Set(path.map(t => t.id))
+  const elsewhere: ElsewhereContext[] = graph.order
+    .filter(t => t.legal && !onPath.has(t.id))
+    .slice(-ELSEWHERE_TURNS)
+    .map(t => ({
+      turn_index: t.turn_index,
+      move_offering: t.move_offering,
+      reply_offering: t.reply_offering,
+      carried: t.carried,
+    }))
+
+  const linkable = linkableTurns(graph, parent?.id ?? null).map(t => t.turn_index)
+
+  /**
+   * The player's guess at what their own move will draw back.
+   *
+   * Accepted from *any* game, not only Prediction, and that is not an oversight
+   * being preserved — the field has always been ungated here while
+   * `wantsPrediction` gated only whether the composer renders an input. Reading
+   * the registry to decide would make the schema and the field disagree the
+   * moment a client posts one.
+   *
+   * Null on a self-reply: there is no move of the player's, so there is nothing
+   * of theirs to have predicted.
+   */
+  const prediction = selfReply ? null : body?.prediction?.trim() || null
+
+  const systemPrompt = buildSystemPrompt(
+    game, media, relations, tuning, selfReply, answerIn, !!prediction,
+  )
+  const userPrompt = buildUserPrompt({
+    game,
+    media,
+    relations,
+    world,
+    history,
+    elsewhere,
+    move,
+    previous,
+    selfReply,
+    selfReplyFrom: selfReply ? parent!.turn_index : null,
+    selfReplyDepth,
+    // Said only when the player went back, because on a straight continuation it
+    // would be a sentence of prompt that tells the interpreter nothing.
+    parentIndex: parent && parent.turn_index !== turnIndex - 1 ? parent.turn_index : null,
+    claimedRelation,
+    spent,
+    switchedFrom: branch.switchedFrom
+      ? {
+          name: getGame(branch.switchedFrom)?.name ?? branch.switchedFrom,
+          // True only on a tier-1 switch, where the shapes match and nothing was
+          // reset. `since` holding the whole path is what that looks like here.
+          keptWorld: branch.since.length > 0,
+          released,
+        }
+      : null,
+    prediction,
+    turnIndex,
+    tuning,
+    due,
+  })
+
 
   const firstRaw = await callInterpreter(systemPrompt, userPrompt)
   if (firstRaw === null) return err('Interpreter unavailable. Try that move again in a moment.', 502)
@@ -755,7 +854,11 @@ export async function POST(req: NextRequest) {
           // Adopt the retry's account of the exchange, not the first pass's: its
           // narration, carried and lost describe the reply that actually landed.
           // Legality is NOT revisited — that was ruled once, on the move.
-          interpretation = { ...retry, verdict: firstPass.verdict }
+          // `called` travels with `verdict` and for the same reason: both were
+          // ruled on the first pass, and a retry is answering the move again
+          // rather than re-judging it. A second completion seeing the guess for
+          // the first time must not be able to overturn a ruling on it.
+          interpretation = { ...retry, verdict: firstPass.verdict, called: firstPass.called }
           failure.current = null
           scopeMiss.current = null
         }
@@ -872,7 +975,7 @@ export async function POST(req: NextRequest) {
           if (last) {
             reply = last
             replySource = 'floor'
-            interpretation = { ...floored, verdict: firstPass.verdict }
+            interpretation = { ...floored, verdict: firstPass.verdict, called: firstPass.called }
             failure.current = null
             scopeMiss.current = null
           }
@@ -929,8 +1032,28 @@ export async function POST(req: NextRequest) {
   // the world anywhere is the fold of the deltas along the path that reached it.
   // mediaVisited goes *into* the delta rather than being bolted onto the session
   // world afterwards, so the fold reproduces it instead of losing it.
+  //
+  // Three things the engine writes in rather than asks for, and all three are
+  // here because the fold is what has to reproduce them:
+  //
+  //  - `mediaVisited`, bookkeeping a prompt does worse than arithmetic.
+  //  - the carried and authored seed, on a tier-3 switch. Without it the seed
+  //    this turn was played against would exist only in this request, and every
+  //    later fold would start from the destination's canned premise — the exact
+  //    content the switch was built to avoid. It goes *under* the interpreter's
+  //    delta, so a scene it transformed on this very turn still wins.
+  //  - `record`, the prediction tally, now derived from the ruling rather than
+  //    kept by the interpreter. See migration 77.
+  const seedIntoDelta = branch.switchedFrom ? seed : {}
   const storedDelta: Record<string, any> | null = legal
-    ? { ...interpretation.worldDelta, mediaVisited: visitedAfter(world, move, reply) }
+    ? {
+        ...seedIntoDelta,
+        ...interpretation.worldDelta,
+        mediaVisited: visitedAfter(world, move, reply),
+        ...(interpretation.called === true || interpretation.called === false
+          ? { record: recordAfter(world, interpretation.called) }
+          : {}),
+      }
     : null
 
   /**
@@ -968,6 +1091,11 @@ export async function POST(req: NextRequest) {
       carried: interpretation.carried || null,
       lost: interpretation.lost || null,
       facts: interpretation.facts,
+      // Stored verbatim and never interpreted. The ruling beside it is only
+      // checkable if the thing it ruled on is still there — which it was not,
+      // before migration 77.
+      prediction,
+      prediction_called: prediction ? interpretation.called ?? null : null,
       world_delta: storedDelta,
       link_turn_id: linkedTurn?.id ?? null,
       link_note: linkedTurn ? interpretation.link!.note : null,
@@ -1041,4 +1169,31 @@ function visitedAfter(
   visited.add(move.medium)
   if (reply) visited.add(reply.medium)
   return [...visited]
+}
+
+/**
+ * The prediction tally after this turn.
+ *
+ * Same shape as `visitedAfter` and there for the same reason, one step further
+ * along: this is bookkeeping the interpreter used to do about itself. Prediction's
+ * whole world is `record: {hits, misses}`, and it was maintained by the model in
+ * its own delta, scored from prose the model had just written — while the guess
+ * that produced the score was not stored anywhere. So the hit rate of the game
+ * that is about a hit rate could not be recomputed or disagreed with.
+ *
+ * It is the same move `relations.ts` describes making when the interpreter's
+ * `threadsUsed` array became a real `relation` column: a rule that depended on a
+ * model remembering to append became a fact about the log.
+ *
+ * Read off the folded world rather than counted over the rows, which is what
+ * `mediaVisited` does and is correct for the same reason — the world *is* the
+ * fold of the deltas along this path, so incrementing it is counting them.
+ * `prediction_called` on the rows is the independent record that makes this
+ * checkable.
+ */
+function recordAfter(world: Record<string, any>, called: boolean): { hits: number; misses: number } {
+  const current = world.record
+  const hits = typeof current?.hits === 'number' ? current.hits : 0
+  const misses = typeof current?.misses === 'number' ? current.misses : 0
+  return called ? { hits: hits + 1, misses } : { hits, misses: misses + 1 }
 }

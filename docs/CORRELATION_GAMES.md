@@ -1420,3 +1420,121 @@ seeded, `relations: 'all'`, `judge: 'player'`, and distinguished only by
 because it is mechanically clean, and the modifier question is untouched. If it
 is ever answered the right way, it stops being a target and becomes something
 that can apply to any of the others.
+
+**Followed up in §20**, which found the modifier already half-built and the
+persona arguing with the player.
+
+## 20. Ninth pass (2026-10-29): tier 3, and the prediction's own record
+
+Two of the three things §19f and §19 left open. New:
+`supabase/setup/77_prediction_is_a_fact.sql`,
+`buildSeedSystemPrompt` / `buildSeedPrompt` / `normalizeSeed` in `prompt.ts`,
+`carriedSeedKeys` / `derivedSeedKeys` / `switchSeed` in `switching.ts`.
+
+### 20a. Consistency is with yourself, not against the player
+
+Prediction's persona said *"You never bend your answer to match a guess, and you
+never pretend a miss was a hit."* Both clauses read as an interpreter guarding
+itself against the person it is playing with, and the first licenses the exact
+failure it was written to prevent: an interpreter told not to be led will swerve
+off an answer the player correctly predicted. That punishes a good read, and it
+makes the one thing the game exists for — learning how the interpreter thinks —
+impossible. It is also invisible from inside a turn, because a swerved answer
+looks exactly like an independent one.
+
+The persona now says consistency is *with itself*, that being predicted is the
+game working, and that the interpreter is on the player's side. The shared prompt
+block says the same, and says why: *"Reaching for something else because they saw
+it coming is the one move that makes you impossible to learn, and it is a worse
+outcome than being obvious."*
+
+The ordering rule survives unchanged — choose your reply, then read the guess —
+because that one is not about resisting the player. A guess read first becomes a
+suggestion, and then there was nothing to have predicted.
+
+### 20b. The modifier was already there; only the input was gated
+
+`wantsPrediction(game)` has exactly one caller outside its own definition, and it
+is in `CorrelationBoard.tsx`, deciding whether to render a text input. The turn
+route has always accepted the field from any game, and `buildUserPrompt` has
+always emitted the block. So a prediction posted into a game of Tag was already
+honoured end to end.
+
+That changes what the registry entry is *for*. The ordering rule and the
+reporting rule were already universal; what Prediction owns is the consistency
+persona and the `record` / `tendencies` world. Only the second half is
+game-shaped.
+
+The schema field follows the field rather than the registry — `buildSystemPrompt`
+takes a `predicted` flag, not `game.id === 'prediction'` — because keying it on
+the game would make the schema and the accepted field disagree the moment a
+client posted one.
+
+**Not flipped on in the UI.** The argument for universality was that it could be
+*measured* — and the thing that makes it measurable is 77, which only just
+landed. There is no data yet.
+
+### 20c. The hit rate was the model's own homework
+
+Prediction's entire world is `record: {hits, misses}`. That record was maintained
+by the interpreter, in its own `world_delta`, scored from prose it had written
+itself — and the guess that produced the score was never stored at all. So the
+hit rate of the game that is *about* a hit rate could not be recomputed or
+disagreed with.
+
+`relations.ts` already says why that is the wrong shape:
+
+> The music section asked the interpreter to maintain a `threadsUsed` array
+> itself, which meant the rule depended on a model remembering to append to it;
+> recording the relation on each turn makes what is spent a fact about the log
+> instead.
+
+So: `listen_turns.prediction` holds the guess verbatim, `prediction_called` holds
+the ruling, the interpreter returns a bare `called` boolean and is told the
+running score is not its to keep, and `recordAfter` folds the tally in beside
+`visitedAfter`. `tendencies` stays the interpreter's — it is prose about
+reasoning and no arithmetic could produce it.
+
+### 20d. Tier 3 opens, and the problem was never the scene
+
+`duel ↔ transformation` is now switchable. Reading the two seeds is what made it
+answerable:
+
+| | authored | starts empty |
+|---|---|---|
+| `duel` | `scene` | `score {0,0}`, `established []` |
+| `transformation` | `scene`, `invariants ['There is still one man waiting.']` | `ledger []` |
+
+A drifted scene is still a scene and crosses fine. The problem is `invariants` —
+authored content *about* the canned premise, true of a bus shelter and
+meaningless about an apartment. Keep it and the world asserts something false;
+drop it and Transformation has lost the thing it tracks, since `invariants` is
+"what has survived every transformation so far" and an empty one gives the first
+transformation nothing to preserve against.
+
+The third option is to author it for the scene that actually arrived, which is a
+model call producing **seed** content — the only one in the engine. Every other
+seed is written by hand and `worldFor` only ever folds deltas onto one.
+
+Three things keep it honest:
+
+- **It is narrow.** `buildSeedSystemPrompt` hands over the destination's persona
+  and nothing else: no move, no history, no reply to plan, no turn schema. The
+  scene is an input it is forbidden to improve, extend or replace.
+- **It fails closed.** `normalizeSeed` checks the returned shape against the
+  destination's own `seedWorld` value for that key, and a failure refuses the
+  turn. The only alternative to a usable premise is the canned one, which is the
+  dishonesty the tier was closed over.
+- **It is durable without being recomputed.** The carried and authored seed goes
+  into the switching turn's `world_delta`, under the interpreter's own delta, the
+  way `mediaVisited` does. Every later fold reproduces it from the row.
+
+And the asymmetry is real: `transformation → duel` needs **nothing** authored.
+Duel's only authored key is `scene`, which carries, and its other two are
+supposed to start empty. One direction of the only tier-3 pair never needed a new
+mechanism at all — which the first pass missed because it reasoned about the pair
+rather than about the ordered pair.
+
+Tier 4 stays closed. There the destination's premise is about a scene that has
+nothing to do with what you were playing, so there is nothing to derive it *from*
+— the input this whole mechanism depends on does not exist.

@@ -89,7 +89,7 @@ const M = build()
 const {
   parseJsonObject, normalizeInterpretation, applyWorldDelta, offeringLine, sessionScope,
   describeRejection, salvageQueries, buildSystemPrompt, buildUserPrompt, buildRetryPrompt,
-  buildSalvageAccountPrompt,
+  buildSalvageAccountPrompt, buildSeedPrompt, buildSeedSystemPrompt, normalizeSeed,
 } = M.prompt
 const { GAME_LIST, GAMES, getGame, ACCENT_CLASSES, FEATURED_GAMES, FEATURED_GAME_IDS, retiredGameName } = M.games
 const {
@@ -107,6 +107,7 @@ const {
   ENGINE_WORLD_KEYS, authoredSeedKeys, isEmptySeeded, switchTier, switchTargets, canSwitch,
   modeOf, modeAlong, switchesAlong, pathSinceSwitch, activeBranch, switchRefusal,
   switchChanges, playedUnder,
+  carriedSeedKeys, derivedSeedKeys, derivedSeedSpec, switchSeed,
 } = M.switching
 const {
   TUNING_AXES, AXIS_LIST, ALL_AXIS_IDS, AXIS_STOPS, DEFAULT_WEIGHT, WEIGHT_LABELS, WEIGHT_HINTS,
@@ -572,6 +573,10 @@ const mkTurn = (o = {}) => ({
   // Same reasoning one migration later: null is what every row written before 76
   // holds, and it has to read as "the session's own game".
   mode: o.mode ?? null,
+  // And 77. Null on both means nobody guessed — which is also what every row
+  // written before the columns existed says, correctly.
+  prediction: o.prediction ?? null,
+  prediction_called: o.prediction_called ?? null,
   legal: o.legal !== false,
   created_at: '',
 })
@@ -2375,8 +2380,21 @@ t('every ordered pair resolves to a tier or to null, never undefined',
     .every(tier => tier === null || [1, 2, 3, 4].includes(tier)))
 
 group('switching — what is offered')
-t('no premise-seeded game is ever a target',
-  GAME_LIST.every(from => switchTargets(from.id).every(isEmptySeeded)))
+/**
+ * A premise-seeded game is offered only where the premise can be *rebuilt* — it
+ * shares a world shape with the game you are leaving, so the content crosses and
+ * the rest is authored for it. From anywhere else it stays out, because there is
+ * no honest answer to where its scene came from.
+ */
+t('a premise-seeded game is offered only from another premise-seeded game',
+  GAME_LIST.every(from => switchTargets(from.id)
+    .every(to => isEmptySeeded(to) || !isEmptySeeded(from))))
+t('and only where a world key is genuinely shared',
+  GAME_LIST.every(from => switchTargets(from.id)
+    .every(to => isEmptySeeded(to) || carriedSeedKeys(from.id, to.id).length > 0)))
+t('from a chain game no premise-seeded game is offered at all',
+  ['tag', 'chain', 'translation', 'counterpoint', 'embodiment', 'prediction']
+    .every(id => switchTargets(id).every(isEmptySeeded)))
 t('every offered target agrees with canSwitch',
   GAME_LIST.every(from => switchTargets(from.id).every(to => canSwitch(from.id, to.id))))
 t('a game is never offered as a switch into itself',
@@ -2384,8 +2402,12 @@ t('a game is never offered as a switch into itself',
 t('from tag there are six targets: the other six empty-seeded games',
   switchTargets('tag').length === 6 && switchTargets('tag').some(g => g.id === 'embodiment'))
 t('and duel is not among them', !switchTargets('tag').some(g => g.id === 'duel'))
-t('tier 3 is computable but not offered',
-  switchTier('duel', 'transformation') === 3 && !canSwitch('duel', 'transformation'))
+t('tier 3 is offered now that the premise question has an answer',
+  switchTier('duel', 'transformation') === 3 && canSwitch('duel', 'transformation'))
+t('tier 4 is the only class that is never offered',
+  GAME_LIST.flatMap(a => GAME_LIST.map(b => [a.id, b.id]))
+    .filter(([a, b]) => switchTier(a, b) === 4)
+    .every(([a, b]) => !canSwitch(a, b)))
 
 group('switching — reading the mode off a path')
 const PRE_76 = [
@@ -2498,10 +2520,8 @@ t('a premise-seeded destination is refused by naming what it ships', (() => {
   const why = switchRefusal('tag', 'duel', { onTable: true })
   return typeof why === 'string' && why.includes('scene')
 })())
-t('a tier-3 pair is refused with the reason it is unresolved, not as unknown', (() => {
-  const why = switchRefusal('duel', 'transformation', { onTable: true })
-  return typeof why === 'string' && !why.includes('no game called')
-})())
+t('a tier-3 pair is no longer refused',
+  switchRefusal('duel', 'transformation', { onTable: true }) === null)
 t('an unknown game is refused as unknown', (() => {
   const why = switchRefusal('tag', 'nonesuch', { onTable: true })
   return typeof why === 'string' && why.includes('nonesuch')
@@ -2543,6 +2563,211 @@ t('a pre-76 row is read as the session’s game, so it marks correctly too',
   playedUnder(PRE_76[0], 'tag', 'embodiment')?.name === 'Tag')
 t('engine-maintained world keys are excluded from every shape comparison',
   ENGINE_WORLD_KEYS.includes('facts') && ENGINE_WORLD_KEYS.includes('mediaVisited'))
+
+/**
+ * Tier 3 — the switch that needs part of its own seed written for it.
+ *
+ * The pair is `duel` ↔ `transformation` and it is **asymmetric**, which is the
+ * thing worth locking down: the scene crosses both ways, but only one direction
+ * needs anything authored. Transformation's `invariants` is a statement about a
+ * scene and its canned value is false of any other; Duel's remaining keys are a
+ * zeroed score and an empty list, which are supposed to start that way.
+ */
+group('switching — tier 3 carries a scene and authors the rest')
+t('the scene is what crosses, both ways',
+  carriedSeedKeys('duel', 'transformation').join(',') === 'scene' &&
+  carriedSeedKeys('transformation', 'duel').join(',') === 'scene')
+t('into Transformation, invariants have to be written for the carried scene',
+  derivedSeedKeys('duel', 'transformation').join(',') === 'invariants')
+t('into Duel, nothing does — its other keys are meant to start empty',
+  derivedSeedKeys('transformation', 'duel').length === 0)
+t('so one direction of the only tier-3 pair needed no new mechanism at all',
+  derivedSeedKeys('transformation', 'duel').length === 0 &&
+  derivedSeedKeys('duel', 'transformation').length > 0)
+t('the keys to author arrive with the destination’s own description of them', (() => {
+  const spec = derivedSeedSpec('duel', 'transformation')
+  return spec.length === 1 && spec[0].key === 'invariants' && spec[0].description.length > 10
+})())
+t('nothing is ever asked for on a tier-1 or tier-2 switch',
+  GAME_LIST.flatMap(a => GAME_LIST.map(b => [a.id, b.id]))
+    .filter(([a, b]) => [1, 2].includes(switchTier(a, b)))
+    .every(([a, b]) => derivedSeedKeys(a, b).length === 0))
+
+group('switching — the seed a switch folds onto')
+const DUEL_WORLD = {
+  scene: 'A woman stands in a stairwell she has already left once tonight.',
+  score: { player: 2, opponent: 1 },
+  established: ['The stairwell light is on a timer.'],
+  facts: [],
+}
+t('tier 2 folds onto the destination’s own seed, untouched',
+  JSON.stringify(switchSeed('tag', 'embodiment', { chain: ['a', 'b'] })) ===
+  JSON.stringify(GAMES.embodiment.seedWorld))
+t('tier 1 likewise — it does not restart the fold, so there is no seed to build',
+  JSON.stringify(switchSeed('tag', 'chain', { chain: ['a'] })) ===
+  JSON.stringify(GAMES.chain.seedWorld))
+t('tier 3 takes the carried scene from the world as it stood', (() => {
+  const seed = switchSeed('duel', 'transformation', DUEL_WORLD, { invariants: ['She has not sat down.'] })
+  return seed.scene === DUEL_WORLD.scene
+})())
+t('and the authored key, not the canned one', (() => {
+  const seed = switchSeed('duel', 'transformation', DUEL_WORLD, { invariants: ['She has not sat down.'] })
+  return seed.invariants.join('') === 'She has not sat down.' &&
+    !seed.invariants.join('').includes('one man waiting')
+})())
+t('keys the destination owns and the source does not are left as seeded', (() => {
+  const seed = switchSeed('duel', 'transformation', DUEL_WORLD, { invariants: ['x'] })
+  return Array.isArray(seed.ledger) && seed.ledger.length === 0
+})())
+t('and the source’s own keys do not leak in — a score is not Transformation’s', (() => {
+  const seed = switchSeed('duel', 'transformation', DUEL_WORLD, { invariants: ['x'] })
+  return seed.score === undefined && seed.established === undefined
+})())
+t('the easy direction needs no authored input to come out right', (() => {
+  const seed = switchSeed('transformation', 'duel', { scene: 'A bus shelter, rewritten.', ledger: ['x'] })
+  return seed.scene === 'A bus shelter, rewritten.' &&
+    seed.score.player === 0 && seed.score.opponent === 0 && seed.ledger === undefined
+})())
+/**
+ * The guard that keeps the canned premise out when authoring fails. `switchSeed`
+ * stays pure and falls back to it; the route refuses the turn rather than
+ * shipping that fallback, and this asserts the fallback is the only thing a
+ * missing key can produce — i.e. that it is detectable.
+ */
+t('a missing authored key falls back to the canned value, detectably',
+  switchSeed('duel', 'transformation', DUEL_WORLD, {}).invariants
+    .join('').includes('one man waiting'))
+
+group('normalizeSeed — authored seed content, shape-checked')
+const TF = GAMES.transformation
+t('an array key accepts an array of strings',
+  normalizeSeed({ invariants: ['a', 'b'] }, TF, ['invariants']).invariants.length === 2)
+t('a single string is wrapped rather than rejected — "one invariant" is meant',
+  normalizeSeed({ invariants: 'a' }, TF, ['invariants']).invariants.join('') === 'a')
+t('blank entries are dropped',
+  normalizeSeed({ invariants: ['a', '  ', ''] }, TF, ['invariants']).invariants.length === 1)
+t('an array that empties out is a failure, not an empty premise',
+  normalizeSeed({ invariants: ['', ' '] }, TF, ['invariants']) === null)
+t('a missing key is a failure', normalizeSeed({}, TF, ['invariants']) === null)
+t('a number where strings belong is a failure',
+  normalizeSeed({ invariants: 7 }, TF, ['invariants']) === null)
+t('a non-object is a failure', normalizeSeed(null, TF, ['invariants']) === null &&
+  normalizeSeed(['a'], TF, ['invariants']) === null)
+t('a string key wants a non-empty string', (() => {
+  const d = GAMES.duel
+  return normalizeSeed({ scene: 'A room.' }, d, ['scene']).scene === 'A room.' &&
+    normalizeSeed({ scene: '   ' }, d, ['scene']) === null
+})())
+t('extra keys the caller did not ask for are not carried through', (() => {
+  const seed = normalizeSeed({ invariants: ['a'], scene: 'sneaky' }, TF, ['invariants'])
+  return seed.scene === undefined
+})())
+
+/**
+ * The prediction, which is now a fact about the log rather than a tally the
+ * interpreter keeps about itself. See migration 77.
+ */
+group('prediction — the ruling is recorded, not self-reported')
+t('a bare true and a bare false are the only values taken',
+  normalizeInterpretation({ reading: 'r', called: true }, ALL_MEDIA, ALL_RELATIONS).called === true &&
+  normalizeInterpretation({ reading: 'r', called: false }, ALL_MEDIA, ALL_RELATIONS).called === false)
+t('the string "true" is not a hit — a tally built on it would be a wrong number',
+  normalizeInterpretation({ reading: 'r', called: 'true' }, ALL_MEDIA, ALL_RELATIONS).called === null)
+t('an absent ruling is null, which already means "nobody guessed"',
+  normalizeInterpretation({ reading: 'r' }, ALL_MEDIA, ALL_RELATIONS).called === null)
+t('the schema asks for "called" only when a prediction was actually supplied',
+  !buildSystemPrompt(GAMES.prediction, ALL_MEDIA, ALL_RELATIONS, DEFAULT_TUNING, false, undefined, false)
+    .includes('"called"') &&
+  buildSystemPrompt(GAMES.prediction, ALL_MEDIA, ALL_RELATIONS, DEFAULT_TUNING, false, undefined, true)
+    .includes('"called"'))
+/**
+ * The field follows the field, not the registry. The turn route has always
+ * accepted `prediction` from any game — `wantsPrediction` gates only whether the
+ * composer renders an input — so a schema keyed on the game id would disagree
+ * with the field the moment a client posted one.
+ */
+t('and it asks in a game that is not Prediction, because the route accepts one there',
+  buildSystemPrompt(GAMES.tag, ALL_MEDIA, ALL_RELATIONS, DEFAULT_TUNING, false, undefined, true)
+    .includes('"called"'))
+t('the interpreter is told the running score is not its to keep',
+  buildSystemPrompt(GAMES.prediction, ALL_MEDIA, ALL_RELATIONS, DEFAULT_TUNING, false, undefined, true)
+    .includes('NOT yours to keep'))
+
+group('prediction — the copy no longer tells it to resist the player')
+const PREDICT_PROMPT = buildUserPrompt({
+  game: GAMES.prediction, media: ALL_MEDIA, relations: ALL_RELATIONS, world: {},
+  history: [], move: off('m', 'music'), previous: off('p', 'artwork'),
+  claimedRelation: null, spent: [], turnIndex: 3, prediction: 'a stretch about falling',
+})
+t('the guess is shown', PREDICT_PROMPT.includes('a stretch about falling'))
+t('the ordering rule survives', /on your own terms/.test(PREDICT_PROMPT))
+/**
+ * The failure the old copy licensed. "You never bend your answer to match a
+ * guess" reads as resistance, and an interpreter that resists will swerve off an
+ * answer the player correctly predicted — punishing a good read and making the
+ * one thing this game is for impossible. It is also invisible from inside a
+ * turn: a swerved answer looks like an independent one.
+ */
+t('swerving off a correct guess is named and forbidden',
+  /play that answer anyway/.test(PREDICT_PROMPT))
+t('and the reason is given as learnability, not as obedience',
+  /impossible to learn/.test(PREDICT_PROMPT))
+t('nothing in the prompt tells it to resist the player',
+  !/never bend/i.test(PREDICT_PROMPT) && !/do not let/i.test(PREDICT_PROMPT))
+t('the persona says consistency is with itself',
+  /consistent with yourself/.test(GAMES.prediction.persona))
+t('and that it is on the player’s side',
+  /on their side/.test(GAMES.prediction.persona))
+t('the retired adversarial clauses are gone from the persona',
+  !/never bend/i.test(GAMES.prediction.persona) &&
+  !/never pretend a miss/i.test(GAMES.prediction.persona))
+t('no prediction, no block — an ordinary turn is unchanged',
+  !buildUserPrompt({
+    game: GAMES.tag, media: ALL_MEDIA, relations: ALL_RELATIONS, world: {},
+    history: [], move: off('m', 'music'), previous: null,
+    claimedRelation: null, spent: [], turnIndex: 1,
+  }).includes('PREDICTION'))
+
+group('the seed prompt — authoring a premise for a scene that arrived')
+const SEED_PROMPT = buildSeedPrompt({
+  from: GAMES.duel,
+  to: GAMES.transformation,
+  carried: { scene: 'A woman stands in a stairwell she has already left once tonight.' },
+  keys: GAMES.transformation.worldKeys.filter(k => k.key === 'invariants'),
+})
+t('the carried scene is in it', SEED_PROMPT.includes('stairwell'))
+t('it says where the scene came from', SEED_PROMPT.includes('Duel'))
+t('it asks for exactly the key that needs authoring',
+  SEED_PROMPT.includes('"invariants"') && !SEED_PROMPT.includes('"ledger"'))
+t('it carries the destination’s own description of that key',
+  SEED_PROMPT.includes('What has survived every transformation so far'))
+t('the system prompt forbids replacing the scene it was given',
+  /Do not improve it, extend it, or replace it/.test(buildSeedSystemPrompt(GAMES.transformation)))
+t('and says plainly that no turn is being taken',
+  /not taking a turn/.test(buildSeedSystemPrompt(GAMES.transformation)))
+t('the canned premise is not in either half — that is the whole point',
+  !SEED_PROMPT.includes('one man waiting') &&
+  !buildSeedSystemPrompt(GAMES.transformation).includes('one man waiting'))
+
+group('switching — what a tier-3 switch tells the player')
+t('it names what crosses over',
+  switchChanges('duel', 'transformation')[0].detail.includes('scene'))
+t('and that the rest is written for it rather than arriving from nowhere',
+  /written for it/.test(switchChanges('duel', 'transformation')[0].detail))
+t('the easy direction says its empty keys start empty',
+  /from nothing/.test(switchChanges('transformation', 'duel')[0].detail))
+/**
+ * The destination is named on purpose — "Embodiment's world is meant to begin
+ * empty" is the informative sentence. What must not appear is any *other* game,
+ * which is what a hand-written per-pair string would produce and what the
+ * derived form cannot. (A first attempt at this asserted no game id appeared at
+ * all and failed on "keeps the chain you have built", where `chain` is an
+ * English noun. The invariant is about naming, not about the substring.)
+ */
+t('the only game a change names is the one being switched into',
+  GAME_LIST.flatMap(from => switchTargets(from.id).map(to => ({ to, changes: switchChanges(from.id, to.id) })))
+    .every(({ to, changes }) => changes.every(c =>
+      GAME_LIST.filter(g => g.id !== to.id).every(other => !c.detail.includes(other.name)))))
 
 rmSync(outDir, { recursive: true, force: true })
 

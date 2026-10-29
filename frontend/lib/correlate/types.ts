@@ -410,6 +410,23 @@ export interface CorrelationTurn {
   /** False only in games that enforce their constraint, when the move was
    *  ruled not to connect. The row is still written. */
   legal: boolean
+  /**
+   * The player's guess at what this move would draw back, verbatim.
+   *
+   * Stored rather than consumed. It used to go into the prompt and vanish, which
+   * left the ruling beside it uncheckable — and the ruling is what the whole
+   * Prediction world is built from. Null on turns where nobody guessed, and on
+   * every row written before migration 77.
+   */
+  prediction: string | null
+  /**
+   * Whether that guess was right. Null means there was none.
+   *
+   * The engine folds `record` in the world from this column rather than asking
+   * the interpreter to keep a tally, which is the same move `relations.ts`
+   * describes making when `threadsUsed` became a real `relation` column.
+   */
+  prediction_called: boolean | null
   created_at: string
 }
 
@@ -475,6 +492,19 @@ export interface Interpretation {
   worldDelta: Record<string, any>
   /** Games with `enforcesConstraint` only. Authoritative — nothing recomputes it. */
   verdict?: 'legal' | 'illegal'
+  /**
+   * Whether the player's prediction landed. Null when none was made.
+   *
+   * Asked for only when a prediction was supplied, and ruled once — on the first
+   * pass, like `verdict`. A retry answers the move again; it does not re-judge
+   * what the player guessed, and re-asking would let a second completion
+   * overturn a ruling on a guess it was reading for the first time.
+   *
+   * This is the field that takes the hit rate out of the interpreter's hands.
+   * `record` in the world is folded from it by the engine, the way
+   * `mediaVisited` is — see migration 77 for why that mattered.
+   */
+  called?: boolean | null
 }
 
 export interface TurnResponse {

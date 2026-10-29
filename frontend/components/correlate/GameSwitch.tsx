@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { ChevronDown, Shuffle, X } from 'lucide-react'
 import { ACCENT_CLASSES, getGame } from '@/lib/correlate/games'
-import { switchChanges, switchTargets, switchTier } from '@/lib/correlate/switching'
+import { carriedSeedKeys, switchChanges, switchTargets, switchTier } from '@/lib/correlate/switching'
 import type { CorrelationGame } from '@/lib/correlate/types'
 
 /**
@@ -33,11 +33,11 @@ import type { CorrelationGame } from '@/lib/correlate/types'
  *    switching from Tag to Counterpoint moves the ruling from an interpreter to
  *    them — and it was the one the design left unexamined.
  *
- * Only tiers 1 and 2 are offered, which is `switchTargets`' business and not
- * this component's: the games that ship an authored premise have no honest
- * answer to where that premise came from mid-chain, so they are not in the list
- * and there is nothing here to explain their absence. A player who wants Duel
- * starts Duel.
+ * Which games are in the list is `switchTargets`' business and not this
+ * component's. What that means in practice is that the list is usually short and
+ * occasionally has one entry nothing else does: from Duel, Transformation is
+ * offered because the two share a scene, and from a chain game neither is. There
+ * is nothing here to explain an absence — a player who wants Duel starts Duel.
  */
 export default function GameSwitch({
   from,
@@ -120,9 +120,13 @@ export default function GameSwitch({
 
       {open && (
         <div className="mt-2 space-y-2">
+          {/* Deliberately says what is true of every entry and leaves the rest to
+              the per-game line. "Your last offering becomes the opening move" is
+              true of a fresh world and misleading where a scene crosses over, and
+              one blurb cannot be both. */}
           <p className="text-[11px] text-gray-500 dark:text-gray-400 leading-relaxed">
-            The offering on the table becomes the opening move of the new game, which is how every
-            game starts anyway. Nothing already played changes.
+            The game changes from your next move on. Nothing already played changes, and the branch
+            you are on stays playable.
           </p>
           <ul className="space-y-1.5">
             {targets.map(game => (
@@ -154,7 +158,16 @@ function Target({ game, from, disabled, onArm }: {
 }) {
   const [shown, setShown] = useState(false)
   const accent = ACCENT_CLASSES[game.accent]
-  const carries = switchTier(from, game.id) === 1
+  const tier = switchTier(from, game.id)
+  /**
+   * Three states, as a phrase about the player's game rather than a tier number.
+   * "Tier 1" is a fact about our analysis; "the chain carries over" is a fact
+   * about what they are about to play.
+   */
+  const label =
+    tier === 1 ? 'chain carries over'
+    : tier === 3 ? `${carriedSeedKeys(from, game.id).join(' and ')} carries over`
+    : 'fresh world'
 
   return (
     <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-2.5">
@@ -163,7 +176,7 @@ function Target({ game, from, disabled, onArm }: {
           <p className="text-xs font-medium text-gray-800 dark:text-gray-200 truncate">
             {game.name}
             <span className={`ml-1.5 text-[10px] font-medium px-1.5 py-0.5 rounded-full ${accent.chip}`}>
-              {carries ? 'chain carries over' : 'fresh world'}
+              {label}
             </span>
           </p>
           <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 leading-relaxed">{game.tagline}</p>

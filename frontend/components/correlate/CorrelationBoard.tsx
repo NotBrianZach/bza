@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, CornerDownRight, Flag, GitBranch,
   Globe2, Link2, Loader2, Pause, Play, Radio, Repeat, Shuffle, SignalZero, SkipBack,
-  SkipForward,
+  SkipForward, Target,
 } from 'lucide-react'
 import { authedFetch } from '@/lib/authedFetch'
 import { track } from '@/lib/analytics'
@@ -1405,6 +1405,30 @@ function TurnBlock({ turn, graph, player, accentText, accentChip, isFocus, onFoc
         label={moveLabel}
         compact={alone}
       />
+
+      {/* The guess, between the move and the reading.
+          Position is the point: it goes *above* the answer, which is the order it
+          happened in, so the player reads their own call before seeing what came
+          back. Shown even when `prediction_called` is null — a guess with no
+          ruling is a real state (the interpreter did not answer the field) and
+          hiding the guess would make it look as though none was made. */}
+      {turn.prediction && (
+        <div className="flex items-start gap-2 pl-1">
+          {turn.prediction_called === true ? (
+            <CheckCircle2 size={13} className="flex-shrink-0 mt-0.5 text-emerald-500 dark:text-emerald-400" />
+          ) : turn.prediction_called === false ? (
+            <Target size={13} className="flex-shrink-0 mt-0.5 text-gray-400 dark:text-gray-500" />
+          ) : (
+            <Target size={13} className="flex-shrink-0 mt-0.5 text-gray-300 dark:text-gray-600" />
+          )}
+          <p className="text-xs leading-relaxed">
+            <span className="text-gray-400 dark:text-gray-500">
+              {turn.prediction_called === true ? 'you called it — ' : 'you predicted — '}
+            </span>
+            <span className="text-gray-600 dark:text-gray-300">{turn.prediction}</span>
+          </p>
+        </div>
+      )}
 
       {turn.reading && (
         <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed pl-1 italic">{turn.reading}</p>

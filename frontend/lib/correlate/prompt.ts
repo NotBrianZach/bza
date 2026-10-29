@@ -115,6 +115,15 @@ export function buildSystemPrompt(
   selfReply = false,
   /** Media still within their share this turn. Omit for no proportions filter. */
   answerIn?: MediumId[],
+  /**
+   * True when the player supplied a prediction this turn, which adds the one
+   * schema field a ruling on it needs.
+   *
+   * A flag rather than `game.id === 'prediction'` deliberately: the turn route
+   * accepts the field from any game, so the schema has to follow the field and
+   * not the registry. See the PREDICTION block in `buildUserPrompt`.
+   */
+  predicted = false,
 ): string {
   const worldKeys = game.worldKeys.map(k => `  - ${k.key}: ${k.description}`).join('\n')
 
@@ -329,7 +338,11 @@ Rules for the world:
 - Return only a *delta*. Keys you omit are left alone. Never restate the whole world.
 - Anything an earlier turn established is binding. You may complicate it, reveal it
   was incomplete, or put it in doubt — but you may not silently contradict it.
-- One turn establishes one new thing. Resist summarising.
+- One turn establishes one new thing. Resist summarising.${predicted ? `
+- A running prediction score is NOT yours to keep. Set "called" and the engine counts
+  it; a "record" in your delta would be a second tally kept by the less reliable of
+  the two. Say what the player's reasoning got right or missed in prose instead —
+  that part no arithmetic can produce.` : ''}
 
 OUTPUT
 Reply with a single JSON object and nothing else. No prose before or after, no
@@ -355,7 +368,7 @@ markdown fence. Schema:
   "carried": "what survived the crossing, one clause.",
   "lost": "what did not, one clause.",
   "facts": ["at most two new durable statements"],
-  "worldDelta": { "only": "changed keys" }${game.enforcesConstraint && !selfReply && gatesLegality(tuning) ? ',\n  "verdict": "legal" | "illegal"' : ''}
+  "worldDelta": { "only": "changed keys" }${predicted ? ',\n  "called": true | false    (did the player\'s prediction land? a bare boolean, and it is recorded on the turn — do not also maintain a running score in worldDelta)' : ''}${game.enforcesConstraint && !selfReply && gatesLegality(tuning) ? ',\n  "verdict": "legal" | "illegal"' : ''}
 }
 
 Include "query" or "composed", never both — whichever the reply's medium calls for.
@@ -665,10 +678,38 @@ export function buildUserPrompt(opts: {
     if (standing) parts.push(standing)
   }
 
+  /**
+   * THE PREDICTION, AND THE TWO WAYS TO GET IT WRONG.
+   *
+   * This block is in `buildUserPrompt` rather than in Prediction's own registry
+   * entry, which means it is reached by *every* game — the route accepts the
+   * field unconditionally and only the composer gates it. So the rules have to
+   * stand on their own here, without the game's persona behind them.
+   *
+   * Ordering first, because a guess read before the answer is chosen stops being
+   * a guess and becomes a suggestion. That much was already here.
+   *
+   * What was not, and is the more likely failure: **swerving**. An interpreter
+   * that treats the guess as something to resist will avoid an answer the player
+   * correctly predicted, which punishes a good read and makes the interpreter
+   * unlearnable — the exact thing the game exists to let you learn. It is also
+   * invisible from inside the turn: a swerved answer looks like an independent
+   * one. So the instruction is stated positively, and "being predicted is this
+   * working" is said outright rather than implied.
+   */
   if (prediction) {
     parts.push(
-      `THE PLAYER'S PREDICTION (choose your reply on your own terms first, then judge it): "${prediction}"\n` +
-      `In your narration, say whether they called it and exactly where their reasoning diverged from yours.`,
+      `THE PLAYER'S PREDICTION\n"${prediction}"\n` +
+      `Choose your reply on your own terms, then read this. The ordering is not suspicion of the ` +
+      `player — it is that a guess read first becomes a suggestion, and then there was nothing for ` +
+      `them to have predicted.\n` +
+      `- If they called it: say so plainly, and play that answer anyway. Reaching for something ` +
+      `else because they saw it coming is the one move that makes you impossible to learn, and it ` +
+      `is a worse outcome than being obvious. Set "called" to true.\n` +
+      `- If they missed: say exactly where their reasoning diverged from yours, in terms they could ` +
+      `use to call it next time. Set "called" to false.\n` +
+      `- Either way you are on their side. The aim is that they get good at reading you, so the ` +
+      `reasoning you give is the thing they are owed — not a verdict on their guess.`,
     )
   }
 
@@ -970,6 +1011,12 @@ export function normalizeInterpretation(
     facts,
     worldDelta,
     verdict: parsed.verdict === 'illegal' ? 'illegal' : parsed.verdict === 'legal' ? 'legal' : undefined,
+    // Strict on the two booleans and null on anything else, including the string
+    // "true". A hit rate is arithmetic over this column, so a coerced value is a
+    // wrong number rather than a soft label — and null already has a meaning
+    // ("no prediction was made") that a failed parse should fall into rather
+    // than guessing at a verdict nobody gave.
+    called: parsed.called === true ? true : parsed.called === false ? false : null,
   }
 }
 
@@ -1177,6 +1224,136 @@ export function buildSalvageAccountPrompt(opts: {
     `  "lost": "what this record does not answer, one clause — or \\"\\"."\n` +
     `}`,
   ].join('\n\n')
+}
+
+/**
+ * Author a new game's premise for a scene it was not written for.
+ *
+ * The only place in this engine that produces *seed* content. Every other seed
+ * is authored by hand in the registry, and `worldFor` only ever folds deltas
+ * onto one — so this is a genuinely new kind of call and worth being clear about
+ * why it is justified rather than a shortcut.
+ *
+ * It exists for one switch: between two games that both turn on a `scene`
+ * (`duel` ↔ `transformation`). The scene the player has been playing crosses
+ * over, and the destination's remaining authored keys are statements *about a
+ * scene* — `invariants` is "what has survived every transformation so far". The
+ * canned value is true of the game's own opening scene and false of the one that
+ * arrived, so there are three options and two of them are bad: keep it and the
+ * world asserts something untrue, drop it and the destination has lost the thing
+ * it tracks. Writing it for the scene that is actually there is the third.
+ *
+ * Deliberately narrow, and the narrowness is the honesty guard. It is shown the
+ * carried world and nothing else — no move, no history, no reply to plan — and
+ * it may only return the keys it was asked for. It cannot establish a fact,
+ * cannot touch the chain, and cannot invent a scene: the scene is an input.
+ *
+ * Paired with `buildSeedSystemPrompt` rather than with the full
+ * `buildSystemPrompt`, because handing it the turn schema would invite it to
+ * answer a turn nobody is playing.
+ */
+export function buildSeedSystemPrompt(to: CorrelationGame): string {
+  return `${to.persona}
+
+You are setting up a game of "${to.name}" on a scene that has arrived from another
+game, mid-session. The player was playing something else; what they built is below,
+and it is now what this game is about.
+
+You are not taking a turn. Nothing is being answered, nothing is being judged, and
+no offering is being chosen. You are writing down what is true of this scene at the
+moment this game starts — the things ${to.name} keeps track of, which do not exist
+yet because the scene came from somewhere else.
+
+Two rules, and the first is the one that matters:
+
+- **Read the scene you were given. Do not improve it, extend it, or replace it.**
+  It is not your opening scene and it is not a draft. If it is an apartment, your
+  answer is about an apartment. A premise you prefer would be exactly the thing
+  this call exists to avoid — the canned one arriving mid-chain and contradicting
+  what the player just played.
+- Write only what the scene supports. If what you can say about it is thin, say
+  something thin and true rather than something rich and invented.`
+}
+
+export function buildSeedPrompt(opts: {
+  from: CorrelationGame
+  to: CorrelationGame
+  /** The keys that crossed, with the values they crossed with. */
+  carried: Record<string, any>
+  /** What needs authoring, with the destination's own description of each. */
+  keys: { key: string; description: string }[]
+}): string {
+  const { from, to, carried, keys } = opts
+
+  const carriedBlock = Object.entries(carried)
+    .map(([k, v]) => `${k}: ${typeof v === 'string' ? v : JSON.stringify(v, null, 2)}`)
+    .join('\n\n')
+
+  return [
+    `WHERE THIS CAME FROM\nThe player has been playing ${from.name}. They have switched to ` +
+    `${to.name}, and this is the first moment of it.`,
+    `WHAT CROSSED OVER\n${carriedBlock}`,
+    `WHAT ${to.name.toUpperCase()} NEEDS, AND DOES NOT HAVE\n` +
+    keys.map(k => `- ${k.key}: ${k.description}`).join('\n'),
+    `Write ${keys.length === 1 ? 'that one key' : 'those keys'} for the scene above. ` +
+    `${keys.length === 1 ? 'It has' : 'They have'} to be true of it as it stands — ` +
+    `including whatever the other game already did to it.`,
+    `Reply with a single JSON object and nothing else, with exactly ` +
+    `${keys.length === 1 ? 'this key' : 'these keys'} and no others:\n` +
+    `{\n${keys.map(k => `  "${k.key}": …`).join(',\n')}\n}`,
+  ].join('\n\n')
+}
+
+/**
+ * Validate authored seed content against the shape the destination declared.
+ *
+ * Returns null — and the route then refuses the switch — rather than patching a
+ * half-answer. That is deliberate, and it is the one place a model call gets to
+ * block a switch: the alternative to a usable premise is the canned one, which
+ * is the dishonest option this whole path exists to avoid. Better to tell the
+ * player it could not be set up than to start Transformation on an apartment
+ * while asserting there is still one man waiting.
+ *
+ * The expected shape comes from the game's own `seedWorld` value for that key,
+ * so nothing has to be declared twice: `invariants` is an array because
+ * Transformation seeds it with one, and a string arriving where an array belongs
+ * is wrapped rather than rejected, because "one invariant" is a reasonable thing
+ * to have meant and the shape is recoverable without guessing at content.
+ */
+export function normalizeSeed(
+  parsed: any,
+  to: CorrelationGame,
+  keys: string[],
+): Record<string, unknown> | null {
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null
+
+  const seed: Record<string, unknown> = {}
+  for (const key of keys) {
+    const expected = (to.seedWorld as Record<string, unknown>)[key]
+    const got = parsed[key]
+
+    if (Array.isArray(expected)) {
+      const list = Array.isArray(got) ? got : typeof got === 'string' ? [got] : null
+      if (!list) return null
+      const cleaned = list.map(v => (typeof v === 'string' ? v.trim() : '')).filter(Boolean)
+      if (cleaned.length === 0) return null
+      seed[key] = cleaned
+      continue
+    }
+
+    if (typeof expected === 'string') {
+      if (typeof got !== 'string' || !got.trim()) return null
+      seed[key] = got.trim()
+      continue
+    }
+
+    // No shape to check against — the key was seeded null or with a number, which
+    // means the registry does not say what it looks like. Take what came back if
+    // anything did, since refusing would be stricter than the game itself.
+    if (got === undefined || got === null) return null
+    seed[key] = got
+  }
+  return seed
 }
 
 /**

@@ -150,21 +150,119 @@ export function switchTier(fromId: string, toId: string): 1 | 2 | 3 | 4 | null {
 /**
  * The games a player may switch into from here, in registry order.
  *
- * Tiers 1 and 2 only. Tier 3 is computable and is not offered: both its members
- * are premise-seeded, so each direction needs a decision about what happens to
- * the destination's standing premise, and no such decision has been made. Tier
- * 4 has no honest form.
+ * Tiers 1, 2 and 3. Tier 4 is the only class with no honest form: its
+ * destination ships a premise about a scene that has nothing to do with what
+ * you were playing, and there is no answer to where that premise came from.
+ *
+ * Tier 3 was withheld on the first pass and is admitted now that the premise
+ * question has an answer — see `derivedSeedKeys`. The distinction that made it
+ * answerable is that a tier-3 destination's premise is not arbitrary: it is
+ * *about* a scene the source game also has, so the scene carries and only the
+ * keys written about it need authoring.
  */
 export function switchTargets(fromId: string): CorrelationGame[] {
-  return GAME_LIST.filter(g => {
-    const tier = switchTier(fromId, g.id)
-    return tier === 1 || tier === 2
-  })
+  return GAME_LIST.filter(g => canSwitch(fromId, g.id))
 }
 
 export function canSwitch(fromId: string, toId: string): boolean {
   const tier = switchTier(fromId, toId)
-  return tier === 1 || tier === 2
+  return tier === 1 || tier === 2 || tier === 3
+}
+
+/**
+ * The destination's world keys that the source also keeps, and therefore has a
+ * live value for.
+ *
+ * `duel` ↔ `transformation` is the whole of this today: both turn on `scene`,
+ * and the scene the player has been playing is what crosses. Everything else in
+ * either game's world is written *about* its own scene and cannot.
+ */
+export function carriedSeedKeys(fromId: string, toId: string): string[] {
+  const from = getGame(fromId)
+  const to = getGame(toId)
+  if (!from || !to) return []
+  return ownKeys(to).filter(k => ownKeys(from).includes(k))
+}
+
+/**
+ * The destination's *authored* keys that nothing can carry, and which therefore
+ * have to be written for the scene that did.
+ *
+ * This is the question that kept tier 3 closed, and naming it this precisely is
+ * what opened it. The problem was never `scene` — a drifted scene is still a
+ * scene and crosses fine. It was `invariants`:
+ *
+ *   transformation.seedWorld.invariants = ['There is still one man waiting.']
+ *
+ * which is a true statement about a bus shelter and a meaningless one about an
+ * apartment in 2022. Both available options were bad — keep it and the world
+ * asserts something false, drop it and Transformation has lost the thing it
+ * tracks, since `invariants` is "what has survived every transformation so far"
+ * and an empty one gives the first transformation nothing to preserve against.
+ *
+ * So the third option: author it, for the scene that actually arrived. That is a
+ * model call producing *seed* content, which the engine does nowhere else —
+ * every seed in the registry is written by hand, and `worldFor` only ever folds
+ * deltas onto one. The route makes the call; see `switchSeed` for where the
+ * result goes, and `buildSeedPrompt` for what is asked.
+ *
+ * Empty for `transformation` → `duel`, which is the easy direction: Duel's only
+ * authored key is `scene`, and `score` and `established` are supposed to start
+ * empty. That asymmetry is real and worth knowing — one direction of the only
+ * tier-3 pair needed no new mechanism at all.
+ */
+export function derivedSeedKeys(fromId: string, toId: string): string[] {
+  const to = getGame(toId)
+  if (!to) return []
+  const carried = carriedSeedKeys(fromId, toId)
+  return authoredSeedKeys(to).filter(k => !carried.includes(k))
+}
+
+/** The `worldKeys` entries for the keys that need authoring, descriptions and all. */
+export function derivedSeedSpec(fromId: string, toId: string): { key: string; description: string }[] {
+  const to = getGame(toId)
+  if (!to) return []
+  const wanted = derivedSeedKeys(fromId, toId)
+  return to.worldKeys.filter(k => wanted.includes(k.key))
+}
+
+/**
+ * The world the new game's replay folds onto.
+ *
+ * Tiers 1 and 2 fold onto the destination's own seed, unchanged: tier 1 because
+ * the shapes match and the existing deltas apply, tier 2 because starting empty
+ * is where the destination is supposed to start.
+ *
+ * Tier 3 is the one that needs a seed built for the occasion — the carried keys
+ * taken from the world as it stood, and the authored ones supplied by `derived`.
+ * A key missing from `derived` falls back to the destination's canned value,
+ * which is the wrong content but a shaped one; the route refuses the switch
+ * rather than relying on that, and the fallback exists so this stays a pure
+ * function with no failure mode of its own.
+ *
+ * Durability is not this function's job and is worth saying so nothing goes
+ * looking for it: the route writes the result into the switching turn's
+ * `world_delta`, exactly the way `mediaVisited` is written, so every later fold
+ * reproduces it from the row rather than needing the seed recomputed.
+ */
+export function switchSeed(
+  fromId: string,
+  toId: string,
+  fromWorld: Record<string, any>,
+  derived: Record<string, unknown> = {},
+): Record<string, any> {
+  const to = getGame(toId)
+  if (!to) return {}
+  if (switchTier(fromId, toId) !== 3) return { ...to.seedWorld }
+
+  const seed: Record<string, any> = { ...to.seedWorld }
+  for (const key of carriedSeedKeys(fromId, toId)) {
+    if (fromWorld[key] !== undefined) seed[key] = fromWorld[key]
+  }
+  for (const key of derivedSeedKeys(fromId, toId)) {
+    if (derived[key] !== undefined) seed[key] = derived[key]
+  }
+  return seed
 }
 
 /**
@@ -350,11 +448,6 @@ export function switchRefusal(
   }
 
   const tier = switchTier(fromId, toId)
-  if (tier === 3) {
-    return `${to.name} is built around a premise of its own, and so is the game you are in. ` +
-      'Switching between two of those needs a decision about whose scene survives, and that ' +
-      'decision has not been made.'
-  }
   if (tier === 4) {
     const keys = authoredSeedKeys(to)
     const named = keys.length > 0 ? ` its ${keys.join(', ')}` : ' its premise'
@@ -391,9 +484,26 @@ export function switchChanges(fromId: string, toId: string): SwitchChange[] {
   const changes: SwitchChange[] = []
   const tier = switchTier(fromId, toId)
 
-  changes.push(tier === 1
-    ? { what: 'The world', detail: `Carries over — ${to.name} keeps the chain you have built.` }
-    : { what: 'The world', detail: `Starts fresh. ${to.name}'s world is meant to begin empty, and your last offering is its opening move. Nothing already recorded changes.` })
+  if (tier === 1) {
+    changes.push({ what: 'The world', detail: `Carries over — ${to.name} keeps the chain you have built.` })
+  } else if (tier === 3) {
+    const carried = carriedSeedKeys(fromId, toId)
+    const derived = derivedSeedKeys(fromId, toId)
+    changes.push({
+      what: 'The world',
+      detail: `Your ${carried.join(' and ')} crosses over as it stands. ${to.name} ` +
+        (derived.length > 0
+          ? `also keeps ${derived.join(' and ')}, which ${derived.length === 1 ? 'does' : 'do'} not ` +
+            `exist yet for this scene — ${derived.length === 1 ? 'it is' : 'they are'} written for it ` +
+            `when you switch, rather than ${to.name}'s own opening scene arriving from nowhere.`
+          // Derived rather than named, so a game added later does not need this
+          // sentence edited — and so no game id appears in this file's copy.
+          : `starts its ${ownKeys(to).filter(k => !authoredSeedKeys(to).includes(k)).join(' and ') || 'world'} ` +
+            `from nothing, which is where ${to.name} is supposed to start them.`),
+    })
+  } else {
+    changes.push({ what: 'The world', detail: `Starts fresh. ${to.name}'s world is meant to begin empty, and your last offering is its opening move. Nothing already recorded changes.` })
+  }
 
   if (from.judge !== to.judge) {
     changes.push({

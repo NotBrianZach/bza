@@ -1,10 +1,17 @@
 # Switching games mid-session
 
 **Date:** 2026-10-28
-**Status:** built 2026-10-29 — see `docs/CORRELATION_GAMES.md` §19 for what
-landed, and for the one place the tier table below contradicts this document's
-own seeding rule (`construction` is empty-seeded, so switching into it is tier
-2, not tier 3). The analysis is otherwise unchanged from the design pass.
+**Status:** built 2026-10-29. `docs/CORRELATION_GAMES.md` §19 covers tiers 1–2
+and the UI; §20 covers tier 3, which this document left withheld. Two places the
+analysis below is superseded:
+
+- the tier table contradicts this document's own seeding rule — `construction`
+  is empty-seeded, so switching into it is tier 2, not tier 3;
+- "tier 3 … each needs a decision about the destination's standing premise" has
+  an answer now (derive it from the carried scene), and the pair turns out to be
+  asymmetric: `transformation → duel` needed no new mechanism at all.
+
+The analysis is otherwise unchanged from the design pass.
 **Code read:** `frontend/lib/correlate/{games,tuning,graph,prompt}.ts`,
 `frontend/app/api/correlate/turn/route.ts`,
 `supabase/setup/00_baseline_bza_public.sql`
