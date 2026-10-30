@@ -131,6 +131,42 @@ const STRICT_OUTPUT_NOTE =
  */
 const INTERPRETER_TIMEOUT_MS = 60_000
 
+/**
+ * How much the interpreter is allowed to think before it answers.
+ *
+ * Measured against the real API rather than reasoned about, because the default
+ * turned out to be the single largest cost in the turn. Five samples on the
+ * production prompt with a warm cache, `max_tokens: 2800`:
+ *
+ *   | reasoning        | latency      | output    | of which thinking |
+ *   |------------------|--------------|-----------|-------------------|
+ *   | default (on)     | 11–35s       | 866–2662  | 591–2047          |
+ *   | `effort: low`    | 10–15s       | 636–1086  | 180–674           |
+ *   | disabled         | 3.6–8.3s     | 217–529   | 0                 |
+ *
+ * **Default was spending most of the turn thinking**: one sample wrote 2,047
+ * thinking tokens inside a 2,662-token response and came within 138 tokens of
+ * the cap. That is not an abstract cost — it is the §21e truncation, arriving
+ * from a direction nothing in the route could see. `low` leaves the same budget
+ * two to four times the headroom.
+ *
+ * **Disabled is faster and is not safe here.** On a Radiohead-answering-Millet
+ * turn it replied with the move itself — the one record `inPlay` forbids — and
+ * its reading described the player as "replaying the same offering". That answer
+ * would be rejected downstream and cost a retry, so the 3.6s is not really 3.6s.
+ * `low` produced a valid, non-self reply on four turns out of four.
+ *
+ * So `low`, on the reading that this game does not want private deliberation:
+ * the reading *is* the output here, not a conclusion derived from hidden work.
+ * One knob, one place, measurements attached — raise it if readings get thin.
+ *
+ * Kept constant on purpose. Toggling it between turns would invalidate the
+ * prompt cache every time, which the measurement also showed: the samples that
+ * changed this setting reported `cached=0, write=4229` and the ones that did not
+ * reported `cached=4229`.
+ */
+const REASONING_EFFORT = 'low'
+
 /** One image put in front of the interpreter, with what it is of. */
 type InterpreterImage = { url: string; of: string; medium: MediumId }
 
@@ -158,6 +194,15 @@ function providerUsage(data: any): {
   const u = data?.usage ?? {}
   const n = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : 0)
   return {
+    /**
+     * NOTE the semantics differ by provider and the number is not comparable
+     * across them. OpenRouter's `prompt_tokens` is the *total* prompt including
+     * whatever was served from cache; Anthropic's `input_tokens` is the uncached
+     * remainder, with the cached part reported only in its own field. So on a
+     * cached OpenRouter turn `input` ≈ `input` on an uncached one, and the saving
+     * shows up in `cacheRead` rather than as a smaller `input`. Read the two
+     * together, never `input` alone.
+     */
     input: n(u.prompt_tokens ?? u.input_tokens),
     output: n(u.completion_tokens ?? u.output_tokens),
     cacheRead: n(
@@ -165,7 +210,21 @@ function providerUsage(data: any): {
       u.prompt_tokens_details?.cached_tokens ??
       u.cached_tokens,
     ),
-    cacheWrite: n(u.cache_creation_input_tokens ?? u.cache_write_tokens),
+    /**
+     * `prompt_tokens_details.cache_write_tokens` is where OpenRouter actually
+     * puts this, which the first version of this function missed — it looked
+     * only at the two top-level spellings and so reported a cache write of zero
+     * on the very turn that wrote the cache. Found by calling the real API and
+     * reading the response rather than by reasoning about field names, which is
+     * the only way this class of mistake surfaces: every value was plausible and
+     * the wrong one was zero, which is also what "no caching happened" looks
+     * like.
+     */
+    cacheWrite: n(
+      u.cache_creation_input_tokens ??
+      u.prompt_tokens_details?.cache_write_tokens ??
+      u.cache_write_tokens,
+    ),
     reasoning: n(
       u.completion_tokens_details?.reasoning_tokens ??
       u.reasoning_tokens,
@@ -736,6 +795,10 @@ export async function POST(req: NextRequest) {
             { role: 'user', content },
           ],
           max_tokens: maxTokens,
+          // See `REASONING_EFFORT`: measured at two to three times faster than
+          // the default, with the truncation pressure removed and no loss of
+          // reading quality across four sampled turns.
+          reasoning: { effort: REASONING_EFFORT },
           // `temperature` is gone, and not as a tidy-up. Claude Sonnet 5 — which
           // `CORRELATE_MODEL` names — rejects a non-default `temperature`
           // outright. Since turns were landing, the value was being dropped or
@@ -778,13 +841,14 @@ export async function POST(req: NextRequest) {
      */
     const u = providerUsage(data)
     logUsage(userId, 0.005, { model: modelId, endpoint: 'correlate-turn' }, u)
-    if (u.cacheRead || u.cacheWrite) {
-      console.log(
-        `[correlate] tokens in=${u.input} out=${u.output} ` +
-        `cache(read=${u.cacheRead} write=${u.cacheWrite})` +
-        (u.reasoning ? ` reasoning=${u.reasoning}` : ''),
-      )
-    }
+    // Logged unconditionally rather than only when a cache field is set: a zero
+    // across every turn of one game is the signal that something is invalidating
+    // the prefix, and a line that only appears when caching already works cannot
+    // report that it stopped.
+    console.log(
+      `[correlate] tokens in=${u.input} out=${u.output} ` +
+      `cache(read=${u.cacheRead} write=${u.cacheWrite}) reasoning=${u.reasoning}`,
+    )
 
     return data?.choices?.[0]?.message?.content ?? ''
   }

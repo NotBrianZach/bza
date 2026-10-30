@@ -2068,3 +2068,83 @@ optimisation. What is paid in full every turn is the 2.3–3.6kB volatile half �
 which is mostly the OUTPUT schema, the one part that cannot be cut. If prompt
 size is worth another pass, that is where it is now, and it is a much smaller
 target than the number at the top of this section suggested.
+
+## 25. Verification pass (2026-10-30): the caching question, answered
+
+§24a shipped a prompt-cache split and admitted it could not confirm OpenRouter
+passed `cache_control` through. It can be confirmed, by calling the real API with
+the real prefix and reading the usage block — which is what this pass did, and
+which turned up two things the split had not predicted.
+
+### 25a. Caching works
+
+Two calls, identical 13,278-character prefix, the production request shape:
+
+| | prompt tokens | cached | cache write | cost |
+|---|---|---|---|---|
+| first call | 5,052 | 0 | 4,229 | $0.0128 |
+| second call | 5,052 | **4,229** | 0 | **$0.0025** |
+
+**4,229 of 5,052 prompt tokens served from cache — 84%**, closely matching the
+86% the character measurement predicted, and the call cost **5× less**. The
+prefix also held across every later sample in this pass, including ones with
+different moves and different user prompts.
+
+So the §24a question is settled: OpenRouter passes the marker through for
+`anthropic/claude-sonnet-5`, and the split does what it was built to do.
+
+### 25b. The default was spending most of the turn thinking
+
+Not predicted, and much larger than the caching win. Adaptive thinking is on by
+default on Claude Sonnet 5 and the route was sending no reasoning parameter, so
+every turn was paying for it. Five samples, warm cache, `max_tokens: 2800`:
+
+| reasoning | latency | output | of which thinking |
+|---|---|---|---|
+| default (on) | 11–35s | 866–2,662 | 591–2,047 |
+| `effort: low` | 10–15s | 636–1,086 | 180–674 |
+| disabled | 3.6–8.3s | 217–529 | 0 |
+
+One default sample wrote **2,047 thinking tokens inside a 2,662-token response**
+and came within 138 tokens of the cap. That is not an abstract cost — it is the
+§21e truncation, arriving from a direction nothing in the route could observe.
+Thinking and the JSON object share one budget, and thinking was taking most of
+it.
+
+**Disabled is faster and is not safe.** On a Radiohead-answering-Millet turn it
+replied with *the move itself* — the one record `inPlay` forbids — and its
+reading described the player as "replaying the same offering". Downstream would
+reject that and spend a retry, so the 3.6s is not really 3.6s. `effort: low`
+produced a valid, non-self reply on four turns out of four, at 10–15s.
+
+`REASONING_EFFORT = 'low'`, with the table above in the comment. The reading is
+*the output* in this game rather than a conclusion derived from private work, so
+there is less for deliberation to buy here than in the workloads the default is
+tuned for. The constant is kept stable on purpose: toggling it invalidates the
+prompt cache, which the samples also showed — every run that changed the setting
+reported `cached=0, write=4229` and every run that did not reported
+`cached=4229`.
+
+Left at the default in `close` and `claim`: the closing reading is one piece of
+writing per game about a whole arc, and a claim is a ruling. Those are the shapes
+deliberation is for.
+
+### 25c. A bug that only a real call could find
+
+`providerUsage` read the cache-write count from the two top-level spellings and
+missed the one OpenRouter actually uses,
+`prompt_tokens_details.cache_write_tokens` — so it reported a cache write of zero
+on the very turn that wrote the cache.
+
+Worth recording how it surfaced. Every field name in that function was
+*plausible*, the code typechecked, the tests passed, and the wrong answer was
+zero — which is also exactly what "no caching happened" looks like. A reasoning
+pass over field names could not have caught it; printing a real response did, in
+one line. The same call also showed that OpenRouter's `prompt_tokens` includes
+the cached portion while Anthropic's `input_tokens` excludes it, so the two are
+not comparable and `input` must never be read alone.
+
+The usage line now logs unconditionally rather than only when a cache field is
+set: a zero across every turn is the signal that something is invalidating the
+prefix, and a line that only appears when caching already works cannot report
+that it stopped.
