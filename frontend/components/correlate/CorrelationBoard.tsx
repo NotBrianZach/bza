@@ -10,7 +10,7 @@ import { authedFetch } from '@/lib/authedFetch'
 import { track } from '@/lib/analytics'
 import { correlateQueries } from '@/lib/queries/correlate'
 import { ACCENT_CLASSES, getGame, retiredGameName, wantsPrediction } from '@/lib/correlate/games'
-import { getMedium } from '@/lib/correlate/media'
+import { getMedium, isComposed } from '@/lib/correlate/media'
 import { RELATIONS, resolveRelations, spentRelations } from '@/lib/correlate/relations'
 import {
   buildGraph, childrenOf, defaultParent, offeringOnTable, pathTo, relationsAlong, siblingsOf,
@@ -22,7 +22,8 @@ import {
 import {
   isSelfReply, radioRefusal, selfRepliesLeft, selfReplyRefusal, RADIO_HINT, RADIO_LABEL,
 } from '@/lib/correlate/continuation'
-import { activeBranch, playedUnder } from '@/lib/correlate/switching'
+import { activeBranch, playedUnder, switchTargets } from '@/lib/correlate/switching'
+import { hintsFor, type VoiceCommand, type VoiceIntent, type VoiceStage } from '@/lib/correlate/voice'
 import type {
   CorrelationClaim, CorrelationSession, CorrelationTurn, MediumId, Offering, RelationId,
 } from '@/lib/correlate/types'
@@ -34,6 +35,8 @@ import OfferingCard from './OfferingCard'
 import OfferingPicker, { type MoveDraft } from './OfferingPicker'
 import GameSwitch from './GameSwitch'
 import TuningPanel from './TuningPanel'
+import VoiceBar, { VoiceHint } from './VoiceBar'
+import { useVoiceControl } from './useVoiceControl'
 
 /**
  * How many answers radio keeps queued in front of the one playing.
@@ -105,6 +108,25 @@ export default function CorrelationBoard({
   const [problems, setProblems] = useState<string[]>([])
   const [notice, setNotice] = useState('')
   const [prediction, setPrediction] = useState('')
+  /**
+   * The last answer, spoken form, for "say that again".
+   *
+   * A ref and declared up here because `absorb` — which is where an answer
+   * lands — is defined well above the voice section, and because the voice
+   * handlers are themselves read through a ref: a state read inside them would
+   * be a render behind, which for this value means reading back the turn before
+   * last.
+   */
+  const lastReadingRef = useRef('')
+  /**
+   * The voice control, for the callbacks defined above it.
+   *
+   * `absorb` speaks the answer and is built before `useVoiceControl` runs, so it
+   * cannot close over the result directly. Writing it into a ref is the smaller
+   * of the two fixes — the other is hoisting the whole voice section above every
+   * action it dispatches to, which it cannot be, because it dispatches to them.
+   */
+  const voiceRef = useRef<ReturnType<typeof useVoiceControl> | null>(null)
   /**
    * The game the next move will be played under, when the player has asked to
    * change it. Null means carry on with whatever this branch is.
@@ -460,6 +482,25 @@ export default function CorrelationBoard({
               : 'Nothing could be found to answer with, so it wrote this one instead.')
           : 'Two answers could not be found, so this one was searched out from the move.',
       )
+    }
+
+    // The answer, out loud, for a player who is not looking at the screen.
+    //
+    // Named before read: the reading talks *about* the reply, so hearing it
+    // without knowing what was answered with is hearing the second half of a
+    // sentence. The two are kept together in `lastReadingRef` for the same
+    // reason, so "say that again" repeats the whole thing.
+    //
+    // Only when voice is on, and always recorded even when it is off — turning
+    // voice on mid-game and asking "say that again" should work.
+    const reply = data.turn?.reply_offering
+    if (data.turn?.legal && (reply || data.turn?.reading)) {
+      const named = reply
+        ? `${reply.title}${reply.attribution ? ` by ${reply.attribution}` : ''}.`
+        : ''
+      const spoken = `${named} ${data.turn.reading ?? ''}`.trim()
+      lastReadingRef.current = spoken
+      if (voiceRef.current?.listening) voiceRef.current.say(spoken)
     }
   }, [focusOn, updateSession])
 
@@ -904,8 +945,24 @@ export default function CorrelationBoard({
    * none to be right. This reverses the direction: you reach for credit instead
    * of avoiding refusal.
    */
-  const submitClaim = useCallback(async () => {
-    if (!claimFrom || !claimTo || !claimNote.trim()) return
+  /**
+   * `over` lets a caller supply the claim directly instead of through the form.
+   *
+   * The voice path needs it and cannot work without it: it learns the two turns
+   * and the reason across three separate utterances, and a `setState` followed
+   * by a call in the same tick reads the *old* state. Passing the values is the
+   * fix that does not involve an effect watching for a sentinel.
+   *
+   * The form still calls it with no argument and still reads the state, so the
+   * typed path is unchanged.
+   */
+  const submitClaim = useCallback(async (
+    over?: { fromTurnId: string; toTurnId: string; note: string },
+  ) => {
+    const fromId = over?.fromTurnId ?? claimFrom
+    const toId = over?.toTurnId ?? claimTo
+    const note = (over?.note ?? claimNote).trim()
+    if (!fromId || !toId || !note) return
     setClaiming(true)
     setError('')
     try {
@@ -914,9 +971,9 @@ export default function CorrelationBoard({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           sessionId: session.id,
-          fromTurnId: claimFrom,
-          toTurnId: claimTo,
-          note: claimNote.trim(),
+          fromTurnId: fromId,
+          toTurnId: toId,
+          note,
         }),
       })
       const data = await res.json()
@@ -926,12 +983,267 @@ export default function CorrelationBoard({
       setClaimTo(null)
       setClaimNote('')
       track('correlate_rhyme_claimed', { game: branch.mode, verdict: data.claim?.verdict })
+      // Returned so the voice path can speak the ruling: a claim is the one
+      // action whose whole point is the answer, and a hands-free player who
+      // only hears "ruling on that" has been told nothing.
+      return data.claim as CorrelationClaim
     } catch (e: any) {
       setError(e?.message ?? 'That could not be ruled on')
+      return null
     } finally {
       setClaiming(false)
     }
   }, [claimFrom, claimTo, claimNote, session.id, branch.mode])
+
+  // ─────────────────────────────── voice ───────────────────────────────────
+  //
+  // The grammar is in lib/correlate/voice.ts and the microphone in
+  // useVoiceControl; what lives here is the part that needs the board's own
+  // actions, which is the composer. Everything else is a one-line call into a
+  // handler that already existed — which is the measure of whether the control
+  // surface was factored well, and it mostly was: `again`, `you go`, `finish`,
+  // `switch to X` and `go to turn N` are all existing callbacks.
+  //
+  // The move is the exception, and it is the whole reason hands-free is more
+  // than a hotkey layer. An offering is not a command but a *selection*: a query
+  // goes to a catalogue, a handful of records come back, and one has to be
+  // picked. That is a conversation, so it is a small state machine — search,
+  // read the results out, take an ordinal — rather than a function call.
+
+  /** Results waiting to be chosen from, with the query that found them. */
+  const [voiceResults, setVoiceResults] = useState<{ query: string; offerings: Offering[] }>(
+    { query: '', offerings: [] },
+  )
+  /**
+   * The medium voice searches in, which is a separate thing from the composer's.
+   *
+   * Separate because the typed picker's medium is a control the player can see
+   * and this one is remembered across utterances they cannot. Defaults to the
+   * session's first medium and is changed by "in art" / "play me a stretch".
+   */
+  const [voiceMedium, setVoiceMedium] = useState<MediumId | null>(null)
+  /** Framing and relation gathered across utterances, applied to the next move. */
+  const [voiceFraming, setVoiceFraming] = useState('')
+  const [voiceRelation, setVoiceRelation] = useState<RelationId | null>(null)
+  const [voiceExpanded, setVoiceExpanded] = useState(false)
+
+  /**
+   * The stage, mirrored into a ref.
+   *
+   * `voiceContext` is called from inside the recogniser's event handler, which
+   * is outside React's render cycle — so it has to read the stage from
+   * somewhere that is current rather than from a closure captured when the
+   * callback was built. Getting this wrong makes "the second one" a search
+   * query, which is the failure that is hardest to spot because it *works*.
+   */
+  const voiceStageRef = useRef<VoiceStage>('idle')
+  /**
+   * The results, mirrored for the same reason and one more.
+   *
+   * The grammar refuses an ordinal past `resultCount`, so a stale count of zero
+   * makes "the second one" parse as nothing at all — the choice is dropped in
+   * silence, which is the worst failure this interface has. The state copy still
+   * exists because the count is also rendered.
+   */
+  const voiceResultsRef = useRef<Offering[]>([])
+
+  /** What the grammar needs to resolve an utterance, rebuilt on every command. */
+  const voiceContext = useCallback(() => ({
+    stage: voiceStageRef.current,
+    media,
+    relations,
+    switchTargets: switchTargets(branch.mode),
+    resultCount: voiceResultsRef.current.length,
+  }), [media, relations, branch.mode])
+
+  /** Read a result set out, numbered, so an ordinal has something to refer to. */
+  const describeResults = useCallback((offerings: Offering[]) => {
+    if (offerings.length === 0) return 'Nothing came back for that.'
+    const top = offerings.slice(0, 4)
+    const lines = top.map((o, i) =>
+      `${i + 1}. ${o.title}${o.attribution ? ` by ${o.attribution}` : ''}`)
+    return `${top.length === 1 ? 'One match' : `${top.length} matches`}. ${lines.join('. ')}. Which one?`
+  }, [])
+
+  const onVoiceIntent = useCallback(async (intent: VoiceIntent): Promise<string | null> => {
+    // Through the ref, not the `voice` binding: this callback is built before
+    // `useVoiceControl` returns, so naming `voice` in the dependency array
+    // would read it in its temporal dead zone and throw on the first render.
+    // The ref is the whole state of the mirror — `voiceStageRef` is what the
+    // grammar reads, and the hook's copy only drives the display.
+    const setStage = (s: VoiceStage) => {
+      voiceStageRef.current = s
+      voiceRef.current?.setStage(s)
+    }
+    const setResults = (query: string, offerings: Offering[]) => {
+      voiceResultsRef.current = offerings
+      setVoiceResults({ query, offerings })
+    }
+
+    switch (intent.kind) {
+      case 'again':
+        if (!canAnswerAgainRef.current) return 'There is nothing to ask again yet.'
+        await answerAgain()
+        return null
+
+      case 'selfReply':
+        if (!focusId) return 'There is nothing on the table for it to answer.'
+        await continueOnce()
+        return null
+
+      case 'finish':
+        await finish()
+        return null
+
+      case 'switch':
+        armSwitch(intent.gameId)
+        return null
+
+      case 'medium':
+        setVoiceMedium(intent.medium)
+        return null
+
+      case 'framing':
+        setVoiceFraming(intent.framing)
+        return null
+
+      case 'relation':
+        setVoiceRelation(intent.relation)
+        return null
+
+      case 'predict':
+        setPrediction(intent.text)
+        return null
+
+      case 'offer': {
+        const m = intent.medium ?? voiceMedium ?? media[0]
+        setVoiceMedium(m)
+        // A composed medium has nothing to search, so the same utterance is the
+        // offering itself rather than a query for one. Submitted directly, with
+        // the words as its title and the framing voice has gathered.
+        if (isComposed(m)) {
+          await play({
+            medium: m,
+            composed: { title: intent.query, steps: [intent.query], intent: 'shown' },
+            framing: voiceFraming || 'all of it',
+            ...(voiceRelation ? { claimedRelation: voiceRelation } : {}),
+          })
+          setVoiceFraming(''); setVoiceRelation(null)
+          return null
+        }
+        const res = await authedFetch(
+          `/api/offerings/search?medium=${m}&q=${encodeURIComponent(intent.query)}`,
+        )
+        const data = await res.json()
+        if (data.error) return `${data.error}`
+        const offerings = (data.offerings ?? []) as Offering[]
+        setResults(intent.query, offerings)
+        setStage(offerings.length > 0 ? 'choosing' : 'idle')
+        return describeResults(offerings)
+      }
+
+      case 'choose': {
+        const pick = voiceResultsRef.current[intent.index - 1]
+        if (!pick) return 'There is nothing there to take.'
+        setStage('idle')
+        setResults('', [])
+        await play({
+          medium: pick.medium,
+          offeringId: pick.id,
+          framing: voiceFraming || pick.framing || 'all of it',
+          ...(voiceRelation ? { claimedRelation: voiceRelation } : {}),
+        })
+        setVoiceFraming(''); setVoiceRelation(null)
+        return null
+      }
+
+      case 'rhymes': {
+        // Spoken turn numbers are what the board shows, which is one-based —
+        // `turn_index` is zero-based. Off by one here would claim a rhyme with
+        // the wrong exchange and be ruled on earnestly.
+        const target = path.find(t => t.turn_index === intent.turn - 1)
+        if (!target) return `There is no turn ${intent.turn} on this line.`
+        if (!focusTurn) return 'Stand on an exchange first.'
+        if (target.id === focusTurn.id) return 'That is the turn you are on.'
+        setClaimFrom(focusTurn.id)
+        setClaimTo(target.id)
+        setStage('claiming')
+        return null
+      }
+
+      case 'because': {
+        if (!claimFrom || !claimTo) { setStage('idle'); return 'No claim is waiting.' }
+        const claim = await submitClaim({
+          fromTurnId: claimFrom, toTurnId: claimTo, note: intent.note,
+        })
+        setStage('idle')
+        if (!claim) return null
+        const verdict = claim.verdict === 'holds' ? 'It holds.'
+          : claim.verdict === 'thin' ? 'Thin, but there.'
+          : claim.verdict === 'no' ? 'It does not hold.'
+          : ''
+        return `${verdict} ${claim.ruling ?? ''}`.trim()
+      }
+
+      case 'goTo': {
+        const target = path.find(t => t.turn_index === intent.turn - 1)
+          ?? graph.order.find(t => t.turn_index === intent.turn - 1)
+        if (!target) return `There is no turn ${intent.turn}.`
+        if (!target.legal) return 'That move was turned away, so there is nothing there to answer.'
+        focusOn(target.id)
+        return null
+      }
+
+      case 'goBack':
+        focusOn(defaultParent(graph)?.id ?? null)
+        return null
+
+      case 'cancel':
+        setStage('idle')
+        setResults('', [])
+        setVoiceFraming(''); setVoiceRelation(null)
+        setClaimFrom(null); setClaimTo(null); setClaimNote('')
+        return null
+
+      // Handled inside the hook, which owns the speaker and the command table.
+      case 'repeat':
+      case 'help':
+        return null
+    }
+  }, [
+    answerAgain, continueOnce, finish, armSwitch, play, focusOn, submitClaim,
+    focusId, focusTurn, path, graph, media, voiceMedium,
+    voiceFraming, voiceRelation, claimFrom, claimTo, describeResults,
+  ])
+
+  const voice = useVoiceControl(voiceContext, {
+    onIntent: onVoiceIntent,
+    lastReading: () => lastReadingRef.current,
+  })
+  voiceRef.current = voice
+
+  /**
+   * Whether "again" is available, in a ref the voice handler can read.
+   *
+   * `canAnswerAgain` is computed below the early return for a retired game, so
+   * it does not exist where `onVoiceIntent` is defined. Mirroring it is cheaper
+   * than hoisting the computation above a guard it is downstream of.
+   */
+  const canAnswerAgainRef = useRef(false)
+
+  /**
+   * The phrase to print beside a control, or null when voice is off.
+   *
+   * A stage-specific command wins over a general one for the same control,
+   * because that is what the player needs to say *next*: inside the claim panel
+   * the useful phrase is "because …", not the "this rhymes with turn 4" that
+   * opened it.
+   */
+  const voicePhrase = useCallback((control: VoiceCommand['control']): string | null => {
+    if (!voice.listening) return null
+    const live = hintsFor(control, voice.stage)
+    return (live.find(c => c.stages) ?? live[0])?.say ?? null
+  }, [voice.listening, voice.stage])
 
   // A session can outlive its game. Night Radio was retired along with the "dial"
   // concept it ran on, and telling someone their game no longer exists is better
@@ -1000,6 +1312,7 @@ export default function CorrelationBoard({
    */
   const canAnswerAgain = !!lastMove && !!focusTurn &&
     (graph.nodes.get(focusTurn.id)?.parentId ?? null) === lastMove.parentId
+  canAnswerAgainRef.current = canAnswerAgain
 
   /** The other answers to the same move. Each one is a line the player could walk. */
   const otherAnswers = focusTurn ? siblingsOf(graph, focusTurn.id) : []
@@ -1411,7 +1724,10 @@ export default function CorrelationBoard({
                   />
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={submitClaim}
+                      // Wrapped rather than passed: `submitClaim` now takes an
+                      // optional override for the voice path, and a click event
+                      // handed straight in would arrive as that argument.
+                      onClick={() => submitClaim()}
                       disabled={claiming || !claimTo || !claimNote.trim()}
                       className="flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1.5 rounded-full bg-gray-900 text-white hover:bg-gray-700 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-gray-300 transition-colors disabled:opacity-40"
                     >
@@ -1427,6 +1743,7 @@ export default function CorrelationBoard({
                     {!claimTo && (
                       <p className="text-[11px] text-gray-400 dark:text-gray-500">Pick an earlier turn.</p>
                     )}
+                    <VoiceHint phrase={voicePhrase('claim')} />
                   </div>
                 </div>
               )}
@@ -1509,6 +1826,16 @@ export default function CorrelationBoard({
 
           {!isOver && (
             <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
+              {/* Above the composer, because it is an alternative to the whole
+                  of it rather than one more field in it. */}
+              <VoiceBar
+                voice={voice}
+                media={media}
+                switchTargets={switchTargets(branch.mode)}
+                expanded={voiceExpanded}
+                onToggleExpanded={() => setVoiceExpanded(v => !v)}
+              />
+
               <div className="flex items-center justify-between mb-3 gap-3">
                 <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
                   {!focusTurn
@@ -1548,14 +1875,19 @@ export default function CorrelationBoard({
                   it as the new game's move is how a player gets a 400 for a
                   field they were never shown. */}
               {wantsPrediction(composerGame) && (
-                <input
-                  type="text"
-                  value={prediction}
-                  onChange={e => setPrediction(e.target.value)}
-                  disabled={pending}
-                  placeholder="Your prediction — what will come back?"
-                  className="w-full mb-3 px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400 disabled:opacity-50"
-                />
+                <div className="mb-3">
+                  <input
+                    type="text"
+                    value={prediction}
+                    onChange={e => setPrediction(e.target.value)}
+                    disabled={pending}
+                    placeholder="Your prediction — what will come back?"
+                    className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400 disabled:opacity-50"
+                  />
+                  {voice.listening && (
+                    <p className="mt-1"><VoiceHint phrase="predict <anything>" /></p>
+                  )}
+                </div>
               )}
 
               <OfferingPicker
@@ -1567,6 +1899,14 @@ export default function CorrelationBoard({
                 disabled={pending}
                 onSubmit={play}
               />
+              {voice.listening && (
+                <p className="mt-1.5 flex items-center gap-2">
+                  <VoiceHint phrase={voicePhrase('compose')} />
+                  <span className="text-[10px] text-gray-400 dark:text-gray-500">
+                    then say which result to take
+                  </span>
+                </p>
+              )}
 
               {/* Under the composer rather than beside the game chip in the
                   header, because arming a switch is a decision about the move
@@ -1580,6 +1920,9 @@ export default function CorrelationBoard({
                   disabled={pending}
                   onTable={!!onTheTable}
                 />
+                {voice.listening && (
+                  <p className="mt-1.5"><VoiceHint phrase={voicePhrase('switch')} /></p>
+                )}
               </div>
 
               {/* Standing back is a move too. The partner answers its own last
@@ -1608,6 +1951,7 @@ export default function CorrelationBoard({
                           Answer it again
                         </button>
                       )}
+                      {canAnswerAgain && <VoiceHint phrase={voicePhrase('again')} />}
                       <button
                         onClick={continueOnce}
                         disabled={pending}
@@ -1616,6 +1960,7 @@ export default function CorrelationBoard({
                         {pending ? <Loader2 size={11} className="animate-spin" /> : <Repeat size={11} />}
                         Let it answer itself
                       </button>
+                      <VoiceHint phrase={voicePhrase('selfReply')} />
                       <p className="text-[11px] text-gray-400 dark:text-gray-500 min-w-0">
                         Take no turn — it answers its own offering.
                         {/* Radio makes `runsLeft` infinite, and "Infinity more in a

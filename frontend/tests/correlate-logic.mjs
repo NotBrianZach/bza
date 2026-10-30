@@ -49,6 +49,7 @@ function build() {
     join('lib', 'correlate', 'tuning.ts'),
     join('lib', 'correlate', 'continuation.ts'),
     join('lib', 'correlate', 'presets.ts'),
+    join('lib', 'correlate', 'voice.ts'),
     join('lib', 'offerings', 'composed.ts'),
     join('lib', 'offerings', 'shared.ts'),
     join('lib', 'offerings', 'knowledge.ts'),
@@ -80,6 +81,7 @@ function build() {
     tuning:    require(join(outDir, 'correlate', 'tuning.js')),
     carry:     require(join(outDir, 'correlate', 'continuation.js')),
     presets:   require(join(outDir, 'correlate', 'presets.js')),
+    voice:     require(join(outDir, 'correlate', 'voice.js')),
     composed:  require(join(outDir, 'offerings', 'composed.js')),
     knowledge: require(join(outDir, 'offerings', 'knowledge.js')),
   }
@@ -111,6 +113,10 @@ const {
   carriedSeedKeys, derivedSeedKeys, derivedSeedSpec, switchSeed,
   ENTRY_GAME_ID, openingGames, variantGames, startableGames,
 } = M.switching
+const {
+  parseVoice, spokenNumber, spokenOrdinal, extractMedium, matchGame, matchRelation,
+  VOICE_COMMANDS, hintsFor, confirmationFor, spokenHelp, spokenMediaNames,
+} = M.voice
 const {
   TUNING_AXES, AXIS_LIST, ALL_AXIS_IDS, AXIS_STOPS, DEFAULT_WEIGHT, WEIGHT_LABELS, WEIGHT_HINTS,
   DEFAULT_TUNING, normalizeTuning, isNeutral, isUntouched, isProportioned, axisValue, mutedMedia,
@@ -3290,6 +3296,279 @@ t('`does` still exists for the picker, which shows it without the guidance',
   RELATIONS.association.does.length > 0)
 t('every relation in play still carries its guidance',
   ALL_RELATIONS.every(id => PREFIX.includes(RELATIONS[id].guidance)))
+
+// ---------------------------------------------------------------------------
+/*
+ * Playing by voice — lib/correlate/voice.ts.
+ *
+ * The microphone is open while the player talks to the room, so the property
+ * that matters most is not "does it understand commands" but "does it refuse
+ * everything else". A false positive here plays a turn nobody asked for, costs
+ * a model call, and writes a row. Half of what follows is ambient speech that
+ * must parse to null.
+ */
+// ---------------------------------------------------------------------------
+
+const V_MEDIA = ['music', 'artwork', 'passage', 'stretch']
+const V_CTX = {
+  stage: 'idle',
+  media: V_MEDIA,
+  relations: ['association', 'translation', 'counterpoint'],
+  switchTargets: switchTargets('tag'),
+  resultCount: 0,
+}
+const vctx = (over = {}) => ({ ...V_CTX, ...over })
+const pv = (text, over) => parseVoice(text, vctx(over))
+
+group('voice — spoken numbers')
+t('digits', spokenNumber('turn 7') === 7)
+t('words', spokenNumber('turn seven') === 7)
+t('compound, spaced', spokenNumber('twenty one') === 21)
+t('compound, hyphenated by the recogniser', spokenNumber('twenty-one') === 21)
+t('a bare tens word is itself', spokenNumber('thirty') === 30)
+t('no number is null and not zero, because turn 0 is a real turn',
+  spokenNumber('the first part') === null)
+t('zero is zero and not null', spokenNumber('zero') === 0)
+
+group('voice — ordinals, for choosing a result')
+t('"the second one"', spokenOrdinal('the second one', 4) === 2)
+t('"take the third"', spokenOrdinal('take the third', 4) === 3)
+t('"last" resolves against the count', spokenOrdinal('the last one', 4) === 4)
+t('a bare number within range', spokenOrdinal('two', 4) === 2)
+t('a number past the count is refused rather than clamped',
+  spokenOrdinal('nine', 4) === null)
+t('"that one" with results on the table is the first',
+  spokenOrdinal('that one', 3) === 1)
+t('"that one" with nothing on the table is nothing',
+  spokenOrdinal('that one', 0) === null)
+
+group('voice — media by the words people say')
+t('"a song" is music', extractMedium('play a song about rain', V_MEDIA).medium === 'music')
+t('"in art" is artwork', extractMedium('in art', V_MEDIA).medium === 'artwork')
+t('"as a stretch" is stretch', extractMedium('answer as a stretch', V_MEDIA).medium === 'stretch')
+t('the medium is removed from the rest',
+  !extractMedium('play a song about rain', V_MEDIA).rest.includes('song'))
+/*
+ * The one that justifies the qualifier requirement. "Life On Mars" contains
+ * "life", which is a spoken word for `organism` — without the a/an/the/in/as
+ * anchor the medium would be read off the title and the search would run in the
+ * wrong catalogue, which looks like a provider failure rather than a parse bug.
+ */
+t('a medium word inside a title is not a medium',
+  extractMedium('play life on mars', ['music', 'organism']).medium === null)
+t('a medium this session does not play is not matched',
+  extractMedium('as a stretch', ['music', 'artwork']).medium === null)
+t('every session medium has a word to say for it',
+  spokenMediaNames(V_MEDIA).every(m => m.say.length > 1))
+
+group('voice — the bare verbs')
+t('again', pv('again')?.kind === 'again')
+t('"one more" is again', pv('one more')?.kind === 'again')
+t('you go', pv('you go')?.kind === 'selfReply')
+t('"let it answer itself"', pv('let it answer itself')?.kind === 'selfReply')
+t('finish', pv('finish')?.kind === 'finish')
+t('"that\'s it" closes the game', pv("that's it")?.kind === 'finish')
+t('filler in front is stripped', pv('ok so now finish')?.kind === 'finish')
+t('trailing punctuation from the recogniser is stripped', pv('Again.')?.kind === 'again')
+
+group('voice — what must NOT parse')
+/*
+ * Each of these is something a person says in a room with a microphone open.
+ * They are the test that matters: a parser that guessed on any of them would
+ * take a turn on its own.
+ */
+for (const ambient of [
+  'what do you think of that one',
+  'i love this song',
+  'hang on a second',
+  'that reminds me of something',
+  'yeah that makes sense',
+  'no i meant the other thing',
+  'can you believe it',
+  'the painting in the hallway',
+  'she said it was fine',
+  'because i said so',
+]) {
+  t(`ambient: "${ambient}"`, pv(ambient) === null)
+}
+t('"because …" is not a command with no claim pending', pv('because it rained') === null)
+t('but it is one while a claim waits',
+  pv('because it rained', { stage: 'claiming' })?.kind === 'because')
+t('"the second one" is nothing while no results are up',
+  pv('the second one') === null)
+t('and a choice while they are',
+  pv('the second one', { stage: 'choosing', resultCount: 3 })?.kind === 'choose')
+t('an ordinal past the result count is refused, not clamped to the last',
+  pv('the fourth one', { stage: 'choosing', resultCount: 2 }) === null)
+
+group('voice — offering a move')
+t('"play Idioteque" is a search', pv('play idioteque')?.kind === 'offer')
+t('the query is the words, without the verb',
+  pv('play idioteque')?.query === 'idioteque')
+t('a named medium rides along',
+  pv('play the song idioteque')?.medium === 'music')
+t('and is not left in the query',
+  pv('play the song idioteque')?.query === 'idioteque')
+/*
+ * "play me a song" names a medium and no query. An empty search would return
+ * nothing and read as a failure, so it is taken as the medium change it plainly
+ * is — which is also what makes "play me a song" then "Idioteque" work.
+ */
+t('a medium with no query is a medium change, not an empty search',
+  pv('play me a song')?.kind === 'medium')
+t('and it carries the medium', pv('play me a song')?.medium === 'music')
+t('a bare medium is a medium change', pv('in art')?.kind === 'medium')
+t('"how about" offers too', pv('how about something by bowie')?.kind === 'offer')
+
+group('voice — the composer fields')
+t('framing', pv('framing the last ten seconds')?.kind === 'framing')
+t('the framing is the words after the verb',
+  pv('framing the last ten seconds')?.framing === 'the last ten seconds')
+t('"just the chorus" is a framing', pv('just the chorus')?.kind === 'framing')
+t('claiming a relation', pv('claiming translation')?.relation === 'translation')
+t('a relation this game does not permit is not claimed',
+  pv('claiming translation', { relations: ['association'] })?.kind !== 'relation')
+/*
+ * "as a stretch" matches the relation rule's `as a` prefix and is not a
+ * relation. It has to fall through to the medium rule rather than returning
+ * null, which is why that branch does not early-return.
+ */
+t('"as a stretch" falls through the relation rule to the medium one',
+  pv('as a stretch')?.kind === 'medium')
+t('and lands on the right medium', pv('as a stretch')?.medium === 'stretch')
+t('predict', pv('predict it comes back with something slower')?.kind === 'predict')
+t('"my guess is …" predicts', pv('my guess is a painting')?.kind === 'predict')
+
+group('voice — turns, branches and claims')
+t('go to turn 3', pv('go to turn 3')?.kind === 'goTo')
+t('the turn is the number said', pv('go to turn 3')?.turn === 3)
+t('spoken as a word', pv('go to turn three')?.turn === 3)
+t('go back', pv('go back')?.kind === 'goBack')
+t('"go back" is not read as "go to"', pv('go back')?.kind !== 'goTo')
+t('rhymes with turn 4', pv('this rhymes with turn 4')?.kind === 'rhymes')
+t('with no leading "this"', pv('rhymes with turn 4')?.turn === 4)
+t('a rhyme claim with no number is refused', pv('this rhymes with something') === null)
+/*
+ * The off-by-one that would claim a rhyme with the wrong exchange and have it
+ * ruled on earnestly. The intent carries what the player said; converting to
+ * `turn_index` is the board's job, and the spoken confirmation must echo the
+ * number they used or they cannot tell it misheard.
+ */
+t('the confirmation echoes the turn the player said',
+  confirmationFor({ kind: 'rhymes', turn: 4 }).includes('Turn 4'))
+t('and so does the one for standing on a turn',
+  confirmationFor({ kind: 'goTo', turn: 3 }).includes('turn 3'))
+
+group('voice — switching, scoped to what is legal')
+t('switch to a real target',
+  pv('switch to translation')?.kind === 'switch')
+t('the id, not the name', pv('switch to translation')?.gameId === 'translation')
+t('a game that is not a target is refused rather than silently doing nothing',
+  pv('switch to night radio') === null)
+/*
+ * The grammar is scoped to `switchTargets`, so a premise-seeded game is not
+ * sayable from Tag — and that is the right answer rather than a gap. A parser
+ * that resolved it would turn `switchRefusal`'s clear "a premise cannot be
+ * conjured mid-chain" into a command that silently did nothing.
+ */
+t('a premise-seeded game is not switchable from Tag, and so is not sayable',
+  pv('switch to duel') === null && !switchTargets('tag').some(g => g.id === 'duel'))
+t('"play as" switches', pv('play as counterpoint')?.kind === 'switch')
+t('the longest matching name wins, so "chain" does not take "correlation chain"',
+  (() => {
+    const targets = switchTargets('tag')
+    const g = matchGame('correlation chain', targets)
+    return g === null || g.name.toLowerCase().includes('chain')
+  })())
+t('a relation matches by id or by name',
+  matchRelation('translation', ['translation']) === 'translation' &&
+  matchRelation(RELATIONS.counterpoint.name.toLowerCase(), ['counterpoint']) === 'counterpoint')
+/*
+ * Found by this file: an id the registry does not know used to throw inside
+ * `matchRelation`, and it is called from the recogniser's result handler — where
+ * a throw stops voice mode altogether rather than failing one utterance.
+ */
+t('an unknown relation id is no match rather than a crash',
+  matchRelation('whatever', ['not_a_relation']) === null)
+
+group('voice — the escape hatches')
+t('never mind cancels', pv('never mind')?.kind === 'cancel')
+t('say that again repeats', pv('say that again')?.kind === 'repeat')
+t('what can I say is help', pv('what can i say')?.kind === 'help')
+t('help is answered at every stage',
+  ['idle', 'choosing', 'claiming'].every(s => pv('help', { stage: s })?.kind === 'help'))
+t('cancel is available at every stage',
+  ['idle', 'choosing', 'claiming'].every(s => pv('never mind', { stage: s })?.kind === 'cancel'))
+
+group('voice — the command table is the hint layer')
+/*
+ * The table doubles as what the UI prints, so the phrase a player reads has to
+ * be one the parser answers to. Drift here prints instructions that do not
+ * work, which is worse than printing none.
+ */
+t('every command in the table has a phrase and a description',
+  VOICE_COMMANDS.every(c => c.say.length > 0 && c.does.length > 0))
+t('every intent kind the parser can produce is in the table', (() => {
+  const kinds = new Set(VOICE_COMMANDS.map(c => c.kind))
+  return ['again', 'selfReply', 'finish', 'switch', 'medium', 'offer', 'choose',
+    'relation', 'framing', 'predict', 'rhymes', 'because', 'goTo', 'goBack',
+    'repeat', 'help', 'cancel'].every(k => kinds.has(k))
+})())
+t('every literal phrase in the table parses to its own kind', (() => {
+  // Only the ones with no `<placeholder>` — the rest need a noun supplied.
+  const literal = VOICE_COMMANDS.filter(c => !c.say.includes('<'))
+  return literal.every(c => {
+    const stage = c.stages?.[0] ?? 'idle'
+    const got = pv(c.say, { stage, resultCount: 4 })
+    return got?.kind === c.kind
+  })
+})())
+t('and so does every placeholder phrase, with a noun put in', (() => {
+  const filled = {
+    offer: 'play idioteque',
+    medium: 'in art',
+    framing: 'framing the last ten seconds',
+    relation: 'claiming translation',
+    predict: 'predict something slower',
+    switch: 'switch to translation',
+    because: 'because they both end the same way',
+  }
+  return Object.entries(filled).every(([kind, say]) => {
+    const stage = kind === 'because' ? 'claiming' : 'idle'
+    return pv(say, { stage })?.kind === kind
+  })
+})())
+t('stage-specific commands are hidden where they mean nothing',
+  hintsFor('compose', 'idle').every(c => c.kind !== 'choose') &&
+  hintsFor('compose', 'choosing').some(c => c.kind === 'choose'))
+t('the claim control offers the reason only once a claim is pending',
+  hintsFor('claim', 'idle').every(c => c.kind !== 'because') &&
+  hintsFor('claim', 'claiming').some(c => c.kind === 'because'))
+t('every action confirms out loud, because silence reads as "it did not hear me"',
+  VOICE_COMMANDS
+    .filter(c => c.kind !== 'repeat' && c.kind !== 'help')
+    .every(c => confirmationFor(sampleIntent(c.kind)).length > 0))
+t('the spoken help names fewer commands mid-claim than at rest',
+  spokenHelp(vctx({ stage: 'claiming' })).length !== spokenHelp(vctx()).length)
+t('the help does not read out the angle brackets',
+  !spokenHelp(vctx()).includes('<'))
+
+/** A stand-in intent per kind, for the "everything confirms" sweep. */
+function sampleIntent(kind) {
+  switch (kind) {
+    case 'switch': return { kind, gameId: 'transformation' }
+    case 'medium': return { kind, medium: 'music' }
+    case 'offer': return { kind, query: 'idioteque' }
+    case 'choose': return { kind, index: 1 }
+    case 'relation': return { kind, relation: 'translation' }
+    case 'framing': return { kind, framing: 'the chorus' }
+    case 'predict': return { kind, text: 'something slower' }
+    case 'rhymes': return { kind, turn: 4 }
+    case 'because': return { kind, note: 'they both end the same way' }
+    case 'goTo': return { kind, turn: 3 }
+    default: return { kind }
+  }
+}
 
 rmSync(outDir, { recursive: true, force: true })
 
