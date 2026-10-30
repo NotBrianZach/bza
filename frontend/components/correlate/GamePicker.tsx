@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { ChevronDown, Loader2, Plus, Shuffle } from 'lucide-react'
 import { ACCENT_CLASSES } from '@/lib/correlate/games'
-import { startableGames, switchOnlyGames } from '@/lib/correlate/switching'
+import { ENTRY_GAME_ID, openingGames, variantGames } from '@/lib/correlate/switching'
 import { getMedium, resolveMedia } from '@/lib/correlate/media'
 import { RELATIONS, resolveRelations } from '@/lib/correlate/relations'
 import type { CorrelationGame, MediumId } from '@/lib/correlate/types'
@@ -43,31 +43,6 @@ const PIECE_ROWS = [
 ] as const
 
 /**
- * Start a game.
- *
- * Five cards, not eleven, and the cut is `startableGames()`' decision rather than
- * this component's: Tag plus the four games a game of Tag cannot become. The
- * other six are empty-seeded, which means switching into one mid-chain is strictly
- * better than starting it — the last offering on the table becomes its opening
- * move instead of the player having to supply one cold.
- *
- * Eleven cards also misdescribed the section. Seven of the eleven are one exchange
- * with different rules, and presenting them as eleven unrelated choices asked the
- * player to commit, up front and uninformed, to a decision they can now make from
- * inside a chain with something concrete to carry into it.
- *
- * This is the third shape this list has had. It used to be two groups, "Across
- * media" and "Music only" — a quarantine for the games the section grew out of,
- * doing two bad things at once: implying the music games were a lesser tier, and
- * making a reader scroll past a heading to find out most of them were
- * medium-agnostic all along. Then one flat list of eleven. Now one list of what is
- * worth starting, and a note naming what is reached instead.
- *
- * Each card shows its media and its relations, because that pairing is what
- * actually changes play — the same offerings produce very different games depending
- * on which connections are legal and who gets to rule on them.
- */
-/**
  * How long a game runs for.
  *
  * Three options and open-ended first, because open-ended is what every game
@@ -83,6 +58,33 @@ const LENGTHS: { label: string; limit?: number; hint: string }[] = [
   { label: '16 turns', limit: 16, hint: 'Long enough to develop a shape worth naming at the end.' },
 ]
 
+/**
+ * Start a game. All eleven are startable; five get a card.
+ *
+ * The split is `openingGames()` / `variantGames()`, and it is about what the
+ * games *are* rather than about what may be created: five open on a scene of
+ * their own, and six are the same exchange as Tag under different rules. So the
+ * six live inside Tag's card, which is the only place that says so.
+ *
+ * This is the fourth shape the list has had and each change fixed the last one's
+ * overcorrection, which is worth having written down:
+ *
+ *  1. Two groups, "Across media" and "Music only" — a quarantine for the games
+ *     the section grew out of, implying a lesser tier and making a reader scroll
+ *     past a heading to learn most of them were medium-agnostic anyway.
+ *  2. One flat list of eleven, which read as eleven unrelated games and asked
+ *     the player to commit up front to a distinction they could not yet see.
+ *  3. Five cards and a dashed box reading "6 more are inside a game of Tag".
+ *     That described the relationship correctly and then trapped it: the only
+ *     route in was a mid-chain switch, and a switch needed something on the
+ *     table, so a variant could not be played until a move of something else had
+ *     been played. Reported as exactly that.
+ *  4. Five cards, with the six inside the one they are variants of, startable.
+ *
+ * Each card shows its media and its relations, because that pairing is what
+ * actually changes play — the same offerings produce very different games
+ * depending on which connections are legal and who gets to rule on them.
+ */
 export default function GamePicker({
   available,
   onStart,
@@ -92,8 +94,8 @@ export default function GamePicker({
   onStart: (gameId: string, turnLimit?: number) => void
   starting: string | null
 }) {
-  const startable = startableGames()
-  const inside = switchOnlyGames()
+  const opening = openingGames()
+  const variants = variantGames()
   /**
    * One control above the grid rather than one per card.
    *
@@ -112,8 +114,8 @@ export default function GamePicker({
           media card makes it by listing them. Dropped. What is left is the only
           thing this paragraph knew that nothing else did. */}
       <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-3 max-w-2xl leading-relaxed">
-        Tag is the place to start. The rest of these each open on a scene of their own, which is
-        why they are separate games rather than something Tag can turn into.
+        Tag is the place to start, and its variants are inside its card. The other four each open
+        on a scene of their own, which is why they are separate games rather than variations.
       </p>
       <div className="mb-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-3">
         <p className="text-[10px] uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-2">
@@ -142,47 +144,80 @@ export default function GamePicker({
       </div>
 
       <div className="grid sm:grid-cols-2 gap-3">
-        {startable.map(game => (
+        {opening.map(game => (
           <GameCard
             key={game.id}
             game={game}
             available={available}
             onStart={id => onStart(id, LENGTHS[length].limit)}
             starting={starting}
+            // The entry card carries the variants, because they are variants *of
+            // the exchange it sets up* and nowhere else would say so.
+            variants={game.id === ENTRY_GAME_ID ? variants : undefined}
           />
         ))}
       </div>
-
-      {/*
-        Where the other six went, said plainly.
-        This list is not decoration and it is not a consolation: dropping six
-        games from the picker without naming them would leave a player who knows
-        Embodiment exists with nothing to go on, which is a worse failure than the
-        eleven cards this replaced. Naming them *and* saying they are inside Tag
-        teaches the mechanism in one sentence.
-      */}
-      {inside.length > 0 && (
-        <div className="mt-4 rounded-2xl border border-dashed border-gray-300 dark:border-gray-600 p-4">
-          <p className="flex items-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-300">
-            <Shuffle size={13} className="text-gray-400 dark:text-gray-500" />
-            {inside.length} more are inside a game of Tag
-          </p>
-          <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1.5 leading-relaxed">
-            {inside.map(g => g.name).join(', ')}. These start from nothing, so there is no scene to
-            set up — switch into one mid-chain and your last offering becomes its opening move.
-            Nothing you have played changes, and you can switch back.
-          </p>
-        </div>
-      )}
     </section>
   )
 }
 
-function GameCard({ game, available, onStart, starting }: {
+/**
+ * The variants, inside the card for the game they are variants of.
+ *
+ * They were a dashed box underneath the grid saying "6 more are inside a game of
+ * Tag", which told the player where they were and then would not let them go: the
+ * only route in was a mid-chain switch, and a switch needed something on the
+ * table, so a variant could not be played until a move of something else had
+ * been played first. Reported as exactly that.
+ *
+ * Starting one directly is also the *better* route when you already know which
+ * one you want, and not only by a click. `createSession` snapshots the game's own
+ * rules and relation set and computes its starting tuning from its own
+ * `coreMedia` — so a session created as Embodiment opens with the four physical
+ * media unmuted, and one created as Tag and switched does not.
+ */
+function Variants({ games, onStart, starting }: {
+  games: CorrelationGame[]
+  onStart: (gameId: string) => void
+  starting: string | null
+}) {
+  return (
+    <div className="px-4 pb-4">
+      <p className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-2">
+        <Shuffle size={11} /> or open as a variant
+      </p>
+      <ul className="flex flex-wrap gap-1.5">
+        {games.map(g => {
+          const accent = ACCENT_CLASSES[g.accent]
+          return (
+            <li key={g.id}>
+              <button
+                onClick={() => onStart(g.id)}
+                disabled={starting !== null}
+                title={g.tagline}
+                className={`text-[11px] font-medium px-2 py-1 rounded-full border transition-all disabled:opacity-40 ${accent.ring} ${accent.bg} ${accent.text} hover:brightness-95 dark:hover:brightness-110`}
+              >
+                {starting === g.id ? <Loader2 size={10} className="inline animate-spin" /> : g.name}
+              </button>
+            </li>
+          )
+        })}
+      </ul>
+      <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-2 leading-relaxed">
+        The same exchange under different rules — who names the connection, who rules on it, what
+        the world keeps. You can also switch between any of them mid-chain, and switch back.
+      </p>
+    </div>
+  )
+}
+
+function GameCard({ game, available, onStart, starting, variants }: {
   game: CorrelationGame
   available: MediumId[]
   onStart: (gameId: string) => void
   starting: string | null
+  /** Variants of this game's exchange, offered under its own start button. */
+  variants?: CorrelationGame[]
 }) {
   const [expanded, setExpanded] = useState(false)
   const accent = ACCENT_CLASSES[game.accent]
@@ -289,6 +324,13 @@ function GameCard({ game, available, onStart, starting }: {
           ? <><Loader2 size={14} className="animate-spin" /> Starting…</>
           : <><Plus size={14} /> Play {game.name}</>}
       </button>
+
+      {/* Below the start button rather than above it: the headline game is the
+          default and the variants are the qualification, so the primary action
+          should not be the thing a reader scrolls past. */}
+      {variants && variants.length > 0 && (
+        <Variants games={variants} onStart={onStart} starting={starting} />
+      )}
     </div>
   )
 }

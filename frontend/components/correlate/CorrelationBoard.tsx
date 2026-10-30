@@ -16,7 +16,9 @@ import {
   buildGraph, childrenOf, defaultParent, offeringOnTable, pathTo, relationsAlong, siblingsOf,
   subtreeSize, worldFor, type TurnGraph,
 } from '@/lib/correlate/graph'
-import { continuationOf, normalizeTuning, radioOf, type Tuning } from '@/lib/correlate/tuning'
+import {
+  continuationOf, isStarting, normalizeTuning, radioOf, startingTuning, type Tuning,
+} from '@/lib/correlate/tuning'
 import {
   isSelfReply, radioRefusal, selfRepliesLeft, selfReplyRefusal, RADIO_HINT, RADIO_LABEL,
 } from '@/lib/correlate/continuation'
@@ -370,6 +372,34 @@ export default function CorrelationBoard({
     // it, so losing this race costs nothing.
     correlateQueries.saveTuning(session.id, next, media).catch(() => {})
   }, [session.id, media])
+
+  /**
+   * Arm or disarm a switch, and at turn zero hand it the game's own weighting.
+   *
+   * The second half exists because of what `startingTuning` does. It reads the
+   * game's `coreMedia` — the media a game's `replyRule` cannot be followed
+   * without — and a session created as Tag was weighted for Tag, which mutes all
+   * four media Embodiment composes actions in. So switching to Embodiment before
+   * playing anything would have produced a *worse* Embodiment than starting one:
+   * the right rules, with the game's own media silenced. That is the §21b bug
+   * arriving by a second route.
+   *
+   * Only at turn zero, and only while the weighting is still the one the game was
+   * created with. Both conditions are the same promise `startingTuning` itself
+   * makes — "a game in progress keeps whatever it has" — read precisely: a game
+   * with no turns is not in progress, and a weighting the player has moved is
+   * theirs and not ours to reset.
+   */
+  const armSwitch = useCallback((gameId: string | null) => {
+    setArmedSwitch(gameId)
+    if (turns.length > 0) return
+
+    const current = getGame(session.mode)
+    if (!current || !isStarting(tuning, media, current.coreMedia ?? [])) return
+
+    const target = gameId ? getGame(gameId) : current
+    if (target) changeTuning(startingTuning(media, target.coreMedia ?? []))
+  }, [turns.length, session.mode, tuning, media, changeTuning])
 
   /**
    * One turn, whoever is taking it.
@@ -1129,12 +1159,17 @@ export default function CorrelationBoard({
           ) : path.length === 0 ? (
             <div className={`rounded-2xl border ${accent.ring} ${accent.bg} p-6 mb-6`}>
               <Shuffle size={22} className={`${accent.text} mb-3`} />
+              {/* `composerGame`, not `game`: with a switch armed before anything
+                  is played, the opening prompt the player should read is the one
+                  belonging to the game they are about to open. Showing Tag's
+                  while they are about to play Embodiment would be the only
+                  instruction on an empty board, and wrong. */}
               <p className="text-sm font-medium text-gray-800 dark:text-gray-200">
                 {turns.length === 0
-                  ? game.openingPrompt
+                  ? composerGame.openingPrompt
                   : 'A new thread, with nothing on the table. Offer anything.'}
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">{game.pieces.goal}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">{composerGame.pieces.goal}</p>
             </div>
           ) : (
             <>
@@ -1541,7 +1576,7 @@ export default function CorrelationBoard({
                 <GameSwitch
                   from={branch.mode}
                   armed={armedSwitch}
-                  onArm={setArmedSwitch}
+                  onArm={armSwitch}
                   disabled={pending}
                   onTable={!!onTheTable}
                 />

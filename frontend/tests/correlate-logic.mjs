@@ -109,7 +109,7 @@ const {
   modeOf, modeAlong, switchesAlong, pathSinceSwitch, activeBranch, switchRefusal,
   switchChanges, playedUnder,
   carriedSeedKeys, derivedSeedKeys, derivedSeedSpec, switchSeed,
-  ENTRY_GAME_ID, startableGames, switchOnlyGames,
+  ENTRY_GAME_ID, openingGames, variantGames, startableGames,
 } = M.switching
 const {
   TUNING_AXES, AXIS_LIST, ALL_AXIS_IDS, AXIS_STOPS, DEFAULT_WEIGHT, WEIGHT_LABELS, WEIGHT_HINTS,
@@ -2512,10 +2512,35 @@ t('and every narrow-relation game is reachable without emptying its set',
       relationsAlong(activeBranch(SPENT_TRANSLATION, 'tag', 'translation').since), 1).length))
 
 group('switching — refusals')
-t('with nothing on the table there is nothing to carry',
-  typeof switchRefusal('tag', 'embodiment', { onTable: false }) === 'string')
-t('with something on it, a clean switch is allowed',
+/**
+ * Nothing on the table used to refuse every switch, which made a variant
+ * unplayable until a move of some *other* game had been played — reported as
+ * exactly that. An empty-seeded game starts from nothing, so switching into one
+ * before anything is played is not a degraded version of it; it is it.
+ */
+t('an empty-seeded destination needs nothing on the table',
+  switchRefusal('tag', 'embodiment', { onTable: false }) === null)
+t('and every variant is reachable from the first move',
+  variantGames().every(g => switchRefusal(ENTRY_GAME_ID, g.id, { onTable: false }) === null))
+t('with something on it too, of course',
   switchRefusal('tag', 'embodiment', { onTable: true }) === null)
+/**
+ * Tier 3 still needs one, for a reason that survives the correction: there the
+ * carry *is* a scene, and with nothing played the only scene available is the
+ * source's canned premise — which the player never played, and which arriving in
+ * another game is what tier 4 is refused for.
+ */
+t('a tier-3 switch still needs a scene of your own to carry',
+  typeof switchRefusal('duel', 'transformation', { onTable: false }) === 'string')
+t('and says so in terms of the scene rather than the table', (() => {
+  const why = switchRefusal('duel', 'transformation', { onTable: false })
+  return typeof why === 'string' && /no scene of yours/.test(why)
+})())
+t('every switch that needs a table is a tier-3 one',
+  GAME_LIST.flatMap(a => GAME_LIST.map(b => [a.id, b.id]))
+    .filter(([a, b]) => canSwitch(a, b))
+    .filter(([a, b]) => switchRefusal(a, b, { onTable: false }) !== null)
+    .every(([a, b]) => switchTier(a, b) === 3))
 t('a self-reply is not the player’s turn to change the game in',
   typeof switchRefusal('tag', 'embodiment', { onTable: true, selfReply: true }) === 'string')
 t('a premise-seeded destination is refused by naming what it ships', (() => {
@@ -2947,32 +2972,41 @@ t('the default has real headroom now',
   readingLengths(startingTuning(EVERY_MEDIUM)).maxTokens >= 2800)
 
 /**
- * The picker. Six of the eleven games are reachable from a game of Tag, so
- * offering them as cold starts asks for a decision the player can now make from
- * inside a chain with something on the table to carry into it.
+ * How the picker is laid out, which is now a question about presentation and no
+ * longer about what may be created. All eleven are startable; five get a card and
+ * six sit inside the card for the game they are variants of.
  */
-group('what is worth starting, as opposed to what is worth playing')
-t('Tag plus the games a game of Tag cannot become',
-  startableGames().map(g => g.id).join(',') === 'tag,duel,transformation,investigation,navigation')
+group('what gets a card, and what is a variant of it')
+t('Tag plus the games a game of Tag cannot become get the cards',
+  openingGames().map(g => g.id).join(',') === 'tag,duel,transformation,investigation,navigation')
 t('and that is exactly Tag plus the premise-seeded four',
-  startableGames().every(g => g.id === ENTRY_GAME_ID || !isEmptySeeded(g)))
-t('everything held back is reachable by switching from Tag',
-  switchOnlyGames().every(g => canSwitch(ENTRY_GAME_ID, g.id)))
-t('nothing startable is also switch-only, and together they are the registry', (() => {
-  const a = startableGames().map(g => g.id), b = switchOnlyGames().map(g => g.id)
+  openingGames().every(g => g.id === ENTRY_GAME_ID || !isEmptySeeded(g)))
+t('the variants are the other six, every one empty-seeded',
+  variantGames().length === 6 && variantGames().every(isEmptySeeded))
+t('every variant is reachable from Tag by switching as well as by starting',
+  variantGames().every(g => canSwitch(ENTRY_GAME_ID, g.id)))
+t('the two lists are disjoint and together are the registry', (() => {
+  const a = openingGames().map(g => g.id), b = variantGames().map(g => g.id)
   return a.every(id => !b.includes(id)) && a.length + b.length === GAME_LIST.length
 })())
-t('Tag is always startable, whatever else moves',
-  startableGames().some(g => g.id === ENTRY_GAME_ID))
 /**
- * The home strip's buttons create a session, so every featured game has to be one
- * you can start. Three of the four it used to name are now switch-only.
+ * The correction. Everything is startable now — a variant that could only be
+ * entered mid-chain could not be played until a move of another game had been.
  */
-t('every featured game is one the picker offers',
+t('all eleven games are startable', startableGames().length === GAME_LIST.length)
+t('Tag has a card, whatever else moves',
+  openingGames().some(g => g.id === ENTRY_GAME_ID))
+/**
+ * The home strip's buttons create a session, so every featured game has to be
+ * one that can be created. That was the binding constraint when only five could.
+ */
+t('every featured game is one that can be started',
   FEATURED_GAME_IDS.every(id => startableGames().some(g => g.id === id)))
-t('and Embodiment is no longer among them, because you cannot start it',
-  !FEATURED_GAME_IDS.includes('embodiment') &&
-  switchOnlyGames().some(g => g.id === 'embodiment'))
+t('and every featured game has a card of its own, which is the stronger claim',
+  FEATURED_GAME_IDS.every(id => openingGames().some(g => g.id === id)))
+t('Embodiment is a variant rather than a card, and startable either way',
+  variantGames().some(g => g.id === 'embodiment') &&
+  startableGames().some(g => g.id === 'embodiment'))
 
 /**
  * Looking at the thing instead of reading its name.
@@ -3087,6 +3121,63 @@ t('every game produces a closing prompt that names its own goal',
   GAME_LIST.every(g => buildClosingPrompt({
     game: g, world: {}, line: CLOSE_LINE, elsewhereCount: 0, reachedLimit: false,
   }).includes(g.pieces.goal)))
+
+/**
+ * A switch taken before anything is played is not a handoff, and the prompt must
+ * not describe it as one.
+ *
+ * Both bullets in the ordinary switch block are statements about history — "the
+ * exchanges in THE PATH TO HERE happened under X", "the offering on the table is
+ * the opening move" — and with no turns there is neither a path nor a table.
+ * Saying them anyway is worse than saying nothing: the interpreter would go
+ * looking for inherited context it had been promised.
+ */
+group('switching on the first move — the prompt says the right thing')
+const OPENING_SWITCH = buildUserPrompt({
+  game: GAMES.embodiment, media: ALL_MEDIA,
+  relations: resolveRelations(GAMES.embodiment.relations),
+  world: GAMES.embodiment.seedWorld, history: [],
+  move: off('m', 'music'), previous: null,
+  claimedRelation: null, spent: [], turnIndex: 0,
+  switchedFrom: { name: 'Tag', keptWorld: false, released: [] },
+})
+t('it does not claim a handoff happened', !/THE GAME HAS JUST CHANGED/.test(OPENING_SWITCH))
+t('it says which game this is instead', /WHICH GAME THIS IS/.test(OPENING_SWITCH))
+t('it names both the game left and the game entered',
+  OPENING_SWITCH.includes('Tag') && OPENING_SWITCH.includes('Embodiment'))
+t('it does not promise a path that does not exist',
+  !/exchanges in THE PATH TO HERE/.test(OPENING_SWITCH))
+t('nor an offering on the table', !/offering on the table is the opening move/.test(OPENING_SWITCH))
+t('it says nothing is inherited', /nothing is inherited/.test(OPENING_SWITCH))
+/**
+ * And the ordinary case is untouched — with a path and a table, the handoff block
+ * is still the one that fires.
+ */
+const MID_SWITCH = buildUserPrompt({
+  game: GAMES.embodiment, media: ALL_MEDIA,
+  relations: resolveRelations(GAMES.embodiment.relations),
+  world: GAMES.embodiment.seedWorld,
+  history: [{
+    turn_index: 0, move_offering: off('a', 'music'), reply_offering: off('b', 'artwork'),
+    relation: 'association', reading: 'r', narration: 'n', carried: 'c', played_as: 'Tag',
+  }],
+  move: off('m', 'music'), previous: off('p', 'artwork'),
+  claimedRelation: null, spent: [], turnIndex: 1,
+  switchedFrom: { name: 'Tag', keptWorld: false, released: [] },
+})
+t('a mid-chain switch still gets the handoff block', /THE GAME HAS JUST CHANGED/.test(MID_SWITCH))
+t('and not the opening one', !/WHICH GAME THIS IS/.test(MID_SWITCH))
+t('exactly one of the two fires, never both',
+  [OPENING_SWITCH, MID_SWITCH].every(p =>
+    (/THE GAME HAS JUST CHANGED/.test(p) ? 1 : 0) + (/WHICH GAME THIS IS/.test(p) ? 1 : 0) === 1))
+t('and an unswitched opening turn gets neither', (() => {
+  const plain = buildUserPrompt({
+    game: GAMES.tag, media: ALL_MEDIA, relations: ALL_RELATIONS, world: {},
+    history: [], move: off('m', 'music'), previous: null,
+    claimedRelation: null, spent: [], turnIndex: 0,
+  })
+  return !/THE GAME HAS JUST CHANGED/.test(plain) && !/WHICH GAME THIS IS/.test(plain)
+})())
 
 rmSync(outDir, { recursive: true, force: true })
 

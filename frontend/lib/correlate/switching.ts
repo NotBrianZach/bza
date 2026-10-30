@@ -179,37 +179,51 @@ export function canSwitch(fromId: string, toId: string): boolean {
 export const ENTRY_GAME_ID = 'tag'
 
 /**
- * The games worth *starting*, as opposed to the games worth playing.
+ * The games that open on a scene of their own, and therefore get a card.
  *
- * Before switching existed these were the same set and the picker was eleven
- * cards. They are not the same set any more: six of the eleven are reachable from
- * a game of Tag by switching, so offering them as separate starts asks the player
- * to make a decision up front that they can now make mid-chain, with the
- * advantage of having something on the table to carry into it. Eleven cards also
- * read as eleven unrelated games, which is the opposite of what the seeding split
- * says is true — seven of them are one exchange with different rules.
+ * Tag plus the four premise-seeded games — the ones a game of Tag *cannot*
+ * become, because a premise cannot be conjured mid-chain. Derived from
+ * `canSwitch` rather than listed, so the two lists cannot disagree and a twelfth
+ * game lands in whichever is correct by existing.
  *
- * So: Tag, plus everything a game of Tag cannot become. Derived from `canSwitch`
- * rather than listed, which means the two lists cannot disagree and a twelfth
- * game lands in whichever is correct by existing. Today that is Tag and the four
- * premise-seeded games, because a premise cannot be conjured mid-chain — exactly
- * the tier-4 refusal, read as a product decision instead of an error message.
+ * This is about *presentation*, not about what may be created. Everything in
+ * `variantGames()` is startable too — see its comment. Eleven flat cards was the
+ * thing worth fixing: it read as eleven unrelated games, which is the opposite of
+ * what the seeding split says is true, and it asked the player to choose between
+ * seven things that are one exchange with different rules.
  */
-export function startableGames(): CorrelationGame[] {
+export function openingGames(): CorrelationGame[] {
   return GAME_LIST.filter(g => g.id === ENTRY_GAME_ID || !canSwitch(ENTRY_GAME_ID, g.id))
 }
 
 /**
- * The games you reach by switching rather than by starting.
+ * Variants of the entry exchange: the same game of Tag under different rules.
  *
- * Named for the picker, which has to say where they went. A list that silently
- * dropped six games would be worse than the eleven-card version: a player who
- * knows Embodiment exists and cannot find it has been told nothing, whereas
- * "these are inside Tag" is the whole mechanism in four words.
+ * The six empty-seeded games other than Tag. Every one is reachable *both* ways
+ * and that is the point:
+ *
+ *  - **Started**, from the entry card, as a session of its own. Which is the
+ *    better path when you already know you want Embodiment, and the only one
+ *    that gets the game's own `rules` snapshot, relation set and starting tuning
+ *    — `startingTuning` reads `coreMedia`, so a session created as Embodiment
+ *    opens with the physical media unmuted and one created as Tag does not.
+ *  - **Switched into**, mid-chain, carrying whatever is on the table as the
+ *    opening move.
+ *
+ * This used to be `switchOnlyGames()`, which was a true name for about a day and
+ * then became a lie: these were only reachable by switching, and switching needed
+ * something on the table, so a variant could not be played until after a move of
+ * Tag had been played. Being unable to start the game you want is a strange thing
+ * for a list of games to enforce.
  */
-export function switchOnlyGames(): CorrelationGame[] {
-  const startable = new Set(startableGames().map(g => g.id))
-  return GAME_LIST.filter(g => !startable.has(g.id))
+export function variantGames(): CorrelationGame[] {
+  const opening = new Set(openingGames().map(g => g.id))
+  return GAME_LIST.filter(g => !opening.has(g.id))
+}
+
+/** Every game a player may create directly. All eleven, by two different routes. */
+export function startableGames(): CorrelationGame[] {
+  return [...openingGames(), ...variantGames()]
 }
 
 /**
@@ -481,16 +495,34 @@ export function switchRefusal(
       'the game in — play a move to switch.'
   }
 
-  // The last offering is the new game's opening move, and that is the entire
-  // carry: no world, no premise, nothing but the thing on the table. With
-  // nothing on the table there is nothing for the new game to open on, and
-  // "switching" would just be starting one.
-  if (!opts.onTable) {
-    return 'There is nothing on the table to carry into another game. A switch answers the last ' +
-      'offering under new rules, so it needs one.'
+  const tier = switchTier(fromId, toId)
+
+  /**
+   * Nothing on the table is only a problem for a destination that needs one.
+   *
+   * This used to refuse *every* switch with an empty table, reasoning that "the
+   * last offering becomes the new game's opening move" and there was no last
+   * offering. The reasoning was sound and the conclusion was wrong, because it
+   * ignored what the destination is: an empty-seeded game **starts** from
+   * nothing. Switching into Embodiment before anything has been played is not a
+   * degraded Embodiment — it is exactly Embodiment, the same state as having
+   * created one.
+   *
+   * What the refusal cost was real and was reported as exactly this: a variant
+   * could not be played until a move of some *other* game had been played first,
+   * so "I want Embodiment" meant opening with Tag to get there.
+   *
+   * Tier 3 still needs one, for a reason that survives the correction. There the
+   * carry is a *scene*, and with nothing played the only scene available is the
+   * source game's own canned premise — which the player never played, and which
+   * arriving in another game is precisely what tier 4 is refused for.
+   */
+  if (!opts.onTable && tier === 3) {
+    return `${to.name} is built around a scene, and a switch is what carries yours into it — ` +
+      'but nothing has been played yet, so there is no scene of yours to carry. Play a move ' +
+      `first, or start ${to.name} on its own.`
   }
 
-  const tier = switchTier(fromId, toId)
   if (tier === 4) {
     const keys = authoredSeedKeys(to)
     const named = keys.length > 0 ? ` its ${keys.join(', ')}` : ' its premise'

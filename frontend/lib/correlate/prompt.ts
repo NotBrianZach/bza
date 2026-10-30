@@ -530,7 +530,28 @@ export function buildUserPrompt(opts: {
    * to tell which — so a reply that avoids the released relation out of caution
    * is the likely outcome, which is the opposite of what releasing it was for.
    */
-  if (switchedFrom) {
+  /**
+   * A switch taken before anything was played is not a handoff.
+   *
+   * Both bullets in the block below are statements about history — "the exchanges
+   * in THE PATH TO HERE happened under X", "the offering on the table is the
+   * opening move" — and with no turns there is neither a path nor a table. Saying
+   * them anyway would be the prompt describing a game that did not happen, which
+   * is worse than saying nothing: the interpreter would go looking for the
+   * inherited context it had been promised.
+   *
+   * So this case gets its own short block. It is also the honest description of
+   * what the player did, which is choose a variant rather than hand one game off
+   * to another.
+   */
+  if (switchedFrom && history.length === 0 && !previous) {
+    parts.push(
+      `WHICH GAME THIS IS\nThe player opened under ${switchedFrom.name} and changed their mind ` +
+      `before playing anything, so this is a game of ${game.name} from its first move. Nothing ` +
+      `has happened yet and nothing is inherited — treat the move below as an opening offering ` +
+      `and establish ${game.name}'s world from it.`,
+    )
+  } else if (switchedFrom) {
     const released = switchedFrom.released.length > 0
       ? `\n- ${switchedFrom.released.join(', ')} ${switchedFrom.released.length === 1 ? 'was' : 'were'} ` +
         `spent in ${switchedFrom.name} and ${switchedFrom.released.length === 1 ? 'is' : 'are'} ` +

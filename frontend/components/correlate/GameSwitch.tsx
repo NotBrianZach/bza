@@ -3,7 +3,9 @@
 import { useState } from 'react'
 import { ChevronDown, Shuffle, X } from 'lucide-react'
 import { ACCENT_CLASSES, getGame } from '@/lib/correlate/games'
-import { carriedSeedKeys, switchChanges, switchTargets, switchTier } from '@/lib/correlate/switching'
+import {
+  carriedSeedKeys, switchChanges, switchRefusal, switchTargets, switchTier,
+} from '@/lib/correlate/switching'
 import type { CorrelationGame } from '@/lib/correlate/types'
 
 /**
@@ -53,14 +55,29 @@ export default function GameSwitch({
   onArm: (gameId: string | null) => void
   disabled: boolean
   /**
-   * Whether there is an offering on the table. The last offering is the whole of
-   * what a switch carries, so with nothing there the control has nothing to
-   * offer and says why instead of presenting a list that would be refused.
+   * Whether there is an offering on the table.
+   *
+   * Changes what this control *is* rather than whether it works. With something
+   * there, a switch is a handoff: the offering becomes the new game's opening
+   * move. With nothing there it is simply which game you are about to open, which
+   * is the same state as having created that game — so it is allowed, and the
+   * copy says the other thing.
+   *
+   * It used to gate the whole control, which made a variant unplayable until a
+   * move of some other game had been played. See `switchRefusal`, which now only
+   * requires a table for the tier-3 pair, where the carry really is a scene.
    */
   onTable: boolean
 }) {
   const [open, setOpen] = useState(false)
-  const targets = switchTargets(from)
+  /**
+   * Filtered through the refusal rather than by a condition of its own, so the
+   * control can only ever offer what the server would accept. With nothing on the
+   * table that removes the tier-3 pair — where the carry *is* a scene and there
+   * is no scene yet — and leaves everything that starts empty, which is all of
+   * the variants.
+   */
+  const targets = switchTargets(from).filter(g => switchRefusal(from, g.id, { onTable }) === null)
 
   if (targets.length === 0) return null
 
@@ -89,19 +106,13 @@ export default function GameSwitch({
             moment of committing: nothing already played is touched, and the old
             branch stays where it is. */}
         <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-2 pt-2 border-t border-gray-200/70 dark:border-gray-700/70 leading-relaxed">
-          The turns above stay what they were — this move starts a branch under the new rules, and
-          the branch you are on now remains playable from the map.
+          {onTable
+            ? 'The turns above stay what they were — this move starts a branch under the new ' +
+              'rules, and the branch you are on now remains playable from the map.'
+            : `Nothing has been played, so there is nothing to leave behind. This is a game of ` +
+              `${armedGame.name} from its first move.`}
         </p>
       </div>
-    )
-  }
-
-  if (!onTable) {
-    return (
-      <p className="text-[11px] text-gray-400 dark:text-gray-500 leading-relaxed">
-        A switch answers the offering on the table under new rules, so there needs to be one. Play
-        a move first.
-      </p>
     )
   }
 
@@ -114,7 +125,11 @@ export default function GameSwitch({
         className="flex items-center gap-1.5 text-[11px] font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors disabled:opacity-50"
       >
         <Shuffle size={11} />
-        Play this move as another game
+        {/* Two different acts behind one control, so it says which one it is.
+            With nothing played there is no handoff and nothing to carry — the
+            player is choosing a variant before they start, which is a different
+            sentence from playing a move under new rules. */}
+        {onTable ? 'Play this move as another game' : 'Open as a different game instead'}
         <ChevronDown size={11} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
 
@@ -125,8 +140,11 @@ export default function GameSwitch({
               true of a fresh world and misleading where a scene crosses over, and
               one blurb cannot be both. */}
           <p className="text-[11px] text-gray-500 dark:text-gray-400 leading-relaxed">
-            The game changes from your next move on. Nothing already played changes, and the branch
-            you are on stays playable.
+            {onTable
+              ? 'The game changes from your next move on. Nothing already played changes, and the ' +
+                'branch you are on stays playable.'
+              : 'Nothing has been played yet, so this is simply which game you are about to open. ' +
+                'Your first move will be its first move.'}
           </p>
           <ul className="space-y-1.5">
             {targets.map(game => (

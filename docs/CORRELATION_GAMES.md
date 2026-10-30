@@ -1836,3 +1836,85 @@ reader — the opposite of the owner's order, who lived through it.
 - **The shared view's branch map**, and full-length playback in it. A shared
   chain is a line, and full playback is quota'd against an account that a reader
   does not have.
+
+## 23. Twelfth pass (2026-10-29): a variant from the first move
+
+Reported in one line: *"you should be able to play tag variants from the first
+move instead of after the first move."* Correct, and it was §19/§22's
+overcorrection. Two separate things were in the way.
+
+### 23a. The picker told you where they were and would not let you go
+
+§21f took the six variants out of the card grid on the reasoning that switching
+into one mid-chain is better than starting it — the offering on the table becomes
+its opening move instead of being supplied cold. That reasoning is sound and it
+described a *preference* as though it were the only route. The dashed box saying
+"6 more are inside a game of Tag" was accurate and useless: the only way in was a
+switch, and a switch needed a table.
+
+They are startable again, but inside Tag's card rather than as five more cards —
+which is the only place that says what they are. `switchOnlyGames()` became
+`variantGames()`, because the old name had been true for about a day and then
+became a lie.
+
+Starting one directly is also genuinely better when you already know which you
+want, and not just by a click. `createSession` snapshots the game's own `rules`
+and relation set and computes its starting tuning from its own `coreMedia` — so a
+session created as Embodiment opens with the four physical media unmuted, and one
+created as Tag does not. See 23c.
+
+`openingGames()` is now about presentation and not about what may be created:
+five games open on a scene of their own, six are the same exchange under
+different rules.
+
+### 23b. The switch refused an empty table, and only tier 3 should
+
+`switchRefusal` refused *every* switch with nothing on the table, reasoning that
+"the last offering becomes the new game's opening move" and there was no last
+offering. Sound reasoning, wrong conclusion — it ignored what the destination is.
+An empty-seeded game **starts** from nothing. Switching into Embodiment before
+anything is played is not a degraded Embodiment; it is Embodiment, in the same
+state as one that had just been created.
+
+Tier 3 still needs a table, for a reason that survives the correction: there the
+carry *is* a scene, and with nothing played the only scene available is the
+source game's own canned premise — which the player never played, and which
+arriving in another game is exactly what tier 4 is refused for. A test asserts
+that every switch still requiring a table is a tier-3 one.
+
+The control now filters its list through `switchRefusal` rather than through a
+condition of its own, so it can only offer what the server would accept, and its
+copy changes: with something on the table a switch is a handoff, and with nothing
+there it is simply which game you are about to open.
+
+### 23c. Two things that would have been wrong about a turn-zero switch
+
+Both are cases where the feature would have "worked" and produced something
+worse than starting the game.
+
+**The weighting.** `startingTuning` reads `coreMedia`, and a session created as
+Tag is weighted for Tag — which mutes all four media Embodiment composes actions
+in (§21b). So switching to Embodiment on move one would have given the right
+rules with the game's own media silenced: the §21b bug arriving by a second
+route. `armSwitch` now hands the armed game its own starting weighting, but only
+at turn zero and only while the weighting is still the one the game was created
+with. Both conditions are `startingTuning`'s own promise read precisely — a game
+with no turns is not in progress, and a weighting the player has moved is theirs.
+
+**The prompt.** The switch block is two statements about history: "the exchanges
+in THE PATH TO HERE happened under X" and "the offering on the table is the
+opening move". With no turns there is neither. Saying them anyway would be worse
+than saying nothing, because the interpreter would go looking for the inherited
+context it had been promised. A turn-zero switch gets its own short block that
+says what actually happened — the player changed their mind before playing
+anything — and that nothing is inherited.
+
+The opening prompt on the board reads from the armed game too. Showing Tag's
+instruction on an empty board while the player is about to play Embodiment would
+be the only instruction there, and wrong.
+
+### 23d. What is still only a switch
+
+Nothing, for the variants. Tier 3 (`duel` ↔ `transformation`) remains
+switch-only-after-a-move, which is not a restriction on starting either of them —
+both have cards — only on carrying a scene you have not got yet.
