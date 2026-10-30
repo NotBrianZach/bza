@@ -8,6 +8,7 @@ import {
   applyWorldDelta, buildRetryPrompt, buildSalvageAccountPrompt, buildSeedPrompt,
   buildSeedSystemPrompt, buildSystemPrompt, buildUserPrompt, describeRejection,
   normalizeInterpretation, normalizeSeed, parseJsonObject, salvageQueries, sessionScope,
+  systemPromptParts, type SystemPrompt,
   type ElsewhereContext, type TurnContext,
 } from '@/lib/correlate/prompt'
 import {
@@ -120,8 +121,57 @@ const STRICT_OUTPUT_NOTE =
   'given above, put nothing outside the braces, and do not restate the world — only the keys this ' +
   'exchange changed.'
 
+/**
+ * How long the interpreter gets before the turn gives up on it.
+ *
+ * Sixty seconds, chosen against the thing it must not interrupt rather than as a
+ * round number: the slowest legitimate call is a first pass on the widest token
+ * budget this engine sends, which is comfortably inside it. Before this there was
+ * no deadline at all.
+ */
+const INTERPRETER_TIMEOUT_MS = 60_000
+
 /** One image put in front of the interpreter, with what it is of. */
 type InterpreterImage = { url: string; of: string; medium: MediumId }
+
+/**
+ * Token counts out of a provider response, whatever it calls them.
+ *
+ * Normalized here because the callers should not care: OpenRouter passes
+ * Anthropic's cache fields through under their OpenAI-ish names
+ * (`prompt_tokens_details.cached_tokens`) while Anthropic's own shape uses
+ * `cache_read_input_tokens`, and `reasoning_tokens` appears in a third place
+ * again. Every field is read defensively and defaults to zero, because a missing
+ * count is a fact about the provider and not an error — and because a thrown
+ * exception in a bookkeeping path would be the worst possible trade.
+ *
+ * A zero `cacheRead` across repeated turns of one game is the signal that
+ * something is invalidating the prefix. That is the measurement this exists for.
+ */
+function providerUsage(data: any): {
+  input: number
+  output: number
+  cacheRead: number
+  cacheWrite: number
+  reasoning: number
+} {
+  const u = data?.usage ?? {}
+  const n = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : 0)
+  return {
+    input: n(u.prompt_tokens ?? u.input_tokens),
+    output: n(u.completion_tokens ?? u.output_tokens),
+    cacheRead: n(
+      u.cache_read_input_tokens ??
+      u.prompt_tokens_details?.cached_tokens ??
+      u.cached_tokens,
+    ),
+    cacheWrite: n(u.cache_creation_input_tokens ?? u.cache_write_tokens),
+    reasoning: n(
+      u.completion_tokens_details?.reasoning_tokens ??
+      u.reasoning_tokens,
+    ),
+  }
+}
 
 /**
  * The images in play this turn, so the interpreter can look at them.
@@ -169,16 +219,24 @@ function err(message: string, status: number) {
 }
 
 export async function POST(req: NextRequest) {
-  const userId = await getUserFromToken(req.headers.get('authorization'))
-  if (!userId) return err('Not authenticated', 401)
-
-  const quotaErr = await checkQuota(userId)
-  if (quotaErr) return err(quotaErr, 429)
-
-  const apiKey = process.env.OPENROUTER_API_KEY || process.env.OPENAI_API_KEY
-  if (!apiKey) return err('No API key configured', 501)
-
-  const body = await req.json().catch(() => null) as {
+  /**
+   * The one genuine serial dependency at the top of the turn.
+   *
+   * Everything else needs `userId`, so this hop cannot be overlapped with
+   * anything — but it is also the *only* one that cannot. The body parse is
+   * local work and the quota check is a round trip, so both go alongside it
+   * rather than after it.
+   *
+   * Worth saying why this matters more here than it would elsewhere: the worker
+   * runs in a Cloudflare datacenter and the database is in us-east-1, so each of
+   * these is a cross-network hop on the critical path before any work starts.
+   * There were four of them in a row — auth, quota, session, turns — and only
+   * the first had to be.
+   */
+  const [userId, body] = await Promise.all([
+    getUserFromToken(req.headers.get('authorization')),
+    req.json().catch(() => null),
+  ]) as [string | null, {
     sessionId?: string
     medium?: MediumId
     offeringId?: string
@@ -190,7 +248,12 @@ export async function POST(req: NextRequest) {
     tuning?: unknown
     selfReply?: boolean
     switchTo?: string
-  } | null
+  } | null]
+
+  if (!userId) return err('Not authenticated', 401)
+
+  const apiKey = process.env.OPENROUTER_API_KEY || process.env.OPENAI_API_KEY
+  if (!apiKey) return err('No API key configured', 501)
 
   const sessionId = body?.sessionId
   const mediumId = body?.medium
@@ -210,12 +273,48 @@ export async function POST(req: NextRequest) {
 
   const db = serviceClient()
 
-  const { data: session } = await ((db.from('listen_sessions') as any)
-    .select('*')
-    .eq('id', sessionId)
-    .eq('user_id', userId)
-    .maybeSingle() as any)
+  /**
+   * Quota, the session and the whole turn list — one round trip's worth of wall
+   * clock instead of three.
+   *
+   * None of the three depends on the others: the quota row is keyed on the user,
+   * the session on its id, and the turns on the session id the client sent. They
+   * were sequential only because they were written in the order they are read.
+   *
+   * The turns query moving up here is the one worth checking twice, because it
+   * fires before the session has been validated — so a request naming a session
+   * that does not exist, or someone else's, now runs a `listen_turns` select that
+   * used to be skipped. That is safe and stays safe for a specific reason: the
+   * select is scoped to `session_id` alone, so the rows it could return are
+   * exactly the rows the *session* check below decides whether to let anyone act
+   * on, and the refusals still happen before a single row is read. The cost of
+   * being wrong is one wasted query on a request that was going to be refused.
+   */
+  const [quotaErr, sessionResult, turnsResult] = await Promise.all([
+    checkQuota(userId),
+    ((db.from('listen_sessions') as any)
+      .select('*')
+      .eq('id', sessionId)
+      .eq('user_id', userId)
+      .maybeSingle() as any),
+    ((db.from('listen_turns') as any)
+      .select(
+        // `mode` is what makes a branch's game knowable. Omitting it from this
+        // list would not fail — every read of it goes through `modeOf`, which
+        // treats absent and null alike as "the session's mode" — it would
+        // silently un-switch every switched branch on the next turn.
+        'id, turn_index, parent_turn_id, move_by, move_offering, reply_offering, relation, ' +
+        'reading, narration, carried, facts, world_delta, link_turn_id, link_note, legal, mode, ' +
+        'prediction, prediction_called',
+      )
+      .eq('session_id', sessionId)
+      .order('turn_index', { ascending: true })
+      .limit(MAX_TURNS) as any),
+  ])
 
+  if (quotaErr) return err(quotaErr, 429)
+
+  const session = sessionResult?.data
   if (!session) return err('Session not found', 404)
   if (session.status !== 'active') return err('This game is finished', 409)
 
@@ -283,21 +382,10 @@ export async function POST(req: NextRequest) {
   // is not a suffix: the player may be answering turn 3 of a twenty-turn game, and
   // the history that binds is the path down to turn 3, not whatever happened most
   // recently. Sessions are small; the cap is a backstop, not a budget.
-  const { data: turnRows } = await ((db.from('listen_turns') as any)
-    .select(
-      // `mode` is what makes a branch's game knowable. Omitting it from this
-      // list would not fail — every read of it goes through `modeOf`, which
-      // treats absent and null alike as "the session's mode" — it would silently
-      // un-switch every switched branch on the next turn.
-      'id, turn_index, parent_turn_id, move_by, move_offering, reply_offering, relation, ' +
-      'reading, narration, carried, facts, world_delta, link_turn_id, link_note, legal, mode, ' +
-      'prediction, prediction_called',
-    )
-    .eq('session_id', sessionId)
-    .order('turn_index', { ascending: true })
-    .limit(MAX_TURNS) as any)
-
-  const allTurns = (turnRows ?? []) as CorrelationTurn[]
+  //
+  // Fetched further up, alongside the session and the quota check — see the
+  // `Promise.all` there. The rows arrive here rather than being queried here.
+  const allTurns = (turnsResult?.data ?? []) as CorrelationTurn[]
   const graph = buildGraph(allTurns)
 
   // An explicit null means "start a new thread with nothing on the table", which is
@@ -567,7 +655,16 @@ export async function POST(req: NextRequest) {
   const { maxTokens } = readingLengths(tuning)
 
   const callInterpreter = async (
-    system: string,
+    /**
+     * Two parts when the prefix is worth caching, one string when it is not.
+     *
+     * A plain string is the ordinary case and means "no breakpoint": the retry,
+     * the seed call, the salvage account and the composed floor are one-offs
+     * whose prefix nothing reuses, and a `cache_control` marker there would pay
+     * the write premium for a read that never happens. Only the first pass — the
+     * call that repeats every turn with the same prefix — hands over a split.
+     */
+    system: SystemPrompt | string,
     user: string,
     /**
      * Images to put in front of it, when the offerings in play have any.
@@ -586,32 +683,109 @@ export async function POST(req: NextRequest) {
         ]
       : user
 
-    const res = await fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-        ...(useOpenRouter
-          ? { 'HTTP-Referer': 'https://aireadalong.com', 'X-Title': 'AI Play Along' }
-          : {}),
-      },
-      body: JSON.stringify({
-        model: modelId,
-        messages: [
-          { role: 'system', content: system },
-          { role: 'user', content },
-        ],
-        max_tokens: maxTokens,
-        temperature: 0.9,
-      }),
-    })
+    /**
+     * A cache breakpoint on the stable half of the system prompt.
+     *
+     * Measured before writing this: the system prompt is **byte-identical**
+     * between consecutive turns of the same game, 16kB of it, re-sent and
+     * re-prefilled every turn. Prompt caching is a prefix match, so the one thing
+     * it needs is for the stable part to come first and the per-turn part to come
+     * after — which `systemPromptParts` is what guarantees. The breakpoint goes on
+     * `stable`; `volatile` sits after it and is never cached.
+     *
+     * Sent as an array of content parts rather than a string, because that is the
+     * only shape a `cache_control` marker can hang on. A provider that does not
+     * understand the marker still reads the parts as text, so the worst case is
+     * the behaviour we already had.
+     */
+    const systemContent = typeof system === 'string'
+      ? system
+      : [
+          { type: 'text', text: system.stable, cache_control: { type: 'ephemeral' } },
+          ...(system.volatile ? [{ type: 'text', text: system.volatile }] : []),
+        ]
+
+    /**
+     * A deadline, because there was none.
+     *
+     * `fetch` here had no abort signal, so a provider request that hung rather
+     * than failing held the turn open until the platform killed the worker — the
+     * player sees an indefinite spinner instead of the "try that again" a clean
+     * 502 produces, and none of the fallback ladder below ever runs. 60 seconds
+     * is chosen against the thing it has to not interrupt: a long first pass on a
+     * 2800-token budget, which is well inside it.
+     */
+    const abort = AbortSignal.timeout(INTERPRETER_TIMEOUT_MS)
+
+    let res: Response
+    try {
+      res = await fetch(apiUrl, {
+        method: 'POST',
+        signal: abort,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${apiKey}`,
+          ...(useOpenRouter
+            ? { 'HTTP-Referer': 'https://aireadalong.com', 'X-Title': 'AI Play Along' }
+            : {}),
+        },
+        body: JSON.stringify({
+          model: modelId,
+          messages: [
+            { role: 'system', content: systemContent },
+            { role: 'user', content },
+          ],
+          max_tokens: maxTokens,
+          // `temperature` is gone, and not as a tidy-up. Claude Sonnet 5 — which
+          // `CORRELATE_MODEL` names — rejects a non-default `temperature`
+          // outright. Since turns were landing, the value was being dropped or
+          // normalized somewhere upstream, which means the 0.9 this used to send
+          // had no effect and the comment-free `temperature: 0.9` was telling
+          // every reader the engine had a variety knob it did not have. Variety
+          // comes from the prompt now, which is where the rest of this engine
+          // already puts it.
+        }),
+      })
+    } catch (e) {
+      // An abort looks like any other fetch rejection, so it is named: a timeout
+      // and a dropped connection want different investigation.
+      const why = (e as Error)?.name === 'TimeoutError'
+        ? `no response in ${INTERPRETER_TIMEOUT_MS / 1000}s`
+        : `${(e as Error)?.message ?? e}`
+      console.warn(`[correlate] interpreter unreachable in ${game?.id ?? '?'}: ${why}`)
+      return null
+    }
+
     if (!res.ok) {
       const detail = await res.text().catch(() => '')
       console.warn(`[correlate] interpreter HTTP ${res.status}${detail ? `: ${detail.slice(0, 200)}` : ''}`)
       return null
     }
-    logUsage(userId, 0.005, { model: modelId, endpoint: 'correlate-turn' })
+
     const data = await res.json()
+
+    /**
+     * What the call actually cost, which nothing has ever recorded.
+     *
+     * `logUsage` was called with a flat 0.005 estimate and explicit zeros for
+     * both token columns, so `api_usage` held a guess and no measurement. Every
+     * question worth asking about this route — is the prompt as expensive as we
+     * think, did the cache work, is `max_tokens` tight, is the model thinking —
+     * was unanswerable from data we were already storing.
+     *
+     * Still fire-and-forget: the player's turn must not wait on bookkeeping, and
+     * a logging failure must not fail a turn that worked.
+     */
+    const u = providerUsage(data)
+    logUsage(userId, 0.005, { model: modelId, endpoint: 'correlate-turn' }, u)
+    if (u.cacheRead || u.cacheWrite) {
+      console.log(
+        `[correlate] tokens in=${u.input} out=${u.output} ` +
+        `cache(read=${u.cacheRead} write=${u.cacheWrite})` +
+        (u.reasoning ? ` reasoning=${u.reasoning}` : ''),
+      )
+    }
+
     return data?.choices?.[0]?.message?.content ?? ''
   }
 
@@ -774,7 +948,15 @@ export async function POST(req: NextRequest) {
   const seeing = lookAt(move, previous)
   const seenMedia = [...new Set(seeing.map(i => i.medium))]
 
-  const systemPrompt = buildSystemPrompt(
+  /**
+   * Split rather than joined, because this is the one call whose prefix repeats.
+   *
+   * Every turn of a game at the same tuning produces the same `stable` half, so
+   * it is the only place a cache breakpoint can pay for itself. `callInterpreter`
+   * puts the marker on it; see `systemPromptParts` for what had to move below the
+   * line to make the prefix hold.
+   */
+  const systemPrompt = systemPromptParts(
     game, media, relations, tuning, selfReply, answerIn, !!prediction, seenMedia,
   )
   const userPrompt = buildUserPrompt({
@@ -1273,6 +1455,19 @@ export async function POST(req: NextRequest) {
   // An illegal move leaves the world untouched — nothing was established.
   const nextWorld = legal ? applyWorldDelta(world, { ...interpretation, worldDelta: storedDelta! }) : world
 
+  /**
+   * DELIBERATELY NOT PARALLELISED with the insert above, unlike the reads at the
+   * top of this route.
+   *
+   * Nothing in this update reads the inserted row — `nextWorld` is folded from
+   * `interpretation`, and `turn_count` from the graph — so a `Promise.all` would
+   * work and would save a round trip. It is still wrong. The insert is the
+   * authoritative record and this is a derived cache of it, so running them
+   * together means a failed insert still bumps `turn_count` and still advances
+   * `world_state`: the next turn would compute its `turnIndex` from a count that
+   * includes a turn nobody can see, and the board would show a world no exchange
+   * produced. One hop is the right price for that ordering.
+   */
   const { data: updated } = await ((db.from('listen_sessions') as any)
     .update({
       // The world of the branch just played. Authoritative only while the game is

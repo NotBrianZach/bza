@@ -90,7 +90,7 @@ const {
   parseJsonObject, normalizeInterpretation, applyWorldDelta, offeringLine, sessionScope,
   describeRejection, salvageQueries, buildSystemPrompt, buildUserPrompt, buildRetryPrompt,
   buildSalvageAccountPrompt, buildSeedPrompt, buildSeedSystemPrompt, normalizeSeed, restateGame,
-  buildClaimPrompt, buildClosingPrompt,
+  buildClaimPrompt, buildClosingPrompt, systemPromptParts,
 } = M.prompt
 const { GAME_LIST, GAMES, getGame, ACCENT_CLASSES, FEATURED_GAMES, FEATURED_GAME_IDS, retiredGameName } = M.games
 const {
@@ -3024,19 +3024,33 @@ const sysFor = (seen = []) => buildSystemPrompt(
 t('with nothing attached the unperceived warning stands',
   /CANNOT PERCEIVE/.test(sysFor()) && !/YOU CAN SEE THEM/.test(sysFor()))
 t('with an image attached it says so', /YOU CAN SEE THEM/.test(sysFor(['artwork'])))
-t('and the attached medium drops out of the unperceived list', (() => {
-  const block = sysFor(['artwork']).split('CANNOT PERCEIVE')[1]?.split('\n\n')[0] ?? ''
-  return !block.includes('Art') && block.length > 0
-})())
 /**
- * Subtracted rather than suppressed wholesale: with a painting attached and a
- * song on the table the warning is still true of the song, and still needed.
+ * The standing warning does NOT change shape when a picture is attached — it
+ * used to, and that was the single thing making the whole system prompt
+ * per-turn. Measured: subtracting `seen` from `unperceived` moved the first byte
+ * of divergence from the end of the prompt to 30% through it, which is the
+ * difference between a 13kB cacheable prefix and none.
+ *
+ * The exception now lives in the volatile tail instead, which is both cacheable
+ * and better prompting: a standing limit with a named exception beats a limit
+ * that quietly varies.
  */
-t('the warning survives for the media that really did arrive as a name',
+t('the standing warning is unchanged by what is attached this turn', (() => {
+  const a = systemPromptParts(GAMES.tag, ALL_MEDIA, ALL_RELATIONS, DEFAULT_TUNING, false, undefined, false, [])
+  const b = systemPromptParts(GAMES.tag, ALL_MEDIA, ALL_RELATIONS, DEFAULT_TUNING, false, undefined, false, ['artwork'])
+  return a.stable === b.stable
+})())
+t('the warning still names the media that really do arrive as a name',
   /CANNOT PERCEIVE/.test(sysFor(['artwork'])))
-t('and goes entirely when every unperceived medium is attached',
+t('and the per-turn exception names the attached medium instead', (() => {
+  const { volatile } = systemPromptParts(
+    GAMES.tag, ALL_MEDIA, ALL_RELATIONS, DEFAULT_TUNING, false, undefined, false, ['artwork'],
+  )
+  return /does not apply to them/.test(volatile) && volatile.includes('Art')
+})())
+t('the warning goes entirely when no medium arrives as a name',
   !/CANNOT PERCEIVE/.test(buildSystemPrompt(
-    GAMES.tag, ['artwork'], ALL_RELATIONS, DEFAULT_TUNING, false, undefined, false, ['artwork'],
+    GAMES.tag, ['gesture'], ALL_RELATIONS, DEFAULT_TUNING, false, undefined, false,
   )))
 t('it tells the interpreter which reading to reach for, not merely that it may look',
   /composition|cropped|light is doing/.test(sysFor(['artwork'])))
@@ -3178,6 +3192,104 @@ t('and an unswitched opening turn gets neither', (() => {
   })
   return !/THE GAME HAS JUST CHANGED/.test(plain) && !/WHICH GAME THIS IS/.test(plain)
 })())
+
+/**
+ * The prompt-cache prefix.
+ *
+ * Prompt caching is a prefix match, so the entire requirement is that nothing
+ * per-turn appears above anything stable — and the failure mode is silent. A
+ * single per-turn byte added to the stable half costs the whole 13kB prefix, the
+ * turn still works, and the only symptom is a `cache_read_input_tokens` of zero
+ * in a table nobody reads. These assertions are the thing that notices.
+ *
+ * Measured before the split: the joined prompt was 16,346 characters and
+ * byte-identical between consecutive turns, re-prefilled every move.
+ */
+group('the cacheable prefix — per-turn content must stay below the line')
+const SP = (opts = {}) => systemPromptParts(
+  GAMES.tag, ALL_MEDIA, ALL_RELATIONS, DEFAULT_TUNING,
+  opts.selfReply ?? false,
+  opts.answerIn,
+  opts.predicted ?? false,
+  opts.seen ?? [],
+)
+/**
+ * Every axis that varies within one game at one tuning, each of which used to
+ * break the prefix. `answerIn` is the one that made it unfixable before the
+ * split: `owedMedia` recomputes it from the branch's reply history every turn.
+ */
+const PREFIX_CASES = [
+  ['nothing varying', {}],
+  ['a narrower reply enum', { answerIn: ['music'] }],
+  ['a wider reply enum', { answerIn: ['music', 'artwork', 'passage'] }],
+  ['a vision turn', { seen: ['artwork'] }],
+  ['two media attached', { seen: ['artwork', 'scene'] }],
+  ['a self-reply', { selfReply: true }],
+  ['a prediction', { predicted: true }],
+  ['all of them at once', { selfReply: true, predicted: true, seen: ['artwork'], answerIn: ['music'] }],
+]
+const PREFIX = SP().stable
+t('one prefix is shared by every per-turn case',
+  PREFIX_CASES.every(([, o]) => SP(o).stable === PREFIX))
+for (const [name, o] of PREFIX_CASES) {
+  t(`  prefix holds across ${name}`, SP(o).stable === PREFIX)
+}
+t('the prefix is long enough to be cacheable at all',
+  // Claude Sonnet 5's minimum cacheable prefix is 1024 tokens. Checked in
+  // characters because that is what this process can measure, with a
+  // deliberately pessimistic 4-chars-per-token assumption.
+  PREFIX.length / 4 > 1024)
+t('and it is the large half — otherwise the split would not be worth having',
+  PREFIX.length > SP().volatile.length * 2)
+/**
+ * The per-turn content has to actually be *in* the volatile half, not merely
+ * absent from the stable one — a block dropped by accident would satisfy the
+ * assertions above and lose the instruction.
+ */
+t('the vision exception is in the volatile half', /does not apply to them/.test(SP({ seen: ['artwork'] }).volatile))
+t('the self-reply guidance is in the volatile half',
+  SP({ selfReply: true }).volatile.includes(SELF_REPLY_GUIDANCE.slice(0, 40)))
+t('the prediction rule is in the volatile half',
+  /NOT yours to keep/.test(SP({ predicted: true }).volatile))
+t('the output schema is in the volatile half, since its enum is per-turn',
+  // `^OUTPUT\n`, not `^OUTPUT$` — without the `m` flag `$` is end-of-string, so
+  // the anchored form only matched a volatile half that was the bare word.
+  /^OUTPUT\n|\nOUTPUT\n/.test(SP().volatile) && SP().volatile.includes('"reading"'))
+t('and none of those four appear in the stable half',
+  !/does not apply to them/.test(PREFIX) &&
+  !PREFIX.includes(SELF_REPLY_GUIDANCE.slice(0, 40)) &&
+  !/NOT yours to keep/.test(PREFIX) &&
+  !PREFIX.includes('"reading"'))
+/**
+ * The joined form is what every one-off call still uses (retry, floor, salvage
+ * account, seed), so it has to remain a faithful concatenation.
+ */
+t('buildSystemPrompt is still the two halves joined', (() => {
+  const p = SP({ seen: ['artwork'], predicted: true })
+  const joined = buildSystemPrompt(
+    GAMES.tag, ALL_MEDIA, ALL_RELATIONS, DEFAULT_TUNING, false, undefined, true, ['artwork'],
+  )
+  return joined === `${p.stable}\n\n${p.volatile}`
+})())
+t('a tuning change does invalidate the prefix, which is correct and rare',
+  systemPromptParts(GAMES.tag, ALL_MEDIA, ALL_RELATIONS, startingTuning(ALL_MEDIA)).stable !== PREFIX)
+t('and so does a different game, for the same reason',
+  systemPromptParts(GAMES.embodiment, ALL_MEDIA, ALL_RELATIONS, DEFAULT_TUNING).stable !== PREFIX)
+
+group('prompt size — what the trims removed')
+t('provider brand names are gone from the media list',
+  !PREFIX.includes('Deezer') && !PREFIX.includes('Cleveland'))
+t('but the catalogued/composed distinction the schema needs is kept',
+  /composed: you author it/.test(PREFIX))
+t('each medium is still named with its plural',
+  ALL_MEDIA.every(m => PREFIX.includes(`- ${m} (`)))
+t('a relation is stated once, not twice',
+  PREFIX.includes(RELATIONS.association.guidance) &&
+  !PREFIX.includes(`${RELATIONS.association.does}. `))
+t('`does` still exists for the picker, which shows it without the guidance',
+  RELATIONS.association.does.length > 0)
+t('every relation in play still carries its guidance',
+  ALL_RELATIONS.every(id => PREFIX.includes(RELATIONS[id].guidance)))
 
 rmSync(outDir, { recursive: true, force: true })
 

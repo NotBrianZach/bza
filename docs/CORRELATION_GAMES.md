@@ -1918,3 +1918,153 @@ be the only instruction there, and wrong.
 Nothing, for the variants. Tier 3 (`duel` ↔ `transformation`) remains
 switch-only-after-a-move, which is not a restriction on starting either of them —
 both have cards — only on carrying a scene you have not got yet.
+
+## 24. Thirteenth pass (2026-10-30): making the turn faster
+
+Asked directly: can the server respond quicker. Four changes and one measurement
+that reframed the fifth. No schema change.
+
+### 24a. 16,346 characters, byte-identical, re-prefilled every turn
+
+The measurement first, because it is the whole argument. Rendering the system
+prompt for turn 1 and turn 6 of the same game and diffing them: **identical, all
+16,346 characters** — about 4,000 tokens re-sent and re-processed on every move,
+against a cacheable minimum of 1,024 on Claude Sonnet 5.
+
+Prompt caching is a prefix match, so the only requirement is that nothing
+per-turn sits above anything stable. The prompt was already *nearly* in that
+shape — the world, the move and the offering on the table were in the user
+prompt — but four things in the system prompt varied per turn, and one of them
+was fatal:
+
+| Varies | Was at | Why |
+|---|---|---|
+| the reply-medium enum | end (OUTPUT) | `owedMedia` recomputes it from the branch's reply history |
+| the prediction rule + schema field | end + world rules | only when the player guessed |
+| the self-reply guidance | ~45% | only on a self-reply |
+| **the vision exception** | **~30%** | **`seen` subtracted from `unperceived`** |
+
+The last one was the problem, and it was mine — §22a shipped it the day before.
+Subtracting the attached media from the unperceived warning moved the first byte
+of divergence from the *end* of the prompt to 30% through it, which is the
+difference between a cacheable prefix and none.
+
+`systemPromptParts` now returns `{ stable, volatile }` and the breakpoint is a
+thing the type system carries. 13,278 characters stable, 2,263–3,572 volatile —
+**86% of the prompt cacheable**, and the stable half is byte-identical across
+every per-turn case: narrow enum, wide enum, vision, two images, self-reply,
+prediction, and all of them at once. Twelve assertions lock that down, because
+the failure is silent: one per-turn byte added above the line costs the whole
+prefix, the turn still works, and the only symptom is a zero in a column nobody
+reads.
+
+**Both blocks that had to move read better where they landed.** The vision
+exception is now "artwork is attached on *this* turn, so the warning above does
+not apply to it" — a standing limit with a named exception, instead of a limit
+that quietly changes shape. That is the same move `restateGame` and
+`restateTuning` already make.
+
+`buildSystemPrompt` still exists and joins the halves, which is what the retry,
+the composed floor, the salvage account and the seed call all use: those are
+one-offs whose prefix nothing reuses, and a breakpoint there would pay the
+cache-write premium for a read that never comes.
+
+**Unverified end-to-end.** Whether OpenRouter passes `cache_control` through for
+`anthropic/claude-sonnet-5` rather than stripping it is a question only a real
+turn answers — which is what 24b is for. The change is additive either way: a
+provider that ignores the marker reads the parts as text.
+
+### 24b. `api_usage` recorded a guess and no measurement
+
+`logUsage` was called with a flat `0.005` estimate and explicit zeros for both
+token columns, which have existed since the table did. So every question worth
+asking about this route — is the prompt as expensive as we think, did the cache
+work, is `max_tokens` tight, is the model thinking — was unanswerable from data
+we were already storing. 24a in particular is unfalsifiable without it.
+
+`providerUsage` normalizes the counts, because providers disagree: OpenRouter
+passes Anthropic's cache fields through as `prompt_tokens_details.cached_tokens`
+while Anthropic's own shape says `cache_read_input_tokens`, and reasoning tokens
+appear in a third place again. Cache and reasoning counts go into the existing
+`request_metadata` jsonb rather than new columns.
+
+**The column name was nearly a silent disaster.** `logUsage` is wrapped in
+`catch {}` so that a logging failure can never fail a player's turn — which
+means an insert naming a column that does not exist would have stopped recording
+usage altogether, with an empty table as the only symptom. The first draft wrote
+`meta`; the column is `request_metadata`.
+
+### 24c. Four serial database round trips before any work started
+
+Auth → quota → session → turns, sequential, from a Cloudflare worker to a
+database in us-east-1. Only the first is a real dependency. The body parse joins
+the auth hop, and quota, session and turns now go in one `Promise.all` — roughly
+three cross-network hops off the critical path before the model is even called.
+
+The turns query moving up is the one worth a second look, because it now fires
+before the session has been validated: a request naming a nonexistent or
+someone-else's session runs a `listen_turns` select that used to be skipped.
+That is safe for a specific reason — the select is scoped to `session_id` alone,
+so the rows it could return are exactly the rows the session check decides
+whether to let anyone act on, and every refusal still happens before a row is
+read. The cost of being wrong is one wasted query on a request that was going to
+be refused.
+
+**The two writes at the end are deliberately NOT parallelised**, and the comment
+says so, because the saving is real and the trade is bad: nothing in the session
+update reads the inserted row, so a `Promise.all` would work — and would mean a
+failed insert still bumped `turn_count` and still advanced `world_state`. The
+next turn would compute its index from a count including a turn nobody can see.
+
+### 24d. No deadline on the interpreter call
+
+There was no abort signal, so a provider request that hung rather than failing
+held the turn open until the platform killed the worker: an indefinite spinner
+instead of the "try that again" a clean 502 produces, and none of the fallback
+ladder ran. Sixty seconds, chosen against the thing it must not interrupt — the
+slowest legitimate first pass is well inside it — and a timeout is logged
+differently from a dropped connection, because the two want different
+investigation.
+
+### 24e. `temperature: 0.9` was doing nothing
+
+Claude Sonnet 5 — which `CORRELATE_MODEL` names — **rejects a non-default
+`temperature` outright**. Since turns were landing, the value was being dropped
+or normalized upstream, which means the 0.9 had no effect and an uncommented
+`temperature: 0.9` was telling every reader the engine had a variety knob it did
+not have. Removed. Variety comes from the prompt, which is where the rest of
+this engine already puts it.
+
+Worth noting what this does *not* explain: it is not the cause of the §21e
+retries, because a parameter the provider rejected would fail every request
+identically rather than intermittently.
+
+### 24f. Compression — and why the target moved
+
+Asked for alongside the rest. Two trims that were genuine duplication:
+
+- **Provider brand names** out of the media list. `from Deezer` / `from
+  Cleveland Museum of Art` was eight lines the interpreter can do nothing with —
+  it never names a provider or chooses one, and the only thing it needs from
+  that line (catalogued vs composed) is said once below and enforced by the
+  schema.
+- **`does` out of the relation list.** Each line was `does. guidance`, and `does`
+  is a one-clause summary of the sentence immediately after it — "Follows any
+  explainable connection" ahead of "Any connection is admissible so long as you
+  can say what it is." It is written for the *picker*, where it appears without
+  the guidance beside it, and it still does that job there.
+
+14,068 → 13,278 characters. 790, which is modest, and the honest reason it is
+modest is that **the remaining bulk is not padding.** The three longest blocks —
+reading a record you cannot perceive, the propositional naming rule, the
+weighting — are each several paragraphs documenting a specific observed failure
+with its reason. §16 and §17b of this document are about what happens when that
+prose is paraphrased or duplicated; cutting it for length would be the same
+mistake from the other direction.
+
+**And caching moved the target.** The 13.3kB prefix now bills at roughly a tenth
+and prefills from cache, so compressing it further is the low-value
+optimisation. What is paid in full every turn is the 2.3–3.6kB volatile half —
+which is mostly the OUTPUT schema, the one part that cannot be cut. If prompt
+size is worth another pass, that is where it is now, and it is a much smaller
+target than the number at the top of this section suggested.

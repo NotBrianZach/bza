@@ -96,8 +96,19 @@ export function offeringLine(o: Offering): string {
   return bits.join(' ')
 }
 
+/** The system prompt in two halves, split at the prompt-cache breakpoint. */
+export interface SystemPrompt {
+  /**
+   * Byte-identical between turns of the same game at the same tuning. The part
+   * worth caching, and the reason the split exists.
+   */
+  stable: string
+  /** Everything that depends on *this* turn. Never cached. */
+  volatile: string
+}
+
 /**
- * The system prompt.
+ * The system prompt, as a cacheable prefix plus a per-turn tail.
  *
  * `tuning` is optional and contributes nothing when neutral — so a game nobody has
  * adjusted produces exactly the prompt it produced before tuning existed, which is
@@ -106,8 +117,24 @@ export function offeringLine(o: Offering): string {
  * `selfReply` adds the one section and the one schema field a turn needs when the
  * move it is reading is the interpreter's own previous answer. Off by default, for
  * the same reason: a player turn must produce the prompt it always produced.
+ *
+ * ── Why it returns two strings ───────────────────────────────────────────────
+ *
+ * Measured, not assumed: this prompt is 16,346 characters and **byte-identical
+ * between consecutive turns of the same game** — about 4,000 tokens re-sent and
+ * re-prefilled on every move. Prompt caching is a prefix match, so the entire
+ * requirement is that nothing per-turn appears above anything stable. Returning
+ * one string made that impossible to express; returning two makes the breakpoint
+ * a thing the type system carries.
+ *
+ * Two blocks had to move for the prefix to hold, and both read better where they
+ * landed — see the comment at the boundary, and `unperceived` above.
+ *
+ * The caller's job is to put a `cache_control` marker on `stable` and nothing on
+ * `volatile`. `buildSystemPrompt` below joins them for every call site that has
+ * no prefix worth reusing.
  */
-export function buildSystemPrompt(
+export function systemPromptParts(
   game: CorrelationGame,
   media: MediumId[],
   relations: RelationId[],
@@ -139,18 +166,39 @@ export function buildSystemPrompt(
    * in play have pictures. See `lookAt` in the turn route.
    */
   seen: MediumId[] = [],
-): string {
+): SystemPrompt {
   const worldKeys = game.worldKeys.map(k => `  - ${k.key}: ${k.description}`).join('\n')
 
+  /**
+   * The media list, without the provider names it used to carry.
+   *
+   * `from Deezer` / `from Cleveland Museum of Art` was eight lines of text the
+   * interpreter can do nothing with: it never names a provider, never chooses
+   * one, and the only thing it needs from this line — catalogued (a query that
+   * gets searched) versus composed (authored here, nothing to search) — is said
+   * once below and enforced by the schema. The distinction is kept; the brand
+   * names are not.
+   */
   const mediaBlock = media.map(id => {
     const m = getMedium(id)
     if (!m) return ''
-    return `  - ${id} (${m.plural}) — ${m.origin === 'composed' ? 'composed: you author it' : `from ${m.provider}`}`
+    return `  - ${id} (${m.plural})${m.origin === 'composed' ? ' — composed: you author it' : ''}`
   }).filter(Boolean).join('\n')
 
+  /**
+   * One line per relation, `guidance` only.
+   *
+   * `does` was prefixed to each and is a one-clause summary of the sentence that
+   * follows it — "Follows any explainable connection" ahead of "Any connection is
+   * admissible so long as you can say what it is." Two statements of the same
+   * rule in the same line is the kind of duplication the model has to reconcile
+   * rather than read, and `does` is written for the *picker UI*, where it appears
+   * next to the relation's name with no guidance beside it. It still does that
+   * job there.
+   */
   const relationBlock = relations.map(id => {
     const r = RELATIONS[id]
-    return `  - ${id} — ${r.does}. ${r.guidance}${r.requiresMediumChange ? ' (Only valid across a change of medium.)' : ''}`
+    return `  - ${id} — ${r.guidance}${r.requiresMediumChange ? ' (Only valid across a change of medium.)' : ''}`
   }).join('\n')
 
   const composedMedia = media.filter(isComposed)
@@ -179,13 +227,25 @@ export function buildSystemPrompt(
    * instruction a model cannot follow when it has not been told what the move
    * contains.
    */
+  /**
+   * Computed from `media` alone — deliberately *not* narrowed by `seen`.
+   *
+   * It used to subtract the media attached as images this turn, which made this
+   * block vary per turn and therefore made the whole system prompt vary per turn.
+   * Measured: that one subtraction moved the first byte of divergence from the end
+   * of the prompt to 30% through it, which is the difference between caching 16kB
+   * of prefix and caching none of it.
+   *
+   * The standing limit is stable and belongs here; the per-turn exception — "the
+   * artwork is attached on *this* turn, so that warning does not apply to it" —
+   * is one sentence and belongs in the volatile tail, next to the decision. Same
+   * move `restateGame` and `restateTuning` make, and it reads better besides: a
+   * standing limit with a named exception is clearer than a limit that quietly
+   * changes shape from turn to turn.
+   */
   const unperceived = media.filter(
     m => !isComposed(m) && !isPropositional(m) && !getMedium(m)?.dependsOnUserLibrary,
-    // A medium whose record is attached as an image this turn is not one of
-    // these, for this turn. Subtracted rather than the block being suppressed
-    // wholesale: with a painting attached and a song on the table, the warning is
-    // still true of the song and still needed.
-  ).filter(m => !seen.includes(m))
+  )
 
   // The enum the interpreter is handed is the media it may *answer* in, which is
   // not the media in play: a muted medium stays playable by the player and stays
@@ -208,7 +268,7 @@ export function buildSystemPrompt(
   // this schema has always carried, so an untouched game's prompt is unchanged.
   const lengths = readingLengths(tuning)
 
-  return `${game.persona}
+  const stable = `${game.persona}
 
 You are the interpreter for a correlation game called "${game.name}". In this game an
 offering is: ${game.offeringIs}.
@@ -238,22 +298,6 @@ ${mediaBlock}
 
 RELATIONS A REPLY MAY USE
 ${relationBlock}
-${seen.length > 0 ? `
-YOU CAN SEE THEM
-The records in play this turn are attached to this message as images. Look at them
-before you write anything. This is not a courtesy — it is the difference between
-the two kinds of reading you can give, and only one of them is worth having:
-
-- What is actually there. The composition, where the weight sits, what is cropped
-  out, what the light is doing, who is looking at whom, what the picture is of.
-  Name something a person standing in front of it would notice.
-- What a title suggests. Available without looking, fluent, and the thing you
-  write when you have nothing — a reading of mood, filed under the subject the
-  name implies.
-
-Reach for the first. If the picture contradicts what its title led you to expect,
-say so; that is usually the most interesting sentence available about it.
-` : ''}
 ${unperceived.length > 0 ? `
 READING A RECORD YOU CANNOT PERCEIVE
 ${unperceived.map(id => getMedium(id)?.plural ?? id).join(', ')} arrive as a name, an attribution and at most a line
@@ -340,7 +384,7 @@ Every offering states which part of it is in play — the whole canvas, ten seco
 of a scene, one gesture, the sensation of a stretch. Without it two players answer
 different things without noticing. Give your reply a framing, and read the move
 according to the framing the player gave it, not the one you would have chosen.
-${selfReply ? `\n${SELF_REPLY_GUIDANCE}\n` : ''}
+
 WHAT CARRIED, AND WHAT DID NOT
 A connection across media is almost never exact. Rhythm becomes repetition in an
 image; dissonance becomes conflict in a scene; balance becomes something felt in a
@@ -373,13 +417,52 @@ Rules for the world:
 - Return only a *delta*. Keys you omit are left alone. Never restate the whole world.
 - Anything an earlier turn established is binding. You may complicate it, reveal it
   was incomplete, or put it in doubt — but you may not silently contradict it.
-- One turn establishes one new thing. Resist summarising.${predicted ? `
-- A running prediction score is NOT yours to keep. Set "called" and the engine counts
-  it; a "record" in your delta would be a second tally kept by the less reliable of
-  the two. Say what the player's reasoning got right or missed in prose instead —
-  that part no arithmetic can produce.` : ''}
+- One turn establishes one new thing. Resist summarising.`
 
-OUTPUT
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Everything above is `stable`; everything below is `volatile`.
+  //
+  // The boundary is not arbitrary and it is not a formatting choice: it is the
+  // cache breakpoint. Prompt caching is a prefix match, so anything that changes
+  // between turns has to live strictly after everything that does not — one
+  // per-turn byte above this line costs the whole prefix.
+  //
+  // What is below, and why each one varies:
+  //   - the vision exception, which depends on whether these particular records
+  //     have pictures
+  //   - the self-reply guidance and its schema field
+  //   - the prediction ruling, present only when the player guessed
+  //   - the OUTPUT schema, whose reply-medium enum is `answerIn` — recomputed
+  //     every turn from the branch's reply history by `owedMedia`
+  //
+  // That last one is why the schema could never be cached, and it is also why
+  // the schema is the natural place to cut: it was already last.
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  const volatile = `${seen.length > 0 ? `YOU CAN SEE THEM
+${seen.map(id => getMedium(id)?.plural ?? id).join(', ')} are attached to this message as images on this
+turn. The warning above about records you cannot perceive does not apply to them —
+look at them before you write anything. This is the difference between the two
+kinds of reading you can give, and only one is worth having:
+
+- What is actually there. The composition, where the weight sits, what is cropped
+  out, what the light is doing, who is looking at whom, what the picture is of.
+  Name something a person standing in front of it would notice.
+- What a title suggests. Available without looking, fluent, and the thing you
+  write when you have nothing — a reading of mood, filed under the subject the
+  name implies.
+
+Reach for the first. If the picture contradicts what its title led you to expect,
+say so; that is usually the most interesting sentence available about it.
+
+` : ''}${selfReply ? `${SELF_REPLY_GUIDANCE}
+
+` : ''}${predicted ? `A running prediction score is NOT yours to keep. Set "called" and the engine counts
+it; a "record" in your delta would be a second tally kept by the less reliable of
+the two. Say what the player's reasoning got right or missed in prose instead —
+that part no arithmetic can produce.
+
+` : ''}OUTPUT
 Reply with a single JSON object and nothing else. No prose before or after, no
 markdown fence. Schema:
 
@@ -419,6 +502,22 @@ The "medium" field of your reply must be EXACTLY one of the strings listed above
 not a synonym. Write "passage", not "prose" or "text"; "artwork", not "painting";
 "movement", not "dance". A reply naming a medium not on that list cannot be looked
 up, and your turn lands nowhere.`
+
+  return { stable, volatile }
+}
+
+/**
+ * The system prompt as one string.
+ *
+ * The shape every caller used before the split, kept because most of them still
+ * want it: the retry, the salvage account and the composed floor are one-off
+ * calls whose prefix nothing will reuse, so a breakpoint on them would pay the
+ * cache-write premium for a read that never comes. Only the first pass — the one
+ * that repeats every turn with the same prefix — takes the two parts.
+ */
+export function buildSystemPrompt(...args: Parameters<typeof systemPromptParts>): string {
+  const { stable, volatile } = systemPromptParts(...args)
+  return `${stable}\n\n${volatile}`
 }
 
 /** One exchange on a branch the player is not standing on. */
