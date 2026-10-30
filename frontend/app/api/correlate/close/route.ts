@@ -199,7 +199,9 @@ export async function POST(req: NextRequest) {
           // said *per turn*, and this is one piece of writing per game — a player
           // who asked for terse turns did not ask for a terse ending.
           max_tokens: 1200,
-          temperature: 0.8,
+          // No `temperature`. Claude Sonnet 5 rejects a non-default value, so
+          // this was being dropped or normalized upstream and had no effect —
+          // see the turn route, where the same dead parameter was removed.
         }),
       })
       if (res.ok) {

@@ -150,7 +150,9 @@ export async function POST(req: NextRequest) {
         { role: 'user', content: buildClaimPrompt({ game, from, to, note }) },
       ],
       max_tokens: 700,
-      temperature: 0.7,
+      // No `temperature`. Claude Sonnet 5 rejects a non-default value, so
+      // this was being dropped or normalized upstream and had no effect —
+      // see the turn route, where the same dead parameter was removed.
     }),
   })
 
