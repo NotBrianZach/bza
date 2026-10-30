@@ -115,7 +115,7 @@ const {
 } = M.switching
 const {
   parseVoice, spokenNumber, spokenOrdinal, extractMedium, matchGame, matchRelation,
-  VOICE_COMMANDS, hintsFor, confirmationFor, spokenHelp, spokenMediaNames,
+  VOICE_COMMANDS, hintsFor, confirmationFor, spokenHelp, spokenMediaNames, whenAvailable,
 } = M.voice
 const {
   TUNING_AXES, AXIS_LIST, ALL_AXIS_IDS, AXIS_STOPS, DEFAULT_WEIGHT, WEIGHT_LABELS, WEIGHT_HINTS,
@@ -3548,10 +3548,66 @@ t('every action confirms out loud, because silence reads as "it did not hear me"
   VOICE_COMMANDS
     .filter(c => c.kind !== 'repeat' && c.kind !== 'help')
     .every(c => confirmationFor(sampleIntent(c.kind)).length > 0))
-t('the spoken help names fewer commands mid-claim than at rest',
-  spokenHelp(vctx({ stage: 'claiming' })).length !== spokenHelp(vctx()).length)
+/*
+ * The help is the one command that cannot be discovered by asking, so it lists
+ * everything. The first version read only the phrases and only the ones live at
+ * the current stage — which taught a vocabulary missing the two entries a player
+ * would never guess, and gave no explanation for any of the rest.
+ */
+t('the help names every command in the table',
+  VOICE_COMMANDS.every(c => spokenHelp(vctx()).includes(c.aloud ?? c.say.replace(/[<>]/g, ''))))
+/*
+ * A placeholder phrase read out bare — "play anything", "switch to game" —
+ * sounds like a command in itself rather than a template, so each one carries a
+ * spoken form. The invariant is that the two sets coincide: a new placeholder
+ * command without an `aloud` would be read out wrong.
+ */
+t('every placeholder phrase has a spoken form, and only those do',
+  VOICE_COMMANDS.every(c => (c.say.includes('<') ? !!c.aloud : !c.aloud)))
+t('no spoken form smuggles the brackets back in',
+  VOICE_COMMANDS.every(c => !(c.aloud ?? '').includes('<')))
+t('and explains each one', VOICE_COMMANDS.every(c => spokenHelp(vctx()).includes(c.does)))
+t('the whole table, not just what is live at this stage',
+  spokenHelp(vctx({ stage: 'claiming' })) === spokenHelp(vctx()))
+t('a stage-gated command says what it is waiting for rather than being dropped',
+  VOICE_COMMANDS.filter(c => c.stages).every(c => {
+    const when = whenAvailable(c)
+    return when !== null && spokenHelp(vctx()).includes(when)
+  }))
+t('an ungated command carries no condition',
+  VOICE_COMMANDS.filter(c => !c.stages).every(c => whenAvailable(c) === null))
 t('the help does not read out the angle brackets',
   !spokenHelp(vctx()).includes('<'))
+t('it names the media this session plays, which is the part nobody can guess',
+  spokenMediaNames(V_MEDIA).every(m => spokenHelp(vctx()).includes(m.say)))
+t('and the games it can switch into',
+  V_CTX.switchTargets.every(g => spokenHelp(vctx()).includes(g.name)))
+/*
+ * It is around 1,500 characters, which is most of a minute of speech. That
+ * number is load-bearing: the watchdog that reopens the microphone is sized off
+ * text length, and a ceiling below this one cuts the help in half and reopens
+ * the mic into the rest of it.
+ */
+t('the help is long, which is the fact the speech watchdog is sized against',
+  spokenHelp(vctx()).length > 800 && spokenHelp(vctx()).length < 4000)
+
+group('voice — asking for help, in the ways people ask')
+for (const phrase of [
+  'help', 'commands', 'what can i say', 'what are my options', 'list commands',
+  'what commands', 'voice commands', 'what are the commands', 'what can you do',
+  'read the commands', 'my options', 'what do i say', 'how does this work',
+]) {
+  t(`"${phrase}"`, pv(phrase)?.kind === 'help')
+}
+t('it is reachable mid-claim and mid-choice, when it is most needed',
+  ['choosing', 'claiming'].every(s =>
+    pv('commands', { stage: s, resultCount: 3 })?.kind === 'help'))
+/*
+ * "help me find something" is a request, not a request for the command list.
+ * The anchored pattern is what keeps the broad phrasings from swallowing it.
+ */
+t('"help me find something" is not the help command',
+  pv('help me find something')?.kind !== 'help')
 
 /** A stand-in intent per kind, for the "everything confirms" sweep. */
 function sampleIntent(kind) {

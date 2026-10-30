@@ -194,11 +194,14 @@ const MEDIUM_WORDS: Partial<Record<MediumId, string[]>> = {
   theorem: ['maths', 'math', 'mathematics', 'proof', 'equation'],
   phenomenon: ['science', 'physics', 'chemistry', 'effect'],
   organism: ['life', 'animal', 'plant', 'creature', 'species'],
-  place: ['places', 'location', 'somewhere', 'geography'],
-  gesture: ['gestures', 'sign'],
+  // First word first on purpose: `spokenMediaNames` reads it out, and a list
+  // that mixes "song, art" with "stretches, exercises" sounds like two
+  // different kinds of thing.
+  place: ['place', 'places', 'location', 'somewhere', 'geography'],
+  gesture: ['gesture', 'gestures', 'sign'],
   movement: ['dance', 'dancing', 'choreography'],
-  stretch: ['stretches', 'stretching'],
-  exercise: ['exercises', 'workout'],
+  stretch: ['stretch', 'stretches', 'stretching'],
+  exercise: ['exercise', 'exercises', 'workout'],
 }
 
 /** Every spoken form of a medium, longest first so "television" beats "tv". */
@@ -304,6 +307,14 @@ export interface VoiceCommand {
   kind: VoiceIntent['kind']
   /** The canonical phrasing, shown in the UI. */
   say: string
+  /**
+   * How to read `say` out, when the written form does not survive speech.
+   *
+   * `play <anything>` is clear on screen and becomes "play anything" aloud,
+   * which sounds like a command in itself. Only the placeholder phrases need
+   * one; the literal ones are already what you say.
+   */
+  aloud?: string
   /** One line on what it does, for the spoken help. */
   does: string
   /** Which on-screen control this is the voice form of. */
@@ -315,29 +326,49 @@ export interface VoiceCommand {
 }
 
 export const VOICE_COMMANDS: VoiceCommand[] = [
-  { kind: 'offer', say: 'play <anything>', does: 'Search for something to offer. "play the song Idioteque".', control: 'compose' },
+  { kind: 'offer', say: 'play <anything>', aloud: 'play, then the name of something', does: 'Search for something to offer. For instance, play the song Idioteque.', control: 'compose' },
   { kind: 'choose', say: 'the second one', does: 'Take one of the results just read out.', control: 'compose', stages: ['choosing'] },
-  { kind: 'medium', say: 'in art', does: 'Change the medium the next offering is searched in.', control: 'compose' },
-  { kind: 'framing', say: 'framing <words>', does: 'Say which part of the offering is in play.', control: 'compose' },
-  { kind: 'relation', say: 'claiming translation', does: 'Name your relation, in games that ask for one.', control: 'compose' },
-  { kind: 'predict', say: 'predict <anything>', does: 'Guess what your move will draw back.', control: 'compose' },
-  { kind: 'again', say: 'again', does: 'Get a second answer to the move you just made.', control: 'again' },
+  { kind: 'medium', say: 'in art', does: 'Change the medium the next offering is searched in. Name any medium this session plays.', control: 'compose' },
+  { kind: 'framing', say: 'framing <words>', aloud: 'framing, then the part you mean', does: 'Say which part of the offering is in play, like framing the last ten seconds.', control: 'compose' },
+  { kind: 'relation', say: 'claiming translation', does: 'Name the relation you are claiming, in games that ask for one.', control: 'compose' },
+  { kind: 'predict', say: 'predict <anything>', aloud: 'predict, then your guess', does: 'Guess what your move will draw back.', control: 'compose' },
+  { kind: 'again', say: 'again', does: 'Get a second answer to the move you just made. Both are kept.', control: 'again' },
   { kind: 'selfReply', say: 'you go', does: 'Stand back and let it answer its own offering.', control: 'selfReply' },
-  { kind: 'switch', say: 'switch to <game>', does: 'Play the next move as a different game.', control: 'switch' },
-  { kind: 'rhymes', say: 'this rhymes with turn 4', does: 'Claim two exchanges rhyme. Then say why.', control: 'claim' },
-  { kind: 'because', say: 'because <reason>', does: 'The reason for the rhyme you just claimed.', control: 'claim', stages: ['claiming'] },
-  { kind: 'goTo', say: 'go to turn 3', does: 'Stand on an earlier exchange and answer that instead.', control: 'branch' },
+  { kind: 'switch', say: 'switch to <game>', aloud: 'switch to, then a game name', does: 'Play the next move as a different game.', control: 'switch' },
+  { kind: 'rhymes', say: 'this rhymes with turn 4', does: 'Claim that two exchanges rhyme. Then say why, and it is ruled on.', control: 'claim' },
+  { kind: 'because', say: 'because <reason>', aloud: 'because, then your reason', does: 'The reason for the rhyme you just claimed.', control: 'claim', stages: ['claiming'] },
+  { kind: 'goTo', say: 'go to turn 3', does: 'Stand on an earlier exchange and answer that one instead, which starts a branch.', control: 'branch' },
   { kind: 'goBack', say: 'go back', does: 'Return to where the chain actually is.', control: 'branch' },
   { kind: 'finish', say: 'finish', does: 'Close the game and hear what it turned out to be.', control: 'finish' },
-  { kind: 'repeat', say: 'say that again', does: 'Re-read the last reading aloud.', control: null },
+  { kind: 'repeat', say: 'say that again', does: 'Re-read the last answer aloud.', control: null },
   { kind: 'cancel', say: 'never mind', does: 'Drop whatever is pending.', control: null },
-  { kind: 'help', say: 'what can I say', does: 'Read these out.', control: null },
+  { kind: 'help', say: 'what can I say', does: 'Read this list out, and put it on screen.', control: null },
 ]
 
 /** The commands worth printing beside a given control, in table order. */
 export function hintsFor(control: VoiceCommand['control'], stage: VoiceStage): VoiceCommand[] {
   return VOICE_COMMANDS.filter(c =>
     c.control === control && (!c.stages || c.stages.includes(stage)))
+}
+
+/**
+ * When a stage-gated command applies, in words.
+ *
+ * The help lists every command rather than only the live ones, so each gated
+ * one has to say what it is waiting for — otherwise the list promises phrases
+ * that do nothing, which is worse than omitting them.
+ */
+const STAGE_CONDITIONS: Record<VoiceStage, string> = {
+  idle: '',
+  choosing: 'once some results have been read out',
+  claiming: 'after you have claimed a rhyme',
+}
+
+/** The condition on a command, or null when it always applies. */
+export function whenAvailable(c: VoiceCommand): string | null {
+  if (!c.stages || c.stages.length === 0) return null
+  const conditions = c.stages.map(s => STAGE_CONDITIONS[s]).filter(Boolean)
+  return conditions.length > 0 ? conditions.join(' or ') : null
 }
 
 // ---------------------------------------------------------------------------
@@ -391,7 +422,13 @@ export function parseVoice(utterance: string, ctx: VoiceContext): VoiceIntent | 
   if (/^(never mind|nevermind|cancel|forget it|stop that|scratch that)$/.test(t)) {
     return { kind: 'cancel' }
   }
-  if (/^(what can i say|help|what are my options|commands)$/.test(t)) return { kind: 'help' }
+  // Broad, because this is the one command a player reaches for when nothing
+  // else has worked — and it is the only one that cannot be discovered by
+  // asking. Every phrasing here is one somebody would actually try.
+  if (/^(?:(?:what|list|read|tell me)\s+)?(?:the\s+|my\s+|your\s+)?(?:voice\s+)?(?:commands?|options|help)$/.test(t)
+    || /^(?:what can i say|what can you do|what are my options|what are the commands|how does this work|what do i say)$/.test(t)) {
+    return { kind: 'help' }
+  }
   if (/^(say that again|repeat( that)?|read that again|what was that)$/.test(t)) {
     return { kind: 'repeat' }
   }
@@ -502,15 +539,47 @@ export function confirmationFor(intent: VoiceIntent): string {
 }
 
 /**
- * The spoken help, built from the same table the hints come from.
+ * The spoken help: every command, each with what it does.
  *
- * Trimmed to the commands that apply at the current stage, because reading
- * seventeen options to someone who asked a question mid-turn is its own
- * failure.
+ * All of them, not the ones live at this stage. The first version read only the
+ * phrases and only the live ones, on the reasoning that a shorter list is a
+ * kinder one — but a phrase with no explanation is not a command anybody can
+ * use, and a list that silently drops two entries teaches a vocabulary that is
+ * missing the parts a player would never guess. The gated ones carry their
+ * condition instead, so nothing is promised that does not work yet.
+ *
+ * This takes most of a minute to read, which is why asking for it also opens the
+ * written list and why the speaker can be stopped mid-sentence. The audio is the
+ * channel that works when nobody is looking, not the only one.
+ *
+ * The two open vocabularies are appended because they are the part a player
+ * cannot guess: which media this session plays and which games it can switch
+ * into. Both come from the registries, so neither can go stale.
  */
 export function spokenHelp(ctx: VoiceContext): string {
-  const live = VOICE_COMMANDS.filter(c => !c.stages || c.stages.includes(ctx.stage))
-  return `You can say: ${live.map(c => c.say.replace(/<|>/g, '')).join('. ')}.`
+  const lines = VOICE_COMMANDS.map(c => {
+    // `aloud` where the written phrase does not survive speech; the angle
+    // brackets are a written convention and are noise read out.
+    const phrase = c.aloud ?? c.say.replace(/[<>]/g, '')
+    const when = whenAvailable(c)
+    // No "Say …" lead-in: it makes "say that again" into "Say say that again".
+    // The `aloud` forms all start with their verb, so the phrase stands alone.
+    return `${phrase}. ${c.does}${when ? ` That one works ${when}.` : ''}`
+  })
+
+  const media = spokenMediaNames(ctx.media).map(m => m.say)
+  const vocab: string[] = []
+  if (media.length > 0) vocab.push(`The media you can ask for are: ${media.join(', ')}.`)
+  if (ctx.switchTargets.length > 0) {
+    vocab.push(`The games you can switch to are: ${ctx.switchTargets.map(g => g.name).join(', ')}.`)
+  }
+
+  return [
+    `There are ${VOICE_COMMANDS.length} things you can say.`,
+    ...lines,
+    ...vocab,
+    'They are all written on screen as well.',
+  ].join(' ')
 }
 
 /** Every game name the switch grammar will currently answer to, for the hints. */

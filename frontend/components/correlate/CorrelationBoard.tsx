@@ -1205,9 +1205,15 @@ export default function CorrelationBoard({
         setClaimFrom(null); setClaimTo(null); setClaimNote('')
         return null
 
-      // Handled inside the hook, which owns the speaker and the command table.
-      case 'repeat':
+      // Asking out loud opens the written list too. The spoken form is the whole
+      // table and takes most of a minute; the screen is the version you can
+      // skim, and a player who asked has shown they do not know what to say.
       case 'help':
+        setVoiceExpanded(true)
+        return null
+
+      // Spoken by the hook, which holds the last reading.
+      case 'repeat':
         return null
     }
   }, [

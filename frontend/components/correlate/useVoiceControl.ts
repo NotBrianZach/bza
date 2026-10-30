@@ -44,6 +44,21 @@ function recognitionCtor(): (new () => Recognition) | null {
 }
 
 /**
+ * How long to wait for the speaker to actually start before giving up on it.
+ *
+ * `personaSpeak` has two paths that return without ever calling back: no
+ * `speechSynthesis` in the browser, and text that strips to nothing. Neither
+ * calls `onStart` either, which is what makes this detectable — and it has to be
+ * detected, because the microphone is closed until something releases it.
+ *
+ * Separate from the long watchdog on purpose. This one catches "nothing is going
+ * to be said" in a couple of seconds; the long one catches `onend` being dropped
+ * part-way through a real utterance, and cannot be short without reopening the
+ * mic into the rest of the sentence.
+ */
+const START_GRACE_MS = 2_500
+
+/**
  * How long a result may sit before it is treated as a complete utterance.
  *
  * `continuous` recognition fires `onresult` with `isFinal` when the speaker
@@ -80,6 +95,8 @@ export interface VoiceControl {
   toggle: () => void
   /** Speak a line, pausing recognition for its duration. */
   say: (text: string) => void
+  /** Stop talking and reopen the microphone, without leaving voice mode. */
+  hush: () => void
 }
 
 export function useVoiceControl(
@@ -110,6 +127,9 @@ export function useVoiceControl(
   const cancelSpeech = useRef<(() => void) | null>(null)
   const settleTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const speakWatchdog = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const startGrace = useRef<ReturnType<typeof setTimeout> | null>(null)
+  /** The current utterance's "I am done talking" callback, so `hush` can run it. */
+  const releaseRef = useRef<(() => void) | null>(null)
 
   // Handlers and context are read through refs so the recogniser is built once:
   // re-creating it on every render would drop the permission grant and restart
@@ -128,21 +148,23 @@ export function useVoiceControl(
     try { recRef.current?.stop() } catch {}
 
     /**
-     * Reopen the microphone. Idempotent, because three things race to call it.
+     * Reopen the microphone. Idempotent, because four things race to call it.
      *
      * `personaSpeak` does not guarantee its `onEnd` fires: it returns a no-op
      * on a browser with no `speechSynthesis`, and again when the text strips to
      * nothing — and `speechSynthesis.speak` is independently known to drop
      * `onend` on long utterances. Every one of those leaves `speakingRef` true
      * forever, and since the mic is closed while it is true, voice mode would
-     * stop working with no error anywhere. Hence the timer below.
+     * stop working with no error anywhere. Hence the two timers below.
      */
     const release = () => {
       if (speakWatchdog.current) { clearTimeout(speakWatchdog.current); speakWatchdog.current = null }
+      if (startGrace.current) { clearTimeout(startGrace.current); startGrace.current = null }
       if (!speakingRef.current) return
       speakingRef.current = false
       setSpeaking(false)
       cancelSpeech.current = null
+      releaseRef.current = null
       // `onend` also tries this; both are guarded by `wantRef`, and a second
       // `start()` on a running recogniser throws and is swallowed.
       if (wantRef.current && !stoppingRef.current) {
@@ -151,15 +173,37 @@ export function useVoiceControl(
     }
 
     cancelSpeech.current?.()
-    cancelSpeech.current = personaSpeak(text, () => {}, release)
+    releaseRef.current = release
+    let started = false
+    cancelSpeech.current = personaSpeak(text, () => { started = true }, release)
+
+    // Nothing is going to be said at all — see START_GRACE_MS.
+    if (startGrace.current) clearTimeout(startGrace.current)
+    startGrace.current = setTimeout(() => { if (!started) release() }, START_GRACE_MS)
 
     // Roughly how long the line takes to read, plus slack. Overshooting only
-    // costs a late reopen; undershooting reopens the mic mid-sentence and the
-    // recogniser hears the rest of it, which is the failure this file exists to
-    // prevent — so the estimate is deliberately generous.
-    const estimate = Math.min(30_000, 2_000 + (text.length / 12) * 1_000)
+    // costs a late reopen — and `hush` makes that a tap away — while
+    // undershooting reopens the mic mid-sentence and the recogniser hears the
+    // rest of it, which is the failure this file exists to prevent. So the
+    // estimate is generous and the ceiling is well past the help, which runs
+    // about 1,600 characters. A 30-second cap was the first version and it cut
+    // the help off less than half way through.
+    const estimate = Math.min(240_000, 2_000 + (text.length / 12) * 1_000)
     if (speakWatchdog.current) clearTimeout(speakWatchdog.current)
     speakWatchdog.current = setTimeout(release, estimate)
+  }, [])
+
+  /**
+   * Stop talking, stay listening.
+   *
+   * Distinct from `stop`, which leaves voice mode. Needed because the only way
+   * to interrupt the speaker otherwise is to turn the whole thing off: the mic
+   * is closed while it talks, so "stop reading" is the one instruction that
+   * cannot be spoken.
+   */
+  const hush = useCallback(() => {
+    cancelSpeech.current?.()
+    releaseRef.current?.()
   }, [])
 
   const handle = useCallback(async (utterance: string) => {
@@ -177,7 +221,15 @@ export function useVoiceControl(
     setLastResult(`${utterance}`)
     track('correlate_voice_command', { kind: intent.kind })
 
-    if (intent.kind === 'help') { say(spokenHelp(ctx)); return }
+    if (intent.kind === 'help') {
+      say(spokenHelp(ctx))
+      // Dispatched as well as spoken: the board opens the written list on it,
+      // so a player who asked out loud gets both channels. Reading the whole
+      // table takes most of a minute, and the screen is the version you can
+      // skim.
+      void handlersRef.current.onIntent(intent)
+      return
+    }
     if (intent.kind === 'repeat') {
       const r = handlersRef.current.lastReading()
       say(r || 'Nothing to read back yet.')
@@ -269,6 +321,7 @@ export function useVoiceControl(
       cancelSpeech.current?.()
       if (settleTimer.current) clearTimeout(settleTimer.current)
       if (speakWatchdog.current) clearTimeout(speakWatchdog.current)
+      if (startGrace.current) clearTimeout(startGrace.current)
       recRef.current = null
     }
   }, [handle])
@@ -291,6 +344,7 @@ export function useVoiceControl(
     try { recRef.current?.stop() } catch {}
     cancelSpeech.current?.()
     if (speakWatchdog.current) { clearTimeout(speakWatchdog.current); speakWatchdog.current = null }
+    if (startGrace.current) { clearTimeout(startGrace.current); startGrace.current = null }
     if (settleTimer.current) { clearTimeout(settleTimer.current); settleTimer.current = null }
     speakingRef.current = false
     setSpeaking(false)
@@ -304,6 +358,6 @@ export function useVoiceControl(
 
   return {
     supported, listening, speaking, heard, lastResult, error,
-    stage, setStage, start, stop, toggle, say,
+    stage, setStage, start, stop, toggle, say, hush,
   }
 }

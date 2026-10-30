@@ -1,7 +1,7 @@
 'use client'
 
 import { AlertTriangle, Ear, Loader2, Mic, MicOff, Volume2 } from 'lucide-react'
-import { VOICE_COMMANDS, spokenMediaNames } from '@/lib/correlate/voice'
+import { VOICE_COMMANDS, spokenMediaNames, whenAvailable } from '@/lib/correlate/voice'
 import type { VoiceControl } from './useVoiceControl'
 import type { CorrelationGame, MediumId } from '@/lib/correlate/types'
 
@@ -76,7 +76,17 @@ export default function VoiceBar({
         {voice.listening && (
           <span className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400 min-w-0">
             {voice.speaking ? (
-              <><Volume2 size={11} className="flex-shrink-0 text-emerald-600 dark:text-emerald-400" /> speaking — mic paused</>
+              /* A button, because the mic is closed while it talks — so "stop
+                 reading" is the one instruction that cannot be spoken, and the
+                 help takes most of a minute to get through. */
+              <button
+                onClick={voice.hush}
+                title="Stop reading and listen again"
+                className="flex items-center gap-1.5 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+              >
+                <Volume2 size={11} className="flex-shrink-0 text-emerald-600 dark:text-emerald-400" />
+                speaking — tap to stop
+              </button>
             ) : voice.heard ? (
               <><Ear size={11} className="flex-shrink-0" /> <span className="truncate italic">{voice.heard}</span></>
             ) : (
@@ -115,14 +125,27 @@ export default function VoiceBar({
       {expanded && (
         <div className="mt-2 pt-2 border-t border-gray-200/70 dark:border-gray-700/70">
           <dl className="space-y-1">
-            {VOICE_COMMANDS.map(c => (
-              <div key={c.kind + c.say} className="flex gap-2 text-[11px]">
-                <dt className="font-mono text-gray-700 dark:text-gray-200 flex-shrink-0 w-44">
-                  &ldquo;{c.say}&rdquo;
-                </dt>
-                <dd className="text-gray-500 dark:text-gray-400 min-w-0">{c.does}</dd>
-              </div>
-            ))}
+            {VOICE_COMMANDS.map(c => {
+              /* A gated command is listed with its condition rather than
+                 omitted. Dropping it would teach a vocabulary missing the
+                 parts a player would never guess; listing it bare would
+                 promise a phrase that does nothing yet. */
+              const when = whenAvailable(c)
+              const live = !c.stages || c.stages.includes(voice.stage)
+              return (
+                <div key={c.kind + c.say} className={`flex gap-2 text-[11px] ${live ? '' : 'opacity-60'}`}>
+                  <dt className="font-mono text-gray-700 dark:text-gray-200 flex-shrink-0 w-44">
+                    &ldquo;{c.say}&rdquo;
+                  </dt>
+                  <dd className="text-gray-500 dark:text-gray-400 min-w-0">
+                    {c.does}
+                    {when && (
+                      <span className="text-gray-400 dark:text-gray-500"> — {when}</span>
+                    )}
+                  </dd>
+                </div>
+              )
+            })}
           </dl>
           {/* The two open vocabularies, listed because they are the ones a
               player cannot guess: which media this session plays, and which
