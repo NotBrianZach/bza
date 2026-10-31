@@ -56,6 +56,9 @@ import { useVoiceControl } from './useVoiceControl'
  */
 const RADIO_LOOKAHEAD = 2
 
+/** How soon a second spoken "next" is taken seriously. See `lastVoiceSkip`. */
+const VOICE_SKIP_GUARD_MS = 800
+
 /**
  * How many silent answers in a row end the run.
  *
@@ -140,6 +143,26 @@ export default function CorrelationBoard({
    * output and the board is the commentary, so voice says nothing.
    */
   const radioRef = useRef(false)
+  /**
+   * Whether a track is audibly playing, for the grammar's wake-word rule.
+   *
+   * The field whose absence broke voice play in use: with the microphone open
+   * beside a playing speaker the recogniser transcribes the song, and the
+   * grammar matched on it — so the game took commands from its own output. A
+   * lyric heard as "next" skipped the track, the next track's lyrics skipped
+   * again, and that is the start-stop cycling.
+   */
+  const audioPlayingRef = useRef(false)
+  /**
+   * When a voice skip was last honoured, to break a runaway.
+   *
+   * Defence in depth behind the wake word, and worth having because this
+   * particular loop spends money: `player.skip()` at the tail of the queue asks
+   * radio to generate, so a skip firing on repeat is a model call firing on
+   * repeat. 800ms is longer than any feedback loop and shorter than the gap
+   * between two things a person says on purpose.
+   */
+  const lastVoiceSkip = useRef(0)
   /**
    * The voice control, for the callbacks defined above it.
    *
@@ -337,6 +360,9 @@ export default function CorrelationBoard({
   /** Only the audible part can play itself; the rest is stepped through by eye. */
   const audible = useMemo(() => chain.filter(o => !!audioUrl(o)), [chain])
   const playingIndex = player.current ? audible.findIndex(o => o.id === player.current!.id) : -1
+  // Mirrored for the voice grammar, which is evaluated outside React and needs
+  // to know whether the speakers are making noise. See `audioPlayingRef`.
+  audioPlayingRef.current = !!player.current && !player.paused
 
   const mediaVisited = useMemo(
     () => [...new Set(chain.map(o => o.medium))],
@@ -815,10 +841,21 @@ export default function CorrelationBoard({
   // dependency the effect actually has, now stated in a form that can be
   // statically checked.
   const { append: appendAudible } = player
-  useEffect(() => {
-    if (!radio || audible.length === 0) return
-    appendAudible(audible)
-  }, [radio, audible, appendAudible])
+  /*
+   * Voice counts as well as radio.
+   *
+   * Hands-free means the speakers are the output, so a player who says "play
+   * the song Idioteque" has asked to hear something — and used to get a turn
+   * that landed silently with a Play button they could not reach. `append`
+   * starts a dry queue, so this is also what makes the answer play itself.
+   *
+   * The toggle that turned voice on is the gesture the autoplay policy wants,
+   * and `useOfferingPlayer` keeps one element alive across the gap precisely so
+   * that permission survives to here.
+   */
+  //
+  // The effect itself lives below `useVoiceControl`, because it now reads
+  // `voice.listening` and that does not exist until the hook has run.
 
   const play = useCallback(async (draft: MoveDraft) => {
     setPending(true)
@@ -1085,6 +1122,12 @@ export default function CorrelationBoard({
     relations,
     switchTargets: switchTargets(branch.mode),
     resultCount: voiceResultsRef.current.length,
+    // Whether the speakers are making noise, which decides whether a command
+    // has to be addressed. Read through the ref rather than the render value:
+    // this is called from the recogniser's handler, outside React, and a render
+    // behind here means the one utterance arriving as the track starts is
+    // judged under the wrong rule.
+    audioPlaying: audioPlayingRef.current,
   }), [media, relations, branch.mode])
 
   /**
@@ -1280,15 +1323,25 @@ export default function CorrelationBoard({
         return null
       }
 
-      case 'skip':
+      case 'skip': {
+        const now = Date.now()
+        if (now - lastVoiceSkip.current < VOICE_SKIP_GUARD_MS) return null
+        lastVoiceSkip.current = now
         // `skip`, not `advance`: at the tail of the queue this means "find me
         // another" rather than "the track ended", and in radio that generates
         // instead of stopping — which is what a listener saying "next" means.
         player.skip()
         return null
+      }
 
-      // Handled inside the hook, which owns the speaker.
       case 'hush':
+        // The speaker is already silenced by the hook. This is the other half:
+        // "stop" said over a playing track means the track, and nothing else
+        // here can pause it.
+        if (!player.paused && player.current) player.toggle()
+        return null
+
+      // Spoken by the hook, which holds the text.
       case 'more':
         return null
 
@@ -1329,6 +1382,14 @@ export default function CorrelationBoard({
     },
   })
   voiceRef.current = voice
+
+  // The queue feed, declared here because it needs `voice.listening`. See the
+  // long comment on `appendAudible` above for why `append` is the dependency
+  // rather than `player`.
+  useEffect(() => {
+    if ((!radio && !voice.listening) || audible.length === 0) return
+    appendAudible(audible)
+  }, [radio, voice.listening, audible, appendAudible])
 
   /**
    * Whether "again" is available, in a ref the voice handler can read.
@@ -1940,6 +2001,7 @@ export default function CorrelationBoard({
                 voice={voice}
                 media={media}
                 switchTargets={switchTargets(branch.mode)}
+                audioPlaying={!!player.current && !player.paused}
                 expanded={voiceExpanded}
                 onToggleExpanded={() => setVoiceExpanded(v => !v)}
               />

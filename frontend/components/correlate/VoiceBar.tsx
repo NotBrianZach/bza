@@ -21,12 +21,15 @@ export default function VoiceBar({
   voice,
   media,
   switchTargets,
+  audioPlaying,
   expanded,
   onToggleExpanded,
 }: {
   voice: VoiceControl
   media: MediumId[]
   switchTargets: CorrelationGame[]
+  /** Whether a track is playing, which is when commands must be addressed. */
+  audioPlaying: boolean
   expanded: boolean
   onToggleExpanded: () => void
 }) {
@@ -89,6 +92,11 @@ export default function VoiceBar({
               </button>
             ) : voice.heard ? (
               <><Ear size={11} className="flex-shrink-0" /> <span className="truncate italic">{voice.heard}</span></>
+            ) : audioPlaying ? (
+              /* The wake word has to be stated or it reads as voice mode being
+                 broken while music plays — which is the only time it applies,
+                 and the time a player is most likely to try talking. */
+              <><Ear size={11} className="flex-shrink-0" /> start with &ldquo;okay&rdquo; while it plays</>
             ) : (
               <><Ear size={11} className="flex-shrink-0 opacity-50" /> say something</>
             )}
@@ -161,6 +169,14 @@ export default function VoiceBar({
               {switchTargets.map(g => g.name).join(', ')}
             </p>
           )}
+          {/* Stated in the list as well as in the indicator, because it is the
+              one rule that is not discoverable by trying: an unaddressed command
+              over music does nothing at all, which looks like a fault. */}
+          <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-2 leading-relaxed">
+            <span className="text-gray-400 dark:text-gray-500">while a track is playing: </span>
+            start with &ldquo;okay&rdquo; or &ldquo;hey&rdquo; — the microphone hears the music too, and
+            that is how it tells you apart from it.
+          </p>
         </div>
       )}
     </div>

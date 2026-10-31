@@ -116,7 +116,7 @@ const {
 const {
   parseVoice, spokenNumber, spokenOrdinal, extractMedium, matchGame, matchRelation,
   VOICE_COMMANDS, hintsFor, confirmationFor, spokenHelp, spokenMediaNames, whenAvailable,
-  matchScore, pickConfidently, parseBarge, openingSentence,
+  matchScore, pickConfidently, parseBarge, openingSentence, isAddressed,
   CONFIDENT_SCORE, CONFIDENT_MARGIN,
 } = M.voice
 const {
@@ -3318,6 +3318,7 @@ const V_CTX = {
   relations: ['association', 'translation', 'counterpoint'],
   switchTargets: switchTargets('tag'),
   resultCount: 0,
+  audioPlaying: false,
 }
 const vctx = (over = {}) => ({ ...V_CTX, ...over })
 const pv = (text, over) => parseVoice(text, vctx(over))
@@ -3787,6 +3788,68 @@ t('radio says who is driving, the one state you cannot hear',
   confirmationFor({ kind: 'radio', on: true }) !== confirmationFor({ kind: 'radio', on: false }))
 t('an unknown relation id does not crash the confirmation',
   typeof confirmationFor({ kind: 'relation', relation: 'not_a_relation' }) === 'string')
+
+group('voice — the game must not take orders from its own music')
+/*
+ * The regression this group exists for, reported from real use: a track started
+ * and stopped over and over. The microphone is open while the speakers play, the
+ * recogniser transcribes the song as speech, and the grammar matched on it — so
+ * a lyric heard as "next" skipped the track and the next track's lyrics skipped
+ * again.
+ *
+ * It was made far worse by the latency pass, which replaced multi-word commands
+ * with one-word ones. Two of the phrases added for radio were "don't stop" and
+ * "let me", in a game whose output is pop music. That is not a near-miss; it is
+ * a sentence a song is more likely to say than a person.
+ *
+ * The partner's own speech can be filtered because its exact text is known (see
+ * `parseBarge`). Lyrics cannot. So while audio plays a command must address the
+ * game, and that is the whole defence.
+ */
+const PLAYING = { audioPlaying: true }
+
+t('a bare command is ignored while a track is playing',
+  pv('next', PLAYING) === null && pv('stop', PLAYING) === null)
+t('and so is everything else, including the long ones',
+  ['play idioteque', 'again', 'finish', 'switch to translation', 'keep going', 'go on']
+    .every(s => pv(s, PLAYING) === null))
+t('addressed, the same commands work',
+  pv('okay next', PLAYING)?.kind === 'skip' &&
+  pv('hey stop', PLAYING)?.kind === 'hush')
+t('addressing works for a command with an argument too',
+  pv('okay play idioteque', PLAYING)?.kind === 'offer')
+t('and the address is not left in the query',
+  pv('okay play idioteque', PLAYING)?.query === 'idioteque')
+t('nothing has to be addressed when nothing is playing',
+  pv('next')?.kind === 'skip' && pv('stop')?.kind === 'hush')
+/*
+ * "um" and "so" are things people say while thinking, so accepting them as the
+ * address would be no filter at all — which is the trap, because `strip` treats
+ * them as leading filler and it would have been the obvious thing to reuse.
+ */
+t('thinking-noise is not an address',
+  !isAddressed('um') && !isAddressed('so next') && !isAddressed('now stop'))
+t('but a real address is', ['ok', 'okay', 'hey', 'yo', 'listen', 'computer']
+  .every(w => isAddressed(`${w} next`)))
+
+group('voice — phrases a song is likely to say are not commands')
+/*
+ * Each of these was a live trigger. They are all ordinary pop lyrics, and with
+ * the microphone open next to the speakers they fired from the music itself.
+ */
+t('"don\'t stop" is not radio on', pv("don't stop")?.kind !== 'radio')
+t('"let me" is not radio off', pv('let me')?.kind !== 'radio')
+t('"and" is not a command', pv('and') === null)
+t('"more" is not a command', pv('more') === null)
+t('"put it on" is not radio on', pv('put it on')?.kind !== 'radio')
+t('"take over" alone is not radio on', pv('take over')?.kind !== 'radio')
+t('the deliberate phrasings still work', (() => {
+  const on = ['radio', 'radio on', 'keep going', 'keep playing', 'start radio', 'take it over']
+  const off = ['radio off', 'my turn', 'stop radio', "i'll take it", 'give it back']
+  return on.every(s => pv(s)?.on === true) && off.every(s => pv(s)?.on === false)
+})())
+t('"go on" survives, because no song says it in isolation as a whole utterance',
+  pv('go on')?.kind === 'more')
 
 group('voice — asking for help, in the ways people ask')
 for (const phrase of [

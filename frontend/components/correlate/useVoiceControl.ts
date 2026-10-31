@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { personaSpeak } from '@/lib/persona'
 import { track } from '@/lib/analytics'
 import {
-  confirmationFor, parseBarge, parseVoice, spokenHelp,
+  confirmationFor, isAddressed, parseBarge, parseVoice, spokenHelp,
   type VoiceContext, type VoiceIntent, type VoiceStage,
 } from '@/lib/correlate/voice'
 
@@ -283,6 +283,10 @@ export function useVoiceControl(
     // there is no way to tell. Two words we can prove came from the room is a
     // real interruption; seventeen we cannot is a haunted interface.
     if (speakingRef.current) {
+      // Addressed, when music is playing underneath the speech as well. The echo
+      // check below rules out the partner's own words; it cannot rule out a
+      // lyric, and in radio both sounds are present at once.
+      if (ctx.audioPlaying && !isAddressed(utterance)) return
       const barge = parseBarge(utterance, spokenTextRef.current)
       if (!barge) return
       setLastResult(utterance)
@@ -292,9 +296,10 @@ export function useVoiceControl(
       // for quiet, and acting before stopping would talk over the answer.
       cancelSpeech.current?.()
       releaseRef.current?.()
-      if (barge.kind !== 'hush') {
-        try { await handlersRef.current.onIntent(barge) } catch {}
-      }
+      // Dispatched even for `hush`: silencing the speaker is this hook's job,
+      // but "stop" said over a playing track means the track too, and only the
+      // board can pause that.
+      try { await handlersRef.current.onIntent(barge) } catch {}
       return
     }
 
@@ -318,9 +323,12 @@ export function useVoiceControl(
 
     // Inlined rather than calling `hush`, which is declared below this callback:
     // naming it in the dependency array would read it in its temporal dead zone.
+    // Falls through to `onIntent` rather than returning, so the board can pause
+    // the audio — "stop" over a playing track means the track as well.
     if (intent.kind === 'hush') {
       cancelSpeech.current?.()
       releaseRef.current?.()
+      try { await handlersRef.current.onIntent(intent) } catch {}
       return
     }
     if (intent.kind === 'more') {

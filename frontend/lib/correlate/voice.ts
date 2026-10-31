@@ -147,6 +147,23 @@ export interface VoiceContext {
   switchTargets: CorrelationGame[]
   /** How many results are on the table, so "the fourth" can be refused when there are three. */
   resultCount: number
+  /**
+   * Whether the game's own audio is playing out of the speakers right now.
+   *
+   * The most important field here, and the one whose absence broke voice play
+   * the first time it was used in anger. An open microphone next to a playing
+   * speaker hears the song, the recogniser transcribes the lyrics as speech, and
+   * the grammar matches on them — so the game was taking commands from the music
+   * it was playing. The symptom was a track starting and stopping over and over:
+   * a lyric transcribed as "next" skips, the next track starts, and its lyrics
+   * skip again.
+   *
+   * It cannot be echo-checked the way the partner's own speech can. We know the
+   * string being read out by the speech synthesiser and can refuse any match
+   * against it; we do not know the words of a song. So the answer is `WAKE` —
+   * while audio plays, a command must be addressed.
+   */
+  audioPlaying: boolean
 }
 
 // ---------------------------------------------------------------------------
@@ -561,6 +578,23 @@ export function whenAvailable(c: VoiceCommand): string | null {
 /** Filler a speech recogniser cheerfully transcribes and nothing should match on. */
 const LEADERS = /^(?:ok(?:ay)?|hey|um+|uh+|so|now|please|could you|can you|let'?s|lets|i'?d like to|i want to)\b[\s,]*/i
 
+/**
+ * Addressing it, which is required only while its own audio is playing.
+ *
+ * A deliberate subset of `LEADERS` — "um" and "so" are things people say while
+ * thinking, and requiring one of those as a wake word would be no filter at all.
+ * These are the ones that mean "I am talking to you now".
+ *
+ * Why a wake word and not something cleverer: the recogniser gives us a
+ * transcript with no indication of where the sound came from, and over a playing
+ * speaker a large share of what it hears is the song. The partner's own speech
+ * can be filtered because we know its exact text (see `parseBarge`); lyrics
+ * cannot. Requiring the player to address the game is the only remaining signal,
+ * and it costs one word — and only while something is playing, so the quiet
+ * case stays conversational.
+ */
+const WAKE = /^(?:ok(?:ay)?|hey|yo|hi|listen|computer)\b[\s,]*/i
+
 function strip(text: string): string {
   let t = text.trim().toLowerCase().replace(/[.!?]+$/, '')
   // Repeatedly, because "ok so now play…" is a real transcript.
@@ -570,6 +604,11 @@ function strip(text: string): string {
     t = next
   }
   return t.trim()
+}
+
+/** Whether an utterance addresses the game, for the audio-playing case. */
+export function isAddressed(utterance: string): boolean {
+  return WAKE.test(utterance.trim())
 }
 
 /**
@@ -584,6 +623,12 @@ function strip(text: string): string {
  * in tests/correlate-logic.mjs.
  */
 export function parseVoice(utterance: string, ctx: VoiceContext): VoiceIntent | null {
+  // While its own audio is playing, a command has to be addressed. Everything
+  // the microphone picks up is then either the player or the song, and this is
+  // the only thing that tells them apart — see `VoiceContext.audioPlaying`.
+  // Without it the game takes instructions from the music it is playing.
+  if (ctx.audioPlaying && !isAddressed(utterance)) return null
+
   const t = strip(utterance)
   if (!t) return null
 
@@ -615,7 +660,10 @@ export function parseVoice(utterance: string, ctx: VoiceContext): VoiceIntent | 
   if (/^(say that again|repeat( that)?|read that again|what was that)$/.test(t)) {
     return { kind: 'repeat' }
   }
-  if (/^(go on|carry on|the rest|and|more|tell me more|finish the thought)$/.test(t)) {
+  // "and" and "more" are gone. A one-word command that is also one of the
+  // commonest words in English is not a command, it is a tripwire — and these
+  // are matched against a transcript of whatever the room is doing.
+  if (/^(go on|the rest|read the rest|tell me more|finish the thought)$/.test(t)) {
     return { kind: 'more' }
   }
 
@@ -637,10 +685,20 @@ export function parseVoice(utterance: string, ctx: VoiceContext): VoiceIntent | 
    * wait for the model with nothing playing. "you go" stays as the one-turn
    * version for anyone who wants exactly that.
    */
-  if (/^(radio|radio on|keep going|keep playing|take over|you drive|put it on|don'?t stop)$/.test(t)) {
+  /*
+   * "don't stop" and "let me" used to be here, for radio on and radio off.
+   *
+   * In a game whose output is music, with the microphone open while it plays.
+   * They are two of the commonest lines in pop songs, so the radio toggled
+   * itself off and on from its own audio — which, with "next" doing the same
+   * thing to the queue, is what made a track start and stop over and over.
+   *
+   * Kept short but no longer things a song is likely to say in isolation.
+   */
+  if (/^(radio|radio on|keep going|keep playing|take it over|you drive|start radio)$/.test(t)) {
     return { kind: 'radio', on: true }
   }
-  if (/^(radio off|my turn|stop radio|i'?ll go|give it back|let me)$/.test(t)) {
+  if (/^(radio off|my turn|stop radio|stop the radio|i'?ll take it|give it back)$/.test(t)) {
     return { kind: 'radio', on: false }
   }
 
