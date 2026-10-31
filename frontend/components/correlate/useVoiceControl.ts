@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { personaSpeak } from '@/lib/persona'
 import { track } from '@/lib/analytics'
 import {
-  confirmationFor, isAddressed, parseBarge, parseVoice, spokenHelp,
+  confirmationFor, isAddressed, parseBarge, parseChoice, parseVoice, spokenHelp,
   type VoiceContext, type VoiceIntent, type VoiceStage,
 } from '@/lib/correlate/voice'
 
@@ -287,6 +287,33 @@ export function useVoiceControl(
       // check below rules out the partner's own words; it cannot rule out a
       // lyric, and in radio both sounds are present at once.
       if (ctx.audioPlaying && !isAddressed(utterance)) return
+
+      /*
+       * A choice counts as an interruption, and it is the most important one.
+       *
+       * When the game has just asked "Idioteque, or Clair de Lune? Which?", the
+       * answer arrives over the top of the question — you hear the one you want
+       * and say so without waiting for the rest. Treating that as echo and
+       * discarding it is what left the player repeating the whole song title,
+       * which is exactly what naming a position is for.
+       *
+       * Echo-safe without a text check, because `describeResults` says no
+       * ordinals and no numbers: the words "one", "two", "first" and "second"
+       * cannot be coming from the speaker, because the speaker never says them.
+       */
+      if (ctx.stage === 'choosing') {
+        const choice = parseChoice(utterance, ctx.resultCount)
+        if (choice) {
+          setLastResult(utterance)
+          track('correlate_voice_command', { kind: choice.kind, barge: true })
+          earcon.current('ok')
+          cancelSpeech.current?.()
+          releaseRef.current?.()
+          try { await handlersRef.current.onIntent(choice) } catch {}
+          return
+        }
+      }
+
       const barge = parseBarge(utterance, spokenTextRef.current)
       if (!barge) return
       setLastResult(utterance)

@@ -116,7 +116,7 @@ const {
 const {
   parseVoice, spokenNumber, spokenOrdinal, extractMedium, matchGame, matchRelation,
   VOICE_COMMANDS, hintsFor, confirmationFor, spokenHelp, spokenMediaNames, whenAvailable,
-  matchScore, pickConfidently, parseBarge, openingSentence, isAddressed,
+  matchScore, pickConfidently, parseBarge, parseChoice, openingSentence, isAddressed,
   CONFIDENT_SCORE, CONFIDENT_MARGIN,
 } = M.voice
 const {
@@ -3788,6 +3788,49 @@ t('radio says who is driving, the one state you cannot hear',
   confirmationFor({ kind: 'radio', on: true }) !== confirmationFor({ kind: 'radio', on: false }))
 t('an unknown relation id does not crash the confirmation',
   typeof confirmationFor({ kind: 'relation', relation: 'not_a_relation' }) === 'string')
+
+group('voice — answering a numbered choice')
+/*
+ * Reported: having to say the whole song title back instead of just "one".
+ *
+ * Three things were in the way, and only the first is obvious. (1) The options
+ * were never shown, so the numbers had no visible referent. (2) The answer
+ * arrives *over* the question — you hear the one you want and say so without
+ * waiting — and mid-speech only the barge vocabulary was live, so it was
+ * discarded. (3) `describeResults` ended with "Which one?", which put the word
+ * "one" into the speaker's own mouth, so the echo check would have refused the
+ * answer even once it was allowed through.
+ */
+t('"one"', parseChoice('one', 2)?.index === 1)
+t('"two"', parseChoice('two', 2)?.index === 2)
+t('"the second"', parseChoice('the second', 2)?.index === 2)
+t('"the second one"', parseChoice('the second one', 2)?.index === 2)
+t('"number two"', parseChoice('number two', 2)?.index === 2)
+t('"take the first"', parseChoice('take the first', 2)?.index === 1)
+t('"the last one" resolves against the count', parseChoice('the last one', 2)?.index === 2)
+t('"that one" with options up is the first', parseChoice('that one', 2)?.index === 1)
+t('addressed answers work, since the wake word is stripped first',
+  parseChoice('okay two', 2)?.index === 2)
+t('a position past the count is refused, not clamped',
+  parseChoice('three', 2) === null)
+t('nothing on the table means nothing to choose',
+  parseChoice('one', 0) === null && parseChoice('two', 0) === null)
+t('a sentence is not a position', parseChoice('i like the first song a lot', 2) === null)
+t('and the choice reaches the same intent through parseVoice',
+  pv('two', { stage: 'choosing', resultCount: 2 })?.index === 2)
+
+group('voice — or by name, when the positions went past too fast')
+const OPTS = [hit('Idioteque', 'Radiohead'), hit('Clair de Lune', 'Debussy')]
+t('naming one picks it',
+  pv('clair de lune', { stage: 'choosing', resultCount: 2, options: OPTS })?.index === 2)
+t('naming the other picks the other',
+  pv('idioteque', { stage: 'choosing', resultCount: 2, options: OPTS })?.index === 1)
+t('a name matching neither picks neither',
+  pv('something else entirely', { stage: 'choosing', resultCount: 2, options: OPTS }) === null)
+t('position still wins over name, being the cheaper thing to say',
+  pv('one', { stage: 'choosing', resultCount: 2, options: OPTS })?.index === 1)
+t('no options means no name matching, and no crash',
+  pv('idioteque', { stage: 'choosing', resultCount: 0 }) === null)
 
 group('voice — the game must not take orders from its own music')
 /*

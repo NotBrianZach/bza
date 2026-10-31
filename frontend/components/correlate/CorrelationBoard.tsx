@@ -1122,6 +1122,7 @@ export default function CorrelationBoard({
     relations,
     switchTargets: switchTargets(branch.mode),
     resultCount: voiceResultsRef.current.length,
+    options: voiceResultsRef.current,
     // Whether the speakers are making noise, which decides whether a command
     // has to be addressed. Read through the ref rather than the render value:
     // this is called from the recogniser's handler, outside React, and a render
@@ -1140,9 +1141,22 @@ export default function CorrelationBoard({
    */
   const describeResults = useCallback((offerings: Offering[]) => {
     if (offerings.length === 0) return 'Nothing came back for that.'
-    const lines = offerings.map((o, i) =>
-      `${i + 1}. ${o.title}${o.attribution ? ` by ${o.attribution}` : ''}`)
-    return `${lines.join('. ')}. Which one?`
+    /*
+     * No spoken numbering, and the question is "Which?" rather than "Which one?".
+     *
+     * Both for the same reason, and it is not cosmetic. The player answers by
+     * position — "one", "two", "the second" — while this is still being read,
+     * and a word the speaker has just said cannot be told apart from the
+     * speaker saying it. Numbering the options aloud would have put every
+     * possible answer into the speaker's own mouth, so the only safe way to
+     * offer a numbered choice is not to read the numbers.
+     *
+     * The order is still what "one" and "two" refer to, and the written list in
+     * the voice bar shows them numbered — which is where that affordance
+     * belongs anyway.
+     */
+    const named = offerings.map(o => `${o.title}${o.attribution ? ` by ${o.attribution}` : ''}`)
+    return `${named.join(', or ')}. Which?`
   }, [])
 
   const onVoiceIntent = useCallback(async (intent: VoiceIntent): Promise<string | null> => {
@@ -2002,6 +2016,10 @@ export default function CorrelationBoard({
                 media={media}
                 switchTargets={switchTargets(branch.mode)}
                 audioPlaying={!!player.current && !player.paused}
+                options={voiceResults.offerings}
+                // Routed through the same intent the spoken form produces, so
+                // tapping and saying "two" cannot drift apart.
+                onChoose={i => { void onVoiceIntent({ kind: 'choose', index: i }) }}
                 expanded={voiceExpanded}
                 onToggleExpanded={() => setVoiceExpanded(v => !v)}
               />

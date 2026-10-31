@@ -3,7 +3,7 @@
 import { AlertTriangle, Ear, Loader2, Mic, MicOff, Volume2 } from 'lucide-react'
 import { VOICE_COMMANDS, spokenMediaNames, whenAvailable } from '@/lib/correlate/voice'
 import type { VoiceControl } from './useVoiceControl'
-import type { CorrelationGame, MediumId } from '@/lib/correlate/types'
+import type { CorrelationGame, MediumId, Offering } from '@/lib/correlate/types'
 
 /**
  * The voice mode control, and the only place a player learns what to say.
@@ -22,6 +22,8 @@ export default function VoiceBar({
   media,
   switchTargets,
   audioPlaying,
+  options,
+  onChoose,
   expanded,
   onToggleExpanded,
 }: {
@@ -30,6 +32,10 @@ export default function VoiceBar({
   switchTargets: CorrelationGame[]
   /** Whether a track is playing, which is when commands must be addressed. */
   audioPlaying: boolean
+  /** Results waiting to be chosen from, if any. */
+  options: Offering[]
+  /** Take the Nth, one-based — the same thing saying "two" does. */
+  onChoose: (index: number) => void
   expanded: boolean
   onToggleExpanded: () => void
 }) {
@@ -122,6 +128,39 @@ export default function VoiceBar({
             ? <span className="italic">{voice.lastResult} <span className="not-italic">· not a command</span></span>
             : <span>heard: <span className="text-gray-600 dark:text-gray-300">{voice.lastResult}</span></span>}
         </p>
+      )}
+
+      {/* The options, numbered.
+          Spoken play offered a numbered choice and then never showed the
+          numbers, so "one" and "two" had nothing visible to refer to and the
+          only way to pick was to say the whole title back. They are also
+          buttons, because a choice you can see is a choice you should be able
+          to tap — and because the spoken numbers are deliberately absent from
+          what is read out, this is where the numbering actually lives. */}
+      {options.length > 0 && (
+        <ol className="mt-2 space-y-1">
+          {options.map((o, i) => (
+            <li key={o.id}>
+              <button
+                onClick={() => onChoose(i + 1)}
+                className="w-full flex items-baseline gap-2 text-left text-[11px] px-2 py-1 rounded-lg hover:bg-emerald-100/60 dark:hover:bg-emerald-900/30 transition-colors"
+              >
+                <span className="font-mono text-emerald-700 dark:text-emerald-400 flex-shrink-0">
+                  {i + 1}
+                </span>
+                <span className="text-gray-700 dark:text-gray-200 min-w-0">
+                  {o.title}
+                  {o.attribution && (
+                    <span className="text-gray-400 dark:text-gray-500"> · {o.attribution}</span>
+                  )}
+                </span>
+              </button>
+            </li>
+          ))}
+          <li className="text-[10px] text-gray-400 dark:text-gray-500 px-2">
+            say &ldquo;one&rdquo; or &ldquo;two&rdquo; — you can answer while it is still reading
+          </li>
+        </ol>
       )}
 
       {voice.error && (

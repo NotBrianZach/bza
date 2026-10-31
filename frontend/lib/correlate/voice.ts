@@ -148,6 +148,13 @@ export interface VoiceContext {
   /** How many results are on the table, so "the fourth" can be refused when there are three. */
   resultCount: number
   /**
+   * The options themselves, so a choice can be made by name as well as position.
+   *
+   * Only read in the `choosing` stage. Optional because every other caller has
+   * nothing on the table and should not have to say so.
+   */
+  options?: { title: string; attribution?: string | null }[]
+  /**
    * Whether the game's own audio is playing out of the speakers right now.
    *
    * The most important field here, and the one whose absence broke voice play
@@ -225,8 +232,8 @@ const ORDINALS: Record<string, number> = {
 }
 
 export function spokenOrdinal(text: string, count: number): number | null {
-  const t = text.trim().toLowerCase().replace(/^(take |use |pick |choose |go with )/, '')
-  const bare = t.replace(/^the /, '').replace(/ one$/, '').trim()
+  const t = text.trim().toLowerCase().replace(/^(take |use |pick |choose |go with |give me |i'?ll have |that'?s )/, '')
+  const bare = t.replace(/^the /, '').replace(/ one$/, '').replace(/^number /, '').trim()
 
   if (/^(that|this|it|yes|yep|ok|okay)$/.test(bare)) return count > 0 ? 1 : null
 
@@ -237,6 +244,30 @@ export function spokenOrdinal(text: string, count: number): number | null {
   // bare number is a turn reference in every other stage.
   const n = spokenNumber(bare)
   if (n !== null && n >= 1 && n <= count) return n
+  return null
+}
+
+/**
+ * A choice among options, by position only.
+ *
+ * Split out of `parseVoice` so the hook can reach it *while the options are
+ * still being read out*. That is the moment a person actually answers — you hear
+ * "one, Idioteque" and say "one" over the top of the rest — and the first version
+ * threw those away, because mid-speech only the barge vocabulary was live. The
+ * player was left repeating the whole song title, which is the one thing naming
+ * a position is supposed to save them.
+ *
+ * Position only, deliberately. A title is echo-unsafe: the options have just
+ * been spoken, so hearing a title back is at least as likely to be the speaker
+ * as the player. Ordinals and small numbers are safe because `describeResults`
+ * no longer says any of those words — which is why it reads the titles joined by
+ * "or" and asks "Which?" rather than numbering them aloud.
+ */
+export function parseChoice(utterance: string, count: number): VoiceIntent | null {
+  const t = strip(utterance)
+  if (!t) return null
+  const idx = spokenOrdinal(t, count)
+  if (idx !== null && idx >= 1 && idx <= count) return { kind: 'choose', index: idx }
   return null
 }
 
@@ -639,8 +670,23 @@ export function parseVoice(utterance: string, ctx: VoiceContext): VoiceIntent | 
   // is pending and ordinary conversation at any other moment. Matching them
   // globally would make the microphone dangerous.
   if (ctx.stage === 'choosing') {
-    const idx = spokenOrdinal(t, ctx.resultCount)
-    if (idx !== null && idx >= 1 && idx <= ctx.resultCount) return { kind: 'choose', index: idx }
+    const byPosition = parseChoice(utterance, ctx.resultCount)
+    if (byPosition) return byPosition
+    /*
+     * Or by name, which is what someone does when the positions went past too
+     * fast. Safe here and not mid-speech: by the time this runs the options have
+     * finished being read, so a title in the transcript came from the room.
+     *
+     * `options` is handed in by the caller rather than held here because the
+     * grammar owns no state — the board knows what is on the table.
+     */
+    if (ctx.options && ctx.options.length > 0) {
+      const { pick } = pickConfidently(t, ctx.options)
+      if (pick) {
+        const i = ctx.options.indexOf(pick)
+        if (i >= 0) return { kind: 'choose', index: i + 1 }
+      }
+    }
   }
   if (ctx.stage === 'claiming') {
     const m = t.match(/^(?:because|since|they both|both of them|they)\s+(.{3,})$/)
