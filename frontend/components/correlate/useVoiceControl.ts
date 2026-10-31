@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { personaSpeak } from '@/lib/persona'
 import { track } from '@/lib/analytics'
 import {
-  confirmationFor, parseVoice, spokenHelp,
+  confirmationFor, parseBarge, parseVoice, spokenHelp,
   type VoiceContext, type VoiceIntent, type VoiceStage,
 } from '@/lib/correlate/voice'
 
@@ -59,6 +59,55 @@ function recognitionCtor(): (new () => Recognition) | null {
 const START_GRACE_MS = 2_500
 
 /**
+ * "Heard you", as a tone rather than a sentence.
+ *
+ * The cheapest fix for the assistant feeling. A spoken confirmation costs one to
+ * two seconds of closed microphone to convey one bit — *received* — and the
+ * player already knows what they said. Two short sine blips do the same job in
+ * 120ms, and because nothing is being spoken the mic never shuts, so the player
+ * can keep talking straight through the acknowledgement.
+ *
+ * Built with Web Audio rather than an audio file: no asset to ship or cache, no
+ * request on the critical path, and the context is created lazily so a page that
+ * never turns voice on never creates one. Failures are swallowed — a missing
+ * earcon is a cosmetic loss, and a thrown exception here would land inside the
+ * recogniser's result handler and stop voice mode.
+ */
+function makeEarcon(): (kind: 'ok' | 'no') => void {
+  let ctx: AudioContext | null = null
+  return (kind) => {
+    try {
+      const Ctor = (window as any).AudioContext ?? (window as any).webkitAudioContext
+      if (!Ctor) return
+      ctx ??= new Ctor()
+      if (!ctx) return
+      // Suspended is the norm on iOS until a gesture resumes it; the toggle that
+      // turns voice on is one, but a resume here costs nothing if it already is.
+      void ctx.resume?.()
+      const now = ctx.currentTime
+      // Rising for yes, falling for no. Direction is the part that reads without
+      // being learned, which matters for a signal nobody is told about.
+      const notes = kind === 'ok' ? [660, 880] : [440, 330]
+      notes.forEach((hz, i) => {
+        const osc = ctx!.createOscillator()
+        const gain = ctx!.createGain()
+        osc.type = 'sine'
+        osc.frequency.value = hz
+        // Ramped, not switched: a square-edged gate on a sine is a click, and a
+        // click sounds like a fault rather than an acknowledgement.
+        const at = now + i * 0.06
+        gain.gain.setValueAtTime(0, at)
+        gain.gain.linearRampToValueAtTime(0.07, at + 0.01)
+        gain.gain.linearRampToValueAtTime(0, at + 0.055)
+        osc.connect(gain).connect(ctx!.destination)
+        osc.start(at)
+        osc.stop(at + 0.06)
+      })
+    } catch {}
+  }
+}
+
+/**
  * How long a result may sit before it is treated as a complete utterance.
  *
  * `continuous` recognition fires `onresult` with `isFinal` when the speaker
@@ -72,8 +121,10 @@ const SETTLE_MS = 900
 export interface VoiceHandlers {
   /** Act on a parsed command. Returns a line to speak, or null to say nothing. */
   onIntent: (intent: VoiceIntent) => string | null | Promise<string | null>
-  /** The last reading, for "say that again". */
+  /** The last answer in full, for "say that again". */
   lastReading: () => string
+  /** The part of the last reading that was not spoken on landing, for "go on". */
+  unreadRest: () => string
 }
 
 export interface VoiceControl {
@@ -120,6 +171,16 @@ export function useVoiceControl(
    * where an echo arrives.
    */
   const speakingRef = useRef(false)
+  /**
+   * Exactly what is being spoken, for `parseBarge` to rule out echoes against.
+   *
+   * This string is the thing that makes interruption possible at all. The
+   * general problem — "did that word come from the room or from the speaker?" —
+   * has no answer. The problem we actually have does: a word absent from the
+   * text being read cannot have been read, so it came from the player.
+   */
+  const spokenTextRef = useRef('')
+  const earcon = useRef(makeEarcon())
   /** Set while deliberately stopping, so `onend` knows not to restart. */
   const stoppingRef = useRef(false)
   /** True while the player asked to listen, across the restarts below. */
@@ -141,32 +202,38 @@ export function useVoiceControl(
 
   const say = useCallback((text: string) => {
     if (!text) return
-    // Close the microphone *before* the speaker opens, not after: the gap is
-    // where the echo gets in.
+    // Recognition keeps running, but `onresult` only honours the barge-in
+    // vocabulary while this is set — see `spokenTextRef`. Stopping the
+    // recogniser outright was the first version, and it made the partner
+    // uninterruptible: a reading is twenty seconds you could not talk through,
+    // which is most of what made this feel like a kiosk.
     speakingRef.current = true
+    spokenTextRef.current = text
     setSpeaking(true)
-    try { recRef.current?.stop() } catch {}
 
     /**
-     * Reopen the microphone. Idempotent, because four things race to call it.
+     * Done talking. Idempotent, because four things race to call it.
      *
      * `personaSpeak` does not guarantee its `onEnd` fires: it returns a no-op
      * on a browser with no `speechSynthesis`, and again when the text strips to
      * nothing — and `speechSynthesis.speak` is independently known to drop
-     * `onend` on long utterances. Every one of those leaves `speakingRef` true
-     * forever, and since the mic is closed while it is true, voice mode would
-     * stop working with no error anywhere. Hence the two timers below.
+     * `onend` on long utterances. Every one of those would leave the full
+     * grammar permanently narrowed to the two barge-in words, with no error
+     * anywhere. Hence the two timers below.
      */
     const release = () => {
       if (speakWatchdog.current) { clearTimeout(speakWatchdog.current); speakWatchdog.current = null }
       if (startGrace.current) { clearTimeout(startGrace.current); startGrace.current = null }
       if (!speakingRef.current) return
       speakingRef.current = false
+      spokenTextRef.current = ''
       setSpeaking(false)
       cancelSpeech.current = null
       releaseRef.current = null
-      // `onend` also tries this; both are guarded by `wantRef`, and a second
-      // `start()` on a running recogniser throws and is swallowed.
+      // Recognition was never stopped, but `onend` fires for its own reasons —
+      // a long silence, a transient error — and restarting is what makes the
+      // mode continuous. Both are guarded by `wantRef`, and a second `start()`
+      // on a running recogniser throws and is swallowed.
       if (wantRef.current && !stoppingRef.current) {
         try { recRef.current?.start() } catch {}
       }
@@ -208,6 +275,29 @@ export function useVoiceControl(
 
   const handle = useCallback(async (utterance: string) => {
     const ctx = ctxRef.current()
+
+    // While the partner is talking, only the barge-in words are heard, and only
+    // when they do not appear in what is being said. The full grammar is not
+    // available mid-speech on purpose: every other command would be matching
+    // against a transcript that may be the speaker's own words coming back, and
+    // there is no way to tell. Two words we can prove came from the room is a
+    // real interruption; seventeen we cannot is a haunted interface.
+    if (speakingRef.current) {
+      const barge = parseBarge(utterance, spokenTextRef.current)
+      if (!barge) return
+      setLastResult(utterance)
+      track('correlate_voice_command', { kind: barge.kind, barge: true })
+      earcon.current('ok')
+      // Silence first, always — whatever else the word meant, the player asked
+      // for quiet, and acting before stopping would talk over the answer.
+      cancelSpeech.current?.()
+      releaseRef.current?.()
+      if (barge.kind !== 'hush') {
+        try { await handlersRef.current.onIntent(barge) } catch {}
+      }
+      return
+    }
+
     const intent = parseVoice(utterance, ctx)
     if (!intent) {
       // Deliberately quiet. The microphone is open while the player talks to the
@@ -221,6 +311,23 @@ export function useVoiceControl(
     setLastResult(`${utterance}`)
     track('correlate_voice_command', { kind: intent.kind })
 
+    // Before anything else, and before any speech. This is the whole
+    // acknowledgement for most commands now, and its value is that it lands
+    // immediately and costs the player no silence.
+    earcon.current('ok')
+
+    // Inlined rather than calling `hush`, which is declared below this callback:
+    // naming it in the dependency array would read it in its temporal dead zone.
+    if (intent.kind === 'hush') {
+      cancelSpeech.current?.()
+      releaseRef.current?.()
+      return
+    }
+    if (intent.kind === 'more') {
+      const rest = handlersRef.current.unreadRest()
+      say(rest || 'That was all of it.')
+      return
+    }
     if (intent.kind === 'help') {
       say(spokenHelp(ctx))
       // Dispatched as well as spoken: the board opens the written list on it,
@@ -261,9 +368,6 @@ export function useVoiceControl(
     recRef.current = rec
 
     rec.onresult = (ev: any) => {
-      // Dropped wholesale while speaking. See the module comment.
-      if (speakingRef.current) return
-
       let finalText = ''
       let interim = ''
       for (let i = ev.resultIndex; i < ev.results.length; i++) {
@@ -272,7 +376,10 @@ export function useVoiceControl(
         else interim += r[0].transcript
       }
 
-      if (interim) setHeard(interim.trim())
+      // Not while speaking: the mic is picking up the partner, so this would be
+      // a live transcript of the thing the player is already listening to —
+      // churning state on every syllable to display it back to them.
+      if (interim && !speakingRef.current) setHeard(interim.trim())
 
       if (settleTimer.current) { clearTimeout(settleTimer.current); settleTimer.current = null }
 

@@ -116,6 +116,8 @@ const {
 const {
   parseVoice, spokenNumber, spokenOrdinal, extractMedium, matchGame, matchRelation,
   VOICE_COMMANDS, hintsFor, confirmationFor, spokenHelp, spokenMediaNames, whenAvailable,
+  matchScore, pickConfidently, parseBarge, openingSentence,
+  CONFIDENT_SCORE, CONFIDENT_MARGIN,
 } = M.voice
 const {
   TUNING_AXES, AXIS_LIST, ALL_AXIS_IDS, AXIS_STOPS, DEFAULT_WEIGHT, WEIGHT_LABELS, WEIGHT_HINTS,
@@ -3367,7 +3369,7 @@ t('"one more" is again', pv('one more')?.kind === 'again')
 t('you go', pv('you go')?.kind === 'selfReply')
 t('"let it answer itself"', pv('let it answer itself')?.kind === 'selfReply')
 t('finish', pv('finish')?.kind === 'finish')
-t('"that\'s it" closes the game', pv("that's it")?.kind === 'finish')
+t('"we\'re done" closes the game', pv("we're done")?.kind === 'finish')
 t('filler in front is stripped', pv('ok so now finish')?.kind === 'finish')
 t('trailing punctuation from the recogniser is stripped', pv('Again.')?.kind === 'again')
 
@@ -3456,8 +3458,14 @@ t('a rhyme claim with no number is refused', pv('this rhymes with something') ==
  */
 t('the confirmation echoes the turn the player said',
   confirmationFor({ kind: 'rhymes', turn: 4 }).includes('Turn 4'))
-t('and so does the one for standing on a turn',
-  confirmationFor({ kind: 'goTo', turn: 3 }).includes('turn 3'))
+/*
+ * Standing on a turn answers with a tone instead. It is the one case where the
+ * old spoken confirmation was pure cost: the board scrolls to the turn and
+ * highlights it, so "Standing on turn 3" narrated something already on screen —
+ * and mishearing the number is self-evident the moment you look.
+ */
+t('standing on a turn is a tone, since the board already shows where you are',
+  confirmationFor({ kind: 'goTo', turn: 3 }) === '')
 
 group('voice — switching, scoped to what is legal')
 t('switch to a real target',
@@ -3544,10 +3552,8 @@ t('stage-specific commands are hidden where they mean nothing',
 t('the claim control offers the reason only once a claim is pending',
   hintsFor('claim', 'idle').every(c => c.kind !== 'because') &&
   hintsFor('claim', 'claiming').some(c => c.kind === 'because'))
-t('every action confirms out loud, because silence reads as "it did not hear me"',
-  VOICE_COMMANDS
-    .filter(c => c.kind !== 'repeat' && c.kind !== 'help')
-    .every(c => confirmationFor(sampleIntent(c.kind)).length > 0))
+t('every command acknowledges somehow — a confirmation, or the tone',
+  VOICE_COMMANDS.every(c => typeof confirmationFor(sampleIntent(c.kind)) === 'string'))
 /*
  * The help is the one command that cannot be discovered by asking, so it lists
  * everything. The first version read only the phrases and only the ones live at
@@ -3591,6 +3597,197 @@ t('and the games it can switch into',
 t('the help is long, which is the fact the speech watchdog is sized against',
   spokenHelp(vctx()).length > 800 && spokenHelp(vctx()).length < 4000)
 
+// ---------------------------------------------------------------------------
+/*
+ * The latency fixes — lib/correlate/voice.ts.
+ *
+ * Voice play as first shipped spent about 45 seconds of mic-closed time per
+ * move, of which the model was 10-15. The rest was the interface talking to
+ * itself: a confirmation, four results read aloud, another confirmation, then
+ * the whole reading. Everything below removes one of those, and each one can be
+ * wrong in a way only a test catches — taking the wrong record silently is
+ * worse than asking.
+ */
+// ---------------------------------------------------------------------------
+
+const hit = (title, attribution, extra = {}) =>
+  ({ id: title.toLowerCase().replace(/\s+/g, '-'), title, attribution, medium: 'music', ...extra })
+
+group('voice — taking the obvious match instead of asking')
+t('an exact title scores 1', matchScore('idioteque', hit('Idioteque', 'Radiohead')) === 1)
+t('the artist counts as evidence too',
+  matchScore('idioteque radiohead', hit('Idioteque', 'Radiohead')) === 1)
+t('filler words are not evidence',
+  matchScore('the song idioteque', hit('Idioteque', 'Radiohead')) === 1)
+t('an unrelated title scores 0', matchScore('idioteque', hit('Clair de Lune', 'Debussy')) === 0)
+t('a partial match scores partially', (() => {
+  const s = matchScore('life on mars', hit('Life On Mars?', 'David Bowie'))
+  return s === 1
+})())
+t('an empty query is never evidence of anything', matchScore('', hit('Idioteque', 'Radiohead')) === 0)
+
+t('a clear winner is taken without asking', (() => {
+  const { pick, options } = pickConfidently('idioteque', [
+    hit('Idioteque', 'Radiohead'),
+    hit('Everything In Its Right Place', 'Radiohead'),
+  ])
+  return pick?.title === 'Idioteque' && options.length === 0
+})())
+t('one result is taken without asking — there is nothing to be ambiguous with', (() => {
+  const { pick } = pickConfidently('clair de lune', [hit('Clair de Lune', 'Debussy')])
+  return pick?.title === 'Clair de Lune'
+})())
+t('one result that matches nothing is still offered rather than forced', (() => {
+  const { pick, options } = pickConfidently('idioteque', [hit('Clair de Lune', 'Debussy')])
+  return pick === null && options.length === 1
+})())
+/*
+ * The margin's reason for existing. Eight recordings of the same movement all
+ * score 1 on "jupiter", and a high score with no margin is not certainty — it
+ * is exactly the case where the player does want to be asked.
+ */
+t('near-identical titles are asked about, not guessed between', (() => {
+  const { pick, options } = pickConfidently('jupiter', [
+    hit('Jupiter', 'Holst / LSO'),
+    hit('Jupiter', 'Holst / Berlin Phil'),
+    hit('Jupiter', 'Holst / Hallé'),
+  ])
+  return pick === null && options.length === 2
+})())
+t('and only two are read back, not four', (() => {
+  const { options } = pickConfidently('something vague', [
+    hit('A', 'x'), hit('B', 'y'), hit('C', 'z'), hit('D', 'w'),
+  ])
+  return options.length === 2
+})())
+t('a weak best match is asked about even with a clear margin', (() => {
+  // 1 of 4 words matched: a margin over nothing is not confidence.
+  const { pick } = pickConfidently('the quiet one about rain', [
+    hit('Rain', 'The Beatles'), hit('Nothing Alike', 'Someone'),
+  ])
+  return pick === null
+})())
+t('no results picks nothing and offers nothing', (() => {
+  const { pick, options } = pickConfidently('anything', [])
+  return pick === null && options.length === 0
+})())
+t('the thresholds are both real constraints, not decoration',
+  CONFIDENT_SCORE > 0.5 && CONFIDENT_SCORE <= 1 && CONFIDENT_MARGIN > 0)
+
+group('voice — interrupting the speaker')
+/*
+ * Barge-in is most of what separates a conversation from a kiosk. It is only
+ * safe because the exact text being spoken is known: a word absent from it
+ * cannot have been echoed.
+ */
+const READING = 'The painting answers the song by holding still where it hurried.'
+t('"stop" while it talks is an interruption', parseBarge('stop', READING)?.kind === 'hush')
+t('"next" skips', parseBarge('next', READING)?.kind === 'skip')
+t('"enough" is an interruption', parseBarge('enough', READING)?.kind === 'hush')
+t('the full grammar is NOT available mid-speech',
+  parseBarge('play idioteque', READING) === null &&
+  parseBarge('again', READING) === null)
+t('a word the speaker is saying is dropped as an echo',
+  parseBarge('still', 'holding still') === null)
+/*
+ * The case the whole design turns on. "stop" is a barge word, but if the
+ * partner is reading a sentence containing "stop", the recogniser hearing it is
+ * overwhelmingly the echo — so it is refused, and the player says it again.
+ * Losing one genuine interruption costs a second of patience; acting on an echo
+ * makes the interface look possessed.
+ */
+t('a barge word inside the spoken text is refused',
+  parseBarge('stop', 'the music does not stop here') === null)
+t('but the same word is honoured when it is not being said',
+  parseBarge('stop', 'the music carries on') ?.kind === 'hush')
+t('filler in front of an interruption is stripped', parseBarge('ok stop', READING)?.kind === 'hush')
+t('ambient speech is not an interruption',
+  ['i like this one', 'what was that about', 'hang on'].every(s => parseBarge(s, READING) === null))
+
+group('voice — speaking less on landing')
+t('a one-sentence reading is spoken whole, with nothing left over', (() => {
+  const { opening, rest } = openingSentence('It answers the hurry with stillness.')
+  return opening === 'It answers the hurry with stillness.' && rest === ''
+})())
+t('a long reading is split after the first sentence', (() => {
+  const { opening, rest } = openingSentence(
+    'It answers the hurry with stillness. The blues repeat where the song accelerated. Nothing of the rhythm survives.')
+  return opening === 'It answers the hurry with stillness.' && rest.startsWith('The blues')
+})())
+t('nothing is lost in the split', (() => {
+  const text = 'One thing. Two things. Three things.'
+  const { opening, rest } = openingSentence(text)
+  return `${opening} ${rest}` === text
+})())
+/*
+ * A four-word opener followed by silence sounds like it was cut off, so a very
+ * short first sentence takes a second one with it.
+ */
+t('a very short opener takes the next sentence with it', (() => {
+  const { opening } = openingSentence('It rhymes. The shape of the ending is the same. And the key.')
+  return opening === 'It rhymes. The shape of the ending is the same.'
+})())
+t('empty in, empty out', openingSentence('')?.opening === '' && openingSentence('   ').rest === '')
+t('a reading with no terminator is still spoken', (() => {
+  const { opening, rest } = openingSentence('no full stop here')
+  return opening === 'no full stop here' && rest === ''
+})())
+
+group('voice — radio is the fast path')
+t('"keep going" hands the chain over', pv('keep going')?.kind === 'radio')
+t('and means radio on', pv('keep going')?.on === true)
+t('"radio" on its own does too', pv('radio')?.on === true)
+t('"my turn" takes it back', pv('my turn')?.on === false)
+t('"radio off" does too', pv('radio off')?.on === false)
+/*
+ * "keep going" used to mean one self-reply, which is the narrower reading of a
+ * phrase that plainly asks for an open run — and the narrow reading is the slow
+ * one, since a single self-reply still waits on the model with nothing playing.
+ */
+t('"you go" is still the one-turn version',
+  pv('you go')?.kind === 'selfReply' && pv('keep going')?.kind !== 'selfReply')
+t('radio is first in the command table, because it is the one worth learning',
+  VOICE_COMMANDS[0].kind === 'radio')
+
+group('voice — short words beat long ones')
+/*
+ * The worst available misparse: a player wanting the reading to stop, and the
+ * game ending instead. "stop" and "that's it" both used to reach `finish`.
+ */
+t('"stop" is an interruption, never the end of the game', pv('stop')?.kind === 'hush')
+t('"that\'s it" no longer closes the game either', pv("that's it")?.kind !== 'finish')
+t('"finish" still does', pv('finish')?.kind === 'finish')
+t('"next" is a skip, not a turn reference', pv('next')?.kind === 'skip')
+t('"go on" reads the rest', pv('go on')?.kind === 'more')
+
+group('voice — a tone, not a sentence')
+/*
+ * Every command used to answer with speech, which cost one to two seconds of
+ * closed microphone to tell the player what they had just said. Speech now
+ * survives only where it carries information a tone cannot: which value was
+ * heard, a question, or an answer.
+ */
+const SPEAKS = ['switch', 'medium', 'relation', 'rhymes', 'because', 'radio']
+t('the three kinds that earn speech still speak',
+  SPEAKS.every(k => confirmationFor(sampleIntent(k)).length > 0))
+t('and everything else answers with a tone', (() => {
+  const toneOnly = VOICE_COMMANDS.map(c => c.kind).filter(k => !SPEAKS.includes(k))
+  return toneOnly.every(k => confirmationFor(sampleIntent(k)) === '')
+})())
+/*
+ * Mishearing "transformation" for "translation" picks a different game, and a
+ * tone cannot tell you which it took — so these name the value back.
+ */
+t('a switch names the game it heard',
+  confirmationFor({ kind: 'switch', gameId: 'translation' }).includes('Translation'))
+t('a medium names the medium', confirmationFor({ kind: 'medium', medium: 'artwork' }).length > 0)
+t('a rhyme claim asks the question it needs answered',
+  confirmationFor({ kind: 'rhymes', turn: 4 }).includes('?'))
+t('radio says who is driving, the one state you cannot hear',
+  confirmationFor({ kind: 'radio', on: true }) !== confirmationFor({ kind: 'radio', on: false }))
+t('an unknown relation id does not crash the confirmation',
+  typeof confirmationFor({ kind: 'relation', relation: 'not_a_relation' }) === 'string')
+
 group('voice — asking for help, in the ways people ask')
 for (const phrase of [
   'help', 'commands', 'what can i say', 'what are my options', 'list commands',
@@ -3609,10 +3806,11 @@ t('it is reachable mid-claim and mid-choice, when it is most needed',
 t('"help me find something" is not the help command',
   pv('help me find something')?.kind !== 'help')
 
-/** A stand-in intent per kind, for the "everything confirms" sweep. */
+/** A stand-in intent per kind, for the acknowledgement sweeps. */
 function sampleIntent(kind) {
   switch (kind) {
-    case 'switch': return { kind, gameId: 'transformation' }
+    case 'radio': return { kind, on: true }
+    case 'switch': return { kind, gameId: 'translation' }
     case 'medium': return { kind, medium: 'music' }
     case 'offer': return { kind, query: 'idioteque' }
     case 'choose': return { kind, index: 1 }

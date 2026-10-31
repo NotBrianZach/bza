@@ -23,7 +23,10 @@ import {
   isSelfReply, radioRefusal, selfRepliesLeft, selfReplyRefusal, RADIO_HINT, RADIO_LABEL,
 } from '@/lib/correlate/continuation'
 import { activeBranch, playedUnder, switchTargets } from '@/lib/correlate/switching'
-import { hintsFor, type VoiceCommand, type VoiceIntent, type VoiceStage } from '@/lib/correlate/voice'
+import {
+  hintsFor, openingSentence, pickConfidently,
+  type VoiceCommand, type VoiceIntent, type VoiceStage,
+} from '@/lib/correlate/voice'
 import type {
   CorrelationClaim, CorrelationSession, CorrelationTurn, MediumId, Offering, RelationId,
 } from '@/lib/correlate/types'
@@ -118,6 +121,25 @@ export default function CorrelationBoard({
    * last.
    */
   const lastReadingRef = useRef('')
+  /**
+   * The part of the last reading that landing did not speak, for "go on".
+   *
+   * Landing speaks the offering's name and the reading's first sentence. At the
+   * widest breadth a reading is six sentences, which is twenty seconds with the
+   * player unable to say anything — so the rest is held here and read on
+   * request rather than imposed every move.
+   */
+  const unreadRestRef = useRef('')
+  /**
+   * Whether radio is running, for `absorb` — which is built above it.
+   *
+   * Load-bearing for voice and not just a convenience. Radio generates two
+   * answers *ahead* of the audio, so a turn lands while an earlier one is still
+   * playing: speaking on landing would talk over the music and describe
+   * something that is not what you are hearing. In radio the audio is the
+   * output and the board is the commentary, so voice says nothing.
+   */
+  const radioRef = useRef(false)
   /**
    * The voice control, for the callbacks defined above it.
    *
@@ -488,19 +510,27 @@ export default function CorrelationBoard({
     //
     // Named before read: the reading talks *about* the reply, so hearing it
     // without knowing what was answered with is hearing the second half of a
-    // sentence. The two are kept together in `lastReadingRef` for the same
-    // reason, so "say that again" repeats the whole thing.
+    // sentence.
     //
-    // Only when voice is on, and always recorded even when it is off — turning
-    // voice on mid-game and asking "say that again" should work.
+    // The name and the reading's first sentence, and no more. Speaking the whole
+    // reading was twenty seconds of closed microphone on every move for
+    // something the player had not asked to hear in full — and it arrived while
+    // they were most likely to want to say the next thing. "go on" reads the
+    // rest; "say that again" repeats all of it.
+    //
+    // Recorded even when voice is off, so turning it on mid-game and asking for
+    // the last reading works.
     const reply = data.turn?.reply_offering
     if (data.turn?.legal && (reply || data.turn?.reading)) {
       const named = reply
         ? `${reply.title}${reply.attribution ? ` by ${reply.attribution}` : ''}.`
         : ''
-      const spoken = `${named} ${data.turn.reading ?? ''}`.trim()
-      lastReadingRef.current = spoken
-      if (voiceRef.current?.listening) voiceRef.current.say(spoken)
+      const { opening, rest } = openingSentence(data.turn.reading ?? '')
+      lastReadingRef.current = `${named} ${data.turn.reading ?? ''}`.trim()
+      unreadRestRef.current = rest
+      if (voiceRef.current?.listening && !radioRef.current) {
+        voiceRef.current.say(`${named} ${opening}`.trim())
+      }
     }
   }, [focusOn, updateSession])
 
@@ -633,6 +663,7 @@ export default function CorrelationBoard({
    * because two passes of this effect can run before React has re-rendered either.
    */
   const radio = radioOf(tuning)
+  radioRef.current = radio
   /** Why radio cannot run in this session at all, or null. */
   const radioBlocked = radioRefusal(media)
   /**
@@ -1056,13 +1087,19 @@ export default function CorrelationBoard({
     resultCount: voiceResultsRef.current.length,
   }), [media, relations, branch.mode])
 
-  /** Read a result set out, numbered, so an ordinal has something to refer to. */
+  /**
+   * Read a result set out, numbered, so an ordinal has something to refer to.
+   *
+   * Only reached when `pickConfidently` could not choose, which it usually can.
+   * This was on the path of every single move and cost about ten seconds of
+   * read-aloud each time, to settle a question the player had mostly already
+   * answered by naming the thing.
+   */
   const describeResults = useCallback((offerings: Offering[]) => {
     if (offerings.length === 0) return 'Nothing came back for that.'
-    const top = offerings.slice(0, 4)
-    const lines = top.map((o, i) =>
+    const lines = offerings.map((o, i) =>
       `${i + 1}. ${o.title}${o.attribution ? ` by ${o.attribution}` : ''}`)
-    return `${top.length === 1 ? 'One match' : `${top.length} matches`}. ${lines.join('. ')}. Which one?`
+    return `${lines.join('. ')}. Which one?`
   }, [])
 
   const onVoiceIntent = useCallback(async (intent: VoiceIntent): Promise<string | null> => {
@@ -1137,9 +1174,27 @@ export default function CorrelationBoard({
         const data = await res.json()
         if (data.error) return `${data.error}`
         const offerings = (data.offerings ?? []) as Offering[]
-        setResults(intent.query, offerings)
-        setStage(offerings.length > 0 ? 'choosing' : 'idle')
-        return describeResults(offerings)
+
+        // Take the obvious match rather than asking. Naming a song is not an
+        // ambiguous act, and the question only earns its ten seconds when the
+        // results genuinely do not settle it.
+        const { pick, options } = pickConfidently(intent.query, offerings)
+        if (pick) {
+          setResults('', [])
+          setStage('idle')
+          await play({
+            medium: pick.medium,
+            offeringId: pick.id,
+            framing: voiceFraming || pick.framing || 'all of it',
+            ...(voiceRelation ? { claimedRelation: voiceRelation } : {}),
+          })
+          setVoiceFraming(''); setVoiceRelation(null)
+          return null
+        }
+
+        setResults(intent.query, options)
+        setStage(options.length > 0 ? 'choosing' : 'idle')
+        return describeResults(options)
       }
 
       case 'choose': {
@@ -1198,6 +1253,45 @@ export default function CorrelationBoard({
         focusOn(defaultParent(graph)?.id ?? null)
         return null
 
+      /*
+       * Radio — the fast path, and the answer to voice play feeling slow.
+       *
+       * Everything else here is request/response: say a thing, wait ten to
+       * fifteen seconds for a model call, hear the result. Radio inverts it. The
+       * pump keeps two answers queued in front of the audio, so the model runs
+       * while music is playing rather than while the player is waiting, and the
+       * latency stops being something you sit through.
+       *
+       * Handing the state change to `changeTuning` rather than a local flag is
+       * what makes the on-screen control and the spoken one the same switch.
+       */
+      case 'radio': {
+        if (intent.on && radioBlocked) return radioBlocked
+        if (radioOf(tuning) === intent.on) {
+          return intent.on ? 'It is already running.' : 'It is already your turn.'
+        }
+        // A fresh run should not inherit the last one's bad luck — same reset the
+        // button does.
+        radioSilent.current = 0
+        radioFailures.current = 0
+        setRadioStopped('')
+        changeTuning({ ...tuning, radio: intent.on })
+        track('correlate_radio_toggled', { game: branch.mode, on: intent.on, via: 'voice' })
+        return null
+      }
+
+      case 'skip':
+        // `skip`, not `advance`: at the tail of the queue this means "find me
+        // another" rather than "the track ended", and in radio that generates
+        // instead of stopping — which is what a listener saying "next" means.
+        player.skip()
+        return null
+
+      // Handled inside the hook, which owns the speaker.
+      case 'hush':
+      case 'more':
+        return null
+
       case 'cancel':
         setStage('idle')
         setResults('', [])
@@ -1220,11 +1314,19 @@ export default function CorrelationBoard({
     answerAgain, continueOnce, finish, armSwitch, play, focusOn, submitClaim,
     focusId, focusTurn, path, graph, media, voiceMedium,
     voiceFraming, voiceRelation, claimFrom, claimTo, describeResults,
+    tuning, changeTuning, radioBlocked, player, branch.mode, setRadioStopped,
   ])
 
   const voice = useVoiceControl(voiceContext, {
     onIntent: onVoiceIntent,
     lastReading: () => lastReadingRef.current,
+    unreadRest: () => {
+      // Consumed, not just read: "go on" twice should not read the same
+      // paragraph twice, and the second time there genuinely is no more.
+      const rest = unreadRestRef.current
+      unreadRestRef.current = ''
+      return rest
+    },
   })
   voiceRef.current = voice
 

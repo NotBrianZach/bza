@@ -30,6 +30,42 @@
  * `VoiceStage` exists for: the grammar is stage-aware, so "the second one"
  * means a result only while results are on the table, and the same utterance is
  * a search query the rest of the time.
+ *
+ * ── Why the first version felt like Siri ──────────────────────────────────
+ *
+ * It was shaped as request/response, and that shape is the problem rather than
+ * any one delay in it. Counting the mic-closed time in a single move as it
+ * originally shipped:
+ *
+ *   "Looking for Idioteque."                     ~1.5s
+ *   "Four matches. One, … Which one?"            ~10s
+ *   "Playing that one."                          ~1.2s
+ *   (the model)                                  10–15s
+ *   title, attribution, and the whole reading    ~18s
+ *
+ * Around 45 seconds, of which the model is a quarter. Three-quarters was the
+ * interface talking to itself, and every second of it was time the player could
+ * not speak — which is the actual definition of the assistant feeling.
+ *
+ * Four things follow from that, and they are why this file looks the way it
+ * does now:
+ *
+ *  1. **Acknowledge with a tone, not a sentence.** `confirmationFor` returns ''
+ *     for everything whose outcome is visible or self-evident. A 120ms tone says
+ *     "heard you" in a thirteenth of the time and barely closes the mic. Speech
+ *     is kept only where it carries information the player cannot otherwise get:
+ *     which game it thinks you said, a ruling, a question.
+ *  2. **Don't ask when you know.** `pickConfidently` takes the obvious match
+ *     instead of reading four options out. Naming a song is not an ambiguous
+ *     act; treating it as one cost ten seconds every single move.
+ *  3. **Interruption has to work.** See `BARGE_WORDS` — filtering a transcript
+ *     is impossible in general but trivial against the exact string being
+ *     spoken, which is the one thing we always have.
+ *  4. **Prefer radio to command-and-control.** The engine already generates two
+ *     answers ahead of the audio, so in radio the model latency is behind the
+ *     buffer rather than in front of the player. A continuous thing you talk
+ *     over beats a request/response thing you wait for, and no amount of shaving
+ *     milliseconds off the second shape turns it into the first.
  */
 
 import { GAMES, GAME_LIST, getGame } from './games'
@@ -79,6 +115,22 @@ export type VoiceIntent =
   | { kind: 'goBack' }
   /** Say the last reading again. */
   | { kind: 'repeat' }
+  /**
+   * Read the rest of the last reading.
+   *
+   * Exists because landing a turn now speaks the offering's name and the first
+   * sentence rather than the whole thing. Four to six sentences of reading is
+   * twenty seconds of mic-closed speech per move, and a player who wants it can
+   * ask — which is a better trade than one who does not having to sit through it
+   * every time.
+   */
+  | { kind: 'more' }
+  /** Hand the chain to the partner and let it run, or take it back. */
+  | { kind: 'radio'; on: boolean }
+  /** Skip the track that is playing. */
+  | { kind: 'skip' }
+  /** Stop talking, without stopping listening. */
+  | { kind: 'hush' }
   /** Read the available commands aloud. */
   | { kind: 'help' }
   /** Abandon whatever is pending. */
@@ -288,6 +340,127 @@ export function matchRelation(text: string, relations: RelationId[]): RelationId
 }
 
 // ---------------------------------------------------------------------------
+// Taking the obvious match instead of asking
+// ---------------------------------------------------------------------------
+
+/** Words too common to count as evidence that a title is the one meant. */
+const STOP_WORDS = new Set([
+  'a', 'an', 'the', 'of', 'in', 'on', 'at', 'to', 'for', 'and', 'or', 'by',
+  'me', 'us', 'it', 'is', 'song', 'track', 'by',
+])
+
+function tokens(text: string): string[] {
+  return text.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/)
+    .filter(w => w.length > 0 && !STOP_WORDS.has(w))
+}
+
+/**
+ * How well an offering answers a spoken query, 0..1.
+ *
+ * The fraction of the query's content words that appear in the title or its
+ * attribution. Deliberately not a fuzzy string distance: speech recognition
+ * errors are *word* substitutions, not character ones, so a per-word measure is
+ * both the right granularity and one you can reason about from a transcript.
+ */
+export function matchScore(query: string, offering: { title: string; attribution?: string | null }): number {
+  const want = tokens(query)
+  if (want.length === 0) return 0
+  const have = new Set(tokens(`${offering.title} ${offering.attribution ?? ''}`))
+  return want.filter(w => have.has(w)).length / want.length
+}
+
+/**
+ * The result to take without asking, or the handful worth asking about.
+ *
+ * The single biggest thing wrong with the first version of voice play. Naming a
+ * song is not an ambiguous act, and treating every search as a disambiguation
+ * cost ten seconds of read-aloud plus a whole extra turn of speaking, on every
+ * move, to confirm something the player had already said.
+ *
+ * Confident means two things at once, and it needs both:
+ *
+ *  - the best result accounts for most of what was asked for (`CONFIDENT_SCORE`)
+ *  - and it is clearly better than the runner-up (`CONFIDENT_MARGIN`)
+ *
+ * The margin is what stops "play Jupiter" silently picking one of eight
+ * recordings of the same movement. Without it a high score on several
+ * near-identical titles would read as certainty, which is exactly when the
+ * player does want to be asked.
+ *
+ * One result is a special case and goes through without a margin: there is
+ * nothing to be ambiguous *with*, and "one match — do you want it?" is the
+ * purest form of the question nobody needs asked.
+ */
+export const CONFIDENT_SCORE = 0.75
+export const CONFIDENT_MARGIN = 0.25
+
+export function pickConfidently<T extends { title: string; attribution?: string | null }>(
+  query: string,
+  offerings: T[],
+): { pick: T | null; options: T[] } {
+  if (offerings.length === 0) return { pick: null, options: [] }
+
+  const scored = offerings
+    .map(o => ({ o, score: matchScore(query, o) }))
+    .sort((a, b) => b.score - a.score)
+
+  const best = scored[0]
+  if (offerings.length === 1) {
+    return best.score > 0 ? { pick: best.o, options: [] } : { pick: null, options: [best.o] }
+  }
+
+  const margin = best.score - scored[1].score
+  if (best.score >= CONFIDENT_SCORE && margin >= CONFIDENT_MARGIN) {
+    return { pick: best.o, options: [] }
+  }
+  // Two, not four. If the top two are not enough to choose between, a third and
+  // fourth are not going to settle it — they just cost five more seconds.
+  return { pick: null, options: scored.slice(0, 2).map(s => s.o) }
+}
+
+// ---------------------------------------------------------------------------
+// Interrupting the speaker
+// ---------------------------------------------------------------------------
+
+/**
+ * What the player may say *while* the partner is talking.
+ *
+ * Barge-in is most of what separates a conversation from a kiosk, and the
+ * module comment in useVoiceControl is right that you cannot generally tell an
+ * echo from a person — the recogniser does not say where a phrase came from.
+ *
+ * But the general problem is not the one we have. We know the exact string being
+ * spoken. So a word that does **not** occur in it cannot have been echoed, and a
+ * word that does is thrown away. That makes a small vocabulary safe without
+ * making any claim about the acoustics, which is why it is a closed list of
+ * short words rather than the whole grammar.
+ */
+const BARGE_WORDS: { say: RegExp; intent: VoiceIntent }[] = [
+  { say: /^(stop|quiet|hush|enough|be quiet|shut up)$/, intent: { kind: 'hush' } },
+  { say: /^(next|skip|skip it|move on)$/, intent: { kind: 'skip' } },
+]
+
+/**
+ * An interruption, or null.
+ *
+ * `spoken` is the text currently being read out. A candidate whose words appear
+ * in it is dropped as an echo — conservative on purpose: losing one genuine
+ * "stop" costs a second of patience, while acting on an echo makes the interface
+ * look possessed.
+ */
+export function parseBarge(utterance: string, spoken: string): VoiceIntent | null {
+  const t = strip(utterance)
+  if (!t) return null
+  const said = new Set(tokens(spoken))
+  for (const { say, intent } of BARGE_WORDS) {
+    if (!say.test(t)) continue
+    if (tokens(t).some(w => said.has(w))) return null
+    return intent
+  }
+  return null
+}
+
+// ---------------------------------------------------------------------------
 // The commands, which are also the hint layer
 // ---------------------------------------------------------------------------
 
@@ -320,13 +493,23 @@ export interface VoiceCommand {
   /** Which on-screen control this is the voice form of. */
   control:
     | 'again' | 'selfReply' | 'finish' | 'switch' | 'claim' | 'compose' | 'branch'
+    | 'radio' | 'playback'
     | null
   /** Stages where it means anything. Empty means every stage. */
   stages?: VoiceStage[]
 }
 
 export const VOICE_COMMANDS: VoiceCommand[] = [
-  { kind: 'offer', say: 'play <anything>', aloud: 'play, then the name of something', does: 'Search for something to offer. For instance, play the song Idioteque.', control: 'compose' },
+  // First in the table because it is the fast path and the one worth learning.
+  // Radio generates two answers ahead of the audio, so the model's ten seconds
+  // sit behind the music instead of in front of you — which is the whole
+  // difference between playing this hands-free and operating it hands-free.
+  { kind: 'radio', say: 'keep going', does: 'Hand the chain over and let it run — it keeps playing and you talk over it. The fast way to listen.', control: 'radio' },
+  { kind: 'radio', say: 'my turn', does: 'Take the chain back off radio.', control: 'radio' },
+  { kind: 'offer', say: 'play <anything>', aloud: 'play, then the name of something', does: 'Search for something to offer, and take the obvious match. For instance, play the song Idioteque.', control: 'compose' },
+  { kind: 'skip', say: 'next', does: 'Skip what is playing. Works while it is talking, too.', control: 'playback' },
+  { kind: 'hush', say: 'stop', does: 'Stop it reading, without stopping listening. Works mid-sentence.', control: 'playback' },
+  { kind: 'more', say: 'go on', does: 'Read the rest of the last reading — landing a turn reads you the first line only.', control: null },
   { kind: 'choose', say: 'the second one', does: 'Take one of the results just read out.', control: 'compose', stages: ['choosing'] },
   { kind: 'medium', say: 'in art', does: 'Change the medium the next offering is searched in. Name any medium this session plays.', control: 'compose' },
   { kind: 'framing', say: 'framing <words>', aloud: 'framing, then the part you mean', does: 'Say which part of the offering is in play, like framing the last ten seconds.', control: 'compose' },
@@ -432,6 +615,34 @@ export function parseVoice(utterance: string, ctx: VoiceContext): VoiceIntent | 
   if (/^(say that again|repeat( that)?|read that again|what was that)$/.test(t)) {
     return { kind: 'repeat' }
   }
+  if (/^(go on|carry on|the rest|and|more|tell me more|finish the thought)$/.test(t)) {
+    return { kind: 'more' }
+  }
+
+  // ── Playback and radio, before the bare verbs ──
+  //
+  // These are the short utterances and they have to win. "stop" reaching
+  // `finish` and ending the game because the player wanted the reading to stop
+  // is the worst available misparse, so `finish` no longer answers to it at all.
+  if (/^(stop|quiet|hush|enough|be quiet|shut up|stop talking|stop reading)$/.test(t)) {
+    return { kind: 'hush' }
+  }
+  if (/^(next|skip|skip it|skip this|move on|next one)$/.test(t)) return { kind: 'skip' }
+  /*
+   * "keep going" and "carry on" mean radio, not one self-reply.
+   *
+   * They used to mean `selfReply`, which was the narrower reading of a phrase
+   * that plainly asks for an open run rather than one more turn — and the
+   * narrow reading is the slow one, since a single self-reply still makes you
+   * wait for the model with nothing playing. "you go" stays as the one-turn
+   * version for anyone who wants exactly that.
+   */
+  if (/^(radio|radio on|keep going|keep playing|take over|you drive|put it on|don'?t stop)$/.test(t)) {
+    return { kind: 'radio', on: true }
+  }
+  if (/^(radio off|my turn|stop radio|i'?ll go|give it back|let me)$/.test(t)) {
+    return { kind: 'radio', on: false }
+  }
 
   // ── Turn references ──
   // "go to turn 3" before the bare verbs, since "go back" shares a prefix.
@@ -449,10 +660,12 @@ export function parseVoice(utterance: string, ctx: VoiceContext): VoiceIntent | 
 
   // ── The bare verbs ──
   if (/^(again|answer it again|try again|another answer|one more)$/.test(t)) return { kind: 'again' }
-  if (/^(you go|your turn|answer yourself|let it answer( itself)?|carry on|keep going)$/.test(t)) {
+  if (/^(you go|your turn|answer yourself|let it answer( itself)?|one more turn)$/.test(t)) {
     return { kind: 'selfReply' }
   }
-  if (/^(finish|close it|close the game|end the game|that'?s it|i'?m done)$/.test(t)) {
+  // "that's it" is gone along with "stop": both are things people say to mean
+  // "be quiet", and closing the game is not an action to reach by near-miss.
+  if (/^(finish|close it|close the game|end the game|i'?m done|we'?re done)$/.test(t)) {
     return { kind: 'finish' }
   }
 
@@ -507,34 +720,92 @@ export function parseVoice(utterance: string, ctx: VoiceContext): VoiceIntent | 
 }
 
 /**
- * What to say back after acting, so the player knows without looking.
+ * What to say back after acting, or '' to answer with a tone instead.
  *
- * Here rather than in the hook because it is a pure function of the intent and
- * is the part worth testing: a hands-free interface that acts silently is
- * indistinguishable from one that did not hear you.
+ * Mostly '' now, and that is the point. Every one of these used to be a
+ * sentence, on the reasoning that acting silently is indistinguishable from not
+ * having heard — which is true, and is an argument for *acknowledging*, not for
+ * speaking. The microphone is closed while the partner talks, so a 1.5-second
+ * "Asking again." is 1.5 seconds the player cannot talk, spent telling them
+ * something they just said. A 120ms tone discharges the same duty.
+ *
+ * So speech survives in exactly three places, and each earns it:
+ *
+ *  - **Which value it heard.** "transformation" and "translation" are one
+ *    phoneme apart and pick different games; a tone cannot tell you which it
+ *    took. Same for a medium or a relation.
+ *  - **A question.** Claiming a rhyme has to ask why, or the player is waiting
+ *    for a prompt that never comes.
+ *  - **An answer.** A ruling is the whole point of making a claim.
+ *
+ * Everything else is visible on screen the moment it happens, and the player
+ * who is not looking does not need it narrated — they need the mic back.
  */
 export function confirmationFor(intent: VoiceIntent): string {
   switch (intent.kind) {
-    case 'again': return 'Asking again.'
-    case 'selfReply': return 'Letting it answer itself.'
-    case 'finish': return 'Closing the game.'
+    // Which value it heard, where mishearing it changes what happens.
     case 'switch': return `Next move as ${getGame(intent.gameId)?.name ?? intent.gameId}.`
     case 'medium': return `${getMedium(intent.medium)?.plural ?? intent.medium} it is.`
-    case 'offer': return `Looking for ${intent.query}.`
-    case 'choose': return 'Playing that one.'
-    case 'relation': return `Claiming ${RELATIONS[intent.relation].name}.`
-    case 'framing': return 'Noted.'
-    case 'predict': return 'Guess recorded.'
+    case 'relation': return `Claiming ${RELATIONS[intent.relation]?.name ?? intent.relation}.`
+    // A question, and the answer to one.
+    //
     // `turn` is the number the player said, which is the one the board prints —
     // the zero-based `turn_index` conversion belongs at the lookup, not here.
     // Echoing `turn + 1` was the first version and it confirmed the wrong turn.
     case 'rhymes': return `Turn ${intent.turn}. Why do they rhyme?`
     case 'because': return 'Ruling on that.'
-    case 'goTo': return `Standing on turn ${intent.turn}.`
-    case 'goBack': return 'Back to the head of the chain.'
-    case 'repeat': return ''
-    case 'help': return ''
-    case 'cancel': return 'Dropped.'
+    // Radio changes who is driving for an open-ended stretch, which is worth one
+    // short sentence — it is the one state you cannot infer from what you hear,
+    // because in both cases what you hear is music.
+    case 'radio': return intent.on ? 'Taking it from here.' : 'Back to you.'
+
+    // Tone only. The action is immediate, visible, or both.
+    case 'again':
+    case 'selfReply':
+    case 'finish':
+    case 'offer':
+    case 'choose':
+    case 'framing':
+    case 'predict':
+    case 'goTo':
+    case 'goBack':
+    case 'skip':
+    case 'hush':
+    case 'cancel':
+    // Spoken by the hook, which holds the text.
+    case 'repeat':
+    case 'more':
+    case 'help':
+      return ''
+  }
+}
+
+/**
+ * The opening of a reading, for speaking on landing.
+ *
+ * A reading runs one to six sentences depending on the breadth tuning, and six
+ * is twenty seconds of speech with the microphone shut. The first sentence is
+ * the claim and the rest is the argument for it, so the first sentence is what a
+ * listener needs to decide whether to ask for the rest — which "go on" does.
+ *
+ * Takes a second sentence when the first is very short, because a four-word
+ * opener followed by silence sounds like it was cut off.
+ */
+export function openingSentence(text: string): { opening: string; rest: string } {
+  const trimmed = text.trim()
+  if (!trimmed) return { opening: '', rest: '' }
+
+  const parts = trimmed.match(/[^.!?]+[.!?]+(\s|$)|[^.!?]+$/g)
+  if (!parts || parts.length <= 1) return { opening: trimmed, rest: '' }
+
+  // 30, not 60: "It answers the hurry with stillness." is 36 characters and a
+  // complete thought that stands on its own. The case this exists for is "It
+  // rhymes." — ten characters, where stopping sounds like being cut off.
+  let take = 1
+  if (parts[0].trim().length < 30 && parts.length > 2) take = 2
+  return {
+    opening: parts.slice(0, take).join('').trim(),
+    rest: parts.slice(take).join('').trim(),
   }
 }
 

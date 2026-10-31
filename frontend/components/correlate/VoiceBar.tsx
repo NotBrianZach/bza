@@ -70,22 +70,22 @@ export default function VoiceBar({
         </button>
 
         {/* Three states, and they have to be distinguishable without reading:
-            listening, talking back (mic closed), and working. A player who
-            cannot tell "it is thinking" from "it did not hear me" will repeat
-            themselves into a second turn. */}
+            listening, talking back, and working. A player who cannot tell "it
+            is thinking" from "it did not hear me" will repeat themselves into a
+            second turn. */}
         {voice.listening && (
           <span className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400 min-w-0">
             {voice.speaking ? (
-              /* A button, because the mic is closed while it talks — so "stop
-                 reading" is the one instruction that cannot be spoken, and the
-                 help takes most of a minute to get through. */
+              /* Says what to say, because being able to interrupt is worth
+                 nothing if nobody knows they can. The button is for when the
+                 room is too loud for the recogniser to catch it. */
               <button
                 onClick={voice.hush}
                 title="Stop reading and listen again"
                 className="flex items-center gap-1.5 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
               >
                 <Volume2 size={11} className="flex-shrink-0 text-emerald-600 dark:text-emerald-400" />
-                speaking — tap to stop
+                speaking — say &ldquo;stop&rdquo; or &ldquo;next&rdquo;
               </button>
             ) : voice.heard ? (
               <><Ear size={11} className="flex-shrink-0" /> <span className="truncate italic">{voice.heard}</span></>
