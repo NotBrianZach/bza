@@ -51,7 +51,7 @@ function LoginForm() {
 
       await auth.signIn(data.email, data.password)
       
-      // Redirect to dashboard or original destination
+      // Back to the home library, or wherever they were headed
       router.push(redirectTo)
       router.refresh()
     } catch (err: any) {

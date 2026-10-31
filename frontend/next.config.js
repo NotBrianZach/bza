@@ -56,6 +56,13 @@ const nextConfig = {
     // there is now exactly one source for this value and it cannot be overridden.
     BUILD_TIME: new Date().toISOString(),
   },
+  // /dashboard was the library page and is now the home page, which had grown a
+  // superset of it. The redirect stays because the route was public for the whole
+  // life of the app, so it is in bookmarks and in links people have shared — and
+  // a 404 there looks like the library is gone rather than moved.
+  async redirects() {
+    return [{ source: '/dashboard', destination: '/', permanent: true }]
+  },
   images: {
     remotePatterns: [
       {

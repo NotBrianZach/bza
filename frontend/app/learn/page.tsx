@@ -265,7 +265,7 @@ export default function LearnPage() {
     <main className='min-h-screen bg-gray-950 text-gray-100'>
       <header className='border-b border-gray-800 bg-gray-900'>
         <div className='mx-auto flex max-w-4xl items-center gap-3 px-4 py-3'>
-          <Link href='/dashboard' className='text-gray-400 hover:text-gray-200'>
+          <Link href='/' className='text-gray-400 hover:text-gray-200'>
             <ArrowLeft size={18} />
           </Link>
           <div className='min-w-0 flex-1'>

@@ -19,6 +19,7 @@ import { ThemeToggle } from '@/components/ThemeProvider'
 import ClassicLibrary from '@/components/ClassicLibrary'
 import MetaDrawer from '@/components/MetaDrawer'
 import ReadingStreaks from '@/components/ReadingStreaks'
+import DiveBackIn from '@/components/DiveBackIn'
 import HomeFeedSection from '@/components/HomeFeedSection'
 import CorrelationGamesSection from '@/components/correlate/CorrelationGamesSection'
 import MathPracticeSection from '@/components/concepts/MathPracticeSection'
@@ -26,7 +27,7 @@ import SuggestedFeedSection from '@/components/suggest/SuggestedFeedSection'
 import { getPinnedFeeds, savePinnedFeeds, PinnedFeed } from '@/lib/pinnedFeeds'
 import { AUTO_COVER_KEY } from '@/lib/queries/images'
 
-type SectionId = 'streaks' | 'revisit' | 'games' | 'practice' | 'books' | 'feeds' | 'suggested' | 'classics'
+type SectionId = 'streaks' | 'revisit' | 'diveback' | 'games' | 'practice' | 'books' | 'feeds' | 'suggested' | 'classics'
 
 /**
  * Read, Play, Learn — the three things this app does.
@@ -48,7 +49,6 @@ const GROUPS: {
   id: GroupId
   label: string
   blurb: string
-  href: string
   /** Shown when the band is open. Only real routes — /learn keeps its tab in
    *  local state with no searchParams, so there is no honest way to deep-link
    *  its review or concepts tab and this does not pretend otherwise. */
@@ -59,9 +59,10 @@ const GROUPS: {
   {
     id: 'read', label: 'Read',
     blurb: 'your library, your feeds, and whatever is due to revisit',
-    href: '/dashboard',
+    // No "Library" link: the library is this page, and the band renders it
+    // directly below. It used to point at /dashboard, which held an earlier,
+    // smaller version of what is here now.
     links: [
-      { label: 'Library', href: '/dashboard' },
       { label: 'Add a book', href: '/upload' },
       { label: 'Reader settings', href: '/settings' },
     ],
@@ -70,14 +71,12 @@ const GROUPS: {
   {
     id: 'play', label: 'Play',
     blurb: 'answer a song with a painting, a painting with a passage',
-    href: '/play',
     links: [{ label: 'All games', href: '/play' }],
     empty: 'No games in progress.',
   },
   {
     id: 'learn', label: 'Learn',
     blurb: 'work problems and have the answer checked, not string-compared',
-    href: '/learn',
     links: [
       { label: 'Practice', href: '/learn' },
       { label: 'Flashcards', href: '/quiz' },
@@ -88,6 +87,7 @@ const GROUPS: {
 const BAND_KEY = 'bza-home-band'
 const SECTION_GROUP: Record<SectionId, GroupId> = {
   revisit: 'read',
+  diveback: 'read',
   feeds: 'read',
   // Beside "My Feeds", not replacing it. A pinned feed is a bookmark; the
   // digest is a balanced selection out of everything those feeds published.
@@ -102,6 +102,14 @@ const SECTION_GROUP: Record<SectionId, GroupId> = {
 interface SectionConfig { id: SectionId; label: string; visible: boolean }
 const DEFAULT_SECTIONS: SectionConfig[] = [
   { id: 'revisit', label: 'Due for Revisit (SR)', visible: true },
+  // Came over from /dashboard when that route was retired — it was the only
+  // thing there this page did not already have, and deleting the route without
+  // it would have quietly removed the feature along with a live edge function.
+  //
+  // Settings has described this as living "on your home page" the whole time,
+  // under the AI prompts section. It never did, and /dashboard never passed the
+  // custom prompt through — so that setting has been inert. It works here.
+  { id: 'diveback', label: 'Dive Back In', visible: true },
   // Correlation games were a pill in the header, which is where features go to be
   // ignored. High on the page, but below the spaced-repetition prompt — that is the
   // one thing a returning reader came here to act on.
@@ -495,6 +503,20 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
 
           if (section.id === 'streaks') return isAuthenticated ? (
             <ReadingStreaks key="streaks" />
+          ) : null
+
+          // Signed-in only: the edge function it calls needs a session and the
+          // component returns null without one. `onUpload` goes to /upload
+          // rather than opening a modal — /dashboard had an inline uploader and
+          // this page does not, so the link is the honest equivalent.
+          if (section.id === 'diveback') return isAuthenticated ? (
+            <div key="diveback" className="mb-8">
+              <DiveBackIn
+                hasBooks={books.length > 0}
+                onUpload={() => router.push('/upload')}
+                customPrompt={customPrompts['dive-in']}
+              />
+            </div>
           ) : null
 
           // Shown to signed-out visitors too: the games need no account to read

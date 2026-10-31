@@ -78,7 +78,7 @@ export default function SignupPage() {
           <CheckCircle className="mx-auto text-green-600 mb-4" size={48} />
           <h2 className="text-2xl font-bold mb-2">Account Created!</h2>
           <p className="text-gray-600 dark:text-gray-300 mb-4">
-            Welcome to BZA. Redirecting you to your dashboard...
+            Welcome to BZA. Taking you to your library...
           </p>
           <div className="spinner mx-auto"></div>
         </div>
