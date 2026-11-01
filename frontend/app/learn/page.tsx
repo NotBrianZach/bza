@@ -7,6 +7,7 @@ import { ThemeToggle } from '@/components/ThemeProvider'
 import { authedFetch } from '@/lib/authedFetch'
 import { getOntology, ONTOLOGIES } from '@/lib/concepts/ontology'
 import { AREAS, MATHEMATICS, atlasCoverage } from '@/lib/concepts/atlas'
+import { conceptById } from '@/lib/concepts/registry'
 import { TRAVERSAL_GAME } from '@/lib/concepts/traversal'
 import { MASTERY_FLOOR } from '@/lib/concepts/scheduling'
 import ConceptBrowser from '@/components/concepts/ConceptBrowser'
@@ -126,6 +127,22 @@ interface SessionResponse {
 
 export default function LearnPage() {
   const [tab, setTab] = useState<Tab>('practice')
+  /**
+   * A concept named in the URL, so /play can link straight at one.
+   *
+   * Read from `window.location.search` in an effect rather than through
+   * `useSearchParams`. Two reasons, and the second is the one that bites: this
+   * page is statically prerendered, and `useSearchParams` in a prerendered
+   * client component has to sit inside a Suspense boundary or the build
+   * complains — and the failure mode for getting that wrong in this codebase is
+   * a route that builds clean, passes every test, and 500s on every request.
+   * An effect runs only in the browser, where the query string is simply there.
+   *
+   * Nothing is pushed back into the URL as the learner clicks around. The link
+   * is an entry point, not a synchronised view: writing the tab back would make
+   * the back button walk tabs, which is not what anyone means by it here.
+   */
+  const [linkedConcept, setLinkedConcept] = useState<string | null>(null)
   const [state, setState] = useState<SessionResponse | null>(null)
   const [loading, setLoading] = useState(true)
   /**
@@ -261,6 +278,25 @@ export default function LearnPage() {
 
   useEffect(() => { load() }, [load])
 
+  /*
+   * The link from /play: ?tab=concepts&concept=<id>.
+   *
+   * Once, on mount. The tab is only honoured when it names a real one, and the
+   * concept only when the atlas knows it — a stale link from an old chain
+   * should land on a working page rather than an empty panel, since the
+   * mathematics in a recorded game outlives any particular shape of this
+   * registry.
+   */
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search)
+    const wanted = q.get('tab')
+    if (wanted === 'practice' || wanted === 'concepts' || wanted === 'review' || wanted === 'tools') {
+      setTab(wanted)
+    }
+    const concept = q.get('concept')
+    if (concept && conceptById(MATHEMATICS, concept)) setLinkedConcept(concept)
+  }, [])
+
   return (
     <main className='min-h-screen bg-gray-950 text-gray-100'>
       <header className='border-b border-gray-800 bg-gray-900'>
@@ -329,6 +365,55 @@ export default function LearnPage() {
             <Loader2 size={14} className='animate-spin' /> Loading…
           </p>
         )}
+
+        {/* Arriving from a theorem in /play.
+            Stated rather than silently acted on, because what the learner wants
+            here and what the scheduler wants are not the same thing: the
+            practice set is whatever is introducible now, and a concept named in
+            a link is usually behind a prerequisite. Claiming is the one honest
+            way through — it asserts you already know the thing — and it is the
+            learner's assertion to make, not a side effect of following a link.
+
+            `claim` is the same callback the graph uses, so this adds an entry
+            point and no new mechanism. */}
+        {linkedConcept && (() => {
+          const c = conceptById(MATHEMATICS, linkedConcept)
+          if (!c) return null
+          const teachable = c.knowledgePoints.length > 0
+          return (
+            <div className='rounded-lg border border-sky-900/50 bg-sky-950/30 px-3 py-2 text-[12px] text-sky-100'>
+              <p className='flex flex-wrap items-center gap-x-2 gap-y-1'>
+                <span className='text-sky-300'>from a theorem in play:</span>
+                <strong>{c.name}</strong>
+                {teachable ? (
+                  <>
+                    <button
+                      onClick={() => claim(c.id, c.name)}
+                      disabled={claiming === c.id}
+                      className='rounded-full border border-sky-700 px-2 py-0.5 text-[11px] hover:bg-sky-900/50 disabled:opacity-50'
+                    >
+                      {claiming === c.id ? 'opening…' : 'open it for practice'}
+                    </button>
+                    <span className='text-sky-400/70'>
+                      — if it is already open, it is in the set below
+                    </span>
+                  </>
+                ) : (
+                  <span className='text-sky-400/70'>
+                    is on the map but nothing is authored for it, so there are no problems to
+                    do. The Concepts tab shows where it sits.
+                  </span>
+                )}
+              </p>
+              <button
+                onClick={() => setLinkedConcept(null)}
+                className='mt-1 text-[11px] text-sky-400/70 underline hover:text-sky-200'
+              >
+                dismiss
+              </button>
+            </div>
+          )
+        })()}
 
         {state?.error && (
           <p className='rounded border border-rose-900 bg-rose-950/40 px-3 py-2 text-sm text-rose-200'>
@@ -531,7 +616,20 @@ export default function LearnPage() {
                 concept's full text, which is right for nine and unreadable for
                 291 — and the 276 mapped ones have a one-line description and
                 nothing else, so there would be nothing to read. */}
-            <ConceptBrowser ontology={subjectOntology} />
+            {/* The browser shows one subject, and a link from /play can name a
+                concept from anywhere in the atlas — most of which no subject
+                contains. So the linked concept is only handed over when this
+                subject actually holds it; otherwise the atlas graph above is
+                what the learner came to see, and claiming to have opened
+                something that is not in the list would be a lie. */}
+            <ConceptBrowser
+              ontology={subjectOntology}
+              initialOpen={
+                linkedConcept && conceptById(subjectOntology, linkedConcept)
+                  ? linkedConcept
+                  : null
+              }
+            />
             {claimNote && (
               <p className='rounded border border-sky-900/50 bg-sky-950/30 px-2 py-1.5 text-[11px] text-sky-200'>
                 {claimNote}

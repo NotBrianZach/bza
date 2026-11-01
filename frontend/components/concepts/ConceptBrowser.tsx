@@ -29,9 +29,22 @@ import type { ConceptOntology } from '@/lib/concepts/types'
  *    rather than refusing to render, because an ontology is a hand-authored
  *    document and these are editorial faults, not crashes.
  */
-export default function ConceptBrowser({ ontology }: { ontology: ConceptOntology }) {
+export default function ConceptBrowser({
+  ontology,
+  /**
+   * A concept to open on arrival, from a `?concept=` link.
+   *
+   * Only the initial value — the learner can close it and open others, and
+   * forcing it back open on every render would make the link a cage rather than
+   * a destination.
+   */
+  initialOpen,
+}: {
+  ontology: ConceptOntology
+  initialOpen?: string | null
+}) {
   const [query, setQuery] = useState('')
-  const [open, setOpen] = useState<string | null>(null)
+  const [open, setOpen] = useState<string | null>(initialOpen ?? null)
   const [showCandidates, setShowCandidates] = useState(false)
 
   const problems = useMemo(() => ontologyProblems(ontology), [ontology])

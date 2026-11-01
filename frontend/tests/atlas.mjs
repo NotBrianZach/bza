@@ -42,6 +42,7 @@ function build() {
     join('lib', 'concepts', 'atlas.ts'),
     join('lib', 'concepts', 'ontology.ts'),
     join('lib', 'concepts', 'registry.ts'),
+    join('lib', 'concepts', 'offerings.ts'),
   ]
   try {
     execFileSync(process.execPath, [
@@ -76,6 +77,8 @@ const {
   teachingOrder, claimableChainFor, dependentsOf, allPrerequisitesOf,
 } = registry
 const { ONTOLOGIES } = ontology
+const offerings = req(join(outDir, 'concepts', 'offerings.js'))
+const { conceptsInOffering, relatedConcepts, conceptHref } = offerings
 
 let pass = 0
 const failures = []
@@ -514,6 +517,96 @@ console.log('\nper area')
 for (const row of cov.byArea.sort((a, b) => b.concepts - a.concepts)) {
   console.log(`  ${String(row.concepts).padStart(3)}  ${String(row.teachable).padStart(2)} written  ${row.id}`)
 }
+
+// ---------------------------------------------------------------------------
+/*
+ * Theorems in play, linked to the graph — lib/concepts/offerings.ts.
+ *
+ * The thing being guarded is not "does it find matches" but "does it only claim
+ * what it can establish". A trail that confidently mislabels teaches the learner
+ * that the graph is meaningless, which is a worse outcome than an empty trail.
+ */
+// ---------------------------------------------------------------------------
+
+group('a theorem in play, placed in the graph')
+
+const thm = (title, body = '') => ({
+  medium: 'theorem', id: title.toLowerCase().replace(/\s+/g, '-'), title,
+  attribution: null, framing: null, origin: 'catalogued', sourceUrl: null, meta: {},
+  perceptible: { kind: 'text', body },
+})
+
+t('a quadratic formula lands on factoring a quadratic',
+  conceptsInOffering(MATHEMATICS, thm('Quadratic formula')).some(c => /factoring/i.test(c.name)))
+t('a logarithm lands on what a logarithm is',
+  conceptsInOffering(MATHEMATICS, thm('Logarithm')).some(c => /logarithm/i.test(c.name)))
+t('matrix multiplication lands on the matrix concepts',
+  conceptsInOffering(MATHEMATICS, thm('Matrix multiplication')).length >= 1)
+t('a non-theorem medium is never placed', (() => {
+  const song = { ...thm('Quadratic formula'), medium: 'music' }
+  return conceptsInOffering(MATHEMATICS, song).length === 0
+})())
+t('a theorem the atlas has no checked concept for places nothing',
+  conceptsInOffering(MATHEMATICS, thm('Pythagorean theorem')).length === 0)
+t('an untitled offering places nothing rather than matching everything',
+  conceptsInOffering(MATHEMATICS, thm('')).length === 0)
+
+group('the title is the subject, and the extract is not')
+/*
+ * Measured, not assumed. The scope patterns are generous on purpose — the right
+ * trade when filtering a search, the wrong one when labelling a theorem, where a
+ * false positive is a confident claim about what something is ABOUT.
+ *
+ * Each of these is a real leak that matching the whole text produced.
+ */
+t('"Derivative" is not about "what a function is" because its extract says function',
+  conceptsInOffering(MATHEMATICS, thm(
+    'Derivative',
+    'The derivative of a function of a real variable measures the sensitivity to change of the function value.',
+  )).length === 0)
+t('"Eigenvalues and eigenvectors" is not about factoring because its extract says factor',
+  conceptsInOffering(MATHEMATICS, thm(
+    'Eigenvalues and eigenvectors',
+    'An eigenvector of a linear transformation is a nonzero vector that changes by a scalar factor.',
+  )).length === 0)
+t('and a long extract cannot add matches to a title that has them', (() => {
+  const bare = conceptsInOffering(MATHEMATICS, thm('Logarithm'))
+  const verbose = conceptsInOffering(MATHEMATICS, thm(
+    'Logarithm',
+    'In mathematics, the logarithm is the inverse function to exponentiation, related to polynomials, ' +
+    'vectors, matrices, probability, factoring and the Cartesian plane.',
+  ))
+  return bare.length === verbose.length
+})())
+
+group('related concepts: one hop, labelled, and honest about problems')
+
+const trail = relatedConcepts(MATHEMATICS, thm('Quadratic formula'))
+t('a matched theorem has a trail', trail.length > 0)
+t('the matched concept comes first and is labelled "about"', trail[0]?.relation === 'about')
+t('every entry names a real concept in the atlas',
+  trail.every(c => MATHEMATICS.concepts.some(x => x.id === c.id)))
+t('nothing is listed twice', new Set(trail.map(c => c.id)).size === trail.length)
+t('every relation is one of the four kinds',
+  trail.every(c => ['about', 'rests on', 'leads to', 'contained in'].includes(c.relation)))
+t('the trail is capped', relatedConcepts(MATHEMATICS, thm('Quadratic formula'), 3).length <= 3)
+t('an unmatched theorem has no trail',
+  relatedConcepts(MATHEMATICS, thm('Pythagorean theorem')).length === 0)
+/*
+ * The rule this file exists for. The atlas is mostly mapped and unwritten, so a
+ * link promising problems where none are authored would send the learner to an
+ * empty panel and read as the practice engine being broken.
+ */
+t('teachable agrees with isTeachable for every entry',
+  trail.every(c => c.teachable === isTeachable(MATHEMATICS, c.id)))
+t('the trail does contain at least one unteachable concept, so the split is live',
+  relatedConcepts(MATHEMATICS, thm('Quadratic formula'), 20).some(c => !c.teachable))
+t('a teachable concept links to practice',
+  conceptHref({ id: 'x', teachable: true }).includes('tab=practice'))
+t('an unteachable one links to the graph instead, where there is something to see',
+  conceptHref({ id: 'x', teachable: false }).includes('tab=concepts'))
+t('the id is encoded, since it reaches the URL',
+  conceptHref({ id: 'a b', teachable: true }).includes('a%20b'))
 
 rmSync(outDir, { recursive: true, force: true })
 console.log(`\n${pass} passed, ${failures.length} failed`)

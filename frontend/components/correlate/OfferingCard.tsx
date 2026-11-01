@@ -10,6 +10,7 @@ import { authedFetch } from '@/lib/authedFetch'
 import { getMedium } from '@/lib/correlate/media'
 import type { Offering } from '@/lib/correlate/types'
 import { audioUrl, type OfferingPlayer } from './useOfferingPlayer'
+import ConceptTrail from './ConceptTrail'
 
 const ICONS: Record<string, any> = {
   Music2, Frame, BookOpen, Clapperboard, Sigma, Atom, Leaf, Mountain,
@@ -221,6 +222,14 @@ export default function OfferingCard({
             : 'described, not asked of you'}
         </p>
       )}
+
+      {/* Not in `compact`: the chain renders dozens of cards at once and a
+          concept list on each would bury the chain it is annotating. The
+          expanded card is where you have stopped to look at one thing, which is
+          the moment the question "where does this sit" is worth answering.
+          `ConceptTrail` renders nothing for a non-theorem, so the medium test
+          lives there rather than being repeated here. */}
+      {!compact && <ConceptTrail offering={offering} />}
     </div>
   )
 }
