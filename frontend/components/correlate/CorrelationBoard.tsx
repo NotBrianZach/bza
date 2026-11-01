@@ -10,14 +10,15 @@ import { authedFetch } from '@/lib/authedFetch'
 import { track } from '@/lib/analytics'
 import { correlateQueries } from '@/lib/queries/correlate'
 import { ACCENT_CLASSES, getGame, retiredGameName, wantsPrediction } from '@/lib/correlate/games'
-import { getMedium, isComposed } from '@/lib/correlate/media'
+import { getMedium, isComposed, replyMediaFor } from '@/lib/correlate/media'
 import { RELATIONS, resolveRelations, spentRelations } from '@/lib/correlate/relations'
 import {
   buildGraph, childrenOf, defaultParent, offeringOnTable, pathTo, relationsAlong, siblingsOf,
   subtreeSize, worldFor, type TurnGraph,
 } from '@/lib/correlate/graph'
 import {
-  continuationOf, isStarting, normalizeTuning, radioOf, startingTuning, type Tuning,
+  continuationOf, isStarting, mutedMedia, normalizeTuning, radioOf, startingTuning,
+  type Tuning,
 } from '@/lib/correlate/tuning'
 import {
   isSelfReply, radioRefusal, selfRepliesLeft, selfReplyRefusal, RADIO_HINT, RADIO_LABEL,
@@ -380,6 +381,9 @@ export default function CorrelationBoard({
    * the one that binds; a disagreement here would show a relation the server
    * then rejects.
    */
+  /** Media the partner can answer in, which is what `replyIn` may name. */
+  const replyable = useMemo(() => replyMediaFor(media), [media])
+
   const relations: RelationId[] = useMemo(
     () => (nextBranch.mode === session.mode && Array.isArray(session.relations) && session.relations.length > 0
       ? session.relations
@@ -570,8 +574,14 @@ export default function CorrelationBoard({
   const continueAlone = useCallback(async (
     parentId: string,
     asked: 'manual' | 'run' | 'radio',
+    /** One turn, in a medium the player named. See `continueOnce`. */
+    replyIn?: MediumId,
   ) => {
-    const data = await postTurn({ parentTurnId: parentId, selfReply: true })
+    const data = await postTurn({
+      parentTurnId: parentId,
+      selfReply: true,
+      ...(replyIn ? { replyIn } : {}),
+    })
     // Focus follows this answer only if the player is still standing where it was
     // asked from. True by construction for a manual nudge and for each step of a
     // run; false when they moved while it was in flight, which radio makes ordinary
@@ -583,6 +593,10 @@ export default function CorrelationBoard({
       // happen on a branch that has already switched.
       game: data.mode ?? branch.mode,
       medium: data.turn?.reply_offering?.medium,
+      // Both, so the gap is visible: the floor can step over a named medium to
+      // keep the chain alive, and "asked for art, got music" is the thing worth
+      // being able to count.
+      askedFor: replyIn,
       relation: data.turn?.relation,
       turn: data.turn?.turn_index,
       depth: data.selfReplyDepth,
@@ -642,7 +656,17 @@ export default function CorrelationBoard({
   }, [lastMove, postTurn, absorb, branch.mode])
 
   /** The one-click version, with its own error so a failed run reads as one. */
-  const continueOnce = useCallback(async () => {
+  /**
+   * Let the partner answer its own offering, optionally in a medium you name.
+   *
+   * `replyIn` is the one handle this move otherwise lacks. Every other turn
+   * states a preference by *being* a medium — you answer a song with a painting
+   * — and a self-reply sends no move, so without naming one the only lever is
+   * the session tuning, which is a standing policy rather than a request about
+   * this turn. "Let it answer itself, in art" is a sentence the interface could
+   * not say until now.
+   */
+  const continueOnce = useCallback(async (replyIn?: MediumId) => {
     if (!focusId) return
     // Dropped rather than queued when a radio answer is already in flight: the
     // button means "answer what is on the table", and what is on the table is about
@@ -654,7 +678,7 @@ export default function CorrelationBoard({
     setNotice('')
     setProblems([])
     try {
-      await continueAlone(focusId, 'manual')
+      await continueAlone(focusId, 'manual', replyIn)
     } catch (e: any) {
       setError(e?.message ?? 'It could not take that turn')
     } finally {
@@ -1180,10 +1204,17 @@ export default function CorrelationBoard({
         await answerAgain()
         return null
 
-      case 'selfReply':
+      case 'selfReply': {
         if (!focusId) return 'There is nothing on the table for it to answer.'
-        await continueOnce()
+        // Refused rather than quietly dropped to an open turn: the player named
+        // a medium, and answering in a different one while sounding like it
+        // worked is the failure this codebase calls a honesty guard elsewhere.
+        if (intent.medium && !replyable.includes(intent.medium)) {
+          return `It cannot answer in ${getMedium(intent.medium)?.plural ?? intent.medium} in this game.`
+        }
+        await continueOnce(intent.medium)
         return null
+      }
 
       case 'finish':
         await finish()
@@ -1382,6 +1413,7 @@ export default function CorrelationBoard({
     focusId, focusTurn, path, graph, media, voiceMedium,
     voiceFraming, voiceRelation, claimFrom, claimTo, describeResults,
     tuning, changeTuning, radioBlocked, player, branch.mode, setRadioStopped,
+    replyable,
   ])
 
   const voice = useVoiceControl(voiceContext, {
@@ -2141,7 +2173,11 @@ export default function CorrelationBoard({
                       )}
                       {canAnswerAgain && <VoiceHint phrase={voicePhrase('again')} />}
                       <button
-                        onClick={continueOnce}
+                        // Wrapped: the callback now takes an optional medium,
+                        // and a click event handed straight in would arrive as
+                        // one — which typechecks nowhere useful and would post
+                        // a React event as `replyIn`.
+                        onClick={() => { void continueOnce() }}
                         disabled={pending}
                         className="flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1.5 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition-colors disabled:opacity-50"
                       >
@@ -2157,6 +2193,43 @@ export default function CorrelationBoard({
                             to count and the button is simply still there. */}
                         {Number.isFinite(runsLeft) ? ` ${runsLeft} more in a row.` : ''}
                       </p>
+                    </div>
+                  )}
+
+                  {/* Answer itself, in a medium you name.
+                      One click each rather than a selector plus a go button:
+                      naming the medium IS the whole instruction, so asking for
+                      a second click to confirm it would be asking twice.
+
+                      Every medium the game can answer in, including ones the
+                      tuning has muted — naming one is the player lifting their
+                      own mute for a turn, which is a different thing from the
+                      engine stepping over it, and refusing here on the strength
+                      of a long-run average would be the arithmetic overruling
+                      the person it is for. */}
+                  {!noContinuation && replyable.length > 1 && (
+                    <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                      <span className="text-[10px] text-gray-400 dark:text-gray-500">
+                        or have it answer in
+                      </span>
+                      {replyable.map(m => (
+                        <button
+                          key={m}
+                          onClick={() => { void continueOnce(m) }}
+                          disabled={pending}
+                          title={mutedMedia(tuning, media).includes(m)
+                            ? `${getMedium(m)?.plural} is muted in your tuning — asking for it here lifts that for this one turn`
+                            : `Let it answer itself, in ${getMedium(m)?.plural}`}
+                          className={`text-[10px] px-2 py-1 rounded-full transition-colors disabled:opacity-40 ${
+                            mutedMedia(tuning, media).includes(m)
+                              ? 'bg-gray-50 text-gray-400 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-500 dark:hover:bg-gray-700 italic'
+                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+                          }`}
+                        >
+                          {getMedium(m)?.plural ?? m}
+                        </button>
+                      ))}
+                      <VoiceHint phrase={voice.listening ? 'you go, in art' : null} />
                     </div>
                   )}
                 </div>

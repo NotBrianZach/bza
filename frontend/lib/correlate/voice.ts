@@ -87,8 +87,14 @@ export type VoiceStage = 'idle' | 'choosing' | 'claiming'
 export type VoiceIntent =
   /** Ask for a different answer to the move just made. */
   | { kind: 'again' }
-  /** Stand back and let the partner answer its own offering. */
-  | { kind: 'selfReply' }
+  /**
+   * Stand back and let the partner answer its own offering.
+   *
+   * `medium` narrows that one turn — "you go, in art". It is the only handle
+   * this move has: every other turn states a preference by *being* a medium,
+   * and a self-reply sends no move to carry one.
+   */
+  | { kind: 'selfReply'; medium?: MediumId }
   /** Close the game and hear what it turned out to be. */
   | { kind: 'finish' }
   /** Arm a switch into another game. */
@@ -565,6 +571,10 @@ export const VOICE_COMMANDS: VoiceCommand[] = [
   { kind: 'predict', say: 'predict <anything>', aloud: 'predict, then your guess', does: 'Guess what your move will draw back.', control: 'compose' },
   { kind: 'again', say: 'again', does: 'Get a second answer to the move you just made. Both are kept.', control: 'again' },
   { kind: 'selfReply', say: 'you go', does: 'Stand back and let it answer its own offering.', control: 'selfReply' },
+  // No `aloud`: unlike "play <anything>", this phrase is literally sayable as
+  // written, so the invariant that `aloud` exists exactly where a placeholder
+  // does still holds — and the test that checks it caught this.
+  { kind: 'selfReply', say: 'you go, in art', does: 'The same, but answering in a medium you name — for this one turn, even one you have muted.', control: 'selfReply' },
   { kind: 'switch', say: 'switch to <game>', aloud: 'switch to, then a game name', does: 'Play the next move as a different game.', control: 'switch' },
   { kind: 'rhymes', say: 'this rhymes with turn 4', does: 'Claim that two exchanges rhyme. Then say why, and it is ruled on.', control: 'claim' },
   { kind: 'because', say: 'because <reason>', aloud: 'because, then your reason', does: 'The reason for the rhyme you just claimed.', control: 'claim', stages: ['claiming'] },
@@ -764,8 +774,22 @@ export function parseVoice(utterance: string, ctx: VoiceContext): VoiceIntent | 
 
   // ── The bare verbs ──
   if (/^(again|answer it again|try again|another answer|one more)$/.test(t)) return { kind: 'again' }
-  if (/^(you go|your turn|answer yourself|let it answer( itself)?|one more turn)$/.test(t)) {
-    return { kind: 'selfReply' }
+  /*
+   * Self-reply, optionally naming the medium for that one turn.
+   *
+   * The trailing phrase is required to *resolve* to a medium rather than being
+   * ignored. "you go in art" is a narrowed turn and "you go" is an open one, but
+   * "you go and get the door" is somebody talking to the room — and with the
+   * microphone open, silently treating the tail as noise would take a turn on
+   * the strength of the first two words.
+   */
+  const selfReply = t.match(/^(?:you go|your turn|answer yourself|let it answer(?: itself)?|one more turn)\b(.*)$/)
+  if (selfReply) {
+    const tail = selfReply[1].replace(/^[\s,]*(?:with|in|as|using)?\s*/, '').trim()
+    if (!tail) return { kind: 'selfReply' }
+    const { medium, rest } = extractMedium(`in ${tail}`, ctx.media)
+    if (medium && rest.length <= 2) return { kind: 'selfReply', medium }
+    return null
   }
   // "that's it" is gone along with "stop": both are things people say to mean
   // "be quiet", and closing the game is not an action to reach by near-miss.
@@ -863,9 +887,16 @@ export function confirmationFor(intent: VoiceIntent): string {
     // because in both cases what you hear is music.
     case 'radio': return intent.on ? 'Taking it from here.' : 'Back to you.'
 
+    // Named a medium, so it names it back — same reason as `medium` above: a
+    // tone cannot tell you which one it heard, and this one is spent on a turn
+    // rather than held as a setting you can see and correct.
+    case 'selfReply':
+      return intent.medium
+        ? `${getMedium(intent.medium)?.plural ?? intent.medium}, then.`
+        : ''
+
     // Tone only. The action is immediate, visible, or both.
     case 'again':
-    case 'selfReply':
     case 'finish':
     case 'offer':
     case 'choose':

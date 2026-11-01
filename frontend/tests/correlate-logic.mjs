@@ -3789,6 +3789,33 @@ t('radio says who is driving, the one state you cannot hear',
 t('an unknown relation id does not crash the confirmation',
   typeof confirmationFor({ kind: 'relation', relation: 'not_a_relation' }) === 'string')
 
+group('voice — letting it answer itself, in a medium you name')
+/*
+ * The one move with no other handle on it. Every other turn states a preference
+ * by *being* a medium — you answer a song with a painting — and a self-reply
+ * sends no move, so before this the only lever was the session tuning, which is
+ * a standing policy rather than a request about this turn.
+ */
+t('"you go" is still an open turn',
+  pv('you go')?.kind === 'selfReply' && pv('you go')?.medium === undefined)
+t('"you go in art" names the medium', pv('you go in art')?.medium === 'artwork')
+t('a comma survives the recogniser', pv('you go, in art')?.medium === 'artwork')
+t('"you go with a song"', pv('you go with a song')?.medium === 'music')
+t('"your turn, as a stretch"', pv('your turn, as a stretch')?.medium === 'stretch')
+t('"let it answer itself in art"', pv('let it answer itself in art')?.medium === 'artwork')
+/*
+ * The tail has to resolve to a medium rather than being ignored. With the
+ * microphone open, treating it as noise would take a turn on the strength of
+ * the first two words of somebody talking to the room.
+ */
+t('"you go and get the door" is not a turn', pv('you go and get the door') === null)
+t('a medium this session does not play is not a turn',
+  pv('you go in art', { media: ['music', 'passage'] }) === null)
+t('it names the medium back, because a tone cannot',
+  confirmationFor({ kind: 'selfReply', medium: 'artwork' }).length > 0)
+t('and says nothing for an open turn, which needs no value confirmed',
+  confirmationFor({ kind: 'selfReply' }) === '')
+
 group('voice — answering a numbered choice')
 /*
  * Reported: having to say the whole song title back instead of just "one".

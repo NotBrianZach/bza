@@ -307,6 +307,7 @@ export async function POST(req: NextRequest) {
     tuning?: unknown
     selfReply?: boolean
     switchTo?: string
+    replyIn?: MediumId
   } | null]
 
   if (!userId) return err('Not authenticated', 401)
@@ -635,8 +636,11 @@ export async function POST(req: NextRequest) {
     JSON.stringify(tuning) !== JSON.stringify(normalizeTuning(session.tuning, media))
 
   const muted = mutedMedia(tuning, media)
-  // Weighted and muted-free, for the stages where the server picks the medium.
-  const answerMedia = weightedReplyMedia(tuning, replyMediaFor(media))
+  // `answerMedia` used to sit here, described as being "for the stages where the
+  // server picks the medium". Nothing read it, and the description was wrong in
+  // a way worth recording: the salvage stages narrow `answerIn`, and the floor
+  // deliberately uses `media` so it can step over a mute. Removed while adding
+  // `replyIn` below, since a dead weighting next to a live one is a trap.
 
   /**
    * The proportions filter, and the whole reason a share means anything.
@@ -652,8 +656,43 @@ export async function POST(req: NextRequest) {
    * shares, and never empty — see owedMedia.
    */
   const replyHistory = replyMediaAlong(path)
-  const answerIn = owedMedia(tuning, replyMediaFor(media), replyHistory)
-  const due = dueMedium(tuning, replyHistory, media)
+
+  /**
+   * One turn, in a medium the player named. Narrows the reply enum to it.
+   *
+   * Asked for on the self-reply path above all: standing back and letting the
+   * partner answer its own offering is the one move with no other handle on it.
+   * Every other turn expresses a preference by *being* a medium — you answer a
+   * song with a painting — and a self-reply has no move to carry that, so
+   * without this the only lever is the session-wide tuning, which is a standing
+   * policy rather than a request about this turn.
+   *
+   * It outranks the share arithmetic and the mute, both deliberately. A share is
+   * a statement about proportions over a whole game and this is a statement
+   * about one turn; asking and being refused on the grounds of a long-run
+   * average would be the arithmetic overruling the person it is for. The mute is
+   * a prohibition, but it is the player's own prohibition and they have just
+   * lifted it by name — which is a different thing from the engine stepping over
+   * it to keep a chain alive, as stage 4 does.
+   *
+   * Validated against what the session can reply in rather than silently
+   * ignored: a request the engine cannot honour should say so, not look honoured.
+   */
+  const replyIn = body?.replyIn
+  const replyable = replyMediaFor(media)
+  if (replyIn !== undefined && !replyable.includes(replyIn)) {
+    return err(
+      `This game cannot answer in ${getMedium(replyIn)?.plural ?? replyIn}. ` +
+      `It can answer in: ${replyable.join(', ')}.`,
+      400,
+    )
+  }
+
+  const answerIn = replyIn ? [replyIn] : owedMedia(tuning, replyable, replyHistory)
+  // Null when a medium was asked for: `due` is the nudge that says which medium
+  // the proportions owe next, and naming one has already settled that question.
+  // Leaving it in would hand the interpreter two different answers to it.
+  const due = replyIn ? null : dueMedium(tuning, replyHistory, media)
 
   // --- 3. The mechanical half of legality ----------------------------------
   // Translation and embodiment only mean anything across a change of medium.
