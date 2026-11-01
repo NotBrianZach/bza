@@ -93,6 +93,29 @@ export interface MapNode {
   confusedWith?: { id: string; because: string }[]
   /** Search terms for the scope hint. Defaults to the name. */
   terms?: string
+  /**
+   * A hand-written pattern that decides whether a theorem is about this node.
+   *
+   * Optional, and the optionality is the whole design. `MAPPED_CAVEAT` below
+   * argues that a mapped node must not get a *generated* pattern — "a regex
+   * nobody wrote deliberately, presented as a check" — and that argument is
+   * untouched: this field is for a pattern somebody wrote on purpose, which is
+   * the thing it was contrasting against.
+   *
+   * It is orthogonal to having material. A node with a pattern and no
+   * knowledge points can be recognised but not practised, and those are
+   * genuinely different facts: `fidelity` is about whether anything can decide
+   * that a statement is about this concept, `isTeachable` is about whether
+   * there are problems. Conflating them is what would make a link promise an
+   * empty panel.
+   *
+   * Tested against the offering's TITLE alone — see `conceptsInOffering` for the
+   * measurements behind that. So write it to match how an encyclopaedia names
+   * the thing, not how prose about it reads: `/\bbayes/i` and not
+   * `/probability/i`, because the second matches forty articles that merely
+   * mention probability.
+   */
+  match?: RegExp
 }
 
 export interface MapArea {
@@ -134,7 +157,23 @@ const MAPPED_CAVEAT =
   'order, and nothing is written for it yet — so there are no problems to practise, ' +
   'nothing checks that a statement is really about it, and it gates nothing.'
 
+/**
+ * For a node that has an authored pattern but still no material.
+ *
+ * A separate sentence rather than a tweak to the one above, because the one
+ * above makes a claim that has stopped being true: "nothing checks that a
+ * statement is really about it". Printing that beside a concept whose pattern
+ * just matched a theorem would be the registry contradicting itself in front of
+ * the reader.
+ */
+const RECOGNISED_CAVEAT =
+  'Recognised but unwritten. A pattern decides whether a statement is about this concept, ' +
+  'so it can be found and placed — but no problems are authored for it yet, so there is ' +
+  'nothing to practise and it gates nothing.'
+
 function expandNode(area: MapArea, node: MapNode): Concept {
+  // Authored, never derived. See `MapNode.match`.
+  const checked = !!node.match
   return {
     id: node.id,
     name: node.name,
@@ -143,10 +182,13 @@ function expandNode(area: MapArea, node: MapNode): Concept {
       id: node.id,
       label: node.name,
       hint: node.terms ?? node.name.toLowerCase(),
-      // No `match`: see MAPPED_CAVEAT.
+      ...(node.match ? { match: node.match } : {}),
     },
-    fidelity: 'guided',
-    caveat: MAPPED_CAVEAT,
+    fidelity: checked ? 'checked' : 'guided',
+    // Carried in both cases, though `fidelityMismatches` only requires it for
+    // guided: a mapped node's most important fact is that there is nothing to
+    // practise, and that is true whether or not a pattern can recognise it.
+    caveat: checked ? RECOGNISED_CAVEAT : MAPPED_CAVEAT,
     // No objectives. An objective names task kinds an observation could
     // satisfy, and there are no observations here — `ontologyProblems` reports
     // exactly this pairing, because it is a promise of practice that can never

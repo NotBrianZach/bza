@@ -23,6 +23,7 @@ const PROBABILITY: MapArea = {
   nodes: [
     {
       id: 'sample-spaces',
+      match: /\b(sample space|probability axioms|event \(probability theory\))\b/i,
       name: 'Sample spaces and events',
       is: 'Listing what could happen and taking an event to be a set of those — probability as a measure on that set.',
       needs: ['sets', 'fraction-arithmetic'],
@@ -38,6 +39,7 @@ const PROBABILITY: MapArea = {
     },
     {
       id: 'conditional-probability',
+      match: /\b(conditional probability|independence \(probability\))\b/i,
       name: 'Conditional probability',
       is: 'Restricting the sample space to what is known, and independence as the case where restricting changes nothing.',
       needs: ['counting-probability'],
@@ -45,6 +47,7 @@ const PROBABILITY: MapArea = {
     },
     {
       id: 'bayes-theorem',
+      match: /\bbayes('|’)?[- ]?(theorem|rule|law)\b/i,
       name: "Bayes' theorem",
       is: 'Reversing the direction of a conditional — the base rate is the term that gets dropped and the reason the answers feel wrong.',
       needs: ['conditional-probability'],
@@ -59,6 +62,7 @@ const PROBABILITY: MapArea = {
     },
     {
       id: 'random-variables',
+      match: /\brandom variable\b/i,
       name: 'Random variables',
       is: 'A number attached to each outcome, which is what lets arithmetic be done on a random situation.',
       needs: ['conditional-probability', 'function-concept'],
@@ -66,6 +70,7 @@ const PROBABILITY: MapArea = {
     },
     {
       id: 'expectation',
+      match: /\bexpected value\b/i,
       name: 'Expectation',
       is: 'A weighted average of outcomes, linear whether or not the variables are independent — which is the fact that makes it useful.',
       needs: ['random-variables', 'sigma-notation'],
@@ -73,6 +78,7 @@ const PROBABILITY: MapArea = {
     },
     {
       id: 'variance-and-covariance',
+      match: /\b(variance|covariance|standard deviation|correlation)\b/i,
       name: 'Variance and covariance',
       is: 'Spread as an expected squared deviation, with covariance measuring joint movement and independence implying zero but not conversely.',
       needs: ['expectation'],
@@ -80,6 +86,7 @@ const PROBABILITY: MapArea = {
     },
     {
       id: 'discrete-distributions',
+      match: /\b(binomial|poisson|geometric|bernoulli) distribution\b/i,
       name: 'The discrete distributions',
       is: 'Bernoulli, binomial, geometric and Poisson — each is a mechanism, and naming the mechanism is how you choose one.',
       needs: ['variance-and-covariance', 'binomial-theorem'],
@@ -87,6 +94,7 @@ const PROBABILITY: MapArea = {
     },
     {
       id: 'continuous-distributions',
+      match: /\b(normal|exponential|uniform|gamma|beta) distribution\b/i,
       name: 'The continuous distributions',
       is: 'Density rather than probability at a point, with uniform, exponential and normal as the three to know.',
       needs: ['random-variables', 'definite-integral'],
@@ -95,6 +103,7 @@ const PROBABILITY: MapArea = {
     },
     {
       id: 'joint-distributions',
+      match: /\b(joint (probability )?distribution|marginal distribution)\b/i,
       name: 'Joint and marginal distributions',
       is: 'Two random variables at once, where the marginals do not determine the joint — which is exactly where dependence lives.',
       needs: ['continuous-distributions', 'multiple-integrals'],
@@ -109,6 +118,7 @@ const PROBABILITY: MapArea = {
     },
     {
       id: 'law-of-large-numbers',
+      match: /\blaw of large numbers\b/i,
       name: 'The law of large numbers',
       is: 'Sample means converge to the expectation — the theorem that licenses estimating anything from a sample at all.',
       needs: ['variance-and-covariance', 'sequence-convergence'],
@@ -116,6 +126,7 @@ const PROBABILITY: MapArea = {
     },
     {
       id: 'central-limit-theorem',
+      match: /\bcentral limit theorem\b/i,
       name: 'The central limit theorem',
       is: 'Sums of many independent contributions are approximately normal whatever they came from, which is why the normal is everywhere.',
       needs: ['law-of-large-numbers', 'continuous-distributions'],
@@ -123,6 +134,7 @@ const PROBABILITY: MapArea = {
     },
     {
       id: 'markov-chains',
+      match: /\bmarkov (chain|process|property)\b/i,
       name: 'Markov chains',
       is: 'A process whose next state depends only on the present one, with the long-run behaviour read off the transition matrix.',
       needs: ['conditional-probability', 'eigenvalues'],
@@ -131,6 +143,7 @@ const PROBABILITY: MapArea = {
     },
     {
       id: 'stochastic-processes',
+      match: /\b(stochastic process|brownian motion|poisson process|martingale)\b/i,
       name: 'Stochastic processes',
       is: 'Randomness indexed by time: Poisson processes, random walks, and Brownian motion as the continuous limit.',
       needs: ['markov-chains', 'central-limit-theorem'],
@@ -138,6 +151,7 @@ const PROBABILITY: MapArea = {
     },
     {
       id: 'measure-theoretic-probability',
+      match: /\bprobability space\b|\bprobability measure\b/i,
       name: 'Probability as measure theory',
       is: 'A probability is a measure of total mass one, which is the framing that makes conditioning on a continuous variable well defined.',
       needs: ['stochastic-processes', 'measure-zero-and-lebesgue'],
@@ -156,6 +170,7 @@ const STATISTICS: MapArea = {
   nodes: [
     {
       id: 'descriptive-statistics',
+      match: /\b(descriptive statistics|median|quartile|histogram)\b/i,
       name: 'Describing data',
       is: 'Centre, spread and shape of a sample, with the mean-versus-median choice determined by the tail rather than by taste.',
       needs: ['percent', 'sigma-notation'],
@@ -163,6 +178,7 @@ const STATISTICS: MapArea = {
     },
     {
       id: 'sampling-and-bias',
+      match: /\b(sampling \(statistics\)|selection bias|survey methodology)\b/i,
       name: 'Sampling and bias',
       is: 'Where the data came from, which decides what any later calculation can possibly be about — and no computation repairs a bad sample.',
       needs: ['descriptive-statistics', 'sample-spaces'],
@@ -170,6 +186,7 @@ const STATISTICS: MapArea = {
     },
     {
       id: 'sampling-distributions',
+      match: /\b(sampling distribution|standard error)\b/i,
       name: 'Sampling distributions',
       is: 'The distribution of a statistic over repeated samples, which is the object every inference is actually about.',
       needs: ['sampling-and-bias', 'central-limit-theorem'],
@@ -177,6 +194,7 @@ const STATISTICS: MapArea = {
     },
     {
       id: 'point-estimation',
+      match: /\b(estimator|point estimation|bias of an estimator)\b/i,
       name: 'Estimation',
       is: 'Bias, variance and consistency as the properties of an estimator, and the trade-off between the first two.',
       needs: ['sampling-distributions'],
@@ -184,6 +202,7 @@ const STATISTICS: MapArea = {
     },
     {
       id: 'maximum-likelihood',
+      match: /\b(maximum likelihood|likelihood function)\b/i,
       name: 'Maximum likelihood',
       is: 'Choosing the parameter that makes the observed data most probable, which turns estimation into optimisation.',
       needs: ['point-estimation', 'optimisation'],
@@ -192,6 +211,7 @@ const STATISTICS: MapArea = {
     },
     {
       id: 'confidence-intervals',
+      match: /\bconfidence interval\b/i,
       name: 'Confidence intervals',
       is: 'An interval produced by a procedure that covers the truth 95% of the time — a statement about the procedure, not about this interval.',
       needs: ['point-estimation'],
@@ -199,6 +219,10 @@ const STATISTICS: MapArea = {
     },
     {
       id: 'hypothesis-testing',
+      // No trailing \b after "test": the article is "Hypothesis testing", and
+      // `test\b` cannot match inside "testing". Same trap as any pattern whose
+      // last word takes a suffix in the title people actually use.
+      match: /\b(hypothesis test|significance test|p-value|null hypothesis|type i and type ii)/i,
       name: 'Hypothesis testing',
       is: 'Computing how surprising the data would be if a null were true, and the two ways of being wrong that the thresholds trade off.',
       needs: ['confidence-intervals'],
@@ -213,6 +237,7 @@ const STATISTICS: MapArea = {
     },
     {
       id: 'multiple-comparisons',
+      match: /\b(multiple comparisons|bonferroni|false discovery rate)\b/i,
       name: 'Multiple comparisons',
       is: 'Running many tests makes a false positive near-certain, which is why the threshold has to answer to how many questions were asked.',
       needs: ['hypothesis-testing'],
@@ -220,6 +245,7 @@ const STATISTICS: MapArea = {
     },
     {
       id: 'linear-regression',
+      match: /\b(linear regression|ordinary least squares)\b/i,
       name: 'Linear regression',
       is: 'Fitting a line by least squares, with the residuals — not the fit — carrying the information about whether the model holds.',
       needs: ['hypothesis-testing', 'least-squares'],
@@ -228,6 +254,7 @@ const STATISTICS: MapArea = {
     },
     {
       id: 'multiple-regression',
+      match: /\b(multiple (linear )?regression|multicollinearity)\b/i,
       name: 'Multiple regression',
       is: 'Several predictors at once, where a coefficient means "holding the others fixed" and collinearity makes that meaningless.',
       needs: ['linear-regression', 'rank-nullity'],
@@ -235,6 +262,7 @@ const STATISTICS: MapArea = {
     },
     {
       id: 'anova-and-design',
+      match: /\b(analysis of variance|anova|design of experiments)\b/i,
       name: 'Experimental design and ANOVA',
       is: 'Randomisation, blocking and the partition of variance — the part of statistics that happens before any data exists.',
       needs: ['multiple-regression', 'sampling-and-bias'],
@@ -242,6 +270,7 @@ const STATISTICS: MapArea = {
     },
     {
       id: 'causal-inference',
+      match: /\b(causal inference|confounding|instrumental variable|propensity score)\b/i,
       name: 'Causal inference',
       is: 'When a correlation licenses a causal claim: confounding, the counterfactual framing, and what an instrument buys.',
       needs: ['anova-and-design', 'conditional-probability'],
@@ -249,6 +278,7 @@ const STATISTICS: MapArea = {
     },
     {
       id: 'bayesian-inference',
+      match: /\bbayesian (inference|statistics|probability)\b/i,
       name: 'Bayesian inference',
       is: 'Treating the parameter as random and updating a prior, which answers the question the p-value is mistaken for.',
       needs: ['maximum-likelihood', 'bayes-theorem'],
@@ -256,6 +286,7 @@ const STATISTICS: MapArea = {
     },
     {
       id: 'nonparametric-methods',
+      match: /\b(nonparametric statistics|bootstrapping \(statistics\)|rank correlation)\b/i,
       name: 'Nonparametric and resampling methods',
       is: 'Rank tests and the bootstrap, for when the distributional assumption is the weakest part of the argument.',
       needs: ['hypothesis-testing', 'sampling-distributions'],
@@ -263,6 +294,7 @@ const STATISTICS: MapArea = {
     },
     {
       id: 'statistical-learning',
+      match: /\b(statistical learning|overfitting|cross-validation|regulari[sz]ation)\b/i,
       name: 'Statistical learning',
       is: 'Prediction rather than inference, where overfitting is the central problem and cross-validation the honest measurement.',
       needs: ['multiple-regression', 'maximum-likelihood'],
@@ -270,6 +302,7 @@ const STATISTICS: MapArea = {
     },
     {
       id: 'time-series',
+      match: /\btime series\b|\bautocorrelation\b/i,
       name: 'Time series',
       is: 'Data where observations are not independent, so the standard errors of ordinary methods are simply wrong.',
       needs: ['multiple-regression', 'stochastic-processes'],

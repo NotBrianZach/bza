@@ -55,6 +55,7 @@ const NUMBER_AND_ARITHMETIC: MapArea = {
   nodes: [
     {
       id: 'absolute-value',
+      match: /\babsolute value\b/i,
       name: 'Absolute value',
       is: 'Distance from zero, which is why it is a function of sign rather than an instruction to delete a minus.',
       needs: ['negative-numbers'],
@@ -62,6 +63,7 @@ const NUMBER_AND_ARITHMETIC: MapArea = {
     },
     {
       id: 'prime-factorisation',
+      match: /\b(prime factor|fundamental theorem of arithmetic)/i,
       name: 'Prime factorisation',
       is: 'Every whole number above one is a product of primes in exactly one way — the fundamental theorem of arithmetic.',
       needs: ['divisibility'],
@@ -69,6 +71,7 @@ const NUMBER_AND_ARITHMETIC: MapArea = {
     },
     {
       id: 'gcd-and-lcm',
+      match: /\b(greatest common (divisor|factor)|least common multiple|\bgcd\b|\blcm\b)/i,
       name: 'Greatest common divisor and least common multiple',
       is: 'The largest shared factor and the smallest shared multiple, and why their product is the product of the pair.',
       needs: ['prime-factorisation'],
@@ -77,6 +80,7 @@ const NUMBER_AND_ARITHMETIC: MapArea = {
     },
     {
       id: 'fraction-arithmetic',
+      match: /^fractions?\b|\b(common fraction|rational number)s?\b/i,
       name: 'Fraction arithmetic',
       is: 'Rational numbers as parts of a whole, with the four operations and the common-denominator step that drives them.',
       needs: ['gcd-and-lcm', 'negative-numbers'],
@@ -84,6 +88,7 @@ const NUMBER_AND_ARITHMETIC: MapArea = {
     },
     {
       id: 'decimal-representation',
+      match: /\b(decimal (representation|expansion)|repeating decimal)/i,
       name: 'Decimals and recurrence',
       is: 'Writing a rational number in base ten, and why it terminates exactly when the denominator has only 2s and 5s.',
       needs: ['fraction-arithmetic', 'prime-factorisation'],
@@ -91,6 +96,7 @@ const NUMBER_AND_ARITHMETIC: MapArea = {
     },
     {
       id: 'ratio-and-rate',
+      match: /^ratio\b|\b(proportionality|rate of change)\b/i,
       name: 'Ratio and rate',
       is: 'Comparing two quantities multiplicatively, and the difference between a ratio of like things and a rate of unlike ones.',
       needs: ['fraction-arithmetic'],
@@ -98,6 +104,7 @@ const NUMBER_AND_ARITHMETIC: MapArea = {
     },
     {
       id: 'percent',
+      match: /^percent(age)?\b/i,
       name: 'Percent',
       is: 'A ratio with a fixed denominator, where the recurring error is compounding a percent of the wrong base.',
       needs: ['ratio-and-rate', 'decimal-representation'],
@@ -105,6 +112,7 @@ const NUMBER_AND_ARITHMETIC: MapArea = {
     },
     {
       id: 'roots-and-irrationals',
+      match: /\b(irrational number|square root|nth root|surd)/i,
       name: 'Roots and irrational numbers',
       is: 'Square and higher roots, and the proof that √2 is not a ratio — the first number a reader meets that is not rational.',
       needs: ['prime-factorisation', 'fraction-arithmetic'],
@@ -112,6 +120,7 @@ const NUMBER_AND_ARITHMETIC: MapArea = {
     },
     {
       id: 'real-number-line',
+      match: /\b(real number|real line|number line)\b/i,
       name: 'The real line',
       is: 'Rationals and irrationals together as a complete ordered line, taken on trust here and constructed in real analysis.',
       needs: ['roots-and-irrationals', 'decimal-representation'],
@@ -119,6 +128,7 @@ const NUMBER_AND_ARITHMETIC: MapArea = {
     },
     {
       id: 'scientific-notation',
+      match: /\b(scientific notation|order of magnitude|significant figure)/i,
       name: 'Scientific notation and estimation',
       is: 'Writing a quantity as a digit times a power of ten, which is what makes orders of magnitude comparable at a glance.',
       needs: ['decimal-representation'],
@@ -136,6 +146,7 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
   nodes: [
     {
       id: 'variables-and-expressions',
+      match: /\b(algebraic expression|elementary algebra)\b/i,
       name: 'Variables and expressions',
       is: 'A letter standing for an unknown or for any number, and the difference between those two readings.',
       needs: ['order-of-operations', 'negative-numbers'],
@@ -143,6 +154,7 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
     },
     {
       id: 'linear-equations',
+      match: /\blinear equation\b/i,
       name: 'Linear equations in one variable',
       is: 'Solving by doing the same thing to both sides, which works because equality is preserved by any invertible operation.',
       needs: ['variables-and-expressions'],
@@ -150,6 +162,7 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
     },
     {
       id: 'linear-inequalities',
+      match: /\blinear (inequality|inequalities)\b/i,
       name: 'Linear inequalities',
       is: 'The same moves as an equation, except multiplying by a negative reverses the relation.',
       needs: ['linear-equations', 'real-number-line'],
@@ -164,6 +177,7 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
     },
     {
       id: 'absolute-value-equations',
+      match: /\babsolute[- ]value (equation|inequalit)/i,
       name: 'Absolute-value equations and inequalities',
       is: 'Splitting into cases on sign, which is why one equation can have two solutions and one inequality an interval or its complement.',
       needs: ['linear-inequalities', 'absolute-value'],
@@ -171,6 +185,7 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
     },
     {
       id: 'systems-of-linear-equations',
+      match: /\bsystem of linear equations\b/i,
       name: 'Systems of linear equations',
       is: 'Two or more conditions at once, solved by substitution or elimination, with no solution and infinitely many as real outcomes.',
       needs: ['linear-equations'],
@@ -185,6 +200,7 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
     },
     {
       id: 'completing-the-square',
+      match: /\bcompleting the square\b/i,
       name: 'Completing the square',
       is: 'Rewriting a quadratic so the variable appears once, which is the move the formula is a shortcut for.',
       needs: ['factoring-quadratics'],
@@ -192,6 +208,7 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
     },
     {
       id: 'quadratic-formula',
+      match: /\bquadratic (formula|equation)\b/i,
       name: 'The quadratic formula',
       is: 'Completing the square once, in general, and reading the discriminant for how many real roots there are.',
       needs: ['completing-the-square', 'roots-and-irrationals'],
@@ -200,6 +217,7 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
     },
     {
       id: 'complex-numbers',
+      match: /^complex number|\bimaginary unit\b/i,
       name: 'Complex numbers',
       is: 'Adjoining a square root of −1 so every quadratic has roots, with arithmetic, conjugates and modulus.',
       needs: ['quadratic-formula'],
@@ -207,6 +225,7 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
     },
     {
       id: 'polynomial-roots',
+      match: /\b(root of a polynomial|polynomial root|rational root|cubic equation|quartic equation)/i,
       name: 'Roots of higher polynomials',
       is: 'The factor and remainder theorems, rational-root search, and the fundamental theorem of algebra as the thing they are groping toward.',
       needs: ['polynomial-division', 'complex-numbers'],
@@ -215,6 +234,7 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
     },
     {
       id: 'radical-equations',
+      match: /\bradical equation\b/i,
       name: 'Radical equations',
       is: 'Squaring both sides is not invertible, so every solution has to be checked — extraneous roots are produced by the method, not by error.',
       needs: ['quadratic-formula', 'rational-exponents'],
@@ -229,6 +249,7 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
     },
     {
       id: 'binomial-theorem',
+      match: /\bbinomial (theorem|coefficient)\b/i,
       name: 'The binomial theorem',
       is: 'Expanding (a+b)^n by counting how many ways each term arises, which is where algebra first needs combinatorics.',
       needs: ['polynomial-arithmetic', 'exponent-rules'],
@@ -314,6 +335,7 @@ const FUNCTIONS: MapArea = {
     },
     {
       id: 'transformations-of-graphs',
+      match: /\b(graph transformation|transformation of (a )?graph)/i,
       name: 'Transformations',
       is: 'Shifts, stretches and reflections, and why what happens to x happens backwards.',
       needs: ['graphs-of-functions'],
@@ -321,6 +343,7 @@ const FUNCTIONS: MapArea = {
     },
     {
       id: 'piecewise-functions',
+      match: /\bpiecewise\b/i,
       name: 'Piecewise definitions',
       is: 'One function given by different rules on different pieces, which is how a definition can be complete without being a single formula.',
       needs: ['graphs-of-functions', 'absolute-value-equations'],
@@ -328,6 +351,7 @@ const FUNCTIONS: MapArea = {
     },
     {
       id: 'linear-functions',
+      match: /\blinear function\b/i,
       name: 'Linear functions',
       is: 'Constant rate of change, and the three forms of a line as three different questions it answers.',
       needs: ['graphs-of-functions', 'linear-equations'],
@@ -335,6 +359,7 @@ const FUNCTIONS: MapArea = {
     },
     {
       id: 'quadratic-functions',
+      match: /\b(quadratic function|parabola)\b/i,
       name: 'Quadratic functions',
       is: 'The parabola, where completing the square and the vertex are the same fact written two ways.',
       needs: ['linear-functions', 'completing-the-square'],
@@ -343,6 +368,7 @@ const FUNCTIONS: MapArea = {
     },
     {
       id: 'polynomial-functions',
+      match: /\bpolynomial\b(?!.*\bring\b)/i,
       name: 'Polynomial functions',
       is: 'End behaviour from the leading term, turning points bounded by the degree, and roots as the only place the sign can change.',
       needs: ['quadratic-functions', 'polynomial-roots'],
@@ -350,6 +376,7 @@ const FUNCTIONS: MapArea = {
     },
     {
       id: 'rational-functions',
+      match: /\b(rational function|asymptote)\b/i,
       name: 'Rational functions and asymptotes',
       is: 'Where a quotient blows up and what it approaches far out — the vertical asymptotes are exactly the excluded domain.',
       needs: ['polynomial-functions', 'rational-domain'],
@@ -358,6 +385,7 @@ const FUNCTIONS: MapArea = {
     },
     {
       id: 'exponential-functions',
+      match: /\bexponential (function|growth|decay)\b/i,
       name: 'Exponential functions',
       is: 'Constant ratio rather than constant difference, which is the whole of why growth outruns any polynomial.',
       needs: ['linear-functions', 'rational-exponents'],
@@ -372,6 +400,7 @@ const FUNCTIONS: MapArea = {
     },
     {
       id: 'logarithmic-functions',
+      match: /\blogarithm/i,
       name: 'Logarithmic functions',
       is: 'The inverse of an exponential, so its domain, its shape and its slowness are all forced by that.',
       needs: ['exponential-functions', 'inverse-functions', 'logarithm-definition'],
@@ -380,6 +409,7 @@ const FUNCTIONS: MapArea = {
     },
     {
       id: 'parametric-and-implicit',
+      match: /\bparametric equation\b/i,
       name: 'Parametric and implicit descriptions',
       is: 'Curves that are not graphs of functions, given by a parameter or by an equation in both variables.',
       needs: ['graphs-of-functions', 'nonlinear-systems'],
@@ -421,12 +451,14 @@ const EUCLIDEAN_GEOMETRY: MapArea = {
   nodes: [
     {
       id: 'points-lines-angles',
+      match: /^(angle|line|point) \(geometry\)|\b(vertical angles|transversal)\b/i,
       name: 'Points, lines and angles',
       is: 'The undefined terms and the first angle facts — vertical, supplementary, and what a parallel pair forces.',
       terms: 'point line angle parallel transversal vertical angles',
     },
     {
       id: 'triangle-basics',
+      match: /^triangle\b/i,
       name: 'Triangles',
       is: 'The angle sum, the triangle inequality, and the classification that the later theorems are stated against.',
       needs: ['points-lines-angles'],
@@ -434,6 +466,7 @@ const EUCLIDEAN_GEOMETRY: MapArea = {
     },
     {
       id: 'congruence',
+      match: /\bcongruence \(geometry\)|\bcongruent (triangle|figure)/i,
       name: 'Congruence',
       is: 'When two figures are the same figure, and why SSS, SAS and ASA are enough while SSA is not.',
       needs: ['triangle-basics'],
@@ -448,6 +481,7 @@ const EUCLIDEAN_GEOMETRY: MapArea = {
     },
     {
       id: 'similarity',
+      match: /\bsimilarity \(geometry\)|\bsimilar triangle/i,
       name: 'Similarity',
       is: 'Same shape, different size: equal angles force proportional sides, which is where geometry needs ratio.',
       needs: ['congruence', 'ratio-and-rate'],
@@ -462,6 +496,7 @@ const EUCLIDEAN_GEOMETRY: MapArea = {
     },
     {
       id: 'pythagoras',
+      match: /\bpythagorean theorem\b|\bpythagoras('|’)? theorem\b/i,
       name: 'Pythagoras',
       is: 'The relation among the sides of a right triangle, provable from similarity, and the converse that tests for a right angle.',
       needs: ['similarity', 'roots-and-irrationals'],
@@ -469,6 +504,7 @@ const EUCLIDEAN_GEOMETRY: MapArea = {
     },
     {
       id: 'quadrilaterals-and-polygons',
+      match: /^(quadrilateral|polygon|parallelogram|trapez|rhombus)/i,
       name: 'Quadrilaterals and polygons',
       is: 'The parallelogram family and the interior-angle sum, each property proved rather than listed.',
       needs: ['congruence'],
@@ -476,6 +512,7 @@ const EUCLIDEAN_GEOMETRY: MapArea = {
     },
     {
       id: 'area-and-perimeter',
+      match: /^(area|perimeter)\b/i,
       name: 'Area and perimeter',
       is: 'Area as an additive measure, with every polygon formula reduced to the rectangle by cutting and rearranging.',
       needs: ['quadrilaterals-and-polygons', 'triangle-basics'],
@@ -483,6 +520,7 @@ const EUCLIDEAN_GEOMETRY: MapArea = {
     },
     {
       id: 'circles',
+      match: /^circle\b/i,
       name: 'Circles',
       is: 'Chords, tangents and the inscribed-angle theorem — the richest set of consequences from a single definition in school geometry.',
       needs: ['geometric-proof', 'pythagoras'],
@@ -490,6 +528,7 @@ const EUCLIDEAN_GEOMETRY: MapArea = {
     },
     {
       id: 'circle-measure',
+      match: /\b(circumference|area of a (disk|circle)|\bpi\b)/i,
       name: 'Circumference and circular area',
       is: 'π as the ratio that is the same for every circle, and area as a limit of inscribed polygons rather than a formula to accept.',
       needs: ['circles', 'area-and-perimeter'],
@@ -497,6 +536,7 @@ const EUCLIDEAN_GEOMETRY: MapArea = {
     },
     {
       id: 'solid-geometry',
+      match: /^(solid geometry|polyhedron|sphere|cylinder|cone \(geometry\))/i,
       name: 'Solids, volume and surface area',
       is: 'Prisms, pyramids, cylinders, cones and the sphere, with the factor of a third and the factor of four as the two facts worth proving.',
       needs: ['circle-measure'],
@@ -504,6 +544,7 @@ const EUCLIDEAN_GEOMETRY: MapArea = {
     },
     {
       id: 'isometries-and-symmetry',
+      match: /\b(isometry|symmetry group|reflection symmetry|rotational symmetry)\b/i,
       name: 'Isometries and symmetry',
       is: 'Reflections, rotations and translations as the maps that preserve distance, and symmetry as invariance under them.',
       needs: ['congruence'],
@@ -511,6 +552,7 @@ const EUCLIDEAN_GEOMETRY: MapArea = {
     },
     {
       id: 'constructions',
+      match: /\bstraightedge and compass\b|\bcompass[- ]and[- ]straightedge\b/i,
       name: 'Straightedge and compass constructions',
       is: 'What can be built from the two classical tools, and the fact that some famous targets provably cannot.',
       needs: ['circles'],
@@ -518,6 +560,7 @@ const EUCLIDEAN_GEOMETRY: MapArea = {
     },
     {
       id: 'non-euclidean-geometry',
+      match: /\bnon-?euclidean\b|\b(hyperbolic|spherical) geometry\b/i,
       name: 'Non-Euclidean geometry',
       is: 'What happens when the parallel postulate is dropped — the discovery that the axioms were a choice.',
       needs: ['geometric-proof', 'circles'],
@@ -535,6 +578,7 @@ const COORDINATE_GEOMETRY: MapArea = {
   nodes: [
     {
       id: 'cartesian-plane',
+      match: /\bcartesian coordinate|\bcoordinate system\b/i,
       name: 'The Cartesian plane',
       is: 'Pairing a point with two numbers, which is the move that lets every geometric question be asked algebraically.',
       needs: ['real-number-line', 'negative-numbers'],
@@ -542,6 +586,7 @@ const COORDINATE_GEOMETRY: MapArea = {
     },
     {
       id: 'distance-and-midpoint',
+      match: /\b(distance formula|euclidean distance|midpoint)\b/i,
       name: 'Distance and midpoint',
       is: 'Pythagoras in coordinates, and the average of coordinates as the midpoint.',
       needs: ['cartesian-plane', 'pythagoras'],
@@ -550,6 +595,7 @@ const COORDINATE_GEOMETRY: MapArea = {
     },
     {
       id: 'lines-in-the-plane',
+      match: /\b(linear equation|slope|line \(geometry\))\b/i,
       name: 'Lines',
       is: 'Slope as a rate, the three standard forms, and the perpendicularity condition that is not obvious until it is proved.',
       needs: ['distance-and-midpoint', 'linear-functions'],
@@ -564,6 +610,7 @@ const COORDINATE_GEOMETRY: MapArea = {
     },
     {
       id: 'conic-sections',
+      match: /\bconic section|^(ellipse|hyperbola|parabola)/i,
       name: 'Conic sections',
       is: 'Parabola, ellipse and hyperbola by focus–directrix and as slices of a cone — one family, three appearances.',
       needs: ['circles-analytic', 'quadratic-functions'],
@@ -571,6 +618,7 @@ const COORDINATE_GEOMETRY: MapArea = {
     },
     {
       id: 'dot-product-geometry',
+      match: /\b(dot product|scalar product|cross product)\b/i,
       name: 'The dot product',
       is: 'A product of two vectors that returns a number, equal to the product of lengths times the cosine — so it measures angle.',
       needs: ['plane-vectors', 'right-triangle-trig'],
@@ -578,6 +626,7 @@ const COORDINATE_GEOMETRY: MapArea = {
     },
     {
       id: 'three-dimensional-coordinates',
+      match: /\bthree-dimensional space\b/i,
       name: 'Three dimensions',
       is: 'Coordinates, lines and planes in space, where the cross product appears because orientation becomes a question.',
       needs: ['dot-product-geometry', 'solid-geometry'],
@@ -615,6 +664,7 @@ const TRIGONOMETRY: MapArea = {
   nodes: [
     {
       id: 'right-triangle-trig',
+      match: /\b(right triangle|trigonometric (ratio|function)|sine|cosine|tangent)\b/i,
       name: 'Right-triangle ratios',
       is: 'Sine, cosine and tangent as side ratios that depend only on the angle — which is a corollary of similarity.',
       needs: ['similarity', 'pythagoras'],
@@ -622,6 +672,7 @@ const TRIGONOMETRY: MapArea = {
     },
     {
       id: 'unit-circle',
+      match: /\bunit circle\b/i,
       name: 'The unit circle',
       is: 'Redefining the ratios as coordinates on a circle, which is what extends them past 90° and makes them periodic.',
       needs: ['right-triangle-trig', 'circles-analytic'],
@@ -629,6 +680,7 @@ const TRIGONOMETRY: MapArea = {
     },
     {
       id: 'radians',
+      match: /\bradian\b/i,
       name: 'Radian measure',
       is: 'Angle as arc length on the unit circle — not a convenience but the measure that makes the derivative of sine come out as cosine.',
       needs: ['unit-circle', 'circle-measure'],
@@ -636,6 +688,7 @@ const TRIGONOMETRY: MapArea = {
     },
     {
       id: 'trig-graphs',
+      match: /\b(sine wave|sinusoid|periodic function)/i,
       name: 'Graphs of the circular functions',
       is: 'Amplitude, period and phase as the transformations of a graph, applied to a periodic shape.',
       needs: ['radians', 'transformations-of-graphs'],
@@ -643,6 +696,7 @@ const TRIGONOMETRY: MapArea = {
     },
     {
       id: 'pythagorean-identity',
+      match: /\bpythagorean (trigonometric )?identity\b/i,
       name: 'The Pythagorean identity',
       is: 'sin²+cos²=1, which is Pythagoras restated on the unit circle, and the identity every other one is reduced to.',
       needs: ['unit-circle'],
@@ -650,6 +704,7 @@ const TRIGONOMETRY: MapArea = {
     },
     {
       id: 'angle-sum-identities',
+      match: /\b(angle sum|double[- ]angle|trigonometric identit)/i,
       name: 'Angle sum and double angle',
       is: 'How the circular functions behave under addition of angles — the reason they are not additive and the source of most identities.',
       needs: ['pythagorean-identity'],
@@ -658,6 +713,7 @@ const TRIGONOMETRY: MapArea = {
     },
     {
       id: 'trig-equations',
+      match: /\btrigonometric equation\b/i,
       name: 'Trigonometric equations',
       is: 'Solving for an angle, where periodicity means the answer is a family and not a number.',
       needs: ['angle-sum-identities', 'trig-graphs'],
@@ -665,6 +721,7 @@ const TRIGONOMETRY: MapArea = {
     },
     {
       id: 'inverse-trig',
+      match: /\binverse trigonometric\b/i,
       name: 'Inverse circular functions',
       is: 'Arcsine and its relatives, which exist only because the domain was cut down — and the cut is why the range looks arbitrary.',
       needs: ['trig-equations', 'inverse-functions'],
@@ -672,6 +729,7 @@ const TRIGONOMETRY: MapArea = {
     },
     {
       id: 'law-of-sines-cosines',
+      match: /\blaw of (sines|cosines)\b/i,
       name: 'The laws of sines and cosines',
       is: 'Solving triangles that have no right angle, with the ambiguous case as a genuine two-answer situation rather than a trap.',
       needs: ['right-triangle-trig', 'triangle-basics'],
@@ -679,6 +737,7 @@ const TRIGONOMETRY: MapArea = {
     },
     {
       id: 'polar-coordinates',
+      match: /\bpolar coordinate\b/i,
       name: 'Polar coordinates',
       is: 'Locating a point by distance and angle, under which some curves become simple and the representation stops being unique.',
       needs: ['radians', 'cartesian-plane'],
@@ -693,6 +752,7 @@ const TRIGONOMETRY: MapArea = {
     },
     {
       id: 'eulers-formula',
+      match: /\beuler('|’)?s (formula|identity)\b/i,
       name: "Euler's formula",
       is: 'e^{iθ} = cosθ + i sinθ — the identity that makes the circular and exponential functions the same function.',
       needs: ['complex-polar-form', 'exponential-functions'],

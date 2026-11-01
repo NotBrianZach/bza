@@ -26,6 +26,7 @@ const LINEAR_ALGEBRA: MapArea = {
   nodes: [
     {
       id: 'gaussian-elimination',
+      match: /\b(gaussian elimination|row echelon)\b/i,
       name: 'Gaussian elimination',
       is: 'Row reduction as a systematic solve, with the reduced form telling you the solution set rather than a solution.',
       needs: ['matrices-and-maps', 'systems-of-linear-equations'],
@@ -34,6 +35,7 @@ const LINEAR_ALGEBRA: MapArea = {
     },
     {
       id: 'vector-spaces',
+      match: /\bvector space\b/i,
       name: 'Vector spaces',
       is: 'The axioms abstracted from coordinates, so polynomials and functions become vectors with no change of argument.',
       needs: ['linear-independence'],
@@ -41,6 +43,7 @@ const LINEAR_ALGEBRA: MapArea = {
     },
     {
       id: 'basis-and-dimension',
+      match: /\b(basis \(linear algebra\)|dimension \(vector space\)|linear independence)\b/i,
       name: 'Basis and dimension',
       is: 'A minimal spanning set, and the theorem that every basis of a space has the same size.',
       needs: ['vector-spaces', 'linear-independence'],
@@ -48,6 +51,7 @@ const LINEAR_ALGEBRA: MapArea = {
     },
     {
       id: 'rank-nullity',
+      match: /\b(rank(–|-)nullity|rank \(linear algebra\)|kernel \(linear algebra\))\b/i,
       name: 'Rank, kernel and the rank–nullity theorem',
       is: 'What a map hits and what it kills, with their dimensions summing to the dimension of the source.',
       needs: ['basis-and-dimension', 'gaussian-elimination'],
@@ -55,6 +59,7 @@ const LINEAR_ALGEBRA: MapArea = {
     },
     {
       id: 'eigenvalues',
+      match: /\beigen(value|vector|decomposition)/i,
       name: 'Eigenvalues and eigenvectors',
       is: 'Directions a map only stretches, which is what reduces an iterated map to arithmetic on numbers.',
       needs: ['determinant', 'basis-and-dimension', 'polynomial-roots'],
@@ -62,6 +67,7 @@ const LINEAR_ALGEBRA: MapArea = {
     },
     {
       id: 'diagonalisation',
+      match: /\bdiagonali[sz]able\b|\bdiagonali[sz]ation\b/i,
       name: 'Diagonalisation',
       is: 'Choosing a basis of eigenvectors so the matrix becomes diagonal — and the obstruction when there are not enough.',
       needs: ['eigenvalues', 'rank-nullity'],
@@ -69,6 +75,7 @@ const LINEAR_ALGEBRA: MapArea = {
     },
     {
       id: 'inner-product-spaces',
+      match: /\b(inner product|orthogonali[sz]ation|gram(–|-)schmidt)\b/i,
       name: 'Inner products and orthogonality',
       is: 'Generalising the dot product, which recovers length, angle and projection in any vector space that has one.',
       needs: ['vector-spaces', 'dot-product-geometry'],
@@ -76,6 +83,7 @@ const LINEAR_ALGEBRA: MapArea = {
     },
     {
       id: 'spectral-theorem',
+      match: /\bspectral theorem\b/i,
       name: 'The spectral theorem',
       is: 'A symmetric matrix has an orthonormal eigenbasis and real eigenvalues — the cleanest theorem in the subject.',
       needs: ['diagonalisation', 'inner-product-spaces'],
@@ -83,6 +91,7 @@ const LINEAR_ALGEBRA: MapArea = {
     },
     {
       id: 'least-squares',
+      match: /\bleast squares\b/i,
       name: 'Least squares',
       is: 'The best answer to an unsolvable system, which is an orthogonal projection onto the column space.',
       needs: ['inner-product-spaces', 'rank-nullity'],
@@ -90,6 +99,7 @@ const LINEAR_ALGEBRA: MapArea = {
     },
     {
       id: 'singular-value-decomposition',
+      match: /\bsingular value decomposition\b/i,
       name: 'The singular value decomposition',
       is: 'Every matrix is a rotation, a scaling and another rotation — which is why low-rank approximation works.',
       needs: ['spectral-theorem', 'least-squares'],
@@ -97,6 +107,7 @@ const LINEAR_ALGEBRA: MapArea = {
     },
     {
       id: 'numerical-linear-algebra',
+      match: /\bnumerical linear algebra\b|\bmatrix decomposition\b/i,
       name: 'Numerical linear algebra',
       is: 'Conditioning, LU and QR factorisation, iterative methods — where floating point makes the exact theory insufficient.',
       needs: ['singular-value-decomposition', 'gaussian-elimination'],
@@ -186,6 +197,7 @@ const DISCRETE_MATHEMATICS: MapArea = {
   nodes: [
     {
       id: 'propositional-logic',
+      match: /\b(propositional (logic|calculus)|boolean algebra|truth table)\b/i,
       name: 'Propositional logic',
       is: 'Connectives and truth tables, with implication as the one whose truth table surprises everybody.',
       needs: ['geometric-proof'],
@@ -193,6 +205,7 @@ const DISCRETE_MATHEMATICS: MapArea = {
     },
     {
       id: 'quantifiers',
+      match: /\bquantifier\b/i,
       name: 'Quantifiers',
       is: 'For-all and there-exists, where the order of two different quantifiers changes the claim entirely.',
       needs: ['propositional-logic'],
@@ -200,6 +213,7 @@ const DISCRETE_MATHEMATICS: MapArea = {
     },
     {
       id: 'proof-techniques',
+      match: /\b(mathematical proof|proof by contradiction|contraposition)\b/i,
       name: 'Proof techniques',
       is: 'Direct, contrapositive, contradiction and cases — four shapes of argument, each suited to a shape of statement.',
       needs: ['quantifiers'],
@@ -207,6 +221,7 @@ const DISCRETE_MATHEMATICS: MapArea = {
     },
     {
       id: 'sets',
+      match: /\bset (theory|operations)\b|^set \(mathematics\)/i,
       name: 'Sets and set operations',
       is: 'Membership, the operations, and the identities — proved by double inclusion rather than by picture.',
       needs: ['proof-techniques'],
@@ -214,6 +229,7 @@ const DISCRETE_MATHEMATICS: MapArea = {
     },
     {
       id: 'relations',
+      match: /\b(binary relation|equivalence relation|partial order)\b/i,
       name: 'Relations',
       is: 'A subset of a product, with equivalence relations partitioning a set and orders arranging it.',
       needs: ['sets'],
@@ -221,6 +237,7 @@ const DISCRETE_MATHEMATICS: MapArea = {
     },
     {
       id: 'functions-formally',
+      match: /^function \(mathematics\)|\b(injective|surjective|bijection)\b/i,
       name: 'Functions, formally',
       is: 'A function as a relation with a uniqueness condition, which is where injective, surjective and bijective get defined properly.',
       needs: ['relations', 'inverse-functions'],
@@ -228,6 +245,7 @@ const DISCRETE_MATHEMATICS: MapArea = {
     },
     {
       id: 'cardinality',
+      match: /\b(cardinality|countable set|cantor('|’)?s diagonal)\b/i,
       name: 'Cardinality and countability',
       is: 'Comparing infinite sets by bijection: the rationals are countable, the reals are not, and the diagonal argument shows it.',
       needs: ['functions-formally', 'real-number-line'],
@@ -235,6 +253,7 @@ const DISCRETE_MATHEMATICS: MapArea = {
     },
     {
       id: 'counting-principles',
+      match: /\b(combination|permutation|pigeonhole principle|combinatoric)/i,
       name: 'Counting',
       is: 'Product and sum rules, permutations and combinations, with inclusion–exclusion for when the cases overlap.',
       needs: ['sets', 'binomial-theorem'],
@@ -242,6 +261,7 @@ const DISCRETE_MATHEMATICS: MapArea = {
     },
     {
       id: 'combinatorial-identities',
+      match: /\b(pascal('|’)?s triangle|inclusion(–|-)exclusion)\b/i,
       name: 'Combinatorial identities',
       is: 'Proving a counting identity by counting the same set two ways — a style of argument with no algebraic substitute.',
       needs: ['counting-principles', 'mathematical-induction'],
@@ -249,6 +269,7 @@ const DISCRETE_MATHEMATICS: MapArea = {
     },
     {
       id: 'recurrence-relations',
+      match: /\b(recurrence relation|fibonacci (number|sequence))\b/i,
       name: 'Recurrence relations',
       is: 'Defining a sequence by its predecessors, and solving the linear ones by their characteristic polynomial.',
       needs: ['counting-principles', 'geometric-sequences'],
@@ -256,6 +277,7 @@ const DISCRETE_MATHEMATICS: MapArea = {
     },
     {
       id: 'generating-functions',
+      match: /\bgenerating function\b/i,
       name: 'Generating functions',
       is: 'Encoding a sequence as the coefficients of a power series, so counting becomes algebra.',
       needs: ['recurrence-relations', 'power-series'],
@@ -263,6 +285,7 @@ const DISCRETE_MATHEMATICS: MapArea = {
     },
     {
       id: 'graphs',
+      match: /\bgraph theory\b|^graph \(discrete mathematics\)/i,
       name: 'Graphs',
       is: 'Vertices and edges, with degree, paths and connectedness as the first vocabulary — and the handshake lemma as the first theorem.',
       needs: ['relations'],
@@ -270,6 +293,7 @@ const DISCRETE_MATHEMATICS: MapArea = {
     },
     {
       id: 'trees',
+      match: /^tree \(graph theory\)|\bspanning tree\b/i,
       name: 'Trees',
       is: 'Connected and acyclic, with the n−1 edge count and the uniqueness of paths as two readings of one fact.',
       needs: ['graphs', 'mathematical-induction'],
@@ -277,6 +301,7 @@ const DISCRETE_MATHEMATICS: MapArea = {
     },
     {
       id: 'graph-algorithms',
+      match: /\b(dijkstra|breadth-first|depth-first|shortest path)\b/i,
       name: 'Graph algorithms',
       is: 'Traversal, shortest paths and minimum spanning trees, where the correctness proof is the mathematics.',
       needs: ['trees'],
@@ -284,6 +309,7 @@ const DISCRETE_MATHEMATICS: MapArea = {
     },
     {
       id: 'graph-colouring-planarity',
+      match: /\b(graph colo(u)?ring|planar graph|four colo(u)?r)\b/i,
       name: 'Colouring and planarity',
       is: 'Euler\'s formula, planar graphs and chromatic number — where easy questions turn out to be genuinely hard.',
       needs: ['graphs', 'proof-techniques'],
@@ -291,6 +317,7 @@ const DISCRETE_MATHEMATICS: MapArea = {
     },
     {
       id: 'computability-and-complexity',
+      match: /\b(turing machine|computability|halting problem|np-completeness|computational complexity)\b/i,
       name: 'Computability and complexity',
       is: 'What an algorithm is, what cannot be computed at all, and the P versus NP question as a precise statement.',
       needs: ['cardinality', 'graph-algorithms', 'asymptotic-comparison'],
@@ -298,6 +325,7 @@ const DISCRETE_MATHEMATICS: MapArea = {
     },
     {
       id: 'formal-logic-and-incompleteness',
+      match: /\b(g(ö|o)del('|’)?s (incompleteness|completeness)|first-order logic|peano axioms)\b/i,
       name: 'Formal systems and incompleteness',
       is: 'Axioms, derivation and models, up to the statement that any adequate system has truths it cannot prove.',
       needs: ['computability-and-complexity', 'quantifiers'],
@@ -315,6 +343,7 @@ const NUMBER_THEORY: MapArea = {
   nodes: [
     {
       id: 'division-algorithm',
+      match: /\b(euclidean division|division algorithm|divisor)\b/i,
       name: 'The division algorithm',
       is: 'Quotient and remainder exist and are unique — the fact every argument about divisibility unwinds to.',
       needs: ['divisibility', 'proof-techniques'],
@@ -322,6 +351,7 @@ const NUMBER_THEORY: MapArea = {
     },
     {
       id: 'euclidean-algorithm',
+      match: /\b(euclidean algorithm|b(é|e)zout)\b/i,
       name: 'The Euclidean algorithm and Bézout',
       is: 'Computing a gcd by repeated remainder, and the identity that writes it as an integer combination.',
       needs: ['division-algorithm', 'gcd-and-lcm'],
@@ -330,6 +360,7 @@ const NUMBER_THEORY: MapArea = {
     },
     {
       id: 'modular-arithmetic',
+      match: /\bmodular arithmetic\b/i,
       name: 'Modular arithmetic',
       is: 'Arithmetic on remainders, well defined because congruence respects addition and multiplication — but not division.',
       needs: ['euclidean-algorithm', 'relations'],
@@ -337,6 +368,7 @@ const NUMBER_THEORY: MapArea = {
     },
     {
       id: 'linear-congruences',
+      match: /\b(linear congruence|modular multiplicative inverse)\b/i,
       name: 'Linear congruences and inverses',
       is: 'Solving ax ≡ b, which is solvable exactly when the gcd divides b — so Bézout is the solution method.',
       needs: ['modular-arithmetic'],
@@ -344,6 +376,7 @@ const NUMBER_THEORY: MapArea = {
     },
     {
       id: 'chinese-remainder',
+      match: /\bchinese remainder\b/i,
       name: 'The Chinese remainder theorem',
       is: 'Independent congruences to coprime moduli have a simultaneous solution, which splits a modulus into its prime-power parts.',
       needs: ['linear-congruences'],
@@ -351,6 +384,7 @@ const NUMBER_THEORY: MapArea = {
     },
     {
       id: 'fermat-euler',
+      match: /\b(fermat('|’)?s little theorem|euler('|’)?s (theorem|totient))\b/i,
       name: 'Fermat and Euler theorems',
       is: 'Exponents live modulo φ(n), which is what makes modular exponentiation cheap and RSA possible.',
       needs: ['chinese-remainder', 'exponent-rules'],
@@ -358,6 +392,7 @@ const NUMBER_THEORY: MapArea = {
     },
     {
       id: 'primitive-roots',
+      match: /\b(primitive root|discrete logarithm)\b/i,
       name: 'Primitive roots and discrete logarithms',
       is: 'When the units modulo n are generated by a single element, and the asymmetry of inverting that.',
       needs: ['fermat-euler', 'logarithm-definition'],
@@ -365,6 +400,7 @@ const NUMBER_THEORY: MapArea = {
     },
     {
       id: 'quadratic-reciprocity',
+      match: /\b(quadratic (reciprocity|residue)|legendre symbol)\b/i,
       name: 'Quadratic residues and reciprocity',
       is: 'Which numbers are squares modulo p, and the unexpected symmetry between two primes asking about each other.',
       needs: ['primitive-roots'],
@@ -372,6 +408,7 @@ const NUMBER_THEORY: MapArea = {
     },
     {
       id: 'diophantine-equations',
+      match: /\b(diophantine|fermat('|’)?s last theorem|pell('|’)?s equation)\b/i,
       name: 'Diophantine equations',
       is: 'Equations required to have integer solutions, where existence is the hard question and descent is the classical tool.',
       needs: ['chinese-remainder', 'pythagoras'],
@@ -379,6 +416,7 @@ const NUMBER_THEORY: MapArea = {
     },
     {
       id: 'prime-distribution',
+      match: /\b(prime number theorem|distribution of primes|prime-counting)\b/i,
       name: 'The distribution of primes',
       is: 'There are infinitely many, they thin out like 1/log, and the prime number theorem says exactly how.',
       needs: ['prime-factorisation', 'asymptotic-comparison'],
@@ -386,6 +424,7 @@ const NUMBER_THEORY: MapArea = {
     },
     {
       id: 'analytic-number-theory',
+      match: /\b(riemann (zeta|hypothesis)|dirichlet (series|l-function)|analytic number theory)\b/i,
       name: 'Analytic number theory',
       is: 'Using complex analysis on the zeta function to count primes, which is where the Riemann hypothesis lives.',
       needs: ['prime-distribution', 'analytic-continuation'],
@@ -393,6 +432,7 @@ const NUMBER_THEORY: MapArea = {
     },
     {
       id: 'cryptographic-number-theory',
+      match: /\b(rsa \(cryptosystem\)|public-key|diffie(–|-)hellman)\b/i,
       name: 'Number theory in cryptography',
       is: 'RSA and Diffie–Hellman as direct consequences of Euler and of the hardness of the discrete logarithm.',
       needs: ['primitive-roots', 'fermat-euler'],
@@ -410,6 +450,7 @@ const ABSTRACT_ALGEBRA: MapArea = {
   nodes: [
     {
       id: 'binary-operations',
+      match: /\b(binary operation|magma \(algebra\)|monoid|semigroup)\b/i,
       name: 'Binary operations and axioms',
       is: 'Closure, associativity, identity and inverse as separable properties — and examples failing exactly one of them.',
       needs: ['functions-formally', 'isometries-and-symmetry'],
@@ -417,6 +458,7 @@ const ABSTRACT_ALGEBRA: MapArea = {
     },
     {
       id: 'groups',
+      match: /^group \(mathematics\)|\b(abelian group|cyclic group|symmetric group|dihedral group)\b/i,
       name: 'Groups',
       is: 'The four axioms, with the symmetries of an object as the motivating example rather than an afterthought.',
       needs: ['binary-operations'],
@@ -424,6 +466,7 @@ const ABSTRACT_ALGEBRA: MapArea = {
     },
     {
       id: 'subgroups-and-cosets',
+      match: /\b(subgroup|coset|lagrange('|’)?s theorem \(group theory\))\b/i,
       name: 'Subgroups, cosets and Lagrange',
       is: 'Cosets partition a group into equal blocks, so a subgroup\'s order divides the group\'s — one of the great cheap theorems.',
       needs: ['groups', 'relations'],
@@ -431,6 +474,7 @@ const ABSTRACT_ALGEBRA: MapArea = {
     },
     {
       id: 'group-homomorphisms',
+      match: /\b(group homomorphism|group isomorphism|isomorphism theorem)\b/i,
       name: 'Homomorphisms and isomorphism',
       is: 'Maps that respect the operation, with the kernel measuring what is lost and isomorphism meaning "the same group".',
       needs: ['subgroups-and-cosets'],
@@ -438,6 +482,7 @@ const ABSTRACT_ALGEBRA: MapArea = {
     },
     {
       id: 'quotient-groups',
+      match: /\b(normal subgroup|quotient group)\b/i,
       name: 'Normal subgroups and quotients',
       is: 'When the cosets form a group themselves, and the first isomorphism theorem as the statement that kernels and quotients are the same thing.',
       needs: ['group-homomorphisms'],
@@ -445,6 +490,7 @@ const ABSTRACT_ALGEBRA: MapArea = {
     },
     {
       id: 'group-actions',
+      match: /\b(group action|orbit(–|-)stabili[sz]er|burnside)\b/i,
       name: 'Group actions',
       is: 'A group acting on a set, with orbits, stabilisers and the counting formula that follows — this is how groups get used.',
       needs: ['quotient-groups', 'counting-principles'],
@@ -452,6 +498,7 @@ const ABSTRACT_ALGEBRA: MapArea = {
     },
     {
       id: 'finite-group-classification',
+      match: /\b(sylow|classification of finite simple groups|finite group)\b/i,
       name: 'Structure of finite groups',
       is: 'Sylow\'s theorems and the classification of finite abelian groups — how far the axioms alone pin a group down.',
       needs: ['group-actions'],
@@ -459,6 +506,7 @@ const ABSTRACT_ALGEBRA: MapArea = {
     },
     {
       id: 'rings',
+      match: /^ring \(mathematics\)|\bring theory\b/i,
       name: 'Rings',
       is: 'Two operations instead of one, which admits the integers, polynomials and matrices as the same kind of object.',
       needs: ['groups', 'polynomial-arithmetic'],
@@ -466,6 +514,7 @@ const ABSTRACT_ALGEBRA: MapArea = {
     },
     {
       id: 'ideals-and-quotient-rings',
+      match: /\b(ideal \(ring theory\)|quotient ring)\b/i,
       name: 'Ideals and quotient rings',
       is: 'The ring analogue of a normal subgroup, and modular arithmetic as the first example of a quotient.',
       needs: ['rings', 'modular-arithmetic'],
@@ -474,6 +523,7 @@ const ABSTRACT_ALGEBRA: MapArea = {
     },
     {
       id: 'unique-factorisation-domains',
+      match: /\b(unique factori[sz]ation|principal ideal domain|euclidean domain)\b/i,
       name: 'Factorisation in rings',
       is: 'Where unique factorisation survives and where it fails — the failure is what motivated algebraic number theory.',
       needs: ['ideals-and-quotient-rings', 'prime-factorisation'],
@@ -481,6 +531,7 @@ const ABSTRACT_ALGEBRA: MapArea = {
     },
     {
       id: 'fields',
+      match: /^field \(mathematics\)|\bfinite field\b/i,
       name: 'Fields',
       is: 'Every nonzero element invertible, with the finite fields as the examples that are not just the usual number systems.',
       needs: ['ideals-and-quotient-rings'],
@@ -488,6 +539,7 @@ const ABSTRACT_ALGEBRA: MapArea = {
     },
     {
       id: 'polynomial-rings',
+      match: /\b(polynomial ring|irreducible polynomial|eisenstein('|’)?s criterion)\b/i,
       name: 'Polynomial rings and irreducibility',
       is: 'Polynomials over a field as a Euclidean domain, with irreducibility playing the role of primality.',
       needs: ['fields', 'polynomial-division'],
@@ -496,6 +548,7 @@ const ABSTRACT_ALGEBRA: MapArea = {
     },
     {
       id: 'field-extensions',
+      match: /\bfield extension\b|\balgebraic extension\b/i,
       name: 'Field extensions',
       is: 'Building a bigger field by adjoining a root, and measuring the result as a vector space over the smaller one.',
       needs: ['polynomial-rings', 'basis-and-dimension'],
@@ -503,6 +556,7 @@ const ABSTRACT_ALGEBRA: MapArea = {
     },
     {
       id: 'galois-theory',
+      match: /\bgalois\b/i,
       name: 'Galois theory',
       is: 'A correspondence between subfields and subgroups, which converts a question about roots into a question about a group.',
       needs: ['field-extensions', 'quotient-groups'],
@@ -510,6 +564,7 @@ const ABSTRACT_ALGEBRA: MapArea = {
     },
     {
       id: 'representation-theory',
+      match: /\brepresentation theory\b|\bcharacter theory\b/i,
       name: 'Representation theory',
       is: 'Realising a group as matrices, so linear algebra answers questions the group axioms alone cannot.',
       needs: ['group-actions', 'spectral-theorem'],
@@ -527,6 +582,7 @@ const TOPOLOGY: MapArea = {
   nodes: [
     {
       id: 'topological-spaces',
+      match: /\b(topological space|topology)\b/i,
       name: 'Topological spaces',
       is: 'Declaring which sets are open and requiring only unions and finite intersections — less structure than a metric, and enough for continuity.',
       needs: ['metric-spaces', 'sets'],
@@ -534,6 +590,7 @@ const TOPOLOGY: MapArea = {
     },
     {
       id: 'closure-and-interior',
+      match: /\b(closure \(topology\)|interior \(topology\)|boundary \(topology\))\b/i,
       name: 'Closure, interior and boundary',
       is: 'The largest open set inside, the smallest closed set outside, and what is left over — with density as a consequence.',
       needs: ['topological-spaces'],
@@ -541,6 +598,7 @@ const TOPOLOGY: MapArea = {
     },
     {
       id: 'topological-continuity',
+      match: /\bcontinuous function \(topology\)|\bhomeomorphism\b/i,
       name: 'Continuity without distance',
       is: 'Preimages of open sets are open, which is equivalent to ε-δ on a metric space and makes sense where ε does not.',
       needs: ['closure-and-interior', 'uniform-continuity'],
@@ -548,6 +606,7 @@ const TOPOLOGY: MapArea = {
     },
     {
       id: 'compactness',
+      match: /\bcompact (space|set)\b|\bcompactness\b|\bheine(–|-)borel\b/i,
       name: 'Compactness',
       is: 'Every open cover has a finite subcover — the property that makes "closed and bounded" work, generalised correctly.',
       needs: ['topological-continuity', 'bolzano-weierstrass'],
@@ -555,6 +614,7 @@ const TOPOLOGY: MapArea = {
     },
     {
       id: 'connectedness',
+      match: /\bconnected space\b|\bconnectedness\b/i,
       name: 'Connectedness',
       is: 'Not splittable into two open pieces, which is what the intermediate value theorem is really a statement about.',
       needs: ['topological-continuity'],
@@ -562,6 +622,7 @@ const TOPOLOGY: MapArea = {
     },
     {
       id: 'separation-and-metrisability',
+      match: /\b(separation axiom|hausdorff space|urysohn)\b/i,
       name: 'Separation axioms',
       is: 'Hausdorff and its relatives: how much a topology has to allow points to be told apart before it behaves.',
       needs: ['compactness'],
@@ -569,6 +630,7 @@ const TOPOLOGY: MapArea = {
     },
     {
       id: 'quotient-and-product-spaces',
+      match: /\b(quotient space \(topology\)|product topology)\b/i,
       name: 'Products and quotients',
       is: 'Building new spaces by gluing or multiplying, which is how the torus and the Möbius band get defined precisely.',
       needs: ['separation-and-metrisability', 'relations'],
@@ -576,6 +638,7 @@ const TOPOLOGY: MapArea = {
     },
     {
       id: 'homotopy-and-fundamental-group',
+      match: /\b(homotopy|fundamental group|covering space)\b/i,
       name: 'Homotopy and the fundamental group',
       is: 'Loops up to deformation, forming a group whose non-triviality detects a hole.',
       needs: ['quotient-and-product-spaces', 'groups'],
@@ -583,6 +646,7 @@ const TOPOLOGY: MapArea = {
     },
     {
       id: 'homology',
+      match: /\bhomology\b|\bcohomology\b/i,
       name: 'Homology',
       is: 'Counting holes of each dimension by linear algebra on chains, which is computable where homotopy is not.',
       needs: ['homotopy-and-fundamental-group', 'rank-nullity'],
@@ -590,6 +654,7 @@ const TOPOLOGY: MapArea = {
     },
     {
       id: 'manifolds',
+      match: /\bmanifold/i,
       name: 'Manifolds',
       is: 'Spaces that look locally like Euclidean space, which is the minimum needed to do calculus on something curved.',
       needs: ['quotient-and-product-spaces', 'multivariable-chain-rule'],
@@ -597,6 +662,7 @@ const TOPOLOGY: MapArea = {
     },
     {
       id: 'differential-forms',
+      match: /\bdifferential form\b|\bexterior derivative\b/i,
       name: 'Differential forms and Stokes',
       is: 'The object an integral really eats, under which Green, Stokes and divergence become one equation.',
       needs: ['manifolds', 'greens-stokes-divergence'],

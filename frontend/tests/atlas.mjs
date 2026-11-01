@@ -546,8 +546,15 @@ t('a non-theorem medium is never placed', (() => {
   const song = { ...thm('Quadratic formula'), medium: 'music' }
   return conceptsInOffering(MATHEMATICS, song).length === 0
 })())
-t('a theorem the atlas has no checked concept for places nothing',
-  conceptsInOffering(MATHEMATICS, thm('Pythagorean theorem')).length === 0)
+/*
+ * Was 'Pythagorean theorem', which the atlas now recognises — that assertion
+ * was encoding the registry's sparsity rather than a property of the code.
+ * Replaced with a title that is genuinely outside mathematics, which is the
+ * thing actually worth guarding: the trail must stay empty for an offering the
+ * registry knows nothing about, instead of reaching for the nearest word.
+ */
+t('a theorem the atlas has no concept for places nothing',
+  conceptsInOffering(MATHEMATICS, thm('Hadwiger–Nelson problem')).length === 0)
 t('an untitled offering places nothing rather than matching everything',
   conceptsInOffering(MATHEMATICS, thm('')).length === 0)
 
@@ -559,16 +566,24 @@ group('the title is the subject, and the extract is not')
  *
  * Each of these is a real leak that matching the whole text produced.
  */
-t('"Derivative" is not about "what a function is" because its extract says function',
-  conceptsInOffering(MATHEMATICS, thm(
+/*
+ * Both of these now match the right concept, which they did not before the
+ * registry was populated. The assertion that matters is unchanged and is the
+ * one originally intended: the WRONG concept stays out, however much the
+ * extract talks about it.
+ */
+t('"Derivative" is not about "what a function is", however often its extract says function',
+  !conceptsInOffering(MATHEMATICS, thm(
     'Derivative',
     'The derivative of a function of a real variable measures the sensitivity to change of the function value.',
-  )).length === 0)
-t('"Eigenvalues and eigenvectors" is not about factoring because its extract says factor',
-  conceptsInOffering(MATHEMATICS, thm(
+  )).some(c => c.id === 'what-a-function-is'))
+t('and it does land on the derivative itself',
+  conceptsInOffering(MATHEMATICS, thm('Derivative')).some(c => c.id === 'derivative-definition'))
+t('"Eigenvalues and eigenvectors" is not about factoring, however often it says factor',
+  !conceptsInOffering(MATHEMATICS, thm(
     'Eigenvalues and eigenvectors',
     'An eigenvector of a linear transformation is a nonzero vector that changes by a scalar factor.',
-  )).length === 0)
+  )).some(c => /factor/.test(c.id)))
 t('and a long extract cannot add matches to a title that has them', (() => {
   const bare = conceptsInOffering(MATHEMATICS, thm('Logarithm'))
   const verbose = conceptsInOffering(MATHEMATICS, thm(
@@ -591,7 +606,7 @@ t('every relation is one of the four kinds',
   trail.every(c => ['about', 'rests on', 'leads to', 'contained in'].includes(c.relation)))
 t('the trail is capped', relatedConcepts(MATHEMATICS, thm('Quadratic formula'), 3).length <= 3)
 t('an unmatched theorem has no trail',
-  relatedConcepts(MATHEMATICS, thm('Pythagorean theorem')).length === 0)
+  relatedConcepts(MATHEMATICS, thm('Hadwiger–Nelson problem')).length === 0)
 /*
  * The rule this file exists for. The atlas is mostly mapped and unwritten, so a
  * link promising problems where none are authored would send the learner to an
@@ -607,6 +622,182 @@ t('an unteachable one links to the graph instead, where there is something to se
   conceptHref({ id: 'x', teachable: false }).includes('tab=concepts'))
 t('the id is encoded, since it reaches the URL',
   conceptHref({ id: 'a b', teachable: true }).includes('a%20b'))
+
+// ---------------------------------------------------------------------------
+/*
+ * Authored patterns on mapped nodes — `MapNode.match`.
+ *
+ * Bulk authoring needs a guard, and "does the pattern exist" is not one. Three
+ * invariants, each catching a different way a hand-written regex goes wrong:
+ *
+ *  1. It matches its own node's name. Catches typos and a pattern that was
+ *     written against prose rather than a title.
+ *  2. A real article title resolves to the RIGHT concept. This is the only test
+ *     that knows whether the registry is useful, and it is a table of titles an
+ *     encyclopaedia actually uses rather than of names this file chose.
+ *  3. It does not match titles it has no business matching. Over-broad is the
+ *     dominant failure — the patterns here are tested against a title, so
+ *     /functions/ would claim every article with "function" in its name.
+ */
+// ---------------------------------------------------------------------------
+
+group('every checked concept really carries a pattern')
+/*
+ * "The pattern matches its own node's name" was the first invariant here and it
+ * was wrong — it failed on 40 nodes and on four authored concepts, and every
+ * one of those was a false alarm.
+ *
+ * A node's `name` is a curriculum label and the pattern targets an
+ * encyclopaedia title; they are different vocabularies on purpose. "Pythagoras"
+ * is the right name for a syllabus entry and "Pythagorean theorem" is what the
+ * article is called. "Triangles" is plural and the article is not. Requiring the
+ * two to agree would force the curriculum to be named after Wikipedia, which is
+ * backwards.
+ *
+ * What remains checkable structurally is the thing `fidelityMismatches` already
+ * says: a concept claiming to be checked must have something to check with. The
+ * real quality test is the title table below, which knows what the patterns are
+ * *for*.
+ */
+const checkedNodes = MATHEMATICS.concepts.filter(c => c.fidelity === 'checked')
+t('there are authored patterns to check', checkedNodes.length > 20)
+t('every checked concept carries a pattern', checkedNodes.every(c => !!c.scope.match))
+t('and no guided one does',
+  MATHEMATICS.concepts.filter(c => c.fidelity === 'guided').every(c => !c.scope.match))
+t('a recognised-but-unwritten node says so, rather than claiming nothing checks it',
+  MATHEMATICS.concepts
+    .filter(c => c.fidelity === 'checked' && c.knowledgePoints.length === 0)
+    .every(c => !!c.caveat && !/nothing checks/.test(c.caveat)))
+
+group('real article titles land on the right concept')
+/*
+ * The table is titles as an encyclopaedia writes them, because that is what the
+ * `theorem` medium serves. `null` means "nothing in the atlas should claim
+ * this" — those rows are as load-bearing as the positive ones, since a registry
+ * that matches everything is worth less than one that matches nothing.
+ */
+const TITLES = [
+  ['Pythagorean theorem', 'pythagoras'],
+  ['Bayes\' theorem', 'bayes-theorem'],
+  ['Central limit theorem', 'central-limit-theorem'],
+  ['Mean value theorem', 'mean-value-theorem'],
+  ['Fundamental theorem of calculus', 'fundamental-theorem'],
+  ['Chain rule', 'chain-rule'],
+  ['Taylor series', 'taylor-series'],
+  ['Fourier series', 'fourier-series'],
+  ['Eigenvalues and eigenvectors', 'eigenvalues'],
+  ['Singular value decomposition', 'singular-value-decomposition'],
+  ['Gaussian elimination', 'gaussian-elimination'],
+  ['Euclidean algorithm', 'euclidean-algorithm'],
+  ['Modular arithmetic', 'modular-arithmetic'],
+  ['Chinese remainder theorem', 'chinese-remainder'],
+  ['Quadratic reciprocity', 'quadratic-reciprocity'],
+  ['Galois theory', 'galois-theory'],
+  ['Residue theorem', 'residue-theorem'],
+  ['Markov chain', 'markov-chains'],
+  ['Law of large numbers', 'law-of-large-numbers'],
+  ['Maximum likelihood estimation', 'maximum-likelihood'],
+  ['Linear regression', 'linear-regression'],
+  ['Mathematical induction', 'mathematical-induction'],
+  ['Binomial theorem', 'binomial-theorem'],
+  ['Law of sines', 'law-of-sines-cosines'],
+  ['Euler\'s formula', 'eulers-formula'],
+  ['Conic section', 'conic-sections'],
+  ['Intermediate value theorem', 'intermediate-value-theorem'],
+  ['Squeeze theorem', 'squeeze-theorem'],
+  ['L\'Hôpital\'s rule', 'lhopital'],
+  ['Integration by parts', 'integration-by-parts'],
+  ['Lagrange multiplier', 'lagrange-multipliers'],
+  ['Green\'s theorem', 'greens-stokes-divergence'],
+  ['Laplace transform', 'laplace-transform'],
+  ['Cauchy sequence', 'cauchy-sequences'],
+  ['Bolzano–Weierstrass theorem', 'bolzano-weierstrass'],
+  ['Compact space', 'compactness'],
+  ['Fundamental group', 'homotopy-and-fundamental-group'],
+  ['Hypothesis testing', 'hypothesis-testing'],
+  ['Confidence interval', 'confidence-intervals'],
+  ['Analysis of variance', 'anova-and-design'],
+  /*
+   * Inflected titles, as their own rows.
+   *
+   * "Hypothesis testing" was matching nothing because the pattern ended in
+   * `test\b`, and `\b` cannot fall inside "testing". That trap belongs to every
+   * pattern whose last word takes a suffix in the title people actually use, so
+   * the plurals and gerunds are tested rather than assumed.
+   */
+  ['Hypothesis testing', 'hypothesis-testing'],
+  ['Permutations and combinations', 'counting-principles'],
+  ['Partial derivatives', 'partial-derivatives'],
+  ['Eigenvalue', 'eigenvalues'],
+  ['Manifolds', 'manifolds'],
+  ['Conic sections', 'conic-sections'],
+  ['Radian measure', 'radians'],
+  ['Separation of variables', 'separable-equations'],
+  ['Diagonalizable matrix', 'diagonalisation'],
+  ['Homology (mathematics)', 'homology'],
+  // Bare words that four nodes could each claim. Anchoring the pattern to the
+  // article title is what keeps "Sequence" off the arithmetic one and
+  // "Continuous function" off the three rigorous ones.
+  ['Sequence', 'sequences'],
+  ['Continuous function', 'continuity'],
+  ['Sine wave', 'trig-graphs'],
+]
+
+for (const [title, expected] of TITLES) {
+  const o = thm(title)
+  const got = conceptsInOffering(MATHEMATICS, o)
+  const ids = got.map(c => c.id)
+  t(`"${title}" → ${expected}`, ids.includes(expected),
+    ids.length ? `got ${ids.join(', ')}` : 'matched nothing')
+}
+
+group('patterns are not over-broad')
+/*
+ * Each of these is a title that a tempting-but-lazy pattern would have claimed.
+ * The measured leaks from the first version of this feature are in
+ * tests/correlate-logic.mjs; these guard the authored ones.
+ */
+const MUST_NOT = [
+  // "Function" is in a dozen node names, and a pattern on the bare word would
+  // make this article about all of them. `functions-formally` is NOT forbidden
+  // here — it is the concept whose article this is, and the first version of
+  // this row forbade it, which was the test being wrong rather than the
+  // pattern. What must stay out is the specialisation.
+  ['Function (mathematics)', ['functions-of-several-variables', 'multivariable-chain-rule']],
+  // Geometry's congruence and number theory's congruences are different ideas
+  // that share a word.
+  ['Congruence (geometry)', ['linear-congruences', 'modular-arithmetic']],
+  // "Series" likewise.
+  ['Taylor series', ['fourier-series', 'power-series', 'infinite-series']],
+  // A named theorem must not be claimed by the general area it sits in.
+  ['Bayes\' theorem', ['hypothesis-testing', 'bayesian-inference']],
+  ['Pythagorean theorem', ['pythagorean-identity']],
+  ['Sequence', ['arithmetic-sequences', 'geometric-sequences', 'cauchy-sequences']],
+  ['Continuous function', ['rigorous-continuity', 'uniform-continuity']],
+]
+for (const [title, forbidden] of MUST_NOT) {
+  const ids = conceptsInOffering(MATHEMATICS, thm(title)).map(c => c.id)
+  const hit = forbidden.filter(f => ids.includes(f))
+  t(`"${title}" is not claimed by ${forbidden.join(', ')}`, hit.length === 0,
+    hit.length ? `claimed by ${hit.join(', ')}` : '')
+}
+/*
+ * A ceiling on how many concepts one title may be "about". Four is already
+ * generous — a theorem about more than four things at once is a pattern set
+ * that has stopped discriminating, which is the failure that makes the trail
+ * read as noise rather than as structure.
+ */
+for (const [title] of TITLES) {
+  const n = conceptsInOffering(MATHEMATICS, thm(title)).length
+  if (n <= 4) continue
+  t(`"${title}" matches at most four concepts`, false, `matched ${n}`)
+}
+t('no title in the table matches more than four concepts',
+  TITLES.every(([title]) => conceptsInOffering(MATHEMATICS, thm(title)).length <= 4))
+
+console.log('\nrecognition coverage')
+console.log(`  ${checkedNodes.length} of ${MATHEMATICS.concepts.length} concepts can be recognised from a title`)
+console.log(`  ${MATHEMATICS.concepts.filter(c => c.knowledgePoints.length > 0).length} have problems`)
 
 rmSync(outDir, { recursive: true, force: true })
 console.log(`\n${pass} passed, ${failures.length} failed`)

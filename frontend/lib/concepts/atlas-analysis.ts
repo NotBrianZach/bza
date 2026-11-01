@@ -25,6 +25,9 @@ const SEQUENCES_AND_SERIES: MapArea = {
   nodes: [
     {
       id: 'sequences',
+      // Anchored, so it takes "Sequence" and leaves "Arithmetic sequence" and
+      // "Cauchy sequence" to the nodes that are actually about those.
+      match: /^sequence\b/i,
       name: 'Sequences',
       is: 'A function on the naturals, given by a formula or by a recurrence, and those two are not interchangeable.',
       needs: ['function-concept'],
@@ -32,6 +35,7 @@ const SEQUENCES_AND_SERIES: MapArea = {
     },
     {
       id: 'arithmetic-sequences',
+      match: /\barithmetic (sequence|progression|series)\b/i,
       name: 'Arithmetic sequences and sums',
       is: 'Constant difference, with the sum obtained by pairing the ends — the argument, not the formula, is the content.',
       needs: ['sequences'],
@@ -39,6 +43,7 @@ const SEQUENCES_AND_SERIES: MapArea = {
     },
     {
       id: 'geometric-sequences',
+      match: /\bgeometric (sequence|progression|series)\b/i,
       name: 'Geometric sequences and sums',
       is: 'Constant ratio, with a closed-form sum, and a finite total when the ratio is inside the unit interval.',
       needs: ['sequences', 'exponential-functions'],
@@ -53,6 +58,7 @@ const SEQUENCES_AND_SERIES: MapArea = {
     },
     {
       id: 'sigma-notation',
+      match: /\bsummation\b/i,
       name: 'Sigma notation',
       is: 'Notation for a sum with an index, and the linearity rules that make it manipulable rather than only readable.',
       needs: ['sequences'],
@@ -60,6 +66,7 @@ const SEQUENCES_AND_SERIES: MapArea = {
     },
     {
       id: 'mathematical-induction',
+      match: /\bmathematical induction\b|^induction \(/i,
       name: 'Induction',
       is: 'Proving a statement for every natural by proving it is inherited — the base case is not a formality.',
       needs: ['sigma-notation', 'geometric-proof'],
@@ -67,6 +74,7 @@ const SEQUENCES_AND_SERIES: MapArea = {
     },
     {
       id: 'sequence-convergence',
+      match: /\b(limit of a sequence|convergent sequence)\b/i,
       name: 'Convergence of a sequence',
       is: 'What it means for terms to settle down, taken informally here: monotone and bounded is enough, and that claim is the one analysis has to earn.',
       needs: ['geometric-sequences', 'real-number-line'],
@@ -74,6 +82,7 @@ const SEQUENCES_AND_SERIES: MapArea = {
     },
     {
       id: 'infinite-series',
+      match: /^series \(mathematics\)|\b(infinite series|harmonic series|geometric series)\b/i,
       name: 'Infinite series',
       is: 'A sum as the limit of its partial sums, which is why rearranging one can change the answer.',
       needs: ['sequence-convergence', 'sigma-notation'],
@@ -81,6 +90,7 @@ const SEQUENCES_AND_SERIES: MapArea = {
     },
     {
       id: 'convergence-tests',
+      match: /\b(convergence test|ratio test|comparison test|integral test|alternating series)\b/i,
       name: 'Convergence tests',
       is: 'Comparison, ratio, root, integral and alternating — a toolkit, and knowing which one the shape of the terms calls for.',
       needs: ['infinite-series'],
@@ -88,6 +98,7 @@ const SEQUENCES_AND_SERIES: MapArea = {
     },
     {
       id: 'power-series',
+      match: /\bpower series\b/i,
       name: 'Power series',
       is: 'A series whose terms carry a variable, with a radius of convergence inside which it defines a function.',
       needs: ['convergence-tests', 'polynomial-functions'],
@@ -95,6 +106,7 @@ const SEQUENCES_AND_SERIES: MapArea = {
     },
     {
       id: 'taylor-series',
+      match: /\b(taylor (series|theorem|expansion)|maclaurin)\b/i,
       name: 'Taylor and Maclaurin series',
       is: 'Building the power series whose derivatives at a point match a given function, and the remainder that says how wrong a truncation is.',
       needs: ['power-series', 'higher-derivatives'],
@@ -103,6 +115,7 @@ const SEQUENCES_AND_SERIES: MapArea = {
     },
     {
       id: 'fourier-series',
+      match: /\bfourier (series|analysis)\b/i,
       name: 'Fourier series',
       is: 'Expanding a periodic function in sines and cosines instead of powers, which works because they are orthogonal.',
       needs: ['taylor-series', 'definite-integral', 'trig-graphs'],
@@ -120,6 +133,7 @@ const LIMITS_AND_CONTINUITY: MapArea = {
   nodes: [
     {
       id: 'limit-of-a-function',
+      match: /\blimit of a function\b|^limit \(mathematics\)/i,
       name: 'The limit of a function',
       is: 'What the outputs approach as the input approaches a point — a claim about the neighbourhood, deliberately not about the point itself.',
       needs: ['graphs-of-functions', 'sequence-convergence'],
@@ -127,6 +141,7 @@ const LIMITS_AND_CONTINUITY: MapArea = {
     },
     {
       id: 'one-sided-limits',
+      match: /\bone-sided limit\b/i,
       name: 'One-sided limits',
       is: 'Approaching from the left and from the right separately, and a two-sided limit existing exactly when they agree.',
       needs: ['limit-of-a-function', 'piecewise-functions'],
@@ -134,6 +149,7 @@ const LIMITS_AND_CONTINUITY: MapArea = {
     },
     {
       id: 'indeterminate-forms',
+      match: /\bindeterminate form\b/i,
       name: 'Indeterminate forms',
       is: '0/0 is not a value but a signal that the expression must be rewritten — which is why cancelling is the main technique.',
       needs: ['limit-of-a-function', 'simplifying-rational'],
@@ -149,6 +165,7 @@ const LIMITS_AND_CONTINUITY: MapArea = {
     },
     {
       id: 'squeeze-theorem',
+      match: /\bsqueeze theorem\b/i,
       name: 'The squeeze theorem',
       is: 'Trapping a function between two that agree in the limit — the standard route to sin(x)/x and the first genuinely clever limit argument.',
       needs: ['limit-of-a-function', 'trig-graphs'],
@@ -156,6 +173,11 @@ const LIMITS_AND_CONTINUITY: MapArea = {
     },
     {
       id: 'continuity',
+      // "Continuity" is the commonest word in analysis and four nodes have a
+      // claim on it — this one, the proved version, the topological one, and
+      // the complex one. So the pattern takes only the article title, and the
+      // bare word is left to no one rather than fought over.
+      match: /^continuous function\b/i,
       name: 'Continuity',
       is: 'The limit existing and equalling the value — three conditions, and a function can fail any one of them alone.',
       needs: ['one-sided-limits'],
@@ -163,6 +185,7 @@ const LIMITS_AND_CONTINUITY: MapArea = {
     },
     {
       id: 'intermediate-value-theorem',
+      match: /\bintermediate value theorem\b/i,
       name: 'The intermediate value theorem',
       is: 'A continuous function on an interval hits every value between its endpoints, which is how a root is located without being solved for.',
       needs: ['continuity'],
@@ -170,6 +193,7 @@ const LIMITS_AND_CONTINUITY: MapArea = {
     },
     {
       id: 'extreme-value-theorem',
+      match: /\bextreme value theorem\b/i,
       name: 'The extreme value theorem',
       is: 'Continuous on a closed bounded interval means the maximum is attained — closed and bounded both do work here.',
       needs: ['continuity'],
@@ -177,6 +201,7 @@ const LIMITS_AND_CONTINUITY: MapArea = {
     },
     {
       id: 'asymptotic-comparison',
+      match: /\b(asymptotic analysis|big o notation)\b/i,
       name: 'Comparing growth rates',
       is: 'Which of two functions wins far out, ordering logs below powers below exponentials, and the notation that records it.',
       needs: ['limits-at-infinity', 'logarithmic-functions'],
@@ -194,6 +219,7 @@ const DIFFERENTIAL_CALCULUS: MapArea = {
   nodes: [
     {
       id: 'derivative-definition',
+      match: /^derivative\b|\bdifference quotient\b/i,
       name: 'The derivative as a limit',
       is: 'The limit of the difference quotient — instantaneous rate of change defined without ever dividing by zero.',
       needs: ['limit-of-a-function', 'lines-in-the-plane'],
@@ -201,6 +227,7 @@ const DIFFERENTIAL_CALCULUS: MapArea = {
     },
     {
       id: 'differentiability',
+      match: /\bdifferentiab(le|ility)\b/i,
       name: 'Differentiability versus continuity',
       is: 'Differentiable implies continuous and not the reverse; the absolute value at zero is the whole counterexample.',
       needs: ['derivative-definition', 'continuity'],
@@ -208,6 +235,7 @@ const DIFFERENTIAL_CALCULUS: MapArea = {
     },
     {
       id: 'power-and-sum-rules',
+      match: /\bpower rule\b/i,
       name: 'Power, sum and constant rules',
       is: 'The first differentiation rules, each proved from the definition rather than asserted.',
       needs: ['derivative-definition', 'binomial-theorem'],
@@ -215,6 +243,7 @@ const DIFFERENTIAL_CALCULUS: MapArea = {
     },
     {
       id: 'product-and-quotient-rules',
+      match: /\b(product rule|quotient rule)\b/i,
       name: 'Product and quotient rules',
       is: 'The derivative of a product is not the product of derivatives, and the quotient rule is the product rule plus the chain rule.',
       needs: ['power-and-sum-rules'],
@@ -222,6 +251,7 @@ const DIFFERENTIAL_CALCULUS: MapArea = {
     },
     {
       id: 'chain-rule',
+      match: /\bchain rule\b/i,
       name: 'The chain rule',
       is: 'Differentiating a composition by multiplying rates, which is the rule that makes every other one general.',
       needs: ['product-and-quotient-rules', 'function-composition'],
@@ -236,6 +266,7 @@ const DIFFERENTIAL_CALCULUS: MapArea = {
     },
     {
       id: 'implicit-differentiation',
+      match: /\bimplicit (function|differentiation)\b/i,
       name: 'Implicit differentiation',
       is: 'Differentiating an equation rather than a formula, which gets a slope on a curve that is not a function.',
       needs: ['chain-rule', 'parametric-and-implicit'],
@@ -250,6 +281,7 @@ const DIFFERENTIAL_CALCULUS: MapArea = {
     },
     {
       id: 'higher-derivatives',
+      match: /\b(second derivative|higher[- ]order derivative)\b/i,
       name: 'Higher derivatives',
       is: 'Differentiating again: the second derivative as concavity, and the notation that keeps the order straight.',
       needs: ['chain-rule'],
@@ -257,6 +289,7 @@ const DIFFERENTIAL_CALCULUS: MapArea = {
     },
     {
       id: 'mean-value-theorem',
+      match: /\b(mean value theorem|rolle('|’)?s theorem)\b/i,
       name: 'The mean value theorem',
       is: 'Somewhere the instantaneous rate equals the average rate — the theorem almost every later statement about derivatives is proved from.',
       needs: ['differentiability', 'extreme-value-theorem'],
@@ -271,6 +304,7 @@ const DIFFERENTIAL_CALCULUS: MapArea = {
     },
     {
       id: 'optimisation',
+      match: /\b(maxima and minima|optimi[sz]ation)\b/i,
       name: 'Optimisation',
       is: 'Finding a largest or smallest value, where the real difficulty is building the function and its domain, not differentiating it.',
       needs: ['curve-sketching', 'word-problems'],
@@ -278,6 +312,7 @@ const DIFFERENTIAL_CALCULUS: MapArea = {
     },
     {
       id: 'related-rates',
+      match: /\brelated rates\b/i,
       name: 'Related rates',
       is: 'Differentiating a relation with respect to time, which is the chain rule applied to a situation rather than a formula.',
       needs: ['implicit-differentiation', 'word-problems'],
@@ -285,6 +320,7 @@ const DIFFERENTIAL_CALCULUS: MapArea = {
     },
     {
       id: 'linear-approximation',
+      match: /\b(linear approximation|differential \(infinitesimal\))\b/i,
       name: 'Linear approximation and differentials',
       is: 'Replacing a function by its tangent line nearby, which is the first term of Taylor and the basis of Newton\'s method.',
       needs: ['derivative-definition', 'curve-sketching'],
@@ -292,6 +328,7 @@ const DIFFERENTIAL_CALCULUS: MapArea = {
     },
     {
       id: 'lhopital',
+      match: /\bl('|’)?h(ô|o)pital\b/i,
       name: "L'Hôpital's rule",
       is: 'Resolving an indeterminate quotient by differentiating top and bottom, which is legal only for the forms it names.',
       needs: ['mean-value-theorem', 'indeterminate-forms'],
@@ -309,6 +346,7 @@ const INTEGRAL_CALCULUS: MapArea = {
   nodes: [
     {
       id: 'antiderivative',
+      match: /\bantiderivative\b/i,
       name: 'Antiderivatives',
       is: 'Undoing differentiation, where the constant of integration is the statement that the answer is a family.',
       needs: ['derivatives-of-transcendentals'],
@@ -316,6 +354,7 @@ const INTEGRAL_CALCULUS: MapArea = {
     },
     {
       id: 'riemann-sums',
+      match: /\briemann sum\b/i,
       name: 'Riemann sums',
       is: 'Approximating area by rectangles and refining, which is the definition the antiderivative turns out to compute.',
       needs: ['sigma-notation', 'limit-of-a-function', 'area-and-perimeter'],
@@ -323,6 +362,7 @@ const INTEGRAL_CALCULUS: MapArea = {
     },
     {
       id: 'definite-integral',
+      match: /^integral\b|\bdefinite integral\b/i,
       name: 'The definite integral',
       is: 'The limit of Riemann sums as a number attached to an interval, signed, and additive over subintervals.',
       needs: ['riemann-sums'],
@@ -330,6 +370,7 @@ const INTEGRAL_CALCULUS: MapArea = {
     },
     {
       id: 'fundamental-theorem',
+      match: /\bfundamental theorem of calculus\b/i,
       name: 'The fundamental theorem of calculus',
       is: 'Differentiation and integration are inverse — the reason an area is computable at all, and the central theorem of the subject.',
       needs: ['definite-integral', 'antiderivative', 'mean-value-theorem'],
@@ -337,6 +378,7 @@ const INTEGRAL_CALCULUS: MapArea = {
     },
     {
       id: 'integration-by-substitution',
+      match: /\bintegration by substitution\b/i,
       name: 'Substitution',
       is: 'The chain rule read backwards, which is why spotting the inner function is the whole skill.',
       needs: ['fundamental-theorem', 'chain-rule'],
@@ -345,6 +387,7 @@ const INTEGRAL_CALCULUS: MapArea = {
     },
     {
       id: 'integration-by-parts',
+      match: /\bintegration by parts\b/i,
       name: 'Integration by parts',
       is: 'The product rule read backwards, where the choice of which factor to differentiate decides whether it helps.',
       needs: ['integration-by-substitution', 'product-and-quotient-rules'],
@@ -352,6 +395,7 @@ const INTEGRAL_CALCULUS: MapArea = {
     },
     {
       id: 'trig-integrals-and-substitution',
+      match: /\btrigonometric substitution\b/i,
       name: 'Trigonometric integrals and substitution',
       is: 'Using identities to make an integrand integrable, and turning a radical into a circular function.',
       needs: ['integration-by-parts', 'trig-substitution-setup'],
@@ -359,6 +403,7 @@ const INTEGRAL_CALCULUS: MapArea = {
     },
     {
       id: 'integration-partial-fractions',
+      match: /\bpartial fraction\b/i,
       name: 'Integrating a rational function',
       is: 'Decompose, then integrate termwise — every rational function is elementary-integrable, which is special and worth noticing.',
       needs: ['integration-by-substitution', 'partial-fractions-linear'],
@@ -367,6 +412,7 @@ const INTEGRAL_CALCULUS: MapArea = {
     },
     {
       id: 'improper-integrals',
+      match: /\bimproper integral\b/i,
       name: 'Improper integrals',
       is: 'An integral over an unbounded interval or past a vertical asymptote, which only means anything as a limit.',
       needs: ['integration-by-parts', 'limits-at-infinity'],
@@ -381,6 +427,7 @@ const INTEGRAL_CALCULUS: MapArea = {
     },
     {
       id: 'volumes-of-revolution',
+      match: /\bsolid of revolution\b/i,
       name: 'Volumes by slicing and revolution',
       is: 'Integrating a cross-sectional area; discs, washers and shells are three bookkeeping choices for one idea.',
       needs: ['area-between-curves', 'solid-geometry'],
@@ -388,6 +435,7 @@ const INTEGRAL_CALCULUS: MapArea = {
     },
     {
       id: 'arc-length-and-surface',
+      match: /\b(arc length|surface of revolution)\b/i,
       name: 'Arc length and surface area',
       is: 'Integrating an element of length built from Pythagoras, which is why the integrand carries a square root.',
       needs: ['volumes-of-revolution', 'distance-and-midpoint'],
@@ -395,6 +443,7 @@ const INTEGRAL_CALCULUS: MapArea = {
     },
     {
       id: 'numerical-integration',
+      match: /\b(numerical integration|simpson('|’)?s rule|trapezoidal rule)\b/i,
       name: 'Numerical integration',
       is: 'Trapezium and Simpson with error bounds — the honest route when no antiderivative is elementary, which is most of the time.',
       needs: ['definite-integral', 'higher-derivatives'],
@@ -419,6 +468,7 @@ const MULTIVARIABLE_CALCULUS: MapArea = {
   nodes: [
     {
       id: 'functions-of-several-variables',
+      match: /\bfunction of several (real )?variables\b|\bmultivariable calculus\b/i,
       name: 'Functions of several variables',
       is: 'A function of a point rather than a number, pictured by level curves instead of a graph.',
       needs: ['three-dimensional-coordinates', 'domain-and-range'],
@@ -426,6 +476,7 @@ const MULTIVARIABLE_CALCULUS: MapArea = {
     },
     {
       id: 'partial-derivatives',
+      match: /\bpartial derivative/i,
       name: 'Partial derivatives',
       is: 'Differentiating in one direction while the rest are held, which is a single-variable derivative on a slice.',
       needs: ['functions-of-several-variables', 'chain-rule'],
@@ -433,6 +484,7 @@ const MULTIVARIABLE_CALCULUS: MapArea = {
     },
     {
       id: 'gradient-and-directional',
+      match: /\b(gradient|directional derivative)\b/i,
       name: 'Gradient and directional derivatives',
       is: 'The gradient as the vector of partials, which points the steepest way up and is perpendicular to the level set.',
       needs: ['partial-derivatives', 'dot-product-geometry'],
@@ -447,6 +499,7 @@ const MULTIVARIABLE_CALCULUS: MapArea = {
     },
     {
       id: 'multivariable-optimisation',
+      match: /\bsecond partial derivative test\b/i,
       name: 'Optimisation in several variables',
       is: 'Critical points from a vanishing gradient, classified by the second-derivative test — with saddle points as a genuinely new outcome.',
       needs: ['multivariable-chain-rule', 'optimisation'],
@@ -454,6 +507,7 @@ const MULTIVARIABLE_CALCULUS: MapArea = {
     },
     {
       id: 'lagrange-multipliers',
+      match: /\blagrange multiplier\b/i,
       name: 'Lagrange multipliers',
       is: 'Optimising under a constraint by aligning gradients, which is a geometric statement before it is a method.',
       needs: ['multivariable-optimisation'],
@@ -461,6 +515,7 @@ const MULTIVARIABLE_CALCULUS: MapArea = {
     },
     {
       id: 'multiple-integrals',
+      match: /\b(multiple integral|double integral|triple integral)\b/i,
       name: 'Double and triple integrals',
       is: 'Integrating over a region, where choosing the order of integration is choosing how to describe the region.',
       needs: ['partial-derivatives', 'definite-integral'],
@@ -468,6 +523,7 @@ const MULTIVARIABLE_CALCULUS: MapArea = {
     },
     {
       id: 'change-of-variables',
+      match: /\b(jacobian|change of variables)\b/i,
       name: 'Change of variables and the Jacobian',
       is: 'Polar, cylindrical and spherical substitution, with the Jacobian as the factor by which the substitution distorts area.',
       needs: ['multiple-integrals', 'polar-coordinates'],
@@ -475,6 +531,7 @@ const MULTIVARIABLE_CALCULUS: MapArea = {
     },
     {
       id: 'vector-fields',
+      match: /\bvector field\b/i,
       name: 'Vector fields',
       is: 'A vector attached to every point, with divergence and curl as the two local measurements you can make of one.',
       needs: ['gradient-and-directional'],
@@ -482,6 +539,7 @@ const MULTIVARIABLE_CALCULUS: MapArea = {
     },
     {
       id: 'line-integrals',
+      match: /\b(line integral|conservative (vector )?field)\b/i,
       name: 'Line integrals and conservative fields',
       is: 'Integrating along a path; a field is conservative exactly when the answer does not depend on which path.',
       needs: ['vector-fields', 'arc-length-and-surface'],
@@ -489,6 +547,7 @@ const MULTIVARIABLE_CALCULUS: MapArea = {
     },
     {
       id: 'surface-integrals',
+      match: /\bsurface integral\b|\bflux\b/i,
       name: 'Surface integrals and flux',
       is: 'Integrating over a surface, where orientation has to be chosen and the choice changes the sign.',
       needs: ['line-integrals', 'change-of-variables'],
@@ -496,6 +555,7 @@ const MULTIVARIABLE_CALCULUS: MapArea = {
     },
     {
       id: 'greens-stokes-divergence',
+      match: /\b(green('|’)?s theorem|stokes('|’)? theorem|divergence theorem)\b/i,
       name: 'Green, Stokes and divergence',
       is: 'Three statements that an integral over a boundary equals an integral over the inside — all one theorem, and all the fundamental theorem.',
       needs: ['surface-integrals', 'fundamental-theorem'],
@@ -513,6 +573,7 @@ const DIFFERENTIAL_EQUATIONS: MapArea = {
   nodes: [
     {
       id: 'what-an-ode-is',
+      match: /\b(ordinary differential equation|differential equation)\b/i,
       name: 'What a differential equation is',
       is: 'A relation between a function and its derivatives, where the solution is a family and an initial condition picks one out.',
       needs: ['antiderivative'],
@@ -520,6 +581,7 @@ const DIFFERENTIAL_EQUATIONS: MapArea = {
     },
     {
       id: 'separable-equations',
+      match: /\bseparation of variables\b/i,
       name: 'Separable equations',
       is: 'Pulling the variables apart and integrating both sides, which is the chain rule used in reverse on purpose.',
       needs: ['what-an-ode-is', 'integration-by-substitution'],
@@ -534,6 +596,7 @@ const DIFFERENTIAL_EQUATIONS: MapArea = {
     },
     {
       id: 'direction-fields',
+      match: /\b(slope field|phase (plane|portrait))\b/i,
       name: 'Direction fields and qualitative behaviour',
       is: 'Reading the long-run behaviour off the equation without solving it — equilibria and their stability.',
       needs: ['what-an-ode-is', 'vector-fields'],
@@ -562,6 +625,7 @@ const DIFFERENTIAL_EQUATIONS: MapArea = {
     },
     {
       id: 'laplace-transform',
+      match: /\blaplace transform\b/i,
       name: 'The Laplace transform',
       is: 'Turning a differential equation into an algebraic one, including the initial conditions — which is why it handles discontinuous forcing.',
       needs: ['improper-integrals', 'nonhomogeneous-equations'],
@@ -577,6 +641,7 @@ const DIFFERENTIAL_EQUATIONS: MapArea = {
     },
     {
       id: 'numerical-odes',
+      match: /\b(euler method|runge(–|-)kutta)\b/i,
       name: 'Numerical solution',
       is: 'Euler and Runge–Kutta: stepping forward with a local error you can bound and a global error you mostly cannot.',
       needs: ['direction-fields', 'linear-approximation'],
@@ -584,6 +649,7 @@ const DIFFERENTIAL_EQUATIONS: MapArea = {
     },
     {
       id: 'pde-introduction',
+      match: /\bpartial differential equation\b|\b(heat|wave) equation\b/i,
       name: 'Partial differential equations',
       is: 'The heat, wave and Laplace equations, and separation of variables as the one technique that gets a reader started.',
       needs: ['systems-of-odes', 'fourier-series', 'partial-derivatives'],
@@ -601,6 +667,7 @@ const REAL_ANALYSIS: MapArea = {
   nodes: [
     {
       id: 'supremum-and-completeness',
+      match: /\b(supremum|infimum|least[- ]upper[- ]bound)\b/i,
       name: 'Supremum and completeness',
       is: 'Every bounded set of reals has a least upper bound. This is the axiom the rationals fail, and every theorem below is downstream of it.',
       needs: ['real-number-line', 'mathematical-induction'],
@@ -608,6 +675,7 @@ const REAL_ANALYSIS: MapArea = {
     },
     {
       id: 'epsilon-delta',
+      match: /\b(epsilon|\(ε, ?δ\))[- ]?delta\b/i,
       name: 'ε-δ and ε-N',
       is: 'Making "approaches" into a quantified statement, which is what turns limit arguments into proofs.',
       needs: ['supremum-and-completeness', 'limit-of-a-function'],
@@ -615,6 +683,7 @@ const REAL_ANALYSIS: MapArea = {
     },
     {
       id: 'cauchy-sequences',
+      match: /\bcauchy sequence\b/i,
       name: 'Cauchy sequences',
       is: 'Terms getting close to each other rather than to a limit — equivalent to convergence in the reals, and that equivalence IS completeness.',
       needs: ['epsilon-delta', 'sequence-convergence'],
@@ -622,6 +691,7 @@ const REAL_ANALYSIS: MapArea = {
     },
     {
       id: 'bolzano-weierstrass',
+      match: /\bbolzano(–|-)weierstrass\b/i,
       name: 'Bolzano–Weierstrass',
       is: 'Every bounded sequence has a convergent subsequence — the compactness fact that the extreme value theorem actually rests on.',
       needs: ['cauchy-sequences'],
@@ -636,6 +706,7 @@ const REAL_ANALYSIS: MapArea = {
     },
     {
       id: 'uniform-continuity',
+      match: /\buniform continuity\b|\buniformly continuous\b/i,
       name: 'Uniform continuity',
       is: 'One δ that works everywhere, which is strictly stronger than continuity at every point — and automatic on a closed bounded interval.',
       needs: ['rigorous-continuity'],
@@ -657,6 +728,7 @@ const REAL_ANALYSIS: MapArea = {
     },
     {
       id: 'riemann-integral',
+      match: /\briemann integral\b/i,
       name: 'The Riemann integral',
       is: 'Upper and lower sums, with integrability defined as their agreement — which makes "is this integrable" a real question.',
       needs: ['rigorous-differentiation', 'definite-integral'],
@@ -664,6 +736,7 @@ const REAL_ANALYSIS: MapArea = {
     },
     {
       id: 'uniform-convergence',
+      match: /\buniform convergence\b/i,
       name: 'Uniform convergence',
       is: 'When a limit of functions inherits continuity and commutes with integration — pointwise convergence does neither.',
       needs: ['riemann-integral', 'uniform-continuity', 'infinite-series'],
@@ -671,6 +744,7 @@ const REAL_ANALYSIS: MapArea = {
     },
     {
       id: 'metric-spaces',
+      match: /\bmetric space\b/i,
       name: 'Metric spaces',
       is: 'Keeping only the distance function, after which convergence, continuity and completeness all still make sense.',
       needs: ['cauchy-sequences'],
@@ -678,6 +752,7 @@ const REAL_ANALYSIS: MapArea = {
     },
     {
       id: 'measure-zero-and-lebesgue',
+      match: /\b(lebesgue (integral|measure)|measure theory|measure \(mathematics\))\b/i,
       name: 'Measure and the Lebesgue integral',
       is: 'Replacing the partition of the domain with a measure on it, which integrates the functions Riemann cannot and makes the limit theorems clean.',
       needs: ['riemann-integral', 'metric-spaces'],
@@ -685,6 +760,7 @@ const REAL_ANALYSIS: MapArea = {
     },
     {
       id: 'functional-analysis-intro',
+      match: /\b(hilbert space|banach space|normed vector space|functional analysis)\b/i,
       name: 'Normed and Hilbert spaces',
       is: 'Vector spaces of functions with a length, where completeness and an inner product recover geometry in infinite dimensions.',
       needs: ['measure-zero-and-lebesgue', 'inner-product-spaces'],
@@ -702,6 +778,7 @@ const COMPLEX_ANALYSIS: MapArea = {
   nodes: [
     {
       id: 'complex-functions',
+      match: /\bcomplex (analysis|function)\b/i,
       name: 'Functions of a complex variable',
       is: 'A map of the plane to itself, which cannot be graphed — so the pictures are of what it does to regions.',
       needs: ['complex-polar-form', 'functions-of-several-variables'],
@@ -716,6 +793,7 @@ const COMPLEX_ANALYSIS: MapArea = {
     },
     {
       id: 'holomorphic-functions',
+      match: /\b(holomorphic|cauchy(–|-)riemann|analytic function)\b/i,
       name: 'Holomorphic functions and Cauchy–Riemann',
       is: 'Complex differentiability, equivalent to a pair of partial differential equations, and it forces the real and imaginary parts to be harmonic.',
       needs: ['complex-limits', 'partial-derivatives'],
@@ -723,6 +801,7 @@ const COMPLEX_ANALYSIS: MapArea = {
     },
     {
       id: 'contour-integration',
+      match: /\bcontour integration\b/i,
       name: 'Contour integration',
       is: 'A line integral in the plane, taken along a curve chosen for convenience rather than given by the problem.',
       needs: ['holomorphic-functions', 'line-integrals'],
@@ -730,6 +809,7 @@ const COMPLEX_ANALYSIS: MapArea = {
     },
     {
       id: 'cauchy-integral-theorem',
+      match: /\bcauchy('|’)?s (integral )?(theorem|formula)\b/i,
       name: "Cauchy's theorem and integral formula",
       is: 'A holomorphic function integrates to zero round a closed loop, and its values inside are determined by its values on the boundary.',
       needs: ['contour-integration', 'greens-stokes-divergence'],
@@ -737,6 +817,7 @@ const COMPLEX_ANALYSIS: MapArea = {
     },
     {
       id: 'complex-power-series',
+      match: /\blaurent series\b/i,
       name: 'Taylor and Laurent series',
       is: 'Holomorphic means analytic — infinitely differentiable and locally a power series, which has no real-variable analogue.',
       needs: ['cauchy-integral-theorem', 'power-series'],
@@ -744,6 +825,7 @@ const COMPLEX_ANALYSIS: MapArea = {
     },
     {
       id: 'singularities',
+      match: /\b(singularity \(mathematics\)|essential singularity|pole \(complex analysis\)|residue \(complex analysis\))\b/i,
       name: 'Singularities and residues',
       is: 'Classifying the ways a function fails to be holomorphic at a point, and the one coefficient that an integral around it depends on.',
       needs: ['complex-power-series'],
@@ -751,6 +833,7 @@ const COMPLEX_ANALYSIS: MapArea = {
     },
     {
       id: 'residue-theorem',
+      match: /\bresidue theorem\b/i,
       name: 'The residue theorem',
       is: 'Evaluating a contour integral by summing residues, which computes real integrals no real method reaches.',
       needs: ['singularities'],
@@ -759,6 +842,7 @@ const COMPLEX_ANALYSIS: MapArea = {
     },
     {
       id: 'conformal-maps',
+      match: /\bconformal map\b/i,
       name: 'Conformal mapping',
       is: 'Holomorphic maps preserve angles, so they transport a solved boundary-value problem from one region to another.',
       needs: ['holomorphic-functions'],
@@ -766,6 +850,7 @@ const COMPLEX_ANALYSIS: MapArea = {
     },
     {
       id: 'analytic-continuation',
+      match: /\banalytic continuation\b/i,
       name: 'Analytic continuation',
       is: 'A holomorphic function is determined by its values on any small disc, so an extension, if it exists, is unique.',
       needs: ['complex-power-series'],
