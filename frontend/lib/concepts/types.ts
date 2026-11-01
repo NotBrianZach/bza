@@ -121,6 +121,16 @@ export type NamedForm =
   | 'factored'
   /** A sum of monomials. No unexpanded product of sums, no quotient by a non-constant. */
   | 'expanded'
+  /**
+   * The variable appears exactly once, inside a square: `a(x − h)² + k`.
+   *
+   * The form completing the square produces, and the reason the move is worth
+   * teaching — once the variable occurs once, the equation can be undone step by
+   * step. `expanded` and `factored` cannot express it: the completed square is
+   * neither a sum of monomials nor a product of factors, and a task asking for
+   * it with no form attached would accept the input unchanged.
+   */
+  | 'completed_square'
   // ── Exponents and logarithms ──
   /** One power, or a plain numeral or symbol. No product or quotient of powers of one base. */
   | 'single_power'

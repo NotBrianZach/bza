@@ -199,14 +199,15 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
       terms: 'word problem modelling translate into equations',
     },
     {
-      id: 'completing-the-square',
-      match: /\bcompleting the square\b/i,
-      name: 'Completing the square',
-      is: 'Rewriting a quadratic so the variable appears once, which is the move the formula is a shortcut for.',
-      needs: ['factoring-quadratics'],
-      terms: 'completing the square vertex form',
-    },
-    {
+      // `completing-the-square` was here and has been AUTHORED — it now lives in
+      // ontology.ts beside `factoring-quadratics`, its prerequisite. It had to
+      // leave: `atlasProblems` refuses a map node that collides with an authored
+      // concept, since the shadowed copy has no knowledge points and would make
+      // an authored subject read as unteachable.
+      //
+      // Every `needs: ['completing-the-square']` elsewhere in this file still
+      // resolves, because `composeAtlas` is the view in which both the authored
+      // concepts and the map nodes exist.
       id: 'quadratic-formula',
       match: /\bquadratic (formula|equation)\b/i,
       name: 'The quadratic formula',

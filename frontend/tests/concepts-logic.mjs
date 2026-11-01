@@ -1691,13 +1691,27 @@ t('rejecting did not change the teaching order', teachingOrder(O)?.length === O.
  * Deleting declined edges instead would make a bad proposal mechanism look good,
  * which is the opposite of what the rate is for.
  */
+/*
+ * Stated as a relationship, not as totals.
+ *
+ * These read `proposed === 13 && promoted === 10` and broke the moment a
+ * concept was authored with two new edges — which is noise, not a finding: the
+ * property being guarded is that a declined edge stays in the DENOMINATOR, and
+ * that is `proposed === promoted + rejected` however many edges exist. Pinning
+ * the absolutes made every authoring pass look like a regression in the review
+ * mechanism.
+ */
 t('promotionRate still counts declined edges as proposed', (() => {
   const rate = promotionRate(O)
-  return rate.proposed === 13 && rate.promoted === 10
+  const s = reviewStatus(O)
+  return rate.proposed === rate.promoted + s.rejected && s.rejected > 0
 })(), JSON.stringify(promotionRate(O)))
 t('reviewStatus separates "said no" from "nobody looked"', (() => {
   const s = reviewStatus(O)
-  return s.promoted === 10 && s.rejected === 3 && s.pending === 0 && s.reviewedRate === 1
+  return s.rejected === rejectedCandidates(O).length
+    && s.pending === pendingCandidates(O).length
+    && s.pending === 0
+    && s.reviewedRate === 1
 })(), JSON.stringify(reviewStatus(O)))
 t('the second subject still has pending candidates, so the rate stays a measurement',
   pendingCandidates(X2).length === 2 && reviewStatus(X2).reviewedRate < 1,
@@ -2022,6 +2036,93 @@ t('and a wrong one is ruled incorrect rather than inconclusive — the engine se
 // `algebra-foundations.links`, and those edges only exist in `MATHEMATICS`.
 
 rmSync(outDir, { recursive: true, force: true })
+// ---------------------------------------------------------------------------
+/*
+ * Completing the square — the first concept promoted out of the atlas.
+ *
+ * Two things are being tested and they are separate: the new form can rule, and
+ * the concept is genuinely teachable rather than merely present. The generic
+ * task assertions above already cover the rest — that every reference satisfies
+ * its own form, and that no `given` already satisfies what its task asks, which
+ * is the check that would catch a free mark.
+ */
+// ---------------------------------------------------------------------------
+
+group('the completed_square form')
+
+const cs = (src) => {
+  const parsed = tryParse(src, ['x'])
+  if (!parsed.ok) return { held: false, detail: 'did not parse' }
+  return checkForm(parsed.tree, 'completed_square', 'x')
+}
+
+t('the canonical answer holds', cs('(x + 3)^2 - 4').held === true)
+/*
+ * Four phrasings of the same right answer. The check counts occurrences of the
+ * variable rather than matching a shape precisely so that these all pass — a
+ * structural matcher would have to enumerate them and would reject the fifth
+ * nobody thought of.
+ */
+t('the constant may come first', cs('-4 + (x + 3)^2').held === true)
+t('the square may be scaled', cs('2*(x - 1)^2 + 5').held === true)
+t('the shift may be fractional', cs('(x + 3/2)^2 - 9/4').held === true)
+t('there need be no constant at all', cs('(x - 5)^2').held === true)
+
+t('an untouched quadratic does not hold', cs('x^2 + 6x + 5').held === false)
+t('and the failure says what is wrong with it',
+  /appears 2 times/.test(cs('x^2 + 6x + 5').detail))
+t('a factored quadratic does not hold either', cs('(x + 3)*(x - 5)').held === false)
+/*
+ * The two failures are reported apart because they call for different next
+ * moves: the work not being done, versus being done into the wrong shape.
+ */
+t('one occurrence not under a square does not hold', cs('2x + 1').held === false)
+t('and says so, rather than reporting the count',
+  /not inside a square/.test(cs('2x + 1').detail))
+t('a cube is not a square', cs('(x + 3)^3 - 4').held === false)
+t('an expression with no x abstains rather than refusing', cs('7').held === null)
+t('the form is registered with a label, like every other',
+  ALL_NAMED_FORMS.includes('completed_square') && !!FORM_LABELS.completed_square)
+t('it is discriminating, being a positive structural claim',
+  DISCRIMINATING_FORMS.includes('completed_square'))
+
+group('completing the square is teachable, not just present')
+
+const CTS = conceptById(O, 'completing-the-square')
+t('the concept is in the authored ontology', !!CTS)
+t('it has knowledge points, which is what teachable means',
+  isTeachable(O, 'completing-the-square'))
+t('every knowledge point carries a worked example',
+  CTS.knowledgePoints.every(p => !!p.workedExample?.problem && !!p.workedExample.answer))
+t('every worked example has subgoals, not just an answer',
+  CTS.knowledgePoints.every(p => p.workedExample.subgoals.length >= 2))
+t('its objective names task kinds that could satisfy it',
+  CTS.objectives.every(o => o.taskKinds.length > 0))
+t('tasks exist for every one of its knowledge points',
+  CTS.knowledgePoints.every(p => tasksForPoint(p.id).length > 0))
+t('it is checked, so a theorem can be recognised as being about it',
+  CTS.fidelity === 'checked' && !!CTS.scope.match)
+/*
+ * The gate it was authored under. Factoring first, because completing the
+ * square is what you reach for when the factor pair does not exist — so
+ * knowing when it does has to come first.
+ */
+t('factoring gates it', prerequisitesOf(O, 'completing-the-square').includes('factoring-quadratics'))
+t('and it is not a root of the subject', !roots(O).includes('completing-the-square'))
+t('the teaching order still exists, so nothing introduced a cycle',
+  teachingOrder(O) !== null)
+t('doing it exercises polynomial arithmetic, since expanding back is the check',
+  encompassedBy(O, 'completing-the-square').includes('polynomial-arithmetic'))
+/*
+ * The pattern overlap that had to be cleaned up. `factoring-quadratics` listed
+ * "completing the square" as one of its own alternatives, and its pattern is
+ * longer — so it would have won the sort in `conceptsInOffering` and labelled
+ * the article as primarily about factoring.
+ */
+t('factoring no longer claims the phrase',
+  !conceptById(O, 'factoring-quadratics').scope.match.test('Completing the square'))
+t('and completing the square does',
+  CTS.scope.match.test('Completing the square'))
 
 console.log(`\n${pass} passed, ${failures.length} failed`)
 if (failures.length) {

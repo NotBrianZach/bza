@@ -137,7 +137,11 @@ const CONCEPTS: Concept[] = [
       id: 'factoring-quadratics',
       label: 'Factoring quadratics',
       hint: 'factoring quadratic polynomial discriminant',
-      match: /\b(factor\w*|factoris\w*|factoriz\w*|quadratic|discriminant|completing the square|irreducible)\w*/i,
+      // `completing the square` was an alternative here and has been removed:
+      // it is its own authored concept now, and leaving it would have made the
+      // longer pattern win the sort in `conceptsInOffering` — labelling the
+      // article "Completing the square" as primarily about factoring.
+      match: /\b(factor\w*|factoris\w*|factoriz\w*|quadratic|discriminant|irreducible)\w*/i,
     },
     fidelity: 'checked',
     objectives: [
@@ -689,6 +693,139 @@ const CONCEPTS: Concept[] = [
       },
     ],
   },
+
+  /**
+   * Completing the square — promoted out of the atlas.
+   *
+   * It was a map node (`atlas-foundations.ts`, removed in the same commit) and
+   * it had to leave the map to be authored: `atlasProblems` refuses a node that
+   * collides with an authored concept, because the shadowed copy carries no
+   * knowledge points and the subject would silently read as unteachable.
+   *
+   * It is authored HERE rather than as a new subject because this ontology
+   * already owns `factoring-quadratics`, which is its prerequisite. Keeping the
+   * pair together means the gate is an edge between two concepts one file owns,
+   * and no new `Subject` or `ONTOLOGIES` entry is needed — so the hard-coded
+   * `ONTOLOGIES[0]` default that /learn and /api/learn/session both read is
+   * untouched.
+   *
+   * It is also the first concept chosen because of /play. Highlighting
+   * "Completing the square" in a game already showed it on the concept trail,
+   * marked as mapped with nothing to practise — a dead end arrived at by a
+   * feature built to avoid dead ends.
+   *
+   * ── Why it needed a new form ─────────────────────────────────────────────
+   *
+   * Neither `expanded` nor `factored` can express the demand. A completed square
+   * is not a sum of monomials and not a product of factors, so a task asking for
+   * one with no form attached would accept the input back unchanged and call it
+   * correct. `completed_square` is in forms.ts, and it rules by counting
+   * occurrences of the variable rather than by matching a shape — which is both
+   * robust to the four phrasings a right answer arrives in and a restatement of
+   * what the skill actually is.
+   */
+  {
+    id: 'completing-the-square',
+    name: 'Completing the square',
+    subjectId: subject.id,
+    scope: {
+      id: 'completing-the-square',
+      label: 'Completing the square',
+      hint: 'completing the square vertex form quadratic',
+      match: /\b(completing the square|vertex form)\b/i,
+    },
+    fidelity: 'checked',
+    objectives: [
+      {
+        id: 'complete-the-square',
+        statement:
+          'Rewrite any quadratic so the variable appears once, and read the vertex off the result.',
+        taskKinds: ['transform_to_form', 'justify'],
+      },
+    ],
+    knowledgePoints: [
+      {
+        id: 'complete-monic',
+        conceptId: 'completing-the-square',
+        statement:
+          'For x² + bx + c, half of b is the number that goes inside the bracket. Squaring the ' +
+          'bracket adds (b/2)² that was never there, so the same amount comes straight back off.',
+        position: 1,
+        automaticityTarget: 30_000,
+        workedExample: {
+          problem: 'Write x² + 6x + 5 as a completed square.',
+          subgoals: [
+            {
+              label: 'Half the coefficient of x',
+              detail: 'b = 6, so half of it is 3. The bracket is (x + 3).',
+            },
+            {
+              label: 'What did the bracket add?',
+              detail: '(x + 3)² = x² + 6x + 9. The 9 is not in the original, so subtract it.',
+            },
+            {
+              label: 'Put the constant back',
+              detail: 'x² + 6x + 5 = (x + 3)² − 9 + 5 = (x + 3)² − 4.',
+            },
+            {
+              label: 'Check by expanding',
+              detail: '(x + 3)² − 4 = x² + 6x + 9 − 4 = x² + 6x + 5. It agrees.',
+            },
+          ],
+          answer: '(x + 3)² − 4',
+        },
+      },
+      {
+        id: 'complete-odd-b',
+        conceptId: 'completing-the-square',
+        statement:
+          'Nothing changes when b is odd — half of it is simply a fraction. The temptation is to ' +
+          'round it, and rounding makes the identity false.',
+        position: 2,
+        workedExample: {
+          problem: 'Write x² + 3x + 1 as a completed square.',
+          subgoals: [
+            { label: 'Half of b', detail: 'b = 3, so half is 3/2. The bracket is (x + 3/2).' },
+            {
+              label: 'What did it add?',
+              detail: '(x + 3/2)² = x² + 3x + 9/4, so 9/4 has to come off.',
+            },
+            {
+              label: 'Combine the constants',
+              detail: '1 − 9/4 = 4/4 − 9/4 = −5/4.',
+            },
+          ],
+          answer: '(x + 3/2)² − 5/4',
+        },
+      },
+      {
+        id: 'complete-non-monic',
+        conceptId: 'completing-the-square',
+        statement:
+          'When the leading coefficient is not 1, take it out of the x terms first and complete ' +
+          'the square inside the bracket. The factor then multiplies the correction as well, ' +
+          'which is the step people drop.',
+        position: 3,
+        workedExample: {
+          problem: 'Write 2x² + 8x + 5 as a completed square.',
+          subgoals: [
+            { label: 'Take the 2 out of the x terms', detail: '2(x² + 4x) + 5.' },
+            {
+              label: 'Complete the square inside',
+              detail: 'x² + 4x = (x + 2)² − 4, so this is 2((x + 2)² − 4) + 5.',
+            },
+            {
+              label: 'Multiply the correction out too',
+              detail:
+                '2(x + 2)² − 8 + 5 = 2(x + 2)² − 3. Forgetting to multiply the −4 by 2 is the ' +
+                'usual error, and expanding the answer back catches it.',
+            },
+          ],
+          answer: '2(x + 2)² − 3',
+        },
+      },
+    ],
+  },
 ]
 
 // ---------------------------------------------------------------------------
@@ -723,6 +860,12 @@ const EDGES: ConceptEdge[] = [
     rationale: 'An improper fraction has to be divided before it has a decomposition at all.' },
   { id: 'p9', from: 'partial-fractions-linear', to: 'partial-fractions-repeated', kind: 'prerequisite', promotedBy: 'author' },
   { id: 'p10', from: 'partial-fractions-linear', to: 'partial-fractions-quadratic', kind: 'prerequisite', promotedBy: 'author' },
+  // Promoted out of the atlas — see `completing-the-square` below. The edge the
+  // map node declared (`needs: ['factoring-quadratics']`) is restated here
+  // because it now joins two concepts this ontology owns, which is where an
+  // edge belongs when it can be.
+  { id: 'p11', from: 'factoring-quadratics', to: 'completing-the-square', kind: 'prerequisite', promotedBy: 'author',
+    rationale: 'Completing the square is what you reach for when the factor pair does not exist, so knowing when it does comes first.' },
 
   // ── encompasses ─────────────────────────────────────────────────────────
   // The edges that make credit computable. Each one says: a learner who just did
@@ -737,6 +880,8 @@ const EDGES: ConceptEdge[] = [
   { id: 'e5', from: 'partial-fractions-quadratic', to: 'partial-fractions-linear', kind: 'encompasses', promotedBy: 'author' },
   { id: 'e6', from: 'combining-rational', to: 'polynomial-arithmetic', kind: 'encompasses', promotedBy: 'author',
     rationale: 'Re-expressing each fraction over a common denominator is a polynomial product.' },
+  { id: 'e7', from: 'completing-the-square', to: 'polynomial-arithmetic', kind: 'encompasses', promotedBy: 'author',
+    rationale: 'Expanding the bracket back is how the completed square is checked, so doing one exercises the expansion.' },
 
   // ── interferes_with ─────────────────────────────────────────────────────
   // Symmetric, authored, and each one carries its reason, because an unexplained

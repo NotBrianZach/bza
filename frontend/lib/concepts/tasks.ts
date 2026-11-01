@@ -236,6 +236,86 @@ export const TASKS: PracticeTask[] = [
     reference: '(2x + 1)(x + 3)',
   },
 
+  // ── completing-the-square ───────────────────────────────────────────────
+  //
+  // `form: 'completed_square'` is doing the real work on every one of these.
+  // Without it the reference check alone would accept the given back unchanged:
+  // `x^2 + 6x + 5` is equivalent to `(x + 3)^2 - 4`, so equivalence cannot tell
+  // a completed square from an untouched quadratic. The form is what makes the
+  // task a task.
+  {
+    id: 'complete-monic-1',
+    knowledgePointId: 'complete-monic',
+    kind: 'transform_to_form',
+    prompt: 'Write this as a completed square.',
+    given: 'x^2 + 6x + 5',
+    form: 'completed_square',
+    variables: REAL_X,
+    reference: '(x + 3)^2 - 4',
+  },
+  {
+    id: 'complete-monic-2',
+    knowledgePointId: 'complete-monic',
+    kind: 'transform_to_form',
+    prompt: 'Write this as a completed square.',
+    given: 'x^2 - 10x + 7',
+    form: 'completed_square',
+    variables: REAL_X,
+    reference: '(x - 5)^2 - 18',
+  },
+  // A negative constant inside, so the two corrections do not cancel into
+  // something that looks right for the wrong reason.
+  {
+    id: 'complete-monic-3',
+    knowledgePointId: 'complete-monic',
+    kind: 'transform_to_form',
+    prompt: 'Write this as a completed square.',
+    given: 'x^2 + 4x - 1',
+    form: 'completed_square',
+    variables: REAL_X,
+    reference: '(x + 2)^2 - 5',
+  },
+  {
+    id: 'complete-odd-b-1',
+    knowledgePointId: 'complete-odd-b',
+    kind: 'transform_to_form',
+    prompt: 'Write this as a completed square. Keep the fraction exact.',
+    given: 'x^2 + 3x + 1',
+    form: 'completed_square',
+    variables: REAL_X,
+    reference: '(x + 3/2)^2 - 5/4',
+  },
+  {
+    id: 'complete-odd-b-2',
+    knowledgePointId: 'complete-odd-b',
+    kind: 'transform_to_form',
+    prompt: 'Write this as a completed square. Keep the fraction exact.',
+    given: 'x^2 - 5x + 2',
+    form: 'completed_square',
+    variables: REAL_X,
+    reference: '(x - 5/2)^2 - 17/4',
+  },
+  {
+    id: 'complete-non-monic-1',
+    knowledgePointId: 'complete-non-monic',
+    kind: 'transform_to_form',
+    prompt: 'Write this as a completed square. The leading coefficient is not 1.',
+    given: '2x^2 + 8x + 5',
+    form: 'completed_square',
+    variables: REAL_X,
+    reference: '2(x + 2)^2 - 3',
+  },
+  {
+    id: 'complete-non-monic-2',
+    knowledgePointId: 'complete-non-monic',
+    kind: 'transform_to_form',
+    prompt: 'Write this as a completed square. The leading coefficient is not 1.',
+    given: '3x^2 - 12x + 7',
+    form: 'completed_square',
+    variables: REAL_X,
+    reference: '3(x - 2)^2 - 5',
+  },
+
   // ── polynomial-division ─────────────────────────────────────────────────
   {
     id: 'long-division-1',

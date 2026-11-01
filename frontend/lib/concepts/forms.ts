@@ -596,6 +596,65 @@ function checkRadicalFree(node: ExprNode, _symbol: string): FormCheck {
  * It also replaces the old `FORM_LABELS` constant, which was a second table
  * keyed by the same union and therefore a second thing to forget.
  */
+/**
+ * `a(x − h)² + k` — the variable once, inside a square.
+ *
+ * Ruled by counting occurrences rather than by matching a shape, which is what
+ * makes it robust to the forms a correct answer actually arrives in. A learner
+ * may write `(x + 3)^2 - 4`, `-4 + (x+3)^2`, `2(x - 1)^2 + 5` or
+ * `(x + 3/2)^2 - 9/4`; all four have the variable in exactly one place and all
+ * four are right. A structural matcher would have to enumerate those and would
+ * reject the fifth phrasing nobody thought of.
+ *
+ * The counting formulation is also what the *skill* is. Completing the square is
+ * taught as "get x to appear once", and the check says precisely that — so a
+ * learner reading the failure detail is told the thing they were trying to do,
+ * rather than a fact about tree shape.
+ *
+ * Two ways to fail, and they are reported apart because they call for different
+ * next moves: the variable still occurring more than once (the work is not
+ * done), and occurring once but not under a square (`2x + 1` has it once too,
+ * and is not a completed square).
+ */
+function checkCompletedSquare(node: ExprNode, symbol: string): FormCheck {
+  if (!symbolsIn(node).includes(symbol)) {
+    return { held: null, detail: `there is no ${symbol} here to complete the square in` }
+  }
+
+  const occurrences = (n: ExprNode): number => {
+    if (n.kind === 'symbol') return n.name === symbol ? 1 : 0
+    return children(n).reduce((sum, c) => sum + occurrences(c), 0)
+  }
+  const count = occurrences(node)
+  if (count > 1) {
+    return {
+      held: false,
+      detail: `${symbol} still appears ${count} times — a completed square has it once, inside one bracket`,
+    }
+  }
+
+  // The one occurrence has to sit under an exponent of 2. Walked from the top so
+  // the square may be scaled, shifted, or both, which is the general shape.
+  const underSquare = (n: ExprNode, squared: boolean): boolean => {
+    if (n.kind === 'symbol') return n.name !== symbol || squared
+    if (n.kind === 'power') {
+      const exponent = unsigned(n.exponent)
+      const isSquare = isNumeral(exponent) && renderExpr(exponent).trim() === '2'
+      return underSquare(n.base, squared || isSquare)
+        && children(n).slice(1).every(c => underSquare(c, squared))
+    }
+    return children(n).every(c => underSquare(c, squared))
+  }
+
+  if (!underSquare(node, false)) {
+    return {
+      held: false,
+      detail: `${symbol} appears once but is not inside a square — the form is a(${symbol} − h)² + k`,
+    }
+  }
+  return { held: true, detail: `${symbol} appears once, inside a square` }
+}
+
 export const FORM_CHECKS: Record<NamedForm, FormSpec> = {
   partial_fractions: {
     label: 'a sum of partial fractions', check: checkPartialFractions, discriminating: true,
@@ -608,6 +667,9 @@ export const FORM_CHECKS: Record<NamedForm, FormSpec> = {
   },
   expanded: {
     label: 'expanded, as a sum of terms', check: checkExpanded, discriminating: true,
+  },
+  completed_square: {
+    label: 'a completed square, a(x − h)² + k', check: checkCompletedSquare, discriminating: true,
   },
   single_power: {
     label: 'a single power', check: checkSinglePower, discriminating: true,
