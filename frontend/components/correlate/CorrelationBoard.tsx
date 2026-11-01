@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, CornerDownRight, Flag, GitBranch,
-  Globe2, Link2, Loader2, Pause, Play, Radio, Repeat, Shuffle, SignalZero, SkipBack,
+  Globe2, Link2, Loader2, MessageSquare, Pause, Play, Radio, Repeat, Shuffle, SignalZero, SkipBack,
   SkipForward, Target, Dices, Share2, Hourglass,
 } from 'lucide-react'
 import { authedFetch } from '@/lib/authedFetch'
@@ -41,6 +41,8 @@ import GameSwitch from './GameSwitch'
 import TuningPanel from './TuningPanel'
 import VoiceBar, { VoiceHint } from './VoiceBar'
 import { useVoiceControl } from './useVoiceControl'
+import DiscussPanel from './DiscussPanel'
+import { useSelectionIn } from './useSelectionIn'
 
 /**
  * How many answers radio keeps queued in front of the one playing.
@@ -1879,6 +1881,11 @@ export default function CorrelationBoard({
                       // nobody switched. A marker on all of them would make the
                       // real ones invisible.
                       playedAs={playedUnder(turn, session.mode, branch.mode)?.name ?? null}
+                      // The game this exchange was actually read under, not the
+                      // one being played now — same reason as `playedAs`. A
+                      // conversation told the wrong game would explain the
+                      // exchange by rules it was never judged against.
+                      gameName={playedUnder(turn, session.mode, branch.mode)?.name ?? branch.game?.name}
                       claims={claims.filter(c => c.from_turn_id === turn.id || c.to_turn_id === turn.id)}
                       graphIndexOf={id => graph.nodes.get(id)?.turn.turn_index ?? null}
                       // Claimable against anything earlier on this path that is
@@ -2367,13 +2374,15 @@ const PROBLEM_TEXT: Record<string, string> = {
 /** One exchange: the move, how it was read, the reply, and what carried across. */
 function TurnBlock({
   turn, graph, player, accentText, accentChip, isFocus, onFocus, playedAs,
-  claims = [], graphIndexOf, onClaim,
+  claims = [], graphIndexOf, onClaim, gameName,
 }: {
   turn: CorrelationTurn
   graph: TurnGraph
   player: OfferingPlayer
   accentText: string
   accentChip: string
+  /** The game this exchange is read under, for the discussion's context. */
+  gameName?: string
   /** True when the next move answers this turn. */
   isFocus: boolean
   onFocus: (id: string) => void
@@ -2402,6 +2411,20 @@ function TurnBlock({
    * follows about a dropped reply versus a search that found nothing — two
    * different things must not look alike.
    */
+  /*
+   * Highlighting a span inside this exchange opens a conversation about it.
+   *
+   * The hook is scoped to this block rather than the document, so the exchange
+   * that owns the selection is the one that hears about it — the board renders a
+   * dozen of these at once and a document-level listener would have to guess.
+   *
+   * Declared above the illegal-turn early return below, because hooks cannot sit
+   * after one. The refused-move branch renders no selectable prose, so these go
+   * unused there, which costs one listener and is the price of the rule.
+   */
+  const { ref: textRef, selected, clear } = useSelectionIn<HTMLDivElement>()
+  const [discussing, setDiscussing] = useState<string | null>(null)
+
   const alone = isSelfReply(turn)
   const moveLabel = alone ? 'it offered, to itself' : 'you offered'
 
@@ -2427,7 +2450,7 @@ function TurnBlock({
   const linked = turn.link_turn_id ? graph.nodes.get(turn.link_turn_id)?.turn ?? null : null
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" ref={textRef}>
       <div className="flex items-center gap-2 flex-wrap">
         <p className="text-[11px] font-medium text-gray-400 dark:text-gray-500">Turn {turn.turn_index + 1}</p>
         {playedAs && (
@@ -2634,6 +2657,32 @@ function TurnBlock({
             </li>
           ))}
         </ul>
+      )}
+
+      {/* The floating offer. Fixed-position, at the end of the selection, which
+          is where the cursor already is — a button at the top of the block would
+          be a trip back up the page for something the player asked for by
+          highlighting. Hidden once the panel is open on that same span, since the
+          panel quotes it back and two copies is noise. */}
+      {selected && discussing !== selected.text && (
+        <button
+          onClick={() => { setDiscussing(selected.text); clear() }}
+          style={{ position: 'fixed', left: selected.x, top: selected.y + 6, zIndex: 50 }}
+          className="flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-full bg-indigo-600 text-white shadow-lg hover:bg-indigo-700 transition-colors"
+        >
+          <MessageSquare size={11} /> Talk about this
+        </button>
+      )}
+
+      {discussing && (
+        <DiscussPanel
+          move={turn.move_offering}
+          reply={turn.reply_offering}
+          gameName={gameName}
+          reading={turn.reading}
+          selection={discussing}
+          onClose={() => setDiscussing(null)}
+        />
       )}
     </div>
   )
