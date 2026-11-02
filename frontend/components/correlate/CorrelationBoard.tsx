@@ -1588,7 +1588,7 @@ export default function CorrelationBoard({
           <button onClick={onBack} className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors mb-2">
             <ArrowLeft size={14} /> All games
           </button>
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap min-w-0">
             {/* Editable in place, because a game is a playlist and the one thing
                 you do to a playlist is rename it. A pencil beside a heading is a
                 smaller affordance than a settings panel for a single string, and
@@ -1596,7 +1596,7 @@ export default function CorrelationBoard({
             {renaming ? (
               <form
                 onSubmit={e => { e.preventDefault(); void commitRename() }}
-                className="flex items-center gap-1.5"
+                className="flex items-center gap-1.5 min-w-0 w-full sm:w-auto"
               >
                 <input
                   autoFocus
@@ -1606,16 +1606,29 @@ export default function CorrelationBoard({
                   onKeyDown={e => { if (e.key === 'Escape') { setRenaming(false); setDraftTitle(session.title) } }}
                   maxLength={120}
                   aria-label="Game name"
-                  className="text-2xl font-bold bg-transparent border-b-2 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:border-gray-500 min-w-0 max-w-full"
+                  className="w-full text-2xl font-bold bg-transparent border-b-2 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:border-gray-500 min-w-0"
                 />
               </form>
             ) : (
-              <h1 className="group flex items-center gap-1.5 text-2xl font-bold text-gray-900 dark:text-gray-100 min-w-0">
-                <span className="truncate">{session.title}</span>
+              <h1 className="group flex items-center gap-1.5 text-2xl font-bold text-gray-900 dark:text-gray-100 min-w-0 max-w-full">
+                {/* `title` so the full name is recoverable on hover once it has
+                    been cut. It is cut often: measured against the production
+                    stylesheet, a 390px viewport leaves this box 222px, which is
+                    about twenty characters.
+                    No `min-w-0` here, and an earlier version of this had one
+                    with a comment calling it load-bearing. It was not —
+                    `truncate` sets `overflow: hidden`, and an overflow other
+                    than visible already zeroes a flex item's automatic minimum
+                    size, so truncation was never the broken part. */}
+                <span className="truncate" title={session.title}>{session.title}</span>
                 <button
                   onClick={() => { setDraftTitle(session.title); setRenaming(true) }}
                   title="Rename this game"
-                  className="flex-shrink-0 text-gray-300 dark:text-gray-600 hover:text-gray-600 dark:hover:text-gray-300 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all"
+                  aria-label="Rename this game"
+                  // Always visible on touch, where there is no hover to reveal
+                  // it — an affordance that only appears on hover is absent on a
+                  // phone, which is the case this whole change is about.
+                  className="flex-shrink-0 text-gray-300 dark:text-gray-600 hover:text-gray-600 dark:hover:text-gray-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100 transition-all"
                 >
                   <Pencil size={14} />
                 </button>
@@ -1664,10 +1677,15 @@ export default function CorrelationBoard({
               title={session.share_token
                 ? 'Sharing is on. Click to turn it off and kill every link.'
                 : 'Make a read-only link anyone can open'}
+              aria-label={session.share_token ? 'Sharing is on' : 'Share this game'}
               className="btn btn-secondary text-sm flex items-center gap-1.5 disabled:opacity-50"
             >
               {sharing ? <Loader2 size={14} className="animate-spin" /> : <Share2 size={14} />}
-              {session.share_token ? 'Shared' : 'Share'}
+              {/* Icon only on a narrow screen. Two labelled buttons are about
+                  160px, which on a 390px viewport is most of what the title had
+                  to live in — and the icons are the recognisable part anyway.
+                  `aria-label` above carries the name once the text is gone. */}
+              <span className="hidden sm:inline">{session.share_token ? 'Shared' : 'Share'}</span>
             </button>
           )}
           {!isOver && turns.length > 0 && (
@@ -1684,9 +1702,15 @@ export default function CorrelationBoard({
                 // the call to action.
                 outOfTurns ? 'btn btn-primary' : 'btn btn-secondary'
               }`}
+              aria-label={outOfTurns ? 'Close this game' : 'Finish this game'}
             >
               {closing ? <Loader2 size={14} className="animate-spin" /> : <Flag size={14} />}
-              {closing ? 'Closing…' : outOfTurns ? 'Close it' : 'Finish'}
+              {/* Kept visible while closing even on mobile: it is the one state
+                  where the label is news rather than decoration, and the button
+                  is disabled anyway so nothing is competing for the room. */}
+              <span className={closing ? '' : 'hidden sm:inline'}>
+                {closing ? 'Closing…' : outOfTurns ? 'Close it' : 'Finish'}
+              </span>
             </button>
           )}
         </div>

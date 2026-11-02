@@ -272,8 +272,11 @@ function PlayPageInner() {
                     return (
                       <li key={s.id} className="group flex items-center gap-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-3">
                         <Link href={`/play?game=${s.id}`} className="flex-1 min-w-0">
-                          <span className="flex items-center gap-2 flex-wrap">
-                            <span className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{s.title}</span>
+                          <span className="flex items-center gap-2 flex-wrap min-w-0">
+                            {/* `title` so a cut name is still readable on
+                                hover, now that these are named after whole
+                                tracks rather than after the game type. */}
+                            <span className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate" title={s.title}>{s.title}</span>
                             <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full flex-shrink-0 ${accent.chip}`}>
                               {game?.name ?? retiredGameName(s.mode) ?? s.mode}
                             </span>
