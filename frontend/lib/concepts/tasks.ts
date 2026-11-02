@@ -218,16 +218,26 @@ export const TASKS: PracticeTask[] = [
   },
 
   /*
-   * `evaluate` tasks on polynomial arithmetic, so the subject has a way in.
+   * `evaluate` tasks on polynomial arithmetic, so the subject survives the
+   * worker being unreachable.
    *
-   * Found by an invariant written while authoring completing the square: this
-   * concept's three tasks are all `transform_to_form`, all of which need the
-   * worker — and `factoring-quadratics` and `polynomial-division` are each
-   * gated SOLELY behind it. So with no worker configured, which is production,
-   * a learner who chose rational-expressions hit a wall at its first concept
-   * and nothing behind it was reachable by doing problems.
+   * This concept's other three tasks are all `transform_to_form`, which cannot
+   * be settled without the CAS — and `factoring-quadratics` and
+   * `polynomial-division` are each gated SOLELY behind it. So whenever the
+   * worker is down, a learner who chose rational-expressions meets a wall at
+   * its first concept and nothing behind it can be reached by doing problems.
    *
-   * Evaluating at a point is the right stand-in rather than a consolation
+   * NOT because the worker is absent. It is deployed and wired up:
+   * `services.mathwb` on zMothership2, published at
+   * math-worker.aireadalong.com by a Cloudflare Tunnel, with
+   * MATH_WORKBENCH_URL and MATH_WORKBENCH_TOKEN live as Worker secrets. An
+   * earlier version of this comment claimed production had no worker, which was
+   * wrong — it was inferred from a locally-built `NO_WORKER` config rather than
+   * observed. But the tunnel terminates on a home machine, so "unreachable" is
+   * an ordinary state rather than a hypothetical, and a subject that becomes
+   * impassable when it happens is worth preventing.
+   *
+   * Evaluating at a point is the right fallback rather than a consolation
    * prize: expansion is an identity, so the two forms must agree at every
    * value, and checking one is how the expansion is verified by hand anyway.
    * It cannot be done without expanding correctly.
@@ -379,14 +389,15 @@ export const TASKS: PracticeTask[] = [
     reference: '3(x - 2)^2 - 5',
   },
   /*
-   * The same skill as `evaluate`, so the concept is gradable with no worker.
+   * The same skill as `evaluate`, so the concept stays gradable when the worker
+   * is unreachable.
    *
-   * This was found by measuring rather than reasoning: all seven
-   * `transform_to_form` tasks above rule `inconclusive` in production, because
-   * `MATH_WORKBENCH_URL` is unset and the equivalence half of a transform needs
-   * the worker. A concept whose every task is inconclusive can never gain
-   * strength, so `quadratic-formula` — which it gates — would have been
-   * reachable only by claiming it.
+   * All seven `transform_to_form` tasks above need the CAS for the equivalence
+   * half, and a concept whose every task is inconclusive cannot gain strength —
+   * so `quadratic-formula`, which this gates, would be reachable only by
+   * claiming past it. (The worker IS deployed; see the longer note on the
+   * polynomial-arithmetic tasks above, including the correction to an earlier
+   * claim here that it was not.)
    *
    * Completing the square computes exactly two numbers, h = b/2a and
    * k = c − b²/4a, and both are exactly rational. Asking for them directly is

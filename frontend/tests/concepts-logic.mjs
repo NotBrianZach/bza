@@ -1348,28 +1348,34 @@ t('and they say they needed one rather than guessing', (await Promise.all(
 
 group('can a concept be mastered in the default configuration?')
 /*
- * The question this group asks was not being asked, and authoring
- * `completing-the-square` is what exposed it: all seven of its tasks were
- * `transform_to_form`, every one of them ruled `inconclusive` with no worker
- * configured — which is production — and a concept whose every task is
- * inconclusive can never gain strength. It gates `quadratic-formula`, so that
- * would have been reachable only by claiming it.
+ * "Can a learner finish this concept if the CAS cannot be reached?"
  *
- * None of the tests here failed when that was true. The suite checked that
- * tasks exist, that references are correct, and that rulings are honest; it did
- * not check that a learner could finish anything.
+ * A resilience question, and nothing was asking it. The suite checked that
+ * tasks exist, that references are correct and that rulings are honest; it did
+ * not check that anything could be completed. A concept whose every task is a
+ * `transform_to_form` is inconclusive without the worker, and a concept that
+ * is always inconclusive never gains strength — so anything gated behind it is
+ * walled off except via a claim.
  *
- * Four concepts were already in that state before this group was written. They
- * are named rather than fixed: all four are partial fractions and polynomial
- * arithmetic, where the demand genuinely IS a transformation and an `evaluate`
- * stand-in would be testing something else. The real fix for them is deploying
- * the worker, not contorting the tasks.
+ * The worker IS deployed — zMothership2, published through a Cloudflare Tunnel
+ * at math-worker.aireadalong.com, with the URL and token live as Worker
+ * secrets. An earlier version of this comment said production had none, which
+ * was wrong and was inferred from the `NO_WORKER` object below rather than
+ * observed. The group still earns its place: the tunnel terminates on a home
+ * machine, so unreachable is an ordinary state, and `polynomial-arithmetic`
+ * being impassable then would take the whole rational-expressions subject with
+ * it.
+ *
+ * Three concepts are named exceptions rather than fixed — combining rational
+ * expressions and two partial-fractions ones — where the demand genuinely IS a
+ * transformation and an `evaluate` stand-in would be testing something else.
  */
 const WORKERLESS_CONCEPTS = [
   // `polynomial-arithmetic` was here and has been FIXED rather than listed: the
   // gating assertion below showed `factoring-quadratics` and
   // `polynomial-division` were each walled off solely by it, so the whole
-  // rational-expressions subject was unreachable past its first concept.
+  // rational-expressions subject became unreachable past its first concept
+  // whenever the worker could not be reached.
   'combining-rational',
   'partial-fractions-repeated',
   'partial-fractions-quadratic',
