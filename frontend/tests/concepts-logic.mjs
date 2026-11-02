@@ -1105,7 +1105,19 @@ t('a negative exponent inverts', show('2^(0 - 2)') === '1/4')
 t('nested arithmetic', show('(4 + 6 + 5)/3') === '5')
 t('a symbol has no rational value', exactValue({ kind: 'symbol', name: 'x' }) === null)
 t('pi has no rational value', exactValue({ kind: 'constant', name: 'pi' }) === null)
-t('a function call has no rational value', val('sqrt(4)') === null)
+/*
+ * `sqrt(4)` used to be the example of "a function call has no rational value",
+ * which was a statement about this function rather than about the number.
+ * `exactValue` had no case for a function node at all, so every call returned
+ * null — including the ones that are exactly rational, which made every task on
+ * the quadratic formula need the math worker.
+ */
+t('an exactly-rational square root is computed', show('sqrt(4)') === '2')
+t('a nested one too', show('sqrt(16)/2') === '2')
+t('abs is exact', show('abs(0 - 7)') === '7')
+t('an irrational square root still has no rational value', val('sqrt(2)') === null)
+t('and a function that is irrational nearly everywhere has none either',
+  val('log(5)') === null && val('sin(1)') === null)
 t('division by zero is not a value, rather than a crash', val('1/(3 - 3)') === null)
 t('an exact fractional exponent is computed', show('4^(1/2)') === '2')
 t('an inexact one is still refused', val('2^(1/2)') === null)
@@ -1171,8 +1183,10 @@ t('an unparseable given is an authoring fault',
   (await ruleEvaluate(evalTask({ given: 'x +' }), '0', NO_WORKER)).verdict.ruling === 'inconclusive')
 
 group('ruleEvaluate — the non-rational fallback needs the worker and says so')
+// `sqrt(2)`, not `sqrt(16)`: the latter is now computed exactly, so it stopped
+// being an example of an answer with no rational value.
 const irrational = await ruleEvaluate(
-  evalTask({ given: 'x^2', at: { x: '2' }, reference: '4' }), 'sqrt(16)', NO_WORKER)
+  evalTask({ given: 'x^2', at: { x: '2' }, reference: '4' }), 'sqrt(2)', NO_WORKER)
 t('an answer with no rational value is inconclusive when no worker is configured',
   irrational.verdict.ruling === 'inconclusive')
 t('and names why it needed one', /no exact rational value/.test(irrational.verdict.method))
@@ -1187,10 +1201,32 @@ t('and says which kind', /kind "justify" has no verifier/.test(unruled.reason))
 
 group('the shipped evaluate tasks')
 const EVALS = TASKS.filter(task => task.kind === 'evaluate')
-// Forty: thirteen across the two algebra subjects, plus one per
-// knowledge point in arithmetic-foundations (15) and functions-and-inverses
-// (12), both of which are `evaluate`-only.
-t('there are sixty-one across the six subjects', EVALS.length === 61, `${EVALS.length}`)
+/**
+ * The tasks whose answer has no rational value, so only the worker can rule them.
+ *
+ * Named, and used by all three assertions below that have to make an exception.
+ * A list rather than a count because every entry has to be justified by the
+ * mathematics: `root-as-exponent-1` asks for a fractional exponent `exactValue`
+ * refuses, and the two formula tasks ask for −1 + √2 and 2 + √3, which no
+ * arrangement of this code could give a rational value.
+ *
+ * It was one entry and is now three. Keeping it a list is what stops that
+ * growth being silent — a NEW task that cannot be verified locally fails these
+ * assertions until somebody writes down why it belongs here.
+ */
+const WORKER_ONLY = ['root-as-exponent-1', 'formula-irrational-1', 'formula-irrational-2']
+/*
+ * A floor, not a total.
+ *
+ * This read `=== 61` and before that `=== 40`, and each authoring pass has had
+ * to come back and edit the number — which tests nothing: the count is an
+ * outcome of how much has been written, and asserting it exactly makes writing
+ * more look like a regression. What is worth guarding is that the shipped set
+ * has not collapsed, and that every subject contributes something.
+ */
+t('there are many, across every subject', EVALS.length >= 60, `${EVALS.length}`)
+t('and no subject ships none', ONTOLOGIES.every(o =>
+  allKnowledgePoints(o).some(point => tasksForPoint(point.id).length > 0)))
 t('they cover the six knowledge points that had no task at all', (() => {
   const previouslyBare = [
     'irreducible-quadratic', 'improper-first', 'excluded-points',
@@ -1232,8 +1268,8 @@ const reDerive = task => {
 t('every rationally-valued reference equals its given at the stated inputs',
   EVALS.map(reDerive).every(r => r === 'ok' || r === 'skip'),
   EVALS.map(reDerive).filter(r => r !== 'ok' && r !== 'skip').join('; '))
-t('every evaluate task is now locally verifiable — exact roots closed the gap',
-  EVALS.filter(task => reDerive(task) === 'skip').length === 0,
+t('only the named worker-only tasks are skipped by the re-derivation',
+  EVALS.filter(task => reDerive(task) === 'skip').every(task => WORKER_ONLY.includes(task.id)),
   EVALS.filter(task => reDerive(task) === 'skip').map(task => task.id).join(','))
 t('the superseded whole-set check still holds for the first subject', (() => {
   const bad = []
@@ -1282,12 +1318,33 @@ const selfRulings = await Promise.all(localEvals.map(task => ruleEvaluate(task, 
 t('every rationally-valued evaluate task rules its own reference correct with no worker',
   selfRulings.every(r => r.status === 'ruled' && r.verdict.ruling === 'correct'),
   selfRulings.map((r, i) => `${localEvals[i].id}:${r.status === 'ruled' ? r.verdict.ruling : r.status}`).join(', '))
-t('most of them are rationally valued', localEvals.length >= EVALS.length - 2,
+t('most of them are rationally valued', localEvals.length >= EVALS.length - 3,
   `${localEvals.length} of ${EVALS.length}`)
-t('the one that is not needs the worker and says so, rather than guessing', (() => {
-  const needsWorker = EVALS.filter(task => !localEvals.includes(task))
-  return needsWorker.length === 0 || needsWorker.every(task => task.id === 'root-as-exponent-1')
+/*
+ * The worker-only list, named task by task.
+ *
+ * It is a list rather than a count because each entry has to be justified by
+ * the MATHEMATICS and not by convenience. All three are irrational answers:
+ * `root-as-exponent-1` asks for a fractional exponent `exactValue` refuses, and
+ * the two irrational-roots tasks ask for `−1 + √2` and `2 + √3`, which have no
+ * rational value for the same reason no arrangement of this code could give
+ * them one.
+ *
+ * Dropping those two tasks would have made this group green again, and would
+ * have deleted the point of the quadratic formula: producing exactly the roots
+ * factoring cannot reach. The honest shape is to keep the tasks and keep the
+ * boundary visible — which is what the suite already did for one task before
+ * there were three.
+ */
+t('the ones that are not need the worker, and each is irrational by mathematics', (() => {
+  const needsWorker = EVALS.filter(task => !localEvals.includes(task)).map(task => task.id)
+  const sanctioned = ['root-as-exponent-1', 'formula-irrational-1', 'formula-irrational-2']
+  return needsWorker.every(id => sanctioned.includes(id))
 })(), EVALS.filter(task => !localEvals.includes(task)).map(t2 => t2.id).join(', '))
+t('and they say they needed one rather than guessing', (await Promise.all(
+  EVALS.filter(task => !localEvals.includes(task))
+    .map(task => ruleEvaluate(task, task.reference, NO_WORKER)),
+)).every(r => r.status === 'ruled' && r.verdict.ruling === 'inconclusive'))
 
 group('coverage across both shipped subjects')
 t('every rational-expressions knowledge point has at least one task', (() => {
@@ -1576,9 +1633,20 @@ t('validateInstance refuses a task that asks for nothing', (() => {
  */
 const authoredValidation = TASKS.map(task => ({ id: task.id, problems: validateInstance(task, 6) }))
   .filter(x => x.problems.length > 0)
-t('every authored task validates, with no exceptions left',
-  authoredValidation.length === 0,
+/*
+ * Every authored task validates, except the knowingly worker-ruled ones — and
+ * the exception is narrow in both directions: only a task on the `WORKER_ONLY`
+ * list may fail, and only with the one problem that list exists for. A
+ * sanctioned task that develops a *different* fault still fails here, which is
+ * what keeps this from becoming "most tasks validate".
+ */
+t('every authored task validates, except the named worker-ruled ones',
+  authoredValidation.every(x =>
+    WORKER_ONLY.includes(x.id)
+    && x.problems.every(p => /no exact value at the stated inputs/.test(p))),
   authoredValidation.map(x => `${x.id}: ${x.problems.join('; ')}`).join(' | '))
+t('and the exception really is used, so it is not dead text',
+  authoredValidation.length > 0 && authoredValidation.length <= WORKER_ONLY.length)
 
 // ---------------------------------------------------------------------------
 // The counterexample kind

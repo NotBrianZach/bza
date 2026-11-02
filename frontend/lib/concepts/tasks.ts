@@ -316,6 +316,106 @@ export const TASKS: PracticeTask[] = [
     reference: '3(x - 2)^2 - 5',
   },
 
+  // ── quadratic-formula ───────────────────────────────────────────────────
+  //
+  // All `evaluate`, which is what made this concept authorable with no new
+  // engine work: `sqrt` is already in ALLOWED_FUNCTIONS, so an irrational root
+  // is an exact expression the verifier can rule.
+  //
+  // One root per task, always a named one. A quadratic has two roots and a task
+  // has one reference, and accepting either would let a learner who always takes
+  // the + branch never discover they had not understood the ±.
+  {
+    id: 'discriminant-negative-1',
+    knowledgePointId: 'read-the-discriminant',
+    kind: 'evaluate',
+    prompt:
+      'Compute the discriminant of x² + x + 1. Its sign is the answer to "how many real roots".',
+    given: 'b^2 - 4*a*c',
+    variables: REAL_ABC,
+    at: { a: '1', b: '1', c: '1' },
+    reference: '-3',
+  },
+  {
+    id: 'discriminant-zero-1',
+    knowledgePointId: 'read-the-discriminant',
+    kind: 'evaluate',
+    prompt:
+      'Compute the discriminant of x² − 6x + 9. Zero means the two roots have collided into one.',
+    given: 'b^2 - 4*a*c',
+    variables: REAL_ABC,
+    at: { a: '1', b: '-6', c: '9' },
+    reference: '0',
+  },
+  // A non-monic perfect square, so the 4ac term cannot be mistaken for 4c.
+  {
+    id: 'discriminant-square-1',
+    knowledgePointId: 'read-the-discriminant',
+    kind: 'evaluate',
+    prompt:
+      'Compute the discriminant of 2x² + 5x − 3. A perfect square here means factoring would ' +
+      'also have worked.',
+    given: 'b^2 - 4*a*c',
+    variables: REAL_ABC,
+    at: { a: '2', b: '5', c: '-3' },
+    reference: '49',
+  },
+  {
+    id: 'formula-rational-1',
+    knowledgePointId: 'apply-the-formula',
+    kind: 'evaluate',
+    prompt:
+      'Use the formula to find the LARGER root of x² − 2x − 15 = 0. It factors, so you can check ' +
+      'the answer against (x + 3)(x − 5).',
+    given: '(-b + sqrt(b^2 - 4*a*c))/(2*a)',
+    variables: REAL_ABC,
+    at: { a: '1', b: '-2', c: '-15' },
+    reference: '5',
+  },
+  {
+    id: 'formula-rational-2',
+    knowledgePointId: 'apply-the-formula',
+    kind: 'evaluate',
+    prompt: 'Find the SMALLER root of 2x² + 5x − 3 = 0.',
+    given: '(-b - sqrt(b^2 - 4*a*c))/(2*a)',
+    variables: REAL_ABC,
+    at: { a: '2', b: '5', c: '-3' },
+    reference: '-3',
+  },
+  // b positive, so −b is negative: the sign slip the knowledge point names.
+  {
+    id: 'formula-rational-3',
+    knowledgePointId: 'apply-the-formula',
+    kind: 'evaluate',
+    prompt: 'Find the LARGER root of x² + 7x + 12 = 0. Watch the sign of −b.',
+    given: '(-b + sqrt(b^2 - 4*a*c))/(2*a)',
+    variables: REAL_ABC,
+    at: { a: '1', b: '7', c: '12' },
+    reference: '-3',
+  },
+  {
+    id: 'formula-irrational-1',
+    knowledgePointId: 'irrational-roots',
+    kind: 'evaluate',
+    prompt:
+      'Find the LARGER root of x² + 2x − 1 = 0, exactly. Keep the surd — a decimal is not the ' +
+      'answer the formula gives.',
+    given: '(-b + sqrt(b^2 - 4*a*c))/(2*a)',
+    variables: REAL_ABC,
+    at: { a: '1', b: '2', c: '-1' },
+    reference: '-1 + sqrt(2)',
+  },
+  {
+    id: 'formula-irrational-2',
+    knowledgePointId: 'irrational-roots',
+    kind: 'evaluate',
+    prompt: 'Find the LARGER root of x² − 4x + 1 = 0, exactly.',
+    given: '(-b + sqrt(b^2 - 4*a*c))/(2*a)',
+    variables: REAL_ABC,
+    at: { a: '1', b: '-4', c: '1' },
+    reference: '2 + sqrt(3)',
+  },
+
   // ── polynomial-division ─────────────────────────────────────────────────
   {
     id: 'long-division-1',

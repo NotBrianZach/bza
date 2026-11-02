@@ -641,6 +641,56 @@ t('the id is encoded, since it reaches the URL',
  */
 // ---------------------------------------------------------------------------
 
+group('promoting a node out of the map keeps its edges')
+/*
+ * The generalised form of a bug this file has already seen once. `needs` lives
+ * on the map node, so authoring a concept and deleting the node takes the edge
+ * with it — and the authored concept becomes a ROOT of mathematics, drawn as
+ * somewhere the subject begins. That happened to `function-concept` and was
+ * noticed only by looking at the graph.
+ *
+ * Asserted over every authored concept rather than the ones it has bitten, so
+ * the next promotion is covered before anybody makes it.
+ */
+const AUTHORED_IDS = new Set(ONTOLOGIES.flatMap(o => o.concepts.map(c => c.id)))
+const atlasRoots = roots(MATHEMATICS)
+/**
+ * The one authored concept that is SUPPOSED to be a root.
+ *
+ * `place-value` is where arithmetic begins and arithmetic is the floor of the
+ * map — it is `ONTOLOGIES[0]`'s first concept precisely because, as that array's
+ * comment puts it, "arithmetic genuinely is met first". So it has nothing behind
+ * it by design, and this assertion found it the moment it was written.
+ *
+ * Named rather than excluded by a rule, because "has no prerequisites" is the
+ * symptom shared by the legitimate bottom of the map and by a concept whose edge
+ * was lost in a promotion. Only a human can tell those apart, so the list says
+ * which one this is.
+ */
+const AUTHORED_ROOTS = ['place-value']
+t('no authored concept is a root of the composed map, bar the floor of arithmetic',
+  atlasRoots.filter(id => AUTHORED_IDS.has(id)).every(id => AUTHORED_ROOTS.includes(id)),
+  atlasRoots.filter(id => AUTHORED_IDS.has(id)).join(', '))
+t('and that exception is real, so it is not dead text',
+  AUTHORED_ROOTS.every(id => atlasRoots.includes(id)))
+t('the map does have roots, so the check is not vacuous', atlasRoots.length > 0)
+/*
+ * The two promotions this was written alongside, named — the assertion above
+ * would also pass if they had never been authored at all.
+ */
+for (const id of ['completing-the-square', 'quadratic-formula']) {
+  t(`${id} is authored, teachable and still gated`,
+    AUTHORED_IDS.has(id)
+    && isTeachable(MATHEMATICS, id)
+    && prerequisitesOf(MATHEMATICS, id).length > 0,
+    prerequisitesOf(MATHEMATICS, id).join(', '))
+}
+t('the quadratic formula kept the surd prerequisite that crosses into the map',
+  prerequisitesOf(MATHEMATICS, 'quadratic-formula').includes('roots-and-irrationals'))
+t('and everything that depended on it still does',
+  dependentsOf(MATHEMATICS, 'quadratic-formula').length > 0,
+  dependentsOf(MATHEMATICS, 'quadratic-formula').join(', '))
+
 group('every checked concept really carries a pattern')
 /*
  * "The pattern matches its own node's name" was the first invariant here and it

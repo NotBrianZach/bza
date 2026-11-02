@@ -826,6 +826,138 @@ const CONCEPTS: Concept[] = [
       },
     ],
   },
+
+  /**
+   * The quadratic formula — promoted out of the atlas, like the concept above.
+   *
+   * Chosen second for one reason: of every mapped node, "Quadratic formula" is
+   * the likeliest mathematics article to turn up in a game, and it was its own
+   * `about` match on the concept trail while having nothing to practise.
+   *
+   * ── It needed no new machinery, which is why it came before easier nodes ──
+   *
+   * Every task here is `evaluate`, and `sqrt` is already in
+   * `ALLOWED_FUNCTIONS` — so the roots of a quadratic are an exact expression
+   * the existing verifier can rule, irrational ones included. That is not true
+   * of several nodes that look cheaper: `gcd-and-lcm` is a number with no
+   * expression to manipulate, and every task must declare a symbol, so "what is
+   * gcd(48, 180)" has no honest shape in this schema at all.
+   *
+   * ── One root per task, deliberately ──────────────────────────────────────
+   *
+   * A quadratic has two roots and a task has one reference, so each task asks
+   * for a named one — "the larger". The alternative, accepting either, would
+   * mean a learner who always took the + branch never discovered they had not
+   * understood the ±.
+   */
+  {
+    id: 'quadratic-formula',
+    name: 'The quadratic formula',
+    subjectId: subject.id,
+    scope: {
+      id: 'quadratic-formula',
+      label: 'The quadratic formula',
+      hint: 'quadratic formula discriminant roots',
+      match: /\b(quadratic formula|discriminant)\b/i,
+    },
+    fidelity: 'checked',
+    objectives: [
+      {
+        id: 'solve-any-quadratic',
+        statement:
+          'Solve any quadratic exactly, and say from the discriminant how many real roots it has ' +
+          'before solving it.',
+        taskKinds: ['evaluate', 'justify'],
+      },
+    ],
+    knowledgePoints: [
+      {
+        id: 'read-the-discriminant',
+        conceptId: 'quadratic-formula',
+        statement:
+          'b² − 4ac decides the question before you solve anything: positive gives two real ' +
+          'roots, zero gives one, negative gives none. A perfect square additionally means the ' +
+          'roots are rational, which is exactly when factoring would have worked.',
+        position: 1,
+        automaticityTarget: 20_000,
+        workedExample: {
+          problem: 'How many real roots does x² + x + 1 have?',
+          subgoals: [
+            { label: 'Name a, b, c', detail: 'a = 1, b = 1, c = 1.' },
+            { label: 'Compute b² − 4ac', detail: '1 − 4·1·1 = 1 − 4 = −3.' },
+            {
+              label: 'Read the sign',
+              detail:
+                'Negative, so there is no real square root to take and the equation has no real ' +
+                'roots. The parabola never crosses the axis.',
+            },
+          ],
+          answer: 'None — the discriminant is −3.',
+        },
+      },
+      {
+        id: 'apply-the-formula',
+        conceptId: 'quadratic-formula',
+        statement:
+          'x = (−b ± √(b² − 4ac)) / 2a. The whole numerator is over 2a, and the minus sign in ' +
+          '−b applies to b whatever sign b already had — both are places the formula is ' +
+          'misremembered rather than misunderstood.',
+        position: 2,
+        workedExample: {
+          problem: 'Solve x² − 2x − 15 = 0.',
+          subgoals: [
+            { label: 'Name a, b, c', detail: 'a = 1, b = −2, c = −15.' },
+            {
+              label: 'The discriminant first',
+              detail: '(−2)² − 4·1·(−15) = 4 + 60 = 64. A perfect square, so expect rational roots.',
+            },
+            {
+              label: 'Substitute',
+              detail: 'x = (2 ± 8) / 2, since −b = 2 and √64 = 8.',
+            },
+            {
+              label: 'Both branches',
+              detail: 'x = 10/2 = 5, or x = −6/2 = −3.',
+            },
+            {
+              label: 'Check against factoring',
+              detail:
+                'x² − 2x − 15 = (x + 3)(x − 5), whose roots are −3 and 5. The two methods agree, ' +
+                'which is the check available whenever the discriminant is a perfect square.',
+            },
+          ],
+          answer: 'x = 5 or x = −3',
+        },
+      },
+      {
+        id: 'irrational-roots',
+        conceptId: 'quadratic-formula',
+        statement:
+          'When the discriminant is positive but not a perfect square the roots are irrational, ' +
+          'and the exact answer keeps the surd. Reaching for a decimal here loses the thing the ' +
+          'formula was for — it is the only method that gives these roots at all.',
+        position: 3,
+        workedExample: {
+          problem: 'Solve x² + 2x − 1 = 0 exactly.',
+          subgoals: [
+            { label: 'Name a, b, c', detail: 'a = 1, b = 2, c = −1.' },
+            { label: 'The discriminant', detail: '4 − 4·1·(−1) = 4 + 4 = 8. Positive, not a square.' },
+            {
+              label: 'Substitute and simplify the surd',
+              detail: 'x = (−2 ± √8)/2. √8 = 2√2, so x = (−2 ± 2√2)/2 = −1 ± √2.',
+            },
+            {
+              label: 'Why factoring could not have done this',
+              detail:
+                'There is no pair of rationals multiplying to −1 and adding to 2. That is the ' +
+                'same fact as the discriminant not being a perfect square.',
+            },
+          ],
+          answer: 'x = −1 + √2 or x = −1 − √2',
+        },
+      },
+    ],
+  },
 ]
 
 // ---------------------------------------------------------------------------
@@ -866,6 +998,14 @@ const EDGES: ConceptEdge[] = [
   // edge belongs when it can be.
   { id: 'p11', from: 'factoring-quadratics', to: 'completing-the-square', kind: 'prerequisite', promotedBy: 'author',
     rationale: 'Completing the square is what you reach for when the factor pair does not exist, so knowing when it does comes first.' },
+  // Also promoted out of the atlas. The node declared
+  // `needs: ['completing-the-square', 'roots-and-irrationals']`; the first is
+  // now an authored concept so the edge lives here, and the second is still a
+  // map node so it is carried as a `links` entry in atlas-foundations. Losing
+  // that second edge is how `function-concept` once became a root of the whole
+  // map — see the comment on `functions.links`.
+  { id: 'p12', from: 'completing-the-square', to: 'quadratic-formula', kind: 'prerequisite', promotedBy: 'author',
+    rationale: 'The formula is completing the square carried out once in general, so it is a shortcut for something that has to be understood first.' },
 
   // ── encompasses ─────────────────────────────────────────────────────────
   // The edges that make credit computable. Each one says: a learner who just did
@@ -882,6 +1022,10 @@ const EDGES: ConceptEdge[] = [
     rationale: 'Re-expressing each fraction over a common denominator is a polynomial product.' },
   { id: 'e7', from: 'completing-the-square', to: 'polynomial-arithmetic', kind: 'encompasses', promotedBy: 'author',
     rationale: 'Expanding the bracket back is how the completed square is checked, so doing one exercises the expansion.' },
+  { id: 'e8', from: 'quadratic-formula', to: 'completing-the-square', kind: 'encompasses', promotedBy: 'author',
+    rationale: 'The map node said so with `exercises`, and it is true: applying the formula is completing the square with the arithmetic already done.' },
+  { id: 'e9', from: 'quadratic-formula', to: 'factoring-quadratics', kind: 'encompasses', promotedBy: 'author',
+    rationale: 'A perfect-square discriminant is exactly the case factoring handles, and the formula computes the discriminant on the way.' },
 
   // ── interferes_with ─────────────────────────────────────────────────────
   // Symmetric, authored, and each one carries its reason, because an unexplained

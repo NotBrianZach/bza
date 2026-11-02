@@ -165,8 +165,41 @@ export function exactValue(node: ExprNode): Exact | null {
       }
       return ratio(pow(base.n), pow(base.d))
     }
+    /**
+     * `sqrt` and `abs`, which are sometimes exactly rational.
+     *
+     * Added for the same reason the rational-exponent branch above gives for
+     * itself: `9^(1/2)` is exactly 3 and there is no reason to pretend
+     * otherwise, so refusing outright would make `ruleEvaluate` fall through to
+     * the author's unverified assertion. `sqrt(9)` is the same number written
+     * the other way, and it was returning null purely because nothing handled a
+     * function node at all.
+     *
+     * That gap had a visible cost. The quadratic formula is
+     * `(-b + sqrt(b^2 - 4ac))/(2a)`, so every task on it needed the math worker
+     * — which took the suite's "every evaluate task is gradable with no worker
+     * configured" from true to false for the three tasks whose discriminant is
+     * a perfect square.
+     *
+     * `sqrt(2)` still returns null, which remains the honest answer: it has no
+     * rational value and the worker is the thing that can rule it. So the
+     * irrational-roots tasks are genuinely worker-only, and that is a property
+     * of the mathematics rather than a hole in this function.
+     *
+     * Only these two. Every other allowed function — `log`, `sin`, `gamma` —
+     * is irrational at essentially every rational argument, so a case for it
+     * would be a long way to write `return null`.
+     */
+    case 'function': {
+      if (node.args.length !== 1) return null
+      const v = exactValue(node.args[0])
+      if (!v) return null
+      if (node.name === 'sqrt') return exactRoot(v, 2n)
+      if (node.name === 'abs') return v.n < 0n ? ratio(-v.n, v.d) : ratio(v.n, v.d)
+      return null
+    }
     default:
-      // symbol, constant, function — no rational value, and saying so is the point.
+      // symbol, constant — no rational value, and saying so is the point.
       return null
   }
 }

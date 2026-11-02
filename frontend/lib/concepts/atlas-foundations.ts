@@ -199,24 +199,28 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
       terms: 'word problem modelling translate into equations',
     },
     {
-      // `completing-the-square` was here and has been AUTHORED — it now lives in
-      // ontology.ts beside `factoring-quadratics`, its prerequisite. It had to
-      // leave: `atlasProblems` refuses a map node that collides with an authored
-      // concept, since the shadowed copy has no knowledge points and would make
-      // an authored subject read as unteachable.
+      // Two nodes stood here and both have been AUTHORED — they live in
+      // ontology.ts beside `factoring-quadratics`, which is their prerequisite:
       //
-      // Every `needs: ['completing-the-square']` elsewhere in this file still
-      // resolves, because `composeAtlas` is the view in which both the authored
-      // concepts and the map nodes exist.
-      id: 'quadratic-formula',
-      match: /\bquadratic (formula|equation)\b/i,
-      name: 'The quadratic formula',
-      is: 'Completing the square once, in general, and reading the discriminant for how many real roots there are.',
-      needs: ['completing-the-square', 'roots-and-irrationals'],
-      exercises: ['completing-the-square'],
-      terms: 'quadratic formula discriminant roots',
-    },
-    {
+      //   completing-the-square
+      //   quadratic-formula
+      //
+      // They had to leave. `atlasProblems` refuses a map node that collides
+      // with an authored concept, because the shadowed copy carries no
+      // knowledge points and an authored subject would silently read as
+      // unteachable.
+      //
+      // Their `needs` edges did NOT leave with them. The ones joining authored
+      // concepts moved into that ontology's own edge list, and
+      // `quadratic-formula needs roots-and-irrationals` — which crosses from an
+      // authored concept to a map node — is a `links` entry on this area below.
+      // Dropping that one is precisely how `function-concept` once became a root
+      // of the whole map; see the comment on `functions.links`.
+      //
+      // Every `needs: ['quadratic-formula']` and `needs:
+      // ['completing-the-square']` elsewhere in this file still resolves,
+      // because `composeAtlas` is the view in which authored concepts and map
+      // nodes both exist.
       id: 'complex-numbers',
       match: /^complex number|\bimaginary unit\b/i,
       name: 'Complex numbers',
@@ -272,6 +276,27 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
         'Expanding a product of brackets is the distributive law applied to letters, so it ' +
         'presupposes that a letter stands for a number at all. Without this edge the authored ' +
         'rational-expressions syllabus is drawn as a root of mathematics.',
+    },
+    {
+      /**
+       * THE EDGE THAT WOULD HAVE BEEN LOST WHEN `quadratic-formula` WAS AUTHORED.
+       *
+       * The node declared `needs: ['completing-the-square', 'roots-and-irrationals']`.
+       * The first is now an authored concept, so that edge moved into
+       * ontology.ts. This one crosses from an authored concept to a map node and
+       * has nowhere else to live — an authored ontology's edges may only name
+       * concepts it contains, or `ontologyProblems` reports an unknown endpoint.
+       *
+       * Written at the same time as the promotion rather than afterwards,
+       * because the one previous time a node was authored out of this file the
+       * edge went with it and nobody noticed until `function-concept` was
+       * drawn as a root of mathematics.
+       */
+      from: 'roots-and-irrationals',
+      to: 'quadratic-formula',
+      because:
+        'The formula produces a square root whenever the discriminant is not a perfect square, ' +
+        'so a learner who cannot read √8 as 2√2 cannot write the answer the formula gives.',
     },
     {
       from: 'fraction-arithmetic',
