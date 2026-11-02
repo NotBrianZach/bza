@@ -48,6 +48,19 @@ import type { PracticeTask } from './types'
 /** Every task declares its symbols. Most of them are one real variable. */
 const REAL_X = [{ name: 'x', assumptions: { real: true } }]
 
+/**
+ * Completing the square is in b and c only, with no `a` to give a value to.
+ *
+ * A separate declaration rather than reusing `REAL_ABC`, because every declared
+ * symbol must have a stated input — an unused `a` is an authoring fault the
+ * suite reports, and correctly so: a task whose inputs do not cover its symbols
+ * cannot be evaluated at all.
+ */
+const REAL_BC = [
+  { name: 'b', assumptions: { real: true } },
+  { name: 'c', assumptions: { real: true } },
+]
+
 /** The discriminant tasks are in the coefficients, not in x. */
 const REAL_ABC = [
   { name: 'a', assumptions: { real: true } },
@@ -204,6 +217,56 @@ export const TASKS: PracticeTask[] = [
     reference: '3x^2 + 4x - 5',
   },
 
+  /*
+   * `evaluate` tasks on polynomial arithmetic, so the subject has a way in.
+   *
+   * Found by an invariant written while authoring completing the square: this
+   * concept's three tasks are all `transform_to_form`, all of which need the
+   * worker — and `factoring-quadratics` and `polynomial-division` are each
+   * gated SOLELY behind it. So with no worker configured, which is production,
+   * a learner who chose rational-expressions hit a wall at its first concept
+   * and nothing behind it was reachable by doing problems.
+   *
+   * Evaluating at a point is the right stand-in rather than a consolation
+   * prize: expansion is an identity, so the two forms must agree at every
+   * value, and checking one is how the expansion is verified by hand anyway.
+   * It cannot be done without expanding correctly.
+   */
+  {
+    id: 'expand-binomials-at-1',
+    knowledgePointId: 'expand-binomials',
+    kind: 'evaluate',
+    prompt:
+      'Evaluate (x + 3)(x − 5) at x = 2. Expanding first and substituting first must agree — ' +
+      'that is what makes the expansion an identity rather than a guess.',
+    given: '(x + 3)*(x - 5)',
+    variables: REAL_X,
+    at: { x: '2' },
+    reference: '-15',
+  },
+  {
+    id: 'expand-binomials-at-2',
+    knowledgePointId: 'expand-binomials',
+    kind: 'evaluate',
+    prompt: 'Evaluate (2x − 1)(x + 4) at x = −3.',
+    given: '(2*x - 1)*(x + 4)',
+    variables: REAL_X,
+    at: { x: '-3' },
+    reference: '-7',
+  },
+  {
+    id: 'add-polynomials-at-1',
+    knowledgePointId: 'add-polynomials',
+    kind: 'evaluate',
+    prompt:
+      'Evaluate (2x² − x + 4) + (x² + 5x − 9) at x = 3. Collecting like terms first should give ' +
+      'the same number.',
+    given: '(2*x^2 - x + 4) + (x^2 + 5*x - 9)',
+    variables: REAL_X,
+    at: { x: '3' },
+    reference: '34',
+  },
+
   // ── factoring-quadratics ────────────────────────────────────────────────
   {
     id: 'factor-monic-1',
@@ -314,6 +377,82 @@ export const TASKS: PracticeTask[] = [
     form: 'completed_square',
     variables: REAL_X,
     reference: '3(x - 2)^2 - 5',
+  },
+  /*
+   * The same skill as `evaluate`, so the concept is gradable with no worker.
+   *
+   * This was found by measuring rather than reasoning: all seven
+   * `transform_to_form` tasks above rule `inconclusive` in production, because
+   * `MATH_WORKBENCH_URL` is unset and the equivalence half of a transform needs
+   * the worker. A concept whose every task is inconclusive can never gain
+   * strength, so `quadratic-formula` — which it gates — would have been
+   * reachable only by claiming it.
+   *
+   * Completing the square computes exactly two numbers, h = b/2a and
+   * k = c − b²/4a, and both are exactly rational. Asking for them directly is
+   * not a restatement of the answer: it is the arithmetic the move consists of,
+   * and it isolates the two places it goes wrong — the fraction when b is odd,
+   * and the 4a when the leading coefficient is not 1.
+   *
+   * The transform tasks stay. They are the better test of the skill and they
+   * will rule the moment a worker is configured; these are the floor under
+   * them, not a replacement.
+   */
+  {
+    id: 'complete-monic-k-1',
+    knowledgePointId: 'complete-monic',
+    kind: 'evaluate',
+    prompt:
+      'For x² + 6x + 5 written as (x + h)² + k, what is k? It is the constant left after the ' +
+      'bracket has added (b/2)² that was never there.',
+    given: 'c - (b/2)^2',
+    variables: REAL_BC,
+    at: { b: '6', c: '5' },
+    reference: '-4',
+  },
+  {
+    id: 'complete-odd-b-h-1',
+    knowledgePointId: 'complete-odd-b',
+    kind: 'evaluate',
+    prompt:
+      'For x² + 3x + 1 written as (x + h)² + k, what is h? Keep it exact — rounding it makes ' +
+      'the identity false.',
+    given: 'b/2',
+    variables: REAL_BC,
+    at: { b: '3', c: '1' },
+    reference: '3/2',
+  },
+  {
+    id: 'complete-odd-b-k-1',
+    knowledgePointId: 'complete-odd-b',
+    kind: 'evaluate',
+    prompt: 'And for the same quadratic, x² + 3x + 1, what is k?',
+    given: 'c - (b/2)^2',
+    variables: REAL_BC,
+    at: { b: '3', c: '1' },
+    reference: '-5/4',
+  },
+  {
+    id: 'complete-non-monic-k-1',
+    knowledgePointId: 'complete-non-monic',
+    kind: 'evaluate',
+    prompt:
+      'For 2x² + 8x + 5 written as a(x + h)² + k, what is k? The correction is divided by 4a, ' +
+      'not by 4 — that factor is the step people drop.',
+    given: 'c - b^2/(4*a)',
+    variables: REAL_ABC,
+    at: { a: '2', b: '8', c: '5' },
+    reference: '-3',
+  },
+  {
+    id: 'complete-non-monic-h-1',
+    knowledgePointId: 'complete-non-monic',
+    kind: 'evaluate',
+    prompt: 'For the same quadratic, 2x² + 8x + 5, what is h?',
+    given: 'b/(2*a)',
+    variables: REAL_ABC,
+    at: { a: '2', b: '8', c: '5' },
+    reference: '2',
   },
 
   // ── quadratic-formula ───────────────────────────────────────────────────

@@ -1346,6 +1346,86 @@ t('and they say they needed one rather than guessing', (await Promise.all(
     .map(task => ruleEvaluate(task, task.reference, NO_WORKER)),
 )).every(r => r.status === 'ruled' && r.verdict.ruling === 'inconclusive'))
 
+group('can a concept be mastered in the default configuration?')
+/*
+ * The question this group asks was not being asked, and authoring
+ * `completing-the-square` is what exposed it: all seven of its tasks were
+ * `transform_to_form`, every one of them ruled `inconclusive` with no worker
+ * configured — which is production — and a concept whose every task is
+ * inconclusive can never gain strength. It gates `quadratic-formula`, so that
+ * would have been reachable only by claiming it.
+ *
+ * None of the tests here failed when that was true. The suite checked that
+ * tasks exist, that references are correct, and that rulings are honest; it did
+ * not check that a learner could finish anything.
+ *
+ * Four concepts were already in that state before this group was written. They
+ * are named rather than fixed: all four are partial fractions and polynomial
+ * arithmetic, where the demand genuinely IS a transformation and an `evaluate`
+ * stand-in would be testing something else. The real fix for them is deploying
+ * the worker, not contorting the tasks.
+ */
+const WORKERLESS_CONCEPTS = [
+  // `polynomial-arithmetic` was here and has been FIXED rather than listed: the
+  // gating assertion below showed `factoring-quadratics` and
+  // `polynomial-division` were each walled off solely by it, so the whole
+  // rational-expressions subject was unreachable past its first concept.
+  'combining-rational',
+  'partial-fractions-repeated',
+  'partial-fractions-quadratic',
+]
+
+const gradesWithNoWorker = new Set()
+for (const task of TASKS) {
+  const r = await rule(task, task.reference, NO_WORKER)
+  if (r.status === 'ruled' && r.verdict.ruling === 'correct') gradesWithNoWorker.add(task.id)
+}
+
+const ungradableConcepts = ONTOLOGIES.flatMap(o => o.concepts)
+  .filter(c => c.knowledgePoints.length > 0)
+  .filter(c => {
+    const tasks = c.knowledgePoints.flatMap(p => tasksForPoint(p.id))
+    return tasks.length > 0 && !tasks.some(t2 => gradesWithNoWorker.has(t2.id))
+  })
+  .map(c => c.id)
+
+t('every teachable concept has at least one task a learner can finish with no worker',
+  ungradableConcepts.every(id => WORKERLESS_CONCEPTS.includes(id)),
+  ungradableConcepts.join(', '))
+t('and the named exceptions are still real, so the list is not stale',
+  WORKERLESS_CONCEPTS.every(id => ungradableConcepts.includes(id)),
+  `missing: ${WORKERLESS_CONCEPTS.filter(id => !ungradableConcepts.includes(id)).join(', ')}`)
+/*
+ * The consequence spelled out, so the cost of the four is visible rather than
+ * implied: nothing may be GATED behind a concept that cannot be finished, or
+ * the gate is permanent for anyone who does not know to claim their way past.
+ */
+t('nothing teachable is gated solely behind a concept that cannot be finished', (() => {
+  const stuck = []
+  for (const o of ONTOLOGIES) {
+    for (const c of o.concepts) {
+      if (c.knowledgePoints.length === 0) continue
+      const gates = prerequisitesOf(o, c.id).filter(id => ungradableConcepts.includes(id))
+      if (gates.length > 0 && gates.length === prerequisitesOf(o, c.id).length) {
+        stuck.push(`${c.id} behind ${gates.join('+')}`)
+      }
+    }
+  }
+  return { stuck }
+})().stuck.length === 0, (() => {
+  const stuck = []
+  for (const o of ONTOLOGIES) {
+    for (const c of o.concepts) {
+      if (c.knowledgePoints.length === 0) continue
+      const gates = prerequisitesOf(o, c.id).filter(id => ungradableConcepts.includes(id))
+      if (gates.length > 0 && gates.length === prerequisitesOf(o, c.id).length) {
+        stuck.push(`${c.id} behind ${gates.join('+')}`)
+      }
+    }
+  }
+  return stuck.join('; ')
+})())
+
 group('coverage across both shipped subjects')
 t('every rational-expressions knowledge point has at least one task', (() => {
   const missing = allKnowledgePoints(O).filter(point => tasksForPoint(point.id).length === 0)
@@ -1572,9 +1652,44 @@ t('without a variant seed the set is authored-only', (() => {
   const a = assemble({ ontology: O, strengths: freshTable, now: NOW, size: 20 })
   return a.tasks.length > 0 && a.tasks.every(task => !task.id.includes('@'))
 })())
-t('with a variant seed, generated instances appear', (() => {
-  const a = assemble({ ontology: O, strengths: freshTable, now: NOW, size: 20, variantSeed: 1 })
+/*
+ * This read `size: 20` on a fresh table and expected a variant, which depended
+ * on `expand-binomials` having exactly two authored tasks: the set is capped at
+ * three by what is introducible, so the third slot was filled by a generated
+ * one. Authoring a third task for that point closed the gap and the assertion
+ * stopped being observable — the scheduler preferring authored tasks is the
+ * intended behaviour, so the premise moved rather than the property.
+ *
+ * Restated against a learner who has finished the first point. The next one has
+ * two authored tasks and three slots, so the fallback is visible again — and
+ * stated in terms of a short pool rather than a particular count, which is what
+ * the scheduler actually keys on.
+ */
+const pastFirstPoint = {
+  'expand-binomials': {
+    ...emptyStrength('expand-binomials'),
+    strength: 0.99,
+    streak: 5,
+    unaidedSuccesses: 5,
+    lastDemonstratedAt: '2025-12-20T00:00:00Z',
+  },
+}
+t('with a variant seed, a point whose authored pool is short gets generated instances', (() => {
+  const a = assemble({ ontology: O, strengths: pastFirstPoint, now: NOW, size: 20, variantSeed: 1 })
   return a.tasks.some(task => task.id.includes('@'))
+})(), assemble({ ontology: O, strengths: pastFirstPoint, now: NOW, size: 20, variantSeed: 1 })
+  .tasks.map(x => x.id).join(' '))
+t('and without a seed the same state serves authored tasks only', (() => {
+  const a = assemble({ ontology: O, strengths: pastFirstPoint, now: NOW, size: 20 })
+  return a.tasks.length > 0 && a.tasks.every(task => !task.id.includes('@'))
+})())
+/*
+ * The reason the fresh-table case no longer reaches one, asserted so the change
+ * above is not mistaken later for the scheduler having stopped working.
+ */
+t('a fresh learner now has enough authored tasks to fill the first set', (() => {
+  const a = assemble({ ontology: O, strengths: freshTable, now: NOW, size: 20, variantSeed: 1 })
+  return a.tasks.length > 0 && a.tasks.every(task => !task.id.includes('@'))
 })())
 t('the same history gives the same set, so an instance can be rebuilt from a report', (() => {
   const a = assemble({ ontology: O, strengths: freshTable, now: NOW, size: 20, variantSeed: 1 })
