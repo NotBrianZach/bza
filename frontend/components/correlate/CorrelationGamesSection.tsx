@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowRight, Loader2, Shuffle, Trash2 } from 'lucide-react'
+import { ArrowRight, Loader2, Pencil, Shuffle, Trash2 } from 'lucide-react'
 import { track } from '@/lib/analytics'
 import { timeAgo } from '@/lib/timeAgo'
 import { correlateQueries, fetchAvailableMedia } from '@/lib/queries/correlate'
@@ -42,6 +42,9 @@ export default function CorrelationGamesSection({
   // The last game sent to the trash, kept only to offer an undo. Nothing on the
   // front page lists the trash itself — that is /play's job.
   const [trashed, setTrashed] = useState<CorrelationSession | null>(null)
+  /** The card being renamed, and the text in its field. */
+  const [renaming, setRenaming] = useState<string | null>(null)
+  const [draft, setDraft] = useState('')
 
   useEffect(() => {
     fetchAvailableMedia().then(setMedia).catch(() => {})
@@ -100,6 +103,31 @@ export default function CorrelationGamesSection({
       setError(e?.message ?? 'Could not move that game to the trash')
     }
   }, [])
+
+  /**
+   * Rename a game, optimistically.
+   *
+   * Same posture as `trash`: the new name appears at once and a failed write
+   * puts the old one back. A rename is a label on a card the player is looking
+   * at, so a round trip before it changes reads as the control not working.
+   *
+   * Empty or unchanged is a cancel rather than an error — clearing the field and
+   * clicking away is not a request for a nameless game.
+   */
+  const commitRename = useCallback(async (session: CorrelationSession) => {
+    const next = draft.trim()
+    setRenaming(null)
+    if (!next || next === session.title) return
+    setSessions(list => list.map(x => (x.id === session.id ? { ...x, title: next } : x)))
+    setError('')
+    try {
+      await correlateQueries.renameSession(session.id, next)
+      track('correlate_renamed', { game: session.mode, from: 'home', chars: next.length })
+    } catch (e: any) {
+      setSessions(list => list.map(x => (x.id === session.id ? { ...x, title: session.title } : x)))
+      setError(e?.message ?? 'Could not rename that game')
+    }
+  }, [draft])
 
   const undoTrash = useCallback(async () => {
     const session = trashed
@@ -177,6 +205,20 @@ export default function CorrelationGamesSection({
                   {s.turn_count} turn{s.turn_count === 1 ? '' : 's'} · {timeAgo(new Date(s.updated_at))}
                 </p>
               </Link>
+              {/* Rename beside trash, both revealed on hover.
+                  Here as well as on the board because the list is where several
+                  games are visible at once, which is when a name is worth
+                  changing — and because the whole point of auto-naming is that
+                  the result may be wrong and should be cheap to correct from
+                  where you noticed. */}
+              <button
+                onClick={() => { setRenaming(s.id); setDraft(s.title) }}
+                title="Rename this game"
+                aria-label={`Rename “${s.title}”`}
+                className="absolute top-1.5 right-7 p-1 rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-white/70 dark:hover:bg-gray-900/40 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
+              >
+                <Pencil size={12} />
+              </button>
               <button
                 onClick={() => trash(s)}
                 title="Move this game to the trash"
@@ -185,6 +227,26 @@ export default function CorrelationGamesSection({
               >
                 <Trash2 size={12} />
               </button>
+
+              {/* Over the card rather than replacing its text, so the row does
+                  not change height and the list does not reflow while typing. */}
+              {renaming === s.id && (
+                <form
+                  onSubmit={e => { e.preventDefault(); void commitRename(s) }}
+                  className="absolute inset-0 flex items-center bg-white/95 dark:bg-gray-900/95 rounded-xl p-2"
+                >
+                  <input
+                    autoFocus
+                    value={draft}
+                    onChange={e => setDraft(e.target.value)}
+                    onBlur={() => void commitRename(s)}
+                    onKeyDown={e => { if (e.key === 'Escape') setRenaming(null) }}
+                    maxLength={120}
+                    aria-label="Game name"
+                    className="w-full min-w-0 text-xs px-2 py-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  />
+                </form>
+              )}
             </div>
           )
         })}

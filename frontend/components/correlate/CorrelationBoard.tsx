@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, CornerDownRight, Flag, GitBranch,
-  Globe2, Link2, Loader2, MessageSquare, Pause, Play, Radio, Repeat, Shuffle, SignalZero, SkipBack,
+  Globe2, Link2, Loader2, MessageSquare, Pause, Pencil, Play, Radio, Repeat, Shuffle, SignalZero, SkipBack,
   SkipForward, Target, Dices, Share2, Hourglass,
 } from 'lucide-react'
 import { authedFetch } from '@/lib/authedFetch'
@@ -1122,6 +1122,35 @@ export default function CorrelationBoard({
   const [voiceExpanded, setVoiceExpanded] = useState(false)
 
   /**
+   * Renaming the game, which is the one edit a finished game still allows.
+   *
+   * `renameSession` has existed in lib/queries/correlate.ts since titles did and
+   * nothing ever called it — the column was writable and unreachable.
+   */
+  const [renaming, setRenaming] = useState(false)
+  const [draftTitle, setDraftTitle] = useState(session.title)
+
+  const commitRename = useCallback(async () => {
+    const next = draftTitle.trim()
+    setRenaming(false)
+    // An empty name is a no-op rather than an error: clearing the field and
+    // tabbing away is a cancel, not a request for a nameless game.
+    if (!next || next === session.title) { setDraftTitle(session.title); return }
+    // Optimistic, and reverted on failure. A rename is a label on a row the
+    // player is looking at, so waiting a round trip to see it makes the control
+    // feel broken on a slow connection.
+    updateSession({ ...session, title: next })
+    try {
+      await correlateQueries.renameSession(session.id, next)
+      track('correlate_renamed', { game: session.mode, chars: next.length })
+    } catch (e: any) {
+      updateSession({ ...session, title: session.title })
+      setDraftTitle(session.title)
+      setError(e?.message ?? 'That name could not be saved')
+    }
+  }, [draftTitle, session, updateSession])
+
+  /**
    * The stage, mirrored into a ref.
    *
    * `voiceContext` is called from inside the recogniser's event handler, which
@@ -1560,7 +1589,38 @@ export default function CorrelationBoard({
             <ArrowLeft size={14} /> All games
           </button>
           <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 truncate">{session.title}</h1>
+            {/* Editable in place, because a game is a playlist and the one thing
+                you do to a playlist is rename it. A pencil beside a heading is a
+                smaller affordance than a settings panel for a single string, and
+                the heading is already where the eye goes. */}
+            {renaming ? (
+              <form
+                onSubmit={e => { e.preventDefault(); void commitRename() }}
+                className="flex items-center gap-1.5"
+              >
+                <input
+                  autoFocus
+                  value={draftTitle}
+                  onChange={e => setDraftTitle(e.target.value)}
+                  onBlur={() => void commitRename()}
+                  onKeyDown={e => { if (e.key === 'Escape') { setRenaming(false); setDraftTitle(session.title) } }}
+                  maxLength={120}
+                  aria-label="Game name"
+                  className="text-2xl font-bold bg-transparent border-b-2 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:border-gray-500 min-w-0 max-w-full"
+                />
+              </form>
+            ) : (
+              <h1 className="group flex items-center gap-1.5 text-2xl font-bold text-gray-900 dark:text-gray-100 min-w-0">
+                <span className="truncate">{session.title}</span>
+                <button
+                  onClick={() => { setDraftTitle(session.title); setRenaming(true) }}
+                  title="Rename this game"
+                  className="flex-shrink-0 text-gray-300 dark:text-gray-600 hover:text-gray-600 dark:hover:text-gray-300 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all"
+                >
+                  <Pencil size={14} />
+                </button>
+              </h1>
+            )}
             <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${accent.chip}`}>{game.name}</span>
             {/* The game this branch became, not the one the session is filed
                 under. Saying where it started is what keeps the chip honest: a

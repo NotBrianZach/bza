@@ -20,6 +20,7 @@ import {
   weightedReplyMedia,
 } from '@/lib/correlate/tuning'
 import { selfRepliesSince, selfReplyRefusal } from '@/lib/correlate/continuation'
+import { autoTitleFor } from '@/lib/correlate/naming'
 import {
   activeBranch, carriedSeedKeys, derivedSeedSpec, modeAlong, pathSinceSwitch, playedUnder,
   switchRefusal, switchSeed,
@@ -1571,6 +1572,16 @@ export async function POST(req: NextRequest) {
    * includes a turn nobody can see, and the board would show a world no exchange
    * produced. One hop is the right price for that ordering.
    */
+  // Name the game after the first thing played in it, if it is still carrying
+  // the default. The rule — and the four cases where it declines to act — is in
+  // lib/correlate/naming.ts, which is where the tests can reach it.
+  const autoTitle = autoTitleFor({
+    turnIndex,
+    currentTitle: session.title,
+    gameName: game.name,
+    moveTitle: move.title,
+  })
+
   const { data: updated } = await ((db.from('listen_sessions') as any)
     .update({
       // The world of the branch just played. Authoritative only while the game is
@@ -1578,6 +1589,7 @@ export async function POST(req: NextRequest) {
       world_state: nextWorld,
       turn_count: graph.order.length + 1,
       ...(tuningChanged ? { tuning } : {}),
+      ...(autoTitle ? { title: autoTitle } : {}),
       updated_at: new Date().toISOString(),
     })
     .eq('id', sessionId)

@@ -3,6 +3,7 @@ import { getGame } from '../correlate/games'
 import { resolveMedia } from '../correlate/media'
 import { resolveRelations } from '../correlate/relations'
 import { normalizeTuning, startingTuning, type Tuning } from '../correlate/tuning'
+import { MAX_AUTO_TITLE } from '../correlate/naming'
 import type {
   CorrelationClaim, CorrelationSession, CorrelationTurn, MediumId,
 } from '../correlate/types'
@@ -272,10 +273,22 @@ export const correlateQueries = {
     return token
   },
 
+  /**
+   * Rename a game. Scoped by RLS — `own listen sessions` is
+   * `auth.uid() = user_id` with a matching CHECK, so no user_id filter is
+   * needed here and one would not add protection.
+   *
+   * The empty guard is in this function rather than only at the call sites: it
+   * had none while it was dead code, both current callers happen to check, and a
+   * third would have been one keystroke from writing a nameless game. Clearing
+   * the field is a cancel everywhere it is offered.
+   */
   async renameSession(id: string, title: string): Promise<void> {
+    const next = title.trim().slice(0, MAX_AUTO_TITLE)
+    if (!next) return
     const { error } = await supabase
       .from('listen_sessions')
-      .update({ title: title.trim(), updated_at: new Date().toISOString() })
+      .update({ title: next, updated_at: new Date().toISOString() })
       .eq('id', id)
     if (error) throw new Error(error.message)
   },

@@ -50,6 +50,7 @@ function build() {
     join('lib', 'correlate', 'continuation.ts'),
     join('lib', 'correlate', 'presets.ts'),
     join('lib', 'correlate', 'voice.ts'),
+    join('lib', 'correlate', 'naming.ts'),
     join('lib', 'offerings', 'composed.ts'),
     join('lib', 'offerings', 'shared.ts'),
     join('lib', 'offerings', 'knowledge.ts'),
@@ -82,6 +83,7 @@ function build() {
     carry:     require(join(outDir, 'correlate', 'continuation.js')),
     presets:   require(join(outDir, 'correlate', 'presets.js')),
     voice:     require(join(outDir, 'correlate', 'voice.js')),
+    naming:    require(join(outDir, 'correlate', 'naming.js')),
     composed:  require(join(outDir, 'offerings', 'composed.js')),
     knowledge: require(join(outDir, 'offerings', 'knowledge.js')),
   }
@@ -119,6 +121,7 @@ const {
   matchScore, pickConfidently, parseBarge, parseChoice, openingSentence, isAddressed,
   CONFIDENT_SCORE, CONFIDENT_MARGIN,
 } = M.voice
+const { autoTitleFor, isDefaultTitle, MAX_AUTO_TITLE } = M.naming
 const {
   TUNING_AXES, AXIS_LIST, ALL_AXIS_IDS, AXIS_STOPS, DEFAULT_WEIGHT, WEIGHT_LABELS, WEIGHT_HINTS,
   DEFAULT_TUNING, normalizeTuning, isNeutral, isUntouched, isProportioned, axisValue, mutedMedia,
@@ -3788,6 +3791,65 @@ t('radio says who is driving, the one state you cannot hear',
   confirmationFor({ kind: 'radio', on: true }) !== confirmationFor({ kind: 'radio', on: false }))
 t('an unknown relation id does not crash the confirmation',
   typeof confirmationFor({ kind: 'relation', relation: 'not_a_relation' }) === 'string')
+
+// ---------------------------------------------------------------------------
+/*
+ * Naming a game — lib/correlate/naming.ts.
+ *
+ * Every session was titled after its game type, so four games of Tag were four
+ * rows reading "Tag" — the rules, which the chip beside the title already shows,
+ * rather than the game. Named after the first thing played instead, like a
+ * playlist after its first track.
+ *
+ * Most of what follows is the restraint rather than the feature. The engine is
+ * writing over a user-visible label, so every case where it must decline is
+ * worth an assertion — a rule about NOT acting is the kind that gets quietly
+ * dropped in a refactor.
+ */
+// ---------------------------------------------------------------------------
+
+group('a game is named after its first move')
+
+const named = (over = {}) => autoTitleFor({
+  turnIndex: 0, currentTitle: 'Tag', gameName: 'Tag', moveTitle: 'Idioteque', ...over,
+})
+
+t('the first move names the game', named() === 'Idioteque')
+t('a long title is cut rather than refused',
+  named({ moveTitle: 'x'.repeat(400) })?.length === MAX_AUTO_TITLE)
+t('surrounding space is not part of the name', named({ moveTitle: '  Idioteque  ' }) === 'Idioteque')
+
+group('and the cases where it must not')
+/*
+ * The one that matters most: a title the player chose is theirs. `createSession`
+ * defaults to the game's own name, so a title equal to that name means nobody
+ * picked one — and anything else was typed at creation or set by a rename.
+ */
+t('a title the player typed is left alone', named({ currentTitle: 'road trip' }) === null)
+t('and so is one set by a rename to something else', named({ currentTitle: 'Idioteque v2' }) === null)
+t('a later turn never renames the game', named({ turnIndex: 1 }) === null)
+t('nor does the third', named({ turnIndex: 2 }) === null)
+t('an offering with no title names nothing',
+  named({ moveTitle: '' }) === null && named({ moveTitle: '   ' }) === null)
+t('a missing title is not a crash',
+  named({ moveTitle: null }) === null && named({ moveTitle: undefined }) === null)
+
+group('what counts as the default title')
+t('the game name is the default', isDefaultTitle('Tag', 'Tag'))
+t('case and padding do not change its provenance',
+  isDefaultTitle('  tag ', 'Tag') && isDefaultTitle('TAG', 'Tag'))
+t('anything else is the player’s', !isDefaultTitle('road trip', 'Tag'))
+t('an absent title counts as unnamed only when the game is too',
+  !isDefaultTitle('', 'Tag') && !isDefaultTitle(null, 'Tag'))
+/*
+ * Every shipped game's name has to be usable as the default, since that is what
+ * `createSession` writes — a game whose name did not round-trip through this
+ * comparison could never be auto-named.
+ */
+t('every game name round-trips as its own default',
+  GAME_LIST.every(g => isDefaultTitle(g.name, g.name)))
+t('and no two games share a name, or a default would be ambiguous',
+  new Set(GAME_LIST.map(g => g.name.toLowerCase())).size === GAME_LIST.length)
 
 group('voice — letting it answer itself, in a medium you name')
 /*
