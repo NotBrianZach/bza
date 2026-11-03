@@ -79,6 +79,7 @@ import { CONTINUATION_OFF } from './continuation'
 import { getMedium } from './media'
 import {
   DEFAULT_SHARE, MUTED_SHARE, TUNING_AXES, getAxis, type Tuning, type TuningAxisId,
+  DEFAULT_VOICE,
 } from './tuning'
 import type { MediumId } from './types'
 
@@ -237,6 +238,11 @@ export function presetTuning(
     continuation: base.continuation ?? CONTINUATION_OFF,
     radio: base.radio ?? false,
     notes: base.notes ?? '',
+    // The player's, like `scopes` and for the same reason: a preset is a set of
+    // instructions to the partner, and the voice is not one of those — it is how
+    // the partner is read out. Recalling "Mostly music, leaning old" must not
+    // change who it sounds like.
+    voice: base.voice ?? { ...DEFAULT_VOICE },
   }
 }
 

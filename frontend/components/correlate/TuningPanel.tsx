@@ -1,7 +1,7 @@
 'use client'
 
-import { useMemo, useState } from 'react'
-import { ChevronDown, Info, RotateCcw, SlidersHorizontal } from 'lucide-react'
+import { useMemo, useRef, useState } from 'react'
+import { ChevronDown, Info, RotateCcw, SlidersHorizontal, Volume2 } from 'lucide-react'
 import { getMedium } from '@/lib/correlate/media'
 import {
   AXIS_LIST, DEFAULT_SHARE, MUTED_SHARE, NOTES_MAX, SHARE_MAX, allShares, axisValue,
@@ -12,6 +12,8 @@ import {
   CONTINUATION_HINTS, CONTINUATION_LABELS, CONTINUATION_OFF, CONTINUATION_STOPS,
 } from '@/lib/correlate/continuation'
 import { facetsFor, scopableMedia, selectedOptions, type Scopes } from '@/lib/correlate/scope'
+import { VOICE_CHOICES, getVoice } from '@/lib/correlate/voices'
+import { personaSpeak } from '@/lib/persona'
 import type { MediumId } from '@/lib/correlate/types'
 import PresetPicker from './PresetPicker'
 
@@ -77,6 +79,14 @@ export default function TuningPanel({
   // coercion point every path goes through anyway.
   const notes = tuning.notes ?? ''
   const narrowable = useMemo(() => scopableMedia(media), [media])
+  /**
+   * The preview's cancel handle, so a second click replaces the first.
+   *
+   * Eight voices means a player auditions several in a row, and without this the
+   * generated ones overlap — `personaSpeak`'s Cloud Run path plays its own
+   * `Audio` element and does not stop a previous one.
+   */
+  const cancelPreview = useRef<(() => void) | null>(null)
 
   /** Every medium's raw share plus the proportion it works out to. */
   const shares = useMemo(() => allShares(tuning, media), [tuning, media])
@@ -374,6 +384,93 @@ export default function TuningPanel({
             })}
           </div>
 
+          {/* How the partner sounds.
+              Here rather than in app settings because it belongs to this game:
+              two chains open in two tabs can reasonably have different partners,
+              and a player who gives a Duel a rival's voice does not thereby want
+              it in Embodiment. It is the same argument `scopes` makes for living
+              in Tuning.
+
+              LAST in the panel, below the free-text box, and deliberately: every
+              other control changes what the partner reaches for, and this one
+              changes nothing about the turn at all. It is never sent to the
+              model — see `TuningVoice`. Putting it among the instructions would
+              suggest it was one. */}
+          <div className="pt-3 border-t border-gray-100 dark:border-gray-700">
+            <div className="flex items-baseline gap-2 mb-1.5">
+              <p className="text-xs font-medium text-gray-700 dark:text-gray-200">Its voice</p>
+              <p className="text-[11px] text-gray-400 dark:text-gray-500">
+                when anything reads the chain aloud
+              </p>
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <select
+                value={tuning.voice.persona ?? 'custom'}
+                onChange={e => onChange({
+                  ...tuning,
+                  voice: { ...tuning.voice, persona: e.target.value },
+                })}
+                disabled={disabled}
+                aria-label="The partner’s voice"
+                className="text-xs px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 disabled:opacity-50"
+              >
+                {VOICE_CHOICES.map(v => (
+                  <option key={v.id} value={v.id}>{v.name}</option>
+                ))}
+              </select>
+
+              {/* A preview, because a list of eight names tells you nothing about
+                  what any of them sound like — and the only way to find out
+                  otherwise is to start a radio run. Speaks the chosen voice
+                  directly rather than through the game's own speaker, so it
+                  works with hands-free off. */}
+              <button
+                onClick={() => {
+                  cancelPreview.current?.()
+                  cancelPreview.current = personaSpeak(
+                    `${getVoice(tuning.voice.persona)?.name ?? 'This'} is how your partner will read the chain.`,
+                    undefined,
+                    () => { cancelPreview.current = null },
+                    {
+                      personaId: tuning.voice.persona,
+                      engine: tuning.voice.engine === 'ai' ? 'elevenlabs' : 'browser',
+                    },
+                  )
+                }}
+                disabled={disabled}
+                className="flex items-center gap-1.5 text-[11px] font-medium px-2 py-1 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition-colors disabled:opacity-50"
+              >
+                <Volume2 size={11} /> Hear it
+              </button>
+
+              {/* The engine, as a toggle rather than a second dropdown. The
+                  honest framing is the tradeoff: the good voice costs a request
+                  per utterance, and the free one is the robot. */}
+              <button
+                onClick={() => onChange({
+                  ...tuning,
+                  voice: { ...tuning.voice, engine: tuning.voice.engine === 'ai' ? 'browser' : 'ai' },
+                })}
+                disabled={disabled}
+                aria-pressed={tuning.voice.engine === 'ai'}
+                title={tuning.voice.engine === 'ai'
+                  ? 'Using the generated voice. Costs a request per line read.'
+                  : 'Using the browser’s built-in voice. Free, and it sounds like it.'}
+                className={`text-[11px] font-medium px-2 py-1 rounded-lg transition-colors disabled:opacity-50 ${
+                  tuning.voice.engine === 'ai'
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'
+                }`}
+              >
+                {tuning.voice.engine === 'ai' ? 'generated' : 'browser voice'}
+              </button>
+            </div>
+            <p className="text-[11px] text-gray-400 dark:text-gray-500 leading-relaxed mt-1.5">
+              {getVoice(tuning.voice.persona)?.is ?? 'No character at all.'}
+              {' '}This is presentation only — your partner is never told how it is being read.
+            </p>
+          </div>
+
           {/* The escape hatch, after the controls rather than before them: it is
               for what they could not say, and a player who meets a text box first
               will type what a slider already does. Deliberately not a chat input —
@@ -461,9 +558,14 @@ export default function TuningPanel({
           )}
           {atDefault && !neutral && (
             <button
+              // `tuning.voice` is carried through rather than reset. "Say
+              // nothing to the interpreter" is what this button means, and the
+              // voice says nothing to it either way — clearing it would reset a
+              // presentation choice as a side effect of neutralising the
+              // instructions, which is not what the label promises.
               onClick={() => onChange({
                 shares: {}, axes: {}, scopes: {}, continuation: CONTINUATION_OFF,
-                radio: false, notes: '',
+                radio: false, notes: '', voice: tuning.voice,
               })}
               disabled={disabled}
               className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors disabled:opacity-50"

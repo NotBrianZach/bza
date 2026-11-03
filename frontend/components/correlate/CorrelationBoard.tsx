@@ -17,7 +17,7 @@ import {
   subtreeSize, worldFor, type TurnGraph,
 } from '@/lib/correlate/graph'
 import {
-  continuationOf, isStarting, mutedMedia, normalizeTuning, radioOf, startingTuning,
+  continuationOf, isStarting, mutedMedia, normalizeTuning, radioOf, startingTuning, DEFAULT_TUNING,
   type Tuning,
 } from '@/lib/correlate/tuning'
 import {
@@ -162,6 +162,15 @@ export default function CorrelationBoard({
   const audioPlayingRef = useRef(false)
   /** Whether playback is paused, readable from a speech callback. */
   const pausedRef = useRef(true)
+  /**
+   * The live tuning, for the voice getter.
+   *
+   * The getter runs inside `personaSpeak`'s caller, outside React's cycle, and
+   * the whole point of it being a getter is that the player can change the voice
+   * between two utterances. Reading state through a closure would give them the
+   * voice the game opened with until something remounted.
+   */
+  const tuningRef = useRef<Tuning>(DEFAULT_TUNING)
   /**
    * When a voice skip was last honoured, to break a runaway.
    *
@@ -725,6 +734,7 @@ export default function CorrelationBoard({
    */
   const radio = radioOf(tuning)
   radioRef.current = radio
+  tuningRef.current = tuning
   /** Why radio cannot run in this session at all, or null. */
   const radioBlocked = radioRefusal(media)
   /**
@@ -1506,6 +1516,13 @@ export default function CorrelationBoard({
       unreadRestRef.current = ''
       return rest
     },
+    // The partner's own voice, from this game's tuning rather than from the two
+    // localStorage keys the reader uses. `'ai'` maps to the Cloud Run voice,
+    // which is the one that does not sound like a station announcement.
+    voice: () => ({
+      personaId: tuningRef.current.voice.persona,
+      engine: tuningRef.current.voice.engine === 'ai' ? 'elevenlabs' : 'browser',
+    }),
   })
   voiceRef.current = voice
 

@@ -51,6 +51,7 @@ function build() {
     join('lib', 'correlate', 'presets.ts'),
     join('lib', 'correlate', 'voice.ts'),
     join('lib', 'correlate', 'naming.ts'),
+    join('lib', 'correlate', 'voices.ts'),
     join('lib', 'offerings', 'composed.ts'),
     join('lib', 'offerings', 'shared.ts'),
     join('lib', 'offerings', 'knowledge.ts'),
@@ -84,6 +85,7 @@ function build() {
     presets:   require(join(outDir, 'correlate', 'presets.js')),
     voice:     require(join(outDir, 'correlate', 'voice.js')),
     naming:    require(join(outDir, 'correlate', 'naming.js')),
+    voices:    require(join(outDir, 'correlate', 'voices.js')),
     composed:  require(join(outDir, 'offerings', 'composed.js')),
     knowledge: require(join(outDir, 'offerings', 'knowledge.js')),
   }
@@ -122,9 +124,10 @@ const {
   CONFIDENT_SCORE, CONFIDENT_MARGIN,
 } = M.voice
 const { autoTitleFor, isDefaultTitle, MAX_AUTO_TITLE, announcementFor } = M.naming
+const { VOICE_CHOICES, getVoice } = M.voices
 const {
   TUNING_AXES, AXIS_LIST, ALL_AXIS_IDS, AXIS_STOPS, DEFAULT_WEIGHT, WEIGHT_LABELS, WEIGHT_HINTS,
-  DEFAULT_TUNING, normalizeTuning, isNeutral, isUntouched, isProportioned, axisValue, mutedMedia,
+  DEFAULT_TUNING, DEFAULT_VOICE, normalizeTuning, isNeutral, isUntouched, isProportioned, axisValue, mutedMedia,
   weightedReplyMedia, dueMedium, describeTuning, tuningSummary, getAxis, continuationOf, radioOf,
   SHARE_MAX, DEFAULT_SHARE, MUTED_SHARE, shareOf, shareLabel, targetShares, shareStandings,
   owedMedia, allShares, gatesLegality,
@@ -3850,6 +3853,86 @@ t('every game name round-trips as its own default',
   GAME_LIST.every(g => isDefaultTitle(g.name, g.name)))
 t('and no two games share a name, or a default would be ambiguous',
   new Set(GAME_LIST.map(g => g.name.toLowerCase())).size === GAME_LIST.length)
+
+group('the partner’s voice')
+/*
+ * A presentation setting stored in Tuning, for the reason `scopes` gives: it is
+ * something the player asks of their partner, adjustable between turns, saved
+ * by the same plumbing, and `listen_sessions.tuning` is already jsonb so it
+ * needs no migration.
+ */
+t('a new game is born with a voice, not with nothing', (() => {
+  const v = startingTuning(ALL_MEDIA).voice
+  return !!v && typeof v.persona === 'string' && (v.engine === 'ai' || v.engine === 'browser')
+})())
+t('and it is not the plain one, which is the sound being complained about',
+  startingTuning(ALL_MEDIA).voice.persona !== 'custom')
+t('every voice in the registry has a name and a description',
+  VOICE_CHOICES.length > 1 && VOICE_CHOICES.every(v => !!v.name && !!v.is))
+t('ids are unique, or a stored one would be ambiguous',
+  new Set(VOICE_CHOICES.map(v => v.id)).size === VOICE_CHOICES.length)
+t('getVoice finds one and refuses what it does not know',
+  getVoice('librarian')?.name === 'Flirty Librarian' && getVoice('nope') === null
+  && getVoice(null) === null)
+
+group('the voice must never reach the interpreter')
+/*
+ * The sharpest version of the rule `continuation` and `radio` follow. Those
+ * govern who takes the next turn; this governs nothing about the turn at all —
+ * it is how the answer is READ OUT afterwards. A model told it is being voiced
+ * by a flirty librarian would write toward that voice, which would make a
+ * presentation setting silently rewrite the content.
+ */
+t('describeTuning says nothing about it', (() => {
+  const loud = { ...startingTuning(ALL_MEDIA), voice: { persona: 'tsundere', engine: 'ai' } }
+  const text = describeTuning(loud, ALL_MEDIA).toLowerCase()
+  return !text.includes('tsundere') && !text.includes('voice') && !text.includes('librarian')
+})())
+t('and changing it changes nothing the interpreter is told', (() => {
+  const a = { ...startingTuning(ALL_MEDIA), voice: { persona: 'rival', engine: 'ai' } }
+  const b = { ...startingTuning(ALL_MEDIA), voice: { persona: 'coach', engine: 'browser' } }
+  return describeTuning(a, ALL_MEDIA) === describeTuning(b, ALL_MEDIA)
+})())
+t('nor does it make a tuning look touched, since it is not an instruction',
+  isNeutral({ ...DEFAULT_TUNING, voice: { persona: 'coach', engine: 'browser' } }))
+/*
+ * The whole system prompt, not just the tuning section — a voice leaking in via
+ * some other path would be invisible to the two assertions above.
+ */
+t('no voice name appears anywhere in the system prompt', (() => {
+  const loud = { ...startingTuning(ALL_MEDIA), voice: { persona: 'tsundere', engine: 'ai' } }
+  const prompt = buildSystemPrompt(GAMES.tag, ALL_MEDIA, ALL_RELATIONS, loud, false, ALL_MEDIA).toLowerCase()
+  return VOICE_CHOICES.every(v => v.id === 'custom' || !prompt.includes(v.id))
+})())
+
+group('a stored voice is validated, not trusted')
+const voiceOf = (raw) => normalizeTuning(raw, ALL_MEDIA).voice
+t('a known id survives', voiceOf({ voice: { persona: 'sensei' } }).persona === 'sensei')
+/*
+ * The failure this exists to stop: `PERSONA_VOICES` falls back to `custom` for
+ * anything it does not know, so a typo would play silently in the plain voice
+ * while the picker showed the name the player chose.
+ */
+t('an unknown id falls back rather than being stored',
+  voiceOf({ voice: { persona: 'morgan-freeman' } }).persona === DEFAULT_VOICE.persona)
+t('an explicit null is respected, since "no character" is a choice',
+  voiceOf({ voice: { persona: null } }).persona === null)
+t('a non-string is not a persona',
+  voiceOf({ voice: { persona: 42 } }).persona === DEFAULT_VOICE.persona)
+t('the engine takes only its two values',
+  voiceOf({ voice: { engine: 'browser' } }).engine === 'browser'
+  && voiceOf({ voice: { engine: 'ai' } }).engine === 'ai'
+  && voiceOf({ voice: { engine: 'elevenlabs' } }).engine === DEFAULT_VOICE.engine)
+/*
+ * Every game played before this field existed. The row has no `voice` key, and
+ * it has to come back with one rather than with undefined — the same
+ * upgrade-on-read path `shares` uses for the legacy `weights` object.
+ */
+t('a tuning stored before the field existed gets the default',
+  voiceOf({ shares: { music: 100 } }).persona === DEFAULT_VOICE.persona)
+t('and so does a garbage voice value',
+  voiceOf({ voice: 'librarian' }).persona === DEFAULT_VOICE.persona
+  && voiceOf({ voice: null }).persona === DEFAULT_VOICE.persona)
 
 group('radio announces the track that is starting')
 /*

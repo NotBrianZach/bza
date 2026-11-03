@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { personaSpeak } from '@/lib/persona'
+import { personaSpeak, type SpeakVoice } from '@/lib/persona'
 import { track } from '@/lib/analytics'
 import {
   confirmationFor, isAddressed, parseBarge, parseChoice, parseVoice, spokenHelp,
@@ -125,6 +125,14 @@ export interface VoiceHandlers {
   lastReading: () => string
   /** The part of the last reading that was not spoken on landing, for "go on". */
   unreadRest: () => string
+  /**
+   * The partner's voice, read at speak time rather than captured.
+   *
+   * A getter because the player can change it between two utterances — the
+   * picker is in the same panel as the shares — and a value passed once would
+   * keep the voice the game opened with until a remount.
+   */
+  voice?: () => SpeakVoice
 }
 
 export interface VoiceControl {
@@ -263,7 +271,14 @@ export function useVoiceControl(
     cancelSpeech.current?.()
     releaseRef.current = release
     let started = false
-    cancelSpeech.current = personaSpeak(text, () => { started = true }, release)
+    cancelSpeech.current = personaSpeak(
+      text,
+      () => { started = true },
+      release,
+      // Read now, not when the hook was built: the picker sits in the same
+      // panel as the shares, so it can change between two utterances.
+      handlersRef.current.voice?.(),
+    )
 
     // Nothing is going to be said at all — see START_GRACE_MS.
     if (startGrace.current) clearTimeout(startGrace.current)

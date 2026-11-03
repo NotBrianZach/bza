@@ -63,6 +63,7 @@ import {
 import {
   describeScopes, isUnscoped, normalizeScopes, scopeSummary, type Scopes,
 } from './scope'
+import { VOICE_IDS } from './voices'
 
 // ---------------------------------------------------------------------------
 // Medium shares
@@ -446,6 +447,48 @@ export function getAxis(id: string): TuningAxis | null {
  * stored. The empty object is neutral, and that is the shape a session is created
  * with.
  */
+/**
+ * The partner's voice, when anything reads the chain aloud.
+ *
+ * ── Why it lives in Tuning ───────────────────────────────────────────────
+ *
+ * The same argument `scopes` makes below: it is something the player asks of
+ * their partner, adjustable between any two turns, saved and loaded by the same
+ * plumbing — and `listen_sessions.tuning` is already jsonb and already
+ * canonicalised on the way in, so it needs no migration.
+ *
+ * It belongs to the GAME rather than to the browser, which is the reason it is
+ * not another localStorage key beside the two `persona.ts` already has. Those
+ * are right for the reader, where the persona is a property of the person
+ * reading. A partner is a property of the game: two chains open in two tabs can
+ * reasonably have different ones, and a player who gives a Duel a rival's voice
+ * does not thereby want it in Embodiment.
+ *
+ * ── It must never reach the interpreter ──────────────────────────────────
+ *
+ * Excluded from `describeTuning`, like `continuation` and `radio` and for a
+ * sharper version of their reason. Those govern who takes the next turn; this
+ * governs nothing about the turn at all — it is how the answer is *read out*
+ * after the fact. A model told it is being voiced by a flirty librarian would
+ * write toward that voice, which would make a presentation setting silently
+ * rewrite the content. `isNeutral` therefore ignores it too.
+ */
+export interface TuningVoice {
+  /** A `VOICE_CHOICES` id from lib/persona.ts, or null for the plain voice. */
+  persona: string | null
+  /**
+   * 'ai' is the Cloud Run voice, 'browser' the Web Speech one.
+   *
+   * Defaults to 'ai', which is the opposite of `persona.ts`'s own default and
+   * deliberate: that default dates from before the Cloud Run voice existed, and
+   * every /play surface that speaks was built against the browser one and
+   * sounded like a station announcement. The AI voice costs a request per
+   * utterance, which is why it is a setting at all rather than simply the only
+   * option.
+   */
+  engine: 'browser' | 'ai'
+}
+
 export interface Tuning {
   /**
    * Raw 0–100 weight per medium; absent means `DEFAULT_SHARE`.
@@ -527,13 +570,30 @@ export interface Tuning {
    * one rule this section is built on.
    */
   notes: string
+  /** How the partner is read aloud. See `TuningVoice` — never sent to the model. */
+  voice: TuningVoice
 }
 
 /** How much of the player's own instruction reaches the interpreter. */
 export const NOTES_MAX = 600
 
+/**
+ * The voice a game is born with.
+ *
+ * A named persona rather than null, because the point of the setting is that
+ * the partner should not sound like a station announcement — and `custom`,
+ * which is the plain one, is what it sounded like before. Picking the librarian
+ * is an editorial default and reversible in one click; picking "plain" would
+ * have shipped the complaint as the default.
+ *
+ * `'ai'` for the same reason: the Cloud Run voice is the one that does not sound
+ * robotic, and `persona.ts`'s own default of `'browser'` predates it existing.
+ */
+export const DEFAULT_VOICE: TuningVoice = { persona: 'librarian', engine: 'ai' }
+
 export const DEFAULT_TUNING: Tuning = {
   shares: {}, axes: {}, scopes: {}, continuation: CONTINUATION_OFF, radio: false, notes: '',
+  voice: { ...DEFAULT_VOICE },
 }
 
 /**
@@ -657,6 +717,11 @@ export function startingTuning(media: MediumId[], coreMedia: MediumId[] = []): T
     // for a free-text instruction. Pre-filling it would put words in the prompt
     // that nobody asked for and that every subsequent turn would carry.
     notes: '',
+    // Not empty, unlike the two above. An unset voice is not a neutral voice —
+    // whatever speaks has to speak as something, and the thing it used to speak
+    // as was the browser's default, which is the complaint this setting exists
+    // to answer. See `DEFAULT_VOICE`.
+    voice: { ...DEFAULT_VOICE },
   }
   // A game whose own media are all the deployment has is not a game to apply a
   // music-first default to. Checked against core media too, so Embodiment on a
@@ -693,12 +758,34 @@ const clampInt = (v: unknown, lo: number, hi: number): number | null => {
 export function normalizeTuning(raw: unknown, media: MediumId[]): Tuning {
   const out: Tuning = {
     shares: {}, axes: {}, scopes: {}, continuation: CONTINUATION_OFF, radio: false, notes: '',
+    voice: { ...DEFAULT_VOICE },
   }
   if (!raw || typeof raw !== 'object') return out
 
   const src = raw as {
     shares?: unknown; weights?: unknown; axes?: unknown; scopes?: unknown
-    continuation?: unknown; radio?: unknown; notes?: unknown
+    continuation?: unknown; radio?: unknown; notes?: unknown; voice?: unknown
+  }
+
+  /*
+   * The voice, validated against the registry rather than taken on trust.
+   *
+   * An unknown persona id is the failure worth preventing: `PERSONA_VOICES`
+   * falls back to `custom` for anything it does not know, so a typo would play
+   * silently in the plain voice while the picker showed the name the player
+   * chose. Rejecting it back to the default is louder and recoverable.
+   *
+   * A row stored before this field existed has no `voice` key and lands on
+   * `DEFAULT_VOICE`, which is how every game already played acquires one — the
+   * same upgrade-on-read path `shares` uses for the legacy `weights` object.
+   */
+  if (src.voice && typeof src.voice === 'object') {
+    const v = src.voice as { persona?: unknown; engine?: unknown }
+    if (v.persona === null) out.voice.persona = null
+    else if (typeof v.persona === 'string' && VOICE_IDS.includes(v.persona)) {
+      out.voice.persona = v.persona
+    }
+    if (v.engine === 'browser' || v.engine === 'ai') out.voice.engine = v.engine
   }
 
   out.scopes = normalizeScopes(src.scopes, media)

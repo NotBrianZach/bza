@@ -1,5 +1,7 @@
 import { track } from '@/lib/analytics'
 
+export { VOICE_CHOICES, VOICE_IDS } from './correlate/voices'
+
 // Per-persona voice settings for Web Speech API
 const PERSONA_VOICES: Record<string, { rate: number; pitch: number }> = {
   sensei:    { rate: 0.85, pitch: 0.9 },
@@ -30,17 +32,41 @@ export function setTtsEngine(v: 'browser' | 'elevenlabs') {
   try { localStorage.setItem('bza-tts-engine', v) } catch {}
 }
 
+/**
+ * What voice to speak in, when the caller has one of its own.
+ *
+ * Added for /play, where the voice belongs to the *partner in this game* rather
+ * than to the browser. Before this, every caller got whatever two localStorage
+ * keys happened to say — which is right for the reader, where the persona is a
+ * property of the reader, and wrong for a correlation game, where two games
+ * open side by side can reasonably have different partners.
+ *
+ * Both fields are optional and both fall back to the stored preference, so the
+ * reader's call sites are unchanged and keep reading the keys they always did.
+ */
+export interface SpeakVoice {
+  /** A `VOICE_CHOICES` id. */
+  personaId?: string | null
+  /** 'elevenlabs' is the Cloud Run voice; 'browser' is Web Speech. */
+  engine?: 'browser' | 'elevenlabs'
+}
+
 /** Speak text using the configured TTS engine.
  *  Routes to AI voice (via Cloud Run) or browser voice based on settings. */
 export function personaSpeak(
   text: string,
   onStart?: () => void,
   onEnd?: () => void,
+  voice?: SpeakVoice,
 ): () => void {
   if (typeof window === 'undefined') return () => {}
 
-  const engine = getTtsEngine()
-  const persona = getPersonaInfo()
+  const engine = voice?.engine ?? getTtsEngine()
+  // `?? undefined` and not `|| undefined`: an explicit null from a caller means
+  // "no persona", and collapsing it to the stored one would ignore the choice.
+  const persona = voice?.personaId !== undefined
+    ? (voice.personaId ? { id: voice.personaId } : null)
+    : getPersonaInfo()
 
   track('tts_played', { engine, persona_id: persona?.id, len: text.length })
 
