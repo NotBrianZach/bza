@@ -228,15 +228,17 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
       needs: ['quadratic-formula'],
       terms: 'complex number imaginary unit conjugate modulus argand',
     },
-    {
-      id: 'polynomial-roots',
-      match: /\b(root of a polynomial|polynomial root|rational root|cubic equation|quartic equation)/i,
-      name: 'Roots of higher polynomials',
-      is: 'The factor and remainder theorems, rational-root search, and the fundamental theorem of algebra as the thing they are groping toward.',
-      needs: ['polynomial-division', 'complex-numbers'],
-      exercises: ['polynomial-division'],
-      terms: 'factor theorem remainder theorem rational root fundamental theorem of algebra',
-    },
+    // `polynomial-roots` stood here and is now AUTHORED in ontology.ts. Its
+    // `needs: ['polynomial-division']` moved there with it, both endpoints
+    // being authored concepts; `complex-numbers` is still a map node, so that
+    // edge is a `links` entry below.
+    //
+    // The authored concept covers the factor and remainder theorems and
+    // rational-root search. It does NOT cover the fundamental theorem of
+    // algebra, which is where the complex-numbers dependency actually comes
+    // from — and the edge is kept anyway rather than narrowed to match what is
+    // written, because dropping it would loosen the ordering on the strength of
+    // what happens to be authored today.
     {
       id: 'radical-equations',
       match: /\bradical equation\b/i,
@@ -297,6 +299,28 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
       because:
         'The formula produces a square root whenever the discriminant is not a perfect square, ' +
         'so a learner who cannot read √8 as 2√2 cannot write the answer the formula gives.',
+    },
+    {
+      /**
+       * The other edge `polynomial-roots` carried when it was a node here.
+       *
+       * Kept although the authored concept stops short of the fundamental
+       * theorem of algebra, which is the part that actually needs complex
+       * numbers. Narrowing the ordering to match what is currently written
+       * would loosen it, and this file's rule is that gating tightens as
+       * material is authored and never the reverse.
+       *
+       * It gates nobody today: `complex-numbers` has no material, and
+       * `gatingPrerequisitesOf` looks through an unteachable prerequisite
+       * rather than at it. The day somebody authors complex arithmetic it
+       * starts gating, which is the behaviour that rule exists to produce.
+       */
+      from: 'complex-numbers',
+      to: 'polynomial-roots',
+      because:
+        'A cubic with no rational root still has three roots, and saying so at all requires the ' +
+        'complex numbers — which is where the fundamental theorem of algebra, the thing the ' +
+        'root-finding techniques are groping toward, has to be met.',
     },
     {
       from: 'fraction-arithmetic',

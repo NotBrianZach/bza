@@ -466,6 +466,95 @@ export const TASKS: PracticeTask[] = [
     reference: '2',
   },
 
+  // ── polynomial-roots ────────────────────────────────────────────────────
+  //
+  // Both halves on purpose. The remainder and factor theorems are `evaluate`,
+  // so they settle locally with no worker; full factorisation is a
+  // `transform_to_form` only the CAS can rule. That satisfies the "finishable
+  // without the worker" invariant with the concept's real content rather than
+  // with a stand-in invented to satisfy it.
+  {
+    id: 'remainder-theorem-1',
+    knowledgePointId: 'remainder-theorem',
+    kind: 'evaluate',
+    prompt:
+      'What is the remainder when x³ − 2x² + 4 is divided by x − 3? Substitute rather than divide.',
+    given: 'x^3 - 2*x^2 + 4',
+    variables: REAL_X,
+    at: { x: '3' },
+    reference: '13',
+  },
+  // Negative a, which is where the sign of x − a is misread as x + a.
+  {
+    id: 'remainder-theorem-2',
+    knowledgePointId: 'remainder-theorem',
+    kind: 'evaluate',
+    prompt: 'What is the remainder when 2x³ + x − 5 is divided by x + 2? Mind what a is.',
+    given: '2*x^3 + x - 5',
+    variables: REAL_X,
+    at: { x: '-2' },
+    reference: '-23',
+  },
+  {
+    id: 'factor-theorem-1',
+    knowledgePointId: 'factor-theorem',
+    kind: 'evaluate',
+    prompt:
+      'Evaluate x³ − 7x + 6 at x = 1. A result of zero means x − 1 is a factor.',
+    given: 'x^3 - 7*x + 6',
+    variables: REAL_X,
+    at: { x: '1' },
+    reference: '0',
+  },
+  {
+    id: 'factor-theorem-2',
+    knowledgePointId: 'factor-theorem',
+    kind: 'evaluate',
+    prompt: 'Evaluate the same polynomial, x³ − 7x + 6, at x = 2. Is x − 2 a factor?',
+    given: 'x^3 - 7*x + 6',
+    variables: REAL_X,
+    at: { x: '2' },
+    reference: '0',
+  },
+  // A candidate that fails, so the test is a test rather than a formality — and
+  // the value it returns is the remainder, which is the previous point's skill.
+  {
+    id: 'factor-theorem-3',
+    knowledgePointId: 'factor-theorem',
+    kind: 'evaluate',
+    prompt:
+      'Evaluate x³ − 7x + 6 at x = 3. Not every candidate is a root — and what you get is the ' +
+      'remainder on division by x − 3.',
+    given: 'x^3 - 7*x + 6',
+    variables: REAL_X,
+    at: { x: '3' },
+    reference: '12',
+  },
+  {
+    id: 'rational-root-1',
+    knowledgePointId: 'rational-root-search',
+    kind: 'transform_to_form',
+    prompt: 'Factor this completely into three linear factors.',
+    given: 'x^3 - 7*x + 6',
+    form: 'factored',
+    variables: REAL_X,
+    reference: '(x - 1)*(x - 2)*(x + 3)',
+  },
+  // Leading coefficient 2, so the candidate list includes halves — the part of
+  // the rule that is dropped when people only try divisors of the constant.
+  {
+    id: 'rational-root-2',
+    knowledgePointId: 'rational-root-search',
+    kind: 'transform_to_form',
+    prompt:
+      'Factor this completely. The leading coefficient is not 1, so the candidate roots include ' +
+      'fractions.',
+    given: '2*x^3 - 3*x^2 - 11*x + 6',
+    form: 'factored',
+    variables: REAL_X,
+    reference: '(x - 3)*(2*x - 1)*(x + 2)',
+  },
+
   // ── quadratic-formula ───────────────────────────────────────────────────
   //
   // All `evaluate`, which is what made this concept authorable with no new

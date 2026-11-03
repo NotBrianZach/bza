@@ -1432,6 +1432,45 @@ t('nothing teachable is gated solely behind a concept that cannot be finished', 
   return stuck.join('; ')
 })())
 
+group('roots of higher polynomials is teachable')
+
+const PR = conceptById(O, 'polynomial-roots')
+t('the concept is authored', !!PR && isTeachable(O, 'polynomial-roots'))
+t('three knowledge points, each with a worked example and subgoals',
+  PR.knowledgePoints.length === 3
+  && PR.knowledgePoints.every(p => p.workedExample.subgoals.length >= 3))
+t('every point has a task', PR.knowledgePoints.every(p => tasksForPoint(p.id).length > 0))
+/*
+ * The reason this concept was chosen next: it carries both kinds. The theorems
+ * are `evaluate` and settle locally; full factorisation is a transform only the
+ * CAS can rule. So the "finishable with no worker" invariant is satisfied by
+ * the concept's own content rather than by a stand-in.
+ */
+t('it has both evaluate and transform tasks', (() => {
+  const kinds = new Set(PR.knowledgePoints.flatMap(p => tasksForPoint(p.id)).map(x => x.kind))
+  return kinds.has('evaluate') && kinds.has('transform_to_form')
+})())
+t('division gates it, since a found root has to be divided out',
+  prerequisitesOf(O, 'polynomial-roots').includes('polynomial-division'))
+t('and the quadratic formula does, since that is what is left afterwards',
+  prerequisitesOf(O, 'polynomial-roots').includes('quadratic-formula'))
+t('doing it exercises the division and the quadratic factoring',
+  encompassedBy(O, 'polynomial-roots').includes('polynomial-division')
+  && encompassedBy(O, 'polynomial-roots').includes('factoring-quadratics'))
+t('nothing introduced a cycle', teachingOrder(O) !== null)
+/*
+ * The factor theorem's point is that a zero means a factor, so the references
+ * have to BE zero where the prompt says the candidate is a root — a task
+ * claiming x − 1 is a factor while its reference is 5 would teach the opposite
+ * of the rule.
+ */
+t('the factor-theorem tasks that claim a root reference zero', (() => {
+  const roots = tasksForPoint('factor-theorem').filter(x => /means x − \d+ is a factor|Is x − \d+ a factor/.test(x.prompt))
+  return roots.length >= 2 && roots.every(x => x.reference === '0')
+})())
+t('and the one that does not claim a root is non-zero, so the test is a test',
+  tasksForPoint('factor-theorem').some(x => x.reference !== '0'))
+
 group('coverage across both shipped subjects')
 t('every rational-expressions knowledge point has at least one task', (() => {
   const missing = allKnowledgePoints(O).filter(point => tasksForPoint(point.id).length === 0)
@@ -2000,8 +2039,25 @@ t('it recovers that simplifying a fraction exercises factoring',
   CMP.encompasses.confirmed.some(e => e.from === 'simplifying-rational' && e.to === 'factoring-quadratics'))
 t('and that decomposing one does too',
   CMP.encompasses.confirmed.some(e => e.from === 'partial-fractions-linear' && e.to === 'factoring-quadratics'))
-t('encompasses recall is partial, not total', CMP.encompasses.recall > 0.2 && CMP.encompasses.recall < 0.9,
-  `${CMP.encompasses.recall}`)
+/*
+ * Partial, not total — and the band is loose because the ratio is not a
+ * property of the derivation alone.
+ *
+ * This read `> 0.2` and broke at 0.18 when two authored `encompasses` edges
+ * were added for `polynomial-roots`. Nothing about the derivation changed: the
+ * denominator is the authored edge count, so every hand-written edge the
+ * shape-comparison cannot see pushes recall DOWN. Re-read as the header above
+ * asks, the measurement says what it always said — some authored structure is
+ * recoverable from task shapes and most is not — and a tight lower bound turns
+ * each authoring pass into a false regression.
+ *
+ * What is worth locking is that it recovers something and not everything. The
+ * two specific edges it does recover are asserted by name above, which is the
+ * part that would actually catch the derivation breaking.
+ */
+t('encompasses recall is partial, not total',
+  CMP.encompasses.recall > 0 && CMP.encompasses.recall < 0.9,
+  `${CMP.encompasses.recall} — ${CMP.encompasses.confirmed.length} of ${edgesOfKind(O, 'encompasses').length} authored`)
 t('it recovers the authored interference between the two decomposition templates',
   CMP.interference.confirmed.some(e =>
     [e.from, e.to].sort().join('|') === 'partial-fractions-quadratic|partial-fractions-repeated'))

@@ -958,6 +958,133 @@ const CONCEPTS: Concept[] = [
       },
     ],
   },
+
+  /**
+   * Roots of higher polynomials — the third promotion out of the atlas.
+   *
+   * ── What it teaches, and what it deliberately does not ───────────────────
+   *
+   * The map node's one-liner bundled three things: the factor and remainder
+   * theorems, rational-root search, and "the fundamental theorem of algebra as
+   * the thing they are groping toward". The first two are authored here. The
+   * FTA is not, and that is why the node's `needs: ['complex-numbers']` edge is
+   * kept rather than quietly dropped — complex numbers are what the FTA needs,
+   * and removing the edge because this concept stops short of it would loosen
+   * the ordering on the strength of what is currently written, which is exactly
+   * backwards. Gating only ever tightens here.
+   *
+   * Keeping it costs nothing today: `complex-numbers` has no material, and
+   * `gatingPrerequisitesOf` looks *through* an unteachable prerequisite rather
+   * than at it. So the claim stands in the graph and gates nobody until somebody
+   * authors complex arithmetic, at which point it starts gating and the
+   * ordering tightens — which is the behaviour that rule exists for.
+   *
+   * ── Why it was the next one worth doing ──────────────────────────────────
+   *
+   * It has both halves. The remainder and factor theorems are `evaluate` —
+   * substitute and read the number — so they settle locally with no worker,
+   * while full factorisation is a `transform_to_form` the CAS has to rule. That
+   * satisfies the invariant the last pass added, rather than needing an
+   * `evaluate` stand-in invented to satisfy it.
+   */
+  {
+    id: 'polynomial-roots',
+    name: 'Roots of higher polynomials',
+    subjectId: subject.id,
+    scope: {
+      id: 'polynomial-roots',
+      label: 'Roots of higher polynomials',
+      hint: 'factor theorem remainder theorem rational root cubic',
+      match: /\b(factor theorem|remainder theorem|rational root|cubic equation|quartic equation)\b/i,
+    },
+    fidelity: 'checked',
+    objectives: [
+      {
+        id: 'find-roots-beyond-quadratics',
+        statement:
+          'Find a root of a cubic, show it is one, and use it to factor the polynomial completely.',
+        taskKinds: ['evaluate', 'transform_to_form', 'justify'],
+      },
+    ],
+    knowledgePoints: [
+      {
+        id: 'remainder-theorem',
+        conceptId: 'polynomial-roots',
+        statement:
+          'Dividing p(x) by (x − a) leaves a remainder of exactly p(a). So you never have to do ' +
+          'the division to find the remainder — substitute.',
+        position: 1,
+        automaticityTarget: 25_000,
+        workedExample: {
+          problem: 'What is the remainder when x³ − 2x² + 4 is divided by x − 3?',
+          subgoals: [
+            { label: 'Which a?', detail: 'Dividing by x − 3 means a = 3. Note the sign: x − a, so a is +3.' },
+            { label: 'Substitute', detail: 'p(3) = 27 − 2·9 + 4 = 27 − 18 + 4 = 13.' },
+            {
+              label: 'That is the remainder',
+              detail:
+                'No division needed. Doing it long-hand gives quotient x² + x + 3 and remainder 13, ' +
+                'which is the check rather than the method.',
+            },
+          ],
+          answer: '13',
+        },
+      },
+      {
+        id: 'factor-theorem',
+        conceptId: 'polynomial-roots',
+        statement:
+          'The remainder theorem has one case that matters: if p(a) = 0 then the remainder is zero, ' +
+          'so (x − a) divides p exactly. Finding a root and finding a factor are the same act.',
+        position: 2,
+        automaticityTarget: 25_000,
+        workedExample: {
+          problem: 'Show that x − 1 is a factor of x³ − 7x + 6, and that x − 3 is not.',
+          subgoals: [
+            { label: 'Test a = 1', detail: 'p(1) = 1 − 7 + 6 = 0. Zero, so x − 1 is a factor.' },
+            { label: 'Test a = 3', detail: 'p(3) = 27 − 21 + 6 = 12. Not zero, so x − 3 is not a factor.' },
+            {
+              label: 'What the non-zero value tells you',
+              detail:
+                'It is not wasted: 12 is the remainder on division by x − 3. A failed factor test is ' +
+                'still a completed remainder calculation.',
+            },
+          ],
+          answer: 'x − 1 is a factor; x − 3 leaves remainder 12.',
+        },
+      },
+      {
+        id: 'rational-root-search',
+        conceptId: 'polynomial-roots',
+        statement:
+          'A rational root p/q of a polynomial with integer coefficients has p dividing the constant ' +
+          'term and q dividing the leading coefficient. That turns "guess a root" into a short finite ' +
+          'list to test — and if none of them works, there is no rational root to find.',
+        position: 3,
+        workedExample: {
+          problem: 'Factor 2x³ − 3x² − 11x + 6 completely.',
+          subgoals: [
+            {
+              label: 'Build the candidate list',
+              detail:
+                'Constant 6 gives p ∈ {±1, ±2, ±3, ±6}; leading coefficient 2 gives q ∈ {±1, ±2}. ' +
+                'So the candidates are ±1, ±2, ±3, ±6, ±1/2, ±3/2.',
+            },
+            { label: 'Test until one lands', detail: 'p(1) = −6. p(−1) = 12. p(2) = −12. p(3) = 54 − 27 − 33 + 6 = 0.' },
+            {
+              label: 'Divide out the factor you found',
+              detail: '2x³ − 3x² − 11x + 6 ÷ (x − 3) = 2x² + 3x − 2.',
+            },
+            {
+              label: 'The rest is a quadratic, which you already know',
+              detail: '2x² + 3x − 2 = (2x − 1)(x + 2), so the whole thing is (x − 3)(2x − 1)(x + 2).',
+            },
+          ],
+          answer: '(x − 3)(2x − 1)(x + 2)',
+        },
+      },
+    ],
+  },
 ]
 
 // ---------------------------------------------------------------------------
@@ -1006,6 +1133,13 @@ const EDGES: ConceptEdge[] = [
   // map — see the comment on `functions.links`.
   { id: 'p12', from: 'completing-the-square', to: 'quadratic-formula', kind: 'prerequisite', promotedBy: 'author',
     rationale: 'The formula is completing the square carried out once in general, so it is a shortcut for something that has to be understood first.' },
+  // The third promotion. `complex-numbers -> polynomial-roots` is the node's
+  // other `needs` and is carried as a `links` entry in atlas-foundations, since
+  // it crosses from a map node into an authored concept.
+  { id: 'p13', from: 'polynomial-division', to: 'polynomial-roots', kind: 'prerequisite', promotedBy: 'author',
+    rationale: 'Finding a root gives you a factor, and the next step is dividing it out — so the division has to be available before the search is any use.' },
+  { id: 'p14', from: 'quadratic-formula', to: 'polynomial-roots', kind: 'prerequisite', promotedBy: 'author',
+    rationale: 'Dividing a known factor out of a cubic leaves a quadratic, so the cubic case is only finishable by someone who can finish that.' },
 
   // ── encompasses ─────────────────────────────────────────────────────────
   // The edges that make credit computable. Each one says: a learner who just did
@@ -1026,6 +1160,10 @@ const EDGES: ConceptEdge[] = [
     rationale: 'The map node said so with `exercises`, and it is true: applying the formula is completing the square with the arithmetic already done.' },
   { id: 'e9', from: 'quadratic-formula', to: 'factoring-quadratics', kind: 'encompasses', promotedBy: 'author',
     rationale: 'A perfect-square discriminant is exactly the case factoring handles, and the formula computes the discriminant on the way.' },
+  { id: 'e10', from: 'polynomial-roots', to: 'polynomial-division', kind: 'encompasses', promotedBy: 'author',
+    rationale: 'The map node said so with `exercises`: factoring a cubic means dividing the found factor out, so the division is performed every time.' },
+  { id: 'e11', from: 'polynomial-roots', to: 'factoring-quadratics', kind: 'encompasses', promotedBy: 'author',
+    rationale: 'What is left after dividing a root out of a cubic is a quadratic to factor, so a completed cubic contains a completed quadratic.' },
 
   // ── interferes_with ─────────────────────────────────────────────────────
   // Symmetric, authored, and each one carries its reason, because an unexplained
