@@ -24,6 +24,7 @@ import {
   isSelfReply, radioRefusal, selfRepliesLeft, selfReplyRefusal, RADIO_HINT, RADIO_LABEL,
 } from '@/lib/correlate/continuation'
 import { activeBranch, playedUnder, switchTargets } from '@/lib/correlate/switching'
+import { announcementFor } from '@/lib/correlate/naming'
 import {
   hintsFor, openingSentence, pickConfidently,
   type VoiceCommand, type VoiceIntent, type VoiceStage,
@@ -61,6 +62,9 @@ const RADIO_LOOKAHEAD = 2
 
 /** How soon a second spoken "next" is taken seriously. See `lastVoiceSkip`. */
 const VOICE_SKIP_GUARD_MS = 800
+
+/** Whether radio announces each track. Per browser, like the band and the layout. */
+const NARRATE_KEY = 'bza-correlate-narrate'
 
 /**
  * How many silent answers in a row end the run.
@@ -156,6 +160,8 @@ export default function CorrelationBoard({
    * again, and that is the start-stop cycling.
    */
   const audioPlayingRef = useRef(false)
+  /** Whether playback is paused, readable from a speech callback. */
+  const pausedRef = useRef(true)
   /**
    * When a voice skip was last honoured, to break a runaway.
    *
@@ -366,6 +372,9 @@ export default function CorrelationBoard({
   // Mirrored for the voice grammar, which is evaluated outside React and needs
   // to know whether the speakers are making noise. See `audioPlayingRef`.
   audioPlayingRef.current = !!player.current && !player.paused
+  // And for the radio announcement's resume, which runs in a speech callback
+  // long after the render that scheduled it.
+  pausedRef.current = player.paused
 
   const mediaVisited = useMemo(
     () => [...new Set(chain.map(o => o.medium))],
@@ -1122,6 +1131,46 @@ export default function CorrelationBoard({
   const [voiceExpanded, setVoiceExpanded] = useState(false)
 
   /**
+   * Read each answer out as its track starts, in radio.
+   *
+   * Radio was deliberately silent: `absorb` skips speaking when it is on,
+   * because the pump generates two answers ahead of the audio, so a turn lands
+   * while an earlier one is still playing. Speaking then would describe a track
+   * that is a minute away.
+   *
+   * Which is an argument against announcing on LANDING, not against announcing.
+   * Keyed on the track actually starting, it is a DJ saying what this one is —
+   * and that is the one thing radio could not tell you, since the board is
+   * behind you while it plays.
+   *
+   * Off by default and remembered per browser. On is a real preference: it
+   * doubles the talking, and some of what makes radio worth leaving on is that
+   * it does not talk.
+   */
+  const [narrate, setNarrate] = useState(false)
+  useEffect(() => {
+    try { setNarrate(localStorage.getItem(NARRATE_KEY) === '1') } catch {}
+  }, [])
+  const toggleNarrate = useCallback(() => {
+    setNarrate(v => {
+      const next = !v
+      try { localStorage.setItem(NARRATE_KEY, next ? '1' : '0') } catch {}
+      track('correlate_narrate_toggled', { on: next, game: branch.mode })
+      return next
+    })
+  }, [branch.mode])
+
+  /**
+   * The track the announcement has already covered.
+   *
+   * By offering id rather than by a boolean, because the queue can revisit one:
+   * `previous` restarts the current item when there is nothing behind it, and a
+   * re-announcement of a track that never changed would be the interface
+   * talking over itself for no reason.
+   */
+  const announcedRef = useRef<string | null>(null)
+
+  /**
    * Renaming the game, which is the one edit a finished game still allows.
    *
    * `renameSession` has existed in lib/queries/correlate.ts since titles did and
@@ -1467,6 +1516,57 @@ export default function CorrelationBoard({
     if ((!radio && !voice.listening) || audible.length === 0) return
     appendAudible(audible)
   }, [radio, voice.listening, audible, appendAudible])
+
+  /**
+   * Announce the track that has just started, and hand the music back.
+   *
+   * Pause, speak, resume — rather than speaking over it. Talking over a
+   * thirty-second preview wastes a third of the only perceptible thing in the
+   * exchange, and the announcement is about that track, so being audible
+   * matters more than being quick.
+   *
+   * Resumed from `say`'s `onDone`, which fires on every path the speaker can
+   * stop by: finished, interrupted with "stop", or released by a watchdog when
+   * `personaSpeak` never calls back. Resuming from a `speaking` state flip
+   * instead would be a render late, and resuming only on the happy path would
+   * leave the music paused for ever on the unhappy ones.
+   *
+   * `currentId` in the dependency list and not `player.current`:
+   * `useOfferingPlayer` returns a fresh object literal every render, so the
+   * object would re-run this on every render and re-announce the same track.
+   */
+  const currentId = player.current?.id ?? null
+  const { toggle: togglePlayback } = player
+  useEffect(() => {
+    if (!narrate || !currentId) return
+    if (!voiceRef.current?.supported) return
+    if (announcedRef.current === currentId) return
+    announcedRef.current = currentId
+
+    const offering = audible.find(o => o.id === currentId)
+    if (!offering) return
+    // The exchange this track came back from, for its reading. Found by reply
+    // rather than by position, because the queue and the chain are different
+    // orders once the game has branched.
+    const turn = turns.find(x => x.reply_offering?.id === currentId)
+    // `openingSentence` injected rather than imported inside naming.ts, which
+    // owns no opinion about voice — it is the same trimmer `absorb` uses, so a
+    // landed turn and an announced track clip the reading identically.
+    const line = announcementFor(offering, turn?.reading ?? null, openingSentence)
+    if (!line) return
+
+    const wasPlaying = !pausedRef.current
+    if (wasPlaying) togglePlayback()
+    voiceRef.current.say(line, () => {
+      // Through the ref, because `player` is a fresh object literal every
+      // render and the closure would otherwise hold the paused value from the
+      // render that started the announcement — which is exactly the moment it
+      // was about to change. The condition is "still paused, and we were the
+      // ones who paused it": a player who hit pause while it was talking meant
+      // it, and resuming would overrule them.
+      if (wasPlaying && pausedRef.current) togglePlayback()
+    })
+  }, [narrate, currentId, audible, turns, togglePlayback])
 
   /**
    * Whether "again" is available, in a ref the voice handler can read.
@@ -2143,6 +2243,8 @@ export default function CorrelationBoard({
                 // Routed through the same intent the spoken form produces, so
                 // tapping and saying "two" cannot drift apart.
                 onChoose={i => { void onVoiceIntent({ kind: 'choose', index: i }) }}
+                narrate={narrate}
+                onToggleNarrate={toggleNarrate}
                 expanded={voiceExpanded}
                 onToggleExpanded={() => setVoiceExpanded(v => !v)}
               />

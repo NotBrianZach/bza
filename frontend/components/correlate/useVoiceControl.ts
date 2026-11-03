@@ -144,8 +144,14 @@ export interface VoiceControl {
   start: () => void
   stop: () => void
   toggle: () => void
-  /** Speak a line, pausing recognition for its duration. */
-  say: (text: string) => void
+  /**
+   * Speak a line, narrowing the grammar to barge-in for its duration.
+   *
+   * `onDone` runs when the speaker stops for any reason — finished, interrupted
+   * by `hush`, or released by one of the watchdogs. Callers use it to resume
+   * something they paused to talk over.
+   */
+  say: (text: string, onDone?: () => void) => void
   /** Stop talking and reopen the microphone, without leaving voice mode. */
   hush: () => void
 }
@@ -200,8 +206,18 @@ export function useVoiceControl(
   const handlersRef = useRef(handlers)
   handlersRef.current = handlers
 
-  const say = useCallback((text: string) => {
-    if (!text) return
+  /**
+   * Speak a line, and optionally do something once it has finished.
+   *
+   * `onDone` exists for the radio announcement, which pauses the music to talk
+   * over nothing and has to resume it at exactly the moment the talking stops.
+   * Polling `speaking` from an effect would work and would resume a beat late
+   * every time; a callback on the same `release` path that reopens the
+   * microphone is already the authoritative "done" signal, including the two
+   * watchdog cases where `onEnd` never fires.
+   */
+  const say = useCallback((text: string, onDone?: () => void) => {
+    if (!text) { onDone?.(); return }
     // Recognition keeps running, but `onresult` only honours the barge-in
     // vocabulary while this is set — see `spokenTextRef`. Stopping the
     // recogniser outright was the first version, and it made the partner
@@ -237,6 +253,11 @@ export function useVoiceControl(
       if (wantRef.current && !stoppingRef.current) {
         try { recRef.current?.start() } catch {}
       }
+      // Last, and outside the idempotence guard above only in the sense that it
+      // runs on whichever call wins the race. A throw here must not leave the
+      // microphone shut, so it is swallowed rather than allowed to escape a
+      // function three different timers call.
+      try { onDone?.() } catch {}
     }
 
     cancelSpeech.current?.()

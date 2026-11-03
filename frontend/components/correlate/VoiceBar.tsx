@@ -1,6 +1,6 @@
 'use client'
 
-import { AlertTriangle, Ear, Loader2, Mic, MicOff, Volume2 } from 'lucide-react'
+import { AlertTriangle, Ear, Loader2, Mic, MicOff, Volume2, VolumeX } from 'lucide-react'
 import { VOICE_COMMANDS, spokenMediaNames, whenAvailable } from '@/lib/correlate/voice'
 import type { VoiceControl } from './useVoiceControl'
 import type { CorrelationGame, MediumId, Offering } from '@/lib/correlate/types'
@@ -24,6 +24,8 @@ export default function VoiceBar({
   audioPlaying,
   options,
   onChoose,
+  narrate,
+  onToggleNarrate,
   expanded,
   onToggleExpanded,
 }: {
@@ -36,6 +38,9 @@ export default function VoiceBar({
   options: Offering[]
   /** Take the Nth, one-based — the same thing saying "two" does. */
   onChoose: (index: number) => void
+  /** Whether radio reads each answer out as its track starts. */
+  narrate: boolean
+  onToggleNarrate: () => void
   expanded: boolean
   onToggleExpanded: () => void
 }) {
@@ -108,6 +113,31 @@ export default function VoiceBar({
             )}
           </span>
         )}
+
+        {/* Announcing tracks is a separate thing from taking commands, and the
+            two are deliberately independent: this reads the chain out while
+            radio plays and needs no microphone, so it is useful to somebody who
+            will never turn hands-free on. Hence its own toggle rather than a
+            behaviour of the one beside it.
+
+            Still gated on `supported` — it speaks, and a browser with no speech
+            synthesis cannot do it. Offering a switch that silently does nothing
+            is the thing the unsupported branch above exists to avoid. */}
+        <button
+          onClick={onToggleNarrate}
+          aria-pressed={narrate}
+          title={narrate
+            ? 'Announcing each answer as its track starts. Click to stop.'
+            : 'Read each answer out as its track starts, so you can listen with the screen away'}
+          className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full transition-colors ${
+            narrate
+              ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+          }`}
+        >
+          {narrate ? <Volume2 size={13} /> : <VolumeX size={13} />}
+          Announce
+        </button>
 
         <button
           onClick={onToggleExpanded}

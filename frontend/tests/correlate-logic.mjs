@@ -121,7 +121,7 @@ const {
   matchScore, pickConfidently, parseBarge, parseChoice, openingSentence, isAddressed,
   CONFIDENT_SCORE, CONFIDENT_MARGIN,
 } = M.voice
-const { autoTitleFor, isDefaultTitle, MAX_AUTO_TITLE } = M.naming
+const { autoTitleFor, isDefaultTitle, MAX_AUTO_TITLE, announcementFor } = M.naming
 const {
   TUNING_AXES, AXIS_LIST, ALL_AXIS_IDS, AXIS_STOPS, DEFAULT_WEIGHT, WEIGHT_LABELS, WEIGHT_HINTS,
   DEFAULT_TUNING, normalizeTuning, isNeutral, isUntouched, isProportioned, axisValue, mutedMedia,
@@ -3850,6 +3850,57 @@ t('every game name round-trips as its own default',
   GAME_LIST.every(g => isDefaultTitle(g.name, g.name)))
 t('and no two games share a name, or a default would be ambiguous',
   new Set(GAME_LIST.map(g => g.name.toLowerCase())).size === GAME_LIST.length)
+
+group('radio announces the track that is starting')
+/*
+ * Spoken into a gap the music was PAUSED to make, which is what every rule here
+ * follows from: each word costs silence in the thing the player came for.
+ *
+ * Keyed on the track starting rather than on the turn landing, because radio
+ * generates two answers ahead of the audio — announcing on landing would
+ * describe a record a minute away. That part is an effect in the board; this is
+ * the sentence it speaks.
+ */
+const ann = (o, reading = null) => announcementFor(o, reading, openingSentence)
+
+t('the name comes first, then the reading', (() => {
+  const line = ann({ title: 'Idioteque', attribution: 'Radiohead' }, 'It answers the hurry with stillness.')
+  return line.startsWith('Idioteque, Radiohead.') && line.includes('stillness')
+})())
+/*
+ * The reading talks ABOUT the track, so hearing it without knowing what is
+ * playing is hearing the second half of a sentence — the same ordering a landed
+ * turn uses.
+ */
+t('never the reading first',
+  !ann({ title: 'Idioteque', attribution: 'Radiohead' }, 'It answers the hurry.').startsWith('It answers'))
+t('an attribution is optional', ann({ title: 'Clair de Lune' }) === 'Clair de Lune.')
+t('a blank attribution is not announced as one',
+  ann({ title: 'Clair de Lune', attribution: '   ' }) === 'Clair de Lune.')
+t('with no reading it is just the name',
+  ann({ title: 'Idioteque', attribution: 'Radiohead' }) === 'Idioteque, Radiohead.')
+t('an untitled offering is not worth stopping the music for',
+  ann({ title: '' }) === null && ann({ title: null }) === null)
+/*
+ * Only the first sentence. A preview is thirty seconds and a six-sentence
+ * reading is twenty of them; the claim is in the first sentence and the board
+ * is still there for the argument.
+ */
+t('a long reading is clipped to its opening', (() => {
+  const long = 'It answers the hurry with stillness. The blues repeat where the song accelerated. Nothing of the tempo survives.'
+  const line = ann({ title: 'Starry Night', attribution: 'van Gogh' }, long)
+  return line.includes('stillness') && !line.includes('Nothing of the tempo')
+})())
+t('and a one-sentence reading is spoken whole', (() => {
+  const line = ann({ title: 'Starry Night' }, 'It answers the hurry with stillness.')
+  return line === 'Starry Night. It answers the hurry with stillness.'
+})())
+t('the clipper is injected, so a landed turn and an announced track agree', (() => {
+  // Called with no clipper, the whole reading survives — which is what proves
+  // the trimming is the caller's choice rather than baked in here.
+  const long = 'One. Two. Three.'
+  return announcementFor({ title: 'X' }, long).includes('Three')
+})())
 
 group('voice — letting it answer itself, in a medium you name')
 /*

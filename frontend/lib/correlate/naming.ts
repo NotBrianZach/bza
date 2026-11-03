@@ -39,6 +39,43 @@ export function isDefaultTitle(title: string | null | undefined, gameName: strin
 export const MAX_AUTO_TITLE = 120
 
 /**
+ * What to say as a track starts, in radio with narration on.
+ *
+ * ── Why the name comes first and the reading second ──────────────────────
+ *
+ * The reading talks *about* the track, so hearing it without knowing what is
+ * playing is hearing the second half of a sentence — the same ordering `absorb`
+ * uses when it speaks a landed turn. A listener who recognises the record from
+ * its name stops needing the rest.
+ *
+ * ── Why only the first sentence of the reading ───────────────────────────
+ *
+ * This is spoken into a gap the music has been paused to make, so every word
+ * costs silence in the thing the player actually came for. A preview is thirty
+ * seconds; a six-sentence reading is twenty. The first sentence is the claim and
+ * the rest is the argument for it, and the board is still there for the
+ * argument.
+ *
+ * Returns null when there is nothing worth stopping the music for — which is
+ * most composed offerings, where the title IS the content and announcing it
+ * would read the player their own words back.
+ */
+export function announcementFor(
+  offering: { title?: string | null; attribution?: string | null; origin?: string },
+  reading: string | null,
+  opening: (text: string) => { opening: string } = (t) => ({ opening: t }),
+): string | null {
+  const title = (offering.title ?? '').trim()
+  if (!title) return null
+  const named = offering.attribution?.trim()
+    ? `${title}, ${offering.attribution.trim()}.`
+    : `${title}.`
+  const rest = (reading ?? '').trim()
+  if (!rest) return named
+  return `${named} ${opening(rest).opening}`.trim()
+}
+
+/**
  * The title to give a game whose first move has just landed, or null to leave it.
  *
  * Null in every case where there is any doubt, which is most of them:
