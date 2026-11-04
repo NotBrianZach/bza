@@ -50,8 +50,28 @@ import {
 
 export const dynamic = 'force-dynamic'
 
-/** Per invocation, so one call cannot run past the request budget. */
-const MAX_FEEDS = 40
+/**
+ * Per invocation, counted against the Worker subrequest limit.
+ *
+ * Was 40, which is a feed count rather than a budget and could not succeed:
+ * each feed costs four subrequests — the outbound fetch, the duplicate-check
+ * SELECT and the upsert in `insertItems`, and the `recordPoll` write — against
+ * a Cloudflare ceiling of 50 per invocation. 40 feeds is 160.
+ *
+ * Fixed here as well as in /api/suggest/poll because it is the same defect and
+ * the same arithmetic, and this route is the ops path: it is run deliberately,
+ * rarely, and by someone who would read `Too many subrequests` as the cron
+ * being broken rather than as a cap set without counting.
+ *
+ * The reserve below is larger than the poll route's because this route also
+ * does its own catalogue reads before the loop.
+ */
+const WORKER_SUBREQUEST_LIMIT = 50
+const SUBREQUESTS_PER_FEED = 4
+const RESERVED_SUBREQUESTS = 18
+const MAX_FEEDS = Math.floor(
+  (WORKER_SUBREQUEST_LIMIT - RESERVED_SUBREQUESTS) / SUBREQUESTS_PER_FEED,
+)
 
 function authorised(req: NextRequest): boolean {
   const expected = process.env.SUGGEST_CRON_SECRET
@@ -123,7 +143,7 @@ export async function POST(req: NextRequest) {
           `${subscribed.length - targets.length} more feed(s) were due — schedule this more often, or raise the per-run cap`,
         )
       }
-      // Sequential. Forty concurrent outbound fetches from one Worker is a
+      // Sequential. A batch of concurrent outbound fetches from one Worker is a
       // burst a small publisher notices, and this app shares Cloudflare's
       // egress IPs with everyone else on it.
       for (const target of targets) {
