@@ -125,6 +125,27 @@ export const correlateQueries = {
         // default is the thing that decides and there is one fewer way for a
         // client to accidentally assert "no limit" as a value.
         ...(typeof turnLimit === 'number' && turnLimit > 0 ? { turn_limit: turnLimit } : {}),
+        /**
+         * Shareable from the start.
+         *
+         * Sharing used to be a switch you had to find first, which made showing
+         * somebody a chain a two-step job: notice the button, then copy. A
+         * correlation game is a "do you see what I see" — three of the eleven
+         * are explicitly arguing with somebody — so a link is what the thing is
+         * for, and it should exist before you want it.
+         *
+         * Worth being precise about what this does and does not mean. It is
+         * UNLISTED, not published: 144 bits of base64url, matched server-side
+         * against one row, indexed nowhere and linked from nothing. Nobody
+         * reaches it without the link. The route that serves it already
+         * withholds `user_id`, `tuning` and the token itself, so what a holder
+         * can read is the exchanges and not the account.
+         *
+         * The switch stays, and turning it off still nulls the column and kills
+         * every link that was out there. Default-on moves which way that switch
+         * starts; it does not remove it.
+         */
+        share_token: shareToken(),
       })
       .select()
       .single()

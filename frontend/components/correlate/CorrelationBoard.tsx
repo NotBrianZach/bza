@@ -404,8 +404,69 @@ export default function CorrelationBoard({
    * and a `useCallback` over it memoises nothing. These three are `useCallback`s
    * in the hook; `playingOfferingId` is the only part that genuinely moves.
    */
-  const { jumpTo, playOne, toggle: togglePlay } = player
+  const { jumpTo, playOne, cue, toggle: togglePlay } = player
   const playingOfferingId = player.current?.id ?? null
+
+  /**
+   * The track, in the address bar.
+   *
+   * ── Written with replaceState, not the router ────────────────────────────
+   *
+   * `router.replace` would push this through Next's router: a re-render of the
+   * whole page tree every time a track changes, for a value nothing above this
+   * component reads. `history.replaceState` edits the bar and stops there.
+   *
+   * And `replace`, never `push`. A back button that steps backwards through
+   * twenty songs is not a back button — the player's own `previous` is where
+   * that belongs, and the one thing a listener means by Back on this page is
+   * "leave the game".
+   *
+   * ── What it is for ───────────────────────────────────────────────────────
+   *
+   * Copying the URL out of the bar now names what you are hearing, so a reload
+   * lands back on it and a link lands somebody else on it. The session was
+   * already in the URL as `?game=`; this is the rest of the position.
+   */
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const url = new URL(window.location.href)
+    if (playingOfferingId) {
+      if (url.searchParams.get('track') === playingOfferingId) return
+      url.searchParams.set('track', playingOfferingId)
+    } else {
+      // Cleared on stop. A URL naming a track nothing is playing would send the
+      // next reload back to a song the listener had deliberately finished with.
+      if (!url.searchParams.has('track')) return
+      url.searchParams.delete('track')
+    }
+    window.history.replaceState(null, '', url)
+  }, [playingOfferingId])
+
+  /**
+   * Honour `?track=` once, when the chain is first known.
+   *
+   * CUED, not played: there is no gesture behind a page load, so starting audio
+   * here is blocked by every browser and would surface as the player's own
+   * "Playback was blocked" to somebody who had only followed a link. The track
+   * is named and paused, and the first press of play starts it.
+   *
+   * Guarded by a ref rather than by a dependency, because `audible` changes on
+   * every turn and this must not drag the player back to the link's track an
+   * hour into the game. The flag is set only once there is a chain to look in,
+   * so an empty first render does not consume the one attempt.
+   */
+  const cuedFromUrl = useRef(false)
+  useEffect(() => {
+    if (cuedFromUrl.current || audible.length === 0) return
+    cuedFromUrl.current = true
+    const wanted = new URLSearchParams(window.location.search).get('track')
+    if (!wanted) return
+    const i = audible.findIndex(o => o.id === wanted)
+    // A miss is a stale link — a track from a branch that was trashed, or an id
+    // that never existed. Leaving the player untouched is the answer; cueing
+    // something else would be answering a question nobody asked.
+    if (i >= 0) cue(audible, i)
+  }, [audible, cue])
   const playFromMap = useCallback((offering: Offering) => {
     if (playingOfferingId === offering.id) { togglePlay(); return }
     if (jumpTo(offering)) return
@@ -1055,6 +1116,26 @@ export default function CorrelationBoard({
    * best-effort: it needs a user gesture and a permission that some browsers
    * decline, and the URL is shown either way so the button is never a dead end.
    */
+  /**
+   * Copy the link, which is the thing you almost always want.
+   *
+   * Separate from `toggleShare` because sharing is on from the start now, so
+   * the header button's job changed: with a live token the common act is to
+   * take the link, and a single button that read "Shared" and *revoked* on
+   * click would destroy a link for everyone holding it on a mis-aimed tap.
+   * Stopping is still one click, in the bar below, where it is labelled with
+   * what it does.
+   */
+  const copyShare = useCallback(async () => {
+    if (!session.share_token) return
+    const url = `${window.location.origin}/play/shared/${session.share_token}` +
+      (player.current ? `?track=${encodeURIComponent(player.current.id)}` : '')
+    await navigator.clipboard?.writeText(url).catch(() => {})
+    setNotice(player.current
+      ? 'Link copied — it opens on the track you are hearing.'
+      : 'Link copied. Anyone with it can read this chain.')
+  }, [session.share_token, player])
+
   const toggleShare = useCallback(async () => {
     setSharing(true)
     setError('')
@@ -1720,8 +1801,19 @@ export default function CorrelationBoard({
     : null
   const outOfTurns = turnsLeft === 0
 
+  /**
+   * The share link, carrying the track if one is playing.
+   *
+   * Sending somebody a playlist and sending them a song in it are the same act
+   * here, and the link they get should open where you are rather than at the
+   * top — the shared view honours `?track=` the same way this one does.
+   *
+   * Recomputed as the track changes, so what the Copy button puts on the
+   * clipboard is always what the bar is showing.
+   */
   const shareUrl = session.share_token && typeof window !== 'undefined'
-    ? `${window.location.origin}/play/shared/${session.share_token}`
+    ? `${window.location.origin}/play/shared/${session.share_token}` +
+      (playingOfferingId ? `?track=${encodeURIComponent(playingOfferingId)}` : '')
     : null
 
   return (
@@ -1814,14 +1906,17 @@ export default function CorrelationBoard({
         <div className="flex items-center gap-2 flex-shrink-0">
           {/* Sharing stays available on a finished game — a closed chain with its
               closing reading is the most shareable thing this section makes. */}
+          {/* Copies when sharing is on, which it is by default, and turns it on
+              when a previous owner of this game turned it off. The revoke is in
+              the bar below — see `copyShare`. */}
           {turns.length > 0 && (
             <button
-              onClick={toggleShare}
+              onClick={session.share_token ? copyShare : toggleShare}
               disabled={sharing}
               title={session.share_token
-                ? 'Sharing is on. Click to turn it off and kill every link.'
+                ? 'Copy the read-only link to this chain'
                 : 'Make a read-only link anyone can open'}
-              aria-label={session.share_token ? 'Sharing is on' : 'Share this game'}
+              aria-label={session.share_token ? 'Copy the share link' : 'Share this game'}
               className="btn btn-secondary text-sm flex items-center gap-1.5 disabled:opacity-50"
             >
               {sharing ? <Loader2 size={14} className="animate-spin" /> : <Share2 size={14} />}
@@ -1829,7 +1924,7 @@ export default function CorrelationBoard({
                   160px, which on a 390px viewport is most of what the title had
                   to live in — and the icons are the recognisable part anyway.
                   `aria-label` above carries the name once the text is gone. */}
-              <span className="hidden sm:inline">{session.share_token ? 'Shared' : 'Share'}</span>
+              <span className="hidden sm:inline">{session.share_token ? 'Copy link' : 'Share'}</span>
             </button>
           )}
           {!isOver && turns.length > 0 && (
@@ -1863,7 +1958,10 @@ export default function CorrelationBoard({
       {/* The share link, shown rather than only copied: the clipboard write needs
           a permission some browsers decline, and a button whose whole output went
           to a clipboard that refused it would be a silent failure. */}
-      {session.share_token && (
+      {/* Gated on there being turns, like the button. A game one move old is
+          shareable and the link works, but a bar advertising a link to an empty
+          chain is furniture. */}
+      {session.share_token && turns.length > 0 && (
         <div className="mb-6 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 flex items-center gap-2">
           <Share2 size={12} className="text-gray-400 dark:text-gray-500 flex-shrink-0" />
           <code className="text-[11px] text-gray-600 dark:text-gray-300 truncate flex-1">
@@ -1874,6 +1972,18 @@ export default function CorrelationBoard({
             className="text-[11px] font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors flex-shrink-0"
           >
             Copy
+          </button>
+          {/* The revoke, labelled with what it does and kept away from the
+              header button it used to be. Every game has a link now, so the
+              one destructive thing in this panel must not be the thing you hit
+              reaching for Copy. */}
+          <button
+            onClick={toggleShare}
+            disabled={sharing}
+            title="Turn sharing off. Every link that is out there stops working."
+            className="text-[11px] text-gray-400 dark:text-gray-500 hover:text-red-500 transition-colors flex-shrink-0 disabled:opacity-50"
+          >
+            Stop sharing
           </button>
         </div>
       )}

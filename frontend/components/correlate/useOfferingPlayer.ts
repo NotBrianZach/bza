@@ -74,6 +74,23 @@ export interface OfferingPlayer {
    * hook's, because only the caller knows whether the surrounding run matters.
    */
   jumpTo: (offering: Offering) => boolean
+  /**
+   * Load a queue and point at one item WITHOUT playing it.
+   *
+   * What a URL can ask for and `playQueue` cannot give it. A link that names a
+   * track arrives with no user gesture behind it, and every browser blocks
+   * autoplay in that situation — so a page that called `playQueue` on load
+   * would show "Playback was blocked" to someone who had done nothing wrong.
+   *
+   * Cueing is the honest version: the track is named, shown as current, and
+   * paused, and the first press of play starts it. `toggle` knows to treat a
+   * cued item as a first play rather than a resume, because there is no loaded
+   * media to unpause.
+   *
+   * Does nothing when the index is out of range, so a stale or hand-edited URL
+   * leaves the player alone rather than cueing whatever happens to be at 0.
+   */
+  cue: (offerings: Offering[], startIndex: number) => void
   /** How many queued items sit after the one playing. 0 means it is about to run dry. */
   lookahead: number
   toggle: () => void
@@ -347,6 +364,30 @@ export function useOfferingPlayer(opts: OfferingPlayerOptions = {}): OfferingPla
     return true
   }, [playAt])
 
+  /** Cue without playing. See the note on the interface. */
+  const cue = useCallback((offerings: Offering[], startIndex: number) => {
+    const playable = offerings.filter(o => !!audioUrl(o))
+    const offering = playable[startIndex]
+    // Out of range is the stale-URL case and must be a no-op, not a fallback to
+    // item 0 — cueing a track nobody asked for is worse than cueing none.
+    if (!offering) return
+    // Bumped like any other move, so a resolve still in flight for a previously
+    // cued item cannot come back and start playing over this one.
+    genRef.current++
+    queueRef.current = playable
+    indexRef.current = startIndex
+    driedRef.current = false
+    setQueueLength(playable.length)
+    setQueueIndex(playable.length > 1 ? startIndex : -1)
+    setLookahead(playable.length - 1 - startIndex)
+    setCurrent(offering)
+    setPaused(true)
+    setProgress(0)
+    setError('')
+    // Stays null: `via` is how `toggle` tells a cued item from a paused one.
+    setVia(null)
+  }, [])
+
   const skip = useCallback(() => {
     if (indexRef.current < 0) return
     advance()
@@ -385,6 +426,16 @@ export function useOfferingPlayer(opts: OfferingPlayerOptions = {}): OfferingPla
 
   const toggle = useCallback(() => {
     if (!current) return
+    /**
+     * Cued but never started: this press is the first play, not a resume.
+     *
+     * `via` is null only before anything has been loaded, which is exactly the
+     * state `cue` leaves behind. Without this branch the control below would
+     * call play() on an element with no src and report a failure — and the
+     * press is the gesture the autoplay policy was waiting for, so this is the
+     * one moment starting the track is guaranteed to be allowed.
+     */
+    if (via === null) { playAt(indexRef.current); return }
     // Routed by what is actually playing. Pausing the <audio> element while a video
     // is running would change nothing and report that it had.
     if (via === 'full') {
@@ -397,7 +448,7 @@ export function useOfferingPlayer(opts: OfferingPlayerOptions = {}): OfferingPla
     if (!el) return
     if (el.paused) el.play().then(() => setPaused(false), () => setPaused(true))
     else { el.pause(); setPaused(true) }
-  }, [current, via, paused])
+  }, [current, via, paused, playAt])
 
   const stop = useCallback(() => {
     genRef.current++
@@ -417,7 +468,7 @@ export function useOfferingPlayer(opts: OfferingPlayerOptions = {}): OfferingPla
 
   return {
     current, paused, error, progress, queueIndex, queueLength, lookahead, via,
-    playOne, playQueue, append, jumpTo, toggle, stop, advance, skip, previous,
+    playOne, playQueue, append, jumpTo, cue, toggle, stop, advance, skip, previous,
     fallbackToPreview,
   }
 }

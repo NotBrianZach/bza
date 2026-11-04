@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import {
   AlertTriangle, ArrowRight, CheckCircle2, Flag, Globe2, Loader2, Repeat, Shuffle,
@@ -88,6 +88,41 @@ export default function SharedChain({ token }: { token: string }) {
     return chain.filter(o => !!audioUrl(o))
   }, [line])
 
+  /**
+   * Open on the track the link named, and keep the bar in step after that.
+   *
+   * The sharing side of the board builds links with `?track=` on them, so
+   * "listen to this song" and "look at this chain" are the same link. Mirrored
+   * here rather than factored out with the board's copy: the two pages differ in
+   * what they do with a miss, which is the only interesting part. The board owns
+   * the game and leaves the player alone; this page has nothing else to offer a
+   * visitor, so a stale track falls back to the top of the chain.
+   *
+   * Cued, not played — a page load carries no gesture and autoplay is blocked.
+   * See `cue` in useOfferingPlayer.
+   */
+  const { cue } = player
+  const cuedFromUrl = useRef(false)
+  useEffect(() => {
+    if (cuedFromUrl.current || audible.length === 0) return
+    cuedFromUrl.current = true
+    const wanted = new URLSearchParams(window.location.search).get('track')
+    if (!wanted) return
+    const i = audible.findIndex(o => o.id === wanted)
+    cue(audible, i >= 0 ? i : 0)
+  }, [audible, cue])
+
+  const playingOfferingId = player.current?.id ?? null
+  useEffect(() => {
+    if (typeof window === 'undefined' || !playingOfferingId) return
+    const url = new URL(window.location.href)
+    if (url.searchParams.get('track') === playingOfferingId) return
+    url.searchParams.set('track', playingOfferingId)
+    // replaceState, like the board: a back button that walks back through songs
+    // is not what Back means on a page whose only other destination is /play.
+    window.history.replaceState(null, '', url)
+  }, [playingOfferingId])
+
   if (loading) {
     return (
       <main className="min-h-screen flex items-center justify-center text-gray-400">
@@ -160,10 +195,20 @@ export default function SharedChain({ token }: { token: string }) {
 
       {audible.length > 1 && (
         <button
-          onClick={() => player.playQueue(audible, 0)}
+          /* Starts where the link pointed, not at the top. A link that opened on
+             track seven and then had one button on it labelled "play", which
+             played track one, would be worse than not honouring `?track=` at
+             all. `findIndex` of null is -1, so with nothing cued this is the
+             top, which is what it always was. */
+          onClick={() => player.playQueue(
+            audible,
+            Math.max(0, audible.findIndex(o => o.id === playingOfferingId)),
+          )}
           className="mb-6 flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition-colors"
         >
-          Play the {audible.length} audible ones
+          {playingOfferingId
+            ? 'Play from here'
+            : `Play the ${audible.length} audible ones`}
         </button>
       )}
 
