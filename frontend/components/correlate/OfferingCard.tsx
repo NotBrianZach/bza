@@ -71,8 +71,23 @@ export default function OfferingCard({
 
   const handlePlay = () => {
     if (!playable) return
-    if (isCurrent) player!.toggle()
-    else player!.playOne(offering)
+    if (isCurrent) { player!.toggle(); return }
+    /**
+     * Skip to it inside the run, if there is a run.
+     *
+     * This card is usually one item of a queue that is already playing —
+     * always so under "keep going", where the queue IS the chain. `playOne`
+     * replaces the queue with this single track, which threw the run away:
+     * everything after it stopped being queued, and the radio pump saw a
+     * lookahead of zero and generated a fresh answer on top. So clicking a
+     * song to hear it again ended the radio rather than skipping to it.
+     *
+     * `jumpTo` returns false when this offering is not queued — an item on
+     * another branch, or nothing playing at all — and then a one-off is
+     * exactly right.
+     */
+    if (player!.jumpTo(offering)) return
+    player!.playOne(offering)
   }
 
   const loadFull = async () => {
@@ -126,7 +141,11 @@ export default function OfferingCard({
           {playable && (
             <button
               onClick={handlePlay}
-              title={isPlaying ? 'Pause' : 'Play the preview'}
+              // Not "Play the preview": whether this comes back as the whole
+              // record or the 30-second clip is the queue's resolver's
+              // decision, and during a run this skips to it rather than
+              // starting something separate.
+              title={isPlaying ? 'Pause' : 'Play this one'}
               className="p-2 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
             >
               {isPlaying ? <Pause size={13} /> : <Play size={13} />}

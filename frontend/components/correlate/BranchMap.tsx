@@ -1,10 +1,11 @@
 'use client'
 
 import { useMemo } from 'react'
-import { CornerDownRight, GitBranch, Link2, SignalZero } from 'lucide-react'
+import { CornerDownRight, GitBranch, Link2, Pause, Play, SignalZero } from 'lucide-react'
 import { getMedium } from '@/lib/correlate/media'
 import { childrenOf, pathTo, type TurnGraph } from '@/lib/correlate/graph'
-import type { CorrelationTurn } from '@/lib/correlate/types'
+import type { CorrelationTurn, Offering } from '@/lib/correlate/types'
+import { audioUrl } from './useOfferingPlayer'
 
 /**
  * The shape of the game, as a thing you can click.
@@ -18,6 +19,19 @@ import type { CorrelationTurn } from '@/lib/correlate/types'
  * to recognise a turn and get back to it; a canvas would make that a navigation
  * problem instead of a reading one, and the callbacks the interpreter volunteers are
  * the only non-tree edges — one marker each is enough to say so.
+ *
+ * ── Playing from here is a SECOND control, not the row click ──────────────
+ *
+ * A row click focuses the turn: it says "my next move answers this one", which is
+ * the whole reason a branched game needs this panel. Skipping the music to a turn
+ * is a different intention that happens to want the same target, and overloading
+ * one click with both would make every attempt to hear a track again silently
+ * move where the game continues from.
+ *
+ * So audible rows get their own small play button. It is the only thing in here
+ * that touches the player, and rows with nothing to hear do not grow one — under
+ * "keep going" most rows have audio, but a chain through paintings and passages
+ * would otherwise sprout a column of dead buttons.
  */
 export default function BranchMap({
   graph,
@@ -25,6 +39,9 @@ export default function BranchMap({
   onFocus,
   accentChip,
   accentText,
+  onPlay,
+  playingOfferingId,
+  playingPaused,
 }: {
   graph: TurnGraph
   /** The turn the next move will answer. Null is a thread with nothing behind it. */
@@ -32,6 +49,14 @@ export default function BranchMap({
   onFocus: (id: string | null) => void
   accentChip: string
   accentText: string
+  /**
+   * Skip the player to a turn's offering. Omitted means no play controls at all,
+   * which is the right rendering for a read-only view of somebody else's chain.
+   */
+  onPlay?: (offering: Offering) => void
+  /** The offering playing now, so its row shows a pause rather than a play. */
+  playingOfferingId?: string | null
+  playingPaused?: boolean
 }) {
   const onPath = useMemo(
     () => new Set(pathTo(graph, focusId).map(t => t.id)),
@@ -57,8 +82,17 @@ export default function BranchMap({
           const focused = turn.id === focusId
           const onCurrentPath = onPath.has(turn.id)
           const medium = turn.reply_offering?.medium ?? turn.move_offering?.medium
+          /**
+           * The reply first, because the reply is what the turn produced.
+           *
+           * A turn is "this move → that answer", and on a radio run the answer is
+           * the track that played. Offering the move instead would make the button
+           * play the thing the row is a response TO, which is the previous row.
+           */
+          const hearable = audible(turn)
+          const isPlayingRow = !!hearable && hearable.id === playingOfferingId
           return (
-            <li key={turn.id}>
+            <li key={turn.id} className="flex items-center">
               <button
                 onClick={() => turn.legal && onFocus(turn.id)}
                 disabled={!turn.legal}
@@ -66,7 +100,7 @@ export default function BranchMap({
                   ? `Answer turn ${turn.turn_index + 1}: ${label(turn)}`
                   : 'This move was turned away — there is nothing there to answer'}
                 style={{ paddingLeft: `${0.25 + depth * 0.75}rem` }}
-                className={`w-full flex items-center gap-1.5 pr-2 py-1 rounded-lg text-left transition-colors ${
+                className={`min-w-0 flex-1 flex items-center gap-1.5 pr-2 py-1 rounded-lg text-left transition-colors ${
                   focused
                     ? accentChip
                     : onCurrentPath
@@ -91,6 +125,25 @@ export default function BranchMap({
                   </span>
                 )}
               </button>
+
+              {/* Outside the focus button, not inside it — a button cannot
+                  nest in a button, and the whole point is that these are two
+                  different intentions. */}
+              {onPlay && hearable && (
+                <button
+                  onClick={() => onPlay(hearable)}
+                  title={isPlayingRow
+                    ? (playingPaused ? `Resume ${hearable.title}` : `Pause ${hearable.title}`)
+                    : `Skip to ${hearable.title}`}
+                  className={`flex-shrink-0 mr-1 p-1 rounded-full transition-colors ${
+                    isPlayingRow
+                      ? accentText
+                      : 'text-gray-300 dark:text-gray-600 hover:text-gray-600 dark:hover:text-gray-300'
+                  }`}
+                >
+                  {isPlayingRow && !playingPaused ? <Pause size={11} /> : <Play size={11} />}
+                </button>
+              )}
             </li>
           )
         })}
@@ -99,6 +152,7 @@ export default function BranchMap({
       <div className="px-4 pb-3">
         <p className="text-[11px] text-gray-400 dark:text-gray-500 leading-relaxed">
           Pick any turn to answer it instead. Answering one twice makes two branches; both are kept.
+          {onPlay && ' The play button skips the music to that turn without moving where the game continues from.'}
         </p>
         <button
           onClick={() => onFocus(null)}
@@ -147,6 +201,22 @@ function flatten(graph: TurnGraph): Row[] {
   }
 
   return rows
+}
+
+/**
+ * The offering on this turn that can be heard, if either can.
+ *
+ * Reply before move: the reply is what the turn produced, and on a run it is the
+ * track that played. `audioUrl` is the same test the queue uses to decide what
+ * goes into it, so a row offers a play button exactly when the player would
+ * accept the thing behind it.
+ */
+function audible(turn: CorrelationTurn): Offering | null {
+  const reply = turn.reply_offering
+  if (reply && audioUrl(reply)) return reply
+  const move = turn.move_offering
+  if (move && audioUrl(move)) return move
+  return null
 }
 
 function label(turn: CorrelationTurn): string {

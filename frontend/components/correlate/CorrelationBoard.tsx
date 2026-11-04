@@ -385,6 +385,33 @@ export default function CorrelationBoard({
   // long after the render that scheduled it.
   pausedRef.current = player.paused
 
+  /**
+   * Skip the player to an offering picked out of the tree.
+   *
+   * Three outcomes and all three are wanted. Already playing it: toggle, so the
+   * row's button is a pause as well as a skip. Queued: jump, which keeps the rest
+   * of the run in front of it — the whole reason `jumpTo` exists. Not queued at
+   * all: a one-off, which is the honest reading of clicking a turn on a branch the
+   * run never went down.
+   *
+   * Note what this does NOT do: move the focus. Hearing a turn again and deciding
+   * to answer it are separate acts, and a play button that quietly re-pointed the
+   * game would be the more destructive of the two happening by accident.
+   *
+   * Destructured rather than closing over `player`, for the reason spelled out at
+   * length on `appendAudible` below: `useOfferingPlayer` returns a fresh object
+   * literal every render, so `[player]` is a dependency list that always differs
+   * and a `useCallback` over it memoises nothing. These three are `useCallback`s
+   * in the hook; `playingOfferingId` is the only part that genuinely moves.
+   */
+  const { jumpTo, playOne, toggle: togglePlay } = player
+  const playingOfferingId = player.current?.id ?? null
+  const playFromMap = useCallback((offering: Offering) => {
+    if (playingOfferingId === offering.id) { togglePlay(); return }
+    if (jumpTo(offering)) return
+    playOne(offering)
+  }, [playingOfferingId, jumpTo, playOne, togglePlay])
+
   const mediaVisited = useMemo(
     () => [...new Set(chain.map(o => o.medium))],
     [chain],
@@ -2489,6 +2516,9 @@ export default function CorrelationBoard({
               onFocus={focusOn}
               accentChip={accent.chip}
               accentText={accent.text}
+              onPlay={playFromMap}
+              playingOfferingId={playingOfferingId}
+              playingPaused={player.paused}
             />
           )}
 

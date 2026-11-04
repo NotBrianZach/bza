@@ -58,6 +58,22 @@ export interface OfferingPlayer {
    * played under a real gesture, so it keeps its permission across the gap.
    */
   append: (offerings: Offering[]) => void
+  /**
+   * Play an item the queue already holds, keeping everything after it.
+   *
+   * What "click a track in the list to skip to it" needs, and what `playOne`
+   * could not give it. `playOne` is `playQueue([one])`, which REPLACES the
+   * queue — so clicking a song during a radio run threw the run away: the
+   * queue became that single track, `lookahead` collapsed to 0, the radio pump
+   * read that as about to run dry and generated, and the rest of the chain was
+   * no longer queued to play.
+   *
+   * Returns false when the offering is not in the queue, so a caller can fall
+   * back to playing it as a one-off. That is a real case — an item on another
+   * branch was never queued — and it is the caller's decision rather than this
+   * hook's, because only the caller knows whether the surrounding run matters.
+   */
+  jumpTo: (offering: Offering) => boolean
   /** How many queued items sit after the one playing. 0 means it is about to run dry. */
   lookahead: number
   toggle: () => void
@@ -312,6 +328,25 @@ export function useOfferingPlayer(opts: OfferingPlayerOptions = {}): OfferingPla
     playQueue([offering])
   }, [playQueue])
 
+  /**
+   * Jump to a queued item. See the note on the interface.
+   *
+   * Matched on `id` rather than by reference: the chain is re-derived from the
+   * turns on every render, so the object a card is holding is never the one in
+   * `queueRef`. Identity comparison here would silently always miss and the
+   * jump would degrade into `playOne` — the exact bug being fixed, still
+   * present and now harder to see.
+   *
+   * `playAt` bumps the generation stamp, so an in-flight resolve for the track
+   * this replaces abandons itself rather than starting over the top of it.
+   */
+  const jumpTo = useCallback((offering: Offering) => {
+    const i = queueRef.current.findIndex(o => o.id === offering.id)
+    if (i < 0) return false
+    playAt(i)
+    return true
+  }, [playAt])
+
   const skip = useCallback(() => {
     if (indexRef.current < 0) return
     advance()
@@ -382,6 +417,7 @@ export function useOfferingPlayer(opts: OfferingPlayerOptions = {}): OfferingPla
 
   return {
     current, paused, error, progress, queueIndex, queueLength, lookahead, via,
-    playOne, playQueue, append, toggle, stop, advance, skip, previous, fallbackToPreview,
+    playOne, playQueue, append, jumpTo, toggle, stop, advance, skip, previous,
+    fallbackToPreview,
   }
 }
