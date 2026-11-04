@@ -30,8 +30,36 @@ import { feedsDueForPoll, loadFeeds } from '@/lib/suggest/store'
 
 export const dynamic = 'force-dynamic'
 
-/** A ceiling per invocation, so one call cannot run past the request budget. */
-const MAX_FEEDS_PER_CALL = 25
+/**
+ * The per-invocation ceiling, derived from the Worker subrequest limit rather
+ * than picked.
+ *
+ * It was a flat 25, which is not a budget — it is a feed count that happens to
+ * be under a limit nobody had counted against. A Cloudflare Worker gets 50
+ * subrequests per invocation, and each feed costs FOUR of them: the outbound
+ * fetch, the duplicate-check SELECT and the upsert inside `insertItems`, and
+ * the `recordPoll` write. So 25 feeds is 100 subrequests and cannot succeed;
+ * it only ever looked fine because polling was gated on the 30-minute floor
+ * and rarely had more than a feed or two to do. A manual refresh with `all=1`
+ * reached every feed at once and failed with `Too many subrequests by single
+ * Worker invocation` — on whichever query came next, which made it read as a
+ * database fault rather than a budget one.
+ *
+ * The remainder of the 50 is left for this route's own reads and for the
+ * row-by-row fallback in `insertItems`, which is unbounded by design and fires
+ * on a duplicate race.
+ *
+ * `remaining` goes in the response so the caller can finish the job in another
+ * call. It is a NUMBER and not only the sentence in `notes`: the client loops
+ * on it, and a client that had to parse "3 more feeds are due" would break the
+ * next time that sentence was reworded.
+ */
+const WORKER_SUBREQUEST_LIMIT = 50
+const SUBREQUESTS_PER_FEED = 4
+const RESERVED_SUBREQUESTS = 14
+const MAX_FEEDS_PER_CALL = Math.floor(
+  (WORKER_SUBREQUEST_LIMIT - RESERVED_SUBREQUESTS) / SUBREQUESTS_PER_FEED,
+)
 
 export async function POST(req: NextRequest) {
   const userId = await getUserFromToken(req.headers.get('authorization'))
@@ -92,6 +120,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       polled,
       inserted: polled.reduce((n, p) => n + p.inserted, 0),
+      // How many were due and did not fit, for a caller that wants to continue.
+      // See the note on MAX_FEEDS_PER_CALL: this is the machine-readable half
+      // of the sentence already in `notes`.
+      remaining: due.length - targets.length,
       notes,
     })
   } catch (e) {

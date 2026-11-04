@@ -64,33 +64,55 @@ export interface FeedPost {
 
 // ─── Hacker News ─────────────────────────────────────────────────────────────
 
+/**
+ * HN's front page, in ONE request.
+ *
+ * ── It used to be 1 + limit requests, and that was a production outage ────
+ *
+ * The firebase API this was written against returns `topstories.json` as a bare
+ * array of IDs, so getting anything renderable means a second fetch per story.
+ * At the ingest default of 60 that is 61 outbound requests for one feed, and a
+ * Cloudflare Worker gets 50 subrequests per invocation. It stayed invisible
+ * while polling was gated by the 30-minute floor and only ever picked up a
+ * feed or two; the moment a manual "Refresh" polled every feed in one
+ * invocation it failed with `Too many subrequests by single Worker invocation`
+ * — and failed on whatever unrelated query happened to be next, which in
+ * practice was the duplicate check in `insertItems`.
+ *
+ * The Algolia HN API returns the front page as whole story objects, so the
+ * N+1 goes away rather than being tuned down. A smaller `limit` would not have
+ * fixed it: even 30 is 31 requests, and two users' worth of HN subscriptions
+ * in one poll is 62.
+ *
+ * Field names differ from firebase and the mapping below is the whole
+ * difference: `objectID` not `id`, `points` not `score`, `num_comments` not
+ * `descendants`, `created_at` as an ISO string rather than `time` as unix
+ * seconds. `story_text` carries an Ask HN body.
+ *
+ * `tags=front_page` is the same ranking `topstories.json` serves, and it holds
+ * about 30 items — so a `limit` above that returns what exists rather than
+ * padding with older stories, which is the honest answer for a front page.
+ */
 export async function fetchHN(limit = 30): Promise<FeedPost[]> {
-  const ids: number[] = await fetch(
-    'https://hacker-news.firebaseio.com/v0/topstories.json'
-  ).then(r => r.json())
-
-  const top = ids.slice(0, limit)
-  const stories = await Promise.all(
-    top.map(id =>
-      fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`)
-        .then(r => r.json())
-        .catch(() => null)
-    )
+  const res = await fetch(
+    `https://hn.algolia.com/api/v1/search?tags=front_page&hitsPerPage=${Math.min(limit, 50)}`,
+    { headers: { 'User-Agent': UA, Accept: 'application/json' }, cache: 'no-store' },
   )
+  if (!res.ok) throw new Error(`Hacker News API error: ${res.status}`)
+  const json = await res.json()
 
-  return stories
-    .filter(Boolean)
-    .filter(s => s.type === 'story' && s.title)
+  return ((json?.hits ?? []) as any[])
+    .filter(s => s.objectID && s.title)
     .map(s => ({
-      id: String(s.id),
+      id: String(s.objectID),
+      url: s.url ?? `https://news.ycombinator.com/item?id=${s.objectID}`,
+      commentsUrl: `https://news.ycombinator.com/item?id=${s.objectID}`,
       title: s.title,
-      url: s.url ?? `https://news.ycombinator.com/item?id=${s.id}`,
-      commentsUrl: `https://news.ycombinator.com/item?id=${s.id}`,
-      score: s.score,
-      numComments: s.descendants,
-      author: s.by,
-      date: s.time ? new Date(s.time * 1000).toISOString() : undefined,
-      body: s.text ?? undefined,
+      score: s.points ?? undefined,
+      numComments: s.num_comments ?? undefined,
+      author: s.author,
+      date: s.created_at ?? undefined,
+      body: s.story_text ?? undefined,
       source: 'hn',
     }))
 }

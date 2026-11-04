@@ -175,27 +175,59 @@ export default function SuggestedFeedSection({
     const parts: string[] = []
     try {
       try {
-        const res = await authedFetch('/api/suggest/poll', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ all: 1 }),
-        })
-        const d = await res.json() as {
-          polled?: { ok: boolean }[]; inserted?: number; reason?: string; error?: string
-        }
+        /**
+         * Polled in rounds, because one invocation cannot reach every feed.
+         *
+         * Each feed costs four Cloudflare subrequests out of the Worker's
+         * fifty, so the route stops after nine and reports how many are still
+         * due. Asking once and showing the total was the bug: it looked like a
+         * complete refresh while leaving most of the feeds untouched — and
+         * before the route counted its budget at all, it simply died with
+         * `Too many subrequests by single Worker invocation`.
+         *
+         * `rounds` is a hard stop, not a formality. `remaining` comes from the
+         * server, and a server that always reported the same number would
+         * otherwise loop forever.
+         */
+        let inserted = 0
+        let failed = 0
+        let rounds = 0
+        let d: {
+          polled?: { ok: boolean }[]; inserted?: number; remaining?: number
+          reason?: string; error?: string
+        } = {}
+        do {
+          const res = await authedFetch('/api/suggest/poll', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ all: 1 }),
+          })
+          d = await res.json()
+          if (d.error || d.reason) break
+          inserted += d.inserted ?? 0
+          // Per-feed failures counted, not averaged away. `ok` is a flag on the
+          // result for exactly this — the status strings are prose.
+          failed += (d.polled ?? []).filter(p => !p.ok).length
+          rounds++
+        } while ((d.remaining ?? 0) > 0 && rounds < 6)
+
         if (d.error) {
           parts.push(`could not fetch: ${d.error}`)
+        } else if ((d.remaining ?? 0) > 0) {
+          // Said rather than silently dropped. Hitting the round cap means the
+          // refresh was partial, and a partial refresh that reported itself as
+          // complete is how a feed goes unpolled for weeks unnoticed.
+          parts.push(`${inserted} new item${inserted === 1 ? '' : 's'}, ${d.remaining} feeds still due`)
         } else if (d.reason) {
           // The only `reason` this route returns is "no feeds are enabled", and
           // the rebuild below reports that as a blocker in a form that names the
           // fix. Saying it twice in one line is worse than saying it once well,
           // so this branch deliberately adds nothing.
         } else {
-          const inserted = d.inserted ?? 0
+          // The totals across every round, not the last round's. Reporting the
+          // final page would have said "no new items" after a refresh that
+          // brought in forty.
           parts.push(inserted === 0 ? 'no new items' : `${inserted} new item${inserted === 1 ? '' : 's'}`)
-          // Per-feed failures counted, not averaged away. `ok` is a flag on the
-          // result for exactly this — the status strings are prose.
-          const failed = (d.polled ?? []).filter(p => !p.ok).length
           if (failed > 0) parts.push(`${failed} feed${failed === 1 ? '' : 's'} failed`)
         }
       } catch {
