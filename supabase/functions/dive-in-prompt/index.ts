@@ -1,8 +1,26 @@
 // dive-in-prompt: generates a personalised "dive back in" conversation starter
-// for the user's most recently read book, or a curated discovery prompt if they
-// have no books yet.
+// for the user's most recently read book.
 //
-// GET  /dive-in-prompt          → { type, prompt, book? }
+// GET  /dive-in-prompt          → { type: 'dive_in', prompt, book }
+//                               → 204 No Content when there is no reading history
+//
+// ── The "Something to explore" branch is gone ──────────────────────────────
+//
+// It used to answer { type: 'discover' } for anyone with no reading history: a
+// topic and a blurb drawn from a hard-coded array of seven, rotated by
+// `new Date().getDate() % 7`, under a heading that said "Something to explore"
+// and a button that said "Upload a book to start exploring".
+//
+// Nothing about it was personal, and the one condition it keyed on was wrong.
+// The branch fires on no reading SESSION, not on no books — so a user who had
+// uploaded books but never turned a page was told to upload a book, directly
+// above their own library. The upload path is already the home page's empty
+// state, and said better there.
+//
+// 204 rather than a `{ type: 'none' }` body, deliberately: a client that has
+// not been redeployed yet fails to parse the empty body, falls into its own
+// catch, and renders nothing — which is exactly what the new client does. The
+// alternative shape would have had the old client render an empty card.
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1'
@@ -11,17 +29,6 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
-
-// Shown when the user has no books yet — rotate by day so it feels fresh
-const DISCOVERY_PROMPTS = [
-  { topic: 'The philosophy of consciousness', prompt: "What makes you… you? Dive into ideas about consciousness, identity, and the nature of the mind." },
-  { topic: 'How money actually works', prompt: "From ancient barter to Bitcoin — the surprisingly fascinating story of money, debt, and value." },
-  { topic: 'The science of habits', prompt: "Why do we do what we do? Explore the neurological loops that shape every decision you make." },
-  { topic: 'Fermi\'s paradox', prompt: "The universe is 13 billion years old and incomprehensibly large. So where is everybody?" },
-  { topic: 'The history of writing', prompt: "Every letter you read today traces back 5,000 years to Sumerian clay tablets. What a journey." },
-  { topic: 'Emergence and complexity', prompt: "How do simple rules produce brains, cities, and markets? Explore the hidden order behind complex systems." },
-  { topic: 'Sleep and the brain', prompt: "You spend a third of your life unconscious. What is your brain actually doing during that time?" },
-]
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
@@ -57,12 +64,9 @@ serve(async (req) => {
     const book = session?.books as any
 
     if (!book) {
-      // No reading history — return a discovery prompt
-      const idx = new Date().getDate() % DISCOVERY_PROMPTS.length
-      const pick = DISCOVERY_PROMPTS[idx]
-      return new Response(JSON.stringify({ type: 'discover', ...pick }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      // No reading history, so there is nothing to dive back INTO. The section
+      // simply does not appear; see the note at the top of this file.
+      return new Response(null, { status: 204, headers: corsHeaders })
     }
 
     // Check token quota before calling OpenAI
@@ -117,6 +121,27 @@ Reader is on page ${session.end_page} of ${book.total_pages} (${Math.round((sess
     // Log usage (small cost, don't fail if it errors)
     const usage = openAIData.usage
     if (usage) {
+      /**
+       * `pricing` is looked up here, and it was NOT before.
+       *
+       * The insert below reads `pricing?.markup_multiplier` — copied from
+       * generate-discussion, which fetches the row — but the fetch did not come
+       * with it, so the identifier was undeclared. It sits inside a try/catch
+       * whose comment says the logging is non-critical, so the ReferenceError
+       * was swallowed and the row was never written: every OpenAI call this
+       * function has ever made is missing from `api_usage`, and therefore from
+       * the spend this user's quota is checked against twenty lines above.
+       *
+       * Only the multiplier comes from the row. `base_cost` keeps the literal
+       * gpt-4o-mini rates already written below, because that is what this
+       * function hard-codes as its model.
+       */
+      const { data: pricing } = await db
+        .from('pricing_config')
+        .select('markup_multiplier')
+        .eq('model', 'gpt-4o-mini')
+        .eq('active', true)
+        .maybeSingle()
       try {
         await db.from('api_usage').insert({
           user_id: user.id,

@@ -944,7 +944,7 @@ export async function recordDigest(
   userId: string,
   digest: Digest,
   opts: { clusterIds?: Map<string, string> } = {},
-): Promise<string> {
+): Promise<{ digestId: string; generatedAt: string }> {
   const { data, error } = await db()
     .from('suggest_digests')
     .insert({
@@ -956,12 +956,18 @@ export async function recordDigest(
       candidates_considered: digest.items.length + digest.rejected.length,
       candidates_rejected: digest.rejected.length,
     })
-    .select('id')
+    // `generated_at` comes back from the insert rather than being stamped by
+    // the caller. The column's default is the database's `now()`, and a client
+    // that reported its own clock instead would show an "updated" time that
+    // disagrees with what the next read returns — by the browser's skew, which
+    // on a phone with a bad clock is not small.
+    .select('id, generated_at')
     .single()
   if (error) throw new Error(`could not record the digest: ${error.message}`)
 
   const digestId = (data as { id: string }).id
-  if (digest.items.length === 0) return digestId
+  const generatedAt = String((data as { generated_at: string }).generated_at)
+  if (digest.items.length === 0) return { digestId, generatedAt }
 
   const rows = digest.items.map((s, position) => ({
     digest_id: digestId,
@@ -985,7 +991,7 @@ export async function recordDigest(
 
   const { error: itemErr } = await db().from('suggest_digest_items').insert(rows)
   if (itemErr) throw new Error(`could not record the digest items: ${itemErr.message}`)
-  return digestId
+  return { digestId, generatedAt }
 }
 
 export interface StoredDigestItem extends ShownItem {
@@ -1201,4 +1207,78 @@ export async function loadFeedback(
       at: String(r.created_at),
       shownAsBucket: (typeof r.shown_as_bucket === 'string' ? r.shown_as_bucket : 'core') as Bucket,
     }))
+}
+
+/**
+ * The reaction already recorded for each of these items, newest per item.
+ *
+ * Needed because the controls are now on the home page, where the only way to
+ * know a row has been dealt with is to be told. Without this the buttons reset
+ * on every reload: a user who marked six items "already saw" would come back to
+ * six unmarked items and no record that they had done anything, which makes the
+ * control read as decorative.
+ *
+ * Keyed on item, NOT on (item, digest). An item that gets selected into a
+ * second digest is the same thing you already said you had seen, and scoping
+ * the lookup to the current digest would forget that — the duplicate complaint
+ * the control exists to collect is precisely about the item coming back.
+ *
+ * One query for the whole page, not one per row. `loadCandidates`' sibling in
+ * this file had two one-query-per-row loops that cost 16 seconds of wall clock;
+ * a digest is twenty items and this runs on every home-page visit.
+ */
+export async function loadItemReactions(
+  userId: string, itemIds: string[],
+): Promise<Map<string, { kind: FeedbackKind; at: string }>> {
+  const out = new Map<string, { kind: FeedbackKind; at: string }>()
+  if (itemIds.length === 0) return out
+
+  const { data, error } = await db()
+    .from('suggest_feedback')
+    .select('item_id, kind, created_at')
+    .eq('user_id', userId)
+    .in('item_id', itemIds)
+    .order('created_at', { ascending: true })
+  if (error) throw new Error(`could not load the reactions: ${error.message}`)
+
+  // Ascending with a plain overwrite, so the last write per item wins — a user
+  // who marked something "less like this" and then "worth seeing" meant the
+  // second one. Weak signals are skipped: `opened` is not a reaction anybody
+  // chose, and showing a row as rated because it was clicked is the exact
+  // conflation `loadFeedback` above refuses to make.
+  for (const r of (data ?? []) as Record<string, unknown>[]) {
+    const kind = String(r.kind)
+    if (!isExplicitFeedback(kind)) continue
+    out.set(String(r.item_id), { kind: kind as FeedbackKind, at: String(r.created_at) })
+  }
+  return out
+}
+
+/**
+ * Withdraw a reaction.
+ *
+ * Deletes every row of that kind for the item, which is what makes the undo on
+ * a mis-tapped "already saw" honest rather than cosmetic — hiding the row in
+ * the client while the judgement stays in the table would mean the next digest
+ * build still believes it.
+ *
+ * Returns how many rows went, so a caller can tell "withdrawn" from "there was
+ * nothing to withdraw" instead of reporting success for a no-op.
+ *
+ * The caller is responsible for refusing kinds that moved an interest weight —
+ * see the route. Deleting the row cannot un-move the weight, and this function
+ * deliberately does not pretend otherwise by trying.
+ */
+export async function retractFeedback(
+  userId: string, itemId: string, kind: string,
+): Promise<number> {
+  const { data, error } = await db()
+    .from('suggest_feedback')
+    .delete()
+    .eq('user_id', userId)
+    .eq('item_id', itemId)
+    .eq('kind', kind)
+    .select('id')
+  if (error) throw new Error(`could not withdraw the reaction: ${error.message}`)
+  return (data ?? []).length
 }

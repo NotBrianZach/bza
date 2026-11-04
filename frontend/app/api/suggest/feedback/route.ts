@@ -3,18 +3,36 @@ import { getUserFromToken } from '@/lib/apiQuota'
 import { applyFeedback, applyWeakSignal } from '@/lib/suggest/feedback'
 import { matchedInterestsFor } from '@/lib/suggest/pipeline'
 import {
-  isExplicitFeedback, loadInterests, recordFeedback, saveInterestWeights,
+  isExplicitFeedback, loadInterests, recordFeedback, retractFeedback, saveInterestWeights,
 } from '@/lib/suggest/store'
 import type { Bucket, FeedbackKind } from '@/lib/suggest/types'
 
 /**
  * Record a judgement, and move the interest weights it implies.
  *
- * POST /api/suggest/feedback { itemId, kind, value?, digestId? }
+ * POST   /api/suggest/feedback { itemId, kind, value?, digestId? }
+ * DELETE /api/suggest/feedback { itemId, kind }   — withdraw it again
  *
  * `kind` is one of the five explicit controls — more_like_this,
  * less_like_this, interesting_not_useful, already_saw, worth_seeing — or one of
  * the two weak ones, opened and dwell_ms.
+ *
+ * ── Why DELETE only accepts the two zero-weight kinds ─────────────────────
+ *
+ * The controls are on the home-page strip now, five rows of small buttons, and
+ * a mis-tap there needs to be undoable — a "already saw" that cannot be taken
+ * back means an item you wanted is gone and the system believes a thing you
+ * never said. But undo is only honest for the kinds that moved nothing:
+ * deleting a `less_like_this` row would leave the 0.08 it already took off the
+ * interest weight exactly where it was, so the button would claim to have
+ * withdrawn a judgement whose entire effect remains. `already_saw` and
+ * `interesting_not_useful` are `DIRECTION: 0` by design (see §5 rules 2 and 3
+ * in lib/suggest/feedback.ts), which makes their retraction complete.
+ *
+ * The weight-moving kinds are therefore REFUSED with that reason, rather than
+ * quietly accepted. Taking them back properly means re-applying the inverse
+ * step, which is a different operation from a delete and would need to deal
+ * with the weight having since been clamped, decayed, or typed over by hand.
  *
  * ── Why the response says what it changed ──────────────────────────────────
  *
@@ -119,6 +137,53 @@ export async function POST(req: NextRequest) {
   } catch (e) {
     return NextResponse.json(
       { error: e instanceof Error ? e.message : 'could not record the feedback' },
+      { status: 500 },
+    )
+  }
+}
+
+/** The kinds a delete can fully undo — the ones that never moved a weight. */
+const RETRACTABLE: ReadonlySet<string> = new Set<FeedbackKind>([
+  'already_saw', 'interesting_not_useful',
+])
+
+export async function DELETE(req: NextRequest) {
+  const userId = await getUserFromToken(req.headers.get('authorization'))
+  if (!userId) return NextResponse.json({ error: 'Not signed in' }, { status: 401 })
+
+  const body = await req.json().catch(() => null) as {
+    itemId?: string; kind?: string
+  } | null
+
+  const itemId = body?.itemId?.trim()
+  const kind = body?.kind?.trim()
+  if (!itemId || !kind) {
+    return NextResponse.json({ error: 'itemId and kind are required' }, { status: 400 })
+  }
+  if (!RETRACTABLE.has(kind)) {
+    return NextResponse.json({
+      error: EXPLICIT.has(kind) || WEAK.has(kind)
+        ? `"${kind.replace(/_/g, ' ')}" cannot be withdrawn — it already moved an interest ` +
+          `weight, and deleting the record would not move it back. Only ` +
+          `${[...RETRACTABLE].join(' and ')} are retractable.`
+        : `unknown feedback kind "${kind}"`,
+    }, { status: 400 })
+  }
+
+  try {
+    const removed = await retractFeedback(userId, itemId, kind)
+    return NextResponse.json({
+      // The count, not a bare `true`. "Nothing to withdraw" is a different
+      // answer from "withdrawn", and a client that hid a row on the strength of
+      // a `true` would have hidden it on the strength of a no-op.
+      withdrawn: removed,
+      explanation: removed === 0
+        ? `no "${kind.replace(/_/g, ' ')}" was recorded for this item`
+        : null,
+    })
+  } catch (e) {
+    return NextResponse.json(
+      { error: e instanceof Error ? e.message : 'could not withdraw the reaction' },
       { status: 500 },
     )
   }

@@ -250,7 +250,9 @@ export default function SuggestPage() {
       setDigestId(d.digest?.digestId ?? null)
       setBlockers(d.blockers ?? [])
       setIsPreview(!!d.preview)
-      if (!preview) setGeneratedAt(new Date().toISOString())
+      // The server's stamp, not this browser's. A phone with a skewed clock
+      // used to report a "saved" time that the next page load contradicted.
+      if (!preview) setGeneratedAt(d.digest?.generatedAt ?? null)
       setTab('feed')
     } finally {
       setBusy(null)

@@ -47,6 +47,16 @@ export interface IngestResult {
   feedId: string
   url: string
   status: string
+  /**
+   * Whether the poll reached the feed, as a flag and not as prose.
+   *
+   * `status` is written for a human — "3 new, 40 already stored", "HTTP 404",
+   * "timed out after 12s" — and a caller that wanted to count failures had to
+   * pattern-match those sentences. The same boolean already goes to
+   * `recordPoll`; it is simply returned now, so a summary like "one feed
+   * failed" cannot be broken by rewording a status.
+   */
+  ok: boolean
   /** How many entries the document contained. */
   parsed: number
   /** How many survived normalization. */
@@ -91,8 +101,11 @@ export async function ingestFeed(
    */
   opts: { sourceType?: string; maxEntries?: number } = {},
 ): Promise<IngestResult> {
+  // `ok: false` in the base, so every early return out of this function reads
+  // as a failure unless it says otherwise. The opposite default would make a
+  // newly added bail-out path report success by omission.
   const base: IngestResult = {
-    feedId: target.feedId, url: target.url, status: 'unknown',
+    feedId: target.feedId, url: target.url, status: 'unknown', ok: false,
     parsed: 0, normalized: 0, inserted: 0, skipped: 0, notes: [],
   }
 
@@ -148,7 +161,7 @@ export async function ingestFeed(
 
     if (res.status === 304) {
       await store.recordPoll(target.feedId, { status: 'not modified', ok: true })
-      return { ...base, status: 'not modified' }
+      return { ...base, status: 'not modified', ok: true }
     }
     if (!res.ok) {
       const status = `HTTP ${res.status}`
@@ -167,7 +180,7 @@ export async function ingestFeed(
     // and it is also what an unparseable one looks like from here. Said in the
     // status rather than guessed at.
     await store.recordPoll(target.feedId, { status: 'parsed, no entries', etag, lastModified, ok: true })
-    return { ...base, status: 'parsed, no entries' }
+    return { ...base, status: 'parsed, no entries', ok: true }
   }
 
   /**
@@ -237,7 +250,7 @@ export async function ingestFeed(
   await store.recordPoll(target.feedId, { status, etag, lastModified, ok: true })
 
   return {
-    ...base, status,
+    ...base, status, ok: true,
     parsed: entries.length, normalized: items.length, inserted, skipped, notes,
   }
 }
@@ -249,6 +262,13 @@ export async function ingestFeed(
 export interface BuildDigestResult {
   digest: Digest
   digestId: string | null
+  /**
+   * When the row was written, from the database's clock. Null for a preview and
+   * for an empty digest, which is the same set of cases as `digestId` — a
+   * build that stored nothing has no "updated" time, and reporting one would
+   * tell a user their feed had just been refreshed when it had not.
+   */
+  generatedAt: string | null
   /** Said out loud when there is nothing to build from, instead of an empty list. */
   blockers: string[]
 }
@@ -299,6 +319,7 @@ export async function buildDigest(
     return {
       digest: { items: [], gaps: [], rejected: [], notes: [], weights, plan },
       digestId: null,
+      generatedAt: null,
       blockers,
     }
   }
@@ -327,6 +348,7 @@ export async function buildDigest(
     return {
       digest: { items: [], gaps: [], rejected: [], notes: [], weights, plan },
       digestId: null,
+      generatedAt: null,
       blockers,
     }
   }
@@ -401,11 +423,16 @@ export async function buildDigest(
   }
 
   const persist = opts.persist ?? true
-  const digestId = persist && digest.items.length > 0
+  const recorded = persist && digest.items.length > 0
     ? await store.recordDigest(userId, digest, { clusterIds: assignment })
     : null
 
-  return { digest, digestId, blockers }
+  return {
+    digest,
+    digestId: recorded?.digestId ?? null,
+    generatedAt: recorded?.generatedAt ?? null,
+    blockers,
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -600,7 +627,10 @@ export async function matchedInterestsFor(
 
 /** Shape the digest for a client, with the explanation each item carries. */
 export function presentDigest(digest: Digest): {
-  items: Record<string, unknown>[]
+  // `itemId` is named in the type even though the rest is loose: the digest
+  // route joins each row to its recorded reaction by that key, and a bag of
+  // unknowns would make that join unchecked.
+  items: (Record<string, unknown> & { itemId: string })[]
   gaps: Digest['gaps']
   notes: string[]
 } {

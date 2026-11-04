@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   ChevronDown, ChevronRight, ExternalLink, Eye, Minus, Plus, ThumbsUp, Clock, Check,
 } from 'lucide-react'
@@ -60,6 +60,14 @@ export interface DigestItem {
   matchedInterests?: string[]
   bridgeFrom?: string | null
   bridgeTo?: string | null
+  /**
+   * The reaction already recorded for this item, from the server.
+   *
+   * Required for the strip to be usable: without it the buttons reset on every
+   * reload and the same duplicate asks to be marked "already saw" every visit.
+   */
+  reaction?: string | null
+  reactedAt?: string | null
 }
 
 export interface DigestGap {
@@ -103,19 +111,55 @@ const PART_LABEL: Record<string, string> = {
 }
 
 /** The five controls from §5, in the order they are most likely to be wanted. */
-const CONTROLS: { kind: string; label: string; icon: typeof Plus; title: string }[] = [
-  { kind: 'worth_seeing', label: 'Worth seeing', icon: ThumbsUp, title: 'Glad this was in the feed' },
-  { kind: 'more_like_this', label: 'More', icon: Plus, title: 'Find more like this' },
-  { kind: 'less_like_this', label: 'Less', icon: Minus, title: 'Find less like this' },
+const CONTROLS: { kind: string; label: string; short: string; icon: typeof Plus; title: string }[] = [
+  { kind: 'worth_seeing', label: 'Worth seeing', short: 'Good', icon: ThumbsUp, title: 'Glad this was in the feed' },
+  { kind: 'more_like_this', label: 'More', short: 'More', icon: Plus, title: 'Find more like this' },
+  { kind: 'less_like_this', label: 'Less', short: 'Less', icon: Minus, title: 'Find less like this' },
   {
-    kind: 'interesting_not_useful', label: 'Interesting, not useful', icon: Clock,
+    kind: 'interesting_not_useful', label: 'Interesting, not useful', short: 'Later', icon: Clock,
     // Spelled out because the distinction is the whole reason the control
     // exists, and a user who reads it as a soft "less like this" will teach the
-    // system the opposite of what they mean.
+    // system the opposite of what they mean. The compact label is "Later" and
+    // not "Not useful" for the same reason — "later" is what the control means,
+    // and an abbreviation that reads as mild dislike would collect the wrong
+    // signal from everyone who never hovers.
     title: 'A good find at the wrong moment — this will NOT reduce the topic’s weight',
   },
-  { kind: 'already_saw', label: 'Already saw', icon: Eye, title: 'A duplicate — this moves no interest weight' },
+  {
+    kind: 'already_saw', label: 'Already saw', short: 'Seen', icon: Eye,
+    title: 'A duplicate — this moves no interest weight, and clears the item from the strip',
+  },
 ]
+
+/**
+ * The reaction that takes an item out of the strip.
+ *
+ * Only this one. "Less like this" is a statement about the topic and "later" is
+ * a statement about the week — neither means "I am done with this row", and
+ * hiding on them would make the two controls a user needs for tuning feel like
+ * controls for dismissing.
+ */
+const DISMISSING = 'already_saw'
+
+/**
+ * Reactions a second click can withdraw.
+ *
+ * Exactly the kinds whose `DIRECTION` is 0 — see `lib/suggest/feedback.ts`. A
+ * toggle on `less_like_this` would be a lie: the step it took off the interest
+ * weight stays off, so "un-clicking" it would undo the record and not the
+ * effect. The API refuses those for the same reason.
+ */
+const RETRACTABLE: ReadonlySet<string> = new Set(['already_saw', 'interesting_not_useful'])
+
+/**
+ * What the server last told us about an item, for rolling a failed send back.
+ *
+ * Back to the server's value and not to `null`: an item that already carried a
+ * reaction from a previous visit must not come out of a failed click looking
+ * unrated, or the failure would have silently erased something real.
+ */
+const serverReaction = (items: DigestItem[], itemId: string): string | null =>
+  items.find(i => i.itemId === itemId)?.reaction ?? null
 
 function Score({ name, value, why }: { name: string; value: number; why?: string }) {
   const pct = Math.round((value ?? 0) * 100)
@@ -152,23 +196,83 @@ export default function DigestList({
   digestId,
   compact = false,
   limit,
+  feedback,
+  dismissSeen = false,
+  onTriage,
 }: {
   items: DigestItem[]
   gaps?: DigestGap[]
   notes?: string[]
   digestId?: string | null
-  /** Home-page strip: no feedback controls, shorter rows. */
+  /** Home-page strip: shorter rows, icon-sized controls, no gaps or notes. */
   compact?: boolean
   limit?: number
+  /**
+   * Whether to offer the reaction controls. Defaults to `!compact`, which is
+   * where this started — but the two are separate questions and were wrongly
+   * one. `compact` is about how much room a row gets; whether you can say
+   * "already saw this" is about whether the feed is yours to tune, and the
+   * answer to that does not change with the width of the container.
+   */
+  feedback?: boolean
+  /**
+   * Take "already saw" items out of the list, pulling the next ones up into
+   * their slots.
+   *
+   * For the strip, where five rows out of twenty are shown and the point of the
+   * control is to work through them. The full view leaves them in place and
+   * marked instead — it is the record of the digest, and silently shortening it
+   * would make the item count disagree with the list.
+   */
+  dismissSeen?: boolean
+  /**
+   * How many items the triage took out, and how many are left.
+   *
+   * Reported upward because the surrounding summary ("20 items", "15 more →")
+   * is the parent's, and the parent cannot know this — the dismissal state
+   * lives here. Without it the strip's own header would keep counting items it
+   * had stopped showing.
+   *
+   * Two numbers rather than an object: the parent holds them in `useState`, and
+   * a fresh object every render would re-render forever where identical
+   * primitives bail out. Memoise it with `useCallback` — it is in the effect's
+   * dependency list.
+   */
+  onTriage?: (hidden: number, remaining: number) => void
 }) {
+  const withFeedback = feedback ?? !compact
   const [open, setOpen] = useState<Record<string, boolean>>({})
-  const [sent, setSent] = useState<Record<string, string>>({})
+  /**
+   * Local overrides on the server's recorded reaction.
+   *
+   * A key present with `null` means "cleared here" and must win over the
+   * server's value, which is why this is not `Record<string, string>` with
+   * deletion — a deleted key would fall back to the stale server reaction and
+   * an undo would appear to do nothing until the next reload.
+   */
+  const [reacted, setReacted] = useState<Record<string, string | null>>({})
   const [moved, setMoved] = useState<Record<string, string>>({})
+  /** Items cleared in THIS render session, newest last, for the undo line. */
+  const [undoable, setUndoable] = useState<{ itemId: string; title: string }[]>([])
 
-  const shown = typeof limit === 'number' ? items.slice(0, limit) : items
+  const reactionOf = (item: DigestItem): string | null =>
+    item.itemId in reacted ? reacted[item.itemId] : (item.reaction ?? null)
 
-  async function send(itemId: string, kind: string) {
-    setSent(s => ({ ...s, [itemId]: kind }))
+  const triaged = dismissSeen && withFeedback
+    ? items.filter(i => reactionOf(i) !== DISMISSING)
+    : items
+  const shown = typeof limit === 'number' ? triaged.slice(0, limit) : triaged
+  const hiddenCount = items.length - triaged.length
+  const lastUndo = undoable[undoable.length - 1]
+
+  const remaining = triaged.length
+  useEffect(() => {
+    onTriage?.(hiddenCount, remaining)
+  }, [hiddenCount, remaining, onTriage])
+
+  async function send(itemId: string, kind: string, title: string) {
+    setReacted(s => ({ ...s, [itemId]: kind }))
+    if (kind === DISMISSING) setUndoable(u => [...u, { itemId, title }])
     try {
       const res = await authedFetch('/api/suggest/feedback', {
         method: 'POST',
@@ -192,11 +296,44 @@ export default function DigestList({
       if (d.error) setMoved(m => ({ ...m, [itemId]: `not recorded: ${d.error}` }))
     } catch {
       setMoved(m => ({ ...m, [itemId]: 'not recorded — the request failed' }))
-      setSent(s => {
-        const next = { ...s }
-        delete next[itemId]
-        return next
+      // Put the row back. A dismissal that failed must not leave the item
+      // hidden: the user would believe the system was told something it was
+      // never told, and on the strip the row is the only evidence either way.
+      setReacted(s => ({ ...s, [itemId]: serverReaction(items, itemId) }))
+      setUndoable(u => u.filter(e => e.itemId !== itemId))
+    }
+  }
+
+  /**
+   * Withdraw a reaction.
+   *
+   * Only called for `RETRACTABLE` kinds, and it deletes the row server-side
+   * before trusting the undo — the whole reason to have a DELETE rather than
+   * just un-highlighting the button is that the next digest build reads the
+   * table, not the component.
+   */
+  async function retract(itemId: string, kind: string) {
+    setReacted(s => ({ ...s, [itemId]: null }))
+    setUndoable(u => u.filter(e => e.itemId !== itemId))
+    setMoved(m => {
+      const next = { ...m }
+      delete next[itemId]
+      return next
+    })
+    try {
+      const res = await authedFetch('/api/suggest/feedback', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ itemId, kind }),
       })
+      const d = await res.json()
+      if (d.error) {
+        setMoved(m => ({ ...m, [itemId]: `not withdrawn: ${d.error}` }))
+        setReacted(s => ({ ...s, [itemId]: kind }))
+      }
+    } catch {
+      setMoved(m => ({ ...m, [itemId]: 'not withdrawn — the request failed' }))
+      setReacted(s => ({ ...s, [itemId]: kind }))
     }
   }
 
@@ -208,16 +345,54 @@ export default function DigestList({
     )
   }
 
+  /**
+   * "You have been through all of it" is not "there is nothing here".
+   *
+   * The same distinction the digest route makes between a null digest and an
+   * empty one. A strip that worked its way down to zero rows and then showed
+   * "nothing in the digest yet" would send the user off to add feeds they do
+   * not need.
+   *
+   * Gated on `hiddenCount`, not on `shown` being empty: an empty list for any
+   * other reason is not the user having been through everything, and claiming
+   * so would be this component inventing a fact about them.
+   */
+  if (shown.length === 0 && hiddenCount > 0) {
+    return (
+      <div className="text-xs text-gray-500 dark:text-gray-400">
+        <p>
+          You have marked all {items.length} item{items.length === 1 ? '' : 's'} as
+          already seen.
+        </p>
+        {lastUndo && (
+          <button
+            onClick={() => retract(lastUndo.itemId, DISMISSING)}
+            className="mt-1 text-sky-600 hover:underline dark:text-sky-400"
+          >
+            Undo “{lastUndo.title}”
+          </button>
+        )}
+      </div>
+    )
+  }
+
   return (
     <div>
       <ul className="space-y-2">
         {shown.map(item => {
           const isOpen = !!open[item.itemId]
           const source = item.source ?? item.feedName ?? 'unknown source'
+          const reaction = reactionOf(item)
+          // Dimmed only in the full view, which is the one that keeps seen
+          // items in the list. In the strip they are gone, so there is nothing
+          // to dim and a dimmed row would mean something else entirely.
+          const dealtWith = reaction === DISMISSING && !dismissSeen
           return (
             <li
               key={item.itemId}
-              className="rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-800"
+              className={`rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-800 ${
+                dealtWith ? 'opacity-60' : ''
+              }`}
             >
               <div className="flex items-start gap-2">
                 <div className="min-w-0 flex-1">
@@ -305,24 +480,39 @@ export default function DigestList({
                 </div>
               )}
 
-              {!compact && (
+              {withFeedback && (
                 <div className="mt-2 flex flex-wrap items-center gap-1">
                   {CONTROLS.map(c => {
                     const Icon = c.icon
-                    const isSent = sent[item.itemId] === c.kind
+                    const isSent = reaction === c.kind
+                    const canUndo = isSent && RETRACTABLE.has(c.kind)
                     return (
                       <button
                         key={c.kind}
-                        onClick={() => send(item.itemId, c.kind)}
-                        title={c.title}
-                        className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] transition-colors ${
+                        // A second click on a set reaction withdraws it when
+                        // that is honest, and otherwise records another step —
+                        // a second "more like this" IS a stronger statement, so
+                        // swallowing it would be wrong too.
+                        onClick={() => canUndo
+                          ? retract(item.itemId, c.kind)
+                          : send(item.itemId, c.kind, item.title)}
+                        title={canUndo ? `Undo — ${c.title}` : c.title}
+                        aria-pressed={isSent}
+                        className={`inline-flex items-center gap-1 rounded-full border transition-colors ${
+                          // Taller hit area on the strip despite the smaller
+                          // label: these are five targets in a row on a phone,
+                          // and the compact one is the one people will actually
+                          // use. py-1 keeps it near the 24px that stops being a
+                          // coin toss.
+                          compact ? 'px-1.5 py-1 text-[10px]' : 'px-2 py-0.5 text-[11px]'
+                        } ${
                           isSent
                             ? 'border-sky-300 bg-sky-50 text-sky-700 dark:border-sky-700 dark:bg-sky-900/30 dark:text-sky-200'
                             : 'border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-700 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700/40 dark:hover:text-gray-200'
                         }`}
                       >
-                        {isSent ? <Check size={11} /> : <Icon size={11} />}
-                        {c.label}
+                        {isSent ? <Check size={compact ? 10 : 11} /> : <Icon size={compact ? 10 : 11} />}
+                        {compact ? c.short : c.label}
                       </button>
                     )
                   })}
@@ -337,6 +527,30 @@ export default function DigestList({
           )
         })}
       </ul>
+
+      {/* What the triage took out, and the way back.
+          Shown rather than left implicit: a strip that quietly swapped rows
+          would look like the digest changed on its own, and a dismissal with no
+          visible trace is indistinguishable from a bug that ate an item. The
+          undo is one deep on purpose — it covers the mis-tap, which is the
+          failure this control actually has, and anything older is still
+          reachable (and still marked) on the full page. */}
+      {hiddenCount > 0 && (
+        <p className="mt-2 flex flex-wrap items-center gap-x-2 text-[11px] text-gray-400 dark:text-gray-500">
+          <span>
+            {hiddenCount} marked already seen
+          </span>
+          {lastUndo && (
+            <button
+              onClick={() => retract(lastUndo.itemId, DISMISSING)}
+              className="text-sky-600 hover:underline dark:text-sky-400"
+              title={`Put “${lastUndo.title}” back and withdraw the reaction`}
+            >
+              undo
+            </button>
+          )}
+        </p>
+      )}
 
       {/* Gaps and notes, rendered rather than summarised away. A digest of
           fourteen when twenty were asked for otherwise reads as "that is all

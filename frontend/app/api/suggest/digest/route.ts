@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserFromToken } from '@/lib/apiQuota'
 import { buildDigest, presentDigest } from '@/lib/suggest/pipeline'
-import { loadLatestDigest } from '@/lib/suggest/store'
+import { loadItemReactions, loadLatestDigest } from '@/lib/suggest/store'
 
 /**
  * The digest: read the current one, or build a new one.
@@ -21,9 +21,32 @@ import { loadLatestDigest } from '@/lib/suggest/store'
  * polled. Collapsing them would make "you have no interests yet" read as
  * "nothing matched your interests", which sends the user to fix the wrong
  * thing.
+ *
+ * Every item carries the reaction already recorded for it, if any. That exists
+ * for the home-page strip: the controls are there now, and a reaction that
+ * vanished on reload would make them look decorative — worse, it would invite
+ * the user to mark the same duplicate "already saw" every single visit.
  */
 
 export const dynamic = 'force-dynamic'
+
+/**
+ * Attach each item's recorded reaction.
+ *
+ * Done here rather than inside `loadLatestDigest` so that the build path gets
+ * it too. A freshly built digest can perfectly well contain an item you reacted
+ * to in a previous one — that is what a reappearing story IS — and a build that
+ * forgot the reaction would be the one case where the mark disappears.
+ */
+async function withReactions<T extends { itemId: string }>(
+  userId: string, items: T[],
+): Promise<(T & { reaction: string | null; reactedAt: string | null })[]> {
+  const reactions = await loadItemReactions(userId, items.map(i => i.itemId))
+  return items.map(i => {
+    const r = reactions.get(i.itemId)
+    return { ...i, reaction: r?.kind ?? null, reactedAt: r?.at ?? null }
+  })
+}
 
 export async function GET(req: NextRequest) {
   const userId = await getUserFromToken(req.headers.get('authorization'))
@@ -44,12 +67,26 @@ export async function GET(req: NextRequest) {
           reason: 'no digest has been generated yet — call with ?build=1',
         })
       }
-      return NextResponse.json({ digest: stored, stored: true })
+      return NextResponse.json({
+        digest: { ...stored, items: await withReactions(userId, stored.items) },
+        stored: true,
+      })
     }
 
-    const { digest, digestId, blockers } = await buildDigest(userId, { persist: !preview })
+    const { digest, digestId, generatedAt, blockers } = await buildDigest(userId, { persist: !preview })
+    const presented = presentDigest(digest)
     return NextResponse.json({
-      digest: { digestId, ...presentDigest(digest), weights: digest.weights, plan: digest.plan },
+      digest: {
+        digestId,
+        // From the database's clock, and null for a preview. The clients used to
+        // stamp `new Date()` themselves after a build, which is the browser's
+        // clock disagreeing with what the next read returns.
+        generatedAt,
+        ...presented,
+        items: await withReactions(userId, presented.items),
+        weights: digest.weights,
+        plan: digest.plan,
+      },
       stored: !preview && !!digestId,
       // Said explicitly rather than inferred from `stored` being false, which
       // could also mean the digest was empty.

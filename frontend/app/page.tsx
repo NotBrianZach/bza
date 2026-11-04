@@ -506,16 +506,16 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
           ) : null
 
           // Signed-in only: the edge function it calls needs a session and the
-          // component returns null without one. `onUpload` goes to /upload
-          // rather than opening a modal — /dashboard had an inline uploader and
-          // this page does not, so the link is the honest equivalent.
+          // component returns null without one.
+          //
+          // No `mb-8` on the wrapper and no `hasBooks`/`onUpload` any more. The
+          // component renders nothing for a reader with no reading history —
+          // the "Something to explore" card that used to fill that case is gone
+          // — so the margin moved onto its own root, or this wrapper would hold
+          // open a gap around nothing.
           if (section.id === 'diveback') return isAuthenticated ? (
-            <div key="diveback" className="mb-8">
-              <DiveBackIn
-                hasBooks={books.length > 0}
-                onUpload={() => router.push('/upload')}
-                customPrompt={customPrompts['dive-in']}
-              />
+            <div key="diveback">
+              <DiveBackIn customPrompt={customPrompts['dive-in']} />
             </div>
           ) : null
 
