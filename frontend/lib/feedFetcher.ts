@@ -2,6 +2,8 @@
 // All fetches that can be done client-side (4chan, Reddit, HN comments) are done
 // directly from the browser to avoid Cloudflare Workers IP bans.
 
+import { fetchHN } from './feedSources'
+
 export interface FeedPost {
   id: string
   title: string
@@ -18,34 +20,30 @@ export interface FeedPost {
   thumbnail?: string
 }
 
-// ── HN ──────────────────────────────────────────────────────────────────────
-
-async function fetchHN(limit = 30): Promise<FeedPost[]> {
-  const ids: number[] = await fetch('https://hacker-news.firebaseio.com/v0/topstories.json').then(r => r.json())
-  const stories = await Promise.all(
-    ids.slice(0, limit).map(id =>
-      fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`)
-        .then(r => r.json())
-        .catch(() => null)
-    )
-  )
-  return stories
-    .filter(Boolean)
-    .filter(s => s.type === 'story' && s.title)
-    .map(s => ({
-      id: String(s.id),
-      title: s.title,
-      url: s.url ?? `https://news.ycombinator.com/item?id=${s.id}`,
-      commentsUrl: `https://news.ycombinator.com/item?id=${s.id}`,
-      score: s.score,
-      numComments: s.descendants,
-      author: s.by,
-      date: s.time ? new Date(s.time * 1000).toISOString() : undefined,
-      body: s.text ?? undefined,
-      source: 'hn',
-    }))
-}
-
+/**
+ * ── HN: imported, not duplicated ──────────────────────────────────────────
+ *
+ * This file used to carry its own `fetchHN`, byte-for-byte the one in
+ * feedSources.ts, and it kept the N+1 that file has since lost: the firebase
+ * API returns `topstories.json` as a bare array of IDs, so rendering anything
+ * means a second request per story — 1 + 30 to paint this panel.
+ *
+ * Nothing here hit the Cloudflare subrequest limit the server copy did, because
+ * everything in this module runs in the BROWSER, which has no such ceiling.
+ * That is why the duplicate survived the fix: the symptom was absent, and the
+ * waste was invisible. Thirty-one requests to fill one list is still thirty
+ * wasted round trips on somebody's phone.
+ *
+ * The rest of this file's duplication IS deliberate and stays — Reddit and
+ * 4chan are fetched client-side on purpose, to keep their rate limits aimed at
+ * the reader rather than at Cloudflare's shared egress. HN never had a reason
+ * to be: it was the same function in two places.
+ *
+ * One caveat on sharing it. `fetchHN` sets a `User-Agent`, which is a forbidden
+ * header name in a browser and is dropped rather than sent — harmless, since
+ * the Algolia endpoint does not care, and the header is load-bearing only for
+ * Reddit and 4chan, which are not shared.
+ */
 function decodeHtmlEntities(html: string): string {
   return html
     .replace(/<a[^>]+href="([^"]+)"[^>]*>([^<]*)<\/a>/gi, '[$2]($1)')

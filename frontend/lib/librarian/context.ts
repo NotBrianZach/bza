@@ -130,13 +130,14 @@ export async function feedContext(userId: string): Promise<string> {
   try {
     const [feedback, previous, settings] = await Promise.all([
       loadFeedback(userId),
-      previousClusterIds(userId, digest.digestId),
+      previousClusterIds(userId, { digestId: digest.digestId, generatedAt: digest.generatedAt }),
       loadSettings(userId),
     ])
     const m = measure({
       shown: digest.items,
       feedback,
-      previousClusterIds: previous,
+      previousClusterIds: previous.clusterIds,
+      priorWindowDigests: previous.digestsCounted,
       desiredTopics: settings.desiredTopics,
     })
     lines.push('HOW THE FEED IS MEASURING. Each of these is a separate measurement; there is deliberately no overall score, and you must not compute one:')

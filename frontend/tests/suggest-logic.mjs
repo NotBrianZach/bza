@@ -1514,6 +1514,45 @@ test('duplicate rate counts clusters already shown recently', () => {
   near(m.duplicateRate, 0.5, 0.001)
 })
 
+test('duplicate rate is null, not zero, with no previous window', () => {
+  // Same reasoning as the rated rates below. 0% reads as "nothing repeated";
+  // the truth for a first digest is that there was nothing to repeat from, and
+  // a rebuild from the same sitting is not a previous window either.
+  const m = M.metrics.measure({
+    shown: [{ itemId: 'a', bucket: 'core', feedId: 'f1', topicTags: [], clusterId: 'c1', backfilled: false }],
+    feedback: [], previousClusterIds: [], desiredTopics: [],
+  })
+  eq(m.duplicateRate, null)
+  eq(m.priorWindowDigests, 0)
+  assert(
+    M.metrics.describe(m).some(l => /not measurable/.test(l)),
+    'the prose must say so rather than printing 0%',
+  )
+})
+
+test('duplicate rate counts against the digests it was given', () => {
+  const m = M.metrics.measure({
+    shown: [
+      { itemId: 'a', bucket: 'core', feedId: 'f1', topicTags: [], clusterId: 'c1', backfilled: false },
+      { itemId: 'b', bucket: 'core', feedId: 'f1', topicTags: [], clusterId: 'c2', backfilled: false },
+    ],
+    feedback: [], previousClusterIds: ['c1'], priorWindowDigests: 3, desiredTopics: [],
+  })
+  near(m.duplicateRate, 0.5, 0.001)
+  eq(m.priorWindowDigests, 3)
+})
+
+test('an explicit zero prior window beats the inference', () => {
+  // The inference says "ids exist, so there was a window". An explicit 0 means
+  // the caller looked and found none, and it has to win — that is the whole
+  // reason the field is passed rather than guessed.
+  const m = M.metrics.measure({
+    shown: [{ itemId: 'a', bucket: 'core', feedId: 'f1', topicTags: [], clusterId: 'c1', backfilled: false }],
+    feedback: [], previousClusterIds: ['c1'], priorWindowDigests: 0, desiredTopics: [],
+  })
+  eq(m.duplicateRate, null)
+})
+
 test('rates are null, not zero, when nothing was rated', () => {
   // Zero would read as "nothing was worth seeing"; null reads as "nobody said".
   const m = M.metrics.measure({

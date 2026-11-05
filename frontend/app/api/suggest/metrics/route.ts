@@ -39,7 +39,9 @@ export async function GET(req: NextRequest) {
 
     const [feedback, previous, settings] = await Promise.all([
       loadFeedback(userId),
-      previousClusterIds(userId, digest.digestId),
+      // `generatedAt` goes with the id so rebuilds from this same sitting are
+      // not counted as a previous window — see REBUILD_GRACE_MS.
+      previousClusterIds(userId, { digestId: digest.digestId, generatedAt: digest.generatedAt }),
       loadSettings(userId),
     ])
 
@@ -49,7 +51,8 @@ export async function GET(req: NextRequest) {
       // from being computed over slots that were never discovery.
       shown: digest.items,
       feedback,
-      previousClusterIds: previous,
+      previousClusterIds: previous.clusterIds,
+      priorWindowDigests: previous.digestsCounted,
       desiredTopics: settings.desiredTopics,
     })
 

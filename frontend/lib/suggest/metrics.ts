@@ -44,6 +44,16 @@ export interface MeasureInput {
   feedback: Feedback[]
   /** Cluster ids shown in the preceding window, for the duplicate rate. */
   previousClusterIds: string[]
+  /**
+   * How many prior digests those clusters came from. The duplicate rate's
+   * denominator, in the sense that matters: zero makes the rate null.
+   *
+   * Optional, and inferred when absent — non-empty ids obviously came from at
+   * least one digest. The inference cannot tell "no prior digest" from "a prior
+   * digest of nothing but singletons", which is why the real caller passes the
+   * count instead of relying on it.
+   */
+  priorWindowDigests?: number
   /** Topics the user said they want covered, for the coverage-gap list. */
   desiredTopics: string[]
 }
@@ -63,8 +73,18 @@ export interface Measurements {
   topicDistribution: { topic: string; count: number }[]
   /** Share held by the single largest source. */
   sourceConcentration: number
-  /** Share of items whose story cluster was already shown in the prior window. */
-  duplicateRate: number
+  /**
+   * Share of items whose story cluster was already shown in the prior window.
+   *
+   * Null when there was no prior window — a first digest, or every earlier one
+   * being a rebuild from the same sitting. It used to be 0 in that case, which
+   * reads as "nothing repeated" when the truth is "there was nothing to repeat
+   * from". Same distinction the rated rates already make: zero is an answer,
+   * null is the absence of one.
+   */
+  duplicateRate: number | null
+  /** Prior digests the rate was measured against. The denominator, stated. */
+  priorWindowDigests: number
 
   /** Items per bucket, so a drifting mix is visible. */
   bucketDistribution: { bucket: Bucket; count: number; backfilled: number }[]
@@ -142,7 +162,11 @@ export function measure(input: MeasureInput): Measurements {
   // ── duplicate rate ──────────────────────────────────────────────────────
   const prior = new Set(previousClusterIds)
   const repeats = shown.filter(s => prior.has(s.clusterId)).length
-  const duplicateRate = shown.length > 0 ? repeats / shown.length : 0
+  const priorWindowDigests = input.priorWindowDigests
+    ?? (previousClusterIds.length > 0 ? 1 : 0)
+  const duplicateRate = priorWindowDigests === 0 || shown.length === 0
+    ? null
+    : repeats / shown.length
 
   // ── bucket distribution ─────────────────────────────────────────────────
   const buckets: Bucket[] = ['core', 'adjacent', 'outside', 'context', 'local']
@@ -175,6 +199,7 @@ export function measure(input: MeasureInput): Measurements {
     topicDistribution,
     sourceConcentration,
     duplicateRate,
+    priorWindowDigests,
     bucketDistribution,
     coverageGaps,
     interestingNotUsefulCount,
@@ -211,7 +236,13 @@ export function describe(m: Measurements): string[] {
     : `Topic diversity: ${m.topicDistribution.length} distinct topics; commonest ${topTopics.map(t => `${t.topic} (${t.count})`).join(', ')}.`)
 
   lines.push(`Source concentration: the largest source holds ${pct(m.sourceConcentration)} of the feed.`)
-  lines.push(`Duplicate rate: ${pct(m.duplicateRate)} of items were from a story already shown in the previous window.`)
+  lines.push(m.duplicateRate === null
+    // The absence stated, not rendered as 0%. "No duplicates" and "no previous
+    // digest to compare against" are the same number and different facts, and
+    // the second one is the common case for a new reader.
+    ? 'Duplicate rate: not measurable — there is no earlier digest in this window to compare against.'
+    : `Duplicate rate: ${pct(m.duplicateRate)} of items were from a story already shown in the previous window` +
+      ` (measured against ${m.priorWindowDigests} earlier digest${m.priorWindowDigests === 1 ? '' : 's'}).`)
 
   const backfilled = m.bucketDistribution.reduce((n, b) => n + b.backfilled, 0)
   lines.push(`Mix: ${m.bucketDistribution.map(b => `${b.bucket} ${b.count}`).join(', ')}` +

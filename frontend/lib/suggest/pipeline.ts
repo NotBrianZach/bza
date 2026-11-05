@@ -364,7 +364,13 @@ export async function buildDigest(
   // computation. See `changedClusterIds`.
   await store.saveClusterIds(store.changedClusterIds(unique, assignment))
 
-  const shown = await store.recentlyShown(userId)
+  // Both per-user reads in one round trip. Sequential awaits here cost two
+  // subrequests' worth of latency for no reason, and this function runs inside
+  // a Worker whose budget the poll path has already proved is finite.
+  const [shown, dismissed] = await Promise.all([
+    store.recentlyShown(userId),
+    store.dismissedItemIds(userId, windowDays),
+  ])
   const recentlyShown = shown.map(s => new Set([...contentTokens(s.title), ...s.topicTags]))
 
   const feedById = new Map(feeds.map(f => [f.feedId, f]))
@@ -407,10 +413,43 @@ export async function buildDigest(
     qualityFloor: settings.qualityFloor ?? undefined,
   })
 
-  const digest = selectDigest(scored, assignment, {
+  /**
+   * Drop what the reader has already said they saw.
+   *
+   * ── Here, and NOT before the clustering ───────────────────────────────────
+   *
+   * This is the one placement that is correct, and the obvious one is a bug.
+   * Filtering the candidates up at `loadCandidates` would be cheaper — fewer
+   * items to tokenize and cluster — but `saveClusterIds` writes the assignment
+   * back to `suggest_items`, which is a SHARED table. One user's dismissals
+   * would then change the clustering every other subscriber reads, and a
+   * cluster that an excluded item was holding together would split for
+   * everybody. So the clustering runs over the whole window for every user and
+   * the per-user filter happens after it, where it affects only selection.
+   *
+   * The cost of that choice is scoring items that cannot be chosen, which is
+   * CPU and no round trips — the budget that `prepare()` and the inverted index
+   * already brought down to 79ms at 698 items.
+   */
+  const eligible = dismissed.size > 0
+    ? scored.filter(s => !dismissed.has(s.item.itemId))
+    : scored
+  const dismissedHere = scored.length - eligible.length
+
+  const digest = selectDigest(eligible, assignment, {
     plan, weights, enabledFeeds: feeds.length,
   })
 
+  if (dismissedHere > 0) {
+    // Said out loud, like every other thing this pipeline leaves out. A digest
+    // that came back short because the reader had worked through the window is
+    // a different fact from one the ranking could not fill, and the gaps panel
+    // would otherwise report the second.
+    digest.notes.push(
+      `${dismissedHere} item${dismissedHere === 1 ? '' : 's'} you marked already seen ` +
+      `${dismissedHere === 1 ? 'was' : 'were'} left out`,
+    )
+  }
   if (duplicates.length > 0) {
     digest.notes.push(
       `${duplicates.length} item${duplicates.length === 1 ? '' : 's'} were the same article arriving from more than one feed, and were collapsed`,

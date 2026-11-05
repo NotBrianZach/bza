@@ -1135,24 +1135,69 @@ export async function recentlyShown(
     }))
 }
 
-/** Cluster ids shown in the window before this one, for the duplicate rate. */
+/**
+ * How close before a digest another one has to be to count as the same sitting.
+ *
+ * A rebuild is not a previous window. Press Refresh twice and the second digest
+ * is a redraft of the first, over very nearly the same candidate pool — so
+ * measuring the second against the first measures how stable the ranking is,
+ * and reports it as the feed repeating itself.
+ *
+ * An hour, and the number is tied to something real rather than picked: the
+ * poll floor is thirty minutes, so within an hour at most one round of new
+ * material can have arrived from the reader's own polling. Two digests that
+ * close together are drawing on the same corpus, which is what "the same
+ * window" means.
+ */
+export const REBUILD_GRACE_MS = 3_600_000
+
+/**
+ * Cluster ids shown in the window before this one, for the duplicate rate.
+ *
+ * Returns the count of digests it looked at as well as the ids, because an
+ * empty id list is ambiguous and the metric must not read it as "no
+ * duplicates". Zero digests means there was nothing to compare against; see
+ * `measure`, which turns that into a null rather than a 0%.
+ */
 export async function previousClusterIds(
-  userId: string, beforeDigestId: string, windowDays = 14,
-): Promise<string[]> {
+  userId: string,
+  current: { digestId: string; generatedAt: string | null },
+  windowDays = 14,
+): Promise<{ clusterIds: string[]; digestsCounted: number }> {
   const cutoff = new Date(Date.now() - windowDays * 86_400_000).toISOString()
   const { data, error } = await db()
     .from('suggest_digest_items')
-    .select('story_cluster_id, suggest_digests!inner(generated_at)')
+    .select('digest_id, story_cluster_id, suggest_digests!inner(generated_at)')
     .eq('user_id', userId)
-    .neq('digest_id', beforeDigestId)
+    .neq('digest_id', current.digestId)
     .gte('suggest_digests.generated_at', cutoff)
   if (error) throw new Error(`could not load the previous clusters: ${error.message}`)
 
-  return [...new Set(
-    ((data ?? []) as Record<string, unknown>[])
-      .map(r => r.story_cluster_id)
-      .filter((c): c is string => typeof c === 'string'),
-  )]
+  /**
+   * Anything inside the grace window is a redraft of this digest, not a prior
+   * one. Filtered in code rather than in the query because the bound depends on
+   * the current digest's own timestamp, and PostgREST cannot express "earlier
+   * than this value minus an interval" without a view.
+   *
+   * A null `generatedAt` disables the exclusion rather than excluding
+   * everything: it means the caller did not know when the current digest was
+   * built, and the previous behaviour — count every digest in the window — is
+   * the right fallback for "no information".
+   */
+  const graceFrom = current.generatedAt
+    ? Date.parse(current.generatedAt) - REBUILD_GRACE_MS
+    : null
+
+  const clusterIds = new Set<string>()
+  const digests = new Set<string>()
+  for (const row of (data ?? []) as Record<string, unknown>[]) {
+    const at = (row.suggest_digests as { generated_at?: string } | null)?.generated_at
+    if (graceFrom !== null && at && Date.parse(at) > graceFrom) continue
+    if (typeof row.digest_id === 'string') digests.add(row.digest_id)
+    if (typeof row.story_cluster_id === 'string') clusterIds.add(row.story_cluster_id)
+  }
+
+  return { clusterIds: [...clusterIds], digestsCounted: digests.size }
 }
 
 // ---------------------------------------------------------------------------
@@ -1252,6 +1297,39 @@ export async function loadItemReactions(
     out.set(String(r.item_id), { kind: kind as FeedbackKind, at: String(r.created_at) })
   }
   return out
+}
+
+/**
+ * Items this user has said they already saw.
+ *
+ * Read by `buildDigest` so a dismissed item stops being selected. Until this
+ * existed, "already saw" moved no weight (by design — it is a complaint about
+ * duplication, not about the topic) and was read by nothing else, so the item
+ * went on winning its slot every build. The home-page strip hid it client-side,
+ * which was right for the reader and wasted one of the twenty slots.
+ *
+ * ONLY `already_saw`. `interesting_not_useful` is the control that means "good
+ * find, wrong moment", so excluding it would turn "show me this later" into
+ * "never show me this again" — the exact collapse §5's rule 2 exists to
+ * prevent.
+ *
+ * Bounded by the candidate window, which is safe rather than approximate: an
+ * item is only a candidate while its `first_seen_at` is inside the window, and
+ * feedback on it is necessarily later than that, so nothing reachable is
+ * missed.
+ */
+export async function dismissedItemIds(
+  userId: string, windowDays = 14,
+): Promise<Set<string>> {
+  const cutoff = new Date(Date.now() - windowDays * 86_400_000).toISOString()
+  const { data, error } = await db()
+    .from('suggest_feedback')
+    .select('item_id')
+    .eq('user_id', userId)
+    .eq('kind', 'already_saw')
+    .gte('created_at', cutoff)
+  if (error) throw new Error(`could not load what you have already seen: ${error.message}`)
+  return new Set(((data ?? []) as { item_id: string }[]).map(r => String(r.item_id)))
 }
 
 /**
