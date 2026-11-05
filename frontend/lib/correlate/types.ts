@@ -256,8 +256,14 @@ export interface WorldFact {
  *
  * 'partner' means the partner answered its own previous offering — the player
  * stood back for that turn. See lib/correlate/continuation.ts.
+ *
+ * 'station' means neither of them did: the track was picked from catalogue
+ * listening data and no interpreter was involved. Those rows carry no relation,
+ * no claim and no reading, and everything a player is shown about them is
+ * derived from this field rather than stored as prose — see
+ * lib/correlate/station.ts and migration 79.
  */
-export type MoveBy = 'player' | 'partner'
+export type MoveBy = 'player' | 'partner' | 'station'
 
 /**
  * What the player has asked of their partner, adjustable mid-game.

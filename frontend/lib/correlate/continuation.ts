@@ -131,7 +131,9 @@ export const CONTINUATION_STOPS: ContinuationDepth[] = [0, 1, 2, 3]
 
 /** Who authored a turn's move. Absent on every row written before migration 59. */
 export function moverOf(turn: Pick<CorrelationTurn, 'move_by'> | null): MoveBy {
-  return turn?.move_by === 'partner' ? 'partner' : 'player'
+  if (turn?.move_by === 'partner') return 'partner'
+  if (turn?.move_by === 'station') return 'station'
+  return 'player'
 }
 
 export function isSelfReply(turn: Pick<CorrelationTurn, 'move_by'> | null): boolean {
@@ -153,6 +155,18 @@ export function isSelfReply(turn: Pick<CorrelationTurn, 'move_by'> | null): bool
 export function selfRepliesSince(path: CorrelationTurn[]): number {
   let n = 0
   for (let i = path.length - 1; i >= 0; i--) {
+    /**
+     * A station turn is walked THROUGH, neither counted nor treated as a stop.
+     *
+     * Not counted, because it is not the partner answering itself — no
+     * interpreter took it, so it is not one of the turns this cap is bounding.
+     * Not a stop either, and that is the part worth stating: the cap measures a
+     * run between two of the PLAYER's moves, and a song the station chose is
+     * not the player coming back. Breaking here would hand the partner a fresh
+     * allowance of three every time a song played, which on a station left
+     * running is an unbounded run arriving by the back door.
+     */
+    if (moverOf(path[i]) === 'station') continue
     if (!isSelfReply(path[i])) break
     n++
   }

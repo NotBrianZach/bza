@@ -12,6 +12,7 @@ import { getMedium } from '@/lib/correlate/media'
 import { RELATIONS } from '@/lib/correlate/relations'
 import { buildGraph, defaultParent, pathTo } from '@/lib/correlate/graph'
 import { isSelfReply } from '@/lib/correlate/continuation'
+import { isStationTurn, STATION_TURN_LINE } from '@/lib/correlate/station'
 import { playedUnder } from '@/lib/correlate/switching'
 import type { CorrelationSession, CorrelationTurn, Offering } from '@/lib/correlate/types'
 import OfferingCard from '@/components/correlate/OfferingCard'
@@ -251,6 +252,7 @@ function SharedTurn({ turn, sessionMode, activeMode, player, accentText }: {
   accentText: string
 }) {
   const alone = isSelfReply(turn)
+  const byStation = isStationTurn(turn)
   const playedAs = playedUnder(turn, sessionMode, activeMode)?.name ?? null
 
   if (!turn.legal) {
@@ -300,7 +302,7 @@ function SharedTurn({ turn, sessionMode, activeMode, player, accentText }: {
       <OfferingCard
         offering={turn.move_offering}
         player={player}
-        label={alone ? 'it offered, to itself' : 'they offered'}
+        label={byStation ? 'playing on from' : alone ? 'it offered, to itself' : 'they offered'}
         compact={alone}
       />
 
@@ -322,8 +324,22 @@ function SharedTurn({ turn, sessionMode, activeMode, player, accentText }: {
         <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed pl-1 italic">{turn.reading}</p>
       )}
 
+      {/* The station's line, in the shared view too. A reader looking at
+          somebody else's chain has the most to gain from knowing which rows were
+          a person connecting two things and which were a catalogue playing on —
+          they cannot ask, and the chain is all they have. */}
+      {byStation && (
+        <p className="text-xs text-gray-400 dark:text-gray-500 leading-relaxed pl-1">
+          {STATION_TURN_LINE}
+        </p>
+      )}
+
       {turn.reply_offering && (
-        <OfferingCard offering={turn.reply_offering} player={player} label="came back" />
+        <OfferingCard
+          offering={turn.reply_offering}
+          player={player}
+          label={byStation ? 'the station played' : 'came back'}
+        />
       )}
 
       {turn.narration && (

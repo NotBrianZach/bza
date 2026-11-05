@@ -27,18 +27,26 @@
  * connection separable from a real one, and a feature that quietly claimed to
  * hear similarity would be the first thing in it that lied.
  *
- * ── It writes no turns, on purpose ───────────────────────────────────────
+ * ── Its picks ARE turns, and that was a reversal ──────────────────────────
  *
- * A turn is a claimed connection with a reading, judged legal or not. A station
- * pick has no claim, no reading and nothing judged it, so recording one as a
- * turn would mean inventing both — and then the tree, the share link and the
- * duplicate-rate measurements would all be counting fabrications as exchanges.
- * The station feeds the player's queue and leaves the chain alone. The cost of
- * that choice is real and worth stating: station songs do not appear in the
- * tree and are not part of what a share link shows.
+ * They were queue entries first, on the reasoning that a turn is a claimed
+ * connection with a reading and a station pick has neither. The first half of
+ * that is still true and the conclusion was wrong: the cost of keeping these
+ * out of the chain was that they appeared in no tree, were absent from every
+ * share link, and could not be answered or branched from like everything else
+ * a chain contains. Parity with "keep going" is worth more than a table in
+ * which every row happens to be a judgement.
+ *
+ * What makes a station turn honest is what it leaves EMPTY, not anything it
+ * asserts: no relation, no claim, no reading, no facts, no world delta. The
+ * sentence a player sees is DERIVED from `move_by === 'station'` — see
+ * `STATION_BASIS` — rather than stored as prose, so it cannot drift from the
+ * thing it describes, and nothing anywhere writes a reading nobody read.
+ *
+ * Full reasoning, including why `legal` stays true, is in migration 79.
  */
 
-import type { Offering } from './types'
+import type { CorrelationTurn, Offering } from './types'
 
 export const STATION_LABEL = 'Station'
 
@@ -74,15 +82,18 @@ export function stationRefusal(media: readonly string[]): string | null {
 }
 
 /**
- * How many picks to keep queued ahead of the one playing.
+ * How many songs to keep ahead of the one playing before taking another turn.
  *
- * Small on purpose. The station is cheap, so the temptation is to queue twenty
- * — but a long queue is a commitment: everything in it was chosen from a seed
- * that is now several songs old, so a listener who moves somewhere else is
- * stuck hearing where they used to be. Four is enough that the music never
- * gaps and short enough that the station follows.
+ * Two, which is `RADIO_LOOKAHEAD`, and matching it is the point rather than a
+ * coincidence. Each pick is now a TURN, so queueing far ahead means writing
+ * chain the listener has not reached — and a chain that runs four songs ahead
+ * of the playhead is four turns a player has to scroll back through to find
+ * where they actually are. Two keeps the audio from gapping and nothing more.
+ *
+ * It was 4 while picks were queue entries and nothing was recorded, where the
+ * only cost of a long queue was staleness.
  */
-export const STATION_LOOKAHEAD = 4
+export const STATION_LOOKAHEAD = 2
 
 /**
  * The track a station should start from, and its artist if the row carries one.
@@ -96,6 +107,31 @@ export const STATION_LOOKAHEAD = 4
  * rows written before that field existed simply cost the provider one extra
  * lookup. Returning it rather than resolving it here keeps this function pure.
  */
+/**
+ * Whether this turn was taken by the station.
+ *
+ * Its own function rather than `turn.move_by === 'station'` at nine call sites,
+ * for the same reason `isSelfReply` exists: rows written before migration 79
+ * have no idea this value is possible, and every reader of the column should go
+ * through one place that knows what a missing value means.
+ */
+export function isStationTurn(turn: Pick<CorrelationTurn, 'move_by'> | null): boolean {
+  return turn?.move_by === 'station'
+}
+
+/**
+ * The line shown in place of a reading on a station turn.
+ *
+ * There is no reading, and this is not one — it states what happened and makes
+ * no claim about the pairing. Kept here beside `STATION_BASIS` so the two
+ * cannot disagree, and derived at render time from `move_by` rather than stored
+ * on the row: a sentence in the database would be prose nobody wrote, and the
+ * first thing to go stale if the source ever changes.
+ */
+export const STATION_TURN_LINE =
+  'The station played this one next. Nothing read the pair — they are paired by ' +
+  'what listeners play together.'
+
 export function stationSeed(
   chain: readonly Offering[],
 ): { trackId: string; artistId: string | null } | null {

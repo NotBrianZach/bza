@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import { CornerDownRight, GitBranch, Link2, Pause, Play, SignalZero } from 'lucide-react'
+import { Antenna, CornerDownRight, GitBranch, Link2, Pause, Play, SignalZero } from 'lucide-react'
 import { getMedium } from '@/lib/correlate/media'
 import { childrenOf, pathTo, type TurnGraph } from '@/lib/correlate/graph'
 import type { CorrelationTurn, Offering } from '@/lib/correlate/types'
@@ -115,6 +115,16 @@ export default function BranchMap({
                   {turn.turn_index + 1}
                 </span>
                 {!turn.legal && <SignalZero size={10} className="flex-shrink-0 text-red-400" />}
+                {isStation(turn) && (
+                  <Antenna
+                    size={10}
+                    className="flex-shrink-0 text-gray-300 dark:text-gray-600"
+                    // Titled, because an unexplained icon in a tree of fifty
+                    // rows is noise. The sentence is the narrow one: paired by
+                    // listeners, not read by anything.
+                    aria-label="played by the station"
+                  />
+                )}
                 <span className="text-[11px] truncate text-gray-600 dark:text-gray-300">{label(turn)}</span>
                 {turn.link_turn_id && (
                   <Link2 size={10} className="flex-shrink-0 ml-auto text-gray-400 dark:text-gray-500" />
@@ -223,4 +233,17 @@ function label(turn: CorrelationTurn): string {
   const move = turn.move_offering?.title ?? 'an offering'
   const reply = turn.reply_offering?.title
   return reply ? `${move} → ${reply}` : move
+}
+
+/**
+ * The marker that says a row was the station's rather than an exchange.
+ *
+ * Needed the moment station picks became turns: a tree where a song the
+ * catalogue chose looks identical to a connection somebody made is a tree that
+ * has stopped telling you what the game was. One small icon, like the `Link2`
+ * marker for a volunteered callback, on the same reasoning — the shape of the
+ * game is what this panel is for, and these rows have a different shape.
+ */
+function isStation(turn: CorrelationTurn): boolean {
+  return turn.move_by === 'station'
 }

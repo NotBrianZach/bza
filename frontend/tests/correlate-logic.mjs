@@ -137,7 +137,10 @@ const {
   STARTING_SHARES, STARTING_AXES, startingTuning, isStarting,
   NOTES_MAX, readingLengths, restateTuning, CORE_MEDIUM_SHARE,
 } = M.tuning
-const { stationRefusal, stationSeed, STATION_LOOKAHEAD, STATION_BASIS, STATION_LABEL } = M.station
+const {
+  stationRefusal, stationSeed, isStationTurn, STATION_LOOKAHEAD, STATION_BASIS,
+  STATION_LABEL, STATION_TURN_LINE,
+} = M.station
 const {
   MAX_SELF_REPLIES, CONTINUATION_OFF, CONTINUATION_LABELS, CONTINUATION_HINTS,
   CONTINUATION_STOPS, SELF_REPLY_GUIDANCE, moverOf, isSelfReply, selfRepliesSince,
@@ -2029,6 +2032,57 @@ t('and is null when it does not', stationSeed([MUSIC('a')])?.artistId === null)
 t('music with no audio is not a seed', stationSeed([
   { ...MUSIC('a'), perceptible: { kind: 'text', body: 'lyrics' } },
 ]) === null)
+
+group('station turns — parity with keep going, without a claim')
+t('a station row is recognised', isStationTurn({ move_by: 'station' }))
+t('a partner row is not', !isStationTurn({ move_by: 'partner' }))
+t('a pre-migration row with no mover is not', !isStationTurn({ move_by: null }))
+t('moverOf reads it', moverOf({ move_by: 'station' }) === 'station')
+// It is not the partner answering itself, so every self-reply rule has to see it
+// as something else — otherwise a station run would read as an endless one.
+t('it is not a self-reply', !isSelfReply({ move_by: 'station' }))
+// The line shown in place of a reading. It has to state what happened without
+// claiming anything about the pair, since nothing read them.
+t('the turn line claims no reading',
+  !/sounds? like/i.test(STATION_TURN_LINE) && /Nothing read the pair/.test(STATION_TURN_LINE),
+  STATION_TURN_LINE)
+
+/**
+ * The cap walks THROUGH a station turn: neither counted nor treated as a stop.
+ *
+ * Not counted because no interpreter took it. Not a stop because the cap bounds
+ * a run between two of the PLAYER's moves, and a song the station chose is not
+ * the player coming back — breaking there would hand the partner a fresh three
+ * every time a song played.
+ */
+t('a station turn does not count toward the self-reply cap', selfRepliesSince([
+  mkTurn({ id: 'p0' }),
+  mkTurn({ id: 's1', move_by: 'station' }),
+]) === 0)
+t('and does not reset the count either', selfRepliesSince([
+  mkTurn({ id: 'a1', move_by: 'partner' }),
+  mkTurn({ id: 's1', move_by: 'station' }),
+  mkTurn({ id: 'a2', move_by: 'partner' }),
+]) === 2)
+t('a player move still resets it', selfRepliesSince([
+  mkTurn({ id: 'a1', move_by: 'partner' }),
+  mkTurn({ id: 'p1', move_by: 'player' }),
+  mkTurn({ id: 'a2', move_by: 'partner' }),
+]) === 1)
+// The whole point of the walk-through: three partner turns separated by songs is
+// still three, so the cap refuses the fourth.
+t('the cap still bites across a station run', (() => {
+  const path = [
+    mkTurn({ id: 'r0' }),
+    mkTurn({ id: 'a1', move_by: 'partner' }),
+    mkTurn({ id: 's1', move_by: 'station' }),
+    mkTurn({ id: 'a2', move_by: 'partner' }),
+    mkTurn({ id: 's2', move_by: 'station' }),
+    mkTurn({ id: 'a3', move_by: 'partner' }),
+  ]
+  return selfRepliesSince(path) === MAX_SELF_REPLIES
+    && selfRepliesLeft(path) === 0
+})())
 
 const FULL_RUN = (() => {
   const run = Array.from({ length: MAX_SELF_REPLIES }, (_, i) =>

@@ -25,8 +25,8 @@ import {
   isSelfReply, radioRefusal, selfRepliesLeft, selfReplyRefusal, RADIO_HINT, RADIO_LABEL,
 } from '@/lib/correlate/continuation'
 import {
-  stationRefusal, stationSeed, STATION_BASIS, STATION_HINT, STATION_LABEL,
-  STATION_LOOKAHEAD,
+  isStationTurn, stationRefusal, STATION_BASIS, STATION_HINT, STATION_LABEL,
+  STATION_LOOKAHEAD, STATION_TURN_LINE,
 } from '@/lib/correlate/station'
 import { activeBranch, playedUnder, switchTargets } from '@/lib/correlate/switching'
 import { announcementFor } from '@/lib/correlate/naming'
@@ -1038,14 +1038,9 @@ export default function CorrelationBoard({
    * is not the thing driving the render: `player.queue` is, and it changes in the
    * same pass that adds to the ref.
    */
-  const upNext = player.queue
-    .slice(player.queueIndex >= 0 ? player.queueIndex + 1 : 0)
-    .filter(o => stationHeard.current.has(o.id))
   const stationBusy = useRef(false)
   const stationFailures = useRef(0)
   const stationEmpties = useRef(0)
-  /** Everything the station has put in the queue, so it never offers it twice. */
-  const stationHeard = useRef<Set<string>>(new Set())
   const [stationStopped, setStationStopped] = useState('')
   const [stationFrom, setStationFrom] = useState<string | null>(null)
   const [stationNudge, setStationNudge] = useState(0)
@@ -1064,46 +1059,45 @@ export default function CorrelationBoard({
     void stationNudge
     if (!station || stationBlocked) return
     if (stationBusy.current) return
+    if (session.status !== 'active') return
     if (player.lookahead >= STATION_LOOKAHEAD) return
 
-    const seed = stationSeed(nowPlaying ? [...chain, nowPlaying] : chain)
-    // Nothing audible to start from yet. Quiet, like radio idling before the
-    // first move: it fixes itself as soon as a song is in play.
-    if (!seed) return
+    /**
+     * Played onto the focused turn, like a self-reply, and not onto the
+     * playhead.
+     *
+     * A station pick is a turn now, so it needs a parent — and the parent has to
+     * be where the chain actually is, or a player who clicked back to an older
+     * song would have the station grafting songs onto a branch they had left.
+     * The server resolves the seed from that branch for the same reason.
+     */
+    const from = focusRef.current
+    // Nothing on the table yet. Quiet, like radio idling before the first move:
+    // it fixes itself as soon as something has been played.
+    if (!from) return
 
     stationBusy.current = true
     try {
-      const res = await authedFetch('/api/offerings/similar', {
+      const res = await authedFetch('/api/correlate/station', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          trackId: seed.trackId,
-          artistId: seed.artistId ?? undefined,
-          exclude: [
-            ...stationHeard.current,
-            // The chain's own songs too. Hearing a track the game already
-            // played, presented as something that goes with it, reads as the
-            // station having run out rather than as a coincidence.
-            ...audible.map(o => o.id),
-          ],
-          limit: STATION_LOOKAHEAD * 2,
+          sessionId: session.id,
+          parentTurnId: from,
           // Asked for once the neighbourhood is exhausted, which is what an
-          // empty answer means. See the module note on `drift`.
+          // empty answer means. See the note on `drift` in lib/offerings/music.
           drift: stationEmpties.current > 0,
         }),
       })
-      const data = await res.json() as {
-        tracks?: Offering[]; fromArtist?: string | null; reason?: string; error?: string
-      }
+      const data = await res.json()
       if (data.error) throw new Error(data.error)
 
-      const tracks = data.tracks ?? []
-      if (tracks.length === 0) {
+      if (data.exhausted || !data.turn) {
         if (++stationEmpties.current >= STATION_EMPTY_LIMIT) {
           stopStation(
             data.reason
               ? `The station stopped: ${data.reason}.`
-              : 'The station ran out of songs it had not already played.',
+              : 'The station ran out of songs this chain had not already played.',
           )
         } else {
           // One more pass, which will ask to drift. Woken explicitly because an
@@ -1115,12 +1109,22 @@ export default function CorrelationBoard({
 
       stationFailures.current = 0
       stationEmpties.current = 0
-      for (const t of tracks) stationHeard.current.add(t.id)
       if (data.fromArtist) setStationFrom(data.fromArtist)
-      // `append`, never `playQueue`: the chain's songs and the station's share
-      // one queue, and replacing it would throw away both the position and
-      // whatever the player had queued by hand.
-      appendToQueue(tracks)
+      /**
+       * Absorbed exactly like a self-reply, which is what parity means here.
+       *
+       * The turn joins `turns`, the focus follows it when the player has not
+       * moved away, and the session's new `turn_count` lands — the same three
+       * things `continueAlone` needs. The audio then queues itself: the turn
+       * grows `audible`, and the queue-feed effect appends what is new. There is
+       * no separate station queue any more, and that is the whole reversal.
+       */
+      absorb(data, focusRef.current === from)
+      track('correlate_station_turn', {
+        game: data.turn?.mode ?? branch.mode,
+        turn: data.turn?.turn_index,
+        drifted: data.drifted === true,
+      })
     } catch (e: any) {
       const why = e?.message ?? 'that request did not go through'
       if (++stationFailures.current >= STATION_FAILURE_LIMIT) {
@@ -1139,8 +1143,8 @@ export default function CorrelationBoard({
       stationBusy.current = false
     }
   }, [
-    station, stationBlocked, player.lookahead, nowPlaying, chain, audible,
-    appendToQueue, stopStation,
+    station, stationBlocked, player.lookahead, session.id, session.status,
+    absorb, branch.mode, stopStation,
     // Not read for its value — it exists to make a retry re-run this pass.
     stationNudge,
   ])
@@ -1828,9 +1832,14 @@ export default function CorrelationBoard({
   // long comment on `appendAudible` above for why `append` is the dependency
   // rather than `player`.
   useEffect(() => {
-    if ((!radio && !voice.listening) || audible.length === 0) return
+    // The station counts too, and this is the join that makes its turns audible.
+    // A station pick lands in `turns`, which grows `audible`, which this appends
+    // — so the station needs no queue of its own. Leaving it out of this gate
+    // was a silent failure mode worth naming: the chain would grow song by song
+    // and nothing would ever play.
+    if ((!radio && !voice.listening && !station) || audible.length === 0) return
     appendAudible(audible)
-  }, [radio, voice.listening, audible, appendAudible])
+  }, [radio, station, voice.listening, audible, appendAudible])
 
   /**
    * Announce the track that has just started, and hand the music back.
@@ -2364,45 +2373,24 @@ export default function CorrelationBoard({
                   </button>
                  </div>
 
-                 {/* What the station has queued, and where it came from.
-                     Shown as a list because these tracks are nowhere else on the
-                     page — the chain does not contain them, so without this the
-                     only evidence of four queued songs would be the skip button
-                     not being disabled. Clicking one jumps to it inside the run,
-                     through the same `jumpTo` the chain's cards use. */}
-                 {station && upNext.length > 0 && (
-                   <div className="mt-2 pt-2 border-t border-gray-100 dark:border-gray-700">
-                     <p className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-1">
-                       <Antenna size={10} /> Up next
-                       {stationFrom && <span className="normal-case tracking-normal">· from {stationFrom}’s listeners</span>}
-                     </p>
-                     <ul className="space-y-0.5">
-                       {upNext.map(o => (
-                         <li key={o.id}>
-                           <button
-                             onClick={() => { if (!player.jumpTo(o)) player.playOne(o) }}
-                             title={`Skip to ${o.title}`}
-                             className="w-full flex items-center gap-1.5 px-1 py-0.5 rounded text-left hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors"
-                           >
-                             <Play size={9} className="flex-shrink-0 text-gray-300 dark:text-gray-600" />
-                             <span className="text-[11px] text-gray-600 dark:text-gray-300 truncate">
-                               {o.title}
-                               {o.attribution && (
-                                 <span className="text-gray-400 dark:text-gray-500"> — {o.attribution}</span>
-                               )}
-                             </span>
-                           </button>
-                         </li>
-                       ))}
-                     </ul>
-                     {/* The basis, in the open rather than only in a tooltip. It
-                         is the one claim this feature makes and it is a narrow
-                         one; a player should not have to hover to find out that
-                         nothing here listened to anything. */}
-                     <p className="mt-1 text-[10px] text-gray-400 dark:text-gray-500 leading-snug">
+                 {/* Where the station is drawing from, and on what basis.
+                     No "up next" list any more: its picks are turns, so they are
+                     in the chain and in the tree like everything else, and a
+                     second list of the same songs would be the one thing on this
+                     page that could disagree with the chain. What is left is the
+                     attribution, which is a property of the lookup rather than
+                     of any one turn and therefore has nowhere else to live.
+                     The basis is in the open and not only in a tooltip: it is the
+                     one claim this feature makes, and a player should not have to
+                     hover to learn that nothing here listened to anything. */}
+                 {station && (
+                   <p className="mt-1.5 pt-1.5 border-t border-gray-100 dark:border-gray-700 flex items-start gap-1.5 text-[10px] text-gray-400 dark:text-gray-500 leading-snug">
+                     <Antenna size={11} className="flex-shrink-0 mt-0.5" />
+                     <span>
+                       {stationFrom && <>Playing on from {stationFrom}’s listeners. </>}
                        {STATION_BASIS}
-                     </p>
-                   </div>
+                     </span>
+                   </p>
                  )}
 
                  {/* Where a self-stopped station says so, next to the control that
@@ -3046,7 +3034,10 @@ function TurnBlock({
   const [discussing, setDiscussing] = useState<string | null>(null)
 
   const alone = isSelfReply(turn)
-  const moveLabel = alone ? 'it offered, to itself' : 'you offered'
+  const byStation = isStationTurn(turn)
+  const moveLabel = byStation
+    ? 'playing on from'
+    : alone ? 'it offered, to itself' : 'you offered'
 
   if (!turn.legal) {
     return (
@@ -3162,8 +3153,24 @@ function TurnBlock({
         <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed pl-1 italic">{turn.reading}</p>
       )}
 
+      {/* A station turn has no reading, and this is not one — it says what
+          happened and makes no claim about the pairing. Rendered from `move_by`
+          rather than read off the row, because a sentence stored in the database
+          would be prose nobody wrote and the first thing to go stale. Grey and
+          not italic, so it does not read as the interpreter's voice. */}
+      {byStation && (
+        <p className="flex items-start gap-1.5 text-xs text-gray-400 dark:text-gray-500 leading-relaxed pl-1">
+          <Antenna size={12} className="flex-shrink-0 mt-0.5" />
+          <span>{STATION_TURN_LINE}</span>
+        </p>
+      )}
+
       {turn.reply_offering ? (
-        <OfferingCard offering={turn.reply_offering} player={player} label="came back" />
+        <OfferingCard
+          offering={turn.reply_offering}
+          player={player}
+          label={byStation ? 'the station played' : 'came back'}
+        />
       ) : (
         // Only reachable for turns recorded before the reply pipeline guaranteed
         // an answer: a legal turn is no longer persisted without one, so this is
