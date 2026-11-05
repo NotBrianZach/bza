@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
-  AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, CornerDownRight, Flag, GitBranch,
+  AlertTriangle, Antenna, ArrowLeft, ArrowRight, CheckCircle2, CornerDownRight, Flag, GitBranch,
   Globe2, Link2, Loader2, MessageSquare, Pause, Pencil, Play, Radio, Repeat, Shuffle, SignalZero, SkipBack,
   SkipForward, Target, Dices, Share2, Hourglass,
 } from 'lucide-react'
@@ -17,12 +17,17 @@ import {
   subtreeSize, worldFor, type TurnGraph,
 } from '@/lib/correlate/graph'
 import {
-  continuationOf, isStarting, mutedMedia, normalizeTuning, radioOf, startingTuning, DEFAULT_TUNING,
+  continuationOf, isStarting, mutedMedia, normalizeTuning, radioOf, stationOf,
+  startingTuning, DEFAULT_TUNING,
   type Tuning,
 } from '@/lib/correlate/tuning'
 import {
   isSelfReply, radioRefusal, selfRepliesLeft, selfReplyRefusal, RADIO_HINT, RADIO_LABEL,
 } from '@/lib/correlate/continuation'
+import {
+  stationRefusal, stationSeed, STATION_BASIS, STATION_HINT, STATION_LABEL,
+  STATION_LOOKAHEAD,
+} from '@/lib/correlate/station'
 import { activeBranch, playedUnder, switchTargets } from '@/lib/correlate/switching'
 import { announcementFor } from '@/lib/correlate/naming'
 import {
@@ -89,6 +94,19 @@ const RADIO_FAILURE_LIMIT = 3
 
 /** Linear backoff between retries: 1.5s, then 3s. */
 const RADIO_RETRY_MS = 1500
+
+/**
+ * The station's equivalents. Separate constants rather than shared ones, because
+ * the two pumps fail differently and should not have to move together.
+ *
+ * `STATION_EMPTY_LIMIT` is 3 and counts *successful* requests that returned
+ * nothing new — a different thing from a failure, and the fix for it is to drift
+ * to a neighbouring artist rather than to stop. Three because the first empty
+ * triggers the first drift, so stopping at one would never let the drift happen.
+ */
+const STATION_FAILURE_LIMIT = 3
+const STATION_EMPTY_LIMIT = 3
+const STATION_RETRY_MS = 1200
 
 /**
  * The board.
@@ -956,6 +974,178 @@ export default function CorrelationBoard({
   // a turn landing, the playhead advancing, the control being switched on. The pass
   // itself is guarded, so running it more often than necessary costs nothing.
   useEffect(() => { void pump() }, [pump])
+
+  /**
+   * The station: keep the queue fed from listening data.
+   *
+   * Shaped like the radio pump above and much smaller, because almost everything
+   * that makes that one complicated is absent here. No turn is written, so there
+   * is no legality to check, no relation to spend, no branch to answer from and
+   * no model to wait on. One request, some tracks, append.
+   *
+   * ── Seeded from what is PLAYING, not from the chain ──────────────────────
+   *
+   * A station follows the listener. Seeding from the chain's last song would
+   * make every pick a neighbour of the same track for the whole run, so the
+   * station would circle one artist forever; seeding from the playhead lets it
+   * walk — each pick is a neighbour of the one before it. `player.current` is
+   * appended to the chain for the lookup so that `stationSeed`, which walks
+   * backwards to the last audible music item, finds it first when it is one.
+   *
+   * ── Failures are counted, not fatal ──────────────────────────────────────
+   *
+   * Same reasoning as the radio pump, and more so: this is one HTTP call to one
+   * keyless catalogue, so the common failure is transient and ending an
+   * open-ended run on a single 502 is what made radio look like it worked once.
+   * A refusal fails every time and so still stops the station quickly.
+   *
+   * The empty-but-successful case is counted separately. Deezer answering 200
+   * with nothing new means the listener has heard this neighbourhood, and the
+   * answer to that is to drift rather than to stop — so the next pass asks for
+   * a neighbouring artist, and only a run of empties gives up.
+   */
+  const station = stationOf(tuning)
+  const stationBlocked = stationRefusal(media)
+  /**
+   * The same `append` the chain's own queue feed uses, destructured here.
+   *
+   * A second binding rather than reaching for the one further down: that one is
+   * declared next to the effect it serves, which has to sit below `voice`. The
+   * method is a `useCallback` over a stable `playAt`, so both names are the same
+   * stable function and neither effect re-runs on a render — which is the whole
+   * reason it is destructured at all instead of `player` being the dependency.
+   */
+  const { append: appendToQueue } = player
+  /**
+   * Pulled out of `player` because the linter reads any `.current` as a ref
+   * access and refuses it as a dependency. This one is state that happens to
+   * share the name, so the rule is wrong here — but a local binding is cheaper
+   * than a suppression, and suppressing the rule on a hook that reads nine
+   * things would hide a dependency genuinely missing from it later.
+   */
+  const nowPlaying = player.current
+
+  /**
+   * What the station has queued ahead of the playhead.
+   *
+   * Filtered to the station's own picks rather than showing the whole tail of the
+   * queue, so that the basis sentence under the list is true of everything in it.
+   * The chain's upcoming songs are already on the page — they are the chain —
+   * and listing them here under "from X's listeners" would attribute them to a
+   * recommendation that never touched them.
+   *
+   * `stationHeard` is a ref read during render, which is sound here because it
+   * is not the thing driving the render: `player.queue` is, and it changes in the
+   * same pass that adds to the ref.
+   */
+  const upNext = player.queue
+    .slice(player.queueIndex >= 0 ? player.queueIndex + 1 : 0)
+    .filter(o => stationHeard.current.has(o.id))
+  const stationBusy = useRef(false)
+  const stationFailures = useRef(0)
+  const stationEmpties = useRef(0)
+  /** Everything the station has put in the queue, so it never offers it twice. */
+  const stationHeard = useRef<Set<string>>(new Set())
+  const [stationStopped, setStationStopped] = useState('')
+  const [stationFrom, setStationFrom] = useState<string | null>(null)
+  const [stationNudge, setStationNudge] = useState(0)
+
+  const stopStation = useCallback((why: string) => {
+    changeTuning({ ...tuning, station: false })
+    stationFailures.current = 0
+    stationEmpties.current = 0
+    setStationStopped(why)
+  }, [changeTuning, tuning])
+
+  const stationPump = useCallback(async () => {
+    // Read for its effect on this callback's identity. See the `void radioNudge`
+    // above — a failure changes none of this pump's real inputs, so the counter
+    // is the only thing that can rebuild the callback and retry.
+    void stationNudge
+    if (!station || stationBlocked) return
+    if (stationBusy.current) return
+    if (player.lookahead >= STATION_LOOKAHEAD) return
+
+    const seed = stationSeed(nowPlaying ? [...chain, nowPlaying] : chain)
+    // Nothing audible to start from yet. Quiet, like radio idling before the
+    // first move: it fixes itself as soon as a song is in play.
+    if (!seed) return
+
+    stationBusy.current = true
+    try {
+      const res = await authedFetch('/api/offerings/similar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          trackId: seed.trackId,
+          artistId: seed.artistId ?? undefined,
+          exclude: [
+            ...stationHeard.current,
+            // The chain's own songs too. Hearing a track the game already
+            // played, presented as something that goes with it, reads as the
+            // station having run out rather than as a coincidence.
+            ...audible.map(o => o.id),
+          ],
+          limit: STATION_LOOKAHEAD * 2,
+          // Asked for once the neighbourhood is exhausted, which is what an
+          // empty answer means. See the module note on `drift`.
+          drift: stationEmpties.current > 0,
+        }),
+      })
+      const data = await res.json() as {
+        tracks?: Offering[]; fromArtist?: string | null; reason?: string; error?: string
+      }
+      if (data.error) throw new Error(data.error)
+
+      const tracks = data.tracks ?? []
+      if (tracks.length === 0) {
+        if (++stationEmpties.current >= STATION_EMPTY_LIMIT) {
+          stopStation(
+            data.reason
+              ? `The station stopped: ${data.reason}.`
+              : 'The station ran out of songs it had not already played.',
+          )
+        } else {
+          // One more pass, which will ask to drift. Woken explicitly because an
+          // empty answer moved nothing the pump reads.
+          window.setTimeout(() => setStationNudge(n => n + 1), STATION_RETRY_MS)
+        }
+        return
+      }
+
+      stationFailures.current = 0
+      stationEmpties.current = 0
+      for (const t of tracks) stationHeard.current.add(t.id)
+      if (data.fromArtist) setStationFrom(data.fromArtist)
+      // `append`, never `playQueue`: the chain's songs and the station's share
+      // one queue, and replacing it would throw away both the position and
+      // whatever the player had queued by hand.
+      appendToQueue(tracks)
+    } catch (e: any) {
+      const why = e?.message ?? 'that request did not go through'
+      if (++stationFailures.current >= STATION_FAILURE_LIMIT) {
+        stopStation(
+          `The station stopped after ${STATION_FAILURE_LIMIT} failures in a row. ` +
+          `The last reason was: ${why}`,
+        )
+      } else {
+        console.warn(`[station] failed (${stationFailures.current}/${STATION_FAILURE_LIMIT}): ${why}`)
+        window.setTimeout(
+          () => setStationNudge(n => n + 1),
+          STATION_RETRY_MS * stationFailures.current,
+        )
+      }
+    } finally {
+      stationBusy.current = false
+    }
+  }, [
+    station, stationBlocked, player.lookahead, nowPlaying, chain, audible,
+    appendToQueue, stopStation,
+    // Not read for its value — it exists to make a retry re-run this pass.
+    stationNudge,
+  ])
+
+  useEffect(() => { void stationPump() }, [stationPump])
 
   /**
    * Feed the playback queue from the chain, without restarting it.
@@ -2090,8 +2280,12 @@ export default function CorrelationBoard({
                         onClick={player.skip}
                         title={player.lookahead > 0
                           ? 'The next one'
-                          : radio ? 'Find the next one now' : 'Nothing queued after this'}
-                        disabled={player.lookahead === 0 && !radio}
+                          : radio || station ? 'Find the next one now' : 'Nothing queued after this'}
+                        // Live at the tail whenever something is feeding the
+                        // queue. It used to check radio only, so with a station
+                        // running and the buffer momentarily dry the control
+                        // disabled itself on the one mode that could refill it.
+                        disabled={player.lookahead === 0 && !radio && !station}
                         className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                       >
                         <SkipForward size={13} />
@@ -2135,7 +2329,90 @@ export default function CorrelationBoard({
                     <Radio size={13} className={radio && selfReplyBusy.current ? 'animate-pulse' : ''} />
                     {RADIO_LABEL}
                   </button>
+                  {/* The station, beside "keep going" and not instead of it.
+                      They answer different questions — one is who takes the next
+                      turn, the other is what else is playing — so both can be on,
+                      and then the station fills the gaps while the partner thinks.
+                      Its tooltip carries the basis sentence, because "similar" is
+                      the one word this must not be read as. */}
+                  <button
+                    onClick={() => {
+                      const next = !station
+                      if (next) yt.prime()
+                      changeTuning({ ...tuning, station: next })
+                      // From the end, like radio, and for the same reason: asking
+                      // for a station is an ask for what comes next.
+                      if (next && playingIndex < 0 && audible.length > 0) {
+                        player.playQueue(audible, audible.length - 1)
+                      }
+                      stationFailures.current = 0
+                      stationEmpties.current = 0
+                      setStationStopped('')
+                      if (!next) setStationFrom(null)
+                      track('correlate_station_toggled', { game: branch.mode, on: next })
+                    }}
+                    disabled={!!stationBlocked}
+                    title={stationBlocked ?? `${STATION_HINT} ${STATION_BASIS}`}
+                    className={`flex-shrink-0 flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
+                      station
+                        ? `${accent.bg} ${accent.text}`
+                        : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                    }`}
+                  >
+                    <Antenna size={13} className={station && stationBusy.current ? 'animate-pulse' : ''} />
+                    {STATION_LABEL}
+                  </button>
                  </div>
+
+                 {/* What the station has queued, and where it came from.
+                     Shown as a list because these tracks are nowhere else on the
+                     page — the chain does not contain them, so without this the
+                     only evidence of four queued songs would be the skip button
+                     not being disabled. Clicking one jumps to it inside the run,
+                     through the same `jumpTo` the chain's cards use. */}
+                 {station && upNext.length > 0 && (
+                   <div className="mt-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+                     <p className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-1">
+                       <Antenna size={10} /> Up next
+                       {stationFrom && <span className="normal-case tracking-normal">· from {stationFrom}’s listeners</span>}
+                     </p>
+                     <ul className="space-y-0.5">
+                       {upNext.map(o => (
+                         <li key={o.id}>
+                           <button
+                             onClick={() => { if (!player.jumpTo(o)) player.playOne(o) }}
+                             title={`Skip to ${o.title}`}
+                             className="w-full flex items-center gap-1.5 px-1 py-0.5 rounded text-left hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors"
+                           >
+                             <Play size={9} className="flex-shrink-0 text-gray-300 dark:text-gray-600" />
+                             <span className="text-[11px] text-gray-600 dark:text-gray-300 truncate">
+                               {o.title}
+                               {o.attribution && (
+                                 <span className="text-gray-400 dark:text-gray-500"> — {o.attribution}</span>
+                               )}
+                             </span>
+                           </button>
+                         </li>
+                       ))}
+                     </ul>
+                     {/* The basis, in the open rather than only in a tooltip. It
+                         is the one claim this feature makes and it is a narrow
+                         one; a player should not have to hover to find out that
+                         nothing here listened to anything. */}
+                     <p className="mt-1 text-[10px] text-gray-400 dark:text-gray-500 leading-snug">
+                       {STATION_BASIS}
+                     </p>
+                   </div>
+                 )}
+
+                 {/* Where a self-stopped station says so, next to the control that
+                     is now off — same reasoning as the radio's own notice. */}
+                 {stationStopped && !station && (
+                   <p className="mt-1.5 pt-1.5 border-t border-gray-100 dark:border-gray-700 flex items-start gap-1.5 text-[11px] text-amber-600 dark:text-amber-400">
+                     <AlertTriangle size={12} className="flex-shrink-0 mt-0.5" />
+                     <span>{stationStopped} Press {STATION_LABEL} to start it again.</span>
+                   </p>
+                 )}
                  {/* The video player's permanent home.
                      Rendered here, with `allow`, rather than left to the IFrame API
                      to create — a cross-origin embed without autoplay permission

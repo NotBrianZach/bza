@@ -237,6 +237,10 @@ export function presetTuning(
     scopes: base.scopes,
     continuation: base.continuation ?? CONTINUATION_OFF,
     radio: base.radio ?? false,
+    // The player's too, and here it also means a preset can never start making
+    // outbound requests on recall. A preset is a set of instructions to the
+    // partner; what else is playing in the room is not one of them.
+    station: base.station ?? false,
     notes: base.notes ?? '',
     // The player's, like `scopes` and for the same reason: a preset is a set of
     // instructions to the partner, and the voice is not one of those — it is how

@@ -48,6 +48,7 @@ function build() {
     join('lib', 'correlate', 'switching.ts'),
     join('lib', 'correlate', 'tuning.ts'),
     join('lib', 'correlate', 'continuation.ts'),
+    join('lib', 'correlate', 'station.ts'),
     join('lib', 'correlate', 'presets.ts'),
     join('lib', 'correlate', 'voice.ts'),
     join('lib', 'correlate', 'naming.ts'),
@@ -82,6 +83,7 @@ function build() {
     switching: require(join(outDir, 'correlate', 'switching.js')),
     tuning:    require(join(outDir, 'correlate', 'tuning.js')),
     carry:     require(join(outDir, 'correlate', 'continuation.js')),
+    station:   require(join(outDir, 'correlate', 'station.js')),
     presets:   require(join(outDir, 'correlate', 'presets.js')),
     voice:     require(join(outDir, 'correlate', 'voice.js')),
     naming:    require(join(outDir, 'correlate', 'naming.js')),
@@ -129,11 +131,13 @@ const {
   TUNING_AXES, AXIS_LIST, ALL_AXIS_IDS, AXIS_STOPS, DEFAULT_WEIGHT, WEIGHT_LABELS, WEIGHT_HINTS,
   DEFAULT_TUNING, DEFAULT_VOICE, normalizeTuning, isNeutral, isUntouched, isProportioned, axisValue, mutedMedia,
   weightedReplyMedia, dueMedium, describeTuning, tuningSummary, getAxis, continuationOf, radioOf,
+  stationOf,
   SHARE_MAX, DEFAULT_SHARE, MUTED_SHARE, shareOf, shareLabel, targetShares, shareStandings,
   owedMedia, allShares, gatesLegality,
   STARTING_SHARES, STARTING_AXES, startingTuning, isStarting,
   NOTES_MAX, readingLengths, restateTuning, CORE_MEDIUM_SHARE,
 } = M.tuning
+const { stationRefusal, stationSeed, STATION_LOOKAHEAD, STATION_BASIS, STATION_LABEL } = M.station
 const {
   MAX_SELF_REPLIES, CONTINUATION_OFF, CONTINUATION_LABELS, CONTINUATION_HINTS,
   CONTINUATION_STOPS, SELF_REPLY_GUIDANCE, moverOf, isSelfReply, selfRepliesSince,
@@ -1960,6 +1964,71 @@ t('the string "false" is off', radioOf(TU({ radio: 'false' })) === false)
 t('the string "true" is off too', radioOf(TU({ radio: 'true' })) === false)
 t('a truthy number is off', radioOf(TU({ radio: 1 })) === false)
 t('junk is off', radioOf(TU({ radio: {} })) === false)
+
+group('station — a radio that picks by listening data, not by reading')
+t('off is the default', stationOf(TU({})) === false)
+t('it is kept when set', stationOf(TU({ station: true })) === true)
+// Same strictness as radio, and for a related reason: this flag starts a loop
+// of outbound requests, so only something that meant `true` turns it on.
+t('the string "true" is off', stationOf(TU({ station: 'true' })) === false)
+t('a truthy number is off', stationOf(TU({ station: 1 })) === false)
+t('station alone is not untouched', !isUntouched(TU({ station: true })))
+t('it is still neutral to the interpreter', isNeutral(TU({ station: true })))
+// The station reaches no prompt at all — there is no interpreter in its loop —
+// so it must not appear in one. Asserted like radio's own exclusion.
+t('it never reaches the system prompt',
+  buildSystemPrompt(GAMES.tag, ALL_MEDIA, ALL_RELATIONS, TU({ station: true })) ===
+  buildSystemPrompt(GAMES.tag, ALL_MEDIA, ALL_RELATIONS, TU({})))
+t('the summary names it', /station on/.test(tuningSummary(TU({ station: true }), ALL_MEDIA)),
+  tuningSummary(TU({ station: true }), ALL_MEDIA))
+// Orthogonal to radio, unlike continuation: both can be on, and the summary has
+// to say both rather than letting one stand in for the other.
+t('it is named alongside keep-going, not instead of it', (() => {
+  const s = tuningSummary(TU({ radio: true, station: true }), ALL_MEDIA)
+  return /keeps going/.test(s) && /station on/.test(s)
+})())
+t('a preset never turns it on', (() => {
+  const base = { ...START, station: false }
+  const recalled = M.presets.presetTuning(M.presets.PARTNER_PRESETS[0], ALL_MEDIA, base)
+  return recalled.station === false
+})())
+t('a preset never turns it off either', (() => {
+  const base = { ...START, station: true }
+  const recalled = M.presets.presetTuning(M.presets.PARTNER_PRESETS[0], ALL_MEDIA, base)
+  return recalled.station === true
+})())
+
+t('it refuses a game with no music', !!stationRefusal(['artwork', 'passage']))
+t('it allows one with music', stationRefusal(['music', 'artwork']) === null)
+// The basis sentence is the one claim this feature makes, and it is narrow. A
+// label that said "sounds like" would be asserting an ear nothing here has.
+t('the basis does not claim to have heard anything',
+  !/sounds? like/i.test(STATION_BASIS) && /listeners/.test(STATION_BASIS), STATION_BASIS)
+t('the lookahead is short enough that the station follows the listener',
+  STATION_LOOKAHEAD > 0 && STATION_LOOKAHEAD <= 6)
+
+const MUSIC = (id, extra = {}) => ({
+  medium: 'music', id, title: id, attribution: 'somebody',
+  perceptible: { kind: 'audio', url: `https://x/${id}.mp3` },
+  origin: 'catalogue', meta: {}, ...extra,
+})
+const PAINTING = { medium: 'artwork', id: 'art1', title: 'a painting',
+  perceptible: { kind: 'image', url: 'https://x/a.jpg', alt: '' }, origin: 'catalogue', meta: {} }
+
+t('the seed is the LAST audible music item', stationSeed([MUSIC('a'), MUSIC('b')])?.trackId === 'b')
+// Walked backwards rather than taking the final item, because the chain's last
+// item is often not music and cannot seed a music flow.
+t('a trailing painting does not block it', stationSeed([MUSIC('a'), PAINTING])?.trackId === 'a')
+t('no music at all has no seed', stationSeed([PAINTING]) === null)
+t('an empty chain has no seed', stationSeed([]) === null)
+t('the artist rides along when the row carries one',
+  stationSeed([MUSIC('a', { meta: { artistId: '399' } })])?.artistId === '399')
+t('and is null when it does not', stationSeed([MUSIC('a')])?.artistId === null)
+// A music row with no audio is a catalogue result that had no preview. It cannot
+// seed a station because it cannot be played either.
+t('music with no audio is not a seed', stationSeed([
+  { ...MUSIC('a'), perceptible: { kind: 'text', body: 'lyrics' } },
+]) === null)
 
 const FULL_RUN = (() => {
   const run = Array.from({ length: MAX_SELF_REPLIES }, (_, i) =>

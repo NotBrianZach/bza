@@ -545,6 +545,33 @@ export interface Tuning {
    */
   radio: boolean
   /**
+   * The station — songs chosen by listening data instead of by the partner.
+   *
+   * A different thing from `radio` in the one way that matters: **the
+   * interpreter is not involved at all.** `radio` is the partner answering
+   * itself, so every song is a reading of the one before it and costs a model
+   * call. The station is Deezer's own artist flow — what people who listen to
+   * this listen to next — so a song costs one HTTP request and nothing else.
+   *
+   * It plays BESIDE the chain and writes no turns, which is deliberate and is
+   * the honest placement. A turn in this engine is a claimed connection with a
+   * reading, judged; a station pick has no claim and nothing judged it. Writing
+   * one as a turn would mean inventing a relation and a reading for a pairing
+   * that came from a database of listening habits — exactly the fabrication the
+   * rest of this section refuses. So the chain stays what it is and the station
+   * feeds the player's queue.
+   *
+   * Named `station` and not `similarRadio` because what it actually is, is a
+   * radio station: it plays, it keeps playing, nothing is being argued. The
+   * label a player sees says where the picks come from.
+   *
+   * Excluded from `describeTuning` like `radio` and `continuation`, and here
+   * the reason is stronger than theirs: there is no prompt to exclude it from.
+   * It is in `Tuning` because it is a thing the player asks for and adjusts
+   * between turns, and that plumbing already exists.
+   */
+  station: boolean
+  /**
    * Whatever the controls above cannot say, in the player's own words.
    *
    * Seven axes, twelve shares and a scope per medium is a lot of expressive range
@@ -592,7 +619,7 @@ export const NOTES_MAX = 600
 export const DEFAULT_VOICE: TuningVoice = { persona: 'librarian', engine: 'ai' }
 
 export const DEFAULT_TUNING: Tuning = {
-  shares: {}, axes: {}, scopes: {}, continuation: CONTINUATION_OFF, radio: false, notes: '',
+  shares: {}, axes: {}, scopes: {}, continuation: CONTINUATION_OFF, radio: false, station: false, notes: '',
   voice: { ...DEFAULT_VOICE },
 }
 
@@ -712,6 +739,10 @@ export function startingTuning(media: MediumId[], coreMedia: MediumId[] = []): T
     // the player's first move optional, and the first move is the seed everything
     // after it answers.
     radio: false,
+    // Off too. A game that started playing a station would have started making
+    // noise before the player had offered anything, and the first move is the
+    // seed the whole chain answers.
+    station: false,
     // A new game starts with nothing in the player's own words, and that is not a
     // placeholder for something better — an empty field is the only honest default
     // for a free-text instruction. Pre-filling it would put words in the prompt
@@ -757,14 +788,14 @@ const clampInt = (v: unknown, lo: number, hi: number): number | null => {
  */
 export function normalizeTuning(raw: unknown, media: MediumId[]): Tuning {
   const out: Tuning = {
-    shares: {}, axes: {}, scopes: {}, continuation: CONTINUATION_OFF, radio: false, notes: '',
+    shares: {}, axes: {}, scopes: {}, continuation: CONTINUATION_OFF, radio: false, station: false, notes: '',
     voice: { ...DEFAULT_VOICE },
   }
   if (!raw || typeof raw !== 'object') return out
 
   const src = raw as {
     shares?: unknown; weights?: unknown; axes?: unknown; scopes?: unknown
-    continuation?: unknown; radio?: unknown; notes?: unknown; voice?: unknown
+    continuation?: unknown; radio?: unknown; station?: unknown; notes?: unknown; voice?: unknown
   }
 
   /*
@@ -809,6 +840,10 @@ export function normalizeTuning(raw: unknown, media: MediumId[]): Tuning {
   // lifts a server-side cap: a stray "false" string or a 0 arriving from a form
   // must read as off, and only something that meant it gets through.
   out.radio = src.radio === true
+
+  // Same strictness, and for a related reason: this one starts outbound requests
+  // on a loop. Only something that meant `true` turns it on.
+  out.station = src.station === true
 
   // `shares` wins outright. A legacy `weights` object is upgraded only in its
   // absence, so a tuning saved today and one saved last week both come out on the
@@ -884,6 +919,7 @@ export function isUntouched(tuning: Tuning): boolean {
   return isNeutral(tuning)
     && (tuning.continuation ?? CONTINUATION_OFF) === CONTINUATION_OFF
     && !radioOf(tuning)
+    && !stationOf(tuning)
 }
 
 /**
@@ -900,6 +936,7 @@ export function isStarting(tuning: Tuning, media: MediumId[], coreMedia: MediumI
   const start = startingTuning(media, coreMedia)
   if (continuationOf(tuning) !== continuationOf(start)) return false
   if (radioOf(tuning) !== radioOf(start)) return false
+  if (stationOf(tuning) !== stationOf(start)) return false
   if (!isUnscoped(tuning.scopes ?? {})) return false
   if ((tuning.notes ?? '').trim() !== start.notes) return false
   if (media.some(m => shareOf(tuning, m) !== shareOf(start, m))) return false
@@ -927,6 +964,11 @@ export function continuationOf(tuning: Tuning): ContinuationDepth {
 /** Whether the partner has been asked to carry on without being asked again. */
 export function radioOf(tuning: Tuning): boolean {
   return tuning.radio === true
+}
+
+/** Whether the listening-data station is feeding the queue. See `Tuning.station`. */
+export function stationOf(tuning: Tuning): boolean {
+  return tuning.station === true
 }
 
 export function shareOf(tuning: Tuning, medium: MediumId): number {
@@ -1365,6 +1407,12 @@ export function tuningSummary(tuning: Tuning, media: MediumId[]): string {
     const carry = continuationOf(tuning)
     if (carry > CONTINUATION_OFF) bits.push(`carries on ${CONTINUATION_LABELS[carry].toLowerCase()}`)
   }
+
+  // Alongside the above rather than instead of it, unlike radio-vs-continuation.
+  // Those two are rival answers to "who takes the next turn"; the station answers
+  // "what else is playing" and is orthogonal to both — you can have a partner
+  // carrying on AND a station filling the gaps between its answers.
+  if (stationOf(tuning)) bits.push('station on')
 
   // The note itself, truncated, rather than the words "has a note". The summary is
   // what a player sees without opening the panel, and the whole value of a

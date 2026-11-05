@@ -86,8 +86,126 @@ function mapDeezer(r: any): Offering | null {
       year,
       coverImage: r.album?.cover_medium ?? r.album?.cover ?? null,
       explicit: r.explicit_lyrics ? 'yes' : null,
+      /**
+       * Kept so `similarMusic` can seed a radio in one request instead of two.
+       *
+       * Without it, going from a track to its artist's radio means a
+       * `/track/{id}` lookup first, which doubles the cost of every song a
+       * radio picks. Rows written before this exist without it, which is why
+       * `similarMusic` still accepts a track id and looks the artist up.
+       */
+      artistId: r.artist?.id != null ? String(r.artist.id) : null,
     },
   }
+}
+
+/**
+ * Tracks that go with this one, as Deezer's listeners pair them.
+ *
+ * ── What this is, stated precisely, because the label matters ─────────────
+ *
+ * `/artist/{id}/radio` is Deezer's own "flow" for an artist: what people who
+ * listen to that artist listen to next. It is **co-listening**, not acoustic
+ * analysis — nothing here has examined a waveform, and a key or a tempo is
+ * never consulted. So this must not be presented as "songs that sound like
+ * this". It is "artists that go with this one", which is what a traditional
+ * radio station has always actually been, and it is a genuine answer rather
+ * than a model's guess about two records it has never heard.
+ *
+ * The distinction is not pedantry here: the rest of this section goes to some
+ * length to keep a claimed connection separable from a real one, and a feature
+ * that claimed to hear similarity would be the first thing in it that lied.
+ *
+ * ── Why the artist and not the track ─────────────────────────────────────
+ *
+ * Deezer has no track-level radio. The artist's flow is what exists, and it is
+ * well suited: measured on Radiohead, 25 tracks came back spanning 20 distinct
+ * artists with only 3 by the seed — a radio rather than an album playthrough.
+ * No shuffling or artist-capping is applied on top, because the upstream mix is
+ * already better than anything this function could impose on it.
+ *
+ * ── Drift ────────────────────────────────────────────────────────────────
+ *
+ * `drift` hops to a related artist first and takes THEIR radio, which is how a
+ * station moves somewhere over an hour instead of circling one neighbourhood.
+ * Caller's choice rather than automatic, because the two are different
+ * intentions: topping up a queue wants the seed's own flow, and a listener who
+ * has heard twenty of these wants to be somewhere else.
+ */
+export interface SimilarMusic {
+  tracks: Offering[]
+  /** Whose flow these came from, so the UI can say where they came from. */
+  fromArtist: string | null
+  /** True when `drift` moved off the seed artist before asking. */
+  drifted: boolean
+}
+
+export async function similarMusic(
+  seed: { trackId?: string; artistId?: string },
+  opts: { exclude?: string[]; limit?: number; drift?: boolean } = {},
+): Promise<SimilarMusic> {
+  let artistId = seed.artistId ?? null
+
+  // No artist on the seed — look it up. One extra request, and only for rows
+  // written before `meta.artistId` existed.
+  if (!artistId && seed.trackId) {
+    const parsed = splitId(seed.trackId)
+    // An iTunes-era id cannot seed this: Deezer's radio is keyed on a Deezer
+    // artist, and matching across catalogues by name is a guess this would then
+    // present as a fact. The caller gets an empty result and can say so.
+    if (!parsed || parsed.source !== 'deezer') return { tracks: [], fromArtist: null, drifted: false }
+    const track = await getJson(DEEZER_PROVIDER, `${DEEZER}/track/${encodeURIComponent(parsed.raw)}`)
+    if (track?.error && Object.keys(track.error).length > 0) {
+      return { tracks: [], fromArtist: null, drifted: false }
+    }
+    artistId = track?.artist?.id != null ? String(track.artist.id) : null
+  }
+  if (!artistId) return { tracks: [], fromArtist: null, drifted: false }
+
+  let drifted = false
+  if (opts.drift) {
+    const related = await getJson(DEEZER_PROVIDER, `${DEEZER}/artist/${encodeURIComponent(artistId)}/related?limit=20`)
+    const neighbours = (related?.data ?? []).filter((a: any) => a?.id != null)
+    if (neighbours.length > 0) {
+      // Deezer returns these ranked by closeness. Taking the first would make
+      // every drift from the same artist land in the same place, so the choice
+      // is spread over the list — and `rank` is not used, because "most
+      // popular neighbour" is how a station converges on the hits.
+      const pick = neighbours[Math.floor(Math.random() * neighbours.length)]
+      artistId = String(pick.id)
+      drifted = true
+    }
+    // No neighbours: fall through to the seed's own radio rather than failing.
+    // A radio that stops because it could not drift is worse than one that
+    // stays put.
+  }
+
+  const data = await getJson(DEEZER_PROVIDER, `${DEEZER}/artist/${encodeURIComponent(artistId)}/radio`)
+  if (data?.error && Object.keys(data.error).length > 0) {
+    throw new OfferingError(
+      `Deezer would not start a radio from that (${data.error.type ?? 'error'}).`,
+      502, DEEZER_PROVIDER, 200,
+    )
+  }
+
+  const excluded = new Set(opts.exclude ?? [])
+  const tracks: Offering[] = []
+  const seen = new Set<string>()
+  for (const row of (data?.data ?? [])) {
+    const o = mapDeezer(row)
+    // `mapDeezer` already drops anything with no preview, which is the same
+    // test the player's queue applies — so nothing silently enters a queue
+    // that cannot play it.
+    if (!o || excluded.has(o.id) || seen.has(o.id)) continue
+    seen.add(o.id)
+    tracks.push(o)
+    if (opts.limit && tracks.length >= opts.limit) break
+  }
+
+  const fromArtist = (data?.data ?? []).find((r: any) => String(r?.artist?.id) === artistId)
+    ?.artist?.name ?? null
+
+  return { tracks, fromArtist, drifted }
 }
 
 async function searchDeezer(term: string, limit: number): Promise<Offering[]> {

@@ -563,9 +563,17 @@ export default function TuningPanel({
               // voice says nothing to it either way — clearing it would reset a
               // presentation choice as a side effect of neutralising the
               // instructions, which is not what the label promises.
+              //
+              // `station` is carried through for the same reason and it is the
+              // closer call, since `radio` right beside it is cleared. The two
+              // differ in what they govern: radio decides who takes the next
+              // turn, which is an instruction, while the station is music
+              // playing in the room and reaches no interpreter at all. Stopping
+              // the music is not what "answer in anything" promises, and the
+              // station has its own switch a few rows up.
               onClick={() => onChange({
                 shares: {}, axes: {}, scopes: {}, continuation: CONTINUATION_OFF,
-                radio: false, notes: '', voice: tuning.voice,
+                radio: false, station: tuning.station, notes: '', voice: tuning.voice,
               })}
               disabled={disabled}
               className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors disabled:opacity-50"

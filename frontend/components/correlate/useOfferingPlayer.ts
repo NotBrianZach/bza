@@ -42,6 +42,14 @@ export interface OfferingPlayer {
   /** Position in the active queue, or -1 when playing a one-off. */
   queueIndex: number
   queueLength: number
+  /**
+   * The queue itself, so a caller can show what is coming and let it be clicked.
+   *
+   * The length alone was enough while the only queue was the visible chain — the
+   * list was already on the page. A station queues tracks that appear nowhere
+   * else on screen, where "4 more" would be the only evidence they exist.
+   */
+  queue: Offering[]
   playOne: (offering: Offering) => void
   playQueue: (offerings: Offering[], startIndex?: number) => void
   /**
@@ -196,6 +204,19 @@ export function useOfferingPlayer(opts: OfferingPlayerOptions = {}): OfferingPla
   const [progress, setProgress] = useState(0)
   const [queueIndex, setQueueIndex] = useState(-1)
   const [queueLength, setQueueLength] = useState(0)
+  /**
+   * The queue itself, not only its length.
+   *
+   * Exposed so a caller can SHOW what is coming and let it be clicked. The
+   * length alone was enough while the only queue was the visible chain — the
+   * list was already on the page. A station queues things that are nowhere else
+   * on screen, so "4 more" would be the only evidence they existed.
+   *
+   * Mirrors `queueRef` rather than replacing it: the ref is what the media
+   * listeners and the async `playAt` read, and those must not depend on a
+   * render having happened.
+   */
+  const [queue, setQueue] = useState<Offering[]>([])
   const [lookahead, setLookahead] = useState(0)
   const [via, setVia] = useState<'full' | 'preview' | null>(null)
   /** Readable from the media listeners, which are bound once and never rebound. */
@@ -321,6 +342,7 @@ export function useOfferingPlayer(opts: OfferingPlayerOptions = {}): OfferingPla
     const playable = offerings.filter(o => !!audioUrl(o))
     queueRef.current = playable
     setQueueLength(playable.length)
+    setQueue(playable)
     if (playable.length === 0) { setError('Nothing in this chain has audio to play.'); return }
     playAt(Math.max(0, Math.min(startIndex, playable.length - 1)))
   }, [playAt])
@@ -333,6 +355,7 @@ export function useOfferingPlayer(opts: OfferingPlayerOptions = {}): OfferingPla
     const startAt = queueRef.current.length
     queueRef.current = [...queueRef.current, ...fresh]
     setQueueLength(queueRef.current.length)
+    setQueue(queueRef.current)
 
     // Nothing has played yet, or the queue ran dry while we were fetching: either
     // way the appended item is the one to play. Otherwise it just waits its turn,
@@ -378,6 +401,7 @@ export function useOfferingPlayer(opts: OfferingPlayerOptions = {}): OfferingPla
     indexRef.current = startIndex
     driedRef.current = false
     setQueueLength(playable.length)
+    setQueue(playable)
     setQueueIndex(playable.length > 1 ? startIndex : -1)
     setLookahead(playable.length - 1 - startIndex)
     setCurrent(offering)
@@ -461,13 +485,14 @@ export function useOfferingPlayer(opts: OfferingPlayerOptions = {}): OfferingPla
     setCurrent(null)
     setQueueIndex(-1)
     setQueueLength(0)
+    setQueue([])
     setLookahead(0)
     setProgress(0)
     setVia(null)
   }, [])
 
   return {
-    current, paused, error, progress, queueIndex, queueLength, lookahead, via,
+    current, paused, error, progress, queueIndex, queueLength, queue, lookahead, via,
     playOne, playQueue, append, jumpTo, cue, toggle, stop, advance, skip, previous,
     fallbackToPreview,
   }
