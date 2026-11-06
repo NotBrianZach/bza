@@ -2267,8 +2267,28 @@ export default function CorrelationBoard({
                         alternates between whole records and thirty-second
                         fragments reads as a broken player unless it says so. */}
                     {playingIndex >= 0
-                      ? `${playingIndex + 1} of ${audible.length} · ${player.current?.title ?? ''}`
-                        + (player.via === 'full' ? ' · in full' : player.via ? ' · 30s preview' : '')
+                      ? <>
+                          {`${playingIndex + 1} of ${audible.length} · ${player.current?.title ?? ''}`}
+                          {/* The backend, titled with what it means for leaving
+                              the tab. Full-length playback is a YouTube embed
+                              and YouTube stops embeds while the page is hidden —
+                              so switching away silences a full track and not a
+                              preview. Stated here rather than left to be
+                              discovered as "the audio keeps stopping": it is the
+                              one difference between the two backends a listener
+                              can feel, and the next track picks the one that
+                              works when the tab is already hidden. */}
+                          {player.via === 'full' && (
+                            <span title="Playing in full through YouTube, which stops embedded playback while the tab is hidden. Switch away and this one pauses; the next will play as a preview, which does not.">
+                              {' · in full'}
+                            </span>
+                          )}
+                          {player.via === 'preview' && (
+                            <span title="A 30-second catalogue preview. These keep playing with the tab in the background or the screen locked.">
+                              {' · 30s preview'}
+                            </span>
+                          )}
+                        </>
                       : `${audible.length} of ${chain.length} on this branch have audio`}
                   </p>
                   {playingIndex >= 0 && (

@@ -260,6 +260,28 @@ export function useOfferingPlayer(opts: OfferingPlayerOptions = {}): OfferingPla
     const full = fullRef.current
     if (!resolve || !full) { preview(); return }
 
+    /**
+     * Hidden tab: take the preview and do not even ask for the video.
+     *
+     * A YouTube embed will not play while the page is not visible — that is
+     * enforced by YouTube, not by anything here, and no attribute or API call
+     * changes it. So resolving one for a track that is starting *now*, while
+     * backgrounded, buys a silent player: the queue advances, the iframe
+     * refuses, and the run has stopped making noise while looking like it is
+     * running.
+     *
+     * The `<audio>` element has no such restriction. It keeps playing with the
+     * tab backgrounded and the screen locked, which is what makes a run survive
+     * being switched away from at all.
+     *
+     * This is a per-TRACK decision taken at its start, which is why it is not
+     * the dishonest version of itself. Nothing swaps mid-record: a full track
+     * already playing is left alone to be stopped by the browser, and the next
+     * one picks whichever backend can actually be heard. Come back to the tab
+     * and the track after that resolves in full again.
+     */
+    if (typeof document !== 'undefined' && document.hidden) { preview(); return }
+
     void (async () => {
       let videoId: string | null = null
       try {
@@ -336,6 +358,100 @@ export function useOfferingPlayer(opts: OfferingPlayerOptions = {}): OfferingPla
   useEffect(() => () => {
     audioRef.current?.pause()
     audioRef.current = null
+  }, [])
+
+  /**
+   * Tell the operating system what is playing, and let it drive.
+   *
+   * ── This is most of the answer to "audio stops when I switch tabs" ───────
+   *
+   * A page with audio and no Media Session is, to a phone, a background tab
+   * that happens to be making noise — and a background tab is the first thing
+   * an OS suspends when it wants the memory or the battery. Registering
+   * metadata and action handlers is what moves the page into the category the
+   * platform keeps alive: it becomes the thing in the notification shade, the
+   * thing on the lock screen, the thing the headphone button talks to.
+   *
+   * The handlers are not decoration either. Without `nexttrack` the OS controls
+   * show a dead skip button, and on Android the absence of handlers is part of
+   * what makes a session look abandonable.
+   *
+   * Artwork is passed at the sizes the catalogue gives rather than one "best"
+   * URL, because the shade, the lock screen and a car head unit all ask for
+   * different ones and a single size gets scaled badly by whichever asked for
+   * something else.
+   *
+   * ── What this does NOT fix, and cannot ──────────────────────────────────
+   *
+   * A track playing in full through the YouTube embed still stops when the page
+   * is hidden. That is YouTube's restriction on embedded playback, applied in
+   * their iframe, and no metadata here reaches it. What the hidden-tab branch in
+   * `playAt` does is make sure the NEXT track takes the backend that works.
+   *
+   * Guarded on the API existing: Safari below 15 and a few others have no
+   * `mediaSession`, where every line here would throw on a page that is
+   * otherwise fine.
+   */
+  useEffect(() => {
+    if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return
+    const ms = navigator.mediaSession
+
+    if (!current) {
+      // Cleared rather than left behind. A lock screen still offering the last
+      // track of a run that has been stopped is a control that does nothing.
+      ms.metadata = null
+      ms.playbackState = 'none'
+      return
+    }
+
+    const art = typeof current.meta?.coverImage === 'string'
+      ? current.meta.coverImage
+      : typeof current.meta?.thumb === 'string' ? current.meta.thumb : null
+
+    ms.metadata = new MediaMetadata({
+      title: current.title,
+      artist: current.attribution ?? '',
+      album: typeof current.meta?.album === 'string' ? current.meta.album : '',
+      artwork: art
+        ? [
+            { src: art, sizes: '96x96', type: 'image/jpeg' },
+            { src: art, sizes: '256x256', type: 'image/jpeg' },
+            { src: art, sizes: '512x512', type: 'image/jpeg' },
+          ]
+        : [],
+    })
+    ms.playbackState = paused ? 'paused' : 'playing'
+  }, [current, paused])
+
+  /**
+   * The OS controls, bound once.
+   *
+   * Separate from the metadata effect and with an empty dependency list, so the
+   * handlers are registered on mount and never churn. They read through refs,
+   * which is why they can be bound once at all — rebinding them on every track
+   * would be four `setActionHandler` calls per song for no gain, and on some
+   * platforms a brief window with no handler at all.
+   */
+  const controlsRef = useRef({ toggle: () => {}, skip: () => {}, previous: () => {}, stop: () => {} })
+  useEffect(() => {
+    if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return
+    const ms = navigator.mediaSession
+    const bind = (action: MediaSessionAction, fn: () => void) => {
+      try { ms.setActionHandler(action, fn) } catch {
+        // An unsupported action throws rather than being ignored on some
+        // browsers. One missing control is not a reason to lose the rest.
+      }
+    }
+    bind('play', () => controlsRef.current.toggle())
+    bind('pause', () => controlsRef.current.toggle())
+    bind('nexttrack', () => controlsRef.current.skip())
+    bind('previoustrack', () => controlsRef.current.previous())
+    bind('stop', () => controlsRef.current.stop())
+    return () => {
+      for (const a of ['play', 'pause', 'nexttrack', 'previoustrack', 'stop'] as MediaSessionAction[]) {
+        try { ms.setActionHandler(a, null) } catch { /* see above */ }
+      }
+    }
   }, [])
 
   const playQueue = useCallback((offerings: Offering[], startIndex = 0) => {
@@ -490,6 +606,14 @@ export function useOfferingPlayer(opts: OfferingPlayerOptions = {}): OfferingPla
     setProgress(0)
     setVia(null)
   }, [])
+
+  /**
+   * Kept current for the OS handlers, which are bound once and read through
+   * here. Assigned during render like `viaRef` above, for the same reason: the
+   * thing reading it runs outside React — a lock-screen button press — long
+   * after the render that produced these closures.
+   */
+  controlsRef.current = { toggle, skip, previous, stop }
 
   return {
     current, paused, error, progress, queueIndex, queueLength, queue, lookahead, via,
