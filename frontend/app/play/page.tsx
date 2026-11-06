@@ -3,7 +3,7 @@
 import { Suspense, useCallback, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, ChevronDown, Loader2, RotateCcw, Shuffle, Trash2 } from 'lucide-react'
+import { ArrowLeft, ChevronDown, Loader2, Plus, RotateCcw, Shuffle, Trash2 } from 'lucide-react'
 import { ThemeToggle } from '@/components/ThemeProvider'
 import { ensureSession } from '@/lib/anonAuth'
 import { track } from '@/lib/analytics'
@@ -23,6 +23,23 @@ const byRecency = (a: CorrelationSession, b: CorrelationSession) =>
   b.updated_at.localeCompare(a.updated_at)
 
 /**
+ * How many games to list before collapsing the rest.
+ *
+ * "Start a game" sits BELOW your games, which is the right order — a returning
+ * player wants to get back into one, and making them scroll past five cards of
+ * games they are not playing to reach the one they are would be worse. But the
+ * list had no bound while `listSessions` returns thirty, so the cost of starting
+ * a new game grew with every game you had ever started: thirty rows of scroll
+ * to reach a control that had not moved.
+ *
+ * Capping the list fixes it in the direction that keeps both reachable, where
+ * reordering the page would only have swapped which one was buried. Six because
+ * it covers the handful anybody is actually mid-way through and keeps the picker
+ * inside the first scroll on a laptop.
+ */
+const VISIBLE_GAMES = 6
+
+/**
  * AI Play Along — correlation games.
  *
  * There is no connect step and no account gate: the only session is the anonymous
@@ -38,6 +55,8 @@ function PlayPageInner() {
   const [sessions, setSessions] = useState<CorrelationSession[]>([])
   const [trashed, setTrashed] = useState<CorrelationSession[]>([])
   const [showTrash, setShowTrash] = useState(false)
+  /** Whether the games list is showing everything past `VISIBLE_GAMES`. */
+  const [showAllGames, setShowAllGames] = useState(false)
   const [media, setMedia] = useState<MediumId[]>(['music'])
   const [loading, setLoading] = useState(true)
   const [starting, setStarting] = useState<string | null>(null)
@@ -263,9 +282,39 @@ function PlayPageInner() {
           <>
             {sessions.length > 0 && (
               <section className="mb-10">
-                <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">Your games</h2>
+                <div className="flex items-baseline gap-2 mb-3">
+                  <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                    Your games
+                    {/* The count, so a collapsed list says what it is holding
+                        back rather than looking like the whole of it. */}
+                    {sessions.length > VISIBLE_GAMES && (
+                      <span className="ml-1.5 font-normal text-gray-400 dark:text-gray-500">
+                        {sessions.length}
+                      </span>
+                    )}
+                  </h2>
+                  {/* A way down to the picker that does not depend on how long
+                      this list is. Capping the list bounds the scroll; this
+                      removes it, which is the other half of the complaint — the
+                      picker was always below your games, and with any number of
+                      them that is still a scroll.
+
+                      A scroll rather than a jump, and rather than moving the
+                      picker up here: the picker is where it belongs on the page,
+                      and landing on it with the list still above means a player
+                      can see where they came from. `scrollIntoView` and not an
+                      `#anchor` href, because the href would put a fragment in
+                      the URL that survives a reload and a share. */}
+                  <button
+                    onClick={() => document.getElementById('start-a-game')
+                      ?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                    className="ml-auto flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+                  >
+                    <Plus size={13} /> New game
+                  </button>
+                </div>
                 <ul className="space-y-2">
-                  {sessions.map(s => {
+                  {(showAllGames ? sessions : sessions.slice(0, VISIBLE_GAMES)).map(s => {
                     const game = getGame(s.mode)
                     const accent = ACCENT_CLASSES[game?.accent ?? 'indigo']
                     const visited: string[] = Array.isArray(s.world_state?.mediaVisited) ? s.world_state.mediaVisited : []
@@ -301,6 +350,20 @@ function PlayPageInner() {
                     )
                   })}
                 </ul>
+                {/* The expander, naming what it is hiding. "Show more" would
+                    make a player guess whether the game they are looking for is
+                    behind it; "17 older games" answers that without a click. */}
+                {sessions.length > VISIBLE_GAMES && (
+                  <button
+                    onClick={() => setShowAllGames(v => !v)}
+                    className="mt-2 flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+                  >
+                    <ChevronDown size={13} className={`transition-transform ${showAllGames ? 'rotate-180' : ''}`} />
+                    {showAllGames
+                      ? 'Show fewer'
+                      : `${sessions.length - VISIBLE_GAMES} older game${sessions.length - VISIBLE_GAMES === 1 ? '' : 's'}`}
+                  </button>
+                )}
               </section>
             )}
 
@@ -358,7 +421,12 @@ function PlayPageInner() {
             )}
 
             {error && <p className="mb-3 text-xs text-red-500 dark:text-red-400">{error}</p>}
-            <GamePicker available={media} onStart={startGame} starting={starting} />
+            {/* The scroll target for "New game" above. On the wrapper rather
+                than inside GamePicker, so the picker stays a component that
+                knows nothing about the page it sits on. */}
+            <div id="start-a-game" className="scroll-mt-4">
+              <GamePicker available={media} onStart={startGame} starting={starting} />
+            </div>
           </>
         )}
       </main>
