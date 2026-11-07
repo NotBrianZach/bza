@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserFromToken, checkQuota, logUsage } from '@/lib/apiQuota'
 import { librarianContext, sectionsNeeded } from '@/lib/librarian/context'
+import { describePage, pageContext } from '@/lib/librarian/page'
 
 /**
  * The librarian.
@@ -46,7 +47,7 @@ export async function POST(req: NextRequest) {
   const {
     messages, books, concepts, personaPrompt,
     model: requestModel, provider: requestProvider,
-    includeFeed, includePractice,
+    includeFeed, includePractice, pathname,
   }: {
     messages: ChatMessage[]
     books: BookContext[]
@@ -67,6 +68,18 @@ export async function POST(req: NextRequest) {
      */
     includeFeed?: boolean
     includePractice?: boolean
+    /**
+     * Where the reader is, as a pathname, from the dock that follows them.
+     *
+     * Resolved server-side by `lib/librarian/page.ts` rather than taken as a
+     * ready-made description, so a client cannot hand the model a sentence
+     * about what it can see. A path is a fact; a description is a claim, and
+     * this is the one module whose job is to keep those apart.
+     *
+     * Omitted by the drawer on the home page, which has always been the
+     * library and says so without being told.
+     */
+    pathname?: string
   } = await req.json()
 
   if (!messages?.length) return NextResponse.json({ error: 'messages required' }, { status: 400 })
@@ -88,10 +101,20 @@ export async function POST(req: NextRequest) {
    * message that had nothing to do with either feature.
    */
   const needed = sectionsNeeded(messages)
+  /**
+   * The page the dock is standing on, and what it is owed.
+   *
+   * `wants` is OR'd with the conversation scan rather than replacing it: being
+   * on /suggest is reason enough to load the feed, because "why this one?" is
+   * the commonest question anybody standing there has and it contains none of
+   * the vocabulary `sectionsNeeded` looks for. An explicit `includeFeed:false`
+   * still wins over both — a caller that says no means no.
+   */
+  const page = pathname ? pageContext(pathname) : null
   const extraContext = userId
     ? await librarianContext(userId, {
-        feed: includeFeed ?? needed.feed,
-        practice: includePractice ?? needed.practice,
+        feed: includeFeed ?? (needed.feed || !!page?.wants.feed),
+        practice: includePractice ?? (needed.practice || !!page?.wants.practice),
       }).catch(() => '')
     : ''
 
@@ -112,7 +135,7 @@ export async function POST(req: NextRequest) {
 Their library (${books.length} text${books.length !== 1 ? 's' : ''}):
 ${bookList}
 
-${conceptList ? `Relevant concepts from their library:\n${conceptList}\n` : ''}${extraContext ? `\n${extraContext}\n` : ''}
+${conceptList ? `Relevant concepts from their library:\n${conceptList}\n` : ''}${extraContext ? `\n${extraContext}\n` : ''}${page ? `\n${describePage(page)}\n` : ''}
 Help them find connections between books, recall what they've read, explore ideas, and think deeper. When referencing content, cite the book title and page number. Keep responses concise and conversational.
 
 You can also discuss their suggested feed and their maths practice when the sections above are present — including why a particular item appeared, what their feed is or is not covering, and what they are ready to practise or blocked on. Connect the three where there is a real connection: an article that bears on something they are reading, or a feed topic that a concept in their practice would help them read critically. Where there is no real connection, do not manufacture one.`

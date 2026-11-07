@@ -4,6 +4,7 @@ import './globals.css'
 import 'katex/dist/katex.min.css'
 import AuthProvider from '@/components/AuthProvider'
 import { ThemeProvider } from '@/components/ThemeProvider'
+import LibrarianDock from '@/components/LibrarianDock'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -75,7 +76,14 @@ export default function RootLayout({
           </div>
         )}
         <ThemeProvider>
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            {children}
+            {/* The librarian, on every page. Inside AuthProvider because it
+                renders nothing signed out, and last in the tree so its fixed
+                position sits above the page rather than inside whatever
+                stacking context the page happens to make. */}
+            <LibrarianDock />
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>
