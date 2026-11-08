@@ -78,7 +78,48 @@ function build() {
   return require(join(outDir, 'gating.js'))
 }
 
+/**
+ * lib/librarian/page.ts, compiled whole.
+ *
+ * No slice and no markers, because that module imports nothing at all — which
+ * is itself the design and worth noticing if it ever stops being true. The day
+ * page.ts needs a store, this build breaks loudly and the right fix is to ask
+ * why a module whose entire input is a pathname grew a dependency.
+ */
+function buildPage() {
+  const src = readFileSync(join(FRONTEND, 'lib', 'librarian', 'page.ts'), 'utf8')
+  if (/^\s*import\s/m.test(src)) {
+    console.error(
+      'FATAL: lib/librarian/page.ts has grown an import.\n' +
+      'It resolved a pathname and nothing else, which is why this harness could ' +
+      'compile it whole. Map the import here, or ask why it is there.',
+    )
+    process.exit(1)
+  }
+  const file = join(outDir, 'page.ts')
+  writeFileSync(file, src)
+
+  const tsc = join(FRONTEND, 'node_modules', 'typescript', 'bin', 'tsc')
+  try {
+    execFileSync(process.execPath, [
+      tsc, file,
+      '--outDir', outDir,
+      '--module', 'commonjs',
+      '--target', 'es2020',
+      '--moduleResolution', 'node',
+      '--esModuleInterop',
+      '--skipLibCheck',
+    ], { cwd: FRONTEND, stdio: 'pipe' })
+  } catch (e) {
+    const out = `${e.stdout ?? ''}${e.stderr ?? ''}`
+    if (out.trim()) console.error(out.trim())
+  }
+  const require = createRequire(import.meta.url)
+  return require(join(outDir, 'page.js'))
+}
+
 const M = build()
+const P = buildPage()
 
 // ── harness ──────────────────────────────────────────────────────────────────
 
@@ -251,6 +292,70 @@ test('the notice names both when both are missing, and reads as plural', () => {
   const n = M.notLoadedNotice({ feed: true, practice: true })
   assert(/suggested feed/.test(n) && /practice state/.test(n), n)
   assert(/them/.test(n), `plural phrasing expected: ${n}`)
+})
+
+// ═══════════════════════════════════════════════════════════════════════════
+// pageContext — the surface, and the circle it exists to prevent
+// ═══════════════════════════════════════════════════════════════════════════
+
+test('the dock inside a book is told it cannot see the page, and where to go', () => {
+  const r = P.pageContext('/books/41')
+  assert(/cannot see which book/.test(r.blind), r.blind)
+  assert(/chat inside the reader/.test(r.blind), 'the dock must redirect: ' + r.blind)
+})
+
+test("the reader's own chat is NOT sent to the reader's own chat", () => {
+  // The regression this file exists to catch. Library scope lives INSIDE the
+  // panel the dock's notice points at, so inheriting that notice would have
+  // the librarian telling someone to go and use the chat they are typing into.
+  // It reads as competent advice, which is what makes it expensive.
+  const r = P.pageContext('/books/41', 'reader')
+  assert(!/chat inside the reader/.test(r.blind), `circular redirect: ${r.blind}`)
+  assert(/this is the one/i.test(r.blind), `must claim the redirect: ${r.blind}`)
+  assert(/switch/i.test(r.blind), `must name the remedy that exists: ${r.blind}`)
+})
+
+test('the reader surface still refuses the page text', () => {
+  // The scope is narrower, not more trusting. Nothing here sends page text,
+  // so an answer about the passage would be invented either way.
+  const r = P.pageContext('/books/41', 'reader')
+  assert(r.blind.length > 0, 'a scope with no page text must still say so')
+  assert(/never guess/i.test(r.blind), r.blind)
+})
+
+test('the surface defaults to the dock', () => {
+  // Every caller written before the parameter existed keeps its behaviour.
+  eq(P.pageContext('/books/41').blind, P.pageContext('/books/41', 'dock').blind)
+})
+
+test('the surface changes nothing anywhere else', () => {
+  // Only /books/ is ambiguous — it is the one path two chat surfaces share.
+  for (const p of ['/', '/suggest', '/learn', '/play', '/settings', '/billing', '/upload', '/nowhere']) {
+    const a = P.pageContext(p)
+    const b = P.pageContext(p, 'reader')
+    eq(b.label, a.label, `surface leaked into ${p}`)
+    eq(b.blind, a.blind, `surface leaked into ${p}`)
+  }
+})
+
+test('a book id is never passed through to the prompt', () => {
+  // A number the model cannot resolve is an invitation to pretend it did. The
+  // title reaches the librarian through the route's `reading` lookup against
+  // the book list, which can fail closed; this string cannot.
+  for (const surface of ['dock', 'reader']) {
+    const r = P.pageContext('/books/41?page=7', surface)
+    const all = `${r.label} ${r.doing} ${r.blind}`
+    assert(!/41/.test(all), `book id leaked (${surface}): ${all}`)
+    assert(!/\bpage 7\b/.test(all), `page number leaked (${surface}): ${all}`)
+  }
+})
+
+test('describePage carries the blind notice into the prompt', () => {
+  // The field being right is worth nothing if the prompt builder drops it.
+  const r = P.pageContext('/books/41', 'reader')
+  const prompt = P.describePage(r)
+  assert(prompt.includes(r.blind), 'blind notice missing from the prompt text')
+  assert(/WHAT YOU CANNOT SEE FROM HERE/.test(prompt), prompt)
 })
 
 // ── report ───────────────────────────────────────────────────────────────────

@@ -32,6 +32,26 @@
  * unloaded in writing.
  */
 
+/**
+ * Which chat surface is asking.
+ *
+ * The same pathname means two different things depending on what the user is
+ * typing into, and `/books/` is the case that proves it. From the floating dock
+ * the reader's page text is genuinely out of reach. From the reader's OWN chat
+ * tab, switched to library scope, it is one switch position away — so the dock's
+ * blind notice ("point them at the chat inside the reader") would be sending
+ * them to the chat they are already in.
+ *
+ * That is why this is a parameter and not a second lookup table. The failure it
+ * prevents is specific: circular advice reads as competence, the user follows it
+ * and arrives back where they started.
+ *
+ * It stays within the rule at the top of this file — the caller states which of
+ * its own surfaces it is, which is a fact about itself, not a description of
+ * what it can see. The descriptions are still this module's to write.
+ */
+export type Surface = 'dock' | 'reader'
+
 export interface PageContext {
   /** A short name for the place, used in the prompt and in the dock's header. */
   label: string
@@ -60,13 +80,48 @@ const LIBRARY: PageContext = {
  * `/books/41?page=7` and `/books/9` reach the same entry. The id is not passed
  * on: the librarian has the book list already, and a number it cannot resolve
  * is an invitation to pretend it did.
+ *
+ * `surface` defaults to the dock, so every existing caller keeps the behaviour
+ * it was written against and only the reader has to say what it is.
  */
-export function pageContext(pathname: string): PageContext {
+export function pageContext(pathname: string, surface: Surface = 'dock'): PageContext {
   const p = (pathname || '/').replace(/\/+$/, '') || '/'
 
   if (p === '/' || p === '/dashboard') return LIBRARY
 
   if (p.startsWith('/books/')) {
+    /**
+     * Library scope, reached from inside the reader's own chat.
+     *
+     * The page text is absent here for a different reason than it is absent
+     * from the dock, and the difference is the whole point of saying it: the
+     * dock cannot get the text, whereas this chat chose not to send it because
+     * the user asked about their library instead of about the page. So the
+     * remedy is a switch position, and naming it is the honest answer to "what
+     * does this passage mean" — the dock's answer, "use the chat in the
+     * reader", would be a circle.
+     *
+     * Which book they have open IS supplied, separately, by the route — see the
+     * `reading` field there. It is not stated here because this module only
+     * knows the path, and a path is exactly the thing that cannot name a title.
+     */
+    if (surface === 'reader') {
+      return {
+        label: 'your library',
+        doing:
+          'They have a book open in the reader and have switched the chat beside ' +
+          'it from the page to their whole library, so they are asking about the ' +
+          'library rather than about the passage in front of them.',
+        blind:
+          'You cannot see the page they are on or any of its text IN THIS SCOPE. ' +
+          'This is the same chat panel whose Page and Book scopes can see it — so ' +
+          'if they ask about the passage in front of them, tell them to switch ' +
+          'the scope back to Page or Book and never guess at the text. Do not ' +
+          'send them to some other chat; this is the one.',
+        wants: {},
+      }
+    }
+
     return {
       label: 'a book',
       doing: 'They have a book open in the reader.',

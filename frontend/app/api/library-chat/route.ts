@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
   const {
     messages, books, concepts, personaPrompt,
     model: requestModel, provider: requestProvider,
-    includeFeed, includePractice, pathname,
+    includeFeed, includePractice, pathname, surface, reading,
   }: {
     messages: ChatMessage[]
     books: BookContext[]
@@ -80,6 +80,32 @@ export async function POST(req: NextRequest) {
      * library and says so without being told.
      */
     pathname?: string
+    /**
+     * Which of this app's chat surfaces the message came from.
+     *
+     * `/books/41` means two different things and the blind notice has to differ:
+     * the floating dock cannot reach the page text, while the reader's own chat
+     * tab in library scope declined to send it. Telling the second one to "use
+     * the chat inside the reader" sends it to itself. See `Surface` in
+     * lib/librarian/page.ts.
+     *
+     * Defaults to the dock, which is what every caller before this was.
+     */
+    surface?: 'dock' | 'reader'
+    /**
+     * The book they have open, for a librarian reached from inside it.
+     *
+     * "How does this relate to the rest of what I've read" is the question
+     * library scope exists to answer and it is unanswerable without knowing
+     * which book "this" is — but a path cannot carry a title, so page.ts
+     * deliberately refuses to name one.
+     *
+     * The title is resolved from `books` below and NEVER taken from the client
+     * as prose, and no line is emitted when the id is absent from that list.
+     * Both halves matter: an id the server cannot resolve is the exact shape of
+     * thing a model fills in for itself.
+     */
+    reading?: { bookId: number; page?: number }
   } = await req.json()
 
   if (!messages?.length) return NextResponse.json({ error: 'messages required' }, { status: 400 })
@@ -110,7 +136,7 @@ export async function POST(req: NextRequest) {
    * the vocabulary `sectionsNeeded` looks for. An explicit `includeFeed:false`
    * still wins over both — a caller that says no means no.
    */
-  const page = pathname ? pageContext(pathname) : null
+  const page = pathname ? pageContext(pathname, surface ?? 'dock') : null
   const extraContext = userId
     ? await librarianContext(userId, {
         feed: includeFeed ?? (needed.feed || !!page?.wants.feed),
@@ -130,12 +156,32 @@ export async function POST(req: NextRequest) {
 
   const personaLine = personaPrompt?.trim() ? `\n\nPERSONALITY: ${personaPrompt.trim()}\n` : ''
 
+  /**
+   * The open book, named only if the library list already names it.
+   *
+   * The lookup is the point. `reading.bookId` is a fact the reader knows about
+   * itself; "they are reading Middlemarch" is a claim, and it is only made here
+   * when the id matches a book the same request supplied. A mismatch — a stale
+   * tab, a book deleted in another window — produces no line at all rather than
+   * a book number the model would turn into a title.
+   *
+   * The page number rides along because library scope sends no page TEXT: the
+   * librarian may say where they are up to, which is a fact, and page.ts has
+   * already told it not to characterise what is written there.
+   */
+  const open = reading ? books?.find(b => b.id === reading.bookId) : undefined
+  const readingLine = open
+    ? `CURRENTLY READING: "${open.title}"${reading?.page ? `, page ${reading.page}` : ''}. ` +
+      'When they say "this book" they mean that one. Relating it to the rest of ' +
+      'their library is the main reason they are asking you from inside it.'
+    : ''
+
   const systemPrompt = `You are a reading assistant helping a user explore and connect ideas across their personal library.${personaLine}
 
 Their library (${books.length} text${books.length !== 1 ? 's' : ''}):
 ${bookList}
 
-${conceptList ? `Relevant concepts from their library:\n${conceptList}\n` : ''}${extraContext ? `\n${extraContext}\n` : ''}${page ? `\n${describePage(page)}\n` : ''}
+${conceptList ? `Relevant concepts from their library:\n${conceptList}\n` : ''}${extraContext ? `\n${extraContext}\n` : ''}${readingLine ? `\n${readingLine}\n` : ''}${page ? `\n${describePage(page)}\n` : ''}
 Help them find connections between books, recall what they've read, explore ideas, and think deeper. When referencing content, cite the book title and page number. Keep responses concise and conversational.
 
 You can also discuss their suggested feed and their maths practice when the sections above are present — including why a particular item appeared, what their feed is or is not covering, and what they are ready to practise or blocked on. Connect the three where there is a real connection: an article that bears on something they are reading, or a feed topic that a concept in their practice would help them read critically. Where there is no real connection, do not manufacture one.`

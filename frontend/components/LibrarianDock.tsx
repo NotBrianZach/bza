@@ -48,6 +48,39 @@ interface Msg { role: 'user' | 'assistant'; content: string }
 /** Where the dock keeps its open/closed state, so it survives a navigation. */
 const OPEN_KEY = 'bza-librarian-open'
 
+/**
+ * "Does this page already have a librarian? Then you take it."
+ *
+ * ── The problem this solves ──────────────────────────────────────────────
+ *
+ * The home page mounts `MetaDrawer`, whose `chat` tab is this same librarian —
+ * same route, same persona, same context. So on `/` there were two of them, a
+ * centimetre apart, which is the exact arrangement this component suppresses
+ * itself on `/books/` to avoid. The reader got a scope switch; the home page
+ * needed the opposite move, because the better chat was already there.
+ *
+ * ── Why an event and not a pathname ──────────────────────────────────────
+ *
+ * The honest answer to "which pages have their own librarian" is "the ones that
+ * mount a component that says so", and a hardcoded list in this file is a copy
+ * of that fact that goes stale silently — the drawer moves, the list does not,
+ * and the corner button opens a second chat again with nothing to notice it.
+ *
+ * `cancelable` is what makes this safe rather than clever. `dispatchEvent`
+ * returns false only if a listener called `preventDefault`, so "somebody took
+ * it" is the DOM's own answer and not a convention. Nothing listening — any
+ * other page, or the home page before it has mounted — returns true and the
+ * dock opens its own panel exactly as before. There is no arrangement in which
+ * the button does nothing.
+ */
+const HANDOFF_EVENT = 'bza:open-librarian'
+
+/** True when some page took the request, so this dock should stay shut. */
+function handoff(): boolean {
+  if (typeof window === 'undefined') return false
+  return !window.dispatchEvent(new CustomEvent(HANDOFF_EVENT, { cancelable: true }))
+}
+
 export default function LibrarianDock() {
   const pathname = usePathname() || '/'
   const [signedIn, setSignedIn] = useState<boolean | null>(null)
@@ -63,7 +96,19 @@ export default function LibrarianDock() {
     supabase.auth.getUser()
       .then(({ data }) => { if (!cancelled) setSignedIn(!!data.user) })
       .catch(() => { if (!cancelled) setSignedIn(false) })
-    try { setOpen(localStorage.getItem(OPEN_KEY) === '1') } catch {}
+    /**
+     * A remembered-open dock offers the handoff too, or arriving at a page
+     * that owns the librarian would restore the duplicate this avoids.
+     *
+     * The listener is already attached by the time this runs: the page is a
+     * child of the layout that renders this, and React runs child effects
+     * first. If that ever stops holding, the handoff simply declines and the
+     * dock opens its own panel — the behaviour from before any of this, not a
+     * new failure.
+     */
+    try {
+      if (localStorage.getItem(OPEN_KEY) === '1') setOpen(!handoff())
+    } catch {}
     return () => { cancelled = true }
   }, [])
 
@@ -84,6 +129,14 @@ export default function LibrarianDock() {
    * floating one that can see none of it would be the worse of two assistants
    * sitting a centimetre apart. `pageContext` says the same thing in words for
    * anyone who gets there another way.
+   *
+   * That used to leave a hole where this button would have been: inside a book
+   * there was no way to reach the librarian at all. It is now a redirect rather
+   * than an absence — the reader's chat tab carries the librarian on the fifth
+   * position of its scope switch, with the whole book list, the feed and the
+   * practice state behind it. See `Scope` in components/PageSidebar.tsx, and
+   * the `reader` surface in lib/librarian/page.ts for the sentence that keeps
+   * the two from pointing at each other in a circle.
    */
   const suppressed = pathname.startsWith('/books/')
 
@@ -115,6 +168,10 @@ export default function LibrarianDock() {
           model: choice.model,
           provider: choice.provider,
           pathname,
+          // Stated rather than left to the route's default, because the two
+          // surfaces now get different blind notices for the same path and a
+          // silent default is the wrong place for that distinction to live.
+          surface: 'dock',
         }),
       })
       const data = await res.json()
@@ -136,7 +193,8 @@ export default function LibrarianDock() {
   if (!open) {
     return (
       <button
-        onClick={() => setOpen(true)}
+        // Offer the page the request first; open here only if it declines.
+        onClick={() => { if (!handoff()) setOpen(true) }}
         title={`Ask ${persona?.name ?? 'the librarian'} about ${here.label}`}
         aria-label={`Open ${persona?.name ?? 'the librarian'}`}
         /* Bottom-left, because bottom-right is where this app already puts

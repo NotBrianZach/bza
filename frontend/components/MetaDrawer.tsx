@@ -19,6 +19,19 @@ interface MetaDrawerProps {
   isOpen: boolean
   onClose: () => void
   dueCardCount: number
+  /**
+   * Which tab to land on, for a caller that opened the drawer to reach one.
+   *
+   * The librarian is this drawer's `chat` tab, and the floating dock defers to
+   * it on any page that mounts this component rather than rendering a second
+   * copy of the same assistant a centimetre away — see `handoff` in
+   * components/LibrarianDock.tsx. Opening on `knowledge` and making the user
+   * find the tab would have made that deferral feel like a lost click.
+   *
+   * Applied on each OPEN rather than once on mount: the drawer is kept mounted
+   * and toggled, so a value latched at mount would work exactly once.
+   */
+  openOnTab?: Tab | null
 }
 
 type Tab = 'knowledge' | 'quiz' | 'insights' | 'chat' | 'problems' | 'history'
@@ -326,7 +339,7 @@ function CrossBookProblems({ books }: { books: Book[] }) {
   )
 }
 
-export default function MetaDrawer({ books, isOpen, onClose, dueCardCount }: MetaDrawerProps) {
+export default function MetaDrawer({ books, isOpen, onClose, dueCardCount, openOnTab }: MetaDrawerProps) {
   const [activeTab, setActiveTab] = useState<Tab>('knowledge')
   const [knowledgeSub, setKnowledgeSub] = useState<'concepts' | 'connections'>('concepts')
   const [concepts, setConcepts] = useState<Concept[]>([])
@@ -351,6 +364,17 @@ export default function MetaDrawer({ books, isOpen, onClose, dueCardCount }: Met
   const chatEndRef = useRef<HTMLDivElement>(null)
 
   const bookIds = useMemo(() => books.map(b => b.id), [books])
+
+  /**
+   * Land on the tab the opener asked for.
+   *
+   * Only ever on the way IN. Running this whenever `openOnTab` is set would
+   * fight the user: they would open on `chat`, tap `insights`, and any
+   * re-render that touched the prop would drag them back.
+   */
+  useEffect(() => {
+    if (isOpen && openOnTab) setActiveTab(openOnTab)
+  }, [isOpen, openOnTab])
 
   // Load concepts when Map or Connections tab first activated
   useEffect(() => {

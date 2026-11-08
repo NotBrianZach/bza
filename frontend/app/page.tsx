@@ -201,6 +201,7 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
   const [prefs, setPrefs] = useState<UserPrefs | null>(null)
   const [cardSizes, setCardSizes] = useState<CardSizes>(DEFAULT_CARD_SIZES)
   const [metaDrawerOpen, setMetaDrawerOpen] = useState(false)
+  const [metaDrawerTab, setMetaDrawerTab] = useState<'chat' | null>(null)
   const [globalSearch, setGlobalSearch] = useState('')
   const [searchResults, setSearchResults] = useState<Array<{ bookId: number; bookTitle: string; page: number; snippet: string }>>([])
   const [searching, setSearching] = useState(false)
@@ -234,6 +235,28 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
   const [trashedBooks, setTrashedBooks] = useState<Book[]>([])
   const [showTrash, setShowTrash] = useState(false)
   const loadingRef = useRef(false)
+
+  /**
+   * Claim the librarian, so the floating dock does not draw a second one.
+   *
+   * This page's drawer HAS the librarian — it is the `chat` tab, on the same
+   * route with the same persona and more context than the corner button can
+   * assemble. `preventDefault` is how the dock is told so; see `handoff` in
+   * components/LibrarianDock.tsx for the other half.
+   *
+   * Claimed unconditionally rather than only while signed in: the dock renders
+   * nothing at all when signed out, so there is no second chat to suppress and
+   * no case where this swallows the only way in.
+   */
+  useEffect(() => {
+    const claim = (e: Event) => {
+      e.preventDefault()
+      setMetaDrawerTab('chat')
+      setMetaDrawerOpen(true)
+    }
+    window.addEventListener('bza:open-librarian', claim)
+    return () => window.removeEventListener('bza:open-librarian', claim)
+  }, [])
 
   useEffect(() => {
     checkAuthAndLoadData()
@@ -940,7 +963,10 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
                 )}
                 {isAuthenticated && (
                   <button
-                    onClick={() => setMetaDrawerOpen(o => !o)}
+                    /* Cleared, so the drawer's own button lands where it
+                       always did rather than on whatever the dock last asked
+                       for. */
+                    onClick={() => { setMetaDrawerTab(null); setMetaDrawerOpen(o => !o) }}
                     title="Librarian"
                     className={`btn btn-secondary text-sm flex items-center gap-1.5 relative ${metaDrawerOpen ? 'bg-indigo-50 dark:bg-indigo-900/30 border-indigo-300 text-indigo-700 dark:text-indigo-300' : ''}`}
                   >
@@ -1005,7 +1031,7 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
                     <div className="absolute right-0 top-full mt-1 z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg py-2 min-w-[200px]">
                       {isAuthenticated && (
                         <button
-                          onClick={() => { setMetaDrawerOpen(o => !o); setMobileMenuOpen(false) }}
+                          onClick={() => { setMetaDrawerTab(null); setMetaDrawerOpen(o => !o); setMobileMenuOpen(false) }}
                           className="w-full text-left px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
                         >
                           <BookOpen size={15} /> Librarian
@@ -1442,6 +1468,7 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
           isOpen={metaDrawerOpen}
           onClose={() => setMetaDrawerOpen(false)}
           dueCardCount={dueCardCount}
+          openOnTab={metaDrawerTab}
         />
       )}
     </div>
