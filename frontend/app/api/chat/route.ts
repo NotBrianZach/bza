@@ -103,6 +103,26 @@ export async function POST(req: NextRequest) {
      * The selection is named as the subject explicitly. Without that the model
      * reliably answers about the whole offering, which is the thing the player
      * just went to the trouble of narrowing.
+     *
+     * ── Two kinds of question, and one guard that used to conflate them ─────
+     *
+     * This block ended with a flat "if the text in front of you does not settle
+     * it, say so and do not guess". Correct for claims about the game; wrong,
+     * and uselessly so, for everything else — because the *interesting* thing a
+     * player does here is learn a term and immediately want it placed.
+     *
+     * A real case: someone learned from an offering that a tongue is a muscular
+     * hydrostat, highlighted it, and asked how that differs from a diaphragm.
+     * Nothing in the exchange settles that. Under the old instruction the model
+     * declines and explains what would be needed to answer — to a question any
+     * encyclopaedia answers, about a term the game had just taught them. The
+     * refusal was the whole reason they had highlighted it.
+     *
+     * So the prohibition is now scoped to the thing it was protecting: claims
+     * about the chain, the offerings and the partner, which are records this
+     * surface cannot see all of and must never invent. General knowledge about
+     * a thing *named* in the selection is not a claim about the game, and
+     * answering it is the point of the section rather than a risk to it.
      */
     systemPrompt =
       `${personaPrompt ? `${personaPrompt}\n\n` : ''}` +
@@ -116,8 +136,21 @@ export async function POST(req: NextRequest) {
       `should be played next unless they ask, and never describe what the game "would" ` +
       `answer — nothing said here is recorded in their chain, so presenting it as play ` +
       `would be inventing a turn they did not take.\n\n` +
-      `If they ask something the text in front of you does not settle, say so and say ` +
-      `what it would take to settle it. Do not fill the gap with a confident guess.`
+      `Two kinds of question arrive here and they get OPPOSITE treatment.\n\n` +
+      `ABOUT THEIR GAME — what is in the chain, what an offering contains or says, what ` +
+      `the partner meant, whose turn it is, how the game is going: answer only from what ` +
+      `is given below. When it is not there, say so and say what would show it. Never ` +
+      `fill that gap; you would be inventing their own record back at them.\n\n` +
+      `ABOUT THE WORLD — what a thing named here IS, how it works, how it compares to ` +
+      `something else, who made it, where it sits in a field: answer properly, from what ` +
+      `you know, even though nothing below settles it. This is the good question. Someone ` +
+      `who has just learned from an offering that a tongue is a muscular hydrostat and ` +
+      `asks how that differs from a diaphragm is asking to be taught, not to have the ` +
+      `passage read back. Declining because the offering does not define the term is the ` +
+      `least useful thing you can do — it is the exact reason they highlighted it. Mark ` +
+      `the shift in one short clause when it matters ("not from the text, but —"), then ` +
+      `answer. Ordinary uncertainty about the world is yours to state as uncertainty; it ` +
+      `is not a reason to refuse.`
 
     if (about.game) systemPrompt += `\n\nThe game is ${about.game}.`
     if (about.what) {

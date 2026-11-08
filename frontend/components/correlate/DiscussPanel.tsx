@@ -245,15 +245,25 @@ export default function DiscussPanel({
         </button>
       </form>
 
-      {/* Three openers, because a blank box next to a highlighted sentence is a
+      {/* Openers, because a blank box next to a highlighted sentence is a
           question nobody knows how to start. Each one is a thing this game is
-          actually about, rather than generic chat prompts. */}
+          actually about, rather than generic chat prompts.
+
+          The last one is deliberately NOT about the game. Three
+          game-interpretive openers taught the panel as a reading aid, so the
+          obvious other use went unadvertised: learning a term here and wanting
+          it placed against what you already know — a tongue is a muscular
+          hydrostat, so how is that different from a diaphragm? The route
+          answers that properly now (see the two-kinds-of-question block in
+          app/api/chat/route.ts); this is where somebody finds out they can
+          ask. */}
       {messages.length === 0 && !streaming && (
         <div className="mt-1.5 flex flex-wrap gap-1.5">
           {[
             'What does this mean?',
             'Why would this answer the last one?',
             'What is it doing that I might have missed?',
+            'How does this compare to things like it?',
           ].map(q => (
             <button
               key={q}
