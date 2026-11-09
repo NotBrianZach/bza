@@ -3306,6 +3306,24 @@ function TurnBlock({
         </ul>
       )}
 
+      {/* That the conversation exists at all, said once.
+
+          The offer below is perfect and unreachable: it appears only once you
+          have highlighted something, so the only players who find it are the
+          ones who already guessed it was there. Reported as "I don't see the
+          discuss panel" by someone who had a question they wanted to ask —
+          which is the whole feature failing for want of a sentence.
+
+          On the focus turn only, and gone the moment anything is selected. A
+          line under all dozen exchanges would be the other failure: a hint
+          repeated until it is furniture. */}
+      {isFocus && !selected && !discussing && (
+        <p className="mt-2 text-[10px] text-gray-400 dark:text-gray-500">
+          Highlight any line to ask about it — including what a term means, or how
+          it compares to something you already know.
+        </p>
+      )}
+
       {/* The floating offer. Fixed-position, at the end of the selection, which
           is where the cursor already is — a button at the top of the block would
           be a trip back up the page for something the player asked for by

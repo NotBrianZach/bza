@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
-import { Loader2, Send, X } from 'lucide-react'
+import { BookOpen, Loader2, Send, X } from 'lucide-react'
 import PersonaAvatar, { type AvatarState } from './PersonaAvatar'
 import { getModelChoice, getPersonaInfo, getPersonaPrompt } from '@/lib/persona'
 import { pageContext } from '@/lib/librarian/page'
@@ -79,6 +79,38 @@ const HANDOFF_EVENT = 'bza:open-librarian'
 function handoff(): boolean {
   if (typeof window === 'undefined') return false
   return !window.dispatchEvent(new CustomEvent(HANDOFF_EVENT, { cancelable: true }))
+}
+
+/**
+ * A face when there is one, an icon when there is not.
+ *
+ * ── The bug this fixes ───────────────────────────────────────────────────
+ *
+ * `PersonaAvatar` opens with `if (!persona) return null`, and the closed dock's
+ * only child was that avatar. So for anybody who had never chosen a persona in
+ * settings — the default — the button rendered no content and collapsed to its
+ * own `p-1.5`: a blank **12×12 pixel** dot in the corner of every page.
+ * Measured at exactly that in a browser against production, which is how it was
+ * finally caught.
+ *
+ * It is the worst shape a bug can take. Nothing errors, the element is in the
+ * DOM, a click on the right twelve pixels works perfectly, and automated checks
+ * that assert presence rather than size all pass. It simply cannot be seen, so
+ * the feature reads as never shipped.
+ *
+ * Fixed here rather than by giving `PersonaAvatar` a fallback, because other
+ * callers already compensate for the null — `PageSidebar`'s empty state draws
+ * its own `MessageCircle` when there is no persona prompt — and a fallback
+ * inside the avatar would render two icons there.
+ */
+function DockFace({ state, size }: { state: AvatarState; size: 'sm' | 'md' }) {
+  if (getPersonaInfo()) return <PersonaAvatar state={state} size={size} inline />
+  return (
+    <BookOpen
+      size={size === 'md' ? 24 : 16}
+      className={`text-gray-600 dark:text-gray-300 ${state === 'thinking' ? 'animate-pulse' : ''}`}
+    />
+  )
 }
 
 export default function LibrarianDock() {
@@ -201,10 +233,15 @@ export default function LibrarianDock() {
            things and a dock that covered them would be a tax on every page to
            pay for one feature. `pb-safe` via the inset keeps it off the iOS
            home indicator. */
-        className="fixed bottom-4 left-4 z-40 rounded-full shadow-lg ring-1 ring-black/5 dark:ring-white/10 bg-white dark:bg-gray-800 p-1.5 hover:scale-105 transition-transform"
+        /* `min-w`/`min-h` and `grid place-items-center` rather than padding
+           alone: the padding-only version was what let the button collapse to
+           12px when its child rendered nothing, so the floor is now stated
+           instead of being a side effect of what happens to be inside. 40px is
+           a tap target rather than a dot. */
+        className="fixed bottom-4 left-4 z-40 grid place-items-center min-w-[40px] min-h-[40px] rounded-full shadow-lg ring-1 ring-black/5 dark:ring-white/10 bg-white dark:bg-gray-800 p-1.5 hover:scale-105 transition-transform"
         style={{ marginBottom: 'env(safe-area-inset-bottom)' }}
       >
-        <PersonaAvatar state="idle" size="md" inline />
+        <DockFace state="idle" size="md" />
       </button>
     )
   }
@@ -215,7 +252,7 @@ export default function LibrarianDock() {
       style={{ marginBottom: 'env(safe-area-inset-bottom)', maxHeight: 'min(28rem, 70vh)' }}
     >
       <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-100 dark:border-gray-700">
-        <PersonaAvatar state={state} size="sm" inline />
+        <DockFace state={state} size="sm" />
         <div className="min-w-0">
           <p className="text-xs font-semibold text-gray-700 dark:text-gray-200 truncate">
             {persona?.name ?? 'Librarian'}
@@ -246,7 +283,7 @@ export default function LibrarianDock() {
         )}
         {messages.map((m, i) => (
           <div key={i} className={m.role === 'user' ? 'text-right' : 'flex items-start gap-1.5'}>
-            {m.role === 'assistant' && <PersonaAvatar state="idle" size="sm" inline />}
+            {m.role === 'assistant' && <DockFace state="idle" size="sm" />}
             <p className={`inline-block text-xs leading-relaxed whitespace-pre-wrap rounded-xl px-2.5 py-1.5 ${
               m.role === 'user'
                 ? 'bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900 text-left'
@@ -258,7 +295,7 @@ export default function LibrarianDock() {
         ))}
         {busy && (
           <div className="flex items-center gap-1.5">
-            <PersonaAvatar state="thinking" size="sm" inline />
+            <DockFace state="thinking" size="sm" />
             <Loader2 size={12} className="animate-spin text-gray-400" />
           </div>
         )}
