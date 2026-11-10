@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ConceptOntology } from '@/lib/concepts/types'
 import {
   claimableChainFor, conceptById, dependentsOf, edgesOfKind, gatingPrerequisitesOf, interferesWith,
@@ -74,6 +74,8 @@ export default function ConceptGraph({
   initialArea,
   queuedTasks,
   onPractise,
+  selectedId,
+  onSelectedChange,
 }: {
   ontology: ConceptOntology
   /** Per-concept state from the session's `progress.concepts`. */
@@ -114,6 +116,17 @@ export default function ConceptGraph({
    */
   queuedTasks?: { id: string; conceptId: string | null; prompt: string; kind: string }[]
   /**
+   * Drive the selection from outside, so the journey list and the map agree.
+   *
+   * Optional, and the component keeps its own state when it is absent — the
+   * standard controlled/uncontrolled split. Supplying it makes the parent the
+   * single source of "which concept is being looked at", which is what lets
+   * clicking a journey step land on the node without two components holding
+   * separate answers.
+   */
+  selectedId?: string | null
+  onSelectedChange?: (conceptId: string | null) => void
+  /**
    * Take me to that task. Omit and the problems are listed without a jump.
    *
    * The parent owns the tab and the queue index, so neither can be moved from
@@ -121,7 +134,14 @@ export default function ConceptGraph({
    */
   onPractise?: (taskId: string) => void
 }) {
-  const [selected, setSelected] = useState<string | null>(null)
+  const [ownSelected, setOwnSelected] = useState<string | null>(null)
+  /** Controlled when `selectedId` is supplied, self-managed otherwise. */
+  const controlled = selectedId !== undefined
+  const selected = controlled ? selectedId : ownSelected
+  const setSelected = (id: string | null) => {
+    if (!controlled) setOwnSelected(id)
+    onSelectedChange?.(id)
+  }
   const [area, setArea] = useState<string>(initialArea ?? ALL_AREAS)
 
   /**
@@ -325,6 +345,49 @@ export default function ConceptGraph({
     [sel?.id, queuedTasks], // eslint-disable-line react-hooks/exhaustive-deps
   )
 
+  /**
+   * Bring an externally-selected node into view.
+   *
+   * Without this, "show me this on the map" is a no-op most of the time: the
+   * window is capped at 70vh over an SVG up to 1200px tall, and the area
+   * filter hides whole subjects. A journey crosses several areas, so the
+   * commonest case is selecting a concept that is neither scrolled to NOR
+   * currently drawn.
+   *
+   * Two steps, in that order. First the filter — a node that is filtered out
+   * has no position to scroll to, so switching areas has to happen before the
+   * scroll, and it lands on the next pass once `positions` includes it.
+   */
+  useEffect(() => {
+    if (!selected || !areaNames) return
+    if (positions.has(selected)) return
+    const home = conceptById(ontology, selected)?.subjectId
+    if (home && home !== area) setArea(home)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected, positions])
+
+  const winRef = useRef<HTMLDivElement | null>(null)
+  useEffect(() => {
+    const win = winRef.current
+    if (!selected || !win) return
+    const p = positions.get(selected)
+    if (!p) return
+    /**
+     * `scrollTo` on the container, NOT `scrollIntoView` on the node.
+     *
+     * `scrollIntoView` walks up and scrolls every scrollable ancestor
+     * including the page, which yanks the whole view when all that was asked
+     * for was to look at a node. Centring by arithmetic — the positions are
+     * already computed above — moves exactly one box.
+     */
+    win.scrollTo({
+      left: Math.max(0, p.x + NODE_W / 2 - win.clientWidth / 2),
+      top: Math.max(0, p.y + NODE_H / 2 - win.clientHeight / 2),
+      behavior: 'smooth',
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected, positions])
+
   return (
     <div className='rounded-lg border border-gray-800 bg-gray-900'>
       <div className='flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-gray-800 px-3 py-2'>
@@ -401,7 +464,7 @@ export default function ConceptGraph({
 
           `max-h` only ever caps, so the nine-concept subject graph is
           unaffected and still draws at its natural height. */}
-      <div className='max-h-[70vh] overflow-auto px-1 py-1'>
+      <div ref={winRef} className='max-h-[70vh] overflow-auto px-1 py-1'>
         <svg width={width} height={height} className='min-w-full'>
           <defs>
             <marker id='cg-arrow' viewBox='0 0 10 10' refX='9' refY='5'

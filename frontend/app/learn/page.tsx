@@ -13,6 +13,7 @@ import { MASTERY_FLOOR } from '@/lib/concepts/scheduling'
 import ConceptBrowser from '@/components/concepts/ConceptBrowser'
 import ClaimsList from '@/components/concepts/ClaimsList'
 import ConceptGraph from '@/components/concepts/ConceptGraph'
+import JourneyPanel from '@/components/concepts/JourneyPanel'
 import PracticeChat from '@/components/concepts/PracticeChat'
 import PracticePanel, { type PracticeTaskView } from '@/components/concepts/PracticePanel'
 import ReviewQueue from '@/components/concepts/ReviewQueue'
@@ -184,6 +185,14 @@ export default function LearnPage() {
    * something above both has to hold the request while the tab changes.
    */
   const [focusTaskId, setFocusTaskId] = useState<string | null>(null)
+  /**
+   * Which concept the map is looking at.
+   *
+   * Lifted out of `ConceptGraph` so the journey list can drive it — the two
+   * are the same path seen as prose and as topology, and they have to agree
+   * about which node that is.
+   */
+  const [selectedConcept, setSelectedConcept] = useState<string | null>(null)
 
   const [claiming, setClaiming] = useState<string | null>(null)
   /** Bumped after any successful claim, so ClaimsList re-reads. See its prop note. */
@@ -607,6 +616,36 @@ export default function LearnPage() {
               // it. Not a per-concept generator — see the prop note.
               queuedTasks={state?.tasks ?? []}
               onPractise={id => { setFocusTaskId(id); setTab('practice') }}
+              selectedId={selectedConcept}
+              onSelectedChange={setSelectedConcept}
+            />
+
+            {/* Under the graph rather than above it.
+
+                The graph is what the tab is for and what people arrive
+                looking at; a block of narrative above it would push the map
+                off the first screen. Journeys are the answer to "and what am
+                I doing with this", which is the second question. */}
+            <JourneyPanel
+              /* Always the composed atlas, never the scope switch.
+
+                 A journey crosses areas by nature — "solve any quadratic"
+                 starts in arithmetic and ends in rational expressions. Handed
+                 a single-subject ontology it would find its destination
+                 missing, resolve to an empty chain, and render as "0 of 0
+                 steps": a broken-looking row caused by a filter the learner
+                 did not know applied to it. */
+              ontology={MATHEMATICS}
+              concepts={state?.progress?.concepts ?? []}
+              masteryFloor={MASTERY_FLOOR}
+              areaNames={AREA_NAMES}
+              queuedTasks={state?.tasks ?? []}
+              onPractise={id => { setFocusTaskId(id); setTab('practice') }}
+              /* Showing a step means showing it on a graph that contains it,
+                 so the scope follows the click. In subject scope the map is
+                 one area with no area filter, and selecting a concept from
+                 elsewhere would highlight nothing at all. */
+              onSelectConcept={id => { setScope('atlas'); setSelectedConcept(id) }}
             />
             {!state?.progress && (
               <p className='text-[11px] text-gray-500'>
