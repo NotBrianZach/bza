@@ -383,7 +383,25 @@ export default function ConceptGraph({
         </p>
       )}
 
-      <div className='overflow-x-auto px-1 py-1'>
+      {/* A window onto the graph, not the whole graph laid out down the page.
+
+          `height` is `maxRows * ROW_H`, so a broad area of the atlas draws an
+          SVG around 2700px tall. Only the horizontal axis was contained, which
+          meant the panel underneath — the one place a node can be claimed or
+          practised — sat that far below whatever node you had just clicked.
+          Selecting something and then scrolling past the entire map to act on
+          it is the whole interaction, so the buttons read as missing.
+
+          Capping the viewport is the fix rather than moving the panel up,
+          because "top" and "bottom" are both wrong for a graph taller than the
+          screen: from a node in the middle, either end is a long scroll. With
+          the window capped, the filter, the map, the legend and the panel are
+          one screen, and the controls are a few hundred pixels from any node
+          regardless of where it sits.
+
+          `max-h` only ever caps, so the nine-concept subject graph is
+          unaffected and still draws at its natural height. */}
+      <div className='max-h-[70vh] overflow-auto px-1 py-1'>
         <svg width={width} height={height} className='min-w-full'>
           <defs>
             <marker id='cg-arrow' viewBox='0 0 10 10' refX='9' refY='5'
@@ -476,8 +494,21 @@ export default function ConceptGraph({
         <span className='text-rose-300/70'>· · · interferes with (confusable)</span>
       </div>
 
+      {/* Pinned to the bottom of the screen while a node is selected.
+
+          The capped window above means the panel is never thousands of pixels
+          away, but "a shorter scroll" is still a scroll, and the panel is
+          where every verb lives — claim, claim-the-chain, practise. `sticky
+          bottom-0` makes it reachable from any scroll position inside the card
+          instead of merely a closer one.
+
+          Needs the card's own background: sticky content is transparent by
+          default and the graph would show through the buttons. Height is
+          capped and scrolled in turn, because with the knowledge points
+          expanded this panel is taller than the screen and would otherwise
+          pin the entire viewport. */}
       {sel && (
-        <div className='border-t border-gray-800 px-3 py-2 text-xs'>
+        <div className='sticky bottom-0 z-10 max-h-[45vh] overflow-auto border-t border-gray-800 bg-gray-900 px-3 py-2 text-xs'>
           <div className='flex flex-wrap items-center gap-2'>
             <h4 className='font-medium text-gray-200'>{sel.name}</h4>
             <span className='text-[11px] text-gray-500'>{appearance(sel.id).label}</span>

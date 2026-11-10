@@ -160,6 +160,89 @@ try {
     log('floating buttons after selection:')
     log(JSON.stringify(discuss, null, 2))
   }
+
+  // ── /learn concepts: is the node panel actually reachable? ────────────────
+  //
+  // `position: sticky` is silently inert when any ANCESTOR has a non-visible
+  // overflow — it then sticks to that box instead of the viewport, or not at
+  // all. Nothing errors and the style is present in the DOM, so this is checked
+  // by measuring where the panel lands rather than by reading its CSS.
+  await page.goto(`${BASE}/learn`, { waitUntil: 'networkidle2', timeout: 60000 })
+  await new Promise(r => setTimeout(r, 5000))
+  // Case-insensitive: the tab label is "Concepts". An `=== 'concepts'` match
+  // silently did nothing and left the run measuring a header icon.
+  await page.evaluate(() => {
+    const t = Array.from(document.querySelectorAll('button')).find(b => /^concepts$/i.test(b.textContent?.trim() || ''))
+    t?.click()
+  })
+  await new Promise(r => setTimeout(r, 4000))
+  // The whole map, not the practised subject. The subject graph is ~5 nodes and
+  // 236px, so it never had the problem; the atlas is 291 concepts and is the
+  // only scope where the panel was ever far away.
+  await page.evaluate(() => {
+    const t = Array.from(document.querySelectorAll('button')).find(b => /the whole map/i.test(b.textContent || ''))
+    t?.click()
+  })
+  await new Promise(r => setTimeout(r, 4000))
+
+  const graph = await page.evaluate(() => {
+    // The concept graph is the TALLEST svg — `querySelector('svg')` returns a
+    // header icon and makes the whole check meaningless.
+    const svg = Array.from(document.querySelectorAll('svg'))
+      .sort((a, b) => b.getBoundingClientRect().height - a.getBoundingClientRect().height)[0]
+    if (!svg) return { svg: false, body: document.body.innerText.slice(0, 200) }
+    const win = svg.parentElement
+    const nodes = Array.from(svg.querySelectorAll('g')).filter(g => g.querySelector('rect'))
+    return {
+      svg: true,
+      svgHeight: Math.round(svg.getBoundingClientRect().height),
+      windowHeight: Math.round(win.getBoundingClientRect().height),
+      windowOverflow: getComputedStyle(win).overflow,
+      capped: win.getBoundingClientRect().height <= innerHeight * 0.75,
+      nodeCount: nodes.length,
+    }
+  })
+  log('\n=== /LEARN CONCEPT MAP ===')
+  log(JSON.stringify(graph, null, 2))
+
+  if (graph.nodeCount > 0) {
+    // Click a node far down the graph: that is the case the cap and the pin
+    // exist for, and the one that used to put the buttons offscreen.
+    const picked = await page.evaluate(() => {
+      const svg = Array.from(document.querySelectorAll('svg'))
+        .sort((a, b) => b.getBoundingClientRect().height - a.getBoundingClientRect().height)[0]
+      const nodes = Array.from(svg.querySelectorAll('g')).filter(g => g.querySelector('rect'))
+      const target = nodes[Math.min(nodes.length - 1, Math.floor(nodes.length * 0.8))]
+      target.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+      return target.querySelector('text')?.textContent ?? null
+    })
+    await new Promise(r => setTimeout(r, 1200))
+
+    const panel = await page.evaluate(() => {
+      // The panel is the sticky block holding the verbs.
+      const cand = Array.from(document.querySelectorAll('div'))
+        .find(d => getComputedStyle(d).position === 'sticky' && /rests on|knowledge point|already know/i.test(d.innerText || ''))
+      if (!cand) return { found: false }
+      const r = cand.getBoundingClientRect()
+      const claim = Array.from(cand.querySelectorAll('button'))
+        .find(b => /already know/i.test(b.textContent || ''))
+      const teaches = Array.from(cand.querySelectorAll('summary'))
+        .find(s => /what this teaches/i.test(s.textContent || ''))
+      const cr = claim?.getBoundingClientRect()
+      return {
+        found: true,
+        position: getComputedStyle(cand).position,
+        rect: r.toJSON(),
+        // The assertion that matters: is it on the screen as it sits?
+        inViewport: r.top < innerHeight && r.bottom > 0,
+        hasClaimButton: !!claim,
+        claimInViewport: cr ? cr.top < innerHeight && cr.bottom > 0 : null,
+        hasWhatThisTeaches: !!teaches,
+      }
+    })
+    log(`clicked node: ${JSON.stringify(picked)}`)
+    log(JSON.stringify(panel, null, 2))
+  }
 } finally {
   await browser.close()
 }
