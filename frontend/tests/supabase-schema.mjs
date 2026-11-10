@@ -307,7 +307,8 @@ const stripComments = (src) =>
     // reported line number still points at the real file.
     .replace(/\/\*[\s\S]*?\*\//g, c => c.replace(/[^\n]/g, ''))
     .replace(/^[ \t]*\/\/.*$/gm, '')
-const BASELINE = join(ROOT, '..', 'supabase', 'setup', '00_baseline_bza_public.sql')
+const SETUP_DIR = join(ROOT, '..', 'supabase', 'setup')
+const BASELINE = join(SETUP_DIR, '00_baseline_bza_public.sql')
 
 /**
  * Every enum-shaped CHECK in the schema, as table → column → legal values.
@@ -332,6 +333,12 @@ const BASELINE = join(ROOT, '..', 'supabase', 'setup', '00_baseline_bza_public.s
 const CONSTRAINTS = (() => {
   const sql = readFileSync(BASELINE, 'utf8')
   const byTable = new Map()
+  const set = (table, column, values) => {
+    if (values.size === 0) return
+    if (!byTable.has(table)) byTable.set(table, new Map())
+    byTable.get(table).set(column, values)
+  }
+
   const tableRe = /CREATE TABLE (?:[\w]+\.)?(\w+) \(([\s\S]*?)\n\);/g
   let t
   while ((t = tableRe.exec(sql)) !== null) {
@@ -339,10 +346,48 @@ const CONSTRAINTS = (() => {
     const checkRe = /CHECK\s*\(\(\s*(\w+)\s*=\s*ANY\s*\(ARRAY\[([^\]]*)\]/g
     let c
     while ((c = checkRe.exec(block)) !== null) {
-      const values = new Set([...c[2].matchAll(/'([^']*)'::text/g)].map(x => x[1]))
-      if (values.size === 0) continue
-      if (!byTable.has(table)) byTable.set(table, new Map())
-      byTable.get(table).set(c[1], values)
+      set(table, c[1], new Set([...c[2].matchAll(/'([^']*)'::text/g)].map(x => x[1])))
+    }
+  }
+
+  /**
+   * Then the migrations, which SUPERSEDE the baseline.
+   *
+   * The baseline alone was the bug. It is a dump taken at one moment, and a
+   * later migration that widens a constraint is invisible to it — so the guard
+   * went on checking against the old list and reported a route writing a
+   * perfectly legal value as a value "the database would reject". Migration 79
+   * added `station` to `listen_turns.move_by` and the station route has
+   * written it correctly ever since; this guard called it a fault and, because
+   * `npm test` is a `&&` chain, took the three suites after it down too.
+   *
+   * That is the worst direction for a guard like this to fail. A missed
+   * constraint lets one bad literal through; a stale constraint condemns
+   * correct code, and the only ways out are to edit working code until the
+   * test likes it or to stop believing the test.
+   *
+   * Applied in filename order so the newest definition of a column wins, which
+   * is the order the database applied them in.
+   *
+   * `archive/` is not read: those files are superseded migrations kept for
+   * history, and replaying them would reinstate exactly the old lists this is
+   * here to get past. Nor are bare `drop constraint` statements handled — a
+   * drop names the constraint, not the column, and recovering the column from
+   * the name is the guess the comment above refuses to make. A constraint
+   * dropped and never re-added would leave this stricter than the database;
+   * none exists today, and the symptom would be this same false failure.
+   */
+  const migrations = readdirSync(SETUP_DIR)
+    .filter(f => f.endsWith('.sql') && f !== '00_baseline_bza_public.sql')
+    .sort()
+  for (const file of migrations) {
+    const text = readFileSync(join(SETUP_DIR, file), 'utf8')
+    // Lower case, single-paren, and `any (array[…])` — the hand-written form,
+    // not the dump's. Case-insensitive so either spelling is caught.
+    const addRe = /alter\s+table\s+(?:\w+\.)?(\w+)\s+add\s+constraint\s+\w+\s+check\s*\(+\s*(\w+)\s*=\s*any\s*\(\s*array\s*\[([^\]]*)\]/gi
+    let m
+    while ((m = addRe.exec(text)) !== null) {
+      set(m[1], m[2], new Set([...m[3].matchAll(/'([^']*)'(?:::text)?/g)].map(x => x[1])))
     }
   }
   return byTable

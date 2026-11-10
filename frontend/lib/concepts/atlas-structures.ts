@@ -185,6 +185,37 @@ const LINEAR_ALGEBRA: MapArea = {
         'Row reduction is how a determinant is computed at any size past 3×3, and the effect of ' +
         'each row operation on it is the standard derivation.',
     },
+    {
+      /**
+       * The edge the map was missing, found by writing a journey across it.
+       *
+       * Authoring "When can a linear map be undone?" assumed the standard
+       * telling — vectors, span, independence, then matrices — and the derived
+       * route disagreed: there was no prerequisite path from
+       * `linear-independence` to `matrix-inverse` at all. The two authored
+       * subjects each had their own chain and nothing joined independence to
+       * invertibility, which is the single most important equivalence in the
+       * subject.
+       *
+       * Declared here and not in ontology-matrices.ts for the usual reason:
+       * both endpoints are authored concepts in OTHER subjects, so an edge on
+       * the subject's own `EDGES` would name a concept that ontology does not
+       * contain and `ontologyProblems` would reject it when viewed alone.
+       * `links` is the field for exactly this.
+       *
+       * It gates, which is the point and the cost: invertibility now waits on
+       * independence, so a learner cannot reach it from the determinant alone.
+       * That is the correct order — "det = 0" is a computation, and what it
+       * MEANS is that the columns were dependent and a direction was lost.
+       */
+      from: 'linear-independence',
+      to: 'matrix-inverse',
+      because:
+        'Invertible means no information was lost, and that is exactly the columns being ' +
+        'independent — a zero determinant is the computation, dependence is what it says. ' +
+        'Without independence first, "det = 0 so there is no inverse" is a rule to remember ' +
+        'rather than a thing that follows.',
+    },
   ],
 }
 

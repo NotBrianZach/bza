@@ -25,13 +25,29 @@ export interface Selected {
 }
 
 /**
- * Below this, a selection is a click rather than a passage.
+ * Below this, a selection is a stray click rather than a question.
  *
- * The reader uses ten. This uses the same number for the same reason: a
- * double-click lands on one word, and offering a discussion of one word is
- * noise next to the chain.
+ * ── Why this used to be ten, and why that became wrong ───────────────────
+ *
+ * Ten, matching the reader, on the reasoning that a double-click lands on one
+ * word and offering to discuss one word is noise beside the chain. That held
+ * only while the conversation was about *reading the exchange* — "what is this
+ * doing", "why would this answer the last one" — where a single word genuinely
+ * is not the unit.
+ *
+ * Then the panel started answering questions about the world: what a term IS,
+ * how it compares to a thing you already know. For that, one word is the
+ * commonest unit there is, and a double-click is the obvious gesture — which
+ * the ten-character floor silently refused. "hydrostat" is nine. "chiaroscuro"
+ * scrapes through at eleven and "fugue" never had a chance.
+ *
+ * Three, because that is where stop words stop: "a", "of", "to" and "is" are
+ * below it, while "sin", "cos", "log" and "set" are real terms somebody might
+ * reasonably want explained. The noise this guards against was never a short
+ * selection anyway — it was an ACCIDENTAL one, and a deliberate double-click
+ * on a term is not that.
  */
-const MIN_CHARS = 10
+const MIN_CHARS = 3
 
 export function useSelectionIn<T extends HTMLElement>(): {
   /**

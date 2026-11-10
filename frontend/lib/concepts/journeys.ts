@@ -198,29 +198,36 @@ export const JOURNEYS: Journey[] = [
     title: 'When can a linear map be undone?',
     premise: 'One number tells you whether a matrix threw information away. Find out why.',
     /*
-     * Note what is NOT a beat here: linear independence.
+     * Independence is a beat again, and the history is worth keeping.
      *
      * The first draft of this arc ran vectors → span → independence →
      * matrices, because that is how the subject is usually told, and
-     * `journeyProblems` rejected it — the atlas has no prerequisite path from
-     * `linear-independence` to `matrix-inverse`. The derived route disagreed
-     * with the story, immediately, which is the entire argument for deriving
-     * it. The prose was corrected rather than the ontology: adding that edge
-     * changes what gates what for every learner, and that is a content
-     * decision, not a thing to slip in so a paragraph reads better.
+     * `journeyProblems` rejected it: the atlas had no prerequisite path from
+     * `linear-independence` to `matrix-inverse`. The prose was corrected
+     * rather than the ontology, because adding an edge changes what gates what
+     * for every learner and is not a thing to slip in so a paragraph reads
+     * better.
+     *
+     * It was then raised as a content question and the edge was added
+     * deliberately — see the `links` entry in atlas-structures.ts. So the
+     * route now contains independence and the arc can say what it always
+     * wanted to. The derived path caught a real gap in the map; it did not
+     * get overruled to suit a story.
      */
     arc:
       'The longest of these, and it builds one idea. Vectors give you things to point '
-      + 'with; span asks what you can reach by combining them. A matrix then turns out '
-      + 'to be a linear map rather than a grid of numbers, matrix multiplication turns '
-      + 'out to be doing two maps in a row, and the determinant turns out to be the '
-      + 'number measuring how much the map squashes space. When it squashes space flat '
-      + '— determinant zero — two different inputs land on the same output, information '
-      + 'is gone, and no inverse can exist. The last step is that sentence made precise.',
+      + 'with; span asks what you can reach by combining them; independence asks whether '
+      + 'any of them was redundant. A matrix then turns out to be a linear map rather '
+      + 'than a grid of numbers, matrix multiplication turns out to be doing two maps in '
+      + 'a row, and the determinant turns out to be the number measuring how much the '
+      + 'map squashes space. When it squashes space flat — determinant zero — the '
+      + 'columns were dependent, two different inputs land on the same output, '
+      + 'information is gone, and no inverse can exist. The last step is that sentence '
+      + 'made precise.',
     destination: 'matrix-inverse',
     milestones: [
       { conceptId: 'vectors-and-spans', label: 'What you can reach', promise: 'You can say which vectors a set of vectors can build.' },
-      { conceptId: 'matrices-and-maps', label: 'A matrix is a map', promise: 'You can read a matrix as something that moves space.' },
+      { conceptId: 'linear-independence', label: 'Was any of it redundant?', promise: 'You can tell whether a set carries a repeated direction.' },
       { conceptId: 'determinant', label: 'The number that measures squashing', promise: 'You can compute a determinant and say what it means.' },
       { conceptId: 'matrix-inverse', label: 'Undo, or prove you cannot', promise: 'You can decide invertibility and say what zero means.' },
     ],

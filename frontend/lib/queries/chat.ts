@@ -30,6 +30,30 @@ export const chatQueries = {
   },
 
   /**
+   * Library-scope conversations — the librarian's, belonging to no book.
+   *
+   * A separate function rather than `listConversations(null)`, which already
+   * means something else: the existing overload treats a falsy id as "do not
+   * filter" and returns every conversation including each book's. Teaching it
+   * a third behaviour for `null` would make the two callers' meanings depend on
+   * the difference between `undefined` and `null`.
+   *
+   * `.is('book_id', null)` and not `.eq`: SQL equality against NULL is never
+   * true, so `.eq('book_id', null)` matches nothing and would quietly return
+   * an empty list forever — the thread would look like it had never saved.
+   */
+  async listLibraryConversations(): Promise<Conversation[]> {
+    const { data, error } = await supabase
+      .from('conversations')
+      .select('*')
+      .is('book_id', null)
+      .order('updated_at', { ascending: false })
+
+    if (error) throw error
+    return data || []
+  },
+
+  /**
    * Get conversation messages
    */
   async getMessages(conversationId: number): Promise<ChatMessage[]> {
@@ -47,7 +71,15 @@ export const chatQueries = {
    * Create a new conversation
    */
   async createConversation(
-    bookId: number,
+    /**
+     * Null for a conversation that belongs to no book.
+     *
+     * `conversations.book_id` is nullable in the schema and the RLS policy is
+     * `auth.uid() = user_id` with no reference to books, so a bookless
+     * conversation needed no migration — only this signature, which had
+     * required a number since the only chat was a book's.
+     */
+    bookId: number | null,
     title?: string,
     type: 'chat' | 'discussion' | 'reflection' = 'chat'
   ): Promise<Conversation> {

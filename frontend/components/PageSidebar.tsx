@@ -302,22 +302,30 @@ function ChatPanelContent({
   const [showContextMenu, setShowContextMenu] = useState(false)
   const [customContextPages, setCustomContextPages] = useState('')
   /**
-   * The library conversation, kept apart from the book's.
+   * The library conversation, kept apart from the book's — and now persisted.
    *
    * Two threads rather than one interleaved thread, because a single thread
    * would be re-read later with no record of which scope each message was
    * asked in — and "it told me this book was about X" lands very differently
-   * depending on whether the model could see the page. `chat_messages` has no
-   * column for that, and inventing one to paper over a UI decision is the wrong
-   * order of operations.
+   * depending on whether the model could see the page.
    *
-   * It is in-memory and discarded on close, which is exactly what the dock has
-   * always done with the same conversation — so this stores no less than the
-   * surface it replaces. The book thread's persistence is untouched. If the
-   * library thread should outlive the panel, the fix is a conversation not
-   * filed under a `book_id`, not a scope column on this one.
+   * ── Why this needed no migration ────────────────────────────────────────
+   *
+   * It was in-memory first, matching what the dock had always done, and the
+   * note here said the fix would be "a conversation not filed under a
+   * `book_id`". That turned out to already be possible: `conversations.book_id`
+   * is nullable and the RLS policy is `auth.uid() = user_id` with no mention of
+   * books, so a bookless conversation is a legal row today. The scope column
+   * the earlier note warned against inventing is still not needed — the two
+   * threads are two rows, which is what kept them tellable apart in the first
+   * place.
+   *
+   * Loaded lazily, on first entry into library scope, so opening a book still
+   * costs nothing. The book thread's own persistence is untouched.
    */
   const [libMessages, setLibMessages] = useState<any[]>([])
+  const [libConversationId, setLibConversationId] = useState<number | null>(null)
+  const [libLoaded, setLibLoaded] = useState(false)
   const [libBooks, setLibBooks] = useState<LibraryBook[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [speakingId, setSpeakingId] = useState<string | null>(null)
@@ -407,6 +415,36 @@ function ChatPanelContent({
   }
 
   const isLibrary = contextMode === 'library'
+
+  /**
+   * Load the library thread the first time somebody looks at it.
+   *
+   * Keyed on entering the scope, not on mounting the panel: a reader who never
+   * switches scope should pay for no reads at all, which is the same bargain
+   * `loadLibrary` strikes below for the book list.
+   *
+   * `libLoaded` is set before awaiting and never reset, so a slow read cannot
+   * be started twice by a quick switch away and back — the second pass would
+   * race the first and could overwrite a just-sent message with the older
+   * server copy. A failure leaves the thread empty rather than retrying: the
+   * conversation is created on first send either way, so an unreadable history
+   * costs the history and not the ability to talk.
+   */
+  useEffect(() => {
+    if (!isLibrary || libLoaded || !isAuthenticated) return
+    setLibLoaded(true)
+    void (async () => {
+      try {
+        const convs = await chatQueries.listLibraryConversations()
+        const conv = convs[0]
+        if (!conv) return
+        setLibConversationId(conv.id)
+        setLibMessages(await chatQueries.getMessages(conv.id))
+      } catch {
+        // Said by staying empty. See above.
+      }
+    })()
+  }, [isLibrary, libLoaded, isAuthenticated])
 
   /**
    * The library list, fetched the first time somebody actually asks for it.
@@ -504,6 +542,38 @@ function ChatPanelContent({
         id: replyId, role: 'assistant', content, created_at: new Date().toISOString(),
       }])
       if (autoRead && getPersonaInfo()) speak(replyId, content)
+
+      /**
+       * Persist the exchange, after the reply and never before it.
+       *
+       * Writing the question up front would leave a user turn with no answer
+       * in the history whenever the request failed, and a thread that reads as
+       * though the librarian ignored you is worse than one missing a message.
+       *
+       * `page_num` is deliberately not set. The column exists for the book
+       * thread, where it records which page the question was asked against;
+       * library scope sends no page text at all, so a number here would
+       * suggest a context the model never had.
+       */
+      try {
+        let convId = libConversationId
+        if (!convId) {
+          const conv = await chatQueries.createConversation(null, 'Librarian')
+          convId = conv.id
+          setLibConversationId(convId)
+        }
+        const { data: { session } } = await supabase.auth.getSession()
+        await supabase.from('chat_messages').insert([
+          { user_id: session?.user?.id, conversation_id: convId, role: 'user', content: finalText },
+          { user_id: session?.user?.id, conversation_id: convId, role: 'assistant', content },
+        ])
+        await supabase.from('conversations')
+          .update({ updated_at: new Date().toISOString() })
+          .eq('id', convId)
+      } catch {
+        // The thread is on screen and correct; only the saving failed. Raising
+        // it here would put an error under a reply that actually arrived.
+      }
     } catch {
       setError('Network error — please try again.')
     } finally {
@@ -713,7 +783,15 @@ function ChatPanelContent({
           </button>
         )}
         <button
-          onClick={() => { if (isLibrary) setLibMessages([]); else void startNewChat() }}
+          /* The conversation id has to go too, or "+ New" clears the screen
+             and the next message is appended to the thread that just
+             disappeared — a new chat that silently continues the old one. The
+             previous row is left in place rather than deleted: it is a real
+             conversation the user may want back. */
+          onClick={() => {
+            if (isLibrary) { setLibMessages([]); setLibConversationId(null) }
+            else void startNewChat()
+          }}
           className="text-[10px] text-purple-600 dark:text-purple-400 hover:underline flex-shrink-0"
         >
           + New
