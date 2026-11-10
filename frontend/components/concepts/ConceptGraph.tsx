@@ -72,6 +72,8 @@ export default function ConceptGraph({
   onClaimChain,
   areaNames,
   initialArea,
+  queuedTasks,
+  onPractise,
 }: {
   ontology: ConceptOntology
   /** Per-concept state from the session's `progress.concepts`. */
@@ -97,6 +99,27 @@ export default function ConceptGraph({
   areaNames?: Record<string, string>
   /** Which area to open on. Ignored without `areaNames`. */
   initialArea?: string
+  /**
+   * The tasks already in the practice queue, so a node can show its own.
+   *
+   * Only the queue, and deliberately not "generate me a problem for this
+   * concept". The scheduler decides what is served and when; a button here
+   * that conjured a task for any node the learner clicked would route around
+   * mastery-gated introduction, which is the thing the whole engine is for.
+   * Claiming is the sanctioned way to open something early, and it is already
+   * offered above.
+   *
+   * So this answers a narrower and honest question — "is there anything
+   * waiting for me on this node right now" — and the answer is often no.
+   */
+  queuedTasks?: { id: string; conceptId: string | null; prompt: string; kind: string }[]
+  /**
+   * Take me to that task. Omit and the problems are listed without a jump.
+   *
+   * The parent owns the tab and the queue index, so neither can be moved from
+   * in here without two components disagreeing about which task is current.
+   */
+  onPractise?: (taskId: string) => void
 }) {
   const [selected, setSelected] = useState<string | null>(null)
   const [area, setArea] = useState<string>(initialArea ?? ALL_AREAS)
@@ -287,6 +310,19 @@ export default function ConceptGraph({
   const selChain = useMemo(
     () => (sel ? claimableChainFor(MATHEMATICS, sel.id) : []),
     [sel?.id], // eslint-disable-line react-hooks/exhaustive-deps
+  )
+
+  /**
+   * The queued problems belonging to the selected node.
+   *
+   * `conceptId` is nullable on a task, so the filter must compare against a
+   * real id rather than trusting both sides to be set — a null on each side
+   * would otherwise match and attach every unattributed task to whatever node
+   * happened to be open.
+   */
+  const selTasks = useMemo(
+    () => (sel ? (queuedTasks ?? []).filter(t => t.conceptId === sel.id) : []),
+    [sel?.id, queuedTasks], // eslint-disable-line react-hooks/exhaustive-deps
   )
 
   return (
@@ -528,6 +564,20 @@ export default function ConceptGraph({
               subject to {areaNames?.[sel.subjectId] ?? sel.subjectId} to work on it.
             </p>
           )}
+          {/* The fourth state, which was the silent one.
+
+              A concept that is teachable, in this session, and already
+              introducible gets no claim button — correctly, because there is
+              nothing to unlock. But it got no sentence either, so the one node
+              a learner is most able to act on was the node that offered them
+              least: topology, and no verb. The other three states each said
+              their piece already; this completes the set. */}
+          {isTeachable(ontology, sel.id) && stateOf.get(sel.id)?.introducible && (
+            <p className='mt-1 text-[11px] text-emerald-200/80'>
+              Open to practise now — nothing is gating it.
+              {selTasks.length === 0 && ' Nothing is queued for it this session, though; the scheduler picks what comes next.'}
+            </p>
+          )}
           {sel.scope?.hint && (
             <p className='mt-1 text-[11px] leading-snug text-gray-400'>{sel.scope.hint}</p>
           )}
@@ -580,6 +630,99 @@ export default function ConceptGraph({
               </div>
             )}
           </dl>
+
+          {/* ── What the concept actually SAYS ─────────────────────────────
+
+              The panel above counted the knowledge points and never showed
+              one, so the map could tell you a concept rested on four others
+              and had three knowledge points without telling you what any of
+              it meant. Clicking a node asked "what is this?" and got
+              topology back.
+
+              It is all authored and already in the registry — statement,
+              subgoals and answer per point — so this needs no request. Which
+              is also why it was the wrong thing to be missing.
+
+              Collapsed, because the topology above is the thing the map is
+              for and three worked examples would push it off the screen. */}
+          {sel.knowledgePoints.length > 0 && (
+            <details className='mt-2 border-t border-gray-800 pt-1.5'>
+              <summary className='cursor-pointer text-[11px] text-gray-300 hover:text-gray-100'>
+                what this teaches — {sel.knowledgePoints.length} knowledge point
+                {sel.knowledgePoints.length === 1 ? '' : 's'}
+              </summary>
+              <ol className='mt-1.5 space-y-2'>
+                {[...sel.knowledgePoints]
+                  // Authored order. `position` is the field that carries it;
+                  // array order has no promise attached to it.
+                  .sort((a, b) => a.position - b.position)
+                  .map(kp => (
+                    <li key={kp.id} className='rounded border border-gray-800 bg-gray-950/60 px-2 py-1.5'>
+                      <p className='text-[11px] leading-snug text-gray-200'>{kp.statement}</p>
+                      <details className='mt-1'>
+                        <summary className='cursor-pointer text-[10px] text-gray-500 hover:text-gray-300'>
+                          worked example
+                        </summary>
+                        <div className='mt-1 space-y-1 text-[10px] leading-snug'>
+                          <p className='text-gray-300'>{kp.workedExample.problem}</p>
+                          {/* Subgoal labels shown, not flattened into prose.
+                              The labelling IS the pedagogy here — the point of
+                              a worked example in this engine is that the steps
+                              are named, so a learner can see which step they
+                              lost rather than only that the answer was wrong. */}
+                          <ol className='space-y-0.5 pl-3'>
+                            {kp.workedExample.subgoals.map((s, i) => (
+                              <li key={i} className='text-gray-400'>
+                                <span className='text-gray-500'>{s.label}: </span>{s.detail}
+                              </li>
+                            ))}
+                          </ol>
+                          <p className='text-emerald-200/80'>
+                            <span className='text-gray-500'>answer: </span>{kp.workedExample.answer}
+                          </p>
+                        </div>
+                      </details>
+                    </li>
+                  ))}
+              </ol>
+            </details>
+          )}
+
+          {/* ── Anything waiting on this node right now ────────────────────
+
+              Shown only when the queue genuinely holds something for this
+              concept. The absence is not reported as "no problems": a
+              concept can be perfectly teachable and simply not be what the
+              scheduler chose this session, and "none" would read as "none
+              exist" — the same distinction `notLoadedNotice` draws for the
+              librarian. The lines above already say the two cases that ARE
+              actionable (not introducible → claim it; authored in another
+              subject → switch subject). */}
+          {selTasks.length > 0 && (
+            <div className='mt-2 border-t border-gray-800 pt-1.5'>
+              <p className='text-[11px] text-gray-300'>
+                {selTasks.length} problem{selTasks.length === 1 ? '' : 's'} queued for this
+              </p>
+              <ul className='mt-1 space-y-1'>
+                {selTasks.map(t => (
+                  <li key={t.id} className='flex items-start gap-2'>
+                    <span className='min-w-0 flex-1 text-[10px] leading-snug text-gray-400'>
+                      <span className='text-gray-600'>{t.kind} · </span>
+                      {t.prompt.length > 120 ? `${t.prompt.slice(0, 119)}…` : t.prompt}
+                    </span>
+                    {onPractise && (
+                      <button
+                        onClick={() => onPractise(t.id)}
+                        className='flex-shrink-0 rounded-full border border-emerald-700/60 px-2 py-0.5 text-[10px] text-emerald-200 hover:bg-emerald-900/40'
+                      >
+                        practise
+                      </button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       )}
     </div>

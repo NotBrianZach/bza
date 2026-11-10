@@ -176,6 +176,15 @@ export default function LearnPage() {
   const [pad, setPad] = useState<ScratchpadHandle | null>(null)
   const [padEmpty, setPadEmpty] = useState(true)
 
+  /**
+   * A task the concept map asked us to open, by id.
+   *
+   * Lives here rather than in `PracticePanel` because the jump crosses a tab
+   * boundary: the map is on Concepts and the problem is on Practice, so
+   * something above both has to hold the request while the tab changes.
+   */
+  const [focusTaskId, setFocusTaskId] = useState<string | null>(null)
+
   const [claiming, setClaiming] = useState<string | null>(null)
   /** Bumped after any successful claim, so ClaimsList re-reads. See its prop note. */
   const [claimsVersion, setClaimsVersion] = useState(0)
@@ -437,6 +446,7 @@ export default function LearnPage() {
               onAdvance={load}
               onRefresh={load}
               onTaskChange={setCurrentTask}
+              focusTaskId={focusTaskId}
             />
 
             {/* The scratchpad and the tutor sit WITH the problem rather than on
@@ -593,6 +603,10 @@ export default function LearnPage() {
               // has one area, and a filter with one option is furniture.
               areaNames={scope === 'atlas' ? AREA_NAMES : undefined}
               initialArea={scope === 'atlas' ? subjectOntology.subject.id : undefined}
+              // The real queue, so a node can show what is actually waiting on
+              // it. Not a per-concept generator — see the prop note.
+              queuedTasks={state?.tasks ?? []}
+              onPractise={id => { setFocusTaskId(id); setTab('practice') }}
             />
             {!state?.progress && (
               <p className='text-[11px] text-gray-500'>

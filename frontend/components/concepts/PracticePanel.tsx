@@ -67,7 +67,7 @@ interface RulingResponse {
 }
 
 export default function PracticePanel({
-  tasks, verifierConfigured, onAdvance, onRefresh, onTaskChange,
+  tasks, verifierConfigured, onAdvance, onRefresh, onTaskChange, focusTaskId,
 }: {
   tasks: PracticeTaskView[]
   verifierConfigured: boolean
@@ -83,6 +83,20 @@ export default function PracticePanel({
    * panel needs the current problem, and this is the only place that knows it.
    */
   onTaskChange?: (task: PracticeTaskView | null) => void
+  /**
+   * Jump to this task, when something outside asked for it by id.
+   *
+   * By id rather than by index, because the caller — the concept map — knows
+   * which problem it listed and does not know where the scheduler put it. An
+   * index would be a second copy of the queue's order and would land on the
+   * wrong problem the moment the queue was refreshed between the click and
+   * the render.
+   *
+   * An id that is not in `tasks` is ignored rather than clamped: it means the
+   * queue moved on, and resetting someone to problem one because their jump
+   * expired is a worse answer than leaving them where they are.
+   */
+  focusTaskId?: string | null
 }) {
   const [index, setIndex] = useState(0)
   const [answer, setAnswer] = useState('')
@@ -92,6 +106,15 @@ export default function PracticePanel({
   const shownAt = useRef<number>(Date.now())
 
   const task = tasks[index] ?? null
+
+  // Honour a jump request. Keyed on the id so re-asking for the SAME task
+  // after navigating away still works, which a one-shot effect would not do.
+  useEffect(() => {
+    if (!focusTaskId) return
+    const at = tasks.findIndex(t => t.id === focusTaskId)
+    if (at >= 0) setIndex(at)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusTaskId, tasks.length])
 
   useEffect(() => {
     setAnswer('')
