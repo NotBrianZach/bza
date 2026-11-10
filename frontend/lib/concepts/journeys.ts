@@ -379,21 +379,144 @@ export function resolveJourney(
   }
 }
 
+// ---------------------------------------------------------------------------
+// How journeys relate to each other
+// ---------------------------------------------------------------------------
+
 /**
- * Journeys ordered by how much is left, shortest remaining first.
+ * Journeys are not a flat list, and the relations between them are derivable.
  *
- * So a half-finished short journey outranks an untouched long one, which is
- * the order somebody looking for "what can I finish" wants. Finished journeys
- * sink to the bottom rather than being dropped — having completed one is worth
- * seeing, and removing it would make the list silently shrink.
+ * Two kinds, because they mean different things to a learner:
+ *
+ *  - `stage`: journey A's DESTINATION lies on journey B's route. Finishing A
+ *    is then literal progress through B — not an analogy, the same steps. This
+ *    is directed and is the strong relation.
+ *  - `shares`: they have material in common but neither contains the other.
+ *    Undirected, weaker, and worth drawing because it answers "will this help
+ *    with that" when containment does not.
+ *
+ * ── Why `shares` has to discount the common base ──────────────────────────
+ *
+ * Every journey in a mathematics atlas rests on place value and whole-number
+ * arithmetic. If shared concepts were counted naively, every pair would share
+ * something and the map would be complete — a graph where everything connects
+ * to everything says nothing. So concepts that most journeys depend on are
+ * treated as common ground and excluded. What is left is overlap that is
+ * actually characteristic of those two routes.
+ *
+ * The threshold is a ratio rather than a hand-listed set of "basics", because
+ * a list would need maintaining every time a journey is added and would
+ * silently rot. This way the common base is whatever the current set of
+ * journeys makes common.
  */
-export function byRemaining(resolved: readonly ResolvedJourney[]): ResolvedJourney[] {
-  return [...resolved].sort((a, b) => {
-    const aLeft = a.total - a.done
-    const bLeft = b.total - b.done
-    if ((aLeft === 0) !== (bLeft === 0)) return aLeft === 0 ? 1 : -1
-    return aLeft - bLeft
-  })
+export interface JourneyRelations {
+  /** `from` is a stage of `to`: finishing `from` is progress through `to`. */
+  stage: { from: string; to: string }[]
+  /** Overlap with no containment. `a` and `b` are unordered. */
+  shares: { a: string; b: string; concepts: string[] }[]
+  /** Concepts so widely shared they were discounted, with the count. */
+  common: { conceptId: string; journeys: number }[]
+}
+
+/**
+ * A concept appearing on more than this fraction of journeys is common ground.
+ *
+ * Half. Lower and characteristic overlap starts being discarded; higher and
+ * the arithmetic base creeps back in and reconnects everything.
+ */
+const COMMON_SHARE = 0.5
+
+/** How much non-common overlap is worth drawing an edge for. */
+const SHARES_MIN = 2
+
+export function journeyRelations(
+  o: ConceptOntology,
+  journeys: readonly Journey[],
+): JourneyRelations {
+  const routeOf = new Map<string, Set<string>>()
+  for (const j of journeys) routeOf.set(j.id, new Set(claimableChainFor(o, j.destination)))
+
+  const appearances = new Map<string, number>()
+  for (const route of routeOf.values()) {
+    for (const id of route) appearances.set(id, (appearances.get(id) ?? 0) + 1)
+  }
+  const commonCut = journeys.length * COMMON_SHARE
+  const common = [...appearances.entries()]
+    .filter(([, n]) => n > commonCut)
+    .map(([conceptId, journeys]) => ({ conceptId, journeys }))
+    .sort((a, b) => b.journeys - a.journeys)
+  const isCommon = new Set(common.map(c => c.conceptId))
+
+  const stage: { from: string; to: string }[] = []
+  for (const a of journeys) {
+    for (const b of journeys) {
+      if (a.id === b.id) continue
+      /**
+       * Containment is tested on the DESTINATION, not on the whole route.
+       *
+       * A route is a prerequisite closure, so two journeys in the same area
+       * share most of their early steps without either being a stage of the
+       * other. The destination is the only step that is the journey's own
+       * point, so "your endpoint is on my path" is the claim that actually
+       * means finishing you advances me.
+       */
+      if (routeOf.get(b.id)!.has(a.destination)) stage.push({ from: a.id, to: b.id })
+    }
+  }
+
+  const containment = new Set(stage.map(s => `${s.from}>${s.to}`))
+  const shares: { a: string; b: string; concepts: string[] }[] = []
+  for (let i = 0; i < journeys.length; i++) {
+    for (let k = i + 1; k < journeys.length; k++) {
+      const a = journeys[i]
+      const b = journeys[k]
+      // Containment already says something stronger; a second edge between the
+      // same pair would be two lines meaning one thing.
+      if (containment.has(`${a.id}>${b.id}`) || containment.has(`${b.id}>${a.id}`)) continue
+      const both = [...routeOf.get(a.id)!]
+        .filter(id => routeOf.get(b.id)!.has(id) && !isCommon.has(id))
+      if (both.length >= SHARES_MIN) shares.push({ a: a.id, b: b.id, concepts: both })
+    }
+  }
+
+  return { stage, shares, common }
+}
+
+/**
+ * Layer index per journey: how deep it sits in the `stage` relation.
+ *
+ * Longest path, for the same reason `ConceptGraph` layers by longest path — a
+ * journey that contains both a short one and a long one belongs to the right
+ * of both, and shortest-path would draw an edge leaping backwards over the
+ * layer that the arrow is supposed to explain.
+ *
+ * Journeys in no `stage` relation at all land in layer 0, which is correct
+ * rather than a fallback: an island has nothing before it.
+ */
+export function journeyLayers(
+  journeys: readonly Journey[],
+  stage: readonly { from: string; to: string }[],
+): Map<string, number> {
+  const into = new Map<string, string[]>()
+  for (const j of journeys) into.set(j.id, [])
+  for (const s of stage) into.get(s.to)?.push(s.from)
+
+  const depth = new Map<string, number>()
+  const walk = (id: string, seen: Set<string>): number => {
+    const cached = depth.get(id)
+    if (cached !== undefined) return cached
+    // A cycle is impossible through destination-containment on a DAG, but the
+    // guard costs nothing and a hang here would be a blank tab.
+    if (seen.has(id)) return 0
+    seen.add(id)
+    const parents = into.get(id) ?? []
+    const d = parents.length === 0 ? 0 : 1 + Math.max(...parents.map(p => walk(p, seen)))
+    seen.delete(id)
+    depth.set(id, d)
+    return d
+  }
+  for (const j of journeys) walk(j.id, new Set())
+  return depth
 }
 
 // ---------------------------------------------------------------------------

@@ -293,12 +293,114 @@ test('journeyProblems catches a duplicate id and an empty arc', () => {
   assert(none.some(s => /no milestones/.test(s)), JSON.stringify(none))
 })
 
-test('byRemaining puts the nearly-finished first and the done last', () => {
-  const mk = (id, done, total) => ({ journey: { id }, done, total })
-  const out = J.byRemaining([
-    mk('finished', 3, 3), mk('long', 0, 10), mk('nearly', 4, 5), mk('mid', 2, 6),
-  ]).map(r => r.journey.id)
-  eq(out.join(','), 'nearly,mid,long,finished')
+// ═══════════════════════════════════════════════════════════════════════════
+// Relations between journeys — what the journey map draws
+// ═══════════════════════════════════════════════════════════════════════════
+
+test('a stage edge means one destination sits on another route', () => {
+  // The strong relation, and the one an arrow on the map asserts. Finishing
+  // the contained journey is progress through the containing one — the same
+  // steps, not an analogy.
+  const r = J.journeyRelations(MATHEMATICS, J.JOURNEYS)
+  assert(
+    r.stage.some(s => s.from === 'spot-the-factors' && s.to === 'solve-any-quadratic'),
+    `expected spot-the-factors to be a stage of solve-any-quadratic: ${JSON.stringify(r.stage)}`,
+  )
+  // And it must hold in the data, not just in the function.
+  for (const s of r.stage) {
+    const from = J.JOURNEYS.find(j => j.id === s.from)
+    const route = new Set(R.claimableChainFor(MATHEMATICS, J.JOURNEYS.find(j => j.id === s.to).destination))
+    assert(route.has(from.destination), `${s.from} -> ${s.to} is not real containment`)
+  }
+})
+
+test('stage edges are never mutual', () => {
+  // Two journeys each containing the other's destination would draw arrows
+  // both ways and claim each is a prerequisite stage of the other.
+  const r = J.journeyRelations(MATHEMATICS, J.JOURNEYS)
+  const key = new Set(r.stage.map(s => `${s.from}>${s.to}`))
+  for (const s of r.stage) {
+    assert(!key.has(`${s.to}>${s.from}`), `mutual stage edge: ${s.from} <-> ${s.to}`)
+  }
+})
+
+test('the common arithmetic base is discounted, or everything connects', () => {
+  // The guard that keeps the map from being complete. Place value is on every
+  // route; counted naively it would join all six journeys to each other and
+  // the drawing would carry no information.
+  const r = J.journeyRelations(MATHEMATICS, J.JOURNEYS)
+  const common = new Set(r.common.map(c => c.conceptId))
+  assert(common.has('place-value'), `place-value should be common ground: ${JSON.stringify(r.common)}`)
+  for (const s of r.shares) {
+    for (const c of s.concepts) {
+      assert(!common.has(c), `${s.a} ~ ${s.b} counted common ground "${c}"`)
+    }
+  }
+})
+
+test('a shares edge never duplicates a stage edge', () => {
+  // Containment already says something stronger. Two lines between the same
+  // pair would be two marks meaning one thing.
+  const r = J.journeyRelations(MATHEMATICS, J.JOURNEYS)
+  const staged = new Set(r.stage.flatMap(s => [`${s.from}|${s.to}`, `${s.to}|${s.from}`]))
+  for (const s of r.shares) {
+    assert(!staged.has(`${s.a}|${s.b}`), `${s.a} ~ ${s.b} is already a stage edge`)
+  }
+})
+
+test('the journey graph is allowed to be disconnected', () => {
+  // Not a defect to be fixed by lowering a threshold. An island tells a
+  // learner that picking it up commits them to a thread of its own, and
+  // "Turn multiplication into addition" is genuinely one.
+  const r = J.journeyRelations(MATHEMATICS, J.JOURNEYS)
+  const joined = new Set([
+    ...r.stage.flatMap(s => [s.from, s.to]),
+    ...r.shares.flatMap(s => [s.a, s.b]),
+  ])
+  const islands = J.JOURNEYS.filter(j => !joined.has(j.id)).map(j => j.id)
+  assert(islands.length > 0, 'expected at least one island; a complete graph says nothing')
+})
+
+test('layers put a contained journey strictly left of its container', () => {
+  // The one promise the layout makes. An arrow pointing backwards would make
+  // left-is-earlier false exactly where the arrow is meant to explain it.
+  const r = J.journeyRelations(MATHEMATICS, J.JOURNEYS)
+  const layers = J.journeyLayers(J.JOURNEYS, r.stage)
+  for (const s of r.stage) {
+    assert(layers.get(s.from) < layers.get(s.to),
+      `${s.from} (layer ${layers.get(s.from)}) should be left of ${s.to} (layer ${layers.get(s.to)})`)
+  }
+})
+
+test('layers are longest-path, not shortest', () => {
+  // a contains nothing; b contains a; c contains both a and b. c must be at 2,
+  // beyond b — taking the shortest path from a would put it at 1, level with b,
+  // and the a→c arrow would leap over its own layer.
+  const js = [
+    { id: 'a', destination: 'da', milestones: [] },
+    { id: 'b', destination: 'db', milestones: [] },
+    { id: 'c', destination: 'dc', milestones: [] },
+  ]
+  const stage = [{ from: 'a', to: 'b' }, { from: 'b', to: 'c' }, { from: 'a', to: 'c' }]
+  const layers = J.journeyLayers(js, stage)
+  eq(layers.get('a'), 0)
+  eq(layers.get('b'), 1)
+  eq(layers.get('c'), 2)
+})
+
+test('an island lands in layer 0, and that is the truth not a fallback', () => {
+  const layers = J.journeyLayers(
+    [{ id: 'lonely', destination: 'd', milestones: [] }], [],
+  )
+  eq(layers.get('lonely'), 0)
+})
+
+test('journeyRelations is empty and safe for a single journey', () => {
+  // Nothing to relate. The pair loops must not produce a self-edge.
+  const one = [J.JOURNEYS[0]]
+  const r = J.journeyRelations(MATHEMATICS, one)
+  eq(r.stage.length, 0, `a lone journey cannot be a stage of itself: ${JSON.stringify(r.stage)}`)
+  eq(r.shares.length, 0)
 })
 
 // ── report ───────────────────────────────────────────────────────────────────
@@ -313,6 +415,22 @@ for (const j of J.JOURNEYS) {
     `  ${String(r.total).padStart(2)} steps · ${String(r.unwrittenOnPath).padStart(2)} unwritten on route`
     + ` · ${r.areas.length} area(s) — ${j.title}`,
   )
+}
+
+// The shape of the journey map, printed for the same reason. A set of
+// journeys that had quietly become fully connected, or fully disconnected,
+// would still pass every assertion above while drawing a useless map.
+{
+  const rel = J.journeyRelations(MATHEMATICS, J.JOURNEYS)
+  const joined = new Set([
+    ...rel.stage.flatMap(s => [s.from, s.to]),
+    ...rel.shares.flatMap(s => [s.a, s.b]),
+  ])
+  console.log(
+    `\njourney map: ${rel.stage.length} stage edge(s), ${rel.shares.length} shared-ground edge(s), `
+    + `${J.JOURNEYS.filter(j => !joined.has(j.id)).length} island(s)`,
+  )
+  console.log(`  discounted as common to most routes: ${rel.common.map(c => c.conceptId).join(', ') || 'none'}`)
 }
 
 rmSync(outDir, { recursive: true, force: true })

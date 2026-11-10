@@ -13,7 +13,7 @@ import { MASTERY_FLOOR } from '@/lib/concepts/scheduling'
 import ConceptBrowser from '@/components/concepts/ConceptBrowser'
 import ClaimsList from '@/components/concepts/ClaimsList'
 import ConceptGraph from '@/components/concepts/ConceptGraph'
-import JourneyPanel from '@/components/concepts/JourneyPanel'
+import JourneyMap from '@/components/concepts/JourneyMap'
 import PracticeChat from '@/components/concepts/PracticeChat'
 import PracticePanel, { type PracticeTaskView } from '@/components/concepts/PracticePanel'
 import ReviewQueue from '@/components/concepts/ReviewQueue'
@@ -155,14 +155,21 @@ export default function LearnPage() {
    */
   const [subject, setSubject] = useState<string | null>(null)
   /**
-   * Whether the Concepts tab draws the practised subject or the whole atlas.
+   * Which map the Concepts tab draws.
+   *
+   * Three, and they are three views of one thing rather than three features:
+   * the practised subject, the whole atlas, and the journeys across it. The
+   * journeys began as a list below the graph and became a scope because they
+   * are a map too — one whose nodes are destinations rather than concepts, and
+   * which is not expected to be connected. A second permanent panel would have
+   * been a separate element competing with the graph for the same screen.
    *
    * Not persisted and not in the URL. It is a way of looking at one page rather
    * than a place, and a remembered value would mean a learner who once glanced
    * at the map comes back next week to three hundred nodes instead of their
    * fifteen.
    */
-  const [scope, setScope] = useState<'subject' | 'atlas'>('subject')
+  const [scope, setScope] = useState<'subject' | 'atlas' | 'journeys'>('subject')
 
   /**
    * What the scratchpad and the tutor need from the practice panel.
@@ -574,7 +581,11 @@ export default function LearnPage() {
                 cannot do. The map is one click away and says what it is. */}
             <div className='flex flex-wrap items-center gap-2 text-[11px]'>
               <span className='text-gray-500'>showing</span>
-              {([['subject', 'the subject I am practising'], ['atlas', 'the whole map']] as const)
+              {([
+                ['subject', 'the subject I am practising'],
+                ['atlas', 'the whole map'],
+                ['journeys', 'journeys across it'],
+              ] as const)
                 .map(([id, label]) => (
                   <button
                     key={id}
@@ -597,56 +608,52 @@ export default function LearnPage() {
                 </span>
               )}
             </div>
-            {/* The graph first, the list below. They answer different
-                questions — the graph answers "what is the shape of this
-                subject and where am I", which is what people arrive with; the
-                list answers "what exactly does this one concept say", which is
-                what they want next. Neither replaces the other. */}
-            <ConceptGraph
-              ontology={scope === 'atlas' ? MATHEMATICS : subjectOntology}
-              concepts={state?.progress?.concepts ?? []}
-              masteryFloor={MASTERY_FLOOR}
-              onClaim={claim}
-              onClaimChain={claimChain}
-              // The area filter only appears on the map. A nine-concept subject
-              // has one area, and a filter with one option is furniture.
-              areaNames={scope === 'atlas' ? AREA_NAMES : undefined}
-              initialArea={scope === 'atlas' ? subjectOntology.subject.id : undefined}
-              // The real queue, so a node can show what is actually waiting on
-              // it. Not a per-concept generator — see the prop note.
-              queuedTasks={state?.tasks ?? []}
-              onPractise={id => { setFocusTaskId(id); setTab('practice') }}
-              selectedId={selectedConcept}
-              onSelectedChange={setSelectedConcept}
-            />
+            {/* One map slot, three things it can be.
 
-            {/* Under the graph rather than above it.
+                The journeys used to sit in a permanent panel under the graph,
+                which made them a second element competing for the same screen.
+                They are a map in their own right — nodes are destinations, and
+                unlike the concept graph it is not expected to be connected —
+                so they belong in the switch rather than beside it. */}
+            {scope === 'journeys' ? (
+              <JourneyMap
+                /* Always the composed atlas, never the practised subject.
 
-                The graph is what the tab is for and what people arrive
-                looking at; a block of narrative above it would push the map
-                off the first screen. Journeys are the answer to "and what am
-                I doing with this", which is the second question. */}
-            <JourneyPanel
-              /* Always the composed atlas, never the scope switch.
-
-                 A journey crosses areas by nature — "solve any quadratic"
-                 starts in arithmetic and ends in rational expressions. Handed
-                 a single-subject ontology it would find its destination
-                 missing, resolve to an empty chain, and render as "0 of 0
-                 steps": a broken-looking row caused by a filter the learner
-                 did not know applied to it. */
-              ontology={MATHEMATICS}
-              concepts={state?.progress?.concepts ?? []}
-              masteryFloor={MASTERY_FLOOR}
-              areaNames={AREA_NAMES}
-              queuedTasks={state?.tasks ?? []}
-              onPractise={id => { setFocusTaskId(id); setTab('practice') }}
-              /* Showing a step means showing it on a graph that contains it,
-                 so the scope follows the click. In subject scope the map is
-                 one area with no area filter, and selecting a concept from
-                 elsewhere would highlight nothing at all. */
-              onSelectConcept={id => { setScope('atlas'); setSelectedConcept(id) }}
-            />
+                   A journey crosses areas by nature — "solve any quadratic"
+                   starts in arithmetic and ends in rational expressions.
+                   Handed a single-subject ontology it would find its
+                   destination missing, resolve to an empty chain and render as
+                   "0 of 0 steps". */
+                ontology={MATHEMATICS}
+                concepts={state?.progress?.concepts ?? []}
+                masteryFloor={MASTERY_FLOOR}
+                areaNames={AREA_NAMES}
+                queuedTasks={state?.tasks ?? []}
+                onPractise={id => { setFocusTaskId(id); setTab('practice') }}
+                /* Showing a step means showing it on a graph that contains
+                   it, so the scope follows the click — this leaves the journey
+                   map for the atlas with that concept selected. */
+                onSelectConcept={id => { setScope('atlas'); setSelectedConcept(id) }}
+              />
+            ) : (
+              <ConceptGraph
+                ontology={scope === 'atlas' ? MATHEMATICS : subjectOntology}
+                concepts={state?.progress?.concepts ?? []}
+                masteryFloor={MASTERY_FLOOR}
+                onClaim={claim}
+                onClaimChain={claimChain}
+                // The area filter only appears on the map. A nine-concept subject
+                // has one area, and a filter with one option is furniture.
+                areaNames={scope === 'atlas' ? AREA_NAMES : undefined}
+                initialArea={scope === 'atlas' ? subjectOntology.subject.id : undefined}
+                // The real queue, so a node can show what is actually waiting on
+                // it. Not a per-concept generator — see the prop note.
+                queuedTasks={state?.tasks ?? []}
+                onPractise={id => { setFocusTaskId(id); setTab('practice') }}
+                selectedId={selectedConcept}
+                onSelectedChange={setSelectedConcept}
+              />
+            )}
             {!state?.progress && (
               <p className='text-[11px] text-gray-500'>
                 Every node reads as blocked until the session loads — the colours come
