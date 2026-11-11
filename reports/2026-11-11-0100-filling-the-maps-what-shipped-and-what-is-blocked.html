@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Filling the maps: what shipped, and what the verifier is blocking — bza</title>
+<style>
+  :root {
+    --bg: #0f0f1a; --panel: #13131f; --border: #1e1e3a; --text: #d0d0e8;
+    --muted: #8080a0; --accent: #e94560; --link: #7ec7ff; --code-bg: #0a0a14;
+    --good: #7ad1a0; --warn: #e8c07a;
+  }
+  html, body { background: var(--bg); color: var(--text); }
+  body { font-family: "IBM Plex Sans", "Inter", system-ui, sans-serif;
+         max-width: 780px; margin: 3rem auto 6rem; padding: 0 1.5rem;
+         line-height: 1.65; font-size: 16.5px; }
+  h1 { color: var(--accent); font-size: 1.6rem; margin: 0 0 0.4rem; }
+  h2 { color: var(--accent); font-size: 1rem; margin: 2.6rem 0 1rem;
+       text-transform: uppercase; letter-spacing: 0.08em;
+       border-top: 1px solid var(--border); padding-top: 1.2rem; }
+  h3 { color: #a0a0c0; font-size: 0.95rem; margin: 1.8rem 0 0.6rem; }
+  .lede { color: var(--muted); margin-bottom: 2rem; font-size: 0.95rem; }
+  code { background: var(--code-bg); color: #b0e0b0;
+         padding: 1px 5px; border-radius: 3px; font-size: 0.88em;
+         font-family: "JetBrains Mono", ui-monospace, monospace; }
+  pre { background: var(--code-bg); border: 1px solid var(--border);
+        border-radius: 5px; padding: 0.9rem 1.1rem; overflow-x: auto;
+        font-size: 0.84em; line-height: 1.5; }
+  pre code { background: none; padding: 0; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0 1.4rem; }
+  th { text-align: left; padding: 0.45rem 0.6rem; color: var(--muted);
+       font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em;
+       border-bottom: 1px solid var(--border); }
+  td { padding: 0.42rem 0.6rem; border-bottom: 1px solid #1a1a2e;
+       font-size: 0.9rem; vertical-align: top; }
+  blockquote { border-left: 2px solid var(--border); margin: 1.2rem 0;
+               padding: 0.2rem 0 0.2rem 1.1rem; color: var(--muted);
+               font-size: 0.93rem; }
+  .meta { color: var(--muted); font-size: 0.86rem; margin-bottom: 2.2rem;
+          border-bottom: 1px solid var(--border); padding-bottom: 1.2rem; }
+  .meta b { color: #a0a0c0; font-weight: 600; }
+  .good { color: var(--good); }
+  .warn { color: var(--warn); }
+  a { color: var(--link); }
+  ul, ol { padding-left: 1.3rem; }
+  li { margin-bottom: 0.45rem; }
+</style>
+</head>
+<body>
+
+<h1>Filling the maps: what shipped, and what the verifier is blocking</h1>
+
+<p class="lede">The concept map and the narratives map were an afternoon of
+writing and are done. The practice map moved by one concept and then stopped
+against a wall that is not about authoring effort: three concepts already
+counted as having problems have none, the engine has no verifiable task kind
+for <em>solving</em> or <em>stating</em>, and the next tranche of practice
+content is blocked on engine work rather than on prose.</p>
+
+<p class="meta">
+<b>Date:</b> 2026-11-11<br>
+<b>Status:</b> successor to <code>reports/2026-11-10-filling-out-the-three-maps.md</code>,
+which was a pre-build design pass. That document's proposals are now built or
+answered; this one records which, and restates the plan from where it actually
+stands.<br>
+<b>Also:</b> that report is invisible in the TempleDB GUI, and this one is the
+fix. <code>/reports</code> globs <code>reports/[0-9][0-9][0-9][0-9]-*.html</code>;
+both existing bza reports are <code>.md</code>, so
+<code>/reports?project=bza</code> renders "No reports". Markdown in
+<code>reports/</code> is not a report as far as the GUI is concerned.<br>
+<b>Shipped in:</b> <code>2E4A1116DC88A2A2</code> (content),
+<code>A95B1FED98F5F939</code> (the practisable/teachable split)<br>
+<b>Figures measured against:</b> production, post-deploy, via
+<code>/learn</code> and <code>npm test</code>.
+</p>
+
+<h2>Where the three maps stand now</h2>
+
+<table>
+<tr><th></th><th>Before</th><th>Now</th><th>Verdict</th></tr>
+<tr>
+  <td>Concept map (mapped nodes)</td>
+  <td>291 concepts / 21 areas</td>
+  <td><b>294</b></td>
+  <td class="good">open — extend freely</td>
+</tr>
+<tr>
+  <td>Practice map (material)</td>
+  <td>34 teachable</td>
+  <td><b>35</b></td>
+  <td class="warn">blocked — see below</td>
+</tr>
+<tr>
+  <td>Practice map (<i>actually practisable</i>)</td>
+  <td>not measured</td>
+  <td><b>32</b></td>
+  <td class="warn">the real number</td>
+</tr>
+<tr>
+  <td>Narratives map (journeys)</td>
+  <td>6</td>
+  <td><b>10</b></td>
+  <td class="good">open — bounded by the practice map</td>
+</tr>
+</table>
+
+<p>The live coverage line now reads: <em>"294 concepts across 27 areas, 507
+prerequisite edges — 35 have material written for them (12%), and 32 of those
+have problems you can actually be set."</em></p>
+
+<h2>The finding that changes the plan</h2>
+
+<p><code>isTeachable</code> means <em>"has at least one knowledge point"</em>,
+and every surface in the app reported it as the number of concepts that
+<em>"have problems written for them"</em>. Those are two different claims and
+for three concepts they disagree:</p>
+
+<ul>
+<li><code>logarithm-definition</code> — 2 knowledge points, 0 tasks</li>
+<li><code>logarithm-rules</code> — 2 knowledge points, 0 tasks</li>
+<li><code>solving-exponential-equations</code> — 1 knowledge point, 0 tasks</li>
+</ul>
+
+<p>They were counted as practisable while offering nothing a learner could be
+set. Found by looking for the next concept to author and discovering three that
+already claimed to be done.</p>
+
+<p><b>The pattern is not random, and that is the load-bearing part.</b> Those
+three are exactly the concepts whose natural task is <em>solving</em> an
+equation or <em>stating</em> a definition. <code>TASK_KINDS</code> has five
+members and the two that would serve them are the two that are not
+verifiable:</p>
+
+<table>
+<tr><th>Kind</th><th>Verifiable</th><th>Settled by</th></tr>
+<tr><td><code>transform_to_form</code></td><td class="good">yes</td><td>the CAS worker (equivalence)</td></tr>
+<tr><td><code>evaluate</code></td><td class="good">yes</td><td><b>locally</b>, exact rational arithmetic</td></tr>
+<tr><td><code>counterexample</code></td><td class="good">yes</td><td>substitution</td></tr>
+<tr><td><code>state</code></td><td class="warn">no</td><td>—</td></tr>
+<tr><td><code>justify</code></td><td class="warn">no</td><td>—</td></tr>
+</table>
+
+<p>So the gap recurs at the next such concept. It is now pinned by a test group
+in <code>tests/concepts-logic.mjs</code> that fails if the read-only set grows,
+and reported honestly in three places that were previously silent or wrong: the
+atlas coverage line, the node panel ("readable but not practisable"), and the
+atlas suite's printed report.</p>
+
+<h2>The linear-equations question, answered</h2>
+
+<p>The previous report flagged a check it had not done:</p>
+
+<blockquote>Needs a check I have not done: whether a "solve for x" answer has a
+<code>NamedForm</code> the verifier can check, or whether it has to be posed as
+an <code>evaluate</code> on the root. <b>That check gates the estimate.</b></blockquote>
+
+<p>Checked. <b>There is no verifiable "solve" kind.</b> The answer to
+<code>3x + 5 = 14</code> is a solution — not a transformed expression and not an
+evaluation — and the expression language parses <em>expressions</em>, not
+equations. Authoring <code>linear-equations</code> now would produce a fourth
+concept with material and no problems and make the overstatement above worse.
+It was not authored, deliberately.</p>
+
+<h2>What shipped</h2>
+
+<h3>fraction-arithmetic — and a correction</h3>
+
+<p>Authored into <code>arithmetic-foundations</code>: three knowledge points,
+three <code>evaluate</code> tasks with integer symbols. It was the hole under
+the whole algebra syllabus — <code>combining-rational</code> was reachable
+without ever having added ½ + ⅓.</p>
+
+<p>The previous report framed this as a decision about accepting a new gate. It
+was subtler than that, and the distinction is worth keeping:
+<b>authoring the concept did not add a gate, it made an existing edge
+bite.</b> <code>fraction-arithmetic → combining-rational</code> was already in
+<code>ALGEBRA_FOUNDATIONS.links</code>; <code>gatingPrerequisitesOf</code>
+looked straight through it because the endpoint had no material. A duplicate
+link added during authoring was removed, and the atlas assertion that the
+concept must <em>not</em> appear in the chain was flipped with the reason
+recorded.</p>
+
+<p>Two drafts were caught by the task validator, both real faults rather than
+style:</p>
+
+<ol>
+<li><code>transform_to_form</code> would have made <b>arithmetic — the root of
+the map</b> — depend on the CAS worker, so an outage would wall off the entry
+point rather than a branch. The subject's contract is that every task is settled
+locally, asserted over all of them.</li>
+<li>The division task was a free mark: <code>single_fraction</code> means "one
+quotient, no top-level sum", and <code>(2x/3)/(4/5)</code> already is one, so
+the given satisfied the form it was asking for.</li>
+</ol>
+
+<h3>Four journeys, and a map instead of a list</h3>
+
+<p>Ten journeys now, 3 to 16 steps. The journey list became a journey
+<em>map</em> — a third position on the Concepts scope switch, with two derived
+relations: <code>stage</code> (one journey's destination lies on another's
+route, so finishing it is literal progress) and <code>shares</code> (overlap
+with no containment). Current shape: 13 stage edges, 4 shared-ground edges,
+1 island.</p>
+
+<p>The <code>shares</code> relation discounts concepts common to more than half
+the journeys, or every route's shared arithmetic base connects all of them and
+the drawing carries no information.</p>
+
+<h3>Three concept-map nodes</h3>
+
+<p>Parametric curves, transformations of the plane, loci and regions — into
+<code>coordinate-geometry</code>, the thinnest area at seven nodes. Polar
+coordinates was the obvious fourth and already existed in trigonometry; the
+duplicate test caught it, and also caught
+<code>congruence-and-similarity</code>, an id invented for something filed as
+two concepts.</p>
+
+<h2>The plan from here</h2>
+
+<h3>1. Unblock the practice map (engine work, not authoring)</h3>
+
+<p>This is the only item that changes the ceiling. Two independent routes, and
+the first is cheaper:</p>
+
+<ul>
+<li><b>Give the three read-only concepts real tasks.</b> <code>log</code> is in
+<code>ALLOWED_FUNCTIONS</code>, so the worker can rule equivalence. It needs
+either a new <code>NamedForm</code> for "logs expanded into a sum" — the type
+forces a checker in <code>FORM_CHECKS</code>, which is the actual work — or a
+worker-ruled <code>evaluate</code> path, since <code>exactValue</code> returns
+null for function nodes. Closes a known 3-concept gap and unblocks the
+exponents subject.</li>
+<li><b>A verifiable <code>solve</code> kind.</b> Larger: the expression language
+parses expressions, so equations would need representing, and a solution set is
+not a single value (no solutions, one, infinitely many). This is what
+<code>linear-equations</code>, <code>linear-inequalities</code>,
+<code>systems-of-linear-equations</code> and
+<code>absolute-value-equations</code> are all waiting on — four mapped nodes
+that a reader would expect to be practisable before most of what is.</li>
+</ul>
+
+<h3>2. Keep extending the narratives map — but it is near its bound</h3>
+
+<p>Ten journeys over 35 teachable concepts. The bound is real: a journey must
+end on a teachable concept, so the narratives map cannot outgrow the practice
+map. Remaining unused destinations with a genuine arc:
+<code>polynomial-roots</code>, <code>partial-fractions-quadratic</code>,
+<code>function-composition</code>, <code>determinant</code>,
+<code>plane-vectors</code>. Perhaps four or five more before they start
+overlapping each other more than they illuminate.</p>
+
+<h3>3. Concept map — extend when a reader would notice a hole</h3>
+
+<p>Still cheap and still gates nothing. But the ratio argument from the previous
+report stands and has <em>worsened</em> with the real figure known: 294 nodes
+against 32 practisable is better than 9:1, and every honest surface in the app
+has to print it. Add nodes where a reader would notice their absence; do not
+bulk-author to make the atlas look fuller.</p>
+
+<h2>The authoring checklist, as it actually played out</h2>
+
+<p>The move procedure from the previous report is correct and was followed. Two
+additions from doing it:</p>
+
+<ol>
+<li>Delete the mapped node from its area.</li>
+<li>Add the authored concept, with knowledge points <em>and tasks</em> —
+<code>isTeachable</code> is satisfied by knowledge points alone, which is how
+three concepts ended up readable and not practisable.</li>
+<li><b>Restate every incoming edge</b> in the area's <code>links</code>. The
+symptom of forgetting is not an error; it is a syllabus quietly becoming a root
+of the map.</li>
+<li><b>Check whether an edge into the new concept already exists.</b> If it
+does, authoring makes it bite immediately and there is no concept-then-edge
+sequencing available. This is what <code>fraction-arithmetic</code> did.</li>
+<li><b>Update the pinned counts.</b> Several tests pin subject sizes
+(<code>5 concepts, 15 knowledge points</code>, <code>15 tasks</code>,
+<code>4 blocked</code>). They are meant to be updated, and they are what caught
+each mistake above.</li>
+</ol>
+
+<h2>What I would still not do</h2>
+
+<ul>
+<li><b>Author a concept whose tasks cannot be settled exactly.</b> Unchanged,
+and now with three worked examples of what it costs — they are sitting in the
+exponents subject as material nobody can practise.</li>
+<li><b>Let <code>isTeachable</code> absorb the distinction.</b> It gates
+introduction and must keep meaning "there is material here", which is the right
+question for the scheduler. "Can they go and do it" is a different question and
+now has its own function.</li>
+<li><b>Bulk-author mapped nodes.</b> See the ratio above.</li>
+</ul>
+
+</body>
+</html>
