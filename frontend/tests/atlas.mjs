@@ -231,11 +231,12 @@ t('every gate named is a concept the learner can actually go and practise',
     gatingPrerequisitesOf(MATHEMATICS, id).every(p => isTeachable(MATHEMATICS, p))))
 t('place value is a root of the whole map, and was not teachable before',
   roots(MATHEMATICS).includes('place-value') && isTeachable(MATHEMATICS, 'place-value'))
-t('the five authored ids appear exactly once each in the composed concept list',
-  ['place-value', 'integer-arithmetic', 'order-of-operations', 'negative-numbers', 'divisibility']
+t('the authored arithmetic ids appear exactly once each in the composed concept list',
+  ['place-value', 'integer-arithmetic', 'order-of-operations', 'negative-numbers', 'divisibility',
+    'fraction-arithmetic']
     .every(id => MATHEMATICS.concepts.filter(c => c.id === id).length === 1))
 t('and they carry their own subject, not the area they left',
-  MATHEMATICS.concepts.filter(c => c.subjectId === 'arithmetic-foundations').length === 5)
+  MATHEMATICS.concepts.filter(c => c.subjectId === 'arithmetic-foundations').length === 6)
 t('the nodes that used to need them still do, across the file boundary',
   prerequisitesOf(MATHEMATICS, 'absolute-value').includes('negative-numbers')
   && prerequisitesOf(MATHEMATICS, 'prime-factorisation').includes('divisibility'))
@@ -291,12 +292,28 @@ t('exponent rules reach down into arithmetic', (() => {
 })(), chainFor('exponent-rules').join(', '))
 t('combining rational expressions reaches arithmetic through the fractions link', (() => {
   const chain = chainFor('combining-rational')
-  // `fraction-arithmetic` is the link's own endpoint and is mapped-only, so it
-  // must NOT appear — but the walk has to pass THROUGH it to the arithmetic
-  // below, which is the behaviour `gatingPrerequisitesOf` could not give us.
-  return !chain.includes('fraction-arithmetic')
+  /*
+   * `fraction-arithmetic` MUST now appear, and the flip is the point.
+   *
+   * This assertion read `!chain.includes('fraction-arithmetic')` while the
+   * endpoint was mapped-only: the walk passed THROUGH it to the arithmetic
+   * below and could not stop on it, because a concept with no material has
+   * nothing to claim. Authoring it did not add this edge — the edge was always
+   * in `ALGEBRA_FOUNDATIONS.links` — it gave the edge something to gate with.
+   *
+   * So the arithmetic underneath must still be reachable (it is the same walk)
+   * AND the fractions concept is now a claimable step in its own right.
+   */
+  return chain.includes('fraction-arithmetic')
     && chain.includes('divisibility') && chain.includes('integer-arithmetic')
 })(), chainFor('combining-rational').join(', '))
+t('and the new gate it bites with is itself practisable', (() => {
+  // The invariant that makes tightening acceptable: a learner who meets this
+  // gate can go and do something about it. A gate naming a concept with no
+  // problems would be a wall.
+  const g = gatingPrerequisitesOf(MATHEMATICS, 'combining-rational')
+  return g.includes('fraction-arithmetic') && isTeachable(MATHEMATICS, 'fraction-arithmetic')
+})(), gatingPrerequisitesOf(MATHEMATICS, 'combining-rational').join(', '))
 t('a chain spans more than one subject, which is why rows are filed per concept',
   new Set(chainFor('partial-fractions-linear')
     .map(id => MATHEMATICS.concepts.find(c => c.id === id).subjectId)).size > 1,

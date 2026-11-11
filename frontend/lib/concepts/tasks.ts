@@ -185,6 +185,78 @@ const WHOLE_DIGITS = [
 ]
 
 export const TASKS: PracticeTask[] = [
+  /*
+   * ── fraction-arithmetic ─────────────────────────────────────────────────
+   *
+   * Three `evaluate` tasks with integer symbols, one per knowledge point,
+   * because that is this subject's contract rather than a style preference:
+   * "the third subject is gradable with no worker" is asserted in
+   * tests/concepts-logic.mjs over every task it owns.
+   *
+   * The first draft used `transform_to_form` with `single_fraction` and was
+   * wrong twice over. It would have made arithmetic — the root of the whole
+   * map — depend on the CAS worker being reachable, so an outage would wall
+   * off the entry point rather than a branch. And the division task was a free
+   * mark: `single_fraction` means "one quotient, no top-level sum", and
+   * `(2x/3)/(4/5)` is already one quotient, so the given satisfied the form it
+   * was being asked to reach. The test for that caught it by name.
+   *
+   * Exact rational arithmetic is what `exactValue` settles, so each reference
+   * below is reproducible from its given with nothing consulted — which is the
+   * property that makes fractions the right concept to put here.
+   */
+  {
+    id: 'fraction-add-1',
+    knowledgePointId: 'only-same-sized-parts-add',
+    kind: 'evaluate',
+    prompt:
+      'Evaluate a/b + c/d at a = 2, b = 3, c = 1, d = 4. Only parts of the same size can be '
+      + 'added, so the work is cutting both into twelfths first.',
+    given: 'a/b + c/d',
+    variables: [
+      { name: 'a', assumptions: { integer: true } },
+      { name: 'b', assumptions: { integer: true, nonzero: true } },
+      { name: 'c', assumptions: { integer: true } },
+      { name: 'd', assumptions: { integer: true, nonzero: true } },
+    ],
+    at: { a: '2', b: '3', c: '1', d: '4' },
+    reference: '11/12',
+  },
+  {
+    id: 'fraction-multiply-1',
+    knowledgePointId: 'multiplying-needs-no-common-denominator',
+    kind: 'evaluate',
+    prompt:
+      'Evaluate (a/b) · (c/d) at a = 4, b = 9, c = 3, d = 8. No common denominator is wanted '
+      + 'here — cancel across the product and the numbers stay small.',
+    given: '(a/b) * (c/d)',
+    variables: [
+      { name: 'a', assumptions: { integer: true } },
+      { name: 'b', assumptions: { integer: true, nonzero: true } },
+      { name: 'c', assumptions: { integer: true } },
+      { name: 'd', assumptions: { integer: true, nonzero: true } },
+    ],
+    at: { a: '4', b: '9', c: '3', d: '8' },
+    reference: '1/6',
+  },
+  {
+    id: 'fraction-divide-1',
+    knowledgePointId: 'dividing-is-multiplying-by-the-reciprocal',
+    kind: 'evaluate',
+    prompt:
+      'Evaluate (a/b) ÷ (c/d) at a = 2, b = 3, c = 4, d = 5. Dividing by c/d multiplies by d/c, '
+      + 'which is why the answer can be larger than you started with.',
+    given: '(a/b) / (c/d)',
+    variables: [
+      { name: 'a', assumptions: { integer: true } },
+      { name: 'b', assumptions: { integer: true, nonzero: true } },
+      { name: 'c', assumptions: { integer: true, nonzero: true } },
+      { name: 'd', assumptions: { integer: true, nonzero: true } },
+    ],
+    at: { a: '2', b: '3', c: '4', d: '5' },
+    reference: '5/6',
+  },
+
   // ── polynomial-arithmetic ───────────────────────────────────────────────
   {
     id: 'expand-binomials-1',

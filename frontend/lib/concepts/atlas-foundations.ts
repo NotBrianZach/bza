@@ -78,14 +78,23 @@ const NUMBER_AND_ARITHMETIC: MapArea = {
       exercises: ['prime-factorisation'],
       terms: 'gcd greatest common divisor lcm least common multiple',
     },
-    {
-      id: 'fraction-arithmetic',
-      match: /^fractions?\b|\b(common fraction|rational number)s?\b/i,
-      name: 'Fraction arithmetic',
-      is: 'Rational numbers as parts of a whole, with the four operations and the common-denominator step that drives them.',
-      needs: ['gcd-and-lcm', 'negative-numbers'],
-      terms: 'fraction numerator denominator common denominator',
-    },
+    /*
+     * `fraction-arithmetic` was here and is now authored in
+     * ontology-arithmetic.ts, so it had to leave: `atlasProblems` rejects a
+     * mapped node colliding with an authored concept.
+     *
+     * Its OWN `needs` left with it — that is the trap this file already
+     * records one area down, where authoring `function-concept` silently
+     * deleted `variables-and-expressions → function-concept`. So the incoming
+     * edge from `gcd-and-lcm` is restated in `links` below. The
+     * `negative-numbers` half of that pair is now declared inside the
+     * arithmetic subject itself, both endpoints being authored there.
+     *
+     * Edges pointing the OTHER way survive untouched: `decimal-representation`,
+     * `ratio-and-rate` and `roots-and-irrationals` each name
+     * `fraction-arithmetic` in their own `needs`, they are all still here, and
+     * `composeAtlas` resolves them across the file boundary.
+     */
     {
       id: 'decimal-representation',
       match: /\b(decimal (representation|expansion)|repeating decimal)/i,
@@ -135,7 +144,40 @@ const NUMBER_AND_ARITHMETIC: MapArea = {
       terms: 'scientific notation order of magnitude significant figures estimation',
     },
   ],
+  links: [
+    {
+      /**
+       * THE EDGE THAT WOULD HAVE BEEN LOST WHEN `fraction-arithmetic` WAS
+       * AUTHORED.
+       *
+       * The node declared `needs: ['gcd-and-lcm', 'negative-numbers']`. The
+       * second is an authored concept in the same subject as the new one, so
+       * that edge moved into ontology-arithmetic.ts. This one crosses from a
+       * map node to an authored concept and has nowhere else to live.
+       */
+      from: 'gcd-and-lcm',
+      to: 'fraction-arithmetic',
+      because:
+        'A common denominator is a common multiple and a cancellation is a common factor, so ' +
+        'both halves of fraction arithmetic are gcd and lcm wearing different hats.',
+    },
+  ],
 }
+/*
+ * NOTE ON THE EDGE THAT IS NOT DECLARED HERE.
+ *
+ * `fraction-arithmetic → combining-rational` was the edge this concept was
+ * authored for, and it already existed — in `ALGEBRA_FOUNDATIONS.links`
+ * below, pointing at the mapped node. Declaring a second copy here was the
+ * first attempt and was wrong.
+ *
+ * Which changes the story in a way worth recording: authoring this concept did
+ * not ADD a gate, it made an existing edge BITE. The map had always said
+ * combining rational expressions rests on fraction arithmetic;
+ * `gatingPrerequisitesOf` looked straight through it because the endpoint had
+ * no material to serve. Now it has, so the edge gates — and the one invariant
+ * that matters still holds, because the concept it gates on is teachable.
+ */
 
 const ALGEBRA_FOUNDATIONS: MapArea = {
   id: 'algebra-foundations',
@@ -681,6 +723,42 @@ const COORDINATE_GEOMETRY: MapArea = {
       is: 'Coordinates, lines and planes in space, where the cross product appears because orientation becomes a question.',
       needs: ['dot-product-geometry', 'solid-geometry'],
       terms: 'three dimensional coordinates plane equation cross product normal',
+    },
+    /*
+     * Three more, because this was the thinnest area on the map at seven nodes
+     * and the gaps were not obscure — they were things a reader arrives
+     * holding. Each `match` is title-shaped rather than a bare word, because
+     * tests/atlas.mjs caps how many concepts one title may claim and a loose
+     * pattern burns that budget on prose.
+     *
+     * Polar coordinates was the obvious fourth and is NOT here: it already
+     * exists in the trigonometry area, where it belongs — it is reached
+     * through the unit circle, not through the Cartesian plane. The test
+     * caught the duplicate, which is what it is for.
+     */
+    {
+      id: 'parametric-curves',
+      match: /^parametric (equation|curve)|\bparametrisation\b/i,
+      name: 'Parametric curves',
+      is: 'Describing a path by where you are at each time rather than by a relation between x and y — which is how a curve that fails the vertical-line test becomes a single function again.',
+      needs: ['lines-in-the-plane', 'function-concept'],
+      terms: 'parametric equations parameter t path trace curve',
+    },
+    {
+      id: 'plane-transformations',
+      match: /\b(translation|rotation|reflection|dilation) (of|in) the plane\b|\bisometr(y|ies)\b/i,
+      name: 'Transformations of the plane',
+      is: 'Translation, rotation, reflection and scaling as operations on coordinates, and which of them preserve distance — the first place geometry is studied through what leaves a figure unchanged.',
+      needs: ['cartesian-plane', 'congruence'],
+      terms: 'translation rotation reflection dilation isometry symmetry transformation',
+    },
+    {
+      id: 'loci-and-regions',
+      match: /\blocus\b|\bloci\b|\bregion in the plane\b/i,
+      name: 'Loci and regions',
+      is: 'The set of points satisfying a condition, which is what an equation has always been — and reading an inequality as an area rather than a boundary.',
+      needs: ['distance-and-midpoint', 'linear-inequalities'],
+      terms: 'locus loci region half plane feasible shaded inequality',
     },
   ],
   links: [

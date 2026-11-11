@@ -122,6 +122,23 @@ export const JOURNEYS: Journey[] = [
     ],
   },
   {
+    id: 'parts-of-a-whole',
+    title: 'Add things that are not the same size',
+    premise: 'The one piece of arithmetic that everything algebraic turns out to be.',
+    arc:
+      'Three steps to a fourth. Divisibility is what makes a common denominator findable and a '
+      + 'cancellation visible; signed numbers are what let a fraction be negative without the '
+      + 'minus wandering. Then fractions themselves, where the whole content is one idea — only '
+      + 'parts of the same size can be added, and a common denominator is the act of cutting '
+      + 'both into the same size rather than a ritual. Worth doing before any algebra, because '
+      + 'adding x/(x+1) + 1/x is this exact move with letters where the numbers were.',
+    destination: 'fraction-arithmetic',
+    milestones: [
+      { conceptId: 'divisibility', label: 'Factors on sight', promise: 'You can find a common denominator without hunting for it.' },
+      { conceptId: 'fraction-arithmetic', label: 'Same-sized parts', promise: 'You can add, multiply and divide fractions and say which needs a common denominator.' },
+    ],
+  },
+  {
     id: 'multiplication-into-addition',
     title: 'Turn multiplication into addition',
     premise: 'The trick that made astronomy possible before computers existed.',
@@ -191,6 +208,72 @@ export const JOURNEYS: Journey[] = [
       { conceptId: 'factoring-quadratics', label: 'Take the pieces apart', promise: 'You can factor the denominators you are about to need.' },
       { conceptId: 'combining-rational', label: 'Forwards', promise: 'You can add rational expressions over a common denominator.' },
       { conceptId: 'partial-fractions-linear', label: 'Backwards', promise: 'You can split one hard fraction into a sum of simple ones.' },
+    ],
+  },
+  {
+    id: 'where-is-it-undefined',
+    title: 'Find where an expression breaks',
+    premise: 'Every rational expression has points it refuses, and cancelling can hide them.',
+    arc:
+      'A short one with a sharp edge. Factor the denominator, and the values that make it zero '
+      + 'are the ones the expression has no answer for. Then simplify — and notice that '
+      + 'cancelling a factor REMOVES the evidence while the hole stays: (x²−1)/(x−1) is x+1 '
+      + 'everywhere except at x = 1, where it is nothing at all. The domain has to be read '
+      + 'before the cancellation, not after, and that ordering is the whole point.',
+    destination: 'simplifying-rational',
+    milestones: [
+      { conceptId: 'factoring-quadratics', label: 'Take the bottom apart', promise: 'You can factor a denominator to see what it forbids.' },
+      { conceptId: 'rational-domain', label: 'What it refuses', promise: 'You can state the values an expression has no value at.' },
+      { conceptId: 'simplifying-rational', label: 'Cancel without lying', promise: 'You can simplify and still say where the hole is.' },
+    ],
+  },
+  {
+    id: 'undo-a-power',
+    title: 'Undo a power',
+    premise: 'Squaring and square-rooting are the same move read in two directions.',
+    /*
+     * Not a beat: zero and negative exponents.
+     *
+     * The first draft made them the middle stage, and `journeyProblems`
+     * refused it — they are not on the route. Correctly, and this time the map
+     * was right and the story was wrong: extending the exponent rules
+     * DOWNWARDS to x⁰ and x⁻ⁿ and extending them SIDEWAYS to x^(1/2) are
+     * sibling moves off the same rule, not a sequence. Unlike the
+     * independence case, there was no missing edge to add.
+     *
+     * What the route does contain is fractions, which is the better story
+     * anyway: a rational exponent IS a fraction, so being fluent with
+     * fractions is the thing that makes x^(2/3) readable at all.
+     */
+    arc:
+      'Start with the one rule: powers of the same base multiply by adding exponents. Then get '
+      + 'comfortable with fractions, because the next step needs the exponent itself to be one. '
+      + 'And then the move worth the journey — if the rule is to keep holding, x^(1/2) · x^(1/2) '
+      + 'must be x, so x^(1/2) has no choice but to be the square root. A root stops being a '
+      + 'separate operation you memorised and becomes the exponent rule answering a question in '
+      + 'reverse.',
+    destination: 'rational-exponents',
+    milestones: [
+      { conceptId: 'exponent-rules', label: 'Powers multiply by adding', promise: 'You can combine and split powers of one base.' },
+      { conceptId: 'fraction-arithmetic', label: 'The exponent is a fraction now', promise: 'You can handle the arithmetic a fractional exponent needs.' },
+      { conceptId: 'rational-exponents', label: 'A root is an exponent', promise: 'You can move between radical and fractional-exponent form.' },
+    ],
+  },
+  {
+    id: 'what-a-matrix-does-to-space',
+    title: 'See what a matrix does to space',
+    premise: 'A matrix is not a grid of numbers. It is a thing that moves every point at once.',
+    arc:
+      'The middle of the linear-algebra story, stopped before the determinant so it stays short. '
+      + 'Vectors give you things to point with, span asks what you can reach by combining them, '
+      + 'and then the reframe: a matrix is a function from vectors to vectors, and the columns '
+      + 'are just where the basis vectors land. Multiplication follows immediately — AB means do '
+      + 'B then A — and the row-by-column rule stops being arbitrary because you can derive it.',
+    destination: 'matrix-multiplication',
+    milestones: [
+      { conceptId: 'vectors-and-spans', label: 'What you can reach', promise: 'You can say which vectors a set can build.' },
+      { conceptId: 'matrices-and-maps', label: 'A matrix is a map', promise: 'You can read a matrix by where it sends the basis.' },
+      { conceptId: 'matrix-multiplication', label: 'Two maps in a row', promise: 'You can derive the row-by-column rule from composition.' },
     ],
   },
   {

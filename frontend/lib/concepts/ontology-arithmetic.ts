@@ -740,6 +740,154 @@ const CONCEPTS: Concept[] = [
       },
     ],
   },
+
+  /**
+   * Fractions, which were the hole under the whole algebra syllabus.
+   *
+   * ── Why this one, out of 257 mapped concepts ──────────────────────────────
+   *
+   * `combining-rational` — adding x/(x+1) + 1/x — was reachable without ever
+   * having added 1/2 + 1/3. Every move in it IS fraction arithmetic with
+   * letters where the numbers were: find a common denominator, rewrite both
+   * parts over it, add the numerators, cancel. A learner who has not done that
+   * with numbers is being asked to learn the procedure and the abstraction at
+   * the same time, and the one that fails is usually the arithmetic.
+   *
+   * So this gates `combining-rational`, deliberately — see the link in
+   * atlas-foundations.ts and the test group in tests/atlas.mjs. That tightens
+   * the gate on a concept people can already practise, which authoring
+   * arithmetic beneath the algebra did once before and is the same call made
+   * for the same reason.
+   *
+   * ── Why it is exactly rulable, which decided the knowledge points ────────
+   *
+   * Exact rational arithmetic is precisely what `exactValue` settles, so a
+   * fraction answer can be ruled without the CAS at all. The tasks therefore
+   * carry a variable rather than being pure numerals — `x/2 + x/3` instead of
+   * `1/2 + 1/3` — for two reasons: `tasks.ts` requires every task to declare
+   * its symbols, and the variable is the bridge this concept exists to build.
+   * The numbers version lives in the worked examples, where it belongs.
+   */
+  {
+    id: 'fraction-arithmetic',
+    name: 'Fraction arithmetic',
+    subjectId: subject.id,
+    scope: {
+      id: 'fraction-arithmetic',
+      label: 'Fraction arithmetic',
+      hint: 'fraction numerator denominator common denominator reciprocal',
+      /*
+       * Title-shaped, not text-shaped. A pattern loose enough to catch the word
+       * "fraction" anywhere in a body of prose would claim every passage that
+       * mentions a half — see the scope note in lib/correlate/scope.ts and the
+       * four-concept ceiling asserted in tests/atlas.mjs.
+       */
+      match: /^fractions?\b|\b(common fraction|common denominator|numerator|denominator|reciprocal)s?\b/i,
+    },
+    fidelity: 'checked',
+    objectives: [
+      {
+        id: 'combine-fractions-exactly',
+        statement:
+          'Add, multiply and divide fractions, and say which operation needs a common '
+          + 'denominator and which does not.',
+        taskKinds: ['transform_to_form', 'evaluate'],
+      },
+    ],
+    knowledgePoints: [
+      {
+        id: 'only-same-sized-parts-add',
+        conceptId: 'fraction-arithmetic',
+        statement:
+          'Only parts of the same size can be added. A common denominator is not a ritual step — '
+          + 'it is the act of cutting both fractions into the same-sized pieces so that counting '
+          + 'them means something.',
+        position: 1,
+        workedExample: {
+          problem: 'Add 2/3 + 1/4.',
+          subgoals: [
+            {
+              label: 'Find a size both can be cut into',
+              detail:
+                'Thirds and quarters are different sizes, so neither count can be added to the '
+                + 'other. Twelfths work, because 12 is a multiple of both 3 and 4.',
+            },
+            {
+              label: 'Rewrite each part over that size',
+              detail:
+                '2/3 = 8/12, because each third is four twelfths. 1/4 = 3/12, because each '
+                + 'quarter is three twelfths. Nothing has changed value — only the unit.',
+            },
+            {
+              label: 'Now the counts are comparable, so add them',
+              detail: '8 twelfths and 3 twelfths is 11 twelfths. The denominator does not add.',
+            },
+          ],
+          answer: '11/12',
+        },
+      },
+      {
+        id: 'multiplying-needs-no-common-denominator',
+        conceptId: 'fraction-arithmetic',
+        statement:
+          'Multiplication needs no common denominator, because it is not combining counts of the '
+          + 'same thing — it is taking a part OF a part. Cancel common factors before multiplying '
+          + 'and the numbers stay small.',
+        position: 2,
+        workedExample: {
+          problem: 'Multiply 4/9 · 3/8.',
+          subgoals: [
+            {
+              label: 'Notice why no common denominator is wanted',
+              detail:
+                '4/9 of 3/8 asks for a part of a part. Nothing is being counted together, so '
+                + 'there is nothing to make the same size.',
+            },
+            {
+              label: 'Cancel across the product first',
+              detail:
+                '4 and 8 share a factor of 4, leaving 1 and 2. 3 and 9 share a factor of 3, '
+                + 'leaving 1 and 3. This is legal because a product may be reordered.',
+            },
+            {
+              label: 'Multiply what is left, straight across',
+              detail: '(1 · 1)/(3 · 2) = 1/6. Cancelling after would have meant 12/72.',
+            },
+          ],
+          answer: '1/6',
+        },
+      },
+      {
+        id: 'dividing-is-multiplying-by-the-reciprocal',
+        conceptId: 'fraction-arithmetic',
+        statement:
+          'Dividing by a fraction multiplies by its reciprocal. "How many 1/4s fit into 3?" is '
+          + 'the question, and the answer is larger than 3 — which is why dividing by something '
+          + 'below 1 makes a number bigger.',
+        position: 3,
+        workedExample: {
+          problem: 'Work out (2/3) ÷ (4/5).',
+          subgoals: [
+            {
+              label: 'Say what the question asks',
+              detail: 'How many four-fifths fit into two-thirds? Less than one, since 4/5 > 2/3.',
+            },
+            {
+              label: 'Turn it into a multiplication',
+              detail:
+                'Dividing by 4/5 undoes multiplying by 4/5, and what undoes that is multiplying '
+                + 'by 5/4. So (2/3) ÷ (4/5) = (2/3) · (5/4).',
+            },
+            {
+              label: 'Cancel, then multiply',
+              detail: '2 and 4 share a factor of 2: (1/3) · (5/2) = 5/6.',
+            },
+          ],
+          answer: '5/6',
+        },
+      },
+    ],
+  },
 ]
 
 /**
@@ -784,6 +932,29 @@ const EDGES: ConceptEdge[] = [
     id: 'integer-arithmetic->divisibility',
     from: 'integer-arithmetic',
     to: 'divisibility',
+    kind: 'prerequisite',
+    promotedBy: 'author:arithmetic-foundations',
+  },
+  /*
+   * Fractions rest on both, and on different parts of each: divisibility is
+   * what makes a common denominator findable and a cancellation visible, and
+   * signed numbers are what make a negative fraction behave.
+   *
+   * The edge into `combining-rational` is NOT here — that endpoint is in
+   * another authored subject, so it lives in the area's `links`. See
+   * atlas-foundations.ts.
+   */
+  {
+    id: 'divisibility->fraction-arithmetic',
+    from: 'divisibility',
+    to: 'fraction-arithmetic',
+    kind: 'prerequisite',
+    promotedBy: 'author:arithmetic-foundations',
+  },
+  {
+    id: 'negative-numbers->fraction-arithmetic',
+    from: 'negative-numbers',
+    to: 'fraction-arithmetic',
     kind: 'prerequisite',
     promotedBy: 'author:arithmetic-foundations',
   },
