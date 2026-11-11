@@ -43,7 +43,7 @@
  */
 
 import { generatedTaskById } from './generators'
-import type { PracticeTask } from './types'
+import type { ConceptOntology, PracticeTask } from './types'
 
 /** Every task declares its symbols. Most of them are one real variable. */
 const REAL_X = [{ name: 'x', assumptions: { real: true } }]
@@ -1965,6 +1965,45 @@ export function taskById(id: string): PracticeTask | null {
 
 export function tasksForPoint(knowledgePointId: string): PracticeTask[] {
   return TASKS.filter(t => t.knowledgePointId === knowledgePointId)
+}
+
+/**
+ * Whether a concept has an actual problem behind it, which is NOT `isTeachable`.
+ *
+ * ── The overstatement this exists to stop ─────────────────────────────────
+ *
+ * `isTeachable` means "has at least one knowledge point", and every surface in
+ * the app reports it as the number of concepts that "have problems written for
+ * them". For most concepts those coincide. For three they do not:
+ * `logarithm-definition`, `logarithm-rules` and `solving-exponential-equations`
+ * each carry knowledge points and ZERO tasks, so they are counted in the
+ * figure while offering nothing to do.
+ *
+ * Found by authoring — the honest question "which concept should get problems
+ * next" turned up three that already claimed to have them. The pattern is not
+ * random either: they are the concepts whose natural task is *solving* or
+ * *stating*, and the engine has no verifiable kind for either. So the gap will
+ * recur, and naming it is better than letting the count absorb it.
+ *
+ * This is the same discipline as `atlasCoverage` printing how little is
+ * written, `notLoadedNotice` saying the librarian knows nothing rather than
+ * that there is nothing, and `unwrittenOnPath` counting the gaps a journey
+ * crosses. One number per claim, and no claim wider than its evidence.
+ *
+ * `isTeachable` is NOT redefined. It gates introduction and must keep meaning
+ * "there is material here", which is the right question for the scheduler —
+ * a concept with knowledge points and no tasks still has something to read.
+ * This is the question for a DISPLAY: can they go and do it.
+ */
+export function isPractisable(o: ConceptOntology, conceptId: string): boolean {
+  const c = o.concepts.find(x => x.id === conceptId)
+  if (!c) return false
+  return c.knowledgePoints.some(p => TASKS.some(t => t.knowledgePointId === p.id))
+}
+
+/** Concepts with at least one real problem, for a coverage figure. */
+export function practisableConcepts(o: ConceptOntology): string[] {
+  return o.concepts.filter(c => isPractisable(o, c.id)).map(c => c.id)
 }
 
 /**

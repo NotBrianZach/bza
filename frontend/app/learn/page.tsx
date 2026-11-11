@@ -10,6 +10,7 @@ import { AREAS, MATHEMATICS, atlasCoverage } from '@/lib/concepts/atlas'
 import { conceptById } from '@/lib/concepts/registry'
 import { TRAVERSAL_GAME } from '@/lib/concepts/traversal'
 import { MASTERY_FLOOR } from '@/lib/concepts/scheduling'
+import { practisableConcepts } from '@/lib/concepts/tasks'
 import ConceptBrowser from '@/components/concepts/ConceptBrowser'
 import ClaimsList from '@/components/concepts/ClaimsList'
 import ConceptGraph from '@/components/concepts/ConceptGraph'
@@ -70,6 +71,11 @@ const SUBJECT_NAMES: Record<string, string> = {
 }
 
 const COVERAGE = atlasCoverage(MATHEMATICS)
+/**
+ * How many concepts have a problem behind them, which is fewer than have
+ * material. Module scope: the atlas and the task list are both static.
+ */
+const PRACTISABLE = practisableConcepts(MATHEMATICS).length
 
 /**
  * The subject shown before the session response names one.
@@ -599,11 +605,20 @@ export default function LearnPage() {
                     {label}
                   </button>
                 ))}
+              {/* Two figures, because they are two different claims and one of
+                  them was standing in for the other.
+
+                  `teachable` is "has knowledge points" — material you can
+                  read. `PRACTISABLE` is "has at least one problem". They differ
+                  by three concepts today, and reporting only the first counted
+                  those three as practisable when nothing in them can come up.
+                  See `isPractisable` in tasks.ts. */}
               {scope === 'atlas' && (
                 <span className='text-gray-600'>
                   {COVERAGE.concepts} concepts across {COVERAGE.areas} areas,{' '}
                   {COVERAGE.prerequisiteEdges} prerequisite edges — {COVERAGE.teachable} have
-                  problems written for them ({Math.round(100 * COVERAGE.teachable / COVERAGE.concepts)}%).
+                  material written for them ({Math.round(100 * COVERAGE.teachable / COVERAGE.concepts)}%),
+                  and {PRACTISABLE} of those have problems you can actually be set.
                   The rest are named and ordered only, and gate nothing.
                 </span>
               )}

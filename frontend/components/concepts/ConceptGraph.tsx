@@ -7,6 +7,7 @@ import {
   isTeachable, prerequisitesOf,
 } from '@/lib/concepts/registry'
 import { MATHEMATICS } from '@/lib/concepts/atlas'
+import { isPractisable } from '@/lib/concepts/tasks'
 
 /**
  * The concept graph, drawn as a graph.
@@ -675,11 +676,25 @@ export default function ConceptGraph({
           {sel.scope?.hint && (
             <p className='mt-1 text-[11px] leading-snug text-gray-400'>{sel.scope.hint}</p>
           )}
+          {/* Two different absences, said differently.
+
+              "No knowledge points" means nothing has been written at all.
+              "Knowledge points but no problems" is a concept you can READ and
+              cannot practise — which the count alone reported as though it
+              were practisable. Three concepts are in that state today and they
+              are the ones whose natural task is solving or stating, for which
+              the engine has no verifiable kind. See `isPractisable`. */}
           <p className='mt-0.5 text-[10px] text-gray-500'>
             {sel.knowledgePoints.length === 0
               ? 'no knowledge points yet — on the map, but nothing to practise, and it gates nothing'
               : `${sel.knowledgePoints.length} knowledge point${sel.knowledgePoints.length === 1 ? '' : 's'}`}
           </p>
+          {sel.knowledgePoints.length > 0 && !isPractisable(ontology, sel.id) && (
+            <p className='mt-0.5 text-[10px] text-amber-200/80'>
+              Readable but not practisable — it has material above and no problems written yet, so
+              nothing here can come up in practice.
+            </p>
+          )}
           <dl className='mt-1.5 space-y-0.5 text-[11px] text-gray-400'>
             <div>
               <dt className='inline text-gray-500'>rests on: </dt>

@@ -864,7 +864,10 @@ t('no title in the table matches more than four concepts',
 
 console.log('\nrecognition coverage')
 console.log(`  ${checkedNodes.length} of ${MATHEMATICS.concepts.length} concepts can be recognised from a title`)
-console.log(`  ${MATHEMATICS.concepts.filter(c => c.knowledgePoints.length > 0).length} have problems`)
+// "material", not "problems". This counts knowledge points, and three
+// concepts have those with no task behind them — see the practisable group in
+// tests/concepts-logic.mjs, which can read TASKS and this harness cannot.
+console.log(`  ${MATHEMATICS.concepts.filter(c => c.knowledgePoints.length > 0).length} have material written`)
 
 rmSync(outDir, { recursive: true, force: true })
 console.log(`\n${pass} passed, ${failures.length} failed`)

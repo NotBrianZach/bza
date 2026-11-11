@@ -109,7 +109,7 @@ const {
   emptyStrength, halfLifeDays, strengthNow, conceptStrength, introducible, applyObservation,
   assemble, summarise, MASTERY_FLOOR,
 } = M.scheduling
-const { TASKS, taskById, tasksForPoint, primaryVariable } = M.tasks
+const { TASKS, taskById, tasksForPoint, primaryVariable, isPractisable, practisableConcepts } = M.tasks
 const {
   seedTraversal, hasReached, frontier, unmetPrerequisites, openingDoors, offerKey, arrive,
   traversalProgress, TRAVERSAL_GAME,
@@ -2368,6 +2368,54 @@ t('factoring no longer claims the phrase',
   !conceptById(O, 'factoring-quadratics').scope.match.test('Completing the square'))
 t('and completing the square does',
   CTS.scope.match.test('Completing the square'))
+
+/**
+ * READABLE IS NOT PRACTISABLE, and one figure was standing in for both.
+ *
+ * `isTeachable` means "has knowledge points", and every surface in the app
+ * reported it as the number of concepts that "have problems written for them".
+ * Three concepts carry knowledge points and zero tasks, so the figure counted
+ * them as practisable while there was nothing a learner could be set.
+ *
+ * Pinned rather than left as a comment, because this gap widens quietly: the
+ * next concept whose natural task is *solving* or *stating* lands in the same
+ * state, the engine having no verifiable kind for either. A count that grows
+ * when the gap grows is worth failing on.
+ */
+group('the practisable count is narrower than the teachable one')
+
+/*
+ * Over the authored subjects rather than the composed atlas: this harness does
+ * not load the atlas, and it does not need to — every concept with knowledge
+ * points lives in one of these, so the gap is entirely visible from here.
+ */
+const ALL_AUTHORED = ONTOLOGIES.flatMap(o => o.concepts.map(c => ({ o, c })))
+const TEACHABLE_IDS = ALL_AUTHORED.filter(x => x.c.knowledgePoints.length > 0).map(x => x.c.id)
+const PRACTISABLE_IDS = ONTOLOGIES.flatMap(o => practisableConcepts(o))
+const READ_ONLY = TEACHABLE_IDS.filter(id => !PRACTISABLE_IDS.includes(id))
+
+t('a task cannot exist without material, so practisable implies teachable',
+  PRACTISABLE_IDS.every(id => TEACHABLE_IDS.includes(id)),
+  PRACTISABLE_IDS.filter(id => !TEACHABLE_IDS.includes(id)).join(', '))
+t('the two counts differ, which is the fact the single figure hid',
+  PRACTISABLE_IDS.length < TEACHABLE_IDS.length,
+  `${PRACTISABLE_IDS.length} practisable of ${TEACHABLE_IDS.length} teachable`)
+t('the read-only ones are exactly the three known to have no tasks',
+  READ_ONLY.length === 3
+  && ['logarithm-definition', 'logarithm-rules', 'solving-exponential-equations']
+    .every(id => READ_ONLY.includes(id)),
+  READ_ONLY.join(', '))
+t('each read-only concept still has material, so it is a gap and not a fault',
+  READ_ONLY.every(id => ALL_AUTHORED.find(x => x.c.id === id).c.knowledgePoints.length > 0))
+t('isPractisable is false for an id the ontology does not contain',
+  !isPractisable(ONTOLOGIES[0], 'no-such-concept'))
+t('fractions, just authored, are practisable rather than merely readable',
+  isPractisable(ONTOLOGIES[0], 'fraction-arithmetic'))
+
+console.log(
+  `\npractisable: ${PRACTISABLE_IDS.length} of ${TEACHABLE_IDS.length} teachable `
+  + `(${READ_ONLY.length} readable with no problems: ${READ_ONLY.join(', ')})`,
+)
 
 console.log(`\n${pass} passed, ${failures.length} failed`)
 if (failures.length) {
