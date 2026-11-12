@@ -49,9 +49,17 @@ const GROUPS: {
   id: GroupId
   label: string
   blurb: string
-  /** Shown when the band is open. Only real routes — /learn keeps its tab in
-   *  local state with no searchParams, so there is no honest way to deep-link
-   *  its review or concepts tab and this does not pretend otherwise. */
+  /**
+   * Shown when the band is open. Only real destinations.
+   *
+   * This used to say there was "no honest way to deep-link /learn's review or
+   * concepts tab" because the tab lives in local state. That was already false
+   * when written: /learn reads `?tab=` on mount — it has to, because the
+   * concept trail on a /play card links straight to a node — so a deep link is
+   * exactly as honest as the tab it names. The parts of /learn still NOT
+   * linkable are the ones nothing reads a parameter for, and the test is
+   * whether the page honours it rather than whether the state is local.
+   */
   links: { label: string; href: string }[]
   /** What an open band says when it has nothing to show. */
   empty: string
@@ -80,6 +88,17 @@ const GROUPS: {
     links: [
       { label: 'Practice', href: '/learn' },
       { label: 'Flashcards', href: '/quiz' },
+      /*
+       * `scope=atlas`, not a bare `?tab=concepts`.
+       *
+       * The Concepts tab opens on the practised subject by default — fifteen
+       * nodes, which is the right thing for somebody mid-session and the wrong
+       * thing for a link labelled "Concept map". The map is the atlas: 294
+       * concepts across 27 areas, with the coverage line that says how little
+       * of it is written. Landing on one subject's corner of it would be a
+       * quiet substitution of a smaller claim for the one the label makes.
+       */
+      { label: 'Concept map', href: '/learn?tab=concepts&scope=atlas' },
     ],
     empty: 'Nothing due right now.',
   },

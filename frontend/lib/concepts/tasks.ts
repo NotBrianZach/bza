@@ -1191,6 +1191,154 @@ export const TASKS: PracticeTask[] = [
     reference: 'x^2',
   },
 
+  // ── the logarithm concepts, which had material and no problems ──────────
+  //
+  // `logarithm-definition`, `logarithm-rules` and `solving-exponential-equations`
+  // were the three concepts `isPractisable` was written to expose: knowledge
+  // points, worked examples, and nothing a learner could be set. The diagnosis
+  // at the time was that their natural task is *solving* or *stating* and the
+  // engine has no verifiable kind for either, so the fix would have to be a new
+  // task kind.
+  //
+  // That was half right and the wrong half was load-bearing. The reason no
+  // `evaluate` task could be written here was not the task kind — it was that
+  // `exactValue` returned null for every `log`, so `ruleEvaluate` could not
+  // recompute the task's own value and fell through to comparing the learner
+  // against the author's unverified reference. An authored task that cannot
+  // re-derive its own answer is exactly what the re-derivation check exists to
+  // refuse, so writing these would have been writing three unvouched tasks.
+  //
+  // `exactLog` closed that. A logarithm is exactly rational when its argument
+  // is a rational power of its base, which is the only case a logarithm is set
+  // in by hand — so all five tasks below are settled locally and exactly, with
+  // no worker, like their `evaluate` neighbours above.
+  //
+  // `log(x, b)` is log base b of x: sympy's argument order, which the worker
+  // inherits by calling `sympy.log(*args)` and `exactValue` now matches. The
+  // prompts write it as log₂(32) because that is how it is read.
+  {
+    id: 'log-as-exponent-1',
+    knowledgePointId: 'log-is-an-exponent',
+    kind: 'evaluate',
+    prompt:
+      'Evaluate log₂(32). Read the notation as the question it is — what power of 2 gives 32? — ' +
+      'rather than reaching for a calculator.',
+    given: 'log(c, b)',
+    variables: [
+      { name: 'b', assumptions: { real: true, positive: true } },
+      { name: 'c', assumptions: { real: true, positive: true } },
+    ],
+    at: { b: '2', c: '32' },
+    // 2^5 = 32.
+    reference: '5',
+  },
+  {
+    id: 'log-as-exponent-2',
+    knowledgePointId: 'log-is-an-exponent',
+    kind: 'evaluate',
+    // The second task on the point, and it is the one that does the teaching.
+    // log₂(1/8) is where "a logarithm is an exponent" has to survive contact
+    // with an exponent that is negative — and it separates two things learners
+    // merge: the ARGUMENT of a log must be positive, while its VALUE is free to
+    // be negative. 1/8 is a perfectly good argument.
+    prompt:
+      'Evaluate log₂(1/8). The argument is positive, so this is defined — and the answer is not.',
+    given: 'log(c, b)',
+    variables: [
+      { name: 'b', assumptions: { real: true, positive: true } },
+      { name: 'c', assumptions: { real: true, positive: true } },
+    ],
+    at: { b: '2', c: '1/8' },
+    // 2^-3 = 1/8.
+    reference: '-3',
+  },
+  // NOT AUTHORED: `log-argument-is-positive`, and this is a genuine engine gap
+  // rather than an authoring backlog. Its content is that log₂(−8) *names
+  // nothing*, and `evaluate` asks for a value — there is no way to submit
+  // "undefined" as an answer, and a task whose reference is undefined would
+  // have `exactValue` return null for its own truth, which is the unvouched
+  // state the whole re-derivation check refuses.
+  //
+  // The honest kinds for it are `state` and `justify`, both declared
+  // unverifiable in types.ts, and `counterexample` does not fit either: the
+  // claim "log is defined everywhere" is not an identity, so substitution
+  // cannot refute it. So the point keeps its worked example and no task, which
+  // the registry permits. `log-as-exponent-2` above covers the part of the
+  // confusion that IS rulable.
+  {
+    id: 'log-of-product-1',
+    knowledgePointId: 'log-of-product',
+    kind: 'evaluate',
+    prompt:
+      'Evaluate log₂(8 · 4) by splitting it into log₂(8) + log₂(4). Then check it against ' +
+      'log₂(32) — the rule and the direct route have to agree.',
+    // The product is left unmultiplied in `given` so the task's own expression
+    // is the thing the rule applies to. `exactLog` evaluates it either way,
+    // which is what makes the check in the prompt a real check.
+    given: 'log(x*y, b)',
+    variables: [
+      { name: 'b', assumptions: { real: true, positive: true } },
+      { name: 'x', assumptions: { real: true, positive: true } },
+      { name: 'y', assumptions: { real: true, positive: true } },
+    ],
+    at: { b: '2', x: '8', y: '4' },
+    // 3 + 2 = 5, and log₂(32) = 5.
+    reference: '5',
+  },
+  {
+    id: 'log-of-power-1',
+    knowledgePointId: 'log-of-power',
+    kind: 'evaluate',
+    prompt:
+      'Evaluate log₃(9⁴). Bring the exponent out in front first — 9⁴ is 6561 and nobody wants ' +
+      'to find its logarithm the other way.',
+    given: 'log(x^n, b)',
+    variables: [
+      { name: 'b', assumptions: { real: true, positive: true } },
+      { name: 'x', assumptions: { real: true, positive: true } },
+      { name: 'n', assumptions: { real: true } },
+    ],
+    at: { b: '3', x: '9', n: '4' },
+    // 4 · log₃(9) = 4 · 2 = 8.
+    reference: '8',
+  },
+  {
+    id: 'solve-exponential-1',
+    knowledgePointId: 'take-logs-of-both-sides',
+    kind: 'evaluate',
+    // ── An evaluate task standing in for a solve, and what it does not claim ──
+    //
+    // There is still no verifiable `solve` kind, and this is not one. The
+    // expression language parses expressions rather than equations, and a
+    // solution is in general a SET — no solutions, one, or infinitely many —
+    // which no `evaluate` task can ask for.
+    //
+    // What makes this legitimate rather than a dodge is that the task asks for
+    // the number the method produces: taking log₉ of both sides of 9^x = 27
+    // turns the equation into x = log₉(27), and that expression is what `given`
+    // carries. The learner submits a number and it is ruled exactly. A learner
+    // who submits `log(27, 9)` instead is also ruled correct, because
+    // `exactValue` now evaluates it — which is the right outcome, since the
+    // unsimplified form is a complete answer to "solve for x".
+    //
+    // The answer is 3/2 deliberately. An integer answer can be reached by
+    // guessing powers; 9^x = 27 cannot, so it is the smallest instance where
+    // the method is the only route. It is also the case that exercises
+    // `exactLog`'s rational-exponent search rather than its integer walk.
+    prompt:
+      'Solve 9^x = 27. The unknown is in the exponent, so take log₉ of both sides and read off x. ' +
+      'The answer is not a whole number, which is the point — no amount of trying powers of 9 ' +
+      'gets there.',
+    given: 'log(c, b)',
+    variables: [
+      { name: 'b', assumptions: { real: true, positive: true } },
+      { name: 'c', assumptions: { real: true, positive: true } },
+    ],
+    at: { b: '9', c: '27' },
+    // 9^(3/2) = 27.
+    reference: '3/2',
+  },
+
   // ── arithmetic-foundations ──────────────────────────────────────────────
   //
   // Fifteen tasks, one per knowledge point, every one `evaluate` and every one
@@ -1973,17 +2121,34 @@ export function tasksForPoint(knowledgePointId: string): PracticeTask[] {
  * ── The overstatement this exists to stop ─────────────────────────────────
  *
  * `isTeachable` means "has at least one knowledge point", and every surface in
- * the app reports it as the number of concepts that "have problems written for
- * them". For most concepts those coincide. For three they do not:
+ * the app reported it as the number of concepts that "have problems written
+ * for them". For most concepts those coincide. For three they did not:
  * `logarithm-definition`, `logarithm-rules` and `solving-exponential-equations`
- * each carry knowledge points and ZERO tasks, so they are counted in the
+ * each carried knowledge points and ZERO tasks, so they were counted in the
  * figure while offering nothing to do.
  *
  * Found by authoring — the honest question "which concept should get problems
- * next" turned up three that already claimed to have them. The pattern is not
- * random either: they are the concepts whose natural task is *solving* or
- * *stating*, and the engine has no verifiable kind for either. So the gap will
- * recur, and naming it is better than letting the count absorb it.
+ * next" turned up three that already claimed to have them.
+ *
+ * ── The diagnosis was wrong in a way worth recording ──────────────────────
+ *
+ * This comment used to end: "the pattern is not random either: they are the
+ * concepts whose natural task is *solving* or *stating*, and the engine has no
+ * verifiable kind for either. So the gap will recur." The observation was
+ * right and the cause was not. What actually blocked them was one line in
+ * numerals.ts: `exactValue` returned null for every `log`, so `ruleEvaluate`
+ * could not recompute an authored task's own answer and would have graded
+ * learners against an unvouched reference. The fix was `exactLog`, not a new
+ * task kind, and all three are practisable now.
+ *
+ * So this function currently excludes nothing — and stays, because the state
+ * it names is reachable the moment anybody writes material before problems,
+ * which is the normal order of authoring. A count that silently re-widened
+ * would be the original defect returning.
+ *
+ * The *kind* gap is real and narrower than it looked: it costs
+ * `log-argument-is-positive` its task, since "this expression is undefined" is
+ * not a value `evaluate` can ask for. A knowledge point, not a concept.
  *
  * This is the same discipline as `atlasCoverage` printing how little is
  * written, `notLoadedNotice` saying the librarian knows nothing rather than

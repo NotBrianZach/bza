@@ -50,11 +50,32 @@
  * 2^(1/2) still returns null, because it is not rational and saying so is the
  * point.
  *
- * **Coverage is partial and deliberately so.** Nine knowledge points, tasks on
- * the five that exact arithmetic can rule. The rest carry worked examples and no
- * tasks, which the registry permits and which is honest: a knowledge point with
- * no rulable task is still worth teaching, and faking a task for it would be the
- * failure tasks.ts's header warns about.
+ * **Coverage was partial and is now nearly total — and the reason it was
+ * partial is the most useful thing in this header.** It shipped with tasks on
+ * five of its nine knowledge points, and the four bare ones were recorded as a
+ * limit of the task kinds: the logarithm points want *solving* and *stating*,
+ * and neither kind is verifiable.
+ *
+ * Three of those four were not blocked on a task kind at all. They were blocked
+ * on `exactValue` returning null for every `log`, which meant an `evaluate`
+ * task here could not re-derive its own answer — and an authored task that
+ * cannot do that grades the learner against the author rather than against the
+ * mathematics. `exactLog` (numerals.ts) closed it: a logarithm is exactly
+ * rational when its argument is a rational power of its base, which is every
+ * logarithm anyone is set by hand. log₂(32), log₂(1/8), log₃(9⁴) and log₉(27)
+ * are now ruled locally and exactly, like the arithmetic half.
+ *
+ * The lesson generalises past this subject: "no task kind fits" and "the
+ * verifier cannot see the value" look identical from the outside — both show up
+ * as a concept with material and no problems — and only one of them needs
+ * schema work. Check the cheaper one first.
+ *
+ * `log-argument-is-positive` is still bare and always will be. Its content is
+ * that log₂(−8) *names nothing*, and no verifiable kind can ask for that: an
+ * `evaluate` answer is a value, and a `counterexample` needs an identity to
+ * break. It keeps its worked example, which the registry permits and which is
+ * honest — a knowledge point with no rulable task is still worth teaching, and
+ * faking a task for it would be the failure tasks.ts's header warns about.
  */
 
 import type { Concept, ConceptEdge, ConceptOntology, Subject } from './types'

@@ -26,10 +26,26 @@
  *  - **Doing problems** on it — which requires knowledge points, and most of the
  *    map has none.
  *
- * `relatedConcepts` therefore reports `teachable` per concept and never guesses.
+ * `relatedConcepts` therefore reports both per concept and never guesses.
  * A link that promised problems and delivered an empty panel would be worse than
  * no link, because the learner would conclude the practice engine is broken
  * rather than that the curriculum is unwritten there.
+ *
+ * ── And it reported the wrong one of the two ───────────────────────────────
+ *
+ * It carried `teachable` alone, documented as "whether problems can actually be
+ * served for it", and `ConceptTrail` printed its count as "N with problems".
+ * That is `isTeachable`, which means "has knowledge points" — the precise
+ * conflation this header argues against, in the file that argues it. It went
+ * unnoticed because the two agreed for most concepts; it was wrong for the
+ * three logarithm concepts, which had material and no tasks, and those are
+ * exactly the ones a theorem titled "Logarithm" matches.
+ *
+ * So both fields are carried now. `teachable` still decides whether there is
+ * anything to READ, and `practisable` — `isPractisable`, which asks TASKS —
+ * decides whether a problem can be served and is what the link and the count
+ * use. They are expected to agree; the point is that agreement is computed
+ * rather than assumed.
  *
  * Guided concepts are excluded from *matching* for the same reason: a guided
  * scope "steers the search and filters nothing", so it has no pattern and cannot
@@ -41,6 +57,7 @@ import type { Offering } from '../correlate/types'
 import {
   conceptById, dependentsOf, encompassedBy, isTeachable, prerequisitesOf,
 } from './registry'
+import { isPractisable } from './tasks'
 import type { Concept, ConceptOntology } from './types'
 
 /**
@@ -103,12 +120,21 @@ export interface RelatedConcept {
   name: string
   relation: ConceptRelation
   /**
-   * Whether problems can actually be served for it.
+   * Whether there is material to read — knowledge points.
    *
-   * The field the UI must not ignore. Most of the atlas is mapped and unwritten,
-   * and a concept with no knowledge points can be read about but not practised.
+   * Most of the atlas is mapped and unwritten, so this is the field that
+   * separates a node you can open from a node that is only a position.
    */
   teachable: boolean
+  /**
+   * Whether a problem can actually be served for it.
+   *
+   * The field the UI must not ignore, and not the same question as above: see
+   * the header. Material is written before problems are, so a concept can be
+   * readable and not yet practisable, and promising a problem there is the
+   * broken link this file exists to prevent.
+   */
+  practisable: boolean
   /** Present on a guided concept, printed verbatim. Never summarised away. */
   caveat?: string
 }
@@ -147,6 +173,7 @@ export function relatedConcepts(
       name: c.name,
       relation,
       teachable: isTeachable(o, id),
+      practisable: isPractisable(o, id),
       ...(c.caveat ? { caveat: c.caveat } : {}),
     })
   }
@@ -169,8 +196,13 @@ export function relatedConcepts(
  * because /learn opens on practice by default, and sending a learner to the
  * practice tab for a concept with no problems is the broken promise this file
  * exists to avoid.
+ *
+ * Which is why it reads `practisable` and not `teachable`: the practice tab
+ * needs a problem, not a worked example. On the old field a theorem titled
+ * "Logarithm" sent the learner to the practice tab for a concept that had
+ * nothing to serve.
  */
-export function conceptHref(c: Pick<RelatedConcept, 'id' | 'teachable'>): string {
-  const tab = c.teachable ? 'practice' : 'concepts'
+export function conceptHref(c: Pick<RelatedConcept, 'id' | 'practisable'>): string {
+  const tab = c.practisable ? 'practice' : 'concepts'
   return `/learn?tab=${tab}&concept=${encodeURIComponent(c.id)}`
 }

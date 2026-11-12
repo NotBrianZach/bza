@@ -681,9 +681,12 @@ export default function ConceptGraph({
               "No knowledge points" means nothing has been written at all.
               "Knowledge points but no problems" is a concept you can READ and
               cannot practise — which the count alone reported as though it
-              were practisable. Three concepts are in that state today and they
-              are the ones whose natural task is solving or stating, for which
-              the engine has no verifiable kind. See `isPractisable`. */}
+              were practisable. Three concepts were in that state — the
+              logarithm ones — and `exactLog` closed it, so no shipped concept
+              is in it today. The branch stays because the state is reachable
+              by authoring: material is written before problems are, and the
+              honest thing to show in the gap is this sentence rather than a
+              node that looks ready. See `isPractisable`. */}
           <p className='mt-0.5 text-[10px] text-gray-500'>
             {sel.knowledgePoints.length === 0
               ? 'no knowledge points yet — on the map, but nothing to practise, and it gates nothing'

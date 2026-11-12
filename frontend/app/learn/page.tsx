@@ -170,10 +170,15 @@ export default function LearnPage() {
    * which is not expected to be connected. A second permanent panel would have
    * been a separate element competing with the graph for the same screen.
    *
-   * Not persisted and not in the URL. It is a way of looking at one page rather
-   * than a place, and a remembered value would mean a learner who once glanced
-   * at the map comes back next week to three hundred nodes instead of their
-   * fifteen.
+   * Not persisted, and in the URL only when something asks for it explicitly.
+   *
+   * The distinction matters and the original note conflated them. A REMEMBERED
+   * value is the hazard: a learner who glanced at the whole atlas once comes
+   * back next week to three hundred nodes instead of their fifteen, having
+   * asked for nothing. A link that says "Concept map" and lands on the map is
+   * not that — it is the caller naming which of the three views it meant, which
+   * is why the home page can offer the atlas directly while the default here
+   * stays the practised subject.
    */
   const [scope, setScope] = useState<'subject' | 'atlas' | 'journeys'>('subject')
 
@@ -310,19 +315,27 @@ export default function LearnPage() {
   useEffect(() => { load() }, [load])
 
   /*
-   * The link from /play: ?tab=concepts&concept=<id>.
+   * The links in: ?tab=concepts&concept=<id> from /play, and
+   * ?tab=concepts&scope=atlas from the home page's Learn band.
    *
-   * Once, on mount. The tab is only honoured when it names a real one, and the
-   * concept only when the atlas knows it — a stale link from an old chain
-   * should land on a working page rather than an empty panel, since the
-   * mathematics in a recorded game outlives any particular shape of this
-   * registry.
+   * Once, on mount. Each parameter is honoured only when it names something
+   * real — a tab that exists, a scope that exists, a concept the atlas knows —
+   * and ignored otherwise. A stale link from an old chain should land on a
+   * working page rather than an empty panel, since the mathematics in a
+   * recorded game outlives any particular shape of this registry.
+   *
+   * Absent means default, which is what keeps `scope` honest: nothing is
+   * remembered, so /learn with no query is the practised subject every time.
    */
   useEffect(() => {
     const q = new URLSearchParams(window.location.search)
     const wanted = q.get('tab')
     if (wanted === 'practice' || wanted === 'concepts' || wanted === 'review' || wanted === 'tools') {
       setTab(wanted)
+    }
+    const wantedScope = q.get('scope')
+    if (wantedScope === 'subject' || wantedScope === 'atlas' || wantedScope === 'journeys') {
+      setScope(wantedScope)
     }
     const concept = q.get('concept')
     if (concept && conceptById(MATHEMATICS, concept)) setLinkedConcept(concept)
@@ -609,16 +622,21 @@ export default function LearnPage() {
                   them was standing in for the other.
 
                   `teachable` is "has knowledge points" — material you can
-                  read. `PRACTISABLE` is "has at least one problem". They differ
-                  by three concepts today, and reporting only the first counted
-                  those three as practisable when nothing in them can come up.
-                  See `isPractisable` in tasks.ts. */}
+                  read. `PRACTISABLE` is "has at least one problem". They
+                  differed by three concepts — the logarithm ones, which had
+                  worked examples and nothing to do — and reporting only the
+                  first counted those three as practisable when nothing in them
+                  could come up. They agree today, which is why the sentence is
+                  written two ways: a comparison that is computed cannot
+                  quietly become an assertion. See `isPractisable` in tasks.ts. */}
               {scope === 'atlas' && (
                 <span className='text-gray-600'>
                   {COVERAGE.concepts} concepts across {COVERAGE.areas} areas,{' '}
                   {COVERAGE.prerequisiteEdges} prerequisite edges — {COVERAGE.teachable} have
                   material written for them ({Math.round(100 * COVERAGE.teachable / COVERAGE.concepts)}%),
-                  and {PRACTISABLE} of those have problems you can actually be set.
+                  and {PRACTISABLE === COVERAGE.teachable
+                    ? 'every one of those has problems you can actually be set'
+                    : `${PRACTISABLE} of those have problems you can actually be set`}.
                   The rest are named and ordered only, and gate nothing.
                 </span>
               )}

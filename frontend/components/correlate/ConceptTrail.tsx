@@ -18,7 +18,7 @@ import type { Offering } from '@/lib/correlate/types'
  * waiting on both".
  *
  * Read against `MATHEMATICS` — the whole atlas, not the authored subjects.
- * Deliberate, and the reason `teachable` is carried per concept: the atlas is
+ * Deliberate, and the reason `practisable` is carried per concept: the atlas is
  * mostly mapped and unwritten, so restricting to what has problems would hide
  * the structure, while pretending everything has problems would promise panels
  * that are empty. Showing the position and labelling what can be practised is
@@ -28,7 +28,10 @@ export default function ConceptTrail({ offering }: { offering: Offering }) {
   const related = useMemo(() => relatedConcepts(MATHEMATICS, offering), [offering])
   if (related.length === 0) return null
 
-  const practisable = related.filter(c => c.teachable)
+  // `practisable`, not `teachable`, and the variable was named for the field it
+  // wanted rather than the one it read: the count is printed as "N with
+  // problems", which is a claim about TASKS. See the header of offerings.ts.
+  const practisable = related.filter(c => c.practisable)
 
   return (
     <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
@@ -47,12 +50,14 @@ export default function ConceptTrail({ offering }: { offering: Offering }) {
           <li key={c.id}>
             <Link
               href={conceptHref(c)}
-              title={c.teachable
+              title={c.practisable
                 ? `${c.name} — ${c.relation}. Open it in practice.`
-                : `${c.name} — ${c.relation}. Mapped, but nothing is authored for it yet, so there are no problems to do.`
+                : `${c.name} — ${c.relation}. ${c.teachable
+                  ? 'There is material to read, but no problems are written for it yet.'
+                  : 'Mapped, but nothing is authored for it yet, so there are no problems to do.'}`
                   + (c.caveat ? ` ${c.caveat}` : '')}
               className={`flex items-center gap-1 text-[11px] px-2 py-1 rounded-full transition-colors ${
-                c.teachable
+                c.practisable
                   ? 'bg-sky-50 text-sky-700 hover:bg-sky-100 dark:bg-sky-950/40 dark:text-sky-300 dark:hover:bg-sky-900/40'
                   // Visibly weaker, because it goes somewhere different: the
                   // graph rather than a problem. A learner who cannot tell the
@@ -60,7 +65,7 @@ export default function ConceptTrail({ offering }: { offering: Offering }) {
                   : 'bg-gray-50 text-gray-500 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700'
               }`}
             >
-              {c.teachable ? <PencilRuler size={10} /> : <ArrowUpRight size={10} />}
+              {c.practisable ? <PencilRuler size={10} /> : <ArrowUpRight size={10} />}
               {c.name}
               {c.relation !== 'about' && (
                 <span className="text-gray-400 dark:text-gray-500">· {c.relation}</span>

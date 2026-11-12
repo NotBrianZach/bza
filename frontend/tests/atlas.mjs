@@ -79,6 +79,14 @@ const {
 const { ONTOLOGIES } = ontology
 const offerings = req(join(outDir, 'concepts', 'offerings.js'))
 const { conceptsInOffering, relatedConcepts, conceptHref } = offerings
+/*
+ * `tasks.js` is not in `entries` and is emitted anyway, because offerings.ts
+ * now imports `isPractisable` from it and tsc follows imports. Required here
+ * rather than added to the list, so the list keeps naming what this harness is
+ * ABOUT — and so that if offerings ever stops needing it, this require fails
+ * loudly instead of the practisable assertions below going vacuous.
+ */
+const { isPractisable } = req(join(outDir, 'concepts', 'tasks.js'))
 
 let pass = 0
 const failures = []
@@ -633,12 +641,31 @@ t('teachable agrees with isTeachable for every entry',
   trail.every(c => c.teachable === isTeachable(MATHEMATICS, c.id)))
 t('the trail does contain at least one unteachable concept, so the split is live',
   relatedConcepts(MATHEMATICS, thm('Quadratic formula'), 20).some(c => !c.teachable))
-t('a teachable concept links to practice',
-  conceptHref({ id: 'x', teachable: true }).includes('tab=practice'))
-t('an unteachable one links to the graph instead, where there is something to see',
-  conceptHref({ id: 'x', teachable: false }).includes('tab=concepts'))
+/*
+ * `practisable` is carried alongside, and the link reads THAT one.
+ *
+ * `teachable` is "has knowledge points" and was what the link and the "N with
+ * problems" count both used — a claim about problems settled by material. The
+ * two agree today; they did not for the three logarithm concepts, which is
+ * exactly the trail a theorem titled "Logarithm" produces.
+ *
+ * Asserted against `isPractisable` itself rather than against a count, for the
+ * reason the practisable group in tests/concepts-logic.mjs gives: a pinned size
+ * makes authoring more problems look like a regression.
+ */
+t('every entry carries practisable as a boolean',
+  trail.every(c => typeof c.practisable === 'boolean'))
+t('practisable agrees with isPractisable for every entry',
+  trail.every(c => c.practisable === isPractisable(MATHEMATICS, c.id)))
+t('nothing is practisable without being teachable',
+  relatedConcepts(MATHEMATICS, thm('Quadratic formula'), 20)
+    .every(c => !c.practisable || c.teachable))
+t('a practisable concept links to practice',
+  conceptHref({ id: 'x', practisable: true }).includes('tab=practice'))
+t('one with no problems links to the graph instead, where there is something to see',
+  conceptHref({ id: 'x', practisable: false }).includes('tab=concepts'))
 t('the id is encoded, since it reaches the URL',
-  conceptHref({ id: 'a b', teachable: true }).includes('a%20b'))
+  conceptHref({ id: 'a b', practisable: true }).includes('a%20b'))
 
 // ---------------------------------------------------------------------------
 /*
@@ -864,9 +891,11 @@ t('no title in the table matches more than four concepts',
 
 console.log('\nrecognition coverage')
 console.log(`  ${checkedNodes.length} of ${MATHEMATICS.concepts.length} concepts can be recognised from a title`)
-// "material", not "problems". This counts knowledge points, and three
-// concepts have those with no task behind them — see the practisable group in
-// tests/concepts-logic.mjs, which can read TASKS and this harness cannot.
+// "material", not "problems", and the wording stays careful even though the
+// two agree today. This counts knowledge points; whether a task stands behind
+// one is a question about TASKS, which this harness cannot read — see the
+// practisable group in tests/concepts-logic.mjs, which can. Three concepts
+// were material-only until `exactLog` made the logarithm tasks rulable.
 console.log(`  ${MATHEMATICS.concepts.filter(c => c.knowledgePoints.length > 0).length} have material written`)
 
 rmSync(outDir, { recursive: true, force: true })

@@ -186,11 +186,45 @@ export function exactValue(node: ExprNode): Exact | null {
      * irrational-roots tasks are genuinely worker-only, and that is a property
      * of the mathematics rather than a hole in this function.
      *
-     * Only these two. Every other allowed function — `log`, `sin`, `gamma` —
-     * is irrational at essentially every rational argument, so a case for it
-     * would be a long way to write `return null`.
+     * ── `log`, and the correction to what this comment used to say ──────────
+     *
+     * It used to end "only these two: every other allowed function — `log`,
+     * `sin`, `gamma` — is irrational at essentially every rational argument,
+     * so a case for it would be a long way to write `return null`." The first
+     * clause is true and the conclusion did not follow, because *essentially
+     * every* is not every, and the exceptions are not a curiosity: a logarithm
+     * is exactly rational precisely when its argument is a rational power of
+     * its base, which is the only situation a logarithm is ever *set* in
+     * before a calculator appears. log₂(32), log₂(1/8), log₃(9⁴) and log₉(27)
+     * are 5, −3, 8 and 3/2 — the entire shipped content of the logarithm
+     * concepts, and all of it was going to the worker.
+     *
+     * That cost three concepts their practice. `logarithm-definition`,
+     * `logarithm-rules` and `solving-exponential-equations` carried knowledge
+     * points and no tasks, because an `evaluate` task whose own value cannot
+     * be recomputed here loses the re-derivation check in `ruleEvaluate` and
+     * grades the learner against the author's unverified reference. Authoring
+     * them needed this, not a new task kind. See `exactLog`.
      */
     case 'function': {
+      // `log` is the only two-argument function in the allowed set, and the
+      // arity decides which logarithm is meant — sympy's own convention, which
+      // the worker inherits by calling `sympy.log(*args)`. Checked before the
+      // single-argument guard below, which would otherwise refuse `log(32, 2)`
+      // for having two.
+      if (node.name === 'log') {
+        if (node.args.length === 1) {
+          // A natural log, and rational at exactly one argument: ln(1) = 0.
+          // Handled rather than refused because it costs a comparison and is
+          // the one value a learner can be expected to know without a table.
+          const v = exactValue(node.args[0])
+          return v && v.n === v.d ? { n: 0n, d: 1n } : null
+        }
+        if (node.args.length !== 2) return null
+        const v = exactValue(node.args[0])
+        const b = exactValue(node.args[1])
+        return v && b ? exactLog(v, b) : null
+      }
       if (node.args.length !== 1) return null
       const v = exactValue(node.args[0])
       if (!v) return null
@@ -225,6 +259,76 @@ export function exactRoot(value: Exact, r: bigint): Exact | null {
   const bottom = integerRoot(value.d, r)
   if (top === null || bottom === null) return null
   return { n: negative ? -top : top, d: bottom }
+}
+
+/**
+ * `log_base(value)` when it is exactly rational, and null when it is not.
+ *
+ * ── Why this is a complete search and not a lucky-case table ───────────────
+ *
+ * The answer, if there is one, is a reduced fraction p/q with
+ * `base^(p/q) = value`. That makes it look like a two-dimensional search, and
+ * it is not, because of one fact: if `gcd(p, q) = 1` then Bézout gives
+ * integers s, t with `ps + qt = 1`, so
+ *
+ *   base^(1/q) = base^((ps + qt)/q) = (base^(p/q))^s · base^t = value^s · base^t
+ *
+ * — a product of rationals. So **a rational answer forces `base` to be an
+ * exact qth power of a rational**, and `exactRoot` finds that number or proves
+ * there is none. Each q therefore costs one root extraction plus a walk up the
+ * powers of the root it found, and a q whose root is irrational is dismissed
+ * outright rather than searched.
+ *
+ * That is what makes a null here mean "not rational" rather than "not found" —
+ * within the bound, which is the honest caveat. `MAX_EXPONENT` caps both p and
+ * q, so a logarithm whose value is 1/97 is refused and goes to the worker.
+ * Nothing in the shipped tasks has a denominator above 2.
+ *
+ * The undefined cases return null for the reason the header of `exactValue`
+ * gives: a non-positive argument, a non-positive base and base 1 are
+ * expressions that name no number, and ruling against the learner on one of
+ * them would turn "undefined" into "wrong". `log-argument-is-positive` is a
+ * knowledge point in the ontology precisely because that distinction matters.
+ */
+export function exactLog(value: Exact, base: Exact): Exact | null {
+  if (value.n <= 0n || base.n <= 0n) return null
+  if (base.n === base.d) return null          // log base 1 is undefined
+  if (value.n === value.d) return { n: 0n, d: 1n }  // log_b(1) = 0 for every legal b
+
+  /** Is a/b bigger, smaller or equal? Both denominators are positive. */
+  const compare = (a: Exact, b: Exact) => {
+    const left = a.n * b.d, right = b.n * a.d
+    return left === right ? 0 : left < right ? -1 : 1
+  }
+
+  for (let q = 1n; q <= MAX_EXPONENT; q++) {
+    const root = exactRoot(base, q)
+    if (!root) continue
+    if (root.n === root.d) continue  // base is 1 after all; nothing to walk
+
+    // Walk the powers of the root in whichever direction approaches the value.
+    // `root` is positive and not 1, so the walk is monotone and passing the
+    // target proves no exponent of this q lands on it — which is the break.
+    const up = compare(root, { n: 1n, d: 1n }) > 0
+    const towards = compare(value, { n: 1n, d: 1n }) > 0
+    const step: Exact = up === towards ? root : { n: root.d, d: root.n }
+    const sign = up === towards ? 1n : -1n
+
+    let acc: Exact = { n: 1n, d: 1n }
+    for (let p = 1n; p <= MAX_EXPONENT; p++) {
+      const next = exact(acc.n * step.n, acc.d * step.d)
+      if (next.kind !== 'exact') break
+      acc = next.v
+      const order = compare(acc, value)
+      if (order === 0) {
+        const answer = exact(sign * p, q)
+        return answer.kind === 'exact' ? answer.v : null
+      }
+      // Moved past it: this q cannot land on the value, whatever p is.
+      if (towards ? order > 0 : order < 0) break
+    }
+  }
+  return null
 }
 
 /**

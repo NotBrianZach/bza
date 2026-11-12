@@ -154,7 +154,32 @@ export type NamedForm =
  */
 export interface WorkedExample {
   problem: string
-  subgoals: { label: string; detail: string }[]
+  subgoals: {
+    /** Which move this step makes. Shown as the subgoal heading. */
+    label: string
+    /** What the move establishes. Shown as the step. */
+    detail: string
+    /**
+     * The same step, phrased as a question to be asked instead of told.
+     *
+     * Optional, and the optionality is measured rather than assumed: 21 of the
+     * 283 authored labels are already interrogative, and the other 262 are
+     * imperative — "Add the places separately" — which punctuation cannot fix,
+     * because "Should you add the places separately?" contains its own answer.
+     *
+     * So the question map (questions.ts) derives its STRUCTURE from every
+     * subgoal and takes its PHRASING from here when it exists, from the tutor
+     * at ask time when it does not. This field is how a hand-written question
+     * beats a generated one for the steps worth the effort, and
+     * `questionCoverage` is what says how many have had it.
+     *
+     * It does not replace `label`: the map draws the derivation by its moves,
+     * and the tutor asks the better sentence. Collapsing them would make a
+     * well-phrased question also the subgoal heading, which reads as a quiz
+     * where the worked example should read as a derivation.
+     */
+    socratic?: string
+  }[]
   answer: string
 }
 

@@ -49,6 +49,7 @@ function build() {
     join('lib', 'concepts', 'ontology-exponentials.ts'),
     join('lib', 'concepts', 'ontology.ts'),
     join('lib', 'concepts', 'registry.ts'),
+    join('lib', 'concepts', 'questions.ts'),
     join('lib', 'concepts', 'rpn.ts'),
     join('lib', 'concepts', 'scheduling.ts'),
     join('lib', 'concepts', 'tasks.ts'),
@@ -78,6 +79,7 @@ function build() {
     derive: require(join(outDir, 'concepts', 'derive.js')),
     generators: require(join(outDir, 'concepts', 'generators.js')),
     numerals: require(join(outDir, 'concepts', 'numerals.js')),
+    questions: require(join(outDir, 'concepts', 'questions.js')),
     ontology: require(join(outDir, 'concepts', 'ontology.js')),
     registry: require(join(outDir, 'concepts', 'registry.js')),
     rpn: require(join(outDir, 'concepts', 'rpn.js')),
@@ -119,6 +121,10 @@ const {
   exactValue, substitute, showExact, ruleEvaluate, rule,
 } = M.verify
 const { agreeAtPoints } = M.numerals
+const {
+  isInterrogative, questionsForPoint, questionChains, allQuestions, questionById,
+  questionCoverage, questionCoverageLine, socraticContext, chainsForConcept,
+} = M.questions
 const {
   signatureOf, sameShape, sameCoarseShape, isDiscriminating, properSubtrees, describeShape,
   shapedTasks, deriveEdges, deriveInterference, compareWithAuthored, asCandidateEdges,
@@ -1118,12 +1124,57 @@ t('abs is exact', show('abs(0 - 7)') === '7')
 t('an irrational square root still has no rational value', val('sqrt(2)') === null)
 t('and a function that is irrational nearly everywhere has none either',
   val('log(5)') === null && val('sin(1)') === null)
+t('one argument to log is the natural log, rational only at 1',
+  show('log(1)') === '0' && val('log(2)') === null)
 t('division by zero is not a value, rather than a crash', val('1/(3 - 3)') === null)
 t('an exact fractional exponent is computed', show('4^(1/2)') === '2')
 t('an inexact one is still refused', val('2^(1/2)') === null)
 t('an even root of a negative is not a real number', val('(0 - 4)^(1/2)') === null)
 t('an odd root of a negative keeps its sign', show('(0 - 8)^(1/3)') === '-2')
 t('an absurd exponent is refused rather than computed', val('2^999') === null)
+
+/**
+ * `exactLog`, which is what made the logarithm concepts practisable.
+ *
+ * The refusals matter more than the successes here, for the reason the header
+ * of numerals.ts gives: a logarithm that is ruled when it should abstain marks
+ * a learner wrong for writing something true. So the irrational case, the
+ * undefined cases and the out-of-bound case are all tested, and each returns
+ * null rather than a guess.
+ *
+ * `log(x, b)` is log base b of x — sympy's order, which the worker inherits.
+ * Getting it backwards is the silent failure this group would catch: log(32, 2)
+ * and log(2, 32) are 5 and 1/5, both rational, so only an assertion about
+ * WHICH distinguishes them.
+ */
+group('exactLog — a logarithm is rational exactly when it is a rational power')
+t('the integer case', show('log(32, 2)') === '5')
+t('and the argument order is log base b of x, not the reverse',
+  show('log(2, 32)') === '1/5')
+t('a value below 1 gives a negative exponent', show('log(1/8, 2)') === '-3')
+t('a fractional base with an integer answer', show('log(1/8, 1/2)') === '3')
+t('a rational answer, which needs the root search rather than the walk',
+  show('log(27, 9)') === '3/2')
+t('a big one, found without expanding anything absurd', show('log(6561, 3)') === '8')
+t('log_b(1) is 0 for any legal base', show('log(1, 7)') === '0')
+t('an irrational logarithm has no rational value, and says so', val('log(3, 2)') === null)
+t('a negative argument names nothing', val('log(0 - 8, 2)') === null)
+t('nor does zero', val('log(0, 2)') === null)
+t('base 1 is undefined rather than anything', val('log(5, 1)') === null)
+t('a negative base is refused', val('log(8, 0 - 2)') === null)
+/*
+ * The bound, exercised through the answer rather than through the input.
+ *
+ * `log(2, 2^65)` would have tested nothing: `exactValue` refuses an exponent
+ * above 64 in the `power` branch, so the BASE comes back null and exactLog is
+ * never reached. The literal is 2^65, so the base is a value and the answer
+ * is 1/65 — a denominator one past the bound, which is the refusal meant.
+ */
+t('an answer whose denominator exceeds the bound is refused, not approximated',
+  val('log(2, 36893488147419103232)') === null)
+t('while one inside it is found', show('log(2, 1152921504606846976)') === '1/60')
+t('a symbolic argument abstains',
+  exactValue(parseExpression('log(x, 2)', ['x'])) === null)
 
 group('substitute — tree surgery, not computation')
 t('it replaces a declared symbol', renderExpr(substitute(p('x + 1'), { x: p('5') })) === renderExpr(p('5 + 1')))
@@ -1162,6 +1213,29 @@ const stillSymbolic = await ruled({}, 'x - 5')
 t('an answer that is still an expression breaks at step 1', stillSymbolic.verdict.brokeAt.step === 1)
 t('and is told it asked for a value', /asks for a value, and this still mentions x/.test(stillSymbolic.verdict.brokeAt.detail))
 t('a step-1 failure never reaches the worker', stillSymbolic.verdict.ruling === 'incorrect')
+
+/*
+ * The logarithm tasks, ruled with no worker — which is the whole claim
+ * `exactLog` was added to support.
+ *
+ * The second assertion is the one worth having: `solve-exponential-1` says in
+ * its own comment that a learner who answers `log(27, 9)` rather than `3/2` is
+ * also right, because "solve for x" is answered by either. That is only true
+ * if `exactValue` evaluates the learner's form too, and nothing else in the
+ * suite would notice if it stopped.
+ */
+t('a logarithm task is settled locally and exactly',
+  (await ruleEvaluate(taskById('log-as-exponent-1'), '5', NO_WORKER)).verdict.ruling === 'correct')
+t('and an unsimplified but correct answer is accepted, not sent away',
+  (await ruleEvaluate(taskById('solve-exponential-1'), 'log(27, 9)', NO_WORKER))
+    .verdict.ruling === 'correct')
+// 9^x = 27 invites "x = 3", from reading 27 as 3³ and forgetting that the base
+// is 9. A wrong answer here has to be ruled wrong, not routed to review.
+t('a plausible wrong answer to one is ruled wrong rather than inconclusive',
+  (await ruleEvaluate(taskById('solve-exponential-1'), '3', NO_WORKER))
+    .verdict.ruling === 'incorrect')
+t('the negative-value log is defined and rules correct',
+  (await ruleEvaluate(taskById('log-as-exponent-2'), '-3', NO_WORKER)).verdict.ruling === 'correct')
 
 group('ruleEvaluate — it checks the author, not just the learner')
 const badRef = await ruleEvaluate(evalTask({ reference: '1' }), '0', NO_WORKER)
@@ -2374,15 +2448,38 @@ t('and completing the square does',
  *
  * `isTeachable` means "has knowledge points", and every surface in the app
  * reported it as the number of concepts that "have problems written for them".
- * Three concepts carry knowledge points and zero tasks, so the figure counted
+ * Three concepts carried knowledge points and zero tasks, so the figure counted
  * them as practisable while there was nothing a learner could be set.
  *
- * Pinned rather than left as a comment, because this gap widens quietly: the
- * next concept whose natural task is *solving* or *stating* lands in the same
- * state, the engine having no verifiable kind for either. A count that grows
- * when the gap grows is worth failing on.
+ * ── The gap is closed, and that changed what these tests can assert ────────
+ *
+ * The three were `logarithm-definition`, `logarithm-rules` and
+ * `solving-exponential-equations`, and the reason they were empty was not the
+ * one originally recorded here. The diagnosis was "their natural task is
+ * solving or stating and the engine has no verifiable kind for either", which
+ * is true and was not the blocker: `exactValue` returned null for every `log`,
+ * so an `evaluate` task on them could not re-derive its own answer. `exactLog`
+ * fixed that and the five tasks followed.
+ *
+ * So `READ_ONLY` is empty now. Two of the assertions here were pinning its
+ * SIZE, which made closing the gap look like a regression — the thing the
+ * comment on `EVALS.length` in this same file warns about. They are replaced
+ * with assertions about the two FUNCTIONS, which hold whether or not any
+ * concept is currently in that state:
+ *
+ *   - practisable implies teachable, always, by construction.
+ *   - `isPractisable` is false for a concept with material and no tasks —
+ *     tested against a synthetic ontology, because the shipped set no longer
+ *     contains an example and the distinction must not quietly become a
+ *     tautology that nothing would notice.
+ *
+ * The gap can still recur: `log-argument-is-positive` has material and no task
+ * and never will have one, since "this expression is undefined" is not a value
+ * `evaluate` can ask for. It is a knowledge point rather than a concept, so it
+ * costs no concept its practice — which is exactly why the per-concept figure
+ * stays worth printing.
  */
-group('the practisable count is narrower than the teachable one')
+group('practisable and teachable are different questions')
 
 /*
  * Over the authored subjects rather than the composed atlas: this harness does
@@ -2397,24 +2494,247 @@ const READ_ONLY = TEACHABLE_IDS.filter(id => !PRACTISABLE_IDS.includes(id))
 t('a task cannot exist without material, so practisable implies teachable',
   PRACTISABLE_IDS.every(id => TEACHABLE_IDS.includes(id)),
   PRACTISABLE_IDS.filter(id => !TEACHABLE_IDS.includes(id)).join(', '))
-t('the two counts differ, which is the fact the single figure hid',
-  PRACTISABLE_IDS.length < TEACHABLE_IDS.length,
-  `${PRACTISABLE_IDS.length} practisable of ${TEACHABLE_IDS.length} teachable`)
-t('the read-only ones are exactly the three known to have no tasks',
-  READ_ONLY.length === 3
-  && ['logarithm-definition', 'logarithm-rules', 'solving-exponential-equations']
-    .every(id => READ_ONLY.includes(id)),
-  READ_ONLY.join(', '))
-t('each read-only concept still has material, so it is a gap and not a fault',
-  READ_ONLY.every(id => ALL_AUTHORED.find(x => x.c.id === id).c.knowledgePoints.length > 0))
+/*
+ * The distinction, tested against a concept built here rather than shipped.
+ *
+ * `isPractisable` only reads `knowledgePoints` and `TASKS`, so a plain object
+ * of that shape exercises the real function. This is the assertion that keeps
+ * the two notions apart now that no shipped concept separates them — without
+ * it, `isPractisable` could be rewritten as `isTeachable` and every test in
+ * this file would still pass.
+ */
+const SYNTHETIC = {
+  subject: { id: 'synthetic' },
+  concepts: [
+    { id: 'material-only', knowledgePoints: [{ id: 'no-task-names-this-point' }] },
+    { id: 'nothing-at-all', knowledgePoints: [] },
+  ],
+  edges: [],
+}
+t('a concept with material and no tasks is teachable and NOT practisable',
+  isTeachable(SYNTHETIC, 'material-only') && !isPractisable(SYNTHETIC, 'material-only'))
+t('and one with neither is neither',
+  !isTeachable(SYNTHETIC, 'nothing-at-all') && !isPractisable(SYNTHETIC, 'nothing-at-all'))
+t('so practisableConcepts can be strictly smaller than the teachable set',
+  practisableConcepts(SYNTHETIC).length === 0)
+/*
+ * The shipped set, as a fact about today rather than a pinned size. Named
+ * concepts, so a task deleted out of one of them fails here — which is the
+ * regression worth catching, unlike the count going up.
+ */
+t('every shipped concept with material now has a problem behind it',
+  READ_ONLY.length === 0, READ_ONLY.join(', '))
+t('including the three logarithm concepts that had none',
+  ['logarithm-definition', 'logarithm-rules', 'solving-exponential-equations']
+    .every(id => PRACTISABLE_IDS.includes(id)))
 t('isPractisable is false for an id the ontology does not contain',
   !isPractisable(ONTOLOGIES[0], 'no-such-concept'))
-t('fractions, just authored, are practisable rather than merely readable',
+t('fractions are practisable rather than merely readable',
   isPractisable(ONTOLOGIES[0], 'fraction-arithmetic'))
+/*
+ * A knowledge point can still be material-only, and one deliberately is.
+ * `log-argument-is-positive` teaches that log₂(−8) names nothing, and no
+ * verifiable kind can ask for that — see the comment where the task would be.
+ */
+t('a point with no task is still allowed, and one is left that way on purpose',
+  tasksForPoint('log-argument-is-positive').length === 0
+  && !!knowledgePointById(EXPONENTS_AND_LOGARITHMS, 'log-argument-is-positive'))
+
+/**
+ * THE QUESTION MAP — derived structure, authored phrasing, and no evidence.
+ *
+ * Three claims worth failing on, in descending order of how badly a regression
+ * would hurt:
+ *
+ *  1. `socraticContext` never carries the answer to the question it is asking.
+ *     This is the invariant whose violation is INVISIBLE in the output — a
+ *     leaked answer reads as a perfectly good question, and the only place it
+ *     shows up is a learner being asked something they have just been told.
+ *  2. The map cannot contradict the worked examples, because it is derived
+ *     from them. Asserted as a count rather than a shape: one node per subgoal,
+ *     in subgoal order, no more and no fewer.
+ *  3. The coverage line reports the authored/generated split. 21 of 283 is the
+ *     figure that makes this map honest; a surface printing 283 alone would be
+ *     claiming 283 Socratic questions, of which 262 are not sentences yet.
+ */
+group('the question map — derived from the worked examples')
+
+const QCHAINS = ONTOLOGIES.flatMap(o => questionChains(o))
+const QNODES = ONTOLOGIES.flatMap(o => allQuestions(o))
+
+t('every worked example with subgoals becomes a chain',
+  QCHAINS.length === ONTOLOGIES.flatMap(o => allKnowledgePoints(o))
+    .filter(p2 => p2.workedExample.subgoals.length > 0).length,
+  `${QCHAINS.length} chains`)
+t('one question per subgoal, and no invention',
+  QNODES.length === ONTOLOGIES.flatMap(o => allKnowledgePoints(o))
+    .reduce((n, p2) => n + p2.workedExample.subgoals.length, 0),
+  `${QNODES.length} questions`)
+t('every node carries the move and what it establishes',
+  QNODES.every(q => q.move.length > 0 && q.establishes.length > 0))
+t('every node names a real knowledge point and concept',
+  QNODES.every(q => !!ontologyForPoint(q.knowledgePointId) && !!q.conceptId))
+t('ids are unique across every subject',
+  new Set(QNODES.map(q => q.id)).size === QNODES.length)
+t('positions within a chain are 0..n-1 in order',
+  QCHAINS.every(c => c.questions.every((q, i) => q.position === i)))
+t('a chain stays in its worked example — one point per chain',
+  QCHAINS.every(c => c.questions.every(q => q.knowledgePointId === c.knowledgePointId)))
+
+/*
+ * Reconstructible from the id alone, which a stored answer depends on. The
+ * refusals matter as much: a renumbered reference must not resolve to whatever
+ * node now sits at that index.
+ */
+t('questionById round-trips', (() => {
+  const q = allQuestions(EXPONENTS_AND_LOGARITHMS)[0]
+  return questionById(EXPONENTS_AND_LOGARITHMS, q.id)?.id === q.id
+})())
+t('an out-of-range position is null, not the nearest node',
+  questionById(EXPONENTS_AND_LOGARITHMS, 'log-is-an-exponent#99') === null)
+t('an unknown point is null',
+  questionById(EXPONENTS_AND_LOGARITHMS, 'no-such-point#0') === null)
+t('a malformed id is null, not a crash',
+  questionById(EXPONENTS_AND_LOGARITHMS, 'nohash') === null
+  && questionById(EXPONENTS_AND_LOGARITHMS, '#0') === null
+  && questionById(EXPONENTS_AND_LOGARITHMS, 'x#-1') === null
+  && questionById(EXPONENTS_AND_LOGARITHMS, 'x#abc') === null)
+
+/*
+ * Teaching order, because the map is a route: the questions of a prerequisite
+ * come before the questions of what it gates.
+ */
+t('chains are in teaching order', (() => {
+  const order = teachingOrder(EXPONENTS_AND_LOGARITHMS)
+  const chains = questionChains(EXPONENTS_AND_LOGARITHMS)
+  const ranks = chains.map(c => order.indexOf(c.conceptId))
+  return ranks.every((r, i) => i === 0 || r >= ranks[i - 1])
+})())
+t('and within a concept, the knowledge points keep their authored order', (() => {
+  const chains = chainsForConcept(EXPONENTS_AND_LOGARITHMS, 'exponent-rules')
+  return chains.length === 2 && chains[0].knowledgePointId === 'add-exponents-on-product'
+})())
+t('chainsForConcept refuses an id the ontology does not contain',
+  chainsForConcept(EXPONENTS_AND_LOGARITHMS, 'no-such-concept').length === 0)
+
+group('a question is never evidence, and the asker is never told the answer')
+
+/*
+ * THE invariant. Checked over every node in every subject rather than a
+ * sample, because one leak is one learner asked what they were just told.
+ */
+t('socraticContext never contains the answer to the question it asks',
+  QCHAINS.every(c => c.questions.every((q, i) => {
+    const ctx = socraticContext(c, i)
+    return !JSON.stringify(ctx).includes(JSON.stringify(q.establishes).slice(1, -1))
+  })))
+t('but it does carry every PRIOR step, which is what a tutor mid-derivation knows',
+  QCHAINS.filter(c => c.questions.length > 1).every(c => {
+    const ctx = socraticContext(c, c.questions.length - 1)
+    return ctx.established.length === c.questions.length - 1
+      && ctx.established.every((e, i) => e.establishes === c.questions[i].establishes)
+  }))
+t('the first question has nothing established yet',
+  QCHAINS.every(c => socraticContext(c, 0).established.length === 0))
+t('it carries the problem, so the question is about something',
+  QCHAINS.every(c => socraticContext(c, 0).problem === c.problem))
+t('remaining counts down to zero at the last step',
+  QCHAINS.every(c => socraticContext(c, c.questions.length - 1).remaining === 0))
+t('an out-of-range position is null rather than an empty question',
+  socraticContext(QCHAINS[0], 999) === null)
+
+/*
+ * `convertsTo` is the only route from a conversation to a ruling, and the
+ * chains with none are the honest hole. `log-argument-is-positive` is one on
+ * purpose and permanently: "this expression is undefined" is not a value any
+ * verifiable kind can ask for.
+ */
+t('a chain converts to exactly the tasks on its own knowledge point',
+  QCHAINS.every(c => {
+    const ids = tasksForPoint(c.knowledgePointId).map(t2 => t2.id)
+    return c.convertsTo.length === ids.length && c.convertsTo.every(id => ids.includes(id))
+  }))
+t('the logarithm chains now convert, since their tasks exist',
+  chainsForConcept(EXPONENTS_AND_LOGARITHMS, 'logarithm-definition')
+    .some(c => c.convertsTo.length > 0))
+t('and the undefined-argument chain still converts to nothing, which is counted',
+  QCHAINS.find(c => c.knowledgePointId === 'log-argument-is-positive').convertsTo.length === 0)
+
+group('the question map says how much of it is actually written')
+
+const QCOV = ONTOLOGIES.map(o => questionCoverage(o))
+const Q_TOTAL = QCOV.reduce((n, c) => n + c.questions, 0)
+const Q_AUTHORED = QCOV.reduce((n, c) => n + c.authoredAsQuestions, 0)
+
+t('isInterrogative reads the punctuation and does not guess',
+  isInterrogative('What pair am I looking for?')
+  && !isInterrogative('What the written algorithm was doing')
+  && !isInterrogative('Add the places separately'))
+t('the coverage total matches the node count', Q_TOTAL === QNODES.length)
+t('the authored count is a strict minority, which is the finding',
+  Q_AUTHORED > 0 && Q_AUTHORED < Q_TOTAL / 2, `${Q_AUTHORED} of ${Q_TOTAL}`)
+/*
+ * A floor and not an equality, for the reason the EVALS count carries: the
+ * authored figure is meant to GO UP as questions get written, and asserting it
+ * exactly would make writing one look like a regression. What is worth
+ * guarding is that the honest split is still being computed and still printed.
+ */
+t('four of the six subjects have no authored questions at all, and that is reported',
+  QCOV.filter(c => c.authoredAsQuestions === 0).length >= 3,
+  QCOV.map(c => `${c.authoredAsQuestions}/${c.questions}`).join(' '))
+t('the line names the split rather than the total alone', (() => {
+  const line = questionCoverageLine(EXPONENTS_AND_LOGARITHMS)
+  const c = questionCoverage(EXPONENTS_AND_LOGARITHMS)
+  return line.includes(`${c.questions} question`)
+    && line.includes(`${c.authoredAsQuestions} written as questions`)
+})(), questionCoverageLine(EXPONENTS_AND_LOGARITHMS))
+t('and it says when a chain cannot become evidence', (() => {
+  const line = questionCoverageLine(EXPONENTS_AND_LOGARITHMS)
+  return questionCoverage(EXPONENTS_AND_LOGARITHMS).chainsWithNoRuling > 0
+    && /records nothing/.test(line)
+})(), questionCoverageLine(EXPONENTS_AND_LOGARITHMS))
+
+/*
+ * The override. No subject uses it yet, so it is tested against a synthetic
+ * point — without this the field could be deleted and nothing would fail.
+ */
+t('an authored socratic phrasing overrides the label for the asking', (() => {
+  const synthetic = {
+    subject: { id: 's' },
+    concepts: [{
+      id: 'c', name: 'C', subjectId: 's', knowledgePoints: [{
+        id: 'pt', conceptId: 'c', statement: 'S', position: 1,
+        workedExample: {
+          problem: 'P',
+          subgoals: [{
+            label: 'Add the places separately',
+            detail: 'D',
+            socratic: 'What would make this addition easier?',
+          }],
+          answer: 'A',
+        },
+      }],
+    }],
+    edges: [],
+  }
+  const qs = questionsForPoint(synthetic, synthetic.concepts[0].knowledgePoints[0])
+  return qs.length === 1
+    && qs[0].move === 'What would make this addition easier?'
+    && qs[0].authoredAsQuestion === true
+})())
+t('and without one, the imperative label is carried as it was written',
+  QNODES.some(q => !q.authoredAsQuestion))
+
+console.log(`\n${questionCoverageLine(EXPONENTS_AND_LOGARITHMS)}`)
+console.log(
+  `questions: ${Q_AUTHORED} of ${Q_TOTAL} written as questions across `
+  + `${QCHAINS.length} chains; ${QCHAINS.filter(c => c.convertsTo.length === 0).length} `
+  + `cannot become evidence`,
+)
 
 console.log(
   `\npractisable: ${PRACTISABLE_IDS.length} of ${TEACHABLE_IDS.length} teachable `
-  + `(${READ_ONLY.length} readable with no problems: ${READ_ONLY.join(', ')})`,
+  + `(${READ_ONLY.length} readable with no problems${READ_ONLY.length ? `: ${READ_ONLY.join(', ')}` : ''})`,
 )
 
 console.log(`\n${pass} passed, ${failures.length} failed`)
