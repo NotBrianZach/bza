@@ -434,6 +434,103 @@ export const TASKS: PracticeTask[] = [
     reference: '1/6',
   },
 
+  /*
+   * ── roots-and-irrationals ─────────────────────────────────────────────────
+   *
+   * Four tasks, and the shape of all four is decided by one fact: the natural
+   * task for this concept is "simplify √720" and no form in forms.ts can
+   * demand it. `radical_free` asks for the radical to GO, and 12√5 still has
+   * one; what is wanted is "no square factor remains underneath", which is a
+   * claim about a subterm's factorisation rather than about the top-level
+   * shape of the answer. That is the third time this subject has met the same
+   * missing-form wall — see the concept's header in ontology-arithmetic.ts.
+   *
+   * So these compute WITH the split rather than asking for it, the way
+   * `prime-factorisation` and `gcd-and-lcm` do above. The first asks for a
+   * root that comes out whole, which is the one case needing no split at all;
+   * the second hands over the extracted root and asks for the square-free part
+   * by division; the third asks the one root of a non-integer that is exactly
+   * rational; the fourth squares the best small approximation to √2 and lets
+   * the learner see it miss. Each prompt names the step it stands in for.
+   *
+   * Every one is settled by `exactValue` with no worker configured, which was
+   * checked rather than assumed for a concept about irrational numbers: a
+   * `sqrt` node and a rational exponent are both handled, returning a value
+   * when it is rational and null when it is not. So all four re-derive
+   * locally and none needs adding to `WORKER_ONLY` in the test suite.
+   *
+   * Different numbers from the worked examples throughout — the examples use
+   * 1728, 720, 2 and 45 — so none of these is a recall of its own exposition.
+   */
+  {
+    id: 'fourth-root-from-exponents-1',
+    knowledgePointId: 'a-root-undoes-a-power',
+    kind: 'evaluate',
+    prompt:
+      '4096 = 2¹², and the index you are rooting by is 4. The exponent 12 is divisible by 4, so '
+      + 'this root comes out a whole number and the root is built by dividing the exponent rather '
+      + 'than by searching: 2^(12/4) = 2³. Evaluate x^(1/n) at x = 4096, n = 4.',
+    given: 'x^(1/n)',
+    variables: [
+      { name: 'x', assumptions: { integer: true, positive: true } },
+      { name: 'n', assumptions: { integer: true, positive: true } },
+    ],
+    at: { x: '4096', n: '4' },
+    reference: '8',
+  },
+  {
+    id: 'square-free-part-1',
+    knowledgePointId: 'pull-the-square-out',
+    kind: 'evaluate',
+    prompt:
+      '2700 = 2² · 3³ · 5². Only the 3 has an odd exponent, so one copy of it has to stay under '
+      + 'the radical and everything else comes out: the largest square factor is 2² · 3² · 5² = '
+      + '900, whose root is 30. What stays behind is 2700 divided by that square — evaluate '
+      + 'x / c^2 at x = 2700, c = 30. Your answer is the number left under the radical when '
+      + '√2700 is written as 30 times a smaller root.',
+    given: 'x / c^2',
+    variables: [
+      { name: 'x', assumptions: { integer: true, positive: true } },
+      { name: 'c', assumptions: { integer: true, nonzero: true } },
+    ],
+    at: { x: '2700', c: '30' },
+    reference: '3',
+  },
+  {
+    id: 'root-of-a-fraction-1',
+    knowledgePointId: 'pull-the-square-out',
+    kind: 'evaluate',
+    prompt:
+      'A root splits over a quotient as well as over a product: √(a/b) = √a / √b. Both 49 and 16 '
+      + 'are perfect squares, so this is the case where a root of something that is not a whole '
+      + 'number is still exactly rational. Evaluate sqrt(a/b) at a = 49, b = 16.',
+    given: 'sqrt(a/b)',
+    variables: [
+      { name: 'a', assumptions: { integer: true, positive: true } },
+      { name: 'b', assumptions: { integer: true, positive: true } },
+    ],
+    at: { a: '49', b: '16' },
+    reference: '7/4',
+  },
+  {
+    id: 'no-ratio-squares-to-two-1',
+    knowledgePointId: 'root-of-a-non-square-is-irrational',
+    kind: 'evaluate',
+    prompt:
+      '99/70 is a classical approximation to √2 and a close one — it is within one ten-thousandth. '
+      + 'If the proof in this point is right then squaring it cannot give exactly 2, however close '
+      + 'it looks, so it is worth seeing what it gives instead. Evaluate (a/b)^2 at a = 99, '
+      + 'b = 70, and compare your answer with 2 written over the same denominator, which is '
+      + '9800/4900.',
+    given: '(a/b)^2',
+    variables: [
+      { name: 'a', assumptions: { integer: true, positive: true } },
+      { name: 'b', assumptions: { integer: true, positive: true } },
+    ],
+    at: { a: '99', b: '70' },
+    reference: '9801/4900',
+  },
+
   // ── polynomial-arithmetic ───────────────────────────────────────────────
   {
     id: 'expand-binomials-1',

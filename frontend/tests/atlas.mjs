@@ -265,10 +265,10 @@ t('place value is a root of the whole map, and was not teachable before',
   roots(MATHEMATICS).includes('place-value') && isTeachable(MATHEMATICS, 'place-value'))
 t('the authored arithmetic ids appear exactly once each in the composed concept list',
   ['place-value', 'integer-arithmetic', 'order-of-operations', 'negative-numbers', 'divisibility',
-    'fraction-arithmetic', 'prime-factorisation', 'gcd-and-lcm']
+    'fraction-arithmetic', 'prime-factorisation', 'gcd-and-lcm', 'roots-and-irrationals']
     .every(id => MATHEMATICS.concepts.filter(c => c.id === id).length === 1))
 t('and they carry their own subject, not the area they left',
-  MATHEMATICS.concepts.filter(c => c.subjectId === 'arithmetic-foundations').length === 8)
+  MATHEMATICS.concepts.filter(c => c.subjectId === 'arithmetic-foundations').length === 9)
 /*
  * The cross-boundary example moved up one level when `prime-factorisation` was
  * promoted, and the replacement is deliberately the node that used to sit

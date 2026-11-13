@@ -2230,8 +2230,8 @@ t('and it is the subject with a root that needs nothing',
   roots(ONTOLOGIES[0]).some(id => gatingPrerequisitesOf(ONTOLOGIES[0], id).length === 0))
 t('and resolves by id', getOntology('arithmetic-foundations') === A)
 t('it has no internal faults', ontologyProblems(A).length === 0, ontologyProblems(A).join('; '))
-t('eight concepts, twenty-four knowledge points',
-  A.concepts.length === 8 && allKnowledgePoints(A).length === 24,
+t('nine concepts, twenty-seven knowledge points',
+  A.concepts.length === 9 && allKnowledgePoints(A).length === 27,
   `${A.concepts.length} concepts, ${allKnowledgePoints(A).length} points`)
 t('every concept is teachable — this is a syllabus, not a map',
   A.concepts.every(c => isTeachable(A, c.id)))
@@ -2258,8 +2258,8 @@ const coldSet = assemble({ ontology: A, strengths: COLD, now: '2026-10-23T12:00:
 t('a cold account gets three tasks, all from place value',
   coldSet.tasks.length === 3 && coldSet.tasks.every(x => conceptOfPoint(A, x.knowledgePointId).id === 'place-value'),
   `${coldSet.tasks.length} tasks`)
-t('and the other seven concepts are reported blocked rather than silently absent',
-  coldSet.blocked.length === 7,
+t('and the other eight concepts are reported blocked rather than silently absent',
+  coldSet.blocked.length === 8,
   coldSet.blocked.map(b => b.conceptId).join(', '))
 t('each blocked concept names a TEACHABLE thing to go and do', coldSet.blocked.every(b =>
   b.missing.length > 0 && b.missing.every(m => isTeachable(A, m))))
@@ -2329,7 +2329,18 @@ t('and both limits are named in skipped, not just the one that happened to bind'
  */
 group('the third subject is gradable with no worker')
 const ARITH_TASKS = allKnowledgePoints(A).flatMap(p => tasksForPoint(p.id))
-t('twenty-four tasks, one per point', ARITH_TASKS.length === 24, `${ARITH_TASKS.length}`)
+/*
+ * Twenty-eight tasks over twenty-seven points, so this is no longer one
+ * apiece. `pull-the-square-out` carries two, and the pair is the reason: the
+ * split it teaches cannot be demanded by any form in forms.ts, so one task
+ * computes the square-free part of an integer root and the other takes the one
+ * root of a NON-integer that is still exactly rational. Neither alone covers
+ * the point. The one-per-point floor is asserted separately above, against
+ * every point rather than against a total, which is the part that matters.
+ */
+t('twenty-eight tasks, and every point has at least one',
+  ARITH_TASKS.length === 28 && allKnowledgePoints(A).every(p => tasksForPoint(p.id).length > 0),
+  `${ARITH_TASKS.length}`)
 t('all of them are evaluate', ARITH_TASKS.every(x => x.kind === 'evaluate'))
 t('every one declares integer symbols rather than real ones',
   ARITH_TASKS.every(x => x.variables.every(v => v.assumptions?.integer === true)))

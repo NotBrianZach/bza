@@ -29,28 +29,31 @@ const NUMBER_AND_ARITHMETIC: MapArea = {
   name: 'Number and arithmetic',
   covers:
     'Whole numbers through rational numbers: ratio and percent, decimals and recurrence, ' +
-    'scientific notation, and the step out to the irrationals and the real line. What is left ' +
-    'here is what rests on the primes rather than the primes themselves. The arithmetic ' +
-    'underneath — place value, the written algorithms, order of operations, signed numbers, ' +
-    'divisibility, fractions, prime factorisation, and the gcd and lcm built on those primes — ' +
-    'now has problems written for it and lives in the arithmetic-foundations syllabus; this ' +
-    'area points at those concepts rather than restating them. Nothing of that group is left ' +
-    'here. Nothing symbolic — the moment a letter stands for an unknown, it is algebra.',
+    'scientific notation, and the real line the irrationals complete. What is left here is ' +
+    'what rests on the primes rather than the primes themselves. The arithmetic underneath — ' +
+    'place value, the written algorithms, order of operations, signed numbers, divisibility, ' +
+    'fractions, prime factorisation, the gcd and lcm built on those primes, and now the roots ' +
+    'and the irrationals those factorisations decide — has problems written for it and lives ' +
+    'in the arithmetic-foundations syllabus; this area points at those concepts rather than ' +
+    'restating them. Nothing of that group is left here, and the step OUT to the irrationals ' +
+    'has gone with it: what this area still owns is `real-number-line`, which assembles them ' +
+    'into a complete ordered line, rather than the roots that produce the first one. Nothing ' +
+    'symbolic — the moment a letter stands for an unknown, it is algebra.',
   /**
-   * EIGHT NODES HAVE LEFT THIS AREA AS THEY WERE AUTHORED, AND HAD TO.
+   * NINE NODES HAVE LEFT THIS AREA AS THEY WERE AUTHORED, AND HAD TO.
    *
    * `place-value`, `integer-arithmetic`, `order-of-operations`,
    * `negative-numbers`, `divisibility`, `fraction-arithmetic`,
-   * `prime-factorisation` and `gcd-and-lcm` are now real concepts with worked
-   * examples and tasks, in ontology-arithmetic.ts. `atlasProblems` rejects a
-   * map node whose id collides with an authored concept — not as tidiness, but
-   * because the composed concept list would then hold two entries for the id
-   * and the shadowing copy has no knowledge points, so a fully authored
-   * concept would silently read as unteachable.
+   * `prime-factorisation`, `gcd-and-lcm` and `roots-and-irrationals` are now
+   * real concepts with worked examples and tasks, in ontology-arithmetic.ts.
+   * `atlasProblems` rejects a map node whose id collides with an authored
+   * concept — not as tidiness, but because the composed concept list would
+   * then hold two entries for the id and the shadowing copy has no knowledge
+   * points, so a fully authored concept would silently read as unteachable.
    *
    * The count is kept current deliberately. It is the measurement of how far
    * this area has turned into a syllabus, and a comment saying "five" while
-   * eight have gone is the kind of rot that makes a reader distrust the rest
+   * nine have gone is the kind of rot that makes a reader distrust the rest
    * of the file.
    *
    * The `needs` below still name them. That is the intended way for the map to
@@ -166,14 +169,44 @@ const NUMBER_AND_ARITHMETIC: MapArea = {
       needs: ['ratio-and-rate', 'decimal-representation'],
       terms: 'percent percentage increase discount',
     },
-    {
-      id: 'roots-and-irrationals',
-      match: /\b(irrational number|square root|nth root|surd)/i,
-      name: 'Roots and irrational numbers',
-      is: 'Square and higher roots, and the proof that √2 is not a ratio — the first number a reader meets that is not rational.',
-      needs: ['prime-factorisation', 'fraction-arithmetic'],
-      terms: 'square root irrational surd radical',
-    },
+    /*
+     * `roots-and-irrationals` was here and is now authored in
+     * ontology-arithmetic.ts, so it had to leave — same rule, ninth time in
+     * this area. See the block above the node list.
+     *
+     * BOTH of its own edges left with it and BOTH are restated inside that
+     * subject, which makes this the cleanest promotion this area has
+     * produced: it needed no `links` entry and gave none up. The node
+     * declared `needs: ['prime-factorisation', 'fraction-arithmetic']` and
+     * both endpoints are authored in the same subject as the node now is, so
+     * both edges have an owner there and nothing crosses a subject boundary.
+     * Compare the two above it — `prime-factorisation` restated one edge and
+     * `gcd-and-lcm` restated one and reclaimed one from this area's `links`.
+     *
+     * Three kinds of edge pointing the OTHER way were left untouched, and
+     * they are worth separating because only the first two are of this area:
+     *
+     *  - `real-number-line`, immediately below, names it in its own `needs`.
+     *    Declared by a node that STAYED, so it survives as written and
+     *    `composeAtlas` resolves it across the file boundary.
+     *  - `pythagoras`, in the geometry area, does the same from further away.
+     *    A hypotenuse is a square root, which is the one place school
+     *    geometry cannot avoid the irrationals.
+     *  - the two entries in `ALGEBRA_FOUNDATIONS.links` running from here to
+     *    `quadratic-formula` and to `rational-exponents` stay in `links`, and
+     *    the reason has CHANGED even though the location has not: they used
+     *    to cross from a map node to an authored concept, and now they cross
+     *    between authored concepts in DIFFERENT subjects. An ontology's edges
+     *    may only name concepts it contains, so neither end can take them and
+     *    `links` is still the only place they fit. The notes beside them say
+     *    so.
+     *
+     * What this area keeps is the node below. `real-number-line` is not made
+     * redundant by the promotion: the roots produce the first irrational
+     * number, and assembling the rationals and irrationals into one complete
+     * ordered line is a separate claim, taken on trust here and constructed
+     * in real analysis.
+     */
     {
       id: 'real-number-line',
       match: /\b(real number|real line|number line)\b/i,
@@ -438,14 +471,29 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
        *
        * The node declared `needs: ['completing-the-square', 'roots-and-irrationals']`.
        * The first is now an authored concept, so that edge moved into
-       * ontology.ts. This one crosses from an authored concept to a map node and
-       * has nowhere else to live — an authored ontology's edges may only name
-       * concepts it contains, or `ontologyProblems` reports an unknown endpoint.
+       * ontology.ts. This one stays here, and the REASON has changed since it
+       * was written even though the location has not — worth recording,
+       * because the original reason no longer applies and a reader checking it
+       * would find it false:
        *
-       * Written at the same time as the promotion rather than afterwards,
-       * because the one previous time a node was authored out of this file the
-       * edge went with it and nobody noticed until `function-concept` was
-       * drawn as a root of mathematics.
+       *  - It used to cross from a map node to an authored concept, and
+       *    `links` is where such an edge lives because the map node cannot
+       *    own it.
+       *  - `roots-and-irrationals` is now authored too, in
+       *    `arithmetic-foundations`. So it crosses between two authored
+       *    concepts in DIFFERENT subjects, and an authored ontology's edges
+       *    may only name concepts it contains, or `ontologyProblems` reports
+       *    an unknown endpoint. Neither subject can take it.
+       *
+       * Same conclusion by a different route: `links` is still the only place
+       * it fits. Contrast `gcd-and-lcm → fraction-arithmetic`, which left
+       * this file's `links` on promotion precisely because both of ITS
+       * endpoints ended up in the same subject.
+       *
+       * Written at the same time as the first promotion rather than
+       * afterwards, because the one previous time a node was authored out of
+       * this file the edge went with it and nobody noticed until
+       * `function-concept` was drawn as a root of mathematics.
        */
       from: 'roots-and-irrationals',
       to: 'quadratic-formula',
@@ -491,6 +539,17 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
         'is counting how many factors there are in total.',
     },
     {
+      /*
+       * Stays in `links` for the same changed reason as the edge above: both
+       * ends are authored now, in `arithmetic-foundations` and
+       * `exponents-and-logarithms` respectively, and neither subject may name
+       * a concept it does not contain.
+       *
+       * This is also the edge that makes the promotion pay off twice. It is
+       * the last step of the "Undo a power" journey, whose other eight steps
+       * were already written — so authoring the far end of this one link is
+       * what took that route from one gap to none.
+       */
       from: 'roots-and-irrationals',
       to: 'rational-exponents',
       because:

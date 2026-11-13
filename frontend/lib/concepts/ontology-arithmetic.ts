@@ -1467,6 +1467,334 @@ const CONCEPTS: Concept[] = [
       },
     ],
   },
+
+  /**
+   * Roots and irrational numbers — the step off the rationals.
+   *
+   * ── Why this one, and what writing it finishes ────────────────────────────
+   *
+   * `gcd-and-lcm`'s header, two concepts up, named this as the only unwritten
+   * step left on "Solve any quadratic" and on "Undo a power" once it was
+   * written. That is what this closes: both journeys had exactly one gap, it
+   * was this node in both, and promoting it finishes two learner-visible
+   * routes rather than denting a long one. It is the same tie-break that
+   * chose the last two and it is now spent — every remaining journey with a
+   * gap has at least nineteen.
+   *
+   * It also leans entirely on material. Its two prerequisites are
+   * `prime-factorisation` and `fraction-arithmetic`, both authored in this
+   * file, and that is not a coincidence of ordering: every move here is a
+   * question asked of a factorisation, and the one case where a root comes
+   * out rational without being a whole number is a question asked of a
+   * fraction. Both edges are restated below rather than left on the map.
+   *
+   * ── WHAT prime-factorisation ALREADY SAID, AND WHY THIS IS NOT A REPEAT ───
+   *
+   * The fourth subgoal of `a-square-has-even-exponents` ends by observing that
+   * the odd-exponent split "is also the whole of why √2 is not a ratio", and gives
+   * the a² = 2b² parity argument in two lines. That was a preview offered as
+   * the pay-off of a technique; it is the content here, and the division is
+   * deliberate rather than duplication:
+   *
+   *  - There, the question was "what is the largest square dividing 7350" and
+   *    the irrationality remark was what the answer turned out to be good for.
+   *  - Here, the question is "which roots are rational at all", and the parity
+   *    argument is the thing being established. The third knowledge point
+   *    therefore states it as a proof and then uses it as a TEST — the part
+   *    the preview does not reach — because the useful form of the argument is
+   *    not "√2 is irrational" but "√N is rational exactly when every exponent
+   *    of N is even", which decides any case put in front of it.
+   *
+   * The worked examples share no numbers with that concept's, so neither reads
+   * as a recall of the other.
+   *
+   * ── THE FORM THAT DOES NOT EXIST, STATED PLAINLY ──────────────────────────
+   *
+   * The natural task for the middle knowledge point is "simplify √720", and it
+   * cannot be asked. `NamedForm` has `radical_free` — no `sqrt` and no
+   * fractional exponent — which demands that the radical GO, and 12√5 still
+   * has one. What is wanted is a form meaning "no square factor remains under
+   * the radical", and forms.ts has nothing of the shape: the claim is about a
+   * subterm's factorisation, not about the top-level shape of the answer.
+   *
+   * This is the third time this subject has met the same wall from a different
+   * side — no form can demand a product of primes (`prime-factorisation`), a
+   * relation between two integers (`gcd-and-lcm`), or now a condition on a
+   * factor under a radical. The answer is the one those two found: compute
+   * WITH the split rather than asking for it. So the middle point's tasks hand
+   * over the extracted root and ask for the square-free part by division, and
+   * ask the one root of a non-integer that IS exactly rational. Each prompt
+   * says which step it stands in for, and choosing the split is what the
+   * worked example teaches.
+   *
+   * ── Still gradable with no worker, which was worth checking rather than ───
+   *    assuming
+   *
+   * This subject's header claims every task in it is settled by exact rational
+   * arithmetic with no math worker configured, and a concept about irrational
+   * numbers is the obvious place for that to quietly stop being true.
+   * `exactValue` handles a `sqrt` node and a rational exponent, returning the
+   * value when it is rational and null when it is not — so `sqrt(49/16)` is
+   * 7/4 locally and `sqrt(2)` is worker-only, honestly. Every task here is
+   * therefore built on a root that comes out exactly: a perfect fourth power,
+   * a perfect square over a perfect square, and two plain divisions. Nothing
+   * here needs `WORKER_ONLY` in the test suite, and the claim in the header
+   * stands unamended.
+   *
+   * ── No automaticity targets, and no `encompasses` edge ────────────────────
+   *
+   * Same judgement as the three concepts above: dividing exponents by an index
+   * is a procedure with a stopping rule, and the third point is an argument. A
+   * clock on "is this exponent even" measures reading speed.
+   *
+   * The `encompasses` question is the one `gcd-and-lcm` records at length, and
+   * it comes out the same way for the same reason. Reading a root off a
+   * factorisation genuinely shares its shape with `prime-factorisation`, but
+   * measured against the four tasks actually shipped, three of them are handed
+   * the factorisation or do not involve one at all. Crediting primes on that
+   * evidence would stop the concept coming due for a learner who never
+   * produced a factorisation, and the cost lands on them. Add the edge with a
+   * task that asks for the split itself — see the form note above.
+   */
+  {
+    id: 'roots-and-irrationals',
+    name: 'Roots and irrational numbers',
+    subjectId: subject.id,
+    scope: {
+      id: 'roots-and-irrationals',
+      label: 'Roots and irrational numbers',
+      hint: 'square root irrational surd radical',
+      /*
+       * Carried verbatim from the map node this was promoted out of, so the
+       * concept trail recognises exactly what it recognised before and the
+       * four-concept ceiling in tests/atlas.mjs is unaffected. Title-shaped:
+       * "square root" and "nth root" are left unbounded on the right so that
+       * "Square root of 2" and "nth root algorithm" both land, while
+       * "irrational number" is bounded because "irrational" alone is a word
+       * about behaviour as often as about number.
+       */
+      match: /\b(irrational number|square root|nth root|surd)/i,
+    },
+    fidelity: 'checked',
+    objectives: [
+      {
+        id: 'read-a-root-off-a-factorisation',
+        statement:
+          'Decide whether a whole number is a perfect nth power and produce its nth root by '
+          + 'dividing each exponent of its factorisation by n, instead of searching for a '
+          + 'number that works.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'write-a-root-exactly-rather-than-rounded',
+        statement:
+          'Split a root into its largest square factor and its square-free part, so a root '
+          + 'that is not a whole number is written exactly as a multiple of a smaller root '
+          + 'instead of rounded to a decimal.',
+        taskKinds: ['evaluate', 'justify'],
+      },
+      {
+        id: 'say-which-roots-are-rational-and-why',
+        statement:
+          'State the exponent argument showing no fraction squares to 2, and use it as a test '
+          + 'to decide whether a given root is rational or irrational.',
+        taskKinds: ['state', 'justify'],
+      },
+    ],
+    knowledgePoints: [
+      {
+        id: 'a-root-undoes-a-power',
+        conceptId: 'roots-and-irrationals',
+        statement:
+          'An nth root asks the question an nth power answers: which number, used as a factor n '
+          + 'times, gives this one. On a factorisation that question is pure bookkeeping — '
+          + 'raising to the nth power MULTIPLIES every exponent by n, so taking the nth root '
+          + 'DIVIDES every exponent by n, and the root is a whole number exactly when every '
+          + 'division comes out even.',
+        position: 1,
+        workedExample: {
+          problem: 'Is 1728 a perfect cube, and if so what is its cube root?',
+          subgoals: [
+            {
+              label: 'Factor first, so the question becomes arithmetic on exponents',
+              detail:
+                '1728 = 2⁶ · 3³. Worth doing before anything else: a cube root is a question '
+                + 'about the exponents, and until they are written down there is nothing to ask '
+                + 'it of. Guessing instead means multiplying candidates out — and the candidates '
+                + 'near the answer are 11³ = 1331 and 13³ = 2197, neither close enough to '
+                + 'suggest the next guess.',
+              socratic:
+                'Before deciding whether 1728 is a cube, what do you need written down about '
+                + 'it — and what would you otherwise be reduced to doing?',
+            },
+            {
+              label: 'Test each exponent for divisibility by the index, not the number for size',
+              detail:
+                'The index is 3, and the exponents are 6 and 3. Both are divisible by 3, so 1728 '
+                + 'IS a perfect cube. This is the square test from `prime-factorisation` with 3 '
+                + 'in place of 2: there, an even exponent everywhere meant a square. The rule is '
+                + 'the same because the reason is — a cube has three equal factors, so every '
+                + 'prime in it appears a multiple of three times.',
+              socratic:
+                '1728 = 2⁶ · 3³ and you are asking about cubes rather than squares. What do you '
+                + 'now need to be true of the 6 and the 3?',
+            },
+            {
+              label: 'Divide each exponent by the index to build the root',
+              detail:
+                '6 / 3 = 2 and 3 / 3 = 1, so the cube root is 2² · 3¹ = 4 · 3 = 12. The root is '
+                + 'assembled rather than found: nothing was tried and rejected, and the size of '
+                + '1728 played no part in the work.',
+              socratic:
+                'You have 2⁶ · 3³ and an index of 3. What do you do to the 6 and the 3 to get '
+                + 'the exponents of the root itself?',
+            },
+            {
+              label: 'Check forwards, because the error this makes is an arithmetic slip',
+              detail:
+                '12³ = 12 · 144 = 1728. Worth the one multiplication: the method cannot produce '
+                + 'the wrong KIND of answer once the divisibility test has passed, so the only '
+                + 'failure left is mis-dividing an exponent or mis-multiplying the root back '
+                + 'together, and going forwards catches both.',
+              socratic:
+                'You have 12 as the cube root. What single calculation would disagree with you '
+                + 'if you had divided one of the exponents wrongly?',
+            },
+          ],
+          answer: '1728 = 2⁶ · 3³ is a perfect cube, and its cube root is 2² · 3 = 12',
+        },
+      },
+      {
+        id: 'pull-the-square-out',
+        conceptId: 'roots-and-irrationals',
+        statement:
+          'When the exponents do NOT all divide, the root still splits: √(a · b) = √a · √b lets '
+          + 'the perfect-square part come out from under the radical and leaves the rest behind. '
+          + 'Taking out the LARGEST square factor leaves a square-free number under the sign, '
+          + 'which is what makes the written answer exact and unique rather than merely correct.',
+        position: 2,
+        workedExample: {
+          problem: 'Write √720 exactly, with nothing left under the radical that need not be there.',
+          subgoals: [
+            {
+              label: 'Factor, and sort the exponents into even and odd',
+              detail:
+                '720 = 2⁴ · 3² · 5¹. The 2 and the 3 have even exponents and the 5 has an odd '
+                + 'one. That sorting is the whole decision: an even exponent is a square already '
+                + 'and can leave, an odd one has one copy too many to pair up and must stay.',
+              socratic:
+                '720 = 2⁴ · 3² · 5. A square needs its factors in pairs. Which of these three '
+                + 'primes cannot be fully paired up?',
+            },
+            {
+              label: 'Take out one copy of each odd-exponent prime, and halve the rest',
+              detail:
+                'The single 5 stays under the sign. Everything else is 2⁴ · 3² = 16 · 9 = 144, '
+                + 'and halving its exponents gives √144 = 2² · 3 = 12. So 144 is the largest '
+                + 'square dividing 720 and 5 is the square-free part. Nothing larger would work: '
+                + 'any square divisor must leave the 5 behind, because there is only one of it.',
+              socratic:
+                'The 5 has to stay. What is the largest square that divides 720, and what does '
+                + 'the single 5 force about it?',
+            },
+            {
+              label: 'Read the two parts off as a product',
+              detail:
+                '√720 = √(144 · 5) = √144 · √5 = 12√5. The split is only legal because the root '
+                + 'of a product is the product of the roots, which is what lets a factor cross '
+                + 'the radical sign at all — and it is why the part that crosses has to be a '
+                + 'perfect square.',
+              socratic:
+                'You have 720 = 144 · 5 with 144 a perfect square. What does that let you write '
+                + '√720 as, and which rule about roots are you using?',
+            },
+            {
+              label: 'Check the size, because this is where a decimal would have hidden an error',
+              detail:
+                '26² = 676 and 27² = 729, and 720 sits between them, so √720 is between 26 and '
+                + '27. And 12√5 ≈ 12 · 2.236 = 26.8, which agrees. The check is worth having '
+                + 'because 12√5 is EXACT and 26.8 is not: the decimal is where the next step '
+                + 'would start losing precision, so it belongs in the check and not in the '
+                + 'answer.',
+              socratic:
+                'You have 12√5 and no decimal anywhere in it. What two consecutive whole numbers '
+                + 'could you square to trap 720 between them, and does your answer land inside?',
+            },
+          ],
+          answer: '√720 = 12√5, from 720 = 144 · 5 with 144 = 12² the largest square factor',
+        },
+      },
+      {
+        id: 'root-of-a-non-square-is-irrational',
+        conceptId: 'roots-and-irrationals',
+        statement:
+          'When the square-free part is not 1, the root is not a fraction AT ALL — not a '
+          + 'fraction nobody has found, but one that cannot exist. The reason is the exponent '
+          + 'bookkeeping again: squaring a fraction doubles every exponent, and a doubled '
+          + 'exponent is even, so no squared fraction can equal a number with an odd one. This '
+          + 'is the first number a reader meets that the fractions cannot reach.',
+        position: 3,
+        workedExample: {
+          problem: 'Show that √2 is not a ratio of whole numbers, then use the argument to decide √45.',
+          subgoals: [
+            {
+              label: 'Suppose it is a ratio, and square to clear the root',
+              detail:
+                'Suppose √2 = a/b for whole numbers a and b. Squaring both sides gives '
+                + 'a²/b² = 2, so a² = 2b². The root is now gone and what is left is a statement '
+                + 'about whole numbers — which is the move that makes the question answerable, '
+                + 'because unique factorisation is a fact about whole numbers and says nothing '
+                + 'about radicals.',
+              socratic:
+                'You have assumed √2 = a/b. What can you do to both sides to leave a statement '
+                + 'with no root in it, and why is that worth having?',
+            },
+            {
+              label: 'Count the 2s on each side',
+              detail:
+                'Let a contain the prime 2 exactly m times and b exactly k times. Then a² '
+                + 'contains it 2m times, and 2b² contains it 2k + 1 times — the doubling from '
+                + 'the square, plus the one 2 standing in front. So the left side has an even '
+                + 'number of 2s and the right side an odd number. Note that no size estimate, '
+                + 'and no "lowest terms" assumption, has been used.',
+              socratic:
+                'In a² = 2b², count how many times the prime 2 divides each side. What is '
+                + 'different about the two counts?',
+            },
+            {
+              label: 'Close it with uniqueness, which is what forbids two answers',
+              detail:
+                'a² and 2b² are the same number, and a number has exactly one factorisation, so '
+                + 'it has one count of 2s — it cannot be both even and odd. The supposition is '
+                + 'therefore impossible, and no whole numbers a and b exist. The conclusion is '
+                + 'not that the fraction is hard to find; it is that 2 is not the square of any '
+                + 'ratio.',
+              socratic:
+                'The same number has been shown to contain an even and an odd number of 2s. '
+                + 'Which fact about factorisations makes that impossible rather than merely '
+                + 'surprising?',
+            },
+            {
+              label: 'Turn the proof into a test and run it',
+              detail:
+                'The argument used nothing about 2 except that its exponent was odd, so it works '
+                + 'on any prime: √N is rational exactly when every exponent of N is even — the '
+                + 'perfect-square test from the first point, now with a converse. 45 = 3² · 5, '
+                + 'and the 5 has exponent 1, so √45 is irrational. The second point still says '
+                + 'how to write it: √45 = 3√5.',
+              socratic:
+                '45 = 3² · 5. The argument above only ever used that an exponent was odd — so '
+                + 'what does it tell you about √45, and which exponent decides it?',
+            },
+          ],
+          answer:
+            'No whole a, b satisfy a² = 2b², because the prime 2 would divide one number an even '
+            + 'and an odd number of times — so √2 is irrational. By the same count √45 is too, '
+            + 'and √45 = 3√5.',
+        },
+      },
+    ],
+  },
 ]
 
 /**
@@ -1599,6 +1927,60 @@ const EDGES: ConceptEdge[] = [
     rationale:
       'A common denominator is a common multiple and a cancellation is a common factor, so '
       + 'both halves of fraction arithmetic are gcd and lcm wearing different hats.',
+  },
+
+  /**
+   * BOTH EDGES THAT CAME DOWN OFF THE MAP WITH `roots-and-irrationals`, AND
+   * BOTH BELONG HERE.
+   *
+   * The map node declared `needs: ['prime-factorisation', 'fraction-arithmetic']`
+   * and that `needs` left the area with it. This is the first promotion out of
+   * that area where BOTH stranded edges land in this subject with nothing left
+   * over for `links` — `prime-factorisation` needed one edge restated here,
+   * `gcd-and-lcm` needed one here and one moved in, and this one needs two
+   * here and no change to the area at all beyond the node's own removal.
+   *
+   * Both are real gates rather than bookkeeping, and they gate different
+   * halves of the concept:
+   *
+   *  - `prime-factorisation` is the whole method. Every move here reads
+   *    exponents off a factorisation — testing an nth power, dividing the
+   *    exponents to build the root, pulling out the largest square — and the
+   *    irrationality proof is unique factorisation applied twice. There is
+   *    nothing to do here at all without it.
+   *  - `fraction-arithmetic` is less obvious and still necessary. The concept
+   *    is ABOUT the boundary of the rationals, and a learner who cannot
+   *    compute with a ratio cannot be shown that something is not one: the
+   *    proof squares a/b and compares, the one exactly-rational root of a
+   *    non-integer is √(49/16) = 7/4, and the square-free part is reached by a
+   *    division. "Not a fraction" is not a statement somebody can receive
+   *    before fractions.
+   *
+   * Edges pointing the other way were left alone and resolve in `composeAtlas`:
+   * `real-number-line` and `pythagoras` both name this concept in their own
+   * `needs` and both are still map nodes, and the two `links` in
+   * `ALGEBRA_FOUNDATIONS` that run from here to `quadratic-formula` and
+   * `rational-exponents` stay where they are, because those endpoints are
+   * authored in OTHER subjects and an ontology's edges may only name concepts
+   * it contains.
+   */
+  {
+    id: 'prime-factorisation->roots-and-irrationals',
+    from: 'prime-factorisation',
+    to: 'roots-and-irrationals',
+    kind: 'prerequisite',
+    promotedBy: 'author:arithmetic-foundations',
+  },
+  {
+    id: 'fraction-arithmetic->roots-and-irrationals',
+    from: 'fraction-arithmetic',
+    to: 'roots-and-irrationals',
+    kind: 'prerequisite',
+    promotedBy: 'author:arithmetic-foundations',
+    rationale:
+      'The concept exists to show that a number need not be a ratio, which is not a claim a '
+      + 'learner can receive before they can compute with one — the proof squares a/b, and the '
+      + 'one root here that is exactly rational is a root of a fraction.',
   },
 
   /**
