@@ -131,12 +131,19 @@ const CONCEPTS: Concept[] = [
             {
               label: 'Count the copies',
               detail: 'Three 2s times four 2s is seven 2s in a row, so the result is 2⁷.',
+              socratic:
+                'Write out the 2s from both factors as one long multiplication. How many 2s are ' +
+                'there altogether, and what single power does that make?',
             },
             {
               label: 'State the rule the count proves',
               detail:
                 'xᵃ · xᵇ = xᵃ⁺ᵇ. The addition in the exponent is where the counting went, which ' +
                 'is why the rule needs the bases to be the same — you cannot count 2s and 3s together.',
+              socratic:
+                'The exponents 3 and 4 turned into 7 by counting 2s, not by anything done to 3 ' +
+                'and 4 themselves. What is that rule for any base and any two exponents, and ' +
+                'what does the counting run into if the bases differ, as in 2³ · 3⁴?',
             },
           ],
           answer: '2⁷ = 128, because xᵃ · xᵇ = xᵃ⁺ᵇ',

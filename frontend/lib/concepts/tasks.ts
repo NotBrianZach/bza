@@ -525,6 +525,39 @@ export const TASKS: PracticeTask[] = [
     at: { x: '2700', c: '30' },
     reference: '3',
   },
+  /*
+   * The ask this concept is named for, finally expressible.
+   *
+   * `roots-and-irrationals`' header records the gap at length: the natural task
+   * for this knowledge point is "simplify √720", and it could not be asked.
+   * `radical_free` demands the radical GO and 12√5 still has one, so the two
+   * tasks beside this one hand the extracted root over in the prompt and ask
+   * for a division instead — the move the concept most wants to teach, replaced
+   * by its own last step.
+   *
+   * Two things had to land for this to work, and the second was not the one the
+   * header predicted. `surd_reduced` is the form. But `transform_to_form` was
+   * also routed unconditionally to the CAS, and this subject's contract is that
+   * every task in it grades with no worker — so `asSurd` in numerals.ts put
+   * both sides in normal form, which is a decision rather than a heuristic
+   * because √r for distinct square-free r are linearly independent over Q.
+   *
+   * 1008 = 2⁴ · 3² · 7, so the square part is 144 and the answer is 12√7.
+   * Different numbers from the worked example's 720 = 12√5, and from 2700 in
+   * the task above, so it is not a recall of either.
+   */
+  {
+    id: 'simplify-a-surd-1',
+    knowledgePointId: 'pull-the-square-out',
+    kind: 'transform_to_form',
+    prompt:
+      'Simplify √1008, leaving nothing under the radical that need not be there. Write it as a '
+      + 'whole number times a smaller root.',
+    given: 'sqrt(1008)',
+    form: 'surd_reduced',
+    variables: [],
+    reference: '12*sqrt(7)',
+  },
   {
     id: 'root-of-a-fraction-1',
     knowledgePointId: 'pull-the-square-out',

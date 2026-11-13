@@ -38,7 +38,7 @@
 
 import { parseFailure, parsedTree, renderExpr, symbolsIn, tryParse, unsigned, type ExprNode } from './expr'
 import { checkDenominatorDegree, checkForm, FORM_LABELS, type FormCheck } from './forms'
-import { exactValue, sameValue, showExact, substitute } from './numerals'
+import { asSurd, exactValue, sameSurd, sameValue, showExact, showSurd, substitute } from './numerals'
 import { primaryVariable } from './tasks'
 import type { PracticeTask, Verdict } from './types'
 
@@ -47,7 +47,7 @@ import type { PracticeTask, Verdict } from './types'
  * generators needed them too, and a caller asking the verifier what a tree is
  * worth is still asking a reasonable question of the right module.
  */
-export { exactValue, sameValue, showExact, substitute } from './numerals'
+export { asSurd, exactValue, sameSurd, sameValue, showExact, showSurd, substitute } from './numerals'
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -295,16 +295,36 @@ export async function ruleTransform(
    * concepts shipped evaluate-only proxy tasks partly for this reason — the
    * missing form was the half that got recorded, and this was the other half.
    *
-   * `exactValue` returning null is the honesty guard and the reason this cannot
-   * over-reach: `sqrt(2)` and `pi` are not rational, so they fall through to the
-   * worker exactly as before. Nothing that needed a CAS stops getting one.
+   * ── Surds too, which is what `surd_reduced` was waiting for ───────────
+   *
+   * `asSurd` extends the same argument one step: for distinct square-free r the
+   * numbers √r are linearly independent over the rationals, so two SIMPLE surds
+   * — `c · √r`, one term — are equal exactly when their normal forms agree.
+   * That is a decision, not a heuristic, and it needs no CAS. It is why
+   * `√1008` can now be compared against `12√7` locally, and therefore why
+   * `surd_reduced` is askable inside a subject whose contract is that every
+   * task grades with no worker.
+   *
+   * `asSurd` returns a surd with `r === 1` for anything purely rational, so it
+   * strictly subsumes the case this block originally handled; the two are one
+   * comparison rather than two branches.
+   *
+   * `asSurd` returning null is the honesty guard and the reason this cannot
+   * over-reach. `pi` is not a surd. Neither is `√2 + √3` — SUMS of surds are
+   * deliberately not handled, since deciding those needs real algebraic-number
+   * machinery and guessing would be worse than abstaining. Everything it cannot
+   * read falls through to the worker exactly as before, so nothing that needed
+   * a CAS stops getting one.
    */
   if (symbolsIn(tree).length === 0 && symbolsIn(referenceTree).length === 0) {
-    const mine = exactValue(tree)
-    const theirs = exactValue(referenceTree)
+    const mine = asSurd(tree)
+    const theirs = asSurd(referenceTree)
     if (mine !== null && theirs !== null) {
-      const agree = sameValue(mine, theirs)
-      const method = `exact rational arithmetic — both sides are numbers, so no worker was needed`
+      const agree = sameSurd(mine, theirs)
+      const rationalBoth = mine.r === 1n && theirs.r === 1n
+      const method = rationalBoth
+        ? `exact rational arithmetic — both sides are numbers, so no worker was needed`
+        : `exact surd comparison in normal form — no worker was needed`
       if (!agree) {
         return {
           status: 'ruled',
@@ -314,7 +334,7 @@ export async function ruleTransform(
             method,
             brokeAt: {
               step: 2,
-              detail: `this comes to ${showExact(mine)}, and the answer is ${showExact(theirs)}`,
+              detail: `this comes to ${showSurd(mine)}, and the answer is ${showSurd(theirs)}`,
             },
             conditions: authored,
           },

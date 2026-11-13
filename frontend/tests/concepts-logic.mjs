@@ -120,6 +120,7 @@ const {
 const {
   isScorable, needsReview, rulingHeadline, verifierConfig,
   exactValue, substitute, showExact, ruleEvaluate, rule, ruleTransform,
+  asSurd, sameSurd, showSurd,
 } = M.verify
 const { agreeAtPoints } = M.numerals
 const {
@@ -293,6 +294,54 @@ t('a prime power with a prime exponent still reads as one prime',
 t('a number past the factorisation ceiling abstains rather than hanging',
   pfac('1000000000000031').held === null)
 t('…and says so', /too large/.test(pfac('1000000000000031').detail))
+
+/*
+ * `asSurd` — the normal form that makes a surd comparison a decision.
+ *
+ * For distinct square-free r the numbers √r are linearly independent over the
+ * rationals, so two single-term surds are equal exactly when their normal forms
+ * agree. The abstentions matter as much as the equalities: a sum of surds is
+ * NOT handled, and must return null rather than a guess.
+ */
+group('asSurd — simple surds in normal form')
+const sd = s => asSurd(p(s))
+const sshow = s => (sd(s) === null ? 'null' : showSurd(sd(s)))
+t('an unsimplified root normalises', sshow('sqrt(720)') === '12*sqrt(5)')
+t('an already-simplified one is unchanged', sshow('12*sqrt(5)') === '12*sqrt(5)')
+t('and the two are therefore the same number', sameSurd(sd('sqrt(720)'), sd('12*sqrt(5)')))
+t('a perfect square comes out rational', sshow('sqrt(144)') === '12')
+t('a rational is a surd with radicand 1', sshow('7/4') === '7/4' && sd('7/4').r === 1n)
+t('a root of a fraction rationalises', sshow('sqrt(49/16)') === '7/4')
+t('a non-square fraction keeps a whole radicand', sshow('sqrt(1/2)') === '1/2*sqrt(2)')
+t('a fractional exponent is the same thing written differently',
+  sameSurd(sd('720^(1/2)'), sd('sqrt(720)')))
+t('radicands combine and re-normalise — sqrt6 * sqrt15 = 3 sqrt10',
+  sshow('sqrt(6)*sqrt(15)') === '3*sqrt(10)')
+t('a quotient of surds rationalises its denominator',
+  sshow('sqrt(6)/sqrt(3)') === 'sqrt(2)')
+t('a negated surd keeps its sign', sshow('-sqrt(8)') === '-2*sqrt(2)')
+t('a coefficient multiplies through', sshow('3*sqrt(8)') === '6*sqrt(2)')
+t('sqrt(1) is 1, not a radicand of 1 times something odd', sshow('sqrt(1)') === '1')
+t('sqrt(0) is 0', sshow('sqrt(0)') === '0')
+// The abstentions. Each of these must reach the worker rather than be guessed.
+t('A SUM OF SURDS ABSTAINS — deciding those needs real algebraic machinery',
+  sd('sqrt(2) + sqrt(3)') === null)
+t('an irrational constant abstains', sd('pi') === null)
+t('a symbol abstains', sd('x') === null)
+// An IRRATIONAL cube root abstains — this handles square roots only. A cube
+// root that comes out rational is simply a rational, and `8^(1/3)` is 2, so
+// reading it as one is right rather than an overreach.
+t('an irrational cube root abstains — this handles square roots only',
+  sd('2^(1/3)') === null)
+t('…but a cube root that IS rational is read as that rational',
+  sshow('8^(1/3)') === '2')
+t('a negative radicand abstains rather than going complex', sd('sqrt(-4)') === null)
+t('a radicand past the ceiling abstains', sd('sqrt(1000000000000031)') === null)
+// Distinct square-free radicands must never compare equal, which is the
+// linear-independence property the whole approach rests on.
+t('distinct square-free radicands are different numbers',
+  !sameSurd(sd('sqrt(2)'), sd('sqrt(3)'))
+  && !sameSurd(sd('2*sqrt(3)'), sd('3*sqrt(2)')))
 
 group('form: surd_reduced')
 const sr = s => checkForm(p(s), 'surd_reduced', 'x')
@@ -1360,25 +1409,33 @@ t('…and the message names both numbers',
 t('a partly-factored answer is refused, naming the composite factor',
   (await ruleTransform(pfTask, '2*3*385', NO_WORKER)).verdict.ruling === 'incorrect')
 /*
- * And the limit of the change, pinned so nobody assumes it goes further.
+ * And the same path for surds, which is what `surd_reduced` was waiting on.
  *
- * `surd_reduced` exists and is fully tested, but it CANNOT be used in
- * arithmetic-foundations, and the reason is this path rather than the form:
- * √1008 and 12√7 are both irrational, so `exactValue` returns null for both and
- * the comparison falls through to the worker. That would break the subject's
- * "gradable with no worker" contract, which is why `roots-and-irrationals`
- * still ships evaluate-only tasks even though the form it wanted now exists.
- *
- * What would unblock it: a local comparison for surds — equality of
- * non-negative square roots follows from equality of their squares, which is
- * exact integer arithmetic — or a subject that tolerates the worker.
+ * `exactValue` still refuses an irrational surd — that has not changed and is
+ * asserted below, because it is why this needed `asSurd` rather than being
+ * free. What `asSurd` adds is a normal form, so √1008 and 12√7 are decided
+ * against each other without a CAS and without either having a rational value.
  */
-t('exactValue still refuses an irrational surd, which is why surd_reduced is unwired here',
+t('exactValue alone still cannot settle a surd — asSurd is what made this possible',
   exactValue(parseExpression('sqrt(1008)', [])) === null
   && exactValue(parseExpression('12*sqrt(7)', [])) === null)
-t('…and no shipped task asks for surd_reduced yet',
-  TASKS.every(task => task.form !== 'surd_reduced'),
-  'if this fails, check the no-worker contract of whichever subject now asks for it')
+const srTask = taskById('simplify-a-surd-1')
+t('the simplified surd is accepted with no worker',
+  (await ruleTransform(srTask, '12*sqrt(7)', NO_WORKER)).verdict.ruling === 'correct')
+t('…and the method names the surd comparison rather than a CAS',
+  /surd comparison/.test((await ruleTransform(srTask, '12*sqrt(7)', NO_WORKER)).verdict.method))
+t('THE UNSIMPLIFIED ROOT IS REFUSED, at the form step',
+  (await ruleTransform(srTask, 'sqrt(1008)', NO_WORKER)).verdict.ruling === 'incorrect'
+  && (await ruleTransform(srTask, 'sqrt(1008)', NO_WORKER)).verdict.brokeAt.step === 1)
+t('a partly-simplified root is refused, naming what can still come out',
+  (await ruleTransform(srTask, '2*sqrt(252)', NO_WORKER)).verdict.ruling === 'incorrect')
+t('a square-free but WRONG radicand fails at the equivalence step, not the form step',
+  (await ruleTransform(srTask, '12*sqrt(5)', NO_WORKER)).verdict.brokeAt.step === 2)
+t('a decimal approximation is refused — exactness is the point of the concept',
+  (await ruleTransform(srTask, '31.75', NO_WORKER)).verdict.ruling === 'incorrect')
+// The remaining limit, pinned so nobody assumes it goes further than it does.
+t('a SUM of surds still abstains and would need the worker',
+  asSurd(parseExpression('sqrt(2) + sqrt(3)', [])) === null)
 
 /*
  * The evaluate free mark, closed.
@@ -2540,15 +2597,15 @@ group('the third subject is gradable with no worker')
 const ARITH_TASKS = allKnowledgePoints(A).flatMap(p => tasksForPoint(p.id))
 /*
  * Twenty-eight tasks over twenty-seven points, so this is no longer one
- * apiece. `pull-the-square-out` carries two, and the pair is the reason: the
- * split it teaches cannot be demanded by any form in forms.ts, so one task
- * computes the square-free part of an integer root and the other takes the one
- * root of a NON-integer that is still exactly rational. Neither alone covers
- * the point. The one-per-point floor is asserted separately above, against
- * every point rather than against a total, which is the part that matters.
+ * apiece. `pull-the-square-out` carries THREE: the split it teaches can now be
+ * demanded directly (`surd_reduced` + the `asSurd` comparison), and the two
+ * older tasks stay because they cover different ground — the square-free part
+ * of an integer root, and the one root of a NON-integer that is still exactly
+ * rational. The one-per-point floor is asserted separately above, against every
+ * point rather than against a total, which is the part that matters.
  */
-t('twenty-nine tasks, and every point has at least one',
-  ARITH_TASKS.length === 29 && allKnowledgePoints(A).every(p => tasksForPoint(p.id).length > 0),
+t('thirty tasks, and every point has at least one',
+  ARITH_TASKS.length === 30 && allKnowledgePoints(A).every(p => tasksForPoint(p.id).length > 0),
   `${ARITH_TASKS.length}`)
 /*
  * NOT "all of them are evaluate" any more, and the change is the point rather
@@ -2566,14 +2623,17 @@ t('twenty-nine tasks, and every point has at least one',
  * split is still asserted, as a figure rather than a constraint, so that a kind
  * arriving here unnoticed is still visible.
  */
-t('all but one are evaluate, and the exception is the transform_to_form that now grades locally',
+t('two are transform_to_form and the rest evaluate — both graded locally',
   ARITH_TASKS.filter(x => x.kind === 'evaluate').length === 28
-  && ARITH_TASKS.filter(x => x.kind === 'transform_to_form').length === 1,
+  && ARITH_TASKS.filter(x => x.kind === 'transform_to_form').length === 2,
   ARITH_TASKS.reduce((acc, x) => ({ ...acc, [x.kind]: (acc[x.kind] ?? 0) + 1 }), {}),
 )
-t('every one declares integer symbols rather than real ones, and the numeric task declares none',
+t('…and they are the two forms that constrain an integer subterm',
+  ARITH_TASKS.filter(x => x.kind === 'transform_to_form').map(x => x.form).sort().join(',')
+    === 'prime_factored,surd_reduced')
+t('every one declares integer symbols rather than real ones, and the numeric tasks declare none',
   ARITH_TASKS.every(x => x.variables.every(v => v.assumptions?.integer === true))
-  && ARITH_TASKS.filter(x => x.variables.length === 0).length === 1)
+  && ARITH_TASKS.filter(x => x.variables.length === 0).length === 2)
 t('every evaluate reference is exactly reproducible from the given — no worker consulted',
   ARITH_TASKS.filter(x => x.kind === 'evaluate').every(x => {
     const at = {}
@@ -2582,10 +2642,23 @@ t('every evaluate reference is exactly reproducible from the given — no worker
     const claimed = exactValue(parseExpression(x.reference, x.variables.map(v => v.name)))
     return truth !== null && claimed !== null && showExact(truth) === showExact(claimed)
   }))
-// The transform task's two sides are compared the same exact way, which is the
-// whole reason it is allowed in a subject with this contract.
-t('and the transform task\'s given and reference are exactly equal as integers',
+// Both transform tasks' two sides are settled the same exact way, which is the
+// whole reason they are allowed in a subject with this contract. `asSurd` rather
+// than `exactValue`, since one of the two pairs is irrational on both sides.
+t('and each transform task\'s given and reference are the same number exactly',
   ARITH_TASKS.filter(x => x.kind === 'transform_to_form').every(x => {
+    const given = asSurd(parseExpression(x.given, []))
+    const reference = asSurd(parseExpression(x.reference, []))
+    return given !== null && reference !== null && sameSurd(given, reference)
+  }))
+t('…and for the surd task neither side has a rational value, so exactValue could not have done it',
+  (() => {
+    const x = ARITH_TASKS.find(t2 => t2.form === 'surd_reduced')
+    return exactValue(parseExpression(x.given, [])) === null
+      && exactValue(parseExpression(x.reference, [])) === null
+  })())
+t('…while the integer pair is settled by plain rational arithmetic, the narrower tool',
+  ARITH_TASKS.filter(x => x.form === 'prime_factored').every(x => {
     const given = exactValue(parseExpression(x.given, []))
     const reference = exactValue(parseExpression(x.reference, []))
     return given !== null && reference !== null && showExact(given) === showExact(reference)

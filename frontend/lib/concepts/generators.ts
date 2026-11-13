@@ -58,7 +58,7 @@
 
 import { parseExpression, symbolsIn, tryParse, type ExprNode } from './expr'
 import { checkDenominatorDegree, checkForm } from './forms'
-import { agreeAtPoints, exactValue, sameValue, substitute } from './numerals'
+import { agreeAtPoints, asSurd, exactValue, sameSurd, sameValue, showSurd, substitute } from './numerals'
 import { isVerifiableKind } from './registry'
 import type { NamedForm, PracticeTask, TaskKind, VariableDeclaration } from './types'
 
@@ -841,6 +841,39 @@ export function validateInstance(task: PracticeTask, degreeBound: number): strin
     else if (claimed === null) problems.push('reference has no exact rational value')
     else if (!sameValue(truth, claimed)) {
       problems.push(`reference is ${task.reference}, but given at its inputs is a different value`)
+    }
+    return problems
+  }
+
+  /*
+   * A `transform_to_form` task with no free symbol is validated by COMPARING
+   * the two sides, not by sampling them.
+   *
+   * Point sampling is the right tool for two expressions in a variable, and the
+   * wrong one here: there is nothing to sample over, and the degree bound it is
+   * trying to clear is a statement about polynomials. `simplify-a-surd-1`
+   * failed with "0 usable sample points" for exactly this reason — √1008 is not
+   * an exact rational, so no sampled point was usable, and the honest reading is
+   * not that the task is unproven but that the question was wrong.
+   *
+   * `asSurd` settles it outright, which is stronger than any number of sample
+   * points: equality of two simple surds in normal form is a decision. A null
+   * from either side means this validator cannot speak, and says so rather than
+   * falling through to a sampling run that would report a misleading reason.
+   */
+  if (symbolsIn(givenTree).length === 0 && symbolsIn(referenceTree).length === 0) {
+    const given = asSurd(givenTree)
+    const reference = asSurd(referenceTree)
+    if (given === null || reference === null) {
+      problems.push(
+        'given and reference are both numeric but at least one is not a rational or a simple '
+        + 'surd, so this validator cannot settle them — the worker would have to',
+      )
+    } else if (!sameSurd(given, reference)) {
+      problems.push(
+        `reference is ${task.reference}, but given is a different number `
+        + `(${showSurd(given)} vs ${showSurd(reference)})`,
+      )
     }
     return problems
   }

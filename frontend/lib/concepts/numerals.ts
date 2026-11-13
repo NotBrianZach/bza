@@ -261,6 +261,153 @@ export function exactRoot(value: Exact, r: bigint): Exact | null {
   return { n: negative ? -top : top, d: bottom }
 }
 
+// ---------------------------------------------------------------------------
+// Simple surds, compared exactly
+// ---------------------------------------------------------------------------
+
+/**
+ * A rational multiple of a square root: `c · √r`, with `r` a square-free
+ * positive integer. `r === 1n` is the rational case.
+ */
+export interface Surd { c: Exact; r: bigint }
+
+/**
+ * How large a radicand this module will factorise. Same bound and same reason
+ * as `FACTORISATION_CEILING` in forms.ts: trial division is O(√n), so 10^14 is
+ * ten million divisions, and above it we abstain rather than work.
+ */
+const SURD_CEILING = 100_000_000_000_000n
+
+/**
+ * Pull every square factor out of a positive integer: `n = s² · f` with `f`
+ * square-free. Returns `[s, f]`, or null above the ceiling.
+ */
+function splitSquare(n: bigint): [bigint, bigint] | null {
+  if (n < 1n || n > SURD_CEILING) return null
+  let left = n
+  let outside = 1n
+  let inside = 1n
+  for (let d = 2n; d * d <= left; d += d === 2n ? 1n : 2n) {
+    let e = 0
+    while (left % d === 0n) { left /= d; e++ }
+    // Each PAIR of a prime leaves the radical; a leftover single copy stays.
+    for (let i = 0; i < Math.floor(e / 2); i++) outside *= d
+    if (e % 2 === 1) inside *= d
+  }
+  // Whatever survives the loop is prime — it was not divisible by anything at
+  // or below its own square root — so it contributes one copy, inside.
+  if (left > 1n) inside *= left
+  return [outside, inside]
+}
+
+/**
+ * Read an expression as a simple surd, in normal form, or null.
+ *
+ * ── Why this is sound, and why it is deliberately narrow ──────────────────
+ *
+ * For distinct square-free `r`, the numbers `√r` are linearly independent over
+ * the rationals — so two simple surds are equal exactly when their normal forms
+ * agree. That makes the comparison a decision rather than a heuristic, which is
+ * the bar this file holds everything else to (`exactLog`'s header makes the same
+ * argument for its own search).
+ *
+ * The independence result is about a SINGLE term. `√2 + √3` is not a simple
+ * surd and is not handled: comparing sums of surds needs real algebraic-number
+ * machinery, and guessing would be worse than abstaining. Anything this cannot
+ * read returns null and goes to the worker, exactly as before.
+ *
+ * Accepted shapes, which is what the authored tasks actually use:
+ *
+ *   a rational                 → c · √1
+ *   sqrt(n), n a non-negative rational
+ *   q^(1/2), the same written as a power
+ *   a product of those         → the rationals multiply, the radicands combine
+ *   a quotient of those
+ */
+export function asSurd(node: ExprNode): Surd | null {
+  const rational = exactValue(node)
+  if (rational !== null) return { c: rational, r: 1n }
+
+  const mul = (a: Surd, b: Surd): Surd | null => {
+    const c = exact(a.c.n * b.c.n, a.c.d * b.c.d)
+    if (c.kind !== 'exact') return null
+    // √r · √s = √(rs), then re-normalise: rs may well have a square factor
+    // even when r and s separately do not — √6 · √15 = √90 = 3√10.
+    const split = splitSquare(a.r * b.r)
+    if (split === null) return null
+    const [outside, inside] = split
+    const scaled = exact(c.v.n * outside, c.v.d)
+    return scaled.kind === 'exact' ? { c: scaled.v, r: inside } : null
+  }
+
+  /** √(p/q) = √(pq)/q, which keeps the radicand a whole number. */
+  const rootOf = (value: Exact): Surd | null => {
+    if (value.n < 0n) return null
+    const split = splitSquare(value.n * value.d)
+    if (split === null) return null
+    const [outside, inside] = split
+    const c = exact(outside, value.d)
+    return c.kind === 'exact' ? { c: c.v, r: inside } : null
+  }
+
+  const n = node.kind === 'negate' ? node.operand : node
+  const sign = node.kind === 'negate' ? -1n : 1n
+  const signed = (s: Surd | null): Surd | null => {
+    if (!s || sign === 1n) return s
+    const c = exact(-s.c.n, s.c.d)
+    return c.kind === 'exact' ? { c: c.v, r: s.r } : null
+  }
+
+  switch (n.kind) {
+    case 'function': {
+      if (n.name !== 'sqrt' || n.args.length !== 1) return null
+      const inner = exactValue(n.args[0])
+      return inner === null ? null : signed(rootOf(inner))
+    }
+    case 'power': {
+      const half = exactValue(n.exponent)
+      if (half === null || half.n !== 1n || half.d !== 2n) return null
+      const base = exactValue(n.base)
+      return base === null ? null : signed(rootOf(base))
+    }
+    case 'multiply': {
+      let acc: Surd = { c: { n: 1n, d: 1n }, r: 1n }
+      for (const a of n.args) {
+        const part = asSurd(a)
+        if (part === null) return null
+        const next = mul(acc, part)
+        if (next === null) return null
+        acc = next
+      }
+      return signed(acc)
+    }
+    case 'divide': {
+      const top = asSurd(n.numerator)
+      const bottom = asSurd(n.denominator)
+      if (!top || !bottom || bottom.c.n === 0n) return null
+      // Rationalise: (a√r)/(b√s) = (a/(b·s))·√(rs).
+      const scale = exact(top.c.n * bottom.c.d, top.c.d * bottom.c.n * bottom.r)
+      if (scale.kind !== 'exact') return null
+      return signed(mul({ c: scale.v, r: 1n }, { c: { n: 1n, d: 1n }, r: top.r * bottom.r }))
+    }
+    default:
+      return null
+  }
+}
+
+/** Two simple surds are the same number exactly when their normal forms agree. */
+export const sameSurd = (a: Surd, b: Surd) =>
+  a.r === b.r && a.c.n === b.c.n && a.c.d === b.c.d
+
+/** A surd for display: `12*sqrt(5)`, `7/4`, `-sqrt(2)`. */
+export function showSurd(s: Surd): string {
+  if (s.r === 1n) return showExact(s.c)
+  const c = s.c.n === 1n && s.c.d === 1n ? ''
+    : s.c.n === -1n && s.c.d === 1n ? '-'
+      : `${showExact(s.c)}*`
+  return `${c}sqrt(${s.r})`
+}
+
 /**
  * `log_base(value)` when it is exactly rational, and null when it is not.
  *

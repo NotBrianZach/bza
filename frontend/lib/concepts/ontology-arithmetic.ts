@@ -1508,24 +1508,35 @@ const CONCEPTS: Concept[] = [
    * The worked examples share no numbers with that concept's, so neither reads
    * as a recall of the other.
    *
-   * ── THE FORM THAT DOES NOT EXIST, STATED PLAINLY ──────────────────────────
+   * ── THE FORM THAT DID NOT EXIST, AND NOW DOES ─────────────────────────────
    *
-   * The natural task for the middle knowledge point is "simplify √720", and it
-   * cannot be asked. `NamedForm` has `radical_free` — no `sqrt` and no
-   * fractional exponent — which demands that the radical GO, and 12√5 still
-   * has one. What is wanted is a form meaning "no square factor remains under
-   * the radical", and forms.ts has nothing of the shape: the claim is about a
-   * subterm's factorisation, not about the top-level shape of the answer.
+   * This section used to record a wall. The natural task for the middle
+   * knowledge point is "simplify √1008", and it could not be asked:
+   * `radical_free` demands the radical GO and 12√7 still has one, and nothing
+   * in forms.ts made a claim about a SUBTERM's factorisation rather than about
+   * the top-level shape of an answer. This was the third time the subject met
+   * that wall — a product of primes (`prime-factorisation`), a relation between
+   * two integers (`gcd-and-lcm`), a condition under a radical here — and each
+   * concept worked around it by computing WITH a split it was handed.
    *
-   * This is the third time this subject has met the same wall from a different
-   * side — no form can demand a product of primes (`prime-factorisation`), a
-   * relation between two integers (`gcd-and-lcm`), or now a condition on a
-   * factor under a radical. The answer is the one those two found: compute
-   * WITH the split rather than asking for it. So the middle point's tasks hand
-   * over the extracted root and ask for the square-free part by division, and
-   * ask the one root of a non-integer that IS exactly rational. Each prompt
-   * says which step it stands in for, and choosing the split is what the
-   * worked example teaches.
+   * `surd_reduced` is that form, and the middle point now asks the question
+   * directly. Two things had to land, and the second was not the one this
+   * header predicted:
+   *
+   *  1. the form itself, which refuses √1008 and accepts 12√7;
+   *  2. a way to compare the two WITHOUT the CAS. `transform_to_form` was
+   *     routed unconditionally to the worker, which would have broken this
+   *     subject's no-worker contract to ask a question about integers. `asSurd`
+   *     in numerals.ts puts a single-term surd in normal form, and for distinct
+   *     square-free r the numbers √r are linearly independent over the
+   *     rationals — so agreement of normal forms is a DECISION, not a sample.
+   *
+   * The two older tasks stay. They are not proxies for the new one: one takes
+   * the square-free part of an integer root, the other the one root of a
+   * non-integer that is still exactly rational, and neither is what "simplify
+   * this surd" asks. `gcd-and-lcm`'s wall is the one still standing — a
+   * relation between two integers is not a property of one expression, so no
+   * form can carry it and it needs a task kind instead.
    *
    * ── Still gradable with no worker, which was worth checking rather than ───
    *    assuming
@@ -1535,11 +1546,16 @@ const CONCEPTS: Concept[] = [
    * numbers is the obvious place for that to quietly stop being true.
    * `exactValue` handles a `sqrt` node and a rational exponent, returning the
    * value when it is rational and null when it is not — so `sqrt(49/16)` is
-   * 7/4 locally and `sqrt(2)` is worker-only, honestly. Every task here is
-   * therefore built on a root that comes out exactly: a perfect fourth power,
-   * a perfect square over a perfect square, and two plain divisions. Nothing
-   * here needs `WORKER_ONLY` in the test suite, and the claim in the header
-   * stands unamended.
+   * 7/4 locally and `sqrt(2)` is worker-only, honestly. The three `evaluate`
+   * tasks are therefore built on roots that come out exactly: a perfect fourth
+   * power, a perfect square over a perfect square, and two plain divisions.
+   *
+   * The `surd_reduced` task is the one case where BOTH sides are irrational and
+   * it is still settled here, which is worth stating because it is the
+   * surprising part: `exactValue` returns null for √1008 and for 12√7 alike, so
+   * nothing about their VALUES is computed. `asSurd` compares normal forms
+   * instead, and that is exact. Nothing here needs `WORKER_ONLY` in the test
+   * suite, and the claim in the subject header stands unamended.
    *
    * ── No automaticity targets, and no `encompasses` edge ────────────────────
    *
