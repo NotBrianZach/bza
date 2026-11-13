@@ -119,7 +119,7 @@ const {
 } = M.traversal
 const {
   isScorable, needsReview, rulingHeadline, verifierConfig,
-  exactValue, substitute, showExact, ruleEvaluate, rule,
+  exactValue, substitute, showExact, ruleEvaluate, rule, ruleTransform,
 } = M.verify
 const { agreeAtPoints } = M.numerals
 const {
@@ -256,6 +256,73 @@ t('a bare symbol is too', ff('x').held === true)
 t('a constant is too', ff('7').held === true)
 t('a single degree-2 factor is refused', ff('(x^2 + 1)').held === false)
 t('a transcendental abstains rather than passing', ff('sin(x) + x^2').held === null)
+
+/*
+ * The two forms that make a claim about an integer subterm rather than about
+ * the top-level shape of the answer.
+ *
+ * They exist because three authored arithmetic concepts each worked around
+ * their absence — see the headers of `prime-factorisation`, `gcd-and-lcm` and
+ * `roots-and-irrationals`, all of which compute WITH a factorisation they are
+ * handed because neither `factored` nor `radical_free` could ask for one.
+ *
+ * The abstention cases are the ones worth having. A form check that GUESSED
+ * would mark a learner wrong for writing something the checker was too simple
+ * to read, and both of these can be handed input they genuinely cannot rule:
+ * a symbolic radicand, or a number too large to factorise.
+ */
+group('form: prime_factored')
+const pfac = s => checkForm(p(s), 'prime_factored', 'x')
+t('a collected factorisation holds', pfac('2*3*5^2*7^2').held === true)
+t('the same primes written out flat hold too — nothing demands the repeats collect',
+  pfac('2*3*5*5*7*7').held === true)
+t('THE INPUT IS REFUSED, which is the whole point of the form',
+  pfac('7350').held === false)
+t('…and the message hands back the factorisation, since the learner has not started',
+  /2 · 3 · 5\^2 · 7\^2/.test(pfac('7350').detail))
+t('a single prime is already a product of primes, as x + 3 is already factored',
+  pfac('7').held === true)
+t('one composite factor among primes is refused, and named',
+  pfac('2*3*25').held === false && /25/.test(pfac('2*3*25').detail))
+t('a sum is refused', pfac('2 + 3').held === false)
+t('a fraction is refused', pfac('6/2').held === false)
+t('anything with a letter in it is refused', pfac('2*3*x').held === false)
+t('a composite power is refused — 4^2 is not a prime power', pfac('4^2').held === false)
+t('a prime power with a prime exponent still reads as one prime',
+  pfac('2^3').held === true && /2\^3/.test(pfac('2^3').detail))
+t('a number past the factorisation ceiling abstains rather than hanging',
+  pfac('1000000000000031').held === null)
+t('…and says so', /too large/.test(pfac('1000000000000031').detail))
+
+group('form: surd_reduced')
+const sr = s => checkForm(p(s), 'surd_reduced', 'x')
+t('a square-free radicand holds', sr('12*sqrt(5)').held === true)
+t('THE UNSIMPLIFIED ROOT IS REFUSED — radical_free could not say this',
+  sr('sqrt(720)').held === false)
+t('…and the message names the square to take out and what comes out of it',
+  /square 144/.test(sr('sqrt(720)').detail) && /12 can still come out/.test(sr('sqrt(720)').detail))
+t('radical_free disagrees with both, which is why this form had to be added',
+  checkForm(p('12*sqrt(5)'), 'radical_free', 'x').held === false
+  && checkForm(p('sqrt(720)'), 'radical_free', 'x').held === false)
+t('a rational answer satisfies it — nothing is under a radical', sr('7/4').held === true)
+t('so does an ordinary polynomial, which is why it is not discriminating',
+  sr('x^2 - 2x - 15').held === true)
+t('a sum of surds is ruled on every radicand, not just the first',
+  sr('sqrt(5) + sqrt(50)').held === false && sr('sqrt(5) + sqrt(7)').held === true)
+t('a fractional exponent is the same claim written differently',
+  sr('720^(1/2)').held === false)
+t('a symbolic radicand abstains rather than guessing', sr('sqrt(x)').held === null)
+t('…and a radicand too large to factorise abstains too',
+  sr('sqrt(1000000000000031)').held === null)
+// Both of these reached the "too large" branch before being special-cased:
+// factoriseInteger returns null for them, and that null means "not answerable"
+// rather than "big". A wrong message is a smaller bug than a wrong ruling and
+// is still worth not shipping.
+t('a radicand of 1 is already reduced, not "too large"',
+  sr('sqrt(1)').held === true && !/too large/.test(sr('sqrt(1)').detail))
+t('and so is 0', sr('sqrt(0)').held === true)
+t('a negative radicand abstains rather than having its sign stripped',
+  sr('sqrt(-4)').held === null && /negative/.test(sr('sqrt(-4)').detail))
 
 group('checkDenominatorDegree — "reduce", which no form can express')
 const dd = (s, max) => checkDenominatorDegree(p(s), 'x', max)
@@ -512,7 +579,39 @@ t('every task a subject assembles belongs to that subject', (() => {
   return true
 })())
 
-t('every task declares its symbols', TASKS.every(task => task.variables.length > 0))
+/*
+ * Every symbol a task USES is declared — which is what this assertion was
+ * always for, and is strictly stronger than the `variables.length > 0` it
+ * replaced.
+ *
+ * The old form was a proxy, and it was the proxy that made ontology.ts record
+ * "every task must declare a symbol, so 'what is gcd(48, 180)' has no honest
+ * shape in this schema at all". That conclusion was about this line rather than
+ * about the schema: a task whose given and reference are both numeric has no
+ * symbol to declare, and demanding a vestigial one would have it lie about what
+ * it uses. Such a task is now gradable with no worker (see `ruleTransform`
+ * step 2a), so there is nothing left for a declaration to buy it.
+ *
+ * What a declaration is actually needed FOR is unchanged and still checked: the
+ * two assertions below parse the given and the reference under exactly the
+ * declared names, so an undeclared symbol fails to parse and is caught there.
+ * This one catches the subtler case those two cannot — a symbol that parses
+ * because it was declared somewhere else in the list, and a declaration list
+ * that has drifted from the expression it describes.
+ */
+t('every symbol a task uses is declared, and a numeric task needs no declarations',
+  TASKS.every(task => {
+    const declared = task.variables.map(v => v.name)
+    const given = tryParse(task.given, declared)
+    const reference = tryParse(task.reference, declared)
+    if (!given.ok || !reference.ok) return false
+    const used = new Set([...symbolsIn(given.tree), ...symbolsIn(reference.tree)])
+    return [...used].every(s => declared.includes(s))
+  }))
+t('…and the numeric ones are exactly the tasks that declare nothing',
+  TASKS.filter(task => task.variables.length === 0)
+    .every(task => symbolsIn(tryParse(task.given, []).tree ?? { kind: 'integer', value: '0' }).length === 0),
+  `${TASKS.filter(t2 => t2.variables.length === 0).length} task(s) declare no symbols`)
 t('every given parses under its own declarations', TASKS.every(task =>
   tryParse(task.given, task.variables.map(v => v.name)).ok))
 t('every reference parses under its own declarations', TASKS.every(task =>
@@ -1225,6 +1324,116 @@ t('a step-1 failure never reaches the worker', stillSymbolic.verdict.ruling === 
  * if `exactValue` evaluates the learner's form too, and nothing else in the
  * suite would notice if it stopped.
  */
+/*
+ * `transform_to_form` settled with NO WORKER, which this file previously said
+ * was out of scope — "whether an answer is mathematically equivalent to another
+ * needs a CAS, the CAS is the worker, and a test that faked it would be
+ * asserting the fake".
+ *
+ * That is still true of the general case and these assertions do not touch it.
+ * What changed is a narrow class: when neither side has a free symbol and
+ * `exactValue` settles both, equivalence is bigint comparison rather than CAS
+ * work. No worker is faked below — NO_WORKER has a null url, so any assertion
+ * here that reached the worker would come back `inconclusive` and fail.
+ *
+ * This is what lets `arithmetic-foundations` ask the question its
+ * `prime-factorisation` concept actually teaches instead of a proxy for it.
+ */
+group('transform_to_form settled by exact arithmetic — no worker, no CAS')
+const pfTask = taskById('prime-factorisation-factorise-1')
+t('the factorisation is accepted, and the worker was never consulted',
+  (await ruleTransform(pfTask, '2*3*5*7*11', NO_WORKER)).verdict.ruling === 'correct')
+t('…and the method says so rather than naming a CAS',
+  /no worker was needed/.test((await ruleTransform(pfTask, '2*3*5*7*11', NO_WORKER)).verdict.method))
+t('THE INPUT HANDED BACK IS REFUSED — the free mark this form exists to close',
+  (await ruleTransform(pfTask, '2310', NO_WORKER)).verdict.ruling === 'incorrect')
+t('…and it is refused at the FORM step, before equivalence is even considered',
+  (await ruleTransform(pfTask, '2310', NO_WORKER)).verdict.brokeAt.step === 1)
+// A composite factorisation is in the wrong shape AND would be caught by the
+// form check first; a product of primes with the wrong value is in the right
+// shape and has to be caught by the exact comparison at step 2.
+t('a product of primes with the wrong value fails at the equivalence step',
+  (await ruleTransform(pfTask, '2*3*5*7*13', NO_WORKER)).verdict.brokeAt.step === 2)
+t('…and the message names both numbers',
+  /2730/.test((await ruleTransform(pfTask, '2*3*5*7*13', NO_WORKER)).verdict.brokeAt.detail)
+  && /2310/.test((await ruleTransform(pfTask, '2*3*5*7*13', NO_WORKER)).verdict.brokeAt.detail))
+t('a partly-factored answer is refused, naming the composite factor',
+  (await ruleTransform(pfTask, '2*3*385', NO_WORKER)).verdict.ruling === 'incorrect')
+/*
+ * And the limit of the change, pinned so nobody assumes it goes further.
+ *
+ * `surd_reduced` exists and is fully tested, but it CANNOT be used in
+ * arithmetic-foundations, and the reason is this path rather than the form:
+ * √1008 and 12√7 are both irrational, so `exactValue` returns null for both and
+ * the comparison falls through to the worker. That would break the subject's
+ * "gradable with no worker" contract, which is why `roots-and-irrationals`
+ * still ships evaluate-only tasks even though the form it wanted now exists.
+ *
+ * What would unblock it: a local comparison for surds — equality of
+ * non-negative square roots follows from equality of their squares, which is
+ * exact integer arithmetic — or a subject that tolerates the worker.
+ */
+t('exactValue still refuses an irrational surd, which is why surd_reduced is unwired here',
+  exactValue(parseExpression('sqrt(1008)', [])) === null
+  && exactValue(parseExpression('12*sqrt(7)', [])) === null)
+t('…and no shipped task asks for surd_reduced yet',
+  TASKS.every(task => task.form !== 'surd_reduced'),
+  'if this fails, check the no-worker contract of whichever subject now asks for it')
+
+/*
+ * The evaluate free mark, closed.
+ *
+ * `ruleEvaluate` used to ask an answer for two things only: no free symbol, and
+ * exact equality with the given at its inputs. Substituting the inputs and
+ * stopping satisfies both, so `2/3 + 1/4` was ruled CORRECT for a task asking
+ * for 2/3 + 1/4 — no fraction added, full credit. It affected every evaluate
+ * task in the build, not one subject's, and the suite's existing free-mark
+ * guard could not see it because that guard filters to tasks with a `form`.
+ *
+ * The replacement is structural, not a simplicity demand. The two assertions
+ * about `solve-exponential-1` below are the ones that matter in the other
+ * direction: an unsimplified but genuinely worked answer must still pass, or
+ * the fix would have cost more than the bug.
+ */
+group('ruleEvaluate — the answer has to be worked, not just substituted')
+const fa = taskById('fraction-add-1')
+t('THE SUBSTITUTED GIVEN IS REFUSED — this was a free mark on every evaluate task',
+  (await ruleEvaluate(fa, '2/3 + 1/4', NO_WORKER)).verdict.ruling === 'incorrect')
+t('…and the complaint is that the arithmetic has not been done, not that it is wrong',
+  /rather than its value/.test((await ruleEvaluate(fa, '2/3 + 1/4', NO_WORKER)).verdict.brokeAt.detail))
+t('…and it is refused before equivalence, since equivalence would have said yes',
+  (await ruleEvaluate(fa, '2/3 + 1/4', NO_WORKER)).verdict.brokeAt.step === 1)
+t('the actual value still rules correct', (await ruleEvaluate(fa, '11/12', NO_WORKER)).verdict.ruling === 'correct')
+t('an unreduced but worked answer is still correct — this is not a simplicity demand',
+  (await ruleEvaluate(fa, '22/24', NO_WORKER)).verdict.ruling === 'correct')
+t('a wrong answer is still wrong, at step 2',
+  (await ruleEvaluate(fa, '3/7', NO_WORKER)).verdict.brokeAt.step === 2)
+// The guard that keeps the check honest when there is no arithmetic to do: if
+// the given at its inputs IS a bare number, an answer identical to it is the
+// only correct answer rather than a refusal to work.
+t('a task whose given at its inputs is already a numeral still accepts that numeral',
+  (await ruleEvaluate(
+    { ...fa, given: 'a', variables: [fa.variables[0]], at: { a: '7' }, reference: '7' },
+    '7', NO_WORKER,
+  )).verdict.ruling === 'correct')
+/*
+ * The two tasks a first version of this check broke. Both are correctly
+ * designed and both are pinned here, because each fails for a different reason
+ * and a fix that restored only one would look like it had worked.
+ */
+t('a value whose rendering coincides with the expression producing it is not a dodge',
+  // given `b/2` at b = 3 renders as "3/2", and so does its value. There is no
+  // step being skipped — this is the only right answer.
+  (await ruleEvaluate(taskById('complete-odd-b-h-1'), '3/2', NO_WORKER)).verdict.ruling === 'correct')
+t('and the one task that deliberately accepts its unevaluated form says so in data',
+  TASKS.filter(x => x.acceptsUnevaluated).map(x => x.id).join(',') === 'solve-exponential-1',
+  TASKS.filter(x => x.acceptsUnevaluated).map(x => x.id).join(',') || 'none')
+t('…which is what keeps log(27, 9) accepted now that the default is to refuse',
+  (await ruleEvaluate(taskById('solve-exponential-1'), 'log(27, 9)', NO_WORKER))
+    .verdict.ruling === 'correct')
+t('…while the same task still refuses a wrong answer',
+  (await ruleEvaluate(taskById('solve-exponential-1'), '3', NO_WORKER)).verdict.ruling === 'incorrect')
+
 t('a logarithm task is settled locally and exactly',
   (await ruleEvaluate(taskById('log-as-exponent-1'), '5', NO_WORKER)).verdict.ruling === 'correct')
 t('and an unsimplified but correct answer is accepted, not sent away',
@@ -2338,21 +2547,53 @@ const ARITH_TASKS = allKnowledgePoints(A).flatMap(p => tasksForPoint(p.id))
  * the point. The one-per-point floor is asserted separately above, against
  * every point rather than against a total, which is the part that matters.
  */
-t('twenty-eight tasks, and every point has at least one',
-  ARITH_TASKS.length === 28 && allKnowledgePoints(A).every(p => tasksForPoint(p.id).length > 0),
+t('twenty-nine tasks, and every point has at least one',
+  ARITH_TASKS.length === 29 && allKnowledgePoints(A).every(p => tasksForPoint(p.id).length > 0),
   `${ARITH_TASKS.length}`)
-t('all of them are evaluate', ARITH_TASKS.every(x => x.kind === 'evaluate'))
-t('every one declares integer symbols rather than real ones',
-  ARITH_TASKS.every(x => x.variables.every(v => v.assumptions?.integer === true)))
-t('every reference is exactly reproducible from the given — no worker consulted',
-  ARITH_TASKS.every(x => {
+/*
+ * NOT "all of them are evaluate" any more, and the change is the point rather
+ * than an exception to be tolerated.
+ *
+ * That assertion was a proxy for the property this group is named after. It
+ * held because `evaluate` was the only kind settleable without the worker, so
+ * "all evaluate" and "all gradable locally" were the same set — and the concept
+ * headers in this subject record the cost: no form could demand a product of
+ * primes, so each task handed the factorisation over and asked for the
+ * multiplication back.
+ *
+ * `prime_factored` plus `ruleTransform`'s exact-arithmetic step made the two
+ * sets differ, so the proxy is replaced by the thing it stood for. The kind
+ * split is still asserted, as a figure rather than a constraint, so that a kind
+ * arriving here unnoticed is still visible.
+ */
+t('all but one are evaluate, and the exception is the transform_to_form that now grades locally',
+  ARITH_TASKS.filter(x => x.kind === 'evaluate').length === 28
+  && ARITH_TASKS.filter(x => x.kind === 'transform_to_form').length === 1,
+  ARITH_TASKS.reduce((acc, x) => ({ ...acc, [x.kind]: (acc[x.kind] ?? 0) + 1 }), {}),
+)
+t('every one declares integer symbols rather than real ones, and the numeric task declares none',
+  ARITH_TASKS.every(x => x.variables.every(v => v.assumptions?.integer === true))
+  && ARITH_TASKS.filter(x => x.variables.length === 0).length === 1)
+t('every evaluate reference is exactly reproducible from the given — no worker consulted',
+  ARITH_TASKS.filter(x => x.kind === 'evaluate').every(x => {
     const at = {}
     for (const [name, raw] of Object.entries(x.at)) at[name] = parseExpression(raw, [])
     const truth = exactValue(substitute(parseExpression(x.given, x.variables.map(v => v.name)), at))
     const claimed = exactValue(parseExpression(x.reference, x.variables.map(v => v.name)))
     return truth !== null && claimed !== null && showExact(truth) === showExact(claimed)
   }))
-const arithRulings = await Promise.all(ARITH_TASKS.map(x => ruleEvaluate(x, x.reference, NO_WORKER)))
+// The transform task's two sides are compared the same exact way, which is the
+// whole reason it is allowed in a subject with this contract.
+t('and the transform task\'s given and reference are exactly equal as integers',
+  ARITH_TASKS.filter(x => x.kind === 'transform_to_form').every(x => {
+    const given = exactValue(parseExpression(x.given, []))
+    const reference = exactValue(parseExpression(x.reference, []))
+    return given !== null && reference !== null && showExact(given) === showExact(reference)
+  }))
+const arithRulings = await Promise.all(
+  ARITH_TASKS.map(x => (x.kind === 'transform_to_form' ? ruleTransform : ruleEvaluate)(
+    x, x.reference, NO_WORKER,
+  )))
 t('a correct answer is ruled correct with no worker configured',
   arithRulings.every(r => r.verdict.ruling === 'correct'),
   arithRulings.map((r, i) => `${ARITH_TASKS[i].id}:${r.verdict.ruling}`)
@@ -2378,11 +2619,15 @@ group('prime-factorisation — the claims its header makes')
 const PF = conceptById(A, 'prime-factorisation')
 const PF_SUBGOALS = PF.knowledgePoints.flatMap(p => p.workedExample.subgoals)
 
-t('the factored form cannot express "a product of primes" — a bare numeral satisfies it',
+t('the factored form still cannot express "a product of primes" — a bare numeral satisfies it',
   checkForm(parseExpression('7350', []), 'factored', 'x').held === true,
-  'if this fails, a transform_to_form task is now possible and the header is out of date')
-t('and so does the factorisation, so the form could not tell them apart',
+  'symbol-relative by design: degree 0 reads as irreducible, which is what protects x + 3')
+t('and so does the factorisation, so THAT form cannot tell them apart',
   checkForm(parseExpression('2*3*5^2*7^2', []), 'factored', 'x').held === true)
+t('but prime_factored now can, which is what reopens transform_to_form here',
+  checkForm(parseExpression('7350', []), 'prime_factored', 'x').held === false
+  && checkForm(parseExpression('2*3*5^2*7^2', []), 'prime_factored', 'x').held === true,
+  'the header\'s "no form can demand this" compromise is now optional rather than forced')
 
 /*
  * The exact arithmetic of all three worked examples, computed here and then
@@ -2412,13 +2657,31 @@ t('squaring doubles the exponents: (2 · 3²)² = 2² · 3⁴',
 t('and 324 is what the subgoal that argues it claims',
   PF.knowledgePoints[2].workedExample.subgoals[0].detail.includes('324'))
 
-t('three points, one task each, and every one of them evaluate',
+/*
+ * The first point now carries TWO tasks, and the second one is the concept's
+ * own ask rather than a proxy for it: "write 2310 as a product of primes",
+ * which `prime_factored` made expressible. The three evaluate tasks stay —
+ * they teach the check, the divisor count and the square part, which are
+ * different moves and not substitutes for the factorisation itself.
+ */
+t('three points; the first has the factorisation task beside its evaluate one',
   PF.knowledgePoints.length === 3
-  && PF.knowledgePoints.every(p => tasksForPoint(p.id).length === 1)
-  && PF.knowledgePoints.every(p => tasksForPoint(p.id).every(x => x.kind === 'evaluate')))
-t('each task is about a different number from its own worked example, so it is not a recall',
+  && tasksForPoint(PF.knowledgePoints[0].id).length === 2
+  && PF.knowledgePoints.slice(1).every(p => tasksForPoint(p.id).length === 1),
+  PF.knowledgePoints.map(p => `${p.id}:${tasksForPoint(p.id).length}`).join(' '))
+t('and the one that is not evaluate asks for the factorisation with the form that can demand it',
+  (() => {
+    const transforms = PF.knowledgePoints.flatMap(p => tasksForPoint(p.id))
+      .filter(x => x.kind !== 'evaluate')
+    return transforms.length === 1
+      && transforms[0].kind === 'transform_to_form'
+      && transforms[0].form === 'prime_factored'
+  })())
+t('each point is about a different number from its own worked example, so it is not a recall',
   ['2450', '1350', '1960'].every((n, i) =>
-    tasksForPoint(PF.knowledgePoints[i].id)[0].prompt.includes(n)))
+    tasksForPoint(PF.knowledgePoints[i].id).some(x => x.prompt.includes(n))))
+t('…and the factorisation task uses a fourth number again',
+  tasksForPoint(PF.knowledgePoints[0].id).some(x => x.prompt.includes('2310')))
 
 /**
  * EVERY SUBGOAL HERE IS ASKED AS A QUESTION.

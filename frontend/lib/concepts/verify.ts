@@ -36,7 +36,7 @@
  * reason to wire it this way round.
  */
 
-import { parseFailure, parsedTree, renderExpr, symbolsIn, tryParse, type ExprNode } from './expr'
+import { parseFailure, parsedTree, renderExpr, symbolsIn, tryParse, unsigned, type ExprNode } from './expr'
 import { checkDenominatorDegree, checkForm, FORM_LABELS, type FormCheck } from './forms'
 import { exactValue, sameValue, showExact, substitute } from './numerals'
 import { primaryVariable } from './tasks'
@@ -275,6 +275,75 @@ export async function ruleTransform(
         method: `the task's own reference answer does not parse (${referenceFailure?.message ?? 'unreadable'}) — this is an authoring fault, not yours`,
         conditions: authored,
       },
+    }
+  }
+
+  /*
+   * ── step 2a: settle it here when both sides are exact rationals ────────
+   *
+   * The same argument `ruleEvaluate`'s header makes, applied to the other task
+   * kind. `transform_to_form` needs a CAS because it accepts ANY expression
+   * equivalent to the reference — but when neither the answer nor the reference
+   * has a free symbol and `exactValue` settles both, the comparison is bigint
+   * arithmetic rather than CAS work, and two rationals are either equal or not.
+   *
+   * This is what lets a numeric subject ask `transform_to_form` at all. Before
+   * it, `arithmetic-foundations` could not: that subject's contract is that
+   * every task in it is gradable with no worker configured, and routing
+   * "write 7350 as a product of primes" through `op_equivalent` would have
+   * broken the contract for a question that is exact integer arithmetic. Three
+   * concepts shipped evaluate-only proxy tasks partly for this reason — the
+   * missing form was the half that got recorded, and this was the other half.
+   *
+   * `exactValue` returning null is the honesty guard and the reason this cannot
+   * over-reach: `sqrt(2)` and `pi` are not rational, so they fall through to the
+   * worker exactly as before. Nothing that needed a CAS stops getting one.
+   */
+  if (symbolsIn(tree).length === 0 && symbolsIn(referenceTree).length === 0) {
+    const mine = exactValue(tree)
+    const theirs = exactValue(referenceTree)
+    if (mine !== null && theirs !== null) {
+      const agree = sameValue(mine, theirs)
+      const method = `exact rational arithmetic — both sides are numbers, so no worker was needed`
+      if (!agree) {
+        return {
+          status: 'ruled',
+          asRead,
+          verdict: {
+            ruling: 'incorrect',
+            method,
+            brokeAt: {
+              step: 2,
+              detail: `this comes to ${showExact(mine)}, and the answer is ${showExact(theirs)}`,
+            },
+            conditions: authored,
+          },
+        }
+      }
+      // Equivalent. An abstaining shape check still blocks a correct ruling —
+      // the same rule the worker path applies below, for the same reason.
+      if (abstained) {
+        return {
+          status: 'ruled',
+          asRead,
+          verdict: {
+            ruling: 'inconclusive',
+            method:
+              `the two sides are equal by exact arithmetic, but whether this answer has the `
+              + `shape that was asked for could not be determined: ${abstained.detail}`,
+            conditions: authored,
+          },
+        }
+      }
+      return {
+        status: 'ruled',
+        asRead,
+        verdict: {
+          ruling: 'correct',
+          method: `${method}; ${checks.map(c => c.detail).join('; ')}`,
+          conditions: authored,
+        },
+      }
     }
   }
 
@@ -555,6 +624,68 @@ export async function ruleEvaluate(
       asRead,
       authored,
     )
+  }
+
+  /*
+   * ── step 1b: the arithmetic has to have been DONE ─────────────────────
+   *
+   * The free mark this check closes was build-wide and is the deeper twin of
+   * the one `checkDenominatorDegree` exists for. `ruleEvaluate` asked only two
+   * things of an answer: no free symbol, and exact equality with the given at
+   * its inputs. Substituting the inputs and stopping satisfies both.
+   *
+   * `fraction-add-1` is the clearest case — given `a/b + c/d` at a = 2, b = 3,
+   * c = 1, d = 4, a learner who types `2/3 + 1/4` has written something with no
+   * free symbol that is exactly 11/12, and it ruled CORRECT without any
+   * fraction having been added. The suite's existing free-mark guard could not
+   * see it: that one filters to tasks with a `form`, and an evaluate task has
+   * none.
+   *
+   * The check is structural rather than a claim about simplicity, because
+   * "simplest form" is not what an evaluate task asks and demanding a bare
+   * numeral would be wrong. `solve-exponential-1` deliberately accepts
+   * `log(27, 9)` for 3/2 — "solve for x" is answered by either — and that
+   * answer is not the substituted given, so it still passes.
+   *
+   * ── The two false positives this cost, and what they taught ───────────
+   *
+   * A first version compared the answer against the substituted given and
+   * refused a match outright. It broke two tasks, both correctly designed:
+   *
+   *  - `complete-odd-b-h-1` has given `b/2` at b = 3, so the substituted given
+   *    RENDERS as `3/2` — and `3/2` is also its value and its only right
+   *    answer. There was no arithmetic being refused, only a rational whose
+   *    natural rendering coincides with the expression that produces it. Hence
+   *    the `worthDoing` test: the check fires only when the value and the
+   *    unevaluated form actually look different, which is what "there is a step
+   *    to perform" means in this language.
+   *  - `solve-exponential-1` deliberately accepts `log(27, 9)` for 3/2, and
+   *    that answer IS its substituted given. No structural rule can tell that
+   *    from a dodge, because it is an authoring decision about what the task
+   *    asks. So it is one, via `acceptsUnevaluated` — and the behaviour its
+   *    comment already claimed is now enforced rather than merely described.
+   */
+  const worthDoing = (() => {
+    const value = exactValue(target)
+    return value === null || showExact(value) !== renderExpr(target)
+  })()
+  if (!task.acceptsUnevaluated && worthDoing && renderExpr(answerTree) === renderExpr(target)) {
+    const where = names.map(n => `${n} = ${at[n]}`).join(', ')
+    return {
+      status: 'ruled',
+      asRead,
+      verdict: {
+        ruling: 'incorrect',
+        method: 'the answer is the question with its inputs substituted — equivalence was not checked',
+        brokeAt: {
+          step: 1,
+          detail:
+            `this is ${renderExpr(target)}, which is the expression at ${where} rather than its `
+            + `value. Putting the numbers in is the first step; the task asks for the result.`,
+        },
+        conditions: authored,
+      },
+    }
   }
 
   // ── step 2: the right number, compared exactly ────────────────────────

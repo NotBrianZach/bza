@@ -138,6 +138,27 @@ export type NamedForm =
   | 'no_negative_exponents'
   /** No `sqrt` and no fractional exponent. */
   | 'radical_free'
+  // ── Claims about an integer subterm ──
+  /**
+   * A product of prime powers: `7350` written as `2 · 3 · 5² · 7²`.
+   *
+   * Not expressible as `factored`, and the difference is a category one rather
+   * than a gap in that checker. `factored` is symbol-relative — it measures
+   * `degreeIn(node, symbol)` and reports degree ≤ 1 as "already irreducible",
+   * which is what stops `x + 3` being marked wrong — so a numeral has degree 0
+   * and passes unchanged. Three authored arithmetic concepts each worked around
+   * the absence by computing WITH a factorisation they were handed, because
+   * none of them could ask for one.
+   */
+  | 'prime_factored'
+  /**
+   * Every radicand square-free: `√720` written as `12√5`.
+   *
+   * `radical_free` is the neighbouring demand and the wrong one — it requires
+   * the radical to GO, and `12√5` still has one. This is a claim about the
+   * factorisation of what sits under the sign.
+   */
+  | 'surd_reduced'
 
 // ---------------------------------------------------------------------------
 // Knowledge points
@@ -382,6 +403,25 @@ export interface PracticeTask {
    * `checkDenominatorDegree` in forms.ts.
    */
   maxDenominatorDegree?: number
+  /**
+   * Accept an answer that is the given with its inputs substituted and nothing
+   * else done.
+   *
+   * `ruleEvaluate` refuses such an answer by default, because satisfying "no
+   * free symbol" and "exactly equal to the given at its inputs" by substituting
+   * and stopping was a free mark on every evaluate task in the build.
+   *
+   * Set it only where the unevaluated form is a genuine answer to what was
+   * asked, which is rare and always worth a comment. `solve-exponential-1` is
+   * the one case in the shipped set: it asks for the x satisfying 9^x = 27, and
+   * `log(27, 9)` names that number as well as `3/2` does. Leaving it refused
+   * would mark a learner wrong for writing the method's own output.
+   *
+   * It exists as a field rather than a judgement inside the checker because no
+   * structural rule can distinguish this from a dodge — the two are the same
+   * shape, and only the author knows which the task is asking for.
+   */
+  acceptsUnevaluated?: boolean
   variables: VariableDeclaration[]
   /** Domain conditions the author states, e.g. `x != 1`. Carried into every ruling. */
   domainConditions?: string[]

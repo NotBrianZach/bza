@@ -655,6 +655,285 @@ function checkCompletedSquare(node: ExprNode, symbol: string): FormCheck {
   return { held: true, detail: `${symbol} appears once, inside a square` }
 }
 
+// ---------------------------------------------------------------------------
+// Claims about an integer subterm
+// ---------------------------------------------------------------------------
+
+/**
+ * How large a number this file is willing to factorise by trial division.
+ *
+ * Trial division is O(√n), so the cost is bounded by the square root rather
+ * than by the number: 10^14 is ten million divisions, which is milliseconds and
+ * is already far past any number a curriculum about factorisation would set.
+ * Above it the checkers ABSTAIN rather than work — see `factoriseInteger`.
+ *
+ * The bound exists because the alternative is a hang, not a wrong answer. A
+ * learner who pastes a forty-digit semiprime into a `prime_factored` task would
+ * otherwise block the request thread, and an abstention routes them to review
+ * while a hang loses the answer.
+ */
+const FACTORISATION_CEILING = 100_000_000_000_000n
+
+/**
+ * The prime factorisation of a positive integer, as prime → exponent.
+ *
+ * Null means "not answerable here": zero, one or a negative, or a number above
+ * `FACTORISATION_CEILING`. Every caller turns that into `held: null`, because
+ * the question "is this a product of primes" has no honest answer from a
+ * checker that could not do the factorisation.
+ *
+ * One is deliberately null rather than an empty map. The empty product IS one,
+ * so an empty map is mathematically right and pedagogically useless: it would
+ * make `prime_factored` accept a bare `1` as a factorisation of anything, and
+ * no task in this build asks about the factorisation of one.
+ */
+function factoriseInteger(value: bigint): Map<bigint, number> | null {
+  if (value <= 1n || value > FACTORISATION_CEILING) return null
+  const out = new Map<bigint, number>()
+  let left = value
+  for (let d = 2n; d * d <= left; d += d === 2n ? 1n : 2n) {
+    while (left % d === 0n) {
+      out.set(d, (out.get(d) ?? 0) + 1)
+      left /= d
+    }
+  }
+  // Whatever survives is prime: the loop removed every factor at or below the
+  // square root, and a composite has one.
+  if (left > 1n) out.set(left, (out.get(left) ?? 0) + 1)
+  return out
+}
+
+/** The value of a node when it is a plain non-negative integer, else null. */
+function integerValue(node: ExprNode): bigint | null {
+  const n = unsigned(node)
+  if (n.kind !== 'integer') return null
+  try {
+    return BigInt(n.value)
+  } catch {
+    return null
+  }
+}
+
+/**
+ * A prime numeral, or a power of one with a positive whole exponent.
+ *
+ * `'composite'` and `'not-a-number'` are distinguished from each other and from
+ * null because the three produce different messages, and a learner told only
+ * "wrong" learns nothing about which factor to look at.
+ */
+type PrimePower =
+  | { kind: 'prime-power'; prime: bigint; power: number }
+  | { kind: 'composite'; value: bigint }
+  | { kind: 'not-a-number' }
+  | { kind: 'too-big' }
+
+function readPrimePower(node: ExprNode): PrimePower {
+  const n = unsigned(node)
+
+  let base = n
+  let power = 1
+  if (n.kind === 'power') {
+    const whole = isIntegerExponent(n.exponent)
+    if (whole !== true) return { kind: 'not-a-number' }
+    const exponent = integerValue(n.exponent)
+    if (exponent === null || exponent < 1n) return { kind: 'not-a-number' }
+    base = unsigned(n.base)
+    power = Number(exponent)
+  }
+
+  const value = integerValue(base)
+  if (value === null) return { kind: 'not-a-number' }
+  const factors = factoriseInteger(value)
+  if (factors === null) return value > FACTORISATION_CEILING
+    ? { kind: 'too-big' }
+    : { kind: 'composite', value }
+  if (factors.size === 1 && [...factors.values()][0] === 1) {
+    return { kind: 'prime-power', prime: [...factors.keys()][0], power }
+  }
+  return { kind: 'composite', value }
+}
+
+/**
+ * Written as a product of primes: `7350` must become `2 · 3 · 5² · 7²`.
+ *
+ * ── Why this form has to exist ────────────────────────────────────────────
+ *
+ * `factored` cannot express it, and the reason is not an oversight but a
+ * category difference. `checkFactored` measures `degreeIn(node, symbol)`; a
+ * numeral has degree 0; degree ≤ 1 returns `held: true` as "already
+ * irreducible" — which is CORRECT for `x + 3`, the case that test exists to
+ * protect. So `transform_to_form` + `factored` on 7350 is satisfied by handing
+ * 7350 back unchanged: the free mark this file's own `checkDenominatorDegree`
+ * comment describes, in a different costume.
+ *
+ * Three authored concepts worked around the gap rather than ask the question —
+ * `prime-factorisation`, `gcd-and-lcm` and `roots-and-irrationals` each compute
+ * WITH a factorisation they are handed, because none of them could ask for one.
+ * Their headers say so. This is the form that lets them ask.
+ *
+ * ── What counts ───────────────────────────────────────────────────────────
+ *
+ * A product of prime powers, in any order and with the exponents written either
+ * way: `2 · 3 · 5^2 · 7^2` and `2·3·5·5·7·7` both hold, because both are
+ * products of primes and nothing in the phrase demands the repeats be collected.
+ * A task that wants them collected has to say so, and no task does.
+ *
+ * A single prime holds, for the same reason `x + 3` is already factored: 7 is a
+ * product of one prime and there is no further move to make. A single composite
+ * does not — that is the input, and accepting it is the bug.
+ */
+function checkPrimeFactored(node: ExprNode, _symbol: string): FormCheck {
+  const n = unsigned(node)
+
+  const symbols = symbolsIn(n)
+  if (symbols.length > 0) {
+    return {
+      held: false,
+      detail: `a product of primes is a product of whole numbers, and this contains ${symbols[0]}`,
+    }
+  }
+  if (n.kind === 'divide' || n.kind === 'rational') {
+    return { held: false, detail: 'a product of primes has no division in it' }
+  }
+  if (terms(n).length > 1) {
+    return {
+      held: false,
+      detail: `this is a sum of ${terms(n).length} terms. A product of primes is a product.`,
+    }
+  }
+
+  const list = factors(n)
+  const seen: string[] = []
+  for (const f of list) {
+    const read = readPrimePower(f)
+    if (read.kind === 'too-big') {
+      return {
+        held: null,
+        detail: `${describe(f)} is too large for this checker to factorise`,
+      }
+    }
+    if (read.kind === 'not-a-number') {
+      return {
+        held: null,
+        detail: `${describe(f)} is not a whole number or a whole power of one, so this checker cannot tell whether it is prime`,
+      }
+    }
+    if (read.kind === 'composite') {
+      // The message names the factorisation when it is the WHOLE expression,
+      // because then the learner has not started; for one bad factor among
+      // several, naming the factor is the more useful half.
+      const factorisation = factoriseInteger(read.value)
+      const rendered = factorisation
+        ? [...factorisation.entries()]
+          .map(([p, e]) => (e === 1 ? `${p}` : `${p}^${e}`)).join(' · ')
+        : null
+      return list.length === 1 && rendered
+        ? { held: false, detail: `${read.value} is not prime — it is ${rendered}` }
+        : { held: false, detail: `the factor ${read.value} is not prime` }
+    }
+    seen.push(`${read.prime}${read.power === 1 ? '' : `^${read.power}`}`)
+  }
+
+  return { held: true, detail: `a product of primes: ${seen.join(' · ')}` }
+}
+
+/**
+ * Nothing square left under a radical: `√720` must become `12√5`.
+ *
+ * ── Why `radical_free` is not this ────────────────────────────────────────
+ *
+ * `radical_free` demands the radical GO, and `12√5` still has one — so the
+ * natural ask of `roots-and-irrationals`, "simplify √720", could not be
+ * expressed at all. That concept's header states the gap and works around it by
+ * handing over the extracted root. This is the form it wanted: a claim about
+ * the factorisation of what sits UNDER the sign, not about the top-level shape
+ * of the answer.
+ *
+ * ── An absence form, and what that costs ──────────────────────────────────
+ *
+ * `12` satisfies this, and so does `x^2 - 2x - 15`: having no radical at all is
+ * having no square factor under one. That is the right reading — "simplify the
+ * surd" is satisfied by an answer that came out rational, and `√(49/16)` → `7/4`
+ * is exactly such a task — but it makes the form satisfied by nearly every
+ * expression, hence `discriminating: false` beside it.
+ *
+ * The pairing to watch: on its own this form cannot tell `√720` from `12√5`
+ * being asked for and `√720` being handed back, because it is the equivalence
+ * check that knows what the question was. It rules the FORM; the task's
+ * reference answer rules the value. That division is the same one every check
+ * in this file lives under.
+ */
+function checkSurdReduced(node: ExprNode, _symbol: string): FormCheck {
+  const radicands: ExprNode[] = []
+  const collect = (n: ExprNode): void => {
+    if (n.kind === 'function' && n.name === 'sqrt') radicands.push(n.args[0])
+    if (n.kind === 'power' && isIntegerExponent(n.exponent) === false) radicands.push(n.base)
+    children(n).forEach(collect)
+  }
+  collect(node)
+
+  if (radicands.length === 0) {
+    return { held: true, detail: 'there is nothing under a radical' }
+  }
+
+  const kept: string[] = []
+  for (const r of radicands) {
+    if (r === undefined) {
+      return { held: null, detail: 'a square root with no argument could not be read' }
+    }
+    // A negative radicand is not this checker's business — `unsigned` would
+    // strip the sign and rule on √4 when the learner wrote √(−4), which is a
+    // different number and not a real one.
+    if (unsigned(r) !== r && integerValue(r) !== null) {
+      return {
+        held: null,
+        detail: `${describe(r)} is under a radical and is negative, which this checker does not rule on`,
+      }
+    }
+    const value = integerValue(r)
+    if (value === null) {
+      return {
+        held: null,
+        detail: `${describe(r)} is under a radical but is not a whole number, so this checker cannot look for a square factor in it`,
+      }
+    }
+    // Zero and one have no square factor above 1 to take out, so they are
+    // already reduced. They have to be tested before `factoriseInteger`, which
+    // returns null for them — and that null means "not answerable", which would
+    // otherwise be reported as the number being too large.
+    if (value <= 1n) {
+      kept.push(`${value}`)
+      continue
+    }
+    const factorisation = factoriseInteger(value)
+    if (factorisation === null) {
+      return {
+        held: null,
+        detail: `${value} is too large for this checker to factorise`,
+      }
+    }
+    const squares = [...factorisation.entries()].filter(([, e]) => e >= 2)
+    if (squares.length > 0) {
+      // Name the square that should have come out, which is the whole of what
+      // the learner needs to do next.
+      let square = 1n
+      for (const [p, e] of squares) square *= p ** BigInt(e - (e % 2))
+      const root = [...factorisation.entries()]
+        .reduce((acc, [p, e]) => acc * p ** BigInt(Math.floor(e / 2)), 1n)
+      return {
+        held: false,
+        detail: `${value} is divisible by the square ${square}, so ${root} can still come out of the radical`,
+      }
+    }
+    kept.push(`${value}`)
+  }
+
+  return {
+    held: true,
+    detail: `every radicand is square-free: ${kept.join(', ')}`,
+  }
+}
+
 export const FORM_CHECKS: Record<NamedForm, FormSpec> = {
   partial_fractions: {
     label: 'a sum of partial fractions', check: checkPartialFractions, discriminating: true,
@@ -681,6 +960,32 @@ export const FORM_CHECKS: Record<NamedForm, FormSpec> = {
   },
   radical_free: {
     label: 'without radicals', check: checkRadicalFree, discriminating: false,
+  },
+  /*
+   * Claims about an integer subterm. Both are `discriminating: false`, and the
+   * reason is the one the `FormSpec` field documents rather than a judgement
+   * about their worth — `prime_factored` is a positive structural claim and
+   * would otherwise qualify.
+   *
+   * derive.ts uses the discriminating set as a shape signature over the TASK
+   * corpus, and every task in that corpus is symbolic. Both of these are
+   * constant across it: `prime_factored` is false for everything with a letter
+   * in it, and `surd_reduced` is true for everything with no radical. A
+   * dimension that never varies cannot separate two signatures while still
+   * making every pair look more alike, which is exactly the effect the comment
+   * above `ALL_FORMS` in derive.ts records from the last time this set grew.
+   *
+   * Revisit if a numeric task corpus ever reaches derive.ts. The forms are
+   * fully askable and fully rulable either way; this only keeps them out of the
+   * signature.
+   */
+  prime_factored: {
+    label: 'as a product of primes', check: checkPrimeFactored, discriminating: false,
+  },
+  surd_reduced: {
+    label: 'with no square factor left under the radical',
+    check: checkSurdReduced,
+    discriminating: false,
   },
 }
 

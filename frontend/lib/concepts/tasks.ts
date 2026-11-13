@@ -313,6 +313,35 @@ export const TASKS: PracticeTask[] = [
     at: { p: '2', a: '1', q: '5', b: '2', r: '7', c: '2' },
     reference: '2450',
   },
+  /*
+   * The ask this concept actually teaches, now that a form can express it.
+   *
+   * Its three sibling tasks are all `evaluate`, and the concept's header says
+   * why: no form could demand a product of primes, so each one hands the
+   * factorisation over in the prompt and asks the learner to multiply it back.
+   * That is the proxy-task compromise this file warns about — it drills the
+   * check and never asks for the work.
+   *
+   * `prime_factored` is that form, and `ruleTransform`'s exact-arithmetic path
+   * is what keeps this task inside the subject's no-worker contract: 2310 and
+   * 2 · 3 · 5 · 7 · 11 are both integers, so the equivalence half is bigint
+   * arithmetic and never reaches the CAS.
+   *
+   * 2310 is the product of the first five primes, chosen so that every prime is
+   * distinct and no exponent is above 1 — the exponent-collecting case is what
+   * the worked example covers, and a first task should not need both moves at
+   * once. It shares no number with the three worked examples.
+   */
+  {
+    id: 'prime-factorisation-factorise-1',
+    knowledgePointId: 'one-factorisation-each',
+    kind: 'transform_to_form',
+    prompt: 'Write 2310 as a product of primes.',
+    given: '2310',
+    form: 'prime_factored',
+    variables: [],
+    reference: '2 * 3 * 5 * 7 * 11',
+  },
   {
     id: 'prime-factorisation-divisor-count-1',
     knowledgePointId: 'the-exponents-count-the-divisors',
@@ -1611,6 +1640,13 @@ export const TASKS: PracticeTask[] = [
     at: { b: '9', c: '27' },
     // 9^(3/2) = 27.
     reference: '3/2',
+    // The `log(27, 9)` acceptance described above, now enforced rather than
+    // only asserted in a comment. `ruleEvaluate` otherwise refuses an answer
+    // that is the given with its inputs substituted — which this one is,
+    // textually — because that was a free mark everywhere else. See
+    // `acceptsUnevaluated` in types.ts for why the exemption has to be the
+    // author's call and cannot be inferred.
+    acceptsUnevaluated: true,
   },
 
   // ── arithmetic-foundations ──────────────────────────────────────────────
