@@ -128,10 +128,16 @@ const CONCEPTS: Concept[] = [
             {
               label: 'Put the input where the variable is',
               detail: 'Every x in the rule becomes 4: 3·4 − 2.',
+              socratic:
+                'f(4) has to come out as a number, but the rule as written still mentions x. ' +
+                'What has to become of the x, and how many places in the rule does that affect?',
             },
             {
               label: 'Compute',
               detail: '12 − 2 = 10.',
+              socratic:
+                'There is no x left in 3·4 − 2, so this is ordinary arithmetic now. Which of ' +
+                'the two operations goes first, and what does that leave you with?',
             },
             {
               label: 'What "exactly one" bought you',
@@ -140,6 +146,10 @@ const CONCEPTS: Concept[] = [
                 'rather than a set. That is what makes it legal to write f(4) inside a larger ' +
                 'expression at all — a rule returning two values could not be substituted into ' +
                 'anything.',
+              socratic:
+                'You wrote down one number for f(4) and never had to ask whether there was a ' +
+                'second. Suppose some rule did return two answers for the same input — what ' +
+                'could you no longer do with the symbol f(4)?',
             },
           ],
           answer: '10',

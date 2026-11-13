@@ -230,10 +230,34 @@ const COLD = {}
 t('exponent rules now gate on integer arithmetic',
   gatingPrerequisitesOf(MATHEMATICS, 'exponent-rules').includes('integer-arithmetic'),
   gatingPrerequisitesOf(MATHEMATICS, 'exponent-rules').join(', '))
-t('polynomial arithmetic now gates on order of operations and signed numbers', (() => {
+/*
+ * Stated as a two-step chain, because authoring `variables-and-expressions`
+ * moved this gate down a step rather than removing it.
+ *
+ * `gatingPrerequisitesOf` returns the NEAREST teachable layer, not the whole
+ * chain. While a letter standing for a number was mapped-only, the walk looked
+ * through it and reported the arithmetic directly; now that it has material it
+ * gates in its own right and is what polynomial arithmetic names. The original
+ * assertion read `g.includes('order-of-operations')` and went red on exactly
+ * that, correctly — the claim was the right one in the wrong shape.
+ *
+ * The durable claim is that the route from polynomial arithmetic down to the
+ * arithmetic is unbroken and made entirely of material a learner can go and
+ * practise. That survives any number of concepts being authored in between,
+ * which the immediate-gate form does not.
+ */
+t('polynomial arithmetic gates down to order of operations and signed numbers', (() => {
   const g = gatingPrerequisitesOf(MATHEMATICS, 'polynomial-arithmetic')
-  return g.includes('order-of-operations') && g.includes('negative-numbers')
-})(), gatingPrerequisitesOf(MATHEMATICS, 'polynomial-arithmetic').join(', '))
+  if (!g.includes('variables-and-expressions')) return false
+  const below = gatingPrerequisitesOf(MATHEMATICS, 'variables-and-expressions')
+  return below.includes('order-of-operations') && below.includes('negative-numbers')
+})(), `${gatingPrerequisitesOf(MATHEMATICS, 'polynomial-arithmetic').join(', ')}`
+  + ` → ${gatingPrerequisitesOf(MATHEMATICS, 'variables-and-expressions').join(', ')}`)
+t('and the whole arithmetic chain is still beneath it, every step of it teachable',
+  ['variables-and-expressions', 'order-of-operations', 'negative-numbers', 'integer-arithmetic',
+    'place-value']
+    .every(id => claimableChainFor(MATHEMATICS, 'polynomial-arithmetic').includes(id)),
+  claimableChainFor(MATHEMATICS, 'polynomial-arithmetic').join(', '))
 t('every gate named is a concept the learner can actually go and practise',
   ['exponent-rules', 'polynomial-arithmetic', 'combining-rational'].every(id =>
     gatingPrerequisitesOf(MATHEMATICS, id).every(p => isTeachable(MATHEMATICS, p))))
@@ -241,13 +265,62 @@ t('place value is a root of the whole map, and was not teachable before',
   roots(MATHEMATICS).includes('place-value') && isTeachable(MATHEMATICS, 'place-value'))
 t('the authored arithmetic ids appear exactly once each in the composed concept list',
   ['place-value', 'integer-arithmetic', 'order-of-operations', 'negative-numbers', 'divisibility',
-    'fraction-arithmetic']
+    'fraction-arithmetic', 'prime-factorisation', 'gcd-and-lcm']
     .every(id => MATHEMATICS.concepts.filter(c => c.id === id).length === 1))
 t('and they carry their own subject, not the area they left',
-  MATHEMATICS.concepts.filter(c => c.subjectId === 'arithmetic-foundations').length === 6)
+  MATHEMATICS.concepts.filter(c => c.subjectId === 'arithmetic-foundations').length === 8)
+/*
+ * The cross-boundary example moved up one level when `prime-factorisation` was
+ * promoted, and the replacement is deliberately the node that used to sit
+ * BESIDE it rather than another arbitrary one.
+ *
+ * `prime-factorisation` was the illustration here while it was a map node
+ * needing an authored concept. It is authored now, so the same claim has to be
+ * made about something still on the map — and `decimal-representation` names
+ * both `fraction-arithmetic` and `prime-factorisation` in its own `needs`,
+ * which makes it one node resting on two different promotions. That is the
+ * strongest available form of "the edge survived the move".
+ *
+ * The edge the promotion DID strand — `divisibility → prime-factorisation`,
+ * which the node itself declared — is asserted below, because it now has to be
+ * carried by the subject rather than by the area.
+ */
 t('the nodes that used to need them still do, across the file boundary',
   prerequisitesOf(MATHEMATICS, 'absolute-value').includes('negative-numbers')
-  && prerequisitesOf(MATHEMATICS, 'prime-factorisation').includes('divisibility'))
+  && prerequisitesOf(MATHEMATICS, 'decimal-representation').includes('fraction-arithmetic')
+  && prerequisitesOf(MATHEMATICS, 'decimal-representation').includes('prime-factorisation'),
+  prerequisitesOf(MATHEMATICS, 'decimal-representation').join(', '))
+t('and a promoted node\'s own needs were restated inside the subject, not dropped',
+  prerequisitesOf(MATHEMATICS, 'prime-factorisation').includes('divisibility'),
+  prerequisitesOf(MATHEMATICS, 'prime-factorisation').join(', '))
+t('so prime factorisation is teachable and gates what the map says it gates',
+  isTeachable(MATHEMATICS, 'prime-factorisation')
+  && gatingPrerequisitesOf(MATHEMATICS, 'gcd-and-lcm').includes('prime-factorisation'),
+  gatingPrerequisitesOf(MATHEMATICS, 'gcd-and-lcm').join(', '))
+/*
+ * `gcd-and-lcm` was the illustration above while it was the mapped node
+ * resting on an authored one; it is authored itself now, so the claim is made
+ * in the form the promotion left behind. The edge it declared on the map
+ * (`needs: ['prime-factorisation']`) and the one the area used to declare on
+ * its behalf (`links: gcd-and-lcm → fraction-arithmetic`) both moved into the
+ * subject's own edge list, so the composed map must still show the gcd sitting
+ * between the two of them, with the whole of it teachable.
+ *
+ * `euclidean-algorithm` is the node still on the map that needs the gcd, which
+ * makes it the surviving example of a mapped node resting on authored material
+ * across a file boundary — and the node is in atlas-structures.ts, which the
+ * promotion did not touch.
+ */
+t('the gcd was promoted and kept both its edges, in both directions',
+  isTeachable(MATHEMATICS, 'gcd-and-lcm')
+  && prerequisitesOf(MATHEMATICS, 'gcd-and-lcm').includes('prime-factorisation')
+  && prerequisitesOf(MATHEMATICS, 'fraction-arithmetic').includes('gcd-and-lcm'),
+  `${prerequisitesOf(MATHEMATICS, 'gcd-and-lcm').join(', ')} → gcd-and-lcm → `
+  + `${dependentsOf(MATHEMATICS, 'gcd-and-lcm').join(', ')}`)
+t('and the mapped node above it still reaches it across the file boundary',
+  prerequisitesOf(MATHEMATICS, 'euclidean-algorithm').includes('gcd-and-lcm')
+  && gatingPrerequisitesOf(MATHEMATICS, 'euclidean-algorithm').includes('gcd-and-lcm'),
+  gatingPrerequisitesOf(MATHEMATICS, 'euclidean-algorithm').join(', '))
 
 // ---------------------------------------------------------------------------
 
@@ -420,9 +493,18 @@ t('the gates it created reach mapped nodes and later subjects, never backwards',
     .filter(c => gatingPrerequisitesOf(MATHEMATICS, c.id).some(p => FN_IDS.has(p)))
   return gained.length > 0 && gained.every(c => !PRE_EXISTING.includes(c.subjectId))
 })(), 'expected gates on mapped nodes and on matrices, and none on the three older subjects')
-t('the algebra subjects gate exactly as they did — on arithmetic, not functions', (() => {
+/*
+ * The claim here is about what polynomial arithmetic does NOT gate on, so the
+ * `FN_IDS` half is the load-bearing one and is unchanged. The positive half
+ * now reads down the chain rather than at the immediate gate, for the reason
+ * given where that gate is asserted above: `variables-and-expressions` was
+ * authored between the two and `gatingPrerequisitesOf` stops at the nearest
+ * teachable layer.
+ */
+t('the algebra subjects gate downwards onto arithmetic, and never onto functions', (() => {
   const g = gatingPrerequisitesOf(MATHEMATICS, 'polynomial-arithmetic')
-  return g.includes('order-of-operations') && g.includes('negative-numbers')
+  const chain = claimableChainFor(MATHEMATICS, 'polynomial-arithmetic')
+  return chain.includes('order-of-operations') && chain.includes('negative-numbers')
     && g.every(p => !FN_IDS.has(p))
 })(), gatingPrerequisitesOf(MATHEMATICS, 'polynomial-arithmetic').join(', '))
 

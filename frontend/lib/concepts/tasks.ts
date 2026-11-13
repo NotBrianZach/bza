@@ -87,6 +87,21 @@ const WHOLE_ABC = [
 const WHOLE_ABCD = [...WHOLE_ABC, { name: 'd', assumptions: { integer: true } }]
 
 /**
+ * A coefficient, a constant and the variable, for the expressions subject.
+ *
+ * Exactly three, rather than reusing `REAL_ABC_X` and leaving `c` unused: every
+ * declared symbol must have a stated input, and an unused one is an authoring
+ * fault the suite reports. Real rather than integer because nothing in that
+ * concept is about whole numbers — the point is that a letter stands for a
+ * number, and the tasks substitute a negative one on purpose.
+ */
+const REAL_ABX = [
+  { name: 'a', assumptions: { real: true } },
+  { name: 'b', assumptions: { real: true } },
+  { name: 'x', assumptions: { real: true } },
+]
+
+/**
  * Coefficients plus the variable, for the functions subject.
  *
  * Real rather than integer: these stand for the parameters of an arbitrary
@@ -255,6 +270,168 @@ export const TASKS: PracticeTask[] = [
     ],
     at: { a: '2', b: '3', c: '4', d: '5' },
     reference: '5/6',
+  },
+
+  /*
+   * ── prime-factorisation ─────────────────────────────────────────────────
+   *
+   * `evaluate` like the rest of this subject, and for a reason stronger than
+   * consistency: there is no form that can ask for a product of primes.
+   * `checkFactored` is symbol-relative, a numeral has degree 0, and degree 0
+   * is reported as already irreducible — so `transform_to_form` with
+   * `factored` would be satisfied by handing the number back unchanged. The
+   * concept's own header in ontology-arithmetic.ts has the full argument.
+   *
+   * What that costs is stated rather than hidden: none of these three asks the
+   * learner to FIND a factorisation. Each asks a question that can only be
+   * answered once you have one, so each prompt hands over the factorisation
+   * and names the step it is standing in for. Finding it is what the worked
+   * examples are for.
+   *
+   * Three different numbers from the ones in the worked examples, so the task
+   * is not a recall of the example. Each reference is reproducible from its
+   * given by exact rational arithmetic, which the subject's test group checks
+   * for every task it owns.
+   */
+  {
+    id: 'prime-factorisation-check-1',
+    knowledgePointId: 'one-factorisation-each',
+    kind: 'evaluate',
+    prompt:
+      'A prime factorisation is a claim, and multiplying it back out is the only check there '
+      + 'is on one. Evaluate p^a · q^b · r^c at p = 2, a = 1, q = 5, b = 2, r = 7, c = 2 — this '
+      + 'is that check on "2450 = 2 · 5² · 7²".',
+    given: 'p^a * q^b * r^c',
+    variables: [
+      { name: 'p', assumptions: { integer: true, positive: true } },
+      { name: 'a', assumptions: { integer: true } },
+      { name: 'q', assumptions: { integer: true, positive: true } },
+      { name: 'b', assumptions: { integer: true } },
+      { name: 'r', assumptions: { integer: true, positive: true } },
+      { name: 'c', assumptions: { integer: true } },
+    ],
+    at: { p: '2', a: '1', q: '5', b: '2', r: '7', c: '2' },
+    reference: '2450',
+  },
+  {
+    id: 'prime-factorisation-divisor-count-1',
+    knowledgePointId: 'the-exponents-count-the-divisors',
+    kind: 'evaluate',
+    prompt:
+      '1350 = 2 · 3³ · 5², so its exponents are 1, 3 and 2. A divisor is an independent choice '
+      + 'of how many of each prime to take, which makes the number of them (a+1)(b+1)(c+1). '
+      + 'Evaluate that at a = 1, b = 3, c = 2.',
+    given: '(a + 1) * (b + 1) * (c + 1)',
+    variables: [
+      { name: 'a', assumptions: { integer: true } },
+      { name: 'b', assumptions: { integer: true } },
+      { name: 'c', assumptions: { integer: true } },
+    ],
+    at: { a: '1', b: '3', c: '2' },
+    reference: '24',
+  },
+  {
+    id: 'prime-factorisation-square-part-1',
+    knowledgePointId: 'a-square-has-even-exponents',
+    kind: 'evaluate',
+    prompt:
+      '1960 = 2³ · 5 · 7². The primes with an odd exponent are 2 and 5, and taking one copy of '
+      + 'each out leaves every exponent even — which is to say, leaves the largest square that '
+      + 'divides 1960. Evaluate n/(p · q) at n = 1960, p = 2, q = 5.',
+    given: 'n / (p * q)',
+    variables: [
+      { name: 'n', assumptions: { integer: true } },
+      { name: 'p', assumptions: { integer: true, nonzero: true } },
+      { name: 'q', assumptions: { integer: true, nonzero: true } },
+    ],
+    at: { n: '1960', p: '2', q: '5' },
+    reference: '196',
+  },
+
+  /*
+   * ── gcd-and-lcm ─────────────────────────────────────────────────────────
+   *
+   * `evaluate` like the rest of this subject, and under a sharper version of
+   * the same constraint. ontology.ts recorded the problem when it skipped this
+   * node: a gcd is a NUMBER, every task must declare a symbol, and so "what is
+   * gcd(48, 180)" has no shape here at all. The answer is that while a gcd is
+   * not an expression, `p^a · q^b` at stated primes and exponents is — and it
+   * IS the gcd once the exponents are the minima.
+   *
+   * So each of these hands over what the previous concept supplies and asks the
+   * arithmetic that turns it into the answer. The first is given the
+   * factorisations and the minima; the second is given the gcd; the third is
+   * given the lcm and told the result will not be in lowest terms. What none of
+   * them asks is which exponent is the smaller, because that is a relation
+   * between two integers and no form in forms.ts can demand one — the same gap
+   * that stops a task asking for a product of primes. Each prompt names the
+   * step it stands in for, and the choosing is what the worked examples teach.
+   *
+   * Different numbers from the worked examples in all three cases, so none is a
+   * recall of its own example. Every reference is reproducible from its given
+   * by exact rational arithmetic, which is what the subject's test group checks
+   * over every task it owns.
+   */
+  {
+    id: 'gcd-from-the-exponents-1',
+    knowledgePointId: 'the-exponents-decide-both',
+    kind: 'evaluate',
+    prompt:
+      '540 = 2² · 3³ · 5 and 378 = 2 · 3³ · 7. The gcd takes the smaller exponent of each '
+      + 'prime: one 2, three 3s, and nothing of the 5 or the 7 because each is missing from one '
+      + 'of the two. Evaluate p^a · q^b at p = 2, a = 1, q = 3, b = 3 — that product is the gcd.',
+    given: 'p^a * q^b',
+    variables: [
+      { name: 'p', assumptions: { integer: true, positive: true } },
+      { name: 'a', assumptions: { integer: true } },
+      { name: 'q', assumptions: { integer: true, positive: true } },
+      { name: 'b', assumptions: { integer: true } },
+    ],
+    at: { p: '2', a: '1', q: '3', b: '3' },
+    reference: '54',
+  },
+  {
+    id: 'lcm-from-the-gcd-1',
+    knowledgePointId: 'the-product-is-the-pair',
+    kind: 'evaluate',
+    prompt:
+      '90 = 2 · 3² · 5 and 48 = 2⁴ · 3, so gcd(90, 48) = 2 · 3 = 6. Because gcd · lcm is the '
+      + 'product of the pair, the lcm is that product divided by the gcd — no second pass over '
+      + 'the exponents is needed. Evaluate (a · b)/g at a = 90, b = 48, g = 6.',
+    given: '(a * b) / g',
+    variables: [
+      { name: 'a', assumptions: { integer: true } },
+      { name: 'b', assumptions: { integer: true } },
+      { name: 'g', assumptions: { integer: true, nonzero: true } },
+    ],
+    at: { a: '90', b: '48', g: '6' },
+    reference: '720',
+  },
+  /*
+   * The same `given` as `fraction-add-1`, deliberately, because the numbers are
+   * the content here. That task adds thirds and quarters: coprime denominators,
+   * so their lcm IS their product and the answer is already in lowest terms —
+   * which makes it exactly the case in which neither of these two numbers has
+   * anything to do. This one is the case where both do.
+   */
+  {
+    id: 'common-denominator-is-an-lcm-1',
+    knowledgePointId: 'a-common-denominator-is-an-lcm',
+    kind: 'evaluate',
+    prompt:
+      'Evaluate a/b + c/d at a = 1, b = 15, c = 1, d = 10, and give the answer in lowest terms. '
+      + '15 = 3 · 5 and 10 = 2 · 5, so the denominator to work over is lcm(15, 10) = 30 rather '
+      + 'than 150 — and when the two numerators are added the result still shares a factor with '
+      + '30, so the addition is not the last step.',
+    given: 'a/b + c/d',
+    variables: [
+      { name: 'a', assumptions: { integer: true } },
+      { name: 'b', assumptions: { integer: true, nonzero: true } },
+      { name: 'c', assumptions: { integer: true } },
+      { name: 'd', assumptions: { integer: true, nonzero: true } },
+    ],
+    at: { a: '1', b: '15', c: '1', d: '10' },
+    reference: '1/6',
   },
 
   // ── polynomial-arithmetic ───────────────────────────────────────────────
@@ -1577,6 +1754,106 @@ export const TASKS: PracticeTask[] = [
     at: { a: '84', b: '36', g: '12' },
     // 120/12 = 10, which is the 7 + 3 of the worked example.
     reference: '10',
+  },
+
+  // ── expressions-and-equations ───────────────────────────────────────────
+  //
+  // Five `evaluate` tasks across three knowledge points, all settled by exact
+  // rational arithmetic, so this subject is gradable with no worker — which
+  // matters more here than in most places, because the concept now sits
+  // directly above arithmetic on the entry route and a worker outage must not
+  // wall off the way in.
+  //
+  // THE FIRST TWO ARE A PAIR AND HAVE TO BE READ AS ONE. The knowledge point
+  // is that a letter has two readings, and the two readings are checked by the
+  // same act — substitution — doing two different jobs. `unknown-check-1`
+  // substitutes to CONFIRM the number a condition picked out, which is what
+  // settles an unknown. `identity-difference-1` substitutes into the
+  // difference of the two sides of an identity and gets 0, which is what
+  // substitution can do for a variable and no more: one case, not a proof. A
+  // single task could only have taught one of those.
+  //
+  // `collect-like-terms-1` IS A PROXY AND SAYS SO. Collecting is a claim about
+  // an expression, and no `NamedForm` expresses "collected": `5x + 2 + 3x − 7
+  // + x²` is already a sum of monomials, so `expanded` would be satisfied by
+  // the input unchanged and the equivalence check would pass trivially. See
+  // ontology-algebra.ts for the longer version. The checkable question in the
+  // vicinity is that the collected form and the original agree at every x, so
+  // the task asks for their common value at one.
+  {
+    id: 'unknown-check-1',
+    knowledgePointId: 'a-letter-has-two-readings',
+    kind: 'evaluate',
+    prompt:
+      'The condition 3x − 7 = 11 picks out one number. Evaluate ax − b at a = 3, x = 6, b = 7 to '
+      + 'check that 6 is it. Substituting back is the whole of what settles an unknown, which is '
+      + 'why this reading has a number for an answer.',
+    given: 'a*x - b',
+    variables: REAL_ABX,
+    // 3·6 − 7 = 18 − 7 = 11, the right-hand side of the condition.
+    reference: '11',
+    at: { a: '3', x: '6', b: '7' },
+  },
+  {
+    id: 'identity-difference-1',
+    knowledgePointId: 'a-letter-has-two-readings',
+    kind: 'evaluate',
+    prompt:
+      'Now the other reading. 3(x + 2) = 3x + 6 claims the two sides are the same number for '
+      + 'every x, so their difference should be 0 wherever you look. Evaluate '
+      + 'a(x + b) − (ax + ab) at a = 3, x = −4, b = 2. Note what this does and does not show: '
+      + 'one value of 0 is a single case, and the claim is about all of them.',
+    given: 'a*(x + b) - (a*x + a*b)',
+    variables: REAL_ABX,
+    // 3(−4 + 2) − (3·(−4) + 3·2) = 3(−2) − (−12 + 6) = −6 − (−6) = 0.
+    reference: '0',
+    at: { a: '3', x: '-4', b: '2' },
+  },
+  {
+    id: 'collect-like-terms-1',
+    knowledgePointId: 'terms-collect-only-when-the-letters-match',
+    kind: 'evaluate',
+    prompt:
+      'Collect 5x + 2 + 3x − 7 + x² into three terms, then evaluate it at x = 3. Your collected '
+      + 'answer must give the same number at x = 3 as the original does — that agreement is what '
+      + 'is being checked here, because "collected" is a claim about the expression and no form '
+      + 'in this build can ask for it directly.',
+    given: '5*x + 2 + 3*x - 7 + x^2',
+    variables: REAL_X,
+    // 15 + 2 + 9 − 7 + 9 = 28, and the collected x² + 8x − 5 at x = 3 is
+    // 9 + 24 − 5 = 28. The two agreeing is the point of the task.
+    reference: '28',
+    at: { x: '3' },
+  },
+  {
+    id: 'substitute-signed-1',
+    knowledgePointId: 'substituting-supplies-the-hidden-brackets',
+    kind: 'evaluate',
+    prompt:
+      'Evaluate 5 − 2x + x² at x = −3. Both brackets the letter was hiding have to be written '
+      + 'down: 2x becomes 2(−3), and x² becomes (−3)².',
+    given: '5 - 2*x + x^2',
+    variables: REAL_X,
+    // 5 − 2(−3) + (−3)² = 5 + 6 + 9 = 20. Reading the square as −3² instead
+    // gives 5 + 6 − 9 = 2, so a bracket error changes the answer rather than
+    // hiding inside it — which is what makes this task worth setting.
+    reference: '20',
+    at: { x: '-3' },
+  },
+  {
+    id: 'power-binds-before-minus-1',
+    knowledgePointId: 'substituting-supplies-the-hidden-brackets',
+    kind: 'evaluate',
+    prompt:
+      'Evaluate −x² at x = −3. The power binds tighter than the minus sign in front of it, so the '
+      + 'squaring happens first and the negation second — and the x brought its own sign inside. '
+      + 'This is the order-of-operations convention deciding a sign rather than a magnitude.',
+    given: '-x^2',
+    variables: REAL_X,
+    // −((−3)²) = −9. Negating first instead gives (+3)² = 9, so the two
+    // readings differ in sign and the convention is doing the work.
+    reference: '-9',
+    at: { x: '-3' },
   },
 
   // ── functions-and-inverses ──────────────────────────────────────────────

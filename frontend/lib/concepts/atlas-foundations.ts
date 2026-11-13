@@ -28,22 +28,30 @@ const NUMBER_AND_ARITHMETIC: MapArea = {
   id: 'number-and-arithmetic',
   name: 'Number and arithmetic',
   covers:
-    'Whole numbers through rational numbers: divisibility, primes, fractions, ratio and ' +
-    'percent, and the step out to the irrationals. The arithmetic underneath — place value, ' +
-    'the written algorithms, order of operations, signed numbers and divisibility itself — now ' +
-    'has problems written for it and lives in the arithmetic-foundations syllabus; this area ' +
-    'points at those concepts rather than restating them. Nothing symbolic — the moment a ' +
-    'letter stands for an unknown, it is algebra.',
+    'Whole numbers through rational numbers: ratio and percent, decimals and recurrence, ' +
+    'scientific notation, and the step out to the irrationals and the real line. What is left ' +
+    'here is what rests on the primes rather than the primes themselves. The arithmetic ' +
+    'underneath — place value, the written algorithms, order of operations, signed numbers, ' +
+    'divisibility, fractions, prime factorisation, and the gcd and lcm built on those primes — ' +
+    'now has problems written for it and lives in the arithmetic-foundations syllabus; this ' +
+    'area points at those concepts rather than restating them. Nothing of that group is left ' +
+    'here. Nothing symbolic — the moment a letter stands for an unknown, it is algebra.',
   /**
-   * FIVE NODES LEFT THIS AREA WHEN THEY WERE AUTHORED, AND HAD TO.
+   * EIGHT NODES HAVE LEFT THIS AREA AS THEY WERE AUTHORED, AND HAD TO.
    *
    * `place-value`, `integer-arithmetic`, `order-of-operations`,
-   * `negative-numbers` and `divisibility` are now real concepts with worked
+   * `negative-numbers`, `divisibility`, `fraction-arithmetic`,
+   * `prime-factorisation` and `gcd-and-lcm` are now real concepts with worked
    * examples and tasks, in ontology-arithmetic.ts. `atlasProblems` rejects a
    * map node whose id collides with an authored concept — not as tidiness, but
    * because the composed concept list would then hold two entries for the id
    * and the shadowing copy has no knowledge points, so a fully authored
    * concept would silently read as unteachable.
+   *
+   * The count is kept current deliberately. It is the measurement of how far
+   * this area has turned into a syllabus, and a comment saying "five" while
+   * eight have gone is the kind of rot that makes a reader distrust the rest
+   * of the file.
    *
    * The `needs` below still name them. That is the intended way for the map to
    * meet a syllabus: the edge resolves in `composeAtlas`, where both endpoints
@@ -51,6 +59,14 @@ const NUMBER_AND_ARITHMETIC: MapArea = {
    * the area — so this area viewed alone now shows `absolute-value` and
    * `divisibility`-dependent nodes as roots. That is the area view being
    * honest about its own boundary rather than a fault.
+   *
+   * An edge is owned by the node that DECLARES it, which is the part that
+   * catches people out. Promoting a node strands the `needs` on the node
+   * itself and leaves every edge declared elsewhere alone — so a promotion
+   * needs a `links` entry only when something that STAYED here depended on the
+   * node that left, and hands one BACK when the far end of an existing link is
+   * promoted in turn. This area has now produced one of each; the notes
+   * further down say which was which, and `links` is empty again as a result.
    */
   nodes: [
     {
@@ -61,23 +77,51 @@ const NUMBER_AND_ARITHMETIC: MapArea = {
       needs: ['negative-numbers'],
       terms: 'absolute value modulus distance from zero',
     },
-    {
-      id: 'prime-factorisation',
-      match: /\b(prime factor|fundamental theorem of arithmetic)/i,
-      name: 'Prime factorisation',
-      is: 'Every whole number above one is a product of primes in exactly one way — the fundamental theorem of arithmetic.',
-      needs: ['divisibility'],
-      terms: 'prime factorisation fundamental theorem of arithmetic',
-    },
-    {
-      id: 'gcd-and-lcm',
-      match: /\b(greatest common (divisor|factor)|least common multiple|\bgcd\b|\blcm\b)/i,
-      name: 'Greatest common divisor and least common multiple',
-      is: 'The largest shared factor and the smallest shared multiple, and why their product is the product of the pair.',
-      needs: ['prime-factorisation'],
-      exercises: ['prime-factorisation'],
-      terms: 'gcd greatest common divisor lcm least common multiple',
-    },
+    /*
+     * `prime-factorisation` was here and is now authored in
+     * ontology-arithmetic.ts, so it had to leave — same rule, seventh time in
+     * this area. See the block above the node list.
+     *
+     * Its OWN `needs: ['divisibility']` left with it and is restated as an
+     * edge inside that subject, where both endpoints now live. It did not need
+     * a `links` entry the way `fraction-arithmetic` did, and the difference is
+     * worth knowing for the next promotion: `fraction-arithmetic` was depended
+     * on by a node that STAYED here, so the incoming edge had nowhere to go
+     * but `links`. Every edge into `prime-factorisation` is declared by the
+     * node at the far end — `decimal-representation`, `roots-and-irrationals`,
+     * two in atlas-structures.ts, and `gcd-and-lcm`, which was below until it
+     * was promoted in turn — so all five sat in files that were not touched,
+     * and `composeAtlas` resolves them because both endpoints exist in the
+     * composed graph.
+     *
+     * The rule in one line: a `needs` is owned by the node that DECLARES it.
+     * Promoting a node strands the edges it declared and leaves the rest alone.
+     */
+    /*
+     * `gcd-and-lcm` was here and is now authored in ontology-arithmetic.ts, so
+     * it had to leave — same rule, eighth time in this area, and it is the last
+     * of the group the arithmetic syllabus was written to cover.
+     *
+     * Both of its own edges went with it and BOTH are restated inside that
+     * subject, which is the first promotion in this file where that is true of
+     * the incoming side as well:
+     *
+     *  - `needs: ['prime-factorisation']` is restated as a prerequisite edge
+     *    there, both endpoints being authored in the same subject. Same as
+     *    `prime-factorisation`'s own `needs` above it.
+     *  - `exercises: ['prime-factorisation']` is NOT restated, and that is a
+     *    judgement rather than an omission. `exercises` here is a claim about
+     *    the mathematics, which is why this field is authored on unwritten
+     *    nodes at all; an authored `encompasses` edge is a claim about what
+     *    PRACTISING exercises, and measured against the three tasks that now
+     *    exist it does not hold. The full argument is beside the credit-
+     *    propagation block in ontology-arithmetic.ts, where a reader looking
+     *    for the missing edge will go.
+     *
+     * The `links` entry that used to sit below also moved into that subject,
+     * and that one did not come off the node at all — see the note on `links`
+     * at the end of this area.
+     */
     /*
      * `fraction-arithmetic` was here and is now authored in
      * ontology-arithmetic.ts, so it had to leave: `atlasProblems` rejects a
@@ -85,10 +129,13 @@ const NUMBER_AND_ARITHMETIC: MapArea = {
      *
      * Its OWN `needs` left with it — that is the trap this file already
      * records one area down, where authoring `function-concept` silently
-     * deleted `variables-and-expressions → function-concept`. So the incoming
-     * edge from `gcd-and-lcm` is restated in `links` below. The
-     * `negative-numbers` half of that pair is now declared inside the
-     * arithmetic subject itself, both endpoints being authored there.
+     * deleted `variables-and-expressions → function-concept`. The node
+     * declared `needs: ['gcd-and-lcm', 'negative-numbers']`, and both halves
+     * now live inside the arithmetic subject: `negative-numbers` went straight
+     * there, being authored alongside, and `gcd-and-lcm` spent a while in this
+     * area's `links` and followed it when that node was promoted too. So this
+     * area carries nothing on behalf of either any more — see the note where
+     * `links` used to be.
      *
      * Edges pointing the OTHER way survive untouched: `decimal-representation`,
      * `ratio-and-rate` and `roots-and-irrationals` each name
@@ -144,24 +191,28 @@ const NUMBER_AND_ARITHMETIC: MapArea = {
       terms: 'scientific notation order of magnitude significant figures estimation',
     },
   ],
-  links: [
-    {
-      /**
-       * THE EDGE THAT WOULD HAVE BEEN LOST WHEN `fraction-arithmetic` WAS
-       * AUTHORED.
-       *
-       * The node declared `needs: ['gcd-and-lcm', 'negative-numbers']`. The
-       * second is an authored concept in the same subject as the new one, so
-       * that edge moved into ontology-arithmetic.ts. This one crosses from a
-       * map node to an authored concept and has nowhere else to live.
-       */
-      from: 'gcd-and-lcm',
-      to: 'fraction-arithmetic',
-      because:
-        'A common denominator is a common multiple and a cancellation is a common factor, so ' +
-        'both halves of fraction arithmetic are gcd and lcm wearing different hats.',
-    },
-  ],
+  /*
+   * NO `links`, AND THE ONE THAT WAS HERE WENT SOMEWHERE BETTER.
+   *
+   * `gcd-and-lcm → fraction-arithmetic` lived here from the moment
+   * `fraction-arithmetic` was authored. The reason given at the time was that
+   * it "crosses from a map node to an authored concept and has nowhere else to
+   * live", which was true: `links` exists exactly for an edge neither of whose
+   * owners is a node of this area, and the far end was a node of this area.
+   *
+   * Promoting `gcd-and-lcm` made both endpoints authored concepts of
+   * `arithmetic-foundations`, so the edge now has an owner and it is not this
+   * file. It was moved into that subject's own edge list, and the move is worth
+   * more than consistency: `links` reaches only the composed `MATHEMATICS`,
+   * while `ONTOLOGIES[0]` — what `assemble` is handed when nobody names a
+   * subject — is the standalone arithmetic ontology. So for as long as the edge
+   * was here, the default session did not know that fractions rest on the lcm.
+   *
+   * The rule, since this area has now produced one example of each case: a
+   * promotion needs a `links` entry when something that STAYED here depends on
+   * the node that left, and gives one UP when the thing at the other end of a
+   * link leaves too.
+   */
 }
 /*
  * NOTE ON THE EDGE THAT IS NOT DECLARED HERE.
@@ -183,17 +234,45 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
   id: 'algebra-foundations',
   name: 'Algebra',
   covers:
-    'Letters standing for numbers: expressions, equations, inequalities, systems and quadratics. ' +
-    'Polynomial and rational manipulation has its own authored syllabus and is not restated here.',
+    'Letters standing for numbers: equations, inequalities, systems and quadratics. What a letter ' +
+    'standing for a number actually means — the two readings of one, which terms collect, and ' +
+    'substituting a signed number back in — now has problems written for it and lives in the ' +
+    'expressions-and-equations syllabus; this area points at that concept rather than restating ' +
+    'it. Polynomial and rational manipulation likewise has its own authored syllabus and is not ' +
+    'restated here.',
+  /**
+   * `variables-and-expressions` LEFT THIS AREA WHEN IT WAS AUTHORED, AND HAD TO.
+   *
+   * It is a real concept now — three knowledge points, worked examples and
+   * tasks — in ontology-algebra.ts, under the new `expressions-and-equations`
+   * subject. `atlasProblems` rejects a map node whose id collides with an
+   * authored concept, and not as tidiness: the composed concept list would
+   * then hold two entries for the id, and the shadowing copy has no knowledge
+   * points, so a fully authored concept would silently read as unteachable.
+   *
+   * ITS OWN `needs` LEFT WITH IT, WHICH IS THE TRAP THIS FILE KEEPS RECORDING.
+   * The node declared `needs: ['order-of-operations', 'negative-numbers']`.
+   * Removing a node removes every edge declared on its own `needs`, and both
+   * of those endpoints are authored in `arithmetic-foundations` — a different
+   * subject from the new one — so neither edge can live in either ontology's
+   * own edge list. They are restated in `links` below. Dropping them is
+   * exactly how `function-concept` once became a root of the whole map: a
+   * syllabus authored above the arithmetic and joined to nothing beneath it,
+   * practisable from a cold account by somebody who had never carried a digit.
+   *
+   * Edges pointing the OTHER way survive untouched. `linear-equations` below
+   * still names it in its own `needs`, and the two `links` that already
+   * pointed at it — to `polynomial-arithmetic` here and to `function-concept`
+   * in the functions area — did not need changing, because `links` never
+   * cared which side was authored. All three resolve in `composeAtlas`, where
+   * map nodes and authored concepts both exist. That is the intended way for
+   * the map to meet a syllabus.
+   *
+   * `areaOntology` keeps only edges internal to the area, so this area viewed
+   * alone now shows `linear-equations` as a root. That is the area view being
+   * honest about its own boundary rather than a fault.
+   */
   nodes: [
-    {
-      id: 'variables-and-expressions',
-      match: /\b(algebraic expression|elementary algebra)\b/i,
-      name: 'Variables and expressions',
-      is: 'A letter standing for an unknown or for any number, and the difference between those two readings.',
-      needs: ['order-of-operations', 'negative-numbers'],
-      terms: 'variable algebraic expression term coefficient',
-    },
     {
       id: 'linear-equations',
       match: /\blinear equation\b/i,
@@ -313,6 +392,38 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
     },
   ],
   links: [
+    /**
+     * THE TWO EDGES THAT WOULD HAVE BEEN LOST WHEN `variables-and-expressions`
+     * WAS AUTHORED.
+     *
+     * They were `needs` on the node and came off with it. Both endpoints are
+     * authored and they are in DIFFERENT subjects — `arithmetic-foundations`
+     * on one side, `expressions-and-equations` on the other — so neither
+     * ontology may declare them, and `links` is their only home.
+     *
+     * Written at the same time as the promotion rather than afterwards,
+     * because the first time a node was authored out of this file the edge
+     * went with it and nobody noticed until `function-concept` was drawn as a
+     * root of mathematics.
+     */
+    {
+      from: 'order-of-operations',
+      to: 'variables-and-expressions',
+      because:
+        'Reading 2 + 3x as 2 + (3x) is a convention about precedence, not a fact about letters, ' +
+        'so every expression written without brackets already depends on it. Substituting a ' +
+        'number for the letter then asks the same question again with more at stake: 5 − 2x at ' +
+        'x = −3 is 5 − 2(−3), and which operation goes first decides the answer.',
+    },
+    {
+      from: 'negative-numbers',
+      to: 'variables-and-expressions',
+      because:
+        'A letter carries its sign invisibly, so the moment one stands for a negative number the ' +
+        'signed arithmetic has to be already fluent: 5 − 2x at x = −3 turns a subtraction into ' +
+        'an addition, and x² at x = −3 is positive. A learner who is unsure of (−3)(−3) cannot ' +
+        'tell a substitution error from a sign error.',
+    },
     {
       from: 'variables-and-expressions',
       to: 'polynomial-arithmetic',
@@ -520,9 +631,13 @@ const FUNCTIONS: MapArea = {
        * practisable from a cold account, in parallel with arithmetic, by
        * somebody who has never met a letter standing for a number.
        *
-       * `links` is the right home for it precisely because both endpoints now
-       * live outside this area — a mapped node in algebra-foundations and an
-       * authored concept in functions-and-inverses.
+       * `links` is the right home for it precisely because both endpoints
+       * live outside this area. When this was written that meant a mapped node
+       * in algebra-foundations and an authored concept in
+       * functions-and-inverses; `variables-and-expressions` has since been
+       * authored too, so it is now an edge between two authored subjects and
+       * this entry did not need changing. `links` never cared which side was
+       * which, which is the property that makes promoting a node cheap.
        */
       from: 'variables-and-expressions',
       to: 'function-concept',

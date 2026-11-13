@@ -29,6 +29,7 @@
  */
 
 import { ARITHMETIC_FOUNDATIONS } from './ontology-arithmetic'
+import { EXPRESSIONS_AND_EQUATIONS } from './ontology-algebra'
 import { FUNCTIONS_AND_INVERSES } from './ontology-functions'
 import { MATRICES_AND_DETERMINANTS } from './ontology-matrices'
 import { VECTORS_AND_INDEPENDENCE } from './ontology-vectors'
@@ -37,6 +38,7 @@ import type { ConceptEdge, ConceptOntology, Subject } from './types'
 import type { Concept } from './types'
 
 export { ARITHMETIC_FOUNDATIONS } from './ontology-arithmetic'
+export { EXPRESSIONS_AND_EQUATIONS } from './ontology-algebra'
 export { FUNCTIONS_AND_INVERSES } from './ontology-functions'
 export { MATRICES_AND_DETERMINANTS } from './ontology-matrices'
 export { VECTORS_AND_INDEPENDENCE } from './ontology-vectors'
@@ -1281,10 +1283,18 @@ export const RATIONAL_EXPRESSIONS: ConceptOntology = {
  * configured: every one of its tasks is `evaluate`, and `ruleEvaluate` settles
  * those by exact rational arithmetic. See its header for why that is a property
  * of arithmetic rather than a win that generalises.
+ *
+ * EXPRESSIONS_AND_EQUATIONS IS SECOND, for the same reason and one step up.
+ * It is the one concept between the arithmetic and both algebra subjects — a
+ * letter standing for a number — so in curriculum order it comes directly
+ * after place value and before expanding a bracket. It does not displace
+ * arithmetic from index 0, which the cold-account assertion in
+ * tests/concepts-logic.mjs depends on.
  */
 export const ONTOLOGIES: ConceptOntology[] = [
-  ARITHMETIC_FOUNDATIONS, RATIONAL_EXPRESSIONS, EXPONENTS_AND_LOGARITHMS,
-  FUNCTIONS_AND_INVERSES, VECTORS_AND_INDEPENDENCE, MATRICES_AND_DETERMINANTS,
+  ARITHMETIC_FOUNDATIONS, EXPRESSIONS_AND_EQUATIONS, RATIONAL_EXPRESSIONS,
+  EXPONENTS_AND_LOGARITHMS, FUNCTIONS_AND_INVERSES, VECTORS_AND_INDEPENDENCE,
+  MATRICES_AND_DETERMINANTS,
 ]
 
 export function getOntology(subjectId: string): ConceptOntology | null {

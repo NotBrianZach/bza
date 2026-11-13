@@ -101,10 +101,18 @@ const CONCEPTS: Concept[] = [
             {
               label: 'The components are two legs of a right triangle',
               detail: 'Going 3 across and 4 up, the displacement itself is the hypotenuse.',
+              socratic:
+                'Sketch the trip — three across, then four up — and then the arrow straight ' +
+                'from where you started to where you finished. What figure have those three ' +
+                'segments made, and which one of them is v?',
             },
             {
               label: 'Pythagoras',
               detail: '|v| = (3² + 4²)^(1/2) = (9 + 16)^(1/2) = 25^(1/2) = 5.',
+              socratic:
+                'Two sides of that triangle are 3 and 4, and the one you want is the ' +
+                'hypotenuse. What relation between the three sides gets you from the two you ' +
+                'have to the one you want, and what length does it give?',
             },
             {
               label: 'What the number is about',
@@ -112,6 +120,10 @@ const CONCEPTS: Concept[] = [
                 'It is the length of the arrow, not a location. The vector from (0,0) to (3,4) ' +
                 'and the one from (7,1) to (10,5) are the SAME vector — same displacement — ' +
                 'while the points at their tips are nothing alike.',
+              socratic:
+                'The arrow from (0,0) to (3,4) and the arrow from (7,1) to (10,5) describe the ' +
+                'same three-across-four-up trip, but their tips are nowhere near each other. ' +
+                'Which of those two things is the 5 a measurement of?',
             },
           ],
           answer: '5',

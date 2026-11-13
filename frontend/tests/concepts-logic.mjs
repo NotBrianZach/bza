@@ -97,6 +97,7 @@ const {
 } = M.forms
 const {
   RATIONAL_EXPRESSIONS, EXPONENTS_AND_LOGARITHMS, ARITHMETIC_FOUNDATIONS,
+  EXPRESSIONS_AND_EQUATIONS,
   ONTOLOGIES, getOntology, ontologyForPoint, pointIdCollisions,
 } = M.ontology
 const {
@@ -1933,7 +1934,7 @@ t('a witness at an excluded point fails validation', (() => {
 const X2 = EXPONENTS_AND_LOGARITHMS
 
 group('a second subject the schema was not designed around')
-t('it is registered', ONTOLOGIES.length === 6 && getOntology('exponents-and-logarithms') === X2)
+t('it is registered', ONTOLOGIES.length === 7 && getOntology('exponents-and-logarithms') === X2)
 t('it reports no structural problems', ontologyProblems(X2).length === 0, JSON.stringify(ontologyProblems(X2)))
 t('its fidelity claims match what its options can do', fidelityMismatches(X2).length === 0)
 t('it has a prerequisite-respecting teaching order', teachingOrder(X2)?.length === X2.concepts.length)
@@ -2229,8 +2230,8 @@ t('and it is the subject with a root that needs nothing',
   roots(ONTOLOGIES[0]).some(id => gatingPrerequisitesOf(ONTOLOGIES[0], id).length === 0))
 t('and resolves by id', getOntology('arithmetic-foundations') === A)
 t('it has no internal faults', ontologyProblems(A).length === 0, ontologyProblems(A).join('; '))
-t('six concepts, eighteen knowledge points',
-  A.concepts.length === 6 && allKnowledgePoints(A).length === 18,
+t('eight concepts, twenty-four knowledge points',
+  A.concepts.length === 8 && allKnowledgePoints(A).length === 24,
   `${A.concepts.length} concepts, ${allKnowledgePoints(A).length} points`)
 t('every concept is teachable — this is a syllabus, not a map',
   A.concepts.every(c => isTeachable(A, c.id)))
@@ -2257,8 +2258,8 @@ const coldSet = assemble({ ontology: A, strengths: COLD, now: '2026-10-23T12:00:
 t('a cold account gets three tasks, all from place value',
   coldSet.tasks.length === 3 && coldSet.tasks.every(x => conceptOfPoint(A, x.knowledgePointId).id === 'place-value'),
   `${coldSet.tasks.length} tasks`)
-t('and the other five concepts are reported blocked rather than silently absent',
-  coldSet.blocked.length === 5,
+t('and the other seven concepts are reported blocked rather than silently absent',
+  coldSet.blocked.length === 7,
   coldSet.blocked.map(b => b.conceptId).join(', '))
 t('each blocked concept names a TEACHABLE thing to go and do', coldSet.blocked.every(b =>
   b.missing.length > 0 && b.missing.every(m => isTeachable(A, m))))
@@ -2328,7 +2329,7 @@ t('and both limits are named in skipped, not just the one that happened to bind'
  */
 group('the third subject is gradable with no worker')
 const ARITH_TASKS = allKnowledgePoints(A).flatMap(p => tasksForPoint(p.id))
-t('eighteen tasks, one per point', ARITH_TASKS.length === 18, `${ARITH_TASKS.length}`)
+t('twenty-four tasks, one per point', ARITH_TASKS.length === 24, `${ARITH_TASKS.length}`)
 t('all of them are evaluate', ARITH_TASKS.every(x => x.kind === 'evaluate'))
 t('every one declares integer symbols rather than real ones',
   ARITH_TASKS.every(x => x.variables.every(v => v.assumptions?.integer === true)))
@@ -2348,11 +2349,318 @@ t('a correct answer is ruled correct with no worker configured',
 t('and a wrong one is ruled incorrect rather than inconclusive — the engine settled it',
   (await ruleEvaluate(taskById('precedence-1'), '20', NO_WORKER)).verdict.ruling === 'incorrect')
 
+/**
+ * `prime-factorisation`'s header, which makes four claims worth pinning.
+ *
+ * The first is the load-bearing one: the concept says it ships `evaluate`
+ * tasks because NO form can demand a product of primes, and that is a fact
+ * about forms.ts rather than a preference. If somebody later adds a form that
+ * can, this assertion is where they will find out that the compromise is no
+ * longer necessary.
+ *
+ * The rest are the mathematics of the worked examples, re-derived rather than
+ * read. A wrong worked example is the worst thing this file can contain and
+ * the one thing no other check in the suite would notice — `ontologyProblems`
+ * reads structure, and the task references say nothing about the prose.
+ */
+group('prime-factorisation — the claims its header makes')
+const PF = conceptById(A, 'prime-factorisation')
+const PF_SUBGOALS = PF.knowledgePoints.flatMap(p => p.workedExample.subgoals)
+
+t('the factored form cannot express "a product of primes" — a bare numeral satisfies it',
+  checkForm(parseExpression('7350', []), 'factored', 'x').held === true,
+  'if this fails, a transform_to_form task is now possible and the header is out of date')
+t('and so does the factorisation, so the form could not tell them apart',
+  checkForm(parseExpression('2*3*5^2*7^2', []), 'factored', 'x').held === true)
+
+/*
+ * The exact arithmetic of all three worked examples, computed here and then
+ * compared against WHAT THE EXAMPLE SAYS rather than against a number repeated
+ * in this file. Computing 2·3·5²·7² and checking it equals 7350 proves only
+ * that the test can multiply; what has to be pinned is that the `answer` a
+ * learner is shown is the one the arithmetic produces. So each of these reads
+ * the authored string.
+ */
+const exactly = src => showExact(exactValue(parseExpression(src, [])))
+const pfAnswer = i => PF.knowledgePoints[i].workedExample.answer
+
+t('the first example\'s factorisation multiplies back to the number it factors',
+  exactly('2*3*5^2*7^2') === '7350' && pfAnswer(0) === '7350 = 2 · 3 · 5² · 7²',
+  pfAnswer(0))
+t('the divisor count it states is the one the exponents give — (1+1)(1+1)(2+1)(2+1)',
+  pfAnswer(1) === exactly('2*2*3*3'), `says ${pfAnswer(1)}, arithmetic gives ${exactly('2*2*3*3')}`)
+t('dividing out the odd-exponent primes leaves 1225, and it is 35²',
+  exactly('7350/(2*3)') === '1225' && exactly('35^2') === '1225')
+t('the square part and the square-free part multiply back to 7350',
+  exactly('35^2*6') === '7350')
+t('and the third example states both of those numbers',
+  pfAnswer(2).includes('1225') && pfAnswer(2).includes('35²') && pfAnswer(2).includes('6'),
+  pfAnswer(2))
+t('squaring doubles the exponents: (2 · 3²)² = 2² · 3⁴',
+  exactly('(2*3^2)^2') === exactly('2^2*3^4') && exactly('(2*3^2)^2') === '324')
+t('and 324 is what the subgoal that argues it claims',
+  PF.knowledgePoints[2].workedExample.subgoals[0].detail.includes('324'))
+
+t('three points, one task each, and every one of them evaluate',
+  PF.knowledgePoints.length === 3
+  && PF.knowledgePoints.every(p => tasksForPoint(p.id).length === 1)
+  && PF.knowledgePoints.every(p => tasksForPoint(p.id).every(x => x.kind === 'evaluate')))
+t('each task is about a different number from its own worked example, so it is not a recall',
+  ['2450', '1350', '1960'].every((n, i) =>
+    tasksForPoint(PF.knowledgePoints[i].id)[0].prompt.includes(n)))
+
+/**
+ * EVERY SUBGOAL HERE IS ASKED AS A QUESTION.
+ *
+ * The question map measures this (questions.ts) and found 21 of 283 authored
+ * when it was written. This concept is the first where the figure is all of
+ * them, which is the standard the rest should be brought up to rather than a
+ * flourish — so it is asserted, not just counted.
+ */
+// Asserted before the `every` calls below, which would pass vacuously on an
+// empty list — the failure mode a renamed concept id would produce here.
+t('twelve subgoals across the three worked examples', PF_SUBGOALS.length === 12,
+  `${PF_SUBGOALS.length}`)
+t('every subgoal carries an authored socratic phrasing',
+  PF_SUBGOALS.every(s => typeof s.socratic === 'string' && s.socratic.length > 0),
+  PF_SUBGOALS.filter(s => !s.socratic).map(s => s.label).join(', '))
+t('and every one of them is actually phrased as a question',
+  PF_SUBGOALS.every(s => isInterrogative(s.socratic)),
+  PF_SUBGOALS.filter(s => !isInterrogative(s.socratic)).map(s => s.label).join(', '))
+t('while the labels stay imperative — the map draws moves, the tutor asks sentences',
+  PF_SUBGOALS.every(s => !isInterrogative(s.label)))
+
+/**
+ * The encompasses edge that is deliberately absent. See the note beside the
+ * credit-propagation block in ontology-arithmetic.ts: the claim would be about
+ * what practising exercises, and not one of the three tasks makes the learner
+ * decide a divisibility question.
+ */
+t('factoring does NOT claim credit for divisibility, though it gates on it',
+  !encompassedBy(A, 'prime-factorisation').includes('divisibility')
+  && prerequisitesOf(A, 'prime-factorisation').includes('divisibility'),
+  encompassedBy(A, 'prime-factorisation').join(', '))
+
+/**
+ * `gcd-and-lcm`'s header, pinned the same way and for the same reason.
+ *
+ * The mathematics first: a wrong worked example is the worst thing this file
+ * can contain and the one thing no structural check would notice. Every
+ * number in all three examples is re-derived here and compared against WHAT
+ * THE EXAMPLE SAYS, so a typo in the prose fails rather than being taught.
+ *
+ * Then the two claims the promotion itself makes — that the edge which used to
+ * sit in the map area now lives inside the subject, and that the encompasses
+ * edge the map node declared was deliberately not carried.
+ */
+group('gcd-and-lcm — the claims its header makes')
+const GL = conceptById(A, 'gcd-and-lcm')
+const GL_SUBGOALS = GL.knowledgePoints.flatMap(p => p.workedExample.subgoals)
+const glAnswer = i => GL.knowledgePoints[i].workedExample.answer
+
+t('360 and 84 factor as the first example says they do',
+  exactly('2^3*3^2*5') === '360' && exactly('2^2*3*7') === '84')
+t('the minima give 12 and the maxima give 2520, which is what it answers',
+  exactly('2^2*3') === '12' && exactly('2^3*3^2*5*7') === '2520'
+  && glAnswer(0) === 'gcd(360, 84) = 12 and lcm(360, 84) = 2520',
+  glAnswer(0))
+t('and the check it then performs really does hold',
+  exactly('12*2520') === exactly('360*84') && exactly('12*2520') === '30240')
+t('8 · 9 · 35 is the arithmetic the lcm subgoal shows',
+  exactly('8*9*35') === '2520'
+  && GL.knowledgePoints[0].workedExample.subgoals[2].detail.includes('8 · 9 · 35'))
+
+t('24 and 36 factor as the second example says, and their gcd is 12',
+  exactly('2^3*3') === '24' && exactly('2^2*3^2') === '36' && exactly('2^2*3') === '12')
+t('the lcm it reaches by dividing is the one the exponents give',
+  exactly('24*36') === '864' && exactly('864/12') === '72' && exactly('2^3*3^2') === '72'
+  && glAnswer(1) === 'lcm(24, 36) = 72, from 24 · 36 = 864 divided by the gcd 12',
+  glAnswer(1))
+/*
+ * The counterexample is load-bearing prose — it is the whole of why the
+ * identity is stated for a pair — so the arithmetic in it is checked too. If
+ * these two agreed, the subgoal would be claiming a failure that does not
+ * happen.
+ */
+t('and the three-number counterexample really fails: 2 · 2 is not 2 · 2 · 2',
+  exactly('2*2') !== exactly('2*2*2') && exactly('2*2') === '4' && exactly('2*2*2') === '8')
+
+t('20 and 30 factor as the third example says, with lcm 60 and gcd 10',
+  exactly('2^2*5') === '20' && exactly('2*3*5') === '30'
+  && exactly('2^2*3*5') === '60' && exactly('2*5') === '10')
+t('the product really is the lcm times the gcd it names',
+  exactly('20*30') === '600' && exactly('600/60') === '10')
+t('each fraction rewrites over 60 as the example claims',
+  exactly('1/20') === exactly('3/60') && exactly('11/30') === exactly('22/60'))
+t('the sum is 25/60, which reduces by 5 to the answer it states',
+  exactly('3/60 + 22/60') === exactly('25/60') && exactly('25/60') === exactly('5/12')
+  && exactly('1/20 + 11/30') === exactly('5/12')
+  && glAnswer(2) === '1/20 + 11/30 = 5/12',
+  glAnswer(2))
+
+t('three points, one task each, and every one of them evaluate',
+  GL.knowledgePoints.length === 3
+  && GL.knowledgePoints.every(p => tasksForPoint(p.id).length === 1)
+  && GL.knowledgePoints.every(p => tasksForPoint(p.id).every(x => x.kind === 'evaluate')))
+t('each task is about a different pair from its own worked example',
+  [['540', '378'], ['90', '48'], ['15', '10']].every((pair, i) =>
+    pair.every(n => tasksForPoint(GL.knowledgePoints[i].id)[0].prompt.includes(n))))
+
+// Asserted before the `every` calls below, which would pass vacuously on an
+// empty list — the failure mode a renamed concept id would produce here.
+t('twelve subgoals across the three worked examples', GL_SUBGOALS.length === 12,
+  `${GL_SUBGOALS.length}`)
+t('every subgoal carries an authored socratic phrasing',
+  GL_SUBGOALS.every(s => typeof s.socratic === 'string' && s.socratic.length > 0),
+  GL_SUBGOALS.filter(s => !s.socratic).map(s => s.label).join(', '))
+t('and every one of them is actually phrased as a question',
+  GL_SUBGOALS.every(s => isInterrogative(s.socratic)),
+  GL_SUBGOALS.filter(s => !isInterrogative(s.socratic)).map(s => s.label).join(', '))
+t('while the labels stay imperative — the map draws moves, the tutor asks sentences',
+  GL_SUBGOALS.every(s => !isInterrogative(s.label)))
+
+/**
+ * THE EDGE THAT CAME IN FROM THE MAP AREA, AND WHY IT HAD TO.
+ *
+ * `gcd-and-lcm → fraction-arithmetic` lived in `NUMBER_AND_ARITHMETIC.links`
+ * while the gcd was a map node, and `links` edges exist only in the composed
+ * `MATHEMATICS`. This subject is `ONTOLOGIES[0]`, which is what `assemble` is
+ * handed when nobody names one — so asserting the edge HERE, on the standalone
+ * ontology, is the whole point of having moved it.
+ */
+t('fractions now gate on the lcm inside the subject, not only on the composed map',
+  prerequisitesOf(A, 'fraction-arithmetic').includes('gcd-and-lcm')
+  && gatingPrerequisitesOf(A, 'fraction-arithmetic').includes('gcd-and-lcm'),
+  prerequisitesOf(A, 'fraction-arithmetic').join(', '))
+t('and it rests on the primes, which is the needs that came off the node',
+  prerequisitesOf(A, 'gcd-and-lcm').includes('prime-factorisation')
+  && isTeachable(A, 'prime-factorisation'),
+  prerequisitesOf(A, 'gcd-and-lcm').join(', '))
+/**
+ * The encompasses edge the map node DECLARED and the subject does not carry.
+ *
+ * `exercises: ['prime-factorisation']` was on the node and `expandEdges` turned
+ * it into an encompasses edge; it was inert there, because an unteachable
+ * concept has no strength to propagate. Promoting the node made it live, and it
+ * was dropped rather than restated — the claim is about what practising
+ * exercises, and two of the three tasks never touch a factorisation. Asserted
+ * so the deletion stays visible instead of reading as a forgotten line.
+ */
+t('and taking a gcd claims no credit for the factorisation it is read off',
+  !encompassedBy(A, 'gcd-and-lcm').includes('prime-factorisation'),
+  encompassedBy(A, 'gcd-and-lcm').join(', '))
+
 // NOTE: the companion claim — that authoring these five TIGHTENED the gate on
 // the two algebra subjects, so neither is introducible on a cold account any
 // more — is asserted in tests/atlas.mjs, which is the harness that builds the
 // composed map. It cannot be checked here: the gates run through
 // `algebra-foundations.links`, and those edges only exist in `MATHEMATICS`.
+
+// ---------------------------------------------------------------------------
+// The seventh subject: the step from arithmetic into algebra
+// ---------------------------------------------------------------------------
+
+/**
+ * These assert the CLAIMS IN ontology-algebra.ts's HEADER, for the same reason
+ * the arithmetic block above does: each of them is the kind of statement that
+ * would otherwise rot into a comment that used to be true.
+ *
+ * `variables-and-expressions` was promoted out of the `algebra-foundations`
+ * map area because it was the single unwritten concept on the route of two
+ * journeys that each had one unwritten step left. The journey half of that
+ * claim is checked in tests/journeys.mjs, which is the harness that resolves
+ * routes; what is checkable here is that the material is real, that the
+ * subject is rulable with no worker, and that the boundary the empty edge list
+ * records is genuinely a boundary.
+ */
+const VE = EXPRESSIONS_AND_EQUATIONS
+
+group('expressions-and-equations, the step from arithmetic into algebra')
+t('it is registered, and SECOND — registry order is the curriculum order',
+  ONTOLOGIES[1] === VE && getOntology('expressions-and-equations') === VE)
+t('and it did not displace arithmetic from index 0, which the cold account depends on',
+  ONTOLOGIES[0] === ARITHMETIC_FOUNDATIONS)
+t('it has no internal faults', ontologyProblems(VE).length === 0, ontologyProblems(VE).join('; '))
+t('its fidelity claim matches what its option can do', fidelityMismatches(VE).length === 0)
+t('one concept, three knowledge points',
+  VE.concepts.length === 1 && allKnowledgePoints(VE).length === 3,
+  `${VE.concepts.length} concepts, ${allKnowledgePoints(VE).length} points`)
+t('the concept is teachable AND practisable — a syllabus, not a map entry',
+  isTeachable(VE, 'variables-and-expressions') && isPractisable(VE, 'variables-and-expressions'))
+t('every knowledge point has a task, so no chain is left unable to become evidence',
+  allKnowledgePoints(VE).every(p => tasksForPoint(p.id).length > 0),
+  allKnowledgePoints(VE).filter(p => tasksForPoint(p.id).length === 0).map(p => p.id).join(', '))
+t('every objective names a task kind',
+  VE.concepts.every(c => c.objectives.length > 0 && c.objectives.every(o => o.taskKinds.length > 0)))
+
+/**
+ * THE EMPTY EDGE LIST IS A BOUNDARY, NOT AN OMISSION.
+ *
+ * One concept means no internal pair to join, and every real prerequisite of
+ * this concept crosses into another subject — so it must live in an area's
+ * `links` and cannot live here. Asserted rather than assumed, because an edge
+ * added here naming `order-of-operations` would look right and would make
+ * `ontologyProblems` report an unknown endpoint.
+ */
+t('it declares no edges, and the single concept is therefore its own root',
+  VE.edges.length === 0 && roots(VE).length === 1 && roots(VE)[0] === 'variables-and-expressions')
+
+group('the seventh subject is gradable with no worker')
+const VE_TASKS = allKnowledgePoints(VE).flatMap(p => tasksForPoint(p.id))
+t('five tasks across the three points', VE_TASKS.length === 5, `${VE_TASKS.length}`)
+t('all of them are evaluate — no form can express "collected", so none asks for one',
+  VE_TASKS.every(x => x.kind === 'evaluate' && x.form === undefined))
+t('every reference is exactly reproducible from the given — no worker consulted',
+  VE_TASKS.every(x => {
+    const at = {}
+    for (const [name, raw] of Object.entries(x.at)) at[name] = parseExpression(raw, [])
+    const truth = exactValue(substitute(parseExpression(x.given, x.variables.map(v => v.name)), at))
+    const claimed = exactValue(parseExpression(x.reference, x.variables.map(v => v.name)))
+    return truth !== null && claimed !== null && showExact(truth) === showExact(claimed)
+  }))
+const veRulings = await Promise.all(VE_TASKS.map(x => ruleEvaluate(x, x.reference, NO_WORKER)))
+t('a correct answer is ruled correct with no worker configured',
+  veRulings.every(r => r.verdict.ruling === 'correct'),
+  veRulings.map((r, i) => `${VE_TASKS[i].id}:${r.verdict.ruling}`)
+    .filter((_, i) => veRulings[i].verdict.ruling !== 'correct').join(', '))
+/*
+ * The sign task, specifically. `-x^2` at x = −3 is −9 and not 9, because the
+ * power binds tighter than the leading minus — so this is the one task in the
+ * build where a wrong answer differs from the right one only in sign, and the
+ * engine has to settle it rather than shrug.
+ */
+t('and the sign trap is settled, not left inconclusive',
+  (await ruleEvaluate(taskById('power-binds-before-minus-1'), '9', NO_WORKER))
+    .verdict.ruling === 'incorrect')
+
+/**
+ * THE FIRST SUBJECT TO AUTHOR `socratic` ON EVERY SUBGOAL.
+ *
+ * 21 of 283 questions were interrogative before this file, and all 21 were
+ * labels that happened to end in a question mark rather than authored
+ * overrides. This asserts the claim that makes the coverage figure move: every
+ * subgoal here carries a hand-written question, and each one is a question
+ * rather than an imperative with a question mark bolted on — which is the
+ * failure types.ts names and punctuation cannot fix.
+ */
+const VE_QUESTIONS = allQuestions(VE)
+t('ten questions, one per subgoal', VE_QUESTIONS.length === 10, `${VE_QUESTIONS.length}`)
+t('every subgoal carries an authored socratic phrasing',
+  allKnowledgePoints(VE).every(p => p.workedExample.subgoals.every(s => !!s.socratic)),
+  allKnowledgePoints(VE).flatMap(p => p.workedExample.subgoals)
+    .filter(s => !s.socratic).map(s => s.label).join(' | '))
+t('and every one of them is interrogative, so all ten count as written',
+  VE_QUESTIONS.every(q => q.authoredAsQuestion)
+  && questionCoverage(VE).authoredAsQuestions === questionCoverage(VE).questions)
+/*
+ * The pair of asks the first knowledge point needs. Its whole content is that
+ * one act — substitution — settles an unknown completely and settles a claim
+ * about a variable not at all, so a single task could only have shown one.
+ */
+t('the two-readings point carries both halves of the pair',
+  tasksForPoint('a-letter-has-two-readings').map(x => x.id).sort().join(',')
+  === 'identity-difference-1,unknown-check-1',
+  tasksForPoint('a-letter-has-two-readings').map(x => x.id).join(','))
 
 rmSync(outDir, { recursive: true, force: true })
 // ---------------------------------------------------------------------------
@@ -2678,9 +2986,19 @@ t('the authored count is a strict minority, which is the finding',
  * authored figure is meant to GO UP as questions get written, and asserting it
  * exactly would make writing one look like a regression. What is worth
  * guarding is that the honest split is still being computed and still printed.
+ *
+ * The companion count below is a floor in the OPPOSITE direction, and so it
+ * has to be lowered by hand as subjects come off zero — it was 4 when types.ts
+ * named the four, then 3, then 2 once `function-concept` was authored, and is
+ * 1 now that `a-vector-is-a-displacement` has taken
+ * `vectors-and-independence` off zero. That is maintenance and not a
+ * regression, and the figure is still printed either way. Lower it, never
+ * delete it: the thing being guarded is that a subject with nothing written
+ * stays visible as such instead of being averaged into a single global
+ * percentage. `matrices-and-determinants` is the one still at zero.
  */
-t('four of the six subjects have no authored questions at all, and that is reported',
-  QCOV.filter(c => c.authoredAsQuestions === 0).length >= 3,
+t('one of the seven subjects has no authored questions at all, and that is reported',
+  QCOV.filter(c => c.authoredAsQuestions === 0).length >= 1,
   QCOV.map(c => `${c.authoredAsQuestions}/${c.questions}`).join(' '))
 t('the line names the split rather than the total alone', (() => {
   const line = questionCoverageLine(EXPONENTS_AND_LOGARITHMS)
@@ -2695,8 +3013,14 @@ t('and it says when a chain cannot become evidence', (() => {
 })(), questionCoverageLine(EXPONENTS_AND_LOGARITHMS))
 
 /*
- * The override. No subject uses it yet, so it is tested against a synthetic
- * point — without this the field could be deleted and nothing would fail.
+ * The override. `expressions-and-equations` now uses it on all ten of its
+ * subgoals — it was the first subject to — but the synthetic point stays,
+ * because it is the only case that pins down the SUBSTITUTION: the label here
+ * is the imperative "Add the places separately" that types.ts names as the
+ * failure mode, and the assertion is that the authored question replaces it
+ * for the asking while `label` keeps drawing the derivation. A shipped point
+ * whose label and `socratic` were both interrogative would pass whether or not
+ * the override was wired up at all.
  */
 t('an authored socratic phrasing overrides the label for the asking', (() => {
   const synthetic = {
