@@ -30,6 +30,7 @@
 
 import { ARITHMETIC_FOUNDATIONS } from './ontology-arithmetic'
 import { EXPRESSIONS_AND_EQUATIONS } from './ontology-algebra'
+import { PLANE_GEOMETRY } from './ontology-geometry'
 import { FUNCTIONS_AND_INVERSES } from './ontology-functions'
 import { MATRICES_AND_DETERMINANTS } from './ontology-matrices'
 import { VECTORS_AND_INDEPENDENCE } from './ontology-vectors'
@@ -1290,11 +1291,24 @@ export const RATIONAL_EXPRESSIONS: ConceptOntology = {
  * after place value and before expanding a bracket. It does not displace
  * arithmetic from index 0, which the cold-account assertion in
  * tests/concepts-logic.mjs depends on.
+ *
+ * PLANE_GEOMETRY IS THIRD, and the position is the one honest place for it.
+ * The first angle facts need no algebra — not a letter, not an equation — so
+ * nothing in the array is a prerequisite of it; it is a root of the whole map.
+ * What the position claims is only that a learner meets it around the time
+ * they meet early algebra and long before polynomials, which is where every
+ * school course puts it. Appending it last would have claimed geometry comes
+ * after matrices.
+ *
+ * Inserting rather than appending moves four subjects one place along, and
+ * that is safe because registry order is read only as a tie-break and only two
+ * positions are asserted anywhere: index 0 must stay arithmetic (the
+ * cold-account assertion) and index 1 must stay the expressions subject.
  */
 export const ONTOLOGIES: ConceptOntology[] = [
-  ARITHMETIC_FOUNDATIONS, EXPRESSIONS_AND_EQUATIONS, RATIONAL_EXPRESSIONS,
-  EXPONENTS_AND_LOGARITHMS, FUNCTIONS_AND_INVERSES, VECTORS_AND_INDEPENDENCE,
-  MATRICES_AND_DETERMINANTS,
+  ARITHMETIC_FOUNDATIONS, EXPRESSIONS_AND_EQUATIONS, PLANE_GEOMETRY,
+  RATIONAL_EXPRESSIONS, EXPONENTS_AND_LOGARITHMS, FUNCTIONS_AND_INVERSES,
+  VECTORS_AND_INDEPENDENCE, MATRICES_AND_DETERMINANTS,
 ]
 
 export function getOntology(subjectId: string): ConceptOntology | null {

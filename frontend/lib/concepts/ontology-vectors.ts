@@ -1,23 +1,59 @@
 /**
- * A sixth subject: vectors, spans, and when a description is redundant.
+ * A sixth subject: the plane, vectors, spans, and when a description is
+ * redundant.
  *
  * ── This one goes UNDERNEATH, so it tightens the gate ─────────────────────
  *
  * The last two subjects were authored above the algebra and gated only
  * mapped-only material. This one sits below `matrices-and-determinants`,
  * which is teachable — `matrices-and-maps` rests on `vectors-and-spans` by a
- * link written when matrices was authored. So making these three teachable
+ * link written when matrices was authored. So making these concepts teachable
  * puts a real gate under a subject people can already practise, exactly as
  * arithmetic did to the algebra.
  *
  * That is correct and it is the design working (gating tightens, never
  * loosens, as material is authored), but it has a consequence worth stating:
  * ANYBODY MID-WAY THROUGH MATRICES IS NOW GATED BEHIND VECTORS THEY HAVE NOT
- * DONE. The claim path is the answer — these are three concepts, claimable in
+ * DONE. The claim path is the answer — these are four concepts, claimable in
  * one press from the graph — and the alternative, leaving the foundation
  * unwritten so nobody is inconvenienced, is how a map stays a map for ever.
  *
- * ── Why these three and not the dot product ───────────────────────────────
+ * ── THE PLANE ARRIVED LATER, PROMOTED OUT OF THE MAP ──────────────────────
+ *
+ * `cartesian-plane` was a node of `coordinate-geometry` in atlas-foundations.ts
+ * and is now the first concept below. It joined THIS subject rather than
+ * becoming a subject of its own, and the reason is worth stating because the
+ * alternative was tempting: a one-concept ontology would have been a smaller
+ * edit, and it would have put the plane in a syllabus nobody arrives at. The
+ * subject it belongs to is the one that reads coordinates off it.
+ *
+ * Joining here also moved an edge out of the map. `coordinate-geometry.links`
+ * carried `cartesian-plane → plane-vectors`, because a `links` entry is for an
+ * edge the area does not own both ends of, and before the promotion the
+ * authored end was `plane-vectors`. Both ends are now concepts of this
+ * ontology, so the edge is declared below as a plain prerequisite and the
+ * `links` entry is gone — the one case where promoting a node makes the map
+ * simpler rather than stranding something. The two edges INTO the plane went
+ * the other way: `real-number-line` is still a map node and `negative-numbers`
+ * is authored in a different subject, so neither can be named from here and
+ * both had to become `links`. The note in atlas-foundations.ts says so.
+ *
+ * It tightened the gate one step further down, and this time on material
+ * authored in this very file: `plane-vectors` used to gate on
+ * `roots-and-irrationals` and `decimal-representation`, because
+ * `gatingPrerequisitesOf` looked through the unwritten plane and the unwritten
+ * real line to the nearest teachable ancestors. It now gates on the plane
+ * itself, which is both nearer and the right answer.
+ *
+ * No `encompasses` edge from `plane-vectors` back down to it, and that is a
+ * judgement rather than an omission. The claim such an edge makes is about what
+ * PRACTISING exercises, and measured against the three vector tasks that exist
+ * it does not hold: they are handed components as numbers and never locate a
+ * point, decide a quadrant, or subtract the coordinates of two points. The
+ * same test was applied to `gcd-and-lcm`'s `exercises` claim when arithmetic
+ * was authored, and failed there too.
+ *
+ * ── Why these and not the dot product ─────────────────────────────────────
  *
  * `dot-product-geometry` is the obvious fourth and it is left mapped, because
  * the half of it worth teaching is `a·b = |a||b|cos θ` — the claim that a
@@ -53,17 +89,217 @@ import type { Concept, ConceptEdge, ConceptOntology, Subject } from './types'
 
 const subject: Subject = {
   id: 'vectors-and-independence',
-  name: 'Vectors and independence',
+  name: 'The plane, vectors and independence',
   covers:
-    'Vectors as displacements, linear combinations and span, and the condition that makes a ' +
-    'set of them non-redundant. Components throughout — nothing about the dot product or ' +
-    'angles, which need trigonometry this build cannot rule, and nothing in three dimensions.',
+    'The plane as pairs of numbers, then vectors as displacements across it, linear ' +
+    'combinations and span, and the condition that makes a set of them non-redundant. ' +
+    'Components throughout — nothing about the dot product or angles, which need trigonometry ' +
+    'this build cannot rule, and nothing in three dimensions.',
   medium: 'theorem',
   facetName: 'Concept',
   facetDoes: 'Which concept the statement has to be about.',
 }
 
 const CONCEPTS: Concept[] = [
+  {
+    id: 'cartesian-plane',
+    name: 'The Cartesian plane',
+    subjectId: subject.id,
+    scope: {
+      id: 'cartesian-plane',
+      label: 'The Cartesian plane',
+      hint: 'cartesian coordinates axes quadrant ordered pair',
+      // Carried over unchanged from the map node. It was written title-shaped
+      // and already passes the over-broad check in tests/atlas.mjs, so the
+      // promotion is not the moment to start editing it — `/coordinate/i`
+      // would claim every coordinate-geometry article on the map.
+      match: /\bcartesian coordinate|\bcoordinate system\b/i,
+    },
+    fidelity: 'checked',
+    objectives: [
+      {
+        id: 'read-a-point-from-its-pair',
+        statement:
+          'Name the point a pair of numbers refers to, say which quadrant it is in from the ' +
+          'signs alone, and say why swapping the entries moves it.',
+        taskKinds: ['evaluate', 'justify'],
+      },
+      {
+        id: 'measure-with-coordinates',
+        statement:
+          'Find the horizontal and vertical separation of two points, and say what the sign of ' +
+          'a difference records that its size does not.',
+        taskKinds: ['evaluate', 'justify'],
+      },
+    ],
+    knowledgePoints: [
+      {
+        id: 'a-point-is-an-ordered-pair',
+        conceptId: 'cartesian-plane',
+        statement:
+          'Two number lines crossing at a shared zero turn a point into a pair of numbers: how ' +
+          'far across, then how far up. The pair is ORDERED, so (3, 5) and (5, 3) are different ' +
+          'points — and that convention is most of the content of the idea, because it is what ' +
+          'makes "the point" and "the numbers" interchangeable.',
+        position: 1,
+        // No automaticity target. This point is the distinction between a pair
+        // and a set, and answering it fast is not the skill.
+        workedExample: {
+          problem:
+            'P = (3, 5) and Q = (5, 3). Show they are different points by evaluating the ' +
+            'difference of their first coordinates.',
+          subgoals: [
+            {
+              label: 'Read each pair in the agreed order',
+              detail:
+                'The first entry is the distance across, the second the distance up. So P is 3 ' +
+                'across and 5 up, and Q is 5 across and 3 up.',
+              socratic:
+                'Both of these points are built from a 3 and a 5. What has to be agreed about ' +
+                'those two numbers before either pair refers to anywhere at all?',
+            },
+            {
+              label: 'Compare one coordinate',
+              detail: 'The first coordinates are 3 and 5, and 3 − 5 = −2.',
+              socratic:
+                'There are four numbers in front of you and two points to tell apart. Which ' +
+                'single comparison is already enough to decide it, and what does that ' +
+                'comparison come to?',
+            },
+            {
+              label: 'What one disagreement proves',
+              detail:
+                'Two points are equal only when BOTH coordinates agree, so one disagreement ' +
+                'settles it: −2 ≠ 0, so P ≠ Q. P sits left of Q and higher up — the swap moved ' +
+                'the point rather than renaming it.',
+              socratic:
+                'Your difference is not zero, and you have not looked at the second ' +
+                'coordinates yet. How much of the comparison is still outstanding, and why?',
+            },
+          ],
+          answer: '−2 — non-zero, so P and Q are different points',
+        },
+      },
+      {
+        id: 'the-signs-name-the-quadrant',
+        conceptId: 'cartesian-plane',
+        statement:
+          'The axes cut the plane into four quadrants, and which one a point is in is decided by ' +
+          'the signs of its coordinates and nothing else. This is the first time a question ' +
+          'about where something IS gets answered by looking at an expression instead of at a ' +
+          'picture.',
+        position: 2,
+        automaticityTarget: 15_000,
+        workedExample: {
+          problem: 'Which quadrant is P = (−4, 7) in? Start from the product of its coordinates.',
+          subgoals: [
+            {
+              label: 'Multiply the coordinates to compare their signs',
+              detail:
+                '(−4)(7) = −28. A negative product means the two coordinates have opposite ' +
+                'signs; a positive one would mean they agree.',
+              socratic:
+                'You want to know whether these two coordinates agree in sign. Which single ' +
+                'operation on the pair answers that without telling you anything about their ' +
+                'sizes, and what sign does it return here?',
+            },
+            {
+              label: 'Opposite signs leaves two quadrants, not one',
+              detail:
+                'Opposite signs rule out quadrant I, which is (+, +), and quadrant III, which ' +
+                'is (−, −). That leaves II at (−, +) and IV at (+, −). The product has halved ' +
+                'the question and cannot finish it.',
+              socratic:
+                'The product says the signs differ. Of the four quadrants, how many are still ' +
+                'possible — and what is it about a single product that stops it narrowing ' +
+                'things any further?',
+            },
+            {
+              label: 'Either coordinate alone decides between the two',
+              detail:
+                'The second coordinate is 7, which is positive, so P is above the horizontal ' +
+                'axis: quadrant II. The first coordinate settles it the same way, being −4 and ' +
+                'so left of the vertical axis.',
+              socratic:
+                'Quadrants II and IV sit on opposite sides of the horizontal axis. Which of ' +
+                "P's two numbers tells you which side it is on, and what does it say?",
+            },
+            {
+              label: 'Why nothing was plotted',
+              detail:
+                'The region was decided by the signs of a pair of numbers. That is the trade ' +
+                'the plane offers in both directions — a geometric question becomes an ' +
+                'arithmetic one, and the arithmetic does not care how large the numbers are.',
+              socratic:
+                'You named the region without drawing anything. What did you read instead — and ' +
+                'what does that let you do with a point whose coordinates are far too large to ' +
+                'fit on a page?',
+            },
+          ],
+          answer: 'Quadrant II — the product −28 shows the signs differ, and the positive second coordinate picks II over IV',
+        },
+      },
+      {
+        id: 'separation-is-one-axis-at-a-time',
+        conceptId: 'cartesian-plane',
+        statement:
+          'The horizontal gap between two points is the difference of their first coordinates, ' +
+          'and the vertical gap is the difference of their seconds. The two axes never interfere, ' +
+          'which is why a position in the plane can be handled as two independent numbers — and ' +
+          'it is the same bookkeeping the next concept calls components.',
+        position: 3,
+        automaticityTarget: 15_000,
+        workedExample: {
+          problem:
+            'P = (−4, 7) and Q = (2, 7). Find the horizontal separation of P and Q by evaluating ' +
+            'the difference of the first coordinates.',
+          subgoals: [
+            {
+              label: 'Subtract the first coordinates',
+              detail: '2 − (−4) = 2 + 4 = 6, so the horizontal separation is 6.',
+              socratic:
+                'The two points sit at −4 and at 2 along the horizontal axis, so the gap ' +
+                'between them crosses zero. What does subtracting a negative do to the ' +
+                'arithmetic, and what gap does it leave you with?',
+            },
+            {
+              label: 'Do the other axis separately',
+              detail: '7 − 7 = 0. There is no vertical gap at all — both points are the same height.',
+              socratic:
+                'Now the second coordinates, which are both 7. What does their difference come ' +
+                'to, and what does that tell you about how the two points sit relative to the ' +
+                'horizontal axis?',
+            },
+            {
+              label: 'Read the two numbers together',
+              detail:
+                'Six across and nothing up: P and Q lie on one horizontal line, 6 apart. The ' +
+                'distance between the points is 6 only BECAUSE the vertical gap vanished; with ' +
+                'both gaps non-zero the two numbers would not combine by addition, which is ' +
+                'what the next concept needs Pythagoras for.',
+              socratic:
+                'You have two gaps now, one across and one up. What is the distance between the ' +
+                'points themselves, and what would have gone wrong with reading it off a single ' +
+                'one of those numbers if the vertical gap had come to 3 instead of 0?',
+            },
+            {
+              label: 'The order of subtraction is a sign, not a mistake',
+              detail:
+                '−4 − 2 = −6 rather than 6. The size is the separation either way; the sign ' +
+                'records which direction you travelled. Keeping it is what turns a gap into a ' +
+                'displacement, and a displacement is exactly what the next concept calls a ' +
+                'component.',
+              socratic:
+                'Subtracting the other way round gives −6, and both answers describe the same ' +
+                'pair of points. What is the minus sign carrying that a bare distance does not?',
+            },
+          ],
+          answer: '6',
+        },
+      },
+    ],
+  },
+
   {
     id: 'plane-vectors',
     name: 'Vectors in the plane',
@@ -449,8 +685,26 @@ const CONCEPTS: Concept[] = [
  * IS a determinant and says so in prose, but an edge would close a cycle
  * through `matrices-and-maps` and cost `teachingOrder` its answer for every
  * subject.
+ *
+ * The first edge below used to live in `coordinate-geometry.links`, because
+ * `cartesian-plane` was a map node and only one end was authored. Promoting
+ * the plane into this subject put both ends here, so the edge is declared on
+ * the concept that depends on it like any other — and the `links` entry was
+ * removed rather than left in place, since two identical edges in the composed
+ * graph is not a redundancy the loader would notice. Its rationale came with
+ * it; it is the reason the plane is the first concept and not an aside.
  */
 const EDGES: ConceptEdge[] = [
+  {
+    id: 'cartesian-plane->plane-vectors',
+    from: 'cartesian-plane',
+    to: 'plane-vectors',
+    kind: 'prerequisite',
+    promotedBy: 'author:vectors-and-independence',
+    rationale:
+      'Components are coordinates read as a displacement, so the plane and its axes have to ' +
+      'mean something before a vector can be written as a pair.',
+  },
   {
     id: 'plane-vectors->vectors-and-spans',
     from: 'plane-vectors',

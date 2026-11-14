@@ -11,6 +11,7 @@ import { conceptById } from '@/lib/concepts/registry'
 import { TRAVERSAL_GAME } from '@/lib/concepts/traversal'
 import { MASTERY_FLOOR } from '@/lib/concepts/scheduling'
 import { practisableConcepts } from '@/lib/concepts/tasks'
+import { openingForPoint } from '@/lib/concepts/socratic'
 import ConceptBrowser from '@/components/concepts/ConceptBrowser'
 import ClaimsList from '@/components/concepts/ClaimsList'
 import ConceptGraph from '@/components/concepts/ConceptGraph'
@@ -19,6 +20,7 @@ import PracticeChat from '@/components/concepts/PracticeChat'
 import PracticePanel, { type PracticeTaskView } from '@/components/concepts/PracticePanel'
 import ReviewQueue from '@/components/concepts/ReviewQueue'
 import RpnCalculator from '@/components/concepts/RpnCalculator'
+import SocraticWalk from '@/components/concepts/SocraticWalk'
 import Scratchpad, { type ScratchpadHandle } from '@/components/concepts/Scratchpad'
 import TraversalMap, { type TraversalView } from '@/components/concepts/TraversalMap'
 
@@ -40,7 +42,7 @@ export const dynamic = 'force-dynamic'
  * scratchpad is the surface feature with no CAS behind it.
  */
 
-type Tab = 'practice' | 'concepts' | 'review' | 'tools'
+type Tab = 'practice' | 'concepts' | 'review' | 'tutor' | 'tools'
 
 /**
  * Display names for every subject in the composed atlas — the mapped areas and
@@ -204,6 +206,26 @@ export default function LearnPage() {
    */
   const [focusTaskId, setFocusTaskId] = useState<string | null>(null)
   /**
+   * What tutor mode should lead the learner through.
+   *
+   * Here for the same reason `focusTaskId` is: the request crosses a tab
+   * boundary, so something above both tabs has to hold it while the tab
+   * changes. Two shapes because the two callers know different things — a map
+   * knows a concept and offers its worked examples, a queued problem knows the
+   * knowledge point it was generated from and starts that one walk.
+   *
+   * Cleared by nothing. A learner who walks back to the concept map and
+   * returns should find the walk where they left it, and the walk holds no
+   * record anyway — see SocraticWalk's header.
+   */
+  const [walkTarget, setWalkTarget] = useState<{ conceptId?: string; pointId?: string } | null>(null)
+
+  /** A map asked to be led through a concept. Offers its examples. */
+  const leadThroughConcept = useCallback((conceptId: string) => {
+    setWalkTarget({ conceptId })
+    setTab('tutor')
+  }, [])
+  /**
    * Which concept the map is looking at.
    *
    * Lifted out of `ConceptGraph` so the journey list can drive it — the two
@@ -330,7 +352,8 @@ export default function LearnPage() {
   useEffect(() => {
     const q = new URLSearchParams(window.location.search)
     const wanted = q.get('tab')
-    if (wanted === 'practice' || wanted === 'concepts' || wanted === 'review' || wanted === 'tools') {
+    if (wanted === 'practice' || wanted === 'concepts' || wanted === 'review'
+      || wanted === 'tutor' || wanted === 'tools') {
       setTab(wanted)
     }
     const wantedScope = q.get('scope')
@@ -338,7 +361,12 @@ export default function LearnPage() {
       setScope(wantedScope)
     }
     const concept = q.get('concept')
-    if (concept && conceptById(MATHEMATICS, concept)) setLinkedConcept(concept)
+    if (concept && conceptById(MATHEMATICS, concept)) {
+      setLinkedConcept(concept)
+      // ?tab=tutor&concept=<id> is the same link shape /play already uses, and
+      // on the tutor tab a named concept means "offer me its derivations".
+      if (wanted === 'tutor') setWalkTarget({ conceptId: concept })
+    }
   }, [])
 
   return (
@@ -352,33 +380,22 @@ export default function LearnPage() {
             <h1 className='text-base font-semibold'>{TRAVERSAL_GAME.name}</h1>
             <p className='truncate text-xs text-gray-500'>{TRAVERSAL_GAME.tagline}</p>
           </div>
-          <div className='flex items-center gap-2'>
-            {/*
-              Only rendered once the route has told us there is a choice. A picker
-              with one option is noise, and hardcoding the list here would mean
-              adding a subject in two places.
-            */}
-            {(state?.subjects?.length ?? 0) > 1 && (
-              <label className='flex items-center gap-1.5 text-xs text-gray-400'>
-                <span className='sr-only'>Subject</span>
-                <select
-                  value={subject ?? state?.subject?.id ?? ''}
-                  onChange={e => setSubject(e.target.value)}
-                  className='rounded border border-gray-700 bg-gray-900 px-2 py-1 text-xs text-gray-200 focus:border-emerald-700 focus:outline-none'
-                >
-                  {state?.subjects?.map(s => (
-                    <option key={s.id} value={s.id}>{s.name}</option>
-                  ))}
-                </select>
-              </label>
-            )}
-            <ThemeToggle />
-          </div>
+          {/* The subject picker used to sit here, unlabelled, beside the theme
+              toggle — a bare dropdown in the corner with an `sr-only` label,
+              which gave a sighted learner no way to tell what it changed. It
+              decides which problems the session serves, so it now sits at the
+              top of the Practice tab with a visible label. Only the theme
+              toggle is global enough to belong in the header. */}
+          <ThemeToggle />
         </div>
         <nav className='mx-auto flex max-w-4xl gap-1 px-4'>
           {([
             ['practice', 'Practice'],
             ['concepts', 'Concepts'],
+            // Between the maps and the review queue on purpose: a walk is
+            // entered from a map and leaves for a problem, so it sits on the
+            // road between them rather than at the end of the row.
+            ['tutor', 'Tutor'],
             ['review', 'Review'],
             ['tools', 'Scratchpad'],
           ] as [Tab, string][]).map(([id, label]) => (
@@ -467,6 +484,35 @@ export default function LearnPage() {
 
         {tab === 'practice' && state && !state.error && (
           <>
+            {/* Which subject the session serves.
+
+                Here rather than in the header, where it was an unlabelled
+                dropdown next to the theme toggle. It belongs with the problems
+                it governs, and the label has to be visible: "Practising" is the
+                whole explanation of what the control does.
+
+                Still gated on there being a choice — a picker with one option
+                is noise — and the options still come from the route, because
+                hardcoding them here would mean adding a subject in two places.
+                Without this control the route falls back to ONTOLOGIES[0] for
+                everybody and the other six authored subjects are served to
+                nobody, which is the regression its own route comment records
+                having already been fixed once. */}
+            {(state.subjects?.length ?? 0) > 1 && (
+              <label className='flex flex-wrap items-center gap-2 text-xs text-gray-400'>
+                Practising
+                <select
+                  value={subject ?? state.subject?.id ?? ''}
+                  onChange={e => setSubject(e.target.value)}
+                  className='rounded border border-gray-700 bg-gray-900 px-2 py-1 text-xs text-gray-200 focus:border-emerald-700 focus:outline-none'
+                >
+                  {state.subjects?.map(s => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </select>
+              </label>
+            )}
+
             {state.traversal && (
               <TraversalMap
                 traversal={state.traversal}
@@ -483,6 +529,39 @@ export default function LearnPage() {
               onTaskChange={setCurrentTask}
               focusTaskId={focusTaskId}
             />
+
+            {/* The walk, offered from the problem — the direction `convertsTo`
+                does not cover.
+
+                A generated task has no derivation of its own: tasks.ts makes
+                numbers, not steps. So "the example behind this" means the
+                worked example on the same knowledge point, which is the same
+                move in different numbers. Offered only when that example
+                exists, because most of the atlas has none and a button that
+                explains it cannot help is worse than no button. */}
+            {(() => {
+              if (!currentTask) return null
+              const opening = openingForPoint(MATHEMATICS, currentTask.knowledgePointId)
+              if (!opening) return null
+              return (
+                <div className='flex flex-wrap items-center gap-2 rounded-lg border border-gray-800 bg-gray-900 px-3 py-2 text-[11px]'>
+                  <span className='text-gray-400'>
+                    Stuck before you start? There is a worked example on this knowledge point —
+                    {' '}{opening.steps} step{opening.steps === 1 ? '' : 's'}, asked one at a time.
+                  </span>
+                  <button
+                    onClick={() => {
+                      setWalkTarget({ pointId: opening.knowledgePointId })
+                      setTab('tutor')
+                    }}
+                    title='Be led through the example in different numbers. Nothing there is marked — this problem is what gets ruled.'
+                    className='ml-auto rounded-full border border-sky-700/60 px-2 py-0.5 text-sky-200 hover:bg-sky-900/40'
+                  >
+                    lead me through the example
+                  </button>
+                </div>
+              )
+            })()}
 
             {/* The scratchpad and the tutor sit WITH the problem rather than on
                 a separate tab. Working something out is part of answering, and
@@ -663,6 +742,10 @@ export default function LearnPage() {
                 areaNames={AREA_NAMES}
                 queuedTasks={state?.tasks ?? []}
                 onPractise={id => { setFocusTaskId(id); setTab('practice') }}
+                /* The other half of a step: be set its problem, or be led
+                   through its worked example first. Offered per step because
+                   that is where a learner is deciding what to do about one. */
+                onLeadThrough={leadThroughConcept}
                 /* Showing a step means showing it on a graph that contains
                    it, so the scope follows the click — this leaves the journey
                    map for the atlas with that concept selected. */
@@ -683,6 +766,7 @@ export default function LearnPage() {
                 // it. Not a per-concept generator — see the prop note.
                 queuedTasks={state?.tasks ?? []}
                 onPractise={id => { setFocusTaskId(id); setTab('practice') }}
+                onLeadThrough={leadThroughConcept}
                 selectedId={selectedConcept}
                 onSelectedChange={setSelectedConcept}
               />
@@ -734,6 +818,21 @@ export default function LearnPage() {
         {/* Reloading the session on resolve keeps the badge and the practice set
             honest: settling a review can move strength, which changes what is
             introducible and therefore what the next set contains. */}
+        {/* Always the composed atlas, for JourneyMap's reason: a walk is looked
+            up by knowledge point across every subject, and the practised
+            subject would resolve a concept from the other one to nothing. */}
+        {tab === 'tutor' && (
+          <SocraticWalk
+            ontology={MATHEMATICS}
+            target={walkTarget}
+            concepts={state?.progress?.concepts ?? []}
+            masteryFloor={MASTERY_FLOOR}
+            queuedTasks={state?.tasks ?? []}
+            onPractise={id => { setFocusTaskId(id); setTab('practice') }}
+            onSelectConcept={id => { setScope('atlas'); setSelectedConcept(id); setTab('concepts') }}
+          />
+        )}
+
         {tab === 'review' && <ReviewQueue onResolved={load} />}
 
         {tab === 'tools' && (

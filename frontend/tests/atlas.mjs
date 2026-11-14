@@ -265,31 +265,61 @@ t('place value is a root of the whole map, and was not teachable before',
   roots(MATHEMATICS).includes('place-value') && isTeachable(MATHEMATICS, 'place-value'))
 t('the authored arithmetic ids appear exactly once each in the composed concept list',
   ['place-value', 'integer-arithmetic', 'order-of-operations', 'negative-numbers', 'divisibility',
-    'fraction-arithmetic', 'prime-factorisation', 'gcd-and-lcm', 'roots-and-irrationals']
+    'fraction-arithmetic', 'prime-factorisation', 'gcd-and-lcm', 'roots-and-irrationals',
+    'decimal-representation']
     .every(id => MATHEMATICS.concepts.filter(c => c.id === id).length === 1))
 t('and they carry their own subject, not the area they left',
-  MATHEMATICS.concepts.filter(c => c.subjectId === 'arithmetic-foundations').length === 9)
+  MATHEMATICS.concepts.filter(c => c.subjectId === 'arithmetic-foundations').length === 10)
 /*
- * The cross-boundary example moved up one level when `prime-factorisation` was
- * promoted, and the replacement is deliberately the node that used to sit
- * BESIDE it rather than another arbitrary one.
+ * This cross-boundary example has now moved up twice, and the reason is worth
+ * stating once rather than re-deriving each time: the illustration has to be a
+ * node STILL ON THE MAP that names an authored concept in its own `needs`, so
+ * every promotion of the current exemplar retires it.
  *
- * `prime-factorisation` was the illustration here while it was a map node
- * needing an authored concept. It is authored now, so the same claim has to be
- * made about something still on the map — and `decimal-representation` names
- * both `fraction-arithmetic` and `prime-factorisation` in its own `needs`,
- * which makes it one node resting on two different promotions. That is the
+ * `prime-factorisation` was the first. It was replaced by
+ * `decimal-representation`, which named both `fraction-arithmetic` and
+ * `prime-factorisation` — one node resting on two separate promotions, the
  * strongest available form of "the edge survived the move".
  *
- * The edge the promotion DID strand — `divisibility → prime-factorisation`,
- * which the node itself declared — is asserted below, because it now has to be
- * carried by the subject rather than by the area.
+ * `decimal-representation` is itself authored now, so the claim moves again,
+ * and `real-number-line` is the successor that keeps the two-promotion form
+ * intact: it declares `needs: ['roots-and-irrationals', 'decimal-representation']`
+ * and BOTH of those are now authored concepts in a different file. It is also
+ * the last node in `NUMBER_AND_ARITHMETIC` that can play this role on two
+ * edges, which is itself a reading of how far that area has been written out.
+ *
+ * `absolute-value` stays as the one-edge case alongside it, since a single
+ * surviving edge and a pair of them fail differently — a bug in
+ * `composeAtlas`'s edge resolution could drop one and keep the other.
+ *
+ * The edges each promotion DID strand are asserted below, because they have to
+ * be carried by the subject rather than by the area.
  */
 t('the nodes that used to need them still do, across the file boundary',
   prerequisitesOf(MATHEMATICS, 'absolute-value').includes('negative-numbers')
-  && prerequisitesOf(MATHEMATICS, 'decimal-representation').includes('fraction-arithmetic')
+  && prerequisitesOf(MATHEMATICS, 'real-number-line').includes('roots-and-irrationals')
+  && prerequisitesOf(MATHEMATICS, 'real-number-line').includes('decimal-representation'),
+  prerequisitesOf(MATHEMATICS, 'real-number-line').join(', '))
+/*
+ * The three edges INTO the newly promoted node, all declared by nodes that
+ * stayed. This is the case that needed no `links` entry at all — see the
+ * removal note in atlas-foundations.ts — so it is the one most likely to be
+ * broken silently by a change to edge resolution, since nothing in the area
+ * file mentions it.
+ */
+t('and the three nodes that still need the promoted decimals all reach it',
+  ['percent', 'real-number-line', 'scientific-notation'].every(id =>
+    prerequisitesOf(MATHEMATICS, id).includes('decimal-representation')),
+  ['percent', 'real-number-line', 'scientific-notation']
+    .map(id => `${id}: ${prerequisitesOf(MATHEMATICS, id).join('/')}`).join(' | '))
+t('and the decimals\' own needs were restated inside the subject, not dropped',
+  prerequisitesOf(MATHEMATICS, 'decimal-representation').includes('fraction-arithmetic')
   && prerequisitesOf(MATHEMATICS, 'decimal-representation').includes('prime-factorisation'),
   prerequisitesOf(MATHEMATICS, 'decimal-representation').join(', '))
+t('so the decimals are teachable and gate what the map says they gate',
+  isTeachable(MATHEMATICS, 'decimal-representation')
+  && gatingPrerequisitesOf(MATHEMATICS, 'scientific-notation').includes('decimal-representation'),
+  gatingPrerequisitesOf(MATHEMATICS, 'scientific-notation').join(', '))
 t('and a promoted node\'s own needs were restated inside the subject, not dropped',
   prerequisitesOf(MATHEMATICS, 'prime-factorisation').includes('divisibility'),
   prerequisitesOf(MATHEMATICS, 'prime-factorisation').join(', '))
@@ -555,12 +585,46 @@ group('vectors gated matrices, which is what authoring underneath means')
 const VEC_IDS = new Set(
   MATHEMATICS.concepts.filter(c => c.subjectId === 'vectors-and-independence').map(c => c.id),
 )
-t('the subject contributes three concepts', VEC_IDS.size === 3, `${VEC_IDS.size}`)
+t('the subject contributes four concepts', VEC_IDS.size === 4, `${VEC_IDS.size}`)
 t('matrices now gates on vectors, not through them',
   gatingPrerequisitesOf(MATHEMATICS, 'matrices-and-maps').includes('vectors-and-spans'),
   gatingPrerequisitesOf(MATHEMATICS, 'matrices-and-maps').join(', '))
 t('and the gate it names is teachable, so it is somewhere to go',
   gatingPrerequisitesOf(MATHEMATICS, 'matrices-and-maps').every(p => isTeachable(MATHEMATICS, p)))
+
+/**
+ * THE PLANE WAS PROMOTED INTO THIS SUBJECT, AND IT TIGHTENED THE GATE AGAIN.
+ *
+ * `cartesian-plane` was a node of `coordinate-geometry` and is now the first
+ * concept of this ontology. The count above is the assertion that catches the
+ * collision half of that move — `atlasProblems` would reject the node if it had
+ * been left behind, and a fifth concept here would mean somebody added one
+ * without reading this group.
+ *
+ * What is asserted below is the half a count cannot see. Before the promotion
+ * `plane-vectors` gated on `roots-and-irrationals` and `decimal-representation`,
+ * because `gatingPrerequisitesOf` looked through the unwritten plane and the
+ * unwritten real line to the nearest teachable ancestors. It should now stop at
+ * the plane, which is both nearer and correct — and the edge it stops on is the
+ * one that moved out of `coordinate-geometry.links` and into this ontology, so
+ * this is also the check that the move did not simply delete it.
+ */
+t('plane-vectors gates on the plane itself, not through it to the arithmetic',
+  gatingPrerequisitesOf(MATHEMATICS, 'plane-vectors').includes('cartesian-plane'),
+  gatingPrerequisitesOf(MATHEMATICS, 'plane-vectors').join(', '))
+t('and the plane is still joined to the arithmetic underneath it, by the two links that replaced it', (() => {
+  const below = allPrerequisitesOf(MATHEMATICS, 'cartesian-plane')
+  return below.includes('real-number-line') && below.includes('negative-numbers')
+})(), allPrerequisitesOf(MATHEMATICS, 'cartesian-plane').join(', '))
+/*
+ * The nodes that stayed in `coordinate-geometry` declared their own edges to
+ * the plane, so those survive the promotion untouched. Asserted because the
+ * symmetric case is the documented trap: the edges the plane itself declared
+ * did NOT survive, and had to be rewritten as `links`.
+ */
+t('the nodes left in the coordinate area still reach the promoted plane',
+  prerequisitesOf(MATHEMATICS, 'distance-and-midpoint').includes('cartesian-plane')
+  && prerequisitesOf(MATHEMATICS, 'plane-transformations').includes('cartesian-plane'))
 
 /**
  * The same backwards check the functions group makes: authoring must not reach
@@ -781,20 +845,29 @@ group('promoting a node out of the map keeps its edges')
 const AUTHORED_IDS = new Set(ONTOLOGIES.flatMap(o => o.concepts.map(c => c.id)))
 const atlasRoots = roots(MATHEMATICS)
 /**
- * The one authored concept that is SUPPOSED to be a root.
+ * The authored concepts that are SUPPOSED to be roots.
  *
  * `place-value` is where arithmetic begins and arithmetic is the floor of the
  * map — it is `ONTOLOGIES[0]`'s first concept precisely because, as that array's
  * comment puts it, "arithmetic genuinely is met first". So it has nothing behind
  * it by design, and this assertion found it the moment it was written.
  *
+ * `points-lines-angles` is the second, and it is the case the list was built
+ * for. It was a root of the map BEFORE it was authored: the node carried no
+ * `needs`, because the undefined terms and the first angle facts rest on
+ * nothing earlier in mathematics. So nothing was lost in its promotion, and
+ * the assertion going red was the check doing its job — asking a human which
+ * of the two kinds of rootless concept this is. The answer is on record in
+ * ontology-geometry.ts, including why no edge down to `integer-arithmetic` was
+ * invented to make the figure tidier.
+ *
  * Named rather than excluded by a rule, because "has no prerequisites" is the
  * symptom shared by the legitimate bottom of the map and by a concept whose edge
  * was lost in a promotion. Only a human can tell those apart, so the list says
- * which one this is.
+ * which ones these are.
  */
-const AUTHORED_ROOTS = ['place-value']
-t('no authored concept is a root of the composed map, bar the floor of arithmetic',
+const AUTHORED_ROOTS = ['place-value', 'points-lines-angles']
+t('no authored concept is a root of the composed map, bar the two floors on record',
   atlasRoots.filter(id => AUTHORED_IDS.has(id)).every(id => AUTHORED_ROOTS.includes(id)),
   atlasRoots.filter(id => AUTHORED_IDS.has(id)).join(', '))
 t('and that exception is real, so it is not dead text',
@@ -816,6 +889,175 @@ t('the quadratic formula kept the surd prerequisite that crosses into the map',
 t('and everything that depended on it still does',
   dependentsOf(MATHEMATICS, 'quadratic-formula').length > 0,
   dependentsOf(MATHEMATICS, 'quadratic-formula').join(', '))
+
+/**
+ * FOUR NODES WERE PROMOTED OUT OF THIS AREA — THREE OF THEM THE CHEAPEST KIND
+ * THE ATLAS HAS, AND THE FOURTH THE ONE THAT ENDED THE RUN.
+ *
+ * `points-lines-angles`, `triangle-basics`, `congruence` and `similarity` were
+ * the first four nodes of `euclidean-geometry` and are now the four concepts of
+ * `plane-geometry`. The assertions above already cover the collision half of
+ * all four moves — `shippedAtlasProblems` would name any node that had been
+ * left behind — and the rootless half, by naming the angle facts in
+ * `AUTHORED_ROOTS`.
+ *
+ * What is asserted here is where each promotion's stranded edges went, because
+ * that is the part that varied:
+ *
+ *   The angle facts stranded NOTHING. The node declared no `needs` at all, so
+ *   there was nothing to move, and the one edge into it belonged to
+ *   `triangle-basics`, which was still on the map.
+ *
+ *   The triangles then stranded exactly that edge — it was the promoted node's
+ *   own `needs` — and it went to `PLANE_GEOMETRY.edges` rather than to this
+ *   area's `links`, because by then BOTH endpoints were concepts of that
+ *   subject. An area declaring it would be asserting a relation between two
+ *   concepts it no longer contains, and `areaOntology` would filter it back
+ *   out of the area view anyway.
+ *
+ *   `congruence` repeated that case exactly, which is why the cheap shape could
+ *   be called a pattern rather than a coincidence of two nodes. Its own `needs`
+ *   was `['triangle-basics']`, by then already a concept of `plane-geometry`,
+ *   so the stranded edge was internal the moment it was stranded and went to
+ *   the same list.
+ *
+ *   `similarity` BROKE THE PATTERN, and this group previously asserted the
+ *   emptiness that it broke. The node declared two `needs`: `congruence`, which
+ *   was already a concept and so went to `PLANE_GEOMETRY.edges` like the two
+ *   above, and `ratio-and-rate`, which is still a node of
+ *   `NUMBER_AND_ARITHMETIC`. An authored ontology may only name concepts it
+ *   contains, so the second one could not follow the first and came back here
+ *   as this area's first `links` entry.
+ *
+ * The assertion therefore had to CHANGE rather than merely be extended, and it
+ * is worth being explicit that this is not the test having been wrong. "No
+ * links after three departures" was true, was load-bearing, and would have
+ * caught a link added for symmetry. What it also encoded, without saying so,
+ * was that the branch was being authored strictly upward from its root one node
+ * at a time — and that stopped being true at the first promoted node with a
+ * prerequisite outside the line. So what is asserted now is the sharper claim:
+ * this area declares exactly ONE link, it is the cross-area edge `similarity`
+ * stranded, and nothing else has crept in beside it.
+ */
+const EUCLID = AREAS.find(a => a.id === 'euclidean-geometry')
+const DEPARTED = ['points-lines-angles', 'triangle-basics', 'congruence', 'similarity']
+t('the area no longer declares any of the four, and each carries its own subject',
+  DEPARTED.every(id =>
+    EUCLID.nodes.every(n => n.id !== id) && areaOf(MATHEMATICS, id) === 'plane-geometry'),
+  DEPARTED.map(id => `${id}:${areaOf(MATHEMATICS, id)}`).join(' '))
+t('the area asks for exactly one link, and it is the cross-area edge similarity stranded',
+  (EUCLID.links ?? []).length === 1
+  && EUCLID.links[0].from === 'ratio-and-rate'
+  && EUCLID.links[0].to === 'similarity'
+  && !!EUCLID.links[0].because,
+  (EUCLID.links ?? []).map(l => `${l.from}->${l.to}`).join(', '))
+/*
+ * And the edge it rehomed is really in the composed map, which the `links`
+ * shape alone does not establish — a link naming an id nothing resolves would
+ * sit in the file looking correct. This is the half that would catch the edge
+ * being silently dropped, which is the failure the whole rehoming exists to
+ * prevent.
+ */
+t('so similarity still rests on ratio-and-rate in the composed map, across the file boundary',
+  prerequisitesOf(MATHEMATICS, 'similarity').includes('ratio-and-rate'),
+  prerequisitesOf(MATHEMATICS, 'similarity').join(', '))
+/*
+ * The interference `similarity` also stranded, asserted separately because its
+ * loss is the only stranding here that would NOT have shown up as a missing
+ * gate: `interferes_with` constrains selection rather than introduction order,
+ * so dropping it would have quietly freed the scheduler to introduce the two
+ * most confusable concepts in the subject together.
+ */
+t('and the confusedWith it stranded survived as a real interference, with its reason',
+  MATHEMATICS.edges.some(e =>
+    e.kind === 'interferes_with' && !!e.rationale
+    && ((e.from === 'similarity' && e.to === 'congruence')
+      || (e.from === 'congruence' && e.to === 'similarity'))))
+t('both edges between them survived their promotions, rehomed rather than lost',
+  prerequisitesOf(MATHEMATICS, 'triangle-basics').includes('points-lines-angles')
+  && prerequisitesOf(MATHEMATICS, 'congruence').includes('triangle-basics'),
+  `${prerequisitesOf(MATHEMATICS, 'triangle-basics').join(', ')} | `
+  + `${prerequisitesOf(MATHEMATICS, 'congruence').join(', ')}`)
+/*
+ * Authoring tightens the gate, which is the claim every promotion makes and
+ * the first of these made from zero. `triangle-basics` was gated by NOTHING:
+ * `gatingPrerequisitesOf` looked through the unwritten angle node and found no
+ * teachable ancestor behind it, because there was none — the node was a root.
+ * So the whole of school geometry was introducible on a cold account.
+ *
+ * The second promotion moved the same gate up for the three nodes that rest on
+ * the triangles, and that is the half asserted below. `congruence`,
+ * `area-and-perimeter` and `law-of-sines-cosines` each named `triangle-basics`
+ * in their own `needs` while it was empty, so the walk passed through it and
+ * landed back on the angle facts. Each now has two concepts to demonstrate,
+ * and none of those three edges was touched to make it happen.
+ */
+t('the triangles are gated by the angle facts rather than by nothing at all',
+  gatingPrerequisitesOf(MATHEMATICS, 'triangle-basics').join(',') === 'points-lines-angles',
+  gatingPrerequisitesOf(MATHEMATICS, 'triangle-basics').join(', '))
+t('and what rests on the triangles is now gated by them, not through them',
+  ['congruence', 'area-and-perimeter', 'law-of-sines-cosines'].every(id =>
+    gatingPrerequisitesOf(MATHEMATICS, id).includes('triangle-basics')),
+  ['congruence', 'area-and-perimeter', 'law-of-sines-cosines']
+    .map(id => `${id}:[${gatingPrerequisitesOf(MATHEMATICS, id).join(' ')}]`).join(' '))
+/*
+ * The third promotion did the same thing for the four nodes that rest on
+ * `congruence`. Each named it in their own `needs` while it was an empty node,
+ * so the gating walk passed straight through and landed on the triangles; each
+ * now has `congruence` itself to demonstrate. None of those four edges was
+ * touched, which is the edge rule working for the third time.
+ */
+t('and what rests on congruence is now gated by it, not through it',
+  ['geometric-proof', 'similarity', 'quadrilaterals-and-polygons', 'isometries-and-symmetry']
+    .every(id => gatingPrerequisitesOf(MATHEMATICS, id).includes('congruence')),
+  ['geometric-proof', 'similarity', 'quadrilaterals-and-polygons', 'isometries-and-symmetry']
+    .map(id => `${id}:[${gatingPrerequisitesOf(MATHEMATICS, id).join(' ')}]`).join(' '))
+/*
+ * The fourth promotion moved the gate for just one node, and it is the smallest
+ * fan-out of the four: `pythagoras` is the only node in the area that names
+ * `similarity` in its `needs`. Asserted anyway, because one is the count at
+ * which a dropped edge is easiest to miss — the three-node and four-node cases
+ * above would each have left an obvious hole.
+ */
+t('and what rests on similarity is now gated by it, not through it',
+  gatingPrerequisitesOf(MATHEMATICS, 'pythagoras').includes('similarity'),
+  gatingPrerequisitesOf(MATHEMATICS, 'pythagoras').join(', '))
+t('all four promoted concepts are teachable in the composed map, with their material intact',
+  DEPARTED.every(id => isTeachable(MATHEMATICS, id) && isPractisable(MATHEMATICS, id)))
+/*
+ * The area's own root walks upward as the branch is authored. It was the
+ * triangles after the first promotion and `congruence` after the second, and
+ * the third replaced that single root with the FOUR nodes that rested on it.
+ *
+ * So the invariant is not "one root that moves up" — that is what it looked
+ * like for two promotions, and it was a coincidence of those nodes each having
+ * a single dependent in the area. Promoting a node fans the roots out to
+ * everything in the area that stood on it. What is actually invariant, and
+ * what is asserted here, is that the area's roots are exactly the remaining
+ * nodes whose prerequisites have all left it: the area view keeps naming its
+ * own boundary, however many nodes that boundary runs through.
+ */
+const euclidRoots = roots(areaOntology(EUCLID))
+t('the area viewed alone shows exactly the nodes whose prerequisites have all left it',
+  euclidRoots.slice().sort().join(',') === EUCLID.nodes
+    .filter(n => (n.needs ?? []).every(p => EUCLID.nodes.every(m => m.id !== p)))
+    .map(n => n.id).sort().join(','),
+  euclidRoots.join(', '))
+/*
+ * Named membership rather than a count, and the fourth promotion is why that
+ * matters. It swapped `similarity` out of this set for `pythagoras` — the one
+ * node that rested on it, both of whose `needs` are now outside the area — so
+ * the set went from four members to four different members. A test written as
+ * `length === 4` would have passed without noticing that every claim it was
+ * making about the boundary had changed.
+ */
+t('and after the fourth promotion similarity has been replaced in that set by pythagoras',
+  euclidRoots.slice().sort().join(',')
+  === 'geometric-proof,isometries-and-symmetry,pythagoras,quadrilaterals-and-polygons',
+  euclidRoots.join(', '))
+t('and the departed nodes are not roots of it, because they are not in it',
+  euclidRoots.every(id => !DEPARTED.includes(id)),
+  euclidRoots.join(', '))
 
 group('every checked concept really carries a pattern')
 /*

@@ -172,10 +172,18 @@ const CONCEPTS: Concept[] = [
                 'The placeholder becomes (x + 1), brackets and all: 3(x + 1) − 2. Dropping the ' +
                 'brackets gives 3x + 1 − 2, which is a different rule — the commonest error here ' +
                 'and the same one as subtracting a bracket.',
+              socratic:
+                'Last time the thing going into the placeholder was a single number; this time ' +
+                'it is the two-term expression x + 1, and the rule triples its input before ' +
+                'subtracting. What exactly is it that gets tripled here, and what different ' +
+                'rule would 3x + 1 − 2 be?',
             },
             {
               label: 'Now put the number in',
               detail: 'At x = 4 the input is 5, so 3·5 − 2 = 13.',
+              socratic:
+                'The input to f was written as x + 1, and now x is 4. What does f actually ' +
+                'receive — and what makes that different from the 4 you were handed?',
             },
             {
               label: 'Check it against the other order',
@@ -183,6 +191,10 @@ const CONCEPTS: Concept[] = [
                 'f(4) = 10 and f(5) = 13. f(x + 1) at x = 4 must equal f(5), and it does — which ' +
                 'is the check that the substitution was done to the input rather than to the ' +
                 'output.',
+              socratic:
+                'f(4) is 10, and this came out as 13 — a gap of 3, not 1. If the + 1 had been ' +
+                'applied to the output of f instead of to its input, what would you have got, ' +
+                'and which of the two does 13 rule out?',
             },
           ],
           answer: '13',
@@ -205,12 +217,20 @@ const CONCEPTS: Concept[] = [
               detail:
                 'The positive branch is (1 − x²)^(1/2) and the negative branch is its negation. ' +
                 'At x = 0 those are 1 and −1.',
+              socratic:
+                'Every rule you have substituted into so far had a single expression after the ' +
+                'equals sign; this one has a ± in front of the root. What does that symbol stand ' +
+                'for here, and what does it hand you at x = 0?',
             },
             {
               label: 'Measure the gap',
               detail:
                 'Subtracting one from the other gives 1 − (−1) = 2. A gap of zero would mean the ' +
                 'two branches agreed and there was only ever one output.',
+              socratic:
+                'You now have 1 and −1 sitting at the same input. Subtracting one from the other ' +
+                'turns "these look different" into a number — what would that number have to be ' +
+                'for the two branches to have been the same rule all along?',
             },
             {
               label: 'Read off the conclusion',
@@ -218,12 +238,20 @@ const CONCEPTS: Concept[] = [
                 'The gap is not zero, so x = 0 has two outputs and the relation is not a ' +
                 'function. This is exactly what the vertical-line test draws: a vertical line at ' +
                 'x = 0 crosses the circle twice.',
+              socratic:
+                'The gap came out as 2 rather than 0. Which clause of the definition from the ' +
+                'first example has that broken, and what would a vertical line drawn at x = 0 do ' +
+                'to this curve?',
             },
             {
               label: 'And how it is repaired',
               detail:
                 'Keeping only the positive branch gives a function. That is a restriction, not a ' +
                 'discovery — the circle did not become a function, a part of it was chosen.',
+              socratic:
+                'Discarding the negative branch leaves something that no longer fails that test, ' +
+                'and yet the circle itself is exactly the equation it was before. So what was it ' +
+                'that actually changed, and what did the repair cost you?',
             },
           ],
           answer: 'The gap is 2, so there are two outputs at x = 0 and it is not a function',

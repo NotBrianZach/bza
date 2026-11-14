@@ -50,6 +50,7 @@ function build() {
     join('lib', 'concepts', 'ontology.ts'),
     join('lib', 'concepts', 'registry.ts'),
     join('lib', 'concepts', 'questions.ts'),
+    join('lib', 'concepts', 'socratic.ts'),
     join('lib', 'concepts', 'rpn.ts'),
     join('lib', 'concepts', 'scheduling.ts'),
     join('lib', 'concepts', 'tasks.ts'),
@@ -80,6 +81,7 @@ function build() {
     generators: require(join(outDir, 'concepts', 'generators.js')),
     numerals: require(join(outDir, 'concepts', 'numerals.js')),
     questions: require(join(outDir, 'concepts', 'questions.js')),
+    socratic: require(join(outDir, 'concepts', 'socratic.js')),
     ontology: require(join(outDir, 'concepts', 'ontology.js')),
     registry: require(join(outDir, 'concepts', 'registry.js')),
     rpn: require(join(outDir, 'concepts', 'rpn.js')),
@@ -127,6 +129,10 @@ const {
   isInterrogative, questionsForPoint, questionChains, allQuestions, questionById,
   questionCoverage, questionCoverageLine, socraticContext, chainsForConcept,
 } = M.questions
+const {
+  openingsForConcept, openingForPoint, chainForPoint, unmetBefore, walkTerminus,
+  revealOf, unphrasedQuestion, socraticPrompt, nudgePrompt, promptFor,
+} = M.socratic
 const {
   signatureOf, sameShape, sameCoarseShape, isDiscriminating, properSubtrees, describeShape,
   shapedTasks, deriveEdges, deriveInterference, compareWithAuthored, asCandidateEdges,
@@ -2200,7 +2206,7 @@ t('a witness at an excluded point fails validation', (() => {
 const X2 = EXPONENTS_AND_LOGARITHMS
 
 group('a second subject the schema was not designed around')
-t('it is registered', ONTOLOGIES.length === 7 && getOntology('exponents-and-logarithms') === X2)
+t('it is registered', ONTOLOGIES.length === 8 && getOntology('exponents-and-logarithms') === X2)
 t('it reports no structural problems', ontologyProblems(X2).length === 0, JSON.stringify(ontologyProblems(X2)))
 t('its fidelity claims match what its options can do', fidelityMismatches(X2).length === 0)
 t('it has a prerequisite-respecting teaching order', teachingOrder(X2)?.length === X2.concepts.length)
@@ -2496,8 +2502,8 @@ t('and it is the subject with a root that needs nothing',
   roots(ONTOLOGIES[0]).some(id => gatingPrerequisitesOf(ONTOLOGIES[0], id).length === 0))
 t('and resolves by id', getOntology('arithmetic-foundations') === A)
 t('it has no internal faults', ontologyProblems(A).length === 0, ontologyProblems(A).join('; '))
-t('nine concepts, twenty-seven knowledge points',
-  A.concepts.length === 9 && allKnowledgePoints(A).length === 27,
+t('ten concepts, thirty knowledge points',
+  A.concepts.length === 10 && allKnowledgePoints(A).length === 30,
   `${A.concepts.length} concepts, ${allKnowledgePoints(A).length} points`)
 t('every concept is teachable — this is a syllabus, not a map',
   A.concepts.every(c => isTeachable(A, c.id)))
@@ -2524,8 +2530,8 @@ const coldSet = assemble({ ontology: A, strengths: COLD, now: '2026-10-23T12:00:
 t('a cold account gets three tasks, all from place value',
   coldSet.tasks.length === 3 && coldSet.tasks.every(x => conceptOfPoint(A, x.knowledgePointId).id === 'place-value'),
   `${coldSet.tasks.length} tasks`)
-t('and the other eight concepts are reported blocked rather than silently absent',
-  coldSet.blocked.length === 8,
+t('and the other nine concepts are reported blocked rather than silently absent',
+  coldSet.blocked.length === 9,
   coldSet.blocked.map(b => b.conceptId).join(', '))
 t('each blocked concept names a TEACHABLE thing to go and do', coldSet.blocked.every(b =>
   b.missing.length > 0 && b.missing.every(m => isTeachable(A, m))))
@@ -2596,16 +2602,22 @@ t('and both limits are named in skipped, not just the one that happened to bind'
 group('the third subject is gradable with no worker')
 const ARITH_TASKS = allKnowledgePoints(A).flatMap(p => tasksForPoint(p.id))
 /*
- * Twenty-eight tasks over twenty-seven points, so this is no longer one
- * apiece. `pull-the-square-out` carries THREE: the split it teaches can now be
+ * Thirty-three tasks over thirty points, so this is no longer one apiece.
+ * `pull-the-square-out` carries THREE: the split it teaches can now be
  * demanded directly (`surd_reduced` + the `asSurd` comparison), and the two
  * older tasks stay because they cover different ground — the square-free part
  * of an integer root, and the one root of a NON-integer that is still exactly
  * rational. The one-per-point floor is asserted separately above, against every
  * point rather than against a total, which is the part that matters.
+ *
+ * `decimal-representation` added three points and three tasks, one apiece. It
+ * wanted a fourth kind and could not have one: what the concept teaches is how
+ * to WRITE a rational number, and 0.125 and 1/8 are the same number, so no
+ * equivalence check can prefer one. Its header in ontology-arithmetic.ts names
+ * the form that would fix it.
  */
-t('thirty tasks, and every point has at least one',
-  ARITH_TASKS.length === 30 && allKnowledgePoints(A).every(p => tasksForPoint(p.id).length > 0),
+t('thirty-three tasks, and every point has at least one',
+  ARITH_TASKS.length === 33 && allKnowledgePoints(A).every(p => tasksForPoint(p.id).length > 0),
   `${ARITH_TASKS.length}`)
 /*
  * NOT "all of them are evaluate" any more, and the change is the point rather
@@ -2624,7 +2636,7 @@ t('thirty tasks, and every point has at least one',
  * arriving here unnoticed is still visible.
  */
 t('two are transform_to_form and the rest evaluate — both graded locally',
-  ARITH_TASKS.filter(x => x.kind === 'evaluate').length === 28
+  ARITH_TASKS.filter(x => x.kind === 'evaluate').length === 31
   && ARITH_TASKS.filter(x => x.kind === 'transform_to_form').length === 2,
   ARITH_TASKS.reduce((acc, x) => ({ ...acc, [x.kind]: (acc[x.kind] ?? 0) + 1 }), {}),
 )
@@ -3009,6 +3021,294 @@ t('the two-readings point carries both halves of the pair',
   === 'identity-difference-1,unknown-check-1',
   tasksForPoint('a-letter-has-two-readings').map(x => x.id).join(','))
 
+// ---------------------------------------------------------------------------
+// The eighth subject: the first angle facts, the triangle, and congruence
+// ---------------------------------------------------------------------------
+
+/**
+ * These assert the CLAIMS IN ontology-geometry.ts's HEADER, for the reason the
+ * two blocks above do it: each is the kind of statement that otherwise rots
+ * into a comment that used to be true.
+ *
+ * `points-lines-angles` was promoted out of the `euclidean-geometry` map area
+ * because it was the only concept on the route of the shortest unfinished
+ * journey whose own prerequisites were not themselves unwritten — it has none.
+ * The journey half of that is checked in tests/journeys.mjs, which is the
+ * harness that resolves routes. What is checkable here is that the material is
+ * real, that the subject rules with no worker, and that the two structural
+ * facts the file leans on — a single concept and no edges — are what it says.
+ */
+const PG = getOntology('plane-geometry')
+
+group('plane-geometry, the first angle facts')
+t('it is registered, and THIRD — registry order is the curriculum order',
+  ONTOLOGIES[2] === PG && PG?.subject.id === 'plane-geometry')
+t('and it displaced neither of the two positions anything depends on',
+  ONTOLOGIES[0] === ARITHMETIC_FOUNDATIONS && ONTOLOGIES[1] === EXPRESSIONS_AND_EQUATIONS)
+t('it has no internal faults', ontologyProblems(PG).length === 0, ontologyProblems(PG).join('; '))
+t('its fidelity claim matches what its option can do', fidelityMismatches(PG).length === 0)
+t('four concepts, three knowledge points each',
+  PG.concepts.length === 4 && allKnowledgePoints(PG).length === 12
+  && PG.concepts.every(c => c.knowledgePoints.length === 3),
+  `${PG.concepts.length} concepts, ${allKnowledgePoints(PG).length} points`)
+t('all four concepts are teachable AND practisable — a syllabus, not four map entries',
+  ['points-lines-angles', 'triangle-basics', 'congruence', 'similarity']
+    .every(id => isTeachable(PG, id) && isPractisable(PG, id)))
+/*
+ * Positions restart per concept rather than running 1..6 through the subject.
+ * `position` is documented as order WITHIN the concept, and the two readings
+ * are indistinguishable while a subject holds one concept — so the second one
+ * is the first chance to get it wrong, and the first draft of it did.
+ */
+t('each concept numbers its own points from 1',
+  PG.concepts.every(c => c.knowledgePoints.map(p => p.position).join(',') === '1,2,3'),
+  PG.concepts.map(c => `${c.id}:${c.knowledgePoints.map(p => p.position).join('')}`).join(' '))
+t('every knowledge point has a task, so no chain is left unable to become evidence',
+  allKnowledgePoints(PG).every(p => tasksForPoint(p.id).length > 0),
+  allKnowledgePoints(PG).filter(p => tasksForPoint(p.id).length === 0).map(p => p.id).join(', '))
+t('every objective names a task kind',
+  PG.concepts.every(c => c.objectives.length > 0 && c.objectives.every(o => o.taskKinds.length > 0)))
+/*
+ * The subject's one edge, and where it came from, because the empty list it
+ * replaced was load-bearing text rather than an unfinished one.
+ *
+ * `points-lines-angles` stranded nothing when it was promoted: it declared no
+ * `needs`, and the one edge pointing INTO it was owned by `triangle-basics`,
+ * still a map node at the time. Promoting the triangles stranded exactly that
+ * edge, since it was the promoted node's own `needs`. It did not go back to
+ * `EUCLIDEAN_GEOMETRY.links` — both endpoints are concepts of this subject
+ * now, so the edge is internal and lives here, and an area asserting it would
+ * have it filtered straight back out by `areaOntology`.
+ *
+ * So the pair of assertions is: this subject owns the edge, and the area still
+ * owns no links. The second half is in tests/atlas.mjs, and together they are
+ * what would catch a later `links` entry added "for symmetry".
+ *
+ * `congruence` then did exactly the same thing a third time — its own `needs`
+ * was `triangle-basics`, already a concept here — so the subject owned a CHAIN
+ * of two edges and the area still owned no links. Asserted as the whole ordered
+ * chain rather than as independent edges, because what matters is that the
+ * concepts are in one line: each promotion has been directly above the last,
+ * and a later edge that forked the subject would pass an edges-exist check
+ * while changing what gates what.
+ *
+ * `similarity` extended the chain to three and then did two things neither of
+ * the promotions before it did, which is why the assertion is now in two parts.
+ *
+ * It stranded a second `needs` that could NOT come here — `ratio-and-rate`, a
+ * node of `NUMBER_AND_ARITHMETIC` — and an authored ontology may only name
+ * concepts it contains. So the area's `links` is no longer empty, and the half
+ * of that pair which lived in tests/atlas.mjs had to change with it. The
+ * prerequisite chain here is unaffected, which is the point of separating them.
+ *
+ * It also stranded a `confusedWith`, so this subject now owns an edge that is
+ * not a prerequisite at all. The chain assertion is therefore taken over the
+ * prerequisites specifically rather than over `PG.edges` wholesale: a bare
+ * `every(e => e.kind === 'prerequisite')` would now fail for a correct
+ * ontology, and relaxing it to "mostly prerequisites" would stop checking the
+ * line. The interference is asserted on its own terms below.
+ */
+const PG_PREREQS = PG.edges.filter(e => e.kind === 'prerequisite')
+t('it declares the three edges its promotions stranded, as one chain pointing upward',
+  PG_PREREQS.length === 3
+  && PG_PREREQS.map(e => `${e.from}->${e.to}`).join(' ')
+    === 'points-lines-angles->triangle-basics triangle-basics->congruence '
+      + 'congruence->similarity',
+  PG.edges.map(e => `${e.from}->${e.to}:${e.kind}`).join(', '))
+/*
+ * The interference the fourth promotion stranded, which is the first edge in
+ * this subject that gates nothing. It constrains SELECTION — never introduce
+ * these two together — and that is exactly why it needs its own assertion: a
+ * missing prerequisite shows up as a missing gate in the walk, and a missing
+ * interference shows up as nothing at all until a learner is handed similarity
+ * and congruence in the same sitting.
+ */
+t('and one interference, the only edge here that gates nothing, with its reason stated',
+  edgesOfKind(PG, 'interferes_with').length === 1
+  && edgesOfKind(PG, 'interferes_with').every(e => !!e.rationale)
+  && /proportional/.test(interferenceReason(PG, 'similarity', 'congruence') ?? ''),
+  PG.edges.filter(e => e.kind !== 'prerequisite').map(e => `${e.from}~${e.to}`).join(', '))
+t('and it reads the same in both directions, since interference is symmetric',
+  interferenceReason(PG, 'similarity', 'congruence')
+  === interferenceReason(PG, 'congruence', 'similarity'))
+t('so the angle facts are still the subject\'s root, and neither of the others is',
+  roots(PG).length === 1 && roots(PG)[0] === 'points-lines-angles',
+  roots(PG).join(', '))
+/*
+ * The chain is three deep now, which is the first time this subject could get
+ * transitivity wrong. `congruence` rests on the angle facts THROUGH the
+ * triangles, and it must not also name them directly: a redundant edge would
+ * be invisible in the gating walk and would quietly make the subject's shape a
+ * claim about two routes rather than one.
+ */
+t('congruence reaches the angle facts only through the triangles',
+  prerequisitesOf(PG, 'congruence').join(',') === 'triangle-basics'
+  && allPrerequisitesOf(PG, 'congruence').includes('points-lines-angles'),
+  prerequisitesOf(PG, 'congruence').join(', '))
+
+group('the eighth subject is gradable with no worker')
+const PG_TASKS = allKnowledgePoints(PG).flatMap(p => tasksForPoint(p.id))
+t('twenty-four tasks, two on each of the twelve points', PG_TASKS.length === 24
+  && allKnowledgePoints(PG).every(p => tasksForPoint(p.id).length === 2),
+  `${PG_TASKS.length}`)
+t('all of them are evaluate — a reason is not a value and not a form, so none asks for one',
+  PG_TASKS.every(x => x.kind === 'evaluate' && x.form === undefined))
+t('every reference is exactly reproducible from the given — no worker consulted',
+  PG_TASKS.every(x => {
+    const at = {}
+    for (const [name, raw] of Object.entries(x.at)) at[name] = parseExpression(raw, [])
+    const truth = exactValue(substitute(parseExpression(x.given, x.variables.map(v => v.name)), at))
+    const claimed = exactValue(parseExpression(x.reference, x.variables.map(v => v.name)))
+    return truth !== null && claimed !== null && showExact(truth) === showExact(claimed)
+  }))
+const pgRulings = await Promise.all(PG_TASKS.map(x => ruleEvaluate(x, x.reference, NO_WORKER)))
+t('a correct answer is ruled correct with no worker configured',
+  pgRulings.every(r => r.verdict.ruling === 'correct'),
+  pgRulings.map((r, i) => `${PG_TASKS[i].id}:${r.verdict?.ruling ?? r.status}`)
+    .filter((_, i) => pgRulings[i].verdict?.ruling !== 'correct').join(', '))
+/*
+ * The two angle sums, as a PAIR. The knowledge point's first subgoal is that
+ * choosing between 180 and 360 is the only geometric decision in the problem,
+ * and no ruling can score that choice — so the one thing the suite can hold is
+ * that both tasks exist, on the same point, with the same shape and different
+ * totals. A single one of them would have drilled the subtraction and left the
+ * choice invisible.
+ */
+t('the two-sums point carries both totals, not just the straight line',
+  tasksForPoint('two-sums-every-angle-chase-uses').map(x => x.id).sort().join(',')
+  === 'full-turn-remainder-1,straight-line-remainder-1',
+  tasksForPoint('two-sums-every-angle-chase-uses').map(x => x.id).join(','))
+t('and they differ only in the total the figure makes',
+  taskById('straight-line-remainder-1').given === '180 - a - b - c'
+  && taskById('full-turn-remainder-1').given === '360 - a - b - c')
+/*
+ * The vertical-angle theorem is 180 − (180 − x) = x, and the task evaluates
+ * one instance of it. Checked at a SECOND value here, because "it came back to
+ * where it started" is the whole content and a single arithmetic coincidence
+ * at the authored input would prove nothing about the claim.
+ */
+t('the vertical-pair difference is zero away from its authored input too', (() => {
+  const task = taskById('vertical-pair-difference-1')
+  const at = { x: parseExpression('37', []) }
+  const value = exactValue(substitute(parseExpression(task.given, ['x']), at))
+  return value !== null && showExact(value) === '0'
+})())
+/*
+ * The error the transversal worked example is built around. 118 is the angle
+ * the slide lands OUTSIDE the strip, so answering it for the one inside is the
+ * mistake of assuming a translated angle stays in the same part of the figure.
+ * It has to rule incorrect rather than inconclusive, or the task teaches
+ * nothing at the only point where it could.
+ */
+t('answering the co-interior task with the angle it is not is settled, not shrugged at',
+  (await ruleEvaluate(taskById('co-interior-remainder-1'), '118', NO_WORKER))
+    .verdict.ruling === 'incorrect')
+/*
+ * The congruence tasks that carry a claim rather than an arithmetic instance,
+ * checked away from their authored inputs for the reason the vertical pair is:
+ * "the difference is 0" is the content, and one coincidence at the authored
+ * values would prove nothing about it.
+ *
+ * `the-third-angle-was-never-free-1` is (a + b + c) − 180, which is 0 for the
+ * angles of ANY triangle — that dependence is the whole reason AAA offers two
+ * independent numbers instead of three. So it is checked on a second triple
+ * with nothing in common with the first.
+ *
+ * `aas-completes-to-asa-1` is the opposite shape and must NOT be generalised
+ * the same way: (180 − a − c) − b is 0 only when b really is the third angle,
+ * which is exactly the claim that the AAS data completed to the given ASA
+ * data. A second triple is checked here too, but a MISMATCHED one is checked
+ * as well, to confirm the task can fail — a difference that were identically
+ * zero would score a learner correct for any angles at all.
+ */
+t('the AAA-dependence task is zero for any triangle, not just the authored one', (() => {
+  const task = taskById('the-third-angle-was-never-free-1')
+  const at = { a: parseExpression('20', []), b: parseExpression('35', []), c: parseExpression('125', []) }
+  const value = exactValue(substitute(parseExpression(task.given, ['a', 'b', 'c']), at))
+  return value !== null && showExact(value) === '0'
+})())
+t('the AAS-completes-to-ASA task is zero when the angles agree and non-zero when they do not', (() => {
+  const task = taskById('aas-completes-to-asa-1')
+  const read = (a, b, c) => {
+    const at = { a: parseExpression(a, []), b: parseExpression(b, []), c: parseExpression(c, []) }
+    const v = exactValue(substitute(parseExpression(task.given, ['a', 'b', 'c']), at))
+    return v === null ? null : showExact(v)
+  }
+  // 180 − 20 − 125 = 35, so the given b of 35 agrees and the difference is 0.
+  // Hand it a b of 36 instead and it must not still read as a match.
+  return read('20', '35', '125') === '0' && read('20', '36', '125') !== '0'
+})())
+/*
+ * The equilateral task is the fixed point of x ↦ (180 − x)/2, and that is the
+ * content rather than the arithmetic: 60 is the only apex angle equal to its
+ * own base angles, which is the same statement as 3x = 180. Asserted as a
+ * fixed point, and asserted to be the ONLY one, because "it returned 60" would
+ * also pass if the expression had been the identity.
+ */
+t('sixty is the one angle the base-angle map sends to itself', (() => {
+  const given = parseExpression(taskById('the-equilateral-fixed-point-1').given, ['x'])
+  const at = v => showExact(exactValue(substitute(given, { x: parseExpression(v, []) })))
+  return at('60') === '60' && at('28') === '76' && at('90') === '45'
+})())
+
+const PG_QUESTIONS = allQuestions(PG)
+t('forty-eight questions, one per subgoal', PG_QUESTIONS.length === 48, `${PG_QUESTIONS.length}`)
+t('every subgoal carries an authored socratic phrasing',
+  allKnowledgePoints(PG).every(p => p.workedExample.subgoals.every(s => !!s.socratic)),
+  allKnowledgePoints(PG).flatMap(p => p.workedExample.subgoals)
+    .filter(s => !s.socratic).map(s => s.label).join(' | '))
+t('and every one of them is interrogative, so all forty-eight count as written',
+  PG_QUESTIONS.every(q => q.authoredAsQuestion)
+  && questionCoverage(PG).authoredAsQuestions === questionCoverage(PG).questions)
+t('while the labels stay imperative — the map draws moves, the tutor asks sentences',
+  allKnowledgePoints(PG).flatMap(p => p.workedExample.subgoals)
+    .every(s => !isInterrogative(s.label)),
+  allKnowledgePoints(PG).flatMap(p => p.workedExample.subgoals)
+    .filter(s => isInterrogative(s.label)).map(s => s.label).join(' | '))
+/*
+ * The judgement types.ts asks for on `automaticityTarget`, asserted because it
+ * is the field most likely to be filled in uniformly by whoever writes the
+ * next concept — and the next concept was written, so this is no longer a
+ * precaution. Taking a known total apart is a fluency skill; the two angle
+ * arguments are not, and timing them would measure typing.
+ *
+ * None of the three triangle points is timed either, and the reason is sharper
+ * than "they are arguments". The triangle's angle sum is the SAME subtraction
+ * from the same 180 that the timed point already measures, so a target on it
+ * would report one skill as two and double its weight in the schedule.
+ *
+ * The three congruence points are untimed for a third reason, and it is the
+ * one that most needed an assertion: the error its first point exists to
+ * prevent is reading a letter order too fast, so a timing target there would
+ * reward the mistake rather than merely measure the wrong thing.
+ */
+t('only the point about fluency is timed, and neither later concept added a second',
+  allKnowledgePoints(PG).filter(p => p.automaticityTarget !== undefined)
+    .map(p => p.id).join(',') === 'two-sums-every-angle-chase-uses',
+  allKnowledgePoints(PG).filter(p => p.automaticityTarget !== undefined).map(p => p.id).join(','))
+/*
+ * No `visualRef` anywhere, and it is the honest absence rather than an
+ * oversight — see the header: this build has no figures, which is also why the
+ * other nine nodes of the area stayed mapped. A placeholder here would be the
+ * one thing the field exists to prevent.
+ *
+ * It is a stronger statement with the triangles in than it was without them.
+ * The angle facts could be argued not to need a figure; a triangle plainly
+ * suggests one, and the three points were chosen so that none of them does —
+ * the angle sum is a total, the inequality is two routes compared as numbers,
+ * and the classification is arithmetic ruling a pair out.
+ *
+ * Congruence is the strongest case of the three and the reason the assertion
+ * is worth keeping. It is the node this area's comment once named as
+ * unwriteable FOR WANT OF A FIGURE, so material for it that still claims no
+ * `visualRef` is the whole argument of that promotion reduced to one check:
+ * what got written is the correspondence, the counting and a triangle matched
+ * with itself, and the parts that genuinely need two triangles drawn — the
+ * proofs of the criteria, and SSA — stayed on the map.
+ */
+t('no knowledge point claims a figure, because there are none to claim',
+  allKnowledgePoints(PG).every(p => p.visualRef === undefined))
+
 rmSync(outDir, { recursive: true, force: true })
 // ---------------------------------------------------------------------------
 /*
@@ -3334,18 +3634,31 @@ t('the authored count is a strict minority, which is the finding',
  * exactly would make writing one look like a regression. What is worth
  * guarding is that the honest split is still being computed and still printed.
  *
- * The companion count below is a floor in the OPPOSITE direction, and so it
- * has to be lowered by hand as subjects come off zero — it was 4 when types.ts
- * named the four, then 3, then 2 once `function-concept` was authored, and is
- * 1 now that `a-vector-is-a-displacement` has taken
- * `vectors-and-independence` off zero. That is maintenance and not a
- * regression, and the figure is still printed either way. Lower it, never
- * delete it: the thing being guarded is that a subject with nothing written
- * stays visible as such instead of being averaged into a single global
- * percentage. `matrices-and-determinants` is the one still at zero.
+ * The companion check below used to be a floor in the OPPOSITE direction — a
+ * count of subjects with NOTHING written, lowered by hand as each came off
+ * zero. It was 4 when types.ts named the four, then 3 once `function-concept`
+ * was authored, then 2, then 1, and now 0:
+ * `the-columns-are-where-the-basis-goes` has taken
+ * `matrices-and-determinants`, the last of them, off zero.
+ *
+ * A floor of `>= 0` is vacuously true, so at that point the count stops being
+ * an assertion and the guard has to be restated rather than kept as a number.
+ * What it was ever protecting was not the figure but the SHAPE of the figure:
+ * that coverage is computed and reported per subject, so a starved subject
+ * stays visible as itself instead of being averaged into one global
+ * percentage. That is what is asserted now, and the per-subject splits are
+ * still printed in the message either way — which is how the next starved
+ * subject gets noticed.
+ *
+ * Deliberately NOT asserted: that the weakest subject is below the global
+ * rate. It is (3/28 against 90/341), but authoring the weakest one up is the
+ * work succeeding, and a check that went red for it would be the exact
+ * mistake the paragraph above warns about.
  */
-t('one of the seven subjects has no authored questions at all, and that is reported',
-  QCOV.filter(c => c.authoredAsQuestions === 0).length >= 1,
+t('coverage is reported per subject, so a starved subject is visible as itself',
+  QCOV.length === ONTOLOGIES.length
+  && QCOV.every(c => c.questions > 0 && Number.isInteger(c.authoredAsQuestions))
+  && QCOV.reduce((n, c) => n + c.authoredAsQuestions, 0) === Q_AUTHORED,
   QCOV.map(c => `${c.authoredAsQuestions}/${c.questions}`).join(' '))
 t('the line names the split rather than the total alone', (() => {
   const line = questionCoverageLine(EXPONENTS_AND_LOGARITHMS)
@@ -3395,6 +3708,155 @@ t('an authored socratic phrasing overrides the label for the asking', (() => {
 })())
 t('and without one, the imperative label is carried as it was written',
   QNODES.some(q => !q.authoredAsQuestion))
+
+/**
+ * TUTOR MODE — the walk, and the prompt that cannot hold the answer.
+ *
+ * questions.ts guarantees that a `SocraticContext` excludes the asked step's
+ * `establishes`. That guarantee is worth nothing if the thing actually SENT to
+ * a model is assembled from anything else, so the check is re-run one layer
+ * out, on the prompt strings themselves, over every step of every chain in
+ * every subject and in both modes.
+ *
+ * It is the same invariant and it has to be asserted twice, because the two
+ * failures are different edits. Widening `SocraticContext` would break the
+ * first test; reaching past it in a prompt builder — pulling the chain in to
+ * "give the tutor more context" — would break only this one, and the output
+ * would still read as a perfectly good question.
+ */
+group('tutor mode — the prompt is built from what the asker may see')
+
+const WALK_LEAKS = QCHAINS.flatMap(c => c.questions.map((q, i) => {
+  const ask = promptFor(c, i, 'ask', '')
+  const nudge = promptFor(c, i, 'nudge', 'I think you add them', 'Exponents and logarithms')
+  const sent = JSON.stringify([ask.prompt, nudge.prompt, unphrasedQuestion(ask.context)])
+  return { id: q.id, leaked: sent.includes(JSON.stringify(q.establishes).slice(1, -1)) }
+})).filter(r => r.leaked)
+
+t('no prompt in either mode contains the answer to the question it asks',
+  WALK_LEAKS.length === 0, WALK_LEAKS.map(r => r.id).join(', '))
+t('and the answer is exactly what revealOf hands the LEARNER, so the pair is pinned',
+  QCHAINS.every(c => c.questions.every((q, i) => revealOf(c, i) === q.establishes)))
+t('revealOf is null past the end rather than the last step again',
+  QCHAINS.every(c => revealOf(c, c.questions.length) === null))
+
+/*
+ * The other half: what a tutor mid-derivation legitimately knows. A prompt
+ * that withheld the problem would be asking a riddle, and one that withheld
+ * the established steps would be asking the first question every time.
+ */
+t('every prompt carries the problem it is about',
+  QCHAINS.every(c => c.questions.every((q, i) =>
+    promptFor(c, i, 'ask', '').prompt.user.includes(c.problem))))
+t('and every PRIOR step, with what it established',
+  QCHAINS.filter(c => c.questions.length > 1).every(c => {
+    const last = c.questions.length - 1
+    const user = promptFor(c, last, 'ask', '').prompt.user
+    return c.questions.slice(0, last).every(q => user.includes(q.establishes))
+  }))
+t('the floor rules are in both modes, not just the asking one', (() => {
+  const c = QCHAINS[0]
+  const ask = promptFor(c, 0, 'ask', '').prompt.system
+  const nudge = promptFor(c, 0, 'nudge', 'stuck', undefined).prompt.system
+  const floor = 'You are NOT given what that next move establishes'
+  return ask.includes(floor) && nudge.includes(floor)
+})())
+t('a learner answer is capped rather than passed through whole', (() => {
+  const c = QCHAINS[0]
+  const huge = 'x'.repeat(5000)
+  return promptFor(c, 0, 'nudge', huge).prompt.user.includes('x'.repeat(1200))
+    && !promptFor(c, 0, 'nudge', huge).prompt.user.includes('x'.repeat(1201))
+})())
+t('promptFor refuses a position off the end',
+  promptFor(QCHAINS[0], QCHAINS[0].questions.length, 'ask', '') === null
+  && promptFor(QCHAINS[0], -1, 'ask', '') === null)
+
+/*
+ * The unphrased fallback. Not a Socratic question and not pretending to be —
+ * what it has to guarantee is only that it withholds the detail and names the
+ * move, since that is all a surface with no model configured can honestly do.
+ */
+t('the unphrased fallback names the move',
+  QNODES.filter(q => !q.authoredAsQuestion).every(q => {
+    const chain = QCHAINS.find(c => c.knowledgePointId === q.knowledgePointId)
+    const text = unphrasedQuestion(socraticContext(chain, q.position))
+    const named = q.move.endsWith('.') ? q.move.slice(0, -1) : q.move
+    return text.includes(named)
+  }))
+t('and an authored question is asked as written rather than wrapped in a shell',
+  QNODES.filter(q => q.authoredAsQuestion).every(q => {
+    const chain = QCHAINS.find(c => c.knowledgePointId === q.knowledgePointId)
+    return unphrasedQuestion(socraticContext(chain, q.position)) === q.move
+  }))
+
+group('tutor mode — entering a walk and leaving it for a problem')
+
+t('a concept offers exactly its chains, in the same order',
+  ONTOLOGIES.every(o => o.concepts.every(c => {
+    const chains = chainsForConcept(o, c.id)
+    const openings = openingsForConcept(o, c.id)
+    return openings.length === chains.length
+      && openings.every((w, i) => w.knowledgePointId === chains[i].knowledgePointId)
+  })))
+t('an opening reports its length and how much of it is written, separately',
+  ONTOLOGIES.flatMap(o => o.concepts.flatMap(c => openingsForConcept(o, c.id)))
+    .every(w => w.steps > 0 && w.authored >= 0 && w.authored <= w.steps))
+t('and what it converts to, which is the only way out to a ruling',
+  ONTOLOGIES.every(o => chainsForConcept(o, 'exponent-rules').length === 0
+    || openingsForConcept(o, 'exponent-rules').every(w =>
+      w.convertsTo.length === tasksForPoint(w.knowledgePointId).length)))
+t('an unknown concept offers nothing rather than throwing',
+  openingsForConcept(EXPONENTS_AND_LOGARITHMS, 'no-such-concept').length === 0)
+t('a concept with no worked example offers nothing',
+  openingsForConcept(EXPONENTS_AND_LOGARITHMS, 'logarithm-definition').length
+    === chainsForConcept(EXPONENTS_AND_LOGARITHMS, 'logarithm-definition').length)
+
+/*
+ * The entry a PROBLEM uses. A generated task has no derivation of its own, so
+ * "lead me through this" resolves to the worked example on the same knowledge
+ * point — which is why this has to be reachable by point id alone.
+ */
+t('a knowledge point resolves to its own chain and no other',
+  QCHAINS.every(c => {
+    const o = ontologyForPoint(c.knowledgePointId)
+    return chainForPoint(o, c.knowledgePointId)?.knowledgePointId === c.knowledgePointId
+  }))
+t('an unknown point resolves to null, not to the nearest chain',
+  chainForPoint(EXPONENTS_AND_LOGARITHMS, 'no-such-point') === null
+  && openingForPoint(EXPONENTS_AND_LOGARITHMS, 'no-such-point') === null)
+t('the terminus is the authored answer and the point\'s own tasks',
+  QCHAINS.every(c => {
+    const end = walkTerminus(c)
+    return end.answer === c.answer && end.convertsTo.join() === c.convertsTo.join()
+  }))
+
+/*
+ * `unmetBefore` is for SAYING, not for gating — a walk records nothing, so it
+ * cannot be a way around the mastery floor. What it must not do is name a gap
+ * nobody can close, which is why it goes through `gatingPrerequisitesOf`: an
+ * unteachable concept has no knowledge points and therefore permanent zero
+ * strength, and listing it would be reporting an impossible errand.
+ */
+const UNMET_SUBJECT = EXPONENTS_AND_LOGARITHMS
+const UNMET_TARGET = UNMET_SUBJECT.concepts.find(c =>
+  gatingPrerequisitesOf(UNMET_SUBJECT, c.id).some(id => id !== c.id && isTeachable(UNMET_SUBJECT, id)))
+
+t('with nothing demonstrated, the groundwork is named',
+  unmetBefore(UNMET_SUBJECT, UNMET_TARGET.id, [], 0.7).length > 0,
+  UNMET_TARGET.id)
+t('with everything at full strength, nothing is named',
+  unmetBefore(
+    UNMET_SUBJECT, UNMET_TARGET.id,
+    UNMET_SUBJECT.concepts.map(c => ({ conceptId: c.id, strength: 1 })), 0.7,
+  ).length === 0)
+t('the concept itself is never named as its own prerequisite',
+  UNMET_SUBJECT.concepts.every(c =>
+    !unmetBefore(UNMET_SUBJECT, c.id, [], 0.7).some(u => u.conceptId === c.id)))
+t('nothing unteachable is named, since its strength can never rise',
+  UNMET_SUBJECT.concepts.every(c =>
+    unmetBefore(UNMET_SUBJECT, c.id, [], 0.7).every(u => isTeachable(UNMET_SUBJECT, u.conceptId))))
+t('an unknown concept has no groundwork rather than all of it',
+  unmetBefore(UNMET_SUBJECT, 'no-such-concept', [], 0.7).length === 0)
 
 console.log(`\n${questionCoverageLine(EXPONENTS_AND_LOGARITHMS)}`)
 console.log(

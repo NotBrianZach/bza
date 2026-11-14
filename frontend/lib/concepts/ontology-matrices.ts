@@ -98,12 +98,20 @@ const CONCEPTS: Concept[] = [
             {
               label: 'Apply the rule',
               detail: 'The first component is 2·1 + (−1)·0 = 2.',
+              socratic:
+                'The first component of the output is built out of the first row of A — that is ' +
+                '(2, −1) — and the two entries of e₁. Which two products go into it, and what ' +
+                'does each one come to?',
             },
             {
               label: 'Notice what came back',
               detail:
                 'A·e₁ = (2, 3), which is the first COLUMN of A. Nothing was computed that was ' +
                 'not already written down — multiplying by e₁ selects a column.',
+              socratic:
+                'The second row gives 3·1 + 4·0 = 3 by the same route, so A·e₁ = (2, 3). Look ' +
+                'back at how A was written down — where has that pair of numbers already ' +
+                'appeared, and what does that tell you about what the multiplication did?',
             },
             {
               label: 'Why this is the useful fact',
@@ -111,6 +119,11 @@ const CONCEPTS: Concept[] = [
                 'It runs backwards. If you know a map sends (1,0) to (2,3) and (0,1) to (−1,4), ' +
                 'the matrix is [[2,−1],[3,4]] with no further work. Every matrix you will ever ' +
                 'write down is built this way.',
+              socratic:
+                'A·e₁ handed back column 1, and the same argument makes A·e₂ hand back column 2. ' +
+                'So suppose nobody gives you A — only that the map sends (1, 0) to (2, 3) and ' +
+                '(0, 1) to (−1, 4). How much of A can you write down, and how much arithmetic ' +
+                'does it take?',
             },
           ],
           answer: '2 — the first entry of the first column',
@@ -131,10 +144,17 @@ const CONCEPTS: Concept[] = [
             {
               label: 'Add the vectors first',
               detail: 'u + v = (4, 1).',
+              socratic:
+                'A(u + v) feeds one vector into A, and you have been handed two. What is the ' +
+                'single vector that goes in, and what do you have to do to u and v to get it?',
             },
             {
               label: 'Apply A to the sum',
               detail: 'First component: 2·4 + (−1)·1 = 8 − 1 = 7.',
+              socratic:
+                'So (4, 1) is what goes in, and only the first component of the output was ' +
+                'asked for. Which part of A does that one component depend on, and what does ' +
+                'it come to?',
             },
             {
               label: 'Check it the other way',
@@ -142,6 +162,11 @@ const CONCEPTS: Concept[] = [
                 'Au has first component 2·1 − 2 = 0; Av has 2·3 + 1 = 7. Their sum is 7 — the ' +
                 'same answer. That it agrees is linearity; that it was cheaper the first way is ' +
                 'why linearity is worth having.',
+              socratic:
+                'There was a second route: push u and v through A separately and add afterwards. ' +
+                'Its first components are 0 and 7, so it lands on 7 as well. Was that agreement ' +
+                'a coincidence of these particular numbers, or something you could have counted ' +
+                'on before working out either side?',
             },
           ],
           answer: '7',

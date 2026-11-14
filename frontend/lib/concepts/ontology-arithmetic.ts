@@ -1811,6 +1811,332 @@ const CONCEPTS: Concept[] = [
       },
     ],
   },
+
+  /**
+   * The tenth concept, and the one that finishes what base ten can say about a
+   * ratio.
+   *
+   * ── Why this one next ─────────────────────────────────────────────────────
+   *
+   * It is the only node left in `NUMBER_AND_ARITHMETIC` whose every
+   * prerequisite was already authored, and both of them are load-bearing
+   * rather than nominal, which is the argument for writing it rather than
+   * something further up:
+   *
+   *  - `prime-factorisation` DECIDES the question. A fraction terminates
+   *    exactly when its reduced denominator has no prime but 2 and 5, and that
+   *    is not a rule of thumb about the denominator's size or shape — it is a
+   *    statement about its factorisation, because 10ⁿ = 2ⁿ · 5ⁿ and a
+   *    denominator can only divide a power of ten by being built from the same
+   *    two primes.
+   *  - `fraction-arithmetic` is what makes the test APPLICABLE. The
+   *    factorisation that decides it is the factorisation of the REDUCED
+   *    denominator, so a learner who cannot cancel will read 7/56 as having a
+   *    7 in the bottom and conclude it recurs. It is 1/8, and it stops after
+   *    three places. The reduction is the first move of the first worked
+   *    example for exactly that reason.
+   *
+   * So this concept is where the two halves of the subject above fractions
+   * meet, and the meeting is the content rather than a convenience.
+   *
+   * ── THE FORM THAT DOES NOT EXIST, AND WHAT THAT COSTS ─────────────────────
+   *
+   * Three concepts in this subject have now met the same wall and this is the
+   * fourth: the thing the concept teaches is a claim about the FORM of an
+   * answer, and `evaluate` can only check its VALUE. Here it bites harder than
+   * it did for `prime-factorisation`, because 0.125 and 1/8 are *the same
+   * rational number*. No equivalence check can prefer one, so no task in this
+   * build can ask "write this as a decimal" and refuse the fraction — and
+   * `no evaluate task declares a form` is asserted over the whole set, so the
+   * demand cannot be smuggled in either.
+   *
+   * What would fix it is a `NamedForm` making a claim about the WRITTEN shape
+   * of a numeral — "decimal_expansion", satisfied by 0.125 and refused for
+   * 1/8. forms.ts could decide it with no CAS, since `expr.ts` already parses
+   * a decimal as its own node kind (`{ kind: 'decimal' }`) and keeps the digits
+   * as written. That is a smaller change than `surd_reduced` was. It is not
+   * made here because adding a form is a change to a shared union that every
+   * subject reads, and it should be made with the task that needs it in front
+   * of a reviewer rather than folded into a content pass.
+   *
+   * Until it lands, the three tasks follow the compromise this file already
+   * records for `prime-factorisation`: each asks the arithmetic the method
+   * actually turns on, and each prompt names the step it stands in for. The
+   * tasks.ts comment says which move each one is. Writing the decimal is what
+   * the worked examples are for.
+   *
+   * ── Still gradable with no worker ─────────────────────────────────────────
+   *
+   * The subject's no-worker contract holds and this concept is the easiest case
+   * for it in the file: every task is integer arithmetic over integers. A
+   * decimal numeral is an exact rational to `exactValue` — it reads the digits
+   * as an integer over a power of ten via bigint, so nothing goes through a
+   * float and 0.125 is 1/8 exactly rather than nearly. The repeating-block task
+   * is one exact division of 999999, and the recurring-to-fraction task is one
+   * subtraction over another. Nothing here needs `WORKER_ONLY`.
+   *
+   * ── No automaticity targets, and no `encompasses` edge ────────────────────
+   *
+   * Same judgement as every concept above, and the second half is the one worth
+   * stating. Converting a fraction to a decimal is a division, so an
+   * `encompasses` edge to `fraction-arithmetic` is tempting and the prose would
+   * carry it. Measured against the three tasks actually shipped it fails the
+   * standard this file holds `encompasses` to — a claim about what PRACTISING
+   * exercises, not about what the exposition argues from. Task one is handed its
+   * reduction in the prompt, task two is a division by 7 with no fraction in it,
+   * and task three is a subtraction. Not one of them makes the learner cancel a
+   * fraction, so crediting fraction arithmetic here would stop it coming due on
+   * evidence containing none of it, and the cost lands on the learner.
+   *
+   * The edge becomes correct alongside a task that asks for the reduction
+   * itself — which is the same missing form again, since "reduce this" is a
+   * claim about the answer relative to the input.
+   */
+  {
+    id: 'decimal-representation',
+    name: 'Decimals and recurrence',
+    subjectId: subject.id,
+    scope: {
+      id: 'decimal-representation',
+      label: 'Decimals and recurrence',
+      hint: 'decimal expansion recurring repeating decimal',
+      /*
+       * Carried verbatim from the map node this was promoted out of, so the
+       * concept trail recognises exactly what it recognised before and the
+       * four-concept ceiling in tests/atlas.mjs is unaffected.
+       *
+       * Title-shaped, and narrow on purpose: "decimal" alone is a word about
+       * notation everywhere in school mathematics, so it is only matched when
+       * followed by the word that makes it this concept's subject —
+       * "representation" or "expansion" — while "repeating decimal" is its own
+       * alternative because that is the title the recurring case is filed
+       * under.
+       */
+      match: /\b(decimal (representation|expansion)|repeating decimal)/i,
+    },
+    fidelity: 'checked',
+    objectives: [
+      {
+        id: 'decide-termination-from-the-reduced-denominator',
+        statement:
+          'Decide whether a fraction terminates in base ten by reducing it and factorising the '
+          + 'denominator, and say why only 2s and 5s are allowed, rather than by dividing and '
+          + 'waiting to see what happens.',
+        taskKinds: ['evaluate', 'justify'],
+      },
+      {
+        id: 'produce-a-repeating-block-and-bound-it',
+        statement:
+          'Produce the repeating block of a fraction that does not terminate, and argue from the '
+          + 'remainders that the digits must eventually repeat and that the block is no longer '
+          + 'than one less than the denominator.',
+        taskKinds: ['evaluate', 'justify'],
+      },
+      {
+        id: 'recover-the-exact-fraction-from-a-recurring-decimal',
+        statement:
+          'Recover the exact fraction a recurring decimal names, by multiplying through by the '
+          + 'two powers of ten that align the tails and subtracting — and state why those two '
+          + 'powers are the ones to choose.',
+        taskKinds: ['evaluate', 'state'],
+      },
+    ],
+    knowledgePoints: [
+      {
+        id: 'terminates-when-the-denominator-is-only-2s-and-5s',
+        conceptId: 'decimal-representation',
+        statement:
+          'A decimal with n places IS a fraction over 10ⁿ — 0.125 is 125/1000 and nothing else. '
+          + 'So a fraction has a terminating decimal exactly when it can be rewritten over a '
+          + 'power of ten, and since 10ⁿ = 2ⁿ · 5ⁿ that happens exactly when the REDUCED '
+          + 'denominator is built from no primes but 2 and 5. Any other prime can never be '
+          + 'cancelled into a power of ten, because a power of ten does not contain it.',
+        position: 1,
+        workedExample: {
+          problem: 'Does 7/56 terminate in base ten, and if so write it out exactly?',
+          subgoals: [
+            {
+              label: 'Reduce first, because the test is about the reduced denominator',
+              detail:
+                'gcd(7, 56) = 7, so 7/56 = 1/8. This move is not tidying and skipping it gives '
+                + 'the wrong answer: 56 = 2³ · 7 contains a 7, so the unreduced denominator fails '
+                + 'the test, while the number itself passes it. The 7 was never really in the '
+                + 'denominator — it was a factor of both ends waiting to cancel.',
+              socratic:
+                'You are about to factorise the denominator of 7/56 to decide this. Is 56 the '
+                + 'number the test should be applied to?',
+            },
+            {
+              label: 'Factorise the denominator and look for a prime that is not 2 or 5',
+              detail:
+                '8 = 2³. There is no prime here but 2, so 1/8 terminates. The rule is not '
+                + 'arbitrary: to become a decimal the fraction must be rewritten over some 10ⁿ = '
+                + '2ⁿ · 5ⁿ, which means 8 has to DIVIDE a power of ten, and a number containing '
+                + 'any other prime cannot — unique factorisation says the power of ten has no '
+                + 'such prime to match it against.',
+              socratic:
+                '8 = 2³, and to be a decimal this has to be rewritten over a power of ten. What '
+                + 'is a power of ten made of, and does 2³ fit inside one?',
+            },
+            {
+              label: 'Complete the denominator to a power of ten, which also says how many places',
+              detail:
+                'The denominator needs to become 2ⁿ · 5ⁿ, and 8 = 2³ already has three 2s and no '
+                + '5s — so multiplying top and bottom by 5³ = 125 gives 125/1000. The deficit '
+                + 'decides the length: n is the LARGER of the two exponents, here max(3, 0) = 3, '
+                + 'so the decimal has exactly three places.',
+              socratic:
+                'You have 1/8 = 1/2³ and you want a denominator of the form 2ⁿ · 5ⁿ. What is the '
+                + 'smallest n that works, and what does that force you to multiply by?',
+            },
+            {
+              label: 'Read the digits off the numerator, since the denominator is now a power of ten',
+              detail:
+                '125/1000 = 0.125. No division was performed at this step and that is the point '
+                + 'of having completed the denominator: over a power of ten the decimal is the '
+                + 'numerator with the point moved, so the three places come from the three zeros '
+                + 'rather than from a long division that happened to stop.',
+              socratic:
+                'You have 125/1000. Why does this one need no division at all to be written as a '
+                + 'decimal, when 1/8 did?',
+            },
+          ],
+          answer:
+            '7/56 = 1/8, and 8 = 2³ has no prime but 2, so it terminates: 1/8 = 125/1000 = 0.125, '
+            + 'with max(3, 0) = 3 places.',
+        },
+      },
+      {
+        id: 'a-remainder-must-repeat',
+        conceptId: 'decimal-representation',
+        statement:
+          'When the reduced denominator d does contain another prime, the division never ends — '
+          + 'but it cannot wander forever either. Every step leaves a remainder in 1 … d − 1, so '
+          + 'within d − 1 steps some remainder must come back, and a repeated remainder means a '
+          + 'repeated state: from there the digits do exactly what they did before. The decimal '
+          + 'recurs because there are only finitely many places for it to be.',
+        position: 2,
+        workedExample: {
+          problem: 'Divide out 3/7, and say what fixes the length of its repeating block.',
+          subgoals: [
+            {
+              label: 'Divide, and record the REMAINDER at each step rather than only the digit',
+              detail:
+                '30 ÷ 7 = 4 r 2; 20 ÷ 7 = 2 r 6; 60 ÷ 7 = 8 r 4; 40 ÷ 7 = 5 r 5; 50 ÷ 7 = 7 r 1; '
+                + '10 ÷ 7 = 1 r 3. Digits so far: 0.428571. The remainders are the thing to watch '
+                + 'because they, not the digits, are what the next step depends on — the digit is '
+                + 'an output and the remainder is the state.',
+              socratic:
+                'At each step of this division you write down a digit and carry a remainder. '
+                + 'Which of the two determines what the next step does?',
+            },
+            {
+              label: 'Stop when a remainder recurs, not when a digit looks familiar',
+              detail:
+                'The last remainder is 3, which is the one the division started with. So step '
+                + 'seven must be step one again, and the six digits 428571 repeat forever: 3/7 = '
+                + '0.428571428571… The repetition is forced at the moment the remainder returns, '
+                + 'and a digit coming round again proves nothing on its own — the 4 and the 2 '
+                + 'could recur with different remainders behind them and the sequel would differ.',
+              socratic:
+                'The remainder has just come back to 3, the value you began with. What does that '
+                + 'tell you about the next six digits, and why would a repeated DIGIT not have '
+                + 'told you the same thing?',
+            },
+            {
+              label: 'Bound the block by counting the states available',
+              detail:
+                'A nonzero remainder on division by 7 is one of 1, 2, 3, 4, 5, 6 — six values. '
+                + 'The six that appeared were 3, 2, 6, 4, 5, 1, all of them, so this block is as '
+                + 'long as division by 7 permits. That is the general bound: the period is at most '
+                + 'd − 1, because a seventh step would have to reuse a remainder it had already '
+                + 'had, and termination is the case where the remainder reaches 0 instead.',
+              socratic:
+                'Dividing by 7, how many different nonzero remainders can there be — and what '
+                + 'does that let you say about the period before you divide at all?',
+            },
+            {
+              label: 'Check against a power of ten, which is the same fact without the division',
+              detail:
+                'A block of length 6 means 10⁶ − 1 is divisible by 7, and 999999 = 7 · 142857. '
+                + 'That is the check and also the shortcut: 1/7 = 142857/999999, and dividing by a '
+                + 'string of nines is what a purely repeating decimal IS. Multiplying by 3 gives '
+                + '3/7 = 428571/999999, whose numerator is the block just computed.',
+              socratic:
+                'If the block has length 6, then 3/7 can be written with a denominator of 999999. '
+                + 'What must be true of 7 and 10⁶ − 1 for that to work?',
+            },
+          ],
+          answer:
+            '3/7 = 0.428571428571… with a block of 6, because the remainders 3, 2, 6, 4, 5, 1 use '
+            + 'every nonzero remainder available before returning to 3 — the longest a denominator '
+            + 'of 7 allows. Equivalently 3/7 = 428571/999999.',
+        },
+      },
+      {
+        id: 'subtract-to-clear-the-recurring-tail',
+        conceptId: 'decimal-representation',
+        statement:
+          'A recurring decimal is not an approximation of a fraction, it is a way of writing one '
+          + 'exactly — and the fraction can be recovered. Two copies of the number scaled so their '
+          + 'infinite tails line up have a DIFFERENCE with no tail at all, which turns the '
+          + 'recurring part from the obstacle into the thing that cancels.',
+        position: 3,
+        workedExample: {
+          problem: 'Write 0.41666… — where only the 6 repeats — as an exact fraction.',
+          subgoals: [
+            {
+              label: 'Count the two lengths, because they choose the two multipliers',
+              detail:
+                'Let x = 0.41666… There are two digits before the repetition starts (41) and one '
+                + 'digit in the repeating block (6). Those two counts are the whole of the setup: '
+                + 'everything that follows is forced by them, and a method that says "multiply by '
+                + '10 or 100 or 1000" without counting is guessing at which.',
+              socratic:
+                'In 0.41666… two things need counting before you multiply by anything. What are '
+                + 'they?',
+            },
+            {
+              label: 'Scale twice, to put the two tails in the same position',
+              detail:
+                '1000x = 416.666… and 100x = 41.666… — the 100 moves the point past the two fixed '
+                + 'digits, and the extra factor of 10 moves it on past one full block. Both now '
+                + 'have the identical tail .666…, which is the only property being engineered '
+                + 'here; their whole-number parts are allowed to be anything.',
+              socratic:
+                'You want two multiples of x whose decimal tails are identical. Given two fixed '
+                + 'digits and a block of one, which two powers of ten do that, and what is each '
+                + 'one for?',
+            },
+            {
+              label: 'Subtract, and the infinite part disappears',
+              detail:
+                '1000x − 100x = 416.666… − 41.666… = 375, so 900x = 375. The tails were equal and '
+                + 'cancelled exactly — not approximately — which is why this is a derivation and '
+                + 'not an estimate. What is left is an equation between whole numbers.',
+              socratic:
+                'You have 1000x = 416.666… and 100x = 41.666…. What happens to the part that goes '
+                + 'on forever when you subtract, and how exact is that?',
+            },
+            {
+              label: 'Solve, reduce, and check against the terminating test',
+              detail:
+                'x = 375/900 = 5/12. Worth checking against the first point rather than trusting '
+                + 'it: 12 = 2² · 3, and the 3 is a prime other than 2 and 5, so this number had to '
+                + 'recur — and the 2² predicts exactly max(2, 0) = 2 non-repeating places, which '
+                + 'is the 41 that was counted at the start. The two points agree.',
+              socratic:
+                'You have x = 5/12 and 12 = 2² · 3. Does the first point agree that this number '
+                + 'recurs, and does it also account for the two digits before the repetition?',
+            },
+          ],
+          answer:
+            'x = 0.41666… gives 1000x − 100x = 375, so x = 375/900 = 5/12. The denominator 12 = '
+            + '2² · 3 confirms it: the 3 forces recurrence, and the 2² the two fixed places.',
+        },
+      },
+    ],
+  },
 ]
 
 /**
@@ -1997,6 +2323,57 @@ const EDGES: ConceptEdge[] = [
       'The concept exists to show that a number need not be a ratio, which is not a claim a '
       + 'learner can receive before they can compute with one — the proof squares a/b, and the '
       + 'one root here that is exactly rational is a root of a fraction.',
+  },
+
+  /**
+   * BOTH EDGES THAT CAME DOWN OFF THE MAP WITH `decimal-representation`, AND
+   * BOTH BELONG HERE — THE SAME SHAPE AS `roots-and-irrationals` ABOVE.
+   *
+   * The map node declared `needs: ['fraction-arithmetic', 'prime-factorisation']`
+   * and that `needs` left the area with the node, so both are restated here and
+   * the area needed no change beyond the removal itself. Second promotion out of
+   * `NUMBER_AND_ARITHMETIC` for which that is true.
+   *
+   * Both are real gates, and the second one is the whole reason this concept
+   * could be written next:
+   *
+   *  - `prime-factorisation` DECIDES the concept's central question. A fraction
+   *    terminates exactly when its denominator has no prime but 2 and 5, which
+   *    is a statement about a factorisation and about nothing else — 10ⁿ is
+   *    2ⁿ · 5ⁿ, so a denominator divides a power of ten only by being built out
+   *    of the same two primes. Without the factorisation there is no test, only
+   *    dividing and waiting.
+   *  - `fraction-arithmetic` is what makes that test APPLICABLE rather than
+   *    merely true. The denominator it must be applied to is the REDUCED one,
+   *    and a learner who cannot cancel sees the 7 in 7/56 and concludes it
+   *    recurs. It is 1/8 and it stops after three places. The gate is on the
+   *    first move of the first worked example, not on background knowledge.
+   *
+   * Edges pointing the other way were left alone and resolve in `composeAtlas`:
+   * `percent`, `real-number-line` and `scientific-notation` each name this
+   * concept in their own `needs` and all three are still map nodes in
+   * `NUMBER_AND_ARITHMETIC`. Because all three STAYED, nothing had to move into
+   * that area's `links` — see the note there.
+   */
+  {
+    id: 'prime-factorisation->decimal-representation',
+    from: 'prime-factorisation',
+    to: 'decimal-representation',
+    kind: 'prerequisite',
+    promotedBy: 'author:arithmetic-foundations',
+    rationale:
+      'Termination is a question about the denominator\'s factorisation and not about its size: '
+      + 'a denominator divides some 10ⁿ = 2ⁿ · 5ⁿ exactly when it is built from 2s and 5s alone.',
+  },
+  {
+    id: 'fraction-arithmetic->decimal-representation',
+    from: 'fraction-arithmetic',
+    to: 'decimal-representation',
+    kind: 'prerequisite',
+    promotedBy: 'author:arithmetic-foundations',
+    rationale:
+      'The test applies to the reduced denominator, so cancelling comes first — 7/56 looks like '
+      + 'it recurs and is 1/8, which stops after three places.',
   },
 
   /**

@@ -7,6 +7,7 @@ import {
   isTeachable, prerequisitesOf,
 } from '@/lib/concepts/registry'
 import { MATHEMATICS } from '@/lib/concepts/atlas'
+import { openingsForConcept } from '@/lib/concepts/socratic'
 import { isPractisable } from '@/lib/concepts/tasks'
 
 /**
@@ -75,6 +76,7 @@ export default function ConceptGraph({
   initialArea,
   queuedTasks,
   onPractise,
+  onLeadThrough,
   selectedId,
   onSelectedChange,
 }: {
@@ -134,6 +136,17 @@ export default function ConceptGraph({
    * in here without two components disagreeing about which task is current.
    */
   onPractise?: (taskId: string) => void
+  /**
+   * Lead me through this concept's worked examples, in tutor mode.
+   *
+   * The counterpart to `onPractise` and deliberately not gated the way it is.
+   * `queuedTasks` answers "is there a problem waiting for me", which depends on
+   * the mastery floor; a walk records nothing, so it depends only on whether
+   * anybody has written a derivation. Offered whenever one exists, including on
+   * a node the learner cannot practise yet — which is the case where it is the
+   * only thing worth offering.
+   */
+  onLeadThrough?: (conceptId: string) => void
 }) {
   const [ownSelected, setOwnSelected] = useState<string | null>(null)
   /** Controlled when `selectedId` is supplied, self-managed otherwise. */
@@ -344,6 +357,19 @@ export default function ConceptGraph({
   const selTasks = useMemo(
     () => (sel ? (queuedTasks ?? []).filter(t => t.conceptId === sel.id) : []),
     [sel?.id, queuedTasks], // eslint-disable-line react-hooks/exhaustive-deps
+  )
+
+  /**
+   * How many derivations the selected node could be walked through.
+   *
+   * Computed rather than inferred from `isTeachable`, which is the wrong
+   * question by one step: a knowledge point always has a worked example, and
+   * an example with no subgoals has no steps to ask about. Offering a walk
+   * there would open tutor mode on an empty list.
+   */
+  const selWalks = useMemo(
+    () => (sel ? openingsForConcept(ontology, sel.id).length : 0),
+    [sel?.id, ontology], // eslint-disable-line react-hooks/exhaustive-deps
   )
 
   /**
@@ -576,6 +602,23 @@ export default function ConceptGraph({
           <div className='flex flex-wrap items-center gap-2'>
             <h4 className='font-medium text-gray-200'>{sel.name}</h4>
             <span className='text-[11px] text-gray-500'>{appearance(sel.id).label}</span>
+            {/* Before the claim buttons, because it is the one verb here that
+                asserts nothing: a walk neither opens problems nor claims
+                knowledge. See the prop note on why it is not gated on the
+                floor. */}
+            {onLeadThrough && selWalks > 0 && (
+              <button
+                onClick={() => onLeadThrough(sel.id)}
+                title={
+                  `Be led through ${selWalks === 1 ? 'the worked example' : `${selWalks} worked examples`} `
+                  + `on this concept, one question at a time. Nothing there is marked — it ends at a problem, `
+                  + `and the problem is what gets ruled.`
+                }
+                className='rounded-full border border-sky-700/60 px-2 py-0.5 text-[11px] text-sky-200 hover:bg-sky-900/40'
+              >
+                walk me through it
+              </button>
+            )}
             {/* Three conditions, and the middle one is the atlas-scope guard.
                 `stateOf` is the session progress, which covers only the
                 subject being practised — so a concept absent from it is one

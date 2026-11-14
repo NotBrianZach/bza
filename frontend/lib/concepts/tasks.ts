@@ -61,11 +61,39 @@ const REAL_BC = [
   { name: 'c', assumptions: { real: true } },
 ]
 
-/** The discriminant tasks are in the coefficients, not in x. */
+/**
+ * Three real parameters, no x.
+ *
+ * The discriminant tasks are in the coefficients rather than in x, which is
+ * what this was written for. The plane-geometry tasks reuse it for three angle
+ * measures — also three reals with no variable to substitute into — rather
+ * than declaring an identical set under a geometric name, since what a symbol
+ * MEANS is the prompt's job and what it may be assumed to BE is this one's.
+ */
 const REAL_ABC = [
   { name: 'a', assumptions: { real: true } },
   { name: 'b', assumptions: { real: true } },
   { name: 'c', assumptions: { real: true } },
+]
+
+/**
+ * Two real parameters, for the triangle tasks that are about a pair.
+ *
+ * A fourth declaration rather than reusing `REAL_ABC` and leaving `c` without
+ * a value, for the reason `REAL_BC` gives: every declared symbol must have a
+ * stated input, and a task whose inputs do not cover its symbols cannot be
+ * evaluated at all — the suite reports it, correctly.
+ *
+ * Real rather than integer, matching the plane-geometry tasks it joins and for
+ * the same reason. Two of the three pairs here are angle measures and one is a
+ * pair of side lengths, and nothing in either fact is about whole numbers:
+ * 180 − (180 − a − b) = a + b holds for every pair of angles, and a triangle's
+ * sides are not required to be integers. The whole-number values in the
+ * prompts are a convenience of the figures chosen.
+ */
+const REAL_AB = [
+  { name: 'a', assumptions: { real: true } },
+  { name: 'b', assumptions: { real: true } },
 ]
 
 /**
@@ -189,6 +217,28 @@ const VEC_WEIGHTED_2 = [
   { name: 'c2', assumptions: { real: true } },
   { name: 'u2', assumptions: { real: true } },
   { name: 'v2', assumptions: { real: true } },
+]
+
+/**
+ * Two points, P and Q, as four coordinates.
+ *
+ * `real` and not `integer`, for the same reason the vector components above are
+ * real: a coordinate of the plane is a real number, and these three tasks
+ * happening to use whole ones is a choice about arithmetic load rather than a
+ * fact about the object. The point concept's own material says each axis is a
+ * complete real line.
+ *
+ * All four are declared for all three tasks even though each uses two. The
+ * alternative is three near-identical pairs, and `at` is what decides which
+ * symbols a task actually substitutes — an unused declaration costs nothing,
+ * while a symbol missing from `at` fails the "every symbol in the given has a
+ * stated input" assertion in tests/concepts-logic.mjs.
+ */
+const POINT_PQ = [
+  { name: 'p1', assumptions: { real: true } },
+  { name: 'p2', assumptions: { real: true } },
+  { name: 'q1', assumptions: { real: true } },
+  { name: 'q2', assumptions: { real: true } },
 ]
 
 /** Four digits, most significant first. Shared by the two four-digit tasks. */
@@ -591,6 +641,95 @@ export const TASKS: PracticeTask[] = [
     ],
     at: { a: '99', b: '70' },
     reference: '9801/4900',
+  },
+
+  /*
+   * ── decimal-representation ──────────────────────────────────────────────
+   *
+   * Three `evaluate` tasks, one per knowledge point, and the missing-form wall
+   * is steeper here than anywhere else in the subject: the thing this concept
+   * teaches is how to WRITE a rational number, and 0.125 and 1/8 are the same
+   * rational number. So an equivalence check cannot prefer one over the other,
+   * and asking "write 1/8 as a decimal" would mark `1/8` correct. There is no
+   * form to demand the decimal shape — the concept's header in
+   * ontology-arithmetic.ts names the one that would do it and says why it was
+   * not added in a content pass.
+   *
+   * So none of these asks for a decimal. Each asks the arithmetic the method
+   * genuinely turns on, where the answer is a single number that only comes out
+   * right if the step was understood, and each prompt names the move it stands
+   * in for:
+   *
+   *  - the first completes a denominator to a power of ten, which is the step
+   *    that converts at all. The reduction to 1/8 is handed over in the prompt,
+   *    because reducing is the other thing no form can demand.
+   *  - the second divides 10⁶ − 1 by 7, which is the recurrence fact without
+   *    the long division: the quotient 142857 IS the repeating block of 1/7, so
+   *    the answer is the digits rather than a number about them.
+   *  - the third performs the align-and-subtract itself, as the one quotient
+   *    (416 − 41)/(1000 − 100) the method reduces to.
+   *
+   * All three are integer arithmetic settled by `exactValue` with no worker, so
+   * none goes in `WORKER_ONLY`. Different numbers from the worked examples
+   * throughout — those use 7/56, 3/7 and 0.41666… — except the 7 in the second,
+   * which is deliberate: it is the same denominator seen from the other side,
+   * and the prompt says so.
+   */
+  {
+    id: 'complete-the-denominator-1',
+    knowledgePointId: 'terminates-when-the-denominator-is-only-2s-and-5s',
+    kind: 'evaluate',
+    prompt:
+      '14/112 reduces to 1/8, and 8 = 2³ contains no prime but 2, so this one terminates. '
+      + 'Converting it means completing the denominator to a power of ten: 2³ needs three 5s to '
+      + 'become 2³ · 5³ = 1000. Evaluate (a * p^k) / (b * p^k) at a = 1, b = 8, p = 5, k = 3. '
+      + 'Your answer is 1/8, and the numerator and denominator you pass through on the way — '
+      + 'read as a numerator over a power of ten — are what its three decimal places are.',
+    given: '(a * p^k) / (b * p^k)',
+    variables: [
+      { name: 'a', assumptions: { integer: true } },
+      { name: 'b', assumptions: { integer: true, nonzero: true } },
+      { name: 'p', assumptions: { integer: true, positive: true } },
+      { name: 'k', assumptions: { integer: true } },
+    ],
+    at: { a: '1', b: '8', p: '5', k: '3' },
+    reference: '0.125',
+  },
+  {
+    id: 'repeating-block-from-nines-1',
+    knowledgePointId: 'a-remainder-must-repeat',
+    kind: 'evaluate',
+    prompt:
+      'A block of length n means the denominator divides 10ⁿ − 1, which is why a purely '
+      + 'recurring decimal can be written over a string of nines. For 7 the block has length 6, '
+      + 'so 7 divides 999999. Evaluate (10^n - 1) / d at n = 6, d = 7. Your answer is not just a '
+      + 'quotient: it is the repeating block of 1/7 itself, digit for digit.',
+    given: '(10^n - 1) / d',
+    variables: [
+      { name: 'n', assumptions: { integer: true, positive: true } },
+      { name: 'd', assumptions: { integer: true, nonzero: true } },
+    ],
+    at: { n: '6', d: '7' },
+    reference: '142857',
+  },
+  {
+    id: 'align-and-subtract-1',
+    knowledgePointId: 'subtract-to-clear-the-recurring-tail',
+    kind: 'evaluate',
+    prompt:
+      'Take x = 0.41666…, where only the 6 repeats. Two fixed digits and a block of one give '
+      + '1000x = 416.666… and 100x = 41.666…, whose tails are identical — so subtracting leaves '
+      + 'whole numbers on both sides. That subtraction is this quotient: evaluate '
+      + '(a - b) / (c - d) at a = 416, b = 41, c = 1000, d = 100. Your answer is x exactly.',
+    given: '(a - b) / (c - d)',
+    variables: [
+      { name: 'a', assumptions: { integer: true } },
+      { name: 'b', assumptions: { integer: true } },
+      { name: 'c', assumptions: { integer: true } },
+      { name: 'd', assumptions: { integer: true } },
+    ],
+    at: { a: '416', b: '41', c: '1000', d: '100' },
+    reference: '5/12',
   },
 
   // ── polynomial-arithmetic ───────────────────────────────────────────────
@@ -2022,6 +2161,533 @@ export const TASKS: PracticeTask[] = [
     at: { x: '-3' },
   },
 
+  // ── plane-geometry ──────────────────────────────────────────────────────
+  //
+  // Six `evaluate` tasks across three knowledge points, all settled by exact
+  // rational arithmetic, so this subject needs no worker — which matters here
+  // because the concept is a ROOT of the whole map and a worker outage would
+  // wall off a way in rather than a branch.
+  //
+  // EVERY ONE OF THEM IS A PROXY AND THE SET SAYS SO ONCE, HERE. The real ask
+  // in this concept is "find the missing angle and name the fact you used",
+  // and no verifiable kind can take the second half: a reason is not a value
+  // and not a form. So each task asks the arithmetic its fact licenses, and
+  // each prompt names the decision it is standing in for — the same move the
+  // rational-expressions tasks make for "state the excluded points".
+  //
+  // The cost is specific and worth writing down rather than discovering: a
+  // learner who subtracts from 180 where the figure called for 360 gets the
+  // arithmetic question right. Choosing between the two sums is the skill and
+  // it is unscorable here, which is why `straight-line-remainder-1` and
+  // `full-turn-remainder-1` are a PAIR — same shape, different total, so the
+  // two sit next to each other in practice and the choice is at least visible
+  // even though no ruling turns on it.
+  //
+  // They declare `real` rather than `integer`, unlike the arithmetic tasks
+  // they otherwise resemble. The whole-degree values are a convenience of the
+  // figures chosen; nothing in these facts is about whole numbers, and
+  // 180 − (180 − a) = a is a claim about every angle. Narrowing the
+  // declaration would narrow the claim.
+  {
+    id: 'straight-line-remainder-1',
+    knowledgePointId: 'two-sums-every-angle-chase-uses',
+    kind: 'evaluate',
+    prompt:
+      'Four rays leave a point on a straight line, all on the same side of it, cutting angles of '
+      + '42°, 55°, x° and 38° in a row. Evaluate 180 − a − b − c at a = 42, b = 55, c = 38 to get '
+      + 'x. The 180 is in the expression because the figure put it there — that the four angles '
+      + 'span a straight line and not a full turn is the decision this task cannot ask you for.',
+    given: '180 - a - b - c',
+    variables: REAL_ABC,
+    // 180 − 42 − 55 − 38 = 45, the x of the worked example.
+    reference: '45',
+    at: { a: '42', b: '55', c: '38' },
+  },
+  {
+    id: 'full-turn-remainder-1',
+    knowledgePointId: 'two-sums-every-angle-chase-uses',
+    kind: 'evaluate',
+    prompt:
+      'Now the other total. Four rays leave a point and fill the whole turn around it; three of '
+      + 'the four angles are 90°, 73° and 115°. Evaluate 360 − a − b − c at a = 90, b = 73, '
+      + 'c = 115 to get the fourth. Read this one against the task before it: the arithmetic is '
+      + 'the same arithmetic, and the only thing that changed is which total the figure makes.',
+    given: '360 - a - b - c',
+    variables: REAL_ABC,
+    // 360 − 90 − 73 − 115 = 82. Taking 180 as the total instead gives −98,
+    // which is impossible rather than merely wrong — the sign is the signal
+    // that the wrong sum was chosen.
+    reference: '82',
+    at: { a: '90', b: '73', c: '115' },
+  },
+  {
+    id: 'adjacent-angle-on-a-line-1',
+    knowledgePointId: 'vertical-angles-equal-by-subtracting-twice',
+    kind: 'evaluate',
+    prompt:
+      'Two straight lines cross, and one of the four angles is 35°. Evaluate 180 − x at x = 35 to '
+      + 'get the angle beside it. This single subtraction is the only geometric fact the vertical '
+      + 'argument uses; the next task is what happens when you do it twice.',
+    given: '180 - x',
+    variables: REAL_X,
+    // 180 − 35 = 145, the b and d of the worked example.
+    reference: '145',
+    at: { x: '35' },
+  },
+  {
+    id: 'vertical-pair-difference-1',
+    knowledgePointId: 'vertical-angles-equal-by-subtracting-twice',
+    kind: 'evaluate',
+    prompt:
+      'The angle facing the first one is 180 − (180 − x): beside it along one line, then beside '
+      + 'THAT along the other. Evaluate (180 − (180 − x)) − x at x = 118. A difference of 0 says '
+      + 'the facing angle came back to where it started — and note what one value does and does '
+      + 'not show: 118 is not the 35 of the worked example, which is the point, but two cases are '
+      + 'still two cases. What settles it is that the two subtractions undo each other for every x.',
+    given: '(180 - (180 - x)) - x',
+    variables: REAL_X,
+    // 180 − (180 − 118) = 180 − 62 = 118, and 118 − 118 = 0. Zero for every x,
+    // which is the theorem; this evaluates one instance of it.
+    reference: '0',
+    at: { x: '118' },
+  },
+  {
+    id: 'co-interior-remainder-1',
+    knowledgePointId: 'a-transversal-across-parallels-has-two-values',
+    kind: 'evaluate',
+    prompt:
+      'A line crosses two parallel lines at P and Q. The angle at P opening into the strip '
+      + 'between them, on the right of the crossing line, is 118°. Evaluate 180 − x at x = 118 to '
+      + 'get the angle at Q opening into that same strip on that same side. The subtraction is '
+      + 'the part that can be checked; why it is a subtraction and not the 118° over again is the '
+      + 'slide argument, and that is the half no task here can score.',
+    given: '180 - x',
+    variables: REAL_X,
+    // 180 − 118 = 62. Answering 118 is the error the worked example is built
+    // around: the slide lands that angle outside the strip, not inside it.
+    reference: '62',
+    at: { x: '118' },
+  },
+  {
+    id: 'eight-angles-two-values-1',
+    knowledgePointId: 'a-transversal-across-parallels-has-two-values',
+    kind: 'evaluate',
+    prompt:
+      'All eight angles in that figure are 118° or 62°, four of each, and they fill the four '
+      + 'straight angles the two crossings make — two at each crossing. Evaluate 4x + 4(180 − x) '
+      + 'at x = 118. That the x cancels is the content: the total is 4 × 180 whatever the crossing '
+      + 'line\'s slant, which is another way of saying the figure holds two numbers and no third.',
+    given: '4*x + 4*(180 - x)',
+    variables: REAL_X,
+    // 4·118 + 4·62 = 472 + 248 = 720, which is 4 × 180 — the two crossings'
+    // four straight angles. Identically 720 for every x.
+    reference: '720',
+    at: { x: '118' },
+  },
+
+  // ── plane-geometry: the triangle ─────────────────────────────────────────
+  //
+  // Six more `evaluate` tasks, across the three points of `triangle-basics`.
+  // Everything the block above says applies unchanged — all settled by exact
+  // rational arithmetic with no worker, all proxies for an ask whose second
+  // half is a reason, and all naming the decision they stand in for.
+  //
+  // ONE THING IS NEW AND IT IS THE INEQUALITY. "Do these three lengths make a
+  // triangle?" has a perfectly good task kind waiting for it: `counterexample`
+  // asks for an object that breaks a claim, and three lengths that fail to
+  // close is exactly such an object. It is rulable only when the claim is an
+  // identity, and this claim is an inequality, so the kind would be served and
+  // never scored — which the assembler is designed to refuse.
+  //
+  // So the test is asked as the subtraction whose SIGN decides it, and the
+  // prompt says so. That is better than it sounds and worse than it looks:
+  // the ruling is genuinely in the learner's answer rather than nowhere, since
+  // a + b − c carries the verdict in one number — but a learner who computes
+  // −1 and concludes "yes, a triangle" still scores the mark. Reading the sign
+  // is the skill and no task here can score it, the same shape of loss as
+  // choosing between 180 and 360 one block up.
+  {
+    id: 'third-angle-of-a-triangle-1',
+    knowledgePointId: 'the-angle-sum-is-the-transversal-fact-again',
+    kind: 'evaluate',
+    prompt:
+      'Two angles of a triangle are 47° and 68°. Evaluate 180 − a − b at a = 47, b = 68 to get '
+      + 'the third. The 180 is there because a line through one vertex parallel to the opposite '
+      + 'side puts all three angles along a straight line — that derivation is the content of '
+      + 'this point and this task takes it as given.',
+    given: '180 - a - b',
+    variables: REAL_AB,
+    // 180 − 47 − 68 = 65, the third angle of the worked example.
+    reference: '65',
+    at: { a: '47', b: '68' },
+  },
+  {
+    id: 'exterior-angle-is-the-other-two-1',
+    knowledgePointId: 'the-angle-sum-is-the-transversal-fact-again',
+    kind: 'evaluate',
+    prompt:
+      'The exterior angle at that third vertex is 180 minus the third angle — beside it along a '
+      + 'straight line. So it is 180 − (180 − a − b), and the claim is that this is just a + b. '
+      + 'Evaluate (180 − (180 − a − b)) − (a + b) at a = 47, b = 68. A difference of 0 says the '
+      + 'two subtractions cancelled; that they cancel for EVERY a and b is what makes the '
+      + 'exterior-angle fact a theorem rather than an arithmetic coincidence, and one pair of '
+      + 'values cannot show that.',
+    given: '(180 - (180 - a - b)) - (a + b)',
+    variables: REAL_AB,
+    // 180 − 47 − 68 = 65; 180 − 65 = 115; 115 − (47 + 68) = 115 − 115 = 0.
+    // Identically 0, which is the theorem; this evaluates one instance.
+    reference: '0',
+    at: { a: '47', b: '68' },
+  },
+  {
+    id: 'longest-against-the-other-two-1',
+    knowledgePointId: 'the-inequality-compares-two-routes',
+    kind: 'evaluate',
+    prompt:
+      'Three lengths are 7, 10 and 18. Evaluate a + b − c at a = 7, b = 10, c = 18, where c is '
+      + 'the longest. This compares the way round through the third vertex against the way '
+      + 'straight along the longest side, so a positive answer is a triangle and a negative one '
+      + 'is a route shorter than the straight line, which no route can be. Picking out which of '
+      + 'the three is c, and reading what the sign then means, are the two halves this task '
+      + 'cannot ask you for.',
+    given: 'a + b - c',
+    variables: REAL_ABC,
+    // 7 + 10 − 18 = −1. Negative, so no triangle: the detour is a unit shorter
+    // than the direct route. The sign is the ruling and the magnitude is how
+    // far short the two shorter sides fall.
+    reference: '-1',
+    at: { a: '7', b: '10', c: '18' },
+  },
+  {
+    id: 'the-window-for-a-third-length-1',
+    knowledgePointId: 'the-inequality-compares-two-routes',
+    kind: 'evaluate',
+    prompt:
+      'Keep two sides of 7 and 10 and let the third be x. The two conditions give x > 10 − 7 and '
+      + 'x < 10 + 7, so the third length lies strictly between b − a and b + a. Evaluate '
+      + '(b + a) − (b − a) at a = 7, b = 10 to get how wide that window is. That the b cancels is '
+      + 'the content: the window is twice the SHORTER side whatever the longer one is.',
+    given: '(b + a) - (b - a)',
+    variables: REAL_AB,
+    // (10 + 7) − (10 − 7) = 17 − 3 = 14, which is 2 × 7. Identically 2a, so
+    // the width depends on the shorter side alone.
+    reference: '14',
+    at: { a: '7', b: '10' },
+  },
+  {
+    id: 'share-what-the-given-angle-leaves-1',
+    knowledgePointId: 'at-most-one-angle-is-not-acute',
+    kind: 'evaluate',
+    prompt:
+      'A triangle has one angle of 110° and the other two are equal. Evaluate (180 − x)/2 at '
+      + 'x = 110 to get each of them. The division by 2 is in the expression because the two '
+      + 'angles were said to be equal; deciding that the 110 has to come out of the total BEFORE '
+      + 'anything is shared is the step this task cannot ask you for.',
+    given: '(180 - x)/2',
+    variables: REAL_X,
+    // (180 − 110)/2 = 70/2 = 35, and 110 + 35 + 35 = 180.
+    reference: '35',
+    at: { x: '110' },
+  },
+  {
+    id: 'two-obtuse-angles-overrun-the-total-1',
+    knowledgePointId: 'at-most-one-angle-is-not-acute',
+    kind: 'evaluate',
+    prompt:
+      'Now suppose a triangle had TWO angles of 110°. Evaluate 180 − a − b at a = 110, b = 110 '
+      + 'to see what the third angle would have to be. Read the answer against '
+      + 'third-angle-of-a-triangle-1: the arithmetic is identical and only the inputs moved, '
+      + 'which is what makes the impossibility arithmetic rather than a matter of drawing it and '
+      + 'seeing that it will not fit.',
+    given: '180 - a - b',
+    variables: REAL_AB,
+    // 180 − 110 − 110 = −40. A negative third angle is impossible rather than
+    // merely wrong, and 90 + 90 = 180 gives exactly 0 — also impossible, which
+    // is why the rule is "at most one of 90° OR MORE" and not "at most one
+    // strictly over 90°".
+    reference: '-40',
+    at: { a: '110', b: '110' },
+  },
+
+  // ── plane-geometry: congruence ───────────────────────────────────────────
+  //
+  // Six more `evaluate` tasks, across the three points of `congruence`.
+  // Everything the two blocks above say applies unchanged — exact rational
+  // arithmetic, no worker, every one a proxy that names the decision it stands
+  // in for.
+  //
+  // THE PROXY IS WIDER HERE THAN ANYWHERE ELSE IN THE SUBJECT, and that is
+  // the honest thing to write down rather than discover. In the angle concepts
+  // the unscorable half was a REASON. Here it is a CORRESPONDENCE: the object
+  // the first point is really about is a pairing of vertices, which is not a
+  // value and not a `NamedForm`, so no verifiable kind can carry it. So these
+  // tasks ask the arithmetic a correspondence licenses ONCE IT HAS BEEN READ,
+  // and the reading is unscored — a learner who pairs the vertices wrongly and
+  // then subtracts correctly still takes the mark. Naming the criterion is
+  // unscorable for the same reason: SSS, SAS and ASA are not values either.
+  //
+  // What that leaves scorable is worth stating, because it is not nothing: the
+  // angle-sum arithmetic is exactly the mechanical step the concept adds, and
+  // `aas-completes-to-asa-1` puts it to real work — it checks that an angle
+  // computed in ONE triangle equals an angle given in the OTHER, which is the
+  // whole of why AAS is not a fourth criterion.
+  //
+  // Two of these six deliberately echo expressions from the blocks above.
+  // `isosceles-base-angles-1` is `(180 − x)/2`, the same expression as
+  // `share-what-the-given-angle-leaves-1`, and the repetition IS the content:
+  // there the halving was licensed by being TOLD the other two angles were
+  // equal, and here it is licensed by the base-angle theorem, derived from a
+  // triangle matched with itself. Same arithmetic, one of them earned. The
+  // prompts say so and cross-reference each other, because a learner meeting
+  // the second one has every right to ask what is new.
+  {
+    id: 'third-angle-then-carried-across-1',
+    knowledgePointId: 'a-congruence-names-a-correspondence',
+    kind: 'evaluate',
+    prompt:
+      'Triangle ABC is congruent to triangle DEF. In ABC the angle at A is 24° and the angle at '
+      + 'B is 115°. Evaluate 180 − a − b at a = 24, b = 115 to get the angle at C, which the '
+      + 'correspondence then makes equal to the angle at F. Note which half of that this task '
+      + 'scores: the subtraction, not the pairing. That F is the letter matching C — rather than '
+      + 'D or E — is read off the letter order, and no answer you type here can show you read it '
+      + 'correctly.',
+    given: '180 - a - b',
+    variables: REAL_AB,
+    // 180 − 24 − 115 = 41, the angle at C and so the angle at F.
+    reference: '41',
+    at: { a: '24', b: '115' },
+  },
+  {
+    id: 'the-reordered-claim-is-false-1',
+    knowledgePointId: 'a-congruence-names-a-correspondence',
+    kind: 'evaluate',
+    prompt:
+      'Same two triangles, where the angle at A is 24° and the angle at E is 115°. Writing "ABC '
+      + 'is congruent to EDF" instead pairs A with E, so it demands those two angles be equal. '
+      + 'Evaluate a − b at a = 115, b = 24 to test that demand. A difference of 0 would mean the '
+      + 'reordering changed nothing; anything else means it made a different claim, and a false '
+      + 'one, about the very same pair of triangles.',
+    given: 'a - b',
+    variables: REAL_AB,
+    // 115 − 24 = 91. Non-zero, so the reordered statement is false — about two
+    // triangles that genuinely are congruent under the original order.
+    reference: '91',
+    at: { a: '115', b: '24' },
+  },
+  {
+    id: 'aas-completes-to-asa-1',
+    knowledgePointId: 'three-of-the-six-and-aas-is-asa-again',
+    kind: 'evaluate',
+    prompt:
+      'In triangle PQR the angles at P and Q are 73° and 44°. In triangle XYZ the angles at X '
+      + 'and Z are 73° and 63°, so the angle at Y is 180 − 73 − 63. The claim is that this '
+      + 'recovers the 44° that PQR was given, which is what turns a side and two angles into ASA. '
+      + 'Evaluate (180 − a − c) − b at a = 73, c = 63, b = 44. A difference of 0 says the '
+      + 'computed angle and the given one are the same angle, so the two triangles hold the same '
+      + 'ASA data and AAS was never a fourth criterion.',
+    given: '(180 - a - c) - b',
+    variables: REAL_ABC,
+    // 180 − 73 − 63 = 44, and 44 − 44 = 0. The AAS data for XYZ completes to
+    // exactly the ASA data PQR was handed.
+    reference: '0',
+    at: { a: '73', c: '63', b: '44' },
+  },
+  {
+    id: 'the-third-angle-was-never-free-1',
+    knowledgePointId: 'three-of-the-six-and-aas-is-asa-again',
+    kind: 'evaluate',
+    prompt:
+      'Both triangles turn out to have the angles 73°, 44° and 63°. Evaluate (a + b + c) − 180 '
+      + 'at a = 73, b = 44, c = 63. A difference of 0 is the angle sum, and here it is making a '
+      + 'point about criteria rather than about this triangle: the third angle is forced by the '
+      + 'other two, so three angles are really only two independent numbers — and neither of '
+      + 'them is a length. That is why AAA cannot be a criterion however much angle data it '
+      + 'carries.',
+    given: '(a + b + c) - 180',
+    variables: REAL_ABC,
+    // 73 + 44 + 63 = 180, so 0. Identically 0 for any triangle's angles, which
+    // is the dependence that makes AAA offer two numbers rather than three.
+    reference: '0',
+    at: { a: '73', b: '44', c: '63' },
+  },
+  {
+    id: 'isosceles-base-angles-1',
+    knowledgePointId: 'base-angles-by-matching-a-triangle-with-itself',
+    kind: 'evaluate',
+    prompt:
+      'In triangle ABC, AB = AC and the angle at A is 28°. Evaluate (180 − x)/2 at x = 28 to get '
+      + 'each of the base angles. Read this against share-what-the-given-angle-leaves-1, which is '
+      + 'the identical expression: there you were TOLD the other two angles were equal, and here '
+      + 'you were told only that two SIDES are equal. What licenses the division by 2 is the '
+      + 'base-angle theorem — matching ABC with ACB and applying SAS — and that derivation is '
+      + 'the half this task cannot score.',
+    given: '(180 - x)/2',
+    variables: REAL_X,
+    // (180 − 28)/2 = 152/2 = 76, and 28 + 76 + 76 = 180. The equality of the
+    // two base angles is derived here rather than given, which is the whole
+    // difference from the triangle task of the same shape.
+    reference: '76',
+    at: { x: '28' },
+  },
+  {
+    id: 'the-equilateral-fixed-point-1',
+    knowledgePointId: 'base-angles-by-matching-a-triangle-with-itself',
+    kind: 'evaluate',
+    prompt:
+      'Apply the base-angle theorem to a SECOND pair of equal sides and all three angles come '
+      + 'out equal, so an equilateral triangle has a definite angle rather than merely three '
+      + 'matching ones. Evaluate (180 − x)/2 at x = 60. Getting 60 back is the content: 60° is '
+      + 'the one apex angle that equals its own base angles, so it is the only value all three '
+      + 'can take at once.',
+    given: '(180 - x)/2',
+    variables: REAL_X,
+    // (180 − 60)/2 = 120/2 = 60. The fixed point of x ↦ (180 − x)/2, which is
+    // the equilateral case: 3x = 180 and x = 60 are the same statement.
+    reference: '60',
+    at: { x: '60' },
+  },
+
+  // The similarity tasks pay the same unscorable-half price a fourth time, and
+  // the shape of the debt is worth separating from the three above because it
+  // is not the same one. In the angle concepts the unscorable half was a
+  // REASON; in congruence it was a CORRESPONDENCE. Here it is both at once, and
+  // one more besides: what the first point teaches is which three of the six
+  // claims a similarity weakens, and "the angles stayed equal and the sides
+  // became proportional" is a statement about a claim rather than a value, so
+  // no verifiable kind carries it. A learner who believes EF = 9 and then
+  // multiplies correctly takes the mark on the task below. That is named in the
+  // prompt, as it is in every other block that makes this trade.
+  //
+  // What IS scorable here is better than it was for congruence, and the second
+  // task is why. A reversed letter order produces a FALSE PROPORTION, and a
+  // false proportion is two numbers that fail to be equal — which is a value,
+  // and is rulable. So `the-reversed-order-is-false-1` scores the very thing
+  // the congruence concept could only assert: it is the arithmetic refutation
+  // of a misread correspondence, not a proxy for one.
+  //
+  // Two of these six deliberately echo tasks from the block above, and in both
+  // cases the repetition is the content. `aa-completes-both-triples-1` is the
+  // same expression as `aas-completes-to-asa-1` and `the-third-angle-was-never-
+  // free-1` is cited by `two-angles-are-all-there-ever-were-1`: the angle sum
+  // forcing the third angle is one fact that lands in opposite places, killing
+  // AAA as a congruence criterion and collapsing AAA into AA for similarity.
+  // Asking it twice is how the two verdicts get attached to one piece of
+  // arithmetic. The prompts say so and cross-reference by id.
+  {
+    id: 'the-scale-factor-carried-across-1',
+    knowledgePointId: 'a-similarity-loosens-three-of-the-six',
+    kind: 'evaluate',
+    prompt:
+      'Triangle ABC is similar to triangle DEF. In ABC, AB = 6 and BC = 9; in DEF, DE = 10. The '
+      + 'matched pair AB and DE fixes the scale factor, and every other matched pair shares it. '
+      + 'Evaluate c * a / b at a = 10, b = 6, c = 9 to get EF. Note which half of this task '
+      + 'scores: the multiplication, not the reading. That EF is the side matching BC — rather '
+      + 'than DE or FD — comes off the letter order, and so does the fact that EF is 5/3 of BC '
+      + 'rather than equal to it. Neither is anything your answer here can show you got right.',
+    given: 'c * a / b',
+    variables: REAL_ABC,
+    // 9 × 10/6 = 9 × 5/3 = 15, the side EF. The congruence habit answers 9,
+    // which is the error the knowledge point is built to refuse.
+    reference: '15',
+    at: { a: '10', b: '6', c: '9' },
+  },
+  {
+    id: 'the-reversed-order-is-false-1',
+    knowledgePointId: 'a-similarity-loosens-three-of-the-six',
+    kind: 'evaluate',
+    prompt:
+      'Same two triangles, now with all four lengths known: AB = 6 and BC = 9, DE = 10 and '
+      + 'EF = 15. FED names the same triangle as DEF, so not one length changes — but "ABC is '
+      + 'similar to FED" matches AB with FE and BC with ED instead, and so demands that 6/15 and '
+      + '9/10 be the same number. Evaluate a/b - c/x at a = 6, b = 15, c = 9, x = 10 to test that '
+      + 'demand. A difference of 0 would mean the reversal changed nothing; anything else means '
+      + 'it made a different claim, and a false one, about an unchanged pair of triangles.',
+    given: 'a/b - c/x',
+    variables: REAL_ABC_X,
+    // 6/15 − 9/10 = 2/5 − 9/10 = 4/10 − 9/10 = −1/2. Non-zero, so the reversed
+    // statement is false about two triangles that genuinely are similar.
+    reference: '-1/2',
+    at: { a: '6', b: '15', c: '9', x: '10' },
+  },
+  {
+    id: 'aa-completes-both-triples-1',
+    knowledgePointId: 'two-angles-settle-it-and-no-length-is-needed',
+    kind: 'evaluate',
+    prompt:
+      'In triangle ABC the angles at A and B are 52° and 85°. In triangle DEF the angles at D and '
+      + 'F are 52° and 43°, so the angle at E is 180 − 52 − 43. The claim is that this recovers '
+      + 'the 85° that ABC was given, which is what makes the two triangles similar by AA. '
+      + 'Evaluate (180 - a - c) - b at a = 52, c = 43, b = 85. A difference of 0 says the computed '
+      + 'angle and the given one are the same angle, so the two triangles have the same three '
+      + 'angles and the correspondence is forced. This is the identical expression to '
+      + 'aas-completes-to-asa-1 in the congruence concept — the same completion of an angle '
+      + 'triple, reused here to settle a similarity rather than a congruence.',
+    given: '(180 - a - c) - b',
+    variables: REAL_ABC,
+    // 180 − 52 − 43 = 85, and 85 − 85 = 0. DEF's third angle is exactly the one
+    // ABC was handed, so both triangles carry 52°, 85° and 43°.
+    reference: '0',
+    at: { a: '52', c: '43', b: '85' },
+  },
+  {
+    id: 'two-angles-are-all-there-ever-were-1',
+    knowledgePointId: 'two-angles-settle-it-and-no-length-is-needed',
+    kind: 'evaluate',
+    prompt:
+      'Evaluate 180 - a - b at a = 52, b = 85 to get the third angle of ABC. The value is not the '
+      + 'point — that it was computable at all is. Naming a third angle adds no information to '
+      + 'two, which is why AA and AAA are one criterion and nobody writes AAA for similarity. '
+      + 'Read this against the-third-angle-was-never-free-1, which asserts the same dependence as '
+      + 'a difference of zero: there it is the reason AAA cannot be a CONGRUENCE criterion, since '
+      + 'three angles are two independent numbers and neither is a length. One fact, two opposite '
+      + 'verdicts, and the difference is only whether size was being asked for.',
+    given: '180 - a - b',
+    variables: REAL_AB,
+    // 180 − 52 − 85 = 43, the angle at C. Also the expression of
+    // third-angle-then-carried-across-1 at different inputs: that task carries a
+    // computed angle across a congruence, this one shows it was never free.
+    reference: '43',
+    at: { a: '52', b: '85' },
+  },
+  {
+    id: 'the-down-ratio-is-one-number-1',
+    knowledgePointId: 'the-same-proportion-read-across-or-down',
+    kind: 'evaluate',
+    prompt:
+      'Triangle ABC is similar to triangle DEF, with AB = 8, BC = 14, DE = 20 and so EF = 35. '
+      + 'Rearranging AB/DE = BC/EF gives AB/BC = DE/EF, a ratio taken inside each triangle rather '
+      + 'than between them. Evaluate a/b - c/x at a = 8, b = 14, c = 20, x = 35 to compare the '
+      + 'two. A difference of 0 says both triangles give the same number — and note that number '
+      + 'is 4/7, not the scale factor 5/2: these are two different ratios measuring two different '
+      + 'things, which is the confusion this point exists to separate.',
+    given: 'a/b - c/x',
+    variables: REAL_ABC_X,
+    // 8/14 − 20/35 = 4/7 − 4/7 = 0. Guaranteed by the rearrangement before
+    // either side is computed, which is why the equality is the content and the
+    // arithmetic is only the instance.
+    reference: '0',
+    at: { a: '8', b: '14', c: '20', x: '35' },
+  },
+  {
+    id: 'the-down-ratio-survives-scaling-1',
+    knowledgePointId: 'the-same-proportion-read-across-or-down',
+    kind: 'evaluate',
+    prompt:
+      'Scale DEF again, by a factor of 3: its sides DE = 20 and EF = 35 become 60 and 105. '
+      + 'Evaluate (a*x)/(b*x) at a = 20, b = 35, x = 3. Getting 4/7 back — the same value the '
+      + 'unscaled triangle gave — is the content: the factor cancels top and bottom, so a ratio '
+      + 'of two sides of one figure cannot see how big the figure is. The scale factor has no such '
+      + 'protection; it would have gone from 5/2 to 15/2. That is why a ratio of two sides is a '
+      + 'function of the angles alone, and so why it can be tabulated against an angle at all.',
+    given: '(a*x)/(b*x)',
+    variables: REAL_ABX,
+    // (20 × 3)/(35 × 3) = 60/105 = 4/7, which is 20/35 unchanged. The x cancels
+    // for every non-zero x, so this is the invariance rather than one instance
+    // of it.
+    reference: '4/7',
+    at: { a: '20', b: '35', x: '3' },
+  },
+
   // ── functions-and-inverses ──────────────────────────────────────────────
   //
   // Twelve tasks, one per knowledge point, all `evaluate` and all settled by
@@ -2415,11 +3081,65 @@ export const TASKS: PracticeTask[] = [
 
   // ── vectors-and-independence ────────────────────────────────────────────
   //
-  // Nine tasks on components, all exactly rulable. Two vector pairs run
-  // through the whole subject — u = (2,-1) with v = (1,3) independent, and
+  // Twelve tasks, all exactly rulable: three on the plane the components are
+  // read off, then nine on components. Two vector pairs run through the
+  // component half of the subject — u = (2,-1) with v = (1,3) independent, and
   // u with w = (6,-3) dependent — so the same numbers answer "is it in the
   // span", "is it independent" and "what does it cost", and a learner can see
   // the cross-check give 7 and then 0 on pairs they already know the shape of.
+  //
+  // The three plane tasks do the same thing one level down, with two points
+  // reused throughout: P = (-4, 7) and Q = (2, 7) answer "which quadrant" and
+  // "how far apart" in turn, and their shared second coordinate is the whole
+  // point of the second question. The first task uses (3, 5) and (5, 3)
+  // instead, because what it is about is the swap.
+  {
+    id: 'ordered-pair-1',
+    knowledgePointId: 'a-point-is-an-ordered-pair',
+    kind: 'evaluate',
+    prompt:
+      'P = (3, 5) and Q = (5, 3). Evaluate the difference of their FIRST coordinates. Points are ' +
+      'equal only when both coordinates agree, so one disagreement is enough to tell them apart.',
+    given: 'p1 - q1',
+    variables: POINT_PQ,
+    at: { p1: '3', q1: '5' },
+    // 3 - 5 = -2. Negative rather than positive because P is the left-hand
+    // point; the sign is not incidental here, it is the next task but one.
+    reference: '-2',
+  },
+  {
+    id: 'quadrant-signs-1',
+    knowledgePointId: 'the-signs-name-the-quadrant',
+    kind: 'evaluate',
+    prompt:
+      'P = (-4, 7). Evaluate the product of its coordinates. A negative product means the two ' +
+      'coordinates have opposite signs, which leaves quadrants II and IV — and the positive ' +
+      'second coordinate then picks II.',
+    // A proxy, named as one, the same way `span-line-1` below is: the question
+    // is "which quadrant" and the answer to that is not a number. The product
+    // is the step that halves it and is exactly checkable; the prompt carries
+    // the half the arithmetic cannot settle, rather than pretending -28 is the
+    // quadrant.
+    given: 'p1 * p2',
+    variables: POINT_PQ,
+    at: { p1: '-4', p2: '7' },
+    reference: '-28',
+  },
+  {
+    id: 'coordinate-separation-1',
+    knowledgePointId: 'separation-is-one-axis-at-a-time',
+    kind: 'evaluate',
+    prompt:
+      'P = (-4, 7) and Q = (2, 7). Find the horizontal separation by evaluating the first ' +
+      'coordinate of Q minus the first coordinate of P. The vertical difference is 7 - 7 = 0, so ' +
+      'the points are the same height and this one number is the whole distance.',
+    given: 'q1 - p1',
+    variables: POINT_PQ,
+    at: { q1: '2', p1: '-4' },
+    // 2 - (-4) = 6. Subtracting across zero is the arithmetic this task is
+    // really drilling, which is why the pair straddles the axis.
+    reference: '6',
+  },
   {
     id: 'magnitude-1',
     knowledgePointId: 'a-vector-is-a-displacement',

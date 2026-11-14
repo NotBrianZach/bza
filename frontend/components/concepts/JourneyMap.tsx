@@ -49,6 +49,7 @@ export default function JourneyMap({
   areaNames,
   queuedTasks,
   onPractise,
+  onLeadThrough,
   onSelectConcept,
 }: {
   ontology: ConceptOntology
@@ -57,6 +58,16 @@ export default function JourneyMap({
   areaNames?: Record<string, string>
   queuedTasks?: { id: string; conceptId: string | null }[]
   onPractise?: (taskId: string) => void
+  /**
+   * Be led through this step's worked example, in tutor mode.
+   *
+   * Offered on every step with material rather than only on locked ones: being
+   * walked through a derivation is not a consolation prize for a concept you
+   * cannot practise yet, and a learner who has the problem open may still want
+   * the example first. Whether there is anything to walk is tutor mode's own
+   * question — this only names the concept.
+   */
+  onLeadThrough?: (conceptId: string) => void
   /** Show a concept on the concept map. Switches the tab's scope — see /learn. */
   onSelectConcept?: (conceptId: string) => void
 }) {
@@ -289,6 +300,19 @@ export default function JourneyMap({
                       </span>
                     )}
                   </span>
+                  {/* Both verbs, in the order they are taken: be led through
+                      the example, then be set the problem. A locked step has
+                      only the first, which is the one useful thing that can be
+                      offered for it. */}
+                  {onLeadThrough && (
+                    <button
+                      onClick={() => onLeadThrough(s.conceptId)}
+                      title='Be led through this concept’s worked example, one question at a time. Nothing there is marked.'
+                      className='flex-shrink-0 rounded-full border border-sky-700/60 px-2 py-0.5 text-[10px] text-sky-200 hover:bg-sky-900/40'
+                    >
+                      walk through
+                    </button>
+                  )}
                   {taskId && onPractise && (
                     <button
                       onClick={() => onPractise(taskId)}
