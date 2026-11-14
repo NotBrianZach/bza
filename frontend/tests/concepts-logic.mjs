@@ -3767,6 +3767,39 @@ t('a learner answer is capped rather than passed through whole', (() => {
   return promptFor(c, 0, 'nudge', huge).prompt.user.includes('x'.repeat(1200))
     && !promptFor(c, 0, 'nudge', huge).prompt.user.includes('x'.repeat(1201))
 })())
+/*
+ * The reply turn branches, because an answered step and a stuck one are
+ * different asks. One set of instructions for both produced a reply that
+ * re-asked the step at a learner who had just answered it.
+ *
+ * The forbidden-praise line is asserted as a string because it is the one
+ * instruction standing between "replies with a question" and "replies with a
+ * mark" — the model cannot know whether the learner is right, so a stray
+ * "exactly!" would be a verdict it is not entitled to give.
+ */
+t('an answered step and a stuck step get different instructions', (() => {
+  const c = QCHAINS[0]
+  const answered = promptFor(c, 0, 'nudge', 'I think you add the exponents').prompt.system
+  const stuck = promptFor(c, 0, 'nudge', '   ').prompt.system
+  return answered.includes('has just answered')
+    && !answered.includes('is stuck')
+    && stuck.includes('is stuck')
+    && !stuck.includes('has just answered')
+    && answered !== stuck
+})())
+t('the answered branch forbids every word a learner would read as a mark', (() => {
+  const s = promptFor(QCHAINS[0], 0, 'nudge', 'the bases are the same').prompt.system
+  return s.includes('Never say "correct", "right", "exactly", "good"')
+    && s.includes('do not grade what they')
+})())
+t('whitespace counts as not having answered, so the box cannot send an empty turn', (() => {
+  const u = promptFor(QCHAINS[0], 0, 'nudge', '  \n  ').prompt.user
+  return u.includes('they said only that they are stuck')
+})())
+t('what the learner wrote reaches the prompt verbatim', (() => {
+  const said = 'seven 2s in a row, so 2^7'
+  return promptFor(QCHAINS[0], 0, 'nudge', said).prompt.user.includes(said)
+})())
 t('promptFor refuses a position off the end',
   promptFor(QCHAINS[0], QCHAINS[0].questions.length, 'ask', '') === null
   && promptFor(QCHAINS[0], -1, 'ask', '') === null)

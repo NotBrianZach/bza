@@ -5,7 +5,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkMath from 'remark-math'
 import rehypeKatex from 'rehype-katex'
 import {
-  ArrowRight, Compass, Eye, HelpCircle, Loader2, Lock, MapPin, RotateCcw,
+  ArrowRight, Compass, Eye, HelpCircle, Loader2, Lock, MapPin, RotateCcw, Send,
 } from 'lucide-react'
 import { authedFetch } from '@/lib/authedFetch'
 import { conceptById } from '@/lib/concepts/registry'
@@ -34,19 +34,33 @@ import type { ConceptOntology } from '@/lib/concepts/types'
  * panel let that feel like progress it would be competing with the mastery
  * floor rather than feeding it.
  *
- * So: the answer box posts nowhere, the self-check is a local tally that is
- * discarded on reload, and both say as much. The one button that writes
- * anything is "be set a problem on this", which leaves for the practice tab.
+ * So: the self-check is a local tally discarded on reload and says as much,
+ * and the one button that writes anything is "be set a problem on this",
+ * which leaves for the practice tab.
  *
- * ── Why the self-check is the learner's own ───────────────────────────────
+ * ── Sending an answer, which this panel first shipped without ─────────────
  *
- * The obvious feature here is "mark my answer", and it is the one thing this
- * cannot do. Prose is unverifiable, and the asking model is never given the
- * step's answer — structurally, see lib/concepts/socratic.ts — so it is not
- * merely forbidden from marking, it is incapable of it. What is left is the
- * honest version: show the authored detail, and let the learner say. A tally
- * they wrote about themselves is worth something to them and nothing to the
- * scheduler, which is exactly how it is presented.
+ * The first version had an answer box that posted nowhere, on the reasoning
+ * that prose is unverifiable and a model must not mark. The reasoning was
+ * right and the conclusion was wrong: the send path already existed — the box
+ * was wired to `nudge`, which sends the learner's words — and it was labelled
+ * "smaller question", which nobody reads as "send what I wrote". So the panel
+ * had a text area with no visible way to submit, and a learner's first
+ * reasonable act was impossible.
+ *
+ * It sends now, with an explicit button and Cmd/Ctrl+Enter. What keeps that
+ * honest is not a policy but the prompt: the tutor is given the problem, the
+ * steps already established and the learner's words, and NOT what this step
+ * establishes. So the reply can only be another question. It is not forbidden
+ * from marking, it is incapable of it, and the label under every reply says
+ * which of those it is.
+ *
+ * ── Why the self-check is still the learner's own ─────────────────────────
+ *
+ * Because the above means nothing that comes back is a verdict. The authored
+ * detail is revealed by the app, and the learner says whether they had it. A
+ * tally they wrote about themselves is worth something to them and nothing to
+ * the scheduler, which is exactly how it is presented.
  *
  * ── It decides nothing ────────────────────────────────────────────────────
  *
@@ -108,8 +122,15 @@ export default function SocraticWalk({
   const [asked, setAsked] = useState<Asked | null>(null)
   const [busy, setBusy] = useState<'ask' | 'nudge' | null>(null)
   const [error, setError] = useState<string | null>(null)
-  /** Extra questions on the current step, oldest first. Cleared on advance. */
-  const [nudges, setNudges] = useState<Asked[]>([])
+  /**
+   * The back-and-forth on the current step, oldest first. Cleared on advance.
+   *
+   * What the learner SAID is kept beside the reply, not just the reply. The
+   * first version stored only the tutor's side, which made a sent answer
+   * vanish from the screen the moment it was sent — so the one thing proving
+   * the answer had gone anywhere was absent.
+   */
+  const [thread, setThread] = useState<{ said: string; reply: Asked }[]>([])
   const [answer, setAnswer] = useState('')
   const [revealed, setRevealed] = useState(false)
   /** The learner's own verdict per step. Local, discarded, and labelled as such. */
@@ -142,8 +163,12 @@ export default function SocraticWalk({
       })
       const d = await res.json() as Asked & { error?: string }
       if (d.error) { setError(d.error); return }
-      if (mode === 'nudge') setNudges(n => [...n, d])
-      else setAsked(d)
+      if (mode === 'nudge') {
+        setThread(t => [...t, { said, reply: d }])
+        // Only on success. Clearing the box before the reply lands would lose
+        // the learner's words to a failed request.
+        if (said.trim()) setAnswer('')
+      } else setAsked(d)
     } catch {
       setError('could not reach the tutor')
     } finally {
@@ -169,7 +194,7 @@ export default function SocraticWalk({
     setPointId(id)
     setPosition(0)
     setAsked(null)
-    setNudges([])
+    setThread([])
     setAnswer('')
     setRevealed(false)
     setHad({})
@@ -186,7 +211,7 @@ export default function SocraticWalk({
 
   const advance = () => {
     setPosition(p => p + 1)
-    setNudges([])
+    setThread([])
     setAnswer('')
     setRevealed(false)
   }
@@ -404,35 +429,77 @@ export default function SocraticWalk({
             </>
           )}
 
-          {nudges.map((n, i) => (
-            <div key={i} className='mt-2 border-l-2 border-sky-900/60 pl-2'>
-              <div className='text-[12px] leading-snug text-sky-100/90'>
-                <Md>{n.question}</Md>
+          {/* The exchange, as a conversation: what you said, then what came
+              back. The reply is labelled every time, because the one thing a
+              learner must not conclude from a tutor answering their answer is
+              that it was marked. */}
+          {thread.map((t, i) => (
+            <div key={i} className='mt-2 space-y-1'>
+              {t.said.trim() && (
+                <div className='rounded border border-gray-800 bg-gray-950/40 px-2 py-1'>
+                  <p className='text-[10px] uppercase tracking-wide text-gray-600'>you said</p>
+                  <p className='whitespace-pre-wrap text-[11px] leading-snug text-gray-300'>
+                    {t.said.trim()}
+                  </p>
+                </div>
+              )}
+              <div className='border-l-2 border-sky-900/60 pl-2'>
+                <div className='text-[12px] leading-snug text-sky-100/90'>
+                  <Md>{t.reply.question}</Md>
+                </div>
+                <p className='mt-0.5 text-[10px] text-gray-600'>
+                  {SOURCE_LABEL[t.reply.source]} — a question back, not a verdict. The tutor was
+                  never told what this step establishes.
+                </p>
               </div>
-              <p className='mt-0.5 text-[10px] text-gray-600'>{SOURCE_LABEL[n.source]}</p>
             </div>
           ))}
 
-          {/* The answer box posts nowhere. Said plainly in the placeholder,
-              because an input that looks like it submits and does not is the
-              one thing worse than no input at all. */}
+          {/* Sending is the point, and the placeholder used to say the opposite.
+              What goes to the tutor is your words plus the steps already
+              established — never this step's answer, which is why the reply
+              can only ever be another question. */}
           <textarea
             value={answer}
             onChange={e => setAnswer(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && !busy && answer.trim()) {
+                e.preventDefault()
+                ask(position, 'nudge', answer)
+              }
+            }}
             rows={2}
-            placeholder='Answer it in your own words — this is for you, and is not sent anywhere or marked'
+            placeholder='Answer in your own words, then send it — the tutor replies with a question, never a mark'
             className='mt-2 w-full resize-y rounded border border-gray-700 bg-transparent px-2 py-1 text-xs text-gray-200 outline-none placeholder:text-gray-600'
           />
 
           <div className='mt-1.5 flex flex-wrap items-center gap-1'>
+            {/* The primary action, which this panel shipped without. The answer
+                box always posted to the same place — it was labelled "smaller
+                question", which nobody reads as "send what I wrote". */}
             <button
               onClick={() => ask(position, 'nudge', answer)}
+              disabled={!!busy || !answer.trim()}
+              title={answer.trim()
+                ? 'Send your answer. The tutor reads it and replies with another question — it cannot tell you whether you are right, because it has never been told the answer. Cmd/Ctrl+Enter also sends.'
+                : 'Write something first'}
+              className='inline-flex items-center gap-1 rounded-full border border-sky-700/60 px-2 py-0.5 text-[11px] text-sky-200 hover:bg-sky-900/40 disabled:opacity-40'
+            >
+              {busy === 'nudge' && answer.trim()
+                ? <Loader2 size={10} className='animate-spin' />
+                : <Send size={10} />}
+              send to tutor
+            </button>
+            <button
+              onClick={() => ask(position, 'nudge', '')}
               disabled={!!busy}
-              title='A smaller question about the same step. The tutor still does not have the answer, so it cannot tell you whether yours is right.'
+              title='Ask for a smaller question about the same step, without answering.'
               className='inline-flex items-center gap-1 rounded-full border border-gray-700 px-2 py-0.5 text-[11px] text-gray-300 hover:bg-gray-800 disabled:opacity-40'
             >
-              {busy === 'nudge' ? <Loader2 size={10} className='animate-spin' /> : <HelpCircle size={10} />}
-              smaller question
+              {busy === 'nudge' && !answer.trim()
+                ? <Loader2 size={10} className='animate-spin' />
+                : <HelpCircle size={10} />}
+              I’m stuck
             </button>
             {!revealed ? (
               <button

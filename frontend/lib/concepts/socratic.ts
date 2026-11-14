@@ -295,12 +295,20 @@ export function socraticPrompt(ctx: SocraticContext, subjectName?: string): Prom
 }
 
 /**
- * A smaller question, for a learner who is stuck or has answered.
+ * The reply turn: the learner has answered, or has said they are stuck.
  *
- * The learner's own words are included; the answer still is not. So this
- * cannot become a marking turn however the learner phrases the request — a
- * model asked "is that right?" by something that does not hold the answer can
- * only ask a better question, which is the behaviour wanted anyway.
+ * This is the primary path through a walk rather than the escape hatch it was
+ * first written as. The learner's own words are included; the answer to the
+ * step still is not. So it cannot become a marking turn however the learner
+ * phrases the request — a model asked "is that right?" by something that does
+ * not hold the answer can only ask a better question, which is the behaviour
+ * wanted anyway. The guarantee is the missing field, not the instruction.
+ *
+ * The two cases get different instructions because they are different asks. An
+ * answered step wants the question that moves past what they have shown; a
+ * stuck one wants a smaller way into the same step. Writing one set of
+ * instructions for both produced a reply that re-asked the step at a learner
+ * who had just answered it.
  *
  * `answer` is trimmed and capped. A learner pasting their entire scratchpad is
  * normal, and the cap is here rather than at the route so that the prompt and
@@ -312,21 +320,34 @@ export function nudgePrompt(
   subjectName?: string,
 ): Prompt {
   const said = learnerAnswer.trim().slice(0, 1200)
+  const answered = said.length > 0
   return {
     system:
       'You are a Socratic tutor leading one learner through one derivation'
-      + `${subjectName ? ` in ${subjectName}` : ''}, one step at a time. The learner is stuck on `
-      + 'the current step, or has answered it and asked for another way in.\n\n'
+      + `${subjectName ? ` in ${subjectName}` : ''}, one step at a time. `
+      + (answered
+        ? 'The learner has just answered the current step in their own words.\n\n'
+        : 'The learner is stuck on the current step and has not answered it.\n\n')
       + `${FLOOR}\n\n`
-      + 'Ask a SMALLER question that gets at the same move — one the learner can answer from what '
-      + 'is established, and which leaves the step itself still to be taken. If their words point '
-      + 'at a particular misunderstanding, aim the smaller question at that, without saying that '
-      + 'they are wrong: you do not know.\n\n'
-      + `${MATH_SYNTAX}\n\n`
+      + (answered
+        ? 'Take what they wrote seriously and ask the ONE question it earns. If their reasoning '
+          + 'has a gap you can see from what is established, aim the question at that gap. If it '
+          + 'reads as complete, ask the question that takes the derivation forward from where '
+          + 'they are. Do NOT re-ask the step they have just answered, do not grade what they '
+          + 'wrote, and do not tell them they have it — you have not been told what this step '
+          + 'establishes, so you cannot know either way. Never say "correct", "right", "exactly", '
+          + '"good" or any synonym: the learner will read it as a mark, and it would be one you '
+          + 'are not entitled to give.'
+        : 'Ask a SMALLER question that gets at the same move — one they can answer from what is '
+          + 'established, and which leaves the step itself still to be taken. Breaking the step '
+          + 'into something answerable is the help; doing the step is not.')
+      + `\n\n${MATH_SYNTAX}\n\n`
       + 'Reply with the question and nothing else.',
     user:
       `${contextBlock(ctx)}\n\n`
-      + `WHAT THE LEARNER SAID\n${said.length > 0 ? said : '(nothing — they said only that they are stuck)'}`,
+      + (answered
+        ? `WHAT THE LEARNER WROTE\n${said}`
+        : 'WHAT THE LEARNER SAID\n(nothing — they said only that they are stuck)'),
   }
 }
 
