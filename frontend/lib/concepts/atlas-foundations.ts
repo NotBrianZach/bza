@@ -1,9 +1,32 @@
 /**
  * Foundations: what a school mathematics education actually passes through.
  *
- * Six areas, in the order they are usually met, and the order is a real claim
+ * Four areas, in the order they are usually met, and the order is a real claim
  * rather than a convention — every edge here is "you cannot do the second
  * without the first", not "the second is normally taught later".
+ *
+ * ── IT WAS SIX AREAS, AND TWO OF THEM WERE MERGED AWAY ────────────────────
+ *
+ * `NUMBER_AND_ARITHMETIC` was absorbed into `ALGEBRA_FOUNDATIONS`, and
+ * `COORDINATE_GEOMETRY` into `EUCLIDEAN_GEOMETRY`. Both merges were forced by
+ * the same thing and both are decisions about the learner-facing MAP rather
+ * than bookkeeping, so each is argued where it happened: the block above the
+ * node list of `ALGEBRA_FOUNDATIONS` carries the first and the block above
+ * `EUCLIDEAN_GEOMETRY`'s carries the second.
+ *
+ * The forcing fact in one paragraph. tests/atlas.mjs asserts that no area has
+ * fewer than five nodes — "no area is a stub" — and authoring a mapped node
+ * DELETES it from its area, because `atlasProblems` refuses a map node that
+ * collides with an authored concept. So an area that succeeds shrinks toward
+ * the floor and then freezes: `number-and-arithmetic` had given up ten nodes,
+ * was down to five, and could give up no more. Two of the five were on the
+ * only two learning journeys still unfinished. `euclidean-geometry` was three
+ * promotions from the same wall with five route concepts to release.
+ *
+ * The floor was not lowered and must not be. It is the only thing between
+ * this map and a scatter of one-node areas, and an area of three nodes is not
+ * a region of the map, it is a leftover. What a drained remnant needs is a
+ * neighbour, which is what both merges gave it.
  *
  * ── WHERE THIS MEETS THE AUTHORED SYLLABI ─────────────────────────────────
  *
@@ -24,31 +47,120 @@
 
 import type { MapArea } from './atlas'
 
-const NUMBER_AND_ARITHMETIC: MapArea = {
-  id: 'number-and-arithmetic',
-  name: 'Number and arithmetic',
+const ALGEBRA_FOUNDATIONS: MapArea = {
+  id: 'algebra-foundations',
+  name: 'Number and algebra',
   covers:
-    'Whole numbers through rational numbers: ratio and percent, scientific notation, and the ' +
-    'real line the irrationals complete. What is left here is what rests on the primes rather ' +
-    'than the primes themselves. The arithmetic underneath — place value, the written ' +
-    'algorithms, order of operations, signed numbers, divisibility, fractions, prime ' +
-    'factorisation, the gcd and lcm built on those primes, the roots and the irrationals those ' +
-    'factorisations decide, and now the decimal expansions they decide in the other direction ' +
-    '— has problems written for it and lives in the arithmetic-foundations syllabus; this area ' +
-    'points at those concepts rather than restating them. Nothing of that group is left here. ' +
-    'Both steps OUT of the rationals have gone with it: what this area still owns is ' +
-    '`real-number-line`, which assembles them into a complete ordered line, rather than the ' +
-    'roots that produce the first irrational or the base-ten writing that shows which numbers ' +
-    'the fractions already reach. Nothing symbolic — the moment a letter stands for an ' +
-    'unknown, it is algebra.',
+    'Number and the letters that stand for it: percent and ratio, scientific notation, the real ' +
+    'line the irrationals complete, and then equations, inequalities, systems and quadratics. ' +
+    'These were two areas until the number half had been almost entirely written out. The ' +
+    'arithmetic underneath — place value, the written algorithms, order of operations, signed ' +
+    'numbers, divisibility, fractions, prime factorisation, the gcd and lcm built on those ' +
+    'primes, the roots and the irrationals those factorisations decide, and the decimal ' +
+    'expansions they decide in the other direction — has problems written for it and lives in ' +
+    'the arithmetic-foundations syllabus, as do what a letter standing for a number actually ' +
+    'means and the polynomial and rational manipulation built on that; this area points at all ' +
+    'of them rather than restating them. So the old line between number and algebra — nothing ' +
+    'symbolic on one side, a letter standing for an unknown on the other — still holds of the ' +
+    'mathematics and no longer divides two regions of the map. It runs inside this one, and the ' +
+    'division a learner can still see is between what is written and what is only named.',
   /**
-   * TEN NODES HAVE LEFT THIS AREA AS THEY WERE AUTHORED, AND HAD TO.
+   * THIS AREA ABSORBED `NUMBER_AND_ARITHMETIC`, AND THE STUB FLOOR IS WHY.
    *
-   * `place-value`, `integer-arithmetic`, `order-of-operations`,
-   * `negative-numbers`, `divisibility`, `fraction-arithmetic`,
-   * `prime-factorisation`, `gcd-and-lcm`, `roots-and-irrationals` and
-   * `decimal-representation` are now real concepts with worked examples and
-   * tasks, in ontology-arithmetic.ts.
+   * tests/atlas.mjs asserts that `AREAS.filter(a => a.nodes.length < 5)` is
+   * empty — "no area is a stub". Authoring a mapped node DELETES it from its
+   * area, because `atlasProblems` refuses a node whose id collides with an
+   * authored concept. So an area that succeeds shrinks, and
+   * `number-and-arithmetic` had succeeded ten times: fifteen nodes down to
+   * five, which is the floor exactly. It could give up no more, and two of the
+   * five — `real-number-line` and `ratio-and-rate` — were steps on the only
+   * two learning journeys still carrying unwritten ground.
+   * ontology-geometry.ts had been calling that pair "the area-floor
+   * casualties" for three promotions running and passing over them each time,
+   * which is the shape of a deadlock rather than of a queue.
+   *
+   * THE THING NOT TO DO WAS EDIT THE CHECK, and it is worth saying plainly
+   * because it is both the one-line fix and the wrong one. The floor is what
+   * stands between this map and a scatter of one-node areas. An area is the
+   * unit a learner is shown a region of mathematics in; three nodes is not a
+   * region, it is a leftover, and a map that lets every successful branch
+   * decay into one has no editorial standard left. The remnant's own note said
+   * exactly this before the merge existed, and said what to do instead: merge
+   * into a neighbour. That note is reproduced below, where the ten departures
+   * are counted.
+   *
+   * ONE HONEST WEAKNESS IN THE CHECK — RECOMMENDED, NOT APPLIED. The floor
+   * cannot tell an area that DRAINED from one that was never filled: fifteen
+   * nodes down to five by authoring reads identically to five somebody
+   * sketched and abandoned. A version counting nodes-plus-departures against
+   * the floor would separate the two and would have let this area keep
+   * promoting with no merge at all. That is a real option and it is not what
+   * happened here, for the reason the remnant's note gives: at five remaining
+   * against ten gone the honest reading of that area was "mostly written", and
+   * a region whose content has moved into a syllabus should follow it rather
+   * than be propped up by a more forgiving test. The weakness is written down
+   * because the NEXT drained area may genuinely want the other answer, and
+   * whoever faces it should not have to rediscover that the choice exists.
+   *
+   * WHAT HAPPENED TO THE BOUNDARY — IT MOVED, IT WAS NOT RESTATED. Both areas
+   * drew the same line from opposite sides. "Nothing symbolic — the moment a
+   * letter stands for an unknown, it is algebra" was the number area's closing
+   * sentence, and this area's `covers` mirrored it with "letters standing for
+   * numbers". That claim is still true of the mathematics and has stopped
+   * being a fact about the map, because the map no longer keeps two regions
+   * for it to separate. The two `covers` paragraphs were rewritten into the
+   * one above, which says so. Leaving either of them asserting the old split
+   * would have been the worst outcome available: a reader would find the file
+   * claiming a division that the `AREAS` array itself contradicts.
+   *
+   * WHAT THE MERGE COST, which was almost nothing — and the reason is worth
+   * keeping, because it will not be true of the next merge. A merge has to
+   * re-examine every `links` entry in BOTH areas, since an entry whose two
+   * ends now sit in the SAME area has become an ordinary `needs` edge and must
+   * be deleted: `composeAtlas` would otherwise emit that edge twice, and a
+   * duplicate is not something it notices or any test catches.
+   * `number-and-arithmetic` arrived with `links` EMPTY — it had handed its
+   * last entry back to `arithmetic-foundations` when `gcd-and-lcm` was
+   * promoted — and not one of the eight entries below has both ends inside
+   * this area, so nothing had to go and nothing had to move. Nor did either
+   * area carry a `confusedWith` on a node that moved: the single interference
+   * in the merged area is `linear-inequalities ~ linear-equations`, and both
+   * of its ends were already here.
+   *
+   * tests/atlas.mjs asserts all three of those by name rather than by count,
+   * and the interference one earns its place: `interferes_with` constrains
+   * SELECTION rather than gating, so dropping one keeps every suite green
+   * while quietly freeing the scheduler to introduce the two most confusable
+   * concepts in the subject together.
+   *
+   * WHAT IT GAINED. Four edges that crossed an area boundary are now internal
+   * to one — `absolute-value-equations → absolute-value`,
+   * `linear-inequalities → real-number-line`, `word-problems → ratio-and-rate`
+   * and `percent → ratio-and-rate`. Not one of them was touched, because an
+   * edge is owned by the node that DECLARES it and all four are declared by
+   * nodes that were already in one of the two areas. What changed is that
+   * `areaOntology` keeps only internal edges, so all four appear in the area
+   * view for the first time and the area viewed alone is one connected drawing
+   * instead of two with a gap between them.
+   *
+   * THE BUDGET THIS BOUGHT. Fifteen nodes against a floor of five is ten
+   * promotions, and the two remaining journeys need four of them from here:
+   * `real-number-line`, `ratio-and-rate`, `linear-equations` and
+   * `systems-of-linear-equations`. Nothing in this area is held back by the
+   * floor any more, and nothing in it comes close.
+   */
+  /**
+   * FOURTEEN NODES HAVE LEFT THE TWO AREAS THAT MADE THIS ONE, AND HAD TO.
+   *
+   * Ten from the number half — `place-value`, `integer-arithmetic`,
+   * `order-of-operations`, `negative-numbers`, `divisibility`,
+   * `fraction-arithmetic`, `prime-factorisation`, `gcd-and-lcm`,
+   * `roots-and-irrationals` and `decimal-representation` — all now real
+   * concepts with worked examples and tasks, in ontology-arithmetic.ts. Four
+   * from the algebraic half: `variables-and-expressions` in
+   * ontology-algebra.ts, and `completing-the-square`, `quadratic-formula` and
+   * `polynomial-roots` in ontology.ts.
+   *
    * `atlasProblems` rejects a map node whose id collides with an authored
    * concept — not as tidiness, but because the composed concept list would
    * then hold two entries for the id and the shadowing copy has no knowledge
@@ -56,25 +168,30 @@ const NUMBER_AND_ARITHMETIC: MapArea = {
    *
    * The count is kept current deliberately. It is the measurement of how far
    * this area has turned into a syllabus, and a comment saying "five" while
-   * ten have gone is the kind of rot that makes a reader distrust the rest
-   * of the file. Ten gone against five remaining is also the point at which
-   * the honest reading of this area is "mostly written": see the note on the
-   * stub threshold beside the `decimal-representation` removal below.
+   * ten have gone is the kind of rot that makes a reader distrust the rest of
+   * the file. Fourteen gone against fifteen remaining is also the figure that
+   * forced the merge argued above: ten of the fourteen came out of a single
+   * area of fifteen, and what that left was not a region of the map.
    *
-   * The `needs` below still name them. That is the intended way for the map to
-   * meet a syllabus: the edge resolves in `composeAtlas`, where both endpoints
-   * exist. It is dropped by `areaOntology`, which keeps only edges internal to
-   * the area — so this area viewed alone now shows `absolute-value` and
-   * `divisibility`-dependent nodes as roots. That is the area view being
-   * honest about its own boundary rather than a fault.
+   * The `needs` below still name the departed. That is the intended way for
+   * the map to meet a syllabus: the edge resolves in `composeAtlas`, where
+   * both endpoints exist. It is dropped by `areaOntology`, which keeps only
+   * edges internal to the area — so this area viewed alone has eight roots
+   * rather than one, being every node whose prerequisites have all been
+   * authored out from under it, from `absolute-value` at the bottom to
+   * `binomial-theorem` near the top. That is the area view being honest about
+   * its own boundary rather than a fault, and tests/atlas.mjs asserts the set
+   * by NAMED membership, because a merge can turn a root set over completely
+   * without changing its size.
    *
    * An edge is owned by the node that DECLARES it, which is the part that
    * catches people out. Promoting a node strands the `needs` on the node
    * itself and leaves every edge declared elsewhere alone — so a promotion
-   * needs a `links` entry only when something that STAYED here depended on the
-   * node that left, and hands one BACK when the far end of an existing link is
-   * promoted in turn. This area has now produced one of each; the notes
-   * further down say which was which, and `links` is empty again as a result.
+   * needs a `links` entry only when something that STAYED depended on the node
+   * that left, and hands one BACK when the far end of an existing link is
+   * promoted in turn. The number half produced one of each and finished with
+   * `links` empty, which is the whole reason the merge had nothing to
+   * reconcile. Every entry under `links` below came from the algebraic half.
    */
   nodes: [
     {
@@ -179,6 +296,17 @@ const NUMBER_AND_ARITHMETIC: MapArea = {
      * and the right answer will probably be to merge what is left into a
      * neighbouring area rather than to loosen the threshold — an area of three
      * nodes is not a region of the map, it is a leftover.
+     *
+     * THAT IS WHAT HAPPENED, AND THE PREDICTION HELD IN BOTH HALVES. The next
+     * promotion out of here was never attempted: ontology-geometry.ts records
+     * three successive promotions passing over `real-number-line` and
+     * `ratio-and-rate` as "the area-floor casualties", because there was
+     * nowhere for them to go. The answer taken was the one this paragraph
+     * guessed — `number-and-arithmetic` was merged into `algebra-foundations`,
+     * which is the area these five nodes are now part of, and the threshold was
+     * left alone. The block above the node list argues it. The one thing this
+     * paragraph did not see is that the SAME wall was three promotions ahead in
+     * `euclidean-geometry`, so the merge had to be made twice.
      */
     {
       id: 'ratio-and-rate',
@@ -216,9 +344,16 @@ const NUMBER_AND_ARITHMETIC: MapArea = {
      *  - `real-number-line`, immediately below, names it in its own `needs`.
      *    Declared by a node that STAYED, so it survives as written and
      *    `composeAtlas` resolves it across the file boundary.
-     *  - `pythagoras`, in the geometry area, does the same from further away.
-     *    A hypotenuse is a square root, which is the one place school
-     *    geometry cannot avoid the irrationals.
+     *  - `pythagoras` USED TO do the same from further away, and no longer
+     *    does — it has since been authored in ontology-geometry.ts, so the
+     *    edge it declared could not stay with it. A hypotenuse is a square
+     *    root, which is the one place school geometry cannot avoid the
+     *    irrationals, so the claim is unchanged and only its home moved: it is
+     *    now the second entry in `EUCLIDEAN_GEOMETRY.links`, which is where a
+     *    stranded edge goes when its two endpoints end up in different
+     *    ontologies. Noted rather than deleted because this bullet listed it
+     *    under "declared by a node that STAYED", and that is exactly the kind
+     *    of sentence that rots into a lie when the node leaves.
      *  - the two entries in `ALGEBRA_FOUNDATIONS.links` running from here to
      *    `quadratic-formula` and to `rational-exponents` stay in `links`, and
      *    the reason has CHANGED even though the location has not: they used
@@ -250,89 +385,43 @@ const NUMBER_AND_ARITHMETIC: MapArea = {
       needs: ['decimal-representation'],
       terms: 'scientific notation order of magnitude significant figures estimation',
     },
-  ],
-  /*
-   * NO `links`, AND THE ONE THAT WAS HERE WENT SOMEWHERE BETTER.
-   *
-   * `gcd-and-lcm → fraction-arithmetic` lived here from the moment
-   * `fraction-arithmetic` was authored. The reason given at the time was that
-   * it "crosses from a map node to an authored concept and has nowhere else to
-   * live", which was true: `links` exists exactly for an edge neither of whose
-   * owners is a node of this area, and the far end was a node of this area.
-   *
-   * Promoting `gcd-and-lcm` made both endpoints authored concepts of
-   * `arithmetic-foundations`, so the edge now has an owner and it is not this
-   * file. It was moved into that subject's own edge list, and the move is worth
-   * more than consistency: `links` reaches only the composed `MATHEMATICS`,
-   * while `ONTOLOGIES[0]` — what `assemble` is handed when nobody names a
-   * subject — is the standalone arithmetic ontology. So for as long as the edge
-   * was here, the default session did not know that fractions rest on the lcm.
-   *
-   * The rule, since this area has now produced one example of each case: a
-   * promotion needs a `links` entry when something that STAYED here depends on
-   * the node that left, and gives one UP when the thing at the other end of a
-   * link leaves too.
-   */
-}
-/*
- * NOTE ON THE EDGE THAT IS NOT DECLARED HERE.
- *
- * `fraction-arithmetic → combining-rational` was the edge this concept was
- * authored for, and it already existed — in `ALGEBRA_FOUNDATIONS.links`
- * below, pointing at the mapped node. Declaring a second copy here was the
- * first attempt and was wrong.
- *
- * Which changes the story in a way worth recording: authoring this concept did
- * not ADD a gate, it made an existing edge BITE. The map had always said
- * combining rational expressions rests on fraction arithmetic;
- * `gatingPrerequisitesOf` looked straight through it because the endpoint had
- * no material to serve. Now it has, so the edge gates — and the one invariant
- * that matters still holds, because the concept it gates on is teachable.
- */
-
-const ALGEBRA_FOUNDATIONS: MapArea = {
-  id: 'algebra-foundations',
-  name: 'Algebra',
-  covers:
-    'Letters standing for numbers: equations, inequalities, systems and quadratics. What a letter ' +
-    'standing for a number actually means — the two readings of one, which terms collect, and ' +
-    'substituting a signed number back in — now has problems written for it and lives in the ' +
-    'expressions-and-equations syllabus; this area points at that concept rather than restating ' +
-    'it. Polynomial and rational manipulation likewise has its own authored syllabus and is not ' +
-    'restated here.',
-  /**
-   * `variables-and-expressions` LEFT THIS AREA WHEN IT WAS AUTHORED, AND HAD TO.
-   *
-   * It is a real concept now — three knowledge points, worked examples and
-   * tasks — in ontology-algebra.ts, under the new `expressions-and-equations`
-   * subject. `atlasProblems` rejects a map node whose id collides with an
-   * authored concept, and not as tidiness: the composed concept list would
-   * then hold two entries for the id, and the shadowing copy has no knowledge
-   * points, so a fully authored concept would silently read as unteachable.
-   *
-   * ITS OWN `needs` LEFT WITH IT, WHICH IS THE TRAP THIS FILE KEEPS RECORDING.
-   * The node declared `needs: ['order-of-operations', 'negative-numbers']`.
-   * Removing a node removes every edge declared on its own `needs`, and both
-   * of those endpoints are authored in `arithmetic-foundations` — a different
-   * subject from the new one — so neither edge can live in either ontology's
-   * own edge list. They are restated in `links` below. Dropping them is
-   * exactly how `function-concept` once became a root of the whole map: a
-   * syllabus authored above the arithmetic and joined to nothing beneath it,
-   * practisable from a cold account by somebody who had never carried a digit.
-   *
-   * Edges pointing the OTHER way survive untouched. `linear-equations` below
-   * still names it in its own `needs`, and the two `links` that already
-   * pointed at it — to `polynomial-arithmetic` here and to `function-concept`
-   * in the functions area — did not need changing, because `links` never
-   * cared which side was authored. All three resolve in `composeAtlas`, where
-   * map nodes and authored concepts both exist. That is the intended way for
-   * the map to meet a syllabus.
-   *
-   * `areaOntology` keeps only edges internal to the area, so this area viewed
-   * alone now shows `linear-equations` as a root. That is the area view being
-   * honest about its own boundary rather than a fault.
-   */
-  nodes: [
+    /**
+     * `variables-and-expressions` LEFT THIS AREA WHEN IT WAS AUTHORED, AND HAD TO.
+     *
+     * It is a real concept now — three knowledge points, worked examples and
+     * tasks — in ontology-algebra.ts, under the new `expressions-and-equations`
+     * subject. `atlasProblems` rejects a map node whose id collides with an
+     * authored concept, and not as tidiness: the composed concept list would
+     * then hold two entries for the id, and the shadowing copy has no knowledge
+     * points, so a fully authored concept would silently read as unteachable.
+     *
+     * ITS OWN `needs` LEFT WITH IT, WHICH IS THE TRAP THIS FILE KEEPS RECORDING.
+     * The node declared `needs: ['order-of-operations', 'negative-numbers']`.
+     * Removing a node removes every edge declared on its own `needs`, and both
+     * of those endpoints are authored in `arithmetic-foundations` — a different
+     * subject from the new one — so neither edge can live in either ontology's
+     * own edge list. They are restated in `links` below. Dropping them is
+     * exactly how `function-concept` once became a root of the whole map: a
+     * syllabus authored above the arithmetic and joined to nothing beneath it,
+     * practisable from a cold account by somebody who had never carried a digit.
+     *
+     * Edges pointing the OTHER way survive untouched. `linear-equations` below
+     * still names it in its own `needs`, and the two `links` that already
+     * pointed at it — to `polynomial-arithmetic` here and to `function-concept`
+     * in the functions area — did not need changing, because `links` never
+     * cared which side was authored. All three resolve in `composeAtlas`, where
+     * map nodes and authored concepts both exist. That is the intended way for
+     * the map to meet a syllabus.
+     *
+     * `areaOntology` keeps only edges internal to the area, so this area viewed
+     * alone now shows `linear-equations` as a root. That is the area view being
+     * honest about its own boundary rather than a fault.
+     *
+     * It said "as THE root" while this was the algebra area alone, and the
+     * merge with `number-and-arithmetic` made it one of eight — see the root
+     * set named in the block above the node list. The claim about this node is
+     * unchanged; what changed is how many other nodes are in the same position.
+     */
     {
       id: 'linear-equations',
       match: /\blinear equation\b/i,
@@ -736,10 +825,13 @@ const FUNCTIONS: MapArea = {
 
 const EUCLIDEAN_GEOMETRY: MapArea = {
   id: 'euclidean-geometry',
-  name: 'Euclidean geometry',
+  name: 'Geometry',
   covers:
-    'Synthetic plane and solid geometry: circles, area and volume, and the deductive style the ' +
-    'subject exists to teach. Four of its nodes have left for the plane-geometry syllabus, where ' +
+    'Geometry both ways round. Synthetic plane and solid geometry — circles, area and volume, ' +
+    'and the deductive style the subject exists to teach — and then the same plane done with ' +
+    'algebra, where lines and conics are equations, distance and midpoint are formulas, a ' +
+    'transformation acts on coordinates, and three dimensions are a third number. ' +
+    'Six of its nodes have left for the plane-geometry syllabus, where ' +
     'they have problems written for them, and this area points at them through `needs` rather ' +
     'than restating them: the undefined terms and the first angle facts — what a straight line ' +
     'and a full turn force, a vertical pair, and what a parallel pair forces across a ' +
@@ -752,31 +844,173 @@ const EUCLIDEAN_GEOMETRY: MapArea = {
     'why two angles settle it when three could not settle a congruence, and why a ratio taken ' +
     'inside one figure survives scaling when the scale factor does not. What stayed behind of ' +
     'both is the part that needs the figure: the proofs of SSS, SAS and ASA, the refutation of ' +
-    'SSA, and the justification of the similarity criteria. The triangle is still named in this ' +
-    'area\'s title claim because the rest of what is synthetic about it is still here — the ' +
-    'circle theorems above all, and Pythagoras, which is now the first node above the syllabus. ' +
-    'Coordinates are a separate area.',
+    'SSA, and the justification of the similarity criteria. Pythagoras has gone the same way as ' +
+    'a fifth, taking the relation itself — why its three letters are not interchangeable, the ' +
+    'hypotenuse as a positive root that is normally an irrational surd, and the converse as a ' +
+    'test on three lengths whose sign separates acute from right from obtuse — and leaving behind ' +
+    'both proofs of the identity, which are dissections or similar-triangle arguments about a ' +
+    'figure, and the derivation of the converse, which needs the law of cosines from above this ' +
+    'area. The polygons have gone as a sixth, and they are the first departure that is not about ' +
+    'the triangle: the two angle totals a polygon carries and why only one of them grows with ' +
+    'the number of sides, what a diagonal does to a quadrilateral and which of its four angles ' +
+    'that leaves whole, and why equal sides force equal angles in a triangle and in nothing ' +
+    'larger. What stayed behind of that one is the part that measures ALONG a diagonal rather ' +
+    'than cutting with it — that a parallelogram\'s diagonals bisect each other, that a ' +
+    'rhombus\'s are perpendicular, that a rectangle\'s are equal — together with the kite and ' +
+    'the trapezium, whose definitions are about which pair of sides does what, and the ' +
+    'converses that make the family a hierarchy. The triangle is still named in this area\'s ' +
+    'title claim because the rest of what is synthetic about it is still here, the circle ' +
+    'theorems above all; `circles` is now the first node above the syllabus. Coordinates used ' +
+    'to be a separate area and are not any more: the synthetic/analytic split is still real ' +
+    'mathematics and had stopped being a usable division of the MAP, so it runs inside this area ' +
+    'now rather than between two of them. The plane itself is in neither half — pairing a point ' +
+    'with two numbers has problems written for it and lives in the vectors syllabus, which the ' +
+    'analytic nodes point at rather than restating.',
   /**
-   * FOUR NODES LEFT THIS AREA WHEN THEY WERE AUTHORED, AND HAD TO.
+   * THIS AREA ABSORBED `COORDINATE_GEOMETRY`, AND IT IS THE SAME FLOOR AGAIN.
    *
-   * `points-lines-angles`, `triangle-basics`, `congruence` and `similarity` are
-   * real concepts now — twelve knowledge points between them, with worked
-   * examples and twenty-four tasks — in ontology-geometry.ts, under the
-   * `plane-geometry` subject.
+   * The argument is made in full above the node list of `ALGEBRA_FOUNDATIONS`,
+   * which merged for the same reason on the same day, and is not repeated here.
+   * What is recorded here is the part that differs, which is the TIMING — and
+   * that is the whole of why this merge is a judgement rather than a
+   * consequence.
+   *
+   * `number-and-arithmetic` was frozen: five nodes, floor of five, nowhere to
+   * go. This area was not. It had eight nodes and could release three before
+   * hitting the floor. But it holds FIVE of the concepts the two unfinished
+   * journeys cross — `geometric-proof`, `area-and-perimeter`, `circles`,
+   * `circle-measure` and `solid-geometry` — so three releases is not enough,
+   * and the two that would be left are the two at the top: the ones a route
+   * reaches LAST. And `three-dimensional-coordinates`, in the area that has
+   * now been merged in, sits directly behind `solid-geometry`, so it was
+   * blocked transitively by a floor in a different area from its own.
+   *
+   * So the deadlock was not two independent problems. It was one wall standing
+   * in two places, and merging only the frozen half would have bought eight
+   * promotions project-wide and then stalled both journeys at exactly the
+   * point they stall now, with the merge still to make.
+   *
+   * WHY NOW RATHER THAN WHEN IT BINDS, which was the live question and is
+   * worth answering rather than asserting:
+   *
+   *  - Deferring costs more than nothing, and this file has the receipt.
+   *    ontology-geometry.ts passed over `real-number-line` and
+   *    `ratio-and-rate` three promotions running, each time recording them as
+   *    "the area-floor casualties" and choosing a geometry node instead. The
+   *    deferral did not keep the decision cheap; it just moved three
+   *    promotions' worth of authoring onto the branch that had room, which is
+   *    a map decision made by default.
+   *  - None of the information gets better by waiting. Which concepts the
+   *    routes cross, and how many nodes each area may give up, are both known
+   *    now and neither moves. What waiting changes is only that the next three
+   *    promotions get made by somebody who believes the map is settled.
+   *  - A merge wants a human read, because it reshapes what a learner is shown
+   *    as a region. Two merges in one reviewable change cost one read.
+   *
+   * AND THE HONEST COUNTER-ARGUMENT, since it is a real one: merging before it
+   * binds is a change made on a prediction, and if the geometry branch is
+   * never authored the map has been reshaped for nothing. The answer is the
+   * test for whether any merge is premature — coordinate geometry belongs in
+   * geometry on its own merits, independently of the floor, so the map is
+   * right either way and the floor only decided WHEN.
+   *
+   * WHY `COORDINATE_GEOMETRY` AND NOT `TRIGONOMETRY`, which was the other
+   * neighbour and the other candidate. Trigonometry rests on this area
+   * directly — `right-triangle-trig` needs `similarity` and `pythagoras`,
+   * `radians` needs `circle-measure` — and it has thirteen nodes, so it would
+   * have cleared the floor just as well. It is the wrong merge anyway: more
+   * than half of it is about the circular FUNCTIONS rather than about figures,
+   * and an area holding the identities, the inverse functions, polar form and
+   * Euler's formula alongside straightedge-and-compass constructions has no
+   * boundary anybody could write down. Coordinate geometry is not a
+   * neighbouring subject at all — it is this subject done with coordinates,
+   * the Euclidean plane with a distance on it, which is why the id
+   * `euclidean-geometry` survived the merge and `coordinate-geometry` did not.
+   * The id has to be true of the union, and only one of the two was: synthetic
+   * geometry is not coordinate geometry, while coordinate geometry is
+   * Euclidean. The display name is `Geometry`, because that is what the union
+   * is called.
+   *
+   * WHAT THE MERGE COST. Four `links` entries had to be re-examined, two from
+   * each area, and all four survived unchanged — none of them has both ends
+   * inside this area, so none collapsed into an ordinary `needs`. The note
+   * above the `links` list below says which came from where and why each still
+   * has nowhere better to live. Neither area carried a `confusedWith` at all,
+   * so there was no interference to strand; the merged area has none, and
+   * tests/atlas.mjs asserts that rather than leaving it to be noticed, because
+   * a dropped `interferes_with` is the one stranding that keeps every suite
+   * green. The only thing that moved is the `promotedBy` stamp on the two
+   * entries that came across, from `atlas:coordinate-geometry` to
+   * `atlas:euclidean-geometry` — nothing reads it but the assertion that every
+   * atlas edge names who promoted it, and it is now true of a different area.
+   *
+   * WHAT IT GAINED, and this is the half that actually clears the deadlock.
+   * Two edges that crossed an area boundary are internal now:
+   * `circles-analytic → circles`, and `three-dimensional-coordinates →
+   * solid-geometry`. The second is the one that matters. That edge is why
+   * `three-dimensional-coordinates` was blocked without its own area ever
+   * being near the floor — it was waiting on a node in a region that had run
+   * out of room — and both ends are now in the same area with twelve
+   * promotions of headroom between them. Neither edge was touched: an edge is
+   * owned by the node that DECLARES it, and both are declared by nodes that
+   * were already in one of the two areas.
+   *
+   * THE BUDGET THIS BOUGHT. Seventeen nodes against a floor of five is twelve
+   * promotions. The two remaining journeys need seven of them from here —
+   * `geometric-proof`, `area-and-perimeter`, `circles`, `circle-measure`,
+   * `solid-geometry`, `dot-product-geometry` and
+   * `three-dimensional-coordinates` — which leaves five to spare. Seventeen is
+   * also not an outlier: `discrete-mathematics` is seventeen too, and
+   * `abstract-algebra` and `differential-calculus` are fifteen each, so the
+   * merged area is the size of the largest existing one rather than a new kind
+   * of thing.
+   *
+   * THE AREA'S OWN ROOTS WENT FROM THREE TO SIX, which is the merge's visible
+   * effect on the area view: `area-and-perimeter`, `geometric-proof` and
+   * `isometries-and-symmetry` were already there, and `distance-and-midpoint`,
+   * `dot-product-geometry` and `plane-transformations` arrived as roots
+   * because every one of their prerequisites is outside the merged area.
+   * Asserted by named membership in tests/atlas.mjs, never by count — the
+   * promotions below have twice turned that set over without changing its
+   * size, which a `length === N` check passes while every claim it makes has
+   * gone stale.
+   */
+  /**
+   * SIX NODES LEFT THIS AREA WHEN THEY WERE AUTHORED, AND HAD TO.
+   *
+   * `points-lines-angles`, `triangle-basics`, `congruence`, `similarity`,
+   * `pythagoras` and `quadrilaterals-and-polygons` are real concepts now —
+   * eighteen knowledge points between them, with worked examples and
+   * thirty-six tasks — in ontology-geometry.ts, under the `plane-geometry`
+   * subject.
    * `atlasProblems` rejects a map node whose id collides with an authored
    * concept, and not as tidiness: the composed concept list would then hold two
    * entries for the id, and the shadowing copy has no knowledge points, so a
    * fully authored concept would silently read as unteachable. Leave any of the
-   * four here and the material in ontology-geometry.ts becomes unreachable
+   * six here and the material in ontology-geometry.ts becomes unreachable
    * without a single error.
    *
-   * THE FIRST THREE WERE THE CHEAP KIND OF PROMOTION AND THE FOURTH WAS NOT,
-   * which makes this area the right place to learn the edge rule from — it now
-   * shows both halves. The rule is one sentence: an edge is owned by the node
-   * that DECLARES it. So promoting a node strands the edges on its own `needs`
-   * and leaves every edge pointing INTO it untouched, because those are
-   * declared elsewhere. What varies is where a stranded edge can go, and that
-   * is decided by where its OTHER endpoint ended up.
+   * FOUR OF THE SIX WERE THE CHEAP KIND OF PROMOTION AND TWO WERE NOT, which
+   * makes this area the right place to learn the edge rule from — it shows both
+   * halves, and shows each of them more than once. The rule is one sentence: an
+   * edge is owned by the node that DECLARES it. So promoting a node strands the
+   * edges on its own `needs` and leaves every edge pointing INTO it untouched,
+   * because those are declared elsewhere. What varies is where a stranded edge
+   * can go, and that is decided by where its OTHER endpoint ended up — which,
+   * as the fifth promotion showed, means which FILE it ended up in and not
+   * merely whether it was written.
+   *
+   * The cheap and expensive cases did not arrive in two blocks, and that is
+   * the correction the sixth promotion makes to the sentence below. For a while
+   * the record read "the first three were cheap and the last two were not",
+   * which invited the reading that the area had moved from easy nodes to hard
+   * ones. It had not: what made three in a row cheap was that the branch was
+   * being authored strictly upward from its root, so each promoted node's
+   * `needs` pointed at the node promoted just before it. The sixth is cheap
+   * again — one `needs`, pointing at `congruence`, already a concept of the
+   * same subject — while being the first promotion here that was NOT directly
+   * above the last. So cheapness is a property of where a node's prerequisites
+   * live, and nothing else.
    *
    *   `points-lines-angles` stranded NOTHING. It declared no `needs` at all —
    *   the map calls it a root, because the undefined terms rest on nothing
@@ -804,9 +1038,12 @@ const EUCLIDEAN_GEOMETRY: MapArea = {
    *   kind; the node simply declared TWO `needs` instead of one, and they did
    *   not end up in the same place. `congruence` was already a concept of
    *   `plane-geometry`, so that edge went to `EDGES` like the two before it.
-   *   `ratio-and-rate` is still a node of `NUMBER_AND_ARITHMETIC`, and an
-   *   authored ontology may only name concepts it CONTAINS — so that one could
-   *   not go there, and came back here as this area's first `links` entry. See
+   *   `ratio-and-rate` was then a node of `NUMBER_AND_ARITHMETIC` — it is a
+   *   node of `algebra-foundations` now, those two areas having since merged —
+   *   and an authored ontology may only name concepts it CONTAINS, so that one
+   *   could not go there and came back here as this area's first `links`
+   *   entry. The merge did not change that: it is still a map node in an area,
+   *   not a concept of `plane-geometry`. See
    *   the comment on `links` below for why it is filed in this area rather than
    *   in the one that holds the other endpoint.
    *
@@ -820,22 +1057,70 @@ const EUCLIDEAN_GEOMETRY: MapArea = {
    *   similarity and congruence together — the single worst pairing in the
    *   subject, and the one the node existed to prevent.
    *
+   *   `pythagoras` THEN REPEATED THE EXPENSIVE CASE, which is what settles it
+   *   as the pattern rather than as one awkward node. Two `needs` again,
+   *   landing in two places again: `similarity` was a concept of
+   *   `plane-geometry` by then, so that edge went to `EDGES` like the three
+   *   before it, and `roots-and-irrationals` came back here as this area's
+   *   SECOND `links` entry.
+   *
+   *   But the REASON it could not follow is a different one, and the
+   *   distinction is the most useful thing this promotion produced.
+   *   `ratio-and-rate` could not go into `PLANE_GEOMETRY.edges` because it is
+   *   unwritten — a map node, with no ontology to belong to.
+   *   `roots-and-irrationals` is fully authored; it is simply authored in
+   *   `arithmetic-foundations`. An ontology may only name concepts it CONTAINS,
+   *   and belonging to the wrong subject fails that test exactly as being a
+   *   skeleton does. So `links` is not "where edges into unwritten nodes go" —
+   *   it is where any edge goes whose two endpoints end up in different files,
+   *   and an author who learned the narrower rule from `similarity` would have
+   *   looked for somewhere better to put this one.
+   *
+   *   The consequence also differs, and in the direction that matters. The
+   *   `ratio-and-rate` link gates nothing, because the gating walk passes
+   *   through a node with no material. This one gates immediately:
+   *   `roots-and-irrationals` is three knowledge points and six tasks, so
+   *   `pythagoras` now sits behind a prerequisite in another subject that a
+   *   learner has to actually demonstrate. It is the first `links` entry in
+   *   this area that changes what anybody is shown.
+   *
    * So the lesson the run of three suggested was too strong, and the fourth
    * promotion is the correction: a promotion is cheap when the departing node's
    * `needs` all point at concepts of the SAME authored subject, and that was a
    * property of a branch being authored strictly upward from its root, one node
    * at a time. The moment a promoted node depends on something outside that
-   * line, the expensive case is back. `NUMBER_AND_ARITHMETIC` above has
-   * produced one promotion of every expensive kind and is still the fuller
-   * record of them.
+   * line, the expensive case is back. The fifth promotion did it again, so the
+   * cheap case should now be read as the exception it always was.
+   * `NUMBER_AND_ARITHMETIC` produced one promotion of every expensive kind and
+   * was the fuller record of them; that record is now in the block above
+   * `ALGEBRA_FOUNDATIONS`'s node list, which is the area that absorbed it.
    *
    * The edges that pointed INTO the departed nodes needed no attention at any
-   * point. `congruence`, `area-and-perimeter` and `law-of-sines-cosines` each
-   * named `triangle-basics` in their own `needs`; `geometric-proof`,
-   * `similarity`, `quadrilaterals-and-polygons` and `isometries-and-symmetry`
-   * each named `congruence` in theirs; and `pythagoras` names `similarity` in
-   * its own. Every one of those nodes stayed, so every one still owns its edge
-   * and `composeAtlas` resolves it across the file boundary.
+   * point, with two exceptions that prove the rule rather than breaking it.
+   * `congruence`, `area-and-perimeter` and `law-of-sines-cosines` each named
+   * `triangle-basics` in their own `needs`; `geometric-proof`, `similarity`,
+   * `quadrilaterals-and-polygons` and `isometries-and-symmetry` each named
+   * `congruence` in theirs; `circles`, `right-triangle-trig`,
+   * `distance-and-midpoint` and `diophantine-equations` each name `pythagoras`
+   * in theirs; and `area-and-perimeter` names `quadrilaterals-and-polygons` in
+   * its own, as the sixth promotion's only into-edge. Every one of those nodes
+   * that stayed still owns its edge, and `composeAtlas` resolves it across the
+   * file boundary.
+   *
+   * The first exception is `pythagoras` itself, which named `similarity` in its
+   * own `needs` while both were nodes here. That edge was an into-edge for the
+   * fourth promotion and needed no attention then — and it became a stranded
+   * OWN edge at the fifth, when the node declaring it left. So "an edge
+   * pointing into a departed node is safe" is true only until the node at the
+   * other end is promoted too. On a branch being authored upward, every
+   * into-edge is a future stranded edge.
+   *
+   * The second is `quadrilaterals-and-polygons`, which names `congruence` and
+   * is listed above among the four that did. It stayed for three promotions and
+   * then left at the sixth, stranding that edge the same way — which makes the
+   * sentence above true of a list that keeps shrinking rather than of a fixed
+   * set, and is worth noting because the list reads like a roster of nodes that
+   * are safe. It is not. It is a roster of future stranded edges.
    *
    * `areaOntology` keeps only edges internal to the area, so the root of this
    * area viewed alone keeps walking upward as the branch is authored. It was
@@ -855,15 +1140,44 @@ const EUCLIDEAN_GEOMETRY: MapArea = {
    * against the number — a count would have passed this promotion without
    * noticing that the membership changed completely.
    *
-   * WHAT DID NOT GO WITH THEM, and the reason the other eight are still here:
-   * they are about figures. `visualRef` exists so a knowledge point can name a
-   * diagram, and there are none in this build to name. What was written is the
-   * geometry that survives being written down — two angle sums, a subtraction
-   * done twice, a translation along a transversal, then the angle sum that
-   * follows from that translation, a comparison between two routes, arithmetic
-   * on a total, the three parts of congruence that are about a CORRESPONDENCE
-   * rather than about a picture, and then the three parts of similarity that
-   * are the same correspondence with a ratio in it. That is a property of the
+   * THE FIFTH PROMOTION THEN SHRANK THE SET, which no promotion here had done
+   * before, and it is the correction to the rule the three before it suggested.
+   * `pythagoras` left and nothing took its place: four roots before and THREE
+   * after — `geometric-proof`, `quadrilaterals-and-polygons` and
+   * `isometries-and-symmetry`. The node resting on `pythagoras` is `circles`,
+   * and it did not become a root because its other prerequisite,
+   * `geometric-proof`, is still in the area and still gates it from inside. So
+   * a departing node promotes its dependents to roots only when it was the LAST
+   * of their prerequisites inside the area. The four-way fan-out after
+   * `congruence` looked like the rule and was a special case of it, since all
+   * four of those nodes rested on `congruence` alone. Worth stating plainly
+   * because a reader who learned the pattern from the promotions above would
+   * predict `circles` joining the set, and it does not.
+   *
+   * THE SIXTH PROMOTION SUBSTITUTED, which is the fourth's shape rather than
+   * the fifth's, and having both in the record is what makes the rule above
+   * readable. `quadrilaterals-and-polygons` left the set of three and
+   * `area-and-perimeter` joined it — three roots before and three after, with
+   * different membership — because the departing node WAS the last of
+   * `area-and-perimeter`'s prerequisites inside the area: its other one is
+   * `triangle-basics`, gone since the second promotion. Compare `circles` at
+   * the fifth, which did not join because `geometric-proof` was still here to
+   * gate it from inside. Same rule, opposite outcome, decided entirely by
+   * whether anything else in the area was still holding the dependent back.
+   *
+   * WHAT DID NOT GO WITH THEM, and the reason the eight still here are still
+   * here: they are about figures. `visualRef` exists so a knowledge point can
+   * name a diagram, and there are none in this build to name. What was written
+   * is the geometry that survives being written down — two angle sums, a
+   * subtraction done twice, a translation along a transversal, then the angle
+   * sum that follows from that translation, a comparison between two routes,
+   * arithmetic on a total, the three parts of congruence that are about a
+   * CORRESPONDENCE rather than about a picture, then the three parts of
+   * similarity that are the same correspondence with a ratio in it, then the
+   * three parts of Pythagoras that are about which slot a length occupies
+   * rather than about any triangle you could draw, and now the three parts of
+   * the polygons that are two angle totals, a diagonal used to cut rather than
+   * to measure, and a disagreement between two words. That is a property of the
    * material rather than of how much time anybody had, and
    * ontology-geometry.ts argues it at length so the next author does not start
    * by rediscovering it.
@@ -899,17 +1213,70 @@ const EUCLIDEAN_GEOMETRY: MapArea = {
    * A node's figure-free material is not only the notational part; it is
    * everything that is really a claim about claims.
    *
-   * `pythagoras` is the obvious next place to try it, and it is now also the
-   * cheapest: its `needs` are `similarity`, authored by this promotion, and
-   * `roots-and-irrationals`, authored already — the first node in this area
-   * whose prerequisites are ALL written. The warning worth passing on is that
-   * the test will be harder to pass there than it was here. Pythagoras is one
-   * identity and a converse, the identity's proofs are all dissections or
-   * similar-triangle arguments about a figure, and what is left once those go
-   * is arithmetic on three numbers. That may well be a genuine case of a node
-   * where every part is about the figure — which would make it the first one to
-   * confirm this paragraph's own test by failing it, and that is a result to
-   * record rather than a reason to write the arithmetic and call it the concept.
+   * THAT TEST WAS THEN APPLIED TO `pythagoras`, WHICH THIS COMMENT NOMINATED,
+   * AND IT PASSED — so the paragraph nominating it has been replaced by this
+   * one, the same way the similarity paragraph replaced its own. This is the
+   * third nomination in a row to be taken up and the third to hold, and the
+   * useful part is that the warning attached to it was WRONG while the
+   * prediction underneath it was right.
+   *
+   * The warning said the test would be harder here: one identity and a
+   * converse, proofs that are all dissections or similar-triangle arguments
+   * about a figure, and "what is left once those go is arithmetic on three
+   * numbers" — possibly the first node where every part is about the figure.
+   * The proofs did stay behind, exactly as that said they would. What was wrong
+   * was "arithmetic on three numbers", and the error is the same one the
+   * congruence paragraph made one promotion earlier: identifying the concept
+   * with its theorem. The identity has a shape, and the shape is figure-free.
+   * a² + b² = c² is not symmetric in its three letters, nothing in three
+   * numbers says which is the hypotenuse, and the assignment decides whether
+   * the arithmetic adds or subtracts — the same claim-about-a-claim that made
+   * the congruence letter order worth a knowledge point, with the identical
+   * failure mode of correct computation on mis-assigned slots. And the converse
+   * is a decision procedure that sorts, squares and compares, which is
+   * figure-free end to end and answers more than it is asked: the sign of
+   * a² + b² − c² separates acute from right from obtuse.
+   *
+   * So the test has now run five times without once finding a node where every
+   * part was about the picture, and that is a warning rather than a boast. A
+   * test that has never failed is one an author will find a way to pass. The
+   * honest statement is that what stayed behind here is the largest debt in the
+   * subject — both proofs, and with them the reason the identity is true —
+   * which ontology-geometry.ts names at length rather than approximating.
+   *
+   * THAT WARNING WAS THEN EARNED, BY THE FIRST NODE THE TEST ONLY HALF TOOK.
+   * This comment nominated two candidates and predicted which would win and
+   * how it would hurt, and both halves held, so the paragraph making the
+   * prediction has been replaced by this account of it rather than left
+   * standing.
+   *
+   * `quadrilaterals-and-polygons` was taken and `geometric-proof` was not, for
+   * the reason given: `geometric-proof` is a node about the ARGUMENT being the
+   * answer, its natural task kind is `justify`, `justify` is not
+   * machine-rulable, and a concept every one of whose chains ends with no
+   * ruling is the `chainsWithNoRuling` case types.ts warns about. Writing it
+   * would have added three chains that cannot become evidence, which is worse
+   * than leaving it mapped, so it is still the obvious next place to try and
+   * the question to answer BEFORE writing it is unchanged: what in it can be
+   * asked as a value at all.
+   *
+   * The polygons won on exactly the stated grounds — the two angle totals are
+   * arithmetic on a total, which is the shape that has now passed the test five
+   * times — and the stated risk landed too. The node SPLIT, which is the first
+   * time this test has refused part of a node rather than all or none of it,
+   * and the refused part is the part the prediction named: the properties that
+   * are proved from congruence by measuring along a diagonal. What went is the
+   * diagonal used to CUT the figure, which produces two triangles for
+   * congruence to compare and is a correspondence argument with no measurement
+   * in it; what stayed is the diagonal used as a length — bisection,
+   * perpendicularity, equality — along with the kite, the trapezium and the
+   * converses that make the family a hierarchy. ontology-geometry.ts names all
+   * of it rather than approximating any of it.
+   *
+   * So the test's record is five whole nodes and one split, and the split is
+   * the useful data point: the warning was that a test which never fails is one
+   * an author will find a way to pass, and the answer turned out to be that it
+   * fails PARTIALLY. A node is not a unit the test can take or leave.
    *
    * This area also records the case where a node's material SPLIT, and then the
    * case where the split was repaired. The triangle's angle classification was
@@ -928,22 +1295,66 @@ const EUCLIDEAN_GEOMETRY: MapArea = {
       needs: ['congruence'],
       terms: 'geometric proof two column deduction axiom',
     },
-    {
-      id: 'pythagoras',
-      match: /\bpythagorean theorem\b|\bpythagoras('|’)? theorem\b/i,
-      name: 'Pythagoras',
-      is: 'The relation among the sides of a right triangle, provable from similarity, and the converse that tests for a right angle.',
-      needs: ['similarity', 'roots-and-irrationals'],
-      terms: 'pythagorean theorem hypotenuse right triangle converse',
-    },
-    {
-      id: 'quadrilaterals-and-polygons',
-      match: /^(quadrilateral|polygon|parallelogram|trapez|rhombus)/i,
-      name: 'Quadrilaterals and polygons',
-      is: 'The parallelogram family and the interior-angle sum, each property proved rather than listed.',
-      needs: ['congruence'],
-      terms: 'parallelogram rhombus trapezoid polygon interior angle',
-    },
+    /*
+     * `pythagoras` was here and is now authored in ontology-geometry.ts, so it
+     * had to leave — same rule, fifth time in this area. See the block above
+     * the node list.
+     *
+     * It stranded BOTH of its own `needs` and they went to two different
+     * places, which repeats `similarity`'s shape and settles that the expensive
+     * case is the pattern rather than the exception:
+     *
+     *  - `similarity` is a concept of `plane-geometry`, so that edge is
+     *    internal to that ontology and is declared in its `EDGES`.
+     *  - `roots-and-irrationals` is authored too, but in
+     *    `arithmetic-foundations`, and an ontology's edges may only name
+     *    concepts it CONTAINS. So it came back here as this area's SECOND
+     *    `links` entry. See the note on `links` below — it is the first link
+     *    here that gates anything.
+     *
+     * The edges pointing INTO it were left untouched, as always, because an
+     * edge is owned by the node that DECLARES it. `circles` names it in its
+     * own `needs` and stayed, so that one survives as written;
+     * `distance-and-midpoint` in `coordinate-geometry` names it in both `needs`
+     * and `exercises` and stayed too, which makes this the first promotion out
+     * of this area to leave a real concept on one end of an `encompasses` edge.
+     * `right-triangle-trig` and `diophantine-equations` are the other two
+     * dependents and are in the same position. `composeAtlas` resolves all of
+     * them across the file boundary.
+     */
+    /*
+     * `quadrilaterals-and-polygons` was here and is now authored in
+     * ontology-geometry.ts, so it had to leave — same rule, sixth time in this
+     * area. See the block above the node list.
+     *
+     * IT IS THE CHEAP CASE AGAIN, the first since `congruence` three
+     * promotions ago, and the reason is the one the expensive pair established
+     * by failing it. The node declared `needs: ['congruence']` and nothing
+     * else; `congruence` is a concept of `plane-geometry`, which is where the
+     * node has gone, so the one stranded edge is internal to that ontology the
+     * moment it is stranded and is declared in its `EDGES`. Nothing crossed a
+     * file boundary, so this area's `links` needed no entry and gave none up —
+     * it still holds exactly the two that `similarity` and `pythagoras` left.
+     *
+     * The edge pointing the OTHER way was left untouched, as always:
+     * `area-and-perimeter`, immediately below, is this node's only dependent
+     * anywhere in the atlas and it names the node in its own `needs`. It stayed
+     * here, so it still owns that edge and `composeAtlas` resolves it across
+     * the file boundary. What changed is that the edge now BITES —
+     * `area-and-perimeter` already had `triangle-basics` gating it from the
+     * second promotion, and the other half of its pair was the half the walk
+     * was still looking straight through.
+     *
+     * One thing about this promotion is new and is not about edges: it is the
+     * first out of this area that was NOT the node directly above the last.
+     * Five times running the cheapest next concept was the one above its
+     * predecessor, because the branch was being authored upward one node at a
+     * time, and above `pythagoras` there is nothing writable — `circles` also
+     * needs `geometric-proof`, and its other dependents are in other areas. So
+     * the line ended and the other child of `congruence` was taken instead.
+     * ontology-geometry.ts argues it at length; the consequence here is only
+     * that a reader should stop predicting the next promotion from the last.
+     */
     {
       id: 'area-and-perimeter',
       match: /^(area|perimeter)\b/i,
@@ -1000,84 +1411,40 @@ const EUCLIDEAN_GEOMETRY: MapArea = {
       needs: ['geometric-proof', 'circles'],
       terms: 'non euclidean hyperbolic spherical parallel postulate',
     },
-  ],
-  /**
-   * THE FIRST `links` THIS AREA HAS EVER NEEDED, AND THE FOURTH PROMOTION IS
-   * WHY — SO THE "CHEAPEST KIND OF PROMOTION" RUN HAS ENDED AT THREE.
-   *
-   * The three promotions before this one each stranded either nothing or an
-   * edge whose two endpoints were both already concepts of `plane-geometry`, so
-   * every one of them went into `PLANE_GEOMETRY.edges` and this area kept
-   * asking for no links at all. tests/atlas.mjs asserted that emptiness by
-   * name, three departures deep, and it was a real claim rather than a tidiness
-   * check — it is what would have caught a link added "for symmetry".
-   *
-   * `similarity` broke the run because it declared TWO `needs` rather than one,
-   * and they do not live in the same place:
-   *
-   *   `congruence` is a concept of `plane-geometry`, so that edge is internal
-   *   to the ontology and went there with the other two, as a prerequisite.
-   *
-   *   `ratio-and-rate` is still a node of `NUMBER_AND_ARITHMETIC`. An authored
-   *   ontology may only name concepts it CONTAINS — `ontologyProblems` reports
-   *   an unknown endpoint otherwise — so `PLANE_GEOMETRY.edges` cannot hold
-   *   this one, and `links` is its only home.
-   *
-   * It is declared HERE, in the area that owned it, rather than in
-   * `NUMBER_AND_ARITHMETIC`. The edge was `similarity`'s own `needs` and the
-   * node lived in this area, so this is where the dependency was decided and
-   * this is where it keeps being asserted. Filing it under the other endpoint's
-   * area would read as arithmetic making a claim about geometry.
-   *
-   * `ratio-and-rate` has no material, so this edge gates nothing today —
-   * `gatingPrerequisitesOf` walks straight through an unwritten node. That is
-   * exactly why it has to be written down now rather than when the node is
-   * authored: an edge that gates nothing is invisible, and the three
-   * promotions above all show that an edge nobody can see is an edge that gets
-   * dropped. When `ratio-and-rate` is finally promoted out of its own area, the
-   * gate appears with no further edit here.
-   */
-  links: [
-    {
-      from: 'ratio-and-rate',
-      to: 'similarity',
-      because:
-        'Similarity is where geometry first needs a ratio to be a number you can carry between ' +
-        'two figures rather than a comparison made inside one. Its whole content is that three ' +
-        'matched pairs of sides share a single quotient, so a learner who cannot yet treat a ' +
-        'quotient as one value has nothing for the scale factor to be.',
-    },
-  ],
-}
-
-const COORDINATE_GEOMETRY: MapArea = {
-  id: 'coordinate-geometry',
-  name: 'Coordinate geometry',
-  covers:
-    'Geometry done with algebra: lines and conics as equations, distance and midpoint, ' +
-    'transformations as operations on coordinates, and the step up into three dimensions. The ' +
-    'plane itself is no longer here — pairing a point with two numbers has problems written for ' +
-    'it and lives in the vectors syllabus, alongside the concept that reads components off it; ' +
-    'this area points at it rather than restating it. What is left is what you can do ONCE the ' +
-    'plane is available, which is the rest of the subject.',
-  /**
-   * ONE NODE HAS LEFT THIS AREA, AND HAD TO.
-   *
-   * `cartesian-plane` is now a real concept with worked examples and tasks, in
-   * ontology-vectors.ts. `atlasProblems` rejects a map node whose id collides
-   * with an authored concept — not as tidiness, but because the composed
-   * concept list would then hold two entries for the id and the shadowing copy
-   * has no knowledge points, so a fully authored concept would silently read as
-   * unteachable.
-   *
-   * The `needs` below still name it, and that is the intended way for the map
-   * to meet a syllabus: the edge resolves in `composeAtlas`, where both
-   * endpoints exist. The same promotion in reverse is what `links` is for, and
-   * this one moved an entry in BOTH directions — see the note on `links` at the
-   * end of the area, which is the first place in this file where a promotion
-   * made the map simpler.
-   */
-  nodes: [
+    /*
+     * ── THE ANALYTIC HALF STARTS HERE ────────────────────────────────────
+     *
+     * The nine nodes below were `COORDINATE_GEOMETRY` until the merge argued
+     * in the block above the node list. They are kept together and in their
+     * own order rather than interleaved with the synthetic nodes, because the
+     * split is still how the subject is taught even though it is no longer how
+     * the map is divided: you do the figures first and then you put axes on
+     * them. Interleaving by dependency would have produced a node list in
+     * which neither half is readable, and a reader looking for "the
+     * coordinate part" would have to reconstruct it.
+     *
+     * ONE NODE HAD ALREADY LEFT THIS HALF, AND HAD TO.
+     *
+     * `cartesian-plane` is a real concept with worked examples and tasks, in
+     * ontology-vectors.ts. `atlasProblems` rejects a map node whose id
+     * collides with an authored concept — not as tidiness, but because the
+     * composed concept list would then hold two entries for the id and the
+     * shadowing copy has no knowledge points, so a fully authored concept
+     * would silently read as unteachable.
+     *
+     * The `needs` below still name it, and that is the intended way for the
+     * map to meet a syllabus: the edge resolves in `composeAtlas`, where both
+     * endpoints exist. The same promotion in reverse is what `links` is for,
+     * and that promotion moved an entry in BOTH directions — it is the one
+     * place in this file where a promotion made the map simpler. The note
+     * above `links` at the end of this area carries it, and carries what the
+     * merge then did to the two entries it left behind.
+     *
+     * `cartesian-plane` was promoted AHEAD of `real-number-line`, the node
+     * directly beneath it, precisely because of the floor this merge exists to
+     * answer — see the note where the node used to sit, a few lines down. That
+     * ordering constraint is gone now.
+     */
     /*
      * `cartesian-plane` was here and is now authored in ontology-vectors.ts, so
      * it had to leave. See the block above the node list.
@@ -1199,28 +1566,124 @@ const COORDINATE_GEOMETRY: MapArea = {
     },
   ],
   /**
-   * THE PLANE'S PROMOTION EMPTIED ONE ENTRY AND ADDED TWO.
+   * FOUR ENTRIES NOW, AND THE MERGE WITH `COORDINATE_GEOMETRY` IS WHY.
    *
-   * `cartesian-plane → plane-vectors` used to be here, written when
-   * `plane-vectors` was authored out of this area and this one was still a map
-   * node — one end authored, one end mapped, which is precisely what `links`
-   * is for. Promoting the plane into the SAME subject put both ends inside one
-   * ontology, so the edge is now declared on `plane-vectors` in
-   * ontology-vectors.ts and was deleted from here. It is the first promotion in
-   * this file to hand an edge back to a syllabus instead of taking one on, and
-   * the rationale went with it rather than being duplicated.
+   * Two of them are this area's own, from the fourth and fifth promotions, and
+   * the long note above them is unchanged. Two came across with the analytic
+   * nodes, and the merge's job was to decide whether either had stopped being
+   * a `links` entry — because an entry whose two ends end up in the SAME area
+   * has become an ordinary `needs` edge, and leaving it here would make
+   * `composeAtlas` emit the edge twice, which nothing notices and no test
+   * catches.
    *
-   * The two below replace it, and they are the stranded `needs` the plane
-   * declared on its way out. Neither end can hold them: `real-number-line` is
-   * a map node in another area, `negative-numbers` is authored in a different
-   * subject from the plane, and an ontology may only name concepts it
-   * contains. See the note where the node used to sit for why dropping them
-   * would have been the expensive mistake.
+   * Neither had. Both run INTO `cartesian-plane`, which is an authored concept
+   * of the vectors syllabus and is in neither half of this area, so both still
+   * have exactly one home. The two differ in why the other end cannot take
+   * them, and the distinction is the same one the first two entries record:
+   * `real-number-line` is an unwritten map node — now a node of
+   * `algebra-foundations`, after the other merge — so it has no ontology to
+   * belong to at all, while `negative-numbers` is fully authored and is simply
+   * authored in `arithmetic-foundations`. An ontology may only name concepts
+   * it CONTAINS, so belonging to the wrong subject fails that test exactly as
+   * being a skeleton does.
    *
-   * `dot-product-geometry` above still names `plane-vectors` and needs no help
-   * — that edge is declared on the node that stayed.
+   * They are declared here because the edge was `cartesian-plane`'s own
+   * `needs` and `cartesian-plane` was a node of `coordinate-geometry`, which
+   * is now part of this area. A `links` entry is filed in the area that owned
+   * the DEPARTING node, not in the one holding the other endpoint — filing
+   * these under the vectors syllabus would read as linear algebra making a
+   * claim about where the plane comes from.
+   *
+   * What the merge did change is the `promotedBy` stamp `expandEdges` puts on
+   * them, which is now `atlas:euclidean-geometry`. Worth saying because the
+   * composed graph is where that stamp is read, and "who promoted this edge"
+   * is now a different answer for these two than it was.
+   */
+  /**
+   * THE FIRST `links` THIS AREA HAS EVER NEEDED, AND THE FOURTH PROMOTION IS
+   * WHY — SO THE "CHEAPEST KIND OF PROMOTION" RUN HAS ENDED AT THREE.
+   *
+   * The three promotions before this one each stranded either nothing or an
+   * edge whose two endpoints were both already concepts of `plane-geometry`, so
+   * every one of them went into `PLANE_GEOMETRY.edges` and this area kept
+   * asking for no links at all. tests/atlas.mjs asserted that emptiness by
+   * name, three departures deep, and it was a real claim rather than a tidiness
+   * check — it is what would have caught a link added "for symmetry".
+   *
+   * `similarity` broke the run because it declared TWO `needs` rather than one,
+   * and they do not live in the same place:
+   *
+   *   `congruence` is a concept of `plane-geometry`, so that edge is internal
+   *   to the ontology and went there with the other two, as a prerequisite.
+   *
+   *   `ratio-and-rate` was then a node of `NUMBER_AND_ARITHMETIC` and is a
+   *   node of `algebra-foundations` now, those two areas having merged. Either
+   *   way it is a map node rather than a concept of `plane-geometry`, and an
+   *   authored ontology may only name concepts it CONTAINS —
+   *   `ontologyProblems` reports an unknown endpoint otherwise — so
+   *   `PLANE_GEOMETRY.edges` cannot hold this one, and `links` is its only
+   *   home.
+   *
+   * It is declared HERE, in the area that owned it, rather than in the area
+   * that holds the other endpoint. The edge was `similarity`'s own `needs` and the
+   * node lived in this area, so this is where the dependency was decided and
+   * this is where it keeps being asserted. Filing it under the other endpoint's
+   * area would read as arithmetic making a claim about geometry.
+   *
+   * `ratio-and-rate` has no material, so this edge gates nothing today —
+   * `gatingPrerequisitesOf` walks straight through an unwritten node. That is
+   * exactly why it has to be written down now rather than when the node is
+   * authored: an edge that gates nothing is invisible, and the three
+   * promotions above all show that an edge nobody can see is an edge that gets
+   * dropped. When `ratio-and-rate` is finally promoted out of its own area, the
+   * gate appears with no further edit here.
+   *
+   * THE FIFTH PROMOTION ADDED THE SECOND, AND IT IS THE FIRST LINK HERE THAT
+   * DOES ANYTHING. `pythagoras` stranded two `needs` exactly as `similarity`
+   * did: `similarity` itself went to `PLANE_GEOMETRY.edges`, and
+   * `roots-and-irrationals` had to come here. The reason it had to is NOT the
+   * reason above, and the difference is the useful part. `ratio-and-rate` is
+   * still a map node, so it has no ontology to live in. `roots-and-irrationals`
+   * is a fully authored concept — it simply belongs to `arithmetic-foundations`
+   * rather than to `plane-geometry`, and an ontology's edges may only name
+   * concepts it CONTAINS. Being authored in the wrong subject fails that test
+   * just as being unwritten does, which is worth knowing before the next
+   * promotion: `links` is for every edge whose endpoints end up in different
+   * files, not only for edges into skeletons.
+   *
+   * And because that endpoint has material — three knowledge points, six tasks
+   * — this link GATES. `gatingPrerequisitesOf('pythagoras')` now names
+   * `roots-and-irrationals` as well as `similarity`, so a learner has to
+   * demonstrate the surds before the hypotenuse, across a subject boundary.
+   * That is the first time a `links` entry in this area has been more than a
+   * placeholder, and it is also the answer to anyone wondering whether these
+   * entries are bookkeeping: this one changes what a learner is shown.
+   *
+   * It is declared here for the same reason the first one is — the edge was
+   * `pythagoras`'s own `needs` and `pythagoras` lived in this area, so this is
+   * where the dependency was decided. Filing it under `arithmetic-foundations`
+   * would read as arithmetic making a claim about geometry.
    */
   links: [
+    {
+      from: 'ratio-and-rate',
+      to: 'similarity',
+      because:
+        'Similarity is where geometry first needs a ratio to be a number you can carry between ' +
+        'two figures rather than a comparison made inside one. Its whole content is that three ' +
+        'matched pairs of sides share a single quotient, so a learner who cannot yet treat a ' +
+        'quotient as one value has nothing for the scale factor to be.',
+    },
+    {
+      from: 'roots-and-irrationals',
+      to: 'pythagoras',
+      because:
+        'A hypotenuse is a square root, and almost never a whole one: the relation yields the ' +
+        'square of a side and getting the side back needs a root that is irrational unless the ' +
+        'three lengths happen to form a triple. So this is the one place school geometry cannot ' +
+        'avoid the irrationals, and a learner who cannot reduce a surd cannot write the answer ' +
+        'exactly — only round it, which is a different claim about the triangle.',
+    },
     {
       from: 'real-number-line',
       to: 'cartesian-plane',
@@ -1352,11 +1815,14 @@ const TRIGONOMETRY: MapArea = {
   ],
 }
 
+/*
+ * Four, not six. `NUMBER_AND_ARITHMETIC` and `COORDINATE_GEOMETRY` were
+ * merged into their neighbours — see the blocks above the node lists of
+ * `ALGEBRA_FOUNDATIONS` and `EUCLIDEAN_GEOMETRY`, which argue each one.
+ */
 export const FOUNDATION_AREAS: MapArea[] = [
-  NUMBER_AND_ARITHMETIC,
   ALGEBRA_FOUNDATIONS,
   FUNCTIONS,
   EUCLIDEAN_GEOMETRY,
-  COORDINATE_GEOMETRY,
   TRIGONOMETRY,
 ]

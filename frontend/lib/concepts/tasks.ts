@@ -66,9 +66,17 @@ const REAL_BC = [
  *
  * The discriminant tasks are in the coefficients rather than in x, which is
  * what this was written for. The plane-geometry tasks reuse it for three angle
- * measures — also three reals with no variable to substitute into — rather
- * than declaring an identical set under a geometric name, since what a symbol
- * MEANS is the prompt's job and what it may be assumed to BE is this one's.
+ * measures, and the Pythagoras ones for the three sides of a triangle — in
+ * every case three reals with no variable to substitute into — rather than
+ * declaring identical sets under geometric names, since what a symbol MEANS is
+ * the prompt's job and what it may be assumed to BE is this one's.
+ *
+ * Real rather than `positive`, which a length arguably is. Deliberate: the two
+ * converse tasks are a SUBTRACTION of squares whose sign is the ruling, and one
+ * of them is negative. Nothing is assumed about the symbols that the tasks do
+ * not need, and `positive` would be an assumption about the lengths that the
+ * engine could in principle use to simplify a result these tasks want left
+ * alone.
  */
 const REAL_ABC = [
   { name: 'a', assumptions: { real: true } },
@@ -85,11 +93,14 @@ const REAL_ABC = [
  * evaluated at all — the suite reports it, correctly.
  *
  * Real rather than integer, matching the plane-geometry tasks it joins and for
- * the same reason. Two of the three pairs here are angle measures and one is a
- * pair of side lengths, and nothing in either fact is about whole numbers:
+ * the same reason. Two of the six pairs here are angle measures and four are
+ * pairs of side lengths — one from the triangle inequality and three from
+ * Pythagoras — and nothing in either fact is about whole numbers:
  * 180 − (180 − a − b) = a + b holds for every pair of angles, and a triangle's
  * sides are not required to be integers. The whole-number values in the
- * prompts are a convenience of the figures chosen.
+ * prompts are a convenience of the figures chosen, and in the Pythagoras cases
+ * a deliberate one — a triple is picked where the answer should be rational and
+ * avoided where the point is that it is not.
  */
 const REAL_AB = [
   { name: 'a', assumptions: { real: true } },
@@ -1666,6 +1677,48 @@ export const TASKS: PracticeTask[] = [
     reference: 'x^2',
   },
 
+  // ── even-root-needs-nonnegative ─────────────────────────────────────────
+  //
+  // A domain restriction that IS rulable, which is worth stating plainly
+  // because the two notes nearby say the opposite about their own points and
+  // the difference between the cases is easy to miss.
+  //
+  // `cancelling-keeps-the-hole` and `log-argument-is-positive` are both
+  // unaskable for the same reason: the only thing separating the two sides of
+  // their claim is a point where one side is UNDEFINED, and
+  // `ruleCounterexample` refuses such a point — correctly, since an excluded
+  // point does not refute a claim about values. So those claims have no answer
+  // the engine accepts.
+  //
+  // This claim does not have that shape. `(x^2)^(1/2) = x` is the power rule
+  // with its condition dropped, and both sides are defined at every real x:
+  // squaring first lands on something non-negative, so the even root is always
+  // taken of a legal argument. The left side is |x| and the right is x, so they
+  // differ at an ordinary interior point and substitution settles it. The
+  // undefined case the point teaches — (−4)^(1/2) — is the step the false
+  // reasoning passes THROUGH, not a side of the claim, which is exactly why it
+  // costs nothing here.
+  //
+  // Every negative x is a witness and every x >= 0 makes the two sides agree.
+  // That is a sharper fact than the single reference below, and a learner who
+  // reaches it has the knowledge point rather than one lucky number.
+  {
+    id: 'break-even-root-needs-nonnegative-1',
+    knowledgePointId: 'even-root-needs-nonnegative',
+    kind: 'counterexample',
+    prompt:
+      'Somebody cancelled the 2 against the 1/2 and claims (x²)^(1/2) = x for every real x. ' +
+      'Give a value of x that proves them wrong.',
+    given: '(x^2)^(1/2) = x',
+    variables: REAL_X,
+    // At x = −3 the left side is 9^(1/2) = 3 and the right is −3. Not the −4 of
+    // the worked example, deliberately: the witness is a different number from
+    // the one the example works through, so answering it takes the reasoning
+    // rather than the recollection. No `domainConditions` — there is nothing to
+    // exclude, and that absence is the whole point of the note above.
+    reference: '-3',
+  },
+
   // ── the logarithm concepts, which had material and no problems ──────────
   //
   // `logarithm-definition`, `logarithm-rules` and `solving-exponential-equations`
@@ -2686,6 +2739,300 @@ export const TASKS: PracticeTask[] = [
     // of it.
     reference: '4/7',
     at: { a: '20', b: '35', x: '3' },
+  },
+
+  // ── pythagoras ──────────────────────────────────────────────────────────
+  //
+  // Six tasks, and the first in this subject that is not an `evaluate`.
+  //
+  // THE PROXY PROBLEM IS MILDER HERE THAN ANYWHERE ELSE IN THE SUBJECT, which
+  // is worth saying after four blocks of apologia above. The four concepts
+  // before this one are about correspondences and criteria, and neither is a
+  // value, so their tasks all score arithmetic standing in for a reading. This
+  // concept's content is a relation between three numbers, so most of it IS a
+  // value and most of these tasks score the thing itself.
+  //
+  // What is still unscored is the slot assignment, and it is unscored in the
+  // same way and for the same reason: which of three lengths is the hypotenuse
+  // is a decision, not a value, and a learner who assigns it wrongly and then
+  // computes correctly takes the mark. The first pair is built to make that
+  // decision as visible as a task can — same two inputs, two different
+  // expressions, two answers — but the choosing is still the learner's and the
+  // ruling cannot see it. Named in both prompts, as everywhere else here.
+  //
+  // THE SURD TASK IS THE ONE REAL GAIN, and it was checked before the material
+  // was written rather than hoped for. `transform_to_form` with `surd_reduced`
+  // rules locally — `asSurd` in numerals.ts normalises both sides, so no CAS is
+  // consulted — which keeps this subject's no-worker contract intact while
+  // asking the second point's actual question. An `evaluate` could not have
+  // asked it at all: `exactValue` returns null on √180, correctly, since there
+  // is no exact rational to return.
+  {
+    id: 'the-leg-is-a-subtraction-1',
+    knowledgePointId: 'the-hypotenuse-is-not-one-of-three-equals',
+    kind: 'evaluate',
+    prompt:
+      'A right triangle has a hypotenuse of 25 and one leg of 7. Because the hypotenuse is the '
+      + 'side that is KNOWN here, the relation is used in its subtracting direction: the missing '
+      + 'leg is √(25² − 7²). Evaluate sqrt(b^2 - a^2) at a = 7, b = 25. Note which half of this '
+      + 'task scores — the arithmetic, not the decision. That 25 goes in the b slot rather than '
+      + 'the a slot is the whole content of the knowledge point, and it was handed to you in this '
+      + 'prompt rather than left for you to get right. Compare your answer with '
+      + 'the-same-two-numbers-the-other-way-1, which gives these two numbers the other roles.',
+    given: 'sqrt(b^2 - a^2)',
+    variables: REAL_AB,
+    // 25² − 7² = 625 − 49 = 576, and √576 = 24 exactly, so 7, 24, 25. A perfect
+    // square on purpose: this task is about the direction of the rearrangement,
+    // and an irrational answer would have moved the difficulty to the root.
+    reference: '24',
+    at: { a: '7', b: '25' },
+  },
+  {
+    id: 'the-same-two-numbers-the-other-way-1',
+    knowledgePointId: 'the-hypotenuse-is-not-one-of-three-equals',
+    kind: 'evaluate',
+    prompt:
+      'Same two numbers, 7 and 25, but now both of them are LEGS of a right triangle and the '
+      + 'hypotenuse is what is missing. So the relation is used in its adding direction instead. '
+      + 'Evaluate a^2 + b^2 at a = 7, b = 25 to get the square of that hypotenuse. Read the answer '
+      + 'against the 576 that the-leg-is-a-subtraction-1 produced from the same two inputs: the '
+      + 'gap between them is what one decision about which length is the hypotenuse is worth, and '
+      + 'it is larger than the smaller of the two sides. This task stops at the square — taking '
+      + 'the root is the next point, and this root is irrational.',
+    given: 'a^2 + b^2',
+    variables: REAL_AB,
+    // 49 + 625 = 674, against 576 from the task above. 674 − 576 = 98 = 2 × 7².
+    // The root is √674 = √(2 × 337) with 337 prime, so it does not reduce —
+    // which is why this task asks for the square and the next point takes roots.
+    reference: '674',
+    at: { a: '7', b: '25' },
+  },
+  {
+    id: 'reduce-the-hypotenuse-surd-1',
+    knowledgePointId: 'a-length-is-the-positive-root-and-usually-a-surd',
+    kind: 'transform_to_form',
+    prompt:
+      'A right triangle has legs 6 and 12, so the square of its hypotenuse is 36 + 144 = 180 and '
+      + 'the hypotenuse itself is √180. Give that length exactly, with nothing left under the '
+      + 'radical that need not be there — a whole number times a smaller root. A decimal is a '
+      + 'rounding of this length rather than the length.',
+    given: 'sqrt(180)',
+    form: 'surd_reduced',
+    variables: [],
+    // 180 = 36 × 5 with 36 = 6², so 6√5, and 5 is square-free so nothing further
+    // comes out. Ruled by `asSurd`'s normal form with no worker: correct for
+    // 6*sqrt(5), incorrect for an unreduced sqrt(180), naming the square 36.
+    //
+    // Different numbers from `simplify-a-surd-1` in roots-and-irrationals
+    // (1008 = 12√7) and from that concept's worked example (720 = 12√5), so
+    // this is not a recall of either — and here the radicand was PRODUCED by
+    // Pythagoras rather than handed over.
+    reference: '6*sqrt(5)',
+  },
+  {
+    id: 'the-rational-hypotenuse-is-the-exception-1',
+    knowledgePointId: 'a-length-is-the-positive-root-and-usually-a-surd',
+    kind: 'evaluate',
+    prompt:
+      'Change one leg: a right triangle with legs 9 and 12. Evaluate sqrt(a^2 + b^2) at a = 9, '
+      + 'b = 12. The answer is a whole number, and that is the rare case rather than the normal '
+      + 'one — it happens only when the two squares add to a square, which is what makes these '
+      + 'three lengths a Pythagorean triple. Read it against reduce-the-hypotenuse-surd-1, where '
+      + 'legs 6 and 12 gave 6√5: the same operation on a comparable pair of legs, and only one of '
+      + 'the two answers can be written without a radical.',
+    given: 'sqrt(a^2 + b^2)',
+    variables: REAL_AB,
+    // 81 + 144 = 225 = 15², so exactly 15 and the triangle is 9, 12, 15 — the
+    // 3-4-5 triple scaled by three. Rational on purpose, as the counterpart to
+    // the surd task above; `exactValue` settles it with no worker.
+    reference: '15',
+    at: { a: '9', b: '12' },
+  },
+  {
+    id: 'the-converse-as-a-difference-1',
+    knowledgePointId: 'the-converse-tests-a-triple-and-the-sign-grades-it',
+    kind: 'evaluate',
+    prompt:
+      'Three lengths, 9, 40 and 41, and no figure. The largest is 41, so that is the only side a '
+      + 'right angle could be opposite. Evaluate a^2 + b^2 - c^2 at a = 9, b = 40, c = 41. A '
+      + 'difference of 0 says the two smaller squares add to exactly the largest, so there is a '
+      + 'right angle opposite 41; anything else says there is not. Written as a difference rather '
+      + 'than as an equation to check, because the next task needs its sign.',
+    given: 'a^2 + b^2 - c^2',
+    variables: REAL_ABC,
+    // 81 + 1600 − 1681 = 0. A right triangle, and a Pythagorean triple.
+    // Mis-slotted as 9² + 41² − 40² it gives 1762 − 1600 = 162 — correct
+    // arithmetic, wrong verdict, which is the error the first point is about and
+    // which no ruling here can distinguish from a genuine answer.
+    reference: '0',
+    at: { a: '9', b: '40', c: '41' },
+  },
+  {
+    id: 'the-sign-says-obtuse-1',
+    knowledgePointId: 'the-converse-tests-a-triple-and-the-sign-grades-it',
+    kind: 'evaluate',
+    prompt:
+      'Now shorten the smallest length by one and leave the other two: 8, 40 and 41. Evaluate '
+      + 'a^2 + b^2 - c^2 at a = 8, b = 40, c = 41. The same expression as '
+      + 'the-converse-as-a-difference-1 and the SIGN of the answer is the ruling, not its size: '
+      + 'zero would be a right angle, positive means the angle opposite 41 is acute, negative '
+      + 'means it is obtuse. These three lengths still make a triangle — 8 + 40 exceeds 41 — so '
+      + 'the triangle inequality admits them and this test is what tells you what kind of triangle '
+      + 'they admit.',
+    given: 'a^2 + b^2 - c^2',
+    variables: REAL_ABC,
+    // 64 + 1600 − 1681 = −17. Negative, so the smaller squares fall short and the
+    // angle opposite 41 is obtuse. The same expression at a = 10 gives
+    // 1700 − 1681 = +19 and an acute angle, which the worked example states but
+    // no task asks — two of the three signs are enough to show it is the sign
+    // that rules.
+    reference: '-17',
+    at: { a: '8', b: '40', c: '41' },
+  },
+
+  // ── quadrilaterals-and-polygons ─────────────────────────────────────────
+  //
+  // Six more `evaluate` tasks, across the three points of
+  // `quadrilaterals-and-polygons`. Exact rational arithmetic, no worker, as
+  // everywhere else in this subject.
+  //
+  // THE PROXY PROBLEM IS MILDER HERE THAN IN ANY OF THE FIVE BLOCKS ABOVE,
+  // and that is worth saying plainly rather than repeating an apology that no
+  // longer fits. Two of the three points are about values. "How many sides"
+  // IS a number, so the first task is the whole computation rather than a
+  // stand-in for one. "Are the four angles equal" is a difference of two
+  // numbers, so the fifth task REFUTES the equiangular reading arithmetically
+  // — the gain `the-reversed-order-is-false-1` made for similarity, in a
+  // second concept.
+  //
+  // What is still unscored is one decision, and it is the first subgoal of the
+  // first worked example: which of the two totals to work in. A learner handed
+  // "evaluate 360/(180 − x)" has been given that choice rather than asked to
+  // make it, and no answer typed into this task can show they would have
+  // chosen it. Named in the prompt, as in every block above.
+  //
+  // Two of these six echo expressions from earlier blocks and in both cases
+  // the repetition is the content. `co-interior-across-the-parallel-pair-1` is
+  // `180 - x`, the same expression as `co-interior-remainder-1` in the
+  // transversal point, because a parallelogram's adjacent angles ARE that
+  // co-interior pair — the same subtraction, now with the strip closed into a
+  // figure. And the last pair is one expression at two inputs, exactly as
+  // `isosceles-base-angles-1` and `the-equilateral-fixed-point-1` are: there
+  // the fixed point was the equilateral triangle, here it is the square, and
+  // the difference between the two cases is the whole third knowledge point.
+  {
+    id: 'exterior-angle-counts-the-sides-1',
+    knowledgePointId: 'two-totals-and-only-one-grows-with-n',
+    kind: 'evaluate',
+    prompt:
+      'A regular polygon has interior angles of 156°. Evaluate 360/(180 − x) at x = 156. The '
+      + 'subtraction is the straight-line sum at one vertex, turning the interior angle there into '
+      + 'the exterior angle; the division shares out the one total that does not depend on how '
+      + 'many sides there are. Note which half of the problem this scores: the arithmetic, not the '
+      + 'route. That the question is asked through the exterior angle rather than through '
+      + '(n − 2) × 180 ÷ n is the content of the knowledge point, and this prompt has handed it to '
+      + 'you already made.',
+    given: '360/(180 - x)',
+    variables: REAL_X,
+    // 180 − 156 = 24 and 360/24 = 15, so a regular 15-gon. Checked the other
+    // way in the worked example: (15 − 2) × 180 = 2340 and 2340/15 = 156.
+    reference: '15',
+    at: { x: '156' },
+  },
+  {
+    id: 'the-exterior-total-never-moves-1',
+    knowledgePointId: 'two-totals-and-only-one-grows-with-n',
+    kind: 'evaluate',
+    prompt:
+      'The two angles at each vertex of a polygon lie along a straight line, so the n vertices '
+      + 'contribute 180° each to the two totals TOGETHER: they come to n × 180 between them, and '
+      + 'the interior total is (n − 2) × 180. Evaluate x*180 − (x − 2)*180 at x = 15 to get what '
+      + 'is left over for the exterior angles. The answer is 360, and the point is that it would '
+      + 'have been 360 for any x you were handed — the expression is identically 360, which is the '
+      + 'whole reason one total grows with the number of sides and the other does not.',
+    given: 'x*180 - (x - 2)*180',
+    variables: REAL_X,
+    // 15·180 − 13·180 = 2700 − 2340 = 360. Identically 360 for every x, since
+    // the two multiples of 180 differ by 2 whatever x is — which is the claim,
+    // and this evaluates one instance of it.
+    reference: '360',
+    at: { x: '15' },
+  },
+  {
+    id: 'co-interior-across-the-parallel-pair-1',
+    knowledgePointId: 'a-diagonal-makes-two-triangles-that-match',
+    kind: 'evaluate',
+    prompt:
+      'ABCD is a parallelogram and the angle at A is 64°. AD and BC are parallel and AB crosses '
+      + 'both of them, so the angles at A and at B are the co-interior pair and add to 180°. '
+      + 'Evaluate 180 − x at x = 64 to get the angle at B. This is the one step of the worked '
+      + 'example that produces a NUMBER — the congruence before it says which angles are equal to '
+      + 'which and nothing about their size, and no answer typed here can show you read that '
+      + 'correspondence the right way round. Compare co-interior-remainder-1 in the transversal '
+      + 'point: the same subtraction on the same fact, before the strip was closed into a figure.',
+    given: '180 - x',
+    variables: REAL_X,
+    // 180 − 64 = 116. The correspondence then spreads it: D = B = 116 and
+    // C = A = 64, and 64 + 116 + 64 + 116 = 360 = (4 − 2) × 180.
+    reference: '116',
+    at: { x: '64' },
+  },
+  {
+    id: 'the-four-angles-are-two-angles-twice-1',
+    knowledgePointId: 'a-diagonal-makes-two-triangles-that-match',
+    kind: 'evaluate',
+    prompt:
+      'The congruence makes a parallelogram\'s angles equal in opposite pairs, so the four of them '
+      + 'are a, b, a and b. Evaluate 2a + 2b − 360 at a = 64, b = 116. A difference of 0 says '
+      + 'those four close the quadrilateral — and the 360 is the first point\'s (n − 2) × 180 at '
+      + 'n = 4, so this is the polygon total being used rather than a separate fact about '
+      + 'quadrilaterals. It is NOT identically zero: it is zero exactly when b is 180 − a, which '
+      + 'is what the co-interior pair gave, so a learner who used the wrong angle at B does not '
+      + 'get a free 0 here.',
+    given: '2*a + 2*b - 360',
+    variables: REAL_AB,
+    // 128 + 232 − 360 = 0. At b = 117 it is +2, so the task can fail — which
+    // is what separates it from the identities elsewhere in this subject.
+    reference: '0',
+    at: { a: '64', b: '116' },
+  },
+  {
+    id: 'equal-sides-left-the-angles-unequal-1',
+    knowledgePointId: 'equal-sides-force-equal-angles-only-in-a-triangle',
+    kind: 'evaluate',
+    prompt:
+      'ABCD is a rhombus — all four sides equal — with the angle at A equal to 64°, so its angles '
+      + 'are 64°, 116°, 64°, 116°. Evaluate (180 − x) − x at x = 64 to compare two ADJACENT ones. '
+      + 'Anything other than 0 says the four equal sides did not make the four angles equal, which '
+      + 'is exactly what equal sides DO force in a triangle by the base-angle theorem. Read it '
+      + 'against the-square-is-the-only-fixed-point-1, which is this same expression at the one '
+      + 'value where the difference vanishes.',
+    given: '(180 - x) - x',
+    variables: REAL_X,
+    // 116 − 64 = 52. Non-zero, so an equilateral quadrilateral need not be
+    // equiangular — the refutation the third knowledge point is built on, and
+    // a value rather than a reading, so the ruling scores the claim itself.
+    reference: '52',
+    at: { x: '64' },
+  },
+  {
+    id: 'the-square-is-the-only-fixed-point-1',
+    knowledgePointId: 'equal-sides-force-equal-angles-only-in-a-triangle',
+    kind: 'evaluate',
+    prompt:
+      'The same expression, at x = 90. Evaluate (180 − x) − x at x = 90. Getting 0 is the content: '
+      + '90° is the one angle a rhombus can have and be equal-angled as well as equal-sided, so '
+      + 'the square is the single quadrilateral where those two claims coincide. Read it against '
+      + 'the-equilateral-fixed-point-1 in congruence, which is the same kind of question with the '
+      + 'opposite answer — there EVERY equal-sided triangle satisfies the matching condition, and '
+      + 'here exactly one equal-sided quadrilateral does.',
+    given: '(180 - x) - x',
+    variables: REAL_X,
+    // 90 − 90 = 0, and it is the only root of 180 − 2x, so the square is the
+    // only equiangular rhombus. At 64 the same expression is 52, which is the
+    // task above — one expression, two inputs, two verdicts.
+    reference: '0',
+    at: { x: '90' },
   },
 
   // ── functions-and-inverses ──────────────────────────────────────────────

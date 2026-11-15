@@ -143,28 +143,32 @@ export default function CorrelationGamesSection({
 
   return (
     <div className="mb-8">
-      <div className="flex items-center gap-2 mb-1">
-        {/* The heading is the link people actually aim at. "All eleven" was the
-            only way through to the list, and a section title that looks like a
-            title but is not clickable reads as a dead end — so the icon and the
-            words go to the same place the affordance on the right does. One
-            Link wrapping both, rather than two, so the hover is a single target
-            and `ml-auto` on the sibling still pushes it to the edge. */}
+      {/* The heading is the link people actually aim at, because a section title
+          that looks like a title but is not clickable reads as a dead end — so
+          the icon and the words both go to /play, as one Link rather than two,
+          which keeps the hover a single target.
+
+          There was also an "All eleven" affordance on the right and a paragraph
+          below describing the games. Both are gone. This section only ever
+          renders inside the open Play band, which carries its own blurb and its
+          own link to /play, so the band and the section were saying the same
+          thing twice and pointing at the same page three times. What is left is
+          the one thing the band does NOT already say: which games are in
+          progress. Hence "Active" in the title — it names what the strip holds
+          rather than restating the feature.
+
+          The wrapper div stays despite now holding a single child: it is what
+          keeps the Link shrunk to its content. Promoting the flex to the Link
+          itself would make it block-level and full-width, so hovering anywhere
+          along the empty right-hand side would highlight the title. */}
+      <div className="flex items-center gap-2 mb-3">
         <Link href="/play" className="group flex items-center gap-2">
           <Shuffle size={16} className="text-fuchsia-500" />
           <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-gray-100 transition-colors">
-            Correlation games
+            Active correlation games
           </h2>
         </Link>
-        <Link href="/play" className="ml-auto flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
-          All eleven <ArrowRight size={12} />
-        </Link>
       </div>
-      <p className="text-xs text-gray-500 dark:text-gray-400 mb-3 max-w-2xl leading-relaxed">
-        Answer a song with a painting, a painting with a stretch, a stretch with a passage from
-        something you are reading — or stay where you are. Each turn proposes a connection and
-        makes it perceptible, and a change of medium can be the move itself.
-      </p>
 
       {error && <p className="mb-2 text-xs text-red-500 dark:text-red-400">{error}</p>}
 

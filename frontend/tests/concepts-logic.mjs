@@ -2199,6 +2199,63 @@ t('a witness at an excluded point fails validation', (() => {
   return validateInstance(bad, 0).some(s => /one side is undefined/.test(s))
 })())
 
+/*
+ * The second counterexample task, and the reason it is worth its own
+ * assertions rather than riding on the first.
+ *
+ * `even-root-needs-nonnegative` is a DOMAIN restriction, and two other domain
+ * restrictions in this engine have no rulable task precisely because of their
+ * domains — `cancelling-keeps-the-hole` and `log-argument-is-positive`, both
+ * recorded where their task would be. So "a domain point got a counterexample
+ * task" is the kind of thing that looks like the mistake those notes warn
+ * about, and the distinction is what these pin down: the claim
+ * (x^2)^(1/2) = x is total on the reals, so its separating points are ordinary
+ * ones and nothing here depends on substituting an excluded point.
+ *
+ * The negative-x assertions are the load-bearing ones. If `exactValue` ever
+ * stopped taking the even root of a positive rational — the capability
+ * `exactLog`'s neighbour `exactRoot` provides — the left side would go null
+ * and this task would start telling learners their correct witness leaves a
+ * side undefined. That failure is invisible in the shipped set otherwise.
+ */
+const rootClaim = taskById('break-even-root-needs-nonnegative-1')
+const brokeRoot = async answer => rule(rootClaim, answer, NO_WORKER)
+t('the domain point now has a task, so its chain can become evidence',
+  tasksForPoint('even-root-needs-nonnegative').length === 1)
+t('its claim is an equation, like the kind requires',
+  parseExpression(rootClaim.given, ['x']).kind === 'equation')
+t('the shipped witness validates with no worker',
+  validateInstance(rootClaim, 0).length === 0, validateInstance(rootClaim, 0).join('; '))
+t('a negative witness breaks the claim',
+  (await brokeRoot('-3')).verdict.ruling === 'correct')
+t('and the ruling names |x| against x rather than an undefined side',
+  /the left side is 3 and the right side is -3/.test((await brokeRoot('-3')).verdict.method),
+  (await brokeRoot('-3')).verdict.method)
+t('a different negative works too — every one of them is a witness',
+  (await brokeRoot('-1/2')).verdict.ruling === 'correct')
+/*
+ * The non-negative half, which is the actual content of the knowledge point:
+ * the power rule is not merely unreliable, it holds exactly where x >= 0 and
+ * fails exactly where x < 0. A learner offering 4 has to be told the claim
+ * SURVIVED, not that they mis-substituted.
+ */
+t('a positive value is rejected because the claim survives it',
+  (await brokeRoot('4')).verdict.ruling === 'incorrect')
+t('and it says so in those terms',
+  /both sides equal 4, so the claim survives/.test((await brokeRoot('4')).verdict.brokeAt.detail),
+  (await brokeRoot('4')).verdict.brokeAt.detail)
+t('zero is the boundary and the claim survives there too',
+  (await brokeRoot('0')).verdict.ruling === 'incorrect')
+/*
+ * And the negative result that keeps the note on the task honest: no witness
+ * for this claim is ever refused as an excluded point, because there are none.
+ * Asserted by exercising the branch that WOULD fire — the message the other
+ * task produces at x = −5 must not be producible here at any integer point.
+ */
+t('no point on this claim is an excluded one, unlike the first task',
+  (await Promise.all(['-4', '-2', '-1', '0', '1', '2', '5'].map(brokeRoot)))
+    .every(r => !/is undefined, so the two were never compared/.test(r.verdict.brokeAt?.detail ?? '')))
+
 // ---------------------------------------------------------------------------
 // The second subject, and what it broke
 // ---------------------------------------------------------------------------
@@ -3022,7 +3079,8 @@ t('the two-readings point carries both halves of the pair',
   tasksForPoint('a-letter-has-two-readings').map(x => x.id).join(','))
 
 // ---------------------------------------------------------------------------
-// The eighth subject: the first angle facts, the triangle, and congruence
+// The eighth subject: the angle facts, the triangle, congruence, similarity
+// and Pythagoras
 // ---------------------------------------------------------------------------
 
 /**
@@ -3047,13 +3105,17 @@ t('and it displaced neither of the two positions anything depends on',
   ONTOLOGIES[0] === ARITHMETIC_FOUNDATIONS && ONTOLOGIES[1] === EXPRESSIONS_AND_EQUATIONS)
 t('it has no internal faults', ontologyProblems(PG).length === 0, ontologyProblems(PG).join('; '))
 t('its fidelity claim matches what its option can do', fidelityMismatches(PG).length === 0)
-t('four concepts, three knowledge points each',
-  PG.concepts.length === 4 && allKnowledgePoints(PG).length === 12
+const PG_CONCEPT_IDS = [
+  'points-lines-angles', 'triangle-basics', 'congruence', 'similarity', 'pythagoras',
+  'quadrilaterals-and-polygons',
+]
+t('six concepts, three knowledge points each',
+  PG.concepts.length === 6 && allKnowledgePoints(PG).length === 18
   && PG.concepts.every(c => c.knowledgePoints.length === 3),
   `${PG.concepts.length} concepts, ${allKnowledgePoints(PG).length} points`)
-t('all four concepts are teachable AND practisable — a syllabus, not four map entries',
-  ['points-lines-angles', 'triangle-basics', 'congruence', 'similarity']
-    .every(id => isTeachable(PG, id) && isPractisable(PG, id)))
+t('all six concepts are teachable AND practisable — a syllabus, not six map entries',
+  PG_CONCEPT_IDS.every(id => isTeachable(PG, id) && isPractisable(PG, id)),
+  PG_CONCEPT_IDS.filter(id => !isTeachable(PG, id) || !isPractisable(PG, id)).join(', '))
 /*
  * Positions restart per concept rather than running 1..6 through the subject.
  * `position` is documented as order WITHIN the concept, and the two readings
@@ -3096,7 +3158,8 @@ t('every objective names a task kind',
  * the promotions before it did, which is why the assertion is now in two parts.
  *
  * It stranded a second `needs` that could NOT come here — `ratio-and-rate`, a
- * node of `NUMBER_AND_ARITHMETIC` — and an authored ontology may only name
+ * map node, of `NUMBER_AND_ARITHMETIC` then and of `algebra-foundations` since
+ * those two areas merged — and an authored ontology may only name
  * concepts it contains. So the area's `links` is no longer empty, and the half
  * of that pair which lived in tests/atlas.mjs had to change with it. The
  * prerequisite chain here is unaffected, which is the point of separating them.
@@ -3107,14 +3170,36 @@ t('every objective names a task kind',
  * `every(e => e.kind === 'prerequisite')` would now fail for a correct
  * ontology, and relaxing it to "mostly prerequisites" would stop checking the
  * line. The interference is asserted on its own terms below.
+ *
+ * `quadrilaterals-and-polygons` stranded one edge too — `congruence` again,
+ * already a concept here — so the cheap case is back for a fourth time and the
+ * area still owns no new link. What it is NOT is another link in the chain. It
+ * is the second child of `congruence`, so this subject stopped being a line and
+ * became a tree, and the assertion had to split in two: the line that the first
+ * five promotions walked, and the fork the sixth hung off it. Asserting one
+ * ordered string over all five prerequisites would have worked and would have
+ * said the wrong thing — the claim worth holding is that the fork is off
+ * `congruence` specifically, because an edge accidentally hung off `pythagoras`
+ * instead would pass a string comparison written after the fact while changing
+ * what gates what.
  */
 const PG_PREREQS = PG.edges.filter(e => e.kind === 'prerequisite')
-t('it declares the three edges its promotions stranded, as one chain pointing upward',
-  PG_PREREQS.length === 3
-  && PG_PREREQS.map(e => `${e.from}->${e.to}`).join(' ')
+t('the first five promotions still form one chain pointing upward',
+  PG_PREREQS.map(e => `${e.from}->${e.to}`).slice(0, 4).join(' ')
     === 'points-lines-angles->triangle-basics triangle-basics->congruence '
-      + 'congruence->similarity',
+      + 'congruence->similarity similarity->pythagoras',
   PG.edges.map(e => `${e.from}->${e.to}:${e.kind}`).join(', '))
+t('and the sixth forks off congruence rather than extending that chain',
+  PG_PREREQS.length === 5
+  && PG_PREREQS.filter(e => e.to === 'quadrilaterals-and-polygons')
+    .map(e => e.from).join(',') === 'congruence'
+  && PG_PREREQS.filter(e => e.from === 'congruence').map(e => e.to).sort().join(',')
+    === 'quadrilaterals-and-polygons,similarity',
+  PG_PREREQS.map(e => `${e.from}->${e.to}`).join(' '))
+t('every prerequisite here names two concepts of this subject, and says who promoted it',
+  PG_PREREQS.every(e => !!conceptById(PG, e.from) && !!conceptById(PG, e.to)
+    && e.promotedBy === 'author:plane-geometry'),
+  PG_PREREQS.filter(e => e.promotedBy !== 'author:plane-geometry').map(e => e.id).join(', '))
 /*
  * The interference the fourth promotion stranded, which is the first edge in
  * this subject that gates nothing. It constrains SELECTION — never introduce
@@ -3148,24 +3233,70 @@ t('congruence reaches the angle facts only through the triangles',
 
 group('the eighth subject is gradable with no worker')
 const PG_TASKS = allKnowledgePoints(PG).flatMap(p => tasksForPoint(p.id))
-t('twenty-four tasks, two on each of the twelve points', PG_TASKS.length === 24
+t('thirty-six tasks, two on each of the eighteen points', PG_TASKS.length === 36
   && allKnowledgePoints(PG).every(p => tasksForPoint(p.id).length === 2),
   `${PG_TASKS.length}`)
-t('all of them are evaluate — a reason is not a value and not a form, so none asks for one',
-  PG_TASKS.every(x => x.kind === 'evaluate' && x.form === undefined))
-t('every reference is exactly reproducible from the given — no worker consulted',
-  PG_TASKS.every(x => {
+/*
+ * Thirty-five `evaluate` and ONE `transform_to_form`, and the split is asserted
+ * rather than relaxed to "mostly evaluate".
+ *
+ * The run of twenty-four was a real claim and it is in the ontology header: the
+ * natural ask in the first four concepts is "name the fact you used", no
+ * `NamedForm` describes a reason, so each task scores the arithmetic the fact
+ * licenses. That did not stop being true. `pythagoras` is the first concept
+ * here whose content is a relation between numbers rather than a
+ * correspondence, and its second point is specifically about the answer being
+ * an irrational surd — an ask that `evaluate` cannot carry at all, because
+ * `exactValue` returns null on √180 and correctly so. So the one exception is
+ * where the subject gained an ask, not where it gave one up.
+ *
+ * The polygons added six more `evaluate` and no second exception, which is the
+ * honest outcome rather than a missed opportunity: the asks in that concept are
+ * a side count, a difference of two angles and an angle total, and all three
+ * are numbers. No `NamedForm` describes "the four angles are not all equal",
+ * and the arithmetic refutation of it IS a number, so there was nothing a form
+ * could have carried better.
+ */
+const PG_EVAL = PG_TASKS.filter(x => x.kind === 'evaluate')
+const PG_FORM = PG_TASKS.filter(x => x.kind === 'transform_to_form')
+t('thirty-five evaluate and one transform_to_form, which is the surd the hypotenuse produces',
+  PG_EVAL.length === 35 && PG_FORM.length === 1
+  && PG_EVAL.every(x => x.form === undefined)
+  && PG_FORM[0].id === 'reduce-the-hypotenuse-surd-1'
+  && PG_FORM[0].form === 'surd_reduced',
+  PG_TASKS.filter(x => x.kind !== 'evaluate').map(x => `${x.id}:${x.kind}:${x.form}`).join(', '))
+t('every evaluate reference is exactly reproducible from the given — no worker consulted',
+  PG_EVAL.every(x => {
     const at = {}
     for (const [name, raw] of Object.entries(x.at)) at[name] = parseExpression(raw, [])
     const truth = exactValue(substitute(parseExpression(x.given, x.variables.map(v => v.name)), at))
     const claimed = exactValue(parseExpression(x.reference, x.variables.map(v => v.name)))
     return truth !== null && claimed !== null && showExact(truth) === showExact(claimed)
   }))
-const pgRulings = await Promise.all(PG_TASKS.map(x => ruleEvaluate(x, x.reference, NO_WORKER)))
+const pgRulings = await Promise.all(PG_EVAL.map(x => ruleEvaluate(x, x.reference, NO_WORKER)))
 t('a correct answer is ruled correct with no worker configured',
   pgRulings.every(r => r.verdict.ruling === 'correct'),
-  pgRulings.map((r, i) => `${PG_TASKS[i].id}:${r.verdict?.ruling ?? r.status}`)
+  pgRulings.map((r, i) => `${PG_EVAL[i].id}:${r.verdict?.ruling ?? r.status}`)
     .filter((_, i) => pgRulings[i].verdict?.ruling !== 'correct').join(', '))
+/*
+ * The surd task separately, because it is the one task in the subject that
+ * could have broken the no-worker contract and the only one whose ruling is a
+ * form check rather than a value comparison.
+ *
+ * Both directions are held. Accepting 6√5 is the easy half; REFUSING the
+ * unreduced √180 is the half that matters, since `radical_free` is the
+ * neighbouring form and the wrong one, and a checker that merely compared
+ * values would mark the input correct against itself.
+ */
+const pgSurd = await ruleTransform(PG_FORM[0], '6*sqrt(5)', NO_WORKER)
+t('the surd task rules correct with no worker, by exact comparison rather than a CAS',
+  pgSurd.verdict.ruling === 'correct' && /no worker was needed/.test(pgSurd.verdict.method),
+  pgSurd.verdict.method)
+const pgSurdUnreduced = await ruleTransform(PG_FORM[0], 'sqrt(180)', NO_WORKER)
+t('and refuses the given back unreduced, naming the square that can still come out',
+  pgSurdUnreduced.verdict.ruling === 'incorrect'
+  && /36/.test(pgSurdUnreduced.verdict.brokeAt?.detail ?? ''),
+  pgSurdUnreduced.verdict.brokeAt?.detail ?? '')
 /*
  * The two angle sums, as a PAIR. The knowledge point's first subgoal is that
  * choosing between 180 and 360 is the only geometric decision in the problem,
@@ -3251,13 +3382,68 @@ t('sixty is the one angle the base-angle map sends to itself', (() => {
   return at('60') === '60' && at('28') === '76' && at('90') === '45'
 })())
 
+/*
+ * The polygon tasks, checked the way the congruence ones are: away from their
+ * authored inputs where the content is a claim rather than an instance, since
+ * one coincidence at the values in the prompt would prove nothing about it.
+ *
+ * `the-exterior-total-never-moves-1` is x·180 − (x − 2)·180, which is 360 for
+ * EVERY x — the two multiples of 180 differ by two whatever x is, and that
+ * independence is the whole first knowledge point. So it is checked on a second
+ * value with nothing in common with the first.
+ *
+ * `the-four-angles-are-two-angles-twice-1` is the opposite shape and must NOT
+ * generalise the same way: 2a + 2b − 360 is 0 only when b really is 180 − a,
+ * which is exactly the claim that the co-interior pair produced the right angle
+ * at B. A mismatched pair is checked as well, because a difference that were
+ * identically zero would score a learner correct for any two angles at all —
+ * the same failure the AAS task is guarded against above.
+ */
+t('the exterior total is 360 for any number of sides, not just the authored fifteen', (() => {
+  const task = taskById('the-exterior-total-never-moves-1')
+  const read = v => {
+    const value = exactValue(substitute(parseExpression(task.given, ['x']), { x: parseExpression(v, []) }))
+    return value === null ? null : showExact(value)
+  }
+  // Three sides and a hundred sides give the same total, which is the claim.
+  return read('15') === '360' && read('3') === '360' && read('100') === '360'
+})())
+t('the parallelogram total is zero on a co-interior pair and non-zero otherwise', (() => {
+  const task = taskById('the-four-angles-are-two-angles-twice-1')
+  const read = (a, b) => {
+    const at = { a: parseExpression(a, []), b: parseExpression(b, []) }
+    const v = exactValue(substitute(parseExpression(task.given, ['a', 'b']), at))
+    return v === null ? null : showExact(v)
+  }
+  // 64 and 116 add to 180, so the four angles close. 64 and 117 do not, and
+  // the task has to say so rather than accept any pair.
+  return read('64', '116') === '0' && read('40', '140') === '0' && read('64', '117') !== '0'
+})())
+/*
+ * The rhombus pair, which is one expression at two inputs — and the pair is
+ * the content, exactly as `isosceles-base-angles-1` and
+ * `the-equilateral-fixed-point-1` are in `congruence`. There the fixed point
+ * was the equilateral triangle and EVERY equal-sided triangle satisfies the
+ * condition; here it is the square and exactly one equal-sided quadrilateral
+ * does. So this asserts the fixed point and asserts it is the ONLY one, because
+ * "it returned 0 at 90" would also pass if the expression had been constant.
+ */
+t('ninety is the one rhombus angle where equal sides do give equal angles', (() => {
+  const given = parseExpression(taskById('the-square-is-the-only-fixed-point-1').given, ['x'])
+  const at = v => showExact(exactValue(substitute(given, { x: parseExpression(v, []) })))
+  return at('90') === '0' && at('64') === '52' && at('120') === '-60'
+})())
+t('and both rhombus tasks are the same expression, which is what makes them a pair',
+  taskById('the-square-is-the-only-fixed-point-1').given
+  === taskById('equal-sides-left-the-angles-unequal-1').given)
+
 const PG_QUESTIONS = allQuestions(PG)
-t('forty-eight questions, one per subgoal', PG_QUESTIONS.length === 48, `${PG_QUESTIONS.length}`)
+t('seventy-two questions, one per subgoal', PG_QUESTIONS.length === 72, `${PG_QUESTIONS.length}`)
 t('every subgoal carries an authored socratic phrasing',
   allKnowledgePoints(PG).every(p => p.workedExample.subgoals.every(s => !!s.socratic)),
   allKnowledgePoints(PG).flatMap(p => p.workedExample.subgoals)
     .filter(s => !s.socratic).map(s => s.label).join(' | '))
-t('and every one of them is interrogative, so all forty-eight count as written',
+t('and every one of them is interrogative, so all seventy-two count as written',
   PG_QUESTIONS.every(q => q.authoredAsQuestion)
   && questionCoverage(PG).authoredAsQuestions === questionCoverage(PG).questions)
 t('while the labels stay imperative — the map draws moves, the tutor asks sentences',
@@ -3281,8 +3467,23 @@ t('while the labels stay imperative — the map draws moves, the tutor asks sent
  * one that most needed an assertion: the error its first point exists to
  * prevent is reading a letter order too fast, so a timing target there would
  * reward the mistake rather than merely measure the wrong thing.
+ *
+ * The three Pythagoras points then hit all three of those reasons, one each,
+ * which is why this assertion is worth keeping rather than retiring. Its first
+ * point is the read-it-slowly case exactly — the error is assigning the
+ * hypotenuse's slot too fast. Its second would time `pull-the-square-out` in
+ * `roots-and-irrationals`, which is untimed there, so a target here would
+ * measure another subject's skill. Its third is a decision with an argument
+ * behind it. Five concepts in, the file still has one target.
+ *
+ * The three polygon points hit the same three reasons a third time, so this is
+ * now fifteen untimed points out of eighteen with one reason each rather than a
+ * convention. Its first point's arithmetic is the straight-line subtraction the
+ * timed point already measures, plus a division — reporting one skill as two.
+ * Its second is the read-it-slowly case, since the error it exists to stop is
+ * matching ABC with ACD. Its third is a decision with an argument behind it.
  */
-t('only the point about fluency is timed, and neither later concept added a second',
+t('only the point about fluency is timed, and no later concept added a second',
   allKnowledgePoints(PG).filter(p => p.automaticityTarget !== undefined)
     .map(p => p.id).join(',') === 'two-sums-every-angle-chase-uses',
   allKnowledgePoints(PG).filter(p => p.automaticityTarget !== undefined).map(p => p.id).join(','))
@@ -3305,6 +3506,15 @@ t('only the point about fluency is timed, and neither later concept added a seco
  * what got written is the correspondence, the counting and a triangle matched
  * with itself, and the parts that genuinely need two triangles drawn — the
  * proofs of the criteria, and SSA — stayed on the map.
+ *
+ * The polygons are the first concept here where the figure test took only PART
+ * of a node, which makes this assertion stronger again and in a different way.
+ * A quadrilateral with a diagonal drawn across it is the most figure-suggestive
+ * object in the subject, and the three points were chosen so that none of them
+ * needs the drawing: two angle totals, a diagonal used to CUT rather than to
+ * measure along, and a disagreement between two words. What genuinely needs the
+ * figure — the diagonals bisecting, a rhombus's being perpendicular, the kite
+ * and the trapezium — stayed mapped and is named as absent in the header.
  */
 t('no knowledge point claims a figure, because there are none to claim',
   allKnowledgePoints(PG).every(p => p.visualRef === undefined))

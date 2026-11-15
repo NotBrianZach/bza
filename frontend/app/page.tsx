@@ -79,7 +79,10 @@ const GROUPS: {
   {
     id: 'play', label: 'Play',
     blurb: 'answer a song with a painting, a painting with a passage',
-    links: [{ label: 'All games', href: '/play' }],
+    // "Play games", not "All games": every other label in this band list names
+    // an action, and this is the band's only route to /play now that the
+    // section below dropped its own duplicate link.
+    links: [{ label: 'Play games', href: '/play' }],
     empty: 'No games in progress.',
   },
   {

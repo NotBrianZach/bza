@@ -1818,7 +1818,7 @@ const CONCEPTS: Concept[] = [
    *
    * ── Why this one next ─────────────────────────────────────────────────────
    *
-   * It is the only node left in `NUMBER_AND_ARITHMETIC` whose every
+   * It was the only node left in `NUMBER_AND_ARITHMETIC` whose every
    * prerequisite was already authored, and both of them are load-bearing
    * rather than nominal, which is the argument for writing it rather than
    * something further up:
@@ -2351,9 +2351,10 @@ const EDGES: ConceptEdge[] = [
    *
    * Edges pointing the other way were left alone and resolve in `composeAtlas`:
    * `percent`, `real-number-line` and `scientific-notation` each name this
-   * concept in their own `needs` and all three are still map nodes in
-   * `NUMBER_AND_ARITHMETIC`. Because all three STAYED, nothing had to move into
-   * that area's `links` — see the note there.
+   * concept in their own `needs` and all three are still map nodes — in
+   * `NUMBER_AND_ARITHMETIC` when this was written, and in `algebra-foundations`
+   * since those two areas merged. Because all three STAYED, nothing had to move
+   * into that area's `links` — see the note there.
    */
   {
     id: 'prime-factorisation->decimal-representation',

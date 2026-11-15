@@ -76,6 +76,17 @@
  * break. It keeps its worked example, which the registry permits and which is
  * honest — a knowledge point with no rulable task is still worth teaching, and
  * faking a task for it would be the failure tasks.ts's header warns about.
+ *
+ * **It is now the only bare point, and that sentence used to name one of two.**
+ * `even-root-needs-nonnegative` was bare as well and went unmentioned here,
+ * which made the paragraph above read as a complete account of the subject's
+ * coverage when it was not. It has a `counterexample` task now, and the
+ * distinction it turns on is the useful part: both points are DOMAIN
+ * restrictions, so the obvious reading is that neither can be ruled. The
+ * separating question is not "is this about a domain" but "is the claim total
+ * where it is stated". (x²)^(1/2) = x is defined at every real x and false at
+ * every negative one, so substitution refutes it; a logarithm of a negative
+ * number has no value to compare at all. tasks.ts argues it where the task is.
  */
 
 import type { Concept, ConceptEdge, ConceptOntology, Subject } from './types'
@@ -162,16 +173,27 @@ const CONCEPTS: Concept[] = [
             {
               label: 'What is being repeated?',
               detail: 'The whole of 3², four times: 3² · 3² · 3² · 3².',
+              socratic:
+                'The 4 sits outside the brackets and the 2 sits inside. Which of the two tells ' +
+                'you how many factors to write down, and what is each of those factors?',
             },
             {
               label: 'Use the rule you already have',
               detail: 'Four factors of the same base add their exponents: 2 + 2 + 2 + 2 = 8.',
+              socratic:
+                '3² · 3² · 3² · 3² is a product of powers of the same base, which is the one ' +
+                'shape you already know how to collapse. What exponent does that rule give you ' +
+                'here, and what did you do to the four 2s to get it?',
             },
             {
               label: 'Read off the general rule',
               detail:
                 '(xᵃ)ᵇ = xᵃᵇ. The multiplication is repeated addition of the inner exponent, ' +
                 'which is why this rule rests on the product rule rather than standing beside it.',
+              socratic:
+                'Adding 2 to itself four times is the long way round one multiplication, and the ' +
+                'four came from the exponent outside the brackets. What does (xᵃ)ᵇ come to for ' +
+                'any base and any two exponents — and which rule did you lean on to get there?',
             },
           ],
           answer: '3⁸, because (xᵃ)ᵇ = xᵃᵇ',
@@ -272,8 +294,15 @@ const CONCEPTS: Concept[] = [
     objectives: [
       {
         id: 'move-between-roots-and-exponents',
-        statement: 'Evaluate a power with a rational exponent, and state when it is defined.',
-        taskKinds: ['evaluate', 'state'],
+        statement:
+          'Evaluate a power with a rational exponent, state when it is defined, and break the ' +
+          'power rule where its condition is dropped.',
+        // `counterexample` was added once the third clause became askable. The
+        // condition on (xᵃ)ᵇ = xᵃᵇ can be attacked directly, because
+        // (x²)^(1/2) = x is false at every negative x with both sides defined —
+        // see the note on the task in tasks.ts. `state` stays: "when is it
+        // defined" is still the unrulable half.
+        taskKinds: ['evaluate', 'state', 'counterexample'],
       },
     ],
     knowledgePoints: [

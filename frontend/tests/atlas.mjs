@@ -194,6 +194,22 @@ t('the roots of the map are few — a root is a claim that nothing comes before 
 const interference = MATHEMATICS.edges.filter(e => e.kind === 'interferes_with')
 t('every interference states a reason', interference.every(e => !!e.rationale))
 
+/*
+ * THE FLOOR. Do not lower it and do not delete it: it is the only thing
+ * between this map and a scatter of one-node areas, and an area is the unit a
+ * learner is shown a region of mathematics in.
+ *
+ * It has a known blind spot, which is worth recording HERE rather than only in
+ * the group that had to work around it: this compares nodes remaining, so an
+ * area that drained from fifteen to five by having its content authored reads
+ * identically to five somebody sketched and abandoned. Two areas hit the floor
+ * that way and were merged into their neighbours instead — see
+ * atlas-foundations.ts, and the budget group further down, which asserts that
+ * the merges actually bought the room they were for. Counting
+ * nodes-plus-departures against the floor would tell the two cases apart and
+ * is the alternative that was NOT taken; if a later drained area wants it, that
+ * is a change to this line, not a reason to raise or drop the threshold.
+ */
 const singletons = AREAS.filter(a => a.nodes.length < 5)
 t('no area is a stub', singletons.length === 0, singletons.map(a => a.id).join(', '))
 
@@ -285,8 +301,9 @@ t('and they carry their own subject, not the area they left',
  * and `real-number-line` is the successor that keeps the two-promotion form
  * intact: it declares `needs: ['roots-and-irrationals', 'decimal-representation']`
  * and BOTH of those are now authored concepts in a different file. It is also
- * the last node in `NUMBER_AND_ARITHMETIC` that can play this role on two
- * edges, which is itself a reading of how far that area has been written out.
+ * the last node of the former `NUMBER_AND_ARITHMETIC` that can play this role
+ * on two edges, which is itself a reading of how far that area had been
+ * written out before it was merged into `algebra-foundations`.
  *
  * `absolute-value` stays as the one-edge case alongside it, since a single
  * surviving edge and a pair of them fail differently — a bug in
@@ -891,15 +908,15 @@ t('and everything that depended on it still does',
   dependentsOf(MATHEMATICS, 'quadratic-formula').join(', '))
 
 /**
- * FOUR NODES WERE PROMOTED OUT OF THIS AREA — THREE OF THEM THE CHEAPEST KIND
- * THE ATLAS HAS, AND THE FOURTH THE ONE THAT ENDED THE RUN.
+ * SIX NODES WERE PROMOTED OUT OF THIS AREA — FOUR OF THEM THE CHEAPEST KIND
+ * THE ATLAS HAS, AND TWO OF THEM THE KIND THAT ENDED THE FIRST RUN OF THEM.
  *
- * `points-lines-angles`, `triangle-basics`, `congruence` and `similarity` were
- * the first four nodes of `euclidean-geometry` and are now the four concepts of
- * `plane-geometry`. The assertions above already cover the collision half of
- * all four moves — `shippedAtlasProblems` would name any node that had been
- * left behind — and the rootless half, by naming the angle facts in
- * `AUTHORED_ROOTS`.
+ * `points-lines-angles`, `triangle-basics`, `congruence`, `similarity`,
+ * `pythagoras` and `quadrilaterals-and-polygons` were the first six nodes of
+ * `euclidean-geometry` and are now the six concepts of `plane-geometry`. The
+ * assertions above already cover the collision half of all six moves —
+ * `shippedAtlasProblems` would name any node that had been left behind — and
+ * the rootless half, by naming the angle facts in `AUTHORED_ROOTS`.
  *
  * What is asserted here is where each promotion's stranded edges went, because
  * that is the part that varied:
@@ -924,10 +941,48 @@ t('and everything that depended on it still does',
  *   `similarity` BROKE THE PATTERN, and this group previously asserted the
  *   emptiness that it broke. The node declared two `needs`: `congruence`, which
  *   was already a concept and so went to `PLANE_GEOMETRY.edges` like the two
- *   above, and `ratio-and-rate`, which is still a node of
- *   `NUMBER_AND_ARITHMETIC`. An authored ontology may only name concepts it
+ *   above, and `ratio-and-rate`, which was then a node of
+ *   `NUMBER_AND_ARITHMETIC` and is a node of `algebra-foundations` now, those
+ *   two areas having merged — a map node either way. An authored ontology may
+ *   only name concepts it
  *   contains, so the second one could not follow the first and came back here
  *   as this area's first `links` entry.
+ *
+ *   `pythagoras` DID IT AGAIN, which is what turns `similarity` from an
+ *   awkward one-off into the pattern. Two `needs` again: `similarity`, by then
+ *   a concept, went to `PLANE_GEOMETRY.edges`, and `roots-and-irrationals`
+ *   came back here as the second `links` entry.
+ *
+ *   `quadrilaterals-and-polygons` WENT BACK TO THE CHEAP CASE, which is why
+ *   the heading above says four and two rather than three and then the rest.
+ *   Its own `needs` was `['congruence']` and nothing else, `congruence` was
+ *   already a concept of `plane-geometry`, so the single stranded edge is
+ *   internal there and went to `PLANE_GEOMETRY.edges` like the three cheap ones
+ *   before it. This area's `links` therefore needed no entry and gave none up,
+ *   which is what the ordered-pair assertion below now also holds against a
+ *   sixth promotion rather than a fifth.
+ *
+ *   It was, however, the first promotion here that was NOT directly above the
+ *   last — it is the second child of `congruence`, taken three promotions after
+ *   the first one was. So cheapness is a property of where a departing node's
+ *   prerequisites LIVE and not of the branch being walked upward in order,
+ *   which the run of three had made easy to conflate.
+ *
+ *   `pythagoras`'s reason for not following differs from `ratio-and-rate`'s,
+ *   and that is the distinction the assertion below is written to hold.
+ *   `ratio-and-rate` is an unwritten map node, so it has no ontology to live
+ *   in at all. `roots-and-irrationals` is fully authored — in
+ *   `arithmetic-foundations`. An ontology's edges may only name concepts it
+ *   CONTAINS, so belonging to a different subject fails that test exactly as
+ *   being a skeleton does. `links` is therefore about which FILE an endpoint
+ *   is in, not about whether it was written, and the two entries are asserted
+ *   as an ordered pair so that distinction stays on the record.
+ *
+ *   It also has the opposite CONSEQUENCE, which gets its own assertion. The
+ *   `ratio-and-rate` link gates nothing, because the gating walk passes
+ *   through a node with no material. This one gates, because its endpoint has
+ *   three knowledge points — the first `links` entry in this area to change
+ *   what a learner must demonstrate.
  *
  * The assertion therefore had to CHANGE rather than merely be extended, and it
  * is worth being explicit that this is not the test having been wrong. "No
@@ -936,23 +991,60 @@ t('and everything that depended on it still does',
  * was that the branch was being authored strictly upward from its root one node
  * at a time — and that stopped being true at the first promoted node with a
  * prerequisite outside the line. So what is asserted now is the sharper claim:
- * this area declares exactly ONE link, it is the cross-area edge `similarity`
- * stranded, and nothing else has crept in beside it.
+ * this area declares exactly TWO links, they are the two cross-file edges
+ * `similarity` and `pythagoras` stranded, in that order, and nothing else has
+ * crept in beside them.
  */
 const EUCLID = AREAS.find(a => a.id === 'euclidean-geometry')
-const DEPARTED = ['points-lines-angles', 'triangle-basics', 'congruence', 'similarity']
-t('the area no longer declares any of the four, and each carries its own subject',
+const DEPARTED = [
+  'points-lines-angles', 'triangle-basics', 'congruence', 'similarity', 'pythagoras',
+  'quadrilaterals-and-polygons',
+]
+t('the area no longer declares any of the six, and each carries its own subject',
   DEPARTED.every(id =>
     EUCLID.nodes.every(n => n.id !== id) && areaOf(MATHEMATICS, id) === 'plane-geometry'),
   DEPARTED.map(id => `${id}:${areaOf(MATHEMATICS, id)}`).join(' '))
-t('the area asks for exactly one link, and it is the cross-area edge similarity stranded',
-  (EUCLID.links ?? []).length === 1
-  && EUCLID.links[0].from === 'ratio-and-rate'
-  && EUCLID.links[0].to === 'similarity'
-  && !!EUCLID.links[0].because,
-  (EUCLID.links ?? []).map(l => `${l.from}->${l.to}`).join(', '))
 /*
- * And the edge it rehomed is really in the composed map, which the `links`
+ * Two links now, and the fifth promotion added the second for a reason that is
+ * NOT the first one's — which is why they are asserted as an ordered pair
+ * rather than by a count.
+ *
+ * `ratio-and-rate` could not go into `PLANE_GEOMETRY.edges` because it is an
+ * unwritten map node. `roots-and-irrationals` is fully authored and still could
+ * not, because it is authored in `arithmetic-foundations` and an ontology may
+ * only name concepts it CONTAINS. Both land in `links`, by different routes, so
+ * a test that only counted them would not record that `links` is about which
+ * FILE an endpoint is in rather than about whether it was written.
+ *
+ * FOUR NOW, AND THE MERGE WITH `COORDINATE_GEOMETRY` ADDED THE LAST TWO. They
+ * were that area's own entries, both running into `cartesian-plane`, and the
+ * merge's job was to decide whether either had stopped being a `links` entry —
+ * an entry whose two ends end up in the SAME area has become an ordinary
+ * `needs` edge, and leaving it would make `composeAtlas` emit that edge twice.
+ * Neither had: `cartesian-plane` is an authored concept of the vectors
+ * syllabus and is in neither half of the merged area, so both still have
+ * exactly one home. Asserted as an ordered list of four so that a merge
+ * dropping one, or collapsing one it should not have, is named rather than
+ * counted.
+ */
+const EUCLID_LINKS = (EUCLID.links ?? []).map(l => `${l.from}->${l.to}`).join(' ')
+t('the area asks for exactly the four cross-file edges it has been handed, in order',
+  EUCLID_LINKS === 'ratio-and-rate->similarity roots-and-irrationals->pythagoras '
+    + 'real-number-line->cartesian-plane negative-numbers->cartesian-plane'
+  && (EUCLID.links ?? []).every(l => !!l.because),
+  EUCLID_LINKS)
+t('and the two the merge brought over still resolve in the composed map',
+  prerequisitesOf(MATHEMATICS, 'cartesian-plane').includes('real-number-line')
+  && prerequisitesOf(MATHEMATICS, 'cartesian-plane').includes('negative-numbers'),
+  prerequisitesOf(MATHEMATICS, 'cartesian-plane').join(', '))
+t('and `expandEdges` now stamps them with the area that absorbed them',
+  MATHEMATICS.edges.filter(e =>
+    e.to === 'cartesian-plane' && e.kind === 'prerequisite')
+    .every(e => e.promotedBy === 'atlas:euclidean-geometry'),
+  MATHEMATICS.edges.filter(e => e.to === 'cartesian-plane')
+    .map(e => `${e.from}:${e.promotedBy}`).join(' '))
+/*
+ * And the edges they rehomed are really in the composed map, which the `links`
  * shape alone does not establish — a link naming an id nothing resolves would
  * sit in the file looking correct. This is the half that would catch the edge
  * being silently dropped, which is the failure the whole rehoming exists to
@@ -961,6 +1053,22 @@ t('the area asks for exactly one link, and it is the cross-area edge similarity 
 t('so similarity still rests on ratio-and-rate in the composed map, across the file boundary',
   prerequisitesOf(MATHEMATICS, 'similarity').includes('ratio-and-rate'),
   prerequisitesOf(MATHEMATICS, 'similarity').join(', '))
+t('and pythagoras still rests on roots-and-irrationals, across a subject boundary this time',
+  prerequisitesOf(MATHEMATICS, 'pythagoras').includes('roots-and-irrationals'),
+  prerequisitesOf(MATHEMATICS, 'pythagoras').join(', '))
+/*
+ * The difference between the two links, asserted rather than only described.
+ * `ratio-and-rate` has no material, so the gating walk passes straight through
+ * it and that link gates nothing. `roots-and-irrationals` does, so this one
+ * gates — the first `links` entry in this area to change what a learner has to
+ * demonstrate. Worth holding, because the easiest way to lose it is to decide
+ * the two entries are interchangeable.
+ */
+t('and that one GATES, unlike the other link, because its endpoint has material',
+  gatingPrerequisitesOf(MATHEMATICS, 'pythagoras').includes('roots-and-irrationals')
+  && !gatingPrerequisitesOf(MATHEMATICS, 'similarity').includes('ratio-and-rate'),
+  `pythagoras:[${gatingPrerequisitesOf(MATHEMATICS, 'pythagoras').join(' ')}] `
+  + `similarity:[${gatingPrerequisitesOf(MATHEMATICS, 'similarity').join(' ')}]`)
 /*
  * The interference `similarity` also stranded, asserted separately because its
  * loss is the only stranding here that would NOT have shown up as a missing
@@ -1006,6 +1114,14 @@ t('and what rests on the triangles is now gated by them, not through them',
  * so the gating walk passed straight through and landed on the triangles; each
  * now has `congruence` itself to demonstrate. None of those four edges was
  * touched, which is the edge rule working for the third time.
+ *
+ * Two of the four are no longer map nodes — `similarity` and
+ * `quadrilaterals-and-polygons` have since been promoted themselves — and the
+ * claim is asserted over all four anyway, deliberately. A promotion restates
+ * the departing node's `needs` inside the subject it joins, so the gate has to
+ * survive the edge changing owner, and that is precisely the step where it
+ * would be lost. The list is the four nodes that rested on `congruence`, not
+ * the subset that happens to still be mapped.
  */
 t('and what rests on congruence is now gated by it, not through it',
   ['geometric-proof', 'similarity', 'quadrilaterals-and-polygons', 'isometries-and-symmetry']
@@ -1022,8 +1138,40 @@ t('and what rests on congruence is now gated by it, not through it',
 t('and what rests on similarity is now gated by it, not through it',
   gatingPrerequisitesOf(MATHEMATICS, 'pythagoras').includes('similarity'),
   gatingPrerequisitesOf(MATHEMATICS, 'pythagoras').join(', '))
-t('all four promoted concepts are teachable in the composed map, with their material intact',
-  DEPARTED.every(id => isTeachable(MATHEMATICS, id) && isPractisable(MATHEMATICS, id)))
+/*
+ * The fifth promotion moved the gate for one node again — `circles` is the only
+ * node left in the area that names `pythagoras` in its `needs`. Asserted for
+ * the reason the one-node case above is: a single dropped edge is the easiest
+ * kind to miss.
+ *
+ * Its three other dependents are not checked here because they are elsewhere:
+ * `right-triangle-trig` is in this area's chain above `circles`,
+ * `distance-and-midpoint` is in `coordinate-geometry` and
+ * `diophantine-equations` in `number-theory`. The composed-map assertion above
+ * already covers that the edges resolve across file boundaries.
+ */
+t('and what rests on pythagoras is now gated by it, not through it',
+  gatingPrerequisitesOf(MATHEMATICS, 'circles').includes('pythagoras'),
+  gatingPrerequisitesOf(MATHEMATICS, 'circles').join(', '))
+/*
+ * The sixth promotion moved the gate for one node again, and this one is worth
+ * asserting for a second reason on top of the single-dependent one.
+ *
+ * `area-and-perimeter` is the only node anywhere in the atlas that names
+ * `quadrilaterals-and-polygons` in its `needs`, and it names `triangle-basics`
+ * as well — which has gated it since the second promotion, and is why this gate
+ * was PARTLY live already. So the thing that changed is not that the node
+ * acquired a gate but that the walk stopped looking through half of its pair,
+ * and a test that only asked "is it gated by something" would have passed
+ * before and after. Both halves are named.
+ */
+t('and what rests on the polygons is now gated by them, alongside the triangles it already had',
+  gatingPrerequisitesOf(MATHEMATICS, 'area-and-perimeter').includes('quadrilaterals-and-polygons')
+  && gatingPrerequisitesOf(MATHEMATICS, 'area-and-perimeter').includes('triangle-basics'),
+  gatingPrerequisitesOf(MATHEMATICS, 'area-and-perimeter').join(', '))
+t('all six promoted concepts are teachable in the composed map, with their material intact',
+  DEPARTED.every(id => isTeachable(MATHEMATICS, id) && isPractisable(MATHEMATICS, id)),
+  DEPARTED.filter(id => !isTeachable(MATHEMATICS, id) || !isPractisable(MATHEMATICS, id)).join(', '))
 /*
  * The area's own root walks upward as the branch is authored. It was the
  * triangles after the first promotion and `congruence` after the second, and
@@ -1044,20 +1192,321 @@ t('the area viewed alone shows exactly the nodes whose prerequisites have all le
     .map(n => n.id).sort().join(','),
   euclidRoots.join(', '))
 /*
- * Named membership rather than a count, and the fourth promotion is why that
- * matters. It swapped `similarity` out of this set for `pythagoras` — the one
- * node that rested on it, both of whose `needs` are now outside the area — so
- * the set went from four members to four different members. A test written as
+ * Named membership rather than a count, and the fourth and fifth promotions are
+ * each a reason why that matters — in opposite ways.
+ *
+ * The fourth swapped `similarity` out of this set for `pythagoras`, so the set
+ * went from four members to four DIFFERENT members. A test written as
  * `length === 4` would have passed without noticing that every claim it was
  * making about the boundary had changed.
+ *
+ * The fifth then did what no promotion here had done and SHRANK it, to three:
+ * `pythagoras` left and nothing replaced it, because the node resting on it is
+ * `circles` and `circles` has a second prerequisite, `geometric-proof`, still
+ * inside the area and still gating it. So a departing node promotes its
+ * dependents to roots only when it was the last of their prerequisites in the
+ * area — the four-way fan-out after `congruence` was a special case, since all
+ * four of those nodes rested on `congruence` alone. A count would have flagged
+ * this one, having missed the fourth; the named set catches both.
  */
-t('and after the fourth promotion similarity has been replaced in that set by pythagoras',
-  euclidRoots.slice().sort().join(',')
-  === 'geometric-proof,isometries-and-symmetry,pythagoras,quadrilaterals-and-polygons',
+/*
+ * The sixth promotion then SUBSTITUTED, which is the fourth's shape rather
+ * than the fifth's, and having both outcomes in the record is what makes the
+ * rule legible: `quadrilaterals-and-polygons` left and `area-and-perimeter`
+ * took its place, so three roots before and three after with different
+ * membership — the exact case a `length === 3` would have passed blind, and the
+ * second time this set has turned over without changing size.
+ *
+ * It replaced it because the departing node was the LAST of
+ * `area-and-perimeter`'s prerequisites inside the area: its other one is
+ * `triangle-basics`, gone since the second promotion. That is the same rule the
+ * fifth promotion demonstrated from the other side, when `circles` did NOT
+ * join because `geometric-proof` was still here to gate it from inside. Both
+ * halves are asserted below, since a rule with one worked example in the suite
+ * is a rule the next edit can satisfy by accident.
+ */
+/*
+ * THE MERGE WITH `COORDINATE_GEOMETRY` THEN DOUBLED THE SET, from three to
+ * six, which is the third distinct thing that can happen to it and the first
+ * caused by something other than a promotion.
+ *
+ * The three synthetic members are unchanged — `area-and-perimeter`,
+ * `geometric-proof` and `isometries-and-symmetry` — so the substitution the
+ * sixth promotion made is still asserted, as the subset claim below. The three
+ * that arrived are the analytic nodes every one of whose prerequisites is
+ * outside the merged area: `distance-and-midpoint` needs `cartesian-plane` and
+ * `pythagoras`, `plane-transformations` needs `cartesian-plane` and
+ * `congruence`, and `dot-product-geometry` needs `plane-vectors` and
+ * `right-triangle-trig` — four authored concepts and two nodes in other areas,
+ * none of them here.
+ *
+ * `three-dimensional-coordinates` did NOT arrive as a root, and that is the
+ * merge's point rather than an omission: it needs `solid-geometry`, which used
+ * to be in a different area and is now in this one, so it is held back from
+ * inside exactly as `circles` is by `geometric-proof`. The same rule the fifth
+ * promotion demonstrated, this time produced by a merge instead of a
+ * departure.
+ */
+t('and after the sixth promotion the three synthetic roots are still the SUBSTITUTED set',
+  ['area-and-perimeter', 'geometric-proof', 'isometries-and-symmetry']
+    .every(id => euclidRoots.includes(id))
+  && !euclidRoots.includes('quadrilaterals-and-polygons'),
   euclidRoots.join(', '))
+t('and the merge doubled the set to six, by named membership and never by count',
+  euclidRoots.slice().sort().join(',')
+  === 'area-and-perimeter,distance-and-midpoint,dot-product-geometry,geometric-proof,'
+    + 'isometries-and-symmetry,plane-transformations',
+  euclidRoots.join(', '))
+t('while three-dimensional-coordinates is held back from inside by the solids, which the merge brought into the same area',
+  EUCLID.nodes.some(n => n.id === 'three-dimensional-coordinates'
+    && (n.needs ?? []).includes('solid-geometry'))
+  && EUCLID.nodes.some(n => n.id === 'solid-geometry')
+  && !euclidRoots.includes('three-dimensional-coordinates'),
+  (EUCLID.nodes.find(n => n.id === 'three-dimensional-coordinates')?.needs ?? []).join(', '))
+t('and area-and-perimeter joined it because the polygons were its last prerequisite in the area',
+  (EUCLID.nodes.find(n => n.id === 'area-and-perimeter')?.needs ?? [])
+    .every(p => EUCLID.nodes.every(m => m.id !== p)),
+  (EUCLID.nodes.find(n => n.id === 'area-and-perimeter')?.needs ?? []).join(', '))
+t('while circles is still held back from it by geometric-proof, which is why the fifth SHRANK the set',
+  EUCLID.nodes.some(n => n.id === 'circles' && (n.needs ?? []).includes('geometric-proof'))
+  && EUCLID.nodes.some(n => n.id === 'geometric-proof')
+  && !euclidRoots.includes('circles'),
+  (EUCLID.nodes.find(n => n.id === 'circles')?.needs ?? []).join(', '))
 t('and the departed nodes are not roots of it, because they are not in it',
   euclidRoots.every(id => !DEPARTED.includes(id)),
   euclidRoots.join(', '))
+
+// ---------------------------------------------------------------------------
+
+/**
+ * TWO AREAS WERE MERGED AWAY, AND THE STUB FLOOR IS WHY.
+ *
+ * `number-and-arithmetic` went into `algebra-foundations` and
+ * `coordinate-geometry` into `euclidean-geometry`. Both merges are argued in
+ * atlas-foundations.ts, above the node lists of the two surviving areas. What
+ * is asserted here is the thing prose cannot: that nothing was lost.
+ *
+ * The three things a merge can silently drop, in increasing order of how long
+ * it would take anybody to notice:
+ *
+ *  1. A node. `shippedAtlasProblems` catches one DUPLICATED, which a careless
+ *     merge would do; a node simply deleted leaves no trace at all. So the
+ *     moved ids are named, and checked to appear exactly once each.
+ *  2. A `links` entry whose two ends now sit in the same area. It has become
+ *     an ordinary `needs` edge and must be deleted, or `composeAtlas` emits
+ *     the edge twice — which it does not check for, and which no other
+ *     assertion in this file would see.
+ *  3. A `confusedWith`. `expandEdges` turns each into an `interferes_with`,
+ *     and interference constrains SELECTION rather than gating — so losing one
+ *     keeps every suite green while quietly freeing the scheduler to introduce
+ *     the two most confusable concepts in a subject together. That is the
+ *     stranding worth an assertion of its own, and it gets one below even
+ *     though both merges turned out to have none to strand: an absence nobody
+ *     checked is indistinguishable from a loss.
+ */
+group('the two merges moved every node and dropped no edge')
+
+t('the two drained areas are gone from the map',
+  !AREAS.some(a => a.id === 'number-and-arithmetic' || a.id === 'coordinate-geometry'),
+  AREAS.map(a => a.id).join(', '))
+
+const MOVED = {
+  'algebra-foundations': [
+    'absolute-value', 'ratio-and-rate', 'percent', 'real-number-line', 'scientific-notation',
+  ],
+  'euclidean-geometry': [
+    'distance-and-midpoint', 'lines-in-the-plane', 'circles-analytic', 'conic-sections',
+    'dot-product-geometry', 'three-dimensional-coordinates', 'parametric-curves',
+    'plane-transformations', 'loci-and-regions',
+  ],
+}
+for (const [areaId, ids] of Object.entries(MOVED)) {
+  const area = AREAS.find(a => a.id === areaId)
+  t(`all ${ids.length} nodes arrived in ${areaId}, once each and carrying its subject`,
+    ids.every(id =>
+      area.nodes.filter(n => n.id === id).length === 1
+      && MATHEMATICS.concepts.filter(c => c.id === id).length === 1
+      && areaOf(MATHEMATICS, id) === areaId),
+    ids.map(id => `${id}:${areaOf(MATHEMATICS, id)}`).join(' '))
+}
+
+/*
+ * The edges that used to cross the two dissolved boundaries, named one by one.
+ *
+ * Every one of them is declared by a node that was already inside one of the
+ * two merging areas, so the edge rule says none should have needed touching —
+ * which is exactly why they are the ones worth naming. An edge nobody had to
+ * think about is the edge a bulk move deletes.
+ */
+const SURVIVING = [
+  ['negative-numbers', 'absolute-value'],
+  ['real-number-line', 'linear-inequalities'],
+  ['ratio-and-rate', 'word-problems'],
+  ['ratio-and-rate', 'percent'],
+  ['absolute-value', 'absolute-value-equations'],
+  ['decimal-representation', 'scientific-notation'],
+  ['circles', 'circles-analytic'],
+  ['cartesian-plane', 'distance-and-midpoint'],
+  ['congruence', 'plane-transformations'],
+  ['linear-inequalities', 'loci-and-regions'],
+  ['solid-geometry', 'three-dimensional-coordinates'],
+]
+t('every edge across the two dissolved boundaries is still in the composed map',
+  SURVIVING.every(([from, to]) => prerequisitesOf(MATHEMATICS, to).includes(from)),
+  SURVIVING.filter(([from, to]) => !prerequisitesOf(MATHEMATICS, to).includes(from))
+    .map(([f, x]) => `${f}->${x}`).join(', '))
+/*
+ * Four of them have stopped crossing anything, which is what a merge is FOR —
+ * and the last of the four is the one that clears the deadlock rather than
+ * merely surviving it. `three-dimensional-coordinates` was blocked without its
+ * own area ever being near the floor, because it waits on `solid-geometry` in
+ * the area that HAD run out of room. Both ends are in one area now.
+ */
+const NOW_INTERNAL = [
+  ['real-number-line', 'linear-inequalities'],
+  ['ratio-and-rate', 'word-problems'],
+  ['circles', 'circles-analytic'],
+  ['solid-geometry', 'three-dimensional-coordinates'],
+]
+t('and four of them are internal to one area now, the solids and three dimensions among them',
+  NOW_INTERNAL.every(([from, to]) => areaOf(MATHEMATICS, from) === areaOf(MATHEMATICS, to)),
+  NOW_INTERNAL.map(([f, x]) =>
+    `${f}@${areaOf(MATHEMATICS, f)} -> ${x}@${areaOf(MATHEMATICS, x)}`).join(' | '))
+
+/*
+ * Hazard 2 in its general form, asserted over the whole atlas rather than over
+ * the merged areas alone. `links` exists for an edge NEITHER of whose owners is
+ * a node of the area; an entry that has drifted inside one is a duplicate edge
+ * waiting to happen, and a merge is precisely when it would drift.
+ */
+const internalLinks = AREAS.flatMap(a => {
+  const own = new Set(a.nodes.map(n => n.id))
+  return (a.links ?? []).filter(l => own.has(l.from) && own.has(l.to))
+    .map(l => `${a.id}: ${l.from}->${l.to}`)
+})
+t('no `links` entry has both of its ends inside its own area', internalLinks.length === 0,
+  internalLinks.join(' | '))
+
+const dupes = (() => {
+  const count = new Map()
+  for (const e of MATHEMATICS.edges) {
+    const k = `${e.from}|${e.to}|${e.kind}`
+    count.set(k, (count.get(k) ?? 0) + 1)
+  }
+  return [...count].filter(([, n]) => n > 1).map(([k, n]) => `${k} x${n}`)
+})()
+t('and the composed graph holds no edge twice', dupes.length === 0, dupes.join(' | '))
+
+/*
+ * The interference inventory. Stated as a property over every `confusedWith`
+ * on the map rather than as a count, so it keeps holding as more are authored
+ * — a count would have to be edited by whoever adds the next one, and an
+ * assertion somebody has to edit is an assertion somebody will edit wrongly.
+ */
+const declaredInterference = AREAS.flatMap(a =>
+  a.nodes.flatMap(n => (n.confusedWith ?? []).map(c => ({ from: n.id, to: c.id }))))
+t('every confusedWith on the map became an interferes_with edge carrying its reason',
+  declaredInterference.length > 0 && declaredInterference.every(d =>
+    MATHEMATICS.edges.some(e => e.kind === 'interferes_with' && !!e.rationale
+      && e.from === d.from && e.to === d.to)),
+  declaredInterference.filter(d => !MATHEMATICS.edges.some(e =>
+    e.kind === 'interferes_with' && e.from === d.from && e.to === d.to))
+    .map(d => `${d.from}~${d.to}`).join(' '))
+const ALGEBRA = AREAS.find(a => a.id === 'algebra-foundations')
+const algebraInterference = ALGEBRA.nodes
+  .flatMap(n => (n.confusedWith ?? []).map(c => `${n.id}~${c.id}`)).join(' ')
+t('the merged algebra area declares exactly one, and both of its ends were already in it',
+  algebraInterference === 'linear-inequalities~linear-equations'
+  && ['linear-inequalities', 'linear-equations']
+    .every(id => areaOf(MATHEMATICS, id) === 'algebra-foundations'),
+  `${algebraInterference} | linear-equations@${areaOf(MATHEMATICS, 'linear-equations')}`)
+t('and the merged geometry area declares none, which is why that merge stranded none',
+  EUCLID.nodes.every(n => !(n.confusedWith ?? []).length),
+  EUCLID.nodes.filter(n => (n.confusedWith ?? []).length).map(n => n.id).join(' '))
+
+// ---------------------------------------------------------------------------
+
+/**
+ * THE DEADLOCK THE MERGES EXISTED TO BREAK, ASSERTED AS A BUDGET.
+ *
+ * "No area is a stub" above is the check, it is unchanged, and it must stay
+ * unchanged — it is the only thing between this map and a scatter of one-node
+ * areas. What was wrong was never the check but the map: two areas had drained
+ * to the point where the concepts the unfinished journeys still need could not
+ * be authored without tripping it, so authoring kept choosing against them and
+ * recording them as "area-floor casualties" instead.
+ *
+ * So the claim worth holding is not "the floor passes today" — it passed
+ * before the merges too, which is exactly why the deadlock was invisible to
+ * this suite. It is that the floor will STILL pass once every concept the two
+ * unfinished journeys need has been written. That is the deadlock being gone
+ * rather than postponed, and it is the only real test of this change.
+ *
+ * The table is named membership deliberately. It rots the moment a concept is
+ * authored (the id stops being a node of its area) or renamed, and the first
+ * assertion in each pair fails loudly on that rather than going vacuous —
+ * which is what a bare `length` comparison here would do.
+ */
+group('promoting every remaining route concept still clears the stub floor')
+
+const STUB_FLOOR = 5
+const ROUTE_STILL_UNWRITTEN = {
+  'algebra-foundations': [
+    'real-number-line', 'ratio-and-rate', 'linear-equations', 'systems-of-linear-equations',
+  ],
+  'euclidean-geometry': [
+    'geometric-proof', 'area-and-perimeter', 'circles', 'circle-measure', 'solid-geometry',
+    'dot-product-geometry', 'three-dimensional-coordinates',
+  ],
+  trigonometry: ['right-triangle-trig'],
+  'linear-algebra': ['gaussian-elimination'],
+}
+for (const [areaId, ids] of Object.entries(ROUTE_STILL_UNWRITTEN)) {
+  const area = AREAS.find(a => a.id === areaId)
+  t(`${areaId}: every route concept named is really an unwritten node of it`,
+    !!area && ids.every(id =>
+      area.nodes.some(n => n.id === id) && !isTeachable(MATHEMATICS, id)),
+    ids.filter(id => !area?.nodes.some(n => n.id === id) || isTeachable(MATHEMATICS, id))
+      .join(', '))
+  t(`${areaId}: ${area.nodes.length} nodes less the ${ids.length} still to author `
+    + `leaves ${area.nodes.length - ids.length}, clear of the floor`,
+    area.nodes.length - ids.length >= STUB_FLOOR,
+    `${area.nodes.length} - ${ids.length} = ${area.nodes.length - ids.length} < ${STUB_FLOOR}`)
+}
+
+/*
+ * The five that were blocked before the merges, named individually. The
+ * per-area sums above would still pass if one of these had quietly been moved
+ * somewhere roomy for the wrong reason, or authored by accident, so each is
+ * checked on its own and its area is printed either way.
+ */
+const WAS_BLOCKED = [
+  'real-number-line', 'ratio-and-rate', 'circle-measure', 'solid-geometry',
+  'three-dimensional-coordinates',
+]
+t('each of the five previously blocked concepts is still unwritten and now sits in an area with headroom',
+  WAS_BLOCKED.every(id => {
+    const area = AREAS.find(a => a.nodes.some(n => n.id === id))
+    if (!area || isTeachable(MATHEMATICS, id)) return false
+    return area.nodes.length - (ROUTE_STILL_UNWRITTEN[area.id] ?? []).length >= STUB_FLOOR
+  }),
+  WAS_BLOCKED.map(id => {
+    const area = AREAS.find(a => a.nodes.some(n => n.id === id))
+    return `${id}:${area?.id ?? 'MISSING'}(${area?.nodes.length ?? 0})`
+  }).join(' '))
+/*
+ * And the other thing "blocked" meant. A concept whose prerequisites are all
+ * authored is mechanically ready to write, and the floor was the ONLY thing
+ * stopping these two — ontology-geometry.ts says so three promotions running.
+ * So they have to be ready now, or the merge did not do what it was for.
+ */
+t('and the two arithmetic ones are mechanically ready — every prerequisite authored',
+  ['real-number-line', 'ratio-and-rate'].every(id =>
+    prerequisitesOf(MATHEMATICS, id).length > 0
+    && prerequisitesOf(MATHEMATICS, id).every(p => isTeachable(MATHEMATICS, p))),
+  ['real-number-line', 'ratio-and-rate'].map(id =>
+    `${id}:[${prerequisitesOf(MATHEMATICS, id)
+      .map(p => `${p}${isTeachable(MATHEMATICS, p) ? '*' : ''}`).join(' ')}]`).join(' '))
 
 group('every checked concept really carries a pattern')
 /*

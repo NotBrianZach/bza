@@ -97,14 +97,25 @@ const CONCEPTS: Concept[] = [
               detail:
                 'Every term of the first bracket against every term of the second. Two ' +
                 'terms times two terms is four products.',
+              socratic:
+                'A first attempt at this often multiplies x by x, then 3 by −5, and stops ' +
+                'with those two products. What has it left out?',
             },
             {
               label: 'Form them',
               detail: 'x·x = x², x·(−5) = −5x, 3·x = 3x, 3·(−5) = −15.',
+              socratic:
+                'Take each term of x + 3 against each term of x − 5 in turn. The term in the ' +
+                'second bracket is −5 rather than 5 — what does each of the four products ' +
+                'come to, sign included?',
             },
             {
               label: 'Collect like terms',
               detail: 'Only −5x and 3x share a power of x: −5x + 3x = −2x.',
+              socratic:
+                'Your four products are x², −5x, 3x and −15. Collecting is only legal ' +
+                'between terms carrying the same power of x — so which of these collect, and ' +
+                'what is left standing alone?',
             },
           ],
           answer: 'x² − 2x − 15',
