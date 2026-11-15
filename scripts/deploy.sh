@@ -32,7 +32,18 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # while templedb is still writing, and under `set -o pipefail` the resulting
 # SIGPIPE fails this script before it has deployed anything. It is a race on how
 # much log is left to write, so it looks like a flake rather than a bug.
-LOG=$(templedb vcs log bza || true)
+#
+# `--all-sessions` is load-bearing. A bare `vcs log` shows published commits plus
+# only the CURRENT session's unpublished ones, so any commit made by another
+# session is invisible here — and on this project that is the normal case, because
+# the autonomous authoring tasks each commit from their own session. On 2026-11-15
+# that stamped BUILD_SHA two commits behind the real head.
+#
+# The failure is silent rather than loud, which is why it needs the comment:
+# verify-live-sha.sh reads the head the SAME way, so it compared a stale stamp
+# against a stale expectation and printed "OK". Both halves have to use
+# --all-sessions or neither catches anything.
+LOG=$(templedb vcs log bza --all-sessions || true)
 SHA=$(printf '%s\n' "$LOG" | awk '/^commit / {print $2; exit}')
 if [ -z "$SHA" ]; then
   echo "ERROR: could not read head commit sha from templedb" >&2

@@ -144,7 +144,14 @@ _source_secrets woofs_projects   # provides CLOUDFLARE_PAGES_API_TOKEN (encrypte
 # so the pipeline's status is grep's and the failure arrives as an *empty* sha that
 # looks like "templedb has no commits". Draining first means the producer always
 # runs to EOF. Same note in verify-live-sha.sh.
-_TDB_LOG=$(templedb vcs log bza 2>/dev/null || true)
+#
+# `--all-sessions` for the reason spelled out in scripts/deploy.sh: a bare
+# `vcs log` hides every commit belonging to another session, and the autonomous
+# authoring tasks each commit from their own. Without it this stamps a sha that is
+# behind the real head while still looking like a successful read, which defeats
+# the "refusing to deploy an unstamped build" guard below — the sha is present,
+# just wrong.
+_TDB_LOG=$(templedb vcs log bza --all-sessions 2>/dev/null || true)
 BUILD_SHA=$(printf '%s\n' "$_TDB_LOG" | grep -m1 '^commit ' | cut -d' ' -f2)
 if [ -z "$BUILD_SHA" ]; then
     error "Could not read head commit sha from templedb — refusing to deploy an unstamped build"

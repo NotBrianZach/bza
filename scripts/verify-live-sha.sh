@@ -21,7 +21,20 @@ URL="${1:-https://aireadalong.com/api/version}"
 # for months and then started failing the day a commit arrived with a long
 # message. Draining the output into a variable first means the first command
 # always runs to EOF and there is no early reader to close anything.
-log=$(templedb vcs log bza 2>/dev/null || true)
+# `--all-sessions` is what makes this check mean anything.
+#
+# A bare `vcs log` shows published commits plus only the CURRENT session's
+# unpublished ones. This script runs from deploy.sh, in a session that owns none
+# of the autonomous authoring tasks' commits, so without the flag the "expected"
+# head silently excludes them.
+#
+# That is not merely a weaker check, it is a check that confirms its own error:
+# deploy.sh stamped BUILD_SHA from the same session-scoped log, so on 2026-11-15
+# this compared a two-commits-stale stamp against a two-commits-stale expectation
+# and reported "OK: live sha matches graph". A verifier that derives its
+# expectation the same way the thing it verifies does cannot detect that class of
+# fault at all. Keep both call sites on --all-sessions.
+log=$(templedb vcs log bza --all-sessions 2>/dev/null || true)
 expected=$(printf '%s\n' "$log" | awk '/^commit / {print $2; exit}')
 if [ -z "$expected" ]; then
   echo "ERROR: could not read last bza commit sha from templedb" >&2
