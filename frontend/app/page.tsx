@@ -90,6 +90,20 @@ const GROUPS: {
     blurb: 'work problems and have the answer checked, not string-compared',
     links: [
       { label: 'Practice', href: '/learn' },
+      /*
+       * Second, ahead of Flashcards, because it is the gentlest way in.
+       *
+       * Practice sets a problem and rules on the answer; Tutor asks about a
+       * derivation and rules on nothing. For someone who does not yet know
+       * what they can do, being asked is a smaller step than being tested, so
+       * it belongs beside Practice rather than at the end of the row.
+       *
+       * No `&concept=`, deliberately. The tutor tab treats a named concept as
+       * "offer me its derivations" and shows a list; with nothing named it
+       * opens straight onto a question chosen from the learner's frontier,
+       * which is what this label promises.
+       */
+      { label: 'Tutor', href: '/learn?tab=tutor' },
       { label: 'Flashcards', href: '/quiz' },
       /*
        * `scope=atlas`, not a bare `?tab=concepts`.

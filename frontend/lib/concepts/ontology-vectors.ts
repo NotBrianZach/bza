@@ -34,9 +34,13 @@
  * ontology, so the edge is declared below as a plain prerequisite and the
  * `links` entry is gone — the one case where promoting a node makes the map
  * simpler rather than stranding something. The two edges INTO the plane went
- * the other way: `real-number-line` is still a map node and `negative-numbers`
- * is authored in a different subject, so neither can be named from here and
- * both had to become `links`. The note in atlas-foundations.ts says so.
+ * the other way: at the time `real-number-line` was still a map node and
+ * `negative-numbers` was authored in a different subject, so neither could be
+ * named from here and both had to become `links`. `real-number-line` has since
+ * been authored too, in `arithmetic-foundations` alongside `negative-numbers`,
+ * which changes the reason for its entry and not its home — an ontology may
+ * only name concepts it contains, and this one contains neither. Both are
+ * still `links`, and the note in atlas-foundations.ts says so.
  *
  * It tightened the gate one step further down, and this time on material
  * authored in this very file: `plane-vectors` used to gate on

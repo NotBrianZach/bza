@@ -1,11 +1,12 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkMath from 'remark-math'
 import rehypeKatex from 'rehype-katex'
 import {
   ArrowRight, Compass, Eye, HelpCircle, Loader2, Lock, MapPin, RotateCcw, Send,
+  Shuffle,
 } from 'lucide-react'
 import { authedFetch } from '@/lib/authedFetch'
 import { conceptById } from '@/lib/concepts/registry'
@@ -88,6 +89,7 @@ export default function SocraticWalk({
   concepts,
   masteryFloor,
   queuedTasks,
+  autostart,
   onPractise,
   onSelectConcept,
 }: {
@@ -114,6 +116,19 @@ export default function SocraticWalk({
    * practice tab may still refuse.
    */
   queuedTasks?: { id: string; conceptId: string | null }[]
+  /**
+   * Open on a question instead of on a list of them.
+   *
+   * For the "Tutor" entry point, which arrives with nothing in hand. The two
+   * maps link here holding a concept, so for them the list IS the answer; a
+   * learner who clicked "Tutor" asked to be tutored, and a catalogue is a
+   * second decision standing where the thing they asked for should be.
+   *
+   * Fires at most once per mount — see `autoPicked`. It opens the session, it
+   * does not drive it: once the learner is in a walk, every later choice is
+   * theirs, including leaving it for a different one.
+   */
+  autostart?: boolean
   onPractise?: (taskId: string) => void
   onSelectConcept?: (conceptId: string) => void
 }) {
@@ -234,6 +249,69 @@ export default function SocraticWalk({
     return (fromQueue as string[]).flatMap(id => openingsForConcept(ontology, id))
   }, [ontology, target?.conceptId, queuedTasks])
 
+  /**
+   * Walks worth opening unprompted, nearest the learner's edge first.
+   *
+   * `introducible` already means "every gating prerequisite is over the floor",
+   * so it is precisely "what you already know" expressed as a question about
+   * what you can be asked next — which is why the frontier is derived from it
+   * rather than from a second idea of readiness invented here.
+   *
+   * Two tiers, kept apart because they are different offers:
+   *
+   *  - `frontier` — open and not yet mastered. The edge. Preferred.
+   *  - `review`   — already over the floor. Only when the frontier has nothing
+   *                 written, which is the common case early on: 47 of the
+   *                 atlas's concepts have material, so a learner's open set is
+   *                 usually mostly unwritten and `openingsForConcept` returns
+   *                 nothing for those.
+   *
+   * Concepts with no authored derivation are filtered out by construction: an
+   * empty `openingsForConcept` contributes no candidates. That is the honest
+   * behaviour — a mapped-but-unwritten concept has nothing to be led through,
+   * and the panel says so elsewhere rather than inventing a walk.
+   */
+  const unprompted = useMemo(() => {
+    const withOpenings = (ids: string[]) =>
+      ids.flatMap(id => openingsForConcept(ontology, id))
+    const frontier = concepts.filter(c => c.introducible && c.strength < masteryFloor)
+    const known = concepts.filter(c => c.strength >= masteryFloor)
+    const fromFrontier = withOpenings(frontier.map(c => c.conceptId))
+    if (fromFrontier.length) return { tier: 'frontier' as const, openings: fromFrontier }
+    const fromKnown = withOpenings(known.map(c => c.conceptId))
+    return { tier: 'review' as const, openings: fromKnown }
+  }, [ontology, concepts, masteryFloor])
+
+  /**
+   * Whether the one automatic choice has been spent.
+   *
+   * A ref rather than state because re-running the effect is the bug it exists
+   * to prevent: `concepts` arrives after the session loads, so the effect's
+   * dependencies change at least once AFTER a walk has already been opened.
+   * Guarding on `pointId` alone would also re-fire the moment a learner backed
+   * out to the list, which would make leaving a walk impossible.
+   */
+  const autoPicked = useRef(false)
+
+  /** A random one of the candidates. Random, so the tutor is not a fixed menu. */
+  const pickUnprompted = useCallback(() => {
+    const { openings } = unprompted
+    if (!openings.length) return false
+    const pick = openings[Math.floor(Math.random() * openings.length)]
+    start(pick.knowledgePointId)
+    return true
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [unprompted])
+
+  useEffect(() => {
+    if (!autostart || target || autoPicked.current) return
+    // `concepts` is empty until the session request lands. Returning without
+    // setting the guard is what lets the real attempt happen on a later render.
+    if (!concepts.length) return
+    if (pickUnprompted()) autoPicked.current = true
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autostart, target, concepts.length, pickUnprompted])
+
   const unmet = useMemo(
     () => (chain ? unmetBefore(ontology, chain.conceptId, concepts, masteryFloor) : []),
     [ontology, chain, concepts, masteryFloor],
@@ -267,10 +345,38 @@ export default function SocraticWalk({
             </p>
           )}
           {offered.length === 0 && !target?.conceptId && (
-            <p className='text-gray-500'>
-              Pick a concept on the concept map or a journey and choose “lead me through this”, or
-              open a problem on the practice tab and ask for the example behind it.
-            </p>
+            <>
+              {/* Three different situations, and collapsing them would make two
+                  of them read as the third. There is something to ask about;
+                  there is nothing written anywhere near the learner's edge; or
+                  the session has not loaded yet and we genuinely do not know. */}
+              {concepts.length === 0 ? (
+                <p className='inline-flex items-center gap-1.5 text-gray-500'>
+                  <Loader2 size={11} className='animate-spin' /> finding something to ask you…
+                </p>
+              ) : unprompted.openings.length > 0 ? (
+                <div>
+                  <button
+                    onClick={pickUnprompted}
+                    className='inline-flex items-center gap-1 rounded border border-gray-700 px-2 py-1 text-[11px] text-gray-200 hover:bg-gray-800'
+                  >
+                    <Shuffle size={10} /> ask me a question
+                  </button>
+                  <p className='mt-1.5 text-[10px] text-gray-500'>
+                    {unprompted.tier === 'frontier'
+                      ? 'From what you can be asked next — the concepts whose groundwork you have already demonstrated.'
+                      : 'From what you have already demonstrated. Nothing on your frontier has a written derivation yet, so this is revision rather than new ground.'}
+                  </p>
+                </div>
+              ) : (
+                <p className='text-gray-500'>
+                  Nothing on your frontier has a written derivation yet, so there is nothing to be
+                  led through. Pick a concept on the concept map or a journey and choose “lead me
+                  through this”, or open a problem on the practice tab and ask for the example
+                  behind it.
+                </p>
+              )}
+            </>
           )}
           <ul className='space-y-1.5'>
             {offered.map(o => (
@@ -336,6 +442,20 @@ export default function SocraticWalk({
           >
             <RotateCcw size={9} /> restart
           </button>
+          {/* Beside restart, because without it an opened-on-its-own session is
+              a single question with no way past it: the learner never chose
+              this derivation, so "start it again" is the wrong and only exit.
+              Shown whenever there is more than one candidate — one candidate
+              would make this button re-pick the walk already on screen. */}
+          {unprompted.openings.length > 1 && (
+            <button
+              onClick={pickUnprompted}
+              title='Leave this one and be asked about something else on your frontier'
+              className='inline-flex items-center gap-1 rounded border border-gray-700 px-1.5 py-0.5 text-[10px] text-gray-400 hover:bg-gray-800'
+            >
+              <Shuffle size={9} /> another
+            </button>
+          )}
         </div>
         <div className='mt-1 text-[13px] leading-snug text-gray-100'>
           <Md>{chain.problem}</Md>

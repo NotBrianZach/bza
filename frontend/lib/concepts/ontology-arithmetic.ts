@@ -100,13 +100,58 @@
  * `prime-factorisation` did, by computing WITH the factorisation rather than
  * asking for it.
  *
- * Which leaves this subject with seven of its eight concepts needing no form
- * work and one, `fraction-arithmetic`, that never needed any. The next
+ * Which leaves this subject with nine of its ten whole-number concepts needing
+ * no form work and one, `fraction-arithmetic`, that never needed any. The next
  * whole-number concept worth authoring is not in this file's territory at all:
  * it is `euclidean-algorithm`, in the number-theory area, and it is the first
  * one where "run this procedure and report the remainder" is the whole content
  * — so it may well be the first in this subject's vicinity that an `evaluate`
  * task fits rather than works around.
+ *
+ * ── THE ELEVENTH CONCEPT IS NOT A WHOLE-NUMBER ONE, AND THAT IS THE POINT ──
+ *
+ * `real-number-line` was promoted into this file, and the paragraph above is
+ * why it took a sentence of argument rather than none: the sentence says the
+ * next thing to write here is a whole-number concept in somebody else's area,
+ * and the eleventh concept is instead the one that says what this subject's
+ * numbers are NOT enough of. Both can be true. `euclidean-algorithm` is still
+ * the next whole-number concept and still mapped elsewhere; this one was
+ * available and better placed, and the reasons are structural rather than
+ * editorial:
+ *
+ *  - It was one of six concepts anywhere on the map with every prerequisite
+ *    already authored, and the only one of the six whose prerequisites are
+ *    both in THIS file — so both stranded edges had somewhere to live and the
+ *    area it left needed no `links` entry at all. That is the cheap shape
+ *    atlas-foundations.ts describes, for the third time in this subject.
+ *  - It is a step on both of the two learning journeys that still cross
+ *    unwritten ground, so the promotion shortens both.
+ *  - It sits directly beneath `cartesian-plane`, which IS authored, in
+ *    ontology-vectors.ts. That makes it the first promotion in this subject
+ *    that tightens a gate in the MIDDLE of a written chain rather than at the
+ *    bottom of an unwritten one: `plane-vectors` already gated on the plane,
+ *    and the plane now gates on a real concept instead of looking through an
+ *    empty node to the arithmetic two steps further down.
+ *
+ * ontology-geometry.ts had been making the second and third of those arguments
+ * for three promotions running while choosing against this node anyway,
+ * because its area was at the stub floor and could release nothing. The merge
+ * described in atlas-foundations.ts removed that block, and this is the first
+ * promotion to take the node the record had already named.
+ *
+ * ── AND IT IS THE FIRST CONCEPT HERE WHOSE SUBJECT IS NOT ARITHMETIC ──────
+ *
+ * Worth being exact about, because the subject's `covers` draws a line this
+ * concept stands on. "Nothing symbolic" still holds — there is not a letter
+ * standing for an unknown anywhere in the material. What the concept adds is a
+ * claim that is not about computing at all: that the rationals have gaps, that
+ * a decimal expansion names a point whether or not it terminates or recurs,
+ * and that the least-upper-bound property is what fills them. That is assumed
+ * here and PROVED nowhere in this build — real analysis is where the map files
+ * the construction — so the third knowledge point says so in those words
+ * rather than implying the matter is settled. A foundations subject that
+ * asserted completeness as though it had earned it would be the one dishonesty
+ * this file has otherwise avoided.
  */
 
 import type { Concept, ConceptEdge, ConceptOntology, Subject } from './types'
@@ -118,10 +163,16 @@ const subject: Subject = {
     'Whole-number arithmetic and the conventions for reading it: place value, the written ' +
     'algorithms and why they work, order of operations, signed numbers, divisibility, and the ' +
     'primes a whole number comes apart into. Fractions are here too, resting on that ' +
-    'divisibility, and so are the gcd and the lcm the fractions are made of. Nothing symbolic ' +
-    '— the moment a letter stands for an unknown it is algebra. What is left of whole-number ' +
-    'arithmetic is what rests on the gcd rather than on the primes: the Euclidean algorithm and ' +
-    'the congruences, which are mapped in the number-theory area and still unwritten.',
+    'divisibility, and so are the gcd and the lcm the fractions are made of. Then the two ' +
+    'things a factorisation decides about a ratio — which roots of it are rational, and which ' +
+    'of its decimal expansions stop — and finally the real line, which is where the subject ' +
+    'stops being about computing: that a non-terminating non-recurring expansion still names a ' +
+    'point, that no two numbers on the line are adjacent, and that the least-upper-bound ' +
+    'property is what makes both true. That last one is ASSUMED here and constructed in real ' +
+    'analysis, which the concept says in those words. Nothing symbolic — the moment a letter ' +
+    'stands for an unknown it is algebra. What is left of whole-number arithmetic is what ' +
+    'rests on the gcd rather than on the primes: the Euclidean algorithm and the congruences, ' +
+    'which are mapped in the number-theory area and still unwritten.',
   medium: 'theorem',
   facetName: 'Concept',
   facetDoes: 'Which concept the statement has to be about.',
@@ -2137,6 +2188,393 @@ const CONCEPTS: Concept[] = [
       },
     ],
   },
+
+  /**
+   * The eleventh concept, and the one that stops the subject being about
+   * computing.
+   *
+   * ── What it adds that its two prerequisites do not ────────────────────────
+   *
+   * Both of them end one step short of this, and in opposite directions, which
+   * is why the concept has content rather than being their summary:
+   *
+   *  - `roots-and-irrationals` proves that √2 is not a ratio. That is a
+   *    NEGATIVE result: it says what the number is not, and nothing in it says
+   *    where the number is. A learner who has only that proof has been shown a
+   *    hole, not a point.
+   *  - `decimal-representation` says what a decimal does when the number IS a
+   *    ratio — it stops, or it recurs, decided by the reduced denominator's
+   *    factorisation. It therefore classifies every expansion a rational can
+   *    have, and says nothing at all about the ones left over.
+   *
+   * Put together they say that a non-terminating non-recurring expansion is
+   * not a fraction and that such expansions exist. What neither says is that
+   * one NAMES something. That is this concept, and the three points are the
+   * three parts of it: the digits can be computed (and are never revised), the
+   * things so named are packed with no gaps and no successors, and the
+   * assumption that makes both true is completeness.
+   *
+   * ── Why it is figure-free, which was the thing to check ───────────────────
+   *
+   * "The real line" sounds like a picture, and if the material were the
+   * picture it would belong on the map with the circle theorems — this build
+   * has no figures and `visualRef` has nothing to name. It is not the picture.
+   * Every move in all three worked examples is a comparison between two exact
+   * rationals, and the number line is only ever the ORDER those comparisons
+   * establish. The one place a drawing would normally be doing the work is the
+   * claim that there are no gaps, and that is exactly the claim this concept
+   * refuses to make from a drawing: the third point states it as an axiom and
+   * names where it is proved.
+   *
+   * ── THE THIRD POINT IS ABOUT SOMETHING THIS BUILD CANNOT RULE, AND SAYS SO ─
+   *
+   * Completeness is not a computation and no `evaluate` task can ask for it.
+   * That is a harder version of the missing-form wall the four concepts above
+   * record, because here the thing missing is not a `NamedForm` but a claim
+   * about an infinite set, and no form would help. So the task for that point
+   * asks the one inequality the argument turns on — that 17/12 is above √2 and
+   * therefore bounds the whole increasing list — and the prompt says plainly
+   * that the least-upper-bound half cannot be asked for. The compromise is the
+   * one tasks.ts describes for proxy tasks, held to its own rule: ask a
+   * checkable question in the vicinity and name what it stands in for.
+   *
+   * It is the first point in this subject where the proxy covers only PART of
+   * the content rather than standing in for the whole of it, and that is worth
+   * separating. For `prime-factorisation` the task was the method's last step
+   * instead of its first; here the task is one hypothesis of a two-hypothesis
+   * argument, and the conclusion is unreachable by any task. A reader deciding
+   * whether to write another concept of this shape should know that the
+   * worked example is carrying more of the teaching than usual, which is an
+   * argument for the Socratic phrasing being complete rather than for the
+   * concept being skipped.
+   *
+   * ── Still gradable with no worker ─────────────────────────────────────────
+   *
+   * The subject's no-worker contract holds, and this was the concept most
+   * likely to break it — the material is about numbers `exactValue` returns
+   * null for. It holds because none of the three tasks asks for an irrational
+   * VALUE. The first clears the decimal point and compares two integers
+   * (264² against 7 · 100²), which is the same comparison the digit rests on
+   * and is why a digit of √7 can be settled exactly at all. The second is a
+   * mean of two fractions. The third squares a fraction and subtracts. Nothing
+   * here goes near `WORKER_ONLY`.
+   *
+   * The first task's shape is the mathematically interesting part of that and
+   * not a dodge: 2.64² < 7 and 264² < 7 · 100² are the same statement, and
+   * writing it the second way is what shows that every digit of an irrational
+   * is decided by whole-number arithmetic. The irrationality is in the
+   * non-termination, never in any one step.
+   *
+   * ── No automaticity targets, and no `encompasses` edge ────────────────────
+   *
+   * No targets, same judgement as the ten concepts above: squaring candidates
+   * until the sign changes is a procedure with a stopping rule, and the other
+   * two points are arguments.
+   *
+   * The `encompasses` question is closer here than anywhere else in the file
+   * and still comes out no, which is why it is written down. Two of the three
+   * tasks are fraction arithmetic in the plainest sense — a mean over a common
+   * denominator, and a square of a fraction — so a `=> fraction-arithmetic`
+   * edge has more support than the one-task-in-three cases this file has
+   * already declined. It fails anyway, on the rule those declines establish:
+   * the standard is what PRACTISING exercises, and the first task contains no
+   * fraction at all. A learner who practised only that one would stop having
+   * fraction arithmetic come due on evidence containing none of it, and the
+   * cost lands on them. Two of three is not "you cannot do the first without
+   * doing the second", which is the bar.
+   *
+   * No interference either, and this one is an absence rather than a decline:
+   * the map node carried no `confusedWith`, so the promotion stranded none.
+   * Recorded because `expandEdges` turns a `confusedWith` into an
+   * `interferes_with` and deleting the node would have deleted the edge with
+   * every suite still green — an absence nobody checked reads exactly like a
+   * loss.
+   */
+  {
+    id: 'real-number-line',
+    name: 'The real line',
+    subjectId: subject.id,
+    scope: {
+      id: 'real-number-line',
+      label: 'The real line',
+      hint: 'real numbers number line completeness',
+      /*
+       * Carried verbatim from the map node this was promoted out of, so the
+       * concept trail recognises exactly what it recognised before and the
+       * four-concept ceiling in tests/atlas.mjs is unaffected.
+       *
+       * Title-shaped, and all three alternatives are bounded on both sides.
+       * "Real" is an adjective about everything in mathematics — a real matrix,
+       * a real root, the real part — so it is only matched where the next word
+       * makes the phrase the name of this object.
+       */
+      match: /\b(real number|real line|number line)\b/i,
+    },
+    fidelity: 'checked',
+    objectives: [
+      {
+        id: 'compute-the-digits-of-a-number-that-is-not-a-fraction',
+        statement:
+          'Settle any decimal place of an irrational square root by squaring candidate decimals '
+          + 'and reading the sign of the comparison, and say why each digit so found is never '
+          + 'afterwards revised — rather than copying a calculator\'s display and trusting it.',
+        taskKinds: ['evaluate', 'justify'],
+      },
+      {
+        id: 'show-that-no-two-reals-are-adjacent',
+        statement:
+          'Produce a number strictly between any two given different numbers by taking their '
+          + 'mean, and use the fact that this never runs out to explain why no number on the '
+          + 'line has a next one — including why 0.4999… is not the number just below 0.5.',
+        taskKinds: ['evaluate', 'justify'],
+      },
+      {
+        id: 'state-what-completeness-assumes-and-what-it-buys',
+        statement:
+          'State the least-upper-bound property as an assumption rather than a result, exhibit a '
+          + 'rational upper bound for the decimal approximations of √2 and show that no rational '
+          + 'bound is least, and name real analysis as where a system with the property is '
+          + 'constructed.',
+        taskKinds: ['evaluate', 'state'],
+      },
+    ],
+    knowledgePoints: [
+      {
+        id: 'every-digit-is-settled-by-whole-numbers',
+        conceptId: 'real-number-line',
+        statement:
+          'An irrational number has a decimal expansion, and every digit of it is decided by '
+          + 'whole-number arithmetic. To find a place of √N you square candidate decimals and '
+          + 'compare the square with N: squaring preserves order on positive numbers, so the '
+          + 'comparison transfers, and you never need the root to find a digit of the root. Each '
+          + 'digit is fixed by an exact inequality and no later digit can move an earlier one — '
+          + 'what makes the number irrational is that the process does not stop, never that any '
+          + 'one step is approximate.',
+        position: 1,
+        workedExample: {
+          problem: 'Find the first two decimal places of √7, using nothing but multiplication.',
+          subgoals: [
+            {
+              label: 'Bracket between whole numbers first, so the later digits have somewhere to sit',
+              detail:
+                '2² = 4 and 3² = 9, and 4 < 7 < 9. Squaring is increasing on the positives, so '
+                + 'the number whose square is 7 lies between 2 and 3. The whole-number part is '
+                + 'now settled and nothing computed later can change it, which is what makes the '
+                + 'next step a search over one digit rather than over a number.',
+              socratic:
+                'You want the digits of √7 and the only operation you are allowed is '
+                + 'multiplication. Which two whole numbers can you square to trap 7 between them?',
+            },
+            {
+              label: 'Walk the tenths and stop where the comparison changes side',
+              detail:
+                '2.6² = 6.76 and 2.7² = 7.29, so 6.76 < 7 < 7.29 and the first decimal place is '
+                + '6. Notice what was compared: the two SQUARES against 7, never the candidates '
+                + 'against √7. That is the move the whole method rests on — comparing against '
+                + 'the root would need the root, which is the thing being computed.',
+              socratic:
+                'You are testing 2.6 and 2.7 as candidates for the first digit. You cannot '
+                + 'compare either of them with √7, because that is what you are looking for — so '
+                + 'what can you compare, and against what?',
+            },
+            {
+              label: 'Repeat at the hundredths, and watch the bracket shrink by a factor of ten',
+              detail:
+                '2.64² = 6.9696 and 2.65² = 7.0225, so 6.9696 < 7 < 7.0225 and the second place '
+                + 'is 4. The bracket has gone from width 1 to 0.1 to 0.01. That is the whole '
+                + 'cost structure of the method: one more digit costs a handful of '
+                + 'multiplications and buys one more place, and there is no step at which it '
+                + 'becomes harder.',
+              socratic:
+                'The tenths trapped √7 between 2.6 and 2.7. How wide is that interval, and how '
+                + 'wide will it be once you have settled the next digit?',
+            },
+            {
+              label: 'Read off what the process delivers, and what it does not',
+              detail:
+                'It delivers 2.64…, and each digit for good: every one was fixed by an '
+                + 'inequality between exact rationals, so no later work can revise it. It does '
+                + 'not deliver an end. 7 has the odd exponent 1, so √7 is irrational by the test '
+                + 'in `roots-and-irrationals`; and `decimal-representation` showed that every '
+                + 'fraction either terminates or recurs, so this expansion can do neither. It '
+                + 'therefore names something that is not a fraction — which is the claim the '
+                + 'rest of this concept is about, and the first point at which the rationals are '
+                + 'not enough.',
+              socratic:
+                'Every digit here was fixed for good by an exact comparison, and the process '
+                + 'never ends. Given that a fraction\'s expansion must either stop or recur, '
+                + 'what does that tell you about what these digits name?',
+            },
+          ],
+          answer:
+            '√7 = 2.64…: 2² = 4 < 7 < 9 = 3², then 2.6² = 6.76 < 7 < 7.29 = 2.7², then '
+            + '2.64² = 6.9696 < 7 < 7.0225 = 2.65². Every digit is settled by a comparison '
+            + 'between exact rationals and never revised, and the process does not terminate — 7 '
+            + 'has an odd exponent, so √7 is irrational, and an expansion that neither '
+            + 'terminates nor recurs is not a fraction.',
+        },
+      },
+      {
+        id: 'no-two-reals-are-adjacent',
+        conceptId: 'real-number-line',
+        statement:
+          'Every integer has a next one. No number on the line does. Given two different numbers, '
+          + 'their mean lies strictly between them and is a number of the same kind — so there is '
+          + 'always a third, and then infinitely many, and no "next" number for any of them to '
+          + 'be. Adjacency is never a property of two numbers; it is a property of the '
+          + 'denominator or the decimal place you happened to write them over.',
+        position: 2,
+        workedExample: {
+          problem:
+            'Find a number strictly between 2/9 and 3/13, then decide what lies strictly between '
+            + '0.4999… and 0.5.',
+          subgoals: [
+            {
+              label: 'Put the two over a common denominator, which is where the trap is set',
+              detail:
+                '9 and 13 are coprime, so the common denominator is 117: 2/9 = 26/117 and '
+                + '3/13 = 27/117. The numerators are CONSECUTIVE, and that is exactly the shape '
+                + 'that makes a learner say there is nothing in between. What has actually been '
+                + 'established is narrower: there is no number between them WITH DENOMINATOR '
+                + '117. The question was about the line.',
+              socratic:
+                '2/9 = 26/117 and 3/13 = 27/117. What makes it tempting to say nothing lies '
+                + 'between these two, and what has the common denominator actually established?',
+            },
+            {
+              label: 'Take the mean, which moves the denominator instead of the numerators',
+              detail:
+                '(26/117 + 27/117) / 2 = (53/117) / 2 = 53/234. Over 234 the two original '
+                + 'numbers are 52/234 and 54/234, so 53/234 sits strictly between them. The '
+                + 'numerators had no room and the denominator did: doubling it is what created '
+                + 'the space, which is the sense in which adjacency was an artefact of the '
+                + 'denominator chosen.',
+              socratic:
+                'You want a number between 26/117 and 27/117 and the numerators leave no room. '
+                + 'What else about the way they are written can you change?',
+            },
+            {
+              label: 'Notice the move has no last step, which is the actual conclusion',
+              detail:
+                'The same argument now applies to 26/117 and 53/234, and to whatever that '
+                + 'produces, with no stopping point. So 53/234 is not the next number after 2/9 '
+                + 'and nothing else is either — 2/9 has no next number. And nothing in the '
+                + 'argument used that the two numbers were fractions: the mean of any two '
+                + 'different numbers lies strictly between them, so this is a fact about the '
+                + 'line and not about the rationals.',
+              socratic:
+                'You have found one number between these two. What stops you from calling 53/234 '
+                + 'the next number after 2/9?',
+            },
+            {
+              label: 'Apply it to the case that feels like a counterexample',
+              detail:
+                '0.4999… is read as the number just below 0.5, which is a belief in a next '
+                + 'number — and the argument above has just ruled one out, since a largest '
+                + 'number below 0.5 would have a mean with 0.5 that was larger and still below. '
+                + 'So recover it with the previous concept\'s method: x = 0.4999… and '
+                + '10x = 4.999… have identical tails, so 10x − x = 4.5, giving 9x = 4.5 and '
+                + 'x = 0.5. It is not just below 0.5; it is 0.5, written differently. Two '
+                + 'expansions, one point.',
+              socratic:
+                'Recover the number 0.4999… names, by aligning the tails and subtracting. What '
+                + 'does your answer say about "the number just below 0.5"?',
+            },
+          ],
+          answer:
+            '2/9 = 26/117 and 3/13 = 27/117, and their mean 53/234 lies strictly between them, '
+            + 'since 26/117 = 52/234 and 27/117 = 54/234. The move works on any two different '
+            + 'numbers and has no last step, so nothing on the line has a next one — and '
+            + '0.4999… is therefore not just below 0.5. Aligning and subtracting gives '
+            + '9x = 4.5, so it IS 0.5.',
+        },
+      },
+      {
+        id: 'completeness-is-assumed-not-proved-here',
+        conceptId: 'real-number-line',
+        statement:
+          'Both points above used that a decimal expansion names a number, and nothing so far has '
+          + 'said why it does. The decimals 1, 1.4, 1.41, 1.414, … increase, never pass 17/12, and '
+          + 'close in on nothing that is a fraction — so within the rationals this list has upper '
+          + 'bounds and no LEAST one. The real line is the system in which every bounded set has '
+          + 'a least upper bound, and that is assumed here rather than established: real analysis '
+          + 'constructs such a system out of the rationals. Naming the assumption is the content; '
+          + '"the line has no gaps" is a picture, and the axiom is what replaces it.',
+        position: 3,
+        workedExample: {
+          problem:
+            'Show that 1, 1.4, 1.41, 1.414, … has rational upper bounds but no least one, and say '
+            + 'which assumption fills the gap.',
+          subgoals: [
+            {
+              label: 'Check the two hypotheses, because they are all the argument uses',
+              detail:
+                'Increasing: each term keeps the previous digits and appends another, and the '
+                + 'square of each stays below 2 — 1.414² = 1.999396. Bounded: '
+                + '(17/12)² = 289/144 = 2 + 1/144, which is above 2, so by the order argument of '
+                + 'the first point 17/12 is above every term whose square is below 2. The bound '
+                + 'is itself rational, and close: 17/12 = 1.41666…',
+              socratic:
+                'You want to show 17/12 is above every term of this list. You cannot compare '
+                + '17/12 with √2, since that is the number in question — so what do you compare, '
+                + 'and which fact about squaring makes the comparison transfer?',
+            },
+            {
+              label: 'Show the bound is not the least one, by producing a smaller bound',
+              detail:
+                '1.4143² = 2.00024449, which is above 2, so 1.4143 is also an upper bound — and '
+                + '1.4143 < 17/12. So is 1.41422, since 1.41422² = 2.0000182084. Both are '
+                + 'smaller than the bound before them, and the recipe is general: take enough '
+                + 'digits of the expansion and round the last one up.',
+              socratic:
+                '17/12 bounds the list. Using the digits the first point computes, how would you '
+                + 'produce a SMALLER rational number that also bounds it?',
+            },
+            {
+              label: 'Close the gap off: no rational bound can be least',
+              detail:
+                'Let r be any rational upper bound. Then r² ≥ 2 — if r² were below 2, the '
+                + 'bracketing of the first point would eventually produce a term of the list '
+                + 'above r, and r would not have been a bound. And r² = 2 is impossible by '
+                + '`roots-and-irrationals`, so r² > 2 strictly. Now take enough digits and round '
+                + 'the last one up: that gives a rational bound within 10^(−k) of the number the '
+                + 'list approaches, so for large enough k it is below r. Every rational bound has '
+                + 'a smaller one, which means this bounded increasing list has no least upper '
+                + 'bound in the rationals. That is not a gap in the argument; it is a gap in the '
+                + 'rationals.',
+              socratic:
+                'Suppose r is a rational upper bound for the list. What do the irrationality '
+                + 'proof and the shrinking brackets of the first point together let you build '
+                + 'from r?',
+            },
+            {
+              label: 'Name the assumption, and name where it is discharged',
+              detail:
+                'The least-upper-bound property — every non-empty set with an upper bound has a '
+                + 'least one — is what the real line asserts and what the rationals have just '
+                + 'been shown to lack. It is ASSUMED here. A system satisfying it is constructed '
+                + 'from the rationals in real analysis, by Dedekind cuts or by Cauchy sequences, '
+                + 'and the map files that construction there rather than here. Everything above '
+                + 'rests on it: the digits of √7 in the first point name a number only because '
+                + 'the assumption says there is one for them to name.',
+              socratic:
+                'Those three facts — increasing, bounded, no least rational bound — are all '
+                + 'facts about the rationals, and together they say this list closes in on '
+                + 'nothing inside them. What does the real line have to assert for it to close '
+                + 'in on something, and has anything here proved that assertion?',
+            },
+          ],
+          answer:
+            'Every term of 1, 1.4, 1.41, 1.414, … squares to below 2, and (17/12)² = 2 + 1/144 is '
+            + 'above it, so 17/12 bounds the list. It is not least: 1.4143² = 2.00024449 and '
+            + '1.41422² = 2.0000182084 are both above 2 and both smaller, and one more digit '
+            + 'rounded up always gives a smaller one again — so no rational upper bound is least. '
+            + 'The least-upper-bound property is what the real line assumes and the rationals '
+            + 'lack, and real analysis is where a system having it is built.',
+        },
+      },
+    ],
+  },
 ]
 
 /**
@@ -2299,12 +2737,21 @@ const EDGES: ConceptEdge[] = [
    *    before fractions.
    *
    * Edges pointing the other way were left alone and resolve in `composeAtlas`:
-   * `real-number-line` and `pythagoras` both name this concept in their own
-   * `needs` and both are still map nodes, and the two `links` in
+   * `real-number-line` and `pythagoras` both named this concept in their own
+   * `needs` and both were map nodes at the time, and the two `links` in
    * `ALGEBRA_FOUNDATIONS` that run from here to `quadratic-formula` and
    * `rational-exponents` stay where they are, because those endpoints are
    * authored in OTHER subjects and an ontology's edges may only name concepts
    * it contains.
+   *
+   * Both of those into-edges have since moved, in opposite directions, which
+   * is the clearest pair in the file for the rule that where a stranded edge
+   * goes is decided by which FILE the other endpoint ended up in.
+   * `pythagoras` was authored into `plane-geometry`, so its edge became the
+   * second entry in `EUCLIDEAN_GEOMETRY.links`. `real-number-line` was
+   * authored into THIS subject, so its edge is two blocks below as an ordinary
+   * prerequisite. Same promotion shape, different home, because one landed in
+   * this file and the other did not.
    */
   {
     id: 'prime-factorisation->roots-and-irrationals',
@@ -2350,11 +2797,18 @@ const EDGES: ConceptEdge[] = [
    *    first move of the first worked example, not on background knowledge.
    *
    * Edges pointing the other way were left alone and resolve in `composeAtlas`:
-   * `percent`, `real-number-line` and `scientific-notation` each name this
-   * concept in their own `needs` and all three are still map nodes — in
+   * `percent`, `real-number-line` and `scientific-notation` each named this
+   * concept in their own `needs` and all three were map nodes — in
    * `NUMBER_AND_ARITHMETIC` when this was written, and in `algebra-foundations`
    * since those two areas merged. Because all three STAYED, nothing had to move
    * into that area's `links` — see the note there.
+   *
+   * Two of the three still are. `real-number-line` was authored into this
+   * subject, so the edge it declared is no longer resolved across a file
+   * boundary at all — it is one block below, as a plain prerequisite. A list of
+   * surviving into-edges is a list of FUTURE stranded edges, which is the
+   * correction this file and atlas-foundations.ts have now each had to make
+   * twice.
    */
   {
     id: 'prime-factorisation->decimal-representation',
@@ -2375,6 +2829,75 @@ const EDGES: ConceptEdge[] = [
     rationale:
       'The test applies to the reduced denominator, so cancelling comes first — 7/56 looks like '
       + 'it recurs and is 1/8, which stops after three places.',
+  },
+
+  /**
+   * BOTH EDGES THAT CAME DOWN OFF THE MAP WITH `real-number-line`, AND BOTH
+   * BELONG HERE — THE THIRD CONSECUTIVE PROMOTION OF THAT SHAPE.
+   *
+   * The map node declared `needs: ['roots-and-irrationals', 'decimal-representation']`
+   * and that `needs` left the area with the node. Both endpoints are concepts
+   * of THIS subject, so both are restated here and `algebra-foundations` needed
+   * no change beyond the removal itself — the same as `roots-and-irrationals`
+   * and `decimal-representation` before it.
+   *
+   * It is worth saying why that run of three is ending rather than continuing.
+   * The cheap shape holds when a node's prerequisites were all authored into
+   * ONE file, which happened three times because this subject was being
+   * written out of a single area from the bottom up. Nothing left in
+   * `algebra-foundations` has that property: `ratio-and-rate` rests on
+   * `fraction-arithmetic` alone and would be a fourth, but `percent` and
+   * `word-problems` each rest on it from inside the area, so promoting it
+   * strands an incoming edge into `links`. The cheapness was the branch's, not
+   * the subject's.
+   *
+   * Both are real gates, and they gate the two halves of the concept that this
+   * file's header describes as the two things its prerequisites each stop one
+   * step short of:
+   *
+   *  - `roots-and-irrationals` supplies the only numbers the concept is about.
+   *    Without it there is no reason to believe any expansion fails to
+   *    terminate or recur, so the whole concept would be about an empty case —
+   *    and its exponent test is what the first point invokes to say that √7's
+   *    expansion does not stop, and what the third point invokes to rule out
+   *    r² = 2.
+   *  - `decimal-representation` supplies the classification the concept works
+   *    in the gap of. It establishes that a fraction's expansion terminates or
+   *    recurs, which is what turns "neither" into "not a fraction" rather than
+   *    into "not yet finished". Its align-and-subtract method is also used
+   *    directly, in the second point, to show that 0.4999… is 0.5.
+   *
+   * Edges pointing the other way were left alone and resolve in `composeAtlas`:
+   * `linear-inequalities` names this concept in its own `needs` and is still a
+   * map node of `algebra-foundations`, and the `links` entry in
+   * `EUCLIDEAN_GEOMETRY` running from here to `cartesian-plane` stays where it
+   * is — that endpoint is authored in `vectors-and-independence`, and an
+   * ontology's edges may only name concepts it contains. What changed for that
+   * entry is its REASON and not its home: it used to cross from a map node to
+   * an authored concept, and now it crosses between two authored concepts in
+   * different subjects. The note beside it in atlas-foundations.ts says so.
+   */
+  {
+    id: 'roots-and-irrationals->real-number-line',
+    from: 'roots-and-irrationals',
+    to: 'real-number-line',
+    kind: 'prerequisite',
+    promotedBy: 'author:arithmetic-foundations',
+    rationale:
+      'The concept exists to say where the numbers that are not fractions sit, which is not a '
+      + 'question somebody has before they have been shown that any such number exists — and the '
+      + 'exponent test is what both the first and third points invoke by name.',
+  },
+  {
+    id: 'decimal-representation->real-number-line',
+    from: 'decimal-representation',
+    to: 'real-number-line',
+    kind: 'prerequisite',
+    promotedBy: 'author:arithmetic-foundations',
+    rationale:
+      'That every fraction either terminates or recurs is what makes "neither" mean "not a '
+      + 'fraction" instead of "not finished yet", so the classification has to be in hand before '
+      + 'an expansion can be read as evidence about the number it names.',
   },
 
   /**

@@ -743,6 +743,112 @@ export const TASKS: PracticeTask[] = [
     reference: '5/12',
   },
 
+  /*
+   * ── real-number-line ────────────────────────────────────────────────────
+   *
+   * Three `evaluate` tasks, one per knowledge point, and this concept is the
+   * hardest case in the subject for the proxy rule rather than for the missing
+   * form. The content is a decimal expansion that does not stop, a set with no
+   * last element, and an axiom about infinite sets. None of those is a value,
+   * and no `NamedForm` would change that — unlike `decimal-representation`,
+   * where a `decimal_expansion` form genuinely would close the gap.
+   *
+   * So each asks the one comparison the argument turns on, and each prompt
+   * names what it stands in for:
+   *
+   *  - the first clears the decimal point and compares two integers. 2.64² < 7
+   *    and 264² < 7 · 100² are the same statement, and the integer form is the
+   *    mathematically honest one: it is what shows that every digit of an
+   *    irrational root is settled by whole-number arithmetic, so the
+   *    irrationality lives in the non-termination and never in a step.
+   *  - the second is the mean itself, which is the one part of that point that
+   *    IS a construction with an answer. The conclusion it supports — that the
+   *    move never runs out, so nothing has a next number — cannot be asked.
+   *  - the third is one hypothesis of a two-hypothesis argument: that 17/12 is
+   *    above √2, hence above every term of the increasing list. "And no bound
+   *    is least" is the other half and is unaskable; the prompt says so.
+   *
+   * The first and third are both "square and subtract", which is worth
+   * admitting rather than disguising: they are the same decision procedure run
+   * in opposite directions, one establishing a lower bracket on a digit and one
+   * an upper bound on a set, and on different kinds of operand — integers after
+   * clearing a decimal, and a fraction. They are not proxies for each other,
+   * and the middle task is a different shape entirely.
+   *
+   * All three are integer or rational arithmetic settled by `exactValue` with
+   * no worker, which was worth checking for a concept about numbers
+   * `exactValue` returns null for. Not one of them asks for an irrational
+   * value. Different numbers from the worked examples where it matters — those
+   * use √7 at 2.64, the pair 2/9 and 3/13, and the bound 17/12 — except the
+   * 17/12 in the third, deliberately: it is the bound the example establishes
+   * and the task is the single comparison that establishes it, so a different
+   * fraction would be a different claim rather than a fresh exercise.
+   */
+  {
+    id: 'clear-the-point-to-settle-a-digit-1',
+    knowledgePointId: 'every-digit-is-settled-by-whole-numbers',
+    kind: 'evaluate',
+    prompt:
+      '2.65² = 7.0225 is already past 7, so the second decimal place of √7 is 4 rather than 5 — '
+      + 'provided 2.64 is still short of it. Comparing 2.64² with 7 is the same as comparing '
+      + '264² with 7 · 100², which is the form worth seeing: the digits of an irrational root '
+      + 'are decided by whole-number arithmetic, and nothing at any single step is approximate. '
+      + 'Evaluate n * m^2 - d^2 at n = 7, m = 100, d = 264. A positive answer says 2.64² is '
+      + 'still below 7 and the digit stands. The task cannot ask for the digit itself — a digit '
+      + 'is not a value this engine can demand of an expression — so it asks the comparison the '
+      + 'digit rests on.',
+    given: 'n * m^2 - d^2',
+    variables: [
+      { name: 'n', assumptions: { integer: true, positive: true } },
+      { name: 'm', assumptions: { integer: true, positive: true } },
+      { name: 'd', assumptions: { integer: true, positive: true } },
+    ],
+    at: { n: '7', m: '100', d: '264' },
+    reference: '304',
+  },
+  {
+    id: 'mean-of-two-fractions-1',
+    knowledgePointId: 'no-two-reals-are-adjacent',
+    kind: 'evaluate',
+    prompt:
+      'Over the common denominator 165 the fractions 4/15 and 3/11 are 44/165 and 45/165 — '
+      + 'consecutive numerators, which is exactly the shape that makes adjacency look real. The '
+      + 'mean settles it, and it is also the whole construction rather than a check on one: '
+      + 'evaluate (a/b + c/d) / 2 at a = 4, b = 15, c = 3, d = 11. Your answer lies strictly '
+      + 'between the two, so they were never adjacent — and the same move applies to it and '
+      + 'either of them in turn, which is the part no task can ask you for.',
+    given: '(a/b + c/d) / 2',
+    variables: [
+      { name: 'a', assumptions: { integer: true } },
+      { name: 'b', assumptions: { integer: true, nonzero: true } },
+      { name: 'c', assumptions: { integer: true } },
+      { name: 'd', assumptions: { integer: true, nonzero: true } },
+    ],
+    at: { a: '4', b: '15', c: '3', d: '11' },
+    reference: '89/330',
+  },
+  {
+    id: 'a-rational-upper-bound-1',
+    knowledgePointId: 'completeness-is-assumed-not-proved-here',
+    kind: 'evaluate',
+    prompt:
+      'Showing that 17/12 bounds the increasing list 1, 1.4, 1.41, 1.414, … means showing '
+      + '(17/12)² is above 2, since squaring preserves order on the positives and every term of '
+      + 'the list squares to below 2. That is one subtraction and its sign is the ruling: '
+      + 'evaluate (p/q)^2 - n at p = 17, q = 12, n = 2. A positive answer makes 17/12 an upper '
+      + 'bound. How SMALL the answer is hints at the other half of the point, which is that no '
+      + 'rational bound is the least one — and that half is a claim about an infinite set, so no '
+      + 'task in this build can ask for it.',
+    given: '(p/q)^2 - n',
+    variables: [
+      { name: 'p', assumptions: { integer: true, positive: true } },
+      { name: 'q', assumptions: { integer: true, nonzero: true } },
+      { name: 'n', assumptions: { integer: true, positive: true } },
+    ],
+    at: { p: '17', q: '12', n: '2' },
+    reference: '1/144',
+  },
+
   // ── polynomial-arithmetic ───────────────────────────────────────────────
   {
     id: 'expand-binomials-1',

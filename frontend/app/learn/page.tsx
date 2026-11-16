@@ -401,7 +401,19 @@ export default function LearnPage() {
           ] as [Tab, string][]).map(([id, label]) => (
             <button
               key={id}
-              onClick={() => setTab(id)}
+              /*
+               * Clicking the Tutor tab clears any target first, so it means
+               * "tutor me" every time.
+               *
+               * `walkTarget` is sticky — nothing resets it — so after one jump
+               * from the concept map this tab would keep re-offering that
+               * concept's derivations forever, and the autostart below would
+               * stay suppressed by a choice the learner made once. Only the
+               * manual click clears it: the programmatic entries set the target
+               * and then call `setTab` directly, so they never come through
+               * here and keep working.
+               */
+              onClick={() => { if (id === 'tutor') setWalkTarget(null); setTab(id) }}
               className={`-mb-px border-b-2 px-3 py-2 text-sm ${
                 tab === id
                   ? 'border-emerald-500 text-gray-100'
@@ -828,6 +840,12 @@ export default function LearnPage() {
             concepts={state?.progress?.concepts ?? []}
             masteryFloor={MASTERY_FLOOR}
             queuedTasks={state?.tasks ?? []}
+            /* Open on a question when nobody named one. The maps and the
+               practice tab all arrive here holding a concept or a point, and
+               for them the offer list is the answer; `/learn?tab=tutor` from
+               the home page arrives with nothing, and that link means "tutor
+               me" rather than "show me what could be tutored". */
+            autostart={!walkTarget}
             onPractise={id => { setFocusTaskId(id); setTab('practice') }}
             onSelectConcept={id => { setScope('atlas'); setSelectedConcept(id); setTab('concepts') }}
           />

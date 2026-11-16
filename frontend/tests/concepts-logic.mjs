@@ -2559,8 +2559,8 @@ t('and it is the subject with a root that needs nothing',
   roots(ONTOLOGIES[0]).some(id => gatingPrerequisitesOf(ONTOLOGIES[0], id).length === 0))
 t('and resolves by id', getOntology('arithmetic-foundations') === A)
 t('it has no internal faults', ontologyProblems(A).length === 0, ontologyProblems(A).join('; '))
-t('ten concepts, thirty knowledge points',
-  A.concepts.length === 10 && allKnowledgePoints(A).length === 30,
+t('eleven concepts, thirty-three knowledge points',
+  A.concepts.length === 11 && allKnowledgePoints(A).length === 33,
   `${A.concepts.length} concepts, ${allKnowledgePoints(A).length} points`)
 t('every concept is teachable — this is a syllabus, not a map',
   A.concepts.every(c => isTeachable(A, c.id)))
@@ -2587,8 +2587,8 @@ const coldSet = assemble({ ontology: A, strengths: COLD, now: '2026-10-23T12:00:
 t('a cold account gets three tasks, all from place value',
   coldSet.tasks.length === 3 && coldSet.tasks.every(x => conceptOfPoint(A, x.knowledgePointId).id === 'place-value'),
   `${coldSet.tasks.length} tasks`)
-t('and the other nine concepts are reported blocked rather than silently absent',
-  coldSet.blocked.length === 9,
+t('and the other ten concepts are reported blocked rather than silently absent',
+  coldSet.blocked.length === 10,
   coldSet.blocked.map(b => b.conceptId).join(', '))
 t('each blocked concept names a TEACHABLE thing to go and do', coldSet.blocked.every(b =>
   b.missing.length > 0 && b.missing.every(m => isTeachable(A, m))))
@@ -2672,9 +2672,17 @@ const ARITH_TASKS = allKnowledgePoints(A).flatMap(p => tasksForPoint(p.id))
  * to WRITE a rational number, and 0.125 and 1/8 are the same number, so no
  * equivalence check can prefer one. Its header in ontology-arithmetic.ts names
  * the form that would fix it.
+ *
+ * `real-number-line` added three points and three tasks, one apiece again, and
+ * it is the first concept here whose shortfall no form could close: two of its
+ * three points conclude in a claim about an infinite set ("the mean move never
+ * runs out", "no rational bound is least"), and a `NamedForm` is a claim about
+ * the shape of one expression. So each of its tasks asks a step of the
+ * argument and says in the prompt which step, which is the proxy rule held to
+ * rather than stretched.
  */
-t('thirty-three tasks, and every point has at least one',
-  ARITH_TASKS.length === 33 && allKnowledgePoints(A).every(p => tasksForPoint(p.id).length > 0),
+t('thirty-six tasks, and every point has at least one',
+  ARITH_TASKS.length === 36 && allKnowledgePoints(A).every(p => tasksForPoint(p.id).length > 0),
   `${ARITH_TASKS.length}`)
 /*
  * NOT "all of them are evaluate" any more, and the change is the point rather
@@ -2693,7 +2701,7 @@ t('thirty-three tasks, and every point has at least one',
  * arriving here unnoticed is still visible.
  */
 t('two are transform_to_form and the rest evaluate — both graded locally',
-  ARITH_TASKS.filter(x => x.kind === 'evaluate').length === 31
+  ARITH_TASKS.filter(x => x.kind === 'evaluate').length === 34
   && ARITH_TASKS.filter(x => x.kind === 'transform_to_form').length === 2,
   ARITH_TASKS.reduce((acc, x) => ({ ...acc, [x.kind]: (acc[x.kind] ?? 0) + 1 }), {}),
 )

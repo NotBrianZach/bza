@@ -246,6 +246,28 @@
  * rather than at the bottom of an unwritten one. That argument was never
  * refuted; it was only outvoted by an area count.
  *
+ * AND IT WAS TAKEN, which is why that paragraph is in the past tense now
+ * rather than standing as an open recommendation. `real-number-line` is the
+ * eleventh concept of `arithmetic-foundations`, authored in
+ * ontology-arithmetic.ts, and the gate it tightened is the predicted one:
+ * `cartesian-plane` used to rest on an empty node that `gatingPrerequisitesOf`
+ * looked straight through to the arithmetic two steps below, and now rests on
+ * a concept with three knowledge points and three tasks.
+ *
+ * So the next choice is genuinely open and this file no longer has a
+ * nomination to hand over. What it still has is the warning it earned:
+ * `geometric-proof` is the one remaining concept in this subject's own area
+ * whose prerequisites are all written, and the objection recorded above it has
+ * not been answered. Its natural task kind is `justify`, `justify` is not
+ * machine-rulable, and three chains that cannot become evidence is a worse
+ * outcome than a mapped node. The question to answer BEFORE writing it is
+ * unchanged — what in it can be asked as a value at all — and the real-line
+ * promotion is weak evidence that the answer exists, since the one part of
+ * THAT concept which could not be asked for was handled by asking a
+ * hypothesis of the argument and saying in the prompt that the conclusion was
+ * unaskable. Whether that compromise scales to a concept where EVERY chain
+ * ends in an argument is the open question, not a settled no.
+ *
  * ── Why a subject of its own ──────────────────────────────────────────────
  *
  * There is no geometry ontology to extend. Every existing subject declares a

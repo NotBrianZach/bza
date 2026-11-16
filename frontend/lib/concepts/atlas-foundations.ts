@@ -51,16 +51,22 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
   id: 'algebra-foundations',
   name: 'Number and algebra',
   covers:
-    'Number and the letters that stand for it: percent and ratio, scientific notation, the real ' +
-    'line the irrationals complete, and then equations, inequalities, systems and quadratics. ' +
-    'These were two areas until the number half had been almost entirely written out. The ' +
-    'arithmetic underneath — place value, the written algorithms, order of operations, signed ' +
-    'numbers, divisibility, fractions, prime factorisation, the gcd and lcm built on those ' +
-    'primes, the roots and the irrationals those factorisations decide, and the decimal ' +
-    'expansions they decide in the other direction — has problems written for it and lives in ' +
-    'the arithmetic-foundations syllabus, as do what a letter standing for a number actually ' +
-    'means and the polynomial and rational manipulation built on that; this area points at all ' +
-    'of them rather than restating them. So the old line between number and algebra — nothing ' +
+    'Number and the letters that stand for it: percent and ratio, scientific notation, and then ' +
+    'equations, inequalities, systems and quadratics. These were two areas until the number ' +
+    'half had been almost entirely written out. The arithmetic underneath — place value, the ' +
+    'written algorithms, order of operations, signed numbers, divisibility, fractions, prime ' +
+    'factorisation, the gcd and lcm built on those primes, the roots and the irrationals those ' +
+    'factorisations decide, and the decimal expansions they decide in the other direction — has ' +
+    'problems written for it and lives in the arithmetic-foundations syllabus, as do what a ' +
+    'letter standing for a number actually means and the polynomial and rational manipulation ' +
+    'built on that; this area points at all of them rather than restating them. The real line ' +
+    'has gone the same way as an eleventh, taking what survives being written down about it: ' +
+    'that the digits of an irrational root are each settled by whole-number arithmetic, that no ' +
+    'two numbers on the line are adjacent because their mean is always between them, and that ' +
+    'the least-upper-bound property is assumed rather than proved at this level. What stays ' +
+    'behind of it is nothing, because what would have stayed behind is the construction, and ' +
+    'the map already files that in real analysis. So the old line between number and algebra ' +
+    '— nothing ' +
     'symbolic on one side, a letter standing for an unknown on the other — still holds of the ' +
     'mathematics and no longer divides two regions of the map. It runs inside this one, and the ' +
     'division a learner can still see is between what is written and what is only named.',
@@ -143,23 +149,32 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
    * view for the first time and the area viewed alone is one connected drawing
    * instead of two with a gap between them.
    *
-   * THE BUDGET THIS BOUGHT. Fifteen nodes against a floor of five is ten
-   * promotions, and the two remaining journeys need four of them from here:
+   * THE BUDGET THIS BOUGHT. Fifteen nodes against a floor of five was ten
+   * promotions, and the two remaining journeys needed four of them from here:
    * `real-number-line`, `ratio-and-rate`, `linear-equations` and
-   * `systems-of-linear-equations`. Nothing in this area is held back by the
-   * floor any more, and nothing in it comes close.
+   * `systems-of-linear-equations`. The first has since been taken, so it is
+   * fourteen nodes, nine promotions of room, and three still owed. Nothing in
+   * this area is held back by the floor any more, and nothing in it comes
+   * close.
+   *
+   * The merge is also no longer a change made on a prediction, which is the
+   * honest counter-argument it was recorded with. `real-number-line` is the
+   * concept this area could not release before the merge and the first one
+   * authored after it, so the thing the merge was for has happened once rather
+   * than only been argued for.
    */
   /**
-   * FOURTEEN NODES HAVE LEFT THE TWO AREAS THAT MADE THIS ONE, AND HAD TO.
+   * FIFTEEN NODES HAVE LEFT THE TWO AREAS THAT MADE THIS ONE, AND HAD TO.
    *
-   * Ten from the number half — `place-value`, `integer-arithmetic`,
+   * Eleven from the number half — `place-value`, `integer-arithmetic`,
    * `order-of-operations`, `negative-numbers`, `divisibility`,
    * `fraction-arithmetic`, `prime-factorisation`, `gcd-and-lcm`,
-   * `roots-and-irrationals` and `decimal-representation` — all now real
-   * concepts with worked examples and tasks, in ontology-arithmetic.ts. Four
-   * from the algebraic half: `variables-and-expressions` in
-   * ontology-algebra.ts, and `completing-the-square`, `quadratic-formula` and
-   * `polynomial-roots` in ontology.ts.
+   * `roots-and-irrationals`, `decimal-representation` and `real-number-line`
+   * — all now real concepts with worked examples and tasks, in
+   * ontology-arithmetic.ts. Four from the algebraic half:
+   * `variables-and-expressions` in ontology-algebra.ts, and
+   * `completing-the-square`, `quadratic-formula` and `polynomial-roots` in
+   * ontology.ts.
    *
    * `atlasProblems` rejects a map node whose id collides with an authored
    * concept — not as tidiness, but because the composed concept list would
@@ -168,21 +183,30 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
    *
    * The count is kept current deliberately. It is the measurement of how far
    * this area has turned into a syllabus, and a comment saying "five" while
-   * ten have gone is the kind of rot that makes a reader distrust the rest of
-   * the file. Fourteen gone against fifteen remaining is also the figure that
-   * forced the merge argued above: ten of the fourteen came out of a single
-   * area of fifteen, and what that left was not a region of the map.
+   * eleven have gone is the kind of rot that makes a reader distrust the rest
+   * of the file. Fifteen gone against fourteen remaining is also the figure
+   * that forced the merge argued above, read one promotion later: ten of the
+   * first fourteen came out of a single area of fifteen, and what that left was
+   * not a region of the map. The eleventh is the one that could not have
+   * happened without the merge.
    *
    * The `needs` below still name the departed. That is the intended way for
    * the map to meet a syllabus: the edge resolves in `composeAtlas`, where
    * both endpoints exist. It is dropped by `areaOntology`, which keeps only
-   * edges internal to the area — so this area viewed alone has eight roots
+   * edges internal to the area — so this area viewed alone has seven roots
    * rather than one, being every node whose prerequisites have all been
    * authored out from under it, from `absolute-value` at the bottom to
    * `binomial-theorem` near the top. That is the area view being honest about
    * its own boundary rather than a fault, and tests/atlas.mjs asserts the set
-   * by NAMED membership, because a merge can turn a root set over completely
-   * without changing its size.
+   * by NAMED membership, because a merge or a promotion can turn a root set
+   * over completely without changing its size.
+   *
+   * It was eight until `real-number-line` was promoted, and until that
+   * promotion this paragraph was claiming an assertion that did not exist —
+   * the named-membership check was written for `euclidean-geometry` and never
+   * for this area. The promotion added it. Worth leaving on the record,
+   * because a comment asserting that something is tested is read as evidence
+   * that it is, and this one was wrong for as long as it was true by accident.
    *
    * An edge is owned by the node that DECLARES it, which is the part that
    * catches people out. Promoting a node strands the `needs` on the node
@@ -283,12 +307,21 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
      * Three edges pointing the OTHER way were left untouched, and this is the
      * cleanest case of that in the file: `percent`, `ratio-and-rate`'s
      * neighbour, is immediately below, and `real-number-line` and
-     * `scientific-notation` follow it. All three name this concept in their own
-     * `needs`, all three STAYED here, so all three survive as written and
-     * `composeAtlas` resolves them across the file boundary. Nothing had to
+     * `scientific-notation` followed it. All three named this concept in their
+     * own `needs`, all three STAYED here, so all three survived as written and
+     * `composeAtlas` resolved them across the file boundary. Nothing had to
      * move into `links`, because `links` is for an edge NEITHER of whose owners
-     * is a node of this area, and here the declaring end is a node of this area
-     * every time.
+     * is a node of this area, and here the declaring end was a node of this
+     * area every time.
+     *
+     * Two of the three still are, and that is the sentence worth correcting
+     * rather than deleting. `real-number-line` has since been promoted into
+     * `arithmetic-foundations` itself, so the edge it declared is no longer an
+     * into-edge resolved across a file boundary — it is an ordinary
+     * prerequisite inside that ontology's own `EDGES`. The list above reads
+     * like a roster of safe edges and it is not: on a branch being authored
+     * upward, every into-edge is a future stranded edge, which is the lesson
+     * `EUCLIDEAN_GEOMETRY`'s comment reaches by the same route.
      *
      * Worth noting for whoever promotes the next one: this area is down to five
      * nodes, and tests/atlas.mjs asserts that no area has fewer than five
@@ -341,9 +374,13 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
      * Three kinds of edge pointing the OTHER way were left untouched, and
      * they are worth separating because only the first two are of this area:
      *
-     *  - `real-number-line`, immediately below, names it in its own `needs`.
-     *    Declared by a node that STAYED, so it survives as written and
-     *    `composeAtlas` resolves it across the file boundary.
+     *  - `real-number-line`, immediately below, named it in its own `needs`,
+     *    and was at the time declared by a node that STAYED — so it survived
+     *    as written and `composeAtlas` resolved it across the file boundary.
+     *    That stopped being true when `real-number-line` was promoted in its
+     *    turn: the edge went with the node, and is now a plain prerequisite
+     *    inside `ARITHMETIC_FOUNDATIONS.edges`. Same correction as the bullet
+     *    below, reached the same way, one promotion later.
      *  - `pythagoras` USED TO do the same from further away, and no longer
      *    does — it has since been authored in ontology-geometry.ts, so the
      *    edge it declared could not stay with it. A hypotenuse is a square
@@ -363,20 +400,68 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
      *    `links` is still the only place they fit. The notes beside them say
      *    so.
      *
-     * What this area keeps is the node below. `real-number-line` is not made
-     * redundant by the promotion: the roots produce the first irrational
-     * number, and assembling the rationals and irrationals into one complete
-     * ordered line is a separate claim, taken on trust here and constructed
-     * in real analysis.
+     * What this area kept was `real-number-line`, which was not made redundant
+     * by the promotion — the roots produce the first irrational number, and
+     * assembling the rationals and irrationals into one complete ordered line
+     * is a separate claim. It has since been promoted in its turn; the note
+     * where it sat is below.
      */
-    {
-      id: 'real-number-line',
-      match: /\b(real number|real line|number line)\b/i,
-      name: 'The real line',
-      is: 'Rationals and irrationals together as a complete ordered line, taken on trust here and constructed in real analysis.',
-      needs: ['roots-and-irrationals', 'decimal-representation'],
-      terms: 'real numbers number line completeness',
-    },
+    /*
+     * `real-number-line` was here and is now authored in ontology-arithmetic.ts,
+     * so it had to leave — same rule, eleventh time out of the number half.
+     * See the block above the node list.
+     *
+     * BOTH of its own edges were stranded and BOTH had somewhere to go, which
+     * makes this the third promotion out of this half in a row that cost the
+     * area nothing at all. It declared
+     * `needs: ['roots-and-irrationals', 'decimal-representation']`, both of
+     * them already concepts of `arithmetic-foundations`, so the two edges are
+     * restated in that ontology's own `EDGES` and no `links` entry was needed
+     * in either direction. The long note in that file argues both.
+     *
+     * THE RUN OF THREE ENDS HERE, AND WHY IS WORTH KNOWING BEFORE THE NEXT
+     * PROMOTION. The cheap shape is not a property of this area or of that
+     * subject; it is a property of a branch authored from the bottom up, where
+     * each promoted node's `needs` point at nodes promoted just before it into
+     * the same file. Nothing left in this area has it. `ratio-and-rate` comes
+     * closest — it rests on `fraction-arithmetic` alone, which is authored
+     * there — and it still fails, because `percent` and `word-problems` name it
+     * from INSIDE this area, so promoting it strands two incoming edges into
+     * `links`. That is the `fraction-arithmetic` case again, which this file
+     * records two removals above.
+     *
+     * The edge that pointed INTO it was left alone, as the rule says:
+     * `linear-inequalities` below names it in its own `needs`, that node
+     * stayed, so it still owns the edge and `composeAtlas` resolves it across
+     * the file boundary. It also gates now, where before it pointed at an empty
+     * node the gating walk looked straight through — so `linear-inequalities`
+     * has acquired a real prerequisite without anybody editing it, which is
+     * authoring tightening the gate rather than widening it.
+     *
+     * AND ONE `links` ENTRY'S REASON CHANGED WITHOUT ITS HOME CHANGING, which
+     * is the kind of thing that rots quietly. `EUCLIDEAN_GEOMETRY.links` holds
+     * `real-number-line → cartesian-plane`, filed there because the edge was
+     * `cartesian-plane`'s own `needs` and that node lived in the area which is
+     * now part of that one. It used to be there because this end was an
+     * unwritten map node with no ontology to belong to. It is there now because
+     * this end is authored in `arithmetic-foundations` while the other is
+     * authored in `vectors-and-independence`, and an ontology may only name
+     * concepts it CONTAINS — so the entry stays, and for the same reason as its
+     * neighbour `negative-numbers → cartesian-plane` rather than for a
+     * different one. The note above that list says so.
+     *
+     * THE ROOT SET OF THIS AREA SHRANK, from eight to seven, which is the
+     * fifth-promotion shape rather than the fourth's: `real-number-line` had no
+     * prerequisite inside this area and was therefore a root itself, and the
+     * one node resting on it — `linear-inequalities` — did not take its place,
+     * because its other prerequisite `linear-equations` is still here and still
+     * gates it from inside. A departing node promotes its dependents to roots
+     * only when it was the LAST of their prerequisites inside the area.
+     * Asserted by named membership in tests/atlas.mjs, where this promotion
+     * added the assertion: the block above the node list had been claiming that
+     * set was checked by name and nothing was checking it, so a promotion could
+     * have turned it over in silence.
+     */
     {
       id: 'scientific-notation',
       match: /\b(scientific notation|order of magnitude|significant figure)/i,
@@ -1578,14 +1663,25 @@ const EUCLIDEAN_GEOMETRY: MapArea = {
    *
    * Neither had. Both run INTO `cartesian-plane`, which is an authored concept
    * of the vectors syllabus and is in neither half of this area, so both still
-   * have exactly one home. The two differ in why the other end cannot take
-   * them, and the distinction is the same one the first two entries record:
-   * `real-number-line` is an unwritten map node — now a node of
-   * `algebra-foundations`, after the other merge — so it has no ontology to
-   * belong to at all, while `negative-numbers` is fully authored and is simply
-   * authored in `arithmetic-foundations`. An ontology may only name concepts
-   * it CONTAINS, so belonging to the wrong subject fails that test exactly as
-   * being a skeleton does.
+   * have exactly one home.
+   *
+   * THEY USED TO DIFFER IN WHY, AND NO LONGER DO, WHICH IS WORTH RECORDING
+   * BECAUSE THE DISTINCTION WAS THE POINT. At the merge, `real-number-line`
+   * was an unwritten map node — of `algebra-foundations`, after the other
+   * merge — so it had no ontology to belong to at all, while `negative-numbers`
+   * was fully authored and simply authored in `arithmetic-foundations`. That
+   * was the same two-reasons-one-home pair the first two entries record, and it
+   * was the file's cleanest illustration that `links` is about which FILE an
+   * endpoint is in rather than about whether it was written.
+   *
+   * `real-number-line` has since been authored, into `arithmetic-foundations`,
+   * so both entries are now the second case and the pair no longer illustrates
+   * anything. Neither moved and neither could: an ontology may only name
+   * concepts it CONTAINS, and both of these ends are authored in a subject the
+   * other end does not belong to. The first two entries in the list still
+   * carry the distinction — `ratio-and-rate` is a map node and
+   * `roots-and-irrationals` is authored elsewhere — so it has not been lost,
+   * only moved up two lines.
    *
    * They are declared here because the edge was `cartesian-plane`'s own
    * `needs` and `cartesian-plane` was a node of `coordinate-geometry`, which

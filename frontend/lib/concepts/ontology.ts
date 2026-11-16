@@ -131,10 +131,22 @@ const CONCEPTS: Concept[] = [
         workedExample: {
           problem: 'Add (2x² − x + 4) and (x² + 5x − 9).',
           subgoals: [
-            { label: 'What can be added?', detail: 'Only terms carrying the same power of x.' },
+            {
+              label: 'What can be added?',
+              detail: 'Only terms carrying the same power of x.',
+              socratic:
+                'A first attempt here runs down all six terms and totals the numbers: ' +
+                '2 − 1 + 4 + 1 + 5 − 9. Not one of those additions is between terms that ' +
+                'belong together. Which terms do belong together, and what is it that decides?',
+            },
             {
               label: 'Group by power',
               detail: 'x²: 2 + 1 = 3. x: −1 + 5 = 4. Constants: 4 − 9 = −5.',
+              socratic:
+                'The terms that belong together are now in three groups. Two of them hide ' +
+                'something: the x² in the second bracket has no number written in front of it, ' +
+                'and the x in the first bracket carries a minus. What does each of the three ' +
+                'groups come to once those two are read properly?',
             },
           ],
           answer: '3x² + 4x − 5',
