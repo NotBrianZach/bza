@@ -108,6 +108,57 @@ const REAL_AB = [
 ]
 
 /**
+ * Four real parameters, for the area tasks.
+ *
+ * A fifth declaration rather than reusing `REAL_ABC` with a spare, for the
+ * reason `REAL_BC` and `REAL_AB` give: every declared symbol must have a stated
+ * input. These four are two rectangles' worth of sides — a sheet and the piece
+ * taken out of it, or two rectangles being compared — so four is what the
+ * expressions use and four is what they declare.
+ *
+ * Real rather than `positive`, matching the plane-geometry tasks it joins.
+ * A length is arguably positive, but `equal-perimeters-left-the-areas-unequal-1`
+ * is a difference of two areas whose SIGN says which region is larger, and
+ * nothing should be assumed about the symbols that the tasks do not need.
+ *
+ * Real rather than `integer` for the same reason `REAL_AB` is: nothing in
+ * either measure is about whole numbers. The whole-number sides in the prompts
+ * are a convenience of the figures chosen, and the one height the concept
+ * computes is 168/13.
+ */
+const REAL_ABCD = [
+  { name: 'a', assumptions: { real: true } },
+  { name: 'b', assumptions: { real: true } },
+  { name: 'c', assumptions: { real: true } },
+  { name: 'd', assumptions: { real: true } },
+]
+
+/**
+ * Six real parameters, for the one task that compares two triangles at once.
+ *
+ * A sixth real declaration rather than reusing `REAL_ABCD` with two spares, for
+ * the reason every set above gives: every declared symbol must have a stated
+ * input, and a task whose inputs do not cover its symbols cannot be evaluated
+ * at all. Six is what "the three sides of this triangle against the three sides
+ * of that one" uses, and it is the widest any task in the build gets.
+ *
+ * Real rather than `positive`, matching the plane-geometry tasks it joins, and
+ * here the reason is not a convention but the task: the two perimeter tasks are
+ * a DIFFERENCE whose sign is the ruling, and one of them is negative. Real
+ * rather than `integer` for the usual reason — a triangle's sides are not
+ * required to be whole numbers, and the whole numbers in the prompts are a
+ * convenience of the figures chosen.
+ */
+const REAL_ABCDEF = [
+  { name: 'a', assumptions: { real: true } },
+  { name: 'b', assumptions: { real: true } },
+  { name: 'c', assumptions: { real: true } },
+  { name: 'd', assumptions: { real: true } },
+  { name: 'e', assumptions: { real: true } },
+  { name: 'f', assumptions: { real: true } },
+]
+
+/**
  * The arithmetic tasks declare `integer`, not `real`.
  *
  * It is a stronger assumption than the algebra tasks make and it is the honest
@@ -3139,6 +3190,336 @@ export const TASKS: PracticeTask[] = [
     // task above — one expression, two inputs, two verdicts.
     reference: '0',
     at: { x: '90' },
+  },
+
+  // ── area-and-perimeter ──────────────────────────────────────────────────
+  //
+  // Six more `evaluate` tasks, across the three points of
+  // `area-and-perimeter`. Exact rational arithmetic, no worker, as everywhere
+  // else in this subject.
+  //
+  // THE PROXY PROBLEM DOES NOT ARISE HERE, which is the first time that can be
+  // said in this file and is a property of the concept rather than of the asks.
+  // Both of the concept's measures are numbers: "how much is left" is a value,
+  // "how far round" is a value, and the claim the third point is built on — that
+  // neither decides the other — is settled by comparing two of them. So every
+  // one of these six asks what its knowledge point is about. The one step that
+  // stays unscored is small and is the first subgoal of the first example:
+  // which of the two measures the question wants. A learner handed
+  // "evaluate a*b − c*d" has been told it is an area. Named in the prompts.
+  //
+  // Two of the six echo expressions from earlier blocks and in both cases the
+  // repetition is the content, which is this subject's habit by now.
+  // `the-notch-cancels-out-of-the-corner-perimeter-1` is identically 2(a + b),
+  // so it answers 32 for a corner piece of any size — the shape of
+  // `the-exterior-total-never-moves-1` in a second concept. And
+  // `equal-perimeters-left-the-areas-unequal-1` is `a*b - c*d`, the same
+  // expression as the first task below, doing the opposite job: there it is one
+  // region's area and here it is the difference between two areas whose
+  // perimeters are equal, so anything other than 0 refutes "equal round means
+  // equal inside". That is the arithmetic refutation
+  // `equal-sides-left-the-angles-unequal-1` made for the polygons, in a third
+  // concept.
+  {
+    id: 'the-cut-is-a-subtraction-1',
+    knowledgePointId: 'additivity-turns-a-cut-into-a-subtraction',
+    kind: 'evaluate',
+    prompt:
+      'A rectangular sheet 10 cm by 6 cm has a rectangular piece 4 cm by 3 cm cut out of it. '
+      + 'Evaluate a*b − c*d at a = 10, b = 6, c = 4, d = 3 to get the area of what is left, in '
+      + 'square centimetres. The first product is the sheet and the second is the piece, and the '
+      + 'subtraction is additivity read backwards: the piece and the remainder add to the whole, '
+      + 'so the remainder is the whole less the piece. Note what the expression does NOT contain, '
+      + 'which is the content of the point — nothing in it says where on the sheet the piece was '
+      + 'cut from. Note also which half of the problem this scores: that the answer wanted is an '
+      + 'area rather than a perimeter is the first decision in the problem, and this prompt has '
+      + 'handed it to you already made.',
+    given: 'a*b - c*d',
+    variables: REAL_ABCD,
+    // 60 − 12 = 48. Checked the other way in the worked example and in the
+    // task below: the same region assembled out of its two rectangles, 36 + 12.
+    reference: '48',
+    at: { a: '10', b: '6', c: '4', d: '3' },
+  },
+  {
+    id: 'additivity-forwards-gives-the-same-area-1',
+    knowledgePointId: 'additivity-turns-a-cut-into-a-subtraction',
+    kind: 'evaluate',
+    prompt:
+      'The same cut sheet as the task above, if the piece came out of a corner: it is then two '
+      + 'rectangles, one 6 cm by 6 cm and one 4 cm by 3 cm. Evaluate a*b + c*d at a = 6, b = 6, '
+      + 'c = 4, d = 3 to get its area by assembling it instead of cutting it. Getting 48 again is '
+      + 'the point rather than the arithmetic: additivity read forwards adds the pieces of a '
+      + 'region and read backwards turns a removal into a subtraction, and the two routes have to '
+      + 'agree or it is not a measure. Read it against the-cut-is-a-subtraction-1, which is the '
+      + 'same region by the other route.',
+    given: 'a*b + c*d',
+    variables: REAL_ABCD,
+    // 36 + 12 = 48, the same number the subtraction above gives. The split is
+    // the honest one for a corner cut: cutting the remainder vertically 6 cm
+    // from the uncut side leaves a full-height 6 by 6 and a 4 by 3 beside it.
+    reference: '48',
+    at: { a: '6', b: '6', c: '4', d: '3' },
+  },
+  {
+    id: 'halve-the-matched-pair-1',
+    knowledgePointId: 'a-height-belongs-to-one-base-and-is-usually-no-side',
+    kind: 'evaluate',
+    prompt:
+      'A triangle has sides 13 cm, 14 cm and 15 cm, and the perpendicular height to the 14 cm '
+      + 'side is 12 cm. Evaluate a*b/2 at a = 14, b = 12 to get its area in square centimetres. '
+      + 'The two inputs are the matched pair — a base and the height belonging to THAT base — and '
+      + 'the 13 and the 15 are not in the expression at all. The halving is the step taken as '
+      + 'given: two copies of the triangle make a parallelogram on the same base and height. What '
+      + 'this scores is the arithmetic and not the pairing: a learner who takes 13 as the height '
+      + 'and evaluates the same expression gets 91 and is wrong, but nothing typed here shows '
+      + 'which of the four given lengths you believed belonged together.',
+    given: 'a*b/2',
+    variables: REAL_AB,
+    // 14 · 12 / 2 = 84. Heron on 13, 14, 15: s = 21 and
+    // √(21 · 8 · 7 · 6) = √7056 = 84, so the height is really 2 · 84 / 14 = 12.
+    reference: '84',
+    at: { a: '14', b: '12' },
+  },
+  {
+    id: 'the-same-area-off-a-second-base-1',
+    knowledgePointId: 'a-height-belongs-to-one-base-and-is-usually-no-side',
+    kind: 'evaluate',
+    prompt:
+      'The same triangle on a different base. Evaluate a*b/2 at a = 13, b = 168/13 — the 13 cm '
+      + 'side, with the height belonging to it. Getting 84 again is the content: the area is a '
+      + 'property of the triangle and the three matched pairs are three ways of reading off one '
+      + 'number, not three measurements. The height is a fraction and does not need to be '
+      + 'anything else; it is also less than both 14 and 15, as the shortest-route fact requires. '
+      + 'Read it against halve-the-matched-pair-1, which is the same expression at the other pair.',
+    given: 'a*b/2',
+    variables: REAL_AB,
+    // 13 · (168/13) / 2 = 168/2 = 84. Exact, and deliberately not an integer
+    // height: ½ · 13 · h = 84 forces h = 168/13 ≈ 12.92.
+    reference: '84',
+    at: { a: '13', b: '168/13' },
+  },
+  {
+    id: 'the-notch-cancels-out-of-the-corner-perimeter-1',
+    knowledgePointId: 'neither-measure-decides-the-other',
+    kind: 'evaluate',
+    prompt:
+      'A 10 cm by 6 cm sheet has a 4 cm by 3 cm piece cut out of one CORNER. Walking the boundary '
+      + 'of what is left gives (a − c) + (b − d) + c + d + a + b: the two outer edges shortened by '
+      + 'the cut, then the notch\'s two new edges, then the two edges it did not touch. Evaluate '
+      + 'it at a = 10, b = 6, c = 4, d = 3. The answer is 32, which is the perimeter of the UNCUT '
+      + 'sheet — and the point is that it would have been 2(a + b) for a corner piece of any size, '
+      + 'since the c and the d cancel. A cut that removes area and leaves the perimeter alone is '
+      + 'half of the reason neither measure decides the other.',
+    given: '(a - c) + (b - d) + c + d + a + b',
+    variables: REAL_ABCD,
+    // 6 + 3 + 4 + 3 + 10 + 6 = 32, and the expression is identically 2(a + b),
+    // which is the claim rather than a coincidence of these four numbers. The
+    // same piece taken from the middle of a 10 cm edge gives 38, because both
+    // of its 3 cm sides are added with nothing removed to pay for them.
+    reference: '32',
+    at: { a: '10', b: '6', c: '4', d: '3' },
+  },
+  {
+    id: 'equal-perimeters-left-the-areas-unequal-1',
+    knowledgePointId: 'neither-measure-decides-the-other',
+    kind: 'evaluate',
+    prompt:
+      'A 10 cm by 6 cm rectangle and a 15 cm by 1 cm rectangle both have perimeter 32 cm, since '
+      + '2 × (10 + 6) = 2 × (15 + 1). Evaluate a*b − c*d at a = 10, b = 6, c = 15, d = 1 to '
+      + 'compare their areas. Anything other than 0 says equal perimeters did not make the areas '
+      + 'equal, which is the other direction of the third point — the first is two regions of '
+      + 'equal area whose perimeters differ. Read it against the-cut-is-a-subtraction-1, which is '
+      + 'this same expression measuring one region rather than the gap between two.',
+    given: 'a*b - c*d',
+    variables: REAL_ABCD,
+    // 60 − 15 = 45. Non-zero, so a perimeter does not decide an area — a value
+    // rather than a reading, so the ruling scores the claim itself. It is NOT
+    // identically non-zero: at c = 12, d = 5 it is 0, two rectangles of equal
+    // area, so a learner cannot score this by typing any number at all.
+    reference: '45',
+    at: { a: '10', b: '6', c: '15', d: '1' },
+  },
+
+  // ── geometric-proof ─────────────────────────────────────────────────────
+  //
+  // Six more `evaluate` tasks, across the three points of `geometric-proof`.
+  // Exact rational arithmetic, no worker, as everywhere else in this subject.
+  //
+  // THIS BLOCK IS THE ANSWER TO AN OBJECTION, AND THE OBJECTION IS WHY THE
+  // CONCEPT WAS TWICE LEFT ON THE MAP. `justify` is the natural kind for a node
+  // about proof; it is declared unverifiable in types.ts; the suite refuses to
+  // ship any unverifiable kind; so a justify-only concept has no tasks at all,
+  // and a knowledge point with no task is a chain that cannot become evidence.
+  // Three of those was correctly judged worse than leaving the node mapped.
+  // ontology-geometry.ts argues the way out at length — the figure-free part of
+  // a proof node is the part that is a CLAIM ABOUT CLAIMS, and a claim about
+  // claims is refuted by a value — and these six are what that produces.
+  //
+  // THE PROXY PROBLEM IS THE WIDEST IN THE SUBJECT IN ONE PLACE AND NARROWEST
+  // IN ANOTHER, which is unusual enough to be worth the paragraph.
+  //
+  // Widest in the first point. What that point teaches is the ORDER of three
+  // citations, and an order is not a value — so the task hands over the composed
+  // expression and scores the arithmetic of a chain the learner did not have to
+  // build. That is the congruence block's correspondence problem in a second
+  // form, and it is named in both prompts. What makes it better than that
+  // precedent is that the composite form is itself the content: the given is
+  // written as 180 − 2*(180 − x) rather than as the equivalent 2x − 180, so the
+  // expression a learner reads is the three cited facts in the order they were
+  // cited, and the simplification is the theorem the chain proves.
+  //
+  // Narrowest in the second and third. "A difference of 0 licenses nothing and a
+  // difference of 1 proves non-congruence" is a statement about two values, and
+  // the values are the whole claim rather than a stand-in for it; the same goes
+  // for an angle sum that disqualifies a proposed counterexample. Those four
+  // tasks score what their points are about with nothing held back.
+  //
+  // `counterexample` is the kind the third point really wants and it carries no
+  // tasks anywhere in the build, for the reason at the top of this file. So the
+  // refutation is asked as the two values it reduces to. That is the one real
+  // gap in this block and the concept's third objective says so rather than
+  // naming a kind it cannot serve.
+  //
+  // Two of the six echo expressions from earlier blocks, which is this subject's
+  // habit by now, and in both cases the repetition is the content.
+  // `one-acute-exterior-angle-ends-the-claim-1` is `180 - x`, the same
+  // expression as `co-interior-remainder-1` and
+  // `co-interior-across-the-parallel-pair-1` — the straight-line subtraction,
+  // here deciding a universal claim rather than filling in a figure. And
+  // `a-candidate-that-is-not-a-triangle-refutes-nothing-1` is
+  // `(a + b + c) - 180`, the same expression as `the-third-angle-was-never-
+  // free-1` in `congruence`, doing the opposite job: there it is identically 0
+  // and that makes a point about criteria, here it is non-zero and that
+  // disqualifies an object from being a counterexample at all.
+  {
+    id: 'chain-the-three-cited-facts-1',
+    knowledgePointId: 'a-proof-cites-facts-already-established',
+    kind: 'evaluate',
+    prompt:
+      'In triangle ABC, AB = AC. CB is extended beyond B to D, and the angle ABD is 140°. '
+      + 'Evaluate 180 − 2*(180 − x) at x = 140 to get the angle at A. The expression is the proof '
+      + 'written out: the inner subtraction is the straight line turning the given exterior angle '
+      + 'into the interior angle at B, the doubling is the base-angle theorem making the angle at '
+      + 'C equal to it, and the outer subtraction is the angle sum closing the triangle. It is '
+      + 'deliberately NOT written as the equivalent 2x − 180, because that form is the theorem and '
+      + 'this form is the argument. Note which half of the problem this scores: the arithmetic, '
+      + 'not the order. That those three facts are the ones to cite, and in that sequence, is the '
+      + 'content of the knowledge point, and this prompt has handed it to you already assembled.',
+    given: '180 - 2*(180 - x)',
+    variables: REAL_X,
+    // 180 − 140 = 40 at B, so 40 at C by the base angles, and
+    // 180 − 40 − 40 = 100 at A. Checked the other way: the simplified form
+    // 2x − 180 at x = 140 is 280 − 180 = 100. The expression is an angle of a
+    // real triangle only for x > 90 — at x = 90 it returns 0 — which is the
+    // chain stating its own hypothesis.
+    reference: '100',
+    at: { x: '140' },
+  },
+  {
+    id: 'the-same-chain-from-a-second-exterior-angle-1',
+    knowledgePointId: 'a-proof-cites-facts-already-established',
+    kind: 'evaluate',
+    prompt:
+      'The same triangle and the same chain, with the exterior angle at B given as 110° instead. '
+      + 'Evaluate 180 − 2*(180 − x) at x = 110. Getting a different answer from the task above is '
+      + 'the point rather than the arithmetic: nothing in the chain was rebuilt, so the '
+      + 'conclusion was forced by the citations and not by the first set of numbers — which is '
+      + 'what makes it a proof about every triangle with those givens rather than a measurement '
+      + 'of one. Read it against chain-the-three-cited-facts-1, which is the same expression at '
+      + 'the other input.',
+    given: '180 - 2*(180 - x)',
+    variables: REAL_X,
+    // 180 − 110 = 70 at B and at C, and 180 − 70 − 70 = 40 at A, so
+    // 40 + 70 + 70 = 180. The simplified form 2x − 180 at x = 110 is also 40.
+    reference: '40',
+    at: { x: '110' },
+  },
+  {
+    id: 'the-equal-total-settles-nothing-1',
+    knowledgePointId: 'a-converse-is-a-new-claim-and-a-contrapositive-is-not',
+    kind: 'evaluate',
+    prompt:
+      'It is proved that congruent triangles have equal perimeters. Triangle ABC has sides 5 cm, '
+      + '9 cm and 10 cm, and triangle PQR has 6 cm, 8 cm and 10 cm. Evaluate '
+      + '(a + b + c) − (d + e + f) at a = 5, b = 9, c = 10, d = 6, e = 8, f = 10 to compare their '
+      + 'perimeters. A difference of 0 is the CONVERSE\'s hypothesis holding, and the converse is '
+      + 'not the proved statement — so 0 is precisely the value that licenses nothing. These two '
+      + 'are in fact not congruent, since a congruence would make all three sides match and '
+      + '{5, 9, 10} is not {6, 8, 10}. Read it against the-unequal-total-settles-it-1, which is '
+      + 'the same expression returning a verdict instead of a shrug.',
+    given: '(a + b + c) - (d + e + f)',
+    variables: REAL_ABCDEF,
+    // 24 − 24 = 0. Both triples close: 5 + 9 = 14 > 10 and 6 + 8 = 14 > 10, so
+    // both are real triangles and the pair is a genuine counterexample to the
+    // converse rather than an arithmetic trick.
+    reference: '0',
+    at: { a: '5', b: '9', c: '10', d: '6', e: '8', f: '10' },
+  },
+  {
+    id: 'the-unequal-total-settles-it-1',
+    knowledgePointId: 'a-converse-is-a-new-claim-and-a-contrapositive-is-not',
+    kind: 'evaluate',
+    prompt:
+      'The same proved statement, on triangle PQR with sides 6 cm, 8 cm and 10 cm against '
+      + 'triangle XYZ with 6 cm, 8 cm and 11 cm. Evaluate (a + b + c) − (d + e + f) at a = 6, '
+      + 'b = 8, c = 10, d = 6, e = 8, f = 11. Anything other than 0 proves these two are not '
+      + 'congruent, and that conclusion is the CONTRAPOSITIVE — the proved statement rearranged, '
+      + 'with nothing new proved to get it. One expression, two inputs, and the difference '
+      + 'between the two verdicts is the whole knowledge point: a converse has to be earned and a '
+      + 'contrapositive comes free.',
+    given: '(a + b + c) - (d + e + f)',
+    variables: REAL_ABCDEF,
+    // 24 − 25 = −1. Non-zero, so not congruent, by the contrapositive alone.
+    // Both triples close: 6 + 8 = 14 exceeds 10 and 11 alike. The sign carries
+    // no meaning here beyond "not equal", which is why the task is a difference
+    // rather than a comparison.
+    reference: '-1',
+    at: { a: '6', b: '8', c: '10', d: '6', e: '8', f: '11' },
+  },
+  {
+    id: 'one-acute-exterior-angle-ends-the-claim-1',
+    knowledgePointId: 'one-counterexample-settles-it-if-it-meets-the-hypothesis',
+    kind: 'evaluate',
+    prompt:
+      'Somebody claims that every exterior angle of a triangle is obtuse. Take the triangle with '
+      + 'angles 100°, 40° and 40°, and evaluate 180 − x at x = 100 to get the exterior angle at '
+      + 'its largest vertex. An answer below 90 refutes the claim outright, because the claim was '
+      + 'made of EVERY exterior angle and one failure is enough. The other two vertices of this '
+      + 'same triangle give 140° each, both obtuse, and they add nothing at all — a universal '
+      + 'claim is not partly true once it has failed once, and that asymmetry between refuting '
+      + 'and confirming is why proof exists. Compare co-interior-remainder-1: the same '
+      + 'subtraction, there filling in a figure and here deciding a claim.',
+    given: '180 - x',
+    variables: REAL_X,
+    // 180 − 100 = 80, acute, so the claim is false. The triangle is real:
+    // 100 + 40 + 40 = 180. The repaired claim — at most one exterior angle is
+    // not obtuse — holds, since at most one of a triangle's angles is 90° or
+    // more, which is `at-most-one-angle-is-not-acute` in triangle-basics.
+    reference: '80',
+    at: { x: '100' },
+  },
+  {
+    id: 'a-candidate-that-is-not-a-triangle-refutes-nothing-1',
+    knowledgePointId: 'one-counterexample-settles-it-if-it-meets-the-hypothesis',
+    kind: 'evaluate',
+    prompt:
+      'A second candidate is offered against the same claim: angles of 100°, 50° and 40°, whose '
+      + 'exterior angle at the first vertex is also 80°. Evaluate (a + b + c) − 180 at a = 100, '
+      + 'b = 50, c = 40 BEFORE using it. Anything other than 0 says the three angles do not close '
+      + 'a triangle, so no such triangle exists and it cannot refute a claim about triangles '
+      + 'however its arithmetic comes out. This is the better of the two tasks on this point: the '
+      + 'object looks like a counterexample and produces the same 80° as the real one. Read it '
+      + 'against the-third-angle-was-never-free-1 in congruence, which is this expression '
+      + 'identically 0 for any genuine triangle — there the 0 makes a point about criteria, here '
+      + 'the non-zero disqualifies an object from being evidence.',
+    given: '(a + b + c) - 180',
+    variables: REAL_ABC,
+    // 190 − 180 = 10. Non-zero, so the candidate fails the claim's hypothesis
+    // and refutes nothing. The task is the hypothesis check rather than the
+    // refutation, which is the order the knowledge point insists on.
+    reference: '10',
+    at: { a: '100', b: '50', c: '40' },
   },
 
   // ── functions-and-inverses ──────────────────────────────────────────────

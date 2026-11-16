@@ -192,14 +192,29 @@ const CONCEPTS: Concept[] = [
             {
               label: 'What pair am I looking for?',
               detail: 'Two numbers whose product is the constant −15 and whose sum is −2.',
+              socratic:
+                'You have expanded a pair of brackets before, so run that backwards. If ' +
+                'x² − 2x − 15 came from two brackets, the −15 was produced by one part of ' +
+                'that expansion and the −2x by another. Which part produced each, and so ' +
+                'what two things does the pair of numbers have to do at once?',
             },
             {
               label: 'Walk the factor pairs of −15',
               detail: '(1, −15) sums to −14. (−1, 15) sums to 14. (3, −5) sums to −2 — that is the pair.',
+              socratic:
+                'A product of −15 is negative, which can only happen when the two numbers ' +
+                'have opposite signs — and that is why (1, −15) and (−1, 15) are two ' +
+                'candidates rather than one. Go along the pairs that multiply to −15: what ' +
+                'rules each one out, until one of them is not ruled out?',
             },
             {
               label: 'Write the factors',
               detail: 'x² − 2x − 15 = (x + 3)(x − 5). Expanding it back is the check.',
+              socratic:
+                'The pair is not the answer yet — the two numbers still have to be placed. ' +
+                'Where does each of them sit in the brackets, sign and all, and what could ' +
+                'you then do to the brackets you have written that would tell you, without ' +
+                'being told, whether you have it right?',
             },
           ],
           answer: '(x + 3)(x − 5)',

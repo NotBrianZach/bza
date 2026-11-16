@@ -54,23 +54,27 @@ Verified 2026-11-15: `systemctl --user list-timers --all` has no overage
 timer; the six timers present are poincare-sync, templedb-{ingest,backup,
 reconcile,agent-tick} and systemd-tmpfiles-clean.
 
-## 2. Authored material reaches git but never reaches the site
+## 2. Who takes authored mathematics the rest of the way — DECISION NEEDED
 
-`/api/version` reported sha `1E37435688575ABE` built 2026-11-14T15:28Z while
-three later authoring commits sat in git HEAD. The concept tasks are
-policy=commit and forbidden to publish — correct, because a model must not
-ship unreviewed mathematics — but no step ever takes reviewed work the rest of
-the way, so output accumulates invisibly.
+The concept tasks are policy=commit and forbidden to publish, which is right:
+a model must not ship unreviewed mathematics. Nothing schedules a deploy
+either, so every release is a human at a keyboard, and what reaches learners
+is whatever that human's attention reaches. No cadence has ever been agreed.
 
-This is a process gap, not a bug, and the fix is a decision about who reviews
-and when. Do not resolve it by giving an autonomous task publish rights.
+What needs deciding is who reviews authored material and how often — not
+whether the restriction stays. Do not resolve it by giving an autonomous task
+publish rights.
 
-What would help regardless of that decision: make the drift legible. The
-number of commits between `/api/version`'s sha and HEAD is a one-line check
-and nothing currently reports it.
+Verified 2026-11-16: `deployment_history` rows 413–420 are all
+`triggered_by=manual`, `deployed_by=zach`; `systemctl --user list-timers
+--all` has no deploy timer. The gap is real but bounded, not an outage —
+production was 3 commits and 13 hours behind head when this was checked, all
+three authoring commits, and the previous deploy (2026-11-16T00:36Z) had
+shipped an authoring commit 28 minutes after it landed.
 
-Verified 2026-11-15: curl of `/api/version` against `vcs_commits` ordered by
-`commit_timestamp`.
+The reporting half of this item is closed: `bash scripts/verify-live-sha.sh`
+now prints the gap as a count plus the missing subjects, so "how far behind is
+production" is one command rather than a manual sha comparison.
 
 ## 3. `right-triangle-trig` would open a one-concept subject — DECISION NEEDED
 
@@ -99,7 +103,32 @@ respectively; see `frontend/lib/concepts/atlas-foundations.ts`), and
 concept is reachable with headroom. The one-concept-subject question is
 untouched by that and still needs a human answer.
 
-## 4. Confirm the lint baseline
+## 4. `scripts/deploy.sh` will abort before deploying once the log grows
+
+Line ~47 reads the head sha as `printf '%s\n' "$LOG" | awk '/^commit / {print
+$2; exit}'`. awk's `exit` closes the pipe while printf is still writing, printf
+takes SIGPIPE, and `set -o pipefail` turns that into exit 141 on the
+assignment — which under `set -e` ends the script *before* `templedb deploy
+project` runs. A deploy that never starts and prints nothing.
+
+It only survives because a 10-commit log still fits in the 64KB pipe buffer.
+The fix is the one already applied in `verify-live-sha.sh`: drop the early
+`exit` and guard with a flag, `awk '/^commit / && !seen {print $2; seen = 1}'`.
+Reading a string already in memory to EOF costs nothing.
+
+Check `deploy_bza_web.sh:155` in the same pass but expect no change needed:
+`grep -m1 | cut` has already emitted the sha by the time printf dies, the
+pipeline's status is `cut`'s, and that script sets no `pipefail` — so the
+comment above it describing an empty-sha failure appears to be wrong about its
+own code. Confirm before touching it.
+
+Verified 2026-11-16: `templedb vcs log bza --all-sessions` is 41908 bytes
+today, 65% of the buffer, and mean message size is ~2.9KB. The identical
+construct in `verify-live-sha.sh` did fail this way at 578KB (`-n 200`) while
+closing item 2 — exit 141, no output at all, which is what makes it hard to
+read as a deploy problem.
+
+## 5. Confirm the lint baseline
 
 Recorded baseline is 0 errors and 47 `react-hooks/exhaustive-deps` warnings,
 with `typescript.ignoreBuildErrors: false` and `.eslintrc.json` both live, so

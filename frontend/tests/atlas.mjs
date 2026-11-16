@@ -43,6 +43,11 @@ function build() {
     join('lib', 'concepts', 'ontology.ts'),
     join('lib', 'concepts', 'registry.ts'),
     join('lib', 'concepts', 'offerings.ts'),
+    // probe.ts is tested HERE rather than in concepts-logic.mjs because its
+    // material is the COMPOSED atlas. Most `interferes_with` edges arrive from
+    // map nodes' `confusedWith` during composeAtlas, so a single authored
+    // ontology does not have the edges a probe is built from.
+    join('lib', 'concepts', 'probe.ts'),
   ]
   try {
     execFileSync(process.execPath, [
@@ -79,6 +84,9 @@ const {
 const { ONTOLOGIES } = ontology
 const offerings = req(join(outDir, 'concepts', 'offerings.js'))
 const { conceptsInOffering, relatedConcepts, conceptHref } = offerings
+const {
+  probesFor, probesAcross, probeContext, probePrompt, probeNudgePrompt,
+} = req(join(outDir, 'concepts', 'probe.js'))
 /*
  * `tasks.js` is not in `entries` and is emitted anyway, because offerings.ts
  * now imports `isPractisable` from it and tsc follows imports. Required here
@@ -983,15 +991,16 @@ t('and everything that depended on it still does',
   dependentsOf(MATHEMATICS, 'quadratic-formula').join(', '))
 
 /**
- * SIX NODES WERE PROMOTED OUT OF THIS AREA — FOUR OF THEM THE CHEAPEST KIND
+ * SEVEN NODES WERE PROMOTED OUT OF THIS AREA — FIVE OF THEM THE CHEAPEST KIND
  * THE ATLAS HAS, AND TWO OF THEM THE KIND THAT ENDED THE FIRST RUN OF THEM.
  *
  * `points-lines-angles`, `triangle-basics`, `congruence`, `similarity`,
- * `pythagoras` and `quadrilaterals-and-polygons` were the first six nodes of
- * `euclidean-geometry` and are now the six concepts of `plane-geometry`. The
- * assertions above already cover the collision half of all six moves —
- * `shippedAtlasProblems` would name any node that had been left behind — and
- * the rootless half, by naming the angle facts in `AUTHORED_ROOTS`.
+ * `pythagoras`, `quadrilaterals-and-polygons` and `area-and-perimeter` were
+ * the first seven nodes of `euclidean-geometry` and are now the seven concepts
+ * of `plane-geometry`. The assertions above already cover the collision half of
+ * all seven moves — `shippedAtlasProblems` would name any node that had been
+ * left behind — and the rootless half, by naming the angle facts in
+ * `AUTHORED_ROOTS`.
  *
  * What is asserted here is where each promotion's stranded edges went, because
  * that is the part that varied:
@@ -1043,6 +1052,17 @@ t('and everything that depended on it still does',
  *   prerequisites LIVE and not of the branch being walked upward in order,
  *   which the run of three had made easy to conflate.
  *
+ *   `area-and-perimeter` IS THE CHEAP CASE WITH TWO EDGES, which is a shape
+ *   neither of the two above produced and is what settles what "cheap"
+ *   measures. It declared `['quadrilaterals-and-polygons', 'triangle-basics']`
+ *   and both were already concepts of `plane-geometry`, so both stranded edges
+ *   went to `PLANE_GEOMETRY.edges` and this area's `links` needed no entry.
+ *   Every cheap promotion before it had ONE `needs` and every expensive one
+ *   had two that split, so the list length and the expense had moved together
+ *   by coincidence. They are independent: what costs a `links` entry is an
+ *   endpoint outside the ontology the node is joining, however many endpoints
+ *   there are.
+ *
  *   `pythagoras`'s reason for not following differs from `ratio-and-rate`'s,
  *   and that is the distinction the assertion below is written to hold.
  *   `ratio-and-rate` is an unwritten map node, so it has no ontology to live
@@ -1073,9 +1093,9 @@ t('and everything that depended on it still does',
 const EUCLID = AREAS.find(a => a.id === 'euclidean-geometry')
 const DEPARTED = [
   'points-lines-angles', 'triangle-basics', 'congruence', 'similarity', 'pythagoras',
-  'quadrilaterals-and-polygons',
+  'quadrilaterals-and-polygons', 'area-and-perimeter', 'geometric-proof',
 ]
-t('the area no longer declares any of the six, and each carries its own subject',
+t('the area no longer declares any of the eight, and each carries its own subject',
   DEPARTED.every(id =>
     EUCLID.nodes.every(n => n.id !== id) && areaOf(MATHEMATICS, id) === 'plane-geometry'),
   DEPARTED.map(id => `${id}:${areaOf(MATHEMATICS, id)}`).join(' '))
@@ -1244,9 +1264,103 @@ t('and what rests on the polygons is now gated by them, alongside the triangles 
   gatingPrerequisitesOf(MATHEMATICS, 'area-and-perimeter').includes('quadrilaterals-and-polygons')
   && gatingPrerequisitesOf(MATHEMATICS, 'area-and-perimeter').includes('triangle-basics'),
   gatingPrerequisitesOf(MATHEMATICS, 'area-and-perimeter').join(', '))
-t('all six promoted concepts are teachable in the composed map, with their material intact',
+/*
+ * The seventh promotion moved the gate for one node again — `circle-measure`
+ * is `area-and-perimeter`'s only dependent anywhere in the atlas — and it did
+ * it in a shape no promotion here has produced before, which is the reason
+ * this is two assertions rather than one.
+ *
+ * Every tightening above ADDED a concept to its dependents' gating sets: the
+ * walk used to pass through an empty node and now stops at a real one, so
+ * there is one more thing to demonstrate. Here the set got SMALLER, from four
+ * to three. Before, the walk looked through this node and collected BOTH of
+ * its prerequisites, `quadrilaterals-and-polygons` and `triangle-basics`;
+ * now it stops at the node itself, which sits above both of them. One
+ * demonstration has replaced two.
+ *
+ * That is a tighter gate and not a looser one, and the distinction matters
+ * because a count would read it the wrong way round. `gatingPrerequisitesOf`
+ * names the NEAREST teachable ancestors, so a shorter list means the gate is
+ * closer to the thing being gated — mastery of the polygons and the triangles
+ * no longer licenses circular measure on its own, since the concept standing
+ * between them now has to be demonstrated too. Both halves are asserted: the
+ * one that arrived, and the two that stopped being named directly.
+ *
+ * The other half of `circle-measure`'s pair is untouched BY THAT PROMOTION:
+ * `circles` is unwritten, so the walk still passes through it to whatever is
+ * nearest behind it — which was `congruence` and `pythagoras` at the time.
+ *
+ * THE EIGHTH PROMOTION THEN MOVED THAT HALF WITHOUT TOUCHING THE NODE, and it
+ * is the most useful thing in this group because it is a gate changing at a
+ * distance of two. `circles` needs `geometric-proof` and `pythagoras`;
+ * `geometric-proof` was empty, so the walk went straight past it to
+ * `congruence` one step further down. Now it stops there. So
+ * `circle-measure`'s gating set went from `area-and-perimeter`, `congruence`,
+ * `pythagoras` to `area-and-perimeter`, `geometric-proof`, `pythagoras` —
+ * three members before and three after, with different membership, and
+ * `circle-measure` is two edges away from the concept that was authored.
+ *
+ * That is the fourth time a set in this file has turned over without changing
+ * size, and the first time it happened to a node neither endpoint of the
+ * promoted edge. A `length === 3` check would have passed while every claim it
+ * made had moved up a step.
+ */
+t('what rests on area and perimeter still names it after the rehoming, across the file boundary',
+  prerequisitesOf(MATHEMATICS, 'circle-measure').includes('area-and-perimeter')
+  && prerequisitesOf(MATHEMATICS, 'circle-measure').includes('circles'),
+  prerequisitesOf(MATHEMATICS, 'circle-measure').join(', '))
+t('and the gate it moved SHRANK the set, by standing in for the two concepts below it',
+  gatingPrerequisitesOf(MATHEMATICS, 'circle-measure').slice().sort().join(',')
+    === 'area-and-perimeter,geometric-proof,pythagoras'
+  && !isTeachable(MATHEMATICS, 'circles'),
+  gatingPrerequisitesOf(MATHEMATICS, 'circle-measure').join(', '))
+t('and the eighth promotion then moved the other half of that pair from two edges away',
+  gatingPrerequisitesOf(MATHEMATICS, 'circle-measure').includes('geometric-proof')
+  && !gatingPrerequisitesOf(MATHEMATICS, 'circle-measure').includes('congruence')
+  && prerequisitesOf(MATHEMATICS, 'circles').includes('geometric-proof')
+  && !prerequisitesOf(MATHEMATICS, 'circle-measure').includes('geometric-proof'),
+  gatingPrerequisitesOf(MATHEMATICS, 'circle-measure').join(', '))
+t('all eight promoted concepts are teachable in the composed map, with their material intact',
   DEPARTED.every(id => isTeachable(MATHEMATICS, id) && isPractisable(MATHEMATICS, id)),
   DEPARTED.filter(id => !isTeachable(MATHEMATICS, id) || !isPractisable(MATHEMATICS, id)).join(', '))
+/*
+ * The eighth promotion's gate, and it is the widest fan-out any promotion out
+ * of this area has moved — four dependents, two of them in other atlas FILES.
+ *
+ * `circles` and `non-euclidean-geometry` are here; `mathematical-induction` is
+ * a node of `sequences-and-series` and `propositional-logic` of
+ * `discrete-mathematics`, and both name `geometric-proof` in their own `needs`
+ * while atlas-structures.ts argues at length that the geometry is the real
+ * entry point to proof and the logic is the second pass. None of the four
+ * edges was touched, because an edge is owned by the node that DECLARES it, and
+ * all four stayed. So this assertion is the edge rule working across three
+ * separate map files at once, which no previous promotion here has needed.
+ *
+ * `circles` is the one whose gate actually changes. It has had `pythagoras`
+ * since the fifth promotion and the walk was still looking straight through
+ * this half of its pair, so this is the partly-live case the sixth promotion
+ * recorded for `area-and-perimeter` — both halves named, because a test asking
+ * only "is it gated by something" would have passed before and after.
+ */
+t('and what rests on deductive proof is now gated by it, across three map files',
+  ['circles', 'non-euclidean-geometry', 'mathematical-induction', 'propositional-logic']
+    .every(id => gatingPrerequisitesOf(MATHEMATICS, id).includes('geometric-proof')),
+  ['circles', 'non-euclidean-geometry', 'mathematical-induction', 'propositional-logic']
+    .map(id => `${id}:[${gatingPrerequisitesOf(MATHEMATICS, id).join(' ')}]`).join(' '))
+/*
+ * And `circles` now has both halves of its pair authored, which is the first
+ * node in this area for which that is true. Its gating set is therefore exactly
+ * its own two prerequisites, with nothing collected from below either of them —
+ * the tightest a gate can be. Asserted by named membership rather than by
+ * length, for the reason the root set is: a set of two can turn over completely
+ * without the count moving.
+ */
+t('so circles is gated by exactly its own pair, with nothing collected from beneath them',
+  gatingPrerequisitesOf(MATHEMATICS, 'circles').slice().sort().join(',')
+    === 'geometric-proof,pythagoras'
+  && prerequisitesOf(MATHEMATICS, 'circles').slice().sort().join(',')
+    === 'geometric-proof,pythagoras',
+  gatingPrerequisitesOf(MATHEMATICS, 'circles').join(', '))
 /*
  * The area's own root walks upward as the branch is authored. It was the
  * triangles after the first promotion and `congruence` after the second, and
@@ -1322,31 +1436,121 @@ t('the area viewed alone shows exactly the nodes whose prerequisites have all le
  * promotion demonstrated, this time produced by a merge instead of a
  * departure.
  */
-t('and after the sixth promotion the three synthetic roots are still the SUBSTITUTED set',
-  ['area-and-perimeter', 'geometric-proof', 'isometries-and-symmetry']
-    .every(id => euclidRoots.includes(id))
-  && !euclidRoots.includes('quadrilaterals-and-polygons'),
+/*
+ * THE SEVENTH PROMOTION THEN SHRANK IT AGAIN, from six to five, which is the
+ * fifth promotion's shape reproduced exactly and the fourth distinct thing to
+ * happen to this set.
+ *
+ * `area-and-perimeter` left and nothing replaced it. The node resting on it is
+ * `circle-measure`, which did not become a root because its other
+ * prerequisite, `circles`, is in this area and still gates it from inside —
+ * the same rule, and the same reason, as `circles` itself not joining when
+ * `pythagoras` left. Two of the six members asserted below have now come and
+ * gone while the set changed size three times, so the only claim worth holding
+ * is the named one.
+ *
+ * The substitution the sixth promotion made is no longer assertable as a
+ * membership claim, because the node it substituted IN has itself been
+ * promoted out. What survives of it is the shape — one left, one joined,
+ * neither of them `quadrilaterals-and-polygons` — and the record of it is in
+ * the comments here and in atlas-foundations.ts. Asserting that
+ * `area-and-perimeter` is still a root would now be asserting that this
+ * promotion did not happen.
+ */
+/*
+ * THE EIGHTH PROMOTION THEN SUBSTITUTED, five to five, which is the fourth
+ * turnover and the one that CLOSES the rule rather than illustrating it again.
+ *
+ * `geometric-proof` left and `circles` took its place, because the departing
+ * node was the LAST of `circles`'s prerequisites inside the area — its other
+ * one, `pythagoras`, has been gone since the fifth. And `circles` is the node
+ * the fifth promotion's own note is built around: it did NOT join the set then,
+ * and the reason recorded was that `geometric-proof` was still here to gate it
+ * from inside. So both halves of the rule are now demonstrated on ONE node,
+ * held back while a prerequisite remained and a root the moment it left, which
+ * is stronger evidence than two different nodes showing the two outcomes.
+ *
+ * Three of the five members asserted below have now come and gone while the set
+ * changed size four times. The named claim is the only one worth holding.
+ */
+t('neither the sixth nor the seventh promotion\'s own node is a root of the area any more',
+  !euclidRoots.includes('quadrilaterals-and-polygons')
+  && !euclidRoots.includes('area-and-perimeter')
+  && !euclidRoots.includes('geometric-proof')
+  && euclidRoots.includes('isometries-and-symmetry'),
   euclidRoots.join(', '))
-t('and the merge doubled the set to six, by named membership and never by count',
+t('so the set is five, by named membership and never by count',
   euclidRoots.slice().sort().join(',')
-  === 'area-and-perimeter,distance-and-midpoint,dot-product-geometry,geometric-proof,'
+  === 'circles,distance-and-midpoint,dot-product-geometry,'
     + 'isometries-and-symmetry,plane-transformations',
   euclidRoots.join(', '))
+t('and circles joined it because the eighth promotion took its last prerequisite out of the area',
+  EUCLID.nodes.some(n => n.id === 'circles'
+    && (n.needs ?? []).includes('geometric-proof')
+    && (n.needs ?? []).includes('pythagoras')
+    && (n.needs ?? []).every(p => EUCLID.nodes.every(m => m.id !== p)))
+  && euclidRoots.includes('circles'),
+  (EUCLID.nodes.find(n => n.id === 'circles')?.needs ?? []).join(', '))
 t('while three-dimensional-coordinates is held back from inside by the solids, which the merge brought into the same area',
   EUCLID.nodes.some(n => n.id === 'three-dimensional-coordinates'
     && (n.needs ?? []).includes('solid-geometry'))
   && EUCLID.nodes.some(n => n.id === 'solid-geometry')
   && !euclidRoots.includes('three-dimensional-coordinates'),
   (EUCLID.nodes.find(n => n.id === 'three-dimensional-coordinates')?.needs ?? []).join(', '))
-t('and area-and-perimeter joined it because the polygons were its last prerequisite in the area',
-  (EUCLID.nodes.find(n => n.id === 'area-and-perimeter')?.needs ?? [])
-    .every(p => EUCLID.nodes.every(m => m.id !== p)),
-  (EUCLID.nodes.find(n => n.id === 'area-and-perimeter')?.needs ?? []).join(', '))
-t('while circles is still held back from it by geometric-proof, which is why the fifth SHRANK the set',
-  EUCLID.nodes.some(n => n.id === 'circles' && (n.needs ?? []).includes('geometric-proof'))
-  && EUCLID.nodes.some(n => n.id === 'geometric-proof')
-  && !euclidRoots.includes('circles'),
-  (EUCLID.nodes.find(n => n.id === 'circles')?.needs ?? []).join(', '))
+/*
+ * The replacement for "area-and-perimeter joined it because the polygons were
+ * its last prerequisite in the area", which the seventh promotion made
+ * unassertable — and worse than unassertable. Written as
+ * `(find(...)?.needs ?? []).every(...)`, that check goes VACUOUSLY TRUE the
+ * moment the node stops being in the area, because `every` on an empty list
+ * holds. So it would have kept passing while making a claim about a node that
+ * is not there, which is the failure mode the named-membership rule above
+ * exists to prevent and which an optional-chained lookup reintroduces.
+ *
+ * What is asserted instead is the same rule at the node that now shows it:
+ * `circle-measure` is held back from the root set from INSIDE, by `circles`,
+ * exactly as `circles` is by `geometric-proof`. Both halves need the node to
+ * really be in the area, so neither can go vacuous.
+ */
+t('and circle-measure is held back from the set by circles, which is still in the area',
+  EUCLID.nodes.some(n => n.id === 'circle-measure'
+    && (n.needs ?? []).includes('circles')
+    && (n.needs ?? []).includes('area-and-perimeter'))
+  && EUCLID.nodes.some(n => n.id === 'circles')
+  && !euclidRoots.includes('circle-measure'),
+  (EUCLID.nodes.find(n => n.id === 'circle-measure')?.needs ?? []).join(', '))
+t('and its other prerequisite has left the area entirely, so only one thing is holding it',
+  (EUCLID.nodes.find(n => n.id === 'circle-measure')?.needs ?? [])
+    .filter(p => EUCLID.nodes.some(m => m.id === p)).join(',') === 'circles',
+  (EUCLID.nodes.find(n => n.id === 'circle-measure')?.needs ?? [])
+    .filter(p => EUCLID.nodes.some(m => m.id === p)).join(', '))
+/*
+ * The replacement for "circles is still held back from inside by
+ * geometric-proof", which the eighth promotion made false rather than merely
+ * unassertable — `circles` is a root now, and that claim was the fifth
+ * promotion's whole explanation of why it was not. Replaced rather than
+ * deleted, and for the same reason the seventh promotion's was: written with an
+ * optional-chained lookup it would have gone VACUOUSLY TRUE once the node it
+ * names left the area, so the loss would have been silent.
+ *
+ * The same rule now shows at `non-euclidean-geometry`, which needs
+ * `geometric-proof` and `circles` and is held back from the root set by the
+ * second of those. Both halves need the node to really be in the area, so
+ * neither can go vacuous — and it is the node that takes over the role
+ * `circles` played for three promotions.
+ */
+t('while non-euclidean-geometry is held back from the set by circles, which is still in the area',
+  EUCLID.nodes.some(n => n.id === 'non-euclidean-geometry'
+    && (n.needs ?? []).includes('circles')
+    && (n.needs ?? []).includes('geometric-proof'))
+  && EUCLID.nodes.some(n => n.id === 'circles')
+  && !euclidRoots.includes('non-euclidean-geometry'),
+  (EUCLID.nodes.find(n => n.id === 'non-euclidean-geometry')?.needs ?? []).join(', '))
+t('and its other prerequisite has left the area entirely, so only one thing holds it',
+  (EUCLID.nodes.find(n => n.id === 'non-euclidean-geometry')?.needs ?? [])
+    .filter(p => EUCLID.nodes.some(m => m.id === p)).join(',') === 'circles',
+  (EUCLID.nodes.find(n => n.id === 'non-euclidean-geometry')?.needs ?? [])
+    .filter(p => EUCLID.nodes.some(m => m.id === p)).join(', '))
 t('and the departed nodes are not roots of it, because they are not in it',
   euclidRoots.every(id => !DEPARTED.includes(id)),
   euclidRoots.join(', '))
@@ -1585,8 +1789,26 @@ const ROUTE_STILL_UNWRITTEN = {
   'algebra-foundations': [
     'ratio-and-rate', 'linear-equations', 'systems-of-linear-equations',
   ],
+  /*
+   * `area-and-perimeter` was the seventh entry here and `geometric-proof` was
+   * the first; both are authored now, so both have been removed — which is the
+   * table being cashed in rather than corrected. The first assertion in each
+   * pair requires every id named to be an unwritten NODE of its area, so
+   * leaving either in would have failed loudly, exactly as the comment above
+   * says it should. The budget moved as predicted both times: the area is two
+   * nodes smaller and owes two concepts fewer, so the slack is unchanged at
+   * five.
+   *
+   * What the second removal changed is not the arithmetic but the SHAPE of what
+   * is left. `geometric-proof` was the sole remaining blocker of `circles`, and
+   * every other entry below stands behind `circles` — `circle-measure` needs
+   * it, `solid-geometry` needs that, `three-dimensional-coordinates` needs
+   * that. So this area went from one writable concept and four unreachable ones
+   * to a chain with its bottom link open, and `circles` is now a root of the
+   * area, which is asserted by name in the group above.
+   */
   'euclidean-geometry': [
-    'geometric-proof', 'area-and-perimeter', 'circles', 'circle-measure', 'solid-geometry',
+    'circles', 'circle-measure', 'solid-geometry',
     'dot-product-geometry', 'three-dimensional-coordinates',
   ],
   trigonometry: ['right-triangle-trig'],
@@ -1819,6 +2041,109 @@ for (const [title] of TITLES) {
 }
 t('no title in the table matches more than four concepts',
   TITLES.every(([title]) => conceptsInOffering(MATHEMATICS, thm(title)).length <= 4))
+
+group('probe mode — the same answer-blindness guarantee, against a different answer')
+
+/*
+ * A probe's answer is not a step's `establishes`, it is the EDGE's `rationale`.
+ * "Cancelling is legal across a product and illegal across a sum" IS the
+ * discriminating sentence for that interference, and a model holding it writes
+ * it into the question — so `ProbeContext` must be incapable of carrying one,
+ * exactly as `SocraticContext` is incapable of carrying `establishes`.
+ *
+ * Checked over every probe against every rationale in the graph rather than
+ * against the matching edge's own, because the failure worth catching is a
+ * context that picked up authored prose from anywhere.
+ */
+const ALL_PROBES = probesAcross(MATHEMATICS, MATHEMATICS.concepts.map(c => c.id))
+const ALL_RATIONALES = MATHEMATICS.edges.map(e => e.rationale).filter(Boolean)
+
+t('there are probes to ask at all, or the mode is decoration',
+  ALL_PROBES.length > 50, `${ALL_PROBES.length}`)
+t('all three kinds are represented',
+  new Set(ALL_PROBES.map(p => p.kind)).size === 3,
+  [...new Set(ALL_PROBES.map(p => p.kind))].join(', '))
+t('probeContext never contains any edge rationale',
+  ALL_PROBES.every(p => {
+    const ctx = probeContext(MATHEMATICS, p)
+    if (!ctx) return false
+    const blob = JSON.stringify(ctx)
+    return ALL_RATIONALES.every(r => !blob.includes(r))
+  }))
+t('and carries no field by that name, however it got there',
+  ALL_PROBES.every(p => {
+    const ctx = probeContext(MATHEMATICS, p)
+    return !('rationale' in ctx) && !('because' in ctx)
+  }))
+t('every probe names two different concepts',
+  ALL_PROBES.every(p => p.anchorId !== p.otherId))
+t('both ends are teachable, so neither side of the question is an empty shell',
+  ALL_PROBES.every(p => isTeachable(MATHEMATICS, p.anchorId)
+    && isTeachable(MATHEMATICS, p.otherId)))
+t('an unknown concept yields nothing rather than throwing',
+  probesFor(MATHEMATICS, 'no-such-concept').length === 0)
+t('probeContext refuses a target naming an unknown concept',
+  probeContext(MATHEMATICS, { kind: 'boundary', anchorId: 'no-such', otherId: 'nor-this' }) === null)
+t('probesAcross deduplicates, so one edge is not asked twice in a round',
+  new Set(ALL_PROBES.map(p => `${p.kind}:${p.anchorId}:${p.otherId}`)).size === ALL_PROBES.length)
+
+/*
+ * The prompt's discipline, as string checks — which is the right shape here.
+ * The guarantee is that these specific sentences reach the model, so a reworded
+ * prompt that drops one is precisely the regression worth failing on.
+ */
+const PROBE_SAMPLE = probePrompt(probeContext(MATHEMATICS, ALL_PROBES[0]), 'algebra')
+t('the probe prompt forbids answering its own question',
+  PROBE_SAMPLE.system.includes('do not answer it'))
+t('it forbids marking, since a probe records nothing either',
+  PROBE_SAMPLE.system.includes('Never say or imply whether the learner is right'))
+t('it tells the model the discriminating sentence was withheld on purpose',
+  PROBE_SAMPLE.system.includes('withheld from you'))
+t('it forbids multiple choice, which would contain the answer',
+  PROBE_SAMPLE.system.includes('multiple-choice'))
+t('it steers at the mathematics rather than at this app\'s curriculum',
+  PROBE_SAMPLE.system.includes('never about this app'))
+t('it says plainly that this is NOT a derivation walk',
+  PROBE_SAMPLE.system.includes('NOT walking them through a derivation'))
+t('each kind gets its own instruction rather than one generic one',
+  new Set(['boundary', 'generalisation', 'necessity'].map(k => {
+    const p = ALL_PROBES.find(x => x.kind === k)
+    return probePrompt(probeContext(MATHEMATICS, p)).system
+  })).size === 3)
+
+/*
+ * The reply turn is the other place a rationale could reach the model, and the
+ * likelier one: it carries the learner's words and the question already asked,
+ * so it has two extra strings in it that the first turn does not.
+ */
+const NUDGE_CTX = probeContext(MATHEMATICS, ALL_PROBES[0])
+const NUDGE_ANSWERED = probeNudgePrompt(NUDGE_CTX, 'What decides it?', 'I think you cancel.')
+const NUDGE_STUCK = probeNudgePrompt(NUDGE_CTX, 'What decides it?', '')
+
+t('the nudge prompt leaks no rationale either',
+  ALL_PROBES.every(p => {
+    const ctx = probeContext(MATHEMATICS, p)
+    const blob = JSON.stringify(probeNudgePrompt(ctx, 'asked?', 'said'))
+    return ALL_RATIONALES.every(r => !blob.includes(r))
+  }))
+t('it carries what was asked, so the follow-up pushes the same boundary',
+  NUDGE_ANSWERED.user.includes('What decides it?'))
+t('it carries the learner\'s own words',
+  NUDGE_ANSWERED.user.includes('I think you cancel'))
+t('answered and stuck are different asks, not one with a blank in it',
+  NUDGE_ANSWERED.system !== NUDGE_STUCK.system)
+t('the stuck branch says so rather than sending an empty answer',
+  NUDGE_STUCK.user.includes('LEARNER SAID NOTHING'))
+t('the answered branch is told not to say they were right',
+  NUDGE_ANSWERED.system.includes('do not tell them they were right'))
+t('the stuck branch is told a smaller question is not a reworded one',
+  NUDGE_STUCK.system.includes('a smaller question is a different question'))
+t('both keep the floor that forbids marking',
+  [NUDGE_ANSWERED, NUDGE_STUCK].every(p =>
+    p.system.includes('Never say or imply whether the learner is right')))
+t('a pasted scratchpad is capped rather than sent whole',
+  probeNudgePrompt(NUDGE_CTX, 'asked?', 'x'.repeat(5000)).user.includes('x'.repeat(1200))
+  && !probeNudgePrompt(NUDGE_CTX, 'asked?', 'x'.repeat(5000)).user.includes('x'.repeat(1201)))
 
 console.log('\nrecognition coverage')
 console.log(`  ${checkedNodes.length} of ${MATHEMATICS.concepts.length} concepts can be recognised from a title`)

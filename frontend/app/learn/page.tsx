@@ -21,6 +21,7 @@ import PracticePanel, { type PracticeTaskView } from '@/components/concepts/Prac
 import ReviewQueue from '@/components/concepts/ReviewQueue'
 import RpnCalculator from '@/components/concepts/RpnCalculator'
 import SocraticWalk from '@/components/concepts/SocraticWalk'
+import ProbePanel from '@/components/concepts/ProbePanel'
 import Scratchpad, { type ScratchpadHandle } from '@/components/concepts/Scratchpad'
 import TraversalMap, { type TraversalView } from '@/components/concepts/TraversalMap'
 
@@ -43,6 +44,8 @@ export const dynamic = 'force-dynamic'
  */
 
 type Tab = 'practice' | 'concepts' | 'review' | 'tutor' | 'tools'
+/** Which question the Tutor tab asks. See the toggle for why both exist. */
+type TutorMode = 'walk' | 'probe'
 
 /**
  * Display names for every subject in the composed atlas — the mapped areas and
@@ -219,6 +222,7 @@ export default function LearnPage() {
    * record anyway — see SocraticWalk's header.
    */
   const [walkTarget, setWalkTarget] = useState<{ conceptId?: string; pointId?: string } | null>(null)
+  const [tutorMode, setTutorMode] = useState<TutorMode>('walk')
 
   /** A map asked to be led through a concept. Offers its examples. */
   const leadThroughConcept = useCallback((conceptId: string) => {
@@ -834,21 +838,72 @@ export default function LearnPage() {
             up by knowledge point across every subject, and the practised
             subject would resolve a concept from the other one to nothing. */}
         {tab === 'tutor' && (
-          <SocraticWalk
-            ontology={MATHEMATICS}
-            target={walkTarget}
-            concepts={state?.progress?.concepts ?? []}
-            masteryFloor={MASTERY_FLOOR}
-            queuedTasks={state?.tasks ?? []}
-            /* Open on a question when nobody named one. The maps and the
-               practice tab all arrive here holding a concept or a point, and
-               for them the offer list is the answer; `/learn?tab=tutor` from
-               the home page arrives with nothing, and that link means "tutor
-               me" rather than "show me what could be tutored". */
-            autostart={!walkTarget}
-            onPractise={id => { setFocusTaskId(id); setTab('practice') }}
-            onSelectConcept={id => { setScope('atlas'); setSelectedConcept(id); setTab('concepts') }}
-          />
+          <>
+            {/*
+              * Two modes, because they are two different questions and neither
+              * subsumes the other.
+              *
+              * A walk takes one worked example apart and asks its moves back,
+              * so every question's scope is one step — which is the right thing
+              * for being led through something and is also a ceiling, since a
+              * step is all the context a step question has. A probe asks about
+              * the edges between concepts, which is where an understanding
+              * stops. Reported from use: the walk alone "just restates
+              * problems", and that is the ceiling rather than a defect.
+              *
+              * A toggle rather than a replacement. The walk is still the only
+              * mode that ends at a rulable problem, so it is the one that feeds
+              * the mastery floor; a probe records nothing and never can, since
+              * a boundary question has no exact answer to rule against.
+              *
+              * Walk stays the default: arriving from a map with a concept in
+              * hand means "lead me through this", and flipping that would make
+              * every map link land somewhere the learner did not ask for.
+              */}
+            <div className='mb-2 flex items-center gap-1'>
+              {([
+                ['walk', 'Lead me through something'],
+                ['probe', 'Test my understanding'],
+              ] as [TutorMode, string][]).map(([id, label]) => (
+                <button
+                  key={id}
+                  onClick={() => setTutorMode(id)}
+                  className={`rounded px-2 py-1 text-[11px] ${
+                    tutorMode === id
+                      ? 'bg-gray-800 text-gray-100'
+                      : 'text-gray-500 hover:text-gray-300'}`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {tutorMode === 'walk' ? (
+              <SocraticWalk
+                ontology={MATHEMATICS}
+                target={walkTarget}
+                concepts={state?.progress?.concepts ?? []}
+                masteryFloor={MASTERY_FLOOR}
+                queuedTasks={state?.tasks ?? []}
+                /* Open on a question when nobody named one. The maps and the
+                   practice tab all arrive here holding a concept or a point, and
+                   for them the offer list is the answer; `/learn?tab=tutor` from
+                   the home page arrives with nothing, and that link means "tutor
+                   me" rather than "show me what could be tutored". */
+                autostart={!walkTarget}
+                onPractise={id => { setFocusTaskId(id); setTab('practice') }}
+                onSelectConcept={id => { setScope('atlas'); setSelectedConcept(id); setTab('concepts') }}
+              />
+            ) : (
+              <ProbePanel
+                ontology={MATHEMATICS}
+                concepts={state?.progress?.concepts ?? []}
+                masteryFloor={MASTERY_FLOOR}
+                subjectName={state?.subject?.name}
+                onSelectConcept={id => { setScope('atlas'); setSelectedConcept(id); setTab('concepts') }}
+              />
+            )}
+          </>
         )}
 
         {tab === 'review' && <ReviewQueue onResolved={load} />}

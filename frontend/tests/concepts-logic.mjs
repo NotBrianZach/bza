@@ -3115,15 +3115,38 @@ t('it has no internal faults', ontologyProblems(PG).length === 0, ontologyProble
 t('its fidelity claim matches what its option can do', fidelityMismatches(PG).length === 0)
 const PG_CONCEPT_IDS = [
   'points-lines-angles', 'triangle-basics', 'congruence', 'similarity', 'pythagoras',
-  'quadrilaterals-and-polygons',
+  'quadrilaterals-and-polygons', 'area-and-perimeter', 'geometric-proof',
 ]
-t('six concepts, three knowledge points each',
-  PG.concepts.length === 6 && allKnowledgePoints(PG).length === 18
+t('eight concepts, three knowledge points each',
+  PG.concepts.length === 8 && allKnowledgePoints(PG).length === 24
   && PG.concepts.every(c => c.knowledgePoints.length === 3),
   `${PG.concepts.length} concepts, ${allKnowledgePoints(PG).length} points`)
-t('all six concepts are teachable AND practisable — a syllabus, not six map entries',
+t('all eight concepts are teachable AND practisable — a syllabus, not eight map entries',
   PG_CONCEPT_IDS.every(id => isTeachable(PG, id) && isPractisable(PG, id)),
   PG_CONCEPT_IDS.filter(id => !isTeachable(PG, id) || !isPractisable(PG, id)).join(', '))
+/*
+ * The eighth promotion is the first concept in this subject that is `guided`
+ * rather than `checked`, and it is asserted on its own because the two halves
+ * of the claim are easy to collapse into one.
+ *
+ * `fidelity` says whether a PATTERN can decide that some statement is about
+ * this concept. `isTeachable` says whether there is material. They are
+ * independent, and this concept is the first place in the subject where they
+ * disagree: the map node carried no pattern, inventing one during an authoring
+ * pass is the change the scope comments forbid, and a pattern on "proof" would
+ * claim most of the medium rather than select from it. So the recognition is
+ * unchecked and the teaching is not, and the caveat has to say which — a
+ * caveat that read like a mapped node's would tell a learner there is nothing
+ * to practise, in front of six tasks.
+ */
+t('and the eighth is the subject\'s first guided concept, with a caveat that is about recognition',
+  PG.concepts.find(c => c.id === 'geometric-proof')?.fidelity === 'guided'
+  && !PG.concepts.find(c => c.id === 'geometric-proof')?.scope.match
+  && /filters nothing/.test(PG.concepts.find(c => c.id === 'geometric-proof')?.caveat ?? '')
+  && PG.concepts.filter(c => c.fidelity === 'guided').map(c => c.id).join(',') === 'geometric-proof',
+  PG.concepts.map(c => `${c.id}:${c.fidelity}`).join(' '))
+t('while still being teachable and practisable, which fidelity says nothing about',
+  isTeachable(PG, 'geometric-proof') && isPractisable(PG, 'geometric-proof'))
 /*
  * Positions restart per concept rather than running 1..6 through the subject.
  * `position` is documented as order WITHIN the concept, and the two readings
@@ -3191,19 +3214,84 @@ t('every objective names a task kind',
  * instead would pass a string comparison written after the fact while changing
  * what gates what.
  */
+/*
+ * `area-and-perimeter` then made it two forks and the first PAIR of edges from
+ * one promotion. It declared both `quadrilaterals-and-polygons` and
+ * `triangle-basics` and both were already concepts here, so both edges are
+ * internal and both are below — which is why the prerequisite count moves by
+ * two rather than one, and why the area's `links` needed no entry even though
+ * the node had two `needs`.
+ *
+ * The second of them hangs off `triangle-basics`, which had been a leaf of the
+ * line since the second promotion, so there are two branch points now. Each
+ * fork is asserted against the node that CARRIES it for the reason the sixth
+ * promotion established: an edge accidentally hung off `congruence` instead of
+ * the triangles would pass an ordered-list comparison written after the fact
+ * while changing what gates what. The claim that `triangle-basics` has exactly
+ * two children, and which two, is what would catch it.
+ */
 const PG_PREREQS = PG.edges.filter(e => e.kind === 'prerequisite')
 t('the first five promotions still form one chain pointing upward',
   PG_PREREQS.map(e => `${e.from}->${e.to}`).slice(0, 4).join(' ')
     === 'points-lines-angles->triangle-basics triangle-basics->congruence '
       + 'congruence->similarity similarity->pythagoras',
   PG.edges.map(e => `${e.from}->${e.to}:${e.kind}`).join(', '))
+/*
+ * The sixth's claim is that the fork hangs off `congruence` SPECIFICALLY, and
+ * it used to be written as the whole of that node's child set — which was fine
+ * while the set was two and went stale the moment the eighth promotion made it
+ * three. So the claim is narrowed to the one thing the sixth promotion
+ * established, that `quadrilaterals-and-polygons` is reached from `congruence`
+ * and from nowhere else, and the membership of the fork is asserted in one
+ * place below rather than in two that can disagree.
+ */
 t('and the sixth forks off congruence rather than extending that chain',
-  PG_PREREQS.length === 5
-  && PG_PREREQS.filter(e => e.to === 'quadrilaterals-and-polygons')
+  PG_PREREQS.filter(e => e.to === 'quadrilaterals-and-polygons')
     .map(e => e.from).join(',') === 'congruence'
-  && PG_PREREQS.filter(e => e.from === 'congruence').map(e => e.to).sort().join(',')
-    === 'quadrilaterals-and-polygons,similarity',
+  && PG_PREREQS.filter(e => e.from === 'congruence').map(e => e.to).includes('similarity'),
   PG_PREREQS.map(e => `${e.from}->${e.to}`).join(' '))
+t('and the seventh contributed TWO edges, so the count moves by two',
+  PG_PREREQS.length === 8
+  && PG_PREREQS.filter(e => e.to === 'area-and-perimeter').map(e => e.from).sort().join(',')
+    === 'quadrilaterals-and-polygons,triangle-basics',
+  `${PG_PREREQS.length}: ${PG_PREREQS.map(e => `${e.from}->${e.to}`).join(' ')}`)
+/*
+ * The eighth promotion widened a fork instead of making one, which is the one
+ * shape this list had not shown and the reason this is asserted as a named SET
+ * rather than as an out-degree.
+ *
+ * `congruence` had two children — `similarity` from the fourth promotion and
+ * `quadrilaterals-and-polygons` from the sixth — and now has three. The number
+ * of branch points did not move: it is still `congruence` and
+ * `triangle-basics`, so "the tree grew" is true and "the tree branched" is not,
+ * and those are different claims. A check on `congruence`'s out-degree would
+ * have gone from 2 to 3 for any third child, including one hung off the wrong
+ * parent by accident, which is the failure the sixth promotion's note already
+ * identified. So the claim held here is WHICH three.
+ */
+t('and the eighth widens the congruence fork to three without adding a branch point',
+  PG_PREREQS.filter(e => e.from === 'congruence').map(e => e.to).sort().join(',')
+    === 'geometric-proof,quadrilaterals-and-polygons,similarity'
+  && PG_PREREQS.filter(e => e.to === 'geometric-proof').map(e => e.from).join(',') === 'congruence'
+  && [...new Set(PG_PREREQS.map(e => e.from))]
+    .filter(from => PG_PREREQS.filter(e => e.from === from).length > 1).sort().join(',')
+    === 'congruence,triangle-basics',
+  PG_PREREQS.map(e => `${e.from}->${e.to}`).join(' '))
+t('and geometric-proof reaches the angle facts only through congruence',
+  prerequisitesOf(PG, 'geometric-proof').join(',') === 'congruence'
+  && allPrerequisitesOf(PG, 'geometric-proof').includes('points-lines-angles')
+  && allPrerequisitesOf(PG, 'geometric-proof').includes('triangle-basics'),
+  prerequisitesOf(PG, 'geometric-proof').join(', '))
+t('one of which forks off the triangles, giving the subject a second branch point',
+  PG_PREREQS.filter(e => e.from === 'triangle-basics').map(e => e.to).sort().join(',')
+    === 'area-and-perimeter,congruence',
+  PG_PREREQS.filter(e => e.from === 'triangle-basics').map(e => e.to).join(', '))
+t('and area-and-perimeter reaches the angle facts only through the two it names',
+  prerequisitesOf(PG, 'area-and-perimeter').slice().sort().join(',')
+    === 'quadrilaterals-and-polygons,triangle-basics'
+  && allPrerequisitesOf(PG, 'area-and-perimeter').includes('points-lines-angles')
+  && allPrerequisitesOf(PG, 'area-and-perimeter').includes('congruence'),
+  prerequisitesOf(PG, 'area-and-perimeter').join(', '))
 t('every prerequisite here names two concepts of this subject, and says who promoted it',
   PG_PREREQS.every(e => !!conceptById(PG, e.from) && !!conceptById(PG, e.to)
     && e.promotedBy === 'author:plane-geometry'),
@@ -3241,7 +3329,7 @@ t('congruence reaches the angle facts only through the triangles',
 
 group('the eighth subject is gradable with no worker')
 const PG_TASKS = allKnowledgePoints(PG).flatMap(p => tasksForPoint(p.id))
-t('thirty-six tasks, two on each of the eighteen points', PG_TASKS.length === 36
+t('forty-eight tasks, two on each of the twenty-four points', PG_TASKS.length === 48
   && allKnowledgePoints(PG).every(p => tasksForPoint(p.id).length === 2),
   `${PG_TASKS.length}`)
 /*
@@ -3264,11 +3352,31 @@ t('thirty-six tasks, two on each of the eighteen points', PG_TASKS.length === 36
  * are numbers. No `NamedForm` describes "the four angles are not all equal",
  * and the arithmetic refutation of it IS a number, so there was nothing a form
  * could have carried better.
+ *
+ * `area-and-perimeter` added six more and no third kind either, and it is the
+ * concept where that is least a compromise: both of its measures are values,
+ * so an area, a perimeter and the difference between two of either are all
+ * `evaluate` asks in their own right rather than proxies for something else.
+ * One of the six is the same expression as another doing the opposite job —
+ * `a*b - c*d` is a cut region's area in the first point and the gap between two
+ * equal-perimeter rectangles in the third — which is the subject's habit of
+ * making the repetition the content, and asserted as a pair below.
+ *
+ * `geometric-proof` added the last six and no third kind, and here that is the
+ * answer to an objection rather than a shrug. The concept was twice left on the
+ * map because its natural kind is `justify`, `justify` is unverifiable, and the
+ * assertion above forbids shipping an unverifiable kind at all — so a
+ * justify-only concept has three chains that cannot become evidence. All six of
+ * these are `evaluate`, so `chainsWithNoRuling` did not move. The kind that
+ * would fit the third point better is `counterexample`, which carries no tasks
+ * anywhere in the build for the reason at the top of tasks.ts, and the concept's
+ * objectives decline to name it rather than promising practice that cannot be
+ * served.
  */
 const PG_EVAL = PG_TASKS.filter(x => x.kind === 'evaluate')
 const PG_FORM = PG_TASKS.filter(x => x.kind === 'transform_to_form')
-t('thirty-five evaluate and one transform_to_form, which is the surd the hypotenuse produces',
-  PG_EVAL.length === 35 && PG_FORM.length === 1
+t('forty-seven evaluate and one transform_to_form, which is the surd the hypotenuse produces',
+  PG_EVAL.length === 47 && PG_FORM.length === 1
   && PG_EVAL.every(x => x.form === undefined)
   && PG_FORM[0].id === 'reduce-the-hypotenuse-surd-1'
   && PG_FORM[0].form === 'surd_reduced',
@@ -3445,13 +3553,222 @@ t('and both rhombus tasks are the same expression, which is what makes them a pa
   taskById('the-square-is-the-only-fixed-point-1').given
   === taskById('equal-sides-left-the-angles-unequal-1').given)
 
+/*
+ * The area tasks, checked the way the polygon and congruence ones are: away
+ * from their authored inputs where the content is a claim rather than an
+ * instance, since one coincidence at the values in the prompt would prove
+ * nothing about it.
+ *
+ * `the-notch-cancels-out-of-the-corner-perimeter-1` is the boundary walk of a
+ * corner cut, (a − c) + (b − d) + c + d + a + b, which is identically 2(a + b)
+ * — the notch's two dimensions cancel, and that independence is the whole
+ * reason a corner cut changes no perimeter. So it is checked on a second notch
+ * with nothing in common with the first, exactly as
+ * `the-exterior-total-never-moves-1` is checked at a second number of sides.
+ *
+ * `equal-perimeters-left-the-areas-unequal-1` is the opposite shape and must
+ * NOT generalise: `a*b − c*d` is non-zero because these two equal-perimeter
+ * rectangles have different areas, and it has to be able to come out zero, or
+ * a learner would score the mark for any four numbers at all. A pair of
+ * equal-area rectangles is checked for that reason.
+ *
+ * And the two routes to the same cut region are asserted as a pair, because
+ * agreeing is the content of the first point: additivity read backwards is
+ * 60 − 12 and read forwards is 36 + 12, and a measure where those differ is
+ * not a measure.
+ */
+t('the corner-cut perimeter is the uncut perimeter for a notch of any size', (() => {
+  const task = taskById('the-notch-cancels-out-of-the-corner-perimeter-1')
+  const read = (a, b, c, d) => {
+    const at = {
+      a: parseExpression(a, []), b: parseExpression(b, []),
+      c: parseExpression(c, []), d: parseExpression(d, []),
+    }
+    const v = exactValue(substitute(parseExpression(task.given, ['a', 'b', 'c', 'd']), at))
+    return v === null ? null : showExact(v)
+  }
+  // The authored 4 by 3 notch and a 1 by 5 notch out of the same sheet both
+  // leave 32, which is 2 × (10 + 6) — the claim rather than an arithmetic
+  // coincidence of these four numbers. A DIFFERENT sheet gives that sheet's
+  // own perimeter and not 32, which is what stops the expression having been
+  // constant: 2 × (12 + 5) = 34, whatever is cut out of its corner.
+  return read('10', '6', '4', '3') === '32' && read('10', '6', '1', '5') === '32'
+    && read('12', '5', '4', '3') === '34' && read('12', '5', '1', '1') === '34'
+})())
+t('the equal-perimeter comparison is non-zero here and can still come out zero', (() => {
+  const task = taskById('equal-perimeters-left-the-areas-unequal-1')
+  const read = (a, b, c, d) => {
+    const at = {
+      a: parseExpression(a, []), b: parseExpression(b, []),
+      c: parseExpression(c, []), d: parseExpression(d, []),
+    }
+    const v = exactValue(substitute(parseExpression(task.given, ['a', 'b', 'c', 'd']), at))
+    return v === null ? null : showExact(v)
+  }
+  // 60 − 15 = 45 for the two rectangles of perimeter 32, so equal perimeters
+  // did not make equal areas. 10 by 6 against 12 by 5 is 0, two different
+  // rectangles of equal area — so the expression is not identically non-zero
+  // and the task can fail.
+  return read('10', '6', '15', '1') === '45' && read('10', '6', '12', '5') === '0'
+})())
+t('the two routes to the cut region agree, which is what additivity claims', (() => {
+  const read = (task, inputs) => {
+    const at = {}
+    for (const [name, raw] of Object.entries(inputs)) at[name] = parseExpression(raw, [])
+    const v = exactValue(substitute(parseExpression(task.given, ['a', 'b', 'c', 'd']), at))
+    return v === null ? null : showExact(v)
+  }
+  const back = read(taskById('the-cut-is-a-subtraction-1'), { a: '10', b: '6', c: '4', d: '3' })
+  const forward = read(
+    taskById('additivity-forwards-gives-the-same-area-1'), { a: '6', b: '6', c: '4', d: '3' })
+  return back === '48' && forward === '48'
+})())
+/*
+ * The two matched pairs of one triangle, asserted as a pair for the reason the
+ * rhombus tasks are: the same expression at two inputs, where agreeing is the
+ * content. The area is a property of the triangle and not of the base chosen,
+ * so 14 with 12 and 13 with 168/13 must both give 84 — and the second input is
+ * deliberately not an integer, since the point is that a height usually is not
+ * one. The mis-pairing is checked too: 14 with 13 gives 91, so the task is not
+ * one a wrong pairing passes by accident.
+ */
+t('both matched pairs of the 13-14-15 triangle give the same area, and a mis-pairing does not', (() => {
+  const given = parseExpression(taskById('halve-the-matched-pair-1').given, ['a', 'b'])
+  const at = (a, b) => showExact(exactValue(substitute(given, {
+    a: parseExpression(a, []), b: parseExpression(b, []),
+  })))
+  return at('14', '12') === '84' && at('13', '168/13') === '84'
+    && at('15', '168/15') === '84' && at('14', '13') === '91'
+})())
+t('and both area tasks on that point are the same expression, which is what makes them a pair',
+  taskById('halve-the-matched-pair-1').given
+  === taskById('the-same-area-off-a-second-base-1').given)
+
+/*
+ * The proof tasks. Three claims here that none of the blocks above needed, and
+ * each of them is a thing only a test can hold.
+ *
+ * FIRST, THE CHAIN IS WRITTEN IN ITS COMPOSED FORM ON PURPOSE. The given is
+ * `180 - 2*(180 - x)`, which is the three citations in the order they were made,
+ * and it is equal to `2x - 180`, which is the theorem the chain proves. The
+ * composed form is the content — ontology-geometry.ts argues it — so a later
+ * tidy-up simplifying the given would delete the point while leaving every
+ * answer correct. Asserted both ways: the two forms agree at every input tried,
+ * and the given is not the simplified one.
+ *
+ * SECOND, THE CHAIN STATES ITS OWN HYPOTHESIS. The expression returns an angle
+ * of a real triangle only for an exterior angle above 90°, because at 90 it
+ * returns 0 and below it goes negative — the same shape as
+ * `third-angle-of-a-triangle-1`'s negative answer in the triangle block, and the
+ * last subgoal leans on it. A test is the only place that can be shown, since
+ * the two authored inputs are both well inside the valid range.
+ *
+ * THIRD, THE PERIMETER PAIR'S TWO VERDICTS ARE REALLY DIFFERENT. The whole
+ * knowledge point is that 0 licenses nothing and non-zero concludes, so the
+ * expression must be able to produce both — a difference that could only ever be
+ * non-zero would make the converse look refuted by arithmetic rather than by a
+ * counterexample, and one that were identically zero would make the
+ * contrapositive unusable. Both are checked, with a third input that is zero for
+ * genuinely congruent data.
+ */
+t('the proof chain is its composed form and agrees with the theorem it proves', (() => {
+  const task = taskById('chain-the-three-cited-facts-1')
+  const chain = parseExpression(task.given, ['x'])
+  const theorem = parseExpression('2*x - 180', ['x'])
+  const read = (expr, v) => {
+    const value = exactValue(substitute(expr, { x: parseExpression(v, []) }))
+    return value === null ? null : showExact(value)
+  }
+  // The composed form and the simplified one agree everywhere, which is what
+  // makes the choice between them editorial — and the reason a test has to
+  // record that the editorial choice was made deliberately.
+  const agree = ['140', '110', '91', '175'].every(v => read(chain, v) === read(theorem, v))
+  return agree && task.given === '180 - 2*(180 - x)' && task.given !== '2*x - 180'
+    && read(chain, '140') === '100' && read(chain, '110') === '40'
+})())
+t('and it returns an angle only while the exterior angle exceeds ninety, which is the hypothesis', (() => {
+  const chain = parseExpression(taskById('chain-the-three-cited-facts-1').given, ['x'])
+  const read = v => showExact(exactValue(substitute(chain, { x: parseExpression(v, []) })))
+  // At 90 the apex angle is 0 and below it is negative, so no such triangle
+  // exists — the chain refusing its own input rather than returning nonsense,
+  // the shape `third-angle-of-a-triangle-1` already has.
+  return read('90') === '0' && read('80') === '-20' && read('91') === '2'
+})())
+t('and both chain tasks are the same expression, which is what makes them a pair',
+  taskById('chain-the-three-cited-facts-1').given
+  === taskById('the-same-chain-from-a-second-exterior-angle-1').given)
+t('the perimeter difference can be zero or not, which is what separates the two verdicts', (() => {
+  const given = parseExpression(
+    taskById('the-equal-total-settles-nothing-1').given, ['a', 'b', 'c', 'd', 'e', 'f'])
+  const read = (...sides) => {
+    const at = {}
+    for (const [i, name] of ['a', 'b', 'c', 'd', 'e', 'f'].entries()) {
+      at[name] = parseExpression(sides[i], [])
+    }
+    const v = exactValue(substitute(given, at))
+    return v === null ? null : showExact(v)
+  }
+  // 24 − 24 = 0 for the non-congruent pair, which is the converse's hypothesis
+  // holding and concluding nothing. 24 − 25 = −1 for the second pair, which is
+  // the contrapositive concluding. And 0 again for identical side triples,
+  // where the ORIGINAL implication is what makes it zero — three inputs, three
+  // different relationships between the same two numbers.
+  return read('5', '9', '10', '6', '8', '10') === '0'
+    && read('6', '8', '10', '6', '8', '11') === '-1'
+    && read('6', '8', '10', '6', '8', '10') === '0'
+})())
+t('and both perimeter tasks are the same expression, which is what makes them a pair',
+  taskById('the-equal-total-settles-nothing-1').given
+  === taskById('the-unequal-total-settles-it-1').given)
+/*
+ * The hypothesis check, against the task it echoes. `(a + b + c) - 180` is
+ * `the-third-angle-was-never-free-1`'s expression, which is identically 0 for
+ * any real triangle's angles — and that is exactly why a non-zero answer means
+ * the object offered is not a triangle. Both readings of the one expression are
+ * asserted here, because the echo IS the content and a reader meeting the
+ * second task has every right to ask what is new about it.
+ */
+t('the disqualifying angle sum is the congruence task\'s expression reading the other way', (() => {
+  const task = taskById('a-candidate-that-is-not-a-triangle-refutes-nothing-1')
+  const given = parseExpression(task.given, ['a', 'b', 'c'])
+  const read = (a, b, c) => showExact(exactValue(substitute(given, {
+    a: parseExpression(a, []), b: parseExpression(b, []), c: parseExpression(c, []),
+  })))
+  return task.given === taskById('the-third-angle-was-never-free-1').given
+    && read('100', '50', '40') === '10' && read('100', '40', '40') === '0'
+    && read('73', '44', '63') === '0'
+})())
+t('and the counterexample it accepts really is acute at the vertex the prompt names', (() => {
+  const given = parseExpression(taskById('one-acute-exterior-angle-ends-the-claim-1').given, ['x'])
+  const read = v => showExact(exactValue(substitute(given, { x: parseExpression(v, []) })))
+  // 80 at the 100° vertex refutes "every exterior angle is obtuse"; 140 at each
+  // of the 40° vertices is a confirming instance and establishes nothing. The
+  // claim's repaired form holds because at most one angle can be 90° or more.
+  return read('100') === '80' && read('40') === '140' && read('90') === '90'
+})())
+/*
+ * And the claim the whole promotion turned on: three more chains, none of them
+ * unrulable. `chainsWithNoRuling` counts knowledge points with no task at all,
+ * and a concept whose natural kind is `justify` would have contributed three —
+ * which is the objection this concept was twice deferred on. Asserted against
+ * this subject specifically as well as against the total, so that a later
+ * unrulable point somewhere else cannot mask a regression here.
+ */
+t('the proof concept added three rulable chains and no unrulable ones',
+  questionCoverage(PG).chainsWithNoRuling === 0
+  && PG.concepts.find(c => c.id === 'geometric-proof').knowledgePoints
+    .every(p => tasksForPoint(p.id).length === 2
+      && tasksForPoint(p.id).every(x => isVerifiableKind(x.kind))),
+  PG.concepts.find(c => c.id === 'geometric-proof').knowledgePoints
+    .map(p => `${p.id}:${tasksForPoint(p.id).map(x => x.kind).join('+')}`).join(' '))
+
 const PG_QUESTIONS = allQuestions(PG)
-t('seventy-two questions, one per subgoal', PG_QUESTIONS.length === 72, `${PG_QUESTIONS.length}`)
+t('ninety-six questions, one per subgoal', PG_QUESTIONS.length === 96, `${PG_QUESTIONS.length}`)
 t('every subgoal carries an authored socratic phrasing',
   allKnowledgePoints(PG).every(p => p.workedExample.subgoals.every(s => !!s.socratic)),
   allKnowledgePoints(PG).flatMap(p => p.workedExample.subgoals)
     .filter(s => !s.socratic).map(s => s.label).join(' | '))
-t('and every one of them is interrogative, so all seventy-two count as written',
+t('and every one of them is interrogative, so all ninety-six count as written',
   PG_QUESTIONS.every(q => q.authoredAsQuestion)
   && questionCoverage(PG).authoredAsQuestions === questionCoverage(PG).questions)
 t('while the labels stay imperative — the map draws moves, the tutor asks sentences',
@@ -3490,6 +3807,12 @@ t('while the labels stay imperative — the map draws moves, the tutor asks sent
  * timed point already measures, plus a division — reporting one skill as two.
  * Its second is the read-it-slowly case, since the error it exists to stop is
  * matching ABC with ACD. Its third is a decision with an argument behind it.
+ *
+ * The three proof points are the clearest case in the file and the reason is
+ * worth one line: a concept whose subject is which fact licenses which step
+ * would, if timed, reward reaching for the arithmetic before the citation —
+ * which is the error all three points exist to stop. Twenty-three untimed
+ * points out of twenty-four, and still one target.
  */
 t('only the point about fluency is timed, and no later concept added a second',
   allKnowledgePoints(PG).filter(p => p.automaticityTarget !== undefined)
@@ -3523,6 +3846,15 @@ t('only the point about fluency is timed, and no later concept added a second',
  * measure along, and a disagreement between two words. What genuinely needs the
  * figure — the diagonals bisecting, a rhombus's being perpendicular, the kite
  * and the trapezium — stayed mapped and is named as absent in the header.
+ *
+ * Deductive proof is the one concept here where this assertion says the LEAST,
+ * and that is worth recording rather than letting the pattern above imply
+ * otherwise. Every promotion before it had to find the figure-free part of a
+ * node that plainly suggests a drawing; this node suggests none, because a
+ * proof whose steps are angle facts is a chain of sentences. The figure debt it
+ * leaves is real — every proof whose steps are about a drawing stayed behind —
+ * but it was never what was holding the node, and this file's two deferrals of
+ * it were about the grader instead. See the header there.
  */
 t('no knowledge point claims a figure, because there are none to claim',
   allKnowledgePoints(PG).every(p => p.visualRef === undefined))

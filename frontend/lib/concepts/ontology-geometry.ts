@@ -268,6 +268,220 @@
  * unaskable. Whether that compromise scales to a concept where EVERY chain
  * ends in an argument is the open question, not a settled no.
  *
+ * IT WAS NOT A SETTLED NO, AND THE EIGHTH PROMOTION SETTLED IT YES. Left in
+ * the present tense above because it is the record of two promotions declining
+ * the node, and that record is the evidence the question was real rather than
+ * an excuse — but a reader must not arrive here believing it is still open.
+ * `geometric-proof` is authored; the answer is in the eighth-promotion section
+ * below, and it did not need the real line's compromise at all.
+ *
+ * ── THE SEVENTH PROMOTION WENT ROUND THAT WARNING, AND SAYS SO ────────────
+ *
+ * `area-and-perimeter` is the seventh, and it is the first promotion in this
+ * file chosen over a better-placed candidate for a reason that is about the
+ * ENGINE rather than about the map. Two nodes of the merged area had all their
+ * prerequisites written: this one, resting on `quadrilaterals-and-polygons`
+ * and `triangle-basics`, and `geometric-proof`, resting on `congruence`. Both
+ * are on both unfinished routes, so each cuts exactly one unwritten step off
+ * each of them and there is nothing to choose between them there.
+ *
+ * `geometric-proof` has the better structural case and losing anyway is the
+ * point. It is the sole remaining blocker of `circles`, so authoring it is the
+ * only move that makes a NEW node available; authoring this one unblocks
+ * nothing, because the node above it is `circle-measure` and that needs
+ * `circles` too. By the measure the first six promotions used it should have
+ * been taken.
+ * What stopped it is the objection two paragraphs up, which has been standing
+ * in this file and in atlas-foundations.ts since the sixth promotion and is
+ * still unanswered: `justify` is not machine-rulable, and a concept all of
+ * whose chains end with no ruling is worse than a mapped node. Answering that
+ * question is a decision about what evidence the build will accept, and it is
+ * not a thing to settle as a side effect of writing worked examples — which is
+ * the same argument the area-merge paragraphs above make about the map, applied
+ * to the grader instead.
+ *
+ * So the honest statement of what this promotion is: the best available node
+ * whose material can be RULED, taken in preference to the best available node.
+ * The debt is unchanged and is handed on rather than reduced.
+ *
+ * AND THE EIGHTH PROMOTION THEN PAID IT, which is what makes the two deferrals
+ * above worth reading rather than merely worth apologising for. The question
+ * they refused to settle as a side effect was the right question, and it had a
+ * better answer than either of them expected: the three points of
+ * `geometric-proof` carry six `evaluate` tasks and `chainsWithNoRuling` did not
+ * move. What the deferrals cost was two promotions' delay on the only node that
+ * unblocks a new one. What they bought was the question being asked out loud
+ * instead of answered by whoever happened to be writing worked examples, which
+ * is the trade this file would make again.
+ *
+ * WHAT SURVIVES BEING WRITTEN DOWN, in a concept whose node summary is "every
+ * polygon formula reduced to the rectangle by cutting and rearranging" — which
+ * is a figure argument from end to end, so the figure test looked certain to
+ * take at most a third of this node:
+ *
+ *   Additivity, which is where the formulas come FROM rather than one of them.
+ *   A region cut into pieces has the sum of their areas, so a rectangle with a
+ *   rectangular piece removed is 60 − 12 and nothing in that subtraction says
+ *   where the piece was. That is arithmetic on a total — the shape that has now
+ *   passed this test seven times — and it is also the first point in the file
+ *   whose content is that a given was NOT used. The rectangle's own formula is
+ *   taken as the definition of the measure and the cut-and-rearrange
+ *   derivations are taken as given, which leaves additivity carrying the
+ *   concept, and it turns out to be enough.
+ *
+ *   The matched pair. ½ × base × height is not symmetric in its two letters any
+ *   more than a² + b² = c² is in its three: the height belongs to one base, and
+ *   a triangle carries three such pairs which all give the same area. This is
+ *   `pythagoras`'s first point in a second concept — assign the roles before
+ *   computing, with the identical failure mode, which is correct arithmetic on
+ *   mis-assigned slots. What is new is that the mis-assignment can be REFUSED
+ *   rather than merely scored wrong: the perpendicular from a vertex is the
+ *   shortest route to the base's line, so the triangle inequality rules out any
+ *   candidate height longer than a side reaching the base, before any
+ *   arithmetic is done. That is the first subgoal in the subject that disposes
+ *   of a wrong answer without computing it.
+ *
+ *   Neither measure decides the other. The best part of the concept, and the
+ *   claim-about-claims shape for the fifth time. Cut the same 12 cm² piece out
+ *   of the same sheet at a corner and at the middle of an edge: both leave
+ *   48 cm², and the perimeters are 32 cm and 38 cm, because a corner cut
+ *   replaces the two edge-lengths it removes with the two sides of its notch
+ *   while a middle cut adds both of its sides with nothing removed to pay for
+ *   them. One piece, one area, two perimeters. The converse direction is a pair
+ *   of rectangles — 10 by 6 and 15 by 1, both 32 cm round, 60 cm² against
+ *   15 cm². No figure in any of it, and both directions are exact arithmetic.
+ *
+ * WHAT IS ABSENT, named rather than approximated:
+ *
+ *   Every cut-and-rearrange derivation, which is the node summary's own
+ *   description of the concept. That two copies of a triangle make a
+ *   parallelogram on the same base and height, and that a parallelogram cuts
+ *   and rearranges into a rectangle, are both taken as given like SSS, SAS,
+ *   ASA, AA, the Pythagorean identity and the triangulation above them. They
+ *   are statements about what a drawing does. So the halving is asserted and
+ *   everything built on it is derived, which is the same division of a point
+ *   the polygons made: the figure-dependent half is one sentence of hypothesis
+ *   and the arithmetic on top of it is the material.
+ *
+ *   The trapezium and every other named-shape formula. Each is stated in terms
+ *   of which pair of sides is parallel and which distance separates them, so
+ *   stating one is describing a figure. The concept works with rectangles,
+ *   triangles and regions assembled out of rectangles, which are the shapes a
+ *   sentence can pin down completely.
+ *
+ *   Circular measure, which is a node of its own above this one — π as the
+ *   ratio shared by every circle, and circular area as a limit of inscribed
+ *   polygons. It needs `circles` as well as this concept and is therefore
+ *   behind `geometric-proof` too, so it is doubly out of reach rather than
+ *   merely unwritten.
+ *
+ *   Units of area as a system, and the scaling law that goes with it — that
+ *   multiplying every length by k multiplies an area by k². It is genuinely
+ *   figure-free and it was left out on a boundary rather than a figure: the
+ *   claim is about similar figures and `similarity` is not a prerequisite of
+ *   this node. Writing it here would lean on a concept the map does not gate
+ *   this one by, and adding that edge is a decision about the map. Named so the
+ *   omission does not read as an oversight.
+ *
+ * ── THE EIGHTH PROMOTION ANSWERED THE QUESTION THE SIXTH AND SEVENTH ASKED ─
+ *
+ * `geometric-proof` is the eighth, and it is the node this file passed over
+ * twice while recording exactly what would have to be settled before anybody
+ * took it. The debt is paid rather than handed on again, so the paragraphs that
+ * state it stand as the record of two promotions choosing against it and this
+ * section is what happened when the choice went the other way.
+ *
+ * THE OBJECTION, restated so it is not softened in the retelling: this node is
+ * about the ARGUMENT being the answer, its natural task kind is `justify`,
+ * `justify` is declared unverifiable in types.ts and tests/concepts-logic.mjs
+ * refuses to ship a task of any unverifiable kind at all — so a justify-only
+ * concept has no tasks, and a knowledge point with no task is a chain that
+ * cannot become evidence. Three of those is worse than a mapped node. The
+ * question attached to the objection was "what in it can be asked as a value at
+ * all", and it was a real question rather than a rhetorical one.
+ *
+ * THE ANSWER IS THE ONE THE PREVIOUS FIVE PROMOTIONS ALREADY FOUND, which is
+ * why it is worth stating plainly rather than presenting as an invention. What
+ * survives being written down in a figure-heavy node has turned out, every time,
+ * to be the part that is really a CLAIM ABOUT CLAIMS — the congruence letter
+ * order, similarity and congruence disagreeing about AAA, which slot of
+ * a² + b² = c² a length occupies, the two angle totals, two measures
+ * determining each other in neither direction. A claim about claims can be
+ * refuted by a value, and a refutation is a number. So:
+ *
+ *   The chain is an expression. A proof that cites the straight line, the
+ *   base-angle theorem and the angle sum in that order composes into
+ *   180 − 2(180 − x), which simplifies to 2x − 180. That is the argument
+ *   written as arithmetic, and evaluating it is a real `evaluate` ask rather
+ *   than a proxy: the composite form IS the citations in order, and the fact
+ *   that it returns an angle only for x above 90° is the chain stating its own
+ *   hypothesis. What the task cannot score is the ORDER the citations were made
+ *   in, which the prompts name, as every block in tasks.ts does.
+ *
+ *   A converse and a contrapositive are told apart by a subtraction. Congruent
+ *   triangles have equal perimeters; the contrapositive of that is free and the
+ *   converse is a new and false claim. Both are settled by the sign of one
+ *   difference of two perimeters — zero is the converse's hypothesis holding and
+ *   licensing nothing, non-zero is the contrapositive concluding outright. One
+ *   expression, two inputs, and the two verdicts are "this proves nothing" and
+ *   "this proves it", which is the distinction the point exists for.
+ *
+ *   A counterexample is checked by an angle sum before it is used. One exterior
+ *   angle of 180 − 100 = 80° kills "every exterior angle is obtuse"; a proposed
+ *   counterexample whose angles total 190 kills nothing, because the claim never
+ *   spoke about it. The second of those is the better task, and it is the same
+ *   expression as `the-third-angle-was-never-free-1` in `congruence` doing the
+ *   opposite job — identically zero there for any real triangle, non-zero here
+ *   to disqualify an object that is not one.
+ *
+ * So `chainsWithNoRuling` did not move. It is 1, it is
+ * `log-argument-is-positive` in the exponentials subject, and it is there
+ * deliberately and permanently.
+ *
+ * WHAT IS STILL ABSENT, named rather than approximated, and the first item is
+ * the one the objection was really about:
+ *
+ *   `counterexample` as a task kind. The third point is the first place in the
+ *   build where it is the natural ask — "produce a triangle that breaks this" —
+ *   and tasks.ts declares the kind verifiable while shipping no tasks of it,
+ *   because ruling one needs a checker that can test a produced object against a
+ *   claim and there is none. So the objective does not name it. The refutation is
+ *   asked as the two values it reduces to instead, which is less than the real
+ *   ask and is the honest amount less. This is the thing to build if anybody
+ *   wants this concept asked properly.
+ *
+ *   Every proof whose steps are about a drawing, which is most of school
+ *   geometry's proofs and all of the ones this area is still holding. The worked
+ *   examples here chain angle facts, because an angle chain is a chain of
+ *   sentences; a proof that adds a construction line is a chain of pictures.
+ *
+ *   Two-column layout, and this one is left out on a boundary rather than a
+ *   figure. It is a convention for writing a proof down rather than a fact about
+ *   what makes one valid, and the node's `terms` mention it only as a search
+ *   hint. The citation discipline it exists to enforce — every reason named,
+ *   every reason available before the step that uses it — is the first knowledge
+ *   point's whole subject, written as prose instead of as a table.
+ *
+ *   Induction, and the formal treatment of implication. Both are figure-free,
+ *   and both are left out because the MAP has already placed them above this
+ *   node rather than inside it. `mathematical-induction` is in
+ *   `sequences-and-series` and names `geometric-proof` in its own `needs`;
+ *   `propositional-logic` is in `discrete-mathematics`, names this node too, and
+ *   atlas-structures.ts argues at length that the geometry is the real entry
+ *   point and the logic is the second pass.
+ *
+ *   That second one is the sharpest boundary in this concept, because
+ *   `propositional-logic` lists "contrapositive" among its own `terms` and the
+ *   second knowledge point here is about exactly that word. The division is not
+ *   arbitrary: what is written here is the contrapositive of ONE proved
+ *   statement about triangles, used on three specific triangles, which is a
+ *   learner meeting the rearrangement before having a notation for it. What is
+ *   above is the truth table — implication as a connective, the equivalence
+ *   proved rather than demonstrated, and the quantifier negation that makes the
+ *   third point's "every" into a "there exists". So this concept must not grow
+ *   a general account of implication, and the reason is the map's, not a limit
+ *   of what prose can carry.
+ *
  * ── Why a subject of its own ──────────────────────────────────────────────
  *
  * There is no geometry ontology to extend. Every existing subject declares a
@@ -577,6 +791,47 @@
  * membership, which is exactly the case the assertion in tests/atlas.mjs is
  * written by NAME to catch and a count would have passed.
  *
+ * ── What the seventh promotion did, which TIGHTENS A GATE BY SHORTENING IT ──
+ *
+ * `area-and-perimeter` was gated by both of its prerequisites already — the
+ * second promotion installed one and the sixth the other — so no gate moved
+ * for it. What moved is the gate on `circle-measure`, its only dependent
+ * anywhere in the atlas, and the movement is a shape none of the six
+ * promotions above produced.
+ *
+ * Every tightening before this one ADDED to its dependents' gating sets: the
+ * walk had been passing through an empty node and now stopped at a real one,
+ * so there was one more concept to demonstrate. This one made the set
+ * SMALLER, from four members to three. `gatingPrerequisitesOf(circle-measure)`
+ * used to name `congruence`, `pythagoras`, `quadrilaterals-and-polygons` and
+ * `triangle-basics` — the last two because the walk looked straight through
+ * this node and collected both of its prerequisites. It now names
+ * `congruence`, `pythagoras` and this concept, which stands above both of
+ * them.
+ *
+ * A shorter list is a TIGHTER gate, and that is worth stating because a count
+ * reads it backwards. The function names the NEAREST teachable ancestors, so
+ * fewer of them means the gate sits closer to the thing it gates:
+ * demonstrating the polygons and the triangles no longer licenses circular
+ * measure, because the concept between them has to be demonstrated too. One
+ * demonstration has replaced two, further up. tests/atlas.mjs asserts the
+ * whole set by name rather than its size, for exactly this reason.
+ *
+ * The other half of that node's pair is untouched, as always: `circles` is
+ * unwritten, so the walk still passes through it to `congruence` and
+ * `pythagoras`, and those two are in the set for that reason rather than
+ * through this concept.
+ *
+ * The area's roots SHRANK, from six to five, which is the fifth promotion's
+ * shape rather than the sixth's. `area-and-perimeter` left and nothing
+ * replaced it: the node resting on it is `circle-measure`, which did not
+ * become a root because its other prerequisite, `circles`, is still in the
+ * area and still gates it from inside. That is the fifth promotion's rule
+ * reproduced exactly — a departing node promotes its dependents to roots only
+ * when it was the LAST of their prerequisites inside the area — and it is the
+ * third distinct thing that has happened to this set, after a fan-out, two
+ * substitutions and a merge that doubled it.
+ *
  * ── NEVER GIVE A FIGURE BOTH ITS SIDES AND ITS ANGLES ────────────────────
  *
  * An authoring rule the whole file obeys, worth stating because it is easy to
@@ -665,6 +920,31 @@
  * invited the reader to look for a figure where the point is that no figure is
  * determined.
  *
+ * THE AREA CONCEPT OBEYS IT THE EASY WAY TOO, and it raises one case the rule
+ * had not had to decide: a figure whose angles come from its NAME. The
+ * triangle in the second point states three sides — 13, 14 and 15, which is
+ * exactly three independent parts — and no angle at all; its height of 12 to
+ * the 14 is computed rather than stated, like the third side in Pythagoras,
+ * and the triangle is real (Heron on 13, 14, 15 gives 84, and 2 × 84 ÷ 14 is
+ * 12). The other figures are rectangles, and a rectangle's four right angles
+ * are not independent parts: they are what the word means, in the same way the
+ * right angle in a Pythagoras problem is the hypothesis of the theorem rather
+ * than a measurement. So "10 cm by 6 cm" spends two parts and not six, and the
+ * sheet with a 4 by 3 piece cut out of it spends two more on the piece — all
+ * of them lengths, with every angle in the figure forced by the two words
+ * describing it.
+ *
+ * The one check worth doing by hand, because no test can do it, is that the
+ * two cut sheets are realisable as described and have the perimeters claimed.
+ * A 4 by 3 piece out of a corner: the boundary is 6 + 3 + 4 + 3 + 10 + 6 = 32.
+ * The same piece out of the middle of a 10 cm edge, leaving 3 cm either side of
+ * it: 10 + 6 + 3 + 3 + 4 + 3 + 3 + 6 = 38. Both need the piece to be smaller
+ * than the sheet in both directions, which 4 < 10 and 3 < 6 satisfy, and the
+ * middle cut additionally needs the two remnants of the top edge to be
+ * positive, which 3 + 4 + 3 = 10 satisfies exactly. Those are the figure's
+ * realisability conditions, and they are stated here for the reason the
+ * impossible triangle is: the arithmetic is right either way.
+ *
  * The 64° is deliberately not 60° or 90°, and that is the near miss here. A 90°
  * parallelogram is a rectangle and a 90° rhombus is a square, so either value
  * would have made the second and third examples silently special — the third
@@ -739,6 +1019,33 @@
  * SAS and ASA are not values — and what its tasks score is the angle-sum
  * arithmetic that turns AAS into ASA, which is the one mechanical step in it.
  *
+ * The area tasks are the first block here that owes no apology at all, and the
+ * reason is a property of the concept rather than an improvement in the asks.
+ * Both of its measures ARE numbers. "How much is left" is a value, "how far
+ * round" is a value, and the claim the third point is built on — that the two
+ * do not determine each other — is settled by comparing two of them. So all six
+ * tasks ask what the knowledge points are about, and the proxy paragraph that
+ * every block above had to write does not apply.
+ *
+ * Two of them are worth naming for their shape rather than their subject.
+ * `the-notch-cancels-out-of-the-corner-perimeter-1` is the boundary walk of a
+ * corner cut written out in full, (a − c) + (b − d) + c + d + a + b, which is
+ * identically 2(a + b): the notch's two dimensions cancel, so the answer would
+ * be 32 for a corner piece of ANY size. That is `the-exterior-total-never-moves-1`'s
+ * shape in a second concept, and the independence is the content rather than an
+ * accident of the numbers. And `equal-perimeters-left-the-areas-unequal-1` is
+ * `a*b − c*d` — the same expression as the first point's cut — doing the
+ * opposite job: there it is one region's area, here it is the DIFFERENCE between
+ * two areas whose perimeters are equal, and anything other than 0 refutes
+ * "equal round means equal inside". That is the arithmetic refutation
+ * `equal-sides-left-the-angles-unequal-1` made for the polygons, in a third
+ * concept.
+ *
+ * What stays unscored here is one step and it is small: which of the two
+ * measures a question is asking for, the first subgoal of the first example. A
+ * learner handed "evaluate a*b − c*d" has been told it is an area. Named in the
+ * prompt, as in every block above.
+ *
  * The polygon tasks are the mildest case in the subject, which is worth saying
  * after five blocks that each name a loss. Two of the three points are about
  * values rather than about readings. "How many sides" is a number, and
@@ -805,6 +1112,21 @@
  * inequality and the Pythagorean converse. Nothing in the concept is a fluency
  * skill that is not already measured, which is now true of fifteen points out
  * of eighteen and is a claim about the material rather than a convention.
+ *
+ * The three area points make it twenty-one and still one, and they hit two of
+ * the three reasons rather than all three — worth saying, because a block
+ * claiming all three a fourth time would be reciting the list rather than
+ * checking it. The second point is the read-it-slowly case in its sharpest
+ * form here: the error it exists to stop is grabbing whichever length is to
+ * hand as the height, so a speed reward would train precisely the mistake. The
+ * first is that same shape one level up, since answering an area question with
+ * a perimeter is what haste produces there. The third is a decision with an
+ * argument behind it, like the triangle inequality, the Pythagorean converse
+ * and the rhombus comparison. What none of the three is, is the "times an
+ * operation another point already times" case — the arithmetic in this concept
+ * is a multiplication and a halving rather than the 180-minus subtraction the
+ * rest of the subject keeps borrowing — so the reason that applied to five
+ * points above does not apply to any of these.
  */
 
 import type { Concept, ConceptEdge, ConceptOntology, Subject } from './types'
@@ -842,8 +1164,28 @@ const subject: Subject = {
     'quadrilateral where the two claims coincide. That the diagonals from one vertex cut an ' +
     'n-gon into n − 2 triangles is taken as given like the congruence criteria, the figure is ' +
     'assumed convex throughout, and the diagonal properties that name which segments meet where ' +
-    'are absent. Deductive proof, the circle theorems, area and the solids are the rest and are ' +
-    'still mapped only — each of them is about a figure, and nothing in this build can show one.',
+    'are absent. Then area and perimeter, as two measures rather than a list of formulas: the ' +
+    'rectangle\'s area taken as the definition of the measure and every other area got from ' +
+    'additivity, so that a rectangle with a rectangular piece cut out of it is one subtraction ' +
+    'and the position of the cut never enters it; a triangle\'s base and the height belonging to ' +
+    'that base as a matched pair, with a side offered as a height refused by the triangle ' +
+    'inequality before any arithmetic is done; and the two measures shown to determine each ' +
+    'other in neither direction, by two regions of equal area whose perimeters differ and two ' +
+    'rectangles of equal perimeter whose areas differ. The cut-and-rearrange derivations are ' +
+    'taken as given — the halving that makes a triangle half a parallelogram, and that ' +
+    'parallelogram\'s reduction to a rectangle — as is every area formula whose statement needs ' +
+    'a figure pointed at rather than described. Then deductive proof, which is the first concept ' +
+    'here whose subject is the ARGUMENT rather than any figure: a chain of cited facts reaching ' +
+    'an angle nobody stated, and collapsing into one expression in the given once it is written ' +
+    'out; the difference between a converse, which is a new claim needing its own proof, and a ' +
+    'contrapositive, which is the same claim and comes free; and the asymmetry between refuting ' +
+    'a universal claim, which takes one case, and establishing one, which no number of cases ' +
+    'does — together with the check that a proposed counterexample has to pass the hypothesis ' +
+    'before its arithmetic means anything. Two-column layout is absent, since it is a convention ' +
+    'about how a proof is written down rather than about what makes one valid, and so is every ' +
+    'proof whose steps are about a drawing. The circle theorems, circular measure and the solids ' +
+    'are the rest and are still mapped only — each of them is about a figure, and nothing in ' +
+    'this build can show one.',
   medium: 'theorem',
   facetName: 'Concept',
   facetDoes: 'Which concept the statement has to be about.',
@@ -2673,17 +3015,703 @@ const CONCEPTS: Concept[] = [
       },
     ],
   },
+  {
+    id: 'area-and-perimeter',
+    name: 'Area and perimeter',
+    subjectId: subject.id,
+    scope: {
+      id: 'area-and-perimeter',
+      label: 'Area and perimeter',
+      hint: 'area perimeter rectangle triangle area formula',
+      /*
+       * Carried verbatim from the map node, like all six patterns above it and
+       * for the same reason: widening a pattern while writing the material
+       * makes two changes at once, and the recognition figure in
+       * tests/atlas.mjs would move with no way to say which edit moved it.
+       *
+       * It overlaps `circle-measure`'s pattern on titles beginning "Area of a
+       * disk", and that is not a defect to fix here. Both patterns are
+       * anchored, both are about the measure the article really is about, and
+       * `atlasProblems` is the check that would object if any title were
+       * claimed by too many concepts. Narrowing this one to exclude circles
+       * would be a recognition decision made to tidy an overlap rather than
+       * because a title was being misfiled.
+       */
+      match: /^(area|perimeter)\b/i,
+    },
+    fidelity: 'checked',
+    objectives: [
+      {
+        id: 'compute-an-area-by-additivity-rather-than-by-a-formula-per-shape',
+        statement:
+          'Give the area of a rectangle with a rectangular piece removed, by taking the piece out '
+          + 'of the whole rather than by looking for a formula for the resulting shape, and assemble '
+          + 'the same region out of two rectangles to get the same number; say which of the givens '
+          + 'the area never used, and why that is additivity rather than luck.',
+        taskKinds: ['evaluate', 'justify'],
+      },
+      {
+        id: 'pair-a-base-with-its-own-height-before-using-the-formula',
+        statement:
+          'Find a triangle\'s area from a base and the height matched to that base, read the same '
+          + 'area off a second base to show it is a property of the triangle, and rule out a side '
+          + 'offered as a height by the shortest-route fact rather than by computing with it; say '
+          + 'why three side lengths alone do not give an area.',
+        taskKinds: ['evaluate', 'justify'],
+      },
+      {
+        id: 'decide-whether-either-measure-determines-the-other',
+        statement:
+          'Produce two regions of equal area with unequal perimeters, and two of equal perimeter '
+          + 'with unequal areas, and say which part of the given each measure depended on; decide '
+          + 'in both directions whether one measure can be computed from the other.',
+        taskKinds: ['evaluate', 'justify'],
+      },
+    ],
+    knowledgePoints: [
+      {
+        id: 'additivity-turns-a-cut-into-a-subtraction',
+        conceptId: 'area-and-perimeter',
+        statement:
+          'Area counts unit squares and perimeter measures the way round, so they answer different '
+          + 'questions and come out in different units — a number of square centimetres against a '
+          + 'number of centimetres, which is why one can never be compared with the other. One area '
+          + 'formula is taken as given: a rectangle b units by h units is h rows of b unit squares, '
+          + 'so its area is b × h. Everything else comes from ADDITIVITY — a region cut into pieces '
+          + 'has the sum of their areas — used forwards to assemble a region out of rectangles and '
+          + 'backwards to turn a removal into a subtraction. Nothing in that subtraction says WHERE '
+          + 'the piece was taken from, which is what makes an area computable from a description '
+          + 'rather than from a drawing, and is exactly the property perimeter does not have.',
+        position: 1,
+        /*
+         * No `automaticityTarget`. The arithmetic is one multiplication and one
+         * subtraction and the whole decision is which measure the question
+         * asks for, so this is the read-it-slowly case the congruence and
+         * Pythagoras points are untimed for: the error it exists to stop is
+         * answering an area question with a perimeter, and rewarding speed
+         * would train exactly that. The subtraction itself is also the one
+         * `two-sums-every-angle-chase-uses` already times.
+         */
+        workedExample: {
+          problem:
+            'A rectangular sheet 10 cm by 6 cm has a rectangular piece 4 cm by 3 cm cut out of it. '
+            + 'What is the area of what is left, and what would you still need to know to give its '
+            + 'perimeter?',
+          subgoals: [
+            {
+              label: 'Settle which of the two measures is being asked for, and so what unit the answer carries',
+              detail:
+                'How much sheet is left is an area, so the answer is a number of square '
+                + 'centimetres; the distance round its edge is a perimeter and is a number of '
+                + 'centimetres. The two measures are not comparable and neither is a shortcut to '
+                + 'the other — the third point here is about how far apart they can be — so '
+                + 'naming the measure first is what fixes the unit of everything below.',
+              socratic:
+                'The answer will be a number — but a number of centimetres, or of square '
+                + 'centimetres? Which of the two measures does "how much sheet is left" ask for?',
+            },
+            {
+              label: 'Take the whole rectangle from the one area formula this concept assumes',
+              detail:
+                'The uncut sheet is 10 × 6 = 60 square centimetres. That is the only formula taken '
+                + 'as given here, and it is the definition of the measure rather than a result: six '
+                + 'rows of ten one-centimetre squares tile the sheet exactly, and counting them is '
+                + 'the multiplication. Every other area below is reduced to this one.',
+              socratic:
+                'Before anything is removed, how many one-centimetre squares does it take to tile '
+                + 'the sheet?',
+            },
+            {
+              label: 'Use additivity backwards, which is what turns the cut into a subtraction',
+              detail:
+                'The piece removed and the region left make up the whole sheet between them, so '
+                + 'additivity says their two areas add to 60. The piece is itself a rectangle, so '
+                + 'its area is 4 × 3 = 12, and the region left is 60 − 12 = 48 square centimetres. '
+                + 'There is no formula for the shape that is left and none is wanted: additivity '
+                + 'read forwards assembles an area out of pieces, and read backwards it turns a '
+                + 'removal into one subtraction.',
+              socratic:
+                'The piece and what is left make up the whole sheet between them. If the whole is '
+                + '60 and the piece is 12, what does that force the rest to be?',
+            },
+            {
+              label: 'Find the given that never entered the arithmetic, and say what its absence costs the other measure',
+              detail:
+                'Nothing in 60 − 12 = 48 refers to where on the sheet the piece was cut from — a '
+                + 'corner, the middle of an edge, the middle of the sheet. The area is 48 either '
+                + 'way, and additivity is precisely the property that makes that true. The '
+                + 'perimeter is not like that, so the problem can only be half answered: the same '
+                + 'piece taken from a corner leaves a perimeter of 32 cm and taken from the middle '
+                + 'of a 10 cm edge leaves 38 cm, and the question never said which. That pair is '
+                + 'the third point of this concept.',
+              socratic:
+                'Which of the numbers you were given never appeared in the subtraction at all — '
+                + 'and can you give the perimeter without it?',
+            },
+          ],
+          answer:
+            '48 square centimetres. The whole sheet is 10 × 6 = 60, the piece removed is '
+            + '4 × 3 = 12, and additivity says the piece and the remainder add to the whole, so the '
+            + 'remainder is 60 − 12 = 48. The perimeter cannot be given from what was stated: '
+            + 'where the piece was cut from never entered the area arithmetic, and it is exactly '
+            + 'what decides the perimeter — 32 cm if the piece came from a corner, 38 cm if it came '
+            + 'from the middle of a 10 cm edge.',
+        },
+      },
+      {
+        id: 'a-height-belongs-to-one-base-and-is-usually-no-side',
+        conceptId: 'area-and-perimeter',
+        statement:
+          'A triangle\'s area is half the base times the height, and those two are a MATCHED PAIR: '
+          + 'the height is the perpendicular distance to the line of THAT base from the vertex '
+          + 'opposite it. A triangle therefore carries three bases and the height belonging to each, '
+          + 'and any one of the three pairs gives the same area, because the area is a property of '
+          + 'the triangle rather than of the base you picked. A side is the height only where it '
+          + 'meets the base at a right angle, which in most triangles no side does — so three side '
+          + 'lengths on their own do not give an area, and a candidate height longer than a side '
+          + 'reaching the base is not merely wrong but impossible, since the perpendicular is the '
+          + 'shortest route from the vertex to the base\'s line. The halving is taken as given: two '
+          + 'copies of the triangle make a parallelogram on the same base and height.',
+        position: 2,
+        /*
+         * No `automaticityTarget`, and this is the read-it-slowly case in its
+         * sharpest form in the file. The error the point exists to stop is
+         * grabbing whichever length is to hand as the height, so a speed
+         * reward would train the mistake rather than measure anything. The
+         * arithmetic underneath it is one multiplication and a halving, which
+         * is not a fluency skill the subject is missing.
+         */
+        workedExample: {
+          problem:
+            'A triangle has sides 13 cm, 14 cm and 15 cm, and the perpendicular height to the '
+            + '14 cm side is 12 cm. Find its area.',
+          subgoals: [
+            {
+              label: 'Pair the base with the height that belongs to it, before reaching for the formula',
+              detail:
+                'Four lengths have been given and the formula takes two. The 12 cm is the height to '
+                + 'the 14 cm side, so the matched pair is base 14 and height 12, and the 13 and the '
+                + '15 do not appear in the calculation at all. The formula wants a base together '
+                + 'with the perpendicular distance to that base\'s line from the opposite vertex — '
+                + 'one pair out of the three the triangle carries.',
+              socratic:
+                'Four lengths are given and the formula takes two of them. Which two belong to '
+                + 'each other?',
+            },
+            {
+              label: 'Halve the product of the matched pair',
+              detail:
+                '½ × 14 × 12 = 84 square centimetres. The halving is the step taken as given here: '
+                + 'two copies of the triangle, one of them turned, make a parallelogram standing on '
+                + 'the same 14 cm base with the same 12 cm height, so one copy is half of '
+                + '14 × 12 = 168. That parallelogram in turn reduces to a rectangle by cutting and '
+                + 'rearranging, which is why the rectangle is the only formula the first point '
+                + 'assumes.',
+              socratic:
+                'Two copies of the triangle make a parallelogram on a 14 cm base with a 12 cm '
+                + 'height. What is one copy worth?',
+            },
+            {
+              label: 'Rule out the two tempting mis-pairings by the shortest-route fact rather than by computing them',
+              detail:
+                'Using 13 as the height to the 14 would give ½ × 14 × 13 = 91, and using 15 would '
+                + 'give 105. Both are impossible before any arithmetic is done. The height drops '
+                + 'perpendicular from the opposite vertex to the base\'s line, and the triangle '
+                + 'inequality says that perpendicular is shorter than either route along a side to '
+                + 'the same vertex — so the height to the 14 is less than 13 and less than 15, and '
+                + '12 is. A length offered as a height that exceeds a side reaching the base is not '
+                + 'a wrong answer to be checked; it is not a height.',
+              socratic:
+                'The height drops straight to the base and the two other sides reach the same '
+                + 'vertex the long way round. Which of 12, 13 and 15 could a height to the 14 cm '
+                + 'side possibly be?',
+            },
+            {
+              label: 'Read the same area off a second base, so the answer does not depend on which one was chosen',
+              detail:
+                'Put the triangle on its 13 cm side instead. If the area really is 84 then '
+                + '½ × 13 × h = 84, so h = 168/13 cm, which is about 12.9 — not a whole number, and '
+                + 'it does not need to be. The three matched pairs are three ways of reading off '
+                + 'one number, not three different measurements, and the heights come out '
+                + 'irrational or fractional as often as not. This one also obeys the fact above: '
+                + '168/13 is less than both 14 and 15.',
+              socratic:
+                'If the area is a property of the triangle rather than of the base you picked, what '
+                + 'must the height to the 13 cm side come to?',
+            },
+          ],
+          answer:
+            '84 square centimetres. The 12 cm height is matched to the 14 cm base, so the area is '
+            + '½ × 14 × 12 = 84 and the 13 and 15 never enter it. Pairing the 14 with the 13 or the '
+            + '15 would give 91 or 105, and both are impossible before the arithmetic: the '
+            + 'perpendicular from a vertex is shorter than either side reaching it, so a height to '
+            + 'the 14 has to be less than both. Reading the same area off the 13 cm base gives a '
+            + 'height of 168/13 cm, which is less than both of the other two sides and gives 84 '
+            + 'again.',
+        },
+      },
+      {
+        id: 'neither-measure-decides-the-other',
+        conceptId: 'area-and-perimeter',
+        statement:
+          'Equal areas do not force equal perimeters and equal perimeters do not force equal '
+          + 'areas, so neither measure can be computed from the other. One direction: the same '
+          + '12 cm² piece cut from the same 10 cm by 6 cm sheet leaves 48 cm² wherever it is taken '
+          + 'from, but a corner cut leaves the perimeter at 32 cm while a cut from the middle of a '
+          + '10 cm edge raises it to 38 cm. The other direction: a 10 by 6 rectangle and a 15 by 1 '
+          + 'rectangle both have perimeter 32 cm, and their areas are 60 cm² and 15 cm². The reason '
+          + 'is the one the first point names — a boundary notices where a piece was removed and an '
+          + 'area does not — and it is why "bigger" has to say which measure it means.',
+        position: 3,
+        /*
+         * No `automaticityTarget`, for the reason the triangle inequality, the
+         * Pythagorean converse and the rhombus comparison are untimed: this is
+         * a decision with an argument behind it rather than a fluency skill,
+         * and the arithmetic carrying the decision is a boundary walk and one
+         * subtraction the first point already covers.
+         */
+        workedExample: {
+          problem:
+            'A 10 cm by 6 cm sheet has a 4 cm by 3 cm rectangle cut out of it — in one case from a '
+            + 'corner, in the other from the middle of a 10 cm edge. Compare the areas of the two '
+            + 'results, and their perimeters.',
+          subgoals: [
+            {
+              label: 'Compute both areas and find there is nothing to choose between them',
+              detail:
+                'Both are 60 − 12 = 48 square centimetres, by the subtraction of the first point. '
+                + 'The position of the cut did not appear in that subtraction, so the two areas are '
+                + 'not merely close: they are the same number, for the same reason, and no amount '
+                + 'of detail about where the piece came from would change either of them.',
+              socratic:
+                'The two cuts take the same piece out of the same sheet. What does additivity force '
+                + 'about the two areas?',
+            },
+            {
+              label: 'Walk the boundary of the corner cut, and find the lengths removed exactly replaced',
+              detail:
+                'The uncut sheet goes 10 + 6 + 10 + 6 = 32 cm. Cutting a 4 by 3 piece out of a '
+                + 'corner shortens one 10 cm edge to 6 and one 6 cm edge to 3, which takes 4 + 3 = 7 '
+                + 'off the boundary — and the two new edges of the notch are 4 cm and 3 cm, which '
+                + 'puts the same 7 back. So the perimeter is 32 − 7 + 7 = 32 cm, unchanged, and it '
+                + 'would be unchanged for a corner piece of any size.',
+              socratic:
+                'The cut shortens two outer edges by 4 cm and 3 cm, and puts two new edges in their '
+                + 'place. How long are the new ones, and so what happens to the total?',
+            },
+            {
+              label: 'Walk the boundary of the middle cut, and find two edges with nothing removed to pay for them',
+              detail:
+                'Along the top, 3 + 4 + 3 = 10 cm is still traversed — the floor of the notch '
+                + 'replaces the 4 cm it removed, exactly the trade the corner cut made. What is new '
+                + 'is the notch\'s two SIDES, 3 cm each, and nothing was taken off the boundary to '
+                + 'pay for them: the corner cut used the sheet\'s own edge as one side of its '
+                + 'notch, and a cut in the middle of an edge has sheet on both sides of it. So the '
+                + 'perimeter is 32 + 3 + 3 = 38 cm.',
+              socratic:
+                'The top edge still contributes 10 cm in total. What else is on this boundary that '
+                + 'was not on the corner-cut one, and what was removed to pay for it?',
+            },
+            {
+              label: 'Read off both directions of the independence, and name which given each measure needed',
+              detail:
+                'Equal areas, unequal perimeters: 48 cm² with 32 cm and 48 cm² with 38 cm, so an '
+                + 'area does not decide a perimeter. The other direction needs a different pair and '
+                + 'is as easy: a 10 by 6 rectangle and a 15 by 1 rectangle both have perimeter '
+                + '2 × (10 + 6) = 2 × (15 + 1) = 32 cm, and their areas are 60 cm² and 15 cm². So a '
+                + 'perimeter does not decide an area either. The two measures read different parts '
+                + 'of the same given: the area needed only the sizes of the sheet and the piece, '
+                + 'and the perimeter needed where the piece was.',
+              socratic:
+                'You now have two regions with equal areas and unequal perimeters. What pair of '
+                + 'rectangles would show the same thing the other way round?',
+            },
+          ],
+          answer:
+            'Both cuts leave 48 cm², and the perimeters are 32 cm for the corner cut and 38 cm for '
+            + 'the middle cut. The areas agree because additivity makes the area 60 − 12 wherever '
+            + 'the piece came from. The perimeters differ because a corner cut replaces the two '
+            + 'edge-lengths it removes with the two sides of its notch, while a cut from the middle '
+            + 'of an edge adds both of its 3 cm sides with nothing removed to pay for them. The '
+            + 'other direction takes one more pair: a 10 by 6 and a 15 by 1 rectangle both have '
+            + 'perimeter 32 cm and have areas of 60 cm² and 15 cm². Neither measure decides the '
+            + 'other.',
+        },
+      },
+    ],
+  },
+
+  {
+    id: 'geometric-proof',
+    name: 'Deductive proof',
+    subjectId: subject.id,
+    scope: {
+      id: 'geometric-proof',
+      label: 'Deductive proof',
+      hint: 'geometric proof two column deduction axiom',
+      /*
+       * NO `match`, and this is the first promotion in the subject where that
+       * is the honest answer rather than a copy of the node's.
+       *
+       * The seven concepts above each carried a pattern verbatim from the map
+       * node, for the reason `area-and-perimeter`'s scope gives: widening one
+       * while writing material makes two changes at once and the recognition
+       * figure in tests/atlas.mjs moves with no way to say which edit moved it.
+       * This node never had one. The same rule therefore says do not invent one
+       * HERE either — writing a pattern during an authoring pass is exactly the
+       * change that rule forbids, and `expandNode` has been reporting the
+       * absence correctly all along.
+       *
+       * It is also the right answer on the merits, which is why `fidelity` is
+       * `guided` without regret. "Proof" is in the title of a large part of the
+       * medium and in the body of nearly all of it, so a pattern on the word
+       * would claim the corpus rather than select from it — the failure
+       * `MapNode.match` warns about by name, with `/probability/i` as its
+       * example. The articles that really cover this ("Mathematical proof",
+       * "Deductive reasoning", "Axiom") are about proof in general rather than
+       * about the geometric style the concept teaches, so even an anchored
+       * pattern on those three titles would be deciding a different question.
+       */
+    },
+    fidelity: 'guided',
+    caveat:
+      'Nothing checks that a statement is really about deductive proof, and no pattern here '
+      + 'could. "Proof" names the activity of most of mathematics rather than a topic inside it, '
+      + 'so a pattern on the word would claim nearly every statement instead of selecting one; '
+      + 'the articles that genuinely cover this are about proof in general rather than about the '
+      + 'geometric style taught here. So this concept steers the search and the instruction and '
+      + 'filters nothing. The material below is written and practisable — it is the RECOGNITION '
+      + 'that is unchecked, not the teaching.',
+    objectives: [
+      {
+        id: 'reach-a-conclusion-by-citing-facts-rather-than-by-measuring-one',
+        statement:
+          'Produce an angle nobody stated by citing the straight line, the base-angle theorem and '
+          + 'the angle sum in that order, say which given each step consumed, and say why the '
+          + 'answer is forced by the chain rather than read off a figure — including what the '
+          + 'chain needs of the given before it produces a triangle at all.',
+        taskKinds: ['evaluate', 'justify'],
+      },
+      {
+        id: 'tell-a-converse-from-a-contrapositive-and-say-which-came-free',
+        statement:
+          'Given a true implication, write both its converse and its contrapositive, decide which '
+          + 'pairs of triangles each one settles and which it leaves open, and say which of the '
+          + 'two rearrangements is the same claim and which is a new one needing its own proof.',
+        taskKinds: ['evaluate', 'justify'],
+      },
+      {
+        id: 'refute-a-universal-claim-with-one-case-after-checking-the-case',
+        statement:
+          'Refute a claim made of every triangle by producing a single triangle that breaks it, '
+          + 'reject a proposed counterexample that fails the claim\'s own hypothesis, and say why '
+          + 'any number of confirming instances is not a proof while one failure is a refutation.',
+        /*
+         * `counterexample` is NOT claimed here, and this is the one concept in
+         * the build where that is a real decision rather than a formality.
+         * tasks.ts says why: the kind is declared verifiable and carries no
+         * tasks, because it needs a ruler that can check a produced object
+         * against a claim and none exists — so a task of the kind would be
+         * served and never settled. This is the first objective whose natural
+         * kind it is, and naming it would promise practice that cannot be
+         * served, which is the exact fault `ontologyProblems` reports for a
+         * mapped node's empty objectives. So the refutation is asked as the two
+         * `evaluate` values it reduces to, and the gap is recorded instead of
+         * papered over.
+         */
+        taskKinds: ['evaluate', 'justify'],
+      },
+    ],
+    knowledgePoints: [
+      {
+        id: 'a-proof-cites-facts-already-established',
+        conceptId: 'geometric-proof',
+        statement:
+          'A proof is a chain. Each step states something and names the established fact that '
+          + 'licenses it, and the chain is only sound if every fact it cites was available BEFORE '
+          + 'that step — a step that cites the conclusion, or a fact derived later, proves nothing '
+          + 'however true its sentence is. What the chain buys is a quantity nobody measured: the '
+          + 'conclusion is forced by the givens, so it holds for every figure with those givens '
+          + 'rather than for the one in front of you. Written out as arithmetic, a finished chain '
+          + 'collapses into a single expression in the given — which is what "the argument is the '
+          + 'answer" means here, since the expression IS the citations composed in order.',
+        position: 1,
+        /*
+         * No `automaticityTarget`. The whole content is which fact licenses
+         * which step, so rewarding speed would reward reaching for the
+         * arithmetic before the citation — the error the point exists to stop.
+         * The subtractions underneath it are already timed by
+         * `two-sums-every-angle-chase-uses`.
+         */
+        workedExample: {
+          problem:
+            'In triangle ABC, AB = AC. The side CB is extended beyond B to a point D, and the '
+            + 'angle ABD measures 140°. Find the angle at A.',
+          subgoals: [
+            {
+              label: 'Separate the givens from the conclusion, and list what may be cited',
+              detail:
+                'Given: AB = AC, and the angle ABD is 140° where C, B and D lie on one straight '
+                + 'line. To be found: the angle at A, which nothing in the problem states. '
+                + 'Available to cite: that angles on a straight line total 180°, that the angles '
+                + 'of a triangle total 180°, and the base-angle theorem — equal sides force equal '
+                + 'angles opposite them. Nothing else is used below, and listing them first is '
+                + 'what makes each step checkable rather than plausible.',
+              socratic:
+                'Nothing you have been told is an angle of the triangle itself. What exactly were '
+                + 'you handed, and what single quantity do you have to produce from it?',
+            },
+            {
+              label: 'Cite the straight line to turn the angle outside the triangle into one inside it',
+              detail:
+                'C, B and D are collinear, so the angles ABC and ABD are angles on a straight '
+                + 'line and total 180°. Therefore the angle ABC is 180 − 140 = 40°. This is the '
+                + 'step that brings the given INTO the triangle: the 140° is not an angle of ABC '
+                + 'at all, and no fact about triangles applies to it.',
+              socratic:
+                'The 140° sits outside the triangle. Which of the facts you listed says anything '
+                + 'about the angle at the same vertex on the other side of the line?',
+            },
+            {
+              label: 'Cite the base-angle theorem to carry that angle across to the far vertex',
+              detail:
+                'AB = AC, so A is the apex and BC is the base, and the base angles are the ones '
+                + 'at B and at C. The base-angle theorem makes them equal, so the angle ACB is '
+                + 'also 40°. This is the step that spends the other given: a chain that never '
+                + 'used AB = AC would be answering a problem about some other triangle.',
+              socratic:
+                'You know one angle of the triangle, and you know two of its sides are equal. '
+                + 'Which fact turns a statement about sides into a statement about angles?',
+            },
+            {
+              label: 'Cite the angle sum to close the triangle, and check the chain against its own givens',
+              detail:
+                'The three angles total 180°, so the angle at A is 180 − 40 − 40 = 100°. Both '
+                + 'givens were used and each exactly once, which is what separates a proof from a '
+                + 'guess that happens to land. Composing the three citations in order gives '
+                + '180 − 2(180 − x) for an exterior angle of x°, and that simplifies to 2x − 180: '
+                + 'one expression in the given, which is the finished argument rather than a '
+                + 'shortcut past it. It also states its own hypothesis — the expression is an '
+                + 'angle of a real triangle only for x above 90°, since at x = 90 it returns 0, '
+                + 'so the chain tells you which givens it accepts.',
+              socratic:
+                'Two of the three angles are now known. What closes the third — and has every '
+                + 'given been used, or is one still sitting unspent?',
+            },
+          ],
+          answer:
+            '100°. The angles ABC and ABD are on a straight line, so ABC is 180 − 140 = 40°; '
+            + 'AB = AC makes B and C the base angles, so the base-angle theorem gives ACB = 40° '
+            + 'too; and the angle sum leaves 180 − 40 − 40 = 100° at A. The three citations '
+            + 'compose to 180 − 2(180 − x) = 2x − 180, which is 100 at x = 140 and is an angle of '
+            + 'a genuine triangle only while x exceeds 90°.',
+        },
+      },
+      {
+        id: 'a-converse-is-a-new-claim-and-a-contrapositive-is-not',
+        conceptId: 'geometric-proof',
+        statement:
+          'A proved implication points one way. Congruent triangles have equal perimeters, because '
+          + 'a congruence asserts all six measurements equal and the three sides therefore sum the '
+          + 'same — and that is the only direction proved. Swapping hypothesis and conclusion '
+          + 'gives the CONVERSE, which is a different claim that needs its own proof and here is '
+          + 'false: equal perimeters are easy to arrange between triangles with different sides. '
+          + 'Negating both and then swapping gives the CONTRAPOSITIVE, which is the original claim '
+          + 'rearranged and so comes free — unequal perimeters prove non-congruence outright. The '
+          + 'two rearrangements look equally innocent and only one of them is.',
+        position: 2,
+        /*
+         * No `automaticityTarget`. The arithmetic is two additions and a
+         * subtraction, and the decision is which of two rearrangements the
+         * learner is entitled to use. A speed reward here would train
+         * answering the easy half fast, which is precisely the mistake.
+         */
+        workedExample: {
+          problem:
+            'It is proved that congruent triangles have equal perimeters. Triangle ABC has sides '
+            + '5 cm, 9 cm and 10 cm; triangle PQR has sides 6 cm, 8 cm and 10 cm; triangle XYZ '
+            + 'has sides 6 cm, 8 cm and 11 cm. What does the proved statement settle about ABC and '
+            + 'PQR, and what does it settle about PQR and XYZ?',
+          subgoals: [
+            {
+              label: 'Write the implication with its hypothesis and conclusion named, before rearranging anything',
+              detail:
+                'Hypothesis: the two triangles are congruent. Conclusion: their perimeters are '
+                + 'equal. Nothing in it says that a perimeter decides a congruence, and the whole '
+                + 'point of writing it this way round first is that the three rearrangements '
+                + 'below are indistinguishable once the labels are dropped.',
+              socratic:
+                'Before you use it on anything: which half of that sentence is the assumption, '
+                + 'and which half is what follows from it?',
+            },
+            {
+              label: 'Form the converse by swapping the two, and test it on the first pair',
+              detail:
+                'The converse reads: if their perimeters are equal then they are congruent. ABC '
+                + 'has perimeter 5 + 9 + 10 = 24 cm and PQR has 6 + 8 + 10 = 24 cm, so the '
+                + 'converse\'s hypothesis holds. But a congruence would make all three sides '
+                + 'match, and {5, 9, 10} is not {6, 8, 10}, so these two are NOT congruent. The '
+                + 'converse is therefore false, and the proved statement settles nothing at all '
+                + 'about this pair.',
+              socratic:
+                'Both of these have perimeter 24 cm. Does that let you conclude anything — and '
+                + 'what do their side lengths say about whether it would even be true?',
+            },
+            {
+              label: 'Form the contrapositive by negating both halves and swapping, and apply it to the second pair',
+              detail:
+                'The contrapositive reads: if their perimeters are not equal then they are not '
+                + 'congruent. PQR has perimeter 24 cm and XYZ has 6 + 8 + 11 = 25 cm, and '
+                + '24 ≠ 25. So PQR and XYZ are definitely not congruent, and that conclusion came '
+                + 'from the original implication with nothing added to it.',
+              socratic:
+                'These two differ by 1 cm round the outside. What does the proved statement let '
+                + 'you say about them, and did you have to prove anything new to say it?',
+            },
+            {
+              label: 'Say which rearrangement was free and which was a new claim',
+              detail:
+                'The contrapositive is the same claim written backwards: anything that made it '
+                + 'fail would make the original fail, so proving one proves the other and no work '
+                + 'was done. The converse is a genuinely different statement about the same two '
+                + 'properties, it needed its own proof, and it does not have one — the first pair '
+                + 'is a counterexample to it. A learner who treats the two rearrangements as '
+                + 'interchangeable will conclude that ABC and PQR are congruent, which is false '
+                + 'about two triangles whose data is entirely consistent.',
+              socratic:
+                'You have used two rearrangements of one sentence and they behaved differently. '
+                + 'Which of them could you have written down without proving anything, and why '
+                + 'that one?',
+            },
+          ],
+          answer:
+            'About ABC and PQR: nothing. Their perimeters are both 24 cm, but that is the '
+            + 'converse\'s hypothesis and the converse is false — and in fact these two are not '
+            + 'congruent, since {5, 9, 10} and {6, 8, 10} are different side lengths. About PQR '
+            + 'and XYZ: they are not congruent. Their perimeters are 24 cm and 25 cm, and the '
+            + 'contrapositive of the proved statement settles it with nothing added. The '
+            + 'contrapositive came free; the converse was a new claim and a false one.',
+        },
+      },
+      {
+        id: 'one-counterexample-settles-it-if-it-meets-the-hypothesis',
+        conceptId: 'geometric-proof',
+        statement:
+          'A claim about EVERY triangle is refuted by one triangle that breaks it and is '
+          + 'established by no number of triangles that do not. That asymmetry is why proof exists '
+          + 'at all: checking cases can only ever kill a universal claim, never confirm one. But '
+          + 'the case has to be a case. A proposed counterexample that fails the claim\'s own '
+          + 'hypothesis refutes nothing, because the claim never spoke about it — so the first '
+          + 'thing to check about a counterexample is not whether it breaks the conclusion but '
+          + 'whether it satisfies the hypothesis.',
+        position: 3,
+        /*
+         * No `automaticityTarget`, for the sharpest version of the reason the
+         * two points above are untimed. The error here is accepting an object
+         * as a counterexample without checking it is one, and that is a step a
+         * learner skips when hurried. The arithmetic is a subtraction and an
+         * angle sum, neither of which is a fluency gap in this subject.
+         */
+        workedExample: {
+          problem:
+            'A learner claims that every exterior angle of a triangle is obtuse, and offers two '
+            + 'objects against it. The first is a triangle with angles 100°, 40° and 40°. The '
+            + 'second has angles 100°, 50° and 40°. Which of the two refutes the claim, and what '
+            + 'does the other one do?',
+          subgoals: [
+            {
+              label: 'Read the claim\'s quantifier, since that is what decides what would settle it',
+              detail:
+                'The claim is about EVERY exterior angle of EVERY triangle. One exterior angle '
+                + 'that is not obtuse therefore refutes it completely, and any number that are '
+                + 'obtuse leaves it exactly where it was. So the work is to find one failure, and '
+                + 'the obvious place to look is the vertex whose interior angle is largest.',
+              socratic:
+                'The claim says "every". How many cases would you need to kill it, and how many '
+                + 'would you need to establish it?',
+            },
+            {
+              label: 'Test the first candidate at the vertex most likely to break it',
+              detail:
+                'At the 100° vertex the exterior angle is on a straight line with the interior '
+                + 'one, so it is 180 − 100 = 80°. That is acute, not obtuse, so this triangle '
+                + 'breaks the claim and the claim is finished. Checking a second vertex is '
+                + 'unnecessary — the refutation is already complete.',
+              socratic:
+                'Which vertex of 100°, 40°, 40° would you try first, and what does the straight '
+                + 'line give you for the exterior angle there?',
+            },
+            {
+              label: 'Check the second candidate against the hypothesis before using it at all',
+              detail:
+                '100 + 50 + 40 = 190, and the angles of a triangle total 180°, so there is no '
+                + 'such triangle. Its "exterior angle" of 80° refutes nothing, because the claim '
+                + 'was about triangles and this is not one. This is the failure worth more than '
+                + 'the refutation above: the object looks like a counterexample, produces the '
+                + 'same 80°, and is worthless — so a counterexample must be checked against the '
+                + 'hypothesis first and the conclusion second.',
+              socratic:
+                'Before asking whether this object breaks the claim, ask whether the claim was '
+                + 'ever talking about it. What does 100 + 50 + 40 tell you?',
+            },
+            {
+              label: 'Say what the surviving vertices contribute, and repair the claim into a true one',
+              detail:
+                'The other two vertices of the real triangle give 180 − 40 = 140° each, both '
+                + 'obtuse. They are instances of the claim and they are worth nothing: a '
+                + 'universal claim that has already failed once is not partly true. What IS true '
+                + 'is the repaired version — at most one exterior angle of a triangle fails to be '
+                + 'obtuse — and it follows from a fact already established, that at most one of a '
+                + 'triangle\'s angles can be 90° or more. An exterior angle is non-obtuse exactly '
+                + 'at such a vertex, and there is at most one.',
+              socratic:
+                'The other two exterior angles here are both obtuse. What do they add to the '
+                + 'claim\'s case — and is there a version of the claim they would support?',
+            },
+          ],
+          answer:
+            'The first refutes it, the second does nothing. In the 100°, 40°, 40° triangle the '
+            + 'exterior angle at the 100° vertex is 180 − 100 = 80°, which is acute, and one '
+            + 'failure ends a claim made of every triangle. The second object has angles summing '
+            + 'to 190°, so no such triangle exists and it cannot refute a claim about triangles '
+            + 'however its arithmetic comes out. The two obtuse exterior angles of the first '
+            + 'triangle, 140° each, add nothing: instances never establish a universal claim. The '
+            + 'repaired claim — at most one exterior angle of a triangle is not obtuse — is true, '
+            + 'because at most one of a triangle\'s angles is 90° or more.',
+        },
+      },
+    ],
+  },
 ]
 
 /**
- * Six edges: one prerequisite per promotion after the first, plus the one
- * interference the fourth promotion brought with it.
+ * Nine edges: one prerequisite per promotion after the first, TWO for the
+ * seventh, plus the one interference the fourth promotion brought with it.
+ *
+ * THE EIGHTH PROMOTION PUT A THIRD CHILD ON `congruence` AND ADDED NO BRANCH
+ * POINT, which is the one shape this list had not yet shown. The sixth made
+ * `congruence` a branch point and the seventh made `triangle-basics` a second
+ * one; this promotion widens a fork that already existed rather than opening a
+ * new one, so the number of branch points is unchanged at two while the subject
+ * gets its first node of out-degree three. Worth separating because "the tree
+ * grew" and "the tree branched" are different claims and the second has
+ * stopped being true of every promotion. The note on
+ * `congruence->geometric-proof` at the bottom carries the argument.
  *
  * THE SIXTH PROMOTION MADE THIS A TREE RATHER THAN A LINE, which is the one
  * structural thing about the list that has changed since it was written, and
  * the note on `congruence->quadrilaterals-and-polygons` at the bottom carries
  * the argument. Everything below it describes a list of five that was a chain
  * of four plus an interference, and all of that is still true of those five.
+ *
+ * THE SEVENTH ADDED A SECOND BRANCH POINT AND THE FIRST PAIR. One promotion
+ * has never contributed two edges here before: every node promoted so far
+ * either declared one `needs` or declared two with one of them unable to
+ * follow. `area-and-perimeter` declared two and both were already concepts of
+ * this subject, so both came. One of them forks off `triangle-basics`, which
+ * had been a leaf of the line since the second promotion, so the tree now has
+ * two branch points rather than one. The notes on the last two entries carry
+ * the argument.
  *
  * An authored ontology's edges may only name concepts it contains, or
  * `ontologyProblems` reports an unknown endpoint for each one. While this
@@ -2944,6 +3972,137 @@ const EDGES: ConceptEdge[] = [
      * owns that edge and `composeAtlas` resolves it across the file boundary.
      * One dependent is also the count at which a dropped edge is easiest to
      * miss, which is why tests/atlas.mjs asserts that particular gate by name.
+     */
+    promotedBy: 'author:plane-geometry',
+  },
+  {
+    id: 'quadrilaterals-and-polygons->area-and-perimeter',
+    from: 'quadrilaterals-and-polygons',
+    to: 'area-and-perimeter',
+    kind: 'prerequisite',
+    /*
+     * THE FIRST PROMOTION HERE WHOSE WHOLE `needs` LIST CAME HOME, which is a
+     * third shape for the edge rule rather than a repeat of either known one.
+     *
+     * The cheap case so far has meant a node with ONE `needs`, pointing at a
+     * concept of this subject — the triangles, `congruence`, the polygons. The
+     * expensive case has meant a node with TWO, one of which could not follow
+     * and went to `EUCLIDEAN_GEOMETRY.links` — `similarity` and `pythagoras`.
+     * This node declared two, `['quadrilaterals-and-polygons',
+     * 'triangle-basics']`, and BOTH of them were already concepts here, so
+     * both edges are internal the moment they are stranded and both are
+     * declared below. The area's `links` needed no entry and gave none up: it
+     * still holds exactly the four it had.
+     *
+     * So the expense of a promotion is not the SIZE of its `needs` list. It is
+     * how many of the endpoints live outside the ontology the node is joining,
+     * which is what the two-for-two case makes visible and the one-for-one
+     * cases could not.
+     *
+     * `author:` rather than `atlas:euclidean-geometry`, like the six above it:
+     * `expandEdges` stamped the area on it while it was the node's `needs`,
+     * and the provenance moved with the edge.
+     *
+     * The claim is load-bearing rather than ordering. The first knowledge
+     * point computes the area of a rectangle with a rectangular piece removed,
+     * and the polygons point is where a figure that is not a triangle is first
+     * taken apart into pieces whose parts correspond; the third point then
+     * compares two regions that are neither triangles nor rectangles. Without
+     * the polygons there is no object for additivity to be applied to beyond
+     * the rectangle itself.
+     */
+    promotedBy: 'author:plane-geometry',
+  },
+  {
+    id: 'triangle-basics->area-and-perimeter',
+    from: 'triangle-basics',
+    to: 'area-and-perimeter',
+    kind: 'prerequisite',
+    /*
+     * The second half of the same promotion, and the SECOND FORK in the
+     * subject — this one off `triangle-basics`, where the sixth promotion's
+     * was off `congruence`. So the edge list is a tree with two branch points
+     * now, and tests/concepts-logic.mjs asserts each fork against the node
+     * that carries it rather than asserting one ordered string: an edge
+     * accidentally hung off `congruence` instead of the triangles would pass a
+     * list comparison written after the fact while changing what gates what.
+     *
+     * This is also the first edge here that points INTO a node two promotions
+     * after it was first described. atlas-foundations.ts recorded, at the
+     * second promotion, that `area-and-perimeter` was one of three nodes whose
+     * gate the triangles had just tightened; it is the same claim, now written
+     * from the other side because both of its endpoints are concepts.
+     *
+     * The claim is load-bearing. The second knowledge point is a triangle's
+     * area, and the argument that rules out a side offered as a height is the
+     * triangle inequality from `the-inequality-compares-two-routes` — the
+     * perpendicular from a vertex is the shortest route to the base's line, so
+     * a height cannot exceed a side reaching the base. That subgoal cannot be
+     * written without the inequality, and it is the one part of the concept
+     * that refuses a wrong answer before computing it.
+     */
+    promotedBy: 'author:plane-geometry',
+  },
+  {
+    id: 'congruence->geometric-proof',
+    from: 'congruence',
+    to: 'geometric-proof',
+    kind: 'prerequisite',
+    /*
+     * THE THIRD CHILD OF `congruence`, AND THE FIRST EDGE HERE THAT WIDENS A
+     * FORK INSTEAD OF MAKING ONE.
+     *
+     * `congruence` already carried `similarity` from the fourth promotion and
+     * `quadrilaterals-and-polygons` from the sixth. This is the third, so the
+     * node has out-degree three and the subject still has exactly two branch
+     * points. tests/concepts-logic.mjs asserts the children of `congruence` as a
+     * named set for that reason: a count would have moved from two to three
+     * either way, and what is worth holding is WHICH three, since an edge
+     * accidentally hung off `pythagoras` or the polygons would pass an
+     * out-degree check while changing what gates what.
+     *
+     * `author:` rather than `atlas:euclidean-geometry`, like the seven above it:
+     * `expandEdges` stamped the area on it while it was the node's `needs`, and
+     * the provenance moved with the edge.
+     *
+     * THE CHEAP CASE, for the fifth time, and the node made it cheap by
+     * declaring exactly one `needs` that was already a concept here. So the
+     * area's `links` needed no entry and gave none up: `EUCLIDEAN_GEOMETRY`
+     * still holds exactly the four cross-file edges it had. Nothing about this
+     * promotion was expensive, which is worth recording next to the fact that it
+     * was the one every previous author passed over — the cost that stopped them
+     * was never structural.
+     *
+     * The claim is load-bearing rather than ordering, and it is load-bearing in
+     * all three knowledge points, which no previous edge in this subject can
+     * say. The first point's chain cites the base-angle theorem by name, and
+     * that theorem is `congruence`'s third point — matching a triangle with
+     * itself. The second point's true implication is "congruent triangles have
+     * equal perimeters", which is read straight off the six equalities a
+     * congruence asserts, and its refutation of the converse compares two side
+     * triples as a congruence would. Only the third point could be written
+     * without `congruence`, and it is a claim about proof rather than about
+     * figures. Remove the prerequisite and two of the three worked examples
+     * stop being finishable.
+     *
+     * THE EDGES POINTING INTO THE NODE ARE THE WIDEST FAN-OUT ANY PROMOTION
+     * HERE HAS LEFT BEHIND, and none of them needed attention: an edge is owned
+     * by the node that DECLARES it. `circles` and `non-euclidean-geometry` name
+     * `geometric-proof` in their own `needs` and are still in
+     * `euclidean-geometry`; two more name it from other atlas files entirely,
+     * one in the analysis areas and one in the structures. All four stayed, so
+     * all four still own their edge and `composeAtlas` resolves them across the
+     * file boundary. The only one whose GATE changes is `circles`, which had
+     * `pythagoras` gating it since the fifth promotion and was still having the
+     * walk look straight through this half of its pair.
+     *
+     * WHAT THIS PROMOTION COST THE AREA that the six before it did not:
+     * `circles` becomes a root of `euclidean-geometry` viewed alone. It is the
+     * node that the fifth promotion's note is built around — it did NOT become a
+     * root when `pythagoras` left, because `geometric-proof` was still here to
+     * gate it from inside — and this is the other half of that rule arriving.
+     * atlas-foundations.ts carries it; the consequence for this file is only
+     * that the subject it feeds has stopped being blocked above `pythagoras`.
      */
     promotedBy: 'author:plane-geometry',
   },
