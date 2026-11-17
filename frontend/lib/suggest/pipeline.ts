@@ -367,9 +367,9 @@ export async function buildDigest(
   // Both per-user reads in one round trip. Sequential awaits here cost two
   // subrequests' worth of latency for no reason, and this function runs inside
   // a Worker whose budget the poll path has already proved is finite.
-  const [shown, dismissed] = await Promise.all([
+  const [shown, withheld] = await Promise.all([
     store.recentlyShown(userId),
-    store.dismissedItemIds(userId, windowDays),
+    store.withheldItems(userId, windowDays),
   ])
   const recentlyShown = shown.map(s => new Set([...contentTokens(s.title), ...s.topicTags]))
 
@@ -414,7 +414,7 @@ export async function buildDigest(
   })
 
   /**
-   * Drop what the reader has already said they saw.
+   * Drop what the reader has set aside — seen, asked for less of, or deferred.
    *
    * ── Here, and NOT before the clustering ───────────────────────────────────
    *
@@ -431,23 +431,43 @@ export async function buildDigest(
    * CPU and no round trips — the budget that `prepare()` and the inverted index
    * already brought down to 79ms at 698 items.
    */
-  const eligible = dismissed.size > 0
-    ? scored.filter(s => !dismissed.has(s.item.itemId))
+  const eligible = withheld.size > 0
+    ? scored.filter(s => !withheld.has(s.item.itemId))
     : scored
-  const dismissedHere = scored.length - eligible.length
 
   const digest = selectDigest(eligible, assignment, {
     plan, weights, enabledFeeds: feeds.length,
   })
 
-  if (dismissedHere > 0) {
-    // Said out loud, like every other thing this pipeline leaves out. A digest
-    // that came back short because the reader had worked through the window is
-    // a different fact from one the ranking could not fill, and the gaps panel
-    // would otherwise report the second.
+  /**
+   * Said out loud, like every other thing this pipeline leaves out, and broken
+   * down by reason.
+   *
+   * A digest that came back short because the reader had worked through the
+   * window is a different fact from one the ranking could not fill, and the
+   * gaps panel would otherwise report the second. The breakdown matters for the
+   * same reason one step further in: "you asked for less of these" is a
+   * judgement the reader can revisit, and "these are back next week" is not
+   * even a loss. Counted off `scored`, not off `withheld`, so it reports what
+   * was actually held out of THIS build rather than every reaction on file.
+   */
+  const heldBack = scored.reduce<Record<string, number>>((acc, s) => {
+    const kind = withheld.get(s.item.itemId)
+    if (kind) acc[kind] = (acc[kind] ?? 0) + 1
+    return acc
+  }, {})
+  const HELD_BACK_PHRASE: Record<string, (n: number) => string> = {
+    already_saw: n => `${n} you marked already seen`,
+    less_like_this: n => `${n} you asked for less of`,
+    interesting_not_useful: n => `${n} you put off for later, which will be back in a week`,
+  }
+  const heldBackTotal = Object.values(heldBack).reduce((n, c) => n + c, 0)
+  if (heldBackTotal > 0) {
+    const parts = Object.entries(heldBack)
+      .filter(([, n]) => n > 0)
+      .map(([kind, n]) => HELD_BACK_PHRASE[kind]?.(n) ?? `${n} you reacted to (${kind})`)
     digest.notes.push(
-      `${dismissedHere} item${dismissedHere === 1 ? '' : 's'} you marked already seen ` +
-      `${dismissedHere === 1 ? 'was' : 'were'} left out`,
+      `${heldBackTotal} item${heldBackTotal === 1 ? '' : 's'} left out: ${parts.join(', ')}`,
     )
   }
   if (duplicates.length > 0) {

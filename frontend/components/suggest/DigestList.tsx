@@ -5,6 +5,7 @@ import {
   ChevronDown, ChevronRight, ExternalLink, Eye, Minus, Plus, ThumbsUp, Clock, Check,
 } from 'lucide-react'
 import { authedFetch } from '@/lib/authedFetch'
+import { REMOVAL } from '@/lib/suggest/feedback'
 
 /**
  * The digest, with every item able to explain itself.
@@ -40,6 +41,15 @@ import { authedFetch } from '@/lib/authedFetch'
  * a learning system that adjusts itself invisibly cannot be argued with, and
  * `/api/suggest/feedback` returns the before and after specifically so this can
  * say "energy storage 0.62 → 0.70".
+ *
+ * ── Saying "not this" takes the row away ──────────────────────────────────
+ *
+ * Less, Later and Seen all remove the item from the strip; see `DISMISSING`.
+ * The reasons are different and the durations are different — Later is a week,
+ * the other two are for good — and the line under the list says which, because
+ * four rows vanishing with one count attached to them is not a thing anybody
+ * can check. The way back is `undismiss`, which withdraws the reaction where
+ * that is honest and otherwise only puts the row back.
  */
 
 export interface DigestItem {
@@ -114,7 +124,10 @@ const PART_LABEL: Record<string, string> = {
 const CONTROLS: { kind: string; label: string; short: string; icon: typeof Plus; title: string }[] = [
   { kind: 'worth_seeing', label: 'Worth seeing', short: 'Good', icon: ThumbsUp, title: 'Glad this was in the feed' },
   { kind: 'more_like_this', label: 'More', short: 'More', icon: Plus, title: 'Find more like this' },
-  { kind: 'less_like_this', label: 'Less', short: 'Less', icon: Minus, title: 'Find less like this' },
+  {
+    kind: 'less_like_this', label: 'Less', short: 'Less', icon: Minus,
+    title: 'Find less like this — this item goes, and the topic’s weight comes down',
+  },
   {
     kind: 'interesting_not_useful', label: 'Interesting, not useful', short: 'Later', icon: Clock,
     // Spelled out because the distinction is the whole reason the control
@@ -123,23 +136,57 @@ const CONTROLS: { kind: string; label: string; short: string; icon: typeof Plus;
     // not "Not useful" for the same reason — "later" is what the control means,
     // and an abbreviation that reads as mild dislike would collect the wrong
     // signal from everyone who never hovers.
-    title: 'A good find at the wrong moment — this will NOT reduce the topic’s weight',
+    //
+    // "Back in a week" is now part of the promise and not a vague one: it is
+    // `DEFERRAL_MS`, which the digest builder reads.
+    title: 'A good find at the wrong moment — this item goes for a week and then comes back, '
+      + 'and the topic’s weight does NOT come down',
   },
   {
     kind: 'already_saw', label: 'Already saw', short: 'Seen', icon: Eye,
-    title: 'A duplicate — this moves no interest weight, and clears the item from the strip',
+    title: 'A duplicate — this item goes, and no interest weight moves',
   },
 ]
 
 /**
- * The reaction that takes an item out of the strip.
+ * The reactions that take an item out of the strip.
  *
- * Only this one. "Less like this" is a statement about the topic and "later" is
- * a statement about the week — neither means "I am done with this row", and
- * hiding on them would make the two controls a user needs for tuning feel like
- * controls for dismissing.
+ * All three of `REMOVAL`'s removing kinds, and that is a reversal. This was
+ * `already_saw` alone, on the reasoning that "less like this" is a statement
+ * about the topic and "later" a statement about the week, so neither meant "I
+ * am done with this row". True as far as it goes, and it produced a strip where
+ * saying you wanted less of something left it sitting exactly where it was —
+ * which reads as the control having failed, and invites the reader to press it
+ * again on the same row.
+ *
+ * Read from `lib/suggest/feedback.ts` rather than listed here, because the
+ * digest builder reads the same table. A row this hid that the next build put
+ * back, or the reverse, would be the two halves disagreeing about what the
+ * reader said — and the view is the half with no record to check against.
  */
-const DISMISSING = 'already_saw'
+const DISMISSING: ReadonlySet<string> = new Set(
+  Object.entries(REMOVAL).filter(([, mode]) => mode != null).map(([kind]) => kind),
+)
+
+/** Why a row went, for the line that reports it. */
+const DISMISS_REASON: Record<string, string> = {
+  already_saw: 'already seen',
+  less_like_this: 'less like this',
+  interesting_not_useful: 'saved for later',
+}
+
+/**
+ * "3 already seen, 1 less like this" — the breakdown, not just the total.
+ *
+ * Three rows gone because you had read them and three gone because you want
+ * fewer of them are different facts about the feed, and only the second is
+ * something to go and look at the interest weights about.
+ */
+const reasonSummary = (counts: Record<string, number>): string =>
+  Object.entries(counts)
+    .filter(([, n]) => n > 0)
+    .map(([kind, n]) => `${n} ${DISMISS_REASON[kind] ?? kind.replace(/_/g, ' ')}`)
+    .join(', ')
 
 /**
  * Reactions a second click can withdraw.
@@ -148,6 +195,12 @@ const DISMISSING = 'already_saw'
  * toggle on `less_like_this` would be a lie: the step it took off the interest
  * weight stays off, so "un-clicking" it would undo the record and not the
  * effect. The API refuses those for the same reason.
+ *
+ * Which leaves the mis-tap on Less, now that Less hides the row. The answer is
+ * NOT to add it here — `show anyway` below brings the row back without
+ * claiming to have withdrawn anything, and the way to actually change the
+ * judgement is to press a different button, because the newest reaction per
+ * item is the one the builder reads (`store.withheldItems`).
  */
 const RETRACTABLE: ReadonlySet<string> = new Set(['already_saw', 'interesting_not_useful'])
 
@@ -197,7 +250,7 @@ export default function DigestList({
   compact = false,
   limit,
   feedback,
-  dismissSeen = false,
+  dismissDealtWith = false,
   onTriage,
 }: {
   items: DigestItem[]
@@ -216,15 +269,18 @@ export default function DigestList({
    */
   feedback?: boolean
   /**
-   * Take "already saw" items out of the list, pulling the next ones up into
-   * their slots.
+   * Take dealt-with items out of the list, pulling the next ones up into their
+   * slots. `DISMISSING` is which ones: seen, less like this, or later.
    *
    * For the strip, where five rows out of twenty are shown and the point of the
-   * control is to work through them. The full view leaves them in place and
+   * controls is to work through them. The full view leaves them in place and
    * marked instead — it is the record of the digest, and silently shortening it
    * would make the item count disagree with the list.
+   *
+   * Was `dismissSeen`, renamed with the behaviour: a flag named for one of the
+   * three reactions it now acts on would be read as applying to only that one.
    */
-  dismissSeen?: boolean
+  dismissDealtWith?: boolean
   /**
    * How many items the triage took out, and how many are left.
    *
@@ -253,17 +309,45 @@ export default function DigestList({
   const [reacted, setReacted] = useState<Record<string, string | null>>({})
   const [moved, setMoved] = useState<Record<string, string>>({})
   /** Items cleared in THIS render session, newest last, for the undo line. */
-  const [undoable, setUndoable] = useState<{ itemId: string; title: string }[]>([])
+  const [undoable, setUndoable] = useState<{ itemId: string; title: string; kind: string }[]>([])
+  /**
+   * Rows put back on the screen without the reaction being withdrawn.
+   *
+   * The honest half of an undo for `less_like_this`, which cannot be withdrawn
+   * — the 0.08 it took off the interest weight stays off, and the next build
+   * will still hold the item back. So this restores the row and nothing else:
+   * enough to open a link you did not mean to lose, and not a claim that the
+   * judgement was reversed. Pressing a different reaction on the restored row
+   * is what actually reverses it.
+   *
+   * Separate from `reacted` on purpose. Clearing the reaction instead would
+   * un-mark the button too, and the row would then show as unrated while the
+   * table says otherwise — the same disagreement in the other direction.
+   */
+  const [shownAnyway, setShownAnyway] = useState<Record<string, true>>({})
 
   const reactionOf = (item: DigestItem): string | null =>
     item.itemId in reacted ? reacted[item.itemId] : (item.reaction ?? null)
 
-  const triaged = dismissSeen && withFeedback
-    ? items.filter(i => reactionOf(i) !== DISMISSING)
+  const isDismissed = (item: DigestItem): boolean => {
+    const r = reactionOf(item)
+    return !!r && DISMISSING.has(r) && !shownAnyway[item.itemId]
+  }
+
+  const triaged = dismissDealtWith && withFeedback
+    ? items.filter(i => !isDismissed(i))
     : items
   const shown = typeof limit === 'number' ? triaged.slice(0, limit) : triaged
   const hiddenCount = items.length - triaged.length
   const lastUndo = undoable[undoable.length - 1]
+  /** What the hidden rows went for, so the line below can say which. */
+  const hiddenReasons = items
+    .filter(i => !triaged.includes(i))
+    .reduce<Record<string, number>>((acc, i) => {
+      const r = reactionOf(i) ?? 'unknown'
+      acc[r] = (acc[r] ?? 0) + 1
+      return acc
+    }, {})
 
   const remaining = triaged.length
   useEffect(() => {
@@ -272,7 +356,15 @@ export default function DigestList({
 
   async function send(itemId: string, kind: string, title: string) {
     setReacted(s => ({ ...s, [itemId]: kind }))
-    if (kind === DISMISSING) setUndoable(u => [...u, { itemId, title }])
+    // A new judgement supersedes a put-back, so the row leaves again rather
+    // than sitting there restored with a reaction that no longer explains it.
+    setShownAnyway(s => {
+      if (!(itemId in s)) return s
+      const next = { ...s }
+      delete next[itemId]
+      return next
+    })
+    if (DISMISSING.has(kind)) setUndoable(u => [...u, { itemId, title, kind }])
     try {
       const res = await authedFetch('/api/suggest/feedback', {
         method: 'POST',
@@ -337,6 +429,31 @@ export default function DigestList({
     }
   }
 
+  /**
+   * Put a row back on the screen with the judgement left standing.
+   *
+   * For the kinds `retract` cannot honestly handle — `less_like_this`, whose
+   * weight step a DELETE would not undo, so the API refuses it. No request:
+   * there is nothing to ask the server for, and that is the point. The label
+   * says "show anyway" and not "undo" because this undoes the hiding and
+   * nothing else, and the row says so in words once it is back.
+   *
+   * That sentence is rendered off `shownAnyway` rather than pushed into
+   * `moved`, which the in-flight POST is about to write to — putting it there
+   * would make the note survive or vanish depending on which of a click and a
+   * round trip landed first.
+   */
+  function showAnyway(itemId: string) {
+    setShownAnyway(s => ({ ...s, [itemId]: true }))
+    setUndoable(u => u.filter(e => e.itemId !== itemId))
+  }
+
+  /** Undo where that is honest, put back where it is not. */
+  function undismiss(itemId: string, kind: string) {
+    if (RETRACTABLE.has(kind)) void retract(itemId, kind)
+    else showAnyway(itemId)
+  }
+
   if (items.length === 0) {
     return (
       <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -360,16 +477,19 @@ export default function DigestList({
   if (shown.length === 0 && hiddenCount > 0) {
     return (
       <div className="text-xs text-gray-500 dark:text-gray-400">
+        {/* The reasons, not just the count. Having worked through twenty items
+            and having told the feed you wanted less of all twenty are different
+            states of mind, and the second one is worth seeing written down. */}
         <p>
-          You have marked all {items.length} item{items.length === 1 ? '' : 's'} as
-          already seen.
+          You have dealt with all {items.length} item{items.length === 1 ? '' : 's'}
+          {' '}— {reasonSummary(hiddenReasons)}.
         </p>
         {lastUndo && (
           <button
-            onClick={() => retract(lastUndo.itemId, DISMISSING)}
+            onClick={() => undismiss(lastUndo.itemId, lastUndo.kind)}
             className="mt-1 text-sky-600 hover:underline dark:text-sky-400"
           >
-            Undo “{lastUndo.title}”
+            {RETRACTABLE.has(lastUndo.kind) ? 'Undo' : 'Show anyway'} “{lastUndo.title}”
           </button>
         )}
       </div>
@@ -383,10 +503,13 @@ export default function DigestList({
           const isOpen = !!open[item.itemId]
           const source = item.source ?? item.feedName ?? 'unknown source'
           const reaction = reactionOf(item)
-          // Dimmed only in the full view, which is the one that keeps seen
-          // items in the list. In the strip they are gone, so there is nothing
-          // to dim and a dimmed row would mean something else entirely.
-          const dealtWith = reaction === DISMISSING && !dismissSeen
+          // Dimmed in the full view, which is the one that keeps dealt-with
+          // items in the list — and on the strip only for a row that was put
+          // back, where the dimming is the whole signal that the judgement is
+          // still standing. Otherwise the strip has nothing to dim: they are
+          // gone, and a dimmed row there would mean something else entirely.
+          const dealtWith = !!reaction && DISMISSING.has(reaction)
+            && (!dismissDealtWith || !!shownAnyway[item.itemId])
           return (
             <li
               key={item.itemId}
@@ -521,6 +644,18 @@ export default function DigestList({
                       {moved[item.itemId]}
                     </span>
                   )}
+                  {/* A row that is only back because it was asked for. Said
+                      plainly, because "show anyway" put it in front of you
+                      again and the next digest will not — a restored row that
+                      looked like any other would be this component implying the
+                      judgement had been taken back. */}
+                  {shownAnyway[item.itemId] && (
+                    <span className="ml-1 text-[11px] text-gray-400 dark:text-gray-500">
+                      shown at your request — the{' '}
+                      {DISMISS_REASON[reaction ?? ''] ?? 'reaction'} still stands, so it stays
+                      out of the next digest
+                    </span>
+                  )}
                 </div>
               )}
             </li>
@@ -533,20 +668,30 @@ export default function DigestList({
           would look like the digest changed on its own, and a dismissal with no
           visible trace is indistinguishable from a bug that ate an item. The
           undo is one deep on purpose — it covers the mis-tap, which is the
-          failure this control actually has, and anything older is still
-          reachable (and still marked) on the full page. */}
+          failure these controls actually have, and anything older is still
+          reachable (and still marked) on the full page.
+
+          Broken down by reason now that three reactions land here, because "4
+          hidden" over a strip where one was a duplicate and three were topics
+          you rejected hides the only one of those worth a second thought. */}
       {hiddenCount > 0 && (
         <p className="mt-2 flex flex-wrap items-center gap-x-2 text-[11px] text-gray-400 dark:text-gray-500">
           <span>
-            {hiddenCount} marked already seen
+            {hiddenCount} hidden — {reasonSummary(hiddenReasons)}
           </span>
           {lastUndo && (
             <button
-              onClick={() => retract(lastUndo.itemId, DISMISSING)}
+              onClick={() => undismiss(lastUndo.itemId, lastUndo.kind)}
               className="text-sky-600 hover:underline dark:text-sky-400"
-              title={`Put “${lastUndo.title}” back and withdraw the reaction`}
+              // Two different promises, and the button says which. "Undo"
+              // deletes the record; "show anyway" only puts the row back,
+              // because `less_like_this` already moved a weight that no delete
+              // would move back.
+              title={RETRACTABLE.has(lastUndo.kind)
+                ? `Put “${lastUndo.title}” back and withdraw the reaction`
+                : `Show “${lastUndo.title}” again — the reaction stays recorded`}
             >
-              undo
+              {RETRACTABLE.has(lastUndo.kind) ? 'undo' : 'show anyway'}
             </button>
           )}
         </p>

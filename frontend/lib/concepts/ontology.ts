@@ -233,11 +233,31 @@ const CONCEPTS: Concept[] = [
             {
               label: 'Which pair now?',
               detail: 'Product a·c = 2·3 = 6, sum b = 7. That pair is 1 and 6.',
+              socratic:
+                'Run the monic habit first and watch it fail: a pair multiplying to the ' +
+                'constant 3 and adding to the middle 7. The pairs for 3 are 1 and 3, or −1 ' +
+                'and −3, and those add to 4 and −4. Nothing is wrong with the method — one ' +
+                'number in 2x² + 7x + 3 has so far taken no part in it at all. Which number ' +
+                'is it, and what should that do to the product the pair has to hit?',
             },
-            { label: 'Split the middle term', detail: '2x² + x + 6x + 3.' },
+            {
+              label: 'Split the middle term',
+              detail: '2x² + x + 6x + 3.',
+              socratic:
+                'Your pair is 1 and 6, and what you know about it besides its product is that ' +
+                'it adds to 7 — which is exactly the coefficient standing in the middle of ' +
+                '2x² + 7x + 3. What may you therefore write in place of 7x, and why does ' +
+                'doing so leave you with the same quadratic you started with?',
+            },
             {
               label: 'Group in pairs',
               detail: 'x(2x + 1) + 3(2x + 1). Both groups carry 2x + 1, so it comes out.',
+              socratic:
+                'Four terms where there were three looks like going backwards, so they had ' +
+                'better come apart in a way the three did not. Pull out whatever the first two ' +
+                'terms share, then whatever the last two share. That leaves two brackets, one ' +
+                'from each pair — what is true of those two, and what does it let you do with ' +
+                'the whole expression that you could not do with 2x² + 7x + 3 as it stood?',
             },
           ],
           answer: '(2x + 1)(x + 3)',

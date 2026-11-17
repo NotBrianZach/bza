@@ -29,6 +29,15 @@
  *     a system that allocates slots by click-through eliminates discovery within
  *     a month. The floor is not a tuning parameter; removing it changes what the
  *     product is.
+ *
+ * ── The weight and the item are two different questions ───────────────────
+ *
+ * Everything above is about the *topic's* weight. `REMOVAL`, below, answers the
+ * other half — whether the *item you just judged* stays in front of you — and
+ * the two are deliberately not the same table. "Less like this" lowering a
+ * weight is a statement about a hundred future items and says nothing about
+ * this one, which would otherwise go on winning its slot on every build with
+ * the reader pressing Less at it each time.
  */
 
 import type { Bucket, BucketPlan, FeedbackKind, Interest } from './types'
@@ -63,6 +72,71 @@ const DIRECTION: Record<FeedbackKind, number> = {
   interesting_not_useful: 0,
   /** A duplicate complaint, not a topic complaint. See rule 3. */
   already_saw: 0,
+}
+
+/**
+ * Whether a judgement takes the item out of the feed, and for how long.
+ *
+ * The sibling of `DIRECTION`, and genuinely independent of it: `already_saw`
+ * removes the item and moves no weight, `worth_seeing` moves a weight and
+ * removes nothing. Neither table can be derived from the other, which is why
+ * this is a table and not a flag hung off that one.
+ *
+ * All three removing kinds say some version of "not this, not now":
+ *
+ *  - `already_saw` — a duplicate. Held for good; it was never wanted twice.
+ *  - `less_like_this` — the wrong thing. Held for good, and the topic weight
+ *    goes down with it.
+ *  - `interesting_not_useful` — the right thing at the wrong moment. Held for
+ *    `DEFERRAL_MS` and then eligible again. This is rule 2 read at the item
+ *    level: holding it for good would make "later" a second, softer-labelled
+ *    "less like this", and holding it not at all — which is what this did
+ *    before — makes "not now" the one control that changes nothing about now.
+ *
+ * `more_like_this` and `worth_seeing` remove nothing. The reader said they
+ * wanted more of it; hiding it would be an odd way to agree.
+ */
+export const REMOVAL: Record<FeedbackKind, 'lasting' | 'deferred' | null> = {
+  already_saw: 'lasting',
+  less_like_this: 'lasting',
+  interesting_not_useful: 'deferred',
+  more_like_this: null,
+  worth_seeing: null,
+}
+
+/**
+ * How long "later" holds an item out.
+ *
+ * A week, against the fourteen-day candidate window — so a deferred item gets
+ * its second chance while it is still a candidate, rather than a theoretical
+ * one after it has aged out of the pool. Shortening the candidate window
+ * without looking at this number turns the deferral back into a deletion.
+ */
+export const DEFERRAL_MS = 7 * 86_400_000
+
+/** Whether this judgement takes the item out of the feed at all. */
+export const removesItem = (kind: string): boolean =>
+  REMOVAL[kind as FeedbackKind] != null
+
+/**
+ * Whether a removal recorded at `at` is still holding, as of `now`.
+ *
+ * Computed from the timestamp rather than tracked with a flag, so nothing has
+ * to run on a schedule to let a deferred item back in — the same reasoning as
+ * `decayFractionForElapsed` in a product that has no scheduler.
+ *
+ * An unreadable timestamp keeps the item out: we cannot show that the week has
+ * passed, and resurfacing something on the strength of a date we could not
+ * parse is the worse of the two failures.
+ */
+export function removalHolds(kind: string, at: string, now: string): boolean {
+  const mode = REMOVAL[kind as FeedbackKind]
+  if (mode == null) return false
+  if (mode === 'lasting') return true
+  const atMs = Date.parse(at)
+  const nowMs = Date.parse(now)
+  if (!Number.isFinite(atMs) || !Number.isFinite(nowMs)) return true
+  return nowMs - atMs < DEFERRAL_MS
 }
 
 export interface FeedbackEvent {

@@ -1449,6 +1449,75 @@ test('the discovery floor survives a run of negative feedback', () => {
   assert(discovery >= 2, `discovery collapsed to ${discovery} slots`)
 })
 
+test('saying "not this" removes the item, and saying "more" does not', () => {
+  // The ask these three satisfy: Less and Later must take the row away, the
+  // same as Seen already did. The two positive controls must not — hiding
+  // something because the reader asked for more of it would be absurd.
+  eq(M.feedback.removesItem('less_like_this'), true)
+  eq(M.feedback.removesItem('interesting_not_useful'), true)
+  eq(M.feedback.removesItem('already_saw'), true)
+  eq(M.feedback.removesItem('more_like_this'), false)
+  eq(M.feedback.removesItem('worth_seeing'), false)
+  // Weak signals are not judgements. A click must never remove a row.
+  eq(M.feedback.removesItem('opened'), false)
+  eq(M.feedback.removesItem('dwell_ms'), false)
+})
+
+test('removing the item is independent of moving the weight', () => {
+  // The reason REMOVAL is its own table. Each of the four combinations is a
+  // real control, so neither property can be derived from the other and a
+  // refactor that tried would silently change two behaviours.
+  const moves = kind => M.feedback.applyFeedback(
+    [interest('energy storage', { weight: 0.5 })],
+    { matchedInterests: ['energy storage'], kind, shownAsBucket: 'core' },
+  )[0].weight !== 0.5
+
+  eq(moves('less_like_this') && M.feedback.removesItem('less_like_this'), true,
+    'less: both')
+  eq(!moves('already_saw') && M.feedback.removesItem('already_saw'), true,
+    'seen: removes, moves nothing')
+  eq(moves('worth_seeing') && !M.feedback.removesItem('worth_seeing'), true,
+    'worth seeing: moves, removes nothing')
+  eq(!moves('interesting_not_useful') && M.feedback.removesItem('interesting_not_useful'), true,
+    'later: removes, and rule 2 says it must not move the weight')
+})
+
+test('"later" comes back, and the other two do not', () => {
+  // The whole reason the deferral exists. A "later" that never returned would
+  // be "never" with a friendlier label — rule 2 at the item level — and the
+  // builder reads this function, so this IS the behaviour.
+  const at = '2026-01-01T00:00:00Z'
+  const day = 86_400_000
+  const plus = n => new Date(Date.parse(at) + n * day).toISOString()
+
+  eq(M.feedback.removalHolds('interesting_not_useful', at, plus(1)), true,
+    'the next day is not "later"')
+  eq(M.feedback.removalHolds('interesting_not_useful', at, plus(6)), true)
+  eq(M.feedback.removalHolds('interesting_not_useful', at, plus(8)), false,
+    'a week on, a deferred item is a candidate again')
+
+  eq(M.feedback.removalHolds('already_saw', at, plus(365)), true,
+    'a duplicate was never wanted twice')
+  eq(M.feedback.removalHolds('less_like_this', at, plus(365)), true,
+    'the reader said they wanted less of this one, not less of it for a week')
+
+  eq(M.feedback.removalHolds('more_like_this', at, plus(0)), false,
+    'nothing holds back an item the reader asked for more of')
+})
+
+test('the deferral is shorter than the candidate window it is measured in', () => {
+  // Otherwise "back in a week" is a promise about an item that has already
+  // aged out of the pool, which is a deletion wearing a timer.
+  assert(M.feedback.DEFERRAL_MS < 14 * 86_400_000,
+    `a ${M.feedback.DEFERRAL_MS / 86_400_000}-day deferral against a 14-day window never returns`)
+})
+
+test('an unreadable timestamp keeps a deferred item out', () => {
+  // The safer of the two failures: resurfacing something on the strength of a
+  // date we could not parse is worse than holding it one build longer.
+  eq(M.feedback.removalHolds('interesting_not_useful', 'not a date', '2026-01-01T00:00:00Z'), true)
+})
+
 // ═══════════════════════════════════════════════════════════════════════════
 // metrics
 // ═══════════════════════════════════════════════════════════════════════════

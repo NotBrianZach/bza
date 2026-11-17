@@ -186,6 +186,10 @@ const CONCEPTS: Concept[] = [
             {
               label: 'Take the combination',
               detail: 'First components of the columns are 2 and −1, so 2·2 + 3·(−1) = 4 − 3 = 1.',
+              socratic:
+                'Only the first component of the combination was asked for, so most of A plays ' +
+                'no part in it. Which two entries does it depend on, and what does weighting ' +
+                'those two by 2 and 3 come to?',
             },
             {
               label: 'What vector produced it',
@@ -193,6 +197,11 @@ const CONCEPTS: Concept[] = [
                 'This is A applied to (2, 3) — combining the columns with weights 2 and 3 is the ' +
                 'same as feeding in the vector (2, 3). Those are two descriptions of one ' +
                 'operation.',
+              socratic:
+                'Column 1 is A·e₁ and column 2 is A·e₂, so what you just formed is 2·A·e₁ + ' +
+                '3·A·e₂ — two outputs of A, scaled and then added. The previous point established ' +
+                'that A respects exactly those two operations. What single vector, fed in once, ' +
+                'would have produced the same result?',
             },
             {
               label: 'And when the image is smaller',
@@ -201,6 +210,11 @@ const CONCEPTS: Concept[] = [
                 'plane. Had column 2 been a multiple of column 1, every output would lie on a ' +
                 'single line however the weights were chosen — which is what a zero determinant ' +
                 'will turn out to mean.',
+              socratic:
+                'Nothing in that argument used the particular weights 2 and 3 — any pair of ' +
+                'weights is some input vector, so every output of A whatsoever is a combination ' +
+                'of these two columns. Now suppose column 2 had instead been (−4, −6), which is ' +
+                '−2 times column 1. What can A still reach, and what decides how much that is?',
             },
           ],
           answer: '1',

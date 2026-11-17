@@ -26,7 +26,7 @@
     // Re-enable for any image we host ourselves and can describe.
     "@next/next/no-img-element": "off"
 
-    // DELIBERATELY still "warn" (47 of them): react-hooks/exhaustive-deps.
+    // DELIBERATELY still "warn" (41 of them): react-hooks/exhaustive-deps.
     //
     // Not silenced, because the rule finds real bugs and this codebase has the
     // exact shape it catches — effects that read refs and callbacks captured
@@ -36,5 +36,49 @@
     // registration effects use `[]` on purpose so they register once).
     //
     // Work them one at a time, each with a reason, in a session with a browser.
+    //
+    // Baseline re-measured 2026-11-16: 0 errors, 41 warnings, every one of them
+    // this rule, over 301 linted files. The recorded figure was 47. Which six
+    // went away cannot be recovered, because the old baseline was a bare total —
+    // and that is the reason the split below is written out per file rather than
+    // as one number. 47 → 41 is equally consistent with "six were fixed" and
+    // with "twelve were fixed and six new ones appeared elsewhere", and the
+    // second is the case this rule is kept on for. A total cannot tell them
+    // apart; a per-file list can.
+    //
+    //   15  components/BookReader.tsx
+    //    5  components/PageSidebar.tsx
+    //    3  components/ProblemMapWidget.tsx
+    //    2  app/books/[id]/page.tsx
+    //    2  components/HomeFeedSection.tsx
+    //    2  components/ImagePanel.tsx
+    //    2  components/KnowledgeGraph.tsx
+    //    2  components/StructurePanel.tsx
+    //    1  app/admin/page.tsx
+    //    1  app/billing/invoices/[id]/page.tsx
+    //    1  app/billing/page.tsx
+    //    1  components/BookmarkPanel.tsx
+    //    1  components/CharacterPanel.tsx
+    //    1  components/ChatPanel.tsx
+    //    1  components/DiveBackIn.tsx
+    //    1  components/FlashcardPanel.tsx
+    //
+    // BookReader holds 15 of the 41 on its own and is the one file where the
+    // omissions were argued for. The 17 files under components/reader/ carry
+    // none. Nothing enforces this list — it is prose, and it goes stale the
+    // first time anyone writes an effect, so re-measure rather than cite it.
+    //
+    // To re-measure: the authoring workspaces carry only a typescript symlink,
+    // so you need a real node_modules. You do NOT need a .env.local — that is
+    // only `next build`, which dies collecting page data without Supabase keys.
+    // Both of these run with no environment at all, and agree on 41:
+    //
+    //   next lint
+    //   eslint --ext .ts,.tsx,.js,.jsx app components lib types middleware.ts
+    //
+    // `next lint` covers app/, components/ and lib/; the explicit form adds
+    // types/ and middleware.ts, which are clean. Use `-f json` for the per-file
+    // counts — next's own json output omits files with no messages, so it
+    // cannot tell you how many files were read.
   }
 }

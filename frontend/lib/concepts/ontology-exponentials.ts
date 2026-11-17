@@ -234,16 +234,28 @@ const CONCEPTS: Concept[] = [
             {
               label: 'Insist the product rule keeps working',
               detail: 'If xᵃ · xᵇ = xᵃ⁺ᵇ is to hold for b = 0, then 5ᵃ · 5⁰ = 5ᵃ.',
+              socratic:
+                'Nothing so far says what an exponent of 0 should mean — 5⁰ is not a count of 5s ' +
+                'the way 5³ is. The one rule you have already proved is xᵃ · xᵇ = xᵃ⁺ᵇ. If you ' +
+                'refuse to let that rule break when b is 0, what equation does it hand you for ' +
+                '5ᵃ · 5⁰?',
             },
             {
               label: 'Solve for the unknown value',
               detail: 'Dividing both sides by 5ᵃ — legal because 5ᵃ ≠ 0 — leaves 5⁰ = 1.',
+              socratic:
+                'Read 5ᵃ · 5⁰ = 5ᵃ as an equation whose unknown is 5⁰. What one move clears the ' +
+                '5ᵃ off the left-hand side, and what value does the equation then force on 5⁰?',
             },
             {
               label: 'Notice what the argument needed',
               detail:
                 'It divided by the base to a power. For base 0 that division is illegal, which is ' +
                 'exactly why 0⁰ is left undefined rather than declared to be 1.',
+              socratic:
+                'That move was a division by 5ᵃ, and it is legal only while 5ᵃ is not 0. Run the ' +
+                'same argument with a base of 0 instead of 5: which line is the first to fail, ' +
+                'and what does that failure say about whether 0⁰ can be pinned down this way?',
             },
           ],
           answer: '1 — the product rule forces it, for any nonzero base.',
@@ -265,13 +277,30 @@ const CONCEPTS: Concept[] = [
               detail:
                 'The product rule again: 2³ · 2⁻³ = 2⁰ = 1. So 2⁻³ is whatever 2³ must be ' +
                 'multiplied by to give 1 — its reciprocal.',
+              socratic:
+                'Nothing so far says what a negative exponent counts — there is no way to write ' +
+                'down minus three 2s. What you do have is the product rule and the value of 2⁰. ' +
+                'Add the exponents in 2³ · 2⁻³: what number does that product have to come to, ' +
+                'and what does that one equation fix about 2⁻³?',
             },
-            { label: 'Write the reciprocal', detail: '1/2³ = 1/8.' },
+            {
+              label: 'Write the reciprocal',
+              detail: '1/2³ = 1/8.',
+              socratic:
+                'You now have 2³ · 2⁻³ = 1, and 2³ on its own is a number you can work out. What ' +
+                'must stand in for 2⁻³ to leave that product at 1, and what is it once the 2³ is ' +
+                'evaluated?',
+            },
             {
               label: 'Check the sign',
               detail:
                 '1/8 is positive. A negative exponent never makes a positive base negative, and ' +
                 'reading it as −8 is the error this point exists to prevent.',
+              socratic:
+                'A common first guess at 2⁻³ is −8, and the number you just worked out is not ' +
+                'that. Nothing in the argument ever subtracted or negated anything. So what did ' +
+                'the minus sign in the exponent actually do, and what does that settle about the ' +
+                'sign of x⁻ⁿ whenever x is positive?',
             },
           ],
           answer: '1/8',

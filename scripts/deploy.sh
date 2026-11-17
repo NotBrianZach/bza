@@ -27,11 +27,24 @@ SKIP_VERIFY=false
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Drained into a variable before being parsed — see the long comment in
-# verify-live-sha.sh. Piping straight into `awk … exit` makes awk close the pipe
-# while templedb is still writing, and under `set -o pipefail` the resulting
-# SIGPIPE fails this script before it has deployed anything. It is a race on how
-# much log is left to write, so it looks like a flake rather than a bug.
+# Two separate protections, and the second one is the one that was missing.
+#
+# Drained into a variable first: piping `templedb vcs log` straight into `awk …
+# exit` makes awk close the pipe while templedb is still writing, templedb takes
+# SIGPIPE, and under `set -o pipefail` that fails this script before it has
+# deployed anything.
+#
+# But draining only moves the early reader one process left — it does not remove
+# it. `printf` is now the producer, and once the log exceeds the 64KB a pipe
+# buffers, printf blocks, awk exits on the first match, and printf dies of
+# SIGPIPE: the same 141, the same abort before `templedb deploy project` runs,
+# and still nothing printed. So the awk below must read to EOF and guard with a
+# flag rather than `exit`. It costs one pass over a string already in memory.
+#
+# This had not bitten yet only because the default window is 10 commits — 41KB
+# on 2026-11-16, 65% of the buffer at a mean message size of ~2.9KB. Roughly six
+# more commits of that size would have crossed it. The identical construct in
+# verify-live-sha.sh did cross it, at 578KB once its window widened to 200.
 #
 # `--all-sessions` is load-bearing. A bare `vcs log` shows published commits plus
 # only the CURRENT session's unpublished ones, so any commit made by another
@@ -44,7 +57,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # against a stale expectation and printed "OK". Both halves have to use
 # --all-sessions or neither catches anything.
 LOG=$(templedb vcs log bza --all-sessions || true)
-SHA=$(printf '%s\n' "$LOG" | awk '/^commit / {print $2; exit}')
+SHA=$(printf '%s\n' "$LOG" | awk '/^commit / && !seen {print $2; seen = 1}')
 if [ -z "$SHA" ]; then
   echo "ERROR: could not read head commit sha from templedb" >&2
   exit 1

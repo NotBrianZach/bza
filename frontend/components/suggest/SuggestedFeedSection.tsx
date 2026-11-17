@@ -403,14 +403,16 @@ export default function SuggestedFeedSection({
               in the strip, which is the one place it is actually in the way.
 
               So all five are offered, and the cheap one is the point. The
-              distinction kept instead is `dismissSeen`: here the strip is a
-              queue to work through and a seen item leaves, pulling the next of
-              the twenty up into the slot. The full page keeps it, marked. */}
+              distinction kept instead is `dismissDealtWith`: here the strip is
+              a queue to work through, so a row you have dealt with — seen, or
+              asked for less of, or put off until later — leaves, pulling the
+              next of the twenty up into the slot. The full page keeps it,
+              marked. */}
           <DigestList
             items={items}
             compact
             feedback
-            dismissSeen
+            dismissDealtWith
             limit={5}
             digestId={peek?.digest?.digestId ?? null}
             onTriage={onTriage}

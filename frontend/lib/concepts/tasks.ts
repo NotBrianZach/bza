@@ -3522,6 +3522,379 @@ export const TASKS: PracticeTask[] = [
     at: { a: '100', b: '50', c: '40' },
   },
 
+  // ── circles ─────────────────────────────────────────────────────────────
+  //
+  // Six tasks across the three points of `circles`: five `evaluate` and one
+  // `transform_to_form`, which makes this the second concept in the subject to
+  // use a form and for the same reason `pythagoras` did — a tangent length is
+  // normally an irrational and the ask the concept wants is "leave it exactly".
+  //
+  // THE PROXY PROBLEM IS NARROW IN ALL THREE POINTS, which is unusual here and
+  // is a property of the material rather than of the task writing. The subject's
+  // standing complaint is that the natural ask is "find the angle and name the
+  // fact you used", the second half is not machine-rulable, and so each task
+  // scores the arithmetic a decision licenses while the decision itself goes
+  // unscored. These six are better placed than that because in each point the
+  // decision IS a choice between two expressions, and a task can hand over one
+  // expression rather than the other:
+  //
+  //   The first point's content is which of two central angles a vertex may
+  //   halve, and the two tasks are `x/2` and `(360 - x)/2` at the same input.
+  //   Getting the second one right is getting the decision right; there is no
+  //   version of it that is correct arithmetic on the wrong choice, because the
+  //   wrong choice is literally the other task. That is as close as this
+  //   subject has come to grading a decision with `evaluate`.
+  //
+  //   The second point's content is which length is the hypotenuse, and the
+  //   task is `sqrt(a^2 - b^2)`. The subtraction is the assignment. A learner
+  //   who puts the tangent opposite the right angle computes a sum, and
+  //   `sqrt(41^2 + 9^2)` is not 40.
+  //
+  //   The third point's content is which of two checks carries information, and
+  //   the two tasks are the two checks on the same figure — one returning a
+  //   verdict and one returning the 0 that every quadrilateral returns. The
+  //   pair is the point; neither task alone is.
+  //
+  // What stays unscored is the part that always does: that the right angle is at
+  // the point of contact, that the far arc is the one to halve, that 360° is
+  // vacuous. Each prompt names which decision it has handed over, the same way
+  // the congruence and proof blocks do.
+  //
+  // TWO OF THE SIX ECHO EXPRESSIONS FROM EARLIER BLOCKS, which is this subject's
+  // habit, and in both cases the repetition is the content.
+  // `the-tangent-leg-is-the-subtraction-1` is `sqrt(a^2 - b^2)`, which is
+  // `the-leg-is-a-subtraction-1` in `pythagoras` with the root taken — there the
+  // task stops at the square because the point is the slot, here it finishes
+  // because the point is that a circle fact chose the slot already. And
+  // `every-quadrilateral-passes-this-one-1` is `(a + b + c + d) - 360`, the
+  // four-term sibling of `the-third-angle-was-never-free-1` in `congruence` and
+  // of `a-candidate-that-is-not-a-triangle-refutes-nothing-1` in
+  // `geometric-proof`. All three are "does this close", and the three jobs are
+  // different: in congruence the identical 0 makes a point about criteria, in
+  // the proof concept a non-zero disqualifies an object from being evidence, and
+  // here the 0 is the trap — it arrives, it is correct, and it settles nothing.
+  {
+    id: 'halve-the-central-angle-on-the-far-arc-1',
+    knowledgePointId: 'an-inscribed-angle-halves-the-central-angle-on-the-arc-it-is-not-on',
+    kind: 'evaluate',
+    prompt:
+      'A and B are on a circle of centre O, with the non-reflex angle AOB measuring 110°. P is '
+      + 'some point of the MAJOR arc AB. Evaluate x/2 at x = 110 to get the angle APB. The arc AB '
+      + 'that P does not sit on is the minor one, and 110° is the angle standing on it at the '
+      + 'centre, which is why this is the expression rather than the one in the task below. Note '
+      + 'what this task does NOT ask: where on the major arc P is. Every point of it gives the '
+      + 'same answer, and that invariance is the knowledge point.',
+    given: 'x / 2',
+    variables: REAL_X,
+    // 110 ÷ 2 = 55. The non-reflex central angle is the one standing on the arc
+    // P is NOT on, so it is the one halved. Checks against the task below:
+    // 55 + 125 = 180, forced because the two central angles total 360°.
+    reference: '55',
+    at: { x: '110' },
+  },
+  {
+    id: 'the-other-arc-halves-the-reflex-angle-1',
+    knowledgePointId: 'an-inscribed-angle-halves-the-central-angle-on-the-arc-it-is-not-on',
+    kind: 'evaluate',
+    prompt:
+      'The same circle and the same 110° at the centre, but now Q is a point of the MINOR arc AB. '
+      + 'Evaluate (360 − x)/2 at x = 110 to get the angle AQB. The arc Q does not sit on is the '
+      + 'major one, and the angle standing on that at the centre is the REFLEX one, 360 − 110. '
+      + 'Read this against halve-the-central-angle-on-the-far-arc-1: same circle, same given, '
+      + 'different expression, and choosing between the two expressions is the whole of what this '
+      + 'point teaches. A learner who halves the printed 110° for both vertices answers 55° twice '
+      + 'and is out by 70° on this one, with the division correct.',
+    given: '(360 - x) / 2',
+    variables: REAL_X,
+    // 360 − 110 = 250, halved is 125. Q is on the minor arc, so the far arc is
+    // the major one and the reflex angle is what stands on it. 55 + 125 = 180,
+    // which is the cyclic-quadrilateral fact of the third point falling out of
+    // these two tasks.
+    reference: '125',
+    at: { x: '110' },
+  },
+  {
+    id: 'the-tangent-leg-is-the-subtraction-1',
+    knowledgePointId: 'a-tangent-length-is-the-leg-the-right-angle-leaves',
+    kind: 'evaluate',
+    prompt:
+      'A circle has centre O and radius 9 cm, and T is 41 cm from O. A tangent from T touches at '
+      + 'A. Evaluate sqrt(a^2 - b^2) at a = 41, b = 9 to get TA. The subtraction is the content: '
+      + 'the radius OA meets the tangent at right angles AT THE POINT OF CONTACT, so OT is '
+      + 'opposite the right angle and is the hypotenuse, and TA is a leg — which is decided before '
+      + 'any number is read. Putting the tangent opposite the right angle instead gives '
+      + 'sqrt(41^2 + 9^2), and that is not this answer. Read it against '
+      + 'the-leg-is-a-subtraction-1 in pythagoras, which is this expression stopped at the '
+      + 'square because there the slot is what is in doubt.',
+    given: 'sqrt(a^2 - b^2)',
+    variables: REAL_AB,
+    // 41² − 9² = 1681 − 81 = 1600 and √1600 = 40, rational because 9, 40, 41 is
+    // a Pythagorean triple — picked so this first task comes out whole and the
+    // surd task below carries the irrational case. The wrong assignment gives
+    // √1762, which is not an integer, so the two are not confusable by accident.
+    reference: '40',
+    at: { a: '41', b: '9' },
+  },
+  {
+    id: 'reduce-the-tangent-length-surd-1',
+    knowledgePointId: 'a-tangent-length-is-the-leg-the-right-angle-leaves',
+    kind: 'transform_to_form',
+    prompt:
+      'A circle of radius 2 cm has a point 14 cm from its centre. The tangent length from that '
+      + 'point is sqrt(14^2 - 2^2). Give it exactly, with nothing left under the radical that '
+      + 'need not be there — a whole number times a smaller root. A decimal is a rounding of this '
+      + 'length rather than the length, and the radicand here was PRODUCED by the subtraction '
+      + 'rather than handed to you.',
+    given: 'sqrt(14^2 - 2^2)',
+    form: 'surd_reduced',
+    variables: [],
+    // 196 − 4 = 192 = 64 × 3 with 64 = 8², so 8√3, and 3 is square-free so
+    // nothing further comes out. Ruled by `asSurd`'s normal form with no worker,
+    // like the two surd tasks above it in the build.
+    //
+    // Different numbers from `reduce-the-hypotenuse-surd-1` in pythagoras
+    // (180 = 6√5), from `simplify-a-surd-1` in roots-and-irrationals
+    // (1008 = 12√7) and from that concept's worked example (720 = 12√5), so it
+    // is a recall of none of them. Also different from this concept's own
+    // worked example, whose second case is √39 — square-free, so it reduces to
+    // itself and could not be asked as a form at all. That is why the task
+    // takes a third pair of numbers rather than reusing the example's.
+    reference: '8*sqrt(3)',
+  },
+  {
+    id: 'the-opposite-pair-refutes-it-1',
+    knowledgePointId: 'opposite-angles-decide-concyclicity-and-the-total-of-all-four-does-not',
+    kind: 'evaluate',
+    prompt:
+      'Quadrilateral PQRS is offered as having all four vertices on one circle, with angles '
+      + 'P = 85°, Q = 98°, R = 94° and S = 83°. Evaluate (a + b) − 180 at a = 85, b = 94 — the '
+      + 'pair of OPPOSITE angles P and R. Anything other than 0 proves those four points are not '
+      + 'concyclic, and that conclusion is the contrapositive of "concyclic, therefore opposite '
+      + 'angles total 180°", so nothing new had to be proved to reach it. What this task hands '
+      + 'you is which pair to add; that it is the opposite pair rather than an adjacent one, and '
+      + 'that one pair is the whole test, is the knowledge point.',
+    given: '(a + b) - 180',
+    variables: REAL_AB,
+    // 85 + 94 = 179, so −1. Non-zero, so not concyclic. The other pair gives
+    // 98 + 83 − 180 = +1, the same failure with the opposite sign, because the
+    // four angles total 360° — which is why checking it twice adds nothing. The
+    // figure is a genuine quadrilateral: the four angles total 360° and each is
+    // under 180°.
+    reference: '-1',
+    at: { a: '85', b: '94' },
+  },
+  {
+    id: 'every-quadrilateral-passes-this-one-1',
+    knowledgePointId: 'opposite-angles-decide-concyclicity-and-the-total-of-all-four-does-not',
+    kind: 'evaluate',
+    prompt:
+      'The same quadrilateral PQRS. Evaluate (a + b + c + d) − 360 at a = 85, b = 98, c = 94, '
+      + 'd = 83. The answer is 0, the figure passes, and it is NOT concyclic — which is the point '
+      + 'of the task. Every quadrilateral returns 0 here, because one diagonal cuts it into two '
+      + 'triangles of 180° each, so this check cannot distinguish a cyclic quadrilateral from any '
+      + 'other and a figure that failed it would not be a quadrilateral at all. Read it against '
+      + 'the-opposite-pair-refutes-it-1, which is the same four angles arranged into the check '
+      + 'that does decide. This is the only task in the subject whose correct answer is evidence '
+      + 'of nothing.',
+    given: '(a + b + c + d) - 360',
+    variables: REAL_ABCD,
+    // 85 + 98 + 94 + 83 = 360, so 0. Identically 0 for any quadrilateral, which
+    // is the trap rather than a weakness of the task: the-opposite-pair-
+    // refutes-it-1 returns −1 on these same four angles. Compare
+    // `the-third-angle-was-never-free-1` in congruence, the three-term version,
+    // where the identical 0 is used to make a point about criteria.
+    reference: '0',
+    at: { a: '85', b: '98', c: '94', d: '83' },
+  },
+
+  // ── plane-geometry, tenth promotion: circle-measure ─────────────────────
+  //
+  // Six tasks, two per knowledge point, all `evaluate`, all settled by exact
+  // rational arithmetic with no worker — like every block in this subject
+  // except the two surds.
+  //
+  // EVERY ONE OF THEM ASKS FOR THE MULTIPLE OF π RATHER THAN THE MEASUREMENT,
+  // and that is the one thing about this concept a later author needs to know
+  // before touching it, because it looks like a dodge and is a property of the
+  // engine.
+  //
+  // `pi` is a real constant of the expression language — expr.ts parses it, and
+  // `CONSTANTS` maps `pi`, `PI` and nothing else to it. What it has not got is a
+  // rational value: `exactValue` returns null on it, deliberately and for the
+  // reason its header gives, which is that returning 0 or NaN would turn "I
+  // cannot settle this" into a ruling against the learner. So a task whose
+  // reference is `36*pi` cannot be ruled locally at all. It would be handed to
+  // the worker, and this subject's whole no-worker contract — asserted in
+  // tests/concepts-logic.mjs over every `evaluate` here — would end at this
+  // concept.
+  //
+  // The alternative was to ask for the measurement and accept the worker. It
+  // was rejected on the same ground `pythagoras` refused to ask for a decimal:
+  // 14π IS the circumference, 43.98 cm is a rounding of it, and a task that
+  // accepts the rounding teaches that the rounding is the answer. Asking for the
+  // 14 keeps the exact object and keeps the ruling exact, and every prompt below
+  // says which quantity it wants so that the learner is never guessing whether
+  // the π is theirs to supply.
+  //
+  // What that costs is worth naming rather than glossing: no task here scores
+  // the step from `14` to `14π cm`. That step is in all three worked examples
+  // and in none of the rulings, which makes it the concept's unscored part — the
+  // same shape as "the right angle is at the point of contact" in `circles`,
+  // where each prompt names the decision it has handed over.
+  //
+  // THE SECOND TASK OF EACH PAIR IS WHERE THE CONTENT IS, following this
+  // subject's habit of making the pair the point rather than either half:
+  //
+  //   The first point's two are the relation in both directions — `2*x` for a
+  //   circumference from a radius, `x/2` for a radius from a circumference. The
+  //   content is which length the ratio is taken against, and each direction has
+  //   its own named wrong answer: 7 instead of 14 taking it against the radius,
+  //   50 instead of 25 stopping at the diameter.
+  //
+  //   The second point's two are the SAME fraction at the SAME two inputs over
+  //   two different wholes — `(a/360)*2*b` and `(a/360)*b^2`. Choosing between
+  //   them is the whole of what the point teaches, and neither task alone shows
+  //   it. This is the shape `halve-the-central-angle-on-the-far-arc-1` and
+  //   `the-other-arc-halves-the-reflex-angle-1` established one promotion ago.
+  //
+  //   The third point's two are `x^2` for the area factor and `(x/2)^2` for the
+  //   whole crossing from a circumference to an area. The first is as close as
+  //   this subject comes to grading a misconception directly: the wrong answer to
+  //   "the radius trebles, what happens to the area" is 3, and 3 is the input.
+  //
+  // `the-radius-from-the-circumference-1` is `x/2` at a different input, which
+  // is `halve-the-central-angle-on-the-far-arc-1`'s expression in `circles`. The
+  // repetition is this subject's habit and in this case it is nearly the content:
+  // there the halving is a theorem about two angles standing on a chord, here it
+  // is undoing a definition, and the same division does both. Different numbers
+  // (50 against 110) so neither is a recall of the other.
+  {
+    id: 'the-circumference-is-the-diameter-times-pi-1',
+    knowledgePointId: 'the-ratio-is-taken-against-the-diameter-and-does-not-depend-on-the-circle',
+    kind: 'evaluate',
+    prompt:
+      'A circle has radius 7 cm. Its circumference is an exact multiple of π; evaluate 2*x at '
+      + 'x = 7 to get that multiple, so the circumference is your answer times π centimetres. The '
+      + 'doubling is the content: π is the circumference over the DIAMETER, so C = πd and the '
+      + 'diameter has to be formed from the radius before anything is multiplied. Taking the '
+      + 'ratio against the radius instead answers 7, which is this task\'s wrong answer and is '
+      + 'the printed number handed back. The task asks for the multiple rather than for the '
+      + 'length because π has no exact rational value, so a decimal answer could not be ruled '
+      + 'here without a worker and would be a rounding of the circumference rather than the '
+      + 'circumference.',
+    given: '2*x',
+    variables: REAL_X,
+    // 2 × 7 = 14, so C = 14π cm. The wrong assignment — ratio against the
+    // radius — gives 7, the input unchanged, so the two are distinguishable.
+    reference: '14',
+    at: { x: '7' },
+  },
+  {
+    id: 'the-radius-from-the-circumference-1',
+    knowledgePointId: 'the-ratio-is-taken-against-the-diameter-and-does-not-depend-on-the-circle',
+    kind: 'evaluate',
+    prompt:
+      'A different circle has circumference 50π cm. Evaluate x/2 at x = 50 to get its radius in '
+      + 'centimetres. Read it against the-circumference-is-the-diameter-times-pi-1: same '
+      + 'relation, run the other way. Dividing the multiple by π is the step that has already '
+      + 'been done for you — 50π = πd cancels to d = 50 exactly, with nothing rounded, which is '
+      + 'why the exact form was worth keeping — and what is left is the one halving that takes '
+      + 'the diameter to the radius. Stopping at 50 is this task\'s wrong answer: that is the '
+      + 'diameter, and it is the error the worked example names.',
+    given: 'x / 2',
+    variables: REAL_X,
+    // 50 ÷ 2 = 25 cm. The 50 is the diameter, reached by cancelling π from
+    // 50π = πd, so the remaining work is the halving. Different input from
+    // `halve-the-central-angle-on-the-far-arc-1` in circles, which is the same
+    // expression doing an unrelated job.
+    reference: '25',
+    at: { x: '50' },
+  },
+  {
+    id: 'the-arc-is-that-fraction-of-the-circumference-1',
+    knowledgePointId: 'an-arc-and-a-sector-take-the-same-fraction-of-two-different-wholes',
+    kind: 'evaluate',
+    prompt:
+      'A circle of radius 18 cm has a sector with a central angle of 60°. Evaluate (a/360)*2*b '
+      + 'at a = 60, b = 18 to get the arc length as a multiple of π, so the arc is your answer '
+      + 'times π centimetres. Two things are in the expression: a/360 is the angle\'s share of a '
+      + 'full turn, and 2*b is the whole circumference over π. The arc is part of the BOUNDARY, '
+      + 'so the boundary is the whole that share is taken of. Read this against '
+      + 'the-sector-is-the-same-fraction-of-the-area-1, which has the same two inputs and the '
+      + 'same fraction over a different whole — choosing between the two expressions is what this '
+      + 'point teaches, and neither task shows it alone.',
+    given: '(a/360)*2*b',
+    variables: REAL_AB,
+    // 60/360 = 1/6, and the circumference over π is 2 × 18 = 36, so the arc
+    // over π is 36/6 = 6: the arc is 6π cm. Checks against the task below,
+    // which is 54 rather than 6 — two different wholes, so two different
+    // numbers, which the worked example uses as its own check.
+    reference: '6',
+    at: { a: '60', b: '18' },
+  },
+  {
+    id: 'the-sector-is-the-same-fraction-of-the-area-1',
+    knowledgePointId: 'an-arc-and-a-sector-take-the-same-fraction-of-two-different-wholes',
+    kind: 'evaluate',
+    prompt:
+      'The same circle and the same 60° sector. Evaluate (a/360)*b^2 at a = 60, b = 18 to get '
+      + 'the sector\'s AREA as a multiple of π, in square centimetres. The fraction a/360 is '
+      + 'identical to the one in the task above and only the whole has changed: b^2 is the '
+      + 'circle\'s whole area over π, because an area is πr² where a circumference is 2πr. So the '
+      + 'squaring is the entire difference between the two tasks, and it is the decision the '
+      + 'point is about. A learner who takes the fraction once and reuses what it gave answers 6 '
+      + 'here, which is a length offered as an area, and the units are the only thing that says '
+      + 'so.',
+    given: '(a/360)*b^2',
+    variables: REAL_AB,
+    // 60/360 = 1/6, and the area over π is 18² = 324, so the sector over π is
+    // 324/6 = 54: the sector is 54π cm². Same inputs and same fraction as the
+    // task above, differing only in the whole — 2b against b², which is 2πr
+    // against πr².
+    reference: '54',
+    at: { a: '60', b: '18' },
+  },
+  {
+    id: 'the-area-factor-is-the-square-of-the-scale-factor-1',
+    knowledgePointId: 'a-scale-factor-multiplies-the-boundary-once-and-the-area-twice',
+    kind: 'evaluate',
+    prompt:
+      'One circle\'s radius is three times another\'s. Evaluate x^2 at x = 3 to get the factor '
+      + 'by which its AREA is larger. The squaring is the whole content: the radius sits squared '
+      + 'in πr², so a factor on the radius enters the area twice, while the circumference is a '
+      + 'length and takes it once. This is the one task in the subject whose wrong answer is its '
+      + 'own input — a learner who reasons "three times as wide, three times as big" answers 3, '
+      + 'which is the scale factor and is also the factor the CIRCUMFERENCE grows by, so the '
+      + 'error is a correct answer to the other question.',
+    given: 'x^2',
+    variables: REAL_X,
+    // 3² = 9. The circumference factor is 3, so answering 3 here is the
+    // misconception the knowledge point exists to correct rather than an
+    // arithmetic slip — and it is the input, which is why the prompt names it.
+    reference: '9',
+    at: { x: '3' },
+  },
+  {
+    id: 'one-measure-of-a-circle-pins-the-others-1',
+    knowledgePointId: 'a-scale-factor-multiplies-the-boundary-once-and-the-area-twice',
+    kind: 'evaluate',
+    prompt:
+      'A circle has circumference 20π cm. Evaluate (x/2)^2 at x = 20 to get its area as a '
+      + 'multiple of π, in square centimetres. The expression is the whole crossing in one step: '
+      + 'x/2 takes the circumference\'s multiple of π to the radius, since C = 2πr, and squaring '
+      + 'that takes the radius to the area\'s multiple, since A = πr². That this is possible at '
+      + 'all is the point — `area-and-perimeter` showed two rectangles of equal perimeter with '
+      + 'different areas, so a perimeter does not fix an area in general. A circle has one free '
+      + 'number rather than two, so any measure of it pins the rest.',
+    given: '(x/2)^2',
+    variables: REAL_X,
+    // 20 ÷ 2 = 10, the radius, and 10² = 100, so the area is 100π cm². Both
+    // steps are forced by the two formulas and neither is reversible for a
+    // rectangle, which is the comparison the fourth subgoal makes.
+    reference: '100',
+    at: { x: '20' },
+  },
+
   // ── functions-and-inverses ──────────────────────────────────────────────
   //
   // Twelve tasks, one per knowledge point, all `evaluate` and all settled by

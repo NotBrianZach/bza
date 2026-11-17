@@ -3115,13 +3115,14 @@ t('it has no internal faults', ontologyProblems(PG).length === 0, ontologyProble
 t('its fidelity claim matches what its option can do', fidelityMismatches(PG).length === 0)
 const PG_CONCEPT_IDS = [
   'points-lines-angles', 'triangle-basics', 'congruence', 'similarity', 'pythagoras',
-  'quadrilaterals-and-polygons', 'area-and-perimeter', 'geometric-proof',
+  'quadrilaterals-and-polygons', 'area-and-perimeter', 'geometric-proof', 'circles',
+  'circle-measure',
 ]
-t('eight concepts, three knowledge points each',
-  PG.concepts.length === 8 && allKnowledgePoints(PG).length === 24
+t('ten concepts, three knowledge points each',
+  PG.concepts.length === 10 && allKnowledgePoints(PG).length === 30
   && PG.concepts.every(c => c.knowledgePoints.length === 3),
   `${PG.concepts.length} concepts, ${allKnowledgePoints(PG).length} points`)
-t('all eight concepts are teachable AND practisable — a syllabus, not eight map entries',
+t('all ten concepts are teachable AND practisable — a syllabus, not ten map entries',
   PG_CONCEPT_IDS.every(id => isTeachable(PG, id) && isPractisable(PG, id)),
   PG_CONCEPT_IDS.filter(id => !isTeachable(PG, id) || !isPractisable(PG, id)).join(', '))
 /*
@@ -3250,10 +3251,14 @@ t('and the sixth forks off congruence rather than extending that chain',
     .map(e => e.from).join(',') === 'congruence'
   && PG_PREREQS.filter(e => e.from === 'congruence').map(e => e.to).includes('similarity'),
   PG_PREREQS.map(e => `${e.from}->${e.to}`).join(' '))
-t('and the seventh contributed TWO edges, so the count moves by two',
-  PG_PREREQS.length === 8
+t('and the seventh, ninth and tenth each contributed TWO edges, so the count moves by two thrice',
+  PG_PREREQS.length === 12
   && PG_PREREQS.filter(e => e.to === 'area-and-perimeter').map(e => e.from).sort().join(',')
-    === 'quadrilaterals-and-polygons,triangle-basics',
+    === 'quadrilaterals-and-polygons,triangle-basics'
+  && PG_PREREQS.filter(e => e.to === 'circles').map(e => e.from).sort().join(',')
+    === 'geometric-proof,pythagoras'
+  && PG_PREREQS.filter(e => e.to === 'circle-measure').map(e => e.from).sort().join(',')
+    === 'area-and-perimeter,circles',
   `${PG_PREREQS.length}: ${PG_PREREQS.map(e => `${e.from}->${e.to}`).join(' ')}`)
 /*
  * The eighth promotion widened a fork instead of making one, which is the one
@@ -3282,6 +3287,112 @@ t('and geometric-proof reaches the angle facts only through congruence',
   && allPrerequisitesOf(PG, 'geometric-proof').includes('points-lines-angles')
   && allPrerequisitesOf(PG, 'geometric-proof').includes('triangle-basics'),
   prerequisitesOf(PG, 'geometric-proof').join(', '))
+/*
+ * THE NINTH PROMOTION MERGED TWO BRANCHES, and that claim needs an ancestry
+ * check rather than an in-degree one, because the subject already had a
+ * two-parent node and the two cases are not the same event.
+ *
+ * `area-and-perimeter` names `quadrilaterals-and-polygons` and
+ * `triangle-basics`, and those two are NESTED — `triangle-basics` is an
+ * ancestor of `quadrilaterals-and-polygons` through `congruence` — so that node
+ * joined a line to a point further down the same line. `circles` names
+ * `geometric-proof` and `pythagoras`, and NEITHER is an ancestor of the other:
+ * one hangs off `congruence` directly and the other off `similarity`. So this
+ * is the first node where two branches that genuinely parted come back
+ * together, and the subject's shape is a DAG rather than a tree with a
+ * shortcut in it.
+ *
+ * Asserted as "neither parent is an ancestor of the other", in both directions
+ * and against the nested case for contrast, because every cheaper form of this
+ * check passes on both nodes. In-degree is 2 for each. "Has two parents in this
+ * subject" is true of each. Even "its parents are not adjacent" is true of
+ * each. The ancestry relation is the only thing that separates them, and it is
+ * the thing the claim is about.
+ */
+const PG_ANC = id => allPrerequisitesOf(PG, id)
+t('circles is the first node whose two parents are on separate branches',
+  PG_PREREQS.filter(e => e.to === 'circles').map(e => e.from).sort().join(',')
+    === 'geometric-proof,pythagoras'
+  && !PG_ANC('pythagoras').includes('geometric-proof')
+  && !PG_ANC('geometric-proof').includes('pythagoras'),
+  `pythagoras<-[${PG_ANC('pythagoras').join(' ')}] proof<-[${PG_ANC('geometric-proof').join(' ')}]`)
+t('while the seventh promotion\'s two-parent node joined a line to its own ancestor',
+  PG_PREREQS.filter(e => e.to === 'area-and-perimeter').map(e => e.from).sort().join(',')
+    === 'quadrilaterals-and-polygons,triangle-basics'
+  && PG_ANC('quadrilaterals-and-polygons').includes('triangle-basics'),
+  PG_ANC('quadrilaterals-and-polygons').join(', '))
+t('and the merge added no branch point, so the forks are still exactly two',
+  [...new Set(PG_PREREQS.map(e => e.from))]
+    .filter(from => PG_PREREQS.filter(e => e.from === from).length > 1).sort().join(',')
+    === 'congruence,triangle-basics'
+  && PG_PREREQS.filter(e => e.from === 'geometric-proof').length === 1
+  && PG_PREREQS.filter(e => e.from === 'pythagoras').length === 1,
+  PG_PREREQS.map(e => `${e.from}->${e.to}`).join(' '))
+t('and circles collects nothing from below its own pair, since both are authored here',
+  gatingPrerequisitesOf(PG, 'circles').slice().sort().join(',')
+    === 'geometric-proof,pythagoras',
+  gatingPrerequisitesOf(PG, 'circles').join(', '))
+/*
+ * THE TENTH PROMOTION CLOSED THE FORK, and that is a different claim from the
+ * ninth's merge — which is why it gets its own assertion instead of being read
+ * off the one above.
+ *
+ * Every cheaper form of the check passes on BOTH nodes. In-degree is 2 for each.
+ * "Two parents in this subject" is true of each. "Neither parent is an ancestor
+ * of the other" is true of each, and that is exactly what the ninth's assertion
+ * holds. So the ancestry of the named three is the only thing that separates the
+ * two events.
+ *
+ * `congruence` forked three ways — `similarity` at the fourth promotion,
+ * `quadrilaterals-and-polygons` at the sixth, `geometric-proof` at the eighth.
+ * `circles` reconverged two of the three and provably not the third: the
+ * assertion above holds that the polygons are deliberately NOT behind it.
+ * `circle-measure` reaches all three, because its second parent
+ * `area-and-perimeter` sits on the polygons branch. So this is the first concept
+ * of the subject with every child of `congruence` in its ancestry.
+ *
+ * The contrast against `circles` is asserted in the same breath rather than
+ * separately, because the claim is comparative: "has all three" means nothing
+ * here unless the node one promotion down is known not to.
+ */
+t('the tenth is the first node with all three branches of the congruence fork behind it',
+  ['similarity', 'quadrilaterals-and-polygons', 'geometric-proof']
+    .every(id => PG_ANC('circle-measure').includes(id))
+  && !PG_ANC('circles').includes('quadrilaterals-and-polygons')
+  && PG_PREREQS.filter(e => e.from === 'congruence').map(e => e.to).sort().join(',')
+    === 'geometric-proof,quadrilaterals-and-polygons,similarity',
+  `circle-measure<-[${PG_ANC('circle-measure').join(' ')}]`)
+t('and it added no branch point either, so the forks are STILL exactly two',
+  [...new Set(PG_PREREQS.map(e => e.from))]
+    .filter(from => PG_PREREQS.filter(e => e.from === from).length > 1).sort().join(',')
+    === 'congruence,triangle-basics'
+  && PG_PREREQS.filter(e => e.from === 'circles').length === 1
+  && PG_PREREQS.filter(e => e.from === 'area-and-perimeter').length === 1,
+  PG_PREREQS.map(e => `${e.from}->${e.to}`).join(' '))
+t('and it collects nothing from below its own pair, both of its parents being authored here',
+  gatingPrerequisitesOf(PG, 'circle-measure').slice().sort().join(',')
+    === 'area-and-perimeter,circles'
+  && gatingPrerequisitesOf(PG, 'circle-measure').slice().sort().join(',')
+    === prerequisitesOf(PG, 'circle-measure').slice().sort().join(','),
+  gatingPrerequisitesOf(PG, 'circle-measure').join(', '))
+/*
+ * The one fact the third knowledge point uses from OUTSIDE its own ancestry,
+ * asserted so that nobody repairs the apparent gap by adding an edge.
+ *
+ * That worked example leans on a quadrilateral's angles totalling 360°, which
+ * is `quadrilaterals-and-polygons`' material — and that concept is NOT behind
+ * this one: it forks off `congruence` on a third branch. No edge was invented
+ * to make it an ancestor, because adding a prerequisite changes what gates what
+ * for every learner and doing it as a side effect of writing a worked example
+ * is what ontology-geometry.ts records itself refusing for `integer-arithmetic`.
+ * The example re-derives the total from one diagonal and the triangle angle
+ * sum instead, and `triangle-basics` IS an ancestor — so the fact is reached
+ * from inside the gate.
+ */
+t('and the polygons are deliberately NOT behind circles, while the triangles are',
+  !PG_ANC('circles').includes('quadrilaterals-and-polygons')
+  && PG_ANC('circles').includes('triangle-basics'),
+  PG_ANC('circles').join(', '))
 t('one of which forks off the triangles, giving the subject a second branch point',
   PG_PREREQS.filter(e => e.from === 'triangle-basics').map(e => e.to).sort().join(',')
     === 'area-and-perimeter,congruence',
@@ -3329,7 +3440,7 @@ t('congruence reaches the angle facts only through the triangles',
 
 group('the eighth subject is gradable with no worker')
 const PG_TASKS = allKnowledgePoints(PG).flatMap(p => tasksForPoint(p.id))
-t('forty-eight tasks, two on each of the twenty-four points', PG_TASKS.length === 48
+t('sixty tasks, two on each of the thirty points', PG_TASKS.length === 60
   && allKnowledgePoints(PG).every(p => tasksForPoint(p.id).length === 2),
   `${PG_TASKS.length}`)
 /*
@@ -3372,14 +3483,52 @@ t('forty-eight tasks, two on each of the twenty-four points', PG_TASKS.length ==
  * anywhere in the build for the reason at the top of tasks.ts, and the concept's
  * objectives decline to name it rather than promising practice that cannot be
  * served.
+ *
+ * `circles` added six more and the SECOND `transform_to_form`, and the second
+ * one arrives for exactly the reason the first did, which is what makes it
+ * worth asserting as a pair rather than loosening the claim to "one or two".
+ * `pythagoras` gained a form because a hypotenuse is normally an irrational and
+ * `exactValue` returns null on a surd, so `evaluate` cannot carry the ask at
+ * all. A tangent length is the same object — a root of a difference of two
+ * squares — so the same gap appears, and the same form fills it. Five of the
+ * six circle tasks are still `evaluate`, because an inscribed angle and an
+ * angle total are numbers.
+ *
+ * The two forms are both `surd_reduced` and that is now a claim about the
+ * subject rather than about one concept: every irrational this syllabus
+ * produces is a length got by taking a root, so the only non-numeric ask it
+ * has ever needed is "leave it exactly". Asserted as a named, ordered pair so
+ * that a third form arriving has to be argued for.
+ *
+ * `circle-measure` added the last six, all `evaluate`, and it is the concept
+ * where that took a decision rather than falling out — so the pair above stays
+ * a pair for a reason worth recording here.
+ *
+ * Every measure this concept produces is an irrational: a circumference is 14π,
+ * an area is 324π, and `exactValue` returns null on `pi` exactly as it does on
+ * a surd. That is the gap `pythagoras` and `circles` filled with
+ * `transform_to_form`, so a third form was the obvious move — and there is no
+ * form to reach for. `surd_reduced` is about what sits under a radical and says
+ * nothing about a multiple of π; a `pi_factored` form would have to be invented,
+ * and inventing a `NamedForm` during an authoring pass is what the header of
+ * that union in types.ts argues against, since the compiler then demands a
+ * checker and the checker would exist to serve one concept.
+ *
+ * So all six tasks ask for the MULTIPLE of π and the prompts say so. That keeps
+ * the subject's no-worker contract — asserted two checks below over every
+ * `evaluate` here — and it leaves the step from `14` to `14π cm` unscored,
+ * which the block above these tasks in tasks.ts names as the concept's unscored
+ * part. The alternative was to ask for a decimal and accept the worker, which
+ * would have taught that 43.98 cm is the circumference when 14π is.
  */
 const PG_EVAL = PG_TASKS.filter(x => x.kind === 'evaluate')
 const PG_FORM = PG_TASKS.filter(x => x.kind === 'transform_to_form')
-t('forty-seven evaluate and one transform_to_form, which is the surd the hypotenuse produces',
-  PG_EVAL.length === 47 && PG_FORM.length === 1
+t('fifty-eight evaluate and two transform_to_form, both surds that a right angle produced',
+  PG_EVAL.length === 58 && PG_FORM.length === 2
   && PG_EVAL.every(x => x.form === undefined)
-  && PG_FORM[0].id === 'reduce-the-hypotenuse-surd-1'
-  && PG_FORM[0].form === 'surd_reduced',
+  && PG_FORM.map(x => x.id).join(',')
+    === 'reduce-the-hypotenuse-surd-1,reduce-the-tangent-length-surd-1'
+  && PG_FORM.every(x => x.form === 'surd_reduced'),
   PG_TASKS.filter(x => x.kind !== 'evaluate').map(x => `${x.id}:${x.kind}:${x.form}`).join(', '))
 t('every evaluate reference is exactly reproducible from the given — no worker consulted',
   PG_EVAL.every(x => {
@@ -3413,6 +3562,32 @@ t('and refuses the given back unreduced, naming the square that can still come o
   pgSurdUnreduced.verdict.ruling === 'incorrect'
   && /36/.test(pgSurdUnreduced.verdict.brokeAt?.detail ?? ''),
   pgSurdUnreduced.verdict.brokeAt?.detail ?? '')
+/*
+ * THE SECOND SURD TASK IS RULED SEPARATELY, AND IT HAD TO BE ADDED RATHER THAN
+ * INHERITED — which is the small lesson of the ninth promotion for this file.
+ *
+ * The block above indexes `PG_FORM[0]` explicitly. That was unambiguous while
+ * the subject had exactly one form task, and it silently stopped covering the
+ * subject the moment a second arrived: the count assertion rose from one to
+ * two, every suite stayed green, and the new task shipped with no ruling
+ * exercised anywhere. So "there are N of these" and "each of these works" are
+ * different claims, and a promotion that adds to a kind has to add to both.
+ *
+ * Its radicand is harder than the first in the one way that matters here. 180
+ * has a single obvious square factor; 192 = 64 × 3 has a square factor that is
+ * itself a square of a composite, so a checker pulling out the SMALLEST square
+ * would answer 4√12 and stop. That is still an unreduced surd, so the refusal
+ * below is a real check on the normal form rather than a repeat of the first.
+ */
+const pgTangentSurd = await ruleTransform(PG_FORM[1], '8*sqrt(3)', NO_WORKER)
+t('the tangent surd rules correct with no worker too, on a radicand with a composite square',
+  pgTangentSurd.verdict.ruling === 'correct'
+  && /no worker was needed/.test(pgTangentSurd.verdict.method),
+  pgTangentSurd.verdict.method)
+const pgTangentPartial = await ruleTransform(PG_FORM[1], '4*sqrt(12)', NO_WORKER)
+t('and refuses a partly reduced answer, not only the given back whole',
+  pgTangentPartial.verdict.ruling === 'incorrect',
+  `${pgTangentPartial.verdict.ruling}: ${pgTangentPartial.verdict.brokeAt?.detail ?? ''}`)
 /*
  * The two angle sums, as a PAIR. The knowledge point's first subgoal is that
  * choosing between 180 and 360 is the only geometric decision in the problem,
@@ -3763,12 +3938,13 @@ t('the proof concept added three rulable chains and no unrulable ones',
     .map(p => `${p.id}:${tasksForPoint(p.id).map(x => x.kind).join('+')}`).join(' '))
 
 const PG_QUESTIONS = allQuestions(PG)
-t('ninety-six questions, one per subgoal', PG_QUESTIONS.length === 96, `${PG_QUESTIONS.length}`)
+t('a hundred and twenty questions, one per subgoal',
+  PG_QUESTIONS.length === 120, `${PG_QUESTIONS.length}`)
 t('every subgoal carries an authored socratic phrasing',
   allKnowledgePoints(PG).every(p => p.workedExample.subgoals.every(s => !!s.socratic)),
   allKnowledgePoints(PG).flatMap(p => p.workedExample.subgoals)
     .filter(s => !s.socratic).map(s => s.label).join(' | '))
-t('and every one of them is interrogative, so all ninety-six count as written',
+t('and every one of them is interrogative, so all of them count as written',
   PG_QUESTIONS.every(q => q.authoredAsQuestion)
   && questionCoverage(PG).authoredAsQuestions === questionCoverage(PG).questions)
 t('while the labels stay imperative — the map draws moves, the tutor asks sentences',
@@ -3812,7 +3988,18 @@ t('while the labels stay imperative — the map draws moves, the tutor asks sent
  * worth one line: a concept whose subject is which fact licenses which step
  * would, if timed, reward reaching for the arithmetic before the citation —
  * which is the error all three points exist to stop. Twenty-three untimed
- * points out of twenty-four, and still one target.
+ * points out of twenty-four at that promotion, and still one target.
+ *
+ * The three circle points then hit the three reasons once more, and the three
+ * circular-measure points are where the temptation was strongest and the answer
+ * is sharpest. All three of those have the fastest arithmetic in the subject —
+ * a doubling, one division into a fraction, and squaring a 3 — and in all three
+ * the arithmetic is not the content. The first is the read-it-slowly case: the
+ * error is multiplying the printed number rather than the diameter. The second
+ * is a decision about which WHOLE to take a share of, which no stopwatch
+ * touches. The third is the one that would actively reward the mistake, because
+ * answering k instead of k² is what a learner who computed fast and once
+ * answers. Twenty-nine untimed points out of thirty, and still one target.
  */
 t('only the point about fluency is timed, and no later concept added a second',
   allKnowledgePoints(PG).filter(p => p.automaticityTarget !== undefined)
@@ -3821,8 +4008,18 @@ t('only the point about fluency is timed, and no later concept added a second',
 /*
  * No `visualRef` anywhere, and it is the honest absence rather than an
  * oversight — see the header: this build has no figures, which is also why the
- * other nine nodes of the area stayed mapped. A placeholder here would be the
+ * rest of the area's nodes stayed mapped. A placeholder here would be the
  * one thing the field exists to prevent.
+ *
+ * Circular measure is the sharpest test of that claim in the subject, and it
+ * passes by having been SPLIT rather than by being figure-free. The map node's
+ * `is` line named two things: π as a ratio that does not depend on the circle,
+ * and the area as a limit of inscribed polygons. The first is written here and
+ * needs no picture — it is a claim about a quotient surviving a scaling. The
+ * second is a sequence of drawings with more and more sides, so πr² is used in
+ * the material and never derived there, exactly as the congruence criteria and
+ * the inscribed-angle theorem are. A `visualRef` on any of these three points
+ * would be pointing at the figure that was deliberately not taken.
  *
  * It is a stronger statement with the triangles in than it was without them.
  * The angle facts could be argued not to need a figure; a triangle plainly
@@ -4176,8 +4373,35 @@ t('isInterrogative reads the punctuation and does not guess',
   && !isInterrogative('What the written algorithm was doing')
   && !isInterrogative('Add the places separately'))
 t('the coverage total matches the node count', Q_TOTAL === QNODES.length)
-t('the authored count is a strict minority, which is the finding',
-  Q_AUTHORED > 0 && Q_AUTHORED < Q_TOTAL / 2, `${Q_AUTHORED} of ${Q_TOTAL}`)
+/*
+ * THIS USED TO ASSERT A STRICT MINORITY AND THE NINTH GEOMETRY PROMOTION ENDED
+ * THAT, so the claim is restated here rather than renumbered.
+ *
+ * The old form was `Q_AUTHORED < Q_TOTAL / 2`, and the finding it carried was
+ * real: most subgoals in the build were imperative labels that the tutor had to
+ * phrase at ask time, and types.ts argues at length that a hand-written
+ * question beats a generated one. `circles` shipped twelve subgoals with
+ * twelve authored questions, which took the figure from 226 of 460 to 238 of
+ * 472 — across the halfway line, so the assertion failed by two.
+ *
+ * It failed in the direction the work was supposed to move it, which is the
+ * whole problem with writing a ratchet as an inequality against a moving total:
+ * the test could only stay green while the project stood still. The comment
+ * below already says the authored figure is MEANT to go up and that asserting
+ * it exactly would make writing a question look like a regression — and a
+ * one-sided bound half a dozen questions away from flipping has the same fault
+ * in slower motion.
+ *
+ * So what is held now is the two-sided claim, which does not expire the next
+ * time somebody writes a question: a majority of subgoals carry their own
+ * phrasing, and the gap is still real rather than closed. The upper bound is
+ * the one doing work — it is what stops the coverage line becoming decoration
+ * once it has nothing left to report — and the day it fails is the day this
+ * assertion should be replaced by an equality, because at that point the
+ * number is finished and not merely moving.
+ */
+t('the authored count is a majority now, and still short of all of them',
+  Q_AUTHORED > Q_TOTAL / 2 && Q_AUTHORED < Q_TOTAL, `${Q_AUTHORED} of ${Q_TOTAL}`)
 /*
  * A floor and not an equality, for the reason the EVALS count carries: the
  * authored figure is meant to GO UP as questions get written, and asserting it

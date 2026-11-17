@@ -34,6 +34,7 @@ import type {
   Interest, Labelled, ScoreWeights, SourceType,
 } from './types'
 import type { ShownItem } from './metrics'
+import { removalHolds } from './feedback'
 import { CLASSIFIER_VERSION } from './tags'
 
 /**
@@ -1302,34 +1303,78 @@ export async function loadItemReactions(
 /**
  * Items this user has said they already saw.
  *
- * Read by `buildDigest` so a dismissed item stops being selected. Until this
- * existed, "already saw" moved no weight (by design — it is a complaint about
- * duplication, not about the topic) and was read by nothing else, so the item
- * went on winning its slot every build. The home-page strip hid it client-side,
- * which was right for the reader and wasted one of the twenty slots.
+ * Read by `buildDigest` so an item the reader has dealt with stops being
+ * selected. Until this existed, "already saw" moved no weight (by design — it
+ * is a complaint about duplication, not about the topic) and was read by
+ * nothing else, so the item went on winning its slot every build. The
+ * home-page strip hid it client-side, which was right for the reader and
+ * wasted one of the twenty slots.
  *
- * ONLY `already_saw`. `interesting_not_useful` is the control that means "good
- * find, wrong moment", so excluding it would turn "show me this later" into
- * "never show me this again" — the exact collapse §5's rule 2 exists to
- * prevent.
+ * ── All three removing kinds, not `already_saw` alone ─────────────────────
+ *
+ * This used to filter on `already_saw` only, with a comment arguing that
+ * excluding `interesting_not_useful` would turn "show me this later" into
+ * "never show me this again". That was right about the danger and wrong about
+ * the remedy: leaving the item in meant "later" held nothing back, so the one
+ * control that means "not now" was the one control that changed nothing about
+ * now. `REMOVAL`'s deferral is the remedy — out for a week, then eligible
+ * again — and it is checked here rather than in SQL because the window it is
+ * measured against is a constant in `feedback.ts`, where the rest of the §5
+ * reasoning lives.
+ *
+ * ── The newest judgement per item is the one that counts ──────────────────
+ *
+ * Same rule and the same ascending overwrite as `loadItemReactions`: someone
+ * who said "less like this" and then "worth seeing" meant the second one. That
+ * also makes re-rating the only honest way back from the two lasting removals,
+ * neither of which can be withdrawn — `less_like_this` has already moved a
+ * weight that a delete would not move back. If this and `loadItemReactions`
+ * disagreed, the strip would show one reaction while the builder acted on
+ * another.
  *
  * Bounded by the candidate window, which is safe rather than approximate: an
  * item is only a candidate while its `first_seen_at` is inside the window, and
  * feedback on it is necessarily later than that, so nothing reachable is
  * missed.
  */
-export async function dismissedItemIds(
-  userId: string, windowDays = 14,
-): Promise<Set<string>> {
-  const cutoff = new Date(Date.now() - windowDays * 86_400_000).toISOString()
+export async function withheldItems(
+  userId: string, windowDays = 14, now = new Date().toISOString(),
+): Promise<Map<string, FeedbackKind>> {
+  const nowMs = Date.parse(now)
+  const cutoff = new Date(nowMs - windowDays * 86_400_000).toISOString()
   const { data, error } = await db()
     .from('suggest_feedback')
-    .select('item_id')
+    .select('item_id, kind, created_at')
     .eq('user_id', userId)
-    .eq('kind', 'already_saw')
     .gte('created_at', cutoff)
-  if (error) throw new Error(`could not load what you have already seen: ${error.message}`)
-  return new Set(((data ?? []) as { item_id: string }[]).map(r => String(r.item_id)))
+    // DESCENDING, taking the first row per item — which is the same
+    // newest-wins rule as `loadItemReactions` reached by the opposite route,
+    // and the difference matters here. That one is bounded to the twenty item
+    // ids it was handed; this one asks for a fortnight of a user's reactions
+    // with no bound but PostgREST's default page size. Ascending would make a
+    // truncated page drop the NEWEST rows — the ones that decide the answer —
+    // and a reader active enough to be truncated would find the feed acting on
+    // judgements they had since changed.
+    .order('created_at', { ascending: false })
+  if (error) throw new Error(`could not load what you have set aside: ${error.message}`)
+
+  const latest = new Map<string, { kind: FeedbackKind; at: string }>()
+  for (const r of (data ?? []) as Record<string, unknown>[]) {
+    const kind = String(r.kind)
+    // Weak signals skipped for the reason `loadItemReactions` gives: `opened`
+    // is not a judgement anybody made, and letting a click overwrite a stated
+    // removal would quietly put the item back.
+    if (!isExplicitFeedback(kind)) continue
+    const itemId = String(r.item_id)
+    if (latest.has(itemId)) continue
+    latest.set(itemId, { kind: kind as FeedbackKind, at: String(r.created_at) })
+  }
+
+  const out = new Map<string, FeedbackKind>()
+  for (const [itemId, r] of latest) {
+    if (removalHolds(r.kind, r.at, now)) out.set(itemId, r.kind)
+  }
+  return out
 }
 
 /**

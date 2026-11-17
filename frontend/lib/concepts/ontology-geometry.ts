@@ -482,6 +482,116 @@
  *   a general account of implication, and the reason is the map's, not a limit
  *   of what prose can carry.
  *
+ * ── THE NINTH PROMOTION TOOK THE NODE THIS FILE HAD WRITTEN OFF IN PROSE ──
+ *
+ * `circles` was chosen by the same readiness test as the eight above it, and
+ * the test is now the only heuristic left — the three the file used to lean on
+ * are all spent. It is not the node above the last: `geometric-proof` has one
+ * other dependent and it is in another area. There is no area floor to dodge,
+ * since the merge argued below put `euclidean-geometry` fifteen nodes above a
+ * floor of five. And there is no cheaper candidate: of the ten concepts still
+ * unwritten on the two unfinished journeys, four have all their prerequisites
+ * written — `circles`, `right-triangle-trig`, `linear-equations` and
+ * `ratio-and-rate` — and this is the only one of the four that unblocks
+ * anything, because `circle-measure` needs it, `solid-geometry` needs that,
+ * and `three-dimensional-coordinates` needs that. Three concepts stand behind
+ * this one; nothing stands behind the other three.
+ *
+ * WHAT MAKES IT WORTH A PARAGRAPH IS THAT THIS FILE HAD ALREADY REFUSED IT,
+ * twice over and in writing. `subject.covers` ended, until this promotion, with
+ * "The circle theorems, circular measure and the solids are the rest and are
+ * still mapped only — each of them is about a figure, and nothing in this build
+ * can show one", and `EUCLIDEAN_GEOMETRY`'s comment says the same. That
+ * sentence was a prediction dressed as a boundary, and it was wrong in the way
+ * the file has now been wrong six times: it identified the concept with its
+ * theorems, and the theorems are the part that needs the drawing.
+ *
+ * The figure test's record was six whole nodes and one split. It is now seven
+ * and one, and this is the first node taken where the sentence being overturned
+ * was in THIS file rather than in the atlas — so the test has stopped being a
+ * tool for reading the map and has started correcting the syllabus's own
+ * account of its boundary. Worth the warning that goes with it: a file that
+ * records its refusals in prose and then overturns them is only honest if the
+ * overturning is as explicit as the refusal was, which is why this paragraph
+ * exists instead of a quiet edit to `covers`.
+ *
+ * WHAT SURVIVES BEING WRITTEN DOWN, and why each one needs no figure:
+ *
+ *   The inscribed angle, as an INVARIANCE rather than as a construction. The
+ *   halving is one division. What makes a knowledge point is that a chord has
+ *   two central angles on it rather than one, the vertex halves the one on the
+ *   arc it is NOT on, and the vertex's position on its own arc never enters the
+ *   answer — so a problem that pins the vertex has over-specified itself. That
+ *   is a claim about what the answer depends on, which is the claim-about-claims
+ *   shape the six promotions above kept finding, and it is figure-free in the
+ *   strong sense: there is nothing to look at, because the whole content is
+ *   that looking at a particular picture would mislead you into thinking the
+ *   position mattered. The reflex case is where learners actually fail, and it
+ *   is arithmetic: 360 − 110, halved.
+ *
+ *   The tangent length, as a SLOT ASSIGNMENT made by geometry instead of by
+ *   reading. `pythagoras`' first point is that the relation is not symmetric in
+ *   its three letters and that nothing in three numbers says which is the
+ *   hypotenuse. Here something does: the right angle is at the point of
+ *   contact, so the centre-to-point distance is opposite it and the tangent is
+ *   a leg, so the move is a subtraction — decided before any number is read.
+ *   That is the prerequisite being used rather than restated, and it arrives
+ *   with two free consequences that are usually drawn. The expression needs
+ *   d ≥ r, so a point inside the circle is refused by a negative square rather
+ *   than by inspecting a figure — the same shape as the triangle inequality
+ *   refusing a height in `area-and-perimeter`. And because only d and r enter
+ *   it, the two tangents from one external point are equal, which is a
+ *   standard figure argument obtained here by noticing which variables the
+ *   formula does not contain.
+ *
+ *   The cyclic quadrilateral, as the file's cleanest instance of an argument
+ *   about which check carries information. Opposite angles total 180°, and
+ *   that is DERIVED from the first point rather than taken: two opposite
+ *   vertices stand on the same diagonal from opposite arcs, so they halve two
+ *   central angles totalling 360°. The useful direction is the contrapositive,
+ *   which is `geometric-proof`'s second point cited by name. And set against it
+ *   is the 360° total of all four angles, which every quadrilateral passes —
+ *   so the commonest thing a learner does here tests only that the figure is a
+ *   quadrilateral. The second pair of opposites then turns out to repeat the
+ *   first, because 360 minus 180 is 180, so one pair is the whole test. Three
+ *   checks, one of which decides, one of which decides nothing, and one of
+ *   which is the first one again.
+ *
+ * WHAT IS ABSENT, named rather than approximated:
+ *
+ *   The inscribed-angle theorem's own proof, which is the largest debt this
+ *   concept takes on and is taken on the same terms as the congruence
+ *   criteria. It is a case analysis over where the centre falls relative to the
+ *   angle — inside, on a side, outside — with an isosceles triangle on two
+ *   radii in each case. Three figures, and the case split is itself a statement
+ *   about a picture, so there is no half of it to keep.
+ *
+ *   The perpendicularity of a tangent to its radius, taken as given for the
+ *   same reason and more cheaply: the usual argument is that the radius is the
+ *   shortest segment from the centre to the line, which is the shortest-route
+ *   fact `area-and-perimeter` already leans on, applied to a figure. The second
+ *   knowledge point is explicit that this fact is what decides the slot
+ *   assignment and that it is not being established here.
+ *
+ *   The chord theorems, and this is the part of the node that the figure test
+ *   genuinely refused rather than merely left for later. Equal chords are
+ *   equidistant from the centre; two chords crossing inside cut each other
+ *   into products that match; the angle between a tangent and a chord equals
+ *   the angle in the alternate segment. Each is a similar-triangles or
+ *   isosceles argument whose statement is already a description of a drawing,
+ *   and unlike the inscribed angle none of them has an invariance underneath
+ *   to write about instead. The node's `is` line names chords first, so what
+ *   went is the second and third of its three advertised topics and not the
+ *   first — the split the sixth promotion found, in a different proportion.
+ *
+ *   Arc length and sector area, which are absent on a MAP boundary rather than
+ *   a figure one and are worth separating for that reason. They are
+ *   `circle-measure`'s content, that node names this one in its own `needs`,
+ *   and π as "the ratio that is the same for every circle" is exactly the kind
+ *   of claim this file would otherwise reach for. It is the next node up and
+ *   taking its material here would make the promotion above this one write
+ *   around a hole.
+ *
  * ── Why a subject of its own ──────────────────────────────────────────────
  *
  * There is no geometry ontology to extend. Every existing subject declares a
@@ -1127,6 +1237,39 @@
  * is a multiplication and a halving rather than the 180-minus subtraction the
  * rest of the subject keeps borrowing — so the reason that applied to five
  * points above does not apply to any of these.
+ *
+ * THIS COUNT HAD STOPPED AT TWENTY-ONE AND SHOULD HAVE READ TWENTY-FOUR, which
+ * is worth repairing out loud rather than quietly. The eighth promotion wrote
+ * three untimed points and did not come back here, so the running total was a
+ * promotion behind — and nothing caught it, because the total is a sentence in
+ * a comment and no test reads it. Every other invariant this file maintains by
+ * hand has an assertion standing behind it; this one is the exception, and the
+ * cheapest reading of the gap is that a prose counter is not an invariant at
+ * all, it is a note that happens to be checkable.
+ *
+ * So: the three proof points and the three circle points together take it from
+ * twenty-one to TWENTY-SEVEN, still with exactly one target in the file.
+ *
+ * The proof points are untimed for one reason shared by all three, and it is a
+ * reason none of the concepts above could give: the point of a proof is which
+ * fact licenses which step, so rewarding speed rewards reaching for the
+ * arithmetic ahead of the citation — which is not a mistake about the
+ * arithmetic but a refusal to do the thing being taught. The subtractions
+ * underneath them are already timed by `two-sums-every-angle-chase-uses`.
+ *
+ * The circle points hit two of the established reasons and sharpen one of
+ * them. The first and the third are the "decision in front of trivial
+ * arithmetic" case, and the first is the sharpest instance of it in the file:
+ * the halving is a single division that would time beautifully, and what the
+ * point is actually about is which of two central angles the learner may
+ * halve, so a target would measure precisely the half of the task that is not
+ * the content. The third is the same shape with three additions in front of
+ * it, and the decision is which of two checks carries information. The second
+ * is the read-it-slowly case inherited from `pythagoras`, with the twist that
+ * speed gets it right by luck — the external point is always further from the
+ * centre than the radius, so "assign the hypotenuse to the larger number"
+ * never fails here while never being the reason. A timed point that can be
+ * passed by the wrong method is worse than an untimed one.
  */
 
 import type { Concept, ConceptEdge, ConceptOntology, Subject } from './types'
@@ -1183,9 +1326,44 @@ const subject: Subject = {
     'does — together with the check that a proposed counterexample has to pass the hypothesis ' +
     'before its arithmetic means anything. Two-column layout is absent, since it is a convention ' +
     'about how a proof is written down rather than about what makes one valid, and so is every ' +
-    'proof whose steps are about a drawing. The circle theorems, circular measure and the solids ' +
-    'are the rest and are still mapped only — each of them is about a figure, and nothing in ' +
-    'this build can show one.',
+    'proof whose steps are about a drawing. Then the circle, which is the first concept here ' +
+    'that the sentence this one used to end with had written off: an inscribed angle as half the ' +
+    'central angle standing on the arc the vertex is NOT on, so that a chord carries two answers ' +
+    'rather than one and the reflex angle is the right one for half the positions, and so that ' +
+    'the angle is a property of the chord and the side while the vertex\'s exact place on its ' +
+    'arc goes unused; a tangent length as the leg a right angle leaves, with the hypotenuse '  +
+    'fixed at the centre-to-point distance by the perpendicularity at the point of contact ' +
+    'rather than by which number is larger, normally irrational and left as a reduced surd, and ' +
+    'with both the condition for a tangent to exist and the equality of the two tangents from ' +
+    'one point read off that same expression; and the opposite angles of a cyclic quadrilateral ' +
+    'totalling 180°, obtained by halving twice rather than taken as new, used in its ' +
+    'contrapositive direction to refute concyclicity outright, and set against the total of all ' +
+    'four angles, which every quadrilateral passes and which therefore decides nothing. The ' +
+    'inscribed-angle theorem itself is taken as given, like the congruence criteria, and so is ' +
+    'the perpendicularity of a tangent to its radius: proving either is a case analysis over ' +
+    'where the centre falls relative to the figure. The chord theorems are absent — equal ' +
+    'chords equidistant from the centre, the intersecting-chord products, the alternate segment ' +
+    '— because each is a similar-triangles or isosceles argument about a drawing with no ' +
+    'figure-free part to take. Then circular measure, where the sentence this one used to end ' +
+    'with turned out to be half right and the half it got right is still absent: π as the ' +
+    'quotient of circumference and DIAMETER, with the content being that the quotient is the ' +
+    'same for every circle because any two circles are similar and scaling multiplies the top ' +
+    'and the bottom alike — so π is forced rather than measured — and the relation run backwards, ' +
+    'a circumference kept as an exact multiple of π dividing to a radius with nothing rounded; ' +
+    'a central angle\'s share of a full turn computed ONCE and then taken of two different ' +
+    'wholes, the circumference for the arc and the area for the sector, so that the two answers ' +
+    'differ in number and in units while the fraction does not, together with the sector\'s ' +
+    'perimeter as the one measure of it that is a share of nothing, since a full circle has no ' +
+    'radii on its boundary; and a scale factor entering the boundary once and the area twice, ' +
+    'so that trebling a radius multiplies the circumference by three and the area by nine, with ' +
+    'the parameter count behind it — a circle has ONE free number, so any measure of it fixes ' +
+    'the rest, which is how it escapes the two measures determining each other in neither ' +
+    'direction that area and perimeter established for the rectangle. What stayed behind is the ' +
+    'half that needs the figure, and it is the half that says WHY: the area of a circle as a ' +
+    'limit of inscribed polygons. πr² is used here and not derived, exactly as the congruence ' +
+    'criteria and the inscribed-angle theorem are, because the derivation is a sequence of ' +
+    'drawings with more and more sides and there is no figure-free part of it to take. The ' +
+    'solids are the rest and are still mapped only.',
   medium: 'theorem',
   facetName: 'Concept',
   facetDoes: 'Which concept the statement has to be about.',
@@ -3682,11 +3860,768 @@ const CONCEPTS: Concept[] = [
       },
     ],
   },
+  {
+    id: 'circles',
+    name: 'Circles',
+    subjectId: subject.id,
+    scope: {
+      id: 'circles',
+      label: 'Circles',
+      hint: 'circle chord tangent inscribed angle arc',
+      /*
+       * Carried verbatim from the map node, like the seven anchored patterns
+       * above it and for the same reason `area-and-perimeter`'s scope gives:
+       * widening a pattern while writing the material makes two changes at
+       * once, and the recognition figure in tests/atlas.mjs would move with no
+       * way to say which edit moved it.
+       *
+       * Worth one note on what this pattern does NOT reach, because the gap
+       * looks like an oversight and is the rule working. `/^circle\b/i` is
+       * anchored and the `\b` is before a word boundary, so it takes "Circle"
+       * and "Circle theorem" and does not take "Circles", "Inscribed angle",
+       * "Tangent lines to circles" or "Cyclic quadrilateral" — which is to say
+       * it misses the title of every theorem this concept actually teaches.
+       * Widening it is a recognition decision and belongs on the map as its
+       * own change, not here as a side effect of writing worked examples. The
+       * eighth promotion made the same argument from the other direction, where
+       * the honest answer was no pattern at all.
+       */
+      match: /^circle\b/i,
+    },
+    fidelity: 'checked',
+    objectives: [
+      {
+        id: 'halve-the-central-angle-the-vertex-is-entitled-to-halve',
+        statement:
+          'Given a chord and the angle it makes at the centre, produce the angle it makes at a '
+          + 'point of the circle, for a vertex on either arc — which means deciding first which of '
+          + 'the two central angles standing on that chord the vertex is looking at, since the '
+          + 'reflex one is the answer for half the positions. Say which part of the given the '
+          + 'answer never used, and why that makes the angle a property of the chord and the side '
+          + 'rather than of the vertex.',
+        taskKinds: ['evaluate', 'justify'],
+      },
+      {
+        id: 'put-the-hypotenuse-where-the-tangent-forces-it-and-stop-at-the-surd',
+        statement:
+          'Find the length of a tangent from an external point given the radius and the distance '
+          + 'to the centre, assigning the hypotenuse by the position of the right angle rather '
+          + 'than by which number is larger; leave an irrational answer as a reduced surd rather '
+          + 'than a decimal, and read off the same expression both the condition for a tangent to '
+          + 'exist at all and the reason the two tangents from one point are equal.',
+        taskKinds: ['evaluate', 'transform_to_form', 'justify'],
+      },
+      {
+        id: 'refute-concyclicity-with-the-pair-that-carries-information',
+        statement:
+          'Decide what a quadrilateral\'s four angles settle about whether its vertices lie on one '
+          + 'circle: refute it outright from one pair of opposite angles, say why the total of all '
+          + 'four is not evidence of anything, say why the second pair of opposites repeats the '
+          + 'first rather than confirming it, and say which direction of the statement a figure '
+          + 'that passes has actually satisfied.',
+        taskKinds: ['evaluate', 'justify'],
+      },
+    ],
+    knowledgePoints: [
+      {
+        id: 'an-inscribed-angle-halves-the-central-angle-on-the-arc-it-is-not-on',
+        conceptId: 'circles',
+        statement:
+          'A chord makes an angle at the centre and an angle at a point of the circle, and the '
+          + 'second is half the first. Which first, though, is the whole of the difficulty: a '
+          + 'chord has TWO angles standing on it at the centre, the non-reflex one and the reflex '
+          + 'one, and they total 360° because together they go once round. The angle at a vertex '
+          + 'halves the one standing on the arc the vertex is NOT on. So the answer depends on the '
+          + 'chord and on which side of it the vertex lies, and on nothing else — every point of '
+          + 'one arc gives the same angle, which is why a problem that says where exactly the '
+          + 'vertex is has told you more than the answer can use.',
+        position: 1,
+        /*
+         * No `automaticityTarget`. The halving is one division and would time
+         * well, which is exactly the trap: the content of the point is WHICH of
+         * two central angles the learner is entitled to halve, and a speed
+         * reward trains halving whichever number was printed. That is the error
+         * the point exists to stop, and it is the same reason
+         * `quadrilaterals-and-polygons`' first point is untimed — the
+         * arithmetic is trivial and the decision in front of it is not.
+         */
+        workedExample: {
+          problem:
+            'A circle has centre O, and A and B are points on it with the non-reflex angle AOB '
+            + 'measuring 110°. P is some point of the major arc AB and Q is some point of the '
+            + 'minor arc AB. Find the angles APB and AQB, and say which part of the given neither '
+            + 'answer used.',
+          subgoals: [
+            {
+              label: 'Count the angles standing on the chord at the centre, before halving anything',
+              detail:
+                'The chord AB cuts the circle into a major and a minor arc, and there are two '
+                + 'angles at O standing on it: the non-reflex 110° given, which stands on the '
+                + 'minor arc, and the reflex 360 − 110 = 250°, which stands on the major arc. They '
+                + 'total 360° because between them they sweep once round O. Both are available to '
+                + 'be halved, and which one a vertex gets is settled by the arc the vertex is not '
+                + 'sitting on — so the first move is to have both numbers written down rather '
+                + 'than to halve the one that was printed.',
+              socratic:
+                'P and Q are on opposite sides of the chord AB. What angle does the centre make '
+                + 'over each of the two arcs, and what must those two angles total?',
+            },
+            {
+              label: 'Halve the one standing on the arc P is not on',
+              detail:
+                'P is on the major arc, so the arc AB that P is not on is the minor one, and the '
+                + 'angle standing on the minor arc at the centre is the 110° given. So APB is '
+                + '110 ÷ 2 = 55°. The 250° never enters this calculation: it stands on the arc P '
+                + 'is sitting on, and the theorem pairs a vertex with the far arc.',
+              socratic:
+                'The arc AB that P does not sit on is the minor one, under the 110° at the '
+                + 'centre. How does the angle at P compare with that 110°, and which of the two '
+                + 'is the bigger?',
+            },
+            {
+              label: 'Repeat the same halving for Q, where the far arc is the major one',
+              detail:
+                'Q is on the minor arc, so the arc it is not on is the major one, and the angle '
+                + 'standing on the major arc is the reflex 250°. So AQB is 250 ÷ 2 = 125°. The '
+                + 'arithmetic is the same division as the step above; the only thing that changed '
+                + 'is which of the two central angles the vertex was entitled to halve. A learner '
+                + 'who halves the printed 110° again answers 55° and is wrong by 70°, with every '
+                + 'step of the division correct.',
+              socratic:
+                'Q is on the minor arc. Which arc is Q not sitting on, what angle stands at the '
+                + 'centre over that one, and what does the same halving give you now?',
+            },
+            {
+              label: 'Name the given that neither answer used, and check the two against each other',
+              detail:
+                'Neither answer used where on its arc the vertex was. Any other point of the '
+                + 'major arc halves the same 110° and gives 55° as well, so "P is some point of '
+                + 'the major arc" was the whole of the data about P, and a problem pinning P '
+                + 'exactly would have over-specified it. That invariance IS the theorem: the '
+                + 'inscribed angle is a function of the chord and the side, not of the vertex. '
+                + 'The two answers also check each other — 55 + 125 = 180°, which is forced, '
+                + 'since the two central angles total 360° and both were halved.',
+              socratic:
+                'You were told only that P is somewhere on the major arc. Why was that enough to '
+                + 'pin the angle down, and what would a different point of the same arc give?',
+            },
+          ],
+          answer:
+            'APB = 55° and AQB = 125°. P is on the major arc, so the arc AB without P on it is '
+            + 'the minor one, carrying the given 110° at the centre, and APB = 110 ÷ 2 = 55°. Q '
+            + 'is on the minor arc, so the arc without Q on it is the major one, carrying the '
+            + 'reflex angle 360 − 110 = 250°, and AQB = 250 ÷ 2 = 125°. Neither answer used where '
+            + 'on its arc the vertex lay: every point of the major arc gives 55° and every point '
+            + 'of the minor arc gives 125°, so the side of the chord was the only thing about the '
+            + 'vertex that mattered. The two total 180°, which is forced rather than coincidental '
+            + '— the two central angles total 360° and each was halved.',
+        },
+      },
+      {
+        id: 'a-tangent-length-is-the-leg-the-right-angle-leaves',
+        conceptId: 'circles',
+        statement:
+          'A tangent is perpendicular to the radius at the point where it touches. That single '
+          + 'fact decides the thing Pythagoras cannot decide for itself: the right angle sits at '
+          + 'the point of contact, so the side opposite it — the distance from the centre to the '
+          + 'external point — is the hypotenuse, always, and the radius and the tangent are both '
+          + 'legs. So a tangent length is a subtraction, √(d² − r²), and the two numbers handed '
+          + 'to you are never both legs. The same expression says when there is nothing to find: '
+          + 'it needs d > r, and a point with d < r is inside the circle and has no tangent '
+          + 'through it at all.',
+        position: 2,
+        /*
+         * No `automaticityTarget`, and this is the point in the concept where
+         * one would be most tempting — a subtraction and a root is exactly the
+         * shape that times well, and `pythagoras` is where the subject's one
+         * timed point lives. It is still wrong here. What this point adds to
+         * Pythagoras is not the arithmetic but the SLOT ASSIGNMENT being made
+         * by a geometric fact instead of by reading the problem, and a learner
+         * rewarded for speed assigns the slots by which number is larger —
+         * which gets this one right by luck, since d > r always, and gets the
+         * reasoning wrong. The squaring and subtracting are already timed by
+         * `the-hypotenuse-is-not-one-of-three-equals`.
+         */
+        workedExample: {
+          problem:
+            'A circle has centre O and radius 9 cm, and the point T is 41 cm from O. A tangent '
+            + 'from T touches the circle at A. Find TA. Then find the tangent length from a point '
+            + '8 cm from the centre of a circle of radius 5 cm.',
+          subgoals: [
+            {
+              label: 'Place the right angle from the tangent fact, before any length goes into a slot',
+              detail:
+                'OA is the radius drawn to the point of contact and TA is the tangent, so they '
+                + 'meet at right angles and the right angle of triangle OAT is at A. Pythagoras '
+                + 'puts the hypotenuse opposite the right angle, so the hypotenuse is OT — the '
+                + 'centre-to-point distance, 41 cm — and OA and TA are the two legs. Nothing '
+                + 'about the numbers 9 and 41 establishes this. The perpendicularity does, and it '
+                + 'is the only thing that does.',
+              socratic:
+                'Three lengths, and only one of them can be opposite the right angle. Which angle '
+                + 'of triangle OAT is forced to be 90°, and by which fact about tangents?',
+            },
+            {
+              label: 'Subtract rather than add, because the unknown is a leg and not the hypotenuse',
+              detail:
+                'TA² = OT² − OA² = 41² − 9² = 1681 − 81 = 1600, so TA = 40 cm. The subtraction is '
+                + 'forced by the assignment made in the step above: adding the squares would be '
+                + 'solving for the hypotenuse, and the hypotenuse is the length already given. '
+                + 'This is the leg-versus-hypotenuse decision Pythagoras is built on, met here '
+                + 'with the decision already settled by a fact about circles rather than by a '
+                + 'phrase in the problem.',
+              socratic:
+                'The 41 cm is the hypotenuse and the 9 cm is a leg. Does finding the third side '
+                + 'add the two squares or take one from the other — and how would you know if you '
+                + 'had chosen wrong?',
+            },
+            {
+              label: 'Run it again where the answer is irrational, and stop at the reduced surd',
+              detail:
+                'Same assignment, different numbers: the 8 cm is the hypotenuse and the 5 cm '
+                + 'radius is a leg, so the tangent length squared is 8² − 5² = 64 − 25 = 39 and '
+                + 'the length is √39 cm. 39 = 3 × 13 has no square factor, so there is nothing to '
+                + 'take out from under the sign and √39 already IS the answer; writing 6.24 cm '
+                + 'states a length the figure does not have. The first case came out whole only '
+                + 'because 9, 40, 41 is a Pythagorean triple, which is the exception — a tangent '
+                + 'length is normally an irrational.',
+              socratic:
+                '64 − 25 = 39. Is there a whole number whose square is 39 — and if not, is there '
+                + 'anything you can take out from under the sign?',
+            },
+            {
+              label: 'Read the existence condition and the equal-tangents fact off the same expression',
+              detail:
+                '√(d² − r²) needs d² − r² to be non-negative, which is d ≥ r. At d = r the point '
+                + 'is on the circle and the tangent length is 0; for d < r the point is inside, '
+                + 'no tangent through it touches the circle, and the arithmetic refuses the '
+                + 'configuration by producing a negative square before any root is taken. The '
+                + 'same expression also settles a fact usually argued from a drawing: a second '
+                + 'tangent from T touches at some other point B, and TB² = d² − r² with the same '
+                + 'two numbers, so TA = TB. The two tangents from an external point are equal '
+                + 'because only d and r enter the formula and the point of contact does not.',
+              socratic:
+                'Try the same expression for a point 5 cm from the centre of the 9 cm circle. '
+                + 'What does the subtraction do, and what is it telling you about where that '
+                + 'point is, before you reach for a root?',
+            },
+          ],
+          answer:
+            'TA = 40 cm, and √39 cm in the second case. The radius OA meets the tangent at A at a '
+            + 'right angle, so OT is the hypotenuse and the tangent is a leg: TA² = 41² − 9² = '
+            + '1681 − 81 = 1600, giving TA = 40 cm. For the second circle the tangent length '
+            + 'squared is 8² − 5² = 39, and 39 = 3 × 13 is square-free, so the exact length is '
+            + '√39 cm with nothing to reduce. The subtraction is forced by the right angle being '
+            + 'at the point of contact rather than at the centre or at T. The same expression '
+            + 'carries two more things: it needs d ≥ r, so a point inside the circle is refused '
+            + 'by a negative square before a root is taken, and it depends on d and r alone, '
+            + 'which is why the two tangents from one external point have equal length.',
+        },
+      },
+      {
+        id: 'opposite-angles-decide-concyclicity-and-the-total-of-all-four-does-not',
+        conceptId: 'circles',
+        statement:
+          'If a quadrilateral\'s four vertices lie on one circle, each pair of opposite angles '
+          + 'totals 180° — which is the halving above rather than a new fact, since two opposite '
+          + 'vertices stand on the same diagonal from opposite arcs and so halve two central '
+          + 'angles that total 360°. The direction that does work is the contrapositive: a pair of '
+          + 'opposite angles that does not total 180° proves the four points are not concyclic. '
+          + 'The angles of EVERY quadrilateral total 360°, so that total is evidence of nothing, '
+          + 'and checking it is the commonest way of appearing to test for a circle while testing '
+          + 'only that the figure is a quadrilateral.',
+        position: 3,
+        /*
+         * No `automaticityTarget`. The arithmetic is three additions, and the
+         * content is which of two checks carries information — so a speed
+         * reward would train running the 360° check fast, and that check is the
+         * one the point exists to discredit. Same reason as the second point of
+         * `quadrilaterals-and-polygons`, where haste is what produces the wrong
+         * total.
+         */
+        workedExample: {
+          problem:
+            'Two quadrilaterals are offered as having all four vertices on one circle. ABCD has '
+            + 'angles A = 85°, B = 98°, C = 95° and D = 82°. PQRS has angles P = 85°, Q = 98°, '
+            + 'R = 94° and S = 83°. Decide what can be concluded about each, and say which check '
+            + 'did the work.',
+          subgoals: [
+            {
+              label: 'Run the check every quadrilateral passes, and establish that it separates nothing',
+              detail:
+                'ABCD: 85 + 98 + 95 + 82 = 360. PQRS: 85 + 98 + 94 + 83 = 360. Both total 360°, '
+                + 'and so does every quadrilateral whatever its vertices lie on — one diagonal '
+                + 'cuts it into two triangles and each contributes 180°. So this check cannot '
+                + 'tell a cyclic quadrilateral from any other, and a figure failing it would not '
+                + 'be a quadrilateral at all. It is still worth doing first, for exactly that '
+                + 'reason: it confirms the data describes a quadrilateral, and that is the whole '
+                + 'of what it confirms.',
+              socratic:
+                'Both sets of four angles total 360°. Before deciding what that tells you about '
+                + 'circles, ask the other question: which quadrilaterals would FAIL that check?',
+            },
+            {
+              label: 'Test the pair the theorem actually speaks about, on the second figure',
+              detail:
+                'P + R = 85 + 94 = 179, which is not 180. The proved statement runs "concyclic, '
+                + 'therefore opposite angles total 180°", so its contrapositive — opposite angles '
+                + 'not totalling 180°, therefore not concyclic — settles PQRS with nothing new '
+                + 'proved. Those four points do not lie on one circle, and a subtraction finding '
+                + '1° did it.',
+              socratic:
+                'One of the two figures fails a check the other passes. What do you get from '
+                + 'P + R, and is the statement you are using the one that was proved or its '
+                + 'reverse?',
+            },
+            {
+              label: 'Check the other pair as well, and find you have checked one thing twice',
+              detail:
+                'Q + S = 98 + 83 = 181, and in ABCD both A + C = 85 + 95 = 180 and B + D = 98 + '
+                + '82 = 180. The second pair never carries new information: the four angles total '
+                + '360°, so if one pair totals 180° the other totals 360 − 180 = 180° as well, '
+                + 'and if one pair falls 1° short the other runs 1° over. The 179 and the 181 are '
+                + 'one failure read twice. So one pair is the entire test, and 360° is what makes '
+                + 'that true.',
+              socratic:
+                'You have 179 for one pair. Without adding the other two angles, what must Q + S '
+                + 'be — and what does that make the second check worth?',
+            },
+            {
+              label: 'Say which direction the passing figure satisfied, and which one would need its own proof',
+              detail:
+                'ABCD passes, and passing is the CONVERSE\'s hypothesis rather than the proved '
+                + 'statement\'s. What was proved runs concyclic ⟹ 180°; reading it backwards is a '
+                + 'different claim that needs its own proof, exactly as a converse always does. '
+                + 'That converse happens to be true — a quadrilateral whose opposite angles total '
+                + '180° is cyclic — and the distinction stands anyway, because being true is not '
+                + 'the same as being licensed by the statement in hand. So PQRS is refuted '
+                + 'outright and ABCD has passed the only test available, which is a weaker thing '
+                + 'to be able to say and the honest one.',
+              socratic:
+                'ABCD\'s opposite angles do total 180°. Which way round is the statement that was '
+                + 'proved, and does it let you conclude ABCD is cyclic?',
+            },
+          ],
+          answer:
+            'PQRS is definitely not concyclic; ABCD passes the test without being proved cyclic '
+            + 'by the statement in hand. Both total 360° — 85 + 98 + 95 + 82 and 85 + 98 + 94 + '
+            + '83 — and that separates nothing, since every quadrilateral totals 360°. The pair '
+            + 'that matters: in PQRS, P + R = 85 + 94 = 179 ≠ 180, so the contrapositive of '
+            + '"concyclic, therefore opposite angles total 180°" settles it with nothing added. '
+            + 'Q + S = 181 is the same failure read twice, because the four angles total 360° and '
+            + 'so the two pairs must share that 360° between them. In ABCD both pairs total 180°, '
+            + 'which is the converse\'s hypothesis — a separate claim needing its own proof, true '
+            + 'as it happens but not what was proved here. The 180° fact itself is the first '
+            + 'point\'s halving: opposite vertices stand on the same diagonal from opposite arcs, '
+            + 'so their angles halve two central angles totalling 360°.',
+        },
+      },
+    ],
+  },
+  {
+    id: 'circle-measure',
+    name: 'Circumference and circular area',
+    subjectId: subject.id,
+    scope: {
+      id: 'circle-measure',
+      label: 'Circumference and circular area',
+      hint: 'circumference pi area of a circle arc length sector',
+      /*
+       * Carried verbatim from the map node, like the seven anchored patterns
+       * before it and against the eighth's precedent of no pattern at all. The
+       * rule those comments establish cuts both ways: do not invent a pattern
+       * during an authoring pass, and do not widen one either, because the
+       * recognition figure in tests/atlas.mjs would move with no way to say
+       * which edit moved it.
+       *
+       * The gap is the same shape as `circles`' and worth naming for the same
+       * reason. The alternation takes "Circumference", "Area of a disk", "Area
+       * of a circle" and "Pi", and the `\b` on the last keeps it off "pizza"
+       * and "pint" — but it does not take "Arc length", "Circular sector" or
+       * "Radian", which are the titles of two of the three things taught below.
+       * So the pattern selects precisely and recalls badly, and `fidelity` is
+       * still `checked`: what `checked` claims is that the pattern really
+       * decides membership for what it matches, not that it matches everything
+       * the concept covers. Widening it to reach the sector is a recognition
+       * decision and belongs on the map as its own change.
+       */
+      match: /\b(circumference|area of a (disk|circle)|\bpi\b)/i,
+    },
+    fidelity: 'checked',
+    objectives: [
+      {
+        id: 'produce-either-of-the-circumference-and-the-radius-from-the-other',
+        statement:
+          'Given a radius, produce the circumference as an exact multiple of π, having first '
+          + 'decided whether the defining ratio is taken against the radius or the diameter; and '
+          + 'given a circumference in that form, divide back to the radius with nothing rounded '
+          + 'anywhere. Say why the quotient C/d is the same for every circle — that it follows '
+          + 'from all circles being similar, rather than from any particular circle having been '
+          + 'measured carefully.',
+        taskKinds: ['evaluate', 'justify'],
+      },
+      {
+        id: 'take-one-fraction-of-a-turn-and-apply-it-to-two-different-wholes',
+        statement:
+          'Given a central angle, produce both the arc length and the sector area of the circle '
+          + 'it cuts, computing the angle\'s share of a full turn ONCE and then choosing which '
+          + 'whole to take that share of. Say why one fraction serves a length and an area alike, '
+          + 'and why the sector\'s perimeter is the one measure of it that is a fraction of '
+          + 'nothing at all.',
+        taskKinds: ['evaluate', 'justify'],
+      },
+      {
+        id: 'carry-a-scale-factor-into-the-boundary-once-and-the-area-twice',
+        statement:
+          'Given two circles, or a scale factor between them, produce the factor by which the '
+          + 'circumference grows and the factor by which the area grows, and say why the second '
+          + 'is the square of the first rather than equal to it. Recover any one measure of a '
+          + 'circle from any other, and say why that is available here when `area-and-perimeter` '
+          + 'established that a perimeter does not determine an area.',
+        taskKinds: ['evaluate', 'justify'],
+      },
+    ],
+    knowledgePoints: [
+      {
+        id: 'the-ratio-is-taken-against-the-diameter-and-does-not-depend-on-the-circle',
+        conceptId: 'circle-measure',
+        statement:
+          'π is the circumference divided by the DIAMETER, and the content of the point is the '
+          + 'second half of that: the quotient comes out the same for every circle, which is what '
+          + 'entitles it to be a number rather than a measurement of one particular circle. The '
+          + 'reason is similarity. Any two circles are scaled copies of each other, scaling '
+          + 'multiplies every length by the same factor, and a quotient whose top and bottom are '
+          + 'both multiplied by that factor does not move. From C/d = π comes C = πd = 2πr, and '
+          + 'the commonest error is taking the ratio against the radius instead, which halves '
+          + 'every answer while every multiplication in it stays correct. The relation also runs '
+          + 'backwards: a circumference left as an exact multiple of π divides back to a radius '
+          + 'with no rounding anywhere, which a decimal cannot do.',
+        position: 1,
+        /*
+         * No `automaticityTarget`. Doubling a radius is the fastest arithmetic
+         * in the subject and would time beautifully, which is exactly the trap:
+         * the content is WHICH length the ratio is taken against, and a speed
+         * reward trains multiplying whichever number was printed by 2π. That is
+         * the error the point exists to stop, and it is the same argument the
+         * first point of `circles` makes about halving the printed angle.
+         */
+        workedExample: {
+          problem:
+            'A circle has radius 7 cm. Find its circumference exactly. A second circle has '
+            + 'circumference 50π cm; find its radius. Then say why the quotient C/d could not '
+            + 'have come out differently for the two of them.',
+          subgoals: [
+            {
+              label: 'Name which length the ratio is taken against, before substituting anything',
+              detail:
+                'π is the circumference over the DIAMETER, not over the radius: C/d = π, so '
+                + 'C = πd. What was given is the radius, so the diameter has to be formed first — '
+                + 'd = 2r = 14 cm — and then C = 14π cm. Substituting the printed 7 straight into '
+                + 'πd gives 7π and halves the circumference, with the multiplication itself '
+                + 'correct. So the first move is to say which length the definition names, not to '
+                + 'use the number that was supplied.',
+              socratic:
+                'π is the circumference divided by one other length of the circle. Which length '
+                + 'is it — and which one were you handed here?',
+            },
+            {
+              label: 'Substitute and stop at the exact multiple of π',
+              detail:
+                'C = π × 14 = 14π cm, and 14π IS the circumference — there is no arithmetic left '
+                + 'to do. Writing 43.98 cm states a length the circle does not have: π is '
+                + 'irrational, so every decimal for it is a rounding, and the rounding would now '
+                + 'be inside the answer. The exact form also keeps the 14 in view, which is the '
+                + 'diameter, so it still says where it came from in a way a decimal does not.',
+              socratic:
+                'You have C = π × 14. Is there still a calculation to do here, or is 14π already '
+                + 'the length?',
+            },
+            {
+              label: 'Run the relation backwards, since C = πd is an equation and not a procedure',
+              detail:
+                'The second circle gives 50π = πd, and dividing both sides by π — legal, because '
+                + 'π is not zero — leaves d = 50 cm, so r = 25 cm. The π cancels exactly and '
+                + 'nothing is rounded, which is the practical payoff of having kept the first '
+                + 'answer exact: a circumference recorded as 43.98 cm would have had to be '
+                + 'divided by a decimal for π, and would have come back as 13.9995 rather than '
+                + 'as 14. The error to avoid at the end is stopping at the 50, which is the '
+                + 'diameter, and calling it the radius.',
+              socratic:
+                '50π = πd. What single division undoes this in one step, and what is left on '
+                + 'each side when it is done?',
+            },
+            {
+              label: 'Say why the quotient was never free to differ between the two circles',
+              detail:
+                'Any two circles are similar — one is a scaled copy of the other — and here the '
+                + 'factor is 50/14 = 25/7, which is the ratio of the radii as well. Scaling '
+                + 'multiplies EVERY length of a figure by that factor, so the second circle\'s '
+                + 'circumference and its diameter are both 25/7 times the first\'s, and a '
+                + 'quotient with the same factor top and bottom is unchanged. So C/d is one '
+                + 'number for all circles. It is not a fact about circles that somebody measured '
+                + 'well; it is forced by similarity, and the argument that a ratio inside one '
+                + 'figure survives scaling it is `similarity`\'s third point.',
+              socratic:
+                'The second circle is a scaled copy of the first. What does that scaling do to '
+                + 'the top and the bottom of C/d separately — and so what does it do to the '
+                + 'quotient?',
+            },
+          ],
+          answer:
+            'C = 14π cm for the first circle, and r = 25 cm for the second. π is the ratio of '
+            + 'circumference to DIAMETER, so C = πd = π × 14 = 14π cm; taking it against the '
+            + 'radius would have given 7π and halved it. For the second, 50π = πd divides by π '
+            + 'exactly to give d = 50 cm and hence r = 25 cm, with nothing rounded at any point. '
+            + 'The quotient C/d is the same for both because any two circles are similar: the '
+            + 'second is the first scaled by 25/7, and scaling multiplies circumference and '
+            + 'diameter by that one factor, so their quotient does not move. That invariance is '
+            + 'what makes π a number rather than a measurement of some particular circle.',
+        },
+      },
+      {
+        id: 'an-arc-and-a-sector-take-the-same-fraction-of-two-different-wholes',
+        conceptId: 'circle-measure',
+        statement:
+          'A central angle of θ° opens θ/360 of a full turn, and that single fraction scales BOTH '
+          + 'of the circle\'s measures: θ/360 of the circumference is the arc, and θ/360 of the '
+          + 'area is the sector. The fraction is computed once and the thing that changes is '
+          + 'which whole it is taken of — so the two answers differ in their numbers and in their '
+          + 'units, and getting the same number twice means the fraction was applied once and the '
+          + 'answer reused. The sector\'s PERIMETER is the measure the rule does not reach: it is '
+          + 'the arc plus two radii, and no fraction of the circumference can produce it, because '
+          + 'a full circle has no radii on its boundary for a fraction to take a share of.',
+        position: 2,
+        /*
+         * No `automaticityTarget`. The fraction is one division and the two
+         * products are one multiplication each, so this would time as well as
+         * anything here — and the decision the point is about is which WHOLE to
+         * multiply, which a speed reward does not touch. Timing it would reward
+         * reaching for the first whole that comes to mind, and taking the
+         * fraction of the wrong whole is the error named in the statement.
+         */
+        workedExample: {
+          problem:
+            'A circle has radius 18 cm, and a sector of it has a central angle of 60°. Find the '
+            + 'length of the arc and the area of the sector, both exactly. Then find the '
+            + 'sector\'s perimeter, and say why that one is not a fraction of anything.',
+          subgoals: [
+            {
+              label: 'Turn the angle into a fraction of a full turn, once, before touching either measure',
+              detail:
+                'A full turn is 360°, so 60° opens 60/360 = 1/6 of the circle. That one fraction '
+                + 'is the whole of what the angle contributes, and it is going to serve both '
+                + 'measures, so it is worth reducing now rather than carrying 60/360 through two '
+                + 'separate calculations. Notice what it does not mention: the radius. The '
+                + 'fraction is what the angle does, and the radius decides what it is a fraction '
+                + 'OF.',
+              socratic:
+                'A full turn is 360°. What fraction of it does 60° open — and does that fraction '
+                + 'change if the circle is bigger?',
+            },
+            {
+              label: 'Take that fraction of the circumference to get the arc',
+              detail:
+                'The whole circumference is C = 2πr = 2π(18) = 36π cm, and the arc is a sixth of '
+                + 'it: 36π/6 = 6π cm. The arc is part of the BOUNDARY, so the whole it is a share '
+                + 'of has to be the boundary\'s length. A learner holding the correct 1/6 who '
+                + 'reaches for the area at this step has not made an arithmetic mistake — they '
+                + 'have offered an area where a length was asked for, and the units are the only '
+                + 'thing that says so.',
+              socratic:
+                'The arc is part of the circle\'s boundary. How long is the whole boundary, and '
+                + 'what is a sixth of that?',
+            },
+            {
+              label: 'Take the SAME fraction of the area, which is a different whole',
+              detail:
+                'The whole area is A = πr² = π(18²) = 324π cm², and the sector is a sixth of '
+                + 'that: 324π/6 = 54π cm². The fraction is the identical 1/6 from the first step '
+                + 'and only the whole has changed. The two answers are 6π cm and 54π cm² — '
+                + 'different numbers and different units — and that difference is the check that '
+                + 'two wholes were really used, because the one way to get the same number twice '
+                + 'is to take the fraction once and reuse what it gave.',
+              socratic:
+                'You took a sixth of the circumference for the arc. What is the whole AREA here, '
+                + 'and what is the same sixth of that?',
+            },
+            {
+              label: 'Close the sector, and find the one measure no fraction supplies',
+              detail:
+                'The sector is bounded by the arc and by the two radii that cut it out, so its '
+                + 'perimeter is 6π + 18 + 18 = (6π + 36) cm. This is not a sixth of anything. A '
+                + 'sixth of the circumference is the arc by itself, and the two radii are not '
+                + 'part of the circle\'s boundary at all — a full circle has none on its edge — '
+                + 'so there is nothing in the whole for a fraction to have taken them from. The '
+                + 'fraction rule covers the arc and the sector\'s area and stops there, and this '
+                + 'is where applying it anyway answers 6π and silently drops 36 cm of boundary.',
+              socratic:
+                'Walk the whole way round the sector and back to where you started. Which part '
+                + 'of that journey runs along the circle, and which part would a fraction of the '
+                + 'circumference never have counted?',
+            },
+          ],
+          answer:
+            'The arc is 6π cm, the sector is 54π cm², and the sector\'s perimeter is (6π + 36) '
+            + 'cm. The angle opens 60/360 = 1/6 of a full turn, and that one fraction serves both '
+            + 'measures. The whole circumference is 2π(18) = 36π cm, so the arc is 36π/6 = 6π cm; '
+            + 'the whole area is π(18²) = 324π cm², so the sector is 324π/6 = 54π cm². Same '
+            + 'fraction, two different wholes — and the answers differ in both number and units, '
+            + 'which is how you know two wholes were used rather than one answer reused. The '
+            + 'perimeter is the exception: the sector is closed by the arc and TWO RADII, giving '
+            + '6π + 36 cm, and no fraction of the circumference could have produced it, because a '
+            + 'full circle has no radii on its boundary to take a share of.',
+        },
+      },
+      {
+        id: 'a-scale-factor-multiplies-the-boundary-once-and-the-area-twice',
+        conceptId: 'circle-measure',
+        statement:
+          'Scaling a circle by a factor k multiplies its circumference by k and its area by k², '
+          + 'because a circumference is a length and an area is a length times a length. So '
+          + 'doubling the radius doubles the boundary and QUADRUPLES the area, and "k times as '
+          + 'wide, k times as big" is wrong by a whole factor of k — the right number multiplied '
+          + 'once where it should have been multiplied twice. The exponents also settle something '
+          + '`area-and-perimeter` showed to be false in general. There, neither measure '
+          + 'determined the other, because a rectangle has two free numbers and a perimeter pins '
+          + 'only their sum. A circle has ONE free number, so any one of its measures fixes the '
+          + 'radius and the radius fixes the rest — which means that concept\'s claim was about '
+          + 'shapes with room to vary, not about measures as such.',
+        position: 3,
+        /*
+         * No `automaticityTarget`, and this is the point where one would be
+         * least defensible. Squaring 3 is the whole arithmetic, and the error
+         * the point exists to stop — answering k where k² was wanted — is a
+         * learner who computed FAST and once. A speed target would reward
+         * exactly the reflex being corrected, which is the argument the third
+         * point of `quadrilaterals-and-polygons` makes about haste producing
+         * the wrong total.
+         */
+        workedExample: {
+          problem:
+            'Circle A has radius 5 cm and circle B has radius 15 cm. By what factor does the '
+            + 'circumference grow from A to B, and by what factor does the area? Then a third '
+            + 'circle has circumference 20π cm — find its area, and say why that was possible '
+            + 'here when `area-and-perimeter` showed that a perimeter does not fix an area.',
+          subgoals: [
+            {
+              label: 'Get the scale factor from the two radii before computing any measure',
+              detail:
+                'B\'s radius is 15 cm and A\'s is 5 cm, so B is A scaled by k = 15/5 = 3: every '
+                + 'length of B is three times the matching length of A, which is what a scale '
+                + 'factor means. Both answers below come out of this one number. Computing all '
+                + 'four measures first and comparing them afterwards also works, and hides the '
+                + 'point — the two factors are not two separate findings, they are k and k².',
+              socratic:
+                'B is a scaled copy of A. What single number multiplies every length of A to '
+                + 'give the matching length of B?',
+            },
+            {
+              label: 'Multiply the boundary once, because a circumference is a length',
+              detail:
+                'C_A = 2π(5) = 10π cm and C_B = 2π(15) = 30π cm, so the circumference grew by '
+                + '30π/10π = 3 — the scale factor itself, with no further change. A circumference '
+                + 'is a length, scaling multiplies lengths by k, and so the boundary carries '
+                + 'exactly one factor of k.',
+              socratic:
+                'A circumference is a length. If every length of the figure triples, what happens '
+                + 'to this particular one?',
+            },
+            {
+              label: 'Multiply the area twice, because an area is a length times a length',
+              detail:
+                'A_A = π(5²) = 25π cm² and A_B = π(15²) = 225π cm², so the area grew by '
+                + '225π/25π = 9, which is 3² and not 3. The radius sits SQUARED in πr², so a '
+                + 'factor of 3 on the radius enters the area twice. This is precisely where '
+                + '"three times as wide, three times as big" fails, and it fails by a factor of '
+                + '3: the area is nine times, and a learner who answers three has multiplied the '
+                + 'correct number once instead of twice.',
+              socratic:
+                'An area is a length times a length. If each of those two lengths triples, what '
+                + 'happens to the product — and how does that compare with what happened to the '
+                + 'boundary?',
+            },
+            {
+              label: 'Cross between the measures through the single parameter, which a rectangle has not got',
+              detail:
+                'The third circle has C = 20π cm, so 20π = 2πr gives r = 10 cm, and then '
+                + 'A = π(10²) = 100π cm². One measure fixed another — and `area-and-perimeter` '
+                + 'showed that for a rectangle it does not, by exhibiting two rectangles of equal '
+                + 'perimeter with different areas. The difference is how many numbers it takes to '
+                + 'describe the shape. A rectangle needs two, and a perimeter pins only their '
+                + 'sum, so one degree of freedom survives. A circle needs ONE, so any measure of '
+                + 'it pins the radius, and the radius pins everything else.',
+              socratic:
+                'A rectangle\'s perimeter left its area undecided. How many numbers does it take '
+                + 'to describe a circle completely — and does knowing the circumference leave any '
+                + 'of them free?',
+            },
+          ],
+          answer:
+            'The circumference grows by a factor of 3 and the area by a factor of 9; the third '
+            + 'circle\'s area is 100π cm². B is A scaled by k = 15/5 = 3. A circumference is a '
+            + 'length, so it carries one factor of k: 10π cm becomes 30π cm, a factor of 3. An '
+            + 'area is a length times a length, so it carries two: 25π cm² becomes 225π cm², a '
+            + 'factor of 9 = 3². That is why "three times as wide, three times as big" is wrong, '
+            + 'and wrong by a factor of 3. For the third circle, C = 20π gives 20π = 2πr, so '
+            + 'r = 10 cm and A = π(10²) = 100π cm². One measure fixing another is available here '
+            + 'and was not for the rectangle in `area-and-perimeter`, and the difference is the '
+            + 'number of free parameters: a rectangle has two and its perimeter pins only their '
+            + 'sum, while a circle has one, so any measure of it pins all the others.',
+        },
+      },
+    ],
+  },
 ]
 
 /**
- * Nine edges: one prerequisite per promotion after the first, TWO for the
- * seventh, plus the one interference the fourth promotion brought with it.
+ * Thirteen edges: one prerequisite per promotion after the first, TWO for the
+ * seventh, TWO for the ninth and TWO for the tenth, plus the one interference
+ * the fourth promotion brought with it.
+ *
+ * THE TENTH PROMOTION CLOSED THE FORK, which is the last thing that could
+ * happen to a prerequisite graph that had not happened here yet, and it is a
+ * different event from the merge the ninth recorded.
+ *
+ * `congruence` forked three ways — `similarity` at the fourth promotion,
+ * `quadrilaterals-and-polygons` at the sixth, `geometric-proof` at the eighth —
+ * and the ninth reconverged two of the three. `circles` reaches `similarity`
+ * through `pythagoras` and `geometric-proof` directly, and the note on
+ * `pythagoras->circles` records at length that the polygons branch is
+ * deliberately NOT behind it. `circle-measure` reaches all three, because its
+ * second parent `area-and-perimeter` sits on that third branch. So this is the
+ * first concept of the subject with every child of `congruence` in its
+ * ancestry, and the fork the sixth and eighth promotions widened is now shut
+ * above it.
+ *
+ * Why that is a separate claim from the ninth's, rather than the same one
+ * again: in-degree is two for both nodes, "its two parents are on branches that
+ * genuinely parted" is true of both, and even "neither parent is an ancestor of
+ * the other" is true of both. The only thing that separates them is WHICH
+ * branches are underneath, so tests/concepts-logic.mjs asserts the ancestry of
+ * the named three rather than any count — and asserts, against it, that
+ * `circles` still does not reach the polygons, since that contrast is the whole
+ * content of the distinction.
+ *
+ * THE NINTH PROMOTION MERGED TWO BRANCHES, which is the one thing that can
+ * happen to a prerequisite graph that had not happened here yet, and it is a
+ * different event from the two the list already records.
+ *
+ * `congruence` forked three ways and this is where two of the three come back
+ * together: `circles` names `geometric-proof` and `pythagoras`, and neither of
+ * those is an ancestor of the other. The seventh promotion also contributed a
+ * two-parent node, so in-degree two is not new — but `area-and-perimeter`'s two
+ * parents are nested, `triangle-basics` being an ancestor of
+ * `quadrilaterals-and-polygons` through `congruence`, so that node joined a
+ * line to a point lower down the same line. This one joins two lines that had
+ * genuinely parted, which is why the subject's shape is now a DAG rather than a
+ * tree with a shortcut in it, and why tests/concepts-logic.mjs asserts the
+ * ancestry relation between the two parents rather than counting them.
+ *
+ * It added no branch point either. `geometric-proof` and `pythagoras` each went
+ * from no children to one, so `congruence` and `triangle-basics` are still the
+ * only forks. Three claims that this list has now separated: the tree grew (the
+ * sixth), the tree branched (the sixth and seventh), two branches merged (this
+ * one). A count of edges reports all three identically.
  *
  * THE EIGHTH PROMOTION PUT A THIRD CHILD ON `congruence` AND ADDED NO BRANCH
  * POINT, which is the one shape this list had not yet shown. The sixth made
@@ -4103,6 +5038,216 @@ const EDGES: ConceptEdge[] = [
      * gate it from inside — and this is the other half of that rule arriving.
      * atlas-foundations.ts carries it; the consequence for this file is only
      * that the subject it feeds has stopped being blocked above `pythagoras`.
+     */
+    promotedBy: 'author:plane-geometry',
+  },
+  {
+    id: 'geometric-proof->circles',
+    from: 'geometric-proof',
+    to: 'circles',
+    kind: 'prerequisite',
+    /*
+     * THE FIRST OF A PAIR, AND THE PAIR IS WHAT MAKES THIS PROMOTION NEW: it
+     * is the first node here whose two parents are on DIFFERENT branches.
+     *
+     * The seventh promotion also brought two edges, so "two at once" is not
+     * the novelty — `area-and-perimeter` named `quadrilaterals-and-polygons`
+     * and `triangle-basics`, and both were already concepts here. But those
+     * two are NESTED: `triangle-basics` is an ancestor of
+     * `quadrilaterals-and-polygons` through `congruence`, so that join tied a
+     * node to one line and to a point further down the same line. This one
+     * joins two lines that genuinely parted. `geometric-proof` hangs off
+     * `congruence` directly; `pythagoras` hangs off `similarity`, which hangs
+     * off `congruence`; neither is an ancestor of the other. So the subject
+     * forked at `congruence` and this is the first node where two of its
+     * branches come back together.
+     *
+     * That distinction is asserted in tests/concepts-logic.mjs rather than
+     * described, because both joins look identical to an in-degree check and
+     * only one of them is a reconvergence. It also means the subject has
+     * stopped being readable as a tree with one shortcut — the right word for
+     * its shape now is a DAG, and the teaching order through it is not
+     * recoverable from any single path.
+     *
+     * The branch points did not move, which is the other half worth stating.
+     * `geometric-proof` and `pythagoras` each went from no children to one, so
+     * neither became a fork; `congruence` and `triangle-basics` are still the
+     * only two nodes of out-degree above one. "The tree grew", "the tree
+     * branched" and "two branches merged" are three different claims, and this
+     * promotion is the third with neither of the first two.
+     *
+     * The claim is load-bearing in two of the three knowledge points and in a
+     * way the other prerequisite cannot cover. The third point's whole subject
+     * is a converse and a contrapositive of one proved implication, which is
+     * `geometric-proof`'s second knowledge point used rather than restated —
+     * the distinction is cited by name and not re-derived. And the first
+     * point's closing move is that an answer which does not use part of its
+     * given is reporting an invariance, which is the "say which given each
+     * step consumed" discipline from that concept's first point. Remove this
+     * edge and the third worked example has to re-teach what a converse is
+     * before it can refuse one.
+     *
+     * `author:` rather than `atlas:euclidean-geometry`, like the eight above
+     * it: `expandEdges` stamped the area on this edge while it was the node's
+     * `needs`, and the provenance moved with the edge.
+     */
+    promotedBy: 'author:plane-geometry',
+  },
+  {
+    id: 'pythagoras->circles',
+    from: 'pythagoras',
+    to: 'circles',
+    kind: 'prerequisite',
+    /*
+     * THE SECOND OF THE PAIR, AND THE CHEAP CASE FOR THE SECOND TIME WITH TWO
+     * `needs` — zero endpoints outside this subject, out of two.
+     *
+     * The seventh promotion settled that the expense of a promotion is not the
+     * SIZE of the departing node's `needs` list but how many of its endpoints
+     * live outside the ontology the node is joining. This is the second node to
+     * score zero out of two, so that reading now has two instances rather than
+     * one, and `EUCLIDEAN_GEOMETRY.links` needed no entry and gave none up: it
+     * still holds exactly the four cross-file edges it had.
+     *
+     * The claim is the most concretely load-bearing edge in the subject. The
+     * second knowledge point is Pythagoras applied with its slot assignment
+     * already decided by a fact about circles, and it cites that concept's
+     * first point — the hypotenuse is not one of three equals — by its own
+     * argument rather than by name: the right angle is at the point of contact,
+     * so the centre-to-point distance is opposite it and the tangent is a leg,
+     * so the move is a subtraction. Its third subgoal then lands on an
+     * irrational length and leaves it as a reduced surd, which is that
+     * concept's second point. Two of Pythagoras's three knowledge points are
+     * used in one worked example here, and neither is restated.
+     *
+     * Worth recording what this edge does NOT license, since the file's habit
+     * is to name what a promotion left alone. The third knowledge point uses
+     * the fact that a quadrilateral's angles total 360°, which is
+     * `quadrilaterals-and-polygons`' material — and that concept is NOT an
+     * ancestor of this one. It forks off `congruence` on a third branch, so
+     * nothing in the gating walk puts it behind this concept. No edge was
+     * invented to make it one: adding a prerequisite changes what gates what
+     * for every learner, and doing it as a side effect of writing a worked
+     * example is the thing this file records itself refusing to do for
+     * `integer-arithmetic`. The example derives the 360° in line instead, from
+     * one diagonal and the triangle angle sum — and `triangle-basics` IS an
+     * ancestor, through `congruence` and `geometric-proof` — so the fact is
+     * reached from inside the gate rather than borrowed from beside it.
+     *
+     * `author:` for the same reason as every edge above it.
+     */
+    promotedBy: 'author:plane-geometry',
+  },
+  {
+    id: 'circles->circle-measure',
+    from: 'circles',
+    to: 'circle-measure',
+    kind: 'prerequisite',
+    /*
+     * THE FIRST OF THE TENTH PROMOTION'S PAIR, AND IT CLOSES THE FORK
+     * `congruence` OPENED — which is the one structural event this subject had
+     * not yet produced.
+     *
+     * The ninth promotion merged two branches and said so, so a reconvergence
+     * is not the novelty. What is new is WHICH branches. `congruence` has three
+     * children here — `similarity` from the fourth promotion,
+     * `quadrilaterals-and-polygons` from the sixth, `geometric-proof` from the
+     * eighth — and `circles` reconverged only two of them: it reaches
+     * `similarity` through `pythagoras` and `geometric-proof` directly, and the
+     * polygons branch was explicitly NOT behind it, which the edge above
+     * records at length. This node reaches all three, because its other parent
+     * `area-and-perimeter` sits on the polygons branch. So `circle-measure` is
+     * the first concept of the subject with every child of `congruence` in its
+     * ancestry, and the three-way fork is fully closed above it.
+     *
+     * That is asserted in tests/concepts-logic.mjs as an ancestry claim over
+     * the named three, not as an in-degree or a count. In-degree is 2 here and
+     * was 2 at the ninth; "its parents are on separate branches" was already
+     * true at the ninth. The only thing that separates the two events is which
+     * branches are underneath, so that is what the assertion names.
+     *
+     * No branch point was added, for the third promotion running. `circles` and
+     * `area-and-perimeter` each went from no children to one, so neither became
+     * a fork, and `congruence` and `triangle-basics` are still the only nodes
+     * of out-degree above one.
+     *
+     * What that leaves is worth one line, because it is the tidiest the
+     * subject's shape has ever been and will not survive the next promotion.
+     * Both parents were LEAVES until now — nothing rested on either — and this
+     * is the first promotion here to take two nodes out of the leaf set at once.
+     * The subject is now a DAG with exactly one source and exactly one sink:
+     * every path starts at `points-lines-angles` and every path ends here. That
+     * is a fact about a syllabus authored upward from one root with no node yet
+     * written above two different tops, not a property worth preserving, so it
+     * is recorded rather than asserted — a test holding "one sink" would go red
+     * for the eleventh promotion whichever node that turns out to be.
+     *
+     * The claim is load-bearing in two of the three knowledge points and in a
+     * way `area-and-perimeter` cannot cover. The first point's whole argument is
+     * that C/d does not depend on the circle, and it needs a circle to be an
+     * object with a centre, a radius and a diameter standing in fixed relation —
+     * which is `circles`' subject matter rather than a measurement fact. The
+     * second point cuts a sector with a CENTRAL angle and treats the arc it
+     * subtends as a part of the boundary picked out by that angle; the
+     * vocabulary of central angles, arcs and the two-arcs-per-chord split is
+     * `circles`' first knowledge point exactly, used rather than restated. Take
+     * this edge away and the second worked example has to define a central angle
+     * before it can take a fraction of a turn.
+     *
+     * `author:` rather than `atlas:euclidean-geometry`, like the eleven above
+     * it: `expandEdges` stamped the area on this edge while it was the node's
+     * own `needs`, and the provenance moved with the edge.
+     */
+    promotedBy: 'author:plane-geometry',
+  },
+  {
+    id: 'area-and-perimeter->circle-measure',
+    from: 'area-and-perimeter',
+    to: 'circle-measure',
+    kind: 'prerequisite',
+    /*
+     * THE SECOND OF THE PAIR, AND THE CHEAP CASE FOR THE THIRD TIME WITH TWO
+     * `needs` — zero endpoints outside this subject, out of two.
+     *
+     * The seventh promotion settled that expense is not the SIZE of the
+     * departing node's `needs` list but how many endpoints live outside the
+     * ontology it is joining, and the ninth produced the second instance of
+     * zero-out-of-two. This is the third, so the reading is now as well
+     * evidenced as the rule it replaced: `EUCLIDEAN_GEOMETRY.links` needed no
+     * entry and gave none up, and still holds exactly the four cross-file edges
+     * it had.
+     *
+     * It also hands nothing back, which is the check this promotion had to make
+     * and pass rather than assume. A `links` entry whose two ends BOTH finish
+     * inside one ontology has become an ordinary `needs` and must be deleted, or
+     * `composeAtlas` emits the edge twice and no test notices. None of the four
+     * entries names this node or either of its parents — they run
+     * `ratio-and-rate->similarity`, `roots-and-irrationals->pythagoras` and two
+     * into `cartesian-plane` — so there was nothing to collapse. Recorded
+     * because the absence of a deletion and the failure to look are
+     * indistinguishable afterwards.
+     *
+     * The node stranded no `confusedWith`, and that is the stranding worth
+     * naming precisely because nothing would have gone red if it had. The map
+     * node declared none, so there was no `interferes_with` for `expandEdges` to
+     * lose — unlike `similarity`, whose stranded interference is the one edge in
+     * this subject that gates nothing and whose loss would have shown up as no
+     * failure at all. Checked before the node was deleted rather than inferred
+     * from the suites staying green.
+     *
+     * The claim is load-bearing in two of the three knowledge points, and it is
+     * the only prerequisite that can carry them. The second point takes a
+     * fraction of the circle's AREA to get a sector, which presupposes that an
+     * area is a measure with a whole to take a share of — and the whole content
+     * of the third point is a comparison with what `area-and-perimeter`
+     * established: that neither measure determines the other. That concept
+     * proved it false for rectangles; this one shows a circle escaping it on a
+     * parameter count, and the fourth subgoal cites the equal-perimeter pair
+     * from that concept's third point by its argument. Remove this edge and the
+     * third worked example is contradicting a concept the learner has not been
+     * shown.
+     *
+     * `author:` for the same reason as every edge above it.
      */
     promotedBy: 'author:plane-geometry',
   },

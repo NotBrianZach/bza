@@ -916,7 +916,7 @@ const EUCLIDEAN_GEOMETRY: MapArea = {
     'and the deductive style the subject exists to teach — and then the same plane done with ' +
     'algebra, where lines and conics are equations, distance and midpoint are formulas, a ' +
     'transformation acts on coordinates, and three dimensions are a third number. ' +
-    'Eight of its nodes have left for the plane-geometry syllabus, where ' +
+    'Ten of its nodes have left for the plane-geometry syllabus, where ' +
     'they have problems written for them, and this area points at them through `needs` rather ' +
     'than restating them: the undefined terms and the first angle facts — what a straight line ' +
     'and a full turn force, a vertical pair, and what a parallel pair forces across a ' +
@@ -956,11 +956,38 @@ const EUCLIDEAN_GEOMETRY: MapArea = {
     'given, the difference between a converse that needs its own proof and a contrapositive that ' +
     'comes free, and the asymmetry between refuting a universal claim with one case and ' +
     'establishing one with any number of them. What stayed behind of that is every proof whose ' +
-    'steps are about a drawing, which is most of what this area still holds. The triangle is ' +
+    'steps are about a drawing, which is most of what this area still holds. And the circle has ' +
+    'gone as a ninth, which is the departure this area\'s own prose had written off as ' +
+    'impossible: an inscribed angle as half the central angle on the arc the vertex is NOT on, ' +
+    'so that a chord carries two answers and the vertex\'s place on its arc is not one of the ' +
+    'things the answer uses; a tangent length as the leg left by a right angle whose position is ' +
+    'fixed by the radius rather than by which number is larger, with the existence condition and ' +
+    'the equal-tangents fact read off the same expression; and the opposite angles of a cyclic ' +
+    'quadrilateral totalling 180°, halved out of the first of those and set against the total of ' +
+    'all four angles, which every quadrilateral passes. What stayed behind of that one is the ' +
+    'chords — equal chords equidistant from the centre, the intersecting-chord products, the ' +
+    'alternate segment — each a similar-triangles argument about a drawing, together with the ' +
+    'proofs of the inscribed-angle theorem and of the tangent\'s perpendicularity, which are case ' +
+    'analyses over where the centre falls. And circular measure has gone as a tenth, which is ' +
+    'the first departure the figure test split along a line this area\'s own prose had already ' +
+    'drawn: π as the quotient of circumference and diameter, with the content being that the ' +
+    'quotient is the same for every circle because any two circles are similar and scaling ' +
+    'multiplies its top and bottom by one factor, so that π is forced rather than measured; a ' +
+    'central angle\'s share of a full turn taken ONCE and then applied to two different wholes, ' +
+    'the circumference for the arc and the area for the sector, with the sector\'s perimeter as ' +
+    'the one measure that is a share of nothing because a full circle carries no radii on its ' +
+    'boundary; and a scale factor entering the boundary once and the area twice, which is where ' +
+    'a circle escapes the two measures determining each other in neither direction that area and ' +
+    'perimeter established, on a count of free parameters rather than an exception. What stayed ' +
+    'behind of that one is the half that says WHY, and it is the half that needs the figure: the ' +
+    'area of a circle as a limit of inscribed polygons, which is a sequence of drawings with ' +
+    'more and more sides and has no figure-free part to take, so πr² is used in the syllabus and ' +
+    'not derived there. The triangle is ' +
     'still named in this area\'s ' +
-    'title claim because the rest of what is synthetic about it is still here, the circle ' +
-    'theorems above all; `circles` is now the first node above the syllabus, and the eighth ' +
-    'promotion made it a root of this area rather than a node waiting on one. Coordinates used ' +
+    'title claim because the rest of what is synthetic about it is still here, the chord ' +
+    'theorems above all; `solid-geometry` is now the first node above the syllabus, and the ' +
+    'tenth promotion made it a root of this area in place of `circle-measure`, which the ninth ' +
+    'had made one alongside `constructions` and `non-euclidean-geometry`. Coordinates used ' +
     'to be a separate area and are not any more: the synthetic/analytic split is still real ' +
     'mathematics and had stopped being a usable division of the MAP, so it runs inside this area ' +
     'now rather than between two of them. The plane itself is in neither half — pairing a point ' +
@@ -1065,23 +1092,26 @@ const EUCLIDEAN_GEOMETRY: MapArea = {
    * merged area is the size of the largest existing one rather than a new kind
    * of thing.
    *
-   * TWO OF THE SEVEN HAVE SINCE BEEN SPENT, which is the budget being drawn on
-   * rather than the figures above going stale. `area-and-perimeter` and
-   * `geometric-proof` are both authored, so the area is fifteen nodes against
-   * five owed and the slack is unchanged at five — which is the arithmetic the
-   * budget predicted, since a promotion takes one from each side and the slack
-   * is the difference. tests/atlas.mjs recomputes both numbers from the tree
-   * rather than trusting either, and its named list of route concepts fails
-   * loudly when one of them becomes authored instead of going vacuous.
+   * FOUR OF THE SEVEN HAVE SINCE BEEN SPENT, which is the budget being drawn
+   * on rather than the figures above going stale. `area-and-perimeter`,
+   * `geometric-proof`, `circles` and `circle-measure` are all authored, so the
+   * area is thirteen nodes against three owed and the slack is unchanged at
+   * five — which is the arithmetic the budget predicted, since a promotion
+   * takes one from each side and the slack is the difference. tests/atlas.mjs
+   * recomputes both numbers from the tree rather than trusting either, and its
+   * named list of route concepts fails loudly when one of them becomes authored
+   * instead of going vacuous.
    *
-   * The second of the two is the one that mattered to the ORDER rather than to
+   * The second of the four is the one that mattered to the ORDER rather than to
    * the count. `geometric-proof` was the sole remaining blocker of `circles`,
-   * and `circles` is what the other four owed concepts stand behind —
-   * `circle-measure` needs it, `solid-geometry` needs that, and
+   * and `circles` is what the other four owed concepts stood behind —
+   * `circle-measure` needed it, `solid-geometry` needs that, and
    * `three-dimensional-coordinates` needs that. So the budget's five remaining
    * entries went from "one available and four unreachable" to a chain with its
    * bottom link open, and that is the deadlock this area's merge was argued for
-   * finally being cashed in rather than only cleared.
+   * finally being cashed in rather than only cleared. The two promotions since
+   * have walked that chain two links further, which is the merge's prediction
+   * coming true rather than a new argument.
    *
    * THE AREA'S OWN ROOTS WENT FROM THREE TO SIX, which is the merge's visible
    * effect on the area view: `area-and-perimeter`, `geometric-proof` and
@@ -1095,21 +1125,52 @@ const EUCLIDEAN_GEOMETRY: MapArea = {
    * `length === N` check passes while every claim it makes has gone stale.
    */
   /**
-   * EIGHT NODES LEFT THIS AREA WHEN THEY WERE AUTHORED, AND HAD TO.
+   * TEN NODES LEFT THIS AREA WHEN THEY WERE AUTHORED, AND HAD TO.
    *
    * `points-lines-angles`, `triangle-basics`, `congruence`, `similarity`,
-   * `pythagoras`, `quadrilaterals-and-polygons`, `area-and-perimeter` and
-   * `geometric-proof` are real concepts now — twenty-four knowledge points
-   * between them, with worked examples and forty-eight tasks — in
-   * ontology-geometry.ts, under the `plane-geometry` subject.
+   * `pythagoras`, `quadrilaterals-and-polygons`, `area-and-perimeter`,
+   * `geometric-proof`, `circles` and `circle-measure` are real concepts now —
+   * thirty knowledge points between them, with worked examples and sixty tasks
+   * — in ontology-geometry.ts, under the `plane-geometry` subject.
    * `atlasProblems` rejects a map node whose id collides with an authored
    * concept, and not as tidiness: the composed concept list would then hold two
    * entries for the id, and the shadowing copy has no knowledge points, so a
    * fully authored concept would silently read as unteachable. Leave any of the
-   * eight here and the material in ontology-geometry.ts becomes unreachable
+   * ten here and the material in ontology-geometry.ts becomes unreachable
    * without a single error.
    *
-   * SIX OF THE EIGHT WERE THE CHEAP KIND OF PROMOTION AND TWO WERE NOT, which
+   * THE NINTH IS WHERE THE BUDGET STOPPED BEING THE CONSTRAINT, and it is the
+   * one thing about it this block has to say that the note beside the node does
+   * not. The merge above bought twelve promotions against a floor of five and
+   * named the seven the journeys needed. Two were spent by the time that block
+   * was last edited, so it read "fifteen nodes against five owed, slack
+   * unchanged at five". That promotion made it fourteen nodes against four
+   * owed, and the slack was still five, which is the arithmetic the budget
+   * predicted for the third time running — a promotion takes one from each side
+   * and the difference does not move.
+   *
+   * THE TENTH HELD THAT ARITHMETIC FOR A FOURTH TIME: thirteen nodes against
+   * three owed, slack unchanged at five. Worth one line only because the
+   * prediction is now old enough to be worth distrusting, and it has not failed
+   * yet. It can only fail on a promotion out of this area of a node the
+   * journeys do not need — then the node count drops and the owed count does
+   * not — and all three still owed are route concepts, so the next promotion
+   * from here will hold it again.
+   *
+   * What HAS moved is which of the two numbers is binding, and it is no longer
+   * the floor. The three still owed are `solid-geometry`,
+   * `three-dimensional-coordinates` and `dot-product-geometry`, and they are
+   * very nearly a chain rather than three independent asks: `solid-geometry`
+   * stacks directly on this promotion and `three-dimensional-coordinates` on
+   * that, while `dot-product-geometry` waits on `right-triangle-trig` in
+   * `trigonometry` and so is not this area's to unblock. So the next author's
+   * constraint is dependency depth, not headroom — there are eight nodes of
+   * slack and exactly one available candidate in this area, which is
+   * `solid-geometry`. The merge was argued for as the thing that would clear
+   * the deadlock; the ninth promotion was where it could be said to have
+   * worked, and this one is the second step of the chain it opened.
+   *
+   * SEVEN OF THE NINE WERE THE CHEAP KIND OF PROMOTION AND TWO WERE NOT, which
    * makes this area the right place to learn the edge rule from — it shows both
    * halves, and shows each of them more than once. The rule is one sentence: an
    * edge is owned by the node that DECLARES it. So promoting a node strands the
@@ -1304,8 +1365,10 @@ const EUCLIDEAN_GEOMETRY: MapArea = {
    * argued in the merge block above, and THE SEVENTH PROMOTION SHRANK IT back
    * to five — the fifth promotion's shape, reproduced exactly.
    * `area-and-perimeter` left and nothing replaced it: the node resting on it
-   * is `circle-measure`, which did not become a root because its other
-   * prerequisite, `circles`, is in this area and still gates it from inside.
+   * was `circle-measure`, which did not become a root then because its other
+   * prerequisite, `circles`, was still in this area and gating it from inside.
+   * Both of those have since been authored and left, so this paragraph is a
+   * record of the seventh promotion and not a description of the area now.
    * That is the third time this set has been touched without its size being a
    * guide to its membership, and the assertion in tests/atlas.mjs is written
    * by name for exactly that reason.
@@ -1648,11 +1711,19 @@ const EUCLIDEAN_GEOMETRY: MapArea = {
      * ontology the node is joining, and this is the first promotion where that
      * number was zero out of two rather than zero out of one or one out of two.
      *
-     * The edge pointing the OTHER way was left untouched, as always:
-     * `circle-measure`, two nodes below, is this node's only dependent
-     * anywhere in the atlas and it names the node in its own `needs`. It
-     * stayed here, so it still owns that edge and `composeAtlas` resolves it
-     * across the file boundary.
+     * The edge pointing the OTHER way was left untouched AT THE TIME, as
+     * always: `circle-measure` was this node's only dependent anywhere in the
+     * atlas and it named the node in its own `needs`, and it was still a map
+     * node here, so it still owned that edge.
+     *
+     * THE TENTH PROMOTION THEN STRANDED IT, which makes this another entry in
+     * the "roster of future stranded edges" the block above the node list warns
+     * about — and the clearest one, because this node's own note is where the
+     * edge was recorded as safe. `circle-measure` is authored now, so the edge
+     * it declared came with it into `PLANE_GEOMETRY.edges`. Nothing was lost,
+     * and the sentence above is left standing with this one beside it rather
+     * than rewritten, because "an into-edge is safe" is true only until the
+     * node at the other end is promoted too.
      *
      * THE GATE IT MOVED GOT SHORTER RATHER THAN LONGER, which is new and is
      * the one thing about this promotion a reader is likely to misread. Every
@@ -1661,8 +1732,12 @@ const EUCLIDEAN_GEOMETRY: MapArea = {
      * one. `gatingPrerequisitesOf(circle-measure)` used to name four —
      * `congruence`, `pythagoras`, `quadrilaterals-and-polygons` and
      * `triangle-basics`, the last two because the walk looked straight through
-     * this node and collected both of its prerequisites — and now names three,
-     * with this concept standing in for the pair below it.
+     * this node and collected both of its prerequisites — and named three after
+     * this promotion, with this concept standing in for the pair below it. It
+     * has moved twice since: to two at the ninth, and then the tenth authored
+     * the gated node itself, so the set that is now worth reading is
+     * `solid-geometry`'s. tests/atlas.mjs tracks the whole sequence; the number
+     * in this sentence is historical and is not read by any assertion.
      *
      * A shorter list is a TIGHTER gate. The function reports the NEAREST
      * teachable ancestors, so fewer of them means the gate is closer to what
@@ -1677,22 +1752,139 @@ const EUCLIDEAN_GEOMETRY: MapArea = {
      * this promotion chose against, for the rulability reason
      * ontology-geometry.ts argues at length.
      */
-    {
-      id: 'circles',
-      match: /^circle\b/i,
-      name: 'Circles',
-      is: 'Chords, tangents and the inscribed-angle theorem — the richest set of consequences from a single definition in school geometry.',
-      needs: ['geometric-proof', 'pythagoras'],
-      terms: 'circle chord tangent inscribed angle arc',
-    },
-    {
-      id: 'circle-measure',
-      match: /\b(circumference|area of a (disk|circle)|\bpi\b)/i,
-      name: 'Circumference and circular area',
-      is: 'π as the ratio that is the same for every circle, and area as a limit of inscribed polygons rather than a formula to accept.',
-      needs: ['circles', 'area-and-perimeter'],
-      terms: 'circumference pi area of a circle arc length sector',
-    },
+    /*
+     * `circles` was here and is now authored in ontology-geometry.ts, so it had
+     * to leave — same rule, ninth time in this area. See the block above the
+     * node list.
+     *
+     * IT IS THE CHEAP CASE WITH TWO `needs`, which is the seventh promotion's
+     * shape and the second instance of it. Both `geometric-proof` and
+     * `pythagoras` were already concepts of `plane-geometry`, so both stranded
+     * edges are internal to that ontology and both are declared in its
+     * `EDGES`. Nothing crossed a file boundary, so this area's `links` needed
+     * no entry and gave none up — it still holds exactly the four that
+     * `similarity`, `pythagoras` and the merge left. Zero endpoints outside the
+     * joining ontology out of two, for the second time, which is what settles
+     * the seventh promotion's reading that expense is about WHERE a node's
+     * prerequisites live and not how many there are.
+     *
+     * No `confusedWith` and no `exercises` to strand either, and this is the
+     * check worth stating rather than inferring: `expandEdges` turns a
+     * `confusedWith` into an `interferes_with`, interference constrains
+     * SELECTION rather than gating, so losing one keeps every suite green while
+     * freeing the scheduler to introduce two confusable concepts together. This
+     * node had none — the only two in this file are on `linear-inequalities`
+     * and `exponential-functions` — and an absence nobody looked for is
+     * indistinguishable from a loss.
+     *
+     * THE ROOT SET FANNED OUT, FROM FIVE TO SEVEN, and this is the first time
+     * since the third promotion that a departure has added more than one. The
+     * three promotions before this each substituted or shrank, which made the
+     * fan-out look like a one-off of `congruence`. It is not: it is what the
+     * fifth promotion's rule produces whenever the departing node was the LAST
+     * in-area prerequisite of SEVERAL dependents at once. `circles` had four
+     * dependents and three of them were in that position — `circle-measure`,
+     * whose other prerequisite `area-and-perimeter` left at the seventh;
+     * `constructions`, which names nothing else; and `non-euclidean-geometry`,
+     * whose other prerequisite `geometric-proof` left at the eighth. All three
+     * became roots. `circles-analytic` is the fourth dependent and did NOT,
+     * because it also needs `lines-in-the-plane`, which is in the analytic half
+     * of this area and still gates it from inside.
+     *
+     * So the set has now done all four things it can do — fanned out twice,
+     * substituted three times, shrunk twice, and been doubled by a merge — and
+     * across nine promotions plus that merge its size has read 1, 1, 4, 4, 3,
+     * 3, 6, 5, 5 and now 7. That sequence is the argument for asserting it by
+     * name: no reading of the count predicts the next value, and FOUR of the
+     * ten transitions moved membership without moving size at all — the second
+     * promotion, when the single root walked from `triangle-basics` to
+     * `congruence`, and then the fourth, sixth and eighth.
+     *
+     * The three that arrived are also the three that make this promotion worth
+     * making rather than merely possible. `circle-measure` needs this node,
+     * `solid-geometry` needs that, and `three-dimensional-coordinates` needs
+     * that — the chain the merge block above was argued for. It had its bottom
+     * link opened by the eighth promotion and this is the link itself being
+     * written, so the four concepts that stood behind `circles` now stand
+     * behind a real one.
+     */
+    /*
+     * `circle-measure` was here and is now authored in ontology-geometry.ts, so
+     * it had to leave — same rule, tenth time in this area. See the block above
+     * the node list.
+     *
+     * IT IS THE CHEAP CASE WITH TWO EDGES, for the third time, which makes that
+     * reading as well evidenced as the one-and-two pattern it replaced. The node
+     * declared `needs: ['circles', 'area-and-perimeter']` and BOTH are concepts
+     * of `plane-geometry` by now, so both stranded edges are internal to that
+     * ontology the moment they are stranded and both are declared in its
+     * `EDGES`. Nothing crossed a file boundary, so this area's `links` needed no
+     * entry and gave none up: it still holds exactly the four it had.
+     *
+     * NOTHING WAS HANDED BACK EITHER, and that is the check this promotion had
+     * to make rather than assume. A `links` entry whose two ends BOTH end up
+     * inside one ontology has stopped being a cross-file edge and become an
+     * ordinary `needs`, and leaving it there makes `composeAtlas` emit the same
+     * edge twice — which no test notices, because a duplicate prerequisite gates
+     * exactly like a single one. None of the four entries names this node or
+     * either of its parents, so there was nothing to collapse. Recorded because
+     * afterwards there is no way to tell a deletion that was not needed from a
+     * deletion that was missed.
+     *
+     * IT STRANDED NO `confusedWith`, and that is the one worth stating plainly,
+     * because its loss is the only stranding here that would not have shown up
+     * as a missing gate. `expandEdges` turns a node's `confusedWith` into an
+     * `interferes_with`, interference constrains SELECTION rather than
+     * introduction order, and dropping one leaves every suite green while the
+     * scheduler is quietly freed to introduce two confusable concepts together.
+     * This node declared none — checked on the node before it was deleted, not
+     * inferred from the tests passing afterwards — so there was nothing to
+     * rehome. `similarity` is still the only promotion out of this area that
+     * stranded one.
+     *
+     * THE ROOT SET SUBSTITUTED, five to five in shape and seven to seven in
+     * size, which is the fourth promotion's outcome and the fifth turnover of
+     * this set. This node WAS a root — the ninth promotion made it one, as the
+     * fan-out note above records — and `solid-geometry` takes its place, because
+     * the departing node was the last of that node's prerequisites inside the
+     * area and in fact its ONLY one. So the set reads `constructions`,
+     * `distance-and-midpoint`, `dot-product-geometry`, `isometries-and-symmetry`,
+     * `non-euclidean-geometry`, `plane-transformations` and `solid-geometry`.
+     * Five of the seven members have now come and gone while the size has moved
+     * eleven times; tests/atlas.mjs asserts it by name, and a `length === 7`
+     * check would have passed this promotion while both of the claims that
+     * changed went stale.
+     *
+     * THE EDGES POINTING INTO IT needed no attention, for the usual reason.
+     * `solid-geometry` names it in its own `needs` and stayed here, and
+     * `radians` names it from `trigonometry` — a different atlas area — and
+     * stayed there. Both still own their edge and `composeAtlas` resolves them
+     * across the file boundary. `radians` is the one worth noting: it is the
+     * first edge out of this area to land on a node in `trigonometry`, which is
+     * the area the merge block above considered and rejected as a merge partner,
+     * so the boundary that decision drew is now load-bearing rather than
+     * hypothetical.
+     *
+     * WHAT THE FIGURE TEST TOOK, AND IT TOOK HALF: this is the second node the
+     * test has split, and the first where the node's own `is` line named both
+     * halves. That line read "π as the ratio that is the same for every circle,
+     * and area as a limit of inscribed polygons rather than a formula to
+     * accept", and the subject's `covers` had written the whole node off on the
+     * strength of the second clause. The first clause is figure-free and is one
+     * of the strongest claims-about-claims in the subject — the quotient cannot
+     * differ between two circles, because similarity multiplies its top and its
+     * bottom by one factor — so it was taken. The second genuinely needs the
+     * figure: a limit of inscribed polygons is a sequence of drawings with more
+     * and more sides, and there is no part of it that survives being written
+     * down. So πr² is used below and not derived, exactly as the congruence
+     * criteria and the inscribed-angle theorem are, and ontology-geometry.ts
+     * says so in the concept rather than leaving the omission to be noticed.
+     *
+     * That is the sixth time the test has found more than the `is` line
+     * promised, and the warning attached to it in the block above the node list
+     * still stands: a test that has never once rejected a node whole is a test
+     * an author will find a way to pass.
+     */
     {
       id: 'solid-geometry',
       match: /^(solid geometry|polyhedron|sphere|cylinder|cone \(geometry\))/i,

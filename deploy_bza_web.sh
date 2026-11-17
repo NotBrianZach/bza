@@ -137,13 +137,30 @@ _source_secrets woofs_projects   # provides CLOUDFLARE_PAGES_API_TOKEN (encrypte
 # the two entry points cannot disagree about what was deployed.
 #
 # Drained into a variable before parsing rather than piped. `templedb vcs log |
-# grep -m1` makes the reader close the pipe mid-write, templedb takes SIGPIPE, and
-# how much log was left to write decides whether that happened — so it presents as
-# a flake. In scripts/deploy.sh, which sets `pipefail`, that aborts the deploy
-# outright; here it is quieter and worse, because this script sets only `set -e`,
-# so the pipeline's status is grep's and the failure arrives as an *empty* sha that
-# looks like "templedb has no commits". Draining first means the producer always
-# runs to EOF. Same note in verify-live-sha.sh.
+# grep -m1` makes the reader close the pipe mid-write and templedb takes SIGPIPE.
+# Draining first means that producer always runs to EOF. Same note in
+# verify-live-sha.sh.
+#
+# The `grep -m1 | cut` below still has an early reader — printf, once the log
+# outgrows the 64KB a pipe buffers — and survives it for two reasons worth
+# writing down, because both are easy to remove by accident:
+#
+#   1. grep -m1 prints the matched line before it exits, so cut has the sha in
+#      hand by the time printf dies. The read does not come back empty.
+#   2. This script sets `set -e` and NOT `set -o pipefail`, so a pipeline's
+#      status is the LAST command's — cut's, which is 0. printf's 141 is
+#      discarded.
+#
+# Measured 2026-11-16 at both 41KB (10 commits) and 592KB (200): exit 0, correct
+# sha, both times. Adding `set -o pipefail` to this script is what would arm it —
+# with pipefail the same line exits 141 and prints nothing, which is exactly the
+# abort scripts/deploy.sh was fixed for. Harden the parse to a flag-guarded awk
+# first if pipefail is ever wanted here.
+#
+# An earlier version of this comment claimed the failure already arrives here as
+# an empty sha, and that the pipeline's status is grep's. Neither is true of this
+# code; the note is kept corrected rather than deleted because the empty-sha
+# story is what the guard below reads as.
 #
 # `--all-sessions` for the reason spelled out in scripts/deploy.sh: a bare
 # `vcs log` hides every commit belonging to another session, and the autonomous

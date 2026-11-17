@@ -991,16 +991,26 @@ t('and everything that depended on it still does',
   dependentsOf(MATHEMATICS, 'quadratic-formula').join(', '))
 
 /**
- * SEVEN NODES WERE PROMOTED OUT OF THIS AREA — FIVE OF THEM THE CHEAPEST KIND
+ * TEN NODES WERE PROMOTED OUT OF THIS AREA — EIGHT OF THEM THE CHEAPEST KIND
  * THE ATLAS HAS, AND TWO OF THEM THE KIND THAT ENDED THE FIRST RUN OF THEM.
  *
  * `points-lines-angles`, `triangle-basics`, `congruence`, `similarity`,
- * `pythagoras`, `quadrilaterals-and-polygons` and `area-and-perimeter` were
- * the first seven nodes of `euclidean-geometry` and are now the seven concepts
- * of `plane-geometry`. The assertions above already cover the collision half of
- * all seven moves — `shippedAtlasProblems` would name any node that had been
- * left behind — and the rootless half, by naming the angle facts in
- * `AUTHORED_ROOTS`.
+ * `pythagoras`, `quadrilaterals-and-polygons`, `area-and-perimeter`,
+ * `geometric-proof`, `circles` and `circle-measure` were the first ten nodes of
+ * `euclidean-geometry` and are now the ten concepts of `plane-geometry`. The
+ * assertions above already cover the collision half of all ten moves —
+ * `shippedAtlasProblems` would name any node that had been left behind — and
+ * the rootless half, by naming the angle facts in `AUTHORED_ROOTS`.
+ *
+ * This sentence read SEVEN until the ninth promotion, having been left behind
+ * by the eighth, and it is worth saying so rather than silently renumbering.
+ * The count in a prose header is not an invariant: `DEPARTED` below is the
+ * list the assertions actually walk, it had eight entries while this paragraph
+ * claimed seven, and nothing went red. Two counts in that change set were a
+ * promotion behind — this one and the untimed-points total in
+ * ontology-geometry.ts — which is the same fault twice and says something about
+ * where to look next time: every hand-maintained number in these files that is
+ * NOT read by an assertion has drifted at least once.
  *
  * What is asserted here is where each promotion's stranded edges went, because
  * that is the part that varied:
@@ -1079,6 +1089,28 @@ t('and everything that depended on it still does',
  *   three knowledge points — the first `links` entry in this area to change
  *   what a learner must demonstrate.
  *
+ *   `circle-measure` IS THE CHEAP CASE WITH TWO EDGES FOR THE THIRD TIME, so
+ *   what `area-and-perimeter` settled about what "cheap" measures now has three
+ *   instances rather than one. It declared `['circles', 'area-and-perimeter']`
+ *   and both were concepts of `plane-geometry` by the time it left, so both
+ *   stranded edges went to `PLANE_GEOMETRY.edges` and this area's `links`
+ *   needed no entry.
+ *
+ *   What that promotion adds to this list is the other direction, which no
+ *   promotion here had had to check. A `links` entry whose two ends BOTH finish
+ *   inside one ontology has stopped being a cross-file edge and has to be
+ *   DELETED, or `composeAtlas` emits the same prerequisite twice — and a
+ *   duplicate gates exactly like a single one, so no assertion in this file
+ *   would notice. None of the four entries names this node or either of its
+ *   parents, so nothing was handed back. The ordered-list assertion below is
+ *   what holds that: it would fail on a collapse that should have happened as
+ *   loudly as on one that should not have.
+ *
+ *   It stranded no `confusedWith` either, which is worth a line because that is
+ *   the stranding this suite cannot catch. The node declared none, so there was
+ *   no `interferes_with` for `expandEdges` to drop. `similarity` is still the
+ *   only promotion out of this area that stranded one.
+ *
  * The assertion therefore had to CHANGE rather than merely be extended, and it
  * is worth being explicit that this is not the test having been wrong. "No
  * links after three departures" was true, was load-bearing, and would have
@@ -1093,9 +1125,10 @@ t('and everything that depended on it still does',
 const EUCLID = AREAS.find(a => a.id === 'euclidean-geometry')
 const DEPARTED = [
   'points-lines-angles', 'triangle-basics', 'congruence', 'similarity', 'pythagoras',
-  'quadrilaterals-and-polygons', 'area-and-perimeter', 'geometric-proof',
+  'quadrilaterals-and-polygons', 'area-and-perimeter', 'geometric-proof', 'circles',
+  'circle-measure',
 ]
-t('the area no longer declares any of the eight, and each carries its own subject',
+t('the area no longer declares any of the ten, and each carries its own subject',
   DEPARTED.every(id =>
     EUCLID.nodes.every(n => n.id !== id) && areaOf(MATHEMATICS, id) === 'plane-geometry'),
   DEPARTED.map(id => `${id}:${areaOf(MATHEMATICS, id)}`).join(' '))
@@ -1309,18 +1342,81 @@ t('what rests on area and perimeter still names it after the rehoming, across th
   prerequisitesOf(MATHEMATICS, 'circle-measure').includes('area-and-perimeter')
   && prerequisitesOf(MATHEMATICS, 'circle-measure').includes('circles'),
   prerequisitesOf(MATHEMATICS, 'circle-measure').join(', '))
+/*
+ * THE NINTH PROMOTION SHRANK THAT SET AGAIN, three to TWO, and it is the second
+ * shrinkage this one node's gate has produced — which makes `circle-measure`
+ * the clearest record in the file of what a tightening looks like from the
+ * outside.
+ *
+ * Its gate has read, in order: four members at the sixth promotion
+ * (`congruence`, `pythagoras`, `quadrilaterals-and-polygons`,
+ * `triangle-basics`), three at the seventh when `area-and-perimeter` stood in
+ * for the last two of those, three again at the eighth with different
+ * membership when `geometric-proof` replaced `congruence` from two edges away,
+ * and now TWO — `area-and-perimeter` and `circles`, which are exactly its own
+ * two prerequisites.
+ *
+ * So the gate has arrived where a gate is supposed to end up: naming the two
+ * concepts the node actually declares and nothing collected from behind them.
+ * Four, three, three, two, with the third step changing no size at all. A
+ * `length` check would have reported this as a gate eroding by half when what
+ * happened is that it stopped reaching past its own prerequisites, and the
+ * membership at every step is the only thing that says which.
+ *
+ * `geometric-proof` leaving this set is the half most likely to be misread, so
+ * it is asserted explicitly. It is not a lost edge: the walk used to pass
+ * through the unwritten `circles` and collect what lay behind it, and now stops
+ * at `circles` itself. `geometric-proof` still gates `circles`, one edge
+ * further down, which the assertion below checks in the same breath.
+ */
 t('and the gate it moved SHRANK the set, by standing in for the two concepts below it',
   gatingPrerequisitesOf(MATHEMATICS, 'circle-measure').slice().sort().join(',')
-    === 'area-and-perimeter,geometric-proof,pythagoras'
-  && !isTeachable(MATHEMATICS, 'circles'),
+    === 'area-and-perimeter,circles'
+  && isTeachable(MATHEMATICS, 'circles'),
   gatingPrerequisitesOf(MATHEMATICS, 'circle-measure').join(', '))
-t('and the eighth promotion then moved the other half of that pair from two edges away',
-  gatingPrerequisitesOf(MATHEMATICS, 'circle-measure').includes('geometric-proof')
-  && !gatingPrerequisitesOf(MATHEMATICS, 'circle-measure').includes('congruence')
-  && prerequisitesOf(MATHEMATICS, 'circles').includes('geometric-proof')
-  && !prerequisitesOf(MATHEMATICS, 'circle-measure').includes('geometric-proof'),
+t('and the ninth tightened it onto exactly its own pair, with nothing left from beneath',
+  gatingPrerequisitesOf(MATHEMATICS, 'circle-measure').slice().sort().join(',')
+    === prerequisitesOf(MATHEMATICS, 'circle-measure').slice().sort().join(',')
+  && !gatingPrerequisitesOf(MATHEMATICS, 'circle-measure').includes('geometric-proof')
+  && !gatingPrerequisitesOf(MATHEMATICS, 'circle-measure').includes('pythagoras')
+  && gatingPrerequisitesOf(MATHEMATICS, 'circles').includes('geometric-proof'),
   gatingPrerequisitesOf(MATHEMATICS, 'circle-measure').join(', '))
-t('all eight promoted concepts are teachable in the composed map, with their material intact',
+/*
+ * THE TENTH PROMOTION SHRANK A GATE FROM TWO TO ONE, which is the third
+ * shrinkage in this area and the first to land on a node that is still mapped —
+ * so this is the only one of the three whose result can still be read off the
+ * area rather than off an authored concept.
+ *
+ * `solid-geometry` names `circle-measure` and nothing else. While that node was
+ * unwritten the walk looked straight through it and collected BOTH of its
+ * prerequisites, so the gate read `circles`, `area-and-perimeter`. Now it stops
+ * at the node itself: one demonstration has replaced two, and the one is above
+ * both of them.
+ *
+ * A shorter list is a TIGHTER gate, which is the reading a count gets backwards
+ * and the reason both halves are named. `gatingPrerequisitesOf` returns the
+ * NEAREST teachable ancestors, so fewer members means the gate sits closer to
+ * what it gates — mastery of the circle theorems and of area no longer licenses
+ * the solids between them, because the concept standing between has to be
+ * demonstrated too.
+ *
+ * `radians` is the same tightening at a distance and in another AREA, which no
+ * promotion out of here has produced before: it is a node of `trigonometry`,
+ * it names `circle-measure` in its own `needs`, and its gate now names that
+ * concept where it used to name `area-and-perimeter`. Eight members before and
+ * eight after, with different membership — the fifth time in this file a set
+ * has turned over without its size moving.
+ */
+t('and what rests on circular measure is now gated by it, the gate shrinking from two to one',
+  gatingPrerequisitesOf(MATHEMATICS, 'solid-geometry').join(',') === 'circle-measure'
+  && EUCLID.nodes.some(n => n.id === 'solid-geometry'),
+  gatingPrerequisitesOf(MATHEMATICS, 'solid-geometry').join(', '))
+t('and radians is tightened onto it too, from another area, without its gate changing size',
+  gatingPrerequisitesOf(MATHEMATICS, 'radians').includes('circle-measure')
+  && !gatingPrerequisitesOf(MATHEMATICS, 'radians').includes('area-and-perimeter')
+  && AREAS.find(a => a.id === 'trigonometry').nodes.some(n => n.id === 'radians'),
+  gatingPrerequisitesOf(MATHEMATICS, 'radians').join(', '))
+t('all ten promoted concepts are teachable in the composed map, with their material intact',
   DEPARTED.every(id => isTeachable(MATHEMATICS, id) && isPractisable(MATHEMATICS, id)),
   DEPARTED.filter(id => !isTeachable(MATHEMATICS, id) || !isPractisable(MATHEMATICS, id)).join(', '))
 /*
@@ -1473,24 +1569,82 @@ t('the area viewed alone shows exactly the nodes whose prerequisites have all le
  * Three of the five members asserted below have now come and gone while the set
  * changed size four times. The named claim is the only one worth holding.
  */
-t('neither the sixth nor the seventh promotion\'s own node is a root of the area any more',
+/*
+ * THE NINTH PROMOTION THEN FANNED IT OUT, five to SEVEN, which is the third
+ * promotion's shape and the first time it has recurred — and the recurrence is
+ * what turns that outcome from an oddity of `congruence` into the rule's
+ * ordinary behaviour.
+ *
+ * `circles` left and THREE nodes replaced it, because the departing node was
+ * the last in-area prerequisite of three of its four dependents at once.
+ * `circle-measure`'s other prerequisite `area-and-perimeter` went at the
+ * seventh; `constructions` names nothing but `circles`; and
+ * `non-euclidean-geometry`'s other prerequisite `geometric-proof` went at the
+ * eighth. So two earlier promotions had already stripped the other halves, and
+ * this one collected the result — a fan-out is a departure landing on
+ * dependents that previous departures left one edge short.
+ *
+ * `circles-analytic` is the fourth dependent and did not join, which is what
+ * keeps this a fan-out of three rather than of four: it also needs
+ * `lines-in-the-plane`, still here. Asserted separately below.
+ *
+ * With this the set has done everything it can do. Across nine promotions and
+ * a merge its size has read 1, 1, 4, 4, 3, 3, 6, 5, 5, 7 — two fan-outs, three
+ * substitutions, two shrinkages and one doubling — and FOUR of those ten
+ * transitions moved membership without moving size. There is no reading of the
+ * count that predicts the next value, which is why this is asserted by name and
+ * has been since the fourth promotion.
+ */
+t('none of the sixth, seventh or eighth promotion\'s own nodes is a root of the area any more',
   !euclidRoots.includes('quadrilaterals-and-polygons')
   && !euclidRoots.includes('area-and-perimeter')
   && !euclidRoots.includes('geometric-proof')
+  && !euclidRoots.includes('circles')
   && euclidRoots.includes('isometries-and-symmetry'),
   euclidRoots.join(', '))
-t('so the set is five, by named membership and never by count',
+/*
+ * THE TENTH PROMOTION THEN SUBSTITUTED, seven to seven, which is the fifth
+ * turnover of this set and the third time it has moved membership without
+ * moving size.
+ *
+ * `circle-measure` left and `solid-geometry` took its place, because the
+ * departing node was the last of that node's prerequisites inside the area and
+ * in fact its ONLY one. So five of the seven members asserted below have now
+ * come and gone while the size has read 1, 1, 4, 4, 3, 3, 6, 5, 5, 7 and 7 —
+ * and a `length === 7` check would have passed this promotion while both of the
+ * claims that changed went stale. That is the fifth demonstration of why this
+ * is asserted by name, and the second consecutive promotion where the count
+ * alone says nothing at all.
+ */
+t('so the set is seven, by named membership and never by count',
   euclidRoots.slice().sort().join(',')
-  === 'circles,distance-and-midpoint,dot-product-geometry,'
-    + 'isometries-and-symmetry,plane-transformations',
+  === 'constructions,distance-and-midpoint,dot-product-geometry,'
+    + 'isometries-and-symmetry,non-euclidean-geometry,plane-transformations,solid-geometry',
   euclidRoots.join(', '))
-t('and circles joined it because the eighth promotion took its last prerequisite out of the area',
-  EUCLID.nodes.some(n => n.id === 'circles'
-    && (n.needs ?? []).includes('geometric-proof')
-    && (n.needs ?? []).includes('pythagoras')
-    && (n.needs ?? []).every(p => EUCLID.nodes.every(m => m.id !== p)))
-  && euclidRoots.includes('circles'),
-  (EUCLID.nodes.find(n => n.id === 'circles')?.needs ?? []).join(', '))
+/*
+ * The ninth promotion's three-at-once fan-out, with ONE OF THE THREE REMOVED
+ * because it has since been authored — and removed rather than left in, because
+ * the inner check requires each id to be a node of this area and would have
+ * failed loudly. That is the right failure: the claim "this node became a root"
+ * stops being assertable here the moment the node stops being in the area at
+ * all, exactly as the seventh promotion's did.
+ *
+ * What survives is the shape, on the two members still in the area:
+ * `constructions` names nothing but `circles`, and `non-euclidean-geometry`'s
+ * other prerequisite `geometric-proof` went at the eighth. The third,
+ * `circle-measure`, is asserted as a promotion that happened in the DEPARTED
+ * group above, which is where the record of it now lives.
+ */
+t('and the ninth promotion\'s fan-out still holds for the two of the three still mapped',
+  ['constructions', 'non-euclidean-geometry'].every(id =>
+    EUCLID.nodes.some(n => n.id === id
+      && (n.needs ?? []).includes('circles')
+      && (n.needs ?? []).every(p => EUCLID.nodes.every(m => m.id !== p)))
+    && euclidRoots.includes(id))
+  && isTeachable(MATHEMATICS, 'circle-measure')
+  && EUCLID.nodes.every(n => n.id !== 'circle-measure'),
+  ['constructions', 'non-euclidean-geometry']
+    .map(id => `${id}:[${(EUCLID.nodes.find(n => n.id === id)?.needs ?? []).join(' ')}]`).join(' '))
 t('while three-dimensional-coordinates is held back from inside by the solids, which the merge brought into the same area',
   EUCLID.nodes.some(n => n.id === 'three-dimensional-coordinates'
     && (n.needs ?? []).includes('solid-geometry'))
@@ -1507,50 +1661,73 @@ t('while three-dimensional-coordinates is held back from inside by the solids, w
  * is not there, which is the failure mode the named-membership rule above
  * exists to prevent and which an optional-chained lookup reintroduces.
  *
- * What is asserted instead is the same rule at the node that now shows it:
- * `circle-measure` is held back from the root set from INSIDE, by `circles`,
- * exactly as `circles` is by `geometric-proof`. Both halves need the node to
- * really be in the area, so neither can go vacuous.
+ * What is asserted instead is the same rule at the node that now shows it.
+ * That node has changed twice: it was `circle-measure`, held back by `circles`,
+ * until the NINTH promotion took `circles` out of the area and made
+ * `circle-measure` a root. So this is the second time the held-back-from-inside
+ * role has had to be rehomed, and it is the second time the previous holder
+ * became the thing it was being held back from.
+ *
+ * `circles-analytic` is where the rule shows best now, and better than either
+ * of the nodes that held the role before it, because it has THREE
+ * prerequisites and exactly ONE of them is still in the area.
+ * `lines-in-the-plane` is here and gates it from inside; `completing-the-square`
+ * is authored in `expressions-and-equations` and `circles` is authored in
+ * `plane-geometry`, so two of the three have left and the node is still not a
+ * root. Two prerequisites leaving and the node not moving is the rule stated as
+ * sharply as this area can state it — a departure promotes its dependents only
+ * when it was the LAST in-area prerequisite, and here two departures were not
+ * the last.
+ *
+ * Both halves still need the node and its holder to really be in the area, so
+ * neither can go vacuous the way an optional-chained `every` would.
  */
-t('and circle-measure is held back from the set by circles, which is still in the area',
-  EUCLID.nodes.some(n => n.id === 'circle-measure'
-    && (n.needs ?? []).includes('circles')
-    && (n.needs ?? []).includes('area-and-perimeter'))
-  && EUCLID.nodes.some(n => n.id === 'circles')
-  && !euclidRoots.includes('circle-measure'),
-  (EUCLID.nodes.find(n => n.id === 'circle-measure')?.needs ?? []).join(', '))
-t('and its other prerequisite has left the area entirely, so only one thing is holding it',
-  (EUCLID.nodes.find(n => n.id === 'circle-measure')?.needs ?? [])
-    .filter(p => EUCLID.nodes.some(m => m.id === p)).join(',') === 'circles',
-  (EUCLID.nodes.find(n => n.id === 'circle-measure')?.needs ?? [])
+t('and circles-analytic is held back from the set by lines-in-the-plane, which is still in the area',
+  EUCLID.nodes.some(n => n.id === 'circles-analytic'
+    && (n.needs ?? []).includes('lines-in-the-plane')
+    && (n.needs ?? []).includes('circles'))
+  && EUCLID.nodes.some(n => n.id === 'lines-in-the-plane')
+  && !euclidRoots.includes('circles-analytic'),
+  (EUCLID.nodes.find(n => n.id === 'circles-analytic')?.needs ?? []).join(', '))
+t('and TWO of its three prerequisites have left the area, which still did not promote it',
+  (EUCLID.nodes.find(n => n.id === 'circles-analytic')?.needs ?? [])
+    .filter(p => EUCLID.nodes.some(m => m.id === p)).join(',') === 'lines-in-the-plane'
+  && (EUCLID.nodes.find(n => n.id === 'circles-analytic')?.needs ?? []).length === 3,
+  (EUCLID.nodes.find(n => n.id === 'circles-analytic')?.needs ?? [])
     .filter(p => EUCLID.nodes.some(m => m.id === p)).join(', '))
 /*
- * The replacement for "circles is still held back from inside by
- * geometric-proof", which the eighth promotion made false rather than merely
- * unassertable — `circles` is a root now, and that claim was the fifth
- * promotion's whole explanation of why it was not. Replaced rather than
- * deleted, and for the same reason the seventh promotion's was: written with an
- * optional-chained lookup it would have gone VACUOUSLY TRUE once the node it
- * names left the area, so the loss would have been silent.
+ * The replacement for "non-euclidean-geometry is held back from inside by
+ * circles", which the ninth promotion made false rather than unassertable —
+ * that node is a root now, and so is `circle-measure`, and the two of them
+ * plus `constructions` are the three-way fan-out that promotion produced.
  *
- * The same rule now shows at `non-euclidean-geometry`, which needs
- * `geometric-proof` and `circles` and is held back from the root set by the
- * second of those. Both halves need the node to really be in the area, so
- * neither can go vacuous — and it is the node that takes over the role
- * `circles` played for three promotions.
+ * What replaces it is the thing the fan-out revealed, which is that the area's
+ * remaining route work is a CHAIN and no longer a set of independent asks. It
+ * has since been walked one link: `circle-measure` was the root of it and is
+ * authored now, so `solid-geometry` has taken its place at the bottom and
+ * `three-dimensional-coordinates` still rests on that. So of the three
+ * concepts the two unfinished journeys still need from this area, two are
+ * stacked one behind the other and only the bottom one is writable. That is the
+ * constraint the merge was argued against — it replaced a floor with a depth —
+ * and it is asserted as the chain rather than described, because "is it gated"
+ * passes on every link of it.
+ *
+ * The chain is asserted at its CURRENT bottom rather than at a fixed node, and
+ * the vacuity trap is the reason the shape is written this way. "`solid-geometry`
+ * needs exactly `circle-measure`" is checked against a node that must really be
+ * in the area, so when `solid-geometry` is itself promoted this assertion fails
+ * loudly instead of going quietly true on an empty `needs` list — which is what
+ * `(find(...)?.needs ?? []).every(...)` did to the seventh promotion's claim.
  */
-t('while non-euclidean-geometry is held back from the set by circles, which is still in the area',
-  EUCLID.nodes.some(n => n.id === 'non-euclidean-geometry'
-    && (n.needs ?? []).includes('circles')
-    && (n.needs ?? []).includes('geometric-proof'))
-  && EUCLID.nodes.some(n => n.id === 'circles')
-  && !euclidRoots.includes('non-euclidean-geometry'),
-  (EUCLID.nodes.find(n => n.id === 'non-euclidean-geometry')?.needs ?? []).join(', '))
-t('and its other prerequisite has left the area entirely, so only one thing holds it',
-  (EUCLID.nodes.find(n => n.id === 'non-euclidean-geometry')?.needs ?? [])
-    .filter(p => EUCLID.nodes.some(m => m.id === p)).join(',') === 'circles',
-  (EUCLID.nodes.find(n => n.id === 'non-euclidean-geometry')?.needs ?? [])
-    .filter(p => EUCLID.nodes.some(m => m.id === p)).join(', '))
+t('and the area\'s remaining route work is one chain, now one link shorter',
+  EUCLID.nodes.some(n => n.id === 'solid-geometry'
+    && (n.needs ?? []).join(',') === 'circle-measure')
+  && isTeachable(MATHEMATICS, 'circle-measure')
+  && EUCLID.nodes.some(n => n.id === 'three-dimensional-coordinates'
+    && (n.needs ?? []).includes('solid-geometry'))
+  && euclidRoots.includes('solid-geometry')
+  && !euclidRoots.includes('three-dimensional-coordinates'),
+  euclidRoots.join(', '))
 t('and the departed nodes are not roots of it, because they are not in it',
   euclidRoots.every(id => !DEPARTED.includes(id)),
   euclidRoots.join(', '))
@@ -1660,16 +1837,37 @@ t('every edge across the two dissolved boundaries is still in the composed map',
  * `composeAtlas` instead of by `areaOntology` — which is the merge's gain
  * being SPENT on exactly what it was bought for, not reversed. It is still in
  * `SURVIVING` above, where the claim is only that the edge exists.
+ *
+ * TWO, SINCE `circles` WAS AUTHORED, which is the same event a second time and
+ * is now the pattern rather than a one-off. The merge made
+ * `circles → circles-analytic` internal to `euclidean-geometry`; the ninth
+ * promotion took the lower end into `plane-geometry`, so that edge is
+ * cross-file again too.
+ *
+ * Worth stating plainly because the count here will keep falling and falling is
+ * the SUCCESS condition. A merge makes edges internal; authoring makes them
+ * cross-file again, because an authored concept belongs to a subject and not to
+ * an area. So this list shrinks every time the merge is used for what it was
+ * bought for, and it reaching zero would mean every edge the merge rescued now
+ * runs into real material. The invariant that does not move is `SURVIVING`
+ * above — the edges exist — and that is the one guarding against a bulk move
+ * deleting one.
  */
 const NOW_INTERNAL = [
   ['ratio-and-rate', 'word-problems'],
-  ['circles', 'circles-analytic'],
   ['solid-geometry', 'three-dimensional-coordinates'],
 ]
-t('and three of them are internal to one area now, the solids and three dimensions among them',
+t('and two of them are internal to one area now, the solids and three dimensions among them',
   NOW_INTERNAL.every(([from, to]) => areaOf(MATHEMATICS, from) === areaOf(MATHEMATICS, to)),
   NOW_INTERNAL.map(([f, x]) =>
     `${f}@${areaOf(MATHEMATICS, f)} -> ${x}@${areaOf(MATHEMATICS, x)}`).join(' | '))
+t('while the two the promotions took back out are cross-file again, which is the gain being spent',
+  [['real-number-line', 'linear-inequalities'], ['circles', 'circles-analytic']]
+    .every(([from, to]) => areaOf(MATHEMATICS, from) !== areaOf(MATHEMATICS, to)
+      && isTeachable(MATHEMATICS, from)
+      && prerequisitesOf(MATHEMATICS, to).includes(from)),
+  [['real-number-line', 'linear-inequalities'], ['circles', 'circles-analytic']]
+    .map(([f, x]) => `${f}@${areaOf(MATHEMATICS, f)} -> ${x}@${areaOf(MATHEMATICS, x)}`).join(' | '))
 
 /*
  * Hazard 2 in its general form, asserted over the whole atlas rather than over
@@ -1790,25 +1988,39 @@ const ROUTE_STILL_UNWRITTEN = {
     'ratio-and-rate', 'linear-equations', 'systems-of-linear-equations',
   ],
   /*
-   * `area-and-perimeter` was the seventh entry here and `geometric-proof` was
-   * the first; both are authored now, so both have been removed — which is the
+   * `area-and-perimeter` was the seventh entry here, `geometric-proof` the
+   * first, `circles` the first of what was left and `circle-measure` the next;
+   * all four are authored now, so all four have been removed — which is the
    * table being cashed in rather than corrected. The first assertion in each
    * pair requires every id named to be an unwritten NODE of its area, so
-   * leaving either in would have failed loudly, exactly as the comment above
-   * says it should. The budget moved as predicted both times: the area is two
-   * nodes smaller and owes two concepts fewer, so the slack is unchanged at
-   * five.
+   * leaving any of them in would have failed loudly, exactly as the comment
+   * above says it should. The budget moved as predicted all four times: the
+   * area is four nodes smaller and owes four concepts fewer, so the slack is
+   * unchanged at five.
    *
-   * What the second removal changed is not the arithmetic but the SHAPE of what
-   * is left. `geometric-proof` was the sole remaining blocker of `circles`, and
-   * every other entry below stands behind `circles` — `circle-measure` needs
-   * it, `solid-geometry` needs that, `three-dimensional-coordinates` needs
-   * that. So this area went from one writable concept and four unreachable ones
-   * to a chain with its bottom link open, and `circles` is now a root of the
-   * area, which is asserted by name in the group above.
+   * THE THIRD REMOVAL IS THE ONE THAT CHANGED WHAT THE NUMBER MEANS, and that
+   * is worth keeping here because this table is where anybody will come looking
+   * for the next candidate.
+   *
+   * The slack has been five through four promotions, which makes it look like
+   * the quantity to watch. It is not. The area has thirteen nodes against a
+   * floor of five, so there are EIGHT promotions of headroom and three concepts
+   * still owed — and two of the three are a chain. `solid-geometry` needs
+   * `circle-measure`, which is now authored, so it is writable;
+   * `three-dimensional-coordinates` needs `solid-geometry` and
+   * `dot-product-geometry` both. `dot-product-geometry` is the one this area
+   * cannot unblock on its own: it waits on `right-triangle-trig` in
+   * `trigonometry`.
+   *
+   * So the constraint this table was built to measure has stopped binding.
+   * Authoring is rate-limited by dependency depth — one available candidate in
+   * this area at a time — and no amount of headroom changes that. The floor
+   * assertion below is still worth keeping, because it is what proves the
+   * merges did not merely postpone the problem; it has simply stopped being the
+   * thing that decides what gets written next.
    */
   'euclidean-geometry': [
-    'circles', 'circle-measure', 'solid-geometry',
+    'solid-geometry',
     'dot-product-geometry', 'three-dimensional-coordinates',
   ],
   trigonometry: ['right-triangle-trig'],
@@ -1833,27 +2045,34 @@ for (const [areaId, ids] of Object.entries(ROUTE_STILL_UNWRITTEN)) {
  * somewhere roomy for the wrong reason, or authored by accident, so each is
  * checked on its own and its area is printed either way.
  *
- * ONE OF THE FIVE HAS SINCE BEEN WRITTEN, which is the outcome this group was
+ * TWO OF THE FIVE HAVE SINCE BEEN WRITTEN, which is the outcome this group was
  * waiting for and not a failure of it. `real-number-line` is an authored
- * concept of `arithmetic-foundations` now, so it is in no area and the
- * headroom question stops applying to it — it is asserted in the group above
- * instead, as a promotion that happened. Splitting the list in two rather
- * than dropping the id is deliberate: "it was blocked and is now written" and
- * "it was blocked and is now merely unblocked" are different claims, and
- * collapsing them would lose the only record that the merge has been cashed
- * in once rather than only argued for.
+ * concept of `arithmetic-foundations` now and `circle-measure` is one of
+ * `plane-geometry`, so neither is in any area and the headroom question stops
+ * applying to either — both are asserted in the groups above instead, as
+ * promotions that happened. Splitting the list in two rather than dropping the
+ * ids is deliberate: "it was blocked and is now written" and "it was blocked
+ * and is now merely unblocked" are different claims, and collapsing them would
+ * lose the only record that the merge has been cashed in rather than only
+ * argued for.
+ *
+ * `circle-measure` is the one that cashes it in hardest, and the reason is in
+ * this list's own history. It was named here as blocked by a floor in an area
+ * that had room — the chain behind `circles` ran through it — so it is the
+ * first of the five whose unblocking required the merge AND two promotions on
+ * top of it. The remaining two in the list below both sit behind it.
  */
-const WAS_BLOCKED_NOW_WRITTEN = ['real-number-line']
+const WAS_BLOCKED_NOW_WRITTEN = ['real-number-line', 'circle-measure']
 const WAS_BLOCKED = [
-  'ratio-and-rate', 'circle-measure', 'solid-geometry', 'three-dimensional-coordinates',
+  'ratio-and-rate', 'solid-geometry', 'three-dimensional-coordinates',
 ]
-t('the one previously blocked concept that has since been authored is really authored, and out of every area',
+t('the two previously blocked concepts that have since been authored really are, and out of every area',
   WAS_BLOCKED_NOW_WRITTEN.every(id =>
     isTeachable(MATHEMATICS, id) && !AREAS.some(a => a.nodes.some(n => n.id === id))),
   WAS_BLOCKED_NOW_WRITTEN.map(id =>
     `${id}:${isTeachable(MATHEMATICS, id) ? 'written' : 'UNWRITTEN'}@`
     + `${AREAS.find(a => a.nodes.some(n => n.id === id))?.id ?? 'no area'}`).join(' '))
-t('each of the four still-unwritten ones sits in an area with headroom',
+t('each of the three still-unwritten ones sits in an area with headroom',
   WAS_BLOCKED.every(id => {
     const area = AREAS.find(a => a.nodes.some(n => n.id === id))
     if (!area || isTeachable(MATHEMATICS, id)) return false
