@@ -71,6 +71,12 @@ const REAL_BC = [
  * declaring identical sets under geometric names, since what a symbol MEANS is
  * the prompt's job and what it may be assumed to BE is this one's.
  *
+ * The two one-sided linear solves reuse it for the same reason and are the
+ * clearest case of the rule: their `given` is the SOLUTION of ax − b = c, so
+ * there is genuinely no x to substitute into — the x is what the expression
+ * computes. A declaration named for the unknown would have been wrong there,
+ * not merely redundant.
+ *
  * Real rather than `positive`, which a length arguably is. Deliberate: the two
  * converse tasks are a SUBTRACTION of squares whose sign is the ruling, and one
  * of them is negative. Nothing is assumed about the symbols that the tasks do
@@ -125,6 +131,12 @@ const REAL_AB = [
  * either measure is about whole numbers. The whole-number sides in the prompts
  * are a convenience of the figures chosen, and the one height the concept
  * computes is 168/13.
+ *
+ * The two-sided linear solves reuse it for the four coefficients of
+ * ax + b = cx + d, which is the widest a linear equation gets and uses all
+ * four. Real rather than integer there too: the move those tasks drill is
+ * subtracting a term in the unknown from both sides, and nothing about it
+ * needs the coefficients whole.
  */
 const REAL_ABCD = [
   { name: 'a', assumptions: { real: true } },
@@ -148,6 +160,15 @@ const REAL_ABCD = [
  * rather than `integer` for the usual reason — a triangle's sides are not
  * required to be whole numbers, and the whole numbers in the prompts are a
  * convenience of the figures chosen.
+ *
+ * The three system-elimination tasks reuse it for the six coefficients of
+ * ax + by = c with dx + ey = f, which is what two linear equations in two
+ * unknowns uses and all of what they use. It is no longer "the one task" and
+ * six is still the widest any task in the build gets — a third equation would
+ * be `gaussian-elimination`, which is still a map node. Same rule as
+ * `REAL_ABC`: what a symbol MEANS is the prompt's job and what it may be
+ * assumed to BE is this one's, so three sides and six coefficients share a
+ * declaration rather than duplicating it under separate names.
  */
 const REAL_ABCDEF = [
   { name: 'a', assumptions: { real: true } },
@@ -156,6 +177,34 @@ const REAL_ABCDEF = [
   { name: 'd', assumptions: { real: true } },
   { name: 'e', assumptions: { real: true } },
   { name: 'f', assumptions: { real: true } },
+]
+
+/**
+ * Five real parameters, for the one substitution task that needs five.
+ *
+ * A seventh real declaration rather than reusing `REAL_ABCDEF` with a spare,
+ * for the reason every set above gives: every declared symbol must have a
+ * stated input, and an unused one is an authoring fault the suite reports.
+ *
+ * Five is what substituting into a system costs and it is not padding. The
+ * system is y = ax + b with cx + dy = e, and solving it leaves
+ * x = (e − db)/(c + da) — the slope and intercept of the equation that names a
+ * letter, plus all three coefficients of the equation it is substituted into.
+ * The declaration was added rather than the mathematics contorted to fit a
+ * four-letter set; a second equation with a leading 1 would have fitted
+ * `REAL_ABCD` and would have made the task less general for the convenience of
+ * a constant.
+ *
+ * Real rather than integer, matching the rest of this subject: nothing about
+ * eliminating a letter needs the coefficients whole, and the whole numbers in
+ * the prompts are a convenience of the systems chosen.
+ */
+const REAL_ABCDE = [
+  { name: 'a', assumptions: { real: true } },
+  { name: 'b', assumptions: { real: true } },
+  { name: 'c', assumptions: { real: true } },
+  { name: 'd', assumptions: { real: true } },
+  { name: 'e', assumptions: { real: true } },
 ]
 
 /**
@@ -279,6 +328,68 @@ const VEC_WEIGHTED_2 = [
   { name: 'c2', assumptions: { real: true } },
   { name: 'u2', assumptions: { real: true } },
   { name: 'v2', assumptions: { real: true } },
+]
+
+/**
+ * The same components with a third one, for the thirteenth promotion.
+ *
+ * Separate constants rather than a spread of the two-component sets, because
+ * the two-component ones are the shape the plane material is ABOUT — a
+ * displacement in the plane has two components and not three with one unused —
+ * and a task declaring `u3` while working in the plane would read as a typo.
+ *
+ * `a1`/`a2`/`a3` for a single vector in space, matching the material's own
+ * naming of a·a and |a|, and `u`/`v` for a pair, as the plane tasks do. The
+ * third components are declared across the whole pair in `VEC_UV_3D` for the
+ * reason `POINT_PQ` below gives: `at` decides which symbols a task substitutes,
+ * an unused declaration costs nothing, and a symbol missing from `at` fails an
+ * assertion.
+ */
+const VEC_A_3D = [
+  { name: 'a1', assumptions: { real: true } },
+  { name: 'a2', assumptions: { real: true } },
+  { name: 'a3', assumptions: { real: true } },
+]
+
+const VEC_UV_3D = [
+  { name: 'u1', assumptions: { real: true } },
+  { name: 'u2', assumptions: { real: true } },
+  { name: 'u3', assumptions: { real: true } },
+  { name: 'v1', assumptions: { real: true } },
+  { name: 'v2', assumptions: { real: true } },
+  { name: 'v3', assumptions: { real: true } },
+]
+
+const VEC_UW_3D = [
+  { name: 'u1', assumptions: { real: true } },
+  { name: 'u2', assumptions: { real: true } },
+  { name: 'u3', assumptions: { real: true } },
+  { name: 'w1', assumptions: { real: true } },
+  { name: 'w2', assumptions: { real: true } },
+  { name: 'w3', assumptions: { real: true } },
+]
+
+/**
+ * A normal vector and a point on a plane, for `n·r = d`.
+ *
+ * `n` rather than another letter because the material calls it the normal
+ * throughout and the whole content of the point is that those three numbers are
+ * a vector rather than three coefficients.
+ */
+const PLANE_N_P = [
+  { name: 'n1', assumptions: { real: true } },
+  { name: 'n2', assumptions: { real: true } },
+  { name: 'n3', assumptions: { real: true } },
+  { name: 'r1', assumptions: { real: true } },
+  { name: 'r2', assumptions: { real: true } },
+  { name: 'r3', assumptions: { real: true } },
+]
+
+/** The three coordinates of a point, for substituting into a plane equation. */
+const PLANE_XYZ = [
+  { name: 'x', assumptions: { real: true } },
+  { name: 'y', assumptions: { real: true } },
+  { name: 'z', assumptions: { real: true } },
 ]
 
 /**
@@ -898,6 +1009,112 @@ export const TASKS: PracticeTask[] = [
     ],
     at: { p: '17', q: '12', n: '2' },
     reference: '1/144',
+  },
+
+  /*
+   * ── ratio-and-rate ──────────────────────────────────────────────────────
+   *
+   * Three `evaluate` tasks, one per knowledge point, exact rational arithmetic
+   * throughout so the subject's "gradable with no worker" contract still holds
+   * over every task it owns.
+   *
+   * THIS IS THE FIRST BLOCK IN THE SUBJECT THAT OWES NO PROXY APOLOGY, and the
+   * reason is a property of the concept rather than better asks. Every one of
+   * its three points is about a NUMBER: a share is a value, a price per
+   * kilogram is a value, and "how far apart are the two readings" is a value.
+   * Compare `real-number-line` directly above, where the content is a
+   * non-terminating expansion, a set with no last element and an axiom about
+   * infinite sets, and all three tasks had to stand in for something. Nothing
+   * here stands in for anything.
+   *
+   * What each one asks, and why it is the content rather than beside it:
+   *
+   *  - the first is one part times a term. The whole error the point exists to
+   *    stop is using the wrong denominator — 3/5 of the total instead of 3/8 —
+   *    and `p + q` in the given is exactly the disputed quantity, so a learner
+   *    who makes that mistake cannot arrive at the reference.
+   *  - the second is a difference of two unit rates, and its SIGN is the
+   *    ruling. That is the point's own shape: the comparison is the content and
+   *    the two prices are not, which is why the task subtracts rather than
+   *    asking for either rate alone.
+   *  - the third is the proportional reading minus the additive one. A non-zero
+   *    answer refutes the additive reading arithmetically, which is the
+   *    refutation-by-value shape `plane-geometry` found five times over. Zero
+   *    would mean the two readings agreed, and they agree only when the scale
+   *    factor is 1.
+   *
+   * Different numbers from the worked examples in all three, since none of
+   * these is establishing a specific claim the example made: the shares are
+   * 360 in 4 : 5 rather than 240 in 3 : 5, the bags are 4 kg and 6 kg rather
+   * than 3 kg and 5 kg, and the paint is 9 litres over 4 rooms rather than 8
+   * over 5.
+   *
+   * What stays unscored is one step, and it is the same one every block in this
+   * subject names: which way up the second task's division goes. A learner
+   * handed `a/b - c/d` with a in pence and b in kilograms has been told it is
+   * price per weight. The prompt says so.
+   */
+  {
+    id: 'one-part-settles-both-shares-1',
+    knowledgePointId: 'a-ratio-fixes-the-quotient-not-the-quantities',
+    kind: 'evaluate',
+    prompt:
+      'Share 360 in the ratio 4 : 5 and give the FIRST share. The terms count parts, so the '
+      + 'denominator is their sum and not either of them — which is the whole of what this task '
+      + 'checks, since using 4/5 instead of 4/9 lands somewhere else entirely. Evaluate '
+      + 't * p / (p + q) at t = 360, p = 4, q = 5. The second share is the same expression with '
+      + 'p and q swapped, and the two must total 360.',
+    given: 't * p / (p + q)',
+    variables: [
+      { name: 't', assumptions: { integer: true, positive: true } },
+      { name: 'p', assumptions: { integer: true, positive: true } },
+      { name: 'q', assumptions: { integer: true, positive: true } },
+    ],
+    at: { t: '360', p: '4', q: '5' },
+    reference: '160',
+  },
+  {
+    id: 'which-bag-is-dearer-per-kilogram-1',
+    knowledgePointId: 'a-rate-has-two-ways-up-and-they-compare-oppositely',
+    kind: 'evaluate',
+    prompt:
+      'A 4 kg bag costs 900p and a 6 kg bag costs 1320p. Different sizes, so the prices are not '
+      + 'comparable until each is divided by its weight — pence by kilograms, in that order. '
+      + 'Evaluate a/b - c/d at a = 900, b = 4, c = 1320, d = 6. A positive answer says the first '
+      + 'bag is DEARER per kilogram. Note that the sign is the ruling rather than the size: had '
+      + 'you divided the other way up, into kilograms per penny, the same conclusion would have '
+      + 'come out with the opposite sign, which is the part of the point a single task cannot '
+      + 'ask you for.',
+    given: 'a/b - c/d',
+    variables: [
+      { name: 'a', assumptions: { integer: true, positive: true } },
+      { name: 'b', assumptions: { integer: true, positive: true } },
+      { name: 'c', assumptions: { integer: true, positive: true } },
+      { name: 'd', assumptions: { integer: true, positive: true } },
+    ],
+    at: { a: '900', b: '4', c: '1320', d: '6' },
+    reference: '5',
+  },
+  {
+    id: 'the-additive-reading-is-a-different-claim-1',
+    knowledgePointId: 'proportional-is-not-additive-and-zero-is-the-test',
+    kind: 'evaluate',
+    prompt:
+      '9 litres of paint covers 4 rooms. The proportional reading scales by the factor the '
+      + 'rooms grew by, giving e * n / m for n rooms; the additive one adds the extra rooms to '
+      + 'the litres, giving e + (n - m). Evaluate e * n / m - (e + (n - m)) at e = 9, m = 4, '
+      + 'n = 12 — the gap between the two readings. Anything other than 0 means they are '
+      + 'different claims rather than two routes to one answer, and they agree only when the '
+      + 'factor is 1. Which of the two is RIGHT is decided by what the relationship gives at '
+      + 'zero, and that test is not something an expression can be asked for.',
+    given: 'e * n / m - (e + (n - m))',
+    variables: [
+      { name: 'e', assumptions: { integer: true, positive: true } },
+      { name: 'm', assumptions: { integer: true, positive: true } },
+      { name: 'n', assumptions: { integer: true, positive: true } },
+    ],
+    at: { e: '9', m: '4', n: '12' },
+    reference: '10',
   },
 
   // ── polynomial-arithmetic ───────────────────────────────────────────────
@@ -2273,11 +2490,18 @@ export const TASKS: PracticeTask[] = [
 
   // ── expressions-and-equations ───────────────────────────────────────────
   //
-  // Five `evaluate` tasks across three knowledge points, all settled by exact
-  // rational arithmetic, so this subject is gradable with no worker — which
-  // matters more here than in most places, because the concept now sits
-  // directly above arithmetic on the entry route and a worker outage must not
-  // wall off the way in.
+  // Eighteen `evaluate` tasks across nine knowledge points — five for
+  // `variables-and-expressions`, six for `linear-equations` and seven for
+  // `systems-of-linear-equations` — all settled by exact rational arithmetic,
+  // so this subject is gradable with no worker, which matters more here than
+  // in most places: the first concept sits directly above arithmetic on the
+  // entry route and a worker outage must not wall off the way in.
+  //
+  // Those figures are asserted in tests/concepts-logic.mjs rather than only
+  // written here. A hand-maintained count in a comment is the thing in these
+  // files most likely to be a promotion behind — the geometry files record
+  // exactly that happening twice in one change — and the only numbers worth
+  // trusting are the ones an assertion reads.
   //
   // THE FIRST TWO ARE A PAIR AND HAVE TO BE READ AS ONE. The knowledge point
   // is that a letter has two readings, and the two readings are checked by the
@@ -2369,6 +2593,338 @@ export const TASKS: PracticeTask[] = [
     // readings differ in sign and the convention is doing the work.
     reference: '-9',
     at: { x: '-3' },
+  },
+
+  // ── expressions-and-equations: linear-equations ─────────────────────────
+  //
+  // SIX SOLVE TASKS EXPRESSED AS `evaluate`, AND WHAT MAKES THAT HONEST.
+  //
+  // There is no `solve` kind and these do not pretend to be one. A solution is
+  // in general a SET — none, one, or infinitely many — and no `evaluate` target
+  // expresses a set. What these four ask for is the NUMBER the method produces:
+  // `given` carries the expression the unknown is left equal to once the
+  // operations have been undone, and `prompt` carries the equation. The learner
+  // does the solving and submits a number that is ruled exactly.
+  //
+  // `solve-exponential-1` is the precedent and types.ts argues it at length.
+  // The one-variable linear case is where the shape is SAFEST: with a non-zero
+  // coefficient there is exactly one solution, so the set and the value
+  // coincide and nothing is being quietly rounded off.
+  //
+  // THIS COMMENT WENT ON TO SAY THAT `systems-of-linear-equations` "STILL
+  // CANNOT" BE AUTHORED, and that clause is gone because it was wrong; the
+  // seven tasks for it are below. The reasoning offered was that a system
+  // "answers with a point, a line, or nothing, and that distinction is the
+  // whole content of it". The distinction is PART of the content and the
+  // conclusion did not follow: a point is two values and costs two tasks, and
+  // the distinction between the other two outcomes is decided by a number the
+  // elimination hands you. ontology-algebra.ts argues both at length and
+  // reproduces the refusal rather than deleting it. Corrected here rather than
+  // silently dropped because a comment in a data file is where the next author
+  // looks for what has already been ruled out.
+  //
+  // THE FIRST TWO ARE A PAIR SPLIT ON THE SIGN OF b, which is why their
+  // `given`s differ by one character. `solve-linear-one-sided-1` is ax − b = c
+  // and undoing the subtraction ADDS, so its solution is (c + b)/a;
+  // `solve-linear-non-integer-1` is ax + b = c and undoes the other way. A
+  // learner who has memorised one shape rather than the move gets exactly one
+  // of the two right, which is the only way this build can see the difference.
+  //
+  // `solve-linear-non-integer-1` answers 7/4 ON PURPOSE, for the reason
+  // `solve-exponential-1` answers 3/2: an integer answer can be reached by
+  // trying numbers, so the division step is only load-bearing when the answer
+  // is not one.
+  //
+  // THE SECOND PAIR IS THE SAME EQUATION CLEARED FROM OPPOSITE SIDES, and the
+  // pairing is the point rather than repetition. `(d - b)/(a - c)` is what
+  // subtracting the smaller term in the unknown leaves; `(b - d)/(c - a)` is
+  // what subtracting the larger one leaves, and it divides by a negative. Both
+  // evaluate to 5 at the same inputs. A single task could not have asked
+  // whether the answer depends on the choice, which is the knowledge point.
+  //
+  // THE LAST PAIR IS THE ONE PLACE A SOLUTION SET IS SAYABLE HERE, and it is
+  // sayable because one number is a value. Multiplying 2x − 6 = 0 through by
+  // x − 1 is not invertible, and the two tasks are the two halves of the
+  // evidence: x = 1 sends the multiplied left side to 0, so it solves the new
+  // equation, and sends the original left side to −4, so it does not solve the
+  // old one. Neither task alone shows anything — the first is "a product with a
+  // zero factor is zero" and the second is arithmetic. Read together they are
+  // the solution set having changed, which is as close to the degenerate cases
+  // as this build can get. ontology-algebra.ts says what stays out and why.
+  {
+    id: 'solve-linear-one-sided-1',
+    knowledgePointId: 'undo-the-operations-in-reverse-order',
+    kind: 'evaluate',
+    prompt:
+      'Solve 3x − 7 = 11. Undo the operations in the reverse of the order they were applied: '
+      + 'the subtraction went on last, so it comes off first, and the multiplication by 3 comes '
+      + 'off second. Submit the number x has to be.',
+    given: '(c + b)/a',
+    variables: REAL_ABC,
+    // The equation is ax − b = c, so undoing the subtraction ADDS b:
+    // x = (11 + 7)/3 = 18/3 = 6. Checking against the equation itself,
+    // 3·6 − 7 = 18 − 7 = 11.
+    reference: '6',
+    at: { a: '3', b: '7', c: '11' },
+  },
+  {
+    id: 'solve-linear-non-integer-1',
+    knowledgePointId: 'undo-the-operations-in-reverse-order',
+    kind: 'evaluate',
+    prompt:
+      'Solve 4x + 5 = 12. This one adds rather than subtracts, so the first step off is a '
+      + 'subtraction — and the answer is not a whole number, which is the point: no amount of '
+      + 'trying values gets there, only the division does.',
+    given: '(c - b)/a',
+    variables: REAL_ABC,
+    // ax + b = c, so x = (12 − 5)/4 = 7/4. Checking, 4·(7/4) + 5 = 7 + 5 = 12.
+    // Not an integer deliberately — see the note above.
+    reference: '7/4',
+    at: { a: '4', b: '5', c: '12' },
+  },
+  {
+    id: 'collect-unknown-both-sides-1',
+    knowledgePointId: 'the-unknown-on-both-sides-is-collected-first',
+    kind: 'evaluate',
+    prompt:
+      'Solve 5x + 4 = 2x + 19. Nothing can be undone while x stands on both sides, so subtract '
+      + '2x from both sides first — the same move as subtracting a number, since 2x names one — '
+      + 'and then finish as a one-sided equation.',
+    given: '(d - b)/(a - c)',
+    variables: REAL_ABCD,
+    // ax + b = cx + d, so x = (d − b)/(a − c) = (19 − 4)/(5 − 2) = 15/3 = 5.
+    // Checking against the equation: 5·5 + 4 = 29 and 2·5 + 19 = 29.
+    reference: '5',
+    at: { a: '5', b: '4', c: '2', d: '19' },
+  },
+  {
+    id: 'collect-from-the-other-side-1',
+    knowledgePointId: 'the-unknown-on-both-sides-is-collected-first',
+    kind: 'evaluate',
+    prompt:
+      'The same equation, 5x + 4 = 2x + 19, cleared the other way: subtract 5x from both sides '
+      + 'instead of 2x. The last step is a division by a negative number. Submit the solution, '
+      + 'and note whether it is the one the other route gave.',
+    given: '(b - d)/(c - a)',
+    variables: REAL_ABCD,
+    // Clearing the larger term instead leaves b − d = (c − a)x, so
+    // x = (4 − 19)/(2 − 5) = (−15)/(−3) = 5. The same number as
+    // `collect-unknown-both-sides-1`, from a different expression at the same
+    // inputs — which is the knowledge point's fourth subgoal as a ruling.
+    reference: '5',
+    at: { a: '5', b: '4', c: '2', d: '19' },
+  },
+  {
+    id: 'gained-solution-satisfies-the-new-equation-1',
+    knowledgePointId: 'a-non-invertible-step-changes-the-solutions',
+    kind: 'evaluate',
+    prompt:
+      '2x − 6 = 0 was multiplied through by x − 1, giving (x − 1)(2x − 6) = 0. Evaluate the left '
+      + 'side of that new equation at x = 1. A left side of 0 means 1 satisfies it.',
+    given: '(x - 1)*(2*x - 6)',
+    variables: REAL_X,
+    // (1 − 1)(2·1 − 6) = 0 · (−4) = 0. So x = 1 solves the multiplied equation.
+    // Half of a pair; the other half shows it does not solve the original.
+    reference: '0',
+    at: { x: '1' },
+  },
+  {
+    id: 'gained-solution-fails-the-original-1',
+    knowledgePointId: 'a-non-invertible-step-changes-the-solutions',
+    kind: 'evaluate',
+    prompt:
+      'Now the same x = 1 in the equation that was multiplied, 2x − 6 = 0. Evaluate its left '
+      + 'side. Anything other than 0 means 1 does not satisfy this one — so the step that '
+      + 'produced it changed which numbers are solutions rather than rearranging the equation.',
+    given: '2*x - 6',
+    variables: REAL_X,
+    // 2·1 − 6 = −4, which is not 0. Paired with the task above: one number,
+    // satisfying the multiplied equation and failing the original, is the
+    // solution the non-invertible step created.
+    reference: '-4',
+    at: { x: '1' },
+  },
+
+  // ── expressions-and-equations: systems-of-linear-equations ──────────────
+  //
+  // SEVEN MORE `evaluate` TASKS, AND THE THREE SHAPES THEY TAKE ARE THE THREE
+  // THINGS `evaluate` CAN DO FOR AN ANSWER THAT IS NOT ONE NUMBER.
+  //
+  // Every `given` here is the method carried out ON THE LETTERS, which is the
+  // property that makes a solve expressible as an `evaluate` honest rather
+  // than a dodge. Eliminating y from ax + by = c and dx + ey = f — multiply
+  // the first by e, the second by b, subtract — leaves (ae − bd)x = ce − bf,
+  // so `(c*e - b*f)/(a*e - b*d)` is the learner's own elimination written down
+  // once in general. It is not a formula quoted at them: the prompt carries
+  // the system in numbers and nothing in the task data carries the formula to
+  // them. Same for the substitution task, whose `given` is what putting
+  // ax + b in for y leaves.
+  //
+  // A POINT COSTS TWO TASKS, which is the first shape. The first two ask for
+  // the x and the y of 2x + 3y = 12 with 5x − y = 13, and the pairing is the
+  // point rather than repetition — a solution here is a PAIR, `evaluate`
+  // takes one value, and a learner who produced only one coordinate has not
+  // solved the system. `gained-solution-*` above is the same device for a
+  // different reason, so the shape is established in this file.
+  //
+  // THE SECOND SHAPE IS TWO ROUTES AT ONE SYSTEM. `solve-system-by-
+  // substitution-1` and `solve-system-same-point-by-elimination-1` are
+  // y = 2x − 1 with 3x + 2y = 12, once by substitution and once with the first
+  // equation rewritten as 2x − y = 1 and eliminated. Their `given`s are
+  // different expressions and their `at`s are different parameterisations of
+  // one system, and both reach 2. That is the knowledge point's fourth subgoal
+  // as a ruling, and it is the same device as `collect-unknown-both-sides-1`
+  // against `collect-from-the-other-side-1` one concept down — where the two
+  // `given`s differed and the inputs did not. Here both differ, because the
+  // two methods do not even agree on how many coefficients the system has.
+  //
+  // THE THIRD SHAPE IS THE ONE THAT ANSWERS THE SOLUTION-SET REFUSAL, and it
+  // is a pair differing in ONE INPUT. `inconsistent-system-leftover-1` and
+  // `dependent-system-leftover-1` share the expression `a*b - c` and the first
+  // two inputs, and differ in the third: 2 · 7 − 11 = 3 against 2 · 7 − 14 = 0.
+  // Both are the number the elimination leaves when doubling 2x + 3y = 7 and
+  // subtracting the other equation kills both letters at once. 3 means 0 = 3,
+  // so no pair satisfies both; 0 means 0 = 0, so every pair on the line does.
+  // Neither task asks HOW MANY solutions there are — that is a classification
+  // and no verifiable kind returns one. Each asks for the number that decides
+  // it, which is a value, and which the learner can only get by doing the
+  // elimination.
+  //
+  // `dependent-system-pick-a-y-1` IS THE THIRD IN THAT GROUP AND THE ONLY ONE
+  // THAT EVIDENCES "INFINITELY MANY" RATHER THAN "NOT NONE". A leftover of 0
+  // says the second equation added no condition; it takes an actual pair to
+  // show the solutions are there to be had. So that task fixes y = 2 and asks
+  // for the x beside it, and the answer is 1/2 — deliberately not an integer,
+  // for the reason `solve-linear-non-integer-1` answers 7/4: a whole number
+  // can be reached by trying values, and the line is not a list of lattice
+  // points. It also uses a different y from the worked example's 3, so the two
+  // together show two solutions rather than one twice.
+  //
+  // All seven are exact rational arithmetic on whole numbers, so this subject
+  // still rules with no worker configured — which matters more here than
+  // elsewhere, because it sits directly above the arithmetic on the entry
+  // route and a worker outage must not wall off the way in.
+  {
+    id: 'solve-system-eliminate-for-x-1',
+    knowledgePointId: 'eliminate-a-letter-by-combining-the-equations',
+    kind: 'evaluate',
+    prompt:
+      'Solve 2x + 3y = 12 and 5x − y = 13, and submit the value of x. Multiply the second '
+      + 'equation by 3 so that the y terms become +3y and −3y, add the two equations to remove '
+      + 'y altogether, and divide. The y is asked for separately, because a solution here is a '
+      + 'pair and each coordinate is its own answer.',
+    given: '(c*e - b*f)/(a*e - b*d)',
+    variables: REAL_ABCDEF,
+    // The system is ax + by = c with dx + ey = f, so eliminating y leaves
+    // (ae − bd)x = ce − bf. At a=2, b=3, c=12, d=5, e=−1, f=13:
+    // ae − bd = −2 − 15 = −17 and ce − bf = −12 − 39 = −51, so x = 3.
+    // Against the equations themselves: 2·3 + 3·2 = 12 and 5·3 − 2 = 13.
+    reference: '3',
+    at: { a: '2', b: '3', c: '12', d: '5', e: '-1', f: '13' },
+  },
+  {
+    id: 'solve-system-eliminate-for-y-1',
+    knowledgePointId: 'eliminate-a-letter-by-combining-the-equations',
+    kind: 'evaluate',
+    prompt:
+      'The other coordinate of the same system, 2x + 3y = 12 and 5x − y = 13. Submit the value '
+      + 'of y — either by putting your x into one equation and checking the pair in the other, '
+      + 'or by eliminating x instead. The two coordinates together are the solution; one of them '
+      + 'is half of it.',
+    given: '(a*f - c*d)/(a*e - b*d)',
+    variables: REAL_ABCDEF,
+    // Eliminating x instead leaves (ae − bd)y = af − cd. At the same inputs
+    // af − cd = 26 − 60 = −34 over −17, so y = 2 — which is also what putting
+    // x = 3 into 5x − y = 13 gives. Same denominator as the task above, which
+    // is the point of the third knowledge point.
+    reference: '2',
+    at: { a: '2', b: '3', c: '12', d: '5', e: '-1', f: '13' },
+  },
+  {
+    id: 'solve-system-by-substitution-1',
+    knowledgePointId: 'substitution-reduces-the-system-to-one-equation',
+    kind: 'evaluate',
+    prompt:
+      'Solve y = 2x − 1 and 3x + 2y = 12 by substitution, and submit the value of x. The first '
+      + 'equation already names y, so put 2x − 1 in for it — brackets included, since y stands '
+      + 'for one whole number — and what is left is one equation in one unknown.',
+    given: '(e - d*b)/(c + d*a)',
+    variables: REAL_ABCDE,
+    // The system is y = ax + b with cx + dy = e. Substituting gives
+    // cx + d(ax + b) = e, so (c + da)x = e − db. At a=2, b=−1, c=3, d=2, e=12:
+    // (12 + 2)/(3 + 4) = 14/7 = 2. Against the equations: y = 2·2 − 1 = 3 and
+    // 3·2 + 2·3 = 12.
+    reference: '2',
+    at: { a: '2', b: '-1', c: '3', d: '2', e: '12' },
+  },
+  {
+    id: 'solve-system-same-point-by-elimination-1',
+    knowledgePointId: 'substitution-reduces-the-system-to-one-equation',
+    kind: 'evaluate',
+    prompt:
+      'The same system by the other route. Rewrite y = 2x − 1 as 2x − y = 1, then eliminate: '
+      + 'double it so the y terms become −2y and +2y, add 3x + 2y = 12, and divide. Submit the '
+      + 'value of x, and note whether it is the one substitution gave.',
+    given: '(c*e - b*f)/(a*e - b*d)',
+    variables: REAL_ABCDEF,
+    // Now in the ax + by = c, dx + ey = f shape: a=2, b=−1, c=1, d=3, e=2,
+    // f=12. ae − bd = 4 + 3 = 7 and ce − bf = 2 + 12 = 14, so x = 2 — the same
+    // number as `solve-system-by-substitution-1` from a different expression at
+    // different inputs, which is that knowledge point's fourth subgoal.
+    reference: '2',
+    at: { a: '2', b: '-1', c: '1', d: '3', e: '2', f: '12' },
+  },
+  {
+    id: 'inconsistent-system-leftover-1',
+    knowledgePointId: 'when-both-letters-cancel-the-leftover-decides',
+    kind: 'evaluate',
+    prompt:
+      '2x + 3y = 7 and 4x + 6y = 11. Double the first equation and subtract the second. Both '
+      + 'the x terms and the y terms cancel, so the left side is 0 for every pair of numbers — '
+      + 'submit the number left on the right. Anything other than 0 means no pair satisfies both '
+      + 'equations, because 0 cannot equal it.',
+    given: 'a*b - c',
+    variables: REAL_ABC,
+    // a is the multiplier, b the first equation's right side, c the second's.
+    // Doubling 2x + 3y = 7 gives 4x + 6y = 14, and 2·7 − 11 = 3, so the
+    // elimination ends at 0 = 3. The left sides are identical after doubling,
+    // which is why both letters go at once.
+    reference: '3',
+    at: { a: '2', b: '7', c: '11' },
+  },
+  {
+    id: 'dependent-system-leftover-1',
+    knowledgePointId: 'when-both-letters-cancel-the-leftover-decides',
+    kind: 'evaluate',
+    prompt:
+      'The same move on 2x + 3y = 7 and 4x + 6y = 14 — one number changed. Double the first and '
+      + 'subtract the second, and submit what is left on the right. A leftover of 0 says the '
+      + 'second equation repeated the first and added no condition at all.',
+    given: 'a*b - c',
+    variables: REAL_ABC,
+    // Same expression and same first two inputs as the task above, one input
+    // different: 2·7 − 14 = 0, so the elimination ends at 0 = 0, true for every
+    // pair. The pair of tasks is the two degenerate outcomes side by side, and
+    // it is as close as `evaluate` gets to a solution set — see the group note.
+    reference: '0',
+    at: { a: '2', b: '7', c: '14' },
+  },
+  {
+    id: 'dependent-system-pick-a-y-1',
+    knowledgePointId: 'when-both-letters-cancel-the-leftover-decides',
+    kind: 'evaluate',
+    prompt:
+      'A leftover of 0 says there is no condition left to narrow 2x + 3y = 7, so pick a y and '
+      + 'there will be an x beside it. Take y = 2 and submit that x. It is not a whole number, '
+      + 'which is the point: the solutions are every point on a line, not a list of the tidy ones.',
+    given: '(c - b*d)/a',
+    variables: REAL_ABCD,
+    // 2x + 3y = 7 solved for x with y = d: x = (c − bd)/a = (7 − 6)/2 = 1/2.
+    // Checking in both equations: 2(1/2) + 3·2 = 7 and 4(1/2) + 6·2 = 14, so
+    // (1/2, 2) satisfies the whole system. A different y from the worked
+    // example's 3, which gives (−1, 3), so the two exhibit two solutions.
+    reference: '1/2',
+    at: { a: '2', b: '3', c: '7', d: '2' },
   },
 
   // ── plane-geometry ──────────────────────────────────────────────────────
@@ -3895,6 +4451,200 @@ export const TASKS: PracticeTask[] = [
     at: { x: '20' },
   },
 
+  // ── triangle-trigonometry ───────────────────────────────────────────────
+  //
+  // Six tasks, two per knowledge point: five `evaluate` and one
+  // `transform_to_form`, every one settled by exact arithmetic with no worker.
+  //
+  // WHY THE WHOLE-NUMBER TRIPLES, since four of them appear and they look like
+  // a convenience. They are what makes the subject gradable at all. A side
+  // ratio is a quotient of two lengths, and `exactValue` can settle a quotient
+  // only when it is rational — so the triples 3-4-5, 5-12-13, 7-24-25 and
+  // 8-15-17 are chosen so that every quotient below is an exact fraction.
+  // Choose a triangle by its ANGLES instead and the quotients are irrational
+  // for all but a handful of angles, `exactValue` correctly returns null, and
+  // every task here would be handed to the worker.
+  //
+  // NO TASK ASKS FOR AN ANGLE, AND THAT IS THE SUBJECT'S BOUNDARY RATHER THAN
+  // A GAP IN THE GRADER. "Which angle has this quotient" is the inverse
+  // direction, which the map files as `inverse-trig` behind the unit circle,
+  // and the only answer available at this level is a rounded figure from a
+  // table — a measurement of the angle rather than the angle, exactly as 43.98
+  // is a rounding of 14π in `circle-measure`. The acute angles of the four
+  // triples are not whole numbers of degrees, and no prompt states one.
+  //
+  // THE ONE PLACE AN ANGLE IS NAMED IS THE SURD TASK, and it names 30° and 60°
+  // because those two are DERIVED rather than looked up: the altitude of an
+  // equilateral triangle splits it into two congruent halves, so the short leg
+  // is half the side and the apex angle is half of 60°. That triangle's sides
+  // are 5, 5√3 and 10 — not three whole numbers, which is the point. A right
+  // triangle cannot have whole-number sides AND whole-number acute angles, the
+  // figure would not exist, and nothing in this build would catch it. Each
+  // worked example and each task here picks one or the other.
+  //
+  // WHAT IS UNSCORED, named here as the blocks above name theirs: which of the
+  // three sides plays which role. The second point's whole content is that
+  // "opposite" and "adjacent" are roles relative to a chosen vertex, and both
+  // of its tasks hand the assignment over in the prompt — a learner who reads
+  // the roles off the wrong vertex and then divides correctly takes the mark.
+  // The pair is built to make the decision as visible as a task can, which is
+  // the shape `pythagoras` used for the hypotenuse slot: the same three
+  // lengths, two different quotients, two different answers.
+  {
+    id: 'the-quotient-is-the-same-in-both-triangles-1',
+    knowledgePointId: 'the-quotient-belongs-to-the-angle-not-to-the-triangle',
+    kind: 'evaluate',
+    prompt:
+      'Two right triangles share the acute angle A. In the first, the side opposite A is 5 and '
+      + 'the hypotenuse is 13. In the second they are 20 and 52. Evaluate a/c - b/x at a = 5, '
+      + 'c = 13, b = 20, x = 52 to compare the two quotients. A difference of 0 is the content, '
+      + 'and it is guaranteed before either division is done: the triangles agree on all three '
+      + 'angles, so they are similar, so the quotient taken between two of one triangle\'s own '
+      + 'sides equals the same quotient in the other. That the quotient cannot see how big '
+      + 'either triangle is, is exactly what lets it be tabulated against the angle and called '
+      + 'sin A.',
+    given: 'a/c - b/x',
+    variables: REAL_ABC_X,
+    // 5/13 − 20/52 = 5/13 − 5/13 = 0. The second triangle is 20, 48, 52 — the
+    // 5-12-13 triangle scaled by 4 — and the acute angles of it are not whole
+    // numbers of degrees, which is why neither is stated.
+    //
+    // The shape is `the-down-ratio-is-one-number-1` in `similarity`, with
+    // different numbers and a different claim. There the two quotients were
+    // read off two similar FIGURES and the content was that a ratio taken
+    // inside a figure survives scaling. Here the quotient is indexed by an
+    // ANGLE: the invariance is what makes a table of one column against the
+    // angle possible, which is the step from similarity to trigonometry.
+    reference: '0',
+    at: { a: '5', c: '13', b: '20', x: '52' },
+  },
+  {
+    id: 'the-derived-quotient-at-thirty-degrees-1',
+    knowledgePointId: 'the-quotient-belongs-to-the-angle-not-to-the-triangle',
+    kind: 'transform_to_form',
+    prompt:
+      'An equilateral triangle of side 10 is cut by the altitude from one vertex. That altitude '
+      + 'splits it into two congruent right triangles, so each has a hypotenuse of 10, a short '
+      + 'leg of 5 — half the side — and an angle of 30° at the apex, half of the 60° the '
+      + 'equilateral triangle had there. So the quotient short-leg-over-hypotenuse at 30° is '
+      + 'exactly 5/10 = 1/2, derived rather than read from a table. The altitude is the third '
+      + 'side: its square is 10² − 5² = 75. Give that length exactly, with nothing left under '
+      + 'the radical that need not be there. A decimal is a rounding of this length rather than '
+      + 'the length — and the quotient it forms with the hypotenuse, √3/2, is irrational, which '
+      + 'is why 30° is nearly the only angle whose ratios can be written down without a table.',
+    given: 'sqrt(75)',
+    form: 'surd_reduced',
+    variables: [],
+    // 75 = 25 × 3 with 25 = 5², so 5√3, and 3 is square-free so nothing
+    // further comes out. Ruled by `asSurd`'s normal form with no worker, the
+    // same way `reduce-the-hypotenuse-surd-1` in `pythagoras` is.
+    //
+    // A third radicand distinct from both of that subject's: 180 gave 6√5 and
+    // 192 gave 8√3, so this is not a recall of either. It is also the one
+    // triangle in this subject with whole-number ANGLES, and its third side is
+    // irrational — which is the sides-and-angles constraint being obeyed
+    // rather than dodged. Stating 5, 10 and a whole-number third side
+    // alongside 30° and 60° would describe a triangle that does not exist.
+    reference: '5*sqrt(3)',
+  },
+  {
+    id: 'the-two-acute-angles-give-different-quotients-1',
+    knowledgePointId: 'opposite-and-adjacent-are-roles-not-sides',
+    kind: 'evaluate',
+    prompt:
+      'A right triangle has its right angle at C, legs of 7 and 24, and a hypotenuse of 25. '
+      + 'A is the vertex where the sides of length 24 and 25 meet, so the leg facing A is the 7 '
+      + 'and sin A = 7/25; B is the other acute angle, the leg facing it is the 24, and '
+      + 'sin B = 24/25. Evaluate a/c - b/c at a = 7, b = 24, c = 25. A non-zero answer is the '
+      + 'point: the quotient belongs to an ANGLE and not to a triangle, so the two acute angles '
+      + 'of one triangle give different numbers from the very same three lengths. Note which '
+      + 'half of this task scores — the arithmetic, not the role reading. That the 7 faces A '
+      + 'rather than B was handed to you in this prompt, and it is the whole content of the '
+      + 'knowledge point.',
+    given: 'a/c - b/c',
+    variables: REAL_ABC,
+    // 7/25 − 24/25 = −17/25. Negative because the side facing A is the shorter
+    // leg; the sign is which of the two acute angles is the smaller, and
+    // reading the roles off the wrong vertex gives +17/25.
+    //
+    // 7² + 24² = 49 + 576 = 625 = 25², so the triangle exists. Its acute
+    // angles are not whole numbers of degrees and neither is stated.
+    reference: '-17/25',
+    at: { a: '7', b: '24', c: '25' },
+  },
+  {
+    id: 'the-tangent-of-the-same-angle-from-two-sides-1',
+    knowledgePointId: 'opposite-and-adjacent-are-roles-not-sides',
+    kind: 'evaluate',
+    prompt:
+      'Same triangle, and this time only the hypotenuse 25 and the leg ADJACENT to A, which is '
+      + 'the 24, are given. The tangent of A is the leg facing A over the leg touching it, so '
+      + 'the facing leg has to be recovered first — by Pythagoras, from the two lengths you '
+      + 'have. Evaluate sqrt(c^2 - b^2)/b at b = 24, c = 25. Then read the answer against the '
+      + 'tangent of B, which is the same two legs the other way up: 24/7, a number larger than '
+      + '1. No sine or cosine is ever larger than 1, and the third knowledge point is why — a '
+      + 'tangent has no such ceiling, because neither leg is forced to be the longer one.',
+    given: 'sqrt(c^2 - b^2)/b',
+    variables: REAL_BC,
+    // 625 − 576 = 49, √49 = 7 exactly, so 7/24. Two moves in one expression —
+    // recover the facing leg, then form the quotient — and both settled by
+    // `exactValue`, the root through `exactRoot`.
+    //
+    // 7/24 and 24/7 are reciprocals, and the pair is the role exchange in the
+    // one place where it changes the SIZE of the answer rather than only its
+    // name: for the sine and cosine the exchange swaps two numbers that are
+    // both below 1, and for the tangent exactly one of the two is above it.
+    reference: '7/24',
+    at: { b: '24', c: '25' },
+  },
+  {
+    id: 'a-known-hypotenuse-multiplies-down-1',
+    knowledgePointId: 'the-relation-runs-both-ways-and-the-sine-is-bounded',
+    kind: 'evaluate',
+    prompt:
+      'A right triangle has sin A = 8/17 and a hypotenuse of 102. Because the HYPOTENUSE is the '
+      + 'side that is known, the relation is used in its multiplying direction: the side facing '
+      + 'A is the hypotenuse times the quotient. Evaluate (a/b)*x at a = 8, b = 17, x = 102. '
+      + 'Check the answer against the 102 before trusting it — the side facing an acute angle is '
+      + 'shorter than the hypotenuse, so an answer above 102 is wrong whatever the arithmetic '
+      + 'said. Compare with a-known-opposite-side-divides-up-1, which gives the same quotient '
+      + 'the other direction.',
+    given: '(a/b)*x',
+    variables: REAL_ABX,
+    // (8/17) × 102 = 8 × 6 = 48, and 48 < 102 as it must be. The triangle is
+    // 48, 90, 102 — the 8-15-17 triangle scaled by 6.
+    //
+    // 8/17 is the quotient the second knowledge point read off an 8-15-17
+    // triangle directly. Here it is used on a triangle whose sides were never
+    // given, which is the first point's claim doing work.
+    reference: '48',
+    at: { a: '8', b: '17', x: '102' },
+  },
+  {
+    id: 'a-known-opposite-side-divides-up-1',
+    knowledgePointId: 'the-relation-runs-both-ways-and-the-sine-is-bounded',
+    kind: 'evaluate',
+    prompt:
+      'Same quotient, sin A = 8/17, but now the side facing A is the one that is known and it is '
+      + '72; the hypotenuse is what is missing. So the relation is used in its dividing '
+      + 'direction instead. Evaluate x/(a/b) at a = 8, b = 17, x = 72. This answer has to come '
+      + 'out LARGER than the 72 you were given, where the answer to '
+      + 'a-known-hypotenuse-multiplies-down-1 had to come out smaller than its 102 — and nothing '
+      + 'about the formula says which. The side you were handed says, which is the whole content '
+      + 'of the knowledge point and the one decision this ruling cannot see.',
+    given: 'x/(a/b)',
+    variables: REAL_ABX,
+    // 72 ÷ (8/17) = 72 × 17/8 = 9 × 17 = 153, and 153 > 72 as it must be. The
+    // triangle is 72, 135, 153 — the 8-15-17 triangle scaled by 9.
+    //
+    // The same expression pattern as `the-same-two-numbers-the-other-way-1` in
+    // `pythagoras` and for the same reason: one relation, two directions, and
+    // the gap between the two answers is what one decision about which side is
+    // known is worth.
+    reference: '153',
+    at: { a: '8', b: '17', x: '72' },
+  },
+
   // ── functions-and-inverses ──────────────────────────────────────────────
   //
   // Twelve tasks, one per knowledge point, all `evaluate` and all settled by
@@ -4464,6 +5214,497 @@ export const TASKS: PracticeTask[] = [
     at: { u1: '2', u2: '-1', v1: '6', v2: '-3' },
     // −6 + 6 = 0.
     reference: '0',
+  },
+
+  /*
+   * The dot product — six tasks, two on each of its three knowledge points.
+   *
+   * Every one is settled by exact arithmetic with no worker, and in this
+   * concept that took choosing the components rather than being lucky. The
+   * identity `cos θ = (a·b)/(|a||b|)` divides by two magnitudes, and a
+   * magnitude is a square root: the quotient is rational only when both come
+   * out whole. (3, 4) and (4, 3) give 5 and 5, and (3, 4) and (6, 8) give 5 and
+   * 10, so the two cosine tasks are 24/25 and exactly 1. The obtuse pair
+   * (3, 4) and (−4, 1) has |v| = √17 and therefore an irrational cosine, which
+   * is why that task asks for the PRODUCT and reads its sign — the sign is
+   * exact where the cosine is not, and the knowledge point says so.
+   *
+   * Nothing here asks for an angle, for the reason ontology-vectors.ts gives at
+   * length: 24/25 is the answer and 16.26° is a rounding of it. That is the
+   * same refusal `right-triangle-trig` makes about its own quotients and the
+   * same one `pythagoras` makes about a surd, so three concepts in a row now
+   * stop at the exact quantity rather than at a decimal that reads as more
+   * finished.
+   *
+   * `^(1/2)` rather than `sqrt(...)`, as `magnitude-1` above explains:
+   * `exactValue` returns null on a function node, while a rational exponent
+   * goes through `exactRoot`, so 25^(1/2) is exactly 5 and the whole quotient
+   * rules locally.
+   */
+  {
+    id: 'dot-product-1',
+    knowledgePointId: 'the-product-of-two-vectors-is-a-number',
+    kind: 'evaluate',
+    prompt:
+      'a = (3, 4) and b = (4, 3). Find a·b by multiplying the components that match — first with ' +
+      'first, second with second — and adding. The answer is a number, not a vector, which is the ' +
+      'whole novelty of this operation.',
+    given: 'u1*v1 + u2*v2',
+    variables: VEC_UV_FULL,
+    at: { u1: '3', u2: '4', v1: '4', v2: '3' },
+    // 12 + 12 = 24. Pairing crosswise instead would give 9 + 16 = 25, which is
+    // why the prompt says which products the definition allows.
+    reference: '24',
+  },
+  {
+    id: 'dot-product-self-1',
+    knowledgePointId: 'the-product-of-two-vectors-is-a-number',
+    kind: 'evaluate',
+    prompt:
+      'a = (3, 4). Find a·a. You have computed this sum of squares before in this subject, as the ' +
+      'inside of |a| — so the answer is |a|², and the magnitude turns out to have been a dot ' +
+      'product.',
+    given: 'u1*u1 + u2*u2',
+    variables: VEC_U,
+    at: { u1: '3', u2: '4' },
+    // 9 + 16 = 25 = 5². `magnitude-1` asks for the 5; this asks for the 25,
+    // which is the quantity the identity a·a = |a|² is about.
+    reference: '25',
+  },
+  {
+    id: 'perpendicular-zero-1',
+    knowledgePointId: 'a-zero-product-is-a-right-angle',
+    kind: 'evaluate',
+    prompt:
+      'u = (3, 4) and v = (−4, 3). Find u·v. A zero means the two arrows are at right angles, and ' +
+      'the triangle they make has sides 5, 5 and |u − v| with |u − v|² = 50 — which is 25 + 25, so ' +
+      'the converse of Pythagoras is what supplies the angle.',
+    given: 'u1*v1 + u2*v2',
+    variables: VEC_UV_FULL,
+    at: { u1: '3', u2: '4', v1: '-4', v2: '3' },
+    // −12 + 12 = 0.
+    reference: '0',
+  },
+  {
+    id: 'obtuse-sign-1',
+    knowledgePointId: 'a-zero-product-is-a-right-angle',
+    kind: 'evaluate',
+    prompt:
+      'u = (3, 4) and v = (−4, 1). Find u·v. The sign is the answer to "acute, right or obtuse", ' +
+      'because |u|² + |v|² − |u − v|² is twice this product and that difference is the converse of ' +
+      'Pythagoras\'s own three-way test.',
+    given: 'u1*v1 + u2*v2',
+    variables: VEC_UV_FULL,
+    at: { u1: '3', u2: '4', v1: '-4', v2: '1' },
+    // −12 + 4 = −8, so obtuse. |v| = √17 here, so the cosine of this angle is
+    // irrational — the sign is settled exactly anyway, which is the point of
+    // asking for the product rather than for the cosine.
+    reference: '-8',
+  },
+  {
+    id: 'cosine-exact-1',
+    knowledgePointId: 'the-product-gives-the-cosine-not-the-angle',
+    kind: 'evaluate',
+    prompt:
+      'a = (3, 4) and b = (4, 3). Find cos θ exactly, as a·b divided by the two magnitudes. Give ' +
+      'the quotient and not a figure in degrees: the quotient is exact, and turning it into an ' +
+      'angle needs a table nobody here has.',
+    given: '(u1*v1 + u2*v2) / ((u1^2 + u2^2)^(1/2) * (v1^2 + v2^2)^(1/2))',
+    variables: VEC_UV_FULL,
+    at: { u1: '3', u2: '4', v1: '4', v2: '3' },
+    // 24/(5·5) = 24/25, which is just under 1 — the two arrows nearly agree in
+    // direction. About 16.26°, which the prompt refuses to ask for.
+    reference: '24/25',
+  },
+  {
+    id: 'cosine-aligned-1',
+    knowledgePointId: 'the-product-gives-the-cosine-not-the-angle',
+    kind: 'evaluate',
+    prompt:
+      'a = (3, 4) and b = (6, 8). Find cos θ the same way. The answer is the largest a cosine can ' +
+      'be, which says b points the same way as a — and indeed b = 2a, so this is the ceiling the ' +
+      'span of a single vector was always going to hit.',
+    given: '(u1*v1 + u2*v2) / ((u1^2 + u2^2)^(1/2) * (v1^2 + v2^2)^(1/2))',
+    variables: VEC_UV_FULL,
+    at: { u1: '3', u2: '4', v1: '6', v2: '8' },
+    // (18 + 32)/(5·10) = 50/50 = 1.
+    reference: '1',
+  },
+
+  // ── vectors-and-independence, thirteenth promotion: three dimensions ────
+  //
+  // Eight tasks, two on each of the four points, every one `evaluate` and
+  // every one settled by exact arithmetic with no worker — which is the
+  // subject's standing contract and is asserted per promotion rather than
+  // assumed.
+  //
+  // THE COMPONENTS WERE CHOSEN SO THAT NO ROOT IS EVER LEFT IRRATIONAL IN AN
+  // ANSWER, which is the constraint that shaped these and is invisible in the
+  // finished set. a = (2, 3, 6) is the smallest triple whose magnitude is a
+  // whole number and whose first two components are not themselves a (3, 4):
+  // 4 + 9 + 36 = 49, so |a| = 7 and the floor diagonal is 13^(1/2), which is
+  // the point — the intermediate length is irrational and the answer is not,
+  // so the worked example can show the root being squared away rather than
+  // asserting that it is.
+  //
+  // THE OTHER THREE POINTS DELIBERATELY SHARE ONE FIGURE. n = (2, -1, 2) is
+  // the normal, P = (1, 2, 3) the point on the plane, and u = (1, 2, 0) and
+  // v = (0, 2, 1) two displacements inside it; |n| = 3 exactly, n·u = 0, the
+  // plane is 2x - y + 2z = 6, and u x v comes back as n itself rather than as a
+  // multiple of it. So a learner meets 0 as a perpendicularity, then 6 as a
+  // plane's constant, then 6 again at a second point of the same plane, then
+  // n a third time as a cross product — four tasks whose answers are about one
+  // figure, which is what the plane tasks above do with P = (-4, 7) and
+  // Q = (2, 7).
+  //
+  // NO TASK ASKS FOR A VECTOR, because `evaluate` produces a number. The cross
+  // product is therefore asked for one component at a time and the prompt says
+  // which, the same way `quadrant-signs-1` names itself a proxy: the question
+  // is "what is u x v" and the answer to that is not a number, so the tasks
+  // take the first component and the perpendicularity check, and the worked
+  // example carries the triple the arithmetic cannot return.
+  {
+    id: 'space-magnitude-1',
+    knowledgePointId: 'space-adds-one-coordinate-and-one-term',
+    kind: 'evaluate',
+    prompt:
+      'a = (2, 3, 6). Find |a|. Each perpendicular axis contributes its square and nothing else, ' +
+      'so this is (2² + 3² + 6²)^(1/2) — Pythagoras applied twice, with the first square root ' +
+      'squared away again.',
+    given: '(a1^2 + a2^2 + a3^2)^(1/2)',
+    variables: VEC_A_3D,
+    at: { a1: '2', a2: '3', a3: '6' },
+    // 4 + 9 + 36 = 49, and 49^(1/2) is exactly 7. `^(1/2)` rather than
+    // `sqrt(...)` for the reason `magnitude-1` gives: `exactValue` returns null
+    // on a `function` node, so sqrt could not be settled locally.
+    reference: '7',
+  },
+  {
+    id: 'space-dot-self-1',
+    knowledgePointId: 'space-adds-one-coordinate-and-one-term',
+    kind: 'evaluate',
+    prompt:
+      'a = (2, 3, 6). Find a·a, with one product per axis. You have just computed this sum as the ' +
+      'inside of |a|, so the answer is |a|² — the identity from the plane survives the extra term ' +
+      'because the definition grew by one product and nothing else.',
+    given: 'a1*a1 + a2*a2 + a3*a3',
+    variables: VEC_A_3D,
+    at: { a1: '2', a2: '3', a3: '6' },
+    // 4 + 9 + 36 = 49 = 7². `space-magnitude-1` asks for the 7; this asks for
+    // the 49, which is the quantity a·a = |a|² is about. The two-component
+    // version of this pair is `magnitude-1` and `dot-product-self-1`.
+    reference: '49',
+  },
+  {
+    id: 'space-dot-product-1',
+    knowledgePointId: 'every-plane-fact-extends-and-one-does-not',
+    kind: 'evaluate',
+    prompt:
+      'n = (2, −1, 2) and u = (1, 2, 0). Find n·u. A zero still means a right angle, and in this ' +
+      'case the triangle the two arrows make has squared sides 9, 5 and 14 — so 9 + 5 = 14 and ' +
+      'the converse of Pythagoras is what supplies the angle, exactly as it did in the plane.',
+    given: 'u1*v1 + u2*v2 + u3*v3',
+    variables: VEC_UV_3D,
+    at: { u1: '2', u2: '-1', u3: '2', v1: '1', v2: '2', v3: '0' },
+    // 2 - 2 + 0 = 0. |n| = 3 and |u| = 5^(1/2), so the cosine's denominator is
+    // irrational and the quotient is exact anyway — the knowledge point's third
+    // subgoal, and the reason this task asks for the product and not the cosine.
+    reference: '0',
+  },
+  {
+    id: 'space-third-side-1',
+    knowledgePointId: 'every-plane-fact-extends-and-one-does-not',
+    kind: 'evaluate',
+    prompt:
+      'n = (2, −1, 2) and u = (1, 2, 0). Find |n − u|², the square of the third side of the ' +
+      'triangle the two arrows make. This is the one number the converse of Pythagoras needs that ' +
+      'is not a magnitude of n or of u.',
+    given: '(u1 - v1)^2 + (u2 - v2)^2 + (u3 - v3)^2',
+    variables: VEC_UV_3D,
+    at: { u1: '2', u2: '-1', u3: '2', v1: '1', v2: '2', v3: '0' },
+    // n - u = (1, -3, 2), so 1 + 9 + 4 = 14 — which is |n|² + |u|² = 9 + 5, and
+    // that equality is the right angle. Asked as a square because |n - u| is
+    // 14^(1/2) and irrational; the squared side is what the converse compares.
+    reference: '14',
+  },
+  {
+    id: 'plane-constant-1',
+    knowledgePointId: 'one-equation-in-space-is-a-plane',
+    kind: 'evaluate',
+    prompt:
+      'A plane passes through P = (1, 2, 3) and is perpendicular to n = (2, −1, 2). Its equation ' +
+      'is n·r = d for a single constant d, so find d by evaluating n·P. The three coefficients of ' +
+      'the equation are then n itself.',
+    given: 'n1*r1 + n2*r2 + n3*r3',
+    variables: PLANE_N_P,
+    at: { n1: '2', n2: '-1', n3: '2', r1: '1', r2: '2', r3: '3' },
+    // 2 - 2 + 6 = 6, so the plane is 2x - y + 2z = 6.
+    reference: '6',
+  },
+  {
+    id: 'plane-membership-1',
+    knowledgePointId: 'one-equation-in-space-is-a-plane',
+    kind: 'evaluate',
+    prompt:
+      'A plane has normal vector (2, −1, 2), so its equation reads 2x − y + 2z = d. Evaluate the ' +
+      'left-hand side at the point (2, 4, 3). Comparing what you get with the value at ' +
+      '(1, 2, 3) is what decides whether the two points lie on the same plane.',
+    // The constant is NOT stated, here or in `plane-constant-1`'s prompt, which
+    // is what stops this being a free mark: a prompt reading "= 6" would hand
+    // over the number the task asks for.
+    given: '2*x - y + 2*z',
+    variables: PLANE_XYZ,
+    at: { x: '2', y: '4', z: '3' },
+    // 4 - 4 + 6 = 6, the same as at P — because the step from P to here was
+    // (1, 2, 0), and n·(1, 2, 0) = 0 by `space-dot-product-1`.
+    reference: '6',
+  },
+  {
+    id: 'cross-product-component-1',
+    knowledgePointId: 'the-cross-product-is-a-choice-of-direction',
+    kind: 'evaluate',
+    prompt:
+      'u = (1, 2, 0) and v = (0, 2, 1). Find the FIRST component of u × v. It ignores the first ' +
+      'coordinates and runs the plane\'s crosswise-and-subtract test on the second and third: ' +
+      'u₂v₃ − u₃v₂.',
+    given: 'u2*v3 - u3*v2',
+    variables: VEC_UV_3D,
+    at: { u1: '1', u2: '2', u3: '0', v1: '0', v2: '2', v3: '1' },
+    // 2·1 - 0·2 = 2. The whole product is (2, -1, 2); a vector is not something
+    // `evaluate` can return, which is why this asks for one component and the
+    // prompt says which.
+    reference: '2',
+  },
+  {
+    id: 'cross-product-perpendicular-1',
+    knowledgePointId: 'the-cross-product-is-a-choice-of-direction',
+    kind: 'evaluate',
+    prompt:
+      'u = (1, 2, 0), and w = u × v has come out as (2, −1, 2). Find u·w. This is the check that ' +
+      'the formula really did return something perpendicular to what went into it, rather than ' +
+      'merely something built from the right six numbers.',
+    given: 'u1*w1 + u2*w2 + u3*w3',
+    variables: VEC_UW_3D,
+    at: { u1: '1', u2: '2', u3: '0', w1: '2', w2: '-1', w3: '2' },
+    // 2 - 2 + 0 = 0. v·w = 0 - 2 + 2 = 0 as well; the knowledge point does both
+    // and this task takes the one whose arithmetic is not the same as
+    // `space-dot-product-1`'s.
+    reference: '0',
+  },
+
+  // ── solid-measure, twelfth promotion: solid-geometry ────────────────────
+  //
+  // Seven tasks — two on the first point, three on the second, two on the
+  // third: six `evaluate` and one `transform_to_form`, every one settled by
+  // exact arithmetic with no worker, like the four subjects before it.
+  //
+  // Not two per point, and the exception is the content rather than an
+  // accident. The second point makes two claims — the third applies to the
+  // volume, and it does NOT apply to the surface — and the second of those
+  // needs the slant height before it can be stated at all. So that point gets
+  // the volume, the slant and the surface, and the three of them together are
+  // the claim; any two of them are half of it.
+  //
+  // THE π WALL IS `circle-measure`'S AND IS INHERITED WHOLE. `pi` is a real
+  // constant of the expression language — expr.ts parses it — but `exactValue`
+  // returns null on it, deliberately, because returning 0 or NaN would turn "I
+  // cannot settle this" into a ruling against the learner. So a reference of
+  // `539*pi` cannot be ruled locally and would be handed to the worker, ending
+  // this subject's no-worker contract at its first cylinder. Every task here
+  // that touches a circular cross-section asks for the MULTIPLE of π and says
+  // so in the prompt, so the learner is never guessing whether the π is theirs
+  // to supply. Asking for the measurement instead was rejected on the same
+  // ground `pythagoras` refused to ask for a decimal: 539π IS the volume and
+  // 1693.3 cm³ is a rounding of it.
+  //
+  // What that costs is the same cost and is named rather than glossed: no task
+  // here scores the step from `288` to `288π cm³`. That step is in two of the
+  // three worked examples and in none of the rulings.
+  //
+  // NO TASK NAMES AN ANGLE, and here that is cheap rather than a constraint
+  // fought for. A right triangle cannot have whole-number sides AND
+  // whole-number acute angles — the figure would not exist and nothing in this
+  // build would catch it — and a solid's measure never needs an angle, so the
+  // 8-15-17 cross-section, the 9-12-15 slant and the 4-6 cone are all described
+  // by their lengths alone. The ratios subject had to work for this; this one
+  // only had to not break it.
+  //
+  // WHAT IS UNSCORED: the dissection. The second point's third subgoal proves
+  // the factor of a third by splitting a cube, and that is a `justify`
+  // question, which this build ships no tasks of at all. It is asked by the
+  // tutor and ruled by nobody, and the objectives here name only the two kinds
+  // that really ship — unlike `plane-geometry`, twenty-eight of whose
+  // objectives name `justify`.
+  {
+    id: 'the-prism-is-its-cross-section-carried-along-the-length-1',
+    knowledgePointId: 'a-constant-cross-section-carries-its-area-along-and-its-perimeter-round',
+    kind: 'evaluate',
+    prompt:
+      'A prism is 11 cm long and its cross-section is a right triangle with legs of 8 cm and '
+      + '15 cm. Evaluate (a*b/2)*c at a = 8, b = 15, c = 11 to get its volume in cubic '
+      + 'centimetres. Two things are in the expression: a*b/2 is the cross-section\'s AREA, and '
+      + 'c is the length the solid runs for. Every slice across the prism is that same triangle, '
+      + 'so the length multiplies the area exactly once. Read this against '
+      + 'the-side-of-a-prism-reads-the-perimeter-not-the-area-1, which carries the same length '
+      + 'along the same cross-section\'s OTHER plane measure — choosing between the two is what '
+      + 'this point teaches, and neither task shows it alone.',
+    given: '(a*b/2)*c',
+    variables: REAL_ABC,
+    // ½ × 8 × 15 = 60 cm², and 60 × 11 = 660 cm³. The 8-15-17 triangle, whose
+    // third side the perimeter task needs and this one does not — the area
+    // reads two sides and the perimeter reads three, which is the asymmetry
+    // the pair is built on.
+    //
+    // The triple is `opposite-and-adjacent-are-roles-not-sides`' in
+    // triangle-trigonometry, doing an unrelated job: there the three lengths
+    // are divided into each other to index an angle, here two of them are
+    // multiplied to measure a region.
+    reference: '660',
+    at: { a: '8', b: '15', c: '11' },
+  },
+  {
+    id: 'the-side-of-a-prism-reads-the-perimeter-not-the-area-1',
+    knowledgePointId: 'a-constant-cross-section-carries-its-area-along-and-its-perimeter-round',
+    kind: 'evaluate',
+    prompt:
+      'The same prism. Its cross-section\'s third side is 17 cm, by Pythagoras on 8 and 15. '
+      + 'Evaluate (a+b+c)*d at a = 8, b = 15, c = 17, d = 11 to get the area of its SIDE in '
+      + 'square centimetres — the three rectangles running its length, not counting the two '
+      + 'triangular ends. The length d is the identical 11 from the task above and only the plane '
+      + 'measure has changed: a+b+c is the cross-section\'s perimeter where a*b/2 was its area. '
+      + 'So answering 660 here is not an arithmetic slip, it is a volume offered where an area '
+      + 'was asked for, and the units are the only thing that says so.',
+    given: '(a+b+c)*d',
+    variables: REAL_ABCD,
+    // 8 + 15 + 17 = 40 cm, and 40 × 11 = 440 cm². Unrolled, the side is one
+    // rectangle 40 by 11. The two caps are 2 × 60 = 120 more, which the
+    // worked example adds and this task deliberately does not: the prompt
+    // asks for the side alone, so a learner cannot lose the mark for the
+    // omission the example is about.
+    reference: '440',
+    at: { a: '8', b: '15', c: '17', d: '11' },
+  },
+  {
+    id: 'the-pyramid-is-a-third-of-the-prism-on-the-same-base-1',
+    knowledgePointId: 'the-tapering-solid-takes-a-third-of-the-volume-and-none-of-the-surface',
+    kind: 'evaluate',
+    prompt:
+      'A square-based pyramid has base edges of 18 cm and a height of 12 cm. Evaluate '
+      + '(a^2*b)/3 at a = 18, b = 12 to get its volume in cubic centimetres. The expression is '
+      + 'the whole claim in one line: a^2 is the base, b carries it up to the prism on that same '
+      + 'base, and the division by 3 is the one thing a pyramid does to it. Answering 3888 is '
+      + 'the prism rather than the pyramid. The third is provable and the worked example proves '
+      + 'it — a cube splits into three congruent square pyramids — so it is not a constant to be '
+      + 'taken on trust.',
+    given: '(a^2*b)/3',
+    variables: REAL_AB,
+    // 18² = 324 cm², 324 × 12 = 3888 cm³ for the prism, and 3888 ÷ 3 = 1296 cm³
+    // for the pyramid. Whole at every step, which is why the base edge is even:
+    // the slant-height task below needs half of it to be whole as well.
+    reference: '1296',
+    at: { a: '18', b: '12' },
+  },
+  {
+    id: 'the-slant-height-is-the-length-the-surface-needs-1',
+    knowledgePointId: 'the-tapering-solid-takes-a-third-of-the-volume-and-none-of-the-surface',
+    kind: 'transform_to_form',
+    prompt:
+      'A cone has base radius 4 cm and height 6 cm. Its slanted surface rises along the SLANT '
+      + 'height, which is the hypotenuse of a right triangle on the height and the base radius: '
+      + 'its square is 6² + 4² = 52. Give that length exactly, with nothing left under the '
+      + 'radical that need not be there. The point is that this length exists at all — the volume '
+      + 'of this cone uses only the 4 and the 6, so a fifth number appearing is the signal that '
+      + 'the surface is a separate calculation and not a fraction of one already done. A decimal '
+      + 'is a rounding of the slant height rather than the slant height, which is why it is asked '
+      + 'for as a surd.',
+    given: 'sqrt(52)',
+    form: 'surd_reduced',
+    variables: [],
+    // 52 = 4 × 13 with 4 = 2², so 2√13, and 13 is square-free so nothing
+    // further comes out. Ruled by `asSurd`'s normal form with no worker, the
+    // same way `reduce-the-hypotenuse-surd-1` in `pythagoras` is.
+    //
+    // A radicand distinct from all three already in the build — 180 gave 6√5,
+    // 192 gave 8√3 and 75 gave 5√3 — so this is a recall of none of them, and
+    // the square that comes out is 4 rather than 25, 36 or 64.
+    //
+    // A cone rather than the worked example's pyramid, deliberately: the
+    // pyramid's slant came out whole at √225, which is what let that example
+    // compare two surfaces in integers, and a cone is where the length is
+    // irrational in the ordinary case.
+    reference: '2*sqrt(13)',
+  },
+  {
+    id: 'the-pyramid-s-surface-takes-no-third-1',
+    knowledgePointId: 'the-tapering-solid-takes-a-third-of-the-volume-and-none-of-the-surface',
+    kind: 'evaluate',
+    prompt:
+      'Back to the pyramid with base edges 18 cm and height 12 cm. Evaluate '
+      + '2*a*(b^2 + (a/2)^2)^(1/2) at a = 18, b = 12 to get the area of its four slanted faces '
+      + 'in square centimetres. The bracket is the slant height — Pythagoras on the height and '
+      + 'HALF the base edge — and 2*a is four triangles of base a each taken at a half. Compare '
+      + 'your answer with a third of the prism\'s side, which is 864 ÷ 3 = 288: the two do not '
+      + 'agree, and that is the point. The third is a claim about volume only, because the '
+      + 'prism\'s side rises along the height and these faces rise along the slant.',
+    given: '2*a*(b^2 + (a/2)^2)^(1/2)',
+    variables: REAL_AB,
+    // a/2 = 9, so 12² + 9² = 144 + 81 = 225 and the slant height is 15 — exact,
+    // so `exactValue` settles the half-power with no worker, the way the two
+    // cosine tasks in `dot-product-geometry` do. Then 2 × 18 × 15 = 540 cm²,
+    // which is four triangles of ½ × 18 × 15 = 135.
+    //
+    // 288 is the wrong answer the prompt names, and it is a third of the real
+    // 864 cm² side rather than a mis-multiplication — a correct answer to the
+    // question the point says must not be asked.
+    reference: '540',
+    at: { a: '18', b: '12' },
+  },
+  {
+    id: 'a-volume-takes-the-scale-factor-three-times-1',
+    knowledgePointId: 'the-third-dimension-adds-a-third-exponent-and-ties-the-sphere-s-measures',
+    kind: 'evaluate',
+    prompt:
+      'One sphere\'s radius is three times another\'s. Evaluate x^3 at x = 3 to get the factor by '
+      + 'which its VOLUME is larger. The cubing is the whole content: a volume is three lengths '
+      + 'multiplied, so a factor on the radius enters it three times, where a surface is two '
+      + 'lengths and takes it twice. This task has two named wrong answers and both are right '
+      + 'answers to a different question — 3 is the factor on a LENGTH, and 9 is the factor on '
+      + 'the SURFACE, which is the answer `circle-measure` asked for when there were only two '
+      + 'exponents to choose between.',
+    given: 'x^3',
+    variables: REAL_X,
+    // 3³ = 27. The surface factor is 9 and the length factor is 3, so both
+    // plausible wrong answers are exact answers to the neighbouring questions
+    // rather than slips — which is why the prompt names them.
+    //
+    // `the-area-factor-is-the-square-of-the-scale-factor-1` in `circle-measure`
+    // is `x^2` at the same input, and the repetition is the content: that task
+    // is this one with the third dimension removed, and 9 is its answer and
+    // this one's commonest error.
+    reference: '27',
+    at: { x: '3' },
+  },
+  {
+    id: 'the-sphere-s-volume-is-a-third-of-its-surface-times-the-radius-1',
+    knowledgePointId: 'the-third-dimension-adds-a-third-exponent-and-ties-the-sphere-s-measures',
+    kind: 'evaluate',
+    prompt:
+      'A sphere of radius 6 cm has surface area 144π cm². Evaluate (a*b)/3 at a = 144, b = 6 to '
+      + 'get its volume as a multiple of π, in cubic centimetres — so the volume is your answer '
+      + 'times π. The expression is V = (1/3) × S × r, and it is the factor of a third from the '
+      + 'point above used with the SURFACE as the base: cut the ball into very thin cones with '
+      + 'their apexes at the centre, each has height r, and their bases add up to S. So the two '
+      + 'sphere formulas are not independent — this is a check on (4/3)πr³ rather than a second '
+      + 'thing to remember — and only S = 4πr² had to be taken as given.',
+    given: '(a*b)/3',
+    variables: REAL_AB,
+    // 144 × 6 = 864, and 864 ÷ 3 = 288, so V = 288π cm³. Checks against the
+    // formula: (4/3)π × 6³ = (4/3) × 216 × π = 288π. The radius is 6 and not 3
+    // because at 3 the surface and the volume are both 36π, which is a
+    // coincidence of that one radius and would hide the fact that two
+    // different measures were computed.
+    reference: '288',
+    at: { a: '144', b: '6' },
   },
 ]
 

@@ -1363,7 +1363,11 @@ const subject: Subject = {
     'limit of inscribed polygons. πr² is used here and not derived, exactly as the congruence ' +
     'criteria and the inscribed-angle theorem are, because the derivation is a sequence of ' +
     'drawings with more and more sides and there is no figure-free part of it to take. The ' +
-    'solids are the rest and are still mapped only.',
+    'solids are the rest, and they are no longer mapped only: this sentence used to end "and ' +
+    'are still mapped only", which was this subject naming the material it excludes, and the ' +
+    'exclusion is why the twelfth promotion went to `solid-measure` rather than here. The id is ' +
+    'the boundary — a prism is not a figure in the plane, and the one move that subject is about ' +
+    'is the move out of it.',
   medium: 'theorem',
   facetName: 'Concept',
   facetDoes: 'Which concept the statement has to be about.',

@@ -259,10 +259,20 @@ const CONCEPTS: Concept[] = [
             {
               label: 'Take row 1 of A and column 1 of B',
               detail: 'Row 1 of A is (2, −1). Column 1 of B is (5, 3).',
+              socratic:
+                'The entry asked for is (1,1), and its two indices do not do the same job — one ' +
+                'of them points into A and the other into B. Which part of A does the first ' +
+                'index pick out, which part of B does the second, and which four of these eight ' +
+                'entries are therefore the only ones in play?',
             },
             {
               label: 'Multiply term by term and add',
               detail: '2·5 + (−1)·3 = 10 − 3 = 7.',
+              socratic:
+                'Row 1 of A gave (2, −1) and column 1 of B gave (5, 3), and what has to come out ' +
+                'of those four numbers is one entry. There is more than one way to pair them off ' +
+                '— which pairing is the right one, what happens to each pair, and what does the ' +
+                'entry come to?',
             },
             {
               label: 'Why that is composition',
@@ -270,6 +280,12 @@ const CONCEPTS: Concept[] = [
                 'Column 1 of B is where B sends e₁. Applying A to it gives where AB sends e₁ — ' +
                 'which, by the columns rule, is column 1 of AB. The row-by-column recipe is a ' +
                 'consequence of "do B, then do A", not a separate definition to memorise.',
+              socratic:
+                'By the columns rule, the (5, 3) you took out of B is where B sends e₁ — and ' +
+                '2·5 + (−1)·3 is exactly how you would have found the first component of ' +
+                'A·(5, 3). So follow e₁ through B and then through A: where does it land, which ' +
+                'column of AB is that, and what does it say about where the row-against-column ' +
+                'recipe comes from?',
             },
           ],
           answer: '7',
@@ -300,16 +316,30 @@ const CONCEPTS: Concept[] = [
             {
               label: 'Now B supplies the row',
               detail: 'Row 1 of B is (5, 0). Column 1 of A is (2, 3).',
+              socratic:
+                'Entry (1,1) of AB came from row 1 of A against column 1 of B. Nothing about the ' +
+                'rule changes for BA — what changes is which matrix is standing where. Which of A ' +
+                'and B supplies the row this time, which supplies the column, and what are the ' +
+                'four numbers that end up in play?',
             },
             {
               label: 'Multiply and add',
               detail: '5·2 + 0·3 = 10.',
+              socratic:
+                'The row is (5, 0) and the column is (2, 3). One of those four numbers makes half ' +
+                'of the arithmetic vanish before you do it — which pairing does the rule call for, ' +
+                'which product drops out, and what does entry (1,1) of BA come to?',
             },
             {
               label: 'Compare',
               detail:
                 'Entry (1,1) is 7 in AB and 10 in BA. One entry differing is enough to prove the ' +
                 'two products are different matrices — no need to compute the rest.',
+              socratic:
+                'So AB has 7 in position (1,1) and BA has 10, and between the two products that ' +
+                'is one entry each — six of the eight are still uncomputed. What has that single ' +
+                'disagreement already settled about AB and BA, and is there any arithmetic still ' +
+                'outstanding that could unsettle it?',
             },
           ],
           answer: '10, against 7 the other way round',

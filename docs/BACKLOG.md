@@ -75,30 +75,3 @@ shipped an authoring commit 28 minutes after it landed.
 The reporting half of this item is closed: `bash scripts/verify-live-sha.sh`
 now prints the gap as a count plus the missing subjects, so "how far behind is
 production" is one command rather than a manual sha comparison.
-
-## 3. `right-triangle-trig` would open a one-concept subject — DECISION NEEDED
-
-It is the 7th entry on the concept-promotion order and both its prerequisites
-(`similarity`, `pythagoras`) are authored, so it is mechanically ready. But
-Trigonometry has no authored syllabus, so promoting it creates a subject
-holding exactly one concept — and it also gates `dot-product-geometry`, so
-leaving it alone stalls the Coordinate-geometry branch of both remaining
-journeys.
-
-Either answer is defensible and the authoring loop should not pick for itself:
-promote it and accept a one-concept subject that will grow, or promote several
-trigonometry concepts together so the subject opens at a sensible size.
-
-Verified 2026-11-15: area/prerequisite state read out of the composed atlas.
-
-**Updated 2026-11-15, same day:** this is now the ONLY thing standing between
-those two journeys and the end of their unwritten ground. It was not before.
-The stub-floor deadlock sat behind it — `number-and-arithmetic` was frozen at
-five nodes and `euclidean-geometry` held five route concepts against three
-releases of room, so settling this item would have unblocked the branch for
-three promotions and then stalled it again. Both areas have since been merged
-into their neighbours (`algebra-foundations` and `euclidean-geometry`
-respectively; see `frontend/lib/concepts/atlas-foundations.ts`), and
-`tests/atlas.mjs` now asserts the promotion budget per area, so every route
-concept is reachable with headroom. The one-concept-subject question is
-untouched by that and still needs a human answer.

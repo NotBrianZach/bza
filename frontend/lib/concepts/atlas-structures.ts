@@ -139,23 +139,36 @@ const LINEAR_ALGEBRA: MapArea = {
    * both outside the area declaring it.
    */
   links: [
-    {
-      /**
-       * `vectors-and-spans` left this area too, when it was authored into
-       * ontology-vectors.ts — so this edge now joins two authored subjects
-       * rather than a mapped node to one. It did not need changing: `links`
-       * never cared which side was which.
-       *
-       * The incoming edge it used to declare — `three-dimensional-coordinates
-       * → vectors-and-spans` — is restated below, for the usual reason that
-       * removing a node removes its own `needs`.
-       */
-      from: 'three-dimensional-coordinates',
-      to: 'vectors-and-spans',
-      because:
-        'Span is stated for vectors in any dimension, and the step past the plane is where it ' +
-        'stops being obvious that the reachable set is a line or a plane rather than everything.',
-    },
+    /*
+     * `three-dimensional-coordinates → vectors-and-spans` WAS THE FIRST ENTRY
+     * HERE AND HAS BEEN DELETED, which is a shape of edit this file had not
+     * made before and the one worth reading first.
+     *
+     * The entry existed because this area owned NEITHER end. `vectors-and-spans`
+     * had been authored into ontology-vectors.ts and `three-dimensional-
+     * coordinates` was a node of `euclidean-geometry`, so no ontology could
+     * declare it and `links` was its only home. The thirteenth promotion wrote
+     * that node into `vectors-and-independence` — the same subject as the far
+     * end — so both ends are now concepts of ONE ontology, the edge is declared
+     * there as an ordinary prerequisite with the `because` above carried over
+     * verbatim as its `rationale`, and this entry had to go.
+     *
+     * IT WOULD NOT HAVE FAILED ANYTHING IF IT HAD STAYED, and that is the whole
+     * reason this comment is long. `links` never cared whether an end was a
+     * node or a concept — the note that used to sit here said exactly that, as
+     * a reassurance — so the entry would have gone on resolving perfectly well
+     * and `composeAtlas` would have produced the same edge twice, once from
+     * here and once from the ontology. Two identical edges in the composed
+     * graph is not a redundancy the loader notices and no suite checks for it.
+     * So a promotion can hand an edge BACK to an ontology, and the only way to
+     * find out is to read the file the far end lives in; the suites going green
+     * is not evidence either way.
+     *
+     * The direction is the other thing to keep. It reads at a glance as though
+     * span came first, and it is the reverse: the three dimensions GATE span,
+     * which is why that concept landed in the middle of the receiving subject's
+     * chain rather than on the end of it.
+     */
     {
       from: 'vectors-and-spans',
       to: 'matrices-and-maps',

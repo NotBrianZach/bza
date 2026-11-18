@@ -2263,7 +2263,21 @@ t('no point on this claim is an excluded one, unlike the first task',
 const X2 = EXPONENTS_AND_LOGARITHMS
 
 group('a second subject the schema was not designed around')
-t('it is registered', ONTOLOGIES.length === 8 && getOntology('exponents-and-logarithms') === X2)
+/*
+ * The count is the ONLY assertion a new subject trips, and it lives inside the
+ * SECOND subject's block — far from anything about adding one. The ninth
+ * promotion recorded that as a trap worth grepping for before starting, and the
+ * tenth hit it again, so it is now named here rather than only there: whoever
+ * registers an eleventh subject will find this line from the failure message
+ * and nowhere else.
+ *
+ * It stays a literal rather than becoming `>= 9`. What it is really asserting
+ * is that this subject is registered at all, and a floor would pass with the
+ * subject absent as long as somebody else had added two.
+ */
+t('it is registered, and the registry now holds ten subjects',
+  ONTOLOGIES.length === 10 && getOntology('exponents-and-logarithms') === X2,
+  `${ONTOLOGIES.length} subjects: ${ONTOLOGIES.map(o => o.subject.id).join(', ')}`)
 t('it reports no structural problems', ontologyProblems(X2).length === 0, JSON.stringify(ontologyProblems(X2)))
 t('its fidelity claims match what its options can do', fidelityMismatches(X2).length === 0)
 t('it has a prerequisite-respecting teaching order', teachingOrder(X2)?.length === X2.concepts.length)
@@ -2559,8 +2573,8 @@ t('and it is the subject with a root that needs nothing',
   roots(ONTOLOGIES[0]).some(id => gatingPrerequisitesOf(ONTOLOGIES[0], id).length === 0))
 t('and resolves by id', getOntology('arithmetic-foundations') === A)
 t('it has no internal faults', ontologyProblems(A).length === 0, ontologyProblems(A).join('; '))
-t('eleven concepts, thirty-three knowledge points',
-  A.concepts.length === 11 && allKnowledgePoints(A).length === 33,
+t('twelve concepts, thirty-six knowledge points',
+  A.concepts.length === 12 && allKnowledgePoints(A).length === 36,
   `${A.concepts.length} concepts, ${allKnowledgePoints(A).length} points`)
 t('every concept is teachable — this is a syllabus, not a map',
   A.concepts.every(c => isTeachable(A, c.id)))
@@ -2587,8 +2601,8 @@ const coldSet = assemble({ ontology: A, strengths: COLD, now: '2026-10-23T12:00:
 t('a cold account gets three tasks, all from place value',
   coldSet.tasks.length === 3 && coldSet.tasks.every(x => conceptOfPoint(A, x.knowledgePointId).id === 'place-value'),
   `${coldSet.tasks.length} tasks`)
-t('and the other ten concepts are reported blocked rather than silently absent',
-  coldSet.blocked.length === 10,
+t('and the other eleven concepts are reported blocked rather than silently absent',
+  coldSet.blocked.length === 11,
   coldSet.blocked.map(b => b.conceptId).join(', '))
 t('each blocked concept names a TEACHABLE thing to go and do', coldSet.blocked.every(b =>
   b.missing.length > 0 && b.missing.every(m => isTeachable(A, m))))
@@ -2680,9 +2694,18 @@ const ARITH_TASKS = allKnowledgePoints(A).flatMap(p => tasksForPoint(p.id))
  * the shape of one expression. So each of its tasks asks a step of the
  * argument and says in the prompt which step, which is the proxy rule held to
  * rather than stretched.
+ *
+ * `ratio-and-rate` added three points and three tasks, one apiece, and it is
+ * the first concept in this subject that owes no proxy apology at all — which
+ * is a property of the concept rather than of better asks. All three of its
+ * points are about a NUMBER: a share, a price per kilogram, and the gap
+ * between the proportional and additive readings. Set that against
+ * `real-number-line` directly above, where every task had to stand in for a
+ * claim about an infinite set. The block in tasks.ts makes the comparison in
+ * full.
  */
-t('thirty-six tasks, and every point has at least one',
-  ARITH_TASKS.length === 36 && allKnowledgePoints(A).every(p => tasksForPoint(p.id).length > 0),
+t('thirty-nine tasks, and every point has at least one',
+  ARITH_TASKS.length === 39 && allKnowledgePoints(A).every(p => tasksForPoint(p.id).length > 0),
   `${ARITH_TASKS.length}`)
 /*
  * NOT "all of them are evaluate" any more, and the change is the point rather
@@ -2701,7 +2724,7 @@ t('thirty-six tasks, and every point has at least one',
  * arriving here unnoticed is still visible.
  */
 t('two are transform_to_form and the rest evaluate — both graded locally',
-  ARITH_TASKS.filter(x => x.kind === 'evaluate').length === 34
+  ARITH_TASKS.filter(x => x.kind === 'evaluate').length === 37
   && ARITH_TASKS.filter(x => x.kind === 'transform_to_form').length === 2,
   ARITH_TASKS.reduce((acc, x) => ({ ...acc, [x.kind]: (acc[x.kind] ?? 0) + 1 }), {}),
 )
@@ -3006,11 +3029,16 @@ t('and it did not displace arithmetic from index 0, which the cold account depen
   ONTOLOGIES[0] === ARITHMETIC_FOUNDATIONS)
 t('it has no internal faults', ontologyProblems(VE).length === 0, ontologyProblems(VE).join('; '))
 t('its fidelity claim matches what its option can do', fidelityMismatches(VE).length === 0)
-t('one concept, three knowledge points',
-  VE.concepts.length === 1 && allKnowledgePoints(VE).length === 3,
+t('three concepts, nine knowledge points',
+  VE.concepts.length === 3 && allKnowledgePoints(VE).length === 9,
   `${VE.concepts.length} concepts, ${allKnowledgePoints(VE).length} points`)
 t('the concept is teachable AND practisable — a syllabus, not a map entry',
   isTeachable(VE, 'variables-and-expressions') && isPractisable(VE, 'variables-and-expressions'))
+t('and so is the solve, which is the half of the subject\'s name that was mapped only',
+  isTeachable(VE, 'linear-equations') && isPractisable(VE, 'linear-equations'))
+t('and so is the system, which three files had argued could not be authored at all',
+  isTeachable(VE, 'systems-of-linear-equations')
+  && isPractisable(VE, 'systems-of-linear-equations'))
 t('every knowledge point has a task, so no chain is left unable to become evidence',
   allKnowledgePoints(VE).every(p => tasksForPoint(p.id).length > 0),
   allKnowledgePoints(VE).filter(p => tasksForPoint(p.id).length === 0).map(p => p.id).join(', '))
@@ -3018,21 +3046,71 @@ t('every objective names a task kind',
   VE.concepts.every(c => c.objectives.length > 0 && c.objectives.every(o => o.taskKinds.length > 0)))
 
 /**
- * THE EMPTY EDGE LIST IS A BOUNDARY, NOT AN OMISSION.
+ * THE EDGE LIST WAS EMPTY AND THAT WAS A BOUNDARY, NOT AN OMISSION — AND THE
+ * SECOND CONCEPT IS WHAT MADE IT NON-EMPTY WITHOUT MOVING THE BOUNDARY.
  *
- * One concept means no internal pair to join, and every real prerequisite of
- * this concept crosses into another subject — so it must live in an area's
- * `links` and cannot live here. Asserted rather than assumed, because an edge
- * added here naming `order-of-operations` would look right and would make
- * `ontologyProblems` report an unknown endpoint.
+ * While there was one concept there was no internal pair to join, and every
+ * real prerequisite of it crossed into another subject, so each had to live in
+ * an area's `links`. That is still true of `variables-and-expressions`: both
+ * of its own prerequisites are in `arithmetic-foundations` and both are in
+ * `ALGEBRA_FOUNDATIONS.links` to this day.
+ *
+ * `linear-equations` arrived with exactly one `needs`, pointing at the concept
+ * already here — so its stranded edge belongs in this ontology and cost `links`
+ * nothing. One edge is therefore the whole internal structure, and the root is
+ * unchanged: the reading still comes before the solving.
+ *
+ * Both halves are asserted. The count catches an edge invented here naming
+ * `order-of-operations`, which would look right and would make
+ * `ontologyProblems` report an unknown endpoint; the named root catches the
+ * edge being added backwards, which nothing else would — a reversed
+ * prerequisite is a valid ontology that teaches the subject in the wrong order.
+ *
+ * THE THIRD CONCEPT MADE IT TWO, BY THE SAME MECHANISM, AND THE SUBJECT IS NOW
+ * A CHAIN OF THREE. `systems-of-linear-equations` also declared exactly one
+ * `needs`, also pointing at a concept already here — `linear-equations`,
+ * promoted one change earlier — so its stranded edge belongs in this ontology
+ * too and cost `links` nothing. The root is unchanged for a third time: the
+ * reading still comes before the solving, which comes before solving two at
+ * once.
+ *
+ * THE EDGES ARE NOW CHECKED BY NAME RATHER THAN BY POSITION, which is the one
+ * thing about this change worth more than a renumbered count. `VE.edges[0]`
+ * read correctly while there was one edge and reads correctly today, and it
+ * stops meaning anything the moment the edges are reordered or the chain
+ * forks: a positional check would quietly start asserting the wrong edge, and
+ * `ontologyProblems` would not object, because an edge hung off the wrong
+ * authored parent is a perfectly valid ontology that teaches the subject in
+ * the wrong order. ontology-geometry.ts reached the same conclusion when the
+ * geometry subject stopped being a chain.
  */
-t('it declares no edges, and the single concept is therefore its own root',
-  VE.edges.length === 0 && roots(VE).length === 1 && roots(VE)[0] === 'variables-and-expressions')
+const edgeFromTo = (o, from, to) => o.edges.find(e => e.from === from && e.to === to)
+t('it declares exactly two edges, and the reading is still the root rather than either solve',
+  VE.edges.length === 2 && roots(VE).length === 1 && roots(VE)[0] === 'variables-and-expressions',
+  `${VE.edges.length} edge(s), roots: ${roots(VE).join(', ')}`)
+t('and both are the edges the promoted nodes arrived carrying, each pointing the way it was written',
+  [['variables-and-expressions', 'linear-equations'],
+    ['linear-equations', 'systems-of-linear-equations']].every(([from, to]) => {
+    const e = edgeFromTo(VE, from, to)
+    return !!e && e.kind === 'prerequisite' && !!e.promotedBy
+  }),
+  VE.edges.map(e => `${e.from}->${e.to} ${e.kind}`).join(' | '))
+/*
+ * And the chain in order, as a walk rather than as a string. `teachingOrder`
+ * is what the scheduler reads, so this asserts the claim the subject's own
+ * `covers` paragraph makes about itself — and it fails loudly if an edge is
+ * reversed, which the two checks above cannot, since a backwards edge is still
+ * an edge between the right pair.
+ */
+t('and the three sit in the order the subject claims to teach them',
+  teachingOrder(VE).join(' ')
+    === 'variables-and-expressions linear-equations systems-of-linear-equations',
+  teachingOrder(VE).join(' '))
 
 group('the seventh subject is gradable with no worker')
 const VE_TASKS = allKnowledgePoints(VE).flatMap(p => tasksForPoint(p.id))
-t('five tasks across the three points', VE_TASKS.length === 5, `${VE_TASKS.length}`)
-t('all of them are evaluate — no form can express "collected", so none asks for one',
+t('eighteen tasks across the nine points', VE_TASKS.length === 18, `${VE_TASKS.length}`)
+t('all of them are evaluate — no form can express "collected" and no kind can express "solve"',
   VE_TASKS.every(x => x.kind === 'evaluate' && x.form === undefined))
 t('every reference is exactly reproducible from the given — no worker consulted',
   VE_TASKS.every(x => {
@@ -3058,7 +3136,8 @@ t('and the sign trap is settled, not left inconclusive',
     .verdict.ruling === 'incorrect')
 
 /**
- * THE FIRST SUBJECT TO AUTHOR `socratic` ON EVERY SUBGOAL.
+ * THE FIRST SUBJECT TO AUTHOR `socratic` ON EVERY SUBGOAL, AND STILL THE ONLY
+ * ONE WHERE THAT IS TRUE OF EVERY CONCEPT IN IT.
  *
  * 21 of 283 questions were interrogative before this file, and all 21 were
  * labels that happened to end in a question mark rather than authored
@@ -3066,14 +3145,30 @@ t('and the sign trap is settled, not left inconclusive',
  * subgoal here carries a hand-written question, and each one is a question
  * rather than an imperative with a question mark bolted on — which is the
  * failure types.ts names and punctuation cannot fix.
+ *
+ * It is asserted over the whole subject rather than per concept deliberately,
+ * so a concept added here without its questions written fails this rather than
+ * diluting a fraction somewhere else. `linear-equations` is the first concept
+ * to arrive under that rule and it brought twelve more, which is why the
+ * figures above moved by twelve on both sides at once.
+ *
+ * `systems-of-linear-equations` is the second and brought another twelve, four
+ * subgoals to each of three points. That is the rule doing the job it was
+ * written for rather than being tested by it: the concept was authored knowing
+ * this assertion existed, so the questions were written with the material
+ * instead of being a later pass over it. Twelve subgoals is also where the
+ * cost of the rule shows — an interrogative phrasing for every step is roughly
+ * half the writing in a concept, and the subject-wide form is what stops that
+ * cost being quietly skipped on the third concept because the first two
+ * already carry the fraction.
  */
 const VE_QUESTIONS = allQuestions(VE)
-t('ten questions, one per subgoal', VE_QUESTIONS.length === 10, `${VE_QUESTIONS.length}`)
+t('thirty-four questions, one per subgoal', VE_QUESTIONS.length === 34, `${VE_QUESTIONS.length}`)
 t('every subgoal carries an authored socratic phrasing',
   allKnowledgePoints(VE).every(p => p.workedExample.subgoals.every(s => !!s.socratic)),
   allKnowledgePoints(VE).flatMap(p => p.workedExample.subgoals)
     .filter(s => !s.socratic).map(s => s.label).join(' | '))
-t('and every one of them is interrogative, so all ten count as written',
+t('and every one of them is interrogative, so all twenty-two count as written',
   VE_QUESTIONS.every(q => q.authoredAsQuestion)
   && questionCoverage(VE).authoredAsQuestions === questionCoverage(VE).questions)
 /*
@@ -3085,6 +3180,418 @@ t('the two-readings point carries both halves of the pair',
   tasksForPoint('a-letter-has-two-readings').map(x => x.id).sort().join(',')
   === 'identity-difference-1,unknown-check-1',
   tasksForPoint('a-letter-has-two-readings').map(x => x.id).join(','))
+
+/**
+ * THE SOLVE TASKS, CHECKED AGAINST THE EQUATIONS THEY CLAIM TO SOLVE.
+ *
+ * This group exists because the assertion above it cannot do this job, and the
+ * difference is the whole risk in expressing a solve as an `evaluate`.
+ *
+ * "Every reference is exactly reproducible from the given" checks that the
+ * task is self-consistent — that the author's answer really is what `given`
+ * evaluates to at `at`. It would pass with every equation in every prompt
+ * wrong, because `given` carries the SOLUTION FORMULA and nothing in the task
+ * data carries the equation. A learner reads the equation; the engine rules
+ * against the formula. If those two disagree, a correct answer is marked wrong
+ * and nothing in the build says so.
+ *
+ * So the equations are restated here as left and right sides, independently of
+ * the task data, and the reference is substituted into them. This catches a
+ * sign error in a `given` — `(c + b)/a` against `(c - b)/a` is the difference
+ * between the two one-sided tasks and the easiest thing in the subject to get
+ * backwards.
+ */
+group('the solve tasks really solve the equations their prompts state')
+
+/** The exact value of an expression under an assignment, or null. */
+const valueAt = (src, assignment) => {
+  const names = Object.keys(assignment)
+  const at = {}
+  for (const [name, raw] of Object.entries(assignment)) at[name] = parseExpression(raw, [])
+  return exactValue(substitute(parseExpression(src, names), at))
+}
+
+const SOLVES = [
+  { id: 'solve-linear-one-sided-1', lhs: '3*x - 7', rhs: '11' },
+  { id: 'solve-linear-non-integer-1', lhs: '4*x + 5', rhs: '12' },
+  { id: 'collect-unknown-both-sides-1', lhs: '5*x + 4', rhs: '2*x + 19' },
+  { id: 'collect-from-the-other-side-1', lhs: '5*x + 4', rhs: '2*x + 19' },
+]
+t('each reference, put back into its own equation, makes the two sides equal',
+  SOLVES.every(({ id, lhs, rhs }) => {
+    const x = taskById(id).reference
+    const left = valueAt(lhs, { x })
+    const right = valueAt(rhs, { x })
+    return left !== null && right !== null && showExact(left) === showExact(right)
+  }),
+  SOLVES.map(({ id, lhs, rhs }) => {
+    const x = taskById(id).reference
+    return `${id}@${x}: ${showExact(valueAt(lhs, { x }))} vs ${showExact(valueAt(rhs, { x }))}`
+  }).join(' | '))
+/*
+ * The two one-sided tasks differ in the sign of b and nothing else, which is
+ * the one thing a reader of either task alone cannot see. `3x − 7 = 11` undoes
+ * a subtraction so its solution ADDS; `4x + 5 = 12` undoes an addition. A
+ * learner who has memorised one shape rather than the move gets exactly one of
+ * them right, and that is the only signal this build can take on the
+ * difference — so the pair has to stay a pair.
+ */
+t('the one-sided pair really does undo in opposite directions',
+  taskById('solve-linear-one-sided-1').given === '(c + b)/a'
+  && taskById('solve-linear-non-integer-1').given === '(c - b)/a',
+  `${taskById('solve-linear-one-sided-1').given} | `
+  + `${taskById('solve-linear-non-integer-1').given}`)
+t('and one answer is deliberately not an integer, so the division cannot be guessed past',
+  taskById('solve-linear-non-integer-1').reference === '7/4',
+  taskById('solve-linear-non-integer-1').reference)
+/*
+ * The knowledge point's fourth subgoal, as a ruling rather than as prose: the
+ * answer does not depend on which side the unknown is cleared from. Two
+ * different `given`s at the SAME inputs reaching the same number is what makes
+ * that checkable at all, and it is why the second task exists.
+ */
+t('the two-sided pair clears opposite sides and still lands on one number',
+  taskById('collect-unknown-both-sides-1').given
+    !== taskById('collect-from-the-other-side-1').given
+  && JSON.stringify(taskById('collect-unknown-both-sides-1').at)
+    === JSON.stringify(taskById('collect-from-the-other-side-1').at)
+  && taskById('collect-unknown-both-sides-1').reference
+    === taskById('collect-from-the-other-side-1').reference,
+  `${taskById('collect-unknown-both-sides-1').given} and `
+  + `${taskById('collect-from-the-other-side-1').given} both give `
+  + `${taskById('collect-unknown-both-sides-1').reference}`)
+
+/**
+ * THE NON-INVERTIBLE STEP, COMPUTED RATHER THAN ASSERTED.
+ *
+ * This is the one place the subject says anything about a solution SET, and it
+ * can only say it about one number at a time — which is exactly the limit
+ * ontology-algebra.ts records. So the claim is checked where it is makeable:
+ * the two equations AGREE at 3 and DISAGREE at 1, which is the solution set
+ * having changed, evaluated rather than described.
+ *
+ * Both halves are needed. Agreement at 3 is what says the step did not simply
+ * break the equation; disagreement at 1 is the solution it created. Either one
+ * alone is consistent with a typo in the other task's `given`.
+ */
+t('multiplying through by x − 1 keeps the old solution and adds one the original rejects', (() => {
+  const original = '2*x - 6'
+  const multiplied = '(x - 1)*(2*x - 6)'
+  const keeps = showExact(valueAt(original, { x: '3' })) === '0'
+    && showExact(valueAt(multiplied, { x: '3' })) === '0'
+  const adds = showExact(valueAt(multiplied, { x: '1' })) === '0'
+    && showExact(valueAt(original, { x: '1' })) !== '0'
+  return keeps && adds
+})(),
+  `at 3: ${showExact(valueAt('2*x - 6', { x: '3' }))}/`
+  + `${showExact(valueAt('(x - 1)*(2*x - 6)', { x: '3' }))}; `
+  + `at 1: ${showExact(valueAt('2*x - 6', { x: '1' }))}/`
+  + `${showExact(valueAt('(x - 1)*(2*x - 6)', { x: '1' }))}`)
+t('and the two tasks that show it ask about the same number, one per side',
+  taskById('gained-solution-satisfies-the-new-equation-1').at.x
+    === taskById('gained-solution-fails-the-original-1').at.x
+  && taskById('gained-solution-satisfies-the-new-equation-1').reference === '0'
+  && taskById('gained-solution-fails-the-original-1').reference !== '0',
+  `x=${taskById('gained-solution-satisfies-the-new-equation-1').at.x}: `
+  + `${taskById('gained-solution-satisfies-the-new-equation-1').reference} and `
+  + `${taskById('gained-solution-fails-the-original-1').reference}`)
+
+/**
+ * THE SYSTEM TASKS, CHECKED AGAINST THE SYSTEMS THEIR PROMPTS STATE.
+ *
+ * Same job as the group above and a sharper need for it. Those tasks' `given`s
+ * are solution formulas in three or four coefficients; these are Cramer's
+ * expressions in six, and `(c*e - b*f)/(a*e - b*d)` differs from the y version
+ * `(a*f - c*d)/(a*e - b*d)` in which numerator, in which order, and in two
+ * signs. Nothing in the task data carries the SYSTEM — the learner reads two
+ * equations and the engine rules against an expression in letters — so a
+ * transposed numerator would mark a correct answer wrong and the
+ * self-consistency check would pass, because the formula really does evaluate
+ * to what the author claimed it does.
+ *
+ * So each system is restated here as pairs of sides, independently of the task
+ * data, and the pair is substituted into BOTH equations. One equation is not
+ * enough: the x the formula produces satisfies one of the two equations for
+ * almost any sign error, since each equation alone admits a whole line.
+ */
+group('the system tasks really solve the systems their prompts state')
+
+const SYSTEMS = [
+  {
+    label: '2x + 3y = 12 with 5x − y = 13',
+    eqs: [['2*x + 3*y', '12'], ['5*x - y', '13']],
+    // Both coordinates come from tasks here, which is the only system where
+    // that is true — it is the one the point about a pair is made on.
+    x: () => taskById('solve-system-eliminate-for-x-1').reference,
+    y: () => taskById('solve-system-eliminate-for-y-1').reference,
+  },
+  {
+    label: 'y = 2x − 1 with 3x + 2y = 12, by substitution',
+    eqs: [['y', '2*x - 1'], ['3*x + 2*y', '12']],
+    x: () => taskById('solve-system-by-substitution-1').reference,
+    y: () => '3',
+  },
+  {
+    label: 'the same system as 2x − y = 1 with 3x + 2y = 12, by elimination',
+    eqs: [['2*x - y', '1'], ['3*x + 2*y', '12']],
+    x: () => taskById('solve-system-same-point-by-elimination-1').reference,
+    y: () => '3',
+  },
+]
+t('each reference, put back into both of its own equations, makes every side agree',
+  SYSTEMS.every(({ eqs, x, y }) => {
+    const at = { x: x(), y: y() }
+    return eqs.every(([lhs, rhs]) => {
+      const left = valueAt(lhs, at)
+      const right = valueAt(rhs, at)
+      return left !== null && right !== null && showExact(left) === showExact(right)
+    })
+  }),
+  SYSTEMS.map(({ label, eqs, x, y }) => {
+    const at = { x: x(), y: y() }
+    return `${label} @(${at.x}, ${at.y}): ` + eqs
+      .map(([l, r]) => `${showExact(valueAt(l, at))}=${showExact(valueAt(r, at))}`).join(' ')
+  }).join(' | '))
+/*
+ * The pair that is a PAIR, which is the whole answer to the refusal this
+ * concept overturned. A point is not a value and is two values, so it costs
+ * two tasks — and the two have to be the same system, or they are two
+ * unrelated numbers. Asserted as identical inputs with different `given`s,
+ * which is the only way "two coordinates of one point" is visible in the data.
+ */
+t('the two coordinates of the point come from one system, differing only in which is asked for',
+  JSON.stringify(taskById('solve-system-eliminate-for-x-1').at)
+    === JSON.stringify(taskById('solve-system-eliminate-for-y-1').at)
+  && taskById('solve-system-eliminate-for-x-1').given
+    !== taskById('solve-system-eliminate-for-y-1').given
+  && taskById('solve-system-eliminate-for-x-1').reference
+    !== taskById('solve-system-eliminate-for-y-1').reference,
+  `${taskById('solve-system-eliminate-for-x-1').given} -> `
+  + `${taskById('solve-system-eliminate-for-x-1').reference}, `
+  + `${taskById('solve-system-eliminate-for-y-1').given} -> `
+  + `${taskById('solve-system-eliminate-for-y-1').reference}`)
+/*
+ * And the two routes at one system, which is the second knowledge point's
+ * fourth subgoal as a ruling. Unlike the `collect-*` pair one concept down,
+ * BOTH the expression and the inputs differ here — the two methods do not
+ * agree on how many coefficients the system has, substitution taking five and
+ * elimination six — so the only thing that can be asserted is that the number
+ * out is the same. That is also the only thing worth asserting.
+ */
+t('substitution and elimination reach the same x from different expressions and different inputs',
+  taskById('solve-system-by-substitution-1').given
+    !== taskById('solve-system-same-point-by-elimination-1').given
+  && JSON.stringify(taskById('solve-system-by-substitution-1').at)
+    !== JSON.stringify(taskById('solve-system-same-point-by-elimination-1').at)
+  && taskById('solve-system-by-substitution-1').reference
+    === taskById('solve-system-same-point-by-elimination-1').reference,
+  `${taskById('solve-system-by-substitution-1').reference} and `
+  + `${taskById('solve-system-same-point-by-elimination-1').reference}`)
+
+/**
+ * THE TWO DEGENERATE OUTCOMES, COMPUTED RATHER THAN DESCRIBED.
+ *
+ * This is the place the solution-set limit genuinely binds, so it is the place
+ * the assertion has to be most careful about what it is claiming. No task asks
+ * how many solutions a system has. What the two leftover tasks ask for is the
+ * number the elimination hands back when both letters cancel, and the claim
+ * being checked here is that those two numbers really are produced by the two
+ * systems in the prompts — which the self-consistency check cannot see, since
+ * `a*b - c` evaluates to the author's answer whatever the prompts say.
+ *
+ * Three things are checked and they fail differently:
+ *
+ *  - Doubling 2x + 3y = 7 produces a left side IDENTICAL to 4x + 6y, which is
+ *    why both letters cancel together rather than one of them. Checked at two
+ *    unrelated pairs, because two expressions agreeing at one point is not
+ *    identity.
+ *  - The inconsistent system admits nothing, exhibited constructively: any
+ *    pair on 2x + 3y = 7 sends 4x + 6y to 14, so it cannot be 11. Two such
+ *    pairs are used, one of them not a lattice point.
+ *  - The dependent system admits both exhibited pairs — the task's (1/2, 2)
+ *    and the worked example's (−1, 3) — which is what makes "infinitely many"
+ *    evidenced rather than asserted. A leftover of 0 alone would only say the
+ *    second equation added no condition.
+ */
+group('the degenerate systems really are degenerate, and in the two different ways')
+
+const DOUBLED = '2*(2*x + 3*y)'
+const SECOND_LEFT = '4*x + 6*y'
+t('doubling the first equation gives the second system\'s left side exactly, so both letters go at once',
+  [{ x: '1', y: '4' }, { x: '-3', y: '1/2' }].every(at =>
+    showExact(valueAt(DOUBLED, at)) === showExact(valueAt(SECOND_LEFT, at))),
+  [{ x: '1', y: '4' }, { x: '-3', y: '1/2' }]
+    .map(at => `${showExact(valueAt(DOUBLED, at))} vs ${showExact(valueAt(SECOND_LEFT, at))}`)
+    .join(' | '))
+t('the leftover pair shares its expression and its first two inputs, differing in the third',
+  taskById('inconsistent-system-leftover-1').given
+    === taskById('dependent-system-leftover-1').given
+  && taskById('inconsistent-system-leftover-1').at.a
+    === taskById('dependent-system-leftover-1').at.a
+  && taskById('inconsistent-system-leftover-1').at.b
+    === taskById('dependent-system-leftover-1').at.b
+  && taskById('inconsistent-system-leftover-1').at.c
+    !== taskById('dependent-system-leftover-1').at.c,
+  `${taskById('inconsistent-system-leftover-1').given} at c=`
+  + `${taskById('inconsistent-system-leftover-1').at.c} and c=`
+  + `${taskById('dependent-system-leftover-1').at.c}`)
+t('and the two answers are the two outcomes: non-zero for no solutions, zero for a repeated equation',
+  taskById('inconsistent-system-leftover-1').reference !== '0'
+  && taskById('dependent-system-leftover-1').reference === '0',
+  `${taskById('inconsistent-system-leftover-1').reference} and `
+  + `${taskById('dependent-system-leftover-1').reference}`)
+/*
+ * The inconsistency, constructively. Not "no pair satisfies both" — that is
+ * not checkable by substitution — but the reason there is none: every pair
+ * satisfying the first equation sends the second's left side to 14, and the
+ * second equation says 11.
+ */
+t('every pair on the first equation sends the second left side to 14, which the 11 cannot be',
+  [{ x: '2', y: '1' }, { x: '1/2', y: '2' }].every(at =>
+    showExact(valueAt('2*x + 3*y', at)) === '7'
+    && showExact(valueAt(SECOND_LEFT, at)) === '14'),
+  [{ x: '2', y: '1' }, { x: '1/2', y: '2' }]
+    .map(at => `(${at.x}, ${at.y}): ${showExact(valueAt('2*x + 3*y', at))} then `
+      + `${showExact(valueAt(SECOND_LEFT, at))}`).join(' | '))
+/*
+ * And the dependent case, exhibited at the two pairs the material names — the
+ * task's and the worked example's. Two different solutions is the smallest
+ * thing that distinguishes "infinitely many" from "one", and the task's y
+ * differs from the worked example's on purpose, so this also catches the two
+ * being quietly made the same.
+ */
+t('the dependent system admits both exhibited pairs, which the task and the example chose apart',
+  (() => {
+    const y = taskById('dependent-system-pick-a-y-1').at.d
+    const x = taskById('dependent-system-pick-a-y-1').reference
+    const exhibited = [{ x, y }, { x: '-1', y: '3' }]
+    return y !== '3'
+      && exhibited.every(at => showExact(valueAt('2*x + 3*y', at)) === '7'
+        && showExact(valueAt(SECOND_LEFT, at)) === '14')
+  })(),
+  `task (${taskById('dependent-system-pick-a-y-1').reference}, `
+  + `${taskById('dependent-system-pick-a-y-1').at.d}) and example (-1, 3)`)
+t('and the task\'s x is deliberately not an integer, so the line is not read as its lattice points',
+  taskById('dependent-system-pick-a-y-1').reference === '1/2',
+  taskById('dependent-system-pick-a-y-1').reference)
+/*
+ * The number the third knowledge point's last subgoal is about, which is the
+ * one claim tying the concept's three points into one concept: ae − bd is what
+ * the first point's answer is divided by, and it is zero exactly in the
+ * degenerate cases. Asserted on both systems, because the claim is a
+ * difference between them and either alone is consistent with the expression
+ * being wrong.
+ */
+t('the deciding number is zero for the degenerate pair and not for the system with a point',
+  showExact(valueAt('a*e - b*d', { a: '2', b: '3', d: '4', e: '6' })) === '0'
+  && showExact(valueAt('a*e - b*d', { a: '2', b: '3', d: '5', e: '-1' })) === '-17'
+  && taskById('solve-system-eliminate-for-x-1').given.endsWith('/(a*e - b*d)'),
+  `${showExact(valueAt('a*e - b*d', { a: '2', b: '3', d: '4', e: '6' }))} and `
+  + `${showExact(valueAt('a*e - b*d', { a: '2', b: '3', d: '5', e: '-1' }))}`)
+
+/**
+ * TWO AUTHORING HABITS THE NEW CONCEPT CHANGED, BOTH ASSERTED SO THE CHANGE IS
+ * NOT QUIETLY UNDONE.
+ *
+ * `taskKinds` naming only what ships. `variables-and-expressions` names
+ * `justify` on two objectives and no `justify` task exists anywhere in the
+ * build — defensible on the letter of types.ts, since a justify task WOULD
+ * evidence them, and still a claim with nothing behind it. The three
+ * objectives on `linear-equations` name only `evaluate`, and each was phrased
+ * so `evaluate` genuinely evidences it: the third asks for the VALUE at the
+ * number a bad step created, not for an account of why the step was bad. The
+ * account is asked for in `socratic`, where an unrulable question belongs.
+ *
+ * Asserted as a property of this concept rather than of the subject, because
+ * the older concept legitimately fails it and renaming its kinds would be a
+ * separate change with its own argument to make.
+ */
+const SOLVE_CONCEPT = VE.concepts.find(c => c.id === 'linear-equations')
+const SHIPPED_KINDS = new Set(VE_TASKS.map(x => x.kind))
+t('every objective on the solve names only a kind the subject actually ships',
+  SOLVE_CONCEPT.objectives.length > 0
+  && SOLVE_CONCEPT.objectives.every(o => o.taskKinds.length > 0
+    && o.taskKinds.every(k => SHIPPED_KINDS.has(k))),
+  SOLVE_CONCEPT.objectives
+    .map(o => `${o.id}:${o.taskKinds.join('+')}`).join(' ')
+  + ` | shipped: ${[...SHIPPED_KINDS].join('+')}`)
+/*
+ * And `automaticityTarget` set on the procedures and absent on the point that
+ * is not one. Reaching for the right inverse in the right order has to become
+ * fluent; deciding which of two steps is invertible does not, and a timing
+ * target on it measures typing — which is the case types.ts makes for the
+ * field usually being absent.
+ *
+ * Asserted by name on all three rather than as a count, because "two of the
+ * three are timed" would pass with the timing on the wrong two.
+ */
+t('the two procedural points are timed and the one about why a step is illegal is not',
+  SOLVE_CONCEPT.knowledgePoints
+    .map(p => `${p.id}:${p.automaticityTarget === undefined ? 'untimed' : 'timed'}`).join(' ')
+  === 'undo-the-operations-in-reverse-order:timed '
+    + 'the-unknown-on-both-sides-is-collected-first:timed '
+    + 'a-non-invertible-step-changes-the-solutions:untimed',
+  SOLVE_CONCEPT.knowledgePoints
+    .map(p => `${p.id}:${p.automaticityTarget ?? 'none'}`).join(' '))
+t('and its positions restart at 1, which they do per concept rather than per subject',
+  SOLVE_CONCEPT.knowledgePoints.map(p => p.position).join(',') === '1,2,3',
+  SOLVE_CONCEPT.knowledgePoints.map(p => p.position).join(','))
+
+/**
+ * THE SAME THREE HABITS ON THE THIRD CONCEPT, AND THE FIRST ONE IS WHERE THE
+ * RULE DID WORK RATHER THAN BEING EASY TO OBEY.
+ *
+ * The natural third objective for a systems concept is "say whether a system
+ * has no solutions, one, or infinitely many", and that objective would name no
+ * kind that could evidence it — a classification is not a value, not a form,
+ * and no verifiable kind returns one. So it asks for the number the
+ * elimination leaves and says in its own statement what the two possible
+ * values mean. The classification is the thing to understand; the leftover is
+ * the thing to produce.
+ *
+ * That is `variables-and-expressions`' `justify` problem avoided rather than
+ * repeated, and worth asserting separately from the concept above it, because
+ * the two concepts obey the rule for different reasons — one had an unrulable
+ * ACCOUNT to keep out of `taskKinds`, this one had an unrulable ANSWER.
+ */
+const SYSTEM_CONCEPT = VE.concepts.find(c => c.id === 'systems-of-linear-equations')
+t('every objective on the system names only a kind the subject actually ships',
+  SYSTEM_CONCEPT.objectives.length === 3
+  && SYSTEM_CONCEPT.objectives.every(o => o.taskKinds.length > 0
+    && o.taskKinds.every(k => SHIPPED_KINDS.has(k))),
+  SYSTEM_CONCEPT.objectives.map(o => `${o.id}:${o.taskKinds.join('+')}`).join(' ')
+  + ` | shipped: ${[...SHIPPED_KINDS].join('+')}`)
+/*
+ * And the timing, by name on all three for the reason the concept above gives:
+ * "two of the three are timed" would pass with the timing on the wrong two.
+ * The two procedures are elimination and substitution; the point about what a
+ * leftover sentence means is a judgement, and a timing target on it measures
+ * typing.
+ *
+ * The figure is 25 seconds rather than the 20 the concept above carries, and
+ * that is a claim worth checking rather than a style choice: a system is two
+ * equations' worth of arithmetic before the first inverse can be applied.
+ */
+t('the two procedural points are timed at the subject\'s longest and the judgement is untimed',
+  SYSTEM_CONCEPT.knowledgePoints
+    .map(p => `${p.id}:${p.automaticityTarget ?? 'untimed'}`).join(' ')
+  === 'eliminate-a-letter-by-combining-the-equations:25000 '
+    + 'substitution-reduces-the-system-to-one-equation:25000 '
+    + 'when-both-letters-cancel-the-leftover-decides:untimed',
+  SYSTEM_CONCEPT.knowledgePoints
+    .map(p => `${p.id}:${p.automaticityTarget ?? 'none'}`).join(' '))
+t('and that is longer than every timed point in the two concepts below it',
+  Math.min(...SYSTEM_CONCEPT.knowledgePoints
+    .map(p => p.automaticityTarget).filter(v => v !== undefined))
+  > Math.max(...VE.concepts.filter(c => c.id !== 'systems-of-linear-equations')
+    .flatMap(c => c.knowledgePoints)
+    .map(p => p.automaticityTarget).filter(v => v !== undefined)),
+  VE.concepts.map(c => `${c.id}:${c.knowledgePoints
+    .map(p => p.automaticityTarget ?? '-').join('/')}`).join(' '))
+t('and its positions restart at 1 too, which is only observable once a subject has three concepts',
+  SYSTEM_CONCEPT.knowledgePoints.map(p => p.position).join(',') === '1,2,3'
+  && VE.concepts.every(c => c.knowledgePoints.map(p => p.position).join(',') === '1,2,3'),
+  VE.concepts.map(c => `${c.id}:${c.knowledgePoints.map(p => p.position).join('')}`).join(' '))
 
 // ---------------------------------------------------------------------------
 // The eighth subject: the angle facts, the triangle, congruence, similarity
@@ -4055,6 +4562,802 @@ t('only the point about fluency is timed, and no later concept added a second',
  */
 t('no knowledge point claims a figure, because there are none to claim',
   allKnowledgePoints(PG).every(p => p.visualRef === undefined))
+
+// ---------------------------------------------------------------------------
+// The ninth subject: the side ratios of a right triangle
+// ---------------------------------------------------------------------------
+
+/**
+ * These assert the CLAIMS IN ontology-trigonometry.ts's HEADER, for the reason
+ * the three blocks above do it: each is the kind of statement that otherwise
+ * rots into a comment that used to be true.
+ *
+ * `right-triangle-trig` was promoted out of the `trigonometry` map area because
+ * it was the only remaining promotion on either unfinished journey that
+ * unblocks anything — it is the sole blocker of `dot-product-geometry`, which
+ * with `solid-geometry` is the sole blocker of `three-dimensional-coordinates`.
+ * The journey half of that is checked in tests/journeys.mjs, which is the
+ * harness that resolves routes, and the structural half in tests/atlas.mjs.
+ * What is checkable here is that the material is real, that the subject rules
+ * with no worker, and that the two constraints the file says shaped it — no
+ * task asks for an angle, and no figure states whole-number sides alongside
+ * whole-number angles — are what it says.
+ */
+const TT = getOntology('triangle-trigonometry')
+
+group('triangle-trigonometry, the ratios of a right triangle')
+t('it is registered, and FOURTH — directly behind the geometry it rests on',
+  ONTOLOGIES[3] === TT && TT?.subject.id === 'triangle-trigonometry')
+t('and it displaced none of the three positions anything reads by index',
+  ONTOLOGIES[0] === ARITHMETIC_FOUNDATIONS
+  && ONTOLOGIES[1] === EXPRESSIONS_AND_EQUATIONS
+  && ONTOLOGIES[2] === getOntology('plane-geometry'))
+t('it has no internal faults', ontologyProblems(TT).length === 0, ontologyProblems(TT).join('; '))
+t('its fidelity claim matches what its option can do', fidelityMismatches(TT).length === 0)
+t('one concept, three knowledge points',
+  TT.concepts.length === 1 && allKnowledgePoints(TT).length === 3,
+  `${TT.concepts.length} concepts, ${allKnowledgePoints(TT).length} points`)
+t('the concept is teachable AND practisable — a syllabus, not a map entry',
+  isTeachable(TT, 'right-triangle-trig') && isPractisable(TT, 'right-triangle-trig'))
+t('its points number from 1, which is per concept and not per subject',
+  TT.concepts.every(c => c.knowledgePoints.map(p => p.position).join(',') === '1,2,3'),
+  TT.concepts.map(c => `${c.id}:${c.knowledgePoints.map(p => p.position).join('')}`).join(' '))
+t('every knowledge point has a task, so no chain is left unable to become evidence',
+  allKnowledgePoints(TT).every(p => tasksForPoint(p.id).length > 0),
+  allKnowledgePoints(TT).filter(p => tasksForPoint(p.id).length === 0).map(p => p.id).join(', '))
+/*
+ * Every objective names a kind, AND every kind it names ships a task in this
+ * subject — which is the stronger half and the one types.ts is arguing for
+ * when it says an objective naming no kind can never be satisfied. Naming a
+ * kind that ships nothing here has the same effect one level down: the
+ * objective looks evidenced and no observation can reach it.
+ */
+const TT_KINDS = new Set(allKnowledgePoints(TT).flatMap(p => tasksForPoint(p.id)).map(x => x.kind))
+t('every objective names a task kind, and every kind it names really ships a task here',
+  TT.concepts.every(c => c.objectives.length > 0
+    && c.objectives.every(o => o.taskKinds.length > 0 && o.taskKinds.every(k => TT_KINDS.has(k)))),
+  TT.concepts.flatMap(c => c.objectives.map(o => `${o.id}:${o.taskKinds.join('+')}`)).join(' ')
+  + ` against ${[...TT_KINDS].join('+')}`)
+/*
+ * THE EMPTY EDGE LIST IS A BOUNDARY, NOT AN OMISSION — the same claim
+ * `expressions-and-equations` makes, reached by the other of the two routes
+ * into `links`.
+ *
+ * There the single concept's prerequisites were unwritten map nodes. Here both
+ * of them, `similarity` and `pythagoras`, are fully AUTHORED concepts — they
+ * simply belong to `plane-geometry`, and an ontology's edges may only name
+ * concepts it CONTAINS. So being authored in another subject fails the
+ * containment test exactly as being unwritten does, and an edge added here
+ * naming `pythagoras` would look right and would make `ontologyProblems`
+ * report an unknown endpoint.
+ */
+t('it declares no edges, and the single concept is therefore its own root',
+  TT.edges.length === 0 && roots(TT).length === 1 && roots(TT)[0] === 'right-triangle-trig')
+t('and its two real prerequisites are authored concepts of another subject, hence links',
+  ['similarity', 'pythagoras'].every(id =>
+    isTeachable(PG, id) && !TT.concepts.some(c => c.id === id)),
+  ['similarity', 'pythagoras'].map(id => `${id}:${isTeachable(PG, id)}`).join(' '))
+t('no knowledge point claims a figure, because there are none to claim',
+  allKnowledgePoints(TT).every(p => p.visualRef === undefined))
+
+group('the ninth subject is gradable with no worker')
+const TT_TASKS = allKnowledgePoints(TT).flatMap(p => tasksForPoint(p.id))
+t('six tasks, two on each of the three points', TT_TASKS.length === 6
+  && allKnowledgePoints(TT).every(p => tasksForPoint(p.id).length === 2),
+  `${TT_TASKS.length}`)
+const TT_EVAL = TT_TASKS.filter(x => x.kind === 'evaluate')
+const TT_FORM = TT_TASKS.filter(x => x.kind === 'transform_to_form')
+t('five evaluate and one transform_to_form, the surd an equilateral triangle produced',
+  TT_EVAL.length === 5 && TT_FORM.length === 1
+  && TT_EVAL.every(x => x.form === undefined)
+  && TT_FORM[0].id === 'the-derived-quotient-at-thirty-degrees-1'
+  && TT_FORM[0].form === 'surd_reduced',
+  TT_TASKS.map(x => `${x.id}:${x.kind}:${x.form}`).join(', '))
+t('every evaluate reference is exactly reproducible from the given — no worker consulted',
+  TT_EVAL.every(x => {
+    const at = {}
+    for (const [name, raw] of Object.entries(x.at)) at[name] = parseExpression(raw, [])
+    const truth = exactValue(substitute(parseExpression(x.given, x.variables.map(v => v.name)), at))
+    const claimed = exactValue(parseExpression(x.reference, x.variables.map(v => v.name)))
+    return truth !== null && claimed !== null && showExact(truth) === showExact(claimed)
+  }),
+  TT_EVAL.map(x => x.id).join(', '))
+const ttRulings = await Promise.all(TT_EVAL.map(x => ruleEvaluate(x, x.reference, NO_WORKER)))
+t('a correct answer is ruled correct with no worker configured',
+  ttRulings.every(r => r.verdict.ruling === 'correct'),
+  ttRulings.map((r, i) => `${TT_EVAL[i].id}:${r.verdict?.ruling ?? r.status}`).join(', '))
+/*
+ * The surd separately, and both directions, for the reason the eighth
+ * subject's block gives: accepting 5√3 is the easy half, and REFUSING √75 is
+ * the half that matters, since a checker comparing only values would mark the
+ * given correct against itself.
+ *
+ * A third radicand distinct from both of `plane-geometry`'s — 180 gave 6√5 and
+ * 192 gave 8√3 — so this is not a recall of either, and the square that comes
+ * out is 25 rather than 36 or 64.
+ */
+const ttSurd = await ruleTransform(TT_FORM[0], '5*sqrt(3)', NO_WORKER)
+t('the surd task rules correct with no worker, by exact comparison rather than a CAS',
+  ttSurd.verdict.ruling === 'correct' && /no worker was needed/.test(ttSurd.verdict.method),
+  ttSurd.verdict.method)
+const ttSurdUnreduced = await ruleTransform(TT_FORM[0], 'sqrt(75)', NO_WORKER)
+t('and refuses the given back unreduced, naming the square that can still come out',
+  ttSurdUnreduced.verdict.ruling === 'incorrect'
+  && /25/.test(ttSurdUnreduced.verdict.brokeAt?.detail ?? ''),
+  ttSurdUnreduced.verdict.brokeAt?.detail ?? '')
+/*
+ * THE TWO CONSTRAINTS THE HEADER SAYS SHAPED THE SUBJECT, ASSERTED.
+ *
+ * No task asks for an angle. The inverse direction is `inverse-trig`, four
+ * nodes up behind the unit circle, and the only answer available here is a
+ * rounded figure off a table — a measurement of the angle rather than the
+ * angle, the same refusal `circle-measure` makes when it asks for the multiple
+ * of π instead of 43.98. A task sneaking in an angle would need `exactValue`
+ * to settle an arcsine, which it cannot, so the no-worker contract above would
+ * break too — but it would break as a RULING failure and would not say why,
+ * which is what this names.
+ *
+ * And exactly one task states a degree measure, which is the sides-and-angles
+ * constraint holding. A right triangle cannot have three whole-number sides
+ * AND whole-number acute angles; the figure does not exist and nothing in this
+ * build would catch it. So the five tasks that describe a triangle by whole
+ * sides state no angle, and the one that names 30° and 60° is the one whose
+ * answer is irrational — which is why the test reads the KIND rather than the
+ * id: an `evaluate` task naming a degree would be the fault, because its
+ * answer would have to be rational.
+ */
+t('no task asks for an angle, which is the subject\'s boundary and not the grader\'s',
+  TT_TASKS.every(x => !/\b(what angle|which angle|find the angle|arcsin|arccos|arctan)\b/i
+    .test(x.prompt)),
+  TT_TASKS.filter(x => /angle\?/.test(x.prompt)).map(x => x.id).join(', '))
+t('and exactly one task names a degree measure, the one whose answer is irrational',
+  TT_TASKS.filter(x => /°/.test(x.prompt)).length === 1
+  && TT_TASKS.filter(x => /°/.test(x.prompt))[0].kind === 'transform_to_form',
+  TT_TASKS.filter(x => /°/.test(x.prompt)).map(x => `${x.id}:${x.kind}`).join(', '))
+
+// ---------------------------------------------------------------------------
+// The tenth subject: the measure of a solid
+// ---------------------------------------------------------------------------
+
+/**
+ * These assert the CLAIMS IN ontology-solids.ts's HEADER, for the reason the
+ * four blocks above do it: each is the kind of statement that otherwise rots
+ * into a comment that used to be true.
+ *
+ * `solid-geometry` was promoted out of the `euclidean-geometry` map area
+ * because it was the only remaining promotion on either unfinished journey
+ * that unblocks anything — it was the last half of `three-dimensional-
+ * coordinates`'s gate. The journey half of that is checked in
+ * tests/journeys.mjs and the structural half in tests/atlas.mjs, including the
+ * subject-id collision the naming of this one had to avoid. What is checkable
+ * here is that the material is real, that the subject rules with no worker, and
+ * that the two things its header says shaped it hold: every objective names
+ * only kinds that really ship, and no task or example states an angle.
+ */
+const SM = getOntology('solid-measure')
+
+group('solid-measure, the measure of a solid')
+t('it is registered, and FIFTH — behind the plane geometry it rests on',
+  ONTOLOGIES[4] === SM && SM?.subject.id === 'solid-measure')
+t('and it displaced none of the four positions anything reads by index',
+  ONTOLOGIES[0] === ARITHMETIC_FOUNDATIONS
+  && ONTOLOGIES[1] === EXPRESSIONS_AND_EQUATIONS
+  && ONTOLOGIES[2] === getOntology('plane-geometry')
+  && ONTOLOGIES[3] === getOntology('triangle-trigonometry'))
+t('it has no internal faults', ontologyProblems(SM).length === 0, ontologyProblems(SM).join('; '))
+t('its fidelity claim matches what its option can do', fidelityMismatches(SM).length === 0)
+t('one concept, three knowledge points',
+  SM.concepts.length === 1 && allKnowledgePoints(SM).length === 3,
+  `${SM.concepts.length} concepts, ${allKnowledgePoints(SM).length} points`)
+t('the concept is teachable AND practisable — a syllabus, not a map entry',
+  isTeachable(SM, 'solid-geometry') && isPractisable(SM, 'solid-geometry'))
+t('its points number from 1, which is per concept and not per subject',
+  SM.concepts.every(c => c.knowledgePoints.map(p => p.position).join(',') === '1,2,3'),
+  SM.concepts.map(c => `${c.id}:${c.knowledgePoints.map(p => p.position).join('')}`).join(' '))
+t('every knowledge point has a task, so no chain is left unable to become evidence',
+  allKnowledgePoints(SM).every(p => tasksForPoint(p.id).length > 0),
+  allKnowledgePoints(SM).filter(p => tasksForPoint(p.id).length === 0).map(p => p.id).join(', '))
+/*
+ * EVERY OBJECTIVE NAMES ONLY KINDS THAT SHIP, AND THIS SUBJECT IS THE FIRST TO
+ * TREAT THAT AS A RULE RATHER THAN AN ACCIDENT.
+ *
+ * The ninth subject asserted it and passed; this one had to DECIDE it, which is
+ * the difference worth recording. Twenty-eight of `plane-geometry`'s objectives
+ * name `justify`, and no `justify` task exists anywhere in this build — so
+ * those objectives name an observation that cannot be made. That is types.ts's
+ * argument about an objective naming no kind, one level down: naming a kind
+ * nothing ships leaves the objective looking evidenced while nothing can reach
+ * it.
+ *
+ * The cube dissection is the best `justify` question in the new file and is
+ * deliberately NOT an objective. It is the third subgoal of the second point,
+ * where the tutor asks it and nothing pretends to rule it — which is the honest
+ * place for an unrulable question and is what the socratic field is for.
+ */
+const SM_KINDS = new Set(allKnowledgePoints(SM).flatMap(p => tasksForPoint(p.id)).map(x => x.kind))
+t('every objective names a task kind, and every kind it names really ships a task here',
+  SM.concepts.every(c => c.objectives.length > 0
+    && c.objectives.every(o => o.taskKinds.length > 0 && o.taskKinds.every(k => SM_KINDS.has(k)))),
+  SM.concepts.flatMap(c => c.objectives.map(o => `${o.id}:${o.taskKinds.join('+')}`)).join(' ')
+  + ` against ${[...SM_KINDS].join('+')}`)
+t('and no objective here names justify, which 28 of plane-geometry\'s do while no task of that kind exists',
+  SM.concepts.every(c => c.objectives.every(o => !o.taskKinds.includes('justify')))
+  && PG.concepts.some(c => c.objectives.some(o => o.taskKinds.includes('justify')))
+  && !TASKS.some(x => x.kind === 'justify'),
+  `${TASKS.filter(x => x.kind === 'justify').length} justify tasks in the build`)
+/*
+ * THE EMPTY EDGE LIST IS A BOUNDARY, NOT AN OMISSION — the third subject to
+ * make that claim, and the first to reach it with a single `needs`.
+ *
+ * `expressions-and-equations` got there because its concept's prerequisites were
+ * unwritten map nodes; `triangle-trigonometry` because both of its concept's
+ * prerequisites were authored in another subject. Here there is exactly ONE
+ * prerequisite and it is authored in another subject, so the whole of the
+ * node's stranded edges went to `EUCLIDEAN_GEOMETRY.links`. An edge added here
+ * naming `circle-measure` would look right and would make `ontologyProblems`
+ * report an unknown endpoint.
+ */
+t('it declares no edges, and the single concept is therefore its own root',
+  SM.edges.length === 0 && roots(SM).length === 1 && roots(SM)[0] === 'solid-geometry')
+t('and its one real prerequisite is an authored concept of another subject, hence a link',
+  isTeachable(PG, 'circle-measure') && !SM.concepts.some(c => c.id === 'circle-measure'),
+  `circle-measure:${isTeachable(PG, 'circle-measure')}`)
+t('no knowledge point claims a figure, because there are none to claim',
+  allKnowledgePoints(SM).every(p => p.visualRef === undefined))
+/*
+ * No `automaticityTarget` anywhere in the subject, which is a judgement rather
+ * than an omission and is asserted because the arithmetic here would time
+ * beautifully. Every one of the three points reduces to one or two
+ * multiplications, and every one of them is ABOUT a choice the multiplication
+ * does not record: which plane measure the question wants, whether the third
+ * applies, which exponent the measure carries. A speed reward would train the
+ * reflex each point exists to correct — which is the case types.ts names when
+ * it says the field should usually be absent.
+ */
+t('and no point claims a speed target, since each one is about a choice rather than an arithmetic',
+  allKnowledgePoints(SM).every(p => p.automaticityTarget === undefined),
+  allKnowledgePoints(SM).filter(p => p.automaticityTarget !== undefined).map(p => p.id).join(', '))
+
+group('the tenth subject is gradable with no worker')
+const SM_TASKS = allKnowledgePoints(SM).flatMap(p => tasksForPoint(p.id))
+t('seven tasks: two on the first point, three on the second, two on the third',
+  SM_TASKS.length === 7
+  && allKnowledgePoints(SM).map(p => tasksForPoint(p.id).length).join(',') === '2,3,2',
+  allKnowledgePoints(SM).map(p => `${p.position}:${tasksForPoint(p.id).length}`).join(' '))
+const SM_EVAL = SM_TASKS.filter(x => x.kind === 'evaluate')
+const SM_FORM = SM_TASKS.filter(x => x.kind === 'transform_to_form')
+t('six evaluate and one transform_to_form, the surd a cone\'s slant height produced',
+  SM_EVAL.length === 6 && SM_FORM.length === 1
+  && SM_EVAL.every(x => x.form === undefined)
+  && SM_FORM[0].id === 'the-slant-height-is-the-length-the-surface-needs-1'
+  && SM_FORM[0].form === 'surd_reduced',
+  SM_TASKS.map(x => `${x.id}:${x.kind}:${x.form}`).join(', '))
+/*
+ * The middle point gets three tasks and the other two get two, which is a
+ * departure from the two-per-point habit and is the content rather than an
+ * accident. That point makes two claims — the third applies to the volume, and
+ * it does NOT apply to the surface — and the second needs the slant height
+ * before it can be stated at all. So the three are the claim, and asserting the
+ * SHAPE rather than a total is what records that: a ratio over a total would be
+ * satisfied by seven tasks distributed any way at all.
+ */
+t('and the three on the middle point are the volume, the slant and the surface, in that order',
+  tasksForPoint('the-tapering-solid-takes-a-third-of-the-volume-and-none-of-the-surface')
+    .map(x => x.kind).join(' ') === 'evaluate transform_to_form evaluate',
+  tasksForPoint('the-tapering-solid-takes-a-third-of-the-volume-and-none-of-the-surface')
+    .map(x => x.id).join(' '))
+t('every evaluate reference is exactly reproducible from the given — no worker consulted',
+  SM_EVAL.every(x => {
+    const at = {}
+    for (const [name, raw] of Object.entries(x.at)) at[name] = parseExpression(raw, [])
+    const truth = exactValue(substitute(parseExpression(x.given, x.variables.map(v => v.name)), at))
+    const claimed = exactValue(parseExpression(x.reference, x.variables.map(v => v.name)))
+    return truth !== null && claimed !== null && showExact(truth) === showExact(claimed)
+  }),
+  SM_EVAL.map(x => x.id).join(', '))
+const smRulings = await Promise.all(SM_EVAL.map(x => ruleEvaluate(x, x.reference, NO_WORKER)))
+t('a correct answer is ruled correct with no worker configured',
+  smRulings.every(r => r.verdict.ruling === 'correct'),
+  smRulings.map((r, i) => `${SM_EVAL[i].id}:${r.verdict?.ruling ?? r.status}`).join(', '))
+/*
+ * The surd separately, and both directions, for the reason the eighth and ninth
+ * subjects give: accepting 2√13 is the easy half, and REFUSING √52 is the half
+ * that matters, since a checker comparing only values would mark the given
+ * correct against itself.
+ *
+ * A radicand distinct from all three already in the build — 180 gave 6√5, 192
+ * gave 8√3 and 75 gave 5√3 — so this is a recall of none of them, and the
+ * square that comes out is 4 rather than 25, 36 or 64.
+ */
+const smSurd = await ruleTransform(SM_FORM[0], '2*sqrt(13)', NO_WORKER)
+t('the surd task rules correct with no worker, by exact comparison rather than a CAS',
+  smSurd.verdict.ruling === 'correct' && /no worker was needed/.test(smSurd.verdict.method),
+  smSurd.verdict.method)
+const smSurdUnreduced = await ruleTransform(SM_FORM[0], 'sqrt(52)', NO_WORKER)
+t('and refuses the given back unreduced, naming the square that can still come out',
+  smSurdUnreduced.verdict.ruling === 'incorrect'
+  && /divisible by the square 4/.test(smSurdUnreduced.verdict.brokeAt?.detail ?? ''),
+  smSurdUnreduced.verdict.brokeAt?.detail ?? '')
+/*
+ * THE π WALL, ASSERTED AS THE SHAPE OF THE PROMPTS RATHER THAN AS AN ABSENCE.
+ *
+ * `exactValue` returns null on `pi`, deliberately, so a reference of `539*pi`
+ * cannot be ruled locally and would fall to the worker — which is what the
+ * no-worker assertion above would catch, but it would catch it as a RULING
+ * failure and would not say why. `circle-measure` settled the answer and this
+ * subject inherits it: the task that reaches a circular solid asks for the
+ * MULTIPLE of π and says so in the prompt, so the learner is never guessing
+ * whether the π is theirs to supply.
+ *
+ * Both halves are needed. The negative alone would be satisfied by a subject
+ * that simply never mentioned π, which would be a different and worse file —
+ * the sphere is one of the three solids the measure cannot avoid.
+ */
+t('no reference anywhere in the subject contains pi, which is what keeps every ruling local',
+  SM_TASKS.every(x => !/\bpi\b/i.test(x.reference)),
+  SM_TASKS.filter(x => /\bpi\b/i.test(x.reference)).map(x => x.id).join(', '))
+t('and the task that reaches a sphere asks for the multiple of π and says so to the learner',
+  /multiple of π/.test(taskById('the-sphere-s-volume-is-a-third-of-its-surface-times-the-radius-1').prompt)
+  && taskById('the-sphere-s-volume-is-a-third-of-its-surface-times-the-radius-1')
+    .reference === '288',
+  taskById('the-sphere-s-volume-is-a-third-of-its-surface-times-the-radius-1').reference)
+/*
+ * THE SIDES-AND-ANGLES CONSTRAINT, WHICH IS CHEAP HERE AND IS ASSERTED ANYWAY.
+ *
+ * A right triangle cannot have three whole-number sides AND whole-number acute
+ * angles; the figure does not exist and nothing in this build would catch it.
+ * The ninth subject had to work for this — one of its triangles is 5, 5√3, 10
+ * precisely so that an angle could be named — and this subject only had to not
+ * break it, because a solid's measure never needs an angle at all. So no prompt
+ * and no worked example here states a degree measure, and the three figures are
+ * described by their lengths: the 8-15-17 cross-section, the 9-12-15 slant and
+ * the 4-6 cone.
+ */
+t('no task states a degree measure, because a solid\'s measure never needs an angle',
+  SM_TASKS.every(x => !/°/.test(x.prompt)),
+  SM_TASKS.filter(x => /°/.test(x.prompt)).map(x => x.id).join(', '))
+t('and no worked example or statement does either',
+  allKnowledgePoints(SM).every(p =>
+    !/°/.test(p.statement)
+    && !/°/.test(p.workedExample.problem)
+    && !/°/.test(p.workedExample.answer)
+    && p.workedExample.subgoals.every(s => !/°/.test(s.detail) && !/°/.test(s.socratic ?? ''))),
+  allKnowledgePoints(SM).filter(p => /°/.test(JSON.stringify(p))).map(p => p.id).join(', '))
+/*
+ * EVERY SUBGOAL SHIPPED WITH ITS QUESTION WRITTEN, which is the single most
+ * valuable property of new material here and the one that silently fails when
+ * somebody writes labels and leaves the questions for later.
+ *
+ * Fourteen arrived and fourteen are authored, so the build's authored fraction
+ * moved in the right direction rather than being diluted. Asserted as "all of
+ * them" rather than against a global figure, because a global figure has to be
+ * edited by whoever adds the next concept and an assertion somebody has to edit
+ * is one somebody will edit wrongly.
+ */
+t('all fourteen of its subgoals ship the question written, not just the label',
+  allKnowledgePoints(SM).flatMap(p => p.workedExample.subgoals).length === 14
+  && allKnowledgePoints(SM).flatMap(p => p.workedExample.subgoals)
+    .every(s => typeof s.socratic === 'string' && s.socratic.length > 0),
+  allKnowledgePoints(SM).flatMap(p => p.workedExample.subgoals)
+    .filter(s => !s.socratic).map(s => s.label).join(' | '))
+/*
+ * And the rule types.ts states about the phrasing: a question must not contain
+ * its own answer. "Should you add the places separately?" is the failure mode
+ * it names — an imperative with a question mark. Checked mechanically as far as
+ * that can be done: every question ends in a question mark and none of them
+ * opens with the modal-imperative shape that turns an instruction into a
+ * rhetorical question.
+ */
+t('and none of them is an imperative wearing a question mark',
+  allKnowledgePoints(SM).flatMap(p => p.workedExample.subgoals).every(s =>
+    s.socratic.trim().endsWith('?')
+    && !/^(should|do|does|can|is|are|will) you\b/i.test(s.socratic.trim())),
+  allKnowledgePoints(SM).flatMap(p => p.workedExample.subgoals)
+    .filter(s => !s.socratic.trim().endsWith('?')
+      || /^(should|do|does|can|is|are|will) you\b/i.test(s.socratic.trim()))
+    .map(s => s.label).join(' | '))
+/*
+ * Every subgoal labelled with the MOVE it makes, which types.ts argues is the
+ * difference between a worked example and a solution. Checked as a property
+ * that cannot be satisfied by a numbered step — no label here is a bare
+ * "Step 1" or a restatement of the arithmetic — by requiring each to be a verb
+ * phrase of some length and all of them to be distinct within their example.
+ */
+t('every subgoal names a move rather than a step number, and no two in one example repeat',
+  allKnowledgePoints(SM).every(p =>
+    p.workedExample.subgoals.every(s => s.label.length > 20 && !/^step\b/i.test(s.label))
+    && new Set(p.workedExample.subgoals.map(s => s.label)).size
+      === p.workedExample.subgoals.length),
+  allKnowledgePoints(SM).flatMap(p => p.workedExample.subgoals)
+    .filter(s => s.label.length <= 20 || /^step\b/i.test(s.label)).map(s => s.label).join(' | '))
+
+// ---------------------------------------------------------------------------
+
+/**
+ * The dot product, promoted into an EXISTING subject — which is the first thing
+ * about it worth asserting.
+ *
+ * The three promotions before this one each created a subject, because every
+ * existing `covers` declared a boundary the concept fell outside. Here exactly
+ * one did — `vectors-and-independence` said "nothing about the dot product or
+ * angles, which need trigonometry this build cannot rule" — and the reason that
+ * sentence gave had expired: `right-triangle-trig` is authored now, and the
+ * identity never asked anybody to EVALUATE a cosine, only to produce one. So
+ * the right move was to rewrite the boundary rather than to file a vector
+ * operation in a tenth ontology to avoid contradicting a sentence.
+ *
+ * What that costs is checkable and is checked below: a fifth concept in a
+ * four-concept file has to leave `ontologyProblems` clean, keep the subject
+ * acyclic, and not disturb the registry index anything reads positionally.
+ *
+ * The group is placed here rather than beside the subject's own because the
+ * subject does not HAVE one — it was authored before this file started writing
+ * a group per subject, and backfilling one for four concepts is a different
+ * change from this promotion. What is asserted is the promotion.
+ */
+const VI = getOntology('vectors-and-independence')
+
+group('the dot product, promoted into the vectors subject')
+t('it is a concept of that subject and the subject is registered where it was',
+  VI?.subject.id === 'vectors-and-independence'
+  && VI.concepts.some(c => c.id === 'dot-product-geometry'),
+  VI?.concepts.map(c => c.id).join(', '))
+t('and it displaced none of the four positions anything reads by index',
+  ONTOLOGIES[0] === ARITHMETIC_FOUNDATIONS
+  && ONTOLOGIES[1] === EXPRESSIONS_AND_EQUATIONS
+  && ONTOLOGIES[2] === getOntology('plane-geometry')
+  && ONTOLOGIES[3] === getOntology('triangle-trigonometry'))
+t('the subject has no internal faults with six concepts in it',
+  ontologyProblems(VI).length === 0, ontologyProblems(VI).join('; '))
+t('its fidelity claim matches what its option can do', fidelityMismatches(VI).length === 0)
+t('six concepts, and the dot product still carries the three it arrived with',
+  VI.concepts.length === 6
+  && conceptById(VI, 'dot-product-geometry').knowledgePoints.length === 3,
+  `${VI.concepts.length} concepts, `
+  + `${conceptById(VI, 'dot-product-geometry').knowledgePoints.length} points on the new one`)
+t('the concept is teachable AND practisable — a syllabus entry, not a map one',
+  isTeachable(VI, 'dot-product-geometry') && isPractisable(VI, 'dot-product-geometry'))
+t('its points number from 1, which is per concept and not per subject',
+  conceptById(VI, 'dot-product-geometry').knowledgePoints
+    .map(p => p.position).join(',') === '1,2,3',
+  conceptById(VI, 'dot-product-geometry').knowledgePoints.map(p => p.position).join(','))
+t('no knowledge point claims a figure, because there are none to claim',
+  conceptById(VI, 'dot-product-geometry').knowledgePoints
+    .every(p => p.visualRef === undefined))
+/*
+ * THE SUBJECT IS A FORK NOW AND ITS ROOT HAS NOT MOVED, which are two separate
+ * claims and both are worth having.
+ *
+ * The fork: the new concept rests on `plane-vectors` and nothing else here, so
+ * the subject branches at its second concept. Asserted as the branch POINT
+ * rather than as an ordered walk, because an ordered string would accept the
+ * concept hung off `linear-independence` instead — a mistake somebody will make,
+ * the cross-check and the dot product being the same four numbers combined two
+ * ways, and one that would gate the product behind material it never uses.
+ *
+ * The root: `cartesian-plane` is still the single root, so nothing about the
+ * promotion gave the subject a second place to start. A subject with two roots
+ * is not wrong, but this one arriving at one silently would mean the new
+ * concept's prerequisite had been dropped rather than written.
+ */
+/*
+ * THE SECOND HALF OF THIS CHANGED AT THE THIRTEENTH PROMOTION, and the reason
+ * it is split rather than rewritten as one string is the reason given above:
+ * the dot product's parent is the mistake worth guarding and it has not moved.
+ *
+ * `vectors-and-spans` has gained a second parent. `three-dimensional-
+ * coordinates` is a concept of this subject now and the span rests on it — an
+ * edge that came home from `linear-algebra.links`, where it had been filed
+ * because that area owned neither end. So the two branches out of
+ * `plane-vectors` rejoin and the subject is a diamond; compared against a
+ * sorted SET, never an ordered string, since `prerequisitesOf` returns edge
+ * order.
+ */
+t('the product still forks off plane-vectors, and span now rests on the product\'s branch too',
+  prerequisitesOf(VI, 'dot-product-geometry').join(' ') === 'plane-vectors'
+  && prerequisitesOf(VI, 'vectors-and-spans').slice().sort().join(' ')
+    === 'plane-vectors three-dimensional-coordinates'
+  && !allPrerequisitesOf(VI, 'dot-product-geometry').includes('linear-independence'),
+  `${prerequisitesOf(VI, 'dot-product-geometry').join(', ')}`
+  + ` | ${prerequisitesOf(VI, 'vectors-and-spans').join(', ')}`)
+t('and the subject still has one root and still has a teaching order',
+  roots(VI).length === 1 && roots(VI)[0] === 'cartesian-plane'
+  && teachingOrder(VI) !== null,
+  roots(VI).join(', '))
+/*
+ * The `encompasses` edge, which this file refused once in this very subject —
+ * `plane-vectors` down to `cartesian-plane`, on the ground that the vector
+ * tasks never locate a point or decide a quadrant. The claim is about what
+ * PRACTISING exercises, so it is asserted against the TASKS rather than against
+ * the prose: both cosine tasks compute two magnitudes as a sum of squares under
+ * a one-half power, which is `magnitude-1` verbatim.
+ */
+t('it claims credit back down to the magnitude, and the tasks bear the claim out',
+  edgesOfKind(VI, 'encompasses')
+    .some(e => e.from === 'dot-product-geometry' && e.to === 'plane-vectors' && !!e.rationale)
+  && ['cosine-exact-1', 'cosine-aligned-1'].every(id =>
+    /\^\(1\/2\)/.test(taskById(id).given)),
+  edgesOfKind(VI, 'encompasses').map(e => `${e.from}=>${e.to}`).join(' '))
+
+group('the eleventh promotion is gradable with no worker')
+const DP_POINTS = conceptById(VI, 'dot-product-geometry').knowledgePoints
+const DP_TASKS = DP_POINTS.flatMap(p => tasksForPoint(p.id))
+t('six tasks, two on each of the three points', DP_TASKS.length === 6
+  && DP_POINTS.every(p => tasksForPoint(p.id).length === 2),
+  `${DP_TASKS.length}`)
+t('all six are evaluate, so none of them claims a form',
+  DP_TASKS.every(x => x.kind === 'evaluate' && x.form === undefined),
+  DP_TASKS.map(x => `${x.id}:${x.kind}`).join(', '))
+t('every reference is exactly reproducible from the given — no worker consulted',
+  DP_TASKS.every(x => {
+    const at = {}
+    for (const [name, raw] of Object.entries(x.at)) at[name] = parseExpression(raw, [])
+    const truth = exactValue(substitute(parseExpression(x.given, x.variables.map(v => v.name)), at))
+    const claimed = exactValue(parseExpression(x.reference, x.variables.map(v => v.name)))
+    return truth !== null && claimed !== null && showExact(truth) === showExact(claimed)
+  }),
+  DP_TASKS.map(x => x.id).join(', '))
+const dpRulings = await Promise.all(DP_TASKS.map(x => ruleEvaluate(x, x.reference, NO_WORKER)))
+t('a correct answer is ruled correct with no worker configured',
+  dpRulings.every(r => r.verdict.ruling === 'correct'),
+  dpRulings.map((r, i) => `${DP_TASKS[i].id}:${r.verdict?.ruling ?? r.status}`).join(', '))
+/*
+ * WHY THE COMPONENTS HAD TO BE CHOSEN, which is the constraint that shaped the
+ * file and is invisible in the finished tasks.
+ *
+ * `cos θ = (a·b)/(|a||b|)` divides by two square roots, so the quotient is
+ * rational only when both magnitudes come out whole. (3, 4) against (4, 3)
+ * gives 5 and 5, and (3, 4) against (6, 8) gives 5 and 10 — hence 24/25 and
+ * exactly 1. The obtuse pair (3, 4) and (−4, 1) has |v| = √17 and an irrational
+ * cosine, which is why that task asks for the PRODUCT and reads its sign: the
+ * sign is exact where the cosine is not, and the knowledge point says so.
+ *
+ * Asserted as "the two cosine tasks are the ones that take a root", because the
+ * failure to catch is a THIRD cosine task added on components whose magnitudes
+ * are not whole. That would rule inconclusive rather than wrong, so the suite
+ * would report it as a worker-only task somewhere else entirely.
+ */
+t('exactly the two cosine tasks take a square root, and both still rule locally',
+  DP_TASKS.filter(x => /\^\(1\/2\)/.test(x.given)).map(x => x.id).join(' ')
+    === 'cosine-exact-1 cosine-aligned-1',
+  DP_TASKS.filter(x => /\^\(1\/2\)/.test(x.given)).map(x => x.id).join(' '))
+t('and the exact cosine really is the quotient, not a rounding of it',
+  taskById('cosine-exact-1').reference === '24/25'
+  && taskById('cosine-aligned-1').reference === '1',
+  `${taskById('cosine-exact-1').reference} / ${taskById('cosine-aligned-1').reference}`)
+/*
+ * The same boundary `right-triangle-trig` asserts for itself, one concept up:
+ * no task asks for an angle. 24/25 is the answer and 16.26° is a rounding of
+ * it, and recovering an angle from its cosine is `inverse-trig`, which needs a
+ * table nothing here has. A task sneaking an angle in would break the
+ * no-worker contract above as well — but it would break as a RULING failure,
+ * which does not say why, and this is what says why.
+ *
+ * Two assertions and not one, because the negative alone was wrong in a way
+ * worth recording: a regex forbidding "in degrees" anywhere in a prompt fails
+ * on the prompt that REFUSES degrees out loud, which is the prompt doing the
+ * right thing. So the negative is about what is ASKED, and the positive is that
+ * the refusal is stated to the learner rather than only in this file.
+ */
+t('no task asks for an angle, which is the subject\'s boundary and not the grader\'s',
+  DP_TASKS.every(x => !/\b(what angle|which angle|find the angle|arccos|arcsin)\b/i
+    .test(x.prompt)),
+  DP_TASKS.filter(x => /angle\?/.test(x.prompt)).map(x => x.id).join(', '))
+t('and the cosine tasks say so in the prompt, so the learner is told where it stops',
+  ['cosine-exact-1', 'cosine-aligned-1'].every(id => /exactly|the same way/.test(taskById(id).prompt))
+  && /not a figure in degrees/.test(taskById('cosine-exact-1').prompt),
+  taskById('cosine-exact-1').prompt)
+/*
+ * EVERY SUBGOAL SHIPPED WITH ITS QUESTION WRITTEN, and the two figures that
+ * says so are both needed.
+ *
+ * `questionCoverage` counts a subgoal as authored when the `socratic` field is
+ * present, and 165 of 424 subgoals in the build were authored that way when
+ * this concept was written. Thirteen arrived with it and thirteen are authored,
+ * so the fraction moved in the right direction rather than being diluted —
+ * which is the single most valuable property of new material here, and the one
+ * that silently fails when somebody writes labels and leaves the questions for
+ * later.
+ *
+ * `chainsWithNoRuling` is the other half: three chains arrived and each has
+ * tasks, so the figure must not have moved. A chain that cannot become evidence
+ * is worse than an unwritten concept, because it looks finished.
+ */
+const DP_COV = questionCoverage(VI)
+t('all thirteen of its subgoals ship the question written, not just the label',
+  conceptById(VI, 'dot-product-geometry').knowledgePoints
+    .flatMap(p => p.workedExample.subgoals).length === 13
+  && conceptById(VI, 'dot-product-geometry').knowledgePoints
+    .flatMap(p => p.workedExample.subgoals).every(s => typeof s.socratic === 'string'),
+  conceptById(VI, 'dot-product-geometry').knowledgePoints
+    .flatMap(p => p.workedExample.subgoals).filter(s => !s.socratic).length + ' unwritten')
+t('and no question contains its own answer by being an imperative with a mark on it',
+  conceptById(VI, 'dot-product-geometry').knowledgePoints
+    .flatMap(p => p.workedExample.subgoals).every(s => isInterrogative(s.socratic)),
+  conceptById(VI, 'dot-product-geometry').knowledgePoints
+    .flatMap(p => p.workedExample.subgoals)
+    .filter(s => !isInterrogative(s.socratic)).map(s => s.label).join('; '))
+t('the subject still has no chain that cannot become evidence',
+  DP_COV.chainsWithNoRuling === 0 && DP_COV.chains === 19,
+  `${DP_COV.chains} chains, ${DP_COV.chainsWithNoRuling} with no ruling`)
+
+// ---------------------------------------------------------------------------
+
+/**
+ * The three dimensions, the thirteenth promotion — and the second in a row to
+ * widen this subject rather than found one.
+ *
+ * WHY THIS NODE AND NOT ANOTHER is the part that should not have to be
+ * rediscovered, so it is asserted rather than described. Readiness was
+ * recomputed from the tree as "unwritten concepts on some journey's route",
+ * which returned exactly two ids: this one and `gaussian-elimination`. The
+ * second is blocked on a missing task kind rather than on effort — "solve for
+ * x" asks for a solution SET and no `NamedForm` expresses one — so there was
+ * one answer, and it is the one that finishes a journey outright. The group
+ * below asserts the state that made the choice forced, so the next run can
+ * read it instead of deriving it.
+ *
+ * WHAT THE PROMOTION HAD TO GET RIGHT, in the order the mistakes would have
+ * been silent in:
+ *
+ *  - Four knowledge points rather than three, which is the first concept in
+ *    this subject to differ. The `is` line promised coordinates, planes and
+ *    the cross product, and the arithmetic bridge has to come first or none of
+ *    the three can be computed.
+ *  - Eight tasks, two per point, every one rulable with no worker — the
+ *    subject's standing contract, which a single irrational magnitude would
+ *    have ended quietly by ruling inconclusive rather than wrong.
+ *  - Every subgoal shipped with its question written, which is the figure that
+ *    silently fails when somebody writes labels and leaves the questions for
+ *    later.
+ */
+group('the thirteenth promotion was the only one available, and is the ninth journey')
+const TDC = conceptById(VI, 'three-dimensional-coordinates')
+const TDC_POINTS = TDC.knowledgePoints
+t('it is a concept of this subject with material, not a sixth name in the list',
+  !!TDC && isTeachable(VI, 'three-dimensional-coordinates')
+  && isPractisable(VI, 'three-dimensional-coordinates'),
+  `${TDC ? 'present' : 'ABSENT'}`)
+t('four knowledge points, one more than every other concept here, numbered from 1',
+  TDC_POINTS.length === 4
+  && VI.concepts.filter(c => c.id !== 'three-dimensional-coordinates')
+    .every(c => c.knowledgePoints.length === 3)
+  && TDC_POINTS.map(p => p.position).join(',') === '1,2,3,4',
+  `${TDC_POINTS.length} points at ${TDC_POINTS.map(p => p.position).join(',')}`)
+t('no point claims a figure, and only the one that is arithmetic claims a timing target',
+  TDC_POINTS.every(p => p.visualRef === undefined)
+  && TDC_POINTS.filter(p => p.automaticityTarget !== undefined)
+    .map(p => p.id).join(' ') === 'space-adds-one-coordinate-and-one-term',
+  TDC_POINTS.filter(p => p.automaticityTarget !== undefined).map(p => p.id).join(' '))
+t('every objective names a task kind, and every kind it names is one the build has',
+  TDC.objectives.length > 0
+  && TDC.objectives.every(o => o.taskKinds.length > 0)
+  && TDC.objectives.every(o => o.taskKinds.includes('evaluate')),
+  TDC.objectives.map(o => `${o.id}:${o.taskKinds.join('/')}`).join(' '))
+/*
+ * The readiness state that made this the only candidate is asserted in
+ * tests/atlas.mjs and not here, because the claim is about the COMPOSED map —
+ * "`gaussian-elimination` is the one unwritten route concept left, with
+ * everything beneath it written" — and this suite builds subjects rather than
+ * the atlas. It sits with the route table, which is the other half of the same
+ * statement.
+ */
+
+group('the thirteenth promotion is gradable with no worker')
+const TDC_TASKS = TDC_POINTS.flatMap(p => tasksForPoint(p.id))
+t('eight tasks, two on each of the four points', TDC_TASKS.length === 8
+  && TDC_POINTS.every(p => tasksForPoint(p.id).length === 2),
+  `${TDC_TASKS.length}`)
+t('all eight are evaluate, so none of them claims a form',
+  TDC_TASKS.every(x => x.kind === 'evaluate' && x.form === undefined),
+  TDC_TASKS.map(x => `${x.id}:${x.kind}`).join(', '))
+t('every reference is exactly reproducible from the given — no worker consulted',
+  TDC_TASKS.every(x => {
+    const at = {}
+    for (const [name, raw] of Object.entries(x.at)) at[name] = parseExpression(raw, [])
+    const truth = exactValue(substitute(parseExpression(x.given, x.variables.map(v => v.name)), at))
+    const claimed = exactValue(parseExpression(x.reference, x.variables.map(v => v.name)))
+    return truth !== null && claimed !== null && showExact(truth) === showExact(claimed)
+  }),
+  TDC_TASKS.map(x => x.id).join(', '))
+const tdcRulings = await Promise.all(TDC_TASKS.map(x => ruleEvaluate(x, x.reference, NO_WORKER)))
+t('a correct answer is ruled correct with no worker configured',
+  tdcRulings.every(r => r.verdict.ruling === 'correct'),
+  tdcRulings.map((r, i) => `${TDC_TASKS[i].id}:${r.verdict?.ruling ?? r.status}`).join(', '))
+/*
+ * WHY THE COMPONENTS HAD TO BE CHOSEN, which is the constraint that shaped the
+ * material and is invisible in the finished tasks — the same note the eleventh
+ * promotion needed, for a different reason.
+ *
+ * There it was the cosine's two square roots in a DENOMINATOR. Here it is that
+ * a magnitude in space is a root of three squares, and the task set would end
+ * the subject's no-worker contract at its first irrational one: `exactValue`
+ * returns null on a root it cannot settle, which rules inconclusive rather than
+ * wrong, so the suite would report it as a worker-only task somewhere else
+ * entirely rather than as a bad choice of numbers here.
+ *
+ * So a = (2, 3, 6) with 4 + 9 + 36 = 49, and the figure the other three points
+ * share has |n| = 3 from 4 + 1 + 4. Asserted as "exactly one task takes a root
+ * and it is the magnitude", because the failure to catch is a SECOND rooted
+ * task added on components whose sum of squares is not a perfect square.
+ */
+t('exactly one task takes a square root, and it still rules locally',
+  TDC_TASKS.filter(x => /\^\(1\/2\)/.test(x.given)).map(x => x.id).join(' ')
+    === 'space-magnitude-1',
+  TDC_TASKS.filter(x => /\^\(1\/2\)/.test(x.given)).map(x => x.id).join(' '))
+t('and no task asks for a vector, which evaluate cannot return',
+  taskById('cross-product-component-1').reference === '2'
+  && /FIRST component/.test(taskById('cross-product-component-1').prompt)
+  && TDC_TASKS.every(x => !/[(]\s*-?\d+\s*,/.test(x.reference)),
+  TDC_TASKS.map(x => x.reference).join(' | '))
+/*
+ * The one place a prompt could have handed over its own answer, and the check
+ * that it does not.
+ *
+ * Both plane tasks are about the constant d in `n·r = d`, and that constant is
+ * 6 for both — once computed as n·P and once read at a second point of the same
+ * plane. A prompt saying "the plane is 2x − y + 2z = 6" would therefore be a
+ * free mark on both of them. Asserted as the absence of the numeral from the
+ * prompts rather than as a shape, because the mistake is a number appearing and
+ * not a sentence being phrased badly.
+ */
+t('neither plane prompt states the constant it asks the learner to produce',
+  ['plane-constant-1', 'plane-membership-1'].every(id =>
+    taskById(id).reference === '6' && !/\b6\b/.test(taskById(id).prompt)),
+  ['plane-constant-1', 'plane-membership-1']
+    .map(id => `${id}:${/\b6\b/.test(taskById(id).prompt) ? 'LEAKS' : 'clean'}`).join(' '))
+/*
+ * EVERY SUBGOAL SHIPPED WITH ITS QUESTION WRITTEN, which the eleventh promotion
+ * argued is the single most valuable property of new material here, and the
+ * reason the count is asserted alongside the property.
+ *
+ * Eighteen arrived and eighteen are authored. One of them was written with the
+ * question clause FIRST and a statement after it — "Where did the 13 come
+ * from? Write 49 in terms of…" — which `isInterrogative` rejects, because it
+ * tests the last character and a question that does not end on its question is
+ * not one the tutor can ask. It failed here before it shipped, which is the
+ * check doing its job; the rule is that the interrogative clause lands LAST.
+ */
+const TDC_SUBGOALS = TDC_POINTS.flatMap(p => p.workedExample.subgoals)
+t('all eighteen of its subgoals ship the question written, not just the label',
+  TDC_SUBGOALS.length === 18
+  && TDC_SUBGOALS.every(s => typeof s.socratic === 'string'),
+  `${TDC_SUBGOALS.filter(s => !s.socratic).length} unwritten of ${TDC_SUBGOALS.length}`)
+t('and every one of them ends on its question rather than on a statement',
+  TDC_SUBGOALS.every(s => isInterrogative(s.socratic)),
+  TDC_SUBGOALS.filter(s => !isInterrogative(s.socratic)).map(s => s.label).join('; '))
+t('every subgoal also names a move rather than a step number, and no two in one example repeat',
+  TDC_POINTS.every(p =>
+    p.workedExample.subgoals.every(s => s.label.length > 20 && !/^step\b/i.test(s.label))
+    && new Set(p.workedExample.subgoals.map(s => s.label)).size
+      === p.workedExample.subgoals.length),
+  TDC_SUBGOALS.filter(s => s.label.length <= 20 || /^step\b/i.test(s.label))
+    .map(s => s.label).join(' | '))
+/*
+ * The `encompasses` edge back down to the dot product, asserted against the
+ * TASKS rather than the prose — the test this file applied to the eleventh
+ * promotion's claim and refused twice elsewhere in this subject. Four of the
+ * eight tasks evaluate a three-term dot product, so somebody who has just found
+ * a plane's constant has demonstrated the product.
+ *
+ * `=== 4` and not `>= 4`, because the number is the claim. The rationale on the
+ * edge names four tasks and says which, so a fifth appearing means either the
+ * rationale is stale or somebody added a dot-product task to a concept whose
+ * credit claim was sized against the old set — and a floor would accept both
+ * silently. The first draft of that rationale said five and listed four; the
+ * exact count is what would have caught it.
+ */
+t('it claims credit back down to the dot product, and the tasks bear the claim out',
+  edgesOfKind(VI, 'encompasses').some(e =>
+    e.from === 'three-dimensional-coordinates' && e.to === 'dot-product-geometry'
+    && !!e.rationale)
+  && TDC_TASKS.filter(x => /\w1\*\w1 \+ \w2\*\w2 \+ \w3\*\w3/.test(x.given)).length === 4,
+  TDC_TASKS.filter(x => /\w1\*\w1 \+ \w2\*\w2 \+ \w3\*\w3/.test(x.given))
+    .map(x => x.id).join(' '))
+t('and it claims nothing back down to span, which the tasks would not support',
+  !edgesOfKind(VI, 'encompasses').some(e =>
+    e.from === 'three-dimensional-coordinates' && e.to === 'vectors-and-spans'),
+  edgesOfKind(VI, 'encompasses').map(e => `${e.from}=>${e.to}`).join(' '))
 
 rmSync(outDir, { recursive: true, force: true })
 // ---------------------------------------------------------------------------

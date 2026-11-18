@@ -138,6 +138,11 @@ const CONCEPTS: Concept[] = [
             {
               label: 'What does each factor stand for?',
               detail: '2³ is three 2s multiplied, and 2⁴ is four 2s. Nothing else is going on yet.',
+              socratic:
+                'There are two factors here and they are not the same size. Write each one out in ' +
+                'full with no shorthand, before you touch either of them: what multiplication is ' +
+                '2³, what multiplication is 2⁴, and what is the 3 doing in the one that the 4 is ' +
+                'doing in the other?',
             },
             {
               label: 'Count the copies',
@@ -348,16 +353,31 @@ const CONCEPTS: Concept[] = [
             {
               label: 'Apply the power rule to it',
               detail: '(9^(1/2))² = 9^(1/2 · 2) = 9¹ = 9.',
+              socratic:
+                'An exponent of 1/2 counts nothing — there is no way to write down half a 9 ' +
+                'multiplied together, so repeated multiplication has nothing to say here. The one ' +
+                'rule you have that mentions two exponents at once is (xᵃ)ᵇ = xᵃᵇ. Raise 9^(1/2) ' +
+                'to an outer power of your choosing: which outer power leaves an exponent you can ' +
+                'already read off, and what does the rule say the result comes to?',
             },
             {
               label: 'Read what that says',
               detail: '9^(1/2) is a number whose square is 9. That is what "square root of 9" means.',
+              socratic:
+                'You now have one fact and only one: squaring 9^(1/2) gives 9. Set the fractional ' +
+                'exponent aside and describe the number that fact is about — what property does it ' +
+                'pin down, and what name does a number with that property already go by?',
             },
             {
               label: 'Pick the one that is meant',
               detail:
                 'Both 3 and −3 square to 9. The notation x^(1/2) means the *non-negative* one by ' +
                 'convention, so 9^(1/2) = 3 and not −3.',
+              socratic:
+                '"A number whose square is 9" is a description, and the problem asked for a value. ' +
+                'Test 3 and −3 against that description: how many numbers does it admit, and since ' +
+                '9^(1/2) is written as though it names exactly one of them, what decides which one ' +
+                '— is that decision forced by the exponent rules, or laid on top of them?',
             },
           ],
           answer: '3 — it is the non-negative number whose square is 9.',

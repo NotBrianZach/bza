@@ -152,6 +152,57 @@
  * rather than implying the matter is settled. A foundations subject that
  * asserted completeness as though it had earned it would be the one dishonesty
  * this file has otherwise avoided.
+ *
+ * ── THE TWELFTH CONCEPT IS THE OTHER HALF OF THAT DEADLOCK ────────────────
+ *
+ * `ratio-and-rate` was the second of the pair ontology-geometry.ts spent three
+ * promotions calling "the area-floor casualties" — both on the route of the
+ * two unfinished journeys, both with every prerequisite already authored, and
+ * both unpromotable because the area holding them was at the stub floor. The
+ * merge described in atlas-foundations.ts lifted that, `real-number-line` was
+ * taken straight afterwards, and this is the other one. The record of three
+ * promotions declining them is now fully cashed in rather than half.
+ *
+ * It was chosen over the alternatives on structure, and the comparison is
+ * worth keeping because the brief that produced it had gone stale:
+ *
+ *  - `linear-equations` was the better-placed candidate by dependency depth —
+ *    it heads a chain of three reaching `gaussian-elimination`. It is BLOCKED,
+ *    and not by effort: ontology-algebra.ts declines it in writing because
+ *    "solve for x" asks for the SET of numbers satisfying a condition, and no
+ *    `NamedForm` and no `evaluate` target expresses a solution set. Authoring
+ *    it as substitute-and-check tasks is the proxy-task failure tasks.ts warns
+ *    about. Unblocking it is a TaskKind decision, not an authoring one.
+ *  - `solid-geometry` is the one available candidate in `euclidean-geometry`
+ *    and its own area file nominates it. It would have to start a NINTH
+ *    subject: `plane-geometry`'s `covers` ends "The solids are the rest and
+ *    are still mapped only", and the id is literally plane geometry, so solids
+ *    cannot be filed there. That is a decision about what region a learner is
+ *    shown their material under, which is the kind of thing the merges above
+ *    were careful not to make as a side effect of writing worked examples.
+ *  - `right-triangle-trig` has the same problem and no area file arguing for
+ *    it.
+ *
+ * This one lands in an EXISTING subject whose `covers` already describes it —
+ * "nothing symbolic", and a ratio of two whole numbers is as unsymbolic as
+ * arithmetic gets — so it is the only one of the four that adds material
+ * without also redrawing the map.
+ *
+ * WHAT IT COSTS THE GATE, which is the thing authoring always does and is
+ * worth stating because this one tightens a gate in a FOREIGN subject.
+ * `similarity`, in `plane-geometry`, rests on this concept through
+ * `EUCLIDEAN_GEOMETRY.links`. That link gated nothing while this was a
+ * skeleton: the walk passed through it to `fraction-arithmetic`. Now
+ * `similarity` is gated by `congruence` and this concept instead — the same
+ * number of gates with one of them replaced, which is why tests/atlas.mjs
+ * checks that set by membership and never by length.
+ *
+ * AND WHAT IT UNBLOCKS. `percent` rests on this concept and on
+ * `decimal-representation`, both authored now, so it becomes the next
+ * mechanically-ready node in `algebra-foundations` and a root of that area's
+ * own view. It is not on either unfinished journey, so it buys readiness rather
+ * than distance. The journeys themselves each lose one unwritten step, which is
+ * what made this concept worth taking over a node on only one of them.
  */
 
 import type { Concept, ConceptEdge, ConceptOntology, Subject } from './types'
@@ -165,11 +216,21 @@ const subject: Subject = {
     'primes a whole number comes apart into. Fractions are here too, resting on that ' +
     'divisibility, and so are the gcd and the lcm the fractions are made of. Then the two ' +
     'things a factorisation decides about a ratio — which roots of it are rational, and which ' +
-    'of its decimal expansions stop — and finally the real line, which is where the subject ' +
+    'of its decimal expansions stop — then the real line, which is where the subject ' +
     'stops being about computing: that a non-terminating non-recurring expansion still names a ' +
     'point, that no two numbers on the line are adjacent, and that the least-upper-bound ' +
     'property is what makes both true. That last one is ASSUMED here and constructed in real ' +
-    'analysis, which the concept says in those words. Nothing symbolic — the moment a letter ' +
+    'analysis, which the concept says in those words. Finally comparison by division, which is ' +
+    'the one concept here that USES the fractions rather than building them: a ratio as a claim ' +
+    'about a quotient and nothing else, so that its terms count parts and 3 : 5 is three ' +
+    'eighths rather than three fifths, and so that the ratio fixes the relation while a second ' +
+    'number is needed to fix the size; a rate as a quotient of UNLIKE quantities, which carries ' +
+    'a unit and comes in two reciprocal ways up that answer different questions and compare in ' +
+    'opposite directions, because sending x to 1/x reverses order on the positives; and scaling ' +
+    'as multiplication by the factor the other quantity grew by rather than addition of the ' +
+    'difference, with what a relationship gives at zero as the test of whether it may be scaled ' +
+    'at all. Percent is the neighbouring node and is mapped only, as are the word problems ' +
+    'above it. Nothing symbolic — the moment a letter ' +
     'stands for an unknown it is algebra. What is left of whole-number arithmetic is what ' +
     'rests on the gcd rather than on the primes: the Euclidean algorithm and the congruences, ' +
     'which are mapped in the number-theory area and still unwritten.',
@@ -2575,6 +2636,300 @@ const CONCEPTS: Concept[] = [
       },
     ],
   },
+  {
+    id: 'ratio-and-rate',
+    name: 'Ratio and rate',
+    subjectId: subject.id,
+    scope: {
+      id: 'ratio-and-rate',
+      label: 'Ratio and rate',
+      hint: 'ratio rate proportion unit rate',
+      /*
+       * Carried verbatim from the map node, as the two promotions before this
+       * one were, and for their reason: widening a pattern at the same time as
+       * writing the material would move the recognition figure in
+       * tests/atlas.mjs on a change that also adds a concept, and there would
+       * be no way to say which edit moved it.
+       *
+       * It was already title-shaped and tightly so, which is worth reading
+       * rather than assuming. `^ratio` is ANCHORED instead of matching the word
+       * anywhere, because "ratio" sits inside the ratio test, the golden ratio
+       * and the likelihood ratio, and none of those is this concept. "Rate" is
+       * not matched alone at all, for the reason `real-number-line` gives about
+       * "real": an interest rate, a heart rate and a rate of convergence are
+       * all rates, so the word is reached only through "rate of change", where
+       * the phrase is the name of the thing.
+       */
+      match: /^ratio\b|\b(proportionality|rate of change)\b/i,
+    },
+    fidelity: 'checked',
+    objectives: [
+      {
+        id: 'share-a-total-in-a-given-ratio',
+        statement:
+          'Divide a given total in a given ratio by counting the PARTS rather than the terms, '
+          + 'and say what a ratio on its own does and does not settle about the two quantities.',
+        taskKinds: ['evaluate', 'justify'],
+      },
+      {
+        id: 'put-a-rate-the-right-way-up',
+        statement:
+          'Compute either of the two unit rates a pair of unlike quantities admits, say which '
+          + 'question each one answers, and explain why the better buy is the smaller of one and '
+          + 'the larger of the other.',
+        taskKinds: ['evaluate', 'justify'],
+      },
+      {
+        id: 'tell-a-proportional-relationship-from-an-additive-one',
+        statement:
+          'Scale a quantity by multiplying by the factor the other one grew by rather than '
+          + 'adding the difference, and decide whether a stated relationship is proportional at '
+          + 'all by testing what it gives at zero.',
+        taskKinds: ['evaluate', 'justify'],
+      },
+    ],
+    knowledgePoints: [
+      {
+        id: 'a-ratio-fixes-the-quotient-not-the-quantities',
+        conceptId: 'ratio-and-rate',
+        statement:
+          'A ratio compares two quantities by dividing them, so 3 : 5 is satisfied by 3 and 5, by '
+          + '30 and 50, and by 90 and 150 — what every such pair shares is the quotient and '
+          + 'nothing else. So a ratio never says how much of anything there is; it says how the '
+          + 'amounts are related, and one further number, usually the total, is what settles the '
+          + 'size. The terms also count PARTS rather than wholes: 3 : 5 is three parts out of '
+          + 'eight, never three out of five.',
+        position: 1,
+        /*
+         * No `automaticityTarget`, and not by copying the five untimed points
+         * above it. The error this point exists to stop is reading 3 : 5 as
+         * three fifths, which is a misreading — so rewarding speed here would
+         * train precisely the mistake, which is the case ontology-geometry.ts
+         * calls the read-it-slowly one. The arithmetic underneath is one
+         * division and one multiplication, and `place-value` already times
+         * those.
+         */
+        workedExample: {
+          problem: 'Share 240 in the ratio 3 : 5, and say what the ratio alone left undecided.',
+          subgoals: [
+            {
+              label: 'Count the parts, which is where the 8 comes from and the 5 does not',
+              detail:
+                'The terms are 3 and 5, so the total is cut into 3 + 5 = 8 equal parts. The '
+                + 'commonest error is reading 3 : 5 as "three fifths" and taking 3/5 of 240, '
+                + 'which gives 144 — a first share larger than the second, from a ratio that '
+                + 'says it is smaller. The terms are counts of parts, so the denominator has to '
+                + 'be their sum.',
+              socratic:
+                'The ratio has a 3 and a 5 in it, and the working has an 8. Where does the 8 '
+                + 'come from, and what goes wrong if you use the 5 as the denominator instead?',
+            },
+            {
+              label: 'Find one part, which makes both shares a multiplication',
+              detail:
+                '240 / 8 = 30, so one part is 30, and the shares are 3 · 30 = 90 and '
+                + '5 · 30 = 150. Finding the single part first is what makes the second share '
+                + 'free rather than a fresh division, and it generalises: any number of terms '
+                + 'is one division followed by that many multiplications.',
+              socratic:
+                'You have 240 split into 8 equal parts. What is the one number that turns both '
+                + 'shares into a single multiplication each?',
+            },
+            {
+              label: 'Check against BOTH conditions, since a wrong answer usually passes one',
+              detail:
+                'The shares must total the original: 90 + 150 = 240. And their quotient must be '
+                + 'the ratio: 90/150 = 3/5, both dividing by 30. Checking only the total is what '
+                + 'lets the misreading through — 144 and 96 also total 240, and their quotient '
+                + 'is 3/2, so the total alone cannot tell the right answer from the wrong one.',
+              socratic:
+                'Your two shares have to satisfy two separate conditions. What are they, and '
+                + 'which of the two would 144 and 96 pass?',
+            },
+            {
+              label: 'Read off what the ratio never said, which is the point of the question',
+              detail:
+                '3 : 5 is equally true of 3 and 5, of 30 and 50 and of 90 and 150, so it fixed '
+                + 'the quotient and left the size open. The total 240 is the second fact and it '
+                + 'was needed — one constraint cannot settle two numbers. Run it the other way '
+                + 'and the total alone does no better: 240 also splits as 120 and 120. Each of '
+                + 'the two facts supplies exactly half of the answer.',
+              socratic:
+                '90 and 150 are in the ratio 3 : 5, and so are 30 and 50. Given that, how much '
+                + 'of your answer did the ratio actually supply, and where did the rest of it '
+                + 'come from?',
+            },
+          ],
+          answer:
+            '90 and 150. The ratio makes 3 + 5 = 8 parts, one part is 240 / 8 = 30, and the '
+            + 'shares are 3 · 30 = 90 and 5 · 30 = 150 — which total 240 and divide to 3/5. The '
+            + 'ratio alone fixes only the quotient, so it would have been equally satisfied by '
+            + '30 and 50; the total is the second fact, and it is what settles the size.',
+        },
+      },
+      {
+        id: 'a-rate-has-two-ways-up-and-they-compare-oppositely',
+        conceptId: 'ratio-and-rate',
+        statement:
+          'A rate divides two quantities that are not the same kind of thing, so it carries a '
+          + 'unit — pence per kilogram — and there are always two of them, each the reciprocal of '
+          + 'the other. Both are correct and they answer different questions. What does not '
+          + 'survive the swap is the DIRECTION of a comparison: the better buy is the smaller '
+          + 'number of pence per kilogram and the larger number of kilograms per pound, because '
+          + 'taking reciprocals reverses order on the positives.',
+        position: 2,
+        /*
+         * Untimed for the same read-it-slowly reason as the point above, in its
+         * sharpest form here: the error is dividing the wrong way round, and a
+         * speed reward would train grabbing whichever division is to hand.
+         */
+        workedExample: {
+          problem:
+            'A 3 kg bag costs £7.50 and a 5 kg bag costs £12.00. Decide which is better value, '
+            + 'both ways up.',
+          subgoals: [
+            {
+              label: 'Divide price by weight, and keep the unit attached to the answer',
+              detail:
+                'Working in pence: 750 / 3 = 250 and 1200 / 5 = 240. The unit is pence per '
+                + 'kilogram and it is part of the answer rather than decoration — 250 and 240 '
+                + 'are comparable only because each is the price of one kilogram. So the 5 kg '
+                + 'bag is cheaper per kilogram, by 10p.',
+              socratic:
+                'The two bags are different sizes, so their prices cannot be compared as they '
+                + 'stand. What do you divide by what to make them comparable, and what does the '
+                + 'resulting number mean?',
+            },
+            {
+              label: 'Divide the other way, and watch which answer is now the bigger',
+              detail:
+                '3 / 7.50 = 2/5 and 5 / 12, in kilograms per pound. Over 60 those are 24/60 and '
+                + '25/60, so the 5 kg bag is again the better buy — but this time it is the '
+                + 'LARGER number. Nothing about the bags changed. The question changed, from '
+                + '"what does one kilogram cost" to "what does one pound buy".',
+              socratic:
+                'You have just found the 5 kg bag better at 240 against 250 — the smaller '
+                + 'number. Divide the other way round and it is 5/12 against 2/5, the larger '
+                + 'one. Why has the better buy moved from the smaller number to the larger?',
+            },
+            {
+              label: 'Name the reason the direction flipped, which is not about shopping',
+              detail:
+                'The two rates are reciprocals: 250 pence per kilogram is £2.50 per kilogram, '
+                + 'and 1 / 2.50 = 0.4 = 2/5 kilograms per pound. On the positives x ↦ 1/x is '
+                + 'decreasing, so it reverses every comparison applied to it — 240 < 250 becomes '
+                + '1/240 > 1/250. "Bigger is better" is therefore not a property of a rate at '
+                + 'all; it is a property of which way up the rate was written.',
+              socratic:
+                '250 and 240 turned into 2/5 and 5/12, and the order reversed. What operation '
+                + 'took you from the one pair to the other, and what does that operation always '
+                + 'do to an inequality between positive numbers?',
+            },
+            {
+              label: 'Check the two answers are one claim rather than two',
+              detail:
+                'Within a single bag the two rates must multiply to 1, since each is the other '
+                + 'reciprocated: 2.50 · 2/5 = 1 and 2.40 · 5/12 = 1. So there is one fact about '
+                + 'each bag written two ways, not two facts that happened to agree — which is '
+                + 'why only the direction of the comparison needed care, and never the '
+                + 'conclusion.',
+              socratic:
+                'You reached the same conclusion by two different routes. What should one bag\'s '
+                + 'price per kilogram and its kilograms per pound multiply to, and do yours?',
+            },
+          ],
+          answer:
+            'The 5 kg bag, both ways up. Per kilogram it costs 1200 / 5 = 240p against '
+            + '750 / 3 = 250p, so it is the smaller number; per pound it buys 5/12 kg against '
+            + '3 / 7.50 = 2/5 kg, which over 60 is 25/60 against 24/60, so it is the larger. The '
+            + 'two rates are reciprocals and x ↦ 1/x reverses order on the positives, so the '
+            + 'direction of the comparison flips while the conclusion does not.',
+        },
+      },
+      {
+        id: 'proportional-is-not-additive-and-zero-is-the-test',
+        conceptId: 'ratio-and-rate',
+        statement:
+          'Scaling a proportional quantity means multiplying by the factor the other one grew '
+          + 'by, not adding the difference: tripling the rooms triples the paint. The two '
+          + 'readings disagree whenever that factor is not 1, and the disagreement is a number '
+          + 'you can compute rather than a matter of taste. Not every relationship is '
+          + 'proportional, and the test is what it gives at zero — a proportional one passes '
+          + 'through 0, so doubling the input doubles the output, while one with a fixed charge '
+          + 'in it does neither.',
+        position: 3,
+        /*
+         * Untimed because it is a decision with an argument behind it, which is
+         * the second of the two reasons this subject uses — the same shape as
+         * the triangle inequality in `plane-geometry`. The arithmetic carrying
+         * the decision is one multiplication and one division, already timed
+         * lower down this file.
+         */
+        workedExample: {
+          problem:
+            '5 rooms take 8 litres of paint. Find the paint for 15 rooms, then decide whether a '
+            + 'taxi fare of £3 plus £2 a mile can be scaled the same way.',
+          subgoals: [
+            {
+              label: 'Find the factor the known quantity grew by',
+              detail:
+                '15 / 5 = 3, so the rooms tripled. That factor is the whole content of a '
+                + 'proportional step: it comes from dividing like by like, so it has no unit '
+                + 'attached, and being unit-free is exactly what lets it carry across to a '
+                + 'quantity measured in litres.',
+              socratic:
+                'You know 5 rooms and you want 15. What single number takes you from the one to '
+                + 'the other, and why does it have no unit on it?',
+            },
+            {
+              label: 'Multiply by the factor instead of adding the difference',
+              detail:
+                '8 · 3 = 24 litres. The additive reading notices 10 more rooms and adds 10 to '
+                + 'the 8 litres, giving 18 — and the two differ by 6, which is not a rounding '
+                + 'disagreement but a different claim about how paint depends on rooms. The same '
+                + 'answer comes through the unit rate: 8/5 = 1.6 litres a room, and '
+                + '15 · 1.6 = 24.',
+              socratic:
+                'There really are 10 more rooms than before, and 8 litres did the first 5. So '
+                + 'what makes 18 litres the wrong answer?',
+            },
+            {
+              label: 'Test the taxi at zero before scaling it at all',
+              detail:
+                '5 miles costs 3 + 2 · 5 = £13, and 10 miles costs 3 + 2 · 10 = £23. Doubling '
+                + 'the distance did not double the fare: twice 13 is 26, and the shortfall is '
+                + 'exactly the £3 that got charged once rather than twice. At zero miles the '
+                + 'fare is £3 and not £0, which is the fixed charge showing up in the one place '
+                + 'a proportional relationship cannot have anything.',
+              socratic:
+                'Double the 5-mile fare and compare it with the 10-mile fare. They differ by '
+                + '£3 — what is that £3, and what does the fare at zero miles tell you about '
+                + 'scaling this one?',
+            },
+            {
+              label: 'State the test as a condition you could check on something else',
+              detail:
+                'A relationship is proportional when one quantity is a fixed multiple of the '
+                + 'other, and its two consequences are equivalent: it gives 0 at 0, and '
+                + 'multiplying the input by k multiplies the output by k. Paint passes — 0 rooms '
+                + 'take 0 litres — so the factor of 3 was legitimate. The fare fails both, so it '
+                + 'has no single rate to be scaled by, and only its per-mile PART does.',
+              socratic:
+                'Paint could be scaled by a factor and the fare could not. What property does '
+                + 'paint have that the fare lacks — and can you put it in a form you could check '
+                + 'on a relationship you have not seen yet?',
+            },
+          ],
+          answer:
+            '24 litres: the rooms grew by 15 / 5 = 3, so the paint does too, and 8 · 3 = 24 — '
+            + 'where the additive reading gives 18, a difference of 6 and a different claim. The '
+            + 'fare cannot be scaled: 5 miles is £13 and 10 miles is £23 rather than £26, short '
+            + 'by the £3 charged once instead of twice, and £3 at zero miles is what a '
+            + 'proportional relationship cannot have.',
+        },
+      },
+    ],
+  },
 ]
 
 /**
@@ -2841,15 +3196,31 @@ const EDGES: ConceptEdge[] = [
    * no change beyond the removal itself — the same as `roots-and-irrationals`
    * and `decimal-representation` before it.
    *
-   * It is worth saying why that run of three is ending rather than continuing.
-   * The cheap shape holds when a node's prerequisites were all authored into
-   * ONE file, which happened three times because this subject was being
-   * written out of a single area from the bottom up. Nothing left in
-   * `algebra-foundations` has that property: `ratio-and-rate` rests on
-   * `fraction-arithmetic` alone and would be a fourth, but `percent` and
-   * `word-problems` each rest on it from inside the area, so promoting it
-   * strands an incoming edge into `links`. The cheapness was the branch's, not
-   * the subject's.
+   * It is worth saying why the cheap shape holds: a node's prerequisites were
+   * all authored into ONE file, which happened three times running because this
+   * subject was being written out of a single area from the bottom up.
+   *
+   * THIS PARAGRAPH THEN PREDICTED THE RUN WOULD END AT THREE, AND IT WAS
+   * WRONG — the twelfth promotion is a fourth cheap one. The claim was that
+   * `ratio-and-rate` "rests on `fraction-arithmetic` alone and would be a
+   * fourth, but `percent` and `word-problems` each rest on it from inside the
+   * area, so promoting it strands an incoming edge into `links`". The second
+   * half does not follow from the first, and the error is worth keeping on the
+   * record because it is the edge rule applied backwards.
+   *
+   * An edge is owned by the node that DECLARES it. `percent` and
+   * `word-problems` are the declaring ends and they STAYED in
+   * `algebra-foundations`, so each still owns its edge and `composeAtlas`
+   * resolves it against the authored concept. A dependent staying put is
+   * exactly what keeps an edge local — it is a dependent LEAVING, or an
+   * endpoint that was never in the area, that costs a `links` entry. All eight
+   * entries in `algebra-foundations.links` have both ends outside the area,
+   * which is the shape of the rule rather than a coincidence.
+   *
+   * So the cheapness was neither the branch's nor the subject's: it is a
+   * property of where a departing node's OWN prerequisites live, which is what
+   * `EUCLIDEAN_GEOMETRY`'s comment reaches by the same route and states
+   * correctly.
    *
    * Both are real gates, and they gate the two halves of the concept that this
    * file's header describes as the two things its prerequisites each stop one
@@ -2899,6 +3270,102 @@ const EDGES: ConceptEdge[] = [
       + 'fraction" instead of "not finished yet", so the classification has to be in hand before '
       + 'an expansion can be read as evidence about the number it names.',
   },
+
+  /**
+   * THE TWELFTH PROMOTION'S ONE STRANDED EDGE, AND IT IS THE CHEAP SHAPE — SO
+   * THE PARAGRAPH ABOVE PREDICTING OTHERWISE WAS WRONG, AND IS CORRECTED THERE.
+   *
+   * `ratio-and-rate` declared exactly one `needs`, `fraction-arithmetic`, and
+   * that concept is in THIS file, so the stranded edge has an owner here and
+   * crosses no subject boundary. `algebra-foundations` needed no `links` entry
+   * for the departure, which makes this the fourth cheap case in this subject
+   * rather than the first expensive one.
+   *
+   * It is a real gate rather than a formality. Both of the first two knowledge
+   * points turn on comparing two quotients — 90/150 against 3/5 in the first,
+   * and 2/5 against 5/12 over a common denominator of 60 in the second — so a
+   * learner who cannot yet put two fractions over one denominator cannot check
+   * either answer. The prerequisite is used, not merely cited.
+   *
+   * Edges pointing the OTHER way were left alone and resolve in `composeAtlas`,
+   * which is the half the paragraph above got backwards. `percent` and
+   * `word-problems` both name this concept in their own `needs` and are both
+   * still map nodes of `algebra-foundations`, so the DECLARING end of each edge
+   * is still a node of that area and still owns it. `links` is for an edge
+   * NEITHER of whose owners is a node of the area, which is why all eight
+   * entries there have both ends outside it.
+   *
+   * The `links` entry in `EUCLIDEAN_GEOMETRY` running from here to `similarity`
+   * stays where it is, for the reason it has always had: `similarity` is
+   * authored in `plane-geometry`, and an ontology's edges may only name
+   * concepts it CONTAINS. What changed for that entry is its CONSEQUENCE and
+   * not its home, and it is the one effect of this promotion a reader would not
+   * predict. It used to gate nothing, because the gating walk passed straight
+   * through a node with no material — `similarity` was gated by `congruence`
+   * and `fraction-arithmetic`. It gates now, and the gating set is the same
+   * SIZE with one member replaced, since this concept stands in front of the
+   * fractions it used to reach. tests/atlas.mjs asserts that by membership,
+   * which is the only reason the turnover is visible rather than silent.
+   */
+  {
+    id: 'fraction-arithmetic->ratio-and-rate',
+    from: 'fraction-arithmetic',
+    to: 'ratio-and-rate',
+    kind: 'prerequisite',
+    promotedBy: 'author:arithmetic-foundations',
+    rationale:
+      'A ratio IS a quotient, and both of the first two points turn on comparing two of them — '
+      + '90/150 against 3/5, and 2/5 against 5/12 over a common denominator. Putting two '
+      + 'fractions over one denominator is the move every check in this concept is made of, so '
+      + 'it has to be in hand first.',
+  },
+
+  /*
+   * AND NO `ratio-and-rate => fraction-arithmetic` EDGE, which is a judgement
+   * against the obvious reading, made by the rule below rather than by taste.
+   *
+   * The prose would support it: a ratio is a quotient, so practising ratios
+   * looks like practising fractions. But an `encompasses` edge is a claim about
+   * what PRACTISING exercises, measured against the tasks actually shipped, and
+   * that is already what keeps `divisibility => place-value` and
+   * `gcd-and-lcm => prime-factorisation` out of this list.
+   *
+   * Measured that way the claim fails, by the same margin those two did. Of the
+   * three tasks here, `one-part-settles-both-shares-1` is an integer division
+   * followed by a multiplication, and
+   * `the-additive-reading-is-a-different-claim-1` is integer arithmetic
+   * throughout. Only `which-bag-is-dearer-per-kilogram-1` is a difference of
+   * two quotients, and even there both divide exactly. One task of three is not
+   * enough: the effect of an encompasses edge is to stop a concept coming due,
+   * so a learner who practised the other two would be credited for fraction
+   * arithmetic on evidence containing none of it, and the cost lands on them as
+   * a weak concept that has quietly stopped being asked about.
+   *
+   * What would make it correct is a task here whose answer is a fraction in
+   * lowest terms rather than an integer — sharing a total that does not divide
+   * by the number of parts would do it. Add the edge with that task, not before
+   * it.
+   */
+
+  /*
+   * NO `interferes_with` EITHER, AND IT GETS A LINE BECAUSE IT IS THE STRANDING
+   * NO TEST CATCHES.
+   *
+   * `expandEdges` turns a node's `confusedWith` into an `interferes_with`, so
+   * promoting a node DELETES any interference it declared — and nothing goes
+   * red, because `interferes_with` constrains selection rather than gating. The
+   * `ratio-and-rate` node declared none, so there was nothing to restate here
+   * and nothing was lost. Checked on the node before it was deleted, rather
+   * than inferred from the suites staying green, since staying green is exactly
+   * what they would have done either way.
+   *
+   * `percent` is what this concept would interfere with if anything did — it is
+   * a ratio with its denominator fixed at 100, and compounding a percent of the
+   * wrong base is its own node's stated error. It cannot be declared from here:
+   * `percent` is still a map node, and an ontology may only name concepts it
+   * contains. Whoever promotes `percent` should look at the pair again from
+   * that end.
+   */
 
   /**
    * Credit propagation.

@@ -290,10 +290,10 @@ t('place value is a root of the whole map, and was not teachable before',
 t('the authored arithmetic ids appear exactly once each in the composed concept list',
   ['place-value', 'integer-arithmetic', 'order-of-operations', 'negative-numbers', 'divisibility',
     'fraction-arithmetic', 'prime-factorisation', 'gcd-and-lcm', 'roots-and-irrationals',
-    'decimal-representation', 'real-number-line']
+    'decimal-representation', 'real-number-line', 'ratio-and-rate']
     .every(id => MATHEMATICS.concepts.filter(c => c.id === id).length === 1))
 t('and they carry their own subject, not the area they left',
-  MATHEMATICS.concepts.filter(c => c.subjectId === 'arithmetic-foundations').length === 11)
+  MATHEMATICS.concepts.filter(c => c.subjectId === 'arithmetic-foundations').length === 12)
 /*
  * This cross-boundary example has now moved up twice, and the reason is worth
  * stating once rather than re-deriving each time: the illustration has to be a
@@ -313,28 +313,53 @@ t('and they carry their own subject, not the area they left',
  * role on two edges, which is itself a reading of how far that area had been
  * written out before it was merged into `algebra-foundations`.
  *
- * AND IT HAS BEEN PROMOTED IN TURN, SO THE TWO-EDGE FORM IS GONE FROM THIS
- * SUBJECT WITH NO SUCCESSOR — which the sentence above predicted and is worth
- * stating as an outcome rather than leaving as a gap somebody fills with a
- * wrong example. Nothing still on the map names two authored arithmetic
- * concepts in its own `needs`: `percent` names `ratio-and-rate`, which is a
- * map node, alongside `decimal-representation`; `scientific-notation` and
- * `linear-inequalities` each name exactly one. So the pair below is now two
- * ONE-edge cases, and the two-promotion form is asserted where it still
- * exists — in the shape the promotion left behind, two groups down, where
- * `real-number-line` has to be teachable with BOTH of its edges restated
- * inside its new subject.
+ * AND IT WAS PROMOTED IN TURN, WHICH LOOKED LIKE THE END OF THE TWO-EDGE FORM
+ * AND WAS NOT. This paragraph said the form was "gone from this subject with no
+ * successor", and gave its reason: nothing still on the map named two authored
+ * arithmetic concepts in its own `needs`, because `percent` named
+ * `ratio-and-rate` — then a map node — alongside `decimal-representation`.
  *
- * They are still worth two assertions rather than one. A bug in
- * `composeAtlas`'s edge resolution could resolve an edge into an area that
- * kept its node and drop one into an area that did not, and these two differ
- * on exactly that.
+ * The twelfth promotion authored `ratio-and-rate`, so `percent` now names two
+ * authored arithmetic concepts and IS the successor this paragraph said did not
+ * exist. The prediction was sound and its premise expired, which is the normal
+ * way a claim about an unfinished map stops being true — so it is corrected
+ * rather than deleted, and the two-edge assertion is restored below instead of
+ * being left as a gap somebody fills with a wrong example.
+ *
+ * `scientific-notation` and `linear-inequalities` still name exactly one each,
+ * so `percent` is the only node that can play this role.
+ *
+ * All three are worth asserting rather than one. A bug in `composeAtlas`'s edge
+ * resolution could resolve an edge into an area that kept its node and drop one
+ * into an area that did not, and these differ on exactly that.
  */
 t('the nodes that used to need them still do, across the file boundary',
   prerequisitesOf(MATHEMATICS, 'absolute-value').includes('negative-numbers')
   && prerequisitesOf(MATHEMATICS, 'linear-inequalities').includes('real-number-line'),
   `${prerequisitesOf(MATHEMATICS, 'absolute-value').join('/')} | `
   + prerequisitesOf(MATHEMATICS, 'linear-inequalities').join('/'))
+t('and the two-edge form is back: percent rests on two authored arithmetic concepts at once',
+  ['ratio-and-rate', 'decimal-representation'].every(id =>
+    prerequisitesOf(MATHEMATICS, 'percent').includes(id)
+    && isTeachable(MATHEMATICS, id)
+    && areaOf(MATHEMATICS, id) === 'arithmetic-foundations')
+  && AREAS.find(a => a.id === 'algebra-foundations').nodes.some(n => n.id === 'percent'),
+  prerequisitesOf(MATHEMATICS, 'percent')
+    .map(id => `${id}@${areaOf(MATHEMATICS, id)}`).join(' '))
+/*
+ * And the half of that which is easy to lose: `percent` is the DECLARING end
+ * and it stayed on the map, so neither edge needed a `links` entry. A promotion
+ * costs one only when neither end of an edge is a node of the area — not, as
+ * two comments in this codebase used to say, whenever something that stayed
+ * depended on the node that left. Asserted because the wrong rule predicts a
+ * `links` entry here, and a spurious one would be a duplicate edge waiting to
+ * happen.
+ */
+t('and neither of those edges needed a links entry, since percent itself stayed',
+  (AREAS.find(a => a.id === 'algebra-foundations').links ?? [])
+    .every(l => l.to !== 'percent'),
+  (AREAS.find(a => a.id === 'algebra-foundations').links ?? [])
+    .map(l => `${l.from}->${l.to}`).join(' '))
 /*
  * The edges INTO the promoted decimals, declared by nodes that stayed. This is
  * the case that needed no `links` entry at all — see the removal note in
@@ -685,7 +710,7 @@ group('vectors gated matrices, which is what authoring underneath means')
 const VEC_IDS = new Set(
   MATHEMATICS.concepts.filter(c => c.subjectId === 'vectors-and-independence').map(c => c.id),
 )
-t('the subject contributes four concepts', VEC_IDS.size === 4, `${VEC_IDS.size}`)
+t('the subject contributes six concepts', VEC_IDS.size === 6, `${VEC_IDS.size}`)
 t('matrices now gates on vectors, not through them',
   gatingPrerequisitesOf(MATHEMATICS, 'matrices-and-maps').includes('vectors-and-spans'),
   gatingPrerequisitesOf(MATHEMATICS, 'matrices-and-maps').join(', '))
@@ -698,8 +723,12 @@ t('and the gate it names is teachable, so it is somewhere to go',
  * `cartesian-plane` was a node of `coordinate-geometry` and is now the first
  * concept of this ontology. The count above is the assertion that catches the
  * collision half of that move — `atlasProblems` would reject the node if it had
- * been left behind, and a fifth concept here would mean somebody added one
- * without reading this group.
+ * been left behind, and a SEVENTH concept here would mean somebody added one
+ * without reading this group. It read `=== 4` until the dot product arrived as
+ * the fifth, and `=== 5` until the three dimensions arrived as the sixth; the
+ * number is edited deliberately on each promotion rather than relaxed to a
+ * floor, because the thing it guards against is a concept appearing with no
+ * account of where it came from.
  *
  * What is asserted below is the half a count cannot see. Before the promotion
  * `plane-vectors` gated on `roots-and-irrationals` and `decimal-representation`,
@@ -759,6 +788,152 @@ t('linear-independence does not depend on the determinant',
   allPrerequisitesOf(MATHEMATICS, 'linear-independence').join(', '))
 t('and the teaching order still exists, so nothing has cycled',
   teachingOrder(MATHEMATICS) !== null)
+
+/**
+ * THE DOT PRODUCT WAS PROMOTED IN AS THE FIFTH, AND THE SUBJECT STOPPED BEING
+ * A CHAIN.
+ *
+ * It rests on `plane-vectors` and on nothing else in this ontology, so the
+ * subject branches at its second concept: one arm runs to the span and
+ * independence, the other to the product. That is asserted as the BRANCH POINT
+ * by name rather than as an ordered walk of the subject, because an ordered
+ * string would have passed the new concept hung off `linear-independence`
+ * instead — which is a real mistake somebody will make, the cross-check and the
+ * dot product being the same four numbers combined two ways, and it would gate
+ * the product behind material it never uses.
+ *
+ * The other `needs` could not come with it. `right-triangle-trig` is authored
+ * in `triangle-trigonometry`, and an ontology may only name concepts it
+ * contains, so that edge is a `links` entry of `euclidean-geometry` — the area
+ * that owned the departing node. Checked here from the composed side: both
+ * prerequisites must resolve, exactly once each, with the two of them stamped
+ * by different promoters, which is the one observable difference between the
+ * edge that went into the ontology and the edge that had to be rehomed.
+ */
+group('the dot product was promoted into the vectors subject')
+const VECTORS = ONTOLOGIES.find(o => o.subject.id === 'vectors-and-independence')
+t('it is a concept of this subject and no longer a node of the geometry area',
+  VEC_IDS.has('dot-product-geometry')
+  && areaOf(MATHEMATICS, 'dot-product-geometry') === 'vectors-and-independence'
+  && AREAS.find(a => a.id === 'euclidean-geometry')
+    .nodes.every(n => n.id !== 'dot-product-geometry'),
+  areaOf(MATHEMATICS, 'dot-product-geometry'))
+t('and it has material, which is the half a collision check cannot see',
+  isTeachable(MATHEMATICS, 'dot-product-geometry')
+  && isPractisable(VECTORS, 'dot-product-geometry'))
+/*
+ * THE THIRTEENTH PROMOTION CLOSED THE FORK AGAIN, and the half of this
+ * assertion that had to change is the half that was about the OTHER branch.
+ *
+ * The dot product's own parent is unchanged and still asserted by name: it
+ * rests on `plane-vectors` and on nothing else here, which is the mistake worth
+ * guarding — hanging it off `linear-independence` instead would gate it behind
+ * material it never uses, the cross-check and the product being the same four
+ * numbers combined two ways.
+ *
+ * What moved is `vectors-and-spans`. It used to rest on `plane-vectors` alone,
+ * and `three-dimensional-coordinates` is now a second parent of it — the edge
+ * came home from `linear-algebra.links` when that node was authored into this
+ * subject. So the branch that went to the span rejoins the branch that went to
+ * the product, two concepts along, and the subject is a diamond rather than a
+ * fork.
+ *
+ * Asserted as a SET and not as an ordered string, for the reason this file
+ * keeps restating: the two parents are sorted before comparison, because
+ * `prerequisitesOf` returns edge order and an ordered string would turn a
+ * reordering of the `EDGES` array into a failure while accepting a parent hung
+ * off the wrong concept.
+ */
+t('the product hangs off plane-vectors, and span now hangs off the product\'s branch as well',
+  prerequisitesOf(VECTORS, 'dot-product-geometry').join(' ') === 'plane-vectors'
+  && prerequisitesOf(VECTORS, 'vectors-and-spans').slice().sort().join(' ')
+    === 'plane-vectors three-dimensional-coordinates'
+  && !allPrerequisitesOf(VECTORS, 'dot-product-geometry').includes('linear-independence'),
+  `${prerequisitesOf(VECTORS, 'dot-product-geometry').join(', ')}`
+  + ` | ${prerequisitesOf(VECTORS, 'vectors-and-spans').join(', ')}`)
+/*
+ * And the diamond really closes, which is the claim a pair of parent lists
+ * cannot make on its own: the two branches out of `plane-vectors` meet at
+ * `vectors-and-spans`, so the dot product is now an ANCESTOR of the span rather
+ * than a sibling of it, and the subject still has a teaching order.
+ */
+t('so the product is now upstream of span, and the subject is still acyclic',
+  allPrerequisitesOf(VECTORS, 'vectors-and-spans').includes('dot-product-geometry')
+  && allPrerequisitesOf(VECTORS, 'vectors-and-spans').includes('three-dimensional-coordinates')
+  && teachingOrder(VECTORS) !== null,
+  allPrerequisitesOf(VECTORS, 'vectors-and-spans').join(', '))
+t('both of its prerequisites resolve in the composed map, once each',
+  ['plane-vectors', 'right-triangle-trig'].every(id =>
+    prerequisitesOf(MATHEMATICS, 'dot-product-geometry').includes(id)
+    && MATHEMATICS.edges.filter(e =>
+      e.from === id && e.to === 'dot-product-geometry' && e.kind === 'prerequisite').length === 1),
+  prerequisitesOf(MATHEMATICS, 'dot-product-geometry').join(', '))
+t('and the two are stamped differently, the rehomed one by the area that owned the node',
+  MATHEMATICS.edges.find(e =>
+    e.from === 'plane-vectors' && e.to === 'dot-product-geometry')
+    ?.promotedBy === 'author:vectors-and-independence'
+  && MATHEMATICS.edges.find(e =>
+    e.from === 'right-triangle-trig' && e.to === 'dot-product-geometry')
+    ?.promotedBy === 'atlas:euclidean-geometry',
+  MATHEMATICS.edges.filter(e => e.to === 'dot-product-geometry')
+    .map(e => `${e.from}:${e.promotedBy}`).join(' '))
+/*
+ * The gate it now imposes, and the two it now has.
+ *
+ * `three-dimensional-coordinates` is the node above it and was gated by
+ * `plane-vectors` and `right-triangle-trig` through the unwritten product;
+ * `gatingPrerequisitesOf` names NEAREST authored ancestors, so writing the
+ * product replaces both with it — the list shrinks while the gate tightens,
+ * which is the reading a count gets backwards and the third time this file has
+ * had to say so.
+ *
+ * `solid-geometry` is the other half of that node's gate and is NOT in the
+ * list, because it is unwritten and the walk passes straight through it to
+ * `circle-measure`. So the entry below is a statement about what is written,
+ * not about what the map says, which is exactly the distinction that makes a
+ * promotion worth measuring.
+ */
+t('the three dimensions are now gated by the product itself, two entries replaced by one',
+  gatingPrerequisitesOf(MATHEMATICS, 'three-dimensional-coordinates')
+    .includes('dot-product-geometry')
+  && !gatingPrerequisitesOf(MATHEMATICS, 'three-dimensional-coordinates')
+    .includes('plane-vectors')
+  && !gatingPrerequisitesOf(MATHEMATICS, 'three-dimensional-coordinates')
+    .includes('right-triangle-trig'),
+  gatingPrerequisitesOf(MATHEMATICS, 'three-dimensional-coordinates').join(', '))
+t('while its own gate is the two concepts it was promoted above',
+  gatingPrerequisitesOf(MATHEMATICS, 'dot-product-geometry').slice().sort().join(' ')
+    === 'plane-vectors right-triangle-trig',
+  gatingPrerequisitesOf(MATHEMATICS, 'dot-product-geometry').join(', '))
+/*
+ * The stranding no other check sees. `expandEdges` turns a node's
+ * `confusedWith` into an `interferes_with`, so deleting a node deletes that
+ * edge and every suite stays green — interference constrains SELECTION rather
+ * than gating. This node carried none, which is the fact worth recording:
+ * asserted so that "there was nothing to strand" is on the record rather than
+ * being indistinguishable from "nobody looked".
+ */
+t('the node stranded no interference, because it declared none',
+  !MATHEMATICS.edges.some(e =>
+    e.kind === 'interferes_with'
+    && (e.from === 'dot-product-geometry' || e.to === 'dot-product-geometry')),
+  MATHEMATICS.edges.filter(e => e.kind === 'interferes_with')
+    .map(e => `${e.from}~${e.to}`).join(' '))
+/*
+ * And the three edges pointing INTO it, which are declared by nodes in three
+ * different files and must not have been touched. `inner-product-spaces` is in
+ * atlas-structures.ts, `gradient-and-directional` in atlas-analysis.ts, and
+ * `three-dimensional-coordinates` in atlas-foundations.ts, so this is the
+ * widest into-edge check in the file — and the one most likely to be broken by
+ * somebody who thought the promotion was a local edit.
+ */
+t('the edges pointing into it survive, from all three map files',
+  ['three-dimensional-coordinates', 'inner-product-spaces', 'gradient-and-directional'].every(id =>
+    prerequisitesOf(MATHEMATICS, id).includes('dot-product-geometry')
+    && MATHEMATICS.edges.filter(e =>
+      e.from === 'dot-product-geometry' && e.to === id).length === 1),
+  MATHEMATICS.edges.filter(e => e.from === 'dot-product-geometry')
+    .map(e => `${e.to}:${e.kind}`).join(' '))
 
 // ---------------------------------------------------------------------------
 
@@ -1155,12 +1330,108 @@ t('the area no longer declares any of the ten, and each carries its own subject'
  * dropping one, or collapsing one it should not have, is named rather than
  * counted.
  */
+/*
+ * FIVE NOW, THE ELEVENTH PROMOTION HAVING ADDED ONE — and it is the first
+ * entry here whose two ends are both authored, in two subjects neither of
+ * which is this area's own.
+ *
+ * `dot-product-geometry` declared `plane-vectors` and `right-triangle-trig`.
+ * The first went into `VECTORS_AND_INDEPENDENCE.edges`, because that is the
+ * ontology the node joined and the edge is internal to it. The second could
+ * not follow: it is a concept of `triangle-trigonometry`, and an ontology may
+ * only name concepts it CONTAINS. So the rule this list has now demonstrated
+ * five times is not "links is for edges into unwritten nodes" and not "links is
+ * for edges into other subjects" — it is for any edge whose endpoints end up in
+ * different FILES, and this is the cleanest case of it, both ends written.
+ */
+/*
+ * SIX NOW, THE TWELFTH PROMOTION HAVING ADDED ONE — and it is the expensive
+ * case with nothing left over, which no earlier entry here could show.
+ *
+ * Every expensive promotion before it declared two `needs` and had one of them
+ * stay in a syllabus, so the rule looked like a statement about splitting a
+ * list. `solid-geometry` declared ONE, `circle-measure`, and it pointed at a
+ * concept of `plane-geometry` while the node became the only concept of
+ * `solid-measure` — a tenth subject. So the whole of its stranded edges came
+ * here, and the rule is stated at its limit: what decides where a stranded edge
+ * goes is which FILE its other endpoint is in, and nothing about how many there
+ * were.
+ */
+/*
+ * SEVEN NOW, AND THE THIRTEENTH PROMOTION ADDED BOTH A ROW AND A DELETION —
+ * which no earlier promotion did, and is the one shape of edge edit this list
+ * could not previously show.
+ *
+ * `three-dimensional-coordinates` declared two `needs`. `dot-product-geometry`
+ * is a concept of the subject the node joined, so that edge went into
+ * `VECTORS_AND_INDEPENDENCE.edges`. `solid-geometry` is a concept of
+ * `solid-measure`, so that one is the entry added below — the expensive case
+ * again, and the second entry in this list with authored material at both ends
+ * from the day it was written.
+ *
+ * The deletion is in atlas-structures.ts rather than here, and it is why this
+ * block exists at all: `three-dimensional-coordinates → vectors-and-spans` was
+ * a `links` entry of `linear-algebra`, and the promotion put both of ITS ends
+ * in one ontology, so that entry had to go. So the rule has a third clause now.
+ * A promotion strands the edges on the node's own `needs`; it leaves edges
+ * declared at the far end alone; and it can also COLLAPSE a `links` entry
+ * somewhere else entirely, by making both of that entry's ends concepts of one
+ * file. The first two fail loudly when missed. The third does not — `links`
+ * never cared whether an end was a node or a concept, so a stale entry goes on
+ * resolving and the composed graph silently carries the edge twice.
+ */
 const EUCLID_LINKS = (EUCLID.links ?? []).map(l => `${l.from}->${l.to}`).join(' ')
-t('the area asks for exactly the four cross-file edges it has been handed, in order',
+t('the area asks for exactly the seven cross-file edges it has been handed, in order',
   EUCLID_LINKS === 'ratio-and-rate->similarity roots-and-irrationals->pythagoras '
-    + 'real-number-line->cartesian-plane negative-numbers->cartesian-plane'
+    + 'real-number-line->cartesian-plane negative-numbers->cartesian-plane '
+    + 'right-triangle-trig->dot-product-geometry circle-measure->solid-geometry '
+    + 'solid-geometry->three-dimensional-coordinates'
   && (EUCLID.links ?? []).every(l => !!l.because),
   EUCLID_LINKS)
+/*
+ * The collapsed entry, asserted from both sides — which is the only way to
+ * catch it, since neither side fails on its own.
+ *
+ * `linear-algebra` must no longer name the edge, the ontology must now declare
+ * it, and the composed graph must carry it EXACTLY ONCE. That last clause is
+ * the real assertion: dropping either of the first two leaves a graph that
+ * still contains the edge and still walks correctly, and only the count of
+ * duplicates distinguishes "rehomed" from "declared twice".
+ */
+const LINALG_LINKS = (AREAS.find(a => a.id === 'linear-algebra').links ?? [])
+  .map(l => `${l.from}->${l.to}`)
+t('the span edge came home: the map no longer declares it and the ontology does',
+  !LINALG_LINKS.includes('three-dimensional-coordinates->vectors-and-spans')
+  && VECTORS.edges.some(e =>
+    e.from === 'three-dimensional-coordinates' && e.to === 'vectors-and-spans'
+    && e.kind === 'prerequisite' && !!e.rationale),
+  LINALG_LINKS.join(' '))
+t('and the composed graph carries it exactly once, which is what a stale links entry would break',
+  MATHEMATICS.edges.filter(e =>
+    e.from === 'three-dimensional-coordinates' && e.to === 'vectors-and-spans'
+    && e.kind === 'prerequisite').length === 1,
+  `${MATHEMATICS.edges.filter(e => e.from === 'three-dimensional-coordinates'
+    && e.to === 'vectors-and-spans').length}`)
+t('and it is stamped by the author rather than by the area that used to declare it',
+  MATHEMATICS.edges.find(e =>
+    e.from === 'three-dimensional-coordinates' && e.to === 'vectors-and-spans')
+    ?.promotedBy === 'author:vectors-and-independence',
+  MATHEMATICS.edges.find(e =>
+    e.from === 'three-dimensional-coordinates' && e.to === 'vectors-and-spans')?.promotedBy)
+/*
+ * And the new one's two ends, named — because "both ends authored" is not the
+ * claim. The claim is that they are authored in two subjects NEITHER of which
+ * is reachable from the other's edge list, which is what makes `links` the only
+ * home rather than a convenience. `areaOf` returns a subject id for an authored
+ * concept, so this reads the filing directly.
+ */
+t('and the newest one runs between two subjects, which is why it cannot live in either',
+  areaOf(MATHEMATICS, 'circle-measure') === 'plane-geometry'
+  && areaOf(MATHEMATICS, 'solid-geometry') === 'solid-measure'
+  && prerequisitesOf(MATHEMATICS, 'solid-geometry').join(' ') === 'circle-measure'
+  && MATHEMATICS.edges.filter(e =>
+    e.from === 'circle-measure' && e.to === 'solid-geometry').length === 1,
+  `${areaOf(MATHEMATICS, 'circle-measure')} -> ${areaOf(MATHEMATICS, 'solid-geometry')}`)
 t('and the two the merge brought over still resolve in the composed map',
   prerequisitesOf(MATHEMATICS, 'cartesian-plane').includes('real-number-line')
   && prerequisitesOf(MATHEMATICS, 'cartesian-plane').includes('negative-numbers'),
@@ -1185,18 +1456,40 @@ t('and pythagoras still rests on roots-and-irrationals, across a subject boundar
   prerequisitesOf(MATHEMATICS, 'pythagoras').includes('roots-and-irrationals'),
   prerequisitesOf(MATHEMATICS, 'pythagoras').join(', '))
 /*
- * The difference between the two links, asserted rather than only described.
- * `ratio-and-rate` has no material, so the gating walk passes straight through
- * it and that link gates nothing. `roots-and-irrationals` does, so this one
- * gates — the first `links` entry in this area to change what a learner has to
- * demonstrate. Worth holding, because the easiest way to lose it is to decide
- * the two entries are interchangeable.
+ * THE CONTRAST THESE TWO LINKS USED TO DRAW HAS COLLAPSED, AND THE ASSERTION IS
+ * REWRITTEN RATHER THAN DELETED.
+ *
+ * It used to say that `roots-and-irrationals->pythagoras` GATES while
+ * `ratio-and-rate->similarity` does not: the first endpoint had material and
+ * the second was a skeleton, so the gating walk passed straight through it.
+ * That was true, load-bearing, and is now false in its second half —
+ * `ratio-and-rate` is authored, so both links gate.
+ *
+ * The distinction the pair was really keeping on the record survives intact and
+ * is the one asserted above: `links` is about which FILE an endpoint is in, not
+ * about whether it was written. `ratio-and-rate` could not go into
+ * `PLANE_GEOMETRY.edges` as a skeleton and still cannot as a concept, because
+ * it is authored in `arithmetic-foundations` and an ontology may only name
+ * concepts it CONTAINS. So the entry never moved, and what changed is only what
+ * it costs a learner.
+ *
+ * What is asserted instead is the stronger thing the promotion made true, and
+ * it is the shape that catches a silent regression: BOTH links gate, and
+ * `similarity`'s gating set is the same SIZE as before with one member
+ * replaced. `fraction-arithmetic` used to appear there, reached through the
+ * empty node; `ratio-and-rate` stands in front of it now. A `length === 2`
+ * check would have passed before and after while the claim turned over
+ * completely, which is why this names the members.
  */
-t('and that one GATES, unlike the other link, because its endpoint has material',
+t('both links GATE now, since both endpoints have material',
   gatingPrerequisitesOf(MATHEMATICS, 'pythagoras').includes('roots-and-irrationals')
-  && !gatingPrerequisitesOf(MATHEMATICS, 'similarity').includes('ratio-and-rate'),
+  && gatingPrerequisitesOf(MATHEMATICS, 'similarity').includes('ratio-and-rate'),
   `pythagoras:[${gatingPrerequisitesOf(MATHEMATICS, 'pythagoras').join(' ')}] `
   + `similarity:[${gatingPrerequisitesOf(MATHEMATICS, 'similarity').join(' ')}]`)
+t('and similarity is gated by the ratio instead of through it — same count, one member replaced',
+  gatingPrerequisitesOf(MATHEMATICS, 'similarity').slice().sort().join(' ')
+    === 'congruence ratio-and-rate',
+  gatingPrerequisitesOf(MATHEMATICS, 'similarity').slice().sort().join(' '))
 /*
  * The interference `similarity` also stranded, asserted separately because its
  * loss is the only stranding here that would NOT have shown up as a missing
@@ -1406,11 +1699,51 @@ t('and the ninth tightened it onto exactly its own pair, with nothing left from 
  * concept where it used to name `area-and-perimeter`. Eight members before and
  * eight after, with different membership — the fifth time in this file a set
  * has turned over without its size moving.
+ *
+ * THE TWELFTH PROMOTION MADE THE FIRST HALF OF THAT UNASSERTABLE HERE, AND
+ * CORRECTLY SO. The claim was "`solid-geometry`'s gate shrank from two to one",
+ * and it was checked against a node that had to really be in this area — which
+ * is what made it fail loudly rather than go vacuous when that node was itself
+ * promoted. The gate is still exactly `circle-measure`, but a statement about
+ * what the MAP gates is not assertable on a concept, so the shrinkage is
+ * recorded in the departed group below, where the record of that node now
+ * lives.
+ *
+ * THE THIRTEENTH PROMOTION DID THE SAME THING TO THE REPLACEMENT, which is
+ * three promotions running that have made this group's subject unassertable and
+ * is worth naming as a pattern rather than patched a third time. The claim was
+ * "`three-dimensional-coordinates`'s gate swapped a member without changing
+ * size", checked against a node that had to really be in this area — and that
+ * node is now a concept of `vectors-and-independence`. The guard worked: it
+ * failed loudly with the id printed rather than going vacuous.
+ *
+ * So the lesson is recorded once here instead of being rediscovered. A gate
+ * assertion anchored on a MAP NODE has a life expectancy, because the node
+ * being written is the goal. Anchor the claim on what gates it and not on what
+ * it gates, or expect to move it every time the thing above it is authored.
+ *
+ * What replaces it is the same rule read from the other end, where it is
+ * stable — and it is the THIRD of the three outcomes, which is what makes the
+ * set of them worth keeping. `vectors-and-spans` is an authored concept and its
+ * gate used to read `plane-vectors`, `dot-product-geometry`, `solid-geometry`:
+ * the walk passed through the unwritten three dimensions and collected both
+ * halves of what lay behind them. It now reads `plane-vectors` and the three
+ * dimensions themselves. THREE MEMBERS BEFORE AND TWO AFTER — so this
+ * promotion tightened a gate by SHRINKING it, where the twelfth tightened one
+ * by swapping a member and the tenth shrank one from two to one. A count read
+ * as a measure of how gated something is gets this exactly backwards: the list
+ * got shorter because the gate moved closer.
  */
-t('and what rests on circular measure is now gated by it, the gate shrinking from two to one',
-  gatingPrerequisitesOf(MATHEMATICS, 'solid-geometry').join(',') === 'circle-measure'
-  && EUCLID.nodes.some(n => n.id === 'solid-geometry'),
-  gatingPrerequisitesOf(MATHEMATICS, 'solid-geometry').join(', '))
+t('span is tightened onto the three dimensions, three gate members replaced by two',
+  gatingPrerequisitesOf(MATHEMATICS, 'vectors-and-spans').slice().sort().join(' ')
+    === 'plane-vectors three-dimensional-coordinates'
+  && isTeachable(MATHEMATICS, 'three-dimensional-coordinates'),
+  gatingPrerequisitesOf(MATHEMATICS, 'vectors-and-spans').join(', '))
+t('and the gate it names is teachable, so the tightening is somewhere to go rather than a wall',
+  gatingPrerequisitesOf(MATHEMATICS, 'vectors-and-spans')
+    .every(p => isTeachable(MATHEMATICS, p) && isPractisable(MATHEMATICS, p)),
+  gatingPrerequisitesOf(MATHEMATICS, 'vectors-and-spans')
+    .filter(p => !isPractisable(MATHEMATICS, p)).join(', '))
 t('and radians is tightened onto it too, from another area, without its gate changing size',
   gatingPrerequisitesOf(MATHEMATICS, 'radians').includes('circle-measure')
   && !gatingPrerequisitesOf(MATHEMATICS, 'radians').includes('area-and-perimeter')
@@ -1616,11 +1949,77 @@ t('none of the sixth, seventh or eighth promotion\'s own nodes is a root of the 
  * is asserted by name, and the second consecutive promotion where the count
  * alone says nothing at all.
  */
-t('so the set is seven, by named membership and never by count',
+/*
+ * THE ELEVENTH PROMOTION THEN SHRANK IT, seven to six, which is the fifth
+ * promotion's shape for the third time and the sixth turnover of this set.
+ *
+ * `dot-product-geometry` left and nothing replaced it. The node resting on it
+ * is `three-dimensional-coordinates`, which did not become a root because its
+ * other prerequisite `solid-geometry` is in this area and still gates it from
+ * inside — the same rule, and the same reason, as `circles` not joining when
+ * `pythagoras` left and `circle-measure` not joining when `area-and-perimeter`
+ * did.
+ *
+ * The departing node is also the first member of this set to have ARRIVED by
+ * merge rather than by being authored around: it became a root when
+ * `coordinate-geometry` was absorbed, because every one of its prerequisites
+ * was outside the merged area, and it has now left as one. The size has read
+ * 1, 1, 4, 4, 3, 3, 6, 5, 5, 7, 7 and 6 across twelve transitions, five of
+ * which moved membership without moving size.
+ */
+/*
+ * THE TWELFTH PROMOTION THEN SUBSTITUTED, six to six, which is the seventh
+ * turnover of this set and the fourth time membership has moved without the
+ * size moving at all.
+ *
+ * `solid-geometry` left and `three-dimensional-coordinates` took its place,
+ * because the departing node was the LAST of that node's prerequisites inside
+ * the area. The other one, `dot-product-geometry`, left at the eleventh and did
+ * NOT promote it then — which the assertion immediately below this group used
+ * to be about, and which is the same rule producing the opposite outcome one
+ * promotion apart.
+ *
+ * The size has now read 1, 1, 4, 4, 3, 3, 6, 5, 5, 7, 7, 6 and 6 across
+ * thirteen transitions, and TWO of the six claims below changed on this one:
+ * the member that left and the member that arrived. A `length === 6` check
+ * would have passed on both sides of it, which is the sixth demonstration of
+ * why this is asserted by name and the third consecutive promotion where the
+ * count alone says nothing.
+ */
+/*
+ * AND THE THIRTEENTH TOOK ONE AWAY WITHOUT PUTTING ANYTHING IN ITS PLACE, which
+ * is the eighth turnover and ends a run of three substitutions.
+ *
+ * `three-dimensional-coordinates` left, and nothing replaced it, because a
+ * departing node promotes a dependent to root only when it was the LAST of that
+ * dependent's prerequisites INSIDE the area — and this node had no in-area
+ * dependents at all. Both of them are elsewhere: `vectors-and-spans` is an
+ * authored concept of `vectors-and-independence` and
+ * `functions-of-several-variables` is a node of `multivariable-calculus`. So
+ * the set simply lost a member.
+ *
+ * That is the third of the three things a promotion can do to this set, after
+ * substituting and after fanning out to several, so the sequence below now
+ * contains an instance of each. The size has read 1, 1, 4, 4, 3, 3, 6, 5, 5,
+ * 7, 7, 6, 6 and 5 across fourteen transitions — and note that a `length === 5`
+ * check would be satisfied by the eighth and ninth entries too, whose
+ * membership has nothing in common with this one's.
+ */
+t('so the set is five, by named membership and never by count',
   euclidRoots.slice().sort().join(',')
-  === 'constructions,distance-and-midpoint,dot-product-geometry,'
-    + 'isometries-and-symmetry,non-euclidean-geometry,plane-transformations,solid-geometry',
+  === 'constructions,distance-and-midpoint,isometries-and-symmetry,'
+    + 'non-euclidean-geometry,plane-transformations',
   euclidRoots.join(', '))
+t('and the departed node is gone from the area entirely rather than merely off the root list',
+  EUCLID.nodes.every(n => n.id !== 'three-dimensional-coordinates')
+  && areaOf(MATHEMATICS, 'three-dimensional-coordinates') === 'vectors-and-independence',
+  areaOf(MATHEMATICS, 'three-dimensional-coordinates'))
+t('and it was removed rather than replaced because neither of its dependents was in this area',
+  ['vectors-and-spans', 'functions-of-several-variables'].every(id =>
+    EUCLID.nodes.every(n => n.id !== id)
+    && prerequisitesOf(MATHEMATICS, id).includes('three-dimensional-coordinates')),
+  ['vectors-and-spans', 'functions-of-several-variables']
+    .map(id => `${id}@${areaOf(MATHEMATICS, id)}`).join(' '))
 /*
  * The ninth promotion's three-at-once fan-out, with ONE OF THE THREE REMOVED
  * because it has since been authored — and removed rather than left in, because
@@ -1645,12 +2044,41 @@ t('and the ninth promotion\'s fan-out still holds for the two of the three still
   && EUCLID.nodes.every(n => n.id !== 'circle-measure'),
   ['constructions', 'non-euclidean-geometry']
     .map(id => `${id}:[${(EUCLID.nodes.find(n => n.id === id)?.needs ?? []).join(' ')}]`).join(' '))
-t('while three-dimensional-coordinates is held back from inside by the solids, which the merge brought into the same area',
-  EUCLID.nodes.some(n => n.id === 'three-dimensional-coordinates'
-    && (n.needs ?? []).includes('solid-geometry'))
-  && EUCLID.nodes.some(n => n.id === 'solid-geometry')
-  && !euclidRoots.includes('three-dimensional-coordinates'),
-  (EUCLID.nodes.find(n => n.id === 'three-dimensional-coordinates')?.needs ?? []).join(', '))
+/*
+ * The replacement for "three-dimensional-coordinates became a root, both of its
+ * prerequisites being outside the area", which the THIRTEENTH promotion made
+ * unassertable by writing that node — and which was deliberately NOT written as
+ * `(EUCLID.nodes.find(...)?.needs ?? []).every(...)`, because that form goes
+ * VACUOUSLY TRUE the moment the node leaves the area. It was written with a
+ * `.some(...)` requiring the node to be present, so it failed loudly with the
+ * node's own `needs` printed. Keeping that shape is the point; see the
+ * `area-and-perimeter` note below, where the vacuous version is dissected.
+ *
+ * What survives the promotion is the half that was never about the node's
+ * position in this area: both of the prerequisites it declared are authored
+ * concepts, in two subjects of which neither is this one, and the edges it
+ * declared therefore split two ways — one into an ontology and one into this
+ * area's `links`. That claim is now checked on the CONCEPT rather than on the
+ * node, which is where it is stable, and the split is checked by the promoter
+ * stamps because that is the one observable difference between the two homes.
+ */
+t('both of the departed node\'s prerequisites are authored, in two subjects neither of them this area\'s',
+  ['dot-product-geometry', 'solid-geometry'].every(id =>
+    isTeachable(MATHEMATICS, id)
+    && prerequisitesOf(MATHEMATICS, 'three-dimensional-coordinates').includes(id))
+  && areaOf(MATHEMATICS, 'dot-product-geometry') === 'vectors-and-independence'
+  && areaOf(MATHEMATICS, 'solid-geometry') === 'solid-measure',
+  ['dot-product-geometry', 'solid-geometry']
+    .map(id => `${id}@${areaOf(MATHEMATICS, id)}`).join(' '))
+t('and its two stranded edges went to two different homes, which the promoter stamps record',
+  MATHEMATICS.edges.find(e =>
+    e.from === 'dot-product-geometry' && e.to === 'three-dimensional-coordinates')
+    ?.promotedBy === 'author:vectors-and-independence'
+  && MATHEMATICS.edges.find(e =>
+    e.from === 'solid-geometry' && e.to === 'three-dimensional-coordinates')
+    ?.promotedBy === 'atlas:euclidean-geometry',
+  MATHEMATICS.edges.filter(e => e.to === 'three-dimensional-coordinates')
+    .map(e => `${e.from}:${e.promotedBy}`).join(' '))
 /*
  * The replacement for "area-and-perimeter joined it because the polygons were
  * its last prerequisite in the area", which the seventh promotion made
@@ -1718,19 +2146,339 @@ t('and TWO of its three prerequisites have left the area, which still did not pr
  * in the area, so when `solid-geometry` is itself promoted this assertion fails
  * loudly instead of going quietly true on an empty `needs` list — which is what
  * `(find(...)?.needs ?? []).every(...)` did to the seventh promotion's claim.
+ *
+ * IT DID FAIL LOUDLY, EXACTLY AS WRITTEN, and the chain is now SPENT — which
+ * is the claim that replaces it and is a different kind of statement. There is
+ * no current bottom left to point at: the area owes ONE node on either
+ * unfinished route, both halves of its gate are authored, and it is writable
+ * today. So what is asserted is the exhaustion rather than the chain — the one
+ * node still owed, and that nothing unwritten stands under it anywhere in the
+ * composed map.
+ *
+ * That last clause is the one doing the work. "Its prerequisites are authored"
+ * is a claim about two edges; "nothing unwritten is anywhere beneath it" is a
+ * claim about the whole closure, and it is what "the depth has run out" means.
+ * It is also the assertion that will fail when this node is promoted, which is
+ * correct: the sentence will have nothing left to describe.
+ *
+ * IT WAS PROMOTED AND THE SENTENCE HAS NOTHING LEFT TO DESCRIBE, which is the
+ * predicted ending rather than a break. The thirteenth promotion wrote
+ * `three-dimensional-coordinates`, so this area owes NOTHING on either
+ * unfinished route — the first time that has been true since the merge.
+ *
+ * What is asserted in its place is the emptiness, and in the strongest form
+ * this file can check without reaching for the journeys: NO node of this area
+ * stands beneath any authored concept. A map node that gates something written
+ * is a node some learner has to cross to reach material that exists, which is
+ * what made `three-dimensional-coordinates` owed in the first place — it gated
+ * `vectors-and-spans`. With none left, nothing written anywhere in the build is
+ * reachable only through unwritten geometry.
+ *
+ * It is deliberately NOT the same check as the route table further down. That
+ * table names ids by hand; this walks the composed graph, so the two would have
+ * to drift together to both be wrong. The journey-level version of the claim —
+ * that no destination's route crosses this area any more — is in
+ * tests/journeys.mjs, which is the suite that has the journeys.
  */
-t('and the area\'s remaining route work is one chain, now one link shorter',
-  EUCLID.nodes.some(n => n.id === 'solid-geometry'
-    && (n.needs ?? []).join(',') === 'circle-measure')
-  && isTeachable(MATHEMATICS, 'circle-measure')
-  && EUCLID.nodes.some(n => n.id === 'three-dimensional-coordinates'
-    && (n.needs ?? []).includes('solid-geometry'))
-  && euclidRoots.includes('solid-geometry')
-  && !euclidRoots.includes('three-dimensional-coordinates'),
-  euclidRoots.join(', '))
+t('and the area now owes nothing beneath anything written, which the chain was walked to reach',
+  EUCLID.nodes.every(n => n.id !== 'three-dimensional-coordinates')
+  && isTeachable(MATHEMATICS, 'three-dimensional-coordinates')
+  && MATHEMATICS.concepts.filter(c => isTeachable(MATHEMATICS, c.id))
+    .flatMap(c => allPrerequisitesOf(MATHEMATICS, c.id))
+    .filter(id => EUCLID.nodes.some(n => n.id === id)).length === 0,
+  [...new Set(MATHEMATICS.concepts.filter(c => isTeachable(MATHEMATICS, c.id))
+    .flatMap(c => allPrerequisitesOf(MATHEMATICS, c.id))
+    .filter(id => EUCLID.nodes.some(n => n.id === id)))].join(', '))
 t('and the departed nodes are not roots of it, because they are not in it',
   euclidRoots.every(id => !DEPARTED.includes(id)),
   euclidRoots.join(', '))
+
+// ---------------------------------------------------------------------------
+
+/**
+ * THE FIRST PROMOTION OUT OF `TRIGONOMETRY`, AND THE FIRST INTO A NEW SUBJECT
+ * SINCE THE GEOMETRY.
+ *
+ * `right-triangle-trig` is authored as `triangle-trigonometry`, a ninth subject
+ * ontology holding one concept. Why a new subject rather than an addition to
+ * `plane-geometry` is argued in ontology-trigonometry.ts's header; what is
+ * checkable here is the structural half, and three of the four things below
+ * are claims no previous promotion in this file has been able to make.
+ *
+ * THE AREA'S ROOT SET WENT FROM ONE MEMBER TO TWO, which is the growth case
+ * and the opposite of what "an area gave up a node" sounds like. Inside
+ * `areaOntology` an edge reaching outside the area is filtered away, so this
+ * area's roots were the nodes with no `needs` INSIDE it — and that was the
+ * departing node alone, every other node resting on something here. Removing
+ * it promoted both of its in-area dependents. Asserted by named membership for
+ * the reason this file gives twice already: a count going 1 → 2 says nothing
+ * about which two.
+ */
+const TRIG = AREAS.find(a => a.id === 'trigonometry')
+t('the ratios are gone from the area and carry the new subject',
+  TRIG.nodes.every(n => n.id !== 'right-triangle-trig')
+  && areaOf(MATHEMATICS, 'right-triangle-trig') === 'triangle-trigonometry'
+  && isTeachable(MATHEMATICS, 'right-triangle-trig')
+  && isPractisable(MATHEMATICS, 'right-triangle-trig'),
+  `${areaOf(MATHEMATICS, 'right-triangle-trig')}`)
+t('and the area\'s two roots are the departing node\'s own in-area dependents, by name',
+  roots(areaOntology(TRIG)).slice().sort().join(' ') === 'law-of-sines-cosines unit-circle',
+  roots(areaOntology(TRIG)).slice().sort().join(' '))
+/*
+ * The floor literal rather than the `STUB_FLOOR` constant, which is declared
+ * further down this file and would be in its temporal dead zone here. The
+ * number is restated in the message so a changed floor is visible either way.
+ */
+t('the area is twelve nodes against a floor of five, so nothing here was floor-bound',
+  TRIG.nodes.length === 12 && TRIG.nodes.length - 5 === 7,
+  `${TRIG.nodes.length} nodes, ${TRIG.nodes.length - 5} of headroom`)
+/*
+ * BOTH STRANDED EDGES HAD TO BECOME `links`, AND BOTH OF THEM GATE.
+ *
+ * The departing node's own `needs` were `similarity` and `pythagoras`, which
+ * are concepts of `plane-geometry`. An authored ontology may only name
+ * concepts it CONTAINS, so neither could go into `TRIANGLE_TRIGONOMETRY.edges`
+ * — the same reason `roots-and-irrationals->pythagoras` had to come to
+ * `EUCLIDEAN_GEOMETRY.links` rather than stay in a syllabus. They are declared
+ * in the area that OWNED the departing node, which is why `promotedBy` reads
+ * `atlas:trigonometry` and not `atlas:euclidean-geometry`.
+ *
+ * What is new is that this area's `links` list was EMPTY before, and both
+ * entries arrived at once and both point at authored concepts with material.
+ * `EUCLIDEAN_GEOMETRY`'s first link pointed at an unwritten node and gated
+ * nothing for five promotions; these two gate from the moment they exist.
+ */
+const TRIG_LINKS = (TRIG.links ?? []).map(l => `${l.from}->${l.to}`).join(' ')
+t('the area declares exactly the two cross-file edges the promotion stranded, in order',
+  TRIG_LINKS === 'similarity->right-triangle-trig pythagoras->right-triangle-trig'
+  && (TRIG.links ?? []).every(l => !!l.because),
+  TRIG_LINKS)
+t('and both resolve in the composed map, stamped with the area that owned the node',
+  prerequisitesOf(MATHEMATICS, 'right-triangle-trig').slice().sort().join(' ')
+    === 'pythagoras similarity'
+  && MATHEMATICS.edges.filter(e =>
+    e.to === 'right-triangle-trig' && e.kind === 'prerequisite')
+    .every(e => e.promotedBy === 'atlas:trigonometry'),
+  MATHEMATICS.edges.filter(e => e.to === 'right-triangle-trig')
+    .map(e => `${e.from}:${e.promotedBy}`).join(' '))
+/*
+ * And the three edges pointing INTO the departed node, which were not touched
+ * and must not have been. An edge is owned by the node that DECLARES it, so
+ * `unit-circle` and `law-of-sines-cosines` here still name it in their own
+ * `needs` and `composeAtlas` resolves both against the authored concept.
+ *
+ * The third was `dot-product-geometry`'s own `needs`, in another FILE, and it
+ * is no longer declared that way: that node has itself been promoted, into
+ * `vectors-and-independence`, and the edge was rehomed to
+ * `EUCLIDEAN_GEOMETRY.links`. So it still resolves, still exactly once, and
+ * still stamped `atlas:euclidean-geometry` — `expandEdges` derives a link's id
+ * and promoter identically to a `needs` — which is why this assertion did not
+ * have to change while the thing it is about did. That is the case the eleventh
+ * promotion added to the record here: "an edge pointing into a departed node is
+ * safe" holds only until the node at the other end is promoted too, and when it
+ * is, the edge survives by being rewritten rather than by being left alone.
+ *
+ * Checked for duplication as well as for presence, because the one failure
+ * `composeAtlas` does not report is the same edge arriving twice — once from a
+ * node's `needs` and once from a `links` entry somebody added "for symmetry".
+ */
+t('the three edges that pointed into it survive the promotion, once each',
+  ['unit-circle', 'law-of-sines-cosines', 'dot-product-geometry'].every(id =>
+    prerequisitesOf(MATHEMATICS, id).includes('right-triangle-trig')
+    && MATHEMATICS.edges.filter(e =>
+      e.from === 'right-triangle-trig' && e.to === id).length === 1),
+  MATHEMATICS.edges.filter(e => e.from === 'right-triangle-trig')
+    .map(e => `${e.to}:${e.kind}`).join(' '))
+t('and the node stranded no interference, which is the loss no other check sees',
+  !MATHEMATICS.edges.some(e =>
+    e.kind === 'interferes_with'
+    && (e.from === 'right-triangle-trig' || e.to === 'right-triangle-trig')),
+  MATHEMATICS.edges.filter(e => e.kind === 'interferes_with')
+    .map(e => `${e.from}~${e.to}`).join(' '))
+/*
+ * THE GATE TIGHTENED AND THE LIST GOT SHORTER, WHICH IS THE READING A COUNT
+ * GETS BACKWARDS.
+ *
+ * `gatingPrerequisitesOf` returns the NEAREST teachable ancestors, so a
+ * concept authored BETWEEN a dependent and what it used to be gated by
+ * replaces two entries with one — and the one is closer to what it gates. The
+ * dot product used to be gated by `plane-vectors`, `similarity` and
+ * `pythagoras` directly; now the geometry is reached through the ratios, which
+ * have to be demonstrated as well. Three members became two and the gate got
+ * stricter.
+ *
+ * `unit-circle` is the same tightening WITHOUT the shrink, and the pair is why
+ * both are asserted. Seven members before and seven after: `similarity` left
+ * and `right-triangle-trig` arrived, but `pythagoras` stayed, because it is
+ * reached by a second route that does not pass through the new concept. So
+ * "the list shrinks when the gate tightens" is not a rule either — what holds
+ * is only that the membership changes, which is the whole argument for naming
+ * members rather than counting them.
+ */
+t('the dot product is now gated by the ratios, its gate shrinking from three to two',
+  gatingPrerequisitesOf(MATHEMATICS, 'dot-product-geometry').slice().sort().join(' ')
+    === 'plane-vectors right-triangle-trig',
+  gatingPrerequisitesOf(MATHEMATICS, 'dot-product-geometry').join(', '))
+t('and the oblique-triangle laws too, from three to two, in the departing node\'s own area',
+  gatingPrerequisitesOf(MATHEMATICS, 'law-of-sines-cosines').slice().sort().join(' ')
+    === 'right-triangle-trig triangle-basics',
+  gatingPrerequisitesOf(MATHEMATICS, 'law-of-sines-cosines').join(', '))
+t('while the unit circle is tightened onto it with its gate the same size, one member swapped',
+  gatingPrerequisitesOf(MATHEMATICS, 'unit-circle').length === 7
+  && gatingPrerequisitesOf(MATHEMATICS, 'unit-circle').includes('right-triangle-trig')
+  && !gatingPrerequisitesOf(MATHEMATICS, 'unit-circle').includes('similarity')
+  && gatingPrerequisitesOf(MATHEMATICS, 'unit-circle').includes('pythagoras'),
+  gatingPrerequisitesOf(MATHEMATICS, 'unit-circle').join(', '))
+/*
+ * The new subject's own identity, which is the one thing a ninth ontology can
+ * get wrong that none of the eight before it could.
+ *
+ * No subject id in the build collides with an AREA id — `plane-geometry`
+ * against `euclidean-geometry`, `expressions-and-equations` against
+ * `algebra-foundations` — and a collision would put two different things
+ * behind one string in `areaOf` and `getOntology`. Naming the subject
+ * `trigonometry` would have done exactly that, and would also have claimed the
+ * eleven circular nodes that are still mapped.
+ */
+t('no subject id collides with an area id, which naming this one for the area would have done',
+  ONTOLOGIES.every(o => !AREAS.some(a => a.id === o.subject.id)),
+  ONTOLOGIES.map(o => o.subject.id).filter(id => AREAS.some(a => a.id === id)).join(', '))
+t('and the subject it left behind still holds every circular node it never claimed',
+  TRIG.nodes.some(n => n.id === 'unit-circle')
+  && TRIG.nodes.some(n => n.id === 'radians')
+  && TRIG.nodes.some(n => n.id === 'pythagorean-identity')
+  && !isTeachable(MATHEMATICS, 'pythagorean-identity'),
+  TRIG.nodes.map(n => n.id).join(' '))
+
+// ---------------------------------------------------------------------------
+
+/**
+ * THE TWELFTH PROMOTION, AND THE FIRST OUT OF `EUCLIDEAN_GEOMETRY` TO CREATE A
+ * SUBJECT.
+ *
+ * `solid-geometry` is authored as the only concept of `solid-measure`, a tenth
+ * ontology. Why a new subject rather than an addition to `plane-geometry` is
+ * argued in ontology-solids.ts's header and is shorter than the ninth
+ * subject's argument was, because `plane-geometry` had already declined the
+ * node in writing: its `covers` closed with "The solids are the rest and are
+ * still mapped only". What is checkable here is the structural half.
+ *
+ * The group's whole reason to exist separately from the ninth subject's is the
+ * collision check below. Everything else here is the same shape as that
+ * promotion and is asserted for the same reasons; the naming hazard is new.
+ */
+const SOLIDS = ONTOLOGIES.find(o => o.subject.id === 'solid-measure')
+
+group('the solids left the geometry area for a tenth subject')
+t('the solids are gone from the area and carry the new subject',
+  EUCLID.nodes.every(n => n.id !== 'solid-geometry')
+  && areaOf(MATHEMATICS, 'solid-geometry') === 'solid-measure'
+  && isTeachable(MATHEMATICS, 'solid-geometry')
+  && isPractisable(MATHEMATICS, 'solid-geometry'),
+  `${areaOf(MATHEMATICS, 'solid-geometry')}`)
+/*
+ * THE NAMING HAZARD THE NINTH SUBJECT DID NOT HAVE, AND THE ASSERTION THAT DID
+ * NOT EXIST FOR IT.
+ *
+ * The obvious id for this subject was `solid-geometry`, which is the id of the
+ * one concept it contains. No earlier subject shipped with its own name on a
+ * concept, so nothing in this file would have objected — and the consequence is
+ * real rather than stylistic. `areaOf` answers with a SUBJECT id for an
+ * authored concept and an AREA id for a map node, so the concept would report
+ * itself as its own area, and `getOntology` and `conceptById` would answer
+ * about two different things behind one string.
+ *
+ * Asserted over every subject and every concept rather than over this one, for
+ * the reason the area-id version of the check gives: an assertion about the
+ * instance that provoked it stops working on the next one.
+ */
+t('no subject id collides with a CONCEPT id, which naming this one for its concept would have done',
+  ONTOLOGIES.every(o => !MATHEMATICS.concepts.some(c => c.id === o.subject.id)),
+  ONTOLOGIES.map(o => o.subject.id)
+    .filter(id => MATHEMATICS.concepts.some(c => c.id === id)).join(', '))
+t('and it still collides with no area id either, which is the half the ninth subject added',
+  ONTOLOGIES.every(o => !AREAS.some(a => a.id === o.subject.id))
+  && ONTOLOGIES.some(o => o.subject.id === 'solid-measure'),
+  ONTOLOGIES.map(o => o.subject.id).filter(id => AREAS.some(a => a.id === id)).join(', '))
+/*
+ * The floor literal rather than the `STUB_FLOOR` constant, which is declared
+ * further down this file and would be in its temporal dead zone here. The
+ * number is restated in the message so a changed floor is visible either way.
+ */
+t('the area is ten nodes against a floor of five, so nothing here was floor-bound',
+  EUCLID.nodes.length === 10 && EUCLID.nodes.length - 5 === 5,
+  `${EUCLID.nodes.length} nodes, ${EUCLID.nodes.length - 5} of headroom`)
+/*
+ * THE WHOLE OF THE STRANDED EDGE HAD TO BECOME A `links` ENTRY, which no
+ * earlier promotion out of this area could show.
+ *
+ * The node declared ONE `needs`, `circle-measure`, and it is a concept of
+ * `plane-geometry` — not of the subject the node joined. An ontology may only
+ * name concepts it CONTAINS, so it could not go into `SOLID_MEASURE.edges`, and
+ * `SOLID_MEASURE.edges` is empty as a result. Every expensive case before this
+ * one had a second `needs` that stayed in a syllabus, so the rule read as a
+ * statement about splitting a list; here there was nothing to split.
+ *
+ * The entry itself is asserted in the links group above, in order and with the
+ * other five. What is asserted here is the consequence for the ontology: the
+ * subject declares no edges at all, and its single concept is therefore its own
+ * root — an emptiness that has to be checked, because an edge added there
+ * naming `circle-measure` would look right and would make `ontologyProblems`
+ * report an unknown endpoint.
+ */
+t('the new subject declares no edges, so its single concept is its own root',
+  SOLIDS.edges.length === 0
+  && SOLIDS.concepts.length === 1
+  && roots(SOLIDS).join(' ') === 'solid-geometry',
+  `${SOLIDS.edges.length} edges, ${SOLIDS.concepts.length} concepts`)
+t('and the prerequisite it could not declare resolves once, stamped by the area that owned the node',
+  prerequisitesOf(MATHEMATICS, 'solid-geometry').join(' ') === 'circle-measure'
+  && MATHEMATICS.edges.filter(e =>
+    e.from === 'circle-measure' && e.to === 'solid-geometry'
+    && e.kind === 'prerequisite').length === 1
+  && MATHEMATICS.edges.find(e =>
+    e.from === 'circle-measure' && e.to === 'solid-geometry')
+    ?.promotedBy === 'atlas:euclidean-geometry',
+  MATHEMATICS.edges.filter(e => e.to === 'solid-geometry')
+    .map(e => `${e.from}:${e.promotedBy}`).join(' '))
+/*
+ * And the two edges pointing INTO the departed node, which were not touched and
+ * must not have been. An edge is owned by the node that DECLARES it, so
+ * `three-dimensional-coordinates` here and `volumes-of-revolution` in
+ * atlas-analysis.ts both still name it in their own `needs`, and `composeAtlas`
+ * resolves each against the authored concept across a file boundary.
+ *
+ * Checked for duplication as well as for presence, because the one failure
+ * `composeAtlas` does not report is the same edge arriving twice — once from a
+ * node's `needs` and once from a `links` entry somebody added "for symmetry".
+ */
+t('the two edges that pointed into it survive the promotion, once each and from two map files',
+  ['three-dimensional-coordinates', 'volumes-of-revolution'].every(id =>
+    prerequisitesOf(MATHEMATICS, id).includes('solid-geometry')
+    && MATHEMATICS.edges.filter(e =>
+      e.from === 'solid-geometry' && e.to === id).length === 1),
+  MATHEMATICS.edges.filter(e => e.from === 'solid-geometry')
+    .map(e => `${e.to}:${e.kind}`).join(' '))
+t('and the node stranded no interference, which is the loss no other check sees',
+  !MATHEMATICS.edges.some(e =>
+    e.kind === 'interferes_with'
+    && (e.from === 'solid-geometry' || e.to === 'solid-geometry')),
+  MATHEMATICS.edges.filter(e => e.kind === 'interferes_with')
+    .map(e => `${e.from}~${e.to}`).join(' '))
+/*
+ * And what the subject does NOT claim, which is the sentence its own name is a
+ * refusal of. `solid-measure` rather than a tenth "solid geometry": a solid's
+ * incidence structure is not here, and the map still holds the nodes that would
+ * carry it. Checked on the one that is nearest and most tempting — the regular
+ * polyhedra are not a node of this build at all, so `non-euclidean-geometry` is
+ * the node that stands for "a claim about solids that is not about measure",
+ * and it is still mapped and still unwritten.
+ */
+t('and the subject claims none of the solids that are not about measure',
+  EUCLID.nodes.some(n => n.id === 'non-euclidean-geometry')
+  && !isTeachable(MATHEMATICS, 'non-euclidean-geometry')
+  && SOLIDS.concepts.every(c => c.id === 'solid-geometry'),
+  SOLIDS.concepts.map(c => c.id).join(' '))
 
 // ---------------------------------------------------------------------------
 
@@ -1776,14 +2524,40 @@ t('the two drained areas are gone from the map',
  * arithmetic subject and appears exactly once in the composed list — which
  * would catch a bulk move having dropped it, since a dropped node could not
  * then have been promoted out of one.
+ *
+ * `ratio-and-rate` is the second id to leave, by the twelfth promotion and for
+ * the identical reason, so the algebra row is down to three. The pair that left
+ * is exactly the pair ontology-geometry.ts spent three promotions calling the
+ * area-floor casualties — so this table shrinking is the merge being used for
+ * what it was bought for, and the row reaching zero would mean every node the
+ * merge rescued had been written.
+ *
+ * `dot-product-geometry` is the third id to leave and the first out of the
+ * geometry row, so that one is down to eight. It is also the first id to leave
+ * this table for a subject other than the one its own area's departures go to:
+ * it is a concept of `vectors-and-independence`, not of `plane-geometry`. The
+ * table does not care — "is this still a node of the area that absorbed it" is
+ * false either way — but it is worth recording here, because this row reaching
+ * zero would NOT mean the geometry syllabus had grown by nine.
+ *
+ * `three-dimensional-coordinates` is the fourth id to leave, by the thirteenth
+ * promotion, so the geometry row is down to seven — and it went to
+ * `vectors-and-independence` as well, which makes that subject the destination
+ * of two of this row's four departures and of neither of the other row's. It is
+ * also the id this whole table was bought for: the merge was argued on the
+ * ground that this node "sits directly behind `solid-geometry`, so it was
+ * blocked transitively by a floor in a different area from its own", and it is
+ * the LAST of the five route concepts the merge rescued to be written. So the
+ * geometry row has now paid for the merge in full, and what is left in it is
+ * eight nodes nothing is waiting on.
  */
 const MOVED = {
   'algebra-foundations': [
-    'absolute-value', 'ratio-and-rate', 'percent', 'scientific-notation',
+    'absolute-value', 'percent', 'scientific-notation',
   ],
   'euclidean-geometry': [
     'distance-and-midpoint', 'lines-in-the-plane', 'circles-analytic', 'conic-sections',
-    'dot-product-geometry', 'three-dimensional-coordinates', 'parametric-curves',
+    'parametric-curves',
     'plane-transformations', 'loci-and-regions',
   ],
 }
@@ -1852,22 +2626,52 @@ t('every edge across the two dissolved boundaries is still in the composed map',
  * runs into real material. The invariant that does not move is `SURVIVING`
  * above — the edges exist — and that is the one guarding against a bulk move
  * deleting one.
+ *
+ * ONE, SINCE `ratio-and-rate` WAS AUTHORED, which is the same event a third
+ * time and the one the paragraph above was written in anticipation of. The
+ * merge made `ratio-and-rate → word-problems` internal to
+ * `algebra-foundations`; the twelfth promotion took the lower end into
+ * `arithmetic-foundations`, so it is cross-file again and resolved by
+ * `composeAtlas`. The list is down to the single solids edge, and that one is
+ * the last of the four the merges rescued still waiting on material.
+ *
+ * ZERO NOW, AND REACHING ZERO IS THE SUCCESS CONDITION THIS COMMENT NAMED IN
+ * ADVANCE — so the list is DELETED rather than left as an empty array, for the
+ * same reason an area that owes nothing has its row removed from the budget
+ * table below: `[]` reads as a list somebody has not got round to filling in.
+ *
+ * `solid-geometry → three-dimensional-coordinates` was the fourth and last. The
+ * merge made it internal to `euclidean-geometry` — that was the whole argument
+ * for merging, since the upper end was blocked without its own area ever being
+ * near the floor — and the solids are now a concept of `solid-measure`, so the
+ * edge is cross-file again and `composeAtlas` resolves it. Every edge the two
+ * merges rescued now runs into real material at its lower end, which is the
+ * strongest form the evidence for those merges can take and the thing this
+ * group was built to be able to say.
  */
-const NOW_INTERNAL = [
+const SPENT = [
+  ['real-number-line', 'linear-inequalities'],
+  ['circles', 'circles-analytic'],
   ['ratio-and-rate', 'word-problems'],
   ['solid-geometry', 'three-dimensional-coordinates'],
 ]
-t('and two of them are internal to one area now, the solids and three dimensions among them',
-  NOW_INTERNAL.every(([from, to]) => areaOf(MATHEMATICS, from) === areaOf(MATHEMATICS, to)),
-  NOW_INTERNAL.map(([f, x]) =>
+t('all four the promotions took back out are cross-file again, which is the whole gain spent',
+  SPENT.every(([from, to]) => areaOf(MATHEMATICS, from) !== areaOf(MATHEMATICS, to)
+    && isTeachable(MATHEMATICS, from)
+    && prerequisitesOf(MATHEMATICS, to).includes(from)),
+  SPENT.map(([f, x]) =>
     `${f}@${areaOf(MATHEMATICS, f)} -> ${x}@${areaOf(MATHEMATICS, x)}`).join(' | '))
-t('while the two the promotions took back out are cross-file again, which is the gain being spent',
-  [['real-number-line', 'linear-inequalities'], ['circles', 'circles-analytic']]
-    .every(([from, to]) => areaOf(MATHEMATICS, from) !== areaOf(MATHEMATICS, to)
-      && isTeachable(MATHEMATICS, from)
-      && prerequisitesOf(MATHEMATICS, to).includes(from)),
-  [['real-number-line', 'linear-inequalities'], ['circles', 'circles-analytic']]
-    .map(([f, x]) => `${f}@${areaOf(MATHEMATICS, f)} -> ${x}@${areaOf(MATHEMATICS, x)}`).join(' | '))
+/*
+ * And WHY each is cross-file again, which the comparison of two `areaOf` values
+ * does not say: the lower end is no longer a node of any area at all. That is
+ * what being authored does, and it is the mechanism rather than the symptom —
+ * an edge could also go cross-file by somebody moving a node between areas,
+ * which would be a map change wearing a promotion's clothes.
+ */
+t('and each lower end left every area rather than moving between two, which is what authoring does',
+  SPENT.every(([from]) => !AREAS.some(a => a.nodes.some(n => n.id === from))),
+  SPENT.map(([from]) =>
+    `${from}@${AREAS.find(a => a.nodes.some(n => n.id === from))?.id ?? 'no area'}`).join(' '))
 
 /*
  * Hazard 2 in its general form, asserted over the whole atlas rather than over
@@ -1911,11 +2715,48 @@ t('every confusedWith on the map became an interferes_with edge carrying its rea
 const ALGEBRA = AREAS.find(a => a.id === 'algebra-foundations')
 const algebraInterference = ALGEBRA.nodes
   .flatMap(n => (n.confusedWith ?? []).map(c => `${n.id}~${c.id}`)).join(' ')
-t('the merged algebra area declares exactly one, and both of its ends were already in it',
-  algebraInterference === 'linear-inequalities~linear-equations'
-  && ['linear-inequalities', 'linear-equations']
-    .every(id => areaOf(MATHEMATICS, id) === 'algebra-foundations'),
-  `${algebraInterference} | linear-equations@${areaOf(MATHEMATICS, 'linear-equations')}`)
+t('the merged algebra area still declares exactly one', algebraInterference
+  === 'linear-inequalities~linear-equations', algebraInterference)
+/*
+ * IT USED TO ASSERT THAT BOTH ENDS WERE NODES OF THIS AREA, AND THE
+ * `linear-equations` PROMOTION FALSIFIED THAT HALF — correctly, so it is split
+ * rather than relaxed.
+ *
+ * The claim was written for the merge, where it was the thing worth saying:
+ * neither end had moved between areas, so the merge stranded no interference.
+ * It is not a claim that survives authoring, because an authored concept is
+ * not a node of ANY area — `areaOf` returns its subject. A sentence about an
+ * end being "in the area" is exactly the sentence that rots when the end is
+ * promoted, which is the lesson atlas-foundations.ts reaches by four routes.
+ *
+ * What is durable is in two halves, and both are checked:
+ *
+ *  - the DECLARING end is still a node here, which is why nothing was
+ *    stranded. `expandEdges` turns a `confusedWith` into an
+ *    `interferes_with`, so deleting the node that declared one deletes the
+ *    edge in silence — interference constrains SELECTION rather than gating,
+ *    so every suite stays green while the scheduler is freed to introduce the
+ *    two most confusable concepts in the subject together. The promotion took
+ *    the OTHER end, so there was nothing to re-home.
+ *  - the edge survived into the composed graph with its reason, now joining an
+ *    authored concept to a map node.
+ *
+ * Asserted separately because they fail for different reasons: the first goes
+ * red if `linear-inequalities` is itself promoted without the interference
+ * being re-declared in the ontology, and the second goes red if edge
+ * resolution stops crossing the authored/mapped boundary.
+ */
+t('and the end that DECLARES it is still a node here, which is why nothing was stranded',
+  ALGEBRA.nodes.some(n => n.id === 'linear-inequalities'
+    && (n.confusedWith ?? []).some(c => c.id === 'linear-equations')),
+  ALGEBRA.nodes.filter(n => (n.confusedWith ?? []).length).map(n => n.id).join(' '))
+t('while the other end is authored now, so the edge joins a concept to a node and still holds',
+  areaOf(MATHEMATICS, 'linear-equations') === 'expressions-and-equations'
+  && isTeachable(MATHEMATICS, 'linear-equations')
+  && !AREAS.some(a => a.nodes.some(n => n.id === 'linear-equations'))
+  && MATHEMATICS.edges.some(e => e.kind === 'interferes_with' && !!e.rationale
+    && e.from === 'linear-inequalities' && e.to === 'linear-equations'),
+  `linear-equations@${areaOf(MATHEMATICS, 'linear-equations')}`)
 t('and the merged geometry area declares none, which is why that merge stranded none',
   EUCLID.nodes.every(n => !(n.confusedWith ?? []).length),
   EUCLID.nodes.filter(n => (n.confusedWith ?? []).length).map(n => n.id).join(' '))
@@ -1944,18 +2785,230 @@ t('and the merged geometry area declares none, which is why that merge stranded 
  * `linear-inequalities` rests on it and did NOT take its place, because its
  * other prerequisite `linear-equations` is still a node here and still gates
  * it from inside.
+ *
+ * STILL SEVEN AFTER THE TWELFTH PROMOTION, AND EVERY WORD OF THAT IS THE POINT.
+ * `ratio-and-rate` WAS a root of this area and has been authored out; `percent`
+ * took its place, because `percent`'s two prerequisites are this concept and
+ * `decimal-representation` and both are authored now, so nothing inside the
+ * area comes before it. Seven before, seven after, one member different.
+ *
+ * This is the case the comment above describes as the reason for naming
+ * members, happening for real rather than hypothetically: a `length === 7`
+ * check would have passed on both sides of a change that replaced one of its
+ * seven claims. It is also the opposite outcome from `real-number-line`'s
+ * promotion, which shrank the set because the dependent it freed was still
+ * gated from inside — so the two promotions out of this area have now
+ * demonstrated both behaviours, substitution and shrinkage, and neither is
+ * predictable from the departing node alone.
+ *
+ * NINE AFTER THE SEVENTEENTH PROMOTION, WHICH IS THE THIRD BEHAVIOUR AND THE
+ * WIDEST FAN-OUT THIS AREA HAS PRODUCED. `linear-equations` was a root and has
+ * been authored out, and THREE nodes took its place at once —
+ * `linear-inequalities`, `systems-of-linear-equations` and `word-problems` —
+ * because it was the LAST of their prerequisites still inside this area. Their
+ * others had already gone: `real-number-line` and `ratio-and-rate` are concepts
+ * of `arithmetic-foundations`.
+ *
+ * So this area has now shown all three outcomes a promotion can have on a root
+ * set — shrinkage, one-for-one substitution, and one-for-three fan-out — and
+ * together they are the argument for this shape of assertion rather than either
+ * simpler one. A `length` check misses the substitution entirely and reports
+ * the fan-out as "two more roots"; a check that only verified the departing
+ * node had gone would pass on all three while saying nothing about who
+ * replaced it.
+ *
+ * STILL NINE AFTER THE EIGHTEENTH PROMOTION, WITH ONE MEMBER DIFFERENT — the
+ * substitution case for the second time, and it took one of the three members
+ * the fan-out had just put in. `systems-of-linear-equations` was a root here
+ * and is a concept of `expressions-and-equations` now; `nonlinear-systems`
+ * takes its place, because that node's two prerequisites are this concept and
+ * `quadratic-formula`, and both are authored. Nine before, nine after.
+ *
+ * Two promotions in a row out of this area have now each changed this list
+ * while leaving its length alone or not, in no predictable pattern — which is
+ * the practical case for naming members, over and above the argument. There is
+ * no way to know which of the three outcomes a promotion will have without
+ * computing the set on both sides of it.
  */
-t('the merged algebra area has exactly these seven roots, and the promoted real line is not among them',
+t('the merged algebra area has exactly these nine roots, one of them new since the systems',
   roots(areaOntology(ALGEBRA)).slice().sort().join(' ')
-    === 'absolute-value binomial-theorem complex-numbers linear-equations radical-equations '
-      + 'ratio-and-rate scientific-notation',
+    === 'absolute-value binomial-theorem complex-numbers linear-inequalities '
+      + 'nonlinear-systems percent radical-equations scientific-notation word-problems',
   roots(areaOntology(ALGEBRA)).slice().sort().join(' '))
-t('and linear-inequalities did not become one, because linear-equations still gates it from inside',
-  ALGEBRA.nodes.some(n => n.id === 'linear-inequalities'
-    && (n.needs ?? []).includes('real-number-line')
-    && (n.needs ?? []).includes('linear-equations'))
-  && ALGEBRA.nodes.some(n => n.id === 'linear-equations')
-  && !roots(areaOntology(ALGEBRA)).includes('linear-inequalities'))
+t('and the promoted ratio is no longer one, because it is no longer a node of any area',
+  !roots(areaOntology(ALGEBRA)).includes('ratio-and-rate')
+  && isTeachable(MATHEMATICS, 'ratio-and-rate')
+  && !AREAS.some(a => a.nodes.some(n => n.id === 'ratio-and-rate')),
+  `${areaOf(MATHEMATICS, 'ratio-and-rate')}`)
+/*
+ * THE REPLACEMENT FOR "linear-inequalities DID NOT BECOME ONE", WHICH THIS
+ * PROMOTION MADE FALSE RATHER THAN UNASSERTABLE.
+ *
+ * The old claim was the shrinkage case stated at the node that showed it:
+ * `real-number-line` left, `linear-inequalities` rested on it, and it did NOT
+ * become a root because `linear-equations` was still here gating it from
+ * inside. Every word of that was true and the last clause has stopped being.
+ *
+ * It is restated as the fan-out rather than deleted, and at all three nodes
+ * rather than one, because the rule being checked is about the LAST in-area
+ * prerequisite and three different nodes satisfy it for three different
+ * reasons — one had two prerequisites of which the other was already authored,
+ * one had only ever had this one, and one had two with the other in the
+ * arithmetic. Asserting it at a single node would check the rule in only the
+ * shape that node happens to have.
+ *
+ * Each half requires the dependent to really be a node of this area, so none
+ * can go vacuously true the way an optional-chained `every` over a missing
+ * node would — the trap `euclidean-geometry`'s group records.
+ *
+ * ONE OF THE THREE HAS SINCE BEEN PROMOTED ITSELF, which is the hazard this
+ * comment block keeps naming arriving at its own assertion.
+ * `systems-of-linear-equations` is a concept now, so it is not a node of this
+ * area, so `ALGEBRA.nodes.find(...)` for it returns undefined — and the
+ * `?? []` in the old form of the second check would have made the claim about
+ * it VACUOUSLY TRUE rather than red. That is the optional-chained-`every`
+ * trap, in the group that was written warning about it, two promotions later.
+ *
+ * So the list is split rather than shortened. The two that are still nodes are
+ * checked as before; the one that left is checked as having left, which is a
+ * different and still-true claim about the same event. Shortening the list to
+ * two would have lost the record that the fan-out was three wide, and leaving
+ * it at three would have passed while asserting nothing about a third of it.
+ */
+const FANNED_OUT = ['linear-inequalities', 'word-problems']
+const FANNED_OUT_SINCE_PROMOTED = 'systems-of-linear-equations'
+t('and the nodes that rested on the solve and are still nodes became roots, it being their last in-area gate',
+  FANNED_OUT.length === 2 && FANNED_OUT.every(id =>
+    ALGEBRA.nodes.some(n => n.id === id && (n.needs ?? []).includes('linear-equations'))
+    && roots(areaOntology(ALGEBRA)).includes(id)),
+  FANNED_OUT.map(id => `${id}:${roots(areaOntology(ALGEBRA)).includes(id)}`).join(' '))
+t('and every prerequisite each of them had is authored now, which is what "last" means here',
+  FANNED_OUT.every(id => (ALGEBRA.nodes.find(n => n.id === id)?.needs ?? []).length > 0
+    && (ALGEBRA.nodes.find(n => n.id === id)?.needs ?? [])
+      .every(p => isTeachable(MATHEMATICS, p))),
+  FANNED_OUT.map(id => `${id}: ${(ALGEBRA.nodes.find(n => n.id === id)?.needs ?? [])
+    .map(p => `${p}@${areaOf(MATHEMATICS, p)}`).join('+')}`).join(' | '))
+/*
+ * The third member of the fan-out, asserted as a departure rather than
+ * dropped. It really was one of the three — it declared `linear-equations` and
+ * nothing else — and it really has gone, into the subject that already held
+ * the node it depended on. Both halves are required, so this cannot go
+ * vacuously true the way asserting it as a node would.
+ */
+t('while the third of the three was promoted in its turn, into the subject it depended on',
+  !ALGEBRA.nodes.some(n => n.id === FANNED_OUT_SINCE_PROMOTED)
+  && isTeachable(MATHEMATICS, FANNED_OUT_SINCE_PROMOTED)
+  && areaOf(MATHEMATICS, FANNED_OUT_SINCE_PROMOTED) === 'expressions-and-equations'
+  && prerequisitesOf(MATHEMATICS, FANNED_OUT_SINCE_PROMOTED).join(' ') === 'linear-equations',
+  `${FANNED_OUT_SINCE_PROMOTED}@${areaOf(MATHEMATICS, FANNED_OUT_SINCE_PROMOTED)}`
+  + ` needs ${prerequisitesOf(MATHEMATICS, FANNED_OUT_SINCE_PROMOTED).join('+')}`)
+/*
+ * And the gate that tightened, which is the half of a promotion no node's own
+ * definition shows. While `linear-equations` was mapped-only it made no claim
+ * about mastery, so `gatingPrerequisitesOf` looked straight THROUGH it and
+ * named `variables-and-expressions`. It gates in its own right now, so all
+ * three dependents are one demonstration further from a cold account with no
+ * edit to any of them.
+ *
+ * Stated as the two-step chain for the reason the `polynomial-arithmetic` gate
+ * above is: the immediate-gate form goes red whenever another concept is
+ * authored in between, and the durable claim is that the route down is
+ * unbroken and made of material a learner can go and practise.
+ */
+t('and the gate on both of those tightened onto the solve, which now stands between them and the reading',
+  FANNED_OUT.every(id => {
+    const g = gatingPrerequisitesOf(MATHEMATICS, id)
+    if (!g.includes('linear-equations')) return false
+    return gatingPrerequisitesOf(MATHEMATICS, 'linear-equations')
+      .includes('variables-and-expressions')
+  }),
+  FANNED_OUT.map(id => `${id}: ${gatingPrerequisitesOf(MATHEMATICS, id).join('/')}`).join(' | '))
+
+/**
+ * THE EIGHTEENTH PROMOTION — AND THE FIRST OUT OF THIS AREA WHOSE EFFECT
+ * LANDED IN A DIFFERENT AREA'S FILE.
+ *
+ * `systems-of-linear-equations` is the third concept of
+ * `expressions-and-equations`, which makes that subject a chain of three
+ * authored in dependency order. Most of what that promotion did is asserted in
+ * the groups above, as the root substitution and the departure. What is here is
+ * the part neither of those can see.
+ *
+ * `gaussian-elimination` is a node of `linear-algebra`. It declares
+ * `needs: ['matrices-and-maps', 'systems-of-linear-equations']`, so the edge
+ * into the promoted concept is owned by a node in atlas-structures.ts and
+ * survived this promotion untouched — but what GATES it changed, because the
+ * walk used to pass straight through a node with no material and report
+ * `linear-equations` instead. So a change to atlas-foundations.ts altered the
+ * gate on a node in another file, with no edit to that file and nothing in its
+ * text saying so. That is the one shape of consequence a per-area group cannot
+ * catch, which is why it is asserted here and across the boundary.
+ *
+ * IT ALSO NAMES IT UNDER `exercises`, AND THAT EDGE HAS ONLY NOW ACQUIRED
+ * SOMETHING TO DO. `expandEdges` turns a node's `exercises` into an
+ * `encompasses` edge unconditionally (lib/concepts/atlas.ts), so the edge has
+ * existed all along — but `encompasses` is what makes credit computable, and
+ * until this promotion its far end was a node with no knowledge points, so
+ * there was nothing for the credit to land on. Practising row reduction can
+ * now discharge review that would otherwise come due on the systems concept,
+ * which is the inefficiency that edge kind exists to prevent.
+ *
+ * Worth separating from the authored case, because the two look identical and
+ * are not. An ontology restating a departed node's `exercises` as its own
+ * `encompasses` edge is a claim about what PRACTISING exercises, measured
+ * against the tasks that actually exist, and ontology-arithmetic.ts declines
+ * one on `gcd-and-lcm` for exactly that reason. A map node's `exercises` is a
+ * claim about the mathematics and is expanded for free. So this edge being
+ * present is not evidence that the authored-side judgement was made either way.
+ */
+group('the systems promotion reached across into linear algebra')
+const LINALG = AREAS.find(a => a.id === 'linear-algebra')
+t('the row-reduction node still declares the edge, so the promotion stranded nothing',
+  LINALG.nodes.some(n => n.id === 'gaussian-elimination'
+    && (n.needs ?? []).includes('systems-of-linear-equations')
+    && (n.needs ?? []).includes('matrices-and-maps')),
+  LINALG.nodes.find(n => n.id === 'gaussian-elimination')?.needs?.join('+'))
+t('and its gate tightened onto the systems, which stands between it and the solve now',
+  gatingPrerequisitesOf(MATHEMATICS, 'gaussian-elimination')
+    .includes('systems-of-linear-equations')
+  && !gatingPrerequisitesOf(MATHEMATICS, 'gaussian-elimination')
+    .includes('linear-equations')
+  && gatingPrerequisitesOf(MATHEMATICS, 'systems-of-linear-equations')
+    .includes('linear-equations'),
+  gatingPrerequisitesOf(MATHEMATICS, 'gaussian-elimination').join(', '))
+t('and the credit edge it declares now has material at the far end to propagate to',
+  LINALG.nodes.some(n => n.id === 'gaussian-elimination'
+    && (n.exercises ?? []).includes('systems-of-linear-equations'))
+  && MATHEMATICS.edges.some(e => e.kind === 'encompasses'
+    && e.from === 'gaussian-elimination' && e.to === 'systems-of-linear-equations')
+  && isPractisable(MATHEMATICS, 'systems-of-linear-equations'),
+  MATHEMATICS.edges.filter(e => e.kind === 'encompasses' && e.from === 'gaussian-elimination')
+    .map(e => `${e.to}:practisable=${isPractisable(MATHEMATICS, e.to)}`).join(' '))
+/*
+ * The two things a promotion can strand that no suite reports, checked as
+ * absences on the node that left. Both have to be checked by hand, because
+ * `composeAtlas` cannot miss an edge that is no longer declared anywhere.
+ *
+ * The `confusedWith` is the one that matters. `expandEdges` turns it into an
+ * `interferes_with`, and interference constrains SELECTION rather than gating —
+ * so dropping one keeps every suite green while freeing the scheduler to
+ * introduce the two most confusable concepts in a subject together. This node
+ * declared none, so nothing was lost, and the assertion is what makes that a
+ * fact on record rather than a claim in a comment.
+ */
+t('no interference was lost, the promoted node having declared none to lose',
+  !MATHEMATICS.edges.some(e => e.kind === 'interferes_with'
+    && (e.from === 'systems-of-linear-equations' || e.to === 'systems-of-linear-equations')),
+  MATHEMATICS.edges.filter(e => e.kind === 'interferes_with'
+    && (e.from === 'systems-of-linear-equations' || e.to === 'systems-of-linear-equations'))
+    .map(e => `${e.from}~${e.to}`).join(' '))
+t('and the area gained no links entry, both ends of its one edge being in the same subject',
+  !ALGEBRA.links.some(l => l.to === 'systems-of-linear-equations'
+    || l.from === 'systems-of-linear-equations')
+  && areaOf(MATHEMATICS, 'linear-equations') === 'expressions-and-equations'
+  && areaOf(MATHEMATICS, 'systems-of-linear-equations') === 'expressions-and-equations',
+  ALGEBRA.links.filter(l => l.to === 'systems-of-linear-equations'
+    || l.from === 'systems-of-linear-equations').map(l => `${l.from}->${l.to}`).join(' '))
 
 // ---------------------------------------------------------------------------
 
@@ -1984,9 +3037,51 @@ group('promoting every remaining route concept still clears the stub floor')
 
 const STUB_FLOOR = 5
 const ROUTE_STILL_UNWRITTEN = {
-  'algebra-foundations': [
-    'ratio-and-rate', 'linear-equations', 'systems-of-linear-equations',
-  ],
+  /*
+   * `algebra-foundations` HAD A ROW HERE AND NO LONGER DOES, which is the table
+   * being cashed in for the sixth time rather than corrected. The row is
+   * DELETED rather than emptied, following the `trigonometry` precedent below:
+   * an area with no row owes nothing on either unfinished route, and `[]` would
+   * read as a row somebody had not got round to filling in.
+   *
+   * It held three entries over its life — `ratio-and-rate`, `linear-equations`
+   * and `systems-of-linear-equations` — and the budget moved as predicted all
+   * three times, the area losing one node and one owed concept each time, so
+   * its slack never shifted off seven. That is the identity the geometry row
+   * below spells out: a route concept being written takes one off each side of
+   * a difference.
+   *
+   * THE LAST TWO REMOVALS WERE BOTH THINGS THIS COMMENT HAD ARGUED COULD NEVER
+   * HAPPEN, and that is the part worth keeping. What stood here said the row
+   * was blocked on a missing TaskKind — "solve for x" asks for the SET of
+   * numbers satisfying a condition, no `NamedForm` and no `evaluate` target
+   * expresses a solution set, so the tasks would have to be
+   * substitute-and-check. The premises were true; the conclusion did not
+   * follow. types.ts names the counterexample for the one-equation case:
+   * `solve-exponential-1` is a shipped solve-for-x task of kind `evaluate`,
+   * whose `given` carries the expression the METHOD leaves x equal to, with
+   * the equation in the prompt.
+   *
+   * This comment then went on to insist that `systems-of-linear-equations`
+   * "DOES NOT INHERIT THE UNBLOCKING" — that a system resolves to a point, a
+   * line, or nothing, and the solution-set limit therefore binds it "directly
+   * and in its own right". It was right to refuse the inheritance and wrong
+   * about the conclusion anyway. A point is not a value and IS two values, so
+   * it costs two `evaluate` tasks; and the two other outcomes are told apart by
+   * the number the elimination leaves when both letters cancel, which is 0 for
+   * a repeated equation and non-zero for a contradiction. The concession the
+   * refusal was built on survives intact: no task in that concept asks how many
+   * solutions a system has. ontology-algebra.ts argues all of it and reproduces
+   * both refusals rather than deleting them.
+   *
+   * THE LESSON THE TABLE ITSELF TEACHES, now that this row has gone: the
+   * obstacle it was built to measure — the stub floor — never once decided what
+   * got written next out of this area. Three concepts left it, each with
+   * headroom to spare, and what actually blocked them in turn was dependency
+   * depth and then a written argument. The geometry row below reaches the same
+   * conclusion from its own five removals. A guard rail is worth asserting; it
+   * is not necessarily worth planning around.
+   */
   /*
    * `area-and-perimeter` was the seventh entry here, `geometric-proof` the
    * first, `circles` the first of what was left and `circle-measure` the next;
@@ -2002,30 +3097,122 @@ const ROUTE_STILL_UNWRITTEN = {
    * is worth keeping here because this table is where anybody will come looking
    * for the next candidate.
    *
-   * The slack has been five through four promotions, which makes it look like
-   * the quantity to watch. It is not. The area has thirteen nodes against a
-   * floor of five, so there are EIGHT promotions of headroom and three concepts
-   * still owed — and two of the three are a chain. `solid-geometry` needs
-   * `circle-measure`, which is now authored, so it is writable;
-   * `three-dimensional-coordinates` needs `solid-geometry` and
-   * `dot-product-geometry` both. `dot-product-geometry` is the one this area
-   * cannot unblock on its own: it waits on `right-triangle-trig` in
-   * `trigonometry`.
+   * The slack has been five through five promotions, which makes it look like
+   * the quantity to watch. It is not; it is an identity. A route concept being
+   * written takes one off the node count and one off the owed count, and the
+   * slack is the difference, so it CANNOT move on a promotion out of this row.
+   *
+   * THE FIFTH REMOVAL IS `dot-product-geometry`, and it is the one that was not
+   * this area's to make. That node waited on `right-triangle-trig` in
+   * `trigonometry` — a cross-area block, which only a promotion somewhere else
+   * could ever clear — and once the ratios were written it became the one
+   * writable candidate here that also unblocked something. It is a concept of
+   * `vectors-and-independence` now, in ontology-vectors.ts, which is the first
+   * time a departure from this area has landed in a subject other than
+   * `plane-geometry`.
+   *
+   * What is left is a chain of two, and the lower link carries a question that
+   * is not about effort: `solid-geometry` is writable — `circle-measure` is
+   * authored — but `plane-geometry`'s id and `covers` both exclude the solids
+   * by name, so it needs either a widened subject or a tenth ontology before
+   * anybody writes a worked example for it. `three-dimensional-coordinates`
+   * needs it, and now needs nothing else: the dot product half of its gate is
+   * written.
    *
    * So the constraint this table was built to measure has stopped binding.
-   * Authoring is rate-limited by dependency depth — one available candidate in
-   * this area at a time — and no amount of headroom changes that. The floor
-   * assertion below is still worth keeping, because it is what proves the
-   * merges did not merely postpone the problem; it has simply stopped being the
-   * thing that decides what gets written next.
+   * Authoring is rate-limited by dependency depth and by where a concept is
+   * allowed to be FILED — and no amount of headroom changes either. The floor
+   * assertion below is still worth keeping, because it is what proves the merges
+   * did not merely postpone the problem; it has simply stopped being the thing
+   * that decides what gets written next.
+   *
+   * THE SIXTH REMOVAL IS `solid-geometry`, AND IT ANSWERED THE FILING QUESTION
+   * ABOVE RATHER THAN DEFERRING IT AGAIN. The answer was a tenth ontology,
+   * `solid-measure`, because `plane-geometry` had already declined the node in
+   * writing: its `covers` closed with "The solids are the rest and are still
+   * mapped only", which is a subject naming the material it excludes. So the
+   * choice was never between two live options. The budget moved as predicted
+   * for a sixth time — eleven nodes against one owed, slack still five.
+   *
+   * WHAT THIS ROW NOW SAYS IS THAT THE DEPTH HAS RUN OUT TOO, which is the part
+   * worth reading before looking for the next candidate. One id is left, it is
+   * writable today, and nothing unwritten stands anywhere beneath it — asserted
+   * in the root-set group above, over the whole prerequisite closure rather than
+   * over its two edges. It carries a filing question of its own and
+   * atlas-foundations.ts states it: the node is analytic, so
+   * `vectors-and-independence` is the likely home and `solid-measure` would have
+   * to be renamed to take it.
+   *
+   * `euclidean-geometry` HAD A ROW HERE AND NO LONGER DOES, which is the table
+   * being cashed in for the sixth time rather than corrected, and it is the
+   * sentence above being answered rather than deferred again.
+   *
+   * Its one entry was `three-dimensional-coordinates`, and that concept is
+   * authored — of `vectors-and-independence` in ontology-vectors.ts, the home
+   * the paragraph above named, chosen because `solid-measure` is named for the
+   * measure of a solid and would have had to be renamed while that subject
+   * already owned the plane and the dot product. The first assertion in each
+   * pair requires every id named to be an unwritten NODE of its area, so
+   * leaving the row in would have failed loudly with the id printed, exactly as
+   * the comment at the top of this table says it should. Deleting the row
+   * rather than emptying it is deliberate, for the reason the trigonometry note
+   * below gives: an area with no row owes nothing on either route, and `[]`
+   * would read as a row somebody had not got round to filling in.
+   *
+   * The budget did NOT move as predicted, and that is the one thing worth
+   * reading here. The slack identity this table has restated six times — a
+   * route concept being written takes one off the node count and one off the
+   * owed count, so the difference cannot move — held for the last time at the
+   * twelfth. This promotion took the owed count to ZERO, and a difference
+   * against zero is not a slack any more; it is just the node count. So the
+   * sequence of fives ends here rather than continuing, and it ends because the
+   * quantity it measured has run out rather than because it changed.
    */
-  'euclidean-geometry': [
-    'solid-geometry',
-    'dot-product-geometry', 'three-dimensional-coordinates',
-  ],
-  trigonometry: ['right-triangle-trig'],
+  /*
+   * `trigonometry` HAD A ROW HERE AND NO LONGER DOES, which is the table being
+   * cashed in for the fifth time rather than corrected.
+   *
+   * Its one entry was `right-triangle-trig`, and that concept is authored —
+   * `triangle-trigonometry` in ontology-trigonometry.ts, the ninth subject. The
+   * first assertion in each pair requires every id named to be an unwritten
+   * NODE of its area, so leaving the row in would have failed loudly with the
+   * id printed, exactly as the comment above says it should. Deleting the row
+   * rather than emptying it is deliberate: an area with no row is an area that
+   * owes nothing on either unfinished route, and `[]` would read as a row
+   * somebody had not got round to filling in.
+   *
+   * The budget moved as predicted. The area is one node smaller — twelve
+   * against a floor of five — and owes one concept fewer, so its slack is
+   * unchanged at seven. The headroom was never what blocked it; the promotion
+   * was waiting on nothing but somebody writing it.
+   */
   'linear-algebra': ['gaussian-elimination'],
 }
+/*
+ * THE LAST ROW, AND WHY IT IS NOT A ROW ANYBODY CAN CASH IN BY WRITING MORE.
+ *
+ * With `euclidean-geometry` cleared, one entry is left in the whole table, and
+ * the state of it is asserted rather than described because the next run will
+ * come here first. `gaussian-elimination` is unwritten, it is a node of an area
+ * with ample headroom, and NOTHING unwritten stands anywhere beneath it — so
+ * neither the stub floor nor dependency depth is what stops it. What stops it
+ * is that "solve for x" asks for a solution SET and no `NamedForm` and no
+ * `evaluate` target expresses one, which ontology-algebra.ts states and which
+ * is a decision about what counts as evidence rather than an authoring job.
+ *
+ * That makes the three heuristics this table has been read with — the floor,
+ * the depth, the cheap promotion — all spent, and this assertion is what will
+ * say so in graph terms rather than in prose. It fails when somebody adds a
+ * task kind that can rule a solution set, which is exactly when the row becomes
+ * writable and somebody should be told.
+ */
+t('the one route concept left is blocked on neither the floor nor depth, which is the state to read',
+  !isTeachable(MATHEMATICS, 'gaussian-elimination')
+  && AREAS.find(a => a.id === 'linear-algebra').nodes.length - 1 >= STUB_FLOOR
+  && allPrerequisitesOf(MATHEMATICS, 'gaussian-elimination')
+    .every(id => isTeachable(MATHEMATICS, id)),
+  allPrerequisitesOf(MATHEMATICS, 'gaussian-elimination')
+    .filter(id => !isTeachable(MATHEMATICS, id)).join(', ') || 'nothing unwritten beneath it')
 for (const [areaId, ids] of Object.entries(ROUTE_STILL_UNWRITTEN)) {
   const area = AREAS.find(a => a.id === areaId)
   t(`${areaId}: every route concept named is really an unwritten node of it`,
@@ -2045,67 +3232,117 @@ for (const [areaId, ids] of Object.entries(ROUTE_STILL_UNWRITTEN)) {
  * somewhere roomy for the wrong reason, or authored by accident, so each is
  * checked on its own and its area is printed either way.
  *
- * TWO OF THE FIVE HAVE SINCE BEEN WRITTEN, which is the outcome this group was
- * waiting for and not a failure of it. `real-number-line` is an authored
- * concept of `arithmetic-foundations` now and `circle-measure` is one of
- * `plane-geometry`, so neither is in any area and the headroom question stops
- * applying to either — both are asserted in the groups above instead, as
- * promotions that happened. Splitting the list in two rather than dropping the
- * ids is deliberate: "it was blocked and is now written" and "it was blocked
- * and is now merely unblocked" are different claims, and collapsing them would
- * lose the only record that the merge has been cashed in rather than only
- * argued for.
+ * THREE OF THE FIVE HAVE SINCE BEEN WRITTEN, which is the outcome this group
+ * was waiting for and not a failure of it. `real-number-line` and
+ * `ratio-and-rate` are authored concepts of `arithmetic-foundations` now and
+ * `circle-measure` is one of `plane-geometry`, so none is in any area and the
+ * headroom question stops applying to them — all three are asserted in the
+ * groups above instead, as promotions that happened. Splitting the list in two
+ * rather than dropping the ids is deliberate: "it was blocked and is now
+ * written" and "it was blocked and is now merely unblocked" are different
+ * claims, and collapsing them would lose the only record that the merge has
+ * been cashed in rather than only argued for.
  *
  * `circle-measure` is the one that cashes it in hardest, and the reason is in
  * this list's own history. It was named here as blocked by a floor in an area
  * that had room — the chain behind `circles` ran through it — so it is the
  * first of the five whose unblocking required the merge AND two promotions on
  * top of it. The remaining two in the list below both sit behind it.
+ *
+ * `ratio-and-rate` is the one that closes the ARGUMENT rather than the chain.
+ * It and `real-number-line` are the pair ontology-geometry.ts passed over three
+ * promotions running while recording them as the area-floor casualties, and
+ * they were the two the `NUMBER_AND_ARITHMETIC` merge was argued for by name.
+ * Both are written now, so that merge is fully spent rather than half — which
+ * is the strongest form the evidence for it can take, and the thing this group
+ * was built to be able to say.
+ *
+ * FOUR OF THE FIVE NOW, `solid-geometry` HAVING BEEN WRITTEN — and it is the
+ * one that closes the argument for the OTHER merge. `coordinate-geometry` was
+ * absorbed because `three-dimensional-coordinates` was blocked transitively by
+ * a floor in an area that was not its own, and the chain in between ran
+ * `circle-measure → solid-geometry → three-dimensional-coordinates`. Two of
+ * those three are written and the last is writable, so that merge is spent down
+ * to its final node as well. The list below is one id long, and it emptying
+ * would mean every concept the two merges unblocked had been authored.
+ *
+ * ALL FIVE NOW, AND THE LIST OF THE STILL-BLOCKED IS DELETED RATHER THAN
+ * EMPTIED — which is the sentence above coming true, and the one bookkeeping
+ * decision in it worth explaining.
+ *
+ * `three-dimensional-coordinates` was the fifth and last, written by the
+ * thirteenth promotion into `vectors-and-independence`. So both merges are
+ * fully spent: every concept either of them was argued for has material, and
+ * that is the strongest form the evidence for them can take.
+ *
+ * The `WAS_BLOCKED` list is GONE instead of `[]`, and an empty list would have
+ * been worse than useless here. Its assertion was `WAS_BLOCKED.every(...)`, and
+ * `every` on an empty array is true — so emptying the list would have left a
+ * check that passes unconditionally while reading as though it still guarded
+ * the headroom of an area. That is the vacuity trap this file dissects twice
+ * elsewhere, arriving by a third route: not an optional-chained lookup on a
+ * departed node, but a quantifier over a drained list. A list that has reached
+ * zero should be deleted along with what quantifies over it.
+ *
+ * What replaces it is the positive claim, with the five named and their
+ * subjects named, because "all five are written" is a count and the useful
+ * statement is WHERE they went — four subjects for five concepts, which is the
+ * thing a count hides and the reason neither merge can be credited to one
+ * syllabus.
  */
-const WAS_BLOCKED_NOW_WRITTEN = ['real-number-line', 'circle-measure']
-const WAS_BLOCKED = [
-  'ratio-and-rate', 'solid-geometry', 'three-dimensional-coordinates',
+const WAS_BLOCKED_NOW_WRITTEN = [
+  'real-number-line', 'circle-measure', 'ratio-and-rate', 'solid-geometry',
+  'three-dimensional-coordinates',
 ]
-t('the two previously blocked concepts that have since been authored really are, and out of every area',
-  WAS_BLOCKED_NOW_WRITTEN.every(id =>
-    isTeachable(MATHEMATICS, id) && !AREAS.some(a => a.nodes.some(n => n.id === id))),
+t('all five previously blocked concepts are authored now, and out of every area',
+  WAS_BLOCKED_NOW_WRITTEN.length === 5
+  && WAS_BLOCKED_NOW_WRITTEN.every(id =>
+    isTeachable(MATHEMATICS, id)
+    && isPractisable(MATHEMATICS, id)
+    && !AREAS.some(a => a.nodes.some(n => n.id === id))),
   WAS_BLOCKED_NOW_WRITTEN.map(id =>
     `${id}:${isTeachable(MATHEMATICS, id) ? 'written' : 'UNWRITTEN'}@`
     + `${AREAS.find(a => a.nodes.some(n => n.id === id))?.id ?? 'no area'}`).join(' '))
-t('each of the three still-unwritten ones sits in an area with headroom',
-  WAS_BLOCKED.every(id => {
-    const area = AREAS.find(a => a.nodes.some(n => n.id === id))
-    if (!area || isTeachable(MATHEMATICS, id)) return false
-    return area.nodes.length - (ROUTE_STILL_UNWRITTEN[area.id] ?? []).length >= STUB_FLOOR
-  }),
-  WAS_BLOCKED.map(id => {
-    const area = AREAS.find(a => a.nodes.some(n => n.id === id))
-    return `${id}:${area?.id ?? 'MISSING'}(${area?.nodes.length ?? 0})`
-  }).join(' '))
+t('and the five landed in four different subjects, which is the thing a count of them would hide',
+  WAS_BLOCKED_NOW_WRITTEN.map(id => areaOf(MATHEMATICS, id)).slice().sort().join(' ')
+    === 'arithmetic-foundations arithmetic-foundations plane-geometry solid-measure '
+      + 'vectors-and-independence',
+  WAS_BLOCKED_NOW_WRITTEN.map(id => `${id}@${areaOf(MATHEMATICS, id)}`).join(' '))
 /*
  * And the other thing "blocked" meant. A concept whose prerequisites are all
  * authored is mechanically ready to write, and the floor was the ONLY thing
  * stopping these two — ontology-geometry.ts says so three promotions running.
- * So they have to be ready now, or the merge did not do what it was for.
+ * So they had to be ready once the merge landed, or the merge did not do what
+ * it was for.
  *
- * `real-number-line` was the first of the pair and has been written, so what
- * is asserted of it here is the stronger thing: that its prerequisites are
- * still authored AND it is now one of them for something else. `ratio-and-rate`
- * is still only ready, which is the state the whole group is about.
+ * BOTH HAVE NOW GONE PAST READY INTO WRITTEN, so the "still only ready" half of
+ * this pair has nothing left to describe and the assertion is restated rather
+ * than kept. `ratio-and-rate` used to be checked here for having every
+ * prerequisite authored — which stays TRUE of a written concept, so leaving it
+ * would have been a check that passes while measuring nothing, the exact
+ * vacuity this group's own comment warns a bare `length` would produce.
+ *
+ * What replaces it is the stronger claim the promotion makes available, and it
+ * is asserted over both of them at once: each is teachable, each still rests
+ * only on authored concepts, and each is now a prerequisite of something else
+ * — so it gates rather than being gated. That is what "the merge was cashed in"
+ * reduces to as a testable statement.
  */
-t('ratio-and-rate is still mechanically ready — every prerequisite authored',
-  prerequisitesOf(MATHEMATICS, 'ratio-and-rate').length > 0
-  && prerequisitesOf(MATHEMATICS, 'ratio-and-rate')
-    .every(p => isTeachable(MATHEMATICS, p)),
-  `ratio-and-rate:[${prerequisitesOf(MATHEMATICS, 'ratio-and-rate')
-    .map(p => `${p}${isTeachable(MATHEMATICS, p) ? '*' : ''}`).join(' ')}]`)
-t('and the real line went past ready into written, so it gates rather than being gated',
-  isTeachable(MATHEMATICS, 'real-number-line')
-  && prerequisitesOf(MATHEMATICS, 'real-number-line')
-    .every(p => isTeachable(MATHEMATICS, p))
-  && dependentsOf(MATHEMATICS, 'real-number-line').length > 0,
-  `[${prerequisitesOf(MATHEMATICS, 'real-number-line').join(' ')}] → real-number-line → `
-  + `[${dependentsOf(MATHEMATICS, 'real-number-line').join(' ')}]`)
+const READY_THEN_WRITTEN = ['real-number-line', 'ratio-and-rate']
+t('both area-floor casualties went past ready into written, so each gates rather than being gated',
+  READY_THEN_WRITTEN.every(id =>
+    isTeachable(MATHEMATICS, id)
+    && prerequisitesOf(MATHEMATICS, id).length > 0
+    && prerequisitesOf(MATHEMATICS, id).every(p => isTeachable(MATHEMATICS, p))
+    && dependentsOf(MATHEMATICS, id).length > 0),
+  READY_THEN_WRITTEN.map(id =>
+    `[${prerequisitesOf(MATHEMATICS, id).join(' ')}] → ${id} → `
+    + `[${dependentsOf(MATHEMATICS, id).join(' ')}]`).join(' | '))
+t('and the ratio gates across a subject boundary, which is the half a links entry carries',
+  gatingPrerequisitesOf(MATHEMATICS, 'similarity').includes('ratio-and-rate')
+  && areaOf(MATHEMATICS, 'ratio-and-rate') === 'arithmetic-foundations'
+  && areaOf(MATHEMATICS, 'similarity') === 'plane-geometry',
+  `${areaOf(MATHEMATICS, 'ratio-and-rate')} gates ${areaOf(MATHEMATICS, 'similarity')}`)
 
 group('every checked concept really carries a pattern')
 /*

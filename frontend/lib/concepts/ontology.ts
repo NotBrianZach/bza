@@ -31,6 +31,8 @@
 import { ARITHMETIC_FOUNDATIONS } from './ontology-arithmetic'
 import { EXPRESSIONS_AND_EQUATIONS } from './ontology-algebra'
 import { PLANE_GEOMETRY } from './ontology-geometry'
+import { TRIANGLE_TRIGONOMETRY } from './ontology-trigonometry'
+import { SOLID_MEASURE } from './ontology-solids'
 import { FUNCTIONS_AND_INVERSES } from './ontology-functions'
 import { MATRICES_AND_DETERMINANTS } from './ontology-matrices'
 import { VECTORS_AND_INDEPENDENCE } from './ontology-vectors'
@@ -276,13 +278,36 @@ const CONCEPTS: Concept[] = [
             {
               label: 'What decides it?',
               detail: 'The discriminant b² − 4ac. Real linear factors exist exactly when it is ≥ 0.',
+              socratic:
+                'Run the pair-hunt on x² + x + 1 and look at what kind of failure it is. The ' +
+                'pairs multiplying to 1 are (1, 1) and (−1, −1), which add to 2 and −2, so ' +
+                'nothing works — but you tried only whole numbers, and the question asks about ' +
+                'real factors. An empty search leaves two quite different situations looking ' +
+                'identical: that no such factors exist, and that you were not looking widely ' +
+                'enough. What kind of thing would have to decide this instead, if the answer is ' +
+                'to be settled outright rather than merely not found?',
             },
-            { label: 'Compute it', detail: '1² − 4·1·1 = −3.' },
+            {
+              label: 'Compute it',
+              detail: '1² − 4·1·1 = −3.',
+              socratic:
+                'Everything b² − 4ac asks for is already in x² + x + 1, though two of the three ' +
+                'coefficients are never written down — the x² and the x each carry one you have ' +
+                'to supply for yourself. What are a, b and c here, what does b² − 4ac come to, ' +
+                'and given that not one number in x² + x + 1 is negative, which part of that ' +
+                'expression is able to make the result negative anyway?',
+            },
             {
               label: 'Read it',
               detail:
                 '−3 < 0, so there are no real roots and therefore no real linear factors. ' +
                 'The quadratic is irreducible over the reals.',
+              socratic:
+                'The value came out −3, and that is a fact about x² + x + 1 rather than about ' +
+                'how hard you looked. You began with a search that could not tell absent ' +
+                'factors from unfound ones. How much does a value of −3 settle about the real ' +
+                'linear factors of x² + x + 1, and is what you can now say about them a verdict ' +
+                'or still only a record of what you did not find?',
             },
           ],
           answer: 'No — the discriminant is −3, so it is irreducible over the reals.',
@@ -1362,11 +1387,45 @@ export const RATIONAL_EXPRESSIONS: ConceptOntology = {
  * that is safe because registry order is read only as a tie-break and only two
  * positions are asserted anywhere: index 0 must stay arithmetic (the
  * cold-account assertion) and index 1 must stay the expressions subject.
+ *
+ * TRIANGLE_TRIGONOMETRY IS FOURTH, DIRECTLY BEHIND THE GEOMETRY, and the
+ * position is forced by what it rests on rather than chosen. Its single
+ * concept needs `similarity` and `pythagoras` and nothing else in the build —
+ * not a letter, not an equation, nothing from either algebra subject — so the
+ * only thing ahead of it in the curriculum order has to be the geometry it
+ * comes out of. Appending it last would have claimed that a learner meets the
+ * sine after partial fractions, logarithms, inverse functions and
+ * determinants, which is false in every school course and is the same mistake
+ * the paragraph above refused for the geometry itself.
+ *
+ * Three positions are asserted now rather than two: index 2 must stay
+ * `plane-geometry`, which the eighth subject's block in
+ * tests/concepts-logic.mjs reads by name. Inserting at index 3 leaves all
+ * three intact and moves five subjects one place along, which is safe for the
+ * reason above — nothing reads an index past 2.
+ *
+ * SOLID_MEASURE IS FIFTH, AND THE CHOICE BETWEEN FOURTH AND FIFTH IS A
+ * TIE-BREAK RATHER THAN A CURRICULUM CLAIM, which is worth saying plainly
+ * instead of dressing it up.
+ *
+ * Its single concept needs `circle-measure` and nothing else in the build, so
+ * it rests on the plane geometry exactly as the ratios do and neither of the
+ * two is a prerequisite of the other. They are siblings of the same parent,
+ * and ordering siblings is not information this array has. What decided it is
+ * that index 3 is read by name in tests/concepts-logic.mjs and index 4 is read
+ * by nobody, so inserting here leaves all four asserted positions intact and
+ * moves four subjects one place along.
+ *
+ * What the position does claim is only that a learner meets the volume of a
+ * prism around the time they meet the sine and long before rational
+ * expressions, which is where every school course puts it. Appending it last
+ * would have claimed the solids come after determinants.
  */
 export const ONTOLOGIES: ConceptOntology[] = [
   ARITHMETIC_FOUNDATIONS, EXPRESSIONS_AND_EQUATIONS, PLANE_GEOMETRY,
-  RATIONAL_EXPRESSIONS, EXPONENTS_AND_LOGARITHMS, FUNCTIONS_AND_INVERSES,
-  VECTORS_AND_INDEPENDENCE, MATRICES_AND_DETERMINANTS,
+  TRIANGLE_TRIGONOMETRY, SOLID_MEASURE, RATIONAL_EXPRESSIONS,
+  EXPONENTS_AND_LOGARITHMS, FUNCTIONS_AND_INVERSES, VECTORS_AND_INDEPENDENCE,
+  MATRICES_AND_DETERMINANTS,
 ]
 
 export function getOntology(subjectId: string): ConceptOntology | null {

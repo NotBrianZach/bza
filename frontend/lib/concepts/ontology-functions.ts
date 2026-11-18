@@ -297,16 +297,30 @@ const CONCEPTS: Concept[] = [
               detail:
                 'Division is defined for every pair except a zero divisor, so the only way this ' +
                 'rule can fail is x − 3 = 0.',
+              socratic:
+                'Every input you have put into 3x − 2 came back with a number, because tripling ' +
+                'and subtracting never refuse anything. This rule divides instead. Which part of ' +
+                'it is capable of refusing an input, and what would have to happen to that part ' +
+                'for the refusal to occur?',
             },
             {
               label: 'Solve for that input',
               detail: 'x = 3. The denominator at x = 3 is 3 − 3 = 0.',
+              socratic:
+                'What you have now is an equation, x − 3 = 0, rather than a fraction to look at ' +
+                'and judge. Which input does solving it pick out — and when you put that input ' +
+                'back into x − 3, what does it come out as?',
             },
             {
               label: 'State the domain',
               detail:
                 'Every real number except 3. Note the exclusion is a fact about the RULE — ' +
                 'f is not "undefined at 3" because somebody decided, but because nothing is.',
+              socratic:
+                'Every input but one survived, and the one that did not was turned away by the ' +
+                'arithmetic rather than by anybody\'s choice. How would you describe the set of ' +
+                'inputs f accepts — and what would have to become true of division before 3 ' +
+                'could be let back in?',
             },
           ],
           answer: 'Undefined at x = 3, where the denominator evaluates to 0',
@@ -326,18 +340,33 @@ const CONCEPTS: Concept[] = [
             {
               label: 'Evaluate at the obvious place',
               detail: 'f(0) = 0 + 4 = 4.',
+              socratic:
+                'The rule before this one turned an input away; this one accepts every number you ' +
+                'can hand it, so there is no exclusion to go looking for. What is left is a fixed ' +
+                '4 with x² added to it. What can you choose x to be so that the added part ' +
+                'contributes nothing, and what does f hand back when you do?',
             },
             {
               label: 'Argue nothing is below it',
               detail:
                 'x² is never negative, so x² + 4 is never below 4. The value 4 is reached, at ' +
                 'x = 0, so it is in the range rather than merely a bound.',
+              socratic:
+                'You did not merely get close to 4, you produced it, so 4 is certainly one of the ' +
+                'outputs. Everything else the rule produces is that same 4 with x² added. What ' +
+                'would x² have to come out as for some output to fall below 4, and which inputs ' +
+                'manage that?',
             },
             {
               label: 'State the range',
               detail:
                 'Every number from 4 upwards. The domain here is everything — this is a function ' +
                 'whose domain and range are quite different sets, which is the normal case.',
+              socratic:
+                'Nothing falls below 4 and 4 itself is produced. Meanwhile every real number is ' +
+                'an acceptable input here — there was no exclusion to find. How would you ' +
+                'describe the set of values f actually reaches, and what does holding that set ' +
+                'next to the set of inputs show about the two being one question?',
             },
           ],
           answer: 'f(0) = 4, and the range is everything from 4 up',

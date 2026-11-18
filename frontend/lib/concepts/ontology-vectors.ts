@@ -57,17 +57,217 @@
  * same test was applied to `gcd-and-lcm`'s `exercises` claim when arithmetic
  * was authored, and failed there too.
  *
- * ── Why these and not the dot product ─────────────────────────────────────
+ * ── THE DOT PRODUCT ARRIVED FIFTH, AND THIS FILE HAD REFUSED IT ───────────
  *
- * `dot-product-geometry` is the obvious fourth and it is left mapped, because
- * the half of it worth teaching is `a·b = |a||b|cos θ` — the claim that a
- * product of components measures an ANGLE. The components half is checkable
- * arithmetic; the cosine half needs trigonometry this build cannot rule, and
- * authoring only the arithmetic would teach the formula while silently
- * dropping the reason anybody cares about it.
+ * This header used to carry a section called "Why these and not the dot
+ * product", and the refusal it made was: the half worth teaching is
+ * `a·b = |a||b|cos θ`, the components half is checkable arithmetic, "the
+ * cosine half needs trigonometry this build cannot rule", and writing only the
+ * arithmetic would teach the formula while dropping the reason anybody cares
+ * about it. The last clause is still right and is why the concept is shaped the
+ * way it is. The clause in quotation marks had TWO readings and only one of
+ * them was ever true, which is the useful part of the record:
  *
- * `three-dimensional-coordinates` is left mapped for the same reason one step
- * on: it rests on the dot product.
+ *   The CURRICULUM reading — no concept in the build gives `cos θ` a meaning —
+ *   was true when it was written and has expired. `right-triangle-trig` is
+ *   authored now, as the `triangle-trigonometry` subject, and its whole content
+ *   is that a quotient of two sides is a well-defined function of an angle. So
+ *   there is somewhere for the cosine in the identity to come FROM.
+ *
+ *   The ENGINE reading — nothing here can rule a trigonometric value — is
+ *   still true and was never the obstacle, because the identity does not ask
+ *   anybody to evaluate a cosine. It asks for one: `cos θ = (a·b)/(|a||b|)`
+ *   hands the cosine back as a quotient of things the components already give,
+ *   and for `a = (3, 4)`, `b = (4, 3)` that quotient is exactly 24/25. No
+ *   table is consulted and no worker is needed.
+ *
+ * So the sentence that had looked like one blocker was one expired fact and one
+ * irrelevant one. The lesson is narrow and worth having: a refusal written
+ * about an ENGINE limit should name which direction the limit runs in. Evaluating
+ * `cos 16°` is out of reach; producing the cosine of the angle between two
+ * named vectors is arithmetic.
+ *
+ * WHAT STAYS OUT, and it is the same boundary `right-triangle-trig` drew: the
+ * ANGLE. 24/25 is the answer and 16.26° is a rounding of it, so nothing here
+ * asks for a figure in degrees — recovering an angle from its cosine is
+ * `inverse-trig`, four nodes up behind the unit circle. The one angle that IS
+ * named is the right angle, and it is named exactly, because `a·b = 0` needs no
+ * table: it is the converse of Pythagoras applied to the triangle the two
+ * arrows make. That case is not stated here, it is PROVED, and both halves of
+ * the proof — `pythagoras` and its converse — are authored concepts of
+ * `plane-geometry`.
+ *
+ * The general identity is proved too, and without the law of cosines, which is
+ * the usual route and is still mapped (`law-of-sines-cosines`). Splitting `b`
+ * into the part along `a` and the part across it needs only the span of one
+ * vector, the perpendicularity criterion, and adjacent-over-hypotenuse — one
+ * fact from each of the three concepts underneath it. That the standard proof
+ * is unavailable and a second one is not is why this node turned out writable
+ * at all.
+ *
+ * ── WHY IT JOINED THIS SUBJECT RATHER THAN BECOMING A TENTH ───────────────
+ *
+ * The three subjects before it each argued for a new ontology because every
+ * existing `covers` declared a boundary the concept fell outside. Here exactly
+ * one did — this file's own, which said "nothing about the dot product or
+ * angles" — and the REASON that sentence gave has expired, as above. A boundary
+ * sentence whose justification has gone is a sentence to rewrite, not a sentence
+ * to work around by filing a vector operation somewhere else. The id helps say
+ * so: `vectors-and-independence` is not `vectors-without-angles`, and the dot
+ * product is a vector operation before it is anything about triangles.
+ *
+ * `three-dimensional-coordinates` is still mapped, and now for only half the
+ * reason it was: it rests on the dot product, which is written, and on
+ * `solid-geometry`, which is not.
+ *
+ * ── AND THEN IT WAS WRITTEN, WHICH IS THE THIRTEENTH PROMOTION ────────────
+ *
+ * The sentence above has expired and is kept because the prediction in it came
+ * true: `solid-geometry` is an authored concept of `solid-measure` now, the
+ * twelfth promotion, and that was the whole of what
+ * `three-dimensional-coordinates` was waiting for. It is the sixth concept
+ * below.
+ *
+ * It was the ONLY concept left unwritten on either unfinished journey that is
+ * also unblocked — recomputed from the tree rather than taken from a list, as
+ * `[dest, ...allPrerequisitesOf(M, dest)].filter(id => !isTeachable(M, id))`
+ * per destination. That returned two ids: this one, which both routes cross,
+ * and `gaussian-elimination`, which only the longer one crosses and which is
+ * blocked on a missing task kind rather than on effort (ontology-algebra.ts's
+ * header: "solve for x" asks for a solution SET and no `NamedForm` expresses
+ * one). So writing this one finishes "See what a matrix does to space"
+ * outright — the ninth of ten journeys to have no unwritten step — and leaves
+ * the tenth owing exactly one.
+ *
+ * ── WHY HERE, WHICH WAS DECIDED IN WRITING BEFORE IT WAS WRITTEN ──────────
+ *
+ * ontology-solids.ts argued it while declining it: the node "is analytic —
+ * coordinates, lines and planes in space, and the cross product — so it is a
+ * better fit for `vectors-and-independence`, which already owns the plane and
+ * the dot product", and `solid-measure` "would have to be renamed to take it".
+ * tests/atlas.mjs says the same thing in its route table. So this was a
+ * recorded recommendation rather than an open question, and the work was to
+ * check the premise rather than to re-argue it.
+ *
+ * The premise holds three ways. TWO OF ITS THREE PREREQUISITES ARE CONCEPTS OF
+ * THIS FILE — `dot-product-geometry` by its own `needs`, and `vectors-and-spans`
+ * by the edge discussed below — so no other subject is even adjacent to it.
+ * ITS CONTENT IS THIS SUBJECT'S CONTENT WITH A TERM ADDED: a magnitude is still
+ * a·a under a root, a right angle is still a zero product, and the cross product
+ * is the plane's own independence test having outgrown being a single number.
+ * AND THIS SUBJECT'S OWN SCOPE ALREADY REACHED INTO IT — `dot-product-geometry`
+ * matches articles titled for the cross product, and the comment on that
+ * pattern says so and names this node as where the cross product is filed.
+ *
+ * The id helps again, as it did for the dot product. `vectors-and-independence`
+ * is not `vectors-in-the-plane`, and the strongest evidence that the subject
+ * was never meant to stop at two coordinates is the rationale on the edge that
+ * came home: span "is stated for vectors in any dimension". That sentence was
+ * written by somebody filing this node OUTSIDE this subject, and it is an
+ * argument for filing it inside.
+ *
+ * SO THE `covers` WAS REWRITTEN AND SO WAS THE SUBJECT'S NAME, and the name is
+ * the part worth flagging. `covers` ended with "Nothing in three dimensions, so
+ * no cross product", which is the same shape of expired boundary the dot
+ * product rewrote and the same remedy. The NAME was "The plane, vectors and
+ * independence", and that is a boundary too — the one place the subject still
+ * claimed a floor it no longer has — so it is now "Vectors, independence and
+ * space". A `covers` rewritten under a name that contradicts it would be worse
+ * than either alone. The ID did NOT change and must not: `areaOf` returns a
+ * subject id for an authored concept, and every edge, test and stored strength
+ * in the build names it.
+ *
+ * ── THE SIX KNOWLEDGE POINTS THAT ARE NOT HERE, AND ONE THAT IS ───────────
+ *
+ * FOUR POINTS RATHER THAN THE THREE EVERY OTHER CONCEPT IN THIS FILE CARRIES,
+ * and the extra one is the `is` line being paid rather than padding. That line
+ * promises "coordinates, lines and planes in space, where the cross product
+ * appears because orientation becomes a question", which is three deliverables
+ * and a reason, and the arithmetic bridge has to come first or none of them can
+ * be computed. So: the third coordinate and the term it adds, what survives it
+ * and what does not, one equation as a plane, and the cross product.
+ *
+ * LINES IN SPACE ARE A PARAGRAPH AND NOT A POINT, which is the one place this
+ * concept delivers less than its `is` line says — stated here rather than left
+ * to be discovered, the way ontology-solids.ts stated its own shortfall. The
+ * useful half is cheap and is in the plane point's last subgoal: three
+ * coordinates less one equation leaves two freedoms, so one equation is a
+ * SURFACE, and a line is one freedom and therefore needs two equations or a
+ * parameter. The expensive half is the parametric form r = r₀ + t·d, and it
+ * wants a task kind that can rule "for which t", which is the same gap that
+ * blocks `gaussian-elimination`. `parametric-curves` is the node that owns it
+ * and it is still mapped.
+ *
+ * THE SPHERE IS NOT HERE EITHER, and that is the new `covers` boundary rather
+ * than an omission: x² + y² + z² = r² is one equation in three unknowns and so
+ * is a surface by the count this concept teaches, but nothing curved is in this
+ * subject and the distance formula is all it would borrow.
+ *
+ * ── THE EDGE THAT COULD NOT COME WITH IT ──────────────────────────────────
+ *
+ * The node declared two `needs`. `plane-vectors` is a concept of this
+ * ontology, so that edge is declared below in `EDGES` like any other. The other
+ * is `right-triangle-trig`, which is authored in `triangle-trigonometry` — and
+ * an ontology's edges may only name concepts it CONTAINS, so being authored in
+ * another subject fails that test exactly as being unwritten would. It is a
+ * `links` entry of `EUCLIDEAN_GEOMETRY` in atlas-foundations.ts, filed in the
+ * area that owned the departing node rather than in the one holding the other
+ * end. It gates immediately, because that endpoint has material: a learner has
+ * to demonstrate the ratios before the dot product.
+ *
+ * ── THE THIRTEENTH PROMOTION'S EDGES, INCLUDING ONE COMING BACK ───────────
+ *
+ * Three edges touched this node and they went three different ways, which is
+ * the whole catalogue of what a promotion can do to an edge and is why they are
+ * listed rather than summarised.
+ *
+ * STRANDED AND REHOMED HERE. `dot-product-geometry → three-dimensional-
+ * coordinates` was declared on the node's own `needs`, so deleting the node
+ * deleted it. Both ends are concepts of this ontology, so it is an ordinary
+ * `EDGES` entry below.
+ *
+ * STRANDED AND REHOMED TO THE MAP. `solid-geometry → three-dimensional-
+ * coordinates` was the node's other `needs`, and `solid-geometry` is a concept
+ * of `solid-measure`. An ontology may only name concepts it CONTAINS, so being
+ * authored in another subject fails that test exactly as being unwritten would,
+ * and it is a `links` entry of `EUCLIDEAN_GEOMETRY` in atlas-foundations.ts —
+ * filed in the area that owned the departing node. It gates from the moment it
+ * exists, both ends having material.
+ *
+ * AND ONE HANDED BACK, WHICH IS THE CASE NO TEST CATCHES.
+ * `three-dimensional-coordinates → vectors-and-spans` was a `links` entry of
+ * `linear-algebra` in atlas-structures.ts, because that area owned neither end.
+ * This promotion puts BOTH ends in this ontology, so the edge is declared below
+ * as a plain prerequisite and the `links` entry is deleted. Leaving it would
+ * not have failed anything: `links` never cared whether an end was a node or a
+ * concept, so the entry would have gone on resolving and the composed graph
+ * would have carried the edge twice, which `composeAtlas` does not notice and
+ * no suite checks. It is the second time this file has had an edge come home —
+ * `cartesian-plane → plane-vectors` was the first — and both times the thing
+ * that made it safe was looking at what the far end's file said rather than at
+ * whether the suites went green.
+ *
+ * Note the DIRECTION, because the prose in atlas-structures.ts reads the other
+ * way round at a glance and the edge is load-bearing: the three dimensions gate
+ * SPAN, not the reverse. So this concept lands in the middle of the subject
+ * rather than on the end of it, and file order below is no longer teaching
+ * order — `teachingOrder` computes the walk and the array is append-only.
+ *
+ * NOTHING ELSE MOVED. `three-dimensional-coordinates → functions-of-several-
+ * variables` is declared on the `functions-of-several-variables` node's own
+ * `needs` in atlas-analysis.ts, at the far end, so it survives untouched and
+ * resolves across the file boundary. AND THE NODE DECLARED NO `confusedWith` —
+ * checked on the node before it was deleted rather than inferred from the
+ * suites passing afterwards, because `expandEdges` turns one into an
+ * `interferes_with`, interference constrains SELECTION rather than gating, and
+ * dropping one leaves every suite green.
+ *
+ * WHAT THE GATE DID, which is the measurement worth keeping. `vectors-and-spans`
+ * was gated by `plane-vectors`, `dot-product-geometry` and `solid-geometry`:
+ * `gatingPrerequisitesOf` names NEAREST authored ancestors and the walk passed
+ * straight through the unwritten node to the two behind it. It is now gated by
+ * `plane-vectors` and this concept — three entries replaced by two. The gate
+ * TIGHTENED and the list SHRANK, which is the reading a count gets backwards.
  *
  * ── The determinant appears here, as a check, without an edge ─────────────
  *
@@ -93,12 +293,21 @@ import type { Concept, ConceptEdge, ConceptOntology, Subject } from './types'
 
 const subject: Subject = {
   id: 'vectors-and-independence',
-  name: 'The plane, vectors and independence',
+  name: 'Vectors, independence and space',
   covers:
     'The plane as pairs of numbers, then vectors as displacements across it, linear ' +
-    'combinations and span, and the condition that makes a set of them non-redundant. ' +
-    'Components throughout — nothing about the dot product or angles, which need trigonometry ' +
-    'this build cannot rule, and nothing in three dimensions.',
+    'combinations and span, the condition that makes a set of them non-redundant, and the one ' +
+    'product of two vectors that returns a number — so that a length is a dot product, a right ' +
+    'angle is a zero one, and the sign of one separates acute from obtuse without a cosine ' +
+    'being computed at all. Components throughout, and now three of them: a third axis adds a ' +
+    'term to every sum and takes nothing away, one linear equation stops being a line and ' +
+    'becomes a plane whose coefficients are its own normal vector, and the independence test ' +
+    'stops being a number and becomes the cross product — because in space which of the two ' +
+    'perpendicular directions you mean is a choice the geometry does not make for you. The ' +
+    'ANGLE is absent and deliberately: the identity hands back cos θ as an exact quotient and ' +
+    'that quotient is the answer, while turning a cosine into a figure in degrees needs a table ' +
+    'and is the inverse functions, which are not written. Lines in space are counted and not ' +
+    'parametrised, and nothing is curved — no spheres, and no surface that is not a plane.',
   medium: 'theorem',
   facetName: 'Concept',
   facetDoes: 'Which concept the statement has to be about.',
@@ -680,10 +889,698 @@ const CONCEPTS: Concept[] = [
       },
     ],
   },
+
+  {
+    id: 'dot-product-geometry',
+    name: 'The dot product',
+    subjectId: subject.id,
+    scope: {
+      id: 'dot-product-geometry',
+      label: 'The dot product',
+      hint: 'dot product scalar product projection angle between vectors',
+      /*
+       * Carried verbatim from the map node, for the reason
+       * ontology-algebra.ts gives and ontology-trigonometry.ts repeats: the
+       * pattern decides against an article title, and widening it during an
+       * authoring pass would move the recognition figure in tests/atlas.mjs at
+       * the same time as the material appeared, leaving no way to say which
+       * edit moved it.
+       *
+       * The `cross product` branch is worth naming, because it matches
+       * articles about an operation this concept does NOT contain — the
+       * `covers` sentence says "nothing in three dimensions, so no cross
+       * product", and the cross product is filed on the map under
+       * `three-dimensional-coordinates`. Overlap is allowed and a title
+       * claiming two concepts is normal; narrowing this is a separate change
+       * with its own measurement, exactly as the `tangent` branch of
+       * `right-triangle-trig` is.
+       */
+      match: /\b(dot product|scalar product|cross product)\b/i,
+    },
+    fidelity: 'checked',
+    objectives: [
+      {
+        id: 'produce-the-product-and-tell-it-from-the-cross-check',
+        statement:
+          'Produce a·b from components, produce a·a and say which quantity already met in this ' +
+          'subject it equals, and say which different question the crosswise-and-subtract ' +
+          'combination of the same four numbers answers.',
+        taskKinds: ['evaluate', 'justify'],
+      },
+      {
+        id: 'decide-the-angle-by-the-sign-of-the-product',
+        statement:
+          'Decide from a·b alone whether two vectors are perpendicular, acute or obtuse to each ' +
+          'other, and justify the right-angle case from the converse of Pythagoras applied to the ' +
+          'triangle the two arrows make.',
+        taskKinds: ['evaluate', 'justify'],
+      },
+      {
+        id: 'produce-the-cosine-exactly-and-refuse-the-angle',
+        statement:
+          'Produce cos θ exactly, as the product divided by the two magnitudes, read it against ' +
+          'the values 1, 0 and −1, and say why a figure in degrees is a rounding of that quotient ' +
+          'rather than the answer to the question.',
+        taskKinds: ['evaluate', 'justify'],
+      },
+    ],
+    knowledgePoints: [
+      {
+        id: 'the-product-of-two-vectors-is-a-number',
+        conceptId: 'dot-product-geometry',
+        statement:
+          'The dot product multiplies the components that match and adds: a·b = a₁b₁ + a₂b₂. Two ' +
+          'vectors go in and a NUMBER comes out, which is new — adding and scaling both handed a ' +
+          'vector back. That is what makes lengths and angles reachable at all, since those are ' +
+          'numbers and no vector-valued operation could produce one. Applied to a single vector ' +
+          'twice it gives a·a = |a|², so the magnitude was a dot product all along.',
+        position: 1,
+        automaticityTarget: 15_000,
+        workedExample: {
+          problem: 'a = (3, 4) and b = (4, 3). Find a·b, and say what kind of object the answer is.',
+          subgoals: [
+            {
+              label: 'Pair the components by position, not across',
+              detail:
+                'First with first and second with second: 3·4 = 12 and 4·3 = 12, and adding them ' +
+                'gives a·b = 24. Pairing them the other way round — 3·3 and 4·4 — would give 25, ' +
+                'which is a different number and is not what the definition says.',
+              socratic:
+                'There are four numbers here and the definition allows you exactly two products. ' +
+                'Which component of b does the 3 in a multiply with, and what is it about the two ' +
+                'vectors that decides that rather than the other pairing?',
+            },
+            {
+              label: 'Notice what came out, and what did not',
+              detail:
+                '24 is a number. u + v was a vector and 3u was a vector; this is the first ' +
+                'operation in the subject that takes two vectors and hands back a scalar. A length ' +
+                'and an angle are numbers, so no amount of adding and scaling could ever have ' +
+                'produced one — this is the operation that opens them up.',
+              socratic:
+                'u + v was a vector and 3u was a vector. What sort of thing is 24 — and what kinds ' +
+                'of question does that let this operation answer that the other two never could?',
+            },
+            {
+              label: 'Take the product of a vector with itself',
+              detail:
+                'a·a = 3·3 + 4·4 = 9 + 16 = 25, and 25 is 5², and 5 is |a|. So a·a = |a|² always: ' +
+                'the sum of squares Pythagoras gave for a magnitude IS a dot product. The ' +
+                'magnitude is not a separate idea that this one happens to sit beside; it is this ' +
+                'operation applied twice to the same arrow.',
+              socratic:
+                'Now run the same two products with b replaced by a itself. You have met 25 before ' +
+                'in this subject — where, and what was it the square of?',
+            },
+            {
+              label: 'Set it beside the cross-check, which is the same four numbers',
+              detail:
+                'The independence test was a₁b₂ − a₂b₁: multiply crosswise and subtract. On these ' +
+                'four numbers it gives 3·3 − 4·4 = −7. This product multiplies alongside and adds, ' +
+                'giving 24. Two combinations of one set of four numbers, answering two different ' +
+                'questions — whether the pair spreads out to cover the plane, and how far the two ' +
+                'of them agree in direction.',
+              socratic:
+                'You met a₁b₂ − a₂b₁ as the independence test. Run it on these same four numbers. ' +
+                'Is it the number you just computed — and if not, what is different about the way ' +
+                'the two expressions combine them?',
+            },
+          ],
+          answer:
+            '24, and it is a number rather than a vector — which is also why a·a comes to 25, ' +
+            'that being |a|².',
+        },
+      },
+      {
+        id: 'a-zero-product-is-a-right-angle',
+        conceptId: 'dot-product-geometry',
+        statement:
+          'For two non-zero vectors, a·b = 0 exactly when they are at right angles. That is the ' +
+          'one angle this product names with no table involved, and it is not a definition: ' +
+          '|a − b|² = |a|² + |b|² − 2(a·b), so a zero product says precisely that the Pythagorean ' +
+          'relation holds for the triangle the two arrows make, and the converse of Pythagoras ' +
+          'then supplies the right angle. The same identity turns the SIGN of a·b into the ' +
+          'converse\'s own sign test — positive for acute, negative for obtuse — and a sign stays ' +
+          'exact in cases where the cosine does not.',
+        position: 2,
+        automaticityTarget: 20_000,
+        workedExample: {
+          problem:
+            'u = (3, 4) and v = (−4, 3). Find u·v, and then prove from the three side lengths ' +
+            'that the two arrows really are at right angles.',
+          subgoals: [
+            {
+              label: 'Compute the product and read the zero',
+              detail:
+                '3(−4) + 4(3) = −12 + 12 = 0. The two products came out equal and opposite, which ' +
+                'is what the zero records. The claim to be checked is that this is not a ' +
+                'coincidence of these numbers but exactly the condition for a right angle.',
+              socratic:
+                'Multiply the matching components and add. What have the two products done to each ' +
+                'other here, and what does that leave as the total?',
+            },
+            {
+              label: 'Turn the two arrows into a triangle with three known sides',
+              detail:
+                'Drawn from one point, u and v are two sides of a triangle, and the third side ' +
+                'joins their tips: it is u − v = (7, 1). So the three sides are |u| = 5, |v| = 5 ' +
+                'and |u − v|, whose square is 49 + 1 = 50. Three lengths, all from components.',
+              socratic:
+                'Two arrows drawn from the same point are two sides of a triangle. What is the ' +
+                'third side as a vector — and which subtraction of the two you have gives it?',
+            },
+            {
+              label: 'Let the converse of Pythagoras decide the angle',
+              detail:
+                '|u|² + |v|² = 25 + 25 = 50, and |u − v|² is 50 as well. Pythagoras run forwards ' +
+                'would need the right angle first; the CONVERSE goes the way this problem needs — ' +
+                'a triangle whose longest side squared equals the sum of the other two squares has ' +
+                'a right angle, sitting between the two sides that were squared. Those two sides ' +
+                'are u and v, so the angle between u and v is the right one. Nothing was measured ' +
+                'and nothing was drawn to scale.',
+              socratic:
+                'You have 25, 25 and 50 for the three squared sides. One direction of Pythagoras ' +
+                'assumes a right angle and one concludes it. Which do you need here, and what does ' +
+                'it let you say about where in this triangle the right angle sits?',
+            },
+            {
+              label: 'Read the sign when the total is not zero',
+              detail:
+                'The same expansion in general gives |u − v|² = |u|² + |v|² − 2(u·v), so ' +
+                '|u|² + |v|² − |u − v|² is exactly twice the product. The converse\'s three-way ' +
+                'sign test on that difference — positive acute, zero right, negative obtuse — is ' +
+                'therefore a sign test on u·v itself. For u = (3, 4) and v = (−4, 1) the product is ' +
+                '−12 + 4 = −8, so that pair is obtuse. Worth noticing what was NOT needed: |v| is ' +
+                '√17 there, so the cosine is irrational, and the sign was settled exactly anyway.',
+              socratic:
+                'The converse sorted triangles three ways by the sign of a² + b² − c². Rewrite ' +
+                'that difference using the expansion above — what is it, in terms of u·v? And what ' +
+                'does that let you say about a pair whose product comes out negative?',
+            },
+          ],
+          answer:
+            '0, and the right angle follows from the converse of Pythagoras: the triangle\'s sides ' +
+            'are 5, 5 and |u − v| with |u − v|² = 50 = 25 + 25, which puts the right angle between ' +
+            'u and v.',
+        },
+      },
+      {
+        id: 'the-product-gives-the-cosine-not-the-angle',
+        conceptId: 'dot-product-geometry',
+        statement:
+          'a·b = |a||b| cos θ. Three of those four quantities come straight from the components, ' +
+          'so the fourth is forced: cos θ = (a·b)/(|a||b|). That quotient is the answer. A figure ' +
+          'in degrees is a rounding of it — this product measures the angle BY its cosine, and ' +
+          'turning a cosine back into an angle is the inverse question, which needs a table.',
+        position: 3,
+        /*
+         * No `automaticityTarget`. Two of the four subgoals are an argument —
+         * where the identity comes from, and why the quotient rather than the
+         * angle is the answer — and a timing target on those measures typing,
+         * which is the case types.ts names when it argues the field should
+         * usually be absent. The two points above it are timed, because
+         * computing a·b and reading its sign genuinely are meant to become
+         * automatic.
+         */
+        workedExample: {
+          problem:
+            'a = (3, 4) and b = (4, 3). Find cos θ for the angle between them, exactly. Then say ' +
+            'why the angle itself is not the answer.',
+          subgoals: [
+            {
+              label: 'Collect the three quantities the identity needs',
+              detail:
+                'a·b = 24, from the first point. |a| = (3² + 4²)^(1/2) = 5 and ' +
+                '|b| = (4² + 3²)^(1/2) = 5. All three came out of the components alone, which ' +
+                'leaves cos θ as the only thing in the identity not yet known.',
+              socratic:
+                'a·b = |a||b| cos θ has four quantities in it. Which three can you get from the ' +
+                'components you were handed, and what does that leave the equation to tell you?',
+            },
+            {
+              label: 'Where the identity comes from, and what it costs',
+              detail:
+                'Split b into the part along a and the part across it: b = ca + b⊥, with b⊥ ' +
+                'perpendicular to a. The split is allowed because every multiple of a lies on one ' +
+                'line — that is the span of a single vector — and whatever b has left over can be ' +
+                'taken perpendicular to it. Then a·b = c(a·a) + a·b⊥ = c|a|², the second term ' +
+                'vanishing by the previous point. And ca is the leg adjacent to θ in the right ' +
+                'triangle with b as hypotenuse, so cos θ = c|a|/|b|, which is adjacent over ' +
+                'hypotenuse. Substituting for c gives a·b = |a||b| cos θ. The usual proof goes ' +
+                'through the law of cosines, which this map files above here and nobody has ' +
+                'written; this one needs one fact from each of the three concepts underneath.',
+              socratic:
+                'You know a·b = 0 when the two are perpendicular, and you know every multiple of a ' +
+                'lies on one line. If b were written as some multiple of a plus something ' +
+                'perpendicular to a, how much of a·b would survive — and which part would it come ' +
+                'from?',
+            },
+            {
+              label: 'Divide, and keep the answer as a quotient',
+              detail:
+                'cos θ = 24/(5 × 5) = 24/25, and that is exact. It is a fraction because both ' +
+                'magnitudes came out whole, which is a property of these components rather than of ' +
+                'the method: for u = (3, 4) and v = (−4, 1) the denominator is 5√17 and the cosine ' +
+                'is irrational, while the sign of the product is still exactly −8. The sign ' +
+                'survives where the cosine does not.',
+              socratic:
+                'You have 24 on top and 5 and 5 underneath. What is cos θ — and would the answer ' +
+                'still have been a fraction if |b| had come out as √17 instead of 5?',
+            },
+            {
+              label: 'Read 24/25 against the three values that mean something',
+              detail:
+                '1 means b is a positive multiple of a: for b = (6, 8) the product is 50 and the ' +
+                'magnitudes are 5 and 10, so cos θ = 50/50 = 1 exactly, and indeed (6, 8) = 2(3, 4). ' +
+                '0 is perpendicular, from the previous point, and −1 is opposite. 24/25 is just ' +
+                'under 1, so these two arrows nearly agree in direction — which the components ' +
+                'confirm: (4, 3) is (3, 4) with its entries swapped, so each is the other reflected ' +
+                'in the line that bisects the first quadrant.',
+              socratic:
+                'Three values of cos θ have a plain geometric meaning: 1, 0 and −1. Which of them ' +
+                'is 24/25 close to, and what does that say about how these two arrows sit relative ' +
+                'to each other?',
+            },
+            {
+              label: 'Stop at the cosine, and say why that is finishing rather than giving up',
+              detail:
+                'A calculator reports about 16.26°, and that figure is a rounding of the answer ' +
+                'rather than the answer: 24/25 pins the angle down exactly and 16.26° does not. ' +
+                'Going back from a quotient to an angle is the inverse question — `inverse-trig` on ' +
+                'the map, behind the unit circle — and it is the same refusal the right-triangle ' +
+                'ratios make, for the same reason a hypotenuse is left as a surd instead of being ' +
+                'rounded.',
+              socratic:
+                'A calculator would hand you about 16.26° here. Which of that and 24/25 is the ' +
+                'exact answer to the question that was asked, and what has happened to the other ' +
+                'one?',
+            },
+          ],
+          answer:
+            '24/25. The angle is about 16.26°, but 24/25 is exact and the degree figure is a ' +
+            'rounding of it — recovering the angle from its cosine is the inverse question and ' +
+            'needs a table.',
+        },
+      },
+    ],
+  },
+
+  {
+    id: 'three-dimensional-coordinates',
+    name: 'Three dimensions',
+    subjectId: subject.id,
+    scope: {
+      id: 'three-dimensional-coordinates',
+      label: 'Three dimensions',
+      hint: 'three dimensional coordinates plane equation cross product normal',
+      /*
+       * Carried verbatim from the map node, including the `terms` string as the
+       * hint, for the reason `dot-product-geometry` above gives and the two
+       * subjects before it repeat: the pattern decides against an article
+       * title, and widening it during an authoring pass would move the
+       * recognition figure in tests/atlas.mjs at the same time as the material
+       * appeared, leaving no way to say which edit moved it.
+       *
+       * It is the narrowest pattern in this file and that is deliberate here
+       * rather than inherited. "Three-dimensional space" is an article title;
+       * `/\bthree dimensions?\b/i` would claim every article that mentions
+       * them in passing, which is most of the solids, the multivariable
+       * calculus and the vector fields. The dot product's pattern can afford to
+       * be generous because the phrases it matches ARE the operation. There is
+       * no phrase that means this concept and nothing else except its title.
+       */
+      match: /\bthree-dimensional space\b/i,
+    },
+    fidelity: 'checked',
+    objectives: [
+      {
+        id: 'extend-the-component-arithmetic-into-space',
+        statement:
+          'Produce a magnitude and a dot product from three components, and say which of the ' +
+          'conclusions reached in the plane the extra term leaves standing and why none of the ' +
+          'arguments had to be made again.',
+        taskKinds: ['evaluate', 'justify'],
+      },
+      {
+        id: 'read-a-plane-off-its-equation',
+        statement:
+          'Produce the equation of a plane from a point and a normal vector, read the normal ' +
+          'straight off any equation of that shape, decide whether a given point lies on it, and ' +
+          'say why the single equation that described a line in the plane describes a surface here.',
+        taskKinds: ['evaluate', 'justify'],
+      },
+      {
+        id: 'produce-a-perpendicular-and-account-for-its-direction',
+        statement:
+          'Produce u × v component by component, check the result against both inputs with a dot ' +
+          'product rather than by trusting the formula, and say what the order of the two ' +
+          'arguments decides that the geometry does not.',
+        taskKinds: ['evaluate', 'justify'],
+      },
+    ],
+    knowledgePoints: [
+      {
+        id: 'space-adds-one-coordinate-and-one-term',
+        conceptId: 'three-dimensional-coordinates',
+        statement:
+          'A point in space is an ordered TRIPLE: a third axis is set perpendicular to the other ' +
+          'two, and the third number says how far along it. Nothing already written is replaced. ' +
+          'The distance from the origin is Pythagoras used twice rather than a new formula — once ' +
+          'across the floor, once standing up — and the sum of squares the two applications ' +
+          'collapse into is a·a again, so the dot product extends by one term and the identity ' +
+          'a·a = |a|² comes with it rather than being re-chosen to fit.',
+        position: 1,
+        automaticityTarget: 15_000,
+        workedExample: {
+          problem:
+            'a = (2, 3, 6). Find |a|, using Pythagoras twice rather than quoting a formula for ' +
+            'three dimensions.',
+          subgoals: [
+            {
+              label: 'Flatten it to a problem already solved',
+              detail:
+                'The first two coordinates describe a displacement in the floor plane: 2 across ' +
+                'and 3 along. Its length is (2² + 3²)^(1/2) = 13^(1/2), by the magnitude of a ' +
+                'plane vector. The third coordinate has not been used yet.',
+              socratic:
+                'Two of these three numbers describe a displacement you already know how to ' +
+                'measure. Which two, and what length do they give?',
+            },
+            {
+              label: 'Stand a second right triangle on the first',
+              detail:
+                'The rise of 6 is along an axis perpendicular to the WHOLE floor plane, so it is ' +
+                'perpendicular to that diagonal in particular. Diagonal and rise are therefore ' +
+                'the two legs of a second right triangle whose hypotenuse is a itself: ' +
+                '|a|² = (13^(1/2))² + 6² = 13 + 36 = 49, so |a| = 7.',
+              socratic:
+                'You have a segment of length 13^(1/2) lying flat and a rise of 6 going straight ' +
+                'up. What is the angle between those two, and what does knowing it let you do ' +
+                'with them?',
+            },
+            {
+              label: 'Look at what survived the squaring',
+              detail:
+                'The 13 was 2² + 3², so 49 is 2² + 3² + 6². Squaring the first hypotenuse undid ' +
+                'the root taken to get it, which is why two applications of Pythagoras leave one ' +
+                'sum of squares and not a nested expression — and why the pattern keeps ' +
+                'extending: each further perpendicular axis contributes its square and nothing ' +
+                'else.',
+              socratic:
+                'Write 49 out in terms of the three numbers you started with. What became of the ' +
+                'square root you took along the way?',
+            },
+            {
+              label: 'Name the sum you have just written',
+              detail:
+                'In the plane that sum of squares was a·a, and the magnitude was its square root. ' +
+                'The same sum here has three terms, so the dot product in space must be ' +
+                'a₁b₁ + a₂b₂ + a₃b₃ — one product per axis — and a·a = |a|² still holds. The ' +
+                'definition was not adjusted to make that come out; it is the old definition with ' +
+                'a term added, and the consequence followed.',
+              socratic:
+                'In the plane this sum of squares had a name as the product of a vector with ' +
+                'itself. What was it called — and what does that force the dot product of two ' +
+                'DIFFERENT vectors in space to be?',
+            },
+          ],
+          answer: '7',
+        },
+      },
+      {
+        id: 'every-plane-fact-extends-and-one-does-not',
+        conceptId: 'three-dimensional-coordinates',
+        statement:
+          'Every consequence the dot product had in the plane survives the third term, because ' +
+          'none of the arguments ever counted the coordinates: a zero product is still a right ' +
+          'angle by the converse of Pythagoras on the triangle the two arrows make, and cos θ is ' +
+          'still the product over the two magnitudes. What does NOT survive is the cross-check ' +
+          'a₁b₂ − a₂b₁. In the plane there was one way to pick two coordinates from two, and the ' +
+          'single number it gave decided independence; in space there are three ways, and no one ' +
+          'of the three answers the question on its own.',
+        position: 2,
+        /*
+         * No `automaticityTarget`. Computing the product IS meant to become
+         * automatic and the point above it carries the target for that; the
+         * content HERE is two arguments — what the proofs did not depend on,
+         * and what the cross-check lost — and a timing target on those measures
+         * typing, which is the case types.ts names when it argues the field
+         * should usually be absent.
+         */
+        workedExample: {
+          problem:
+            'n = (2, −1, 2) and u = (1, 2, 0). Find n·u, and say what the answer settles and what ' +
+            'it does not.',
+          subgoals: [
+            {
+              label: 'Pair the components by position and add the third term',
+              detail:
+                '2·1 = 2, (−1)·2 = −2 and 2·0 = 0, and the three add to n·u = 0. The rule is the ' +
+                'plane\'s rule with one more product in the sum; nothing about how the first two ' +
+                'terms are formed has changed.',
+              socratic:
+                'The definition allows you exactly one product per axis. How many products is ' +
+                'that here, and what do they come to altogether?',
+            },
+            {
+              label: 'Spend the zero without computing an angle',
+              detail:
+                'Drawn from one point, n and u are two sides of a triangle whose third side ' +
+                'is n − u = (1, −3, 2). The three squared sides are |n|² = 4 + 1 + 4 = 9, ' +
+                '|u|² = 1 + 4 + 0 = 5, and |n − u|² = 1 + 9 + 4 = 14. Since 9 + 5 = 14, the ' +
+                'converse of Pythagoras puts a right angle between the two sides that were ' +
+                'squared, which are n and u. That is the plane\'s argument word for word — it ' +
+                'names three side lengths and never how many coordinates each was built from.',
+              socratic:
+                'Make a triangle out of the two arrows and find its three squared sides. Which ' +
+                'direction of Pythagoras do you need to get from those three numbers to an angle, ' +
+                'and what does it tell you about where in the triangle that angle sits?',
+            },
+            {
+              label: 'Produce the cosine, and notice the denominator did not matter',
+              detail:
+                'cos θ = (n·u)/(|n||u|) = 0/(3 · 5^(1/2)) = 0, and 0 is exactly the value that ' +
+                'means perpendicular. |n| came out whole at 3 and |u| did not, so the denominator ' +
+                'is irrational — and the quotient is still exact, because a zero numerator ' +
+                'settles it. That is the same observation the plane made about the sign surviving ' +
+                'where the cosine does not.',
+              socratic:
+                'One of these two magnitudes is 5^(1/2), so the denominator of the cosine is ' +
+                'irrational. Why is the quotient exact anyway?',
+            },
+            {
+              label: 'Try the cross-check and watch it stop being a number',
+              detail:
+                'The plane\'s independence test was a₁b₂ − a₂b₁, built from the two coordinates ' +
+                'there are. Here there are three pairs to choose: the first two coordinates give ' +
+                '2·2 − (−1)·1 = 5, the last two give (−1)·0 − 2·2 = −4, and the first and third ' +
+                'give 2·0 − 2·1 = −2. Three numbers, and none of them is the answer — a pair of ' +
+                'vectors in space is dependent only when ALL three vanish. The question has ' +
+                'stopped having a single-number answer, which is the first sign that what ' +
+                'replaces it is going to be a vector.',
+              socratic:
+                'In the plane the independence test used both coordinates of both vectors, and ' +
+                'there was only one way to choose them. How many ways are there now — and what ' +
+                'does that do to the idea of "the" cross-check?',
+            },
+          ],
+          answer:
+            '0 — so n and u are perpendicular, by the converse of Pythagoras on squared sides ' +
+            '9, 5 and 14.',
+        },
+      },
+      {
+        id: 'one-equation-in-space-is-a-plane',
+        conceptId: 'three-dimensional-coordinates',
+        statement:
+          'In the plane, ax + by = c was a line. In space, ax + by + cz = d is a PLANE, and the ' +
+          'jump is not a quirk of counting: one equation removes one freedom from three and ' +
+          'leaves two, which is a surface. The reason is the dot product — the equation says ' +
+          'n·r = d with n = (a, b, c) — so the coefficients ARE a vector perpendicular to the ' +
+          'surface they describe, and the equation is really the statement that the displacement ' +
+          'from one point of the plane to any other is perpendicular to n. A line in space is one ' +
+          'freedom, so it cannot be one equation: it takes two of them, or a parameter.',
+        position: 3,
+        workedExample: {
+          problem:
+            'Write the equation of the plane through P = (1, 2, 3) perpendicular to ' +
+            'n = (2, −1, 2), then check whether the point P + (1, 2, 0) lies on it.',
+          subgoals: [
+            {
+              label: 'State the condition as a dot product rather than as a formula',
+              detail:
+                'A point r lies on the plane exactly when the displacement r − P lies IN the ' +
+                'plane, and that is exactly when it is perpendicular to n. So the condition is ' +
+                'n·(r − P) = 0, and so far nothing has been assumed about x, y or z.',
+              socratic:
+                'You know a right angle is a zero dot product. Which two vectors have to be ' +
+                'perpendicular for r to lie on this plane, and which of the two is not yet given ' +
+                'to you as numbers?',
+            },
+            {
+              label: 'Expand the single dot product you have',
+              detail:
+                'With r = (x, y, z) the displacement is (x − 1, y − 2, z − 3), and feeding it to ' +
+                'the definition gives 2(x − 1) + (−1)(y − 2) + 2(z − 3) = 0.',
+              socratic:
+                'Write r − P out component by component and hand it to the definition. What ' +
+                'equation in x, y and z does the one geometric condition turn into?',
+            },
+            {
+              label: 'Collect the constants and read the coefficients',
+              detail:
+                'Multiplying out and moving the numbers across gives 2x − y + 2z = ' +
+                '2(1) + (−1)(2) + 2(3) = 2 − 2 + 6 = 6. So the plane is 2x − y + 2z = 6, the ' +
+                'right-hand side is n·P, and the three coefficients on the left are n itself. ' +
+                'Every equation of this shape carries its own normal vector in plain sight.',
+              socratic:
+                'Look at the three numbers multiplying x, y and z, and then look at n. What do ' +
+                'you notice — and what does that let you read off any equation of this shape with ' +
+                'no work at all?',
+            },
+            {
+              label: 'Test the second point, and find the fact that made it pass',
+              detail:
+                'P + (1, 2, 0) = (2, 4, 3), and 2(2) − 4 + 2(3) = 4 − 4 + 6 = 6, so it is on the ' +
+                'plane. It was never going to miss: n·(1, 2, 0) = 2 − 2 + 0 = 0 is the previous ' +
+                'point\'s own worked example, so that displacement is perpendicular to n and ' +
+                'adding it cannot leave the plane. Every point of the plane is reached from P ' +
+                'this way.',
+              socratic:
+                'You stepped away from P by (1, 2, 0) and landed back on the plane. What is ' +
+                'n·(1, 2, 0) — and why does that answer make the landing inevitable rather than ' +
+                'lucky?',
+            },
+            {
+              label: 'Count what one equation cost, and price a line',
+              detail:
+                'Three coordinates, one condition, two freedoms left: a surface. The same count ' +
+                'in the plane was two coordinates less one condition, leaving one freedom — a ' +
+                'line. So "one equation is a line" was a fact about the plane and not about ' +
+                'equations, and a line in space needs one freedom removed twice: two equations, ' +
+                'which is two planes crossing, or a point and a direction and a parameter.',
+              socratic:
+                'x, y and z are three numbers and you have imposed one condition on them. How ' +
+                'many are still free — and does that make this set of points a curve or a ' +
+                'surface?',
+            },
+          ],
+          answer:
+            '2x − y + 2z = 6, and P + (1, 2, 0) = (2, 4, 3) is on it, because the step taken was ' +
+            'perpendicular to n.',
+        },
+      },
+      {
+        id: 'the-cross-product-is-a-choice-of-direction',
+        conceptId: 'three-dimensional-coordinates',
+        statement:
+          'Two vectors in space that are not parallel have a whole LINE of vectors perpendicular ' +
+          'to both, and the two directions along that line are equally good — so "the ' +
+          'perpendicular" is not well defined until a convention picks one. The cross product ' +
+          'makes the pick and hands back a VECTOR: ' +
+          'u × v = (u₂v₃ − u₃v₂, u₃v₁ − u₁v₃, u₁v₂ − u₂v₁). Each component is the plane\'s own ' +
+          'crosswise-and-subtract test run on the two coordinates it leaves out, so the three ' +
+          'numbers that stopped being an answer have become one object. Swapping the arguments ' +
+          'negates it, which makes this the first operation in the subject where order matters.',
+        position: 4,
+        workedExample: {
+          problem:
+            'u = (1, 2, 0) and v = (0, 2, 1) are two displacements that leave the plane ' +
+            '2x − y + 2z = 6 unchanged — each is perpendicular to its normal n = (2, −1, 2). ' +
+            'Compute u × v.',
+          subgoals: [
+            {
+              label: 'Say what is being asked for before computing anything',
+              detail:
+                'A vector perpendicular to both u and v. There is a line of them: if w works then ' +
+                'so does −w, and so does every multiple of w. So perpendicularity alone cannot ' +
+                'force an answer — something has to choose, and the formula is that choice ' +
+                'written down.',
+              socratic:
+                'Suppose you find one vector perpendicular to both u and v. Name another that is ' +
+                'also perpendicular to both. How many are there, and what does that do to the ' +
+                'question "what is THE perpendicular"?',
+            },
+            {
+              label: 'Build each component from the two coordinates it leaves out',
+              detail:
+                'The first component ignores the first coordinates and runs the plane\'s ' +
+                'cross-check on the other two: u₂v₃ − u₃v₂ = 2·1 − 0·2 = 2. The third ignores the ' +
+                'third: u₁v₂ − u₂v₁ = 1·2 − 2·0 = 2. The middle one runs the other way round — ' +
+                'u₃v₁ − u₁v₃ = 0·0 − 1·1 = −1 — and that alternation is not decoration; it is ' +
+                'what makes the result come out perpendicular rather than merely built from the ' +
+                'right six numbers. So u × v = (2, −1, 2).',
+              socratic:
+                'Each component is built from four of the six numbers you were given. Which two ' +
+                'coordinates does the FIRST component leave out, and which test already in hand ' +
+                'is it running on the four that are left?',
+            },
+            {
+              label: 'Check perpendicularity instead of trusting the formula',
+              detail:
+                'u·(u × v) = 1·2 + 2·(−1) + 0·2 = 0, and v·(u × v) = 0·2 + 2·(−1) + 1·2 = 0. Both ' +
+                'zero, so the result really is perpendicular to both inputs — and the check is a ' +
+                'dot product, which is the operation from two points ago being used to audit the ' +
+                'one from this one.',
+              socratic:
+                'You have a candidate perpendicular. Which operation already in hand decides ' +
+                'whether one vector is perpendicular to another, and what does it give for each ' +
+                'of u and v here?',
+            },
+            {
+              label: 'Recognise the answer, and read the previous point backwards',
+              detail:
+                '(2, −1, 2) is n — not a multiple of it, exactly it. The previous point went from ' +
+                'a normal vector to the equation of a plane; this goes from two directions lying ' +
+                'in a surface to its normal. Two non-parallel displacements determine a plane, ' +
+                'and the cross product is how its equation is got out of them.',
+              socratic:
+                'Compare (2, −1, 2) with the normal of the plane u and v were taken from. What ' +
+                'has the cross product just computed — and which way does that run compared with ' +
+                'the previous point?',
+            },
+            {
+              label: 'Swap the arguments and find out what the convention was for',
+              detail:
+                'v × u = (2·0 − 1·2, 1·1 − 0·0, 0·2 − 2·1) = (−2, 1, −2), which is −(u × v). It ' +
+                'is perpendicular to both as well, and it is just as much a normal of the same ' +
+                'plane. The plane cannot tell the two apart, so the ORDER of the arguments is ' +
+                'carrying information the geometry does not have — which way round u and v sit. ' +
+                'In the plane that same information was the SIGN of a₁b₂ − a₂b₁, one number\'s ' +
+                'worth of it; in space it has become a direction. That is why this product is not ' +
+                'commutative when adding, scaling and the dot product all were.',
+              socratic:
+                'Run the formula again with u and v the other way round. What has happened to ' +
+                'every component — and given that both answers are perpendicular to both vectors, ' +
+                'what is the order of the arguments deciding?',
+            },
+          ],
+          answer:
+            '(2, −1, 2) — which is exactly the normal of the plane u and v lie in. Reversed, ' +
+            'v × u = (−2, 1, −2), equally perpendicular to both and equally a normal.',
+        },
+      },
+    ],
+  },
 ]
 
 /**
- * The edges. A chain, plus the credit that flows back down it.
+ * The edges. A FORK now, plus the credit that flows back down it.
+ *
+ * It was a chain of four for as long as the subject was four concepts, and the
+ * fifth promotion ended that: `dot-product-geometry` rests on `plane-vectors`
+ * and on nothing else in here, so the subject branches at the second concept
+ * into the span line and the product. Worth stating because an assertion
+ * written as one ordered string — "the subject is this chain" — would pass
+ * while quietly accepting the new concept hung off the wrong parent, and
+ * tests/atlas.mjs now checks the branch point by name instead.
+ *
+ * It rests on `plane-vectors` rather than on `linear-independence`, which is
+ * the near miss and is worth one line because `the-cross-check` and the dot
+ * product are the same four numbers combined two ways. They are not
+ * dependent on each other: the product needs components and a magnitude, which
+ * is `plane-vectors`, and nothing about redundancy or span. Filing it above
+ * independence would gate it behind material it never uses.
  *
  * No edge to `determinant`, deliberately — see the header. `the-cross-check`
  * IS a determinant and says so in prose, but an edge would close a cycle
@@ -743,6 +1640,128 @@ const EDGES: ConceptEdge[] = [
     rationale:
       'Deciding independence is deciding whether one vector lies in the span of the others, so ' +
       'an independence question is a span question with a yes/no answer.',
+  },
+
+  /*
+   * The fifth promotion's two edges. The prerequisite was stranded by the node
+   * leaving the map and had somewhere to go; the `encompasses` is a new claim
+   * and had to earn its place.
+   *
+   * This file refused an `encompasses` edge once already — from `plane-vectors`
+   * down to `cartesian-plane` — and gave the test: the claim is about what
+   * PRACTISING exercises, and measured against the tasks that actually exist it
+   * did not hold, because the vector tasks are handed components as numbers and
+   * never locate a point or decide a quadrant. The same test applied here
+   * passes, and naming which tasks is what makes that checkable rather than
+   * asserted: `cosine-exact-1` and `cosine-aligned-1` each compute two
+   * magnitudes as `(u1^2 + u2^2)^(1/2)`, which is `magnitude-1` verbatim, and
+   * `dot-product-self-1` computes the same sum of squares one layer in. So
+   * somebody who has just produced a cosine has demonstrated the magnitude, and
+   * `plane-vectors` should not come due as though untouched.
+   *
+   * The claim is deliberately narrow. It is not that the dot product exercises
+   * all of `plane-vectors` — nothing here adds two vectors tip to tail or
+   * scales one — but `encompasses` is read by the scheduler as credit toward the
+   * concept, and two of its three knowledge points are about component
+   * arithmetic that every task below performs.
+   */
+  {
+    id: 'plane-vectors->dot-product-geometry',
+    from: 'plane-vectors',
+    to: 'dot-product-geometry',
+    kind: 'prerequisite',
+    promotedBy: 'author:vectors-and-independence',
+    rationale:
+      'The product is defined on components and its first consequence is that a·a is the square ' +
+      'of a magnitude, so both halves of what a vector is — a pair of components, and a length ' +
+      'got from them by Pythagoras — have to be in hand before the definition says anything.',
+  },
+  {
+    id: 'dot-product-geometry=>plane-vectors',
+    from: 'dot-product-geometry',
+    to: 'plane-vectors',
+    kind: 'encompasses',
+    promotedBy: 'author:vectors-and-independence',
+    rationale:
+      'Every cosine task computes two magnitudes from components by Pythagoras, which is exactly ' +
+      'what the magnitude task below it asks for, so producing a cosine is evidence about the ' +
+      'component arithmetic as well.',
+  },
+
+  /*
+   * The thirteenth promotion's three edges. See the header section for which of
+   * them was stranded, which came home from `linear-algebra.links`, and which
+   * one went out to the map instead of in here.
+   *
+   * The first two are the ones that make this concept sit in the MIDDLE of the
+   * subject rather than on the end: it rests on the dot product and span rests
+   * on it. That is the first time anything has been inserted into an existing
+   * chain in this file rather than hung off it, and it is why the array above
+   * is no longer in teaching order.
+   *
+   * The `encompasses` edge had to earn its place the same way the dot product's
+   * did — the claim is about what PRACTISING exercises, measured against the
+   * tasks that exist rather than against the prose — and naming the tasks is
+   * what makes it checkable. FOUR of this concept's eight tasks are a dot
+   * product written out as `a1*b1 + a2*b2 + a3*b3`: `space-dot-product-1` and
+   * `cross-product-perpendicular-1` are that sum on two different vectors,
+   * `plane-constant-1` is it computing n·P for a plane's constant, and
+   * `space-dot-self-1` is it applied twice to one vector. So somebody who has
+   * just found a plane's constant has demonstrated the product, and
+   * `dot-product-geometry` should not come due as though untouched.
+   *
+   * Four and not five, which is worth one line because the first draft of this
+   * comment said five and enumerated four. The fifth candidate is
+   * `space-magnitude-1`, and it is the same sum of squares under a one-half
+   * power — a·a with a root on it. Counting it would have made the number true
+   * of a looser claim than the one the test checks, so the claim is stated at
+   * the shape the regex can see and the magnitude is left out of it.
+   *
+   * NO `encompasses` DOWN TO `vectors-and-spans`, and that is the refusal this
+   * file keeps recording rather than leaving implicit. Nothing here forms a
+   * linear combination, chooses weights, or decides whether a target is
+   * reachable — the same test that refused `plane-vectors → cartesian-plane`
+   * fails this for the same reason. The prerequisite edge runs the other way in
+   * any case; credit flowing back down it would be a claim about span, which
+   * the tasks do not support.
+   */
+  {
+    id: 'dot-product-geometry->three-dimensional-coordinates',
+    from: 'dot-product-geometry',
+    to: 'three-dimensional-coordinates',
+    kind: 'prerequisite',
+    promotedBy: 'author:vectors-and-independence',
+    rationale:
+      'Every one of the three new facts is a dot product: the distance in space is a·a under a ' +
+      'root, a plane is n·r = d, and the cross product is checked by dotting the answer against ' +
+      'both inputs. The product has to mean something before any of the three can be stated.',
+  },
+  {
+    id: 'three-dimensional-coordinates->vectors-and-spans',
+    from: 'three-dimensional-coordinates',
+    to: 'vectors-and-spans',
+    kind: 'prerequisite',
+    promotedBy: 'author:vectors-and-independence',
+    /*
+     * Carried verbatim from the `links` entry of `linear-algebra` this edge
+     * came home from, in atlas-structures.ts. It is the sentence that argues
+     * this subject was never meant to stop at two coordinates, so it is worth
+     * keeping in the words somebody else wrote it in.
+     */
+    rationale:
+      'Span is stated for vectors in any dimension, and the step past the plane is where it ' +
+      'stops being obvious that the reachable set is a line or a plane rather than everything.',
+  },
+  {
+    id: 'three-dimensional-coordinates=>dot-product-geometry',
+    from: 'three-dimensional-coordinates',
+    to: 'dot-product-geometry',
+    kind: 'encompasses',
+    promotedBy: 'author:vectors-and-independence',
+    rationale:
+      'Four of this concept\'s eight tasks evaluate a three-term dot product — two of them on a ' +
+      'pair of vectors, one of them n·P for a plane\'s constant, one of them a vector against ' +
+      'itself — so practising in space is evidence about the product as well.',
   },
 ]
 

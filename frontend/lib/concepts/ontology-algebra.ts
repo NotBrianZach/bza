@@ -1,7 +1,7 @@
 /**
  * A seventh subject ontology: the step from arithmetic into algebra.
  *
- * ── Why this concept, and why it is its own subject ───────────────────────
+ * ── Why this subject, and why it is its own ───────────────────────────────
  *
  * `variables-and-expressions` was a map node in `algebra-foundations`, and it
  * was the single unwritten concept standing on the route of TWO journeys —
@@ -11,7 +11,7 @@
  *
  * It is a subject of its own rather than an addition to an existing one, and
  * the reason is the same one that produced ontology-arithmetic.ts. Every
- * other authored subject declares a boundary in its `covers` that this concept
+ * other authored subject declares a boundary in its `covers` that that concept
  * falls outside of:
  *
  *  - `arithmetic-foundations` says "nothing symbolic — the moment a letter
@@ -28,6 +28,142 @@
  * each subject keeps a standalone view that is still a valid, walkable
  * ontology, and the gates between subjects exist only in the composed map.
  *
+ * ── THE SECOND CONCEPT, AND THE REFUSAL IT HAD TO OVERTURN ────────────────
+ *
+ * `linear-equations` is the other half the subject was named for, and this
+ * file declined it IN WRITING when it was created. The refusal is reproduced
+ * here rather than deleted, because half of it was right and the half that was
+ * wrong is wrong in a way worth being able to recognise again:
+ *
+ *   Solving is a genuinely different skill from reading — it is about which
+ *   operations preserve a truth, not about what a letter means — and it needs
+ *   a task kind this build does not have: "solve for x" asks for the SET of
+ *   numbers satisfying a condition, and no `NamedForm` and no `evaluate`
+ *   target expresses a solution set. Authoring them as substitute-and-check
+ *   tasks would drill verification and never ask for the solving, which is the
+ *   proxy-task failure tasks.ts warns about.
+ *
+ * THE FIRST SENTENCE STANDS. There is still no `solve` kind, a solution is in
+ * general a set, and no `evaluate` target expresses one. Nothing below claims
+ * otherwise.
+ *
+ * THE LAST SENTENCE WAS FALSE, and types.ts names the counterexample three
+ * screens from where the refusal was written. `solve-exponential-1` is a
+ * shipped solve-for-x task of kind `evaluate`: it asks for the x satisfying
+ * 9^x = 27, and its `given` carries `log(c, b)` — the expression the METHOD
+ * leaves x equal to once logs have been taken of both sides. The learner reads
+ * the equation, does the solving, and submits a number that is ruled exactly.
+ * That is not substitute-and-check. The refusal had collapsed two different
+ * limits into one: `evaluate` cannot express a solution SET, but it rules a
+ * solution VALUE perfectly, and "the number the method produces" is a value.
+ *
+ * So the three tasks below that ask for a solution carry the method's own
+ * output in `given` — `(c + b)/a` for ax − b = c, `(d - b)/(a - c)` for
+ * ax + b = cx + d — and the prompt carries the equation. Same shape as the
+ * exponential one, for the same reason, and the one-variable case is where it
+ * is safest: with a ≠ 0 there is exactly one solution, so the set and the
+ * value coincide and nothing is being rounded off.
+ *
+ * ── THE THIRD CONCEPT, AND THE OTHER HALF OF THAT SAME REFUSAL ────────────
+ *
+ * `systems-of-linear-equations` was declined in writing twice: once by the
+ * section this one replaces, and once more sharply in tests/atlas.mjs, which
+ * said it "DOES NOT INHERIT THE UNBLOCKING" above, on the grounds that a
+ * system "resolves to a point, a line, or nothing", that "no solution" and
+ * "every point on this line" are not values, and that the solution-set limit
+ * therefore binds it "directly and in its own right". That is a better
+ * argument than the first refusal made, it is careful to disclaim the easy
+ * mistake of inheriting a block, and it is still wrong. How it is wrong is the
+ * part worth keeping, because the same shape has now caught three concepts in
+ * this build:
+ *
+ *   A SOLUTION SET IS NOT ONE THING TO ASK FOR. What `evaluate` cannot take is
+ *   a set AS AN ANSWER. What it can take is the NUMBER THAT DECIDES ONE. For a
+ *   system those are two different questions, and only the first is blocked.
+ *
+ * In the generic case the answer is a POINT. A point is not a value, and it is
+ * TWO values — so a pair of `evaluate` tasks is what a point costs, which is a
+ * price rather than an obstacle. The two tasks on the first knowledge point
+ * ask for the x and for the y of one system, and neither number can be reached
+ * without carrying out the elimination. tasks.ts already ships a pair that
+ * means nothing read singly and the whole knowledge point read together —
+ * `gained-solution-satisfies-the-new-equation-1` with
+ * `gained-solution-fails-the-original-1` — so this is an established shape in
+ * the file rather than one invented to get past a refusal.
+ *
+ * `given` carries the METHOD'S OWN OUTPUT here as it does above, and that is
+ * what makes the first point honest rather than formulaic. Eliminate y from
+ * ax + by = c and dx + ey = f on the letters instead of on the numbers —
+ * multiply the first by e, the second by b, subtract — and what is left is
+ * (ae − bd)x = ce − bf. So `(c*e - b*f)/(a*e - b*d)` is not a formula being
+ * quoted at the learner; it is the elimination they are being asked to do,
+ * performed once in general. The same is true of the substitution task, whose
+ * `given` is what putting ax + b in for y leaves.
+ *
+ * In the DEGENERATE cases the limit binds exactly as the refusal said, and the
+ * concession is worth stating before the answer to it: no task in this concept
+ * asks how many solutions a system has, because "none" and "every point on
+ * this line" are not values and nothing below pretends they are. What IS
+ * askable is the number the elimination LEAVES. Double 2x + 3y = 7 and take
+ * 4x + 6y = 11 off it and both letters go together, leaving 0 = 3; do it
+ * against 4x + 6y = 14 instead and it leaves 0 = 0. Three and nought are
+ * values, they are produced by doing the mathematics rather than by reporting
+ * a conclusion about it, and which of the two comes out IS the distinction
+ * between no solutions and infinitely many. The concept above reached the same
+ * place by the same route for its own third point, where one number satisfying
+ * a transformed equation and failing the original was the only form in which
+ * "the solution set changed" could be said.
+ *
+ * AND THE DECIDING NUMBER IS THE DENOMINATOR OF THE FIRST POINT'S ANSWER,
+ * which is the one fact that makes this a single concept rather than three
+ * loosely related procedures. ae − bd is what the elimination divides by, and
+ * it is zero exactly when one equation's left side is a multiple of the
+ * other's — which is when both letters cancel together and the right-hand
+ * sides are left to decide between nothing and the whole line. 2·6 − 3·4 = 0
+ * for the pair in the third point; 2·(−1) − 3·5 = −17 for the system in the
+ * first. The third knowledge point ends there deliberately.
+ *
+ * WHAT REMAINS TRUE AFTER ALL THREE PROMOTIONS. There is no `solve` kind, a
+ * solution is in general a set, and no `evaluate` target expresses one.
+ * Nothing above claims otherwise, and the sentence that keeps failing is never
+ * that one — it is the inference from it to "therefore this concept cannot be
+ * authored". That inference has now been drawn and withdrawn three times, for
+ * `dot-product-geometry` (ontology-vectors.ts, where the useful question
+ * turned out to be which DIRECTION the engine limit ran in: evaluating cos 16°
+ * is out of reach, producing a cosine as a quotient is arithmetic), for
+ * `linear-equations` above (a set against a value), and for this one (a set
+ * against the number that decides a set). Three is enough to call it a
+ * pattern: a refusal resting on a task-kind limit should name the exact
+ * question it cannot ask, because the neighbouring question is usually askable
+ * and is usually the one worth asking.
+ *
+ * ── What is STILL deliberately not here ───────────────────────────────────
+ *
+ * The degenerate cases OF A SINGLE EQUATION. When the x-terms cancel in one
+ * linear equation it is either an identity satisfied by every number or a
+ * contradiction satisfied by none, and those two outcomes are what `evaluate`
+ * cannot ask for directly. They are not missing from `linear-equations` by
+ * accident and they are not what it is about: the node's own one-liner is
+ * "solving by doing the same thing to both sides, which works because equality
+ * is preserved by any invertible operation".
+ *
+ * What the subject CAN say about them it now says twice, in the two places the
+ * sentence is a value rather than a set. `linear-equations`' third point
+ * exhibits one number that satisfies a transformed equation and not the one it
+ * came from. `systems-of-linear-equations`' third point exhibits the leftover
+ * of an elimination that killed both letters, and that one covers the empty and
+ * the universal solution set both — because a system of two equations in two
+ * unknowns is the smallest place where those outcomes arise from a METHOD
+ * rather than from an equation chosen to be degenerate.
+ *
+ * `linear-inequalities` is what is left mapped, and it is blocked for a reason
+ * none of the three overturned refusals answers: its answer is an INTERVAL, a
+ * set with no finite list of deciding numbers behind it, and the move that
+ * matters — multiplying by a negative reverses the relation — is a claim about
+ * the relation symbol, which no `NamedForm` and no `evaluate` target mentions
+ * at all. That is a different obstacle from "a set is not a value" and should
+ * not be read as the same one waiting to expire.
+ *
  * ── THIS TIGHTENS THE GATE, AS AUTHORING ALWAYS DOES ──────────────────────
  *
  * Before this file, `gatingPrerequisitesOf` looked straight through
@@ -41,17 +177,30 @@
  * `gatingPrerequisitesOf`: gating tightens, never loosens, as material is
  * authored), and it is checked by name in tests/atlas.mjs.
  *
- * ── What is deliberately NOT here ─────────────────────────────────────────
+ * IT HAS NOW HAPPENED A SECOND TIME, one layer up, and to three nodes at once.
+ * `linear-inequalities`, `systems-of-linear-equations` and `word-problems` all
+ * name `linear-equations` in their own `needs` and all three were still map
+ * nodes. While it was mapped-only the walk looked straight through it and
+ * reported `variables-and-expressions`; now it gates in its own right, so all
+ * three are one demonstration further from a cold account without anybody
+ * editing them. Also checked by name, because three nodes acquiring a real
+ * prerequisite is invisible from their own definitions.
  *
- * `linear-equations`, `linear-inequalities`, `systems-of-linear-equations` and
- * `word-problems` stay mapped, and the subject is named for the pair so there
- * is somewhere for them to land. Solving is a genuinely different skill from
- * reading — it is about which operations preserve a truth, not about what a
- * letter means — and it needs a task kind this build does not have: "solve for
- * x" asks for the SET of numbers satisfying a condition, and no `NamedForm`
- * and no `evaluate` target expresses a solution set. Authoring them as
- * substitute-and-check tasks would drill verification and never ask for the
- * solving, which is the proxy-task failure tasks.ts warns about.
+ * A THIRD TIME, AND THE TENSE ABOVE IS WHY THIS IS WORTH ITS OWN PARAGRAPH.
+ * One of those three — `systems-of-linear-equations` — is a concept of this
+ * subject now, so the sentence "all three are still map nodes" had to become
+ * "were". Two nodes still rest on `linear-equations` and are checked as such;
+ * the third has moved up a layer and is doing the gating itself. What it
+ * tightened in turn is `nonlinear-systems` here and `gaussian-elimination` in
+ * `linear-algebra`, both of which named it while it had no material and were
+ * therefore gated by `linear-equations` through it. Neither was edited.
+ *
+ * The shape of this file's history is that paragraph three times over: every
+ * promotion out of `algebra-foundations` tightens the gate on whatever rests
+ * on the departing node, and every assertion recording a previous tightening
+ * is phrased about nodes that may themselves be promoted next. There is no way
+ * to write those claims so they never need amending — only the choice between
+ * amending them and letting them rot.
  *
  * ── Why every task here is `evaluate`, and the form that is missing ───────
  *
@@ -66,8 +215,51 @@
  * form and the original must agree at every x, so they agree at x = 3 — and
  * each prompt names what it is standing in for. That keeps the subject
  * gradable with no math worker configured, which matters more here than
- * elsewhere: this concept now sits directly above arithmetic on the entry
+ * elsewhere: the first concept sits directly above arithmetic on the entry
  * route, so a worker outage must not wall it off.
+ *
+ * The equations half is `evaluate`-only for a different reason — there is no
+ * `solve` kind at all, rather than a form that half-fits — and it holds the
+ * worker-free property too. Every reference below is reached by exact rational
+ * arithmetic on whole numbers, including the two answers that are not integers
+ * (7/4 and 1/2, each chosen precisely so the division cannot be guessed past),
+ * so the whole subject still rules with nothing configured.
+ *
+ * The systems half is `evaluate`-only for the same reason as the equations
+ * half and keeps the same property, which is not a coincidence worth passing
+ * over: a system is where the arithmetic first gets long enough that a worker
+ * looks necessary, and it is not. Cramer's expressions in the coefficients are
+ * four multiplications and two subtractions, and every one of the seven
+ * references is an exact rational. A subject sitting this low on the entry
+ * route must not acquire a service dependency at its top.
+ *
+ * ── Objectives name `evaluate` and nothing else, which is a change of habit ─
+ *
+ * `variables-and-expressions` names `['evaluate', 'justify']` on two of its
+ * three objectives and no `justify` task exists anywhere in the build. That is
+ * defensible on the letter of types.ts — a justify task WOULD evidence those
+ * objectives — and it is still a claim with nothing behind it, which is the
+ * exact failure the "never empty" rule was written to prevent, one step up.
+ *
+ * The three objectives on `linear-equations` therefore name only the kind they
+ * actually ship. Each was also phrased so that `evaluate` genuinely evidences
+ * it: the third one asks for the VALUE of each side at the number a
+ * non-invertible step created, rather than for an account of why the step was
+ * illegal. The account is worth asking for and is asked for — in `socratic`,
+ * where an unrulable question belongs, rather than in `taskKinds`, where it
+ * would promise an observation that cannot be made.
+ *
+ * `systems-of-linear-equations` holds the same rule and its third objective is
+ * where the rule did real work rather than being easy to obey. The obvious
+ * phrasing is "say whether a system has no solutions, one, or infinitely
+ * many", and that objective would be unsatisfiable by anything this build can
+ * observe — it names a classification, and no verifiable kind returns one. So
+ * it asks instead for the number the elimination leaves, which is a value, and
+ * says in the statement what the two possible values mean. The classification
+ * is the thing to understand and the leftover is the thing to produce; putting
+ * the first in `taskKinds` would have been a curriculum claiming an
+ * observation it cannot make, which is the failure the never-empty rule exists
+ * one level below to prevent.
  */
 
 import type { Concept, ConceptEdge, ConceptOntology, Subject } from './types'
@@ -78,9 +270,18 @@ const subject: Subject = {
   covers:
     'What a letter standing for a number means: the two readings of one, an unknown a ' +
     'condition pins down and a variable a claim holds for; terms, and which of them collect; ' +
-    'and substituting a signed number back in. Equations, inequalities and systems are the ' +
-    'other half of the subject and are still mapped only — solving is a different skill from ' +
-    'reading, and nothing is written for it yet.',
+    'and substituting a signed number back in. Then solving one equation in one unknown — ' +
+    'undoing the operations in reverse order, collecting the unknown when it stands on both ' +
+    'sides, and why the rule is that the same move on both sides must be INVERTIBLE rather ' +
+    'than merely the same. Then two equations in two unknowns: eliminating a letter by ' +
+    'combining the equations, substituting when one of them already names a letter, and the ' +
+    'two outcomes that are not a point — which arise when the elimination kills both letters ' +
+    'and the number it leaves behind decides between no solution and every point on one line. ' +
+    'What is not here is the inequality, whose answer is an interval and whose one interesting ' +
+    'step is a claim about the relation symbol rather than about a number, so no form and no ' +
+    'evaluate target can ask for it; it is still mapped only. Nor is anything beyond two ' +
+    'equations in two unknowns: three or more is row reduction, which the map files as ' +
+    '`gaussian-elimination` in linear algebra.',
   medium: 'theorem',
   facetName: 'Concept',
   facetDoes: 'Which concept the statement has to be about.',
@@ -296,23 +497,637 @@ const CONCEPTS: Concept[] = [
       },
     ],
   },
+  {
+    id: 'linear-equations',
+    name: 'Linear equations in one variable',
+    subjectId: subject.id,
+    scope: {
+      id: 'linear-equations',
+      label: 'Linear equations in one variable',
+      hint: 'linear equation solve for x balance both sides',
+      /*
+       * Carried verbatim from the map node, for the reason the concept above
+       * gives and which applies again unchanged: widening the pattern at the
+       * same time as writing the material would move the recognition figure in
+       * tests/atlas.mjs with no way to say which of the two edits moved it.
+       *
+       * Worth knowing that it is deliberately singular. `\b` after "equation"
+       * fails against "equations", so this matches the provider's own title
+       * "Linear equation" and not a plural heading. That is the right side of
+       * the trade for a `checked` claim — a pattern loose enough to catch every
+       * plural would also catch "system of linear equations", which is a
+       * different concept and still a map node.
+       */
+      match: /\blinear equation\b/i,
+    },
+    fidelity: 'checked',
+    objectives: [
+      {
+        id: 'solve-by-undoing-in-reverse-order',
+        statement:
+          'Solve a linear equation in one unknown by applying the inverse of each operation to ' +
+          'both sides, undoing them in the reverse of the order they were applied, and produce ' +
+          'the number that satisfies it.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'collect-the-unknown-before-undoing',
+        statement:
+          'Given an equation with the unknown on both sides, subtract one of its terms in the ' +
+          'unknown from both sides to reduce it to the one-sided case, and produce the solution ' +
+          '— reaching the same number whichever side is cleared.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'show-a-non-invertible-step-changed-the-solutions',
+        statement:
+          'When a step on both sides is not invertible, produce the value of each equation at a ' +
+          'number the transformed one admits, exhibiting that it satisfies the new equation and ' +
+          'not the original.',
+        taskKinds: ['evaluate'],
+      },
+    ],
+    knowledgePoints: [
+      {
+        id: 'undo-the-operations-in-reverse-order',
+        conceptId: 'linear-equations',
+        statement:
+          'An equation says two expressions name the same number. Applying one operation to both ' +
+          'sides keeps that true, so the way to reach the unknown is to undo what was done to it ' +
+          '— last operation first, because that is the order a sequence comes apart in. The ' +
+          'condition is that each operation undone is invertible; dividing by 3 qualifies ' +
+          'because 3 is not zero, and that is the whole of why the rule says invertible.',
+        position: 1,
+        /*
+         * Timed, unlike the point below it. Reaching for the right inverse in
+         * the right order is a procedure that has to become fluent before an
+         * equation can be a step inside a longer problem rather than the
+         * problem — which is the case types.ts names for setting the field at
+         * all. The third point is untimed for the opposite reason.
+         */
+        automaticityTarget: 20_000,
+        workedExample: {
+          problem: 'Solve 3x − 7 = 11.',
+          subgoals: [
+            {
+              label: 'Read the left side as a recipe and find which step came last',
+              detail:
+                '3x − 7 says: take x, multiply by 3, then subtract 7. The order matters for what ' +
+                'follows, because undoing a sequence of operations means undoing it backwards — ' +
+                'so the subtraction, being last, is the first thing to go.',
+              socratic:
+                'The left side does two things to x. Which of the two happens last, and what in ' +
+                'the way it is written tells you so?',
+            },
+            {
+              label: 'Undo the last step, on both sides at once',
+              detail:
+                'Add 7 to both sides: 3x − 7 + 7 = 11 + 7, so 3x = 18. The reason both sides get ' +
+                'it is that 3x − 7 and 11 are two names for ONE number. Add 7 to that number and ' +
+                'you have one number again, so whatever is written on each side still names the ' +
+                'same thing.',
+              socratic:
+                'You want the −7 gone. What single operation removes it — and why does the 11 ' +
+                'have to receive it too?',
+            },
+            {
+              label: 'Undo the multiplication, and name the condition that permits it',
+              detail:
+                'Divide both sides by 3: x = 6. This is allowed because 3 is not zero. That is ' +
+                'the condition rather than a technicality — division by zero is the one ' +
+                'arithmetic operation with no inverse, which is exactly why the rule is "any ' +
+                'invertible operation" and not "any operation".',
+              socratic:
+                'One operation is left to undo. What is it, and what would have to be true of ' +
+                'the 3 for that undoing to be impossible?',
+            },
+            {
+              label: 'Say why this is the whole solution set and not just one answer',
+              detail:
+                'Both moves were reversible: adding 7 undoes subtracting 7, dividing by 3 undoes ' +
+                'multiplying by 3. So 3x − 7 = 11 and x = 6 are satisfied by exactly the same ' +
+                'numbers, which makes 6 the only one. Substituting back gives 18 − 7 = 11 and ' +
+                'confirms the arithmetic, but it is the reversibility and not the substitution ' +
+                'that rules out a second answer — one substitution could never do that.',
+              socratic:
+                'You have a number that works. What is it about the steps you took — rather than ' +
+                'about checking the answer — that tells you no second number also works?',
+            },
+          ],
+          answer: 'x = 6',
+        },
+      },
+      {
+        id: 'the-unknown-on-both-sides-is-collected-first',
+        conceptId: 'linear-equations',
+        statement:
+          'When the unknown appears on both sides there is no single chain of operations to ' +
+          'reverse, so nothing can be undone yet. Subtracting a term in the unknown from both ' +
+          'sides is the move that fixes it, and it is the same move as subtracting a number: ' +
+          'once x stands for a number, 2x names a number too, and adding 2x back undoes it.',
+        position: 2,
+        automaticityTarget: 20_000,
+        workedExample: {
+          problem: 'Solve 5x + 4 = 2x + 19.',
+          subgoals: [
+            {
+              label: 'Try to name the last operation, and find that there is not one',
+              detail:
+                'x occurs in two places, so the equation is not one chain of operations applied ' +
+                'to a single x. "Undo the last thing first" has nothing to take hold of until ' +
+                'the unknown is in one place, which is what makes collecting a step in its own ' +
+                'right rather than tidying.',
+              socratic:
+                'Try to say what the last thing done to x was here. Where does that question ' +
+                'break down?',
+            },
+            {
+              label: 'Subtract one of the terms in the unknown from both sides',
+              detail:
+                'Subtract 2x from both sides: 5x + 4 − 2x = 2x + 19 − 2x, so 3x + 4 = 19. This ' +
+                'is not a new kind of move. Once x stands for a number, 2x names a number, so ' +
+                'this is the same operation as subtracting 4 — and it is invertible, since ' +
+                'adding 2x back returns the equation you started from.',
+              socratic:
+                'Subtracting 4 from both sides was allowed. What makes subtracting 2x from both ' +
+                'sides the same kind of move rather than a new one needing its own licence?',
+            },
+            {
+              label: 'Finish as the one-sided case',
+              detail:
+                'The unknown is in one place now, so the previous point applies as written: ' +
+                'subtract 4 to get 3x = 15, then divide by 3 to get x = 5. Checking, the left ' +
+                'side is 25 + 4 = 29 and the right is 10 + 19 = 29.',
+              socratic:
+                'The unknown is in one place. Which problem have you turned this into, and what ' +
+                'are the two steps still to do?',
+            },
+            {
+              label: 'Clear the other side instead, and compare the answers',
+              detail:
+                'Subtract 5x rather than 2x: 4 = −3x + 19, then subtract 19 to get −15 = −3x, ' +
+                'then divide by −3 to get x = 5. The same number, and that is the point worth ' +
+                'taking away: both subtractions are invertible, so both preserve the solutions, ' +
+                'and nothing about the method depends on which side you clear. The second route ' +
+                'divides by a negative, which is where a sign slip lives and the reason it is ' +
+                'worth walking once.',
+              socratic:
+                'Suppose you had cleared the 5x instead of the 2x. Would you expect the same ' +
+                'number out — and what property of both moves decides that?',
+            },
+          ],
+          answer: 'x = 5',
+        },
+      },
+      {
+        id: 'a-non-invertible-step-changes-the-solutions',
+        conceptId: 'linear-equations',
+        statement:
+          '"Do the same thing to both sides" was never the whole rule — the same thing has to be ' +
+          'invertible. Multiply both sides by an expression that can be zero and the new equation ' +
+          'can be satisfied by numbers the old one rejects, because at the value where the ' +
+          'multiplier is zero the step cannot be undone. The solutions were not rearranged; they ' +
+          'were changed.',
+        position: 3,
+        /*
+         * No `automaticityTarget`, and the contrast with the two points above
+         * is the argument for the field existing. Those are procedures and
+         * fluency in them is the skill. This one asks which of two steps is
+         * invertible and why, and a timing target on that measures typing —
+         * the case types.ts makes for leaving it absent.
+         */
+        workedExample: {
+          problem:
+            'Solve 2x − 6 = 0. Then multiply both sides by x − 1 and compare what the two ' +
+            'equations are satisfied by.',
+          subgoals: [
+            {
+              label: 'Solve it as it stands, so there is something to compare against',
+              detail:
+                'Add 6 to both sides to get 2x = 6, then divide by 2 to get x = 3. Both steps ' +
+                'are invertible, so by the first point 3 is not merely a solution but the only ' +
+                'one. That single-element solution set is the thing the next step will disturb.',
+              socratic:
+                'Before changing anything: which numbers satisfy this equation, and how many of ' +
+                'them are there?',
+            },
+            {
+              label: 'Multiply both sides by x − 1 and ask what the result admits',
+              detail:
+                'The left side becomes (x − 1)(2x − 6) and the right becomes 0 · (x − 1), which ' +
+                'is 0. A product is zero exactly when one of its factors is, so (x − 1)(2x − 6) ' +
+                '= 0 is satisfied by x = 1 and by x = 3. Two numbers, where the equation it came ' +
+                'from had one.',
+              socratic:
+                'The right side was 0, and zero times anything is zero. Which numbers satisfy ' +
+                'the equation you are now looking at, and how does that count compare with the ' +
+                'one you started from?',
+            },
+            {
+              label: 'Put the extra number back into the original equation',
+              detail:
+                'At x = 1 the original left side is 2(1) − 6 = −4, and −4 is not 0. So 1 ' +
+                'satisfies the multiplied equation and fails the one it was derived from. The ' +
+                'step did not rewrite the equation into an equivalent one; it produced a ' +
+                'different question with a different answer.',
+              socratic:
+                'One of your two numbers is new. Put it into the equation you started with — ' +
+                'what does each side come to?',
+            },
+            {
+              label: 'Name the property that the multiplier by 2 has and x − 1 does not',
+              detail:
+                'Multiplying both sides by 2 is invertible: divide by 2 and you are back. ' +
+                'Multiplying by x − 1 is not, because at x = 1 the multiplier IS zero, and ' +
+                'multiplying by zero cannot be undone — every number is sent to 0, so nothing ' +
+                'about the original survives at that one value. This is the word "invertible" in ' +
+                'the first point doing work rather than decorating, and it is where the ' +
+                'extraneous roots of a radical equation come from: squaring both sides fails the ' +
+                'same test, since two numbers share a square.',
+              socratic:
+                'Multiplying both sides by 2 is safe; multiplying both sides by x − 1 is not. ' +
+                'What is true of the first multiplier at every value of x that is not true of ' +
+                'the second one at x = 1?',
+            },
+          ],
+          answer:
+            '2x − 6 = 0 has the single solution 3. After multiplying both sides by x − 1, ' +
+            '(x − 1)(2x − 6) = 0 is satisfied by 1 and by 3. The 1 was created by the step: at ' +
+            'x = 1 the multiplier x − 1 is zero and multiplying by zero has no inverse, so that ' +
+            'step falls outside the rule the first point states.',
+        },
+      },
+    ],
+  },
+  {
+    id: 'systems-of-linear-equations',
+    name: 'Systems of two linear equations',
+    subjectId: subject.id,
+    scope: {
+      id: 'systems-of-linear-equations',
+      label: 'Systems of two linear equations',
+      hint: 'simultaneous equations elimination substitution system',
+      /*
+       * Carried verbatim from the map node, for the reason both concepts above
+       * give: widening a pattern at the same time as writing the material
+       * would move the recognition figure in tests/atlas.mjs with no way to
+       * say which of the two edits moved it.
+       *
+       * It does not collide with `linear-equations`' pattern and the reason is
+       * worth knowing, because the two look like they should. That one is
+       * `/\blinear equation\b/i` — singular, with the `\b` after "equation"
+       * failing against "equations" — so the provider's title "System of
+       * linear equations" is matched by this concept and by nothing else. The
+       * note on that pattern predicted exactly this case as the reason not to
+       * loosen it, and this is the promotion that cashes the prediction in.
+       */
+      match: /\bsystem of linear equations\b/i,
+    },
+    fidelity: 'checked',
+    objectives: [
+      {
+        id: 'eliminate-a-letter-and-produce-both-coordinates',
+        statement:
+          'Solve a system of two linear equations in two unknowns by multiplying one equation ' +
+          'through so that one letter\'s coefficients cancel, adding the equations to remove it, ' +
+          'and producing each coordinate of the point that satisfies both.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'substitute-and-reach-the-same-point',
+        statement:
+          'Given a system in which one equation already names a letter in terms of the other, ' +
+          'solve it by substituting that expression — reducing the system to one equation in one ' +
+          'unknown — and produce the same coordinate elimination gives for the same system.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'produce-the-leftover-when-both-letters-cancel',
+        statement:
+          'When the elimination removes both letters at once, produce the number it leaves on ' +
+          'the right: nought when the second equation repeats the first, so every pair on one ' +
+          'line solves the system, and anything else when the two equations contradict, so no ' +
+          'pair does.',
+        taskKinds: ['evaluate'],
+      },
+    ],
+    knowledgePoints: [
+      {
+        id: 'eliminate-a-letter-by-combining-the-equations',
+        conceptId: 'systems-of-linear-equations',
+        statement:
+          'One linear equation in two unknowns is satisfied by infinitely many pairs, so neither ' +
+          'equation of a system decides anything on its own and a solution is a PAIR rather than ' +
+          'a number. The way in is to combine the two equations so that one letter cancels: ' +
+          'adding equals to equals gives equals, so the combination is a condition every pair ' +
+          'satisfying both must satisfy — and it has only one letter left in it.',
+        position: 1,
+        /*
+         * Timed, and at 25 seconds rather than the 20 the two procedural points
+         * in `linear-equations` carry. The longest figure in the subject, and
+         * deliberately: before the first inverse can be applied there is a
+         * multiplication through an entire equation and an addition of two,
+         * which is two equations' worth of arithmetic that a one-sided solve
+         * does not have. Fluency here is what lets a system be a step inside a
+         * longer problem rather than the problem, which is the case types.ts
+         * makes for setting the field at all.
+         */
+        automaticityTarget: 25_000,
+        workedExample: {
+          problem: 'Solve 2x + 3y = 12 and 5x − y = 13.',
+          subgoals: [
+            {
+              label: 'Check what one equation alone settles, and find that it is nothing',
+              detail:
+                '2x + 3y = 12 is satisfied by (0, 4), by (3, 2), by (6, 0) and by infinitely ' +
+                'many other pairs. 5x − y = 13 is satisfied by (2, −3), by (3, 2) and by (4, 7). ' +
+                'So neither equation picks out a pair; what the system asks for is the pair — ' +
+                'here it looks like just one — that appears in both lists.',
+              socratic:
+                'Find two different pairs that satisfy 2x + 3y = 12. How many do you think there ' +
+                'are, and what does that tell you about what one equation on its own can settle?',
+            },
+            {
+              label: 'Multiply one equation through so that a letter\'s coefficients cancel',
+              detail:
+                'The y terms are +3y and −y. Multiplying the second equation by 3 gives ' +
+                '15x − 3y = 39, and now the y terms are +3y and −3y. Multiplying both sides of ' +
+                'an equation by 3 is invertible, so the new equation is satisfied by exactly the ' +
+                'same pairs as the one it came from — which is the licence for changing it at all.',
+              socratic:
+                'You want the y terms to destroy each other when the two equations meet. The ' +
+                'coefficients are 3 and −1 — what would you have to do to one whole equation to ' +
+                'arrange that, and why is doing it allowed?',
+            },
+            {
+              label: 'Add the two equations, which removes the letter and leaves one unknown',
+              detail:
+                'Adding 2x + 3y = 12 to 15x − 3y = 39 gives 17x = 51, so x = 3. The addition is ' +
+                'legal because each side of each equation names the same number as the other, so ' +
+                'the sum of the two left sides names the sum of the two right sides. The y terms ' +
+                'contribute 3y − 3y = 0, which is the whole purpose of the previous step.',
+              socratic:
+                'Add the left sides together and the right sides together. What justifies that, ' +
+                'and what has happened to the y?',
+            },
+            {
+              label: 'Recover the other coordinate, then check the pair in the equation you did not use',
+              detail:
+                'Putting x = 3 into 5x − y = 13 gives 15 − y = 13, so y = 2. The check has to be ' +
+                'in the OTHER equation: 2(3) + 3(2) = 6 + 6 = 12. Substituting back into the ' +
+                'equation you just used cannot fail, because y was computed from it — so it ' +
+                'checks nothing. The pair (3, 2) satisfying both is the answer.',
+              socratic:
+                'You have x = 3 and, from one of the equations, y = 2. Which equation should you ' +
+                'put the pair into to find out whether you have made an arithmetic slip, and why ' +
+                'does it have to be that one?',
+            },
+          ],
+          answer: 'x = 3 and y = 2 — the single pair (3, 2), which satisfies both equations.',
+        },
+      },
+      {
+        id: 'substitution-reduces-the-system-to-one-equation',
+        conceptId: 'systems-of-linear-equations',
+        statement:
+          'When one equation already names a letter in terms of the other, that expression and ' +
+          'the letter are two names for one number wherever the equation holds — so putting it ' +
+          'in for the letter changes no pair\'s status. The point of doing it is that the second ' +
+          'equation becomes one equation in one unknown, which is the problem already solved. ' +
+          'Elimination and substitution reach the same pair because both are the same move: ' +
+          'spend one equation to remove one letter.',
+        position: 2,
+        /*
+         * Timed, for the reason the point above is, and at the same figure. The
+         * knowledge point's CONTENT is that two routes agree, which is a
+         * comparison rather than a drill — but the task it sets is the
+         * substitution itself, and that is a procedure whose fluency is the
+         * skill. A timing target has to describe what is actually being asked.
+         */
+        automaticityTarget: 25_000,
+        workedExample: {
+          problem: 'Solve y = 2x − 1 and 3x + 2y = 12, then solve the same system by elimination.',
+          subgoals: [
+            {
+              label: 'Notice that one equation already names a letter',
+              detail:
+                'y = 2x − 1 does not have to be rearranged: it says that whatever x turns out to ' +
+                'be, y is 2x − 1. That makes "y" and "2x − 1" two names for one number for every ' +
+                'pair on that line, and interchangeable in anything else that holds there.',
+              socratic:
+                'Of the two equations, one is already in a shape the other is not. What is that ' +
+                'equation telling you that you could use somewhere else?',
+            },
+            {
+              label: 'Put the expression in for the letter, with the brackets the letter was hiding',
+              detail:
+                '3x + 2y = 12 becomes 3x + 2(2x − 1) = 12. The brackets are not optional: y ' +
+                'stands for one whole number, so 2y is twice the whole of 2x − 1, and writing ' +
+                '3x + 2 · 2x − 1 = 12 is a different equation. This is the hidden-bracket rule ' +
+                'from `variables-and-expressions`, with an expression substituted rather than a ' +
+                'negative number.',
+              socratic:
+                'You are replacing y by 2x − 1 inside 2y. What has to be written down that was ' +
+                'not needed while it was still a single letter?',
+            },
+            {
+              label: 'Count the unknowns, and solve the equation that is left',
+              detail:
+                'Only x occurs now, so this is a linear equation in one unknown and the previous ' +
+                'concept applies as written. Collecting gives 3x + 4x − 2 = 12, so 7x − 2 = 12, ' +
+                'then 7x = 14 and x = 2. Putting that back into y = 2x − 1 gives y = 3, and ' +
+                'checking the pair in the equation that was substituted into: 3(2) + 2(3) = 12.',
+              socratic:
+                'How many different letters are in the equation now, and which problem does that ' +
+                'make it?',
+            },
+            {
+              label: 'Run the same system by elimination, and compare the answers',
+              detail:
+                'Rewrite y = 2x − 1 as 2x − y = 1 and eliminate: double it to get 4x − 2y = 2, ' +
+                'add 3x + 2y = 12, and the y terms cancel to leave 7x = 14, so x = 2 again. The ' +
+                'agreement is not a coincidence and it is not two methods checking each other. ' +
+                'Both routes spend one equation to delete one letter, and both deletions are ' +
+                'invertible, so neither changes which pairs satisfy the system — so neither can ' +
+                'reach a different pair.',
+              socratic:
+                'Both routes gave x = 2. Would you expect that of any system, or was this one ' +
+                'lucky — and what do the two methods have in common that decides it?',
+            },
+          ],
+          answer:
+            'x = 2 and y = 3, by substitution and by elimination alike — the pair (2, 3).',
+        },
+      },
+      {
+        id: 'when-both-letters-cancel-the-leftover-decides',
+        conceptId: 'systems-of-linear-equations',
+        statement:
+          'Sometimes the elimination removes both letters at once, and what is left is a sentence ' +
+          'with no letter in it to make true or false by choosing. That sentence is the answer. ' +
+          'If it is false, no pair satisfies both equations; if it is true, the second equation ' +
+          'asked for nothing the first had not, and every pair on that one line is a solution. ' +
+          'Neither outcome is a failure of the method — the method ran and reported.',
+        position: 3,
+        /*
+         * No `automaticityTarget`, and the contrast with the two points above is
+         * the argument for the field existing — the same contrast
+         * `linear-equations` draws at its own third point. Those two are
+         * procedures and fluency in them is the skill. This one asks what a
+         * leftover 0 = 3 means about a pair of lines, and a timing target on
+         * that measures typing.
+         */
+        workedExample: {
+          problem:
+            'Try to solve 2x + 3y = 7 with 4x + 6y = 11. Then try the same with 4x + 6y = 14.',
+          subgoals: [
+            {
+              label: 'Eliminate as usual, and find that both letters go together',
+              detail:
+                'Double the first equation: 4x + 6y = 14. Taking 4x + 6y = 11 off it removes the ' +
+                'x terms and the y terms in one stroke, leaving 0 = 3. There is no x to divide ' +
+                'for and nothing to substitute back into, because the step that was supposed to ' +
+                'leave one unknown left none.',
+              socratic:
+                'Double the first equation and subtract the second. The x terms cancel as ' +
+                'planned — what happens to the y terms, and what are you left holding?',
+            },
+            {
+              label: 'Read the leftover sentence as a claim about every pair',
+              detail:
+                '0 = 3 is false, and there is no letter in it to be chosen well. The left side ' +
+                'is 0 for every pair of numbers whatsoever, so no pair can make it 3 — which ' +
+                'means no pair satisfies both equations. Said the other way round: if ' +
+                '2x + 3y = 7 then 4x + 6y is forced to be 14, whatever x and y are, and the ' +
+                'second equation insists it is 11.',
+              socratic:
+                'You are left with 0 = 3. There is no letter left to solve for — so what does ' +
+                'that sentence tell you about how many pairs satisfy both equations?',
+            },
+            {
+              label: 'Change one number and run it again',
+              detail:
+                'With 4x + 6y = 14, doubling the first equation produces that second equation ' +
+                'exactly, so subtracting leaves 0 = 0 — true for every pair. The second equation ' +
+                'has added no condition, so the solution set is every pair satisfying ' +
+                '2x + 3y = 7: choose any y and x is (7 − 3y)/2. At y = 3 that is x = −1, and ' +
+                '2(−1) + 3(3) = 7 with 4(−1) + 6(3) = 14, so (−1, 3) satisfies both. A different ' +
+                'y gives a different solution, and there is no last one.',
+              socratic:
+                'This time the leftover is 0 = 0. Pick a value for y — any value — and see ' +
+                'whether you can find an x to go with it. How many solutions does that make?',
+            },
+            {
+              label: 'Name the number that decided all three outcomes before you started',
+              detail:
+                'For ax + by = c with dx + ey = f, the elimination leaves (ae − bd)x = ce − bf, ' +
+                'so ae − bd is what the answer is divided by. Both letters cancel together ' +
+                'exactly when it is 0, which is exactly when one left side is a multiple of the ' +
+                'other: here 4x + 6y is 2(2x + 3y), and 2 · 6 − 3 · 4 = 0. For the system in the ' +
+                'first point, 2 · (−1) − 3 · 5 = −17, which is not 0, and that is why a single x ' +
+                'survived and a single point came out. So the three outcomes — one point, no ' +
+                'pairs, a whole line — are not three accidents of arithmetic: one number ' +
+                'separates the first from the other two, and the leftover separates those two ' +
+                'from each other.',
+              socratic:
+                'In the first point the elimination ended with 17x = 51 and here it ended with ' +
+                '0 = 3. Looking at the coefficients of the two systems rather than at the ' +
+                'answers — what is different about them that could have told you in advance?',
+            },
+          ],
+          answer:
+            '2x + 3y = 7 with 4x + 6y = 11 is satisfied by no pair at all: the elimination ' +
+            'leaves 0 = 3. With 11 changed to 14 it is satisfied by every pair on the line ' +
+            '2x + 3y = 7 — (−1, 3) and (1/2, 2) among them — because the elimination leaves ' +
+            '0 = 0. Both systems have 2 · 6 − 3 · 4 = 0, which is what put them in this case ' +
+            'rather than the first point\'s.',
+        },
+      },
+    ],
+  },
 ]
 
 /**
- * No edges, and that is a fact about the boundary rather than an omission.
+ * TWO EDGES, AND BOTH ARE THE EDGE THE PROMOTED NODE ARRIVED CARRYING.
  *
- * An authored ontology's edges may only name concepts it contains, or
- * `ontologyProblems` reports an unknown endpoint for every one. This subject
- * holds a single concept, so there is no internal pair to join. Everything
- * this concept rests on and everything that rests on it crosses a subject
- * boundary and therefore lives in an area's `links` — see
- * `ALGEBRA_FOUNDATIONS` in atlas-foundations.ts, which declares both halves.
+ * This list was empty, and the comment explaining the emptiness was a correct
+ * statement about a one-concept subject: an authored ontology's edges may only
+ * name concepts it contains, so with nothing to pair there was no internal
+ * edge to declare, and everything crossing the boundary lived in
+ * `ALGEBRA_FOUNDATIONS.links` instead.
  *
- * Declared as an empty array rather than left off, because `ConceptOntology`
- * requires it and because an explicit empty list is the difference between
- * "there are none" and "somebody forgot".
+ * The promotion of `linear-equations` is the cheapest shape a promotion has,
+ * and this edge is why. The node declared exactly one `needs`, pointing at
+ * `variables-and-expressions` — and that concept is authored in THIS subject.
+ * So the stranded edge has an owner here, it crosses no boundary, and the
+ * promotion cost `links` nothing in either direction. Compare the concept
+ * above it, whose two `needs` pointed into `arithmetic-foundations` and
+ * therefore had to go to `links` and stay there.
+ *
+ * Dropping it instead is the failure atlas-foundations.ts keeps recording:
+ * removing a map node removes every edge declared on its own `needs`, in
+ * silence, and a syllabus joined to nothing beneath it is practisable from a
+ * cold account. Here that would have made `linear-equations` a root of
+ * mathematics alongside `place-value`, which tests/atlas.mjs refuses by name.
+ *
+ * THE SECOND EDGE IS THE SAME SHAPE A SECOND TIME, which is worth one
+ * paragraph rather than none because two in a row is what turns a cheap
+ * promotion from luck into a property. `systems-of-linear-equations` also
+ * declared exactly one `needs`, and it also pointed at a concept authored in
+ * this subject — `linear-equations`, promoted here one change earlier. So
+ * again the stranded edge has an owner here, again it crosses no boundary, and
+ * again `links` needed nothing in either direction.
+ *
+ * The property is not about this area or this subject. It is what a branch
+ * authored from the BOTTOM UP looks like: each promoted node's own `needs`
+ * point at nodes promoted just before it into the same file, so there is
+ * always somewhere local for the stranded edge to go. atlas-foundations.ts
+ * reaches the same conclusion from the arithmetic half, where a run of three
+ * cheap promotions ended as soon as the next candidate had a dependent
+ * STAYING in the area. This subject is now a chain of three authored in
+ * dependency order, which is the cheapest shape available, and it will stop
+ * being cheap the moment something is authored that an area node depends on.
+ *
+ * WHAT IS NOT HERE, because it is not this file's to declare. The interference
+ * between `linear-equations` and `linear-inequalities` is real and survives the
+ * promotion untouched — it is declared by `linear-inequalities`, as a
+ * `confusedWith`, and that node is still on the map. An edge is owned by the
+ * node that DECLARES it, so this one never came off `linear-equations` and
+ * there is nothing to re-home. Restating it here would be the duplicate
+ * `composeAtlas` does not notice.
+ *
+ * The same check was run on the second promotion and came back empty, which is
+ * the one thing about it worth recording: `systems-of-linear-equations`
+ * declared NO `confusedWith`, so nothing was deleted in silence. That is the
+ * stranding no suite catches — `expandEdges` turns a node's `confusedWith`
+ * into an `interferes_with`, and interference constrains selection rather than
+ * gating, so losing one leaves every test green while freeing the scheduler to
+ * introduce the two most confusable concepts in the subject together. An
+ * absence has to be looked for to be known, and this is the record that it was.
+ *
+ * Two edges, and `roots(EXPRESSIONS_AND_EQUATIONS)` is still just the reading:
+ * the subject is a chain, reading before solving before solving two at once.
+ * tests/concepts-logic.mjs asserts the two edges by NAME rather than as an
+ * ordered pair, which matters the moment the chain forks — a positional check
+ * reads correctly today and would pass an edge accidentally hung off the wrong
+ * parent later.
  */
-const EDGES: ConceptEdge[] = []
+const EDGES: ConceptEdge[] = [
+  {
+    id: 'variables-and-expressions->linear-equations',
+    from: 'variables-and-expressions',
+    to: 'linear-equations',
+    kind: 'prerequisite',
+    promotedBy: 'author:expressions-and-equations',
+  },
+  {
+    id: 'linear-equations->systems-of-linear-equations',
+    from: 'linear-equations',
+    to: 'systems-of-linear-equations',
+    kind: 'prerequisite',
+    promotedBy: 'author:expressions-and-equations',
+  },
+]
 
 export const EXPRESSIONS_AND_EQUATIONS: ConceptOntology = {
   subject,

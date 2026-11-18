@@ -153,12 +153,69 @@ test('steps respect prerequisite order', () => {
 })
 
 test('the unwritten stretch of each route is reported', () => {
-  // 34 of 291 concepts are written, so most routes cross unwritten ground and
-  // the number must be available to say. A journey reporting zero unwritten
-  // concepts across a long route would mean the count had stopped working.
-  const totals = J.JOURNEYS.map(j => J.resolveJourney(MATHEMATICS, j, [], FLOOR).unwrittenOnPath)
-  assert(totals.every(n => Number.isInteger(n) && n >= 0), 'unwrittenOnPath must be a count')
-  assert(totals.some(n => n > 0), 'no journey crosses unwritten ground — the count is probably broken')
+  /*
+   * This used to read `totals.some(n => n > 0)` — "at least one journey crosses
+   * unwritten ground, or the count has stopped working" — and that was a
+   * one-sided ratchet with an expiry date on it. Nine of the ten journeys have
+   * no unwritten step left, and the assertion would have failed on the
+   * promotion that finished the tenth: the suite would have gone red to report
+   * the project's goal being reached.
+   *
+   * So it is restated two-sidedly rather than renumbered. Each journey's
+   * reported figure is checked against the same figure recomputed from the
+   * route, which catches a count stuck at zero AND a count inventing unwritten
+   * ground, and holds whether every route is finished or none of them is.
+   *
+   * Recomputed from `[destination, ...allPrerequisitesOf]` and NOT from
+   * `r.steps`, which was the first attempt at this and is wrong by design:
+   * `steps` are the TEACHABLE concepts only — a step you cannot practise is a
+   * gap rather than a step — so the unwritten ones are exactly what `steps`
+   * leaves out. That version failed on the one journey with ground left,
+   * reporting "1 unwritten but its steps say 0", which is the module's own
+   * honesty rule working as intended.
+   */
+  for (const j of J.JOURNEYS) {
+    const r = J.resolveJourney(MATHEMATICS, j, [], FLOOR)
+    assert(Number.isInteger(r.unwrittenOnPath) && r.unwrittenOnPath >= 0,
+      `${j.id}: unwrittenOnPath must be a count`)
+    const recomputed = [j.destination, ...R.allPrerequisitesOf(MATHEMATICS, j.destination)]
+      .filter(id => !R.isTeachable(MATHEMATICS, id)).length
+    eq(r.unwrittenOnPath, recomputed,
+      `${j.id}: reports ${r.unwrittenOnPath} unwritten but the route says ${recomputed}`)
+  }
+})
+
+test('no route crosses unwritten euclidean geometry any more', () => {
+  /*
+   * The journey-level half of a claim tests/atlas.mjs makes about the area
+   * itself, and it is here because this is the suite that has the journeys.
+   *
+   * `euclidean-geometry` held five of the concepts these two long routes cross,
+   * and the two area merges were argued for on exactly that ground. The
+   * thirteenth promotion wrote the last of the five,
+   * `three-dimensional-coordinates`, so no route now passes through an
+   * unwritten node of that area. Asserted over every journey rather than the
+   * two long ones, because a later journey added through the geometry is the
+   * case somebody should be told about.
+   *
+   * Walked over the prerequisite closure and not over `r.steps`, for the reason
+   * the test above records: `steps` holds teachable concepts only, so filtering
+   * it for unwritten ones is empty whatever the map says and the check would
+   * pass vacuously for ever. The closure is where an unwritten crossing is
+   * visible at all, and the area's own node list is what decides membership —
+   * a promoted concept is not a node, which is exactly the transition being
+   * asserted.
+   */
+  const { AREAS } = req(join(outDir, 'concepts', 'atlas.js'))
+  const euclid = AREAS.find(a => a.id === 'euclidean-geometry')
+  assert(!!euclid, 'euclidean-geometry should still be an area')
+  assert(euclid.nodes.length > 0, 'and it should still have nodes, or this check is vacuous')
+  for (const j of J.JOURNEYS) {
+    const crossing = [j.destination, ...R.allPrerequisitesOf(MATHEMATICS, j.destination)]
+      .filter(id => !R.isTeachable(MATHEMATICS, id))
+      .filter(id => euclid.nodes.some(n => n.id === id))
+    eq(crossing.join(', '), '', `${j.id} still crosses unwritten ${crossing.join(', ')}`)
+  }
 })
 
 // ═══════════════════════════════════════════════════════════════════════════
