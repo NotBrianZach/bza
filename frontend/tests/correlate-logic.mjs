@@ -56,6 +56,10 @@ function build() {
     join('lib', 'offerings', 'composed.ts'),
     join('lib', 'offerings', 'shared.ts'),
     join('lib', 'offerings', 'knowledge.ts'),
+    // Not a correlate module, but the preset picker and the /play game search
+    // are both correlate surfaces and it had no tests anywhere. Its contract is
+    // what both of them rest on.
+    join('lib', 'fuzzy.ts'),
   ]
   try {
     execFileSync(process.execPath, [
@@ -75,6 +79,7 @@ function build() {
   }
   const require = createRequire(import.meta.url)
   return {
+    fuzzy:     require(join(outDir, 'fuzzy.js')),
     prompt:    require(join(outDir, 'correlate', 'prompt.js')),
     games:     require(join(outDir, 'correlate', 'games.js')),
     media:     require(join(outDir, 'correlate', 'media.js')),
@@ -4276,6 +4281,91 @@ function sampleIntent(kind) {
   }
 }
 
+
+// ---------------------------------------------------------------------------
+
+group('fuzzy search')
+
+/*
+ * `lib/fuzzy.ts` had no tests and two callers depend on it: the preset picker,
+ * and the game search on /play. These pin the contract each of them relies on
+ * rather than the exact numbers the scorer produces — a score is a tuning
+ * decision and an ORDER is a promise, so everything here asserts order,
+ * membership, or null.
+ */
+const { fuzzyScore, fuzzySearch } = M.fuzzy
+
+t('a subsequence matches and a non-subsequence does not',
+  fuzzyScore('jz', 'Jazz night') !== null && fuzzyScore('zj', 'Jazz night') === null)
+t('a query longer than the target cannot match',
+  fuzzyScore('jazz night extra', 'Jazz') === null)
+t('an empty query matches everything with no indices',
+  fuzzyScore('', 'anything')?.indices.length === 0)
+t('matching is case-insensitive',
+  fuzzyScore('JAZZ', 'jazz night') !== null && fuzzyScore('jazz', 'JAZZ NIGHT') !== null)
+t('it reports where it matched, in order, for highlighting',
+  (() => {
+    const hit = fuzzyScore('jn', 'Jazz night')
+    return hit !== null && hit.indices.length === 2
+      && hit.indices[0] < hit.indices[1]
+      && 'Jazz night'[hit.indices[0]].toLowerCase() === 'j'
+      && 'Jazz night'[hit.indices[1]].toLowerCase() === 'n'
+  })())
+
+/*
+ * The three ranking promises, as orders rather than as numbers. Each is a
+ * reason the file gives for existing, so each should fail if the scoring is
+ * retuned past the point where its claim stops holding.
+ */
+t('a consecutive run beats the same letters scattered',
+  fuzzyScore('jaz', 'Jazz night').score > fuzzyScore('jaz', 'Just a zither').score)
+t('a prefix beats a match further in',
+  fuzzyScore('ni', 'Night songs').score > fuzzyScore('ni', 'Songs at night').score)
+t('a dense match beats a sliver of a long name',
+  fuzzyScore('tag', 'Tag').score > fuzzyScore('tag', 'Tag along with a very long title indeed').score)
+
+/*
+ * The property /play depends on for its default ordering: with nothing typed,
+ * fuzzySearch must return the caller's own order untouched, because that order
+ * is most-recent-first and better than anything a scorer would invent.
+ */
+t('an empty query preserves the caller\'s order exactly',
+  (() => {
+    const items = ['c', 'a', 'b']
+    const out = fuzzySearch(items, '   ', s => s).map(m => m.item)
+    return out.join('') === 'cab'
+  })())
+t('a query that matches nothing returns nothing, not everything badly ranked',
+  fuzzySearch(['Jazz night', 'Tag'], 'qqq', s => s).length === 0)
+
+/*
+ * The composed key the game search uses: `${title} ${gameName}`. Both halves
+ * have to be searchable, which is the whole reason it is composed — sessions
+ * are titled after a track, so the game type is not in the title, and a player
+ * who remembers the track does not want to be made to remember the type.
+ */
+const PLAY_ROWS = [
+  { title: 'Desert rose', mode: 'tag' },
+  { title: 'Blue in green', mode: 'stations' },
+  { title: 'Tangled up in blue', mode: 'tag' },
+]
+// The SAME key expression app/play/page.tsx builds. Written out rather than
+// imported because the page is a client component the harness cannot load —
+// so if that expression changes, this is the line to change with it.
+const playKey = r => `${r.title} ${getGame(r.mode)?.name ?? retiredGameName(r.mode) ?? r.mode}`
+const findGames = q => fuzzySearch(PLAY_ROWS, q, playKey).map(m => m.item.title)
+
+t('a game is findable by its title',
+  findGames('desert').includes('Desert rose'))
+t('a game is findable by its type, which is never in the title',
+  (() => {
+    const hits = findGames(getGame('tag')?.name ?? 'Tag')
+    return hits.includes('Desert rose') && hits.includes('Tangled up in blue')
+  })())
+t('the title still wins when the query is a title',
+  findGames('tangled')[0] === 'Tangled up in blue')
+t('a search over the composed key never invents a match',
+  findGames('zzzz').length === 0)
 rmSync(outDir, { recursive: true, force: true })
 
 console.log(`\n${pass} passed, ${failures.length} failed`)

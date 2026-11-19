@@ -1,13 +1,14 @@
 'use client'
 
-import { Suspense, useCallback, useEffect, useState } from 'react'
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, ChevronDown, Loader2, Plus, RotateCcw, Shuffle, Trash2 } from 'lucide-react'
+import { ArrowLeft, ChevronDown, Loader2, Plus, RotateCcw, Search, Shuffle, Trash2, X } from 'lucide-react'
 import { ThemeToggle } from '@/components/ThemeProvider'
 import { ensureSession } from '@/lib/anonAuth'
 import { track } from '@/lib/analytics'
 import { timeAgo } from '@/lib/timeAgo'
+import { fuzzySearch } from '@/lib/fuzzy'
 import { correlateQueries, fetchAvailableMedia } from '@/lib/queries/correlate'
 import { ACCENT_CLASSES, getGame, retiredGameName } from '@/lib/correlate/games'
 import { MEDIUM_LIST, getMedium, mediaByProvider } from '@/lib/correlate/media'
@@ -57,6 +58,8 @@ function PlayPageInner() {
   const [showTrash, setShowTrash] = useState(false)
   /** Whether the games list is showing everything past `VISIBLE_GAMES`. */
   const [showAllGames, setShowAllGames] = useState(false)
+  /** Fuzzy filter over your games. See `shownGames` for what it searches. */
+  const [gameQuery, setGameQuery] = useState('')
   const [media, setMedia] = useState<MediumId[]>(['music'])
   const [loading, setLoading] = useState(true)
   const [starting, setStarting] = useState<string | null>(null)
@@ -147,6 +150,48 @@ function PlayPageInner() {
       setError(e?.message ?? 'Could not empty the trash')
     }
   }, [trashed])
+
+  /**
+   * Your games, filtered by the search box.
+   *
+   * ── What a query is allowed to match ──────────────────────────────────
+   *
+   * The title and the game's name, joined — the same composed-key shape the
+   * preset picker uses. Both are needed and for different reasons: titles are
+   * named after a whole track rather than after the game type, so "tag" finds
+   * nothing without the second half, and a player who remembers the song but
+   * not which game it was finds nothing without the first.
+   *
+   * The media a game visited are deliberately NOT in the key. They are on the
+   * row and it was tempting, but there are a dozen media and they recur in
+   * nearly every game, so adding them lengthens every haystack with words that
+   * barely discriminate — which costs the density bonus in `fuzzyScore` on
+   * every search to make one rare search possible. One line to add if that
+   * trade turns out to be wrong.
+   *
+   * `retiredGameName` is in the fallback chain so a game of a retired type
+   * stays findable by the name it was played under, rather than only by its
+   * raw mode id.
+   *
+   * ── The cap does not apply to a search ────────────────────────────────
+   *
+   * `VISIBLE_GAMES` exists so a long list does not bury the picker below it,
+   * which is a browsing problem. A player who has typed something is not
+   * browsing: they have told us what they want, and hiding the seventh match
+   * behind "6 older games" would be the collapse working against the search.
+   * So a query shows every match, and the toggle disappears while one is live.
+   */
+  const searching = gameQuery.trim().length > 0
+  const matchedGames = useMemo(
+    () => fuzzySearch(sessions, gameQuery, s => {
+      const game = getGame(s.mode)
+      return `${s.title} ${game?.name ?? retiredGameName(s.mode) ?? s.mode}`
+    }).map(m => m.item),
+    [sessions, gameQuery],
+  )
+  const shownGames = searching
+    ? matchedGames
+    : (showAllGames ? sessions : sessions.slice(0, VISIBLE_GAMES))
 
   const activeSession = gameId ? sessions.find(s => s.id === gameId) : undefined
 
@@ -313,8 +358,39 @@ function PlayPageInner() {
                     <Plus size={13} /> New game
                   </button>
                 </div>
+
+                {/* The search field appears only once there is enough to search,
+                    the same furniture rule the preset picker follows: below that
+                    the list IS the interface and a filter above four rows is
+                    clutter. Keyed to VISIBLE_GAMES because that is already the
+                    number which decides this list is long enough to need help —
+                    one number governing one idea, rather than a second
+                    threshold to keep in step with the first. */}
+                {sessions.length > VISIBLE_GAMES && (
+                  <div className="relative mb-3">
+                    <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                    <input
+                      value={gameQuery}
+                      onChange={e => setGameQuery(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Escape') setGameQuery('') }}
+                      placeholder="Find a game by name or type…"
+                      aria-label="Find one of your games"
+                      className="w-full pl-7 pr-7 py-1.5 text-xs rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400"
+                    />
+                    {searching && (
+                      <button
+                        onClick={() => setGameQuery('')}
+                        aria-label="Clear the search"
+                        className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                      >
+                        <X size={12} />
+                      </button>
+                    )}
+                  </div>
+                )}
+
                 <ul className="space-y-2">
-                  {(showAllGames ? sessions : sessions.slice(0, VISIBLE_GAMES)).map(s => {
+                  {shownGames.map(s => {
                     const game = getGame(s.mode)
                     const accent = ACCENT_CLASSES[game?.accent ?? 'indigo']
                     const visited: string[] = Array.isArray(s.world_state?.mediaVisited) ? s.world_state.mediaVisited : []
@@ -353,7 +429,24 @@ function PlayPageInner() {
                 {/* The expander, naming what it is hiding. "Show more" would
                     make a player guess whether the game they are looking for is
                     behind it; "17 older games" answers that without a click. */}
-                {sessions.length > VISIBLE_GAMES && (
+                {/* A search that matched nothing says so, rather than leaving an
+                    empty space where the list was. Without this the page reads
+                    as though the games had been deleted — and the trash button
+                    is right there on every row, so that is a reading a player
+                    could genuinely reach. */}
+                {searching && shownGames.length === 0 && (
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    No game matches “{gameQuery.trim()}”.{' '}
+                    <button onClick={() => setGameQuery('')} className="underline hover:text-gray-700 dark:hover:text-gray-200">
+                      Show all {sessions.length}
+                    </button>
+                  </p>
+                )}
+
+                {/* Hidden while a search is live: the cap is not applied then, so
+                    the count it quotes would be wrong and the control would do
+                    nothing a player could see. */}
+                {!searching && sessions.length > VISIBLE_GAMES && (
                   <button
                     onClick={() => setShowAllGames(v => !v)}
                     className="mt-2 flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
@@ -363,6 +456,14 @@ function PlayPageInner() {
                       ? 'Show fewer'
                       : `${sessions.length - VISIBLE_GAMES} older game${sessions.length - VISIBLE_GAMES === 1 ? '' : 's'}`}
                   </button>
+                )}
+                {/* How many of how many, while filtering. The list alone cannot
+                    say whether three rows is "three matches" or "all your
+                    games", and those are different facts. */}
+                {searching && shownGames.length > 0 && (
+                  <p className="mt-2 text-xs text-gray-400 dark:text-gray-500">
+                    {shownGames.length} of {sessions.length} games
+                  </p>
                 )}
               </section>
             )}
