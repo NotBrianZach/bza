@@ -11,12 +11,46 @@
 
 import { useEffect, useState } from 'react'
 
+/**
+ * The models offered per feature.
+ *
+ * An id with a slash routes to OpenRouter and one without goes to OpenAI —
+ * `getModelChoice` in lib/persona.ts infers the provider from exactly that, and
+ * the API routes pass whatever arrives straight through. There is no allowlist
+ * on the server, so an id that is wrong here is a 404 the user sees.
+ *
+ * Which makes these ids worth checking against the provider rather than
+ * remembering. Every one below was confirmed with a live call on 2026-11-19;
+ * `curl https://openrouter.ai/api/v1/models` lists the text catalogue, but note
+ * it is NOT the whole truth in either direction — it omits image models that
+ * work fine, and it lists canonical ids while accepting dashed aliases
+ * (`anthropic/claude-haiku-4-5` is served as `claude-haiku-4.5`). A 404 from a
+ * real request is the only reliable test.
+ *
+ * `anthropic/claude-sonnet-4` used to sit here as "Best quality" and had gone
+ * 404 — "no longer available on OpenRouter: no provider serves this model".
+ * Anyone who picked it got an error, so it is now Sonnet 5.
+ */
 const AI_MODELS = [
   { id: 'gpt-4o-mini', label: 'GPT-4o Mini', provider: 'openai', desc: 'Fast & cheap', tier: 'free' },
   { id: 'gpt-4o', label: 'GPT-4o', provider: 'openai', desc: 'Smarter, slower', tier: 'free' },
   { id: 'anthropic/claude-haiku-4-5', label: 'Claude Haiku 4.5', provider: 'openrouter', desc: 'Fast, great at reading', tier: 'free' },
-  { id: 'anthropic/claude-sonnet-4', label: 'Claude Sonnet 4', provider: 'openrouter', desc: 'Best quality', tier: 'free' },
+  { id: 'anthropic/claude-sonnet-5', label: 'Claude Sonnet 5', provider: 'openrouter', desc: 'Best quality', tier: 'free' },
   { id: 'google/gemini-2.5-flash', label: 'Gemini 2.5 Flash', provider: 'openrouter', desc: 'Google, fast', tier: 'free' },
+  /*
+   * DeepSeek, via OpenRouter. Both carry a 1M context and cost a fraction of
+   * the rest — Flash is $0.05/$0.20 per million against Haiku's $1/$5.
+   *
+   * One behaviour worth knowing before wiring either into a new call path:
+   * they spend roughly 40 completion tokens of preamble before the answer, and
+   * the upstream providers return `content: null` rather than partial text when
+   * that runs into `max_tokens`. Below about 50 you get nothing at all. Every
+   * route here budgets 600 or more, so this is safe as it stands, but a
+   * low-max_tokens call added later would fail in a way that looks like an
+   * empty reply rather than an error.
+   */
+  { id: 'deepseek/deepseek-v4.1-flash', label: 'DeepSeek V4.1 Flash', provider: 'openrouter', desc: 'Cheapest, huge context', tier: 'free' },
+  { id: 'deepseek/deepseek-v4-pro', label: 'DeepSeek V4 Pro', provider: 'openrouter', desc: 'Strong reasoning, low cost', tier: 'free' },
 ] as const
 
 const MODEL_FEATURES = [

@@ -1098,12 +1098,17 @@ export const OPENROUTER_IMAGE_MODELS = [
   { id: 'recraft/recraft-v4.1', label: 'Recraft v4.1', cost: '~$0.02' },
   { id: 'bytedance-seed/seedream-4.5', label: 'SeedDream 4.5', cost: '~$0.02' },
   { id: 'sourceful/riverflow-v2.5-pro', label: 'Riverflow v2.5 Pro', cost: '~$0.04' },
-  { id: 'x-ai/grok-imagine-image-quality', label: 'Grok Imagine (Quality)', cost: '~$0.01' },
+  // Grok Imagine (Quality) was here and is 404 — "no provider serves this
+  // model". The rest of this list was confirmed reachable on the same day.
+  // Note these do NOT appear in OpenRouter's /api/v1/models, which carries the
+  // text catalogue only; absence from it says nothing about an image model.
   { id: 'microsoft/mai-image-2.5', label: 'MAI Image 2.5', cost: '~$0.03' },
 ] as const
 
 export const TRANSLATE_MODELS = [
   // General purpose
+  { id: 'deepseek/deepseek-v4.1-flash', label: 'DeepSeek V4.1 Flash', cost: '~$0.0001/page' },
+  { id: 'deepseek/deepseek-v4-pro', label: 'DeepSeek V4 Pro', cost: '~$0.001/page' },
   { id: 'deepseek/deepseek-chat-v3', label: 'DeepSeek V3', cost: '~$0.0005/page' },
   { id: 'deepseek/deepseek-v3.2', label: 'DeepSeek V3.2', cost: '~$0.0005/page' },
   { id: 'anthropic/claude-haiku-4-5', label: 'Claude Haiku 4.5', cost: '~$0.001/page' },
@@ -1113,13 +1118,21 @@ export const TRANSLATE_MODELS = [
   { id: 'google/gemini-2.5-flash', label: 'Gemini 2.5 Flash', cost: '~$0.0003/page' },
   { id: 'meta-llama/llama-4-maverick', label: 'Llama 4 Maverick', cost: '~$0.0005/page' },
   { id: 'mistralai/mistral-large-2512', label: 'Mistral Large', cost: '~$0.001/page' },
-  // Uncensored / NSFW-friendly
-  { id: 'cognitivecomputations/dolphin-mistral-24b-venice-edition:free', label: 'Dolphin Venice 24B (free, uncensored)', cost: 'free' },
-  { id: 'nousresearch/hermes-3-llama-3.1-405b', label: 'Hermes 3 405B (uncensored)', cost: '~$0.002/page' },
+  /*
+   * Uncensored / NSFW-friendly.
+   *
+   * Five of the six that used to be here were 404 on 2026-11-19 — Dolphin
+   * Venice, Hermes 3 405B, Euryale 70B, Rocinante 12B and Hanami 70B all
+   * answered "no longer available on OpenRouter: no provider serves this
+   * model". Offering a model that cannot be called is worse than offering
+   * fewer, so they are gone rather than relabelled.
+   *
+   * Magnum V4 is the one that still answers, which is why it is alone here.
+   * This category needs re-checking with live calls when it is next touched:
+   * these models come and go from OpenRouter faster than the rest, and nothing
+   * in the build would notice them going.
+   */
   { id: 'anthracite-org/magnum-v4-72b', label: 'Magnum V4 72B (uncensored)', cost: '~$0.006/page' },
-  { id: 'sao10k/l3.3-euryale-70b', label: 'Euryale 70B (uncensored, creative)', cost: '~$0.001/page' },
-  { id: 'thedrummer/rocinante-12b', label: 'Rocinante 12B (uncensored)', cost: '~$0.0004/page' },
-  { id: 'sao10k/l3.1-70b-hanami-x1', label: 'Hanami 70B (uncensored, RP)', cost: '~$0.006/page' },
 ] as const
 
 export const TTS_MODELS = [

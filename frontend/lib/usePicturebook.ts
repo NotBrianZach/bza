@@ -60,9 +60,23 @@ export function usePicturebook(bookId: number): UsePicturebookReturn {
     setPreset(p)
     const presetInfo = PICTUREBOOK_PRESETS[p]
     if (presetInfo) setContentFilter(presetInfo.contentFilter)
-    // Use uncensored model for permissive presets
-    if (p === 'romantic' || p === 'horror') setAnalysisModel('nousresearch/hermes-3-llama-3.1-405b')
+    /*
+     * Use an uncensored model for permissive presets.
+     *
+     * Was `nousresearch/hermes-3-llama-3.1-405b`, which went 404 on OpenRouter
+     * — "no provider serves this model". Choosing Romantic or Horror therefore
+     * selected a model that could not be called, and the failure arrived at
+     * generation time rather than at the click. Magnum V4 is the uncensored
+     * model in TRANSLATE_MODELS that still answers; the other five in that
+     * group were 404 too and have been removed.
+     */
+    if (p === 'romantic' || p === 'horror') setAnalysisModel('anthracite-org/magnum-v4-72b')
     else if (p === 'custom') { /* keep current model selection */ }
+    /* Still V3 rather than the V4 now offered elsewhere: this is a default
+       that runs without anyone choosing it, and V4's ~40 tokens of preamble
+       return `content: null` instead of partial text if a caller's max_tokens
+       is tight. Worth moving deliberately, with the picturebook path's budgets
+       checked, rather than as part of a list update. */
     else setAnalysisModel('deepseek/deepseek-chat-v3')
   }, [])
 

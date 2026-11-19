@@ -482,12 +482,27 @@ const CONCEPTS: Concept[] = [
             {
               label: 'Apply the rule',
               detail: 'ad − bc = 2·4 − (−1)·3 = 8 + 3 = 11.',
+              socratic:
+                'In ad − bc, a and d are the pair sitting on the diagonal and b and c are the ' +
+                'two off it — here that is 2 and 4 against −1 and 3. One of those four entries ' +
+                'is already negative, so the minus sign in the rule will not do to it what it ' +
+                'looks like it does. Which two products does the rule call for, what does ' +
+                'subtracting the second one actually do to the first, and what does the ' +
+                'determinant come to?',
             },
             {
               label: 'Read the size',
               detail:
                 'A unit square has area 1; its image under this map has area 11. The determinant ' +
                 'is the factor every area is multiplied by, anywhere in the plane.',
+              socratic:
+                '11 on its own is just a number, so put it next to something with units. The ' +
+                'columns rule says e₁ lands on (2, 3) and e₂ on (−1, 4), so the unit square ' +
+                'those two basis vectors span — area 1 — is sent to the parallelogram built on ' +
+                'the two columns, and that parallelogram\'s area comes out as 11. A linear map ' +
+                'treats no part of the plane differently from any other. What does that make ' +
+                'the determinant a measure of, and is what you have just read off a fact about ' +
+                'that one square or about every region at once?',
             },
             {
               label: 'Read the sign',
@@ -495,6 +510,16 @@ const CONCEPTS: Concept[] = [
                 'Positive, so orientation is preserved — anticlockwise stays anticlockwise. A ' +
                 'negative determinant would mean the map reflects, and |det| would still be the ' +
                 'area factor.',
+              socratic:
+                '11 came out positive, but nothing in ad − bc forces that: write the same two ' +
+                'columns down in the other order, as [[−1, 2], [4, 3]], and the rule returns ' +
+                '−11. That map sends the unit square to the same parallelogram, so it stretches ' +
+                'area by exactly as much, and no area is negative — so size cannot be all the ' +
+                'determinant is recording. Take a pair of vectors that turn anticlockwise and ' +
+                'push them through each of the two maps in turn: what happens to that turning ' +
+                'in the second case that does not happen in the first, and when a determinant ' +
+                'does come out negative, what is left of it that still gives you the area ' +
+                'factor?',
             },
           ],
           answer: '11',
