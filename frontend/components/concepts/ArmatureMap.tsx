@@ -107,7 +107,7 @@ export default function ArmatureMap({ onBrowse, onPractise }: {
     <div className='space-y-3'>
       <p className='text-xs leading-snug text-gray-400'>
         Every sphere of influence on the Armature carries one area of mathematics, so
-        atlas has a geography. Travelling outward from the centre runs roughly
+        the atlas has a geography. Travelling outward from the centre runs roughly
         rules → structure → change → analysis. That is a story, not a syllabus:
         nothing here gates anything, and what actually has to come first is on the
         Concepts tab.
