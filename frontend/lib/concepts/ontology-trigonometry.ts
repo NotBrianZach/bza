@@ -21,8 +21,15 @@
  * algebra candidates — `linear-equations`, `systems-of-linear-equations`,
  * `gaussian-elimination` — are blocked on a missing task kind rather than on
  * effort, for the reason ontology-algebra.ts's header gives: "solve for x" asks
- * for a solution SET and no `NamedForm` or `evaluate` target expresses one. So
- * the readiness test that chose the ten promotions before this one — all
+ * for a solution SET and no `NamedForm` or `evaluate` target expresses one.
+ *
+ * ALL THREE ARE AUTHORED NOW, in `expressions-and-equations`, so that clause
+ * records a block that was never there: a set cannot be an ANSWER, and the
+ * number that DECIDES one is a value. Left as written because it records what
+ * this promotion was chosen on, and the choice stands either way — both of this
+ * node's prerequisites were written and the dot product was waiting above it.
+ *
+ * So the readiness test that chose the ten promotions before this one — all
  * prerequisites written, and preferably something waiting above — has exactly
  * one answer here. Both of this node's own prerequisites, `similarity` and
  * `pythagoras`, are authored concepts of `plane-geometry`.

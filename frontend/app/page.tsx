@@ -116,6 +116,21 @@ const GROUPS: {
        * quiet substitution of a smaller claim for the one the label makes.
        */
       { label: 'Concept map', href: '/learn?tab=concepts&scope=atlas' },
+      /*
+       * Last, and beside the concept map rather than instead of it.
+       *
+       * The two show the same atlas and answer different questions. "Concept
+       * map" draws what rests on what, which is the authority and is also a
+       * hairball to somebody who does not yet know any of the names. "World"
+       * gives twenty-one named places with one idea each and shades each by how
+       * much of it is written, so it is navigable before you know anything and
+       * it makes the coverage visible as terrain.
+       *
+       * It goes at the end because it is the softest entry: a reader who knows
+       * what they want should hit Practice or Concept map first, and this is
+       * for the one who does not.
+       */
+      { label: 'The Armature', href: '/learn?tab=world' },
     ],
     empty: 'Nothing due right now.',
   },

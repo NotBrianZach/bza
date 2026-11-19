@@ -173,6 +173,18 @@
  *    `NamedForm` and no `evaluate` target expresses a solution set. Authoring
  *    it as substitute-and-check tasks is the proxy-task failure tasks.ts warns
  *    about. Unblocking it is a TaskKind decision, not an authoring one.
+ *
+ *    THAT BLOCK HAS SINCE EXPIRED AND SO HAS THE REST OF THAT CHAIN. All three
+ *    of `linear-equations`, `systems-of-linear-equations` and
+ *    `gaussian-elimination` are authored concepts of `expressions-and-equations`
+ *    now. The last sentence is the one that was wrong and it is the one to
+ *    distrust in any comment shaped like it: `evaluate` cannot take a set as an
+ *    ANSWER, and it rules the NUMBER THAT DECIDES one — which is what every
+ *    solve task in that subject asks for. See ontology-algebra.ts's header,
+ *    which withdrew the inference four times and wrote down how to recognise it.
+ *    The comparison above is left as written because it is a record of why THIS
+ *    concept was chosen then, and it was chosen correctly on the information of
+ *    the day.
  *  - `solid-geometry` is the one available candidate in `euclidean-geometry`
  *    and its own area file nominates it. It would have to start a NINTH
  *    subject: `plane-geometry`'s `covers` ends "The solids are the rest and

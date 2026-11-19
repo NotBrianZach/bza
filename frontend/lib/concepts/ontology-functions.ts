@@ -35,6 +35,109 @@
  * is the part of the functions area whose questions have exactly-checkable
  * answers.
  *
+ * ── A FIFTH CONCEPT, AND IT CAME FROM A DIFFERENT AREA ────────────────────
+ *
+ * `sequences` was a node of `sequences-and-series` in atlas-analysis.ts and is
+ * authored here, which is the first concept this subject has taken from an
+ * area other than `functions`. The justification is the node's own one-liner,
+ * which is why it was promoted here rather than into a subject of its own: "a
+ * function on the naturals, given by a formula or by a recurrence, and those
+ * two are not interchangeable". A sequence is not LIKE a function on the
+ * positions; it is one, and the only thing it adds to `function-concept` is
+ * that the input is an index. Filing it anywhere else would have made that
+ * identity a remark instead of the structure.
+ *
+ * The precedent for the area/subject split is `cartesian-plane` and
+ * `three-dimensional-coordinates`, both geometry-area nodes authored into
+ * `vectors-and-independence`. An area is a region of the MAP a learner is
+ * shown; a subject is a syllabus with problems in it, and the two have never
+ * been required to agree.
+ *
+ * It does NOT break the chain, it hangs off the root of it. `function-concept`
+ * is its only prerequisite, so the subject became a chain of four with one
+ * branch at the bottom — the first fork this ontology has had, and the reason
+ * tests/atlas.mjs checks the edges here by name rather than by position. The
+ * sixth concept below extended that branch rather than adding another, so the
+ * shape is now two chains sharing a root.
+ *
+ * WHAT IT DELIBERATELY LEAVES BEHIND, because the nodes that rested on it are
+ * still mapped and this concept must not pre-empt them. Nothing here teaches
+ * the closed form of an arithmetic sequence from its first term and common
+ * difference, the geometric closed form, or any sum — those are
+ * `arithmetic-sequences` and `geometric-sequences`, which stayed.
+ * `sigma-notation` was named here as a third until it was authored below, and
+ * the boundary it draws is in the next section; the two named families are
+ * still on the map and still own their closed forms.
+ * The third knowledge point does use a concrete arithmetic sequence as
+ * its vehicle, because formula-against-recurrence needs a sequence that can be
+ * written both ways and that is the cheapest honest one; what it asks about is
+ * the COST of reaching position n by each route, never the general formula.
+ * The test a reader can apply is that no knowledge point, prompt or `given` in
+ * this concept names a first term and a common difference as SYMBOLS — every
+ * sequence it mentions is a specific one, and the generalisation over all
+ * arithmetic sequences is the node that stayed.
+ *
+ * ── A SIXTH CONCEPT, FROM THE SAME AREA AND ONE STEP ABOVE THE FIFTH ──────
+ *
+ * `sigma-notation` was the node directly above `sequences` in
+ * `sequences-and-series` and is authored here, which makes this branch a chain
+ * of its own: `function-concept` → `sequences` → `sigma-notation`. It is the
+ * first promotion in the build to follow the previous one UP the same area
+ * rather than starting somewhere new, and that is the whole reason it was
+ * cheap: its only `needs` was `sequences`, which the fifth promotion had just
+ * made a concept of this file, so the stranded edge could come here and the
+ * area's `links` stayed empty for a second time. A promotion out of this area
+ * whose node names a prerequisite living anywhere else still costs a `links`
+ * entry; nothing about either of these two made that go away.
+ *
+ * It was NOT chosen because a journey wanted it. Every one of the ten journeys
+ * in journeys.ts reads zero unwritten steps on route, and has since the
+ * fourteenth promotion, so route demand ranks nothing and this was selected on
+ * three other grounds: a finite sum IS a plain number, so every knowledge point
+ * gets a real `evaluate` task; its one prerequisite is inside one ontology; and
+ * five mapped nodes rest on it — `mathematical-induction`, `infinite-series`,
+ * `riemann-sums`, `expectation` and `descriptive-statistics` — which is more
+ * than any other rulable candidate had.
+ *
+ * WHAT IT LEAVES BEHIND IN TURN, and the line is in the same place the fifth
+ * concept drew it. This teaches the NOTATION and the two rearrangements, which
+ * is exactly what the node's own one-liner promised. It does not sum an
+ * arithmetic progression by pairing the ends, and it does not carry the
+ * geometric closed form: those two arguments are the content of the two nodes
+ * that stayed, and a worked example that totalled 5 + 7 + 9 + 11 by pairing
+ * would have taken `arithmetic-sequences`'s only real idea while leaving its
+ * node on the map. So the first example sums k² − 1, whose differences are
+ * 7, 9, 11 and which therefore has no pairing shortcut to be tempted by, and
+ * the linearity example is handed the total of its terms rather than a rule
+ * for them.
+ *
+ * ── Why both objectives name only `evaluate` ──────────────────────────────
+ *
+ * Every other concept in this file names `justify` alongside it, and there is
+ * not one `justify` task in the build — the kind is declared `verifiable:
+ * false` in types.ts and nothing will ever rule one. An objective names the
+ * kinds that would EVIDENCE it, so naming a kind that ships no tasks is an
+ * objective nothing can satisfy, which is the exact fault `ontologyProblems`
+ * reports for an empty `taskKinds` list and does not catch for a populated one
+ * that is unreachable in practice.
+ *
+ * The questions worth asking here that `evaluate` cannot rule — why the rule
+ * alone does not determine the sequence, what the formula buys at position 100
+ * — are in the subgoals' `socratic` phrasings, where a tutor asks them and
+ * nothing pretends to mark them. That is the right home for an unrulable
+ * question, and it is not a reduction of the concept: it is the difference
+ * between asking something and claiming to have measured it.
+ *
+ * `sigma-notation` holds to the same rule for the same reason, and it has more
+ * to keep out: the two rearrangements ARE its content, and the kind that would
+ * ask for one — `transform_to_form`, "rewrite this with the constants
+ * outside" — needs a `NamedForm` that could see a sigma, which nothing in
+ * forms.ts can. So the rearrangement is performed in the worked example, the
+ * `evaluate` task rules the number it leaves, and the questions about WHY the
+ * 3 may come out and a square may not are in the subgoals. Naming `justify`
+ * or `transform_to_form` in those objectives would have described a concept
+ * this build does not serve.
+ *
  * It stops at `graphs-of-functions` deliberately, and the boundary is the
  * verifier rather than the curriculum. Reading a graph is the natural next
  * concept and most of what makes it worth teaching — where the curve turns,
@@ -83,9 +186,15 @@ const subject: Subject = {
   name: 'Functions and inverses',
   covers:
     'What a function is and the three things done to one: where it is defined, what happens ' +
-    'when one is fed into another, and what undoing it requires. Nothing about graphs — reading ' +
-    'a curve is the natural next step and its questions are about a picture, which this ' +
-    'verifier cannot rule — and so nothing about transformations, families or asymptotes either.',
+    'when one is fed into another, and what undoing it requires. Then the case where the input ' +
+    'is a position rather than a number — a sequence, given by a formula or by a recurrence, ' +
+    'and what each of those two costs to reach the hundredth term. Then the notation for adding ' +
+    'a sequence up: which terms the limits name, and the two rearrangements that make such a ' +
+    'sum manipulable rather than only readable. Nothing about graphs — reading a curve is the ' +
+    'natural next step and its questions are about a picture, which this verifier cannot rule ' +
+    '— and so nothing about transformations, families or asymptotes either; and nothing about ' +
+    'the two named families of sequence or the closed forms for their sums, which are still on ' +
+    'the map.',
   medium: 'theorem',
   facetName: 'Concept',
   facetDoes: 'Which concept the statement has to be about.',
@@ -663,11 +772,398 @@ const CONCEPTS: Concept[] = [
       },
     ],
   },
+  {
+    id: 'sequences',
+    name: 'Sequences',
+    subjectId: subject.id,
+    scope: {
+      id: 'sequences',
+      label: 'Sequences',
+      hint: 'sequence term recurrence relation nth term',
+      // Carried VERBATIM off the map node, anchor and all. The anchor is the
+      // whole value of it: it takes the article "Sequence" and leaves
+      // "Arithmetic sequence" and "Cauchy sequence" to the nodes that are
+      // actually about those. A promotion that relaxed it to /sequence/i would
+      // keep every suite green and quietly claim three other nodes' articles,
+      // which is why tests/atlas.mjs asserts the title "Sequence" resolves
+      // here and the over-broad group asserts it resolves nowhere else.
+      match: /^sequence\b/i,
+    },
+    fidelity: 'checked',
+    objectives: [
+      {
+        id: 'name-a-term-from-a-formula',
+        statement:
+          'Compute a stated term of a sequence from a formula in n, without writing out the ' +
+          'terms before it.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'walk-a-recurrence-to-a-position',
+        statement:
+          'Walk a recurrence from its given first term to a stated position, and count the ' +
+          'applications that took.',
+        taskKinds: ['evaluate'],
+      },
+    ],
+    knowledgePoints: [
+      {
+        id: 'a-sequence-is-a-function-on-positions',
+        conceptId: 'sequences',
+        statement:
+          'A sequence is a function whose inputs are the positions 1, 2, 3, … . When the rule ' +
+          'is written as a formula in n, the nth term is a value you can name directly — ' +
+          'exactly as f(4) names a number rather than a search through earlier answers.',
+        position: 1,
+        // Substituting a position into a rule is the same skill as `f(4)`, and
+        // that point carries 15s. Timed for the same reason: it has to become
+        // automatic before the formula-against-recurrence comparison below
+        // means anything, because a learner who finds each substitution
+        // effortful will not believe one is cheaper than ninety-nine.
+        automaticityTarget: 15_000,
+        workedExample: {
+          problem: 'The sequence with nth term n² + 1 begins 2, 5, 10, 17, … . Find the 6th term.',
+          subgoals: [
+            {
+              label: 'Read the position as the input',
+              detail:
+                'The 6th term means n = 6. The position goes in and the term comes out, and they ' +
+                'are different numbers: the 4th term is 17, not 4.',
+              socratic:
+                'The rule n² + 1 takes one number in and gives one out. In the phrase "the 6th ' +
+                'term", which of those two is the 6 — and which of the four terms already ' +
+                'listed settles it for you?',
+            },
+            {
+              label: 'Substitute and compute',
+              detail: '6² + 1 = 36 + 1 = 37.',
+              socratic:
+                'With n replaced by 6 there is no letter left, so this is ordinary arithmetic ' +
+                'now. Which of the two operations has to happen first, and what number would ' +
+                'the other order hand you instead?',
+            },
+            {
+              label: 'Count what the formula saved',
+              detail:
+                'The 5th term never entered the calculation. A rule in n reaches position 6 in ' +
+                'one substitution, and that is the whole difference between a formula and a list.',
+              socratic:
+                'You produced the 6th term without ever working out the 5th. What is it about ' +
+                'this rule that made that possible, and what would a rule have to look like for ' +
+                'the 5th term to be unavoidable?',
+            },
+          ],
+          answer: '37',
+        },
+      },
+      {
+        id: 'a-recurrence-needs-its-first-term',
+        conceptId: 'sequences',
+        statement:
+          'A recurrence says what to do to one term to get the next. It does not say where the ' +
+          'sequence starts, so the first term is separate data — the same rule with a different ' +
+          'first term is a different sequence.',
+        position: 2,
+        // No automaticityTarget. What is being learned is that the rule is
+        // incomplete without a₁ and that reaching aₙ costs n − 1 applications.
+        // Both are judgements about the structure; timing them would measure
+        // how fast the learner can triple a number three times.
+        workedExample: {
+          problem: 'a₁ = 2, and every term after that is 3 times the one before it, minus 1. Find a₄.',
+          subgoals: [
+            {
+              label: 'Separate the rule from the starting value',
+              detail:
+                'The rule is "triple it, then subtract 1". a₁ = 2 is not produced by the rule — ' +
+                'it is handed over. Start the same rule at a₁ = 5 instead and it generates 14, ' +
+                '41, 122: a different sequence from the identical rule.',
+              socratic:
+                'You have been given two things here: a rule, and the number 2. Suppose somebody ' +
+                'gave you the rule and nothing else — what about the sequence could you then not ' +
+                'decide?',
+            },
+            {
+              label: 'Apply the rule once per step',
+              detail:
+                'a₂ = 3·2 − 1 = 5, then a₃ = 3·5 − 1 = 14. Each line uses only the line above ' +
+                'it, which is what makes this a walk rather than a formula.',
+              socratic:
+                'You have a₂ = 5 and you want a₃. Of every number written down so far, which one ' +
+                'does the rule actually need — and is a₁ still among them?',
+            },
+            {
+              label: 'Stop at the position asked for',
+              detail:
+                'a₄ = 3·14 − 1 = 41. Reaching the 4th term took three applications, not four, ' +
+                'because a₁ was given rather than computed.',
+              socratic:
+                'You were asked for the 4th term and you applied the rule three times. Where did ' +
+                'the fourth application go?',
+            },
+          ],
+          answer: '41',
+        },
+      },
+      {
+        id: 'a-formula-and-a-recurrence-are-not-interchangeable',
+        conceptId: 'sequences',
+        statement:
+          'One sequence can be given by a formula in n or by a recurrence, and the two are not ' +
+          'interchangeable. A formula reaches any position in one substitution; a recurrence ' +
+          'reaches position n only by passing through every position before it.',
+        position: 3,
+        workedExample: {
+          problem:
+            'The sequence 5, 8, 11, 14, … is given both by the formula 3n + 2 and by a₁ = 5 ' +
+            'with each term 3 more than the one before. Check the two agree at n = 4, then find ' +
+            'the 100th term.',
+          subgoals: [
+            {
+              label: 'Evaluate the formula at the position',
+              detail:
+                '3·4 + 2 = 14, which is the fourth entry in the list. One substitution, and the ' +
+                'position went straight in.',
+              socratic:
+                'The list already shows you the 4th term. What do you have to do to 3n + 2 to ' +
+                'produce that same number, and how many steps is that?',
+            },
+            {
+              label: 'Walk the recurrence to the same position',
+              detail:
+                '5, then 8, then 11, then 14 — three additions to arrive at the term the formula ' +
+                'produced in one substitution. Agreeing at a position is what entitles you to ' +
+                'call them one sequence.',
+              socratic:
+                'Both descriptions landed on 14. Counting only the arithmetic you actually ' +
+                'performed, which route cost you more — and does that difference bear at all on ' +
+                'whether the two sequences are the same?',
+            },
+            {
+              label: 'Price the same question at n = 100',
+              detail:
+                'The formula is still one substitution: 3·100 + 2 = 302. The recurrence is ' +
+                'ninety-nine additions and every one of them has to be right. The same sequence, ' +
+                'and not the same thing to work with.',
+              socratic:
+                'Move the question from the 4th term to the 100th. What happens to the work the ' +
+                'formula asks of you, and what happens to the work the recurrence asks of you?',
+            },
+          ],
+          answer: '302',
+        },
+      },
+    ],
+  },
+  {
+    id: 'sigma-notation',
+    name: 'Sigma notation',
+    subjectId: subject.id,
+    scope: {
+      id: 'sigma-notation',
+      label: 'Sigma notation',
+      hint: 'sigma notation summation index linearity',
+      // Carried VERBATIM off the map node. It takes the article "Summation",
+      // which is where an encyclopaedia files this, and the thing it is NOT is
+      // a pattern on the bare word "sum" — "Riemann sum", "Sum to infinity"
+      // and the angle sum belong to three other nodes, and `/\bsum\b/i` would
+      // claim all three. The same discipline as `sequences` above and for the
+      // same reason: a widened pattern keeps the TITLES group in
+      // tests/atlas.mjs green, because that group asserts the right title
+      // lands HERE and a wider pattern still would. The over-broad group is
+      // where the three it must refuse are named.
+      //
+      // What it DOES take besides its own article, stated rather than left to
+      // be discovered: "Summation by parts", "Abel summation" and "Einstein
+      // summation convention" all match. None of them is a node anywhere in
+      // this atlas, so nothing is being stolen, and all three really are about
+      // manipulating an indexed sum — which is this concept. Accepted on that
+      // basis, not overlooked.
+      match: /\bsummation\b/i,
+    },
+    fidelity: 'checked',
+    objectives: [
+      {
+        id: 'expand-a-sum-and-total-it',
+        statement:
+          'Write a sum given with an index out as its terms — getting how many there are from ' +
+          'the limits, including when the term does not mention the index — and total it.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'rearrange-a-sum-before-totalling-it',
+        statement:
+          'Take a constant factor outside a sum and split a sum of two terms into two, and use ' +
+          'that to total a sum when only the total of its terms is known.',
+        taskKinds: ['evaluate'],
+      },
+    ],
+    knowledgePoints: [
+      {
+        id: 'the-limits-name-which-terms',
+        conceptId: 'sigma-notation',
+        statement:
+          'The index runs from the lower limit to the upper one and BOTH ends are included, so ' +
+          'the number of terms is upper − lower + 1 and not upper − lower. Everything else about ' +
+          'the notation follows from writing that list of terms out.',
+        position: 1,
+        workedExample: {
+          problem: 'Expand and total the sum of k² − 1 for k running from 3 to 6.',
+          subgoals: [
+            {
+              label: 'Count the terms before computing any of them',
+              detail:
+                '6 − 3 + 1 = 4. The lower limit is itself a term rather than a starting line, ' +
+                'which is what the + 1 is for: k takes the values 3, 4, 5, 6, and 6 − 3 counts ' +
+                'the steps between them instead of the values themselves.',
+              socratic:
+                'The index starts at 3 and finishes at 6. Write down every value it takes on the ' +
+                'way and count what you wrote — which of those values would subtracting 3 from 6 ' +
+                'have left out?',
+            },
+            {
+              label: 'Substitute each index value into the whole term',
+              detail:
+                'k² − 1 at 3, 4, 5, 6 gives 8, 15, 24, 35. The index is an input exactly as a ' +
+                'position is, and the subtraction applies to the square rather than to k.',
+              socratic:
+                'The expression k² − 1 still mentions k, and a total has to be a number. What has ' +
+                'to happen to k, and how many separate times does it have to happen?',
+            },
+            {
+              label: 'Add the list',
+              detail:
+                '8 + 15 + 24 + 35 = 82. The sigma performed none of those three additions — it ' +
+                'said which four numbers to perform them on.',
+              socratic:
+                'You have four numbers in front of you and no sigma left. What is still to be ' +
+                'done, and what was it that the notation actually spared you writing?',
+            },
+          ],
+          answer: '82',
+        },
+      },
+      {
+        id: 'a-constant-term-still-counts-the-terms',
+        conceptId: 'sigma-notation',
+        statement:
+          'When the term does not mention the index there is nothing to substitute — and the sum ' +
+          'is still as long as the limits say. The index has stopped choosing the value and is ' +
+          'still choosing how many, which is the one place the count IS the answer.',
+        position: 2,
+        workedExample: {
+          problem: 'Total the sum of the constant 7 for k running from 4 to 9.',
+          subgoals: [
+            {
+              label: 'Notice that the term ignores the index',
+              detail:
+                'Putting k = 4 into 7 and putting k = 9 into 7 both leave 7, so no substitution ' +
+                'does any work here. That is not a reason for the total to be 7.',
+              socratic:
+                'Substituting the first value of k and substituting the last both leave you ' +
+                'looking at 7. Does that make the total 7 — and if it does not, what is the index ' +
+                'still deciding?',
+            },
+            {
+              label: 'Read the length off the limits',
+              detail:
+                '9 − 4 + 1 = 6 values of k, so there are six copies of 7. The term says nothing ' +
+                'about how many there are; the limits are the only thing that ever did, here or ' +
+                'in the first example.',
+              socratic:
+                'The term gave you no way to tell a long sum from a short one. Where is the only ' +
+                'other place that information could have come from, and what does it say here?',
+            },
+            {
+              label: 'Adding equal numbers is multiplying',
+              detail:
+                '7 × 6 = 42. The commonest wrong answer is 35, which is five copies — the same ' +
+                'slip as 6 − 3 in the first example, except that here it is buried in a product ' +
+                'instead of sitting in a list you could count.',
+              socratic:
+                'Six sevens is a sum nobody writes out. Which single operation replaces it, and ' +
+                'which of its two numbers came from the limits rather than from the term?',
+            },
+          ],
+          answer: '42',
+        },
+      },
+      {
+        id: 'linearity-moves-a-factor-out-and-splits-a-sum',
+        conceptId: 'sigma-notation',
+        statement:
+          'Two rearrangements are always legal: a constant factor can come outside the sigma, ' +
+          'and a sum of two terms can be split into two sigmas. Both are the commutativity and ' +
+          'associativity of addition read through the notation — which is also why neither of ' +
+          'them lets you move something that depends on the index out.',
+        position: 3,
+        workedExample: {
+          problem:
+            'The ten numbers a₁ … a₁₀ total 12 and you are told nothing else about them. Total ' +
+            'the sum of 3aₖ + 5 for k running from 1 to 10.',
+          subgoals: [
+            {
+              label: 'Split the sigma across the plus',
+              detail:
+                'Each of the ten terms is a 3aₖ added to a 5, so this is twenty numbers added ' +
+                'up. Gathering the ten of one kind and then the ten of the other changes the ' +
+                'order and nothing else: Σ(3aₖ + 5) = Σ3aₖ + Σ5.',
+              socratic:
+                'Write the first two terms of this sum out in full. Each one is two things added ' +
+                'together — so if you gathered all the parts of one kind first and all of the ' +
+                'other kind second, what about the total would you have changed?',
+            },
+            {
+              label: 'Take the constant factor outside',
+              detail:
+                'Every one of the ten terms has been tripled, so tripling the total once does ' +
+                'the same job: Σ3aₖ = 3Σaₖ = 3 × 12 = 36.',
+              socratic:
+                'All ten terms have been tripled. If you added the untripled ones first and ' +
+                'tripled the total at the end, would you arrive at a different number — and what ' +
+                'is the law that says so?',
+            },
+            {
+              label: 'The constant sigma needs the count, not the terms',
+              detail:
+                'Σ5 over ten values of k is 5 × 10 = 50, by the previous point. The 10 came off ' +
+                'the limits, and no part of that is a fact about aₖ.',
+              socratic:
+                'The second sigma\'s term never mentions k. What do you need to know in order to ' +
+                'total it, and is any part of that information about the aₖ at all?',
+            },
+            {
+              label: 'Add the two parts',
+              detail:
+                '36 + 50 = 86. You were never told a single value of aₖ, only that the ten of ' +
+                'them come to 12, and that was enough — which is what the notation is for rather ' +
+                'than a lucky feature of this question.',
+              socratic:
+                'You have an exact total and you still do not know any one of the ten numbers. ' +
+                'Would knowing them individually have changed your answer?',
+            },
+            {
+              label: 'And the rearrangement this does NOT license',
+              detail:
+                'Squaring is not linear, so Σaₖ² is not (Σaₖ)². Two terms are enough to settle ' +
+                'it: at a₁ = 1 and a₂ = 2 the sum of the squares is 1 + 4 = 5 and the square of ' +
+                'the sum is 3² = 9. A factor that does not depend on k comes out; something done ' +
+                'TO aₖ does not.',
+              socratic:
+                'The 3 came outside the sigma because it multiplied every term, and squaring ' +
+                'also does the same thing to every term. Take a₁ = 1 and a₂ = 2 and compute both ' +
+                'readings — what is different about the 3?',
+            },
+          ],
+          answer: '86',
+        },
+      },
+    ],
+  },
 ]
 
 /**
- * The edges. One chain, and every link is a real dependency rather than a
- * teaching order.
+ * The edges. A chain of four with a second chain of two branching off its
+ * foot, and every link is a real dependency rather than a teaching order.
  *
  * `domain-and-range` genuinely needs `function-concept`: "where is this
  * defined" presupposes that there is a single value to be defined. Composition
@@ -675,12 +1171,42 @@ const CONCEPTS: Concept[] = [
  * shrinking domain rather than the substitution. And an inverse is defined BY a
  * composition — f⁻¹ is the thing that composes with f to the identity — so it
  * cannot come first.
+ *
+ * `sequences` is the branch, and it is also the first edge in this file that
+ * was STRANDED by a promotion rather than written from scratch. The map node
+ * declared `needs: ['function-concept']` and nothing else; deleting the node
+ * deletes that edge, so it is restated here. It could come here, rather than
+ * into an area's `links`, for the one reason that decides every such case:
+ * both of its endpoints are concepts of THIS ontology, and an ontology may
+ * only name concepts it contains. Had the node named a single prerequisite
+ * outside this file the edge would have had to go back to
+ * `SEQUENCES_AND_SERIES.links` instead, however well authored that endpoint
+ * was — `links` is about which FILE an endpoint is in, not about whether
+ * anybody has written material for it.
+ *
+ * The three edges pointing INTO the node were left alone, as the rule says.
+ * `arithmetic-sequences`, `geometric-sequences` and `sigma-notation` each name
+ * it in their own `needs`; the first two are still map nodes and still own
+ * their edges, which `composeAtlas` resolves across the file boundary. The
+ * third is a concept of this file now, so its edge is declared below rather
+ * than on a node — the edge itself never changed, only where it is written.
+ * What changed without anybody editing the two that stayed is that the edges
+ * now GATE: they used
+ * to point at a node with no material, which `gatingPrerequisitesOf` looks
+ * straight through.
  */
 const EDGES: ConceptEdge[] = [
   {
     id: 'function-concept->domain-and-range',
     from: 'function-concept',
     to: 'domain-and-range',
+    kind: 'prerequisite',
+    promotedBy: 'author:functions-and-inverses',
+  },
+  {
+    id: 'function-concept->sequences',
+    from: 'function-concept',
+    to: 'sequences',
     kind: 'prerequisite',
     promotedBy: 'author:functions-and-inverses',
   },
@@ -739,6 +1265,78 @@ const EDGES: ConceptEdge[] = [
       'Verifying an inverse IS composing it with the original and checking the identity, so an ' +
       'inverse task is a composition task with its answer known in advance.',
   },
+  /**
+   * The sequence's credit edge, and it is claimed only because ALL THREE tasks
+   * earn it.
+   *
+   * ontology-arithmetic.ts has the counter-example worth holding this against:
+   * the `gcd-and-lcm` node declared `exercises: ['prime-factorisation']`, the
+   * promotion made that live, and it was DROPPED rather than restated because
+   * two of the three tasks there never touch a factorisation. An encompasses
+   * edge is a claim about what practising this material actually exercises, so
+   * a majority is not enough — one task that does not perform the sub-skill is
+   * a learner getting credit they did not earn.
+   *
+   * Here every task substitutes a stated number into a rule and evaluates it:
+   * `sequence-term-1` is literally f(6) for f(n) = n² + 1, `recurrence-walk-1`
+   * is three nested substitutions, and `formula-beats-the-walk-1` is one more.
+   * There is no task on this concept that is not the function concept in use.
+   */
+  {
+    id: 'sequences=>function-concept',
+    from: 'sequences',
+    to: 'function-concept',
+    kind: 'encompasses',
+    promotedBy: 'author:functions-and-inverses',
+    rationale:
+      'Naming the nth term means substituting a position into a rule and evaluating it, which ' +
+      'is applying a function to an input — the only thing the sequence adds is that the input ' +
+      'is an index, so every task here exercises the function concept directly.',
+  },
+  /**
+   * The sixth concept's stranded edge, and it came here for the same single
+   * reason the fifth one's did: the map node declared `needs: ['sequences']`
+   * and nothing else, and `sequences` is a concept of THIS ontology. One
+   * `needs` pointing at a node still on the map would have forced the whole
+   * edge back to `SEQUENCES_AND_SERIES.links` instead — `links` is about which
+   * FILE an endpoint is in, not about how well authored it is.
+   *
+   * The chain is now three deep on this branch: `function-concept` →
+   * `sequences` → `sigma-notation`, and the fork is still at the foot.
+   */
+  {
+    id: 'sequences->sigma-notation',
+    from: 'sequences',
+    to: 'sigma-notation',
+    kind: 'prerequisite',
+    promotedBy: 'author:functions-and-inverses',
+  },
+  /**
+   * NO CREDIT EDGE FOR `sigma-notation`, AND THE OMISSION IS THE DECISION.
+   *
+   * `sequences => function-concept` above is claimed because all three of its
+   * tasks substitute a number into a rule. The obvious parallel here would be
+   * `sigma-notation => sequences`, and it fails the same test that killed
+   * `gcd-and-lcm => prime-factorisation` in ontology-arithmetic.ts: an
+   * `encompasses` edge is a claim about what practising this material
+   * ACTUALLY exercises, so a majority is not enough, and here it is not even a
+   * majority. Only the first task names terms from a rule in the index. The
+   * second one's term ignores the index completely — that is its whole point —
+   * and the third is handed the total of ten numbers it never evaluates, which
+   * is what makes linearity worth having. Two of the three never produce a
+   * term of a sequence at all.
+   *
+   * So a learner who practises sigma notation does not thereby demonstrate
+   * `sequences`, and claiming otherwise would stop `sequences` coming due when
+   * it has genuinely gone cold. The prerequisite edge above is the real
+   * relation: you need sequences FIRST, and you do not keep using them.
+   *
+   * No `interferes_with` either, for the reason the header gives about f⁻¹ and
+   * x⁻¹. The confusion worth authoring here is Σ against Π, and Π is nowhere
+   * in this build — not on the map and not in any ontology — so there is no
+   * far endpoint to name. An authored interference nobody believes is worse
+   * than none.
+   */
 ]
 
 export const FUNCTIONS_AND_INVERSES: ConceptOntology = {

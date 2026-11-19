@@ -12,6 +12,7 @@ import { TRAVERSAL_GAME } from '@/lib/concepts/traversal'
 import { MASTERY_FLOOR } from '@/lib/concepts/scheduling'
 import { practisableConcepts } from '@/lib/concepts/tasks'
 import { openingForPoint } from '@/lib/concepts/socratic'
+import ArmatureMap from '@/components/concepts/ArmatureMap'
 import ConceptBrowser from '@/components/concepts/ConceptBrowser'
 import ClaimsList from '@/components/concepts/ClaimsList'
 import ConceptGraph from '@/components/concepts/ConceptGraph'
@@ -43,7 +44,7 @@ export const dynamic = 'force-dynamic'
  * scratchpad is the surface feature with no CAS behind it.
  */
 
-type Tab = 'practice' | 'concepts' | 'review' | 'tutor' | 'tools'
+type Tab = 'practice' | 'concepts' | 'world' | 'review' | 'tutor' | 'tools'
 /** Which question the Tutor tab asks. See the toggle for why both exist. */
 type TutorMode = 'walk' | 'probe'
 
@@ -356,8 +357,8 @@ export default function LearnPage() {
   useEffect(() => {
     const q = new URLSearchParams(window.location.search)
     const wanted = q.get('tab')
-    if (wanted === 'practice' || wanted === 'concepts' || wanted === 'review'
-      || wanted === 'tutor' || wanted === 'tools') {
+    if (wanted === 'practice' || wanted === 'concepts' || wanted === 'world'
+      || wanted === 'review' || wanted === 'tutor' || wanted === 'tools') {
       setTab(wanted)
     }
     const wantedScope = q.get('scope')
@@ -396,6 +397,13 @@ export default function LearnPage() {
           {([
             ['practice', 'Practice'],
             ['concepts', 'Concepts'],
+            // Beside Concepts because it answers the same question from the
+            // other end. Concepts draws what rests on what, which is the truth
+            // and is also a hairball to anyone who does not yet know the names;
+            // the world map gives twenty-one named places with one idea each,
+            // navigable before you know any of them. It is second rather than
+            // first because the graph is the authority and this is the way in.
+            ['world', 'World'],
             // Between the maps and the review queue on purpose: a walk is
             // entered from a map and leaves for a problem, so it sits on the
             // road between them rather than at the end of the row.
@@ -904,6 +912,41 @@ export default function LearnPage() {
               />
             )}
           </>
+        )}
+
+        {/*
+          * The map's way out.
+          *
+          * It lands on Concepts at `atlas` scope rather than setting the
+          * practised subject, and the distinction matters. The subject picker
+          * decides which problems the session SERVES, and nineteen of the
+          * twenty-one regions hold mapped areas with nothing written — pointing
+          * the practice set at `topology` would answer "give me problems" with
+          * nothing and look broken. Scope is a view, so it can show an unwritten
+          * area honestly, which is exactly what the map is for.
+          *
+          * The concept is only carried when the area has one to carry. A named
+          * anchor opens that node; the plain "Open <area>" button falls back to
+          * the area's first concept, which is better than nothing selected and
+          * is still a real node rather than a guess.
+          */}
+        {tab === 'world' && (
+          <ArmatureMap
+            onBrowse={(areaId, conceptId) => {
+              const target = conceptId
+                ?? MATHEMATICS.concepts.find(c => c.subjectId === areaId)?.id
+                ?? null
+              setScope('atlas')
+              setLinkedConcept(target)
+              setTab('concepts')
+            }}
+            /* The other door, and the one with problems behind it. Setting the
+               practised subject is exactly what the Practice tab's own picker
+               does, so a region with authored material behaves as though the
+               learner had chosen it there — which is the point: the map becomes
+               a way of choosing what to work on, not only what to look at. */
+            onPractise={subjectId => { setSubject(subjectId); setTab('practice') }}
+          />
         )}
 
         {tab === 'review' && <ReviewQueue onResolved={load} />}

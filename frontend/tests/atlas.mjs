@@ -48,6 +48,10 @@ function build() {
     // map nodes' `confusedWith` during composeAtlas, so a single authored
     // ontology does not have the edges a probe is built from.
     join('lib', 'concepts', 'probe.ts'),
+    // armature.ts imports AREAS from atlas.ts, which is the point of it being
+    // here: the region table is checked against the live atlas rather than a
+    // snapshot, so a renamed area id fails this harness.
+    join('lib', 'concepts', 'armature.ts'),
   ]
   try {
     execFileSync(process.execPath, [
@@ -79,14 +83,25 @@ const {
 } = atlas
 const {
   ontologyProblems, cycles, prerequisitesOf, gatingPrerequisitesOf, isTeachable, roots,
-  teachingOrder, claimableChainFor, dependentsOf, allPrerequisitesOf,
+  teachingOrder, claimableChainFor, dependentsOf, allPrerequisitesOf, conceptById,
 } = registry
-const { ONTOLOGIES } = ontology
+/*
+ * `FUNCTIONS_AND_INVERSES` by name as well as through `ONTOLOGIES`, because the
+ * sequences group asserts that a stranded edge is in THAT ontology's own edge
+ * list. Reaching it by index would re-break what the expressions-and-equations
+ * block learned: a positional reference keeps reading correctly until the
+ * registry is reordered, and then asserts the wrong subject in silence.
+ */
+const { ONTOLOGIES, FUNCTIONS_AND_INVERSES: FUNCTIONS } = ontology
 const offerings = req(join(outDir, 'concepts', 'offerings.js'))
 const { conceptsInOffering, relatedConcepts, conceptHref } = offerings
 const {
   probesFor, probesAcross, probeContext, probePrompt, probeNudgePrompt,
 } = req(join(outDir, 'concepts', 'probe.js'))
+const {
+  ARMATURE_CENTER, armatureProblems, inwardOf, regionBy, regionCoverage, regionForArea,
+  regions: armatureRegions,
+} = req(join(outDir, 'concepts', 'armature.js'))
 /*
  * `tasks.js` is not in `entries` and is emitted anyway, because offerings.ts
  * now imports `isPractisable` from it and tsc follows imports. Required here
@@ -639,7 +654,29 @@ const regressed = MATHEMATICS.concepts
   .filter(c => PRE_EXISTING.includes(c.subjectId))
   .filter(c => gatingPrerequisitesOf(MATHEMATICS, c.id).some(p => FN_IDS.has(p)))
 
-t('the subject contributes four concepts to the map', FN_IDS.size === 4, `${FN_IDS.size}`)
+/*
+ * Six, not four, and the two it gained both came from a DIFFERENT AREA —
+ * `sequences` and then `sigma-notation`, both nodes of `sequences-and-series`
+ * in atlas-analysis.ts. The subject's own assertions are all phrased over
+ * `FN_IDS` rather than over the `functions` area, so they kept holding through
+ * both; the group below this one is what checks each promotion.
+ *
+ * Two of the six are therefore NOT in the `functions` map area, which is why
+ * this number is not a statement about that area's size and never was.
+ */
+t('the subject contributes six concepts to the map', FN_IDS.size === 6, `${FN_IDS.size}`)
+/*
+ * And by NAME, because the count alone cannot say which six. Two of these were
+ * `sequences-and-series` nodes and four were written here, and once a node is
+ * promoted the composed map stops recording where it came from — `areaOf`
+ * reports the SUBJECT for every authored concept, so there is nothing to read
+ * the origin off. The names are the only durable form of the claim.
+ */
+t('and they are these six, two of them promoted in from the analysis file',
+  [...FN_IDS].sort().join(' ')
+    === 'domain-and-range function-composition function-concept inverse-functions '
+      + 'sequences sigma-notation',
+  [...FN_IDS].sort().join(' '))
 t('nothing that existed before it gained a gate on it',
   regressed.length === 0, regressed.map(c => c.id).join(', '))
 t('the gates it created reach mapped nodes and later subjects, never backwards', (() => {
@@ -688,6 +725,339 @@ t('and a chain from a graph node now reaches real material', (() => {
   const chain = claimableChainFor(MATHEMATICS, 'rational-functions')
   return chain.includes('domain-and-range') && chain.includes('function-concept')
 })(), claimableChainFor(MATHEMATICS, 'rational-functions').join(', '))
+
+// ---------------------------------------------------------------------------
+
+/**
+ * THE FIFTH CONCEPT OF `functions-and-inverses` CAME OUT OF ANALYSIS, AND IT
+ * IS THE FIRST PROMOTION OUT OF atlas-analysis.ts.
+ *
+ * `sequences` was the root node of `sequences-and-series`. Every earlier
+ * promotion in this build left `atlas-foundations.ts` or `atlas-structures.ts`,
+ * so what is new here is only the file; the MOVE rule is the same one, and the
+ * note where the node sat writes it out rather than pointing at the
+ * foundations file, because a reader arriving at that file first should not
+ * have to go looking.
+ *
+ * Three things are asserted that no existing group covers, and each of them is
+ * a documented way for a promotion to lose something silently:
+ *
+ *  - The stranded edge went to the ONTOLOGY and `links` stayed empty. That is
+ *    the cheap case, and it is cheap because both endpoints finished inside
+ *    one ontology — not because this area is tidy. Asserted from both ends, so
+ *    an edge written in neither place fails here rather than leaving
+ *    `arithmetic-sequences` resting on nothing.
+ *  - The root set of the area GREW, one to three, because the departing node
+ *    was the only in-area prerequisite of all three nodes above it. Checked by
+ *    NAMED MEMBERSHIP: `atlas-foundations.ts` records both halves of that rule
+ *    firing out of one area, and the whole point of the record is that a size
+ *    check passes while every member turns over.
+ *  - The anchor on the scope pattern survived the move. The node's
+ *    `/^sequence\b/i` is what keeps the article "Sequence" off
+ *    `arithmetic-sequences` and `sequence-convergence`, and a promotion that
+ *    relaxed it while copying it across would keep the TITLES group below
+ *    green — that group asserts the title resolves HERE, and a widened pattern
+ *    still would — while silently claiming three other nodes' articles.
+ */
+group('a sequence is a function on the naturals, so it left analysis for the functions subject')
+
+const SEQ_AREA = AREAS.find(a => a.id === 'sequences-and-series')
+/*
+ * The three nodes that rested on `sequences` when it was promoted, split by
+ * where they are NOW. Two are still nodes of this area; `sigma-notation` has
+ * since been promoted into the same subject, so the claim "the node that
+ * stayed still owns its edge" is no longer true of it and asserting it over
+ * all three would be asserting the wrong thing about the third.
+ *
+ * Kept as two named lists rather than one, because the edge still exists and
+ * still has to be checked — it just moved from a map node's `needs` to the
+ * ontology's `EDGES`, which is a different place to look. A single list would
+ * have had to drop whichever half it could not express.
+ */
+const SEQ_DEPENDENTS = ['arithmetic-sequences', 'geometric-sequences']
+const SEQ_DEPENDENTS_PROMOTED = ['sigma-notation']
+
+t('the area no longer declares the node, and it carries the functions subject',
+  SEQ_AREA.nodes.every(n => n.id !== 'sequences')
+  && areaOf(MATHEMATICS, 'sequences') === 'functions-and-inverses',
+  `${areaOf(MATHEMATICS, 'sequences')}, `
+  + `node here: ${SEQ_AREA.nodes.some(n => n.id === 'sequences')}`)
+t('and it is teachable AND practisable — a syllabus entry, not a renamed skeleton',
+  isTeachable(MATHEMATICS, 'sequences') && isPractisable(MATHEMATICS, 'sequences'))
+/*
+ * The floor literal rather than the `STUB_FLOOR` constant, which is declared
+ * further down this file and would be in its temporal dead zone here — the same
+ * note the trigonometry, geometry and linear-algebra departures carry. The
+ * number is restated in the message so a changed floor is visible either way.
+ */
+t('nine nodes left after the two departures, four clear of the floor',
+  SEQ_AREA.nodes.length === 9 && SEQ_AREA.nodes.length - 5 === 4,
+  `${SEQ_AREA.nodes.length} nodes, ${SEQ_AREA.nodes.length - 5} of headroom`)
+
+t('its one stranded edge is in the ontology, and this area gave up no links entry',
+  FUNCTIONS.edges.some(e => e.kind === 'prerequisite'
+    && e.from === 'function-concept' && e.to === 'sequences')
+  && (SEQ_AREA.links ?? []).length === 0
+  && MATHEMATICS.edges.filter(e => e.kind === 'prerequisite'
+    && e.from === 'function-concept' && e.to === 'sequences').length === 1,
+  `${(SEQ_AREA.links ?? []).length} links, `
+  + `${MATHEMATICS.edges.filter(e => e.from === 'function-concept' && e.to === 'sequences').length} `
+  + 'composed edge(s)')
+/*
+ * The duplicate that `composeAtlas` would not notice. One prerequisite edge in
+ * the composed map, counted above — a `links` entry added here "for symmetry"
+ * beside the ontology edge would emit two, and a duplicate gates exactly like
+ * a single one.
+ */
+t('and nothing was handed back — an empty links list had nothing to collapse',
+  !(SEQ_AREA.links ?? []).some(l => l.from === 'sequences' || l.to === 'sequences'))
+
+t('the edges pointing into it survive, declared by the nodes that stayed',
+  SEQ_DEPENDENTS.every(id =>
+    SEQ_AREA.nodes.some(n => n.id === id && (n.needs ?? []).includes('sequences'))
+    && prerequisitesOf(MATHEMATICS, id).includes('sequences')),
+  SEQ_DEPENDENTS.map(id => `${id}:${prerequisitesOf(MATHEMATICS, id).join('/')}`).join(' '))
+/*
+ * And the third one survives too, from its new home. This is the shape a
+ * promotion hands to the NEXT promotion out of the same area: the edge did not
+ * change — it is still `sequences → sigma-notation` — but the node that
+ * declared it is gone, so the declaration had to move into the ontology both
+ * ends now live in. Asserted from both ends, as the links claim above is, so
+ * an edge written in neither place fails here rather than leaving a concept
+ * resting on nothing.
+ */
+t('and so does the third, re-declared in the ontology after it was promoted too',
+  SEQ_DEPENDENTS_PROMOTED.every(id =>
+    !SEQ_AREA.nodes.some(n => n.id === id)
+    && FUNCTIONS.edges.some(e => e.kind === 'prerequisite'
+      && e.from === 'sequences' && e.to === id && !!e.promotedBy)
+    && MATHEMATICS.edges.filter(e => e.kind === 'prerequisite'
+      && e.from === 'sequences' && e.to === id).length === 1),
+  SEQ_DEPENDENTS_PROMOTED.map(id =>
+    `${id}:${prerequisitesOf(MATHEMATICS, id).join('/')} `
+    + `x${MATHEMATICS.edges.filter(e => e.from === 'sequences' && e.to === id).length}`).join(' '))
+/*
+ * The gate tightening, and BOTH halves are named for the reason the geometry
+ * group gives: a test asking only "is it gated by something" would have passed
+ * before and after. `geometric-sequences` has had `exponential-functions`
+ * since it was written, so it was already gated by teachable material; what
+ * changed for all three is that `sequences` itself now appears in the gating
+ * set, where the walk used to look straight through it.
+ */
+t('and all three are now gated BY it, where the walk used to look through it',
+  SEQ_DEPENDENTS.concat(SEQ_DEPENDENTS_PROMOTED)
+    .every(id => gatingPrerequisitesOf(MATHEMATICS, id).includes('sequences')),
+  SEQ_DEPENDENTS.concat(SEQ_DEPENDENTS_PROMOTED)
+    .map(id => `${id}:${gatingPrerequisitesOf(MATHEMATICS, id).join('/')}`).join(' '))
+
+/*
+ * Named membership, never a count, AND THIS AREA IS NOW THE PROOF OF WHY.
+ *
+ * The first promotion took the root set 1 → 3: `sequences` was the only root
+ * and the only in-area prerequisite of all three nodes above it, so all three
+ * took its place at once. A count would have caught that one.
+ *
+ * The second promotion took it 3 → 3 and changed a member.
+ * `sigma-notation` left, and `mathematical-induction` became a root because
+ * `sigma-notation` was its only in-area prerequisite — its other `needs`,
+ * `geometric-proof`, is geometry's. `infinite-series` did NOT become a root,
+ * because it needs `sequence-convergence` as well and that is still here. So
+ * the size held while a third of the membership turned over, which is exactly
+ * the failure atlas-foundations.ts predicted and the reason this assertion
+ * names its members.
+ */
+t('the area root set held at three while a member turned over',
+  roots(areaOntology(SEQ_AREA)).slice().sort().join(' ')
+    === 'arithmetic-sequences geometric-sequences mathematical-induction',
+  roots(areaOntology(SEQ_AREA)).slice().sort().join(' '))
+/*
+ * The substitution itself, stated as the reason rather than the outcome: the
+ * node that arrived did so because the departing one was its last prerequisite
+ * inside the area, and the node that did not arrive has one left.
+ */
+t('and the substitution happened for the stated reason, not by coincidence',
+  (SEQ_AREA.nodes.find(n => n.id === 'mathematical-induction').needs ?? [])
+    .every(id => !SEQ_AREA.nodes.some(n => n.id === id))
+  && (SEQ_AREA.nodes.find(n => n.id === 'infinite-series').needs ?? [])
+    .some(id => SEQ_AREA.nodes.some(n => n.id === id)),
+  `induction needs ${SEQ_AREA.nodes.find(n => n.id === 'mathematical-induction').needs.join('/')}, `
+  + `series needs ${SEQ_AREA.nodes.find(n => n.id === 'infinite-series').needs.join('/')}`)
+
+/*
+ * The stranding no suite catches, asserted as an absence that stays true.
+ * `expandEdges` turns `confusedWith` into `interferes_with`, so deleting a node
+ * carrying one deletes that edge — and interference constrains SELECTION, not
+ * gating, so every suite stays green. This node declared none, and the area's
+ * one interference is between two nodes that both STAYED. Asserted together so
+ * the next promotion out of either of those two cannot quietly take it.
+ */
+t('it stranded no interference, and the area\'s one pair is still both on the map',
+  !MATHEMATICS.edges.some(e => e.kind === 'interferes_with'
+    && (e.from === 'sequences' || e.to === 'sequences'))
+  && MATHEMATICS.edges.some(e => e.kind === 'interferes_with'
+    && e.from === 'geometric-sequences' && e.to === 'arithmetic-sequences')
+  && ['geometric-sequences', 'arithmetic-sequences']
+    .every(id => SEQ_AREA.nodes.some(n => n.id === id)),
+  MATHEMATICS.edges.filter(e => e.kind === 'interferes_with'
+    && SEQ_DEPENDENTS.concat('sequences').some(id => e.from === id || e.to === id))
+    .map(e => `${e.from}~${e.to}`).join(' ') || 'none')
+
+/*
+ * The pattern survived the move WITH ITS ANCHOR. Asserted as the regex source
+ * rather than by testing one title, because the TITLES group below already
+ * checks that "Sequence" lands here and would keep passing on a widened
+ * pattern — it is the three articles the anchor EXCLUDES that a relaxation
+ * would quietly capture, and the anchor is the only thing excluding them.
+ */
+t('the scope pattern came across anchored, so it still takes only the bare article',
+  conceptById(MATHEMATICS, 'sequences').scope.match.source === '^sequence\\b',
+  conceptById(MATHEMATICS, 'sequences').scope.match.source)
+t('and the subject claims it is checked, which that pattern earns',
+  conceptById(MATHEMATICS, 'sequences').fidelity === 'checked')
+
+/*
+ * The credit edge, asserted because the comparable one was DELETED rather than
+ * restated when `gcd-and-lcm` was promoted — two of its three tasks never
+ * touched a factorisation. Here all three substitute a number into a rule, so
+ * the claim holds, and asserting it keeps the difference between the two cases
+ * on the record rather than in one file's comment.
+ */
+t('practising a sequence claims credit for the function concept, which every task earns',
+  MATHEMATICS.edges.some(e => e.kind === 'encompasses'
+    && e.from === 'sequences' && e.to === 'function-concept' && !!e.rationale))
+
+// ---------------------------------------------------------------------------
+
+/**
+ * THE SIXTEENTH PROMOTION WENT UP THE SAME AREA, AND IT IS THE FIRST ONE NO
+ * JOURNEY ASKED FOR.
+ *
+ * `sigma-notation` was the node directly above `sequences`. What is new about
+ * it, and what each assertion below is for:
+ *
+ *  - ROUTE DEMAND SELECTED NOTHING. Every journey has read zero unwritten
+ *    steps on route since the fourteenth promotion, so the ranking every
+ *    earlier promotion used had expired. Asserted here, because a future run
+ *    reading these groups top to bottom would otherwise infer that the
+ *    promotion order is route order and look for a route that wanted this.
+ *  - THE CHEAP `links` CASE REPEATED, AND ONLY BECAUSE OF THE ORDER. Its one
+ *    `needs` was `sequences`, which the previous promotion had just moved into
+ *    that ontology. Promoted first, the identical `needs` would have pointed
+ *    at a map node and cost a `links` entry. Asserted as the counterfactual it
+ *    is, by naming the node in this area that still could not avoid one.
+ *  - THE ROOT SET HELD AT THREE AND TURNED A MEMBER OVER. That assertion lives
+ *    with the first promotion's group above, since it is the same set.
+ *  - FIVE DEPENDENTS ACROSS THREE MAP FILES, none of which was edited. This is
+ *    the largest dependent set any promotion in this build has had, and it is
+ *    the clearest case of the rule that an edge belongs to the node declaring
+ *    it: five edges survived a deletion untouched.
+ */
+group('the sixteenth promotion followed the fifteenth up its own area')
+
+const SIGMA_DEPENDENTS = [
+  'mathematical-induction', 'infinite-series', 'riemann-sums',
+  'expectation', 'descriptive-statistics',
+]
+
+t('it left the area and is a concept of the functions subject, with material',
+  !SEQ_AREA.nodes.some(n => n.id === 'sigma-notation')
+  && areaOf(MATHEMATICS, 'sigma-notation') === 'functions-and-inverses'
+  && isTeachable(MATHEMATICS, 'sigma-notation')
+  && isPractisable(MATHEMATICS, 'sigma-notation'),
+  `${areaOf(MATHEMATICS, 'sigma-notation')}, `
+  + `node here: ${SEQ_AREA.nodes.some(n => n.id === 'sigma-notation')}`)
+
+/*
+ * NO JOURNEY WANTED IT, and that premise is NOT asserted here — it is asserted
+ * twice already, by `ROUTE_STILL_UNWRITTEN` being empty further down this file
+ * and over the journeys themselves in tests/journeys.mjs. Reaching for that
+ * table from here would also be a temporal dead zone, since it is declared
+ * below. It is written down because a run reading these promotion groups in
+ * order would otherwise infer that promotion order is route order and go
+ * looking for the route that asked for this one.
+ *
+ * What replaced route demand, and this part IS checkable here: the node was
+ * READY — every one of its `needs` already teachable — which after the
+ * fifteenth promotion meant the single edge from `sequences`. Readiness is a
+ * fact about the tree and is the half of a selection decision that can be
+ * read off it; rulability and dependent count are the other half and live with
+ * the material, in tests/concepts-logic.mjs.
+ */
+t('its one prerequisite was already teachable, which is what made it promotable',
+  prerequisitesOf(MATHEMATICS, 'sigma-notation').join(',') === 'sequences'
+  && isTeachable(MATHEMATICS, 'sequences'),
+  prerequisitesOf(MATHEMATICS, 'sigma-notation').join(','))
+
+/*
+ * The counterfactual, by name. `mathematical-induction` is the node this area
+ * hands the expensive case to: it needs `geometric-proof`, which is an
+ * authored concept of the GEOMETRY subject, so promoting it could not put that
+ * edge in whichever ontology received it — an ontology may only name concepts
+ * it contains — and the edge would have to become a `links` entry here.
+ *
+ * Asserted rather than described, because "links stayed empty twice" reads as
+ * a property of this area and is a property of two nodes' prerequisites.
+ */
+t('the links list is still empty, and the node that proves that was luck is still here',
+  (SEQ_AREA.links ?? []).length === 0
+  && SEQ_AREA.nodes.some(n => n.id === 'mathematical-induction'
+    && (n.needs ?? []).includes('geometric-proof'))
+  && conceptById(MATHEMATICS, 'geometric-proof')?.subjectId === 'plane-geometry',
+  `${(SEQ_AREA.links ?? []).length} links; geometric-proof is `
+  + `${conceptById(MATHEMATICS, 'geometric-proof')?.subjectId ?? 'a map node'}`)
+
+/*
+ * Five edges that nobody touched. Each is declared by its own node in its own
+ * file — two here, one in integral-calculus, two in atlas-uncertainty.ts — and
+ * every one of them now gates, where the walk looked through an unwritten node
+ * before. The count is in the message and not in the assertion: what matters
+ * is that each NAMED dependent still resolves, since an id dropped from this
+ * list would shrink the claim silently.
+ */
+t('all five dependents still rest on it, across three map files and none of them edited',
+  SIGMA_DEPENDENTS.every(id => prerequisitesOf(MATHEMATICS, id).includes('sigma-notation')),
+  SIGMA_DEPENDENTS.filter(id => !prerequisitesOf(MATHEMATICS, id).includes('sigma-notation'))
+    .join(', ') || 'all five')
+t('and it gates every one of them now that it has material',
+  SIGMA_DEPENDENTS.every(id => gatingPrerequisitesOf(MATHEMATICS, id).includes('sigma-notation')),
+  SIGMA_DEPENDENTS.map(id => `${id}:${gatingPrerequisitesOf(MATHEMATICS, id).includes('sigma-notation')}`)
+    .join(' '))
+/*
+ * Exactly one prerequisite edge into it, as the first promotion's group checks
+ * for its own: the duplicate `composeAtlas` would not report is a `links` entry
+ * added here beside the ontology edge, and a duplicate gates exactly like a
+ * single one.
+ */
+t('exactly one edge into it in the composed map, so nothing was declared twice',
+  MATHEMATICS.edges.filter(e => e.kind === 'prerequisite' && e.to === 'sigma-notation').length === 1
+  && MATHEMATICS.edges.filter(e => e.kind === 'prerequisite'
+    && e.to === 'sigma-notation')[0].from === 'sequences',
+  MATHEMATICS.edges.filter(e => e.to === 'sigma-notation')
+    .map(e => `${e.from}:${e.kind}`).join(' '))
+/*
+ * It stranded no interference either, and the area's one pair is STILL both on
+ * the map — the same absence the first promotion's group asserts, re-asserted
+ * because a second departure is a second chance to delete that edge by
+ * accident.
+ */
+t('it stranded no interference, and the area\'s one pair is still intact',
+  !MATHEMATICS.edges.some(e => e.kind === 'interferes_with'
+    && (e.from === 'sigma-notation' || e.to === 'sigma-notation'))
+  && MATHEMATICS.edges.some(e => e.kind === 'interferes_with'
+    && e.from === 'geometric-sequences' && e.to === 'arithmetic-sequences'))
+/*
+ * NO CREDIT EDGE, AND THAT IS THE DECISION. `sequences` claims one because all
+ * three of its tasks substitute a position into a rule; two of this concept's
+ * three never produce a term of a sequence at all — the constant-term task's
+ * term ignores the index by design, and the linearity task is handed a total it
+ * never unpacks. Asserted as an ABSENCE, because an `encompasses` added later
+ * "for symmetry" would stop `sequences` coming due when it had gone cold, and
+ * nothing else in the build would report it.
+ */
+t('and it claims no credit for sequences, which two of its three tasks would not earn',
+  !MATHEMATICS.edges.some(e => e.kind === 'encompasses' && e.from === 'sigma-notation'),
+  MATHEMATICS.edges.filter(e => e.from === 'sigma-notation')
+    .map(e => `${e.kind}->${e.to}`).join(' '))
 
 // ---------------------------------------------------------------------------
 
@@ -2963,12 +3333,27 @@ t('and the gate on both of those tightened onto the solve, which now stands betw
  */
 group('the systems promotion reached across into linear algebra')
 const LINALG = AREAS.find(a => a.id === 'linear-algebra')
-t('the row-reduction node still declares the edge, so the promotion stranded nothing',
-  LINALG.nodes.some(n => n.id === 'gaussian-elimination'
-    && (n.needs ?? []).includes('systems-of-linear-equations')
-    && (n.needs ?? []).includes('matrices-and-maps')),
-  LINALG.nodes.find(n => n.id === 'gaussian-elimination')?.needs?.join('+'))
-t('and its gate tightened onto the systems, which stands between it and the solve now',
+/*
+ * THE NODE THIS GROUP WAS WRITTEN ABOUT HAS SINCE BEEN AUTHORED, so the two
+ * assertions that read it off `LINALG.nodes` are gone and what replaced them is
+ * the same three claims made against the composed graph instead. That is the
+ * shape of maintenance this file keeps performing and it is worth naming: an
+ * assertion about a MAP NODE has a shelf life ending at the node's promotion,
+ * while the same claim about an EDGE survives it, because the edge outlives the
+ * node that declared it if somebody re-homes it.
+ *
+ * The group is kept rather than deleted because the claim it makes — the
+ * systems promotion changed something in a file it did not touch — is still
+ * true and is still the only place that crossing is checked.
+ */
+t('the edges the systems promotion reached across with survive the far node being authored too',
+  MATHEMATICS.edges.some(e => e.kind === 'prerequisite'
+    && e.from === 'systems-of-linear-equations' && e.to === 'gaussian-elimination')
+  && MATHEMATICS.edges.some(e => e.kind === 'prerequisite'
+    && e.from === 'matrices-and-maps' && e.to === 'gaussian-elimination'),
+  MATHEMATICS.edges.filter(e => e.kind === 'prerequisite' && e.to === 'gaussian-elimination')
+    .map(e => `${e.from}@${areaOf(MATHEMATICS, e.from)}`).join(' '))
+t('and its gate is the systems rather than the solve, which is what that promotion did to it',
   gatingPrerequisitesOf(MATHEMATICS, 'gaussian-elimination')
     .includes('systems-of-linear-equations')
   && !gatingPrerequisitesOf(MATHEMATICS, 'gaussian-elimination')
@@ -2976,12 +3361,11 @@ t('and its gate tightened onto the systems, which stands between it and the solv
   && gatingPrerequisitesOf(MATHEMATICS, 'systems-of-linear-equations')
     .includes('linear-equations'),
   gatingPrerequisitesOf(MATHEMATICS, 'gaussian-elimination').join(', '))
-t('and the credit edge it declares now has material at the far end to propagate to',
-  LINALG.nodes.some(n => n.id === 'gaussian-elimination'
-    && (n.exercises ?? []).includes('systems-of-linear-equations'))
-  && MATHEMATICS.edges.some(e => e.kind === 'encompasses'
+t('and the credit edge survived the promotion of the node that used to declare it',
+  MATHEMATICS.edges.some(e => e.kind === 'encompasses'
     && e.from === 'gaussian-elimination' && e.to === 'systems-of-linear-equations')
-  && isPractisable(MATHEMATICS, 'systems-of-linear-equations'),
+  && isPractisable(MATHEMATICS, 'systems-of-linear-equations')
+  && isPractisable(MATHEMATICS, 'gaussian-elimination'),
   MATHEMATICS.edges.filter(e => e.kind === 'encompasses' && e.from === 'gaussian-elimination')
     .map(e => `${e.to}:practisable=${isPractisable(MATHEMATICS, e.to)}`).join(' '))
 /*
@@ -3009,6 +3393,138 @@ t('and the area gained no links entry, both ends of its one edge being in the sa
   && areaOf(MATHEMATICS, 'systems-of-linear-equations') === 'expressions-and-equations',
   ALGEBRA.links.filter(l => l.to === 'systems-of-linear-equations'
     || l.from === 'systems-of-linear-equations').map(l => `${l.from}->${l.to}`).join(' '))
+
+/**
+ * THE FOURTEENTH PROMOTION — THE FIRST OUT OF `linear-algebra`, AND THE ONE
+ * THAT FINISHED THE LAST ROUTE IN THE BUILD.
+ *
+ * `gaussian-elimination` is a concept of `expressions-and-equations` now and
+ * no longer a node here. Four things it did are checked below and they fail
+ * differently:
+ *
+ *  - THE DEPARTURE. Eleven nodes before, ten after, against a floor of five.
+ *    Nothing here is frozen by it and the two nodes that rest on row reduction
+ *    declare their own edges, so they kept them.
+ *  - THE STRANDED HALF. The node declared two `needs`; one pointed into the
+ *    subject it went to and is an ordinary edge there, the other pointed at
+ *    `matrices-and-maps` in a THIRD subject and could be declared by neither
+ *    ontology. That is the new `links` entry, and it is the entry this suite
+ *    exists to catch the absence of — a dropped prerequisite is silent.
+ *  - THE EDGE THAT WAS NOT HANDED BACK. `gaussian-elimination → determinant`
+ *    is still a `links` entry and still has to be. The cartesian-plane
+ *    promotion established that an entry must be DELETED when the promoted
+ *    concept lands in the same ontology as the far end; this one landed in a
+ *    different ontology from `determinant`, so the entry stays. Asserted
+ *    positively, because "we checked and it was fine" is otherwise a claim in a
+ *    comment, and a duplicate edge in the composed graph is something
+ *    `composeAtlas` does not notice.
+ *  - THE AREA ROOTS, BY NAMED MEMBERSHIP. The departing node had no in-area
+ *    prerequisite — both its `needs` pointed outside, so `areaOntology`
+ *    filtered them away — which made it a root of the area view. It is gone
+ *    and `vector-spaces` is the only root left. A `length` check would have
+ *    gone from two to one and said nothing about which.
+ */
+group('the fourteenth promotion, and the first out of linear algebra')
+t('the row reduction is a concept of the equations subject, not a node of this area',
+  !LINALG.nodes.some(n => n.id === 'gaussian-elimination')
+  && areaOf(MATHEMATICS, 'gaussian-elimination') === 'expressions-and-equations'
+  && isTeachable(MATHEMATICS, 'gaussian-elimination'),
+  `${areaOf(MATHEMATICS, 'gaussian-elimination')}, `
+  + `node here: ${LINALG.nodes.some(n => n.id === 'gaussian-elimination')}`)
+/*
+ * The floor literal rather than the `STUB_FLOOR` constant, which is declared
+ * further down this file and would be in its temporal dead zone here — the same
+ * note the trigonometry and geometry departures carry. The number is restated in
+ * the message so a changed floor is visible either way.
+ */
+t('ten nodes left, five clear of the floor, so the departure froze nothing',
+  LINALG.nodes.length === 10 && LINALG.nodes.length - 5 === 5,
+  `${LINALG.nodes.length} nodes, ${LINALG.nodes.length - 5} of headroom`)
+t('the stranded half of its needs is a links entry here, filed with the area that lost the node',
+  LINALG.links.some(l => l.from === 'matrices-and-maps' && l.to === 'gaussian-elimination'
+    && !!l.because)
+  && areaOf(MATHEMATICS, 'matrices-and-maps') === 'matrices-and-determinants'
+  && MATHEMATICS.edges.some(e => e.kind === 'prerequisite'
+    && e.from === 'matrices-and-maps' && e.to === 'gaussian-elimination'),
+  LINALG.links.filter(l => l.to === 'gaussian-elimination')
+    .map(l => `${l.from}@${areaOf(MATHEMATICS, l.from)}->${l.to}`).join(' ') || 'MISSING')
+t('and the other half is not here, both its ends being concepts of one subject',
+  !LINALG.links.some(l => l.from === 'systems-of-linear-equations')
+  && areaOf(MATHEMATICS, 'systems-of-linear-equations') === 'expressions-and-equations'
+  && areaOf(MATHEMATICS, 'gaussian-elimination') === 'expressions-and-equations',
+  LINALG.links.filter(l => l.from === 'systems-of-linear-equations')
+    .map(l => `${l.from}->${l.to}`).join(' ') || 'none, as it should be')
+t('the determinant edge was NOT handed back, its far end being in a different ontology',
+  LINALG.links.filter(l => l.from === 'gaussian-elimination' && l.to === 'determinant')
+    .length === 1
+  && areaOf(MATHEMATICS, 'determinant') === 'matrices-and-determinants'
+  && areaOf(MATHEMATICS, 'gaussian-elimination') !== 'matrices-and-determinants'
+  && MATHEMATICS.edges.filter(e => e.kind === 'prerequisite'
+    && e.from === 'gaussian-elimination' && e.to === 'determinant').length === 1,
+  `${areaOf(MATHEMATICS, 'gaussian-elimination')} -> `
+  + `${areaOf(MATHEMATICS, 'determinant')}, `
+  + `${MATHEMATICS.edges.filter(e => e.from === 'gaussian-elimination'
+    && e.to === 'determinant').length} edge(s)`)
+/*
+ * The gate, which is the half of this promotion no node's own definition shows
+ * and which moved in the counter-intuitive direction. `gatingPrerequisitesOf`
+ * names the NEAREST teachable ancestors and looks through the unteachable ones,
+ * so while row reduction had no material the walk passed through it and
+ * reported what IT rested on — two concepts in two other subjects. Now the walk
+ * stops at it. So `determinant` went from three gating concepts to two and
+ * `rank-nullity` from three to two: a tighter gate is a SHORTER list.
+ *
+ * Asserted as membership and not as length, for the reason the area-roots check
+ * above gives. The counts are in the message so a future reader can see which
+ * way they moved without recomputing them.
+ */
+t('the gate tightened onto the row reduction in three places, in two files nobody edited',
+  gatingPrerequisitesOf(MATHEMATICS, 'determinant').includes('gaussian-elimination')
+  && !gatingPrerequisitesOf(MATHEMATICS, 'determinant')
+    .includes('systems-of-linear-equations')
+  && gatingPrerequisitesOf(MATHEMATICS, 'rank-nullity').includes('gaussian-elimination')
+  && gatingPrerequisitesOf(MATHEMATICS, 'numerical-linear-algebra')
+    .includes('gaussian-elimination'),
+  ['determinant', 'rank-nullity', 'numerical-linear-algebra']
+    .map(id => `${id}: ${gatingPrerequisitesOf(MATHEMATICS, id).join('/')}`).join(' | '))
+t('and the area view has one root left, which is a named substitution rather than a count',
+  roots(areaOntology(LINALG)).join(' ') === 'vector-spaces',
+  roots(areaOntology(LINALG)).join(' '))
+/*
+ * The two stranding checks, as absences on the node that left — the pair that
+ * no suite reports and that have to be looked for to be known.
+ *
+ * `confusedWith` is the one that matters: `expandEdges` turns one into an
+ * `interferes_with`, and interference constrains SELECTION rather than gating,
+ * so dropping one keeps every suite green while freeing the scheduler to
+ * introduce the two most confusable concepts in a subject together. The node
+ * declared none, and this is the record that it was checked.
+ */
+t('no interference was lost, the promoted node having declared none to lose',
+  !MATHEMATICS.edges.some(e => e.kind === 'interferes_with'
+    && (e.from === 'gaussian-elimination' || e.to === 'gaussian-elimination')),
+  MATHEMATICS.edges.filter(e => e.kind === 'interferes_with'
+    && (e.from === 'gaussian-elimination' || e.to === 'gaussian-elimination'))
+    .map(e => `${e.from}~${e.to}`).join(' '))
+/*
+ * And the credit edge, which `links` could not have carried. An area's `links`
+ * produces `prerequisite` edges only, so an `encompasses` edge between two
+ * concepts in different ontologies is expressible NOWHERE — not in either
+ * ontology, which may only name concepts it contains, and not here. That is why
+ * the concept is filed in the subject holding the far end: it is the only
+ * filing under which this edge exists at all.
+ *
+ * Checked as a property of `links` rather than only as the edge surviving, so
+ * the reason stays true rather than just the outcome.
+ */
+t('the credit edge is intra-subject, which is the only way it could exist — links carries no kinds',
+  MATHEMATICS.edges.some(e => e.kind === 'encompasses'
+    && e.from === 'gaussian-elimination' && e.to === 'systems-of-linear-equations')
+  && areaOf(MATHEMATICS, 'gaussian-elimination')
+    === areaOf(MATHEMATICS, 'systems-of-linear-equations')
+  && AREAS.flatMap(a => a.links ?? []).every(l => l.kind === undefined),
+  `both in ${areaOf(MATHEMATICS, 'gaussian-elimination')}; `
+  + `${AREAS.flatMap(a => a.links ?? []).length} links entries, none kinded`)
 
 // ---------------------------------------------------------------------------
 
@@ -3186,33 +3702,69 @@ const ROUTE_STILL_UNWRITTEN = {
    * unchanged at seven. The headroom was never what blocked it; the promotion
    * was waiting on nothing but somebody writing it.
    */
-  'linear-algebra': ['gaussian-elimination'],
+  /*
+   * `linear-algebra` HELD THE LAST ROW IN THIS TABLE AND NO LONGER DOES, which
+   * is the table being cashed in for the seventh time and the last — the thing
+   * it measured has run out rather than moved.
+   *
+   * Its one entry was `gaussian-elimination`, and that concept is authored: of
+   * `expressions-and-equations` in ontology-algebra.ts rather than of the
+   * matrices subject ontology-matrices.ts had reserved it for, because with no
+   * matrix type in the engine the material is three equations and because an
+   * area's `links` carries `prerequisite` edges only, so its credit edge to
+   * `systems-of-linear-equations` could exist nowhere but inside one ontology.
+   * The row is DELETED rather than emptied, following every precedent above: an
+   * area with no row owes nothing on any route, and `[]` would read as a row
+   * somebody had not got round to filling in.
+   *
+   * The budget moved as predicted. The area is one node smaller — ten against a
+   * floor of five — and owes one concept fewer, so its slack is unchanged at
+   * five. The headroom was never what blocked it.
+   */
 }
 /*
- * THE LAST ROW, AND WHY IT IS NOT A ROW ANYBODY CAN CASH IN BY WRITING MORE.
+ * THE TABLE IS EMPTY, AND THAT IS A STATE WORTH ASSERTING RATHER THAN A GROUP
+ * WORTH DELETING.
  *
- * With `euclidean-geometry` cleared, one entry is left in the whole table, and
- * the state of it is asserted rather than described because the next run will
- * come here first. `gaussian-elimination` is unwritten, it is a node of an area
- * with ample headroom, and NOTHING unwritten stands anywhere beneath it — so
- * neither the stub floor nor dependency depth is what stops it. What stops it
- * is that "solve for x" asks for a solution SET and no `NamedForm` and no
- * `evaluate` target expresses one, which ontology-algebra.ts states and which
- * is a decision about what counts as evidence rather than an authoring job.
+ * Every concept on every journey's route is written. The loop below iterates
+ * nothing now, so the group would pass vacuously and say nothing — which is
+ * exactly the failure mode this suite keeps catching elsewhere — so the
+ * emptiness is asserted directly, and the claim it stands for is checked from
+ * the journeys' own side in tests/journeys.mjs, which is the harness that
+ * builds journeys.ts. Both halves are needed: an empty table here with a route
+ * still owing something there is a table somebody cleared without authoring.
  *
- * That makes the three heuristics this table has been read with — the floor,
- * the depth, the cheap promotion — all spent, and this assertion is what will
- * say so in graph terms rather than in prose. It fails when somebody adds a
- * task kind that can rule a solution set, which is exactly when the row becomes
- * writable and somebody should be told.
+ * THE REFUSAL THIS COMMENT USED TO CARRY IS WHY THE RECOMPUTATION MATTERS. It
+ * said `gaussian-elimination` was stopped by neither the floor nor depth but by
+ * the fact that "solve for x" asks for a solution SET and no `NamedForm` and no
+ * `evaluate` target expresses one, and that this was "a decision about what
+ * counts as evidence rather than an authoring job". The first half is still
+ * true. The inference was not, for the fourth time in this build:
+ * `evaluate` cannot take a set AS AN ANSWER, and it rules the NUMBER THAT
+ * DECIDES one perfectly. A 3×3 solve is a TRIPLE, so it costs three tasks the
+ * way a point cost two; an emptied row leaves 0 = 3 or 0 = 0, and three and
+ * nought are values. See ontology-algebra.ts, which had already withdrawn the
+ * same inference twice and wrote down the pattern for doing it a third time.
+ *
+ * So the thing to assert is not a new refusal. It is that nothing is owed, and
+ * that the figure is derived from the journeys rather than typed — because a
+ * typed table is what rotted, and a typed REFUSAL is what cost three runs.
  */
-t('the one route concept left is blocked on neither the floor nor depth, which is the state to read',
-  !isTeachable(MATHEMATICS, 'gaussian-elimination')
-  && AREAS.find(a => a.id === 'linear-algebra').nodes.length - 1 >= STUB_FLOOR
-  && allPrerequisitesOf(MATHEMATICS, 'gaussian-elimination')
-    .every(id => isTeachable(MATHEMATICS, id)),
-  allPrerequisitesOf(MATHEMATICS, 'gaussian-elimination')
-    .filter(id => !isTeachable(MATHEMATICS, id)).join(', ') || 'nothing unwritten beneath it')
+t('the table owes nothing, and the concept that held its last row is written',
+  Object.keys(ROUTE_STILL_UNWRITTEN).length === 0
+  && isTeachable(MATHEMATICS, 'gaussian-elimination'),
+  `${Object.keys(ROUTE_STILL_UNWRITTEN).length} row(s) left`)
+/*
+ * And the floor, from the other side. The claim this group was founded to make
+ * — "the floor will STILL pass once every concept the unfinished journeys need
+ * has been written" — is now a statement about the present rather than a
+ * prediction, so it is checked as one: every area clears the floor, with
+ * nothing owed. That is the deadlock being gone rather than postponed.
+ */
+t('and every area clears the floor with nothing left owed, which is what this group predicted',
+  AREAS.every(a => a.nodes.length >= STUB_FLOOR),
+  AREAS.filter(a => a.nodes.length < STUB_FLOOR).map(a => `${a.id}:${a.nodes.length}`)
+    .join(' ') || `smallest area has ${Math.min(...AREAS.map(a => a.nodes.length))} nodes`)
 for (const [areaId, ids] of Object.entries(ROUTE_STILL_UNWRITTEN)) {
   const area = AREAS.find(a => a.id === areaId)
   t(`${areaId}: every route concept named is really an unwritten node of it`,
@@ -3444,6 +3996,12 @@ const TITLES = [
   ['Sequence', 'sequences'],
   ['Continuous function', 'continuity'],
   ['Sine wave', 'trig-graphs'],
+  // The article sigma notation is filed under. The pattern is `summation` and
+  // not `sum`, which is what keeps the three over-broad rows below off it —
+  // and this row with "Riemann sum" is the pair that pins the width from both
+  // sides, since a pattern narrowed to nothing would satisfy those rows too.
+  ['Summation', 'sigma-notation'],
+  ['Riemann sum', 'riemann-sums'],
 ]
 
 for (const [title, expected] of TITLES) {
@@ -3477,6 +4035,17 @@ const MUST_NOT = [
   ['Pythagorean theorem', ['pythagorean-identity']],
   ['Sequence', ['arithmetic-sequences', 'geometric-sequences', 'cauchy-sequences']],
   ['Continuous function', ['rigorous-continuity', 'uniform-continuity']],
+  /*
+   * `sigma-notation`'s pattern is `summation` rather than `sum`, and these
+   * three are what the shorter word would have cost: a Riemann sum, an
+   * infinite geometric total and the angle sum are three other nodes'
+   * articles. A pattern narrowed into uselessness would pass all three rows
+   * by matching nothing, which is why "Summation" is in the table above and
+   * "Riemann sum" is too — the pair is what pins the width from both sides.
+   */
+  ['Riemann sum', ['sigma-notation']],
+  ['Sum to infinity', ['sigma-notation']],
+  ['Sum of angles of a triangle', ['sigma-notation']],
 ]
 for (const [title, forbidden] of MUST_NOT) {
   const ids = conceptsInOffering(MATHEMATICS, thm(title)).map(c => c.id)
@@ -3600,6 +4169,114 @@ t('both keep the floor that forbids marking',
 t('a pasted scratchpad is capped rather than sent whole',
   probeNudgePrompt(NUDGE_CTX, 'asked?', 'x'.repeat(5000)).user.includes('x'.repeat(1200))
   && !probeNudgePrompt(NUDGE_CTX, 'asked?', 'x'.repeat(5000)).user.includes('x'.repeat(1201)))
+
+
+// ---------------------------------------------------------------------------
+
+group('the Armature')
+
+/*
+ * The region map is a DOCUMENT like the atlas it sits over, so it is checked
+ * here rather than in concepts-logic.mjs. What these assertions can and cannot
+ * do is the point: which area a region holds is EDITORIAL — whether Hasspab
+ * should carry number theory or statistics is taste, and a test asserting it
+ * would be asserting taste. So nothing below checks an assignment. They check
+ * the structure that makes assignments safe to change, and the one thing the
+ * game's copy of this table cannot check at all: that every id still resolves
+ * against the live atlas.
+ */
+const conceptIdsByArea = new Map()
+for (const c of MATHEMATICS.concepts) {
+  if (!conceptIdsByArea.has(c.subjectId)) conceptIdsByArea.set(c.subjectId, new Set())
+  conceptIdsByArea.get(c.subjectId).add(c.id)
+}
+
+const authoredSubjectIds = new Set(ONTOLOGIES.map(o => o.subject.id))
+const armatureFaults = armatureProblems(conceptIdsByArea, authoredSubjectIds)
+t('every region resolves against the live atlas', armatureFaults.length === 0,
+  armatureFaults.slice(0, 6).join(' | '))
+
+const placed = armatureRegions()
+t('there are 21 spheres of influence', placed.length === 21, `${placed.length}`)
+t('19 of them carry an area, 2 carry none',
+  placed.filter(r => r.area).length === AREAS.length
+  && placed.filter(r => !r.area).length === 2,
+  `${placed.filter(r => r.area).length} with an area, ${AREAS.length} areas exist`)
+t('the two that carry none say which role they play instead',
+  placed.filter(r => !r.area).map(r => r.role).sort().join(',') === 'broker,frontier')
+t('every area has a region, so none is unreachable on the map',
+  AREAS.every(a => regionForArea(a.id) !== null),
+  AREAS.filter(a => !regionForArea(a.id)).map(a => a.id).join(', '))
+
+t('the journey runs inward to outward',
+  placed.every((r, i) => i === 0 || placed[i - 1].km <= r.km))
+t('regions at the same distance are neighbours, not prerequisites',
+  inwardOf('kalvent').every(r => r.km < 5500)
+  && !inwardOf('kalvent').some(r => r.id === 'kalkreath-mountains'))
+t('the centre has nothing before it and the far isles have everything',
+  inwardOf('ringed-mountains').length === 0
+  && inwardOf('hemgrad-and-hemlith').length === placed.length - 1)
+t('a region is found by id, name, epithet or sloppy typing',
+  regionBy('gal garad')?.id === 'gal-garad'
+  && regionBy('The Crucible of the Sun')?.id === 'gal-garad'
+  && regionBy('Lumingrad') === null)
+
+/*
+ * Positions were read off a drawn map by eye, so they cannot be asserted to
+ * the pixel — but the setting states a compass bearing for most regions,
+ * measured from the continental centre, and that IS checkable. It catches the
+ * failure that matters: a region pinned on the wrong side of the world.
+ * Distance is deliberately not checked; the projection is an oval and the map
+ * says distances are approximate, so any tolerance loose enough to pass the
+ * far isles would miss a real error.
+ */
+const BEARINGS = {
+  durvolk: 'e', tellgrad: 'e', 'ringed-mountains': 'e',
+  taiga: 'ne', burdervruke: 'ne', krull: 'n', paravgrad: 'n', schalfrend: 'nw',
+  'kalkreath-mountains': 'sw', kalvent: 'sw', 'nadda-zalan': 'sw',
+  alun: 's', rubneb: 's', 'qing-men': 'se', 'hemgrad-and-hemlith': 'w',
+}
+const offBearing = Object.entries(BEARINGS).filter(([id, want]) => {
+  const r = regionBy(id)
+  if (!r) return true
+  const dx = r.xy.x - ARMATURE_CENTER.x       // + is east
+  const dy = r.xy.y - ARMATURE_CENTER.y       // + is south
+  return (want.includes('n') && !(dy < 0)) || (want.includes('s') && !(dy > 0))
+    || (want.includes('e') && !(dx > 0)) || (want.includes('w') && !(dx < 0))
+})
+t('every pin agrees with the bearing the setting states for it',
+  offBearing.length === 0, offBearing.map(([id]) => id).join(', '))
+t('the continental centre sits beside the two regions nearest to it',
+  Math.hypot(regionBy('ringed-mountains').xy.x - ARMATURE_CENTER.x,
+    regionBy('ringed-mountains').xy.y - ARMATURE_CENTER.y) < 0.2
+  && Math.hypot(regionBy('hasspab').xy.x - ARMATURE_CENTER.x,
+    regionBy('hasspab').xy.y - ARMATURE_CENTER.y) < 0.2)
+t('no two regions share a pin',
+  new Set(placed.map(r => `${r.xy.x},${r.xy.y}`)).size === placed.length)
+t('every pin is on the image',
+  placed.every(r => r.xy.x > 0 && r.xy.x < 1 && r.xy.y > 0 && r.xy.y < 1))
+
+/*
+ * Coverage is read from the real atlasCoverage, which is the whole reason this
+ * table lives here as well as in the game. The assertion is a floor rather
+ * than a figure: the written share moves every time somebody authors a
+ * concept, and a test pinned to today's number would fail on success.
+ */
+const armatureCov = regionCoverage(atlasCoverage(MATHEMATICS))
+t('coverage is reported for all 21, including the two with none',
+  armatureCov.length === 21 && armatureCov.filter(c => c.concepts === 0).length === 2)
+t('a region counts its mapped area AND the authored subjects it holds',
+  armatureCov.filter(c => c.region.area).every(c =>
+    c.concepts === [c.region.area, ...c.authored]
+      .reduce((n, id) => n + (conceptIdsByArea.get(id)?.size ?? 0), 0)))
+t('every authored subject is on the map exactly once',
+  armatureRegions().flatMap(r => r.authored ?? []).length === authoredSubjectIds.size
+  && new Set(armatureRegions().flatMap(r => r.authored ?? [])).size === authoredSubjectIds.size)
+t('written never exceeds the concepts it is counted out of',
+  armatureCov.every(c => c.written <= c.concepts))
+t('at least one region has material written, or the map is a lie',
+  armatureCov.some(c => c.written > 0))
+
 
 console.log('\nrecognition coverage')
 console.log(`  ${checkedNodes.length} of ${MATHEMATICS.concepts.length} concepts can be recognised from a title`)

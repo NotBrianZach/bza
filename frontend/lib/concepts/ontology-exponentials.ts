@@ -396,18 +396,38 @@ const CONCEPTS: Concept[] = [
             {
               label: 'Evaluate the left side honestly',
               detail: '(−4)² = 16, and 16^(1/2) = 4. So the left side is 4, not −4.',
+              socratic:
+                'Every line of that chain rewrites the one above it, and not one of them ever ' +
+                'checks the result against the number itself. So work the left side on its own ' +
+                'terms instead — the inner power first, then the half power of what you get, ' +
+                'reading x^(1/2) the way 9^(1/2) was read a moment ago. What does ' +
+                '((−4)²)^(1/2) come to, and what does that alone establish about the chain, ' +
+                'before you have any idea which line is at fault?',
             },
             {
               label: 'Find the step that failed',
               detail:
                 'The power rule (xᵃ)ᵇ = xᵃᵇ was applied to a negative base with a fractional ' +
                 'exponent. It is not valid there — (−4)^(1/2) is not a real number at all.',
+              socratic:
+                'The left side is 4 and the chain ends at −4, so one of its two rewrites is ' +
+                'unsound. The arithmetic 2 · 1/2 = 1 is not a candidate, which leaves ' +
+                '(xᵃ)ᵇ = xᵃᵇ used at a base of −4. Ask what that rule needs in order to join ' +
+                'its two sides here: a half power of the base, which is to say a number whose ' +
+                'square is −4. Describe that number as fully as you can — what does the ' +
+                'description amount to, and what does it settle about using the rule at this base?',
             },
             {
               label: 'State the rule with its condition',
               detail:
                 '(xᵃ)ᵇ = xᵃᵇ for x ≥ 0 when b is not an integer. Dropping "x ≥ 0" is what produced ' +
                 '4 = −4.',
+              socratic:
+                'You have one rule and one case where it fails, and "(xᵃ)ᵇ = xᵃᵇ except where it ' +
+                'breaks" is not a rule. Barring negative bases outright is not one either: it ' +
+                'would throw out ((−4)²)³ = (−4)⁶, which you can check by hand and which is true. ' +
+                'So what has to be said about x, and what has to be said about b, for the failure ' +
+                'you just found to be excluded while that case survives?',
             },
           ],
           answer: 'The power rule was used on a negative base with a fractional exponent, where it does not hold.',
@@ -449,13 +469,33 @@ const CONCEPTS: Concept[] = [
             {
               label: 'Say what is being asked',
               detail: '"What power of 2 gives 32?" — that is the whole content of the notation.',
+              socratic:
+                'Every power you have written so far carried three numbers: 2³ = 8 has a base, an ' +
+                'exponent and a result. log₂(32) is not a power — nothing in it is raised to ' +
+                'anything — and it shows you only two of those three. Which two are sitting in ' +
+                'front of you, which one is absent, and so what is this notation asking you to find?',
             },
-            { label: 'Answer the exponent question', detail: '2⁵ = 32, so the exponent is 5.' },
+            {
+              label: 'Answer the exponent question',
+              detail: '2⁵ = 32, so the exponent is 5.',
+              socratic:
+                'What is left is a question about exponents and nothing else, of the kind you were ' +
+                'answering before logarithms were mentioned. Climb the powers of 2 — 2¹, 2², and ' +
+                'on — rather than guessing at it. Which one lands on 32, and since those powers ' +
+                'only grow as the exponent does, what does that settle about whether some other ' +
+                'exponent would have served just as well?',
+            },
             {
               label: 'Write the definition down',
               detail:
                 'log_b(x) = y means exactly b^y = x. The two statements are the same fact in two ' +
                 'notations, which is why no new technique is needed here.',
+              socratic:
+                'You found that 2⁵ = 32 and then wrote 5 — one fact about 2, 5 and 32, recorded ' +
+                'twice, and only the second recording used the word logarithm. Write that pairing ' +
+                'out in general, with base b, argument x and answer y: which exponent statement is ' +
+                'log_b(x) = y standing in for, and which of the three numbers does each of the two ' +
+                'notations leave you to find?',
             },
           ],
           answer: '5',

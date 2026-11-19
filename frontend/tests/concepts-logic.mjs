@@ -3029,8 +3029,8 @@ t('and it did not displace arithmetic from index 0, which the cold account depen
   ONTOLOGIES[0] === ARITHMETIC_FOUNDATIONS)
 t('it has no internal faults', ontologyProblems(VE).length === 0, ontologyProblems(VE).join('; '))
 t('its fidelity claim matches what its option can do', fidelityMismatches(VE).length === 0)
-t('three concepts, nine knowledge points',
-  VE.concepts.length === 3 && allKnowledgePoints(VE).length === 9,
+t('four concepts, twelve knowledge points',
+  VE.concepts.length === 4 && allKnowledgePoints(VE).length === 12,
   `${VE.concepts.length} concepts, ${allKnowledgePoints(VE).length} points`)
 t('the concept is teachable AND practisable — a syllabus, not a map entry',
   isTeachable(VE, 'variables-and-expressions') && isPractisable(VE, 'variables-and-expressions'))
@@ -3039,6 +3039,9 @@ t('and so is the solve, which is the half of the subject\'s name that was mapped
 t('and so is the system, which three files had argued could not be authored at all',
   isTeachable(VE, 'systems-of-linear-equations')
   && isPractisable(VE, 'systems-of-linear-equations'))
+t('and so is the row reduction, which two more files had argued the same about',
+  isTeachable(VE, 'gaussian-elimination')
+  && isPractisable(VE, 'gaussian-elimination'))
 t('every knowledge point has a task, so no chain is left unable to become evidence',
   allKnowledgePoints(VE).every(p => tasksForPoint(p.id).length > 0),
   allKnowledgePoints(VE).filter(p => tasksForPoint(p.id).length === 0).map(p => p.id).join(', '))
@@ -3084,17 +3087,71 @@ t('every objective names a task kind',
  * the wrong order. ontology-geometry.ts reached the same conclusion when the
  * geometry subject stopped being a chain.
  */
+/**
+ * THE FOURTH CONCEPT COST `links` AN ENTRY, WHICH ENDED THE RUN, AND BROUGHT
+ * THE FIRST EDGE HERE THAT IS NOT A PREREQUISITE.
+ *
+ * `gaussian-elimination` declared TWO `needs`. One pointed at
+ * `systems-of-linear-equations`, authored here, so it is the third prerequisite
+ * below. The other pointed at `matrices-and-maps`, authored in
+ * `matrices-and-determinants` — and an ontology may only name concepts it
+ * contains, so that one could not come here and is in `LINEAR_ALGEBRA.links`
+ * instead. The file's own comment predicted this ("it will stop being cheap the
+ * moment something is authored that an area node depends on") and the
+ * prediction is asserted from the far side in tests/atlas.mjs, where the links
+ * entry lives.
+ *
+ * The node also declared `exercises`, which the atlas expands into an
+ * `encompasses` edge for free. Restating it here is a different claim — what
+ * PRACTISING this material exercises, against the tasks that exist — so it is
+ * asserted as its own thing rather than counted among the prerequisites. It is
+ * the first non-prerequisite edge this subject has, which is why the count
+ * alone would no longer say what it used to.
+ */
 const edgeFromTo = (o, from, to) => o.edges.find(e => e.from === from && e.to === to)
-t('it declares exactly two edges, and the reading is still the root rather than either solve',
-  VE.edges.length === 2 && roots(VE).length === 1 && roots(VE)[0] === 'variables-and-expressions',
+t('it declares four edges, three of them prerequisites, and the reading is still the root',
+  VE.edges.length === 4
+  && VE.edges.filter(e => e.kind === 'prerequisite').length === 3
+  && roots(VE).length === 1 && roots(VE)[0] === 'variables-and-expressions',
   `${VE.edges.length} edge(s), roots: ${roots(VE).join(', ')}`)
-t('and both are the edges the promoted nodes arrived carrying, each pointing the way it was written',
+t('and all three are edges the promoted nodes arrived carrying, each pointing the way it was written',
   [['variables-and-expressions', 'linear-equations'],
-    ['linear-equations', 'systems-of-linear-equations']].every(([from, to]) => {
+    ['linear-equations', 'systems-of-linear-equations'],
+    ['systems-of-linear-equations', 'gaussian-elimination']].every(([from, to]) => {
     const e = edgeFromTo(VE, from, to)
     return !!e && e.kind === 'prerequisite' && !!e.promotedBy
   }),
   VE.edges.map(e => `${e.from}->${e.to} ${e.kind}`).join(' | '))
+/*
+ * The credit edge, by name and by direction. `encompasses` reads
+ * "exercising `from` also exercises `to`", so this one has to run from the row
+ * reduction DOWN to the two-equation solve and not the other way — backwards it
+ * would claim that practising a 2×2 system discharges review on a 3×3 forward
+ * pass, which is false and which no other check would catch, a reversed edge
+ * being a perfectly valid ontology.
+ */
+t('and the fourth is the credit edge, pointing from the row reduction down to the system',
+  (() => {
+    const e = edgeFromTo(VE, 'gaussian-elimination', 'systems-of-linear-equations')
+    return !!e && e.kind === 'encompasses' && !!e.promotedBy && !!e.rationale
+      && !edgeFromTo(VE, 'systems-of-linear-equations', 'gaussian-elimination')
+        ?.kind.includes('encompasses')
+  })(),
+  VE.edges.filter(e => e.kind !== 'prerequisite')
+    .map(e => `${e.from}=>${e.to} ${e.kind}`).join(' | ') || 'none')
+/*
+ * And the claim the credit edge makes, measured rather than asserted: the
+ * forward pass's last step is the two-equation elimination, so the two tasks
+ * share an expression. That is the evidence for the edge — without it the
+ * rationale is a plausible sentence, and ontology-arithmetic.ts declines an
+ * `encompasses` elsewhere for exactly the want of this.
+ */
+t('the edge is earned — the forward pass is ruled by the two-equation elimination\'s own expression',
+  taskById('gaussian-forward-pass-for-z-1').given
+    === taskById('solve-system-eliminate-for-y-1').given
+  && JSON.stringify(taskById('gaussian-forward-pass-for-z-1').at)
+    !== JSON.stringify(taskById('solve-system-eliminate-for-y-1').at),
+  `${taskById('gaussian-forward-pass-for-z-1').given} at reduced vs original coefficients`)
 /*
  * And the chain in order, as a walk rather than as a string. `teachingOrder`
  * is what the scheduler reads, so this asserts the claim the subject's own
@@ -3102,14 +3159,15 @@ t('and both are the edges the promoted nodes arrived carrying, each pointing the
  * reversed, which the two checks above cannot, since a backwards edge is still
  * an edge between the right pair.
  */
-t('and the three sit in the order the subject claims to teach them',
+t('and the four sit in the order the subject claims to teach them',
   teachingOrder(VE).join(' ')
-    === 'variables-and-expressions linear-equations systems-of-linear-equations',
+    === 'variables-and-expressions linear-equations systems-of-linear-equations '
+      + 'gaussian-elimination',
   teachingOrder(VE).join(' '))
 
 group('the seventh subject is gradable with no worker')
 const VE_TASKS = allKnowledgePoints(VE).flatMap(p => tasksForPoint(p.id))
-t('eighteen tasks across the nine points', VE_TASKS.length === 18, `${VE_TASKS.length}`)
+t('twenty-five tasks across the twelve points', VE_TASKS.length === 25, `${VE_TASKS.length}`)
 t('all of them are evaluate — no form can express "collected" and no kind can express "solve"',
   VE_TASKS.every(x => x.kind === 'evaluate' && x.form === undefined))
 t('every reference is exactly reproducible from the given — no worker consulted',
@@ -3163,14 +3221,21 @@ t('and the sign trap is settled, not left inconclusive',
  * already carry the fraction.
  */
 const VE_QUESTIONS = allQuestions(VE)
-t('thirty-four questions, one per subgoal', VE_QUESTIONS.length === 34, `${VE_QUESTIONS.length}`)
+t('forty-six questions, one per subgoal', VE_QUESTIONS.length === 46, `${VE_QUESTIONS.length}`)
 t('every subgoal carries an authored socratic phrasing',
   allKnowledgePoints(VE).every(p => p.workedExample.subgoals.every(s => !!s.socratic)),
   allKnowledgePoints(VE).flatMap(p => p.workedExample.subgoals)
     .filter(s => !s.socratic).map(s => s.label).join(' | '))
-t('and every one of them is interrogative, so all twenty-two count as written',
+/*
+ * Stated as the whole subject rather than as a numeral, which is the form the
+ * claim should always have had: the figure in this line has been renumbered
+ * three times and the claim has not changed once. Every question here is
+ * written and every one of them is a question.
+ */
+t('and every one of them is interrogative, so the subject\'s whole fraction is written',
   VE_QUESTIONS.every(q => q.authoredAsQuestion)
-  && questionCoverage(VE).authoredAsQuestions === questionCoverage(VE).questions)
+  && questionCoverage(VE).authoredAsQuestions === questionCoverage(VE).questions,
+  `${questionCoverage(VE).authoredAsQuestions} of ${questionCoverage(VE).questions}`)
 /*
  * The pair of asks the first knowledge point needs. Its whole content is that
  * one act — substitution — settles an unknown completely and settles a claim
@@ -3490,6 +3555,129 @@ t('the deciding number is zero for the degenerate pair and not for the system wi
   + `${showExact(valueAt('a*e - b*d', { a: '2', b: '3', d: '5', e: '-1' }))}`)
 
 /**
+ * THE ROW-REDUCTION TASKS, CHECKED AGAINST THE SYSTEMS THEIR PROMPTS STATE.
+ *
+ * Same job as the two groups above and the sharpest need for it yet, because
+ * these `given`s are a step further from the prompt than any others in the
+ * build. They are ONE STEP of the forward pass carried out in general, at the
+ * REDUCED coefficients — numbers that appear nowhere in the prompt and that the
+ * learner is expected to produce. So "every reference is reproducible from the
+ * given" is nearly vacuous here: `(a*f - c*d)/(a*e - b*d)` at the author's
+ * inputs evaluates to the author's answer whether or not those inputs are what
+ * the stated three equations actually reduce to, and whether or not the triple
+ * solves anything.
+ *
+ * Three independent things are therefore checked against the equations
+ * themselves, restated here as left and right sides:
+ *
+ *  - The triple the three tasks produce satisfies ALL THREE original equations.
+ *    One or two would not do: each equation alone admits a whole plane, and two
+ *    of them admit a line, so a sign error in any `given` survives a check
+ *    against fewer than three.
+ *  - The reduced rows the `at`s claim really are what the pass produces,
+ *    checked as identities rather than at a point — `x + 2y − z` less
+ *    `x + y + z` IS `y − 2z`, at two unrelated triples, which is what makes the
+ *    inputs to the elimination task honest.
+ *  - The emptied-row systems empty, constructively: the first two equations
+ *    force 2x + 3y to 8 for every triple satisfying them, so a third equation
+ *    asking for 11 cannot be met and one asking for 8 asks for nothing.
+ */
+group('the row-reduction tasks really solve the systems their prompts state')
+
+const GAUSS_EQS = [
+  ['x + y + z', '6'],
+  ['x + 2*y - z', '2'],
+  ['2*x - y + z', '3'],
+]
+t('the triple the three tasks produce satisfies all three of the equations in their prompts',
+  (() => {
+    const at = {
+      x: taskById('gaussian-back-substitute-for-x-1').reference,
+      y: taskById('gaussian-back-substitute-for-y-1').reference,
+      z: taskById('gaussian-forward-pass-for-z-1').reference,
+    }
+    return GAUSS_EQS.every(([lhs, rhs]) => {
+      const left = valueAt(lhs, at)
+      const right = valueAt(rhs, at)
+      return left !== null && right !== null && showExact(left) === showExact(right)
+    })
+  })(),
+  (() => {
+    const at = {
+      x: taskById('gaussian-back-substitute-for-x-1').reference,
+      y: taskById('gaussian-back-substitute-for-y-1').reference,
+      z: taskById('gaussian-forward-pass-for-z-1').reference,
+    }
+    return `(${at.x}, ${at.y}, ${at.z}): ` + GAUSS_EQS
+      .map(([l, r]) => `${showExact(valueAt(l, at))}=${showExact(valueAt(r, at))}`).join(' ')
+  })())
+/*
+ * The reduced rows, as identities. This is the check that the elimination
+ * task's inputs are the right numbers: a=1, b=−2, c=−4 claims the second
+ * reduced row is y − 2z = −4, and d=−3, e=−1, f=−9 claims the third is
+ * −3y − z = −9. Both are checked as left sides agreeing everywhere rather than
+ * at one triple, since two expressions agreeing at a point is not identity.
+ */
+t('the reduced rows the elimination task takes as inputs are what the pass really produces',
+  (() => {
+    const x = taskById('gaussian-forward-pass-for-z-1').at
+    const rows = [
+      // second equation less the first
+      { got: '(x + 2*y - z) - (x + y + z)', claimed: `${x.a}*y + (${x.b})*z`, rhs: x.c, from: '2 - 6' },
+      // third equation less twice the first
+      { got: '(2*x - y + z) - 2*(x + y + z)', claimed: `(${x.d})*y + (${x.e})*z`, rhs: x.f, from: '3 - 12' },
+    ]
+    return rows.every(({ got, claimed, rhs, from }) =>
+      [{ x: '1', y: '1', z: '1' }, { x: '-2', y: '3', z: '1/2' }].every(at =>
+        showExact(valueAt(got, at)) === showExact(valueAt(claimed, at)))
+      && showExact(valueAt(from, {})) === showExact(valueAt(rhs, {})))
+  })(),
+  JSON.stringify(taskById('gaussian-forward-pass-for-z-1').at))
+/*
+ * And the emptied row, constructively rather than by the leftover alone. The
+ * first two equations' left sides ADD to 2x + 3y, so any triple satisfying both
+ * sends it to 6 + 2 = 8 — which is why a third equation asking for 11 can be
+ * met by nothing and one asking for 8 adds no condition. Checked at two triples
+ * on the dependent system, one of them not a lattice point, and the second is
+ * the one the task produces.
+ */
+t('the first two equations force 2x + 3y to 8, so the 11 is impossible and the 8 asks nothing',
+  (() => {
+    const z = taskById('gaussian-free-variable-pick-a-z-1').at.c
+    const x = taskById('gaussian-free-variable-pick-a-z-1').reference
+    const triples = [{ x: '7', y: '-2', z: '1' }, { x, y: '-3', z }]
+    const sumsToIt = [{ x: '5', y: '-1', z: '1/3' }, { x: '-2', y: '4', z: '2' }].every(at =>
+      showExact(valueAt('(x + y + z) + (x + 2*y - z)', at))
+        === showExact(valueAt('2*x + 3*y', at)))
+    return z !== '1' && sumsToIt && triples.every(at =>
+      showExact(valueAt('x + y + z', at)) === '6'
+      && showExact(valueAt('x + 2*y - z', at)) === '2'
+      && showExact(valueAt('2*x + 3*y', at)) === '8')
+  })(),
+  [{ x: '7', y: '-2', z: '1' },
+    { x: taskById('gaussian-free-variable-pick-a-z-1').reference, y: '-3',
+      z: taskById('gaussian-free-variable-pick-a-z-1').at.c }]
+    .map(at => `(${at.x}, ${at.y}, ${at.z}): 2x+3y=${showExact(valueAt('2*x + 3*y', at))}`)
+    .join(' | '))
+t('the leftover pair shares its expression and its first two inputs, differing in the third',
+  taskById('gaussian-emptied-row-contradiction-1').given
+    === taskById('gaussian-emptied-row-dependent-1').given
+  && taskById('gaussian-emptied-row-contradiction-1').at.a
+    === taskById('gaussian-emptied-row-dependent-1').at.a
+  && taskById('gaussian-emptied-row-contradiction-1').at.b
+    === taskById('gaussian-emptied-row-dependent-1').at.b
+  && taskById('gaussian-emptied-row-contradiction-1').at.c
+    !== taskById('gaussian-emptied-row-dependent-1').at.c
+  && taskById('gaussian-emptied-row-contradiction-1').reference !== '0'
+  && taskById('gaussian-emptied-row-dependent-1').reference === '0',
+  `${taskById('gaussian-emptied-row-contradiction-1').given}: `
+  + `${taskById('gaussian-emptied-row-contradiction-1').reference} and `
+  + `${taskById('gaussian-emptied-row-dependent-1').reference}`)
+t('and the free-variable answer is deliberately not an integer, as the two-unknown one is',
+  taskById('gaussian-free-variable-pick-a-z-1').reference === '17/2',
+  taskById('gaussian-free-variable-pick-a-z-1').reference)
+
+/**
  * TWO AUTHORING HABITS THE NEW CONCEPT CHANGED, BOTH ASSERTED SO THE CHANGE IS
  * NOT QUIETLY UNDONE.
  *
@@ -3580,18 +3768,104 @@ t('the two procedural points are timed at the subject\'s longest and the judgeme
     + 'when-both-letters-cancel-the-leftover-decides:untimed',
   SYSTEM_CONCEPT.knowledgePoints
     .map(p => `${p.id}:${p.automaticityTarget ?? 'none'}`).join(' '))
-t('and that is longer than every timed point in the two concepts below it',
-  Math.min(...SYSTEM_CONCEPT.knowledgePoints
-    .map(p => p.automaticityTarget).filter(v => v !== undefined))
-  > Math.max(...VE.concepts.filter(c => c.id !== 'systems-of-linear-equations')
-    .flatMap(c => c.knowledgePoints)
-    .map(p => p.automaticityTarget).filter(v => v !== undefined)),
-  VE.concepts.map(c => `${c.id}:${c.knowledgePoints
+/*
+ * THIS WAS A ONE-SIDED RATCHET AND IT WENT RED ON A SUCCESS.
+ *
+ * It read "longer than every timed point in the two concepts BELOW it", and it
+ * was implemented as "longer than every timed point in every OTHER concept" —
+ * which is the same thing only while the system is the last concept in the
+ * chain. `gaussian-elimination` was authored above it at 30 seconds, so the
+ * assertion failed because the subject grew in the direction it was predicting,
+ * and the figure it was defending had not moved at all.
+ *
+ * Restated two-sidedly rather than renumbered, which is the fix that survives
+ * the next concept: the claim worth holding is that the timing does not DROP as
+ * the chain goes up, because each concept is the one below it plus more
+ * arithmetic before the first inverse can be applied. So every concept's timed
+ * minimum is at least the previous concept's timed maximum, walked in teaching
+ * order. 20 → 20 → 25 → 30 satisfies it, and so would a fifth concept at 30;
+ * a concept timed FASTER than its own prerequisite would not, and that is the
+ * thing actually worth catching.
+ */
+t('timing never drops as the chain goes up — each concept starts no faster than the last one ended',
+  (() => {
+    const timed = teachingOrder(VE)
+      .map(id => VE.concepts.find(c => c.id === id).knowledgePoints
+        .map(p => p.automaticityTarget).filter(v => v !== undefined))
+      .filter(xs => xs.length > 0)
+    return timed.every((xs, i) =>
+      i === 0 || Math.min(...xs) >= Math.max(...timed[i - 1]))
+  })(),
+  teachingOrder(VE).map(id => `${id}:${VE.concepts.find(c => c.id === id).knowledgePoints
     .map(p => p.automaticityTarget ?? '-').join('/')}`).join(' '))
 t('and its positions restart at 1 too, which is only observable once a subject has three concepts',
   SYSTEM_CONCEPT.knowledgePoints.map(p => p.position).join(',') === '1,2,3'
   && VE.concepts.every(c => c.knowledgePoints.map(p => p.position).join(',') === '1,2,3'),
   VE.concepts.map(c => `${c.id}:${c.knowledgePoints.map(p => p.position).join('')}`).join(' '))
+
+/**
+ * THE FOURTEENTH PROMOTION, AND THE ONE THAT FINISHED THE LAST JOURNEY.
+ *
+ * `gaussian-elimination` was the only unwritten concept left on any journey's
+ * route in the whole build, so there was no choice to make about which to
+ * write — readiness recomputed from the tree as
+ * `[dest, ...allPrerequisitesOf(M, dest)].filter(id => !isTeachable(M, id))`
+ * returned exactly one id. What there WAS a choice about is where it went, and
+ * that is asserted below because the structure decided it rather than taste.
+ *
+ * What the promotion had to get right, in the order the mistakes would have
+ * been silent in:
+ *
+ *  - Three knowledge points, matching the two concepts below it: the forward
+ *    pass, the upward pass, and the row that empties. Not four — the pivot/swap
+ *    question belongs inside the first point's choice of clearing row, and
+ *    splitting it out would have left a point whose only task was a drill.
+ *  - Seven tasks, with the triple SPLIT across the first two points rather than
+ *    stacked on the first, because the method splits it that way.
+ *  - Every subgoal shipped with its question written, which is the figure that
+ *    silently fails when somebody writes labels and leaves the questions for
+ *    later. This subject asserts it subject-wide for exactly that reason.
+ *  - Objectives naming only `evaluate`, with the one unrulable question — WHY
+ *    fixing the order turns a search into a procedure — in `socratic` instead.
+ */
+group('the fourteenth promotion, which took the last unwritten concept off the last route')
+const GAUSS = VE.concepts.find(c => c.id === 'gaussian-elimination')
+const GAUSS_POINTS = GAUSS.knowledgePoints
+t('three knowledge points numbered from 1, the same shape as the two concepts below it',
+  GAUSS_POINTS.length === 3
+  && GAUSS_POINTS.map(p => p.position).join(',') === '1,2,3',
+  `${GAUSS_POINTS.length} points at ${GAUSS_POINTS.map(p => p.position).join(',')}`)
+t('no point claims a figure, and the two passes are timed while the judgement is not',
+  GAUSS_POINTS.every(p => p.visualRef === undefined)
+  && GAUSS_POINTS.map(p => `${p.id}:${p.automaticityTarget ?? 'untimed'}`).join(' ')
+    === 'clear-downwards-so-each-row-holds-one-letter-fewer:30000 '
+      + 'back-substitution-runs-back-up-the-staircase:25000 '
+      + 'a-row-that-empties-reports-instead-of-stalling:untimed',
+  GAUSS_POINTS.map(p => `${p.id}:${p.automaticityTarget ?? 'none'}`).join(' '))
+/*
+ * The two timed points differ from each other, which is the one timing claim in
+ * the subject that is about the work rather than about the chain. The forward
+ * pass multiplies two equations through and subtracts them; the upward pass
+ * substitutes and divides, twice, with nothing multiplied through. So the
+ * figures are 30 and 25 and not one number used twice for tidiness.
+ */
+t('and the forward pass is timed longer than the upward one, which is the more arithmetic',
+  GAUSS_POINTS[0].automaticityTarget > GAUSS_POINTS[1].automaticityTarget,
+  `${GAUSS_POINTS[0].automaticityTarget} vs ${GAUSS_POINTS[1].automaticityTarget}`)
+t('every objective names a task kind, and every kind it names is one the subject ships',
+  GAUSS.objectives.length === 3
+  && GAUSS.objectives.every(o => o.taskKinds.length > 0
+    && o.taskKinds.every(k => SHIPPED_KINDS.has(k))),
+  GAUSS.objectives.map(o => `${o.id}:${o.taskKinds.join('+')}`).join(' '))
+t('seven tasks, all evaluate, and the triple is split across the two passes not stacked on one',
+  GAUSS_POINTS.flatMap(p => tasksForPoint(p.id)).length === 7
+  && GAUSS_POINTS.every(p => tasksForPoint(p.id).length > 0)
+  && GAUSS_POINTS.flatMap(p => tasksForPoint(p.id))
+    .every(x => x.kind === 'evaluate' && x.form === undefined)
+  && tasksForPoint('clear-downwards-so-each-row-holds-one-letter-fewer').length === 2
+  && tasksForPoint('back-substitution-runs-back-up-the-staircase').length === 2
+  && tasksForPoint('a-row-that-empties-reports-instead-of-stalling').length === 3,
+  GAUSS_POINTS.map(p => `${p.id}:${tasksForPoint(p.id).length}`).join(' '))
 
 // ---------------------------------------------------------------------------
 // The eighth subject: the angle facts, the triangle, congruence, similarity
@@ -5184,6 +5458,325 @@ t('the subject still has no chain that cannot become evidence',
 // ---------------------------------------------------------------------------
 
 /**
+ * `sequences`, promoted into the functions subject — the same shape as the dot
+ * product above, and the group is placed here for the same reason: the subject
+ * does not HAVE a group of its own, having been authored before this file
+ * started writing one per subject, and backfilling one for four concepts is a
+ * different change from this promotion. What is asserted is the promotion.
+ *
+ * TWO THINGS MAKE IT DIFFERENT FROM THE DOT PRODUCT, and both are asserted.
+ *
+ * It came from ANOTHER AREA. `dot-product-geometry` was a node of
+ * `coordinate-geometry` promoted into the vectors subject whose own area it
+ * sat beside; `sequences` was the root node of `sequences-and-series` in
+ * atlas-analysis.ts, which is a different map FILE and a region of the map no
+ * promotion had touched. The justification is the node's own one-liner — "a
+ * function on the naturals" — so what had to be rewritten was not a boundary
+ * sentence that had expired but a `covers` that had never contemplated the
+ * case. The area half of the move is asserted in tests/atlas.mjs, which is the
+ * harness that builds the composed map; the `links` claim in particular cannot
+ * be checked here.
+ *
+ * It FORKED the subject. Every previous concept here extended a chain of four,
+ * and this one hangs off its FOOT: `function-concept` is still the only root
+ * and now has two children. That is why the edge is asserted by NAME below and
+ * not by counting the edge list — an edge accidentally hung off
+ * `domain-and-range` would leave the root unchanged, the count unchanged and
+ * `ontologyProblems` silent, while teaching that you must know where a
+ * function is defined before you can say what its 6th value is.
+ */
+const FI = getOntology('functions-and-inverses')
+const FI_SEQ = conceptById(FI, 'sequences')
+const FI_SUBGOALS = FI_SEQ.knowledgePoints.flatMap(p => p.workedExample.subgoals)
+
+group('sequences, promoted into the functions subject from another map file')
+t('it is a concept of that subject, which is still registered where things read it',
+  FI?.subject.id === 'functions-and-inverses'
+  && FI.concepts.some(c => c.id === 'sequences')
+  && ONTOLOGIES[0] === ARITHMETIC_FOUNDATIONS
+  && ONTOLOGIES[1] === EXPRESSIONS_AND_EQUATIONS)
+t('it has no internal faults', ontologyProblems(FI).length === 0, ontologyProblems(FI).join('; '))
+t('its fidelity claim matches what its option can do', fidelityMismatches(FI).length === 0)
+t('six concepts, eighteen knowledge points',
+  FI.concepts.length === 6 && allKnowledgePoints(FI).length === 18,
+  `${FI.concepts.length} concepts, ${allKnowledgePoints(FI).length} points`)
+t('the concept is teachable AND practisable — a syllabus entry, not a renamed skeleton',
+  isTeachable(FI, 'sequences') && isPractisable(FI, 'sequences'))
+t('every knowledge point has a task, so no chain is left unable to become evidence',
+  allKnowledgePoints(FI).every(p => tasksForPoint(p.id).length > 0),
+  allKnowledgePoints(FI).filter(p => tasksForPoint(p.id).length === 0).map(p => p.id).join(', '))
+/*
+ * `position` restarts at 1 per CONCEPT and not per subject, which is
+ * unobservable until a subject has two of them and is therefore exactly the
+ * kind of thing a fifth concept gets wrong by continuing the count.
+ */
+t('its points number 1,2,3, as every other concept here does',
+  FI.concepts.every(c => c.knowledgePoints.map(p => p.position).join(',') === '1,2,3'),
+  FI.concepts.map(c => `${c.id}:${c.knowledgePoints.map(p => p.position).join('')}`).join(' '))
+
+/*
+ * THE FORK, BY NAME. `roots` is unchanged at one, so a root check alone says
+ * nothing about where the new concept was attached — the edge itself is the
+ * claim.
+ */
+t('the subject forked at its foot: one root still, and the sequence hangs off that root',
+  roots(FI).length === 1 && roots(FI)[0] === 'function-concept'
+  && prerequisitesOf(FI, 'sequences').join(',') === 'function-concept',
+  `roots ${roots(FI).join('/')}, sequences needs ${prerequisitesOf(FI, 'sequences').join('/')}`)
+/*
+ * The stranded edge is INTERNAL, which is what let it come here at all. The
+ * node declared one `needs` and it pointed at a concept this ontology already
+ * contained; one pointing anywhere else would have had to stay behind as an
+ * area `links` entry, and an edge written here naming it would make
+ * `ontologyProblems` report an unknown endpoint — the fault the empty-edge-list
+ * groups above describe from the other side.
+ */
+t('and that edge is the one the map node stranded, restated here because both ends are inside',
+  FI.edges.some(e => e.kind === 'prerequisite'
+    && e.from === 'function-concept' && e.to === 'sequences' && !!e.promotedBy),
+  FI.edges.filter(e => e.to === 'sequences').map(e => `${e.from}:${e.kind}`).join(' ') || 'MISSING')
+/*
+ * The credit edge points back at this concept's own prerequisite, which is the
+ * shape `domain-and-range` already has here — so it is safe, and asserting
+ * acyclicity says why: `cycles` walks prerequisites, and an `encompasses` in
+ * the opposite direction is a claim about what practising exercises rather than
+ * about what must come first.
+ */
+t('its encompasses edge points back at that same prerequisite without cycling the subject',
+  FI.edges.some(e => e.kind === 'encompasses'
+    && e.from === 'sequences' && e.to === 'function-concept' && !!e.rationale)
+  && cycles(FI).length === 0 && teachingOrder(FI) !== null,
+  cycles(FI).map(l => l.join('→')).join('; ') || 'acyclic')
+
+/*
+ * EVERY OBJECTIVE NAMES ONLY KINDS THAT SHIP, which `solid-measure` made a rule
+ * and this is the first promotion into an OLDER subject to hold to it.
+ *
+ * The distinction matters because the surrounding file does not. Every other
+ * concept here names `justify` beside `evaluate`, and no `justify` task exists
+ * anywhere in the build — so those objectives name an observation that cannot
+ * be made. Matching the local style would have meant copying that, which is
+ * how a fault spreads by being neighbourly. The unrulable questions this
+ * concept is actually about — why the rule alone does not fix the sequence,
+ * what the formula buys at position 100 — are in the `socratic` phrasings
+ * below, asked by a tutor and marked by nothing.
+ */
+const FI_SEQ_KINDS = new Set(FI_SEQ.knowledgePoints.flatMap(p => tasksForPoint(p.id)).map(x => x.kind))
+t('its objectives name only evaluate, and evaluate really ships a task on every point',
+  FI_SEQ.objectives.length > 0
+  && FI_SEQ.objectives.every(o => o.taskKinds.length > 0
+    && o.taskKinds.every(k => FI_SEQ_KINDS.has(k)))
+  && [...FI_SEQ_KINDS].join(',') === 'evaluate',
+  FI_SEQ.objectives.map(o => `${o.id}:${o.taskKinds.join('+')}`).join(' ')
+  + ` against ${[...FI_SEQ_KINDS].join('+')}`)
+t('while the four older concepts here still name justify, of which the build ships none',
+  FI.concepts.filter(c => c.id !== 'sequences')
+    .some(c => c.objectives.some(o => o.taskKinds.includes('justify')))
+  && !TASKS.some(x => x.kind === 'justify'),
+  `${TASKS.filter(x => x.kind === 'justify').length} justify tasks in the build`)
+
+/*
+ * EVERY SUBGOAL SHIPPED WITH ITS QUESTION WRITTEN, and the fraction is the
+ * figure that says it was worth doing.
+ *
+ * This subject had 16 of its 40 subgoals authored as questions before the
+ * promotion — the later concepts in the file were written labels-only. Nine
+ * arrived and nine are authored, so it was 25 of 49, and the subject's own
+ * fraction moved UP rather than being diluted. That is the property that fails
+ * silently when somebody writes the labels and leaves the questions for later:
+ * every suite stays green and the coverage line drops.
+ *
+ * The sixteenth promotion did it again with eleven more, taking the subject to
+ * 36 of 60 — 60%, from 40% before either of these two concepts existed. Both
+ * figures are asserted below so the direction is on the record and not just
+ * the total: a promotion that shipped labels only would leave the total rising
+ * and this ratio falling, which is the shape worth catching.
+ */
+const FI_COV = questionCoverage(FI)
+t('all nine of its subgoals ship the question written, not just the label',
+  FI_SUBGOALS.length === 9 && FI_SUBGOALS.every(s => typeof s.socratic === 'string'),
+  `${FI_SUBGOALS.filter(s => !s.socratic).length} unwritten of ${FI_SUBGOALS.length}`)
+t('and no question contains its own answer by being an imperative with a mark on it',
+  FI_SUBGOALS.every(s => isInterrogative(s.socratic)),
+  FI_SUBGOALS.filter(s => !isInterrogative(s.socratic)).map(s => s.label).join('; '))
+t('while the labels stay imperative — the map draws moves, the tutor asks sentences',
+  FI_SUBGOALS.every(s => !isInterrogative(s.label)),
+  FI_SUBGOALS.filter(s => isInterrogative(s.label)).map(s => s.label).join('; '))
+t('every subgoal says what its move establishes, so none of them is a bare step',
+  FI_SUBGOALS.every(s => typeof s.detail === 'string' && s.detail.length > 0))
+t('the subject is at eighteen chains and still has none that cannot become evidence',
+  FI_COV.chains === 18 && FI_COV.chainsWithNoRuling === 0
+  && FI_COV.authoredAsQuestions === 36 && FI_COV.questions === 60,
+  `${FI_COV.chains} chains, ${FI_COV.chainsWithNoRuling} unrulable, `
+  + `${FI_COV.authoredAsQuestions}/${FI_COV.questions} authored`)
+/*
+ * The RATIO rather than the total, which is the figure the two promotions were
+ * supposed to move and the one a labels-only promotion would push the wrong
+ * way. 16/40 is 40%; 36/60 is 60%. Asserted as a strict improvement on the
+ * pre-promotion state rather than as a literal, so it keeps meaning the same
+ * thing after the next concept lands here.
+ */
+t('and its authored fraction is well above where the subject started, not diluted',
+  FI_COV.authoredAsQuestions / FI_COV.questions > 16 / 40,
+  `${Math.round(100 * FI_COV.authoredAsQuestions / FI_COV.questions)}% against 40% before`)
+
+/*
+ * ONE SPEED TARGET, ON THE SUBSTITUTION, AND NONE ON THE OTHER TWO.
+ *
+ * types.ts says a timing target on "explain why the degrees must match"
+ * measures typing, and two of these three points are that case: what the first
+ * term contributes, and what a formula costs at position 100, are judgements
+ * the arithmetic does not record. The first point is the opposite — putting 6
+ * where the n is has to become automatic before "one substitution against
+ * ninety-nine additions" means anything to a learner who finds one
+ * substitution effortful.
+ *
+ * Named rather than counted, because a count of one is satisfied by the target
+ * sitting on either of the two points where it would be wrong.
+ */
+t('only the substitution point claims a speed target, which is where speed is the skill',
+  allKnowledgePoints(FI).filter(p => p.automaticityTarget !== undefined)
+    .filter(p => FI_SEQ.knowledgePoints.some(q => q.id === p.id))
+    .map(p => p.id).join(',') === 'a-sequence-is-a-function-on-positions',
+  FI_SEQ.knowledgePoints.map(p => `${p.id}:${p.automaticityTarget ?? 'none'}`).join(' '))
+t('and no point here claims a figure, because there are none to claim',
+  allKnowledgePoints(FI).every(p => p.visualRef === undefined))
+
+/**
+ * `sigma-notation`, the sixteenth promotion, and the first in this build that
+ * route demand did not choose.
+ *
+ * WHY THIS NODE is the part that should not have to be rediscovered, so the
+ * three grounds it was chosen on are asserted rather than described. Every
+ * journey had read zero unwritten steps on route since the fourteenth
+ * promotion, so the ranking the briefs used had expired, and what replaced it
+ * was: a finite sum IS a plain number, so every point gets a real `evaluate`
+ * task; its one `needs` pointed inside one ontology; and five mapped nodes
+ * rest on it, which was more than any other rulable candidate had. The
+ * readiness and edge halves are in tests/atlas.mjs, which builds the composed
+ * map. What is here is the material.
+ *
+ * WHAT IT HAD TO GET RIGHT, in the order a mistake would have been silent in:
+ *
+ *  - IT MUST NOT PRE-EMPT THE TWO NODES THAT STAYED. `arithmetic-sequences`
+ *    owns summing by pairing the ends and `geometric-sequences` owns the
+ *    closed form, and both are still on the map. A worked example that
+ *    totalled 5 + 7 + 9 + 11 by pairing would have taken the first one's only
+ *    real idea and left its node behind, and no structural check could see
+ *    that. So the expansion example sums k² − 1, whose differences are 7, 9,
+ *    11 — asserted below from the task's own numbers, because a later edit to
+ *    "simplify" that example to 2k + 1 would reintroduce exactly the shortcut.
+ *  - NO CREDIT EDGE, which is the `gcd-and-lcm` judgement reaching the
+ *    opposite verdict from the one `sequences` got three screens up. Asserted
+ *    per task, since the claim is about what the tasks do and not about taste.
+ *  - EVERY SUBGOAL SHIPPED WITH ITS QUESTION, including the five on the
+ *    linearity point, which is the longest worked example in the subject.
+ */
+group('sigma notation, the sixteenth promotion, chosen with no route asking')
+
+const FI_SIG = conceptById(FI, 'sigma-notation')
+const FI_SIG_POINTS = FI_SIG.knowledgePoints
+const FI_SIG_SUBGOALS = FI_SIG_POINTS.flatMap(p => p.workedExample.subgoals)
+const FI_SIG_TASKS = FI_SIG_POINTS.flatMap(p => tasksForPoint(p.id))
+
+t('it is a concept of this subject with material, not a sixth name in the list',
+  !!FI_SIG && isTeachable(FI, 'sigma-notation') && isPractisable(FI, 'sigma-notation'))
+t('three knowledge points numbered from 1, the shape every concept here has',
+  FI_SIG_POINTS.length === 3 && FI_SIG_POINTS.map(p => p.position).join(',') === '1,2,3',
+  `${FI_SIG_POINTS.length} points at ${FI_SIG_POINTS.map(p => p.position).join(',')}`)
+t('three tasks, one per point, so no chain is left unable to become evidence',
+  FI_SIG_TASKS.length === 3
+  && FI_SIG_POINTS.every(p => tasksForPoint(p.id).length === 1),
+  `${FI_SIG_TASKS.length} tasks: `
+  + FI_SIG_POINTS.map(p => `${p.id}:${tasksForPoint(p.id).length}`).join(' '))
+t('every one of them is an evaluate task, which is the only kind its objectives name',
+  FI_SIG_TASKS.every(x => x.kind === 'evaluate')
+  && FI_SIG.objectives.length > 0
+  && FI_SIG.objectives.every(o => o.taskKinds.length > 0
+    && o.taskKinds.every(k => FI_SIG_TASKS.some(x => x.kind === k))),
+  FI_SIG.objectives.map(o => `${o.id}:${o.taskKinds.join('+')}`).join(' '))
+
+/*
+ * THE PRE-EMPTION GUARD, from the task's own numbers rather than from a
+ * promise in a comment. The expansion task's four terms must NOT be in
+ * arithmetic progression, because an arithmetic one can be totalled by pairing
+ * the ends and that argument is the whole content of a node that stayed on the
+ * map. 8, 15, 24, 35 has differences 7, 9, 11.
+ *
+ * Derived from `given` and `at` rather than written out, so it keeps testing
+ * the task instead of agreeing with a copy of it.
+ */
+t('the expansion example is not an arithmetic progression, so it pre-empts no mapped node',
+  (() => {
+    const task = taskById('sigma-expand-1')
+    const k = Number(task.at.k)
+    const c = Number(task.at.c)
+    const terms = [0, 1, 2, 3].map(i => (k + i) ** 2 - c)
+    const gaps = terms.slice(1).map((v, i) => v - terms[i])
+    return terms.join(',') === '8,15,24,35'
+      && new Set(gaps).size === gaps.length
+      && terms.reduce((a, b) => a + b, 0) === Number(task.reference)
+  })(),
+  `terms from given/at: ${[0, 1, 2, 3]
+    .map(i => (Number(taskById('sigma-expand-1').at.k) + i) ** 2
+      - Number(taskById('sigma-expand-1').at.c)).join(',')}`)
+/*
+ * And the complement: no prompt, `given` or statement on this concept mentions
+ * a first term or a common difference or a common ratio. That is the test a
+ * reader can apply to the boundary, and it is the same shape the `sequences`
+ * header asks for one section earlier.
+ */
+t('and nothing here names a first term, a common difference or a common ratio',
+  !/first term|common difference|common ratio/i.test(
+    JSON.stringify({ points: FI_SIG_POINTS, tasks: FI_SIG_TASKS, obj: FI_SIG.objectives })),
+  'a named-family formula has leaked into the notation concept')
+
+/*
+ * THE CREDIT EDGE THAT IS NOT THERE, asserted per task so the reasoning is
+ * checkable and not just stated. `sequences` earns one because all three of
+ * its tasks substitute a position into a rule. Here only `sigma-expand-1`
+ * does: `sigma-constant-1`'s term ignores the index by design, and
+ * `sigma-linearity-1` is handed a total and never sees a term. One of three is
+ * not a majority, and the `gcd-and-lcm` precedent says a majority would not
+ * have been enough either.
+ */
+t('no encompasses edge, because only one of the three tasks produces a term at all',
+  !FI.edges.some(e => e.kind === 'encompasses' && e.from === 'sigma-notation')
+  && FI_SIG_TASKS.filter(x => x.variables.some(v => v.name === 'k')).length === 1,
+  FI_SIG_TASKS.map(x => `${x.id}:${x.variables.map(v => v.name).join('')}`).join(' '))
+t('while the prerequisite edge IS there, which is the relation that holds',
+  FI.edges.some(e => e.kind === 'prerequisite'
+    && e.from === 'sequences' && e.to === 'sigma-notation' && !!e.promotedBy)
+  && cycles(FI).length === 0 && teachingOrder(FI) !== null,
+  cycles(FI).map(l => l.join('→')).join('; ') || 'acyclic')
+
+t('all eleven subgoals ship the question written, not just the label',
+  FI_SIG_SUBGOALS.length === 11
+  && FI_SIG_SUBGOALS.every(s => typeof s.socratic === 'string'),
+  `${FI_SIG_SUBGOALS.filter(s => !s.socratic).length} unwritten of ${FI_SIG_SUBGOALS.length}`)
+t('and none of them contains its own answer by being an imperative with a mark on it',
+  FI_SIG_SUBGOALS.every(s => isInterrogative(s.socratic)),
+  FI_SIG_SUBGOALS.filter(s => !isInterrogative(s.socratic)).map(s => s.label).join('; '))
+t('the labels stay imperative, so the map still draws moves',
+  FI_SIG_SUBGOALS.every(s => !isInterrogative(s.label)),
+  FI_SIG_SUBGOALS.filter(s => isInterrogative(s.label)).map(s => s.label).join('; '))
+t('every subgoal says what its move establishes',
+  FI_SIG_SUBGOALS.every(s => typeof s.detail === 'string' && s.detail.length > 0))
+/*
+ * NO TIMING TARGET ON ANY OF THE THREE, which is a different answer from
+ * `sequences` and is argued rather than copied. All three points are
+ * judgements: which terms the limits name, that the count survives a term that
+ * ignores the index, and which rearrangements are licensed. The arithmetic in
+ * each is three additions or one product, so a target would measure that
+ * instead of the thing being learned — the case types.ts describes.
+ */
+t('and none of them claims a speed target or a figure, since neither is the skill here',
+  FI_SIG_POINTS.every(p => p.automaticityTarget === undefined && p.visualRef === undefined),
+  FI_SIG_POINTS.map(p => `${p.id}:${p.automaticityTarget ?? 'none'}`).join(' '))
+
+// ---------------------------------------------------------------------------
+
+/**
  * The three dimensions, the thirteenth promotion — and the second in a row to
  * widen this subject rather than found one.
  *
@@ -5196,6 +5789,15 @@ t('the subject still has no chain that cannot become evidence',
  * one answer, and it is the one that finishes a journey outright. The group
  * below asserts the state that made the choice forced, so the next run can
  * read it instead of deriving it.
+ *
+ * THE SECOND WAS NOT BLOCKED, and the next run found that out: it is an
+ * authored concept of `expressions-and-equations` now, the fourteenth
+ * promotion, and the clause above is the fourth appearance in this build of a
+ * refusal that was never structural. The choice recorded here still stands —
+ * this concept finished a journey and that one did not — but the REASON given
+ * for setting the other aside does not, and that distinction is the thing to
+ * carry: a readiness computation is a fact about the tree and a blocker is a
+ * claim about the engine, and only the first can be read off a list.
  *
  * WHAT THE PROMOTION HAD TO GET RIGHT, in the order the mistakes would have
  * been silent in:
@@ -5237,10 +5839,12 @@ t('every objective names a task kind, and every kind it names is one the build h
 /*
  * The readiness state that made this the only candidate is asserted in
  * tests/atlas.mjs and not here, because the claim is about the COMPOSED map —
- * "`gaussian-elimination` is the one unwritten route concept left, with
+ * it was "`gaussian-elimination` is the one unwritten route concept left, with
  * everything beneath it written" — and this suite builds subjects rather than
  * the atlas. It sits with the route table, which is the other half of the same
- * statement.
+ * statement. That table is empty now, row and all, because the one route
+ * concept left got written; the assertion there says so and names this
+ * concept's successor.
  */
 
 group('the thirteenth promotion is gradable with no worker')

@@ -841,6 +841,19 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
      *    STAYED, so each is the DECLARING end and still owns what it declared,
      *    and `composeAtlas` resolves both against the authored concept. A
      *    `links` entry for either would be a duplicate edge waiting to happen.
+     *
+     *    ONE OF THE TWO HAS SINCE BEEN AUTHORED, AND BOTH OF ITS EDGES MOVED.
+     *    `gaussian-elimination` is a concept of `expressions-and-equations`
+     *    now, so it is no longer a declaring end and the paragraph above is a
+     *    record rather than the state. The `needs` edge became an ordinary
+     *    prerequisite in that ontology — same subject, so no `links` entry —
+     *    and so did the `exercises`, as an `encompasses`. Worth reading
+     *    together with the sentence above about duplicates: a `links` entry
+     *    added here then would have been harmless and silent then, and would be
+     *    a duplicate edge NOW, because the far end moved into the same subject.
+     *    That is the hazard cartesian-plane found and the reason an edge has to
+     *    be looked up in the file its far end lives in rather than reasoned
+     *    about from this one.
      *  - It declared NO `confusedWith`, so nothing was deleted in silence.
      *    That is the stranding no suite catches: `expandEdges` turns a node's
      *    `confusedWith` into an `interferes_with`, interference constrains
@@ -2652,6 +2665,14 @@ const EUCLIDEAN_GEOMETRY: MapArea = {
      * count. The row this area had in tests/atlas.mjs's route table is deleted
      * rather than emptied, the way `trigonometry`'s was; `linear-algebra` is
      * the only row left and `gaussian-elimination` its only entry.
+     *
+     * THAT ROW IS GONE TOO AND THE TABLE IS EMPTY. `gaussian-elimination` was
+     * written into `expressions-and-equations` one promotion later, which took
+     * every journey in the build to zero unwritten steps. So the route table
+     * has stopped being a worklist, and the heuristic this area's comments were
+     * built around — find the next route concept whose prerequisites are all
+     * written — has nothing left to return. What the table measured ran out;
+     * it did not change.
      */
     /*
      * Three more, because this was the thinnest area on the map at seven nodes

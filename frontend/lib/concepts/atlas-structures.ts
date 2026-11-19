@@ -21,18 +21,12 @@ const LINEAR_ALGEBRA: MapArea = {
   id: 'linear-algebra',
   name: 'Linear algebra',
   covers:
-    'Vectors, matrices and linear maps, from solving systems through to the spectral theorem ' +
-    'and the singular value decomposition.',
+    'Vectors, matrices and linear maps, from vector spaces and dimension through to the ' +
+    'spectral theorem and the singular value decomposition. Row reduction is no longer here: ' +
+    'it is authored as `gaussian-elimination` in `expressions-and-equations`, since the engine ' +
+    'has no matrix type and every question the method can be asked is about a number the ' +
+    'elimination produces, which makes the material equations rather than grids.',
   nodes: [
-    {
-      id: 'gaussian-elimination',
-      match: /\b(gaussian elimination|row echelon)\b/i,
-      name: 'Gaussian elimination',
-      is: 'Row reduction as a systematic solve, with the reduced form telling you the solution set rather than a solution.',
-      needs: ['matrices-and-maps', 'systems-of-linear-equations'],
-      exercises: ['systems-of-linear-equations'],
-      terms: 'gaussian elimination row echelon pivot free variable rank',
-    },
     {
       id: 'vector-spaces',
       match: /\bvector space\b/i,
@@ -130,13 +124,73 @@ const LINEAR_ALGEBRA: MapArea = {
    * had never met a letter standing for a number.
    *
    * Edges pointing the other way — `eigenvalues` needs `determinant`,
-   * `gaussian-elimination` needs `matrices-and-maps` — are declared on the
-   * nodes that REMAIN, so they survive untouched and resolve across the file
-   * boundary in `composeAtlas`. Only the incoming ones are restated here.
+   * `rank-nullity` and `numerical-linear-algebra` need `gaussian-elimination`
+   * — are declared on the nodes that REMAIN, so they survive untouched and
+   * resolve across the file boundary in `composeAtlas`. Only the incoming ones
+   * are restated here.
    *
    * Two of the four reach into another authored subject rather than into the
    * map, which is exactly what `links` is for: an edge whose endpoints are
    * both outside the area declaring it.
+   *
+   * ── AND NOW A FIFTH, FROM THE ONE NODE THIS AREA HAS LOST SINCE ──────────
+   *
+   * `gaussian-elimination` LEFT THIS AREA WHEN IT WAS AUTHORED, AND HAD TO.
+   * It is a concept of `expressions-and-equations` now, in
+   * ontology-algebra.ts, so a node of the same id here would collide with it
+   * and `atlasProblems` reports that as an error rather than merging the two —
+   * the authored copy would be shadowed by a node with no knowledge points,
+   * and a written subject would silently read as unteachable.
+   *
+   * ELEVEN NODES BEFORE, TEN AFTER, against a stub floor of five. The area
+   * keeps five spare, so nothing here is frozen by the departure and the two
+   * nodes that rest on row reduction — `rank-nullity` and
+   * `numerical-linear-algebra` — kept their edges, since both declare them.
+   *
+   * WHAT IT STRANDED WAS ONE HALF OF ITS OWN `needs`. The node declared two:
+   * `systems-of-linear-equations` and `matrices-and-maps`. The first is
+   * authored in the SAME subject the concept went to, so it is an ordinary
+   * edge in that ontology's `EDGES` and is not here. The second is authored in
+   * `matrices-and-determinants`, a different subject — and an authored
+   * ontology's edges may only name concepts it contains, so neither ontology
+   * could declare it. That is the entry below, filed with the area that OWNED
+   * the departing node rather than with the subject holding the far end, which
+   * is the rule when neither end is local.
+   *
+   * IT GATES, and that is the point of restating it: a matrix has to mean
+   * something before a system is solved by reducing one. Dropping it instead
+   * would have left row reduction resting on the equations alone, which is the
+   * silent failure the paragraph above this one records for `function-concept`.
+   *
+   * AND IT STRANDED A SECOND EDGE OF A DIFFERENT KIND, WHICH `links` CANNOT
+   * CARRY AND DID NOT HAVE TO. The node also declared
+   * `exercises: ['systems-of-linear-equations']`, which `expandEdges` turns
+   * into an `encompasses` edge; `links` produces `prerequisite` edges only, so
+   * had the concept been filed in `matrices-and-determinants` — where
+   * ontology-matrices.ts had reserved it — that credit edge would have joined
+   * two concepts in different ontologies and been expressible nowhere at all.
+   * It would have gone, in silence, with every suite green. The concept went
+   * to the subject holding the far end instead, so it is an ordinary
+   * `encompasses` edge there. Worth knowing that this constraint CHOSE the
+   * filing: the usual question is which subject a concept belongs to, and here
+   * one of the two candidate answers could not hold all of its edges.
+   *
+   * NOTHING WAS HANDED BACK THIS TIME, which is the comparison to make with
+   * the deleted first entry below. `gaussian-elimination → determinant` is
+   * still here and still has to be: this area owns neither end, the promoted
+   * concept went to `expressions-and-equations` and `determinant` is in
+   * `matrices-and-determinants`, so the two ends are in two different
+   * ontologies and `links` remains the only home for it. A promotion hands an
+   * edge back only when the promoted concept lands in the SAME ontology as the
+   * far end, and that is a fact about where it was filed rather than about the
+   * edge.
+   *
+   * `confusedWith` on the departing node: NONE. Checked before deleting it,
+   * because `expandEdges` turns one into an `interferes_with` and interference
+   * constrains SELECTION rather than gating — so losing one leaves every suite
+   * green while freeing the scheduler to introduce the two most confusable
+   * concepts in a subject together. There was none to lose, and an absence has
+   * to be looked for to be known.
    */
   links: [
     /*
@@ -190,6 +244,30 @@ const LINEAR_ALGEBRA: MapArea = {
         'Matrix multiplication IS composition: AB means do B then A, and the row-by-column rule ' +
         'is derived from that rather than stated alongside it. A learner who has not composed ' +
         'two functions has no reason the rule is not arbitrary.',
+    },
+    {
+      /*
+       * The edge the fourteenth promotion stranded, restated.
+       *
+       * Direction is the thing to keep: the matrix reading GATES row
+       * reduction, not the other way round. It reads backwards at a glance
+       * because row reduction is the older topic in most tellings, and the map
+       * takes the other view — the node's own `needs` named
+       * `matrices-and-maps` and this entry carries that claim unchanged.
+       *
+       * It is also the half of the promotion that had to be written down
+       * rather than noticed: the other stranded edge went to the receiving
+       * ontology, where it is adjacent to the concept and impossible to miss,
+       * and this one lives in the area the concept left, three files away from
+       * anything that mentions it.
+       */
+      from: 'matrices-and-maps',
+      to: 'gaussian-elimination',
+      because:
+        'Reducing a system is reducing a matrix of its coefficients, so "this grid is a map and ' +
+        'its columns are where the basis goes" has to mean something before the rows of one are ' +
+        'worth combining. Without it, row reduction rests on the equations alone and the ' +
+        'reduced form is bookkeeping rather than a statement about a map.',
     },
     {
       from: 'gaussian-elimination',

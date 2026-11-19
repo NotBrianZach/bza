@@ -21,7 +21,17 @@
  * ontology-algebra.ts's header gives: "solve for x" asks for a solution SET,
  * and no `NamedForm` and no `evaluate` target expresses one. That is a decision
  * about what counts as evidence and it belongs to a person, not to an authoring
- * pass. So the readiness test that chose the eleven promotions before this one
+ * pass.
+ *
+ * ALL THREE OF THOSE ARE AUTHORED NOW, in `expressions-and-equations`, and the
+ * sentence above is the one to distrust rather than the choice it justified:
+ * `evaluate` cannot take a set as an ANSWER and rules the number that DECIDES
+ * one perfectly, so none of the three ever needed a new task kind. Left as
+ * written because it records what this promotion was chosen on. See
+ * ontology-algebra.ts's header for the pattern and how to recognise it next
+ * time.
+ *
+ * So the readiness test that chose the eleven promotions before this one
  * — all prerequisites written, and preferably something waiting above — again
  * had exactly one answer. This node's only prerequisite, `circle-measure`, is
  * an authored concept of `plane-geometry`.

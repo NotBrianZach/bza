@@ -139,6 +139,17 @@
  * outright — the ninth of ten journeys to have no unwritten step — and leaves
  * the tenth owing exactly one.
  *
+ * THE TENTH OWES NOTHING NOW, AND THE PARENTHESIS ABOVE IS WHY THIS NOTE IS
+ * HERE. `gaussian-elimination` was not blocked on a missing task kind; it is
+ * an authored concept of `expressions-and-equations`, written one promotion
+ * after this one, and the refusal quoted in that parenthesis had already been
+ * withdrawn twice in the file it cites. The sentence to distrust is "asks for a
+ * solution SET and no `NamedForm` expresses one" — true, and never the reason a
+ * concept cannot be authored, because the number that DECIDES the set is a
+ * value. Left as written because it records the information this promotion was
+ * chosen on, and the choice was right either way: this concept finished a
+ * journey outright and that one did not.
+ *
  * ── WHY HERE, WHICH WAS DECIDED IN WRITING BEFORE IT WAS WRITTEN ──────────
  *
  * ontology-solids.ts argued it while declining it: the node "is analytic —
@@ -194,9 +205,15 @@
  * coordinates less one equation leaves two freedoms, so one equation is a
  * SURFACE, and a line is one freedom and therefore needs two equations or a
  * parameter. The expensive half is the parametric form r = r₀ + t·d, and it
- * wants a task kind that can rule "for which t", which is the same gap that
- * blocks `gaussian-elimination`. `parametric-curves` is the node that owns it
- * and it is still mapped.
+ * wants a task kind that can rule "for which t". `parametric-curves` is the
+ * node that owns it and it is still mapped.
+ *
+ * This used to call that "the same gap that blocks `gaussian-elimination`", and
+ * the comparison was wrong twice over: that concept is authored now, and the
+ * gap was never the same one. A parametric form asks for the t at which a
+ * condition holds, which is a solve whose answer is a set with no finite list
+ * of deciding numbers behind it — the shape `linear-inequalities` is blocked by.
+ * Row reduction's answers were values all along.
  *
  * THE SPHERE IS NOT HERE EITHER, and that is the new `covers` boundary rather
  * than an omission: x² + y² + z² = r² is one equation in three unknowns and so

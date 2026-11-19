@@ -12,6 +12,20 @@
  * directly — integration by partial fractions needs
  * `partial-fractions-linear`, which has real problems behind it, so that one
  * mapped node genuinely opens when the syllabus is mastered.
+ *
+ * `sequences-and-series` is now the second such place, and it meets it from
+ * the other direction: this file's own first node was PROMOTED out of it into
+ * `functions-and-inverses`, so the three nodes that rested on `sequences` rest
+ * on real material rather than on a skeleton. The note where it sat records
+ * what that cost and what it did not. The distinction worth keeping is that
+ * the `integral-calculus` case is a mapped node pointing at a syllabus
+ * somebody else wrote, and this one is a node of this file having BECOME one.
+ *
+ * `sigma-notation` then followed it out of the same area and into the same
+ * subject, one step above it, and `riemann-sums` in `integral-calculus` is one
+ * of the five nodes left resting on it. So the two directions have met: a node
+ * of this file now points at a syllabus that is partly made of nodes of this
+ * file.
  */
 
 import type { MapArea } from './atlas'
@@ -21,18 +35,98 @@ const SEQUENCES_AND_SERIES: MapArea = {
   name: 'Sequences and series',
   covers:
     'Lists indexed by the naturals, their sums, and when an infinite sum means anything. ' +
-    'Convergence is stated and tested here; it is proved in real analysis.',
+    'Two things have left for the functions-and-inverses syllabus, where they have problems ' +
+    'written for them, and this area points at both through `needs` rather than restating ' +
+    'them: what a sequence IS — a function whose input is a position, given by a formula or by ' +
+    'a recurrence — and the notation for adding one up, which terms its limits name and the two ' +
+    'rearrangements that make such a sum manipulable. What stayed is everything that needs an ' +
+    'argument rather than a reading: the two named families and the closed forms for their ' +
+    'sums, proof by induction, and when an infinite sum totals anything. Convergence is stated ' +
+    'and tested here; it is proved in real analysis.',
   nodes: [
-    {
-      id: 'sequences',
-      // Anchored, so it takes "Sequence" and leaves "Arithmetic sequence" and
-      // "Cauchy sequence" to the nodes that are actually about those.
-      match: /^sequence\b/i,
-      name: 'Sequences',
-      is: 'A function on the naturals, given by a formula or by a recurrence, and those two are not interchangeable.',
-      needs: ['function-concept'],
-      terms: 'sequence term recurrence relation nth term',
-    },
+    /**
+     * `sequences` LEFT THIS AREA WHEN IT WAS AUTHORED, AND HAD TO.
+     *
+     * It is a concept of `functions-and-inverses` now, in ontology-functions.ts.
+     * The rule that forces the deletion is structural rather than editorial:
+     * `atlasProblems` REJECTS a map node whose id collides with an authored
+     * concept, because `composeAtlas` concatenates the skeleton and the
+     * syllabi into one `MATHEMATICS` and two concepts with one id is a graph
+     * whose edges have no determinate endpoints. So promoting a concept is a
+     * MOVE and never a fill-in, and a run that wrote the material without
+     * deleting the node here would fail loudly, which is the good case.
+     *
+     * THIS IS THE FIRST DEPARTURE FROM THIS FILE, so the whole rule is written
+     * out once rather than cross-referenced. atlas-foundations.ts has the long
+     * version at NUMBER_AND_ARITHMETIC; nothing below contradicts it.
+     *
+     * WHERE ITS ONE STRANDED EDGE WENT. An edge is owned by the node that
+     * DECLARES it, so deleting this node deleted exactly the edges written ON
+     * it, and it declared one: `needs: ['function-concept']`. That went to
+     * `FUNCTIONS_AND_INVERSES.edges`, which it was allowed to do for the single
+     * reason that decides every such case — both endpoints are concepts of
+     * that one ontology, and an ontology may only name concepts it CONTAINS.
+     * This area's `links` therefore stayed EMPTY, which is the cheap shape
+     * atlas-foundations.ts describes: it is a property of where a departing
+     * node's prerequisites live, and not of this area being tidy. The first
+     * promotion out of here whose node names a prerequisite in another file
+     * will cost `links` an entry however well authored that endpoint is.
+     *
+     * IT STRANDED NO `confusedWith`, AND THAT IS WORTH ITS OWN LINE because it
+     * is the stranding no suite catches. `expandEdges` turns a node's
+     * `confusedWith` into an `interferes_with` edge, so deleting a node that
+     * carries one DELETES that edge — and interference constrains SELECTION
+     * rather than gating, so every test stays green while the scheduler is
+     * quietly freed to introduce the two most confusable concepts in the
+     * subject together. This node declared none, and neither did
+     * `sigma-notation` when it followed. The one in this area is on
+     * `geometric-sequences`, pointing at `arithmetic-sequences`, and both ends
+     * are still here — so whoever promotes either of those two next has the
+     * case neither of these two did: that edge must be re-declared in the
+     * receiving ontology's `EDGES`, with its `rationale`, or it is gone without
+     * a sound.
+     *
+     * NOR DID IT HAND AN EDGE BACK. The opposite failure is a `links` entry
+     * that existed because the area owned NEITHER end, whose two ends both
+     * finish inside one ontology after a promotion: it has stopped being a
+     * cross-file edge and must be DELETED, or `composeAtlas` emits the same
+     * prerequisite twice, and a duplicate gates exactly like a single one so
+     * nothing reports it. This area's `links` was empty, so there was nothing
+     * to hand back.
+     *
+     * THE THREE EDGES POINTING INTO IT WERE LEFT ALONE, as the rule says.
+     * `arithmetic-sequences`, `geometric-sequences` and `sigma-notation` each
+     * named it in their own `needs` and all three stayed, so all three still
+     * owned their edges and `composeAtlas` resolved them across the file
+     * boundary. What changed without a line being edited in any of them is
+     * that those edges now GATE: they used to point at a node with no
+     * material, which `gatingPrerequisitesOf` looks straight through. All
+     * three are one demonstration further from a cold account than they were,
+     * which is authoring tightening the gate rather than widening it, and is
+     * checked by name in tests/atlas.mjs because it is invisible from their
+     * own definitions. (One of the three, `sigma-notation`, has since been
+     * authored itself — see the note further down this list. The edge did not
+     * move when that happened: it is `sequences → sigma-notation` either way,
+     * and all that changed is that both ends now live in the same ontology, so
+     * the declaration moved there with the node.)
+     *
+     * THE ROOT SET OF THIS AREA GREW, from one to three, which is the case
+     * atlas-foundations.ts warns is the reason to check root membership by NAME
+     * and never by size. This node had no prerequisite inside the area and was
+     * its only root; it was also the ONLY in-area prerequisite of all three
+     * nodes above it, so all three took its place at once. One root out, three
+     * in — a count would have gone 1 → 3 here and could just as easily have
+     * held steady while every member changed. It did exactly that one
+     * promotion later, which is recorded where it happened.
+     *
+     * HEADROOM. Eleven nodes became ten, against the floor of five that
+     * tests/atlas.mjs enforces as "no area is a stub", so this area had five
+     * more promotions of room and nothing in it was held back. The floor is why
+     * the departure order matters at all, and atlas-foundations.ts is explicit
+     * that a drained area's answer is to MERGE into a neighbour rather than to
+     * lower the threshold. One of those five has since been spent and nothing
+     * here is close to needing that decision.
+     */
     {
       id: 'arithmetic-sequences',
       match: /\barithmetic (sequence|progression|series)\b/i,
@@ -56,14 +150,67 @@ const SEQUENCES_AND_SERIES: MapArea = {
       }],
       terms: 'geometric sequence common ratio geometric series sum to infinity',
     },
-    {
-      id: 'sigma-notation',
-      match: /\bsummation\b/i,
-      name: 'Sigma notation',
-      is: 'Notation for a sum with an index, and the linearity rules that make it manipulable rather than only readable.',
-      needs: ['sequences'],
-      terms: 'sigma notation summation index linearity',
-    },
+    /**
+     * `sigma-notation` LEFT THIS AREA TOO, ONE PROMOTION AFTER `sequences`,
+     * AND FOR THE SAME STRUCTURAL REASON — `atlasProblems` rejects a node whose
+     * id collides with an authored concept, so this is a MOVE and not a
+     * fill-in. The long version of that rule is in the note above and in
+     * atlas-foundations.ts at NUMBER_AND_ARITHMETIC; what follows is only what
+     * is DIFFERENT about the second departure, because a reader who finds the
+     * two notes saying the same thing twice will stop reading either.
+     *
+     * IT IS A CONCEPT OF `functions-and-inverses` NOW, directly above
+     * `sequences`, so that branch of ontology-functions.ts is a chain of its
+     * own: `function-concept` → `sequences` → `sigma-notation`.
+     *
+     * ITS ONE STRANDED EDGE WENT TO THE ONTOLOGY AGAIN, AND THAT WAS LUCK
+     * RATHER THAN TIDINESS — which is the sentence the note above asks the
+     * next departure to check. It declared `needs: ['sequences']` and nothing
+     * else, and `sequences` had become a concept of that same file one
+     * promotion earlier. Had this node been promoted FIRST, that identical
+     * `needs` would have pointed at a map node, no ontology could have named
+     * it, and the edge would have had to be a `links` entry here. So the
+     * cheapness came from the ORDER the two were authored in, and `links` is
+     * still empty for a reason that will not survive the first promotion out of
+     * here whose prerequisites live in another file. `mathematical-induction`
+     * is the example sitting in this list: it needs `geometric-proof`, which is
+     * geometry's, so promoting it would cost an entry whatever else happened.
+     *
+     * NO `confusedWith` AGAIN, so no `interferes_with` was silently deleted —
+     * the stranding no suite catches. This area's one interference is still
+     * `geometric-sequences` → `arithmetic-sequences` and both of those nodes
+     * are still here, so the warning in the note above is still addressed to
+     * whoever promotes one of them.
+     *
+     * NOTHING WAS HANDED BACK, because `links` was empty and an empty list has
+     * nothing to collapse.
+     *
+     * THE FIVE EDGES POINTING INTO IT SURVIVE UNTOUCHED, declared by the nodes
+     * that stayed: `mathematical-induction` and `infinite-series` here,
+     * `riemann-sums` in integral-calculus, and `expectation` and
+     * `descriptive-statistics` in atlas-uncertainty.ts. That is five dependents
+     * across three map files, and not one of those files was edited — an edge
+     * is owned by the node that DECLARES it, and all five declare theirs. What
+     * changed without a line being touched in any of them is that those edges
+     * now gate, where `gatingPrerequisitesOf` used to look straight through a
+     * node with no material.
+     *
+     * THE ROOT SET TURNED OVER WITHOUT CHANGING SIZE, which is the case
+     * atlas-foundations.ts says to check root membership by NAME for, and the
+     * previous note said could "just as easily" have happened. It happened
+     * here. The roots were `arithmetic-sequences`, `geometric-sequences` and
+     * `sigma-notation`; they are now `arithmetic-sequences`,
+     * `geometric-sequences` and `mathematical-induction`, which took the
+     * departing node's place because `sigma-notation` was its only in-area
+     * prerequisite. `infinite-series` did NOT become a root, because it also
+     * needs `sequence-convergence` and that is still here. Three in, three out,
+     * one member different — a `length === 3` check would have passed.
+     *
+     * HEADROOM. Ten nodes became nine, against the floor of five, so four more
+     * promotions of room. The floor is why departure order matters at all and
+     * nothing here is near needing the merge decision atlas-foundations.ts
+     * describes.
+     */
     {
       id: 'mathematical-induction',
       match: /\bmathematical induction\b|^induction \(/i,

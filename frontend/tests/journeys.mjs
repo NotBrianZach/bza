@@ -218,6 +218,38 @@ test('no route crosses unwritten euclidean geometry any more', () => {
   }
 })
 
+test('no route crosses an unwritten concept at all, which is now true of every area', () => {
+  /*
+   * THE STRONGEST FORM OF THE TEST ABOVE, AND IT ONLY BECAME TRUE WITH THE
+   * FOURTEENTH PROMOTION.
+   *
+   * `gaussian-elimination` was the last unwritten concept on any route in the
+   * build — the longest journey crossed it and nothing else did — so writing it
+   * took every journey to zero unwritten steps. That is a milestone worth an
+   * assertion rather than a figure in a printout, and it is the journey-level
+   * half of the now-empty route table in tests/atlas.mjs. Both halves are
+   * needed: an empty table there with a route still owing something here would
+   * be a table somebody cleared without authoring.
+   *
+   * It is the right shape to leave standing rather than a victory lap. A new
+   * journey authored to an unwritten destination fails this immediately and by
+   * name, which is exactly when somebody should be told — and that is a better
+   * signal than a count, which would read as 1 and leave the reader to find
+   * which.
+   *
+   * Walked over the prerequisite closure rather than over `r.steps`, for the
+   * reason both tests above record: `steps` holds teachable concepts only, so
+   * filtering it for unwritten ones is empty whatever the map says.
+   */
+  assert(J.JOURNEYS.length > 0, 'there should be journeys, or this check is vacuous')
+  for (const j of J.JOURNEYS) {
+    const unwritten = [j.destination, ...R.allPrerequisitesOf(MATHEMATICS, j.destination)]
+      .filter(id => !R.isTeachable(MATHEMATICS, id))
+    eq(unwritten.join(', '), '',
+      `${j.id} still crosses ${unwritten.length} unwritten: ${unwritten.join(', ')}`)
+  }
+})
+
 // ═══════════════════════════════════════════════════════════════════════════
 // The resolver, over a synthetic graph
 // ═══════════════════════════════════════════════════════════════════════════

@@ -345,13 +345,50 @@ const CONCEPTS: Concept[] = [
         workedExample: {
           problem: 'Divide x² + 3x + 5 by x + 1.',
           subgoals: [
-            { label: 'First quotient term?', detail: 'Leading over leading: x²/x = x.' },
-            { label: 'Subtract x(x + 1)', detail: 'x² + 3x + 5 − (x² + x) = 2x + 5.' },
+            {
+              label: 'First quotient term?',
+              detail: 'Leading over leading: x²/x = x.',
+              socratic:
+                'You may multiply x + 1 by anything you like, and the one thing in ' +
+                'x² + 3x + 5 that x + 1 cannot reach as it stands is the x² — nothing in the ' +
+                'divisor goes past degree 1. So the x² has to be manufactured. What must ' +
+                'x + 1 be multiplied by for the product to carry an x², and given that the 1 ' +
+                'in x + 1 raises nobody\'s degree, which single term of the divisor is doing ' +
+                'all the work in that decision?',
+            },
+            {
+              label: 'Subtract x(x + 1)',
+              detail: 'x² + 3x + 5 − (x² + x) = 2x + 5.',
+              socratic:
+                'x(x + 1) comes to x² + x, and your dividend opens with an x² of its own — ' +
+                'those are the only degree-2 terms anywhere in the problem. What is left of ' +
+                'x² + 3x + 5 once x² + x is taken away from it, and why was it worth spending ' +
+                'a step on the x² when the 3x and the 5 were never the difficulty?',
+            },
             {
               label: 'Repeat, then know when to stop',
               detail: '2x/x = 2; 2x + 5 − (2x + 2) = 3. Degree 0 is below degree 1, so stop.',
+              socratic:
+                'What you now hold is the same kind of problem as the one you began with — ' +
+                'same divisor, lower degree — so the two moves you have just made apply to it ' +
+                'unchanged. Make them. You end on a bare number, and asking x to divide a bare ' +
+                'number would call for a negative power of x, which no multiple of x + 1 can ' +
+                'supply. What is the comparison between what is left and x + 1 that tells you ' +
+                'this is the end, and would that same comparison have let you stop one step ' +
+                'earlier at 2x + 5?',
             },
-            { label: 'Write the result as an identity', detail: 'x² + 3x + 5 = (x + 1)(x + 2) + 3.' },
+            {
+              label: 'Write the result as an identity',
+              detail: 'x² + 3x + 5 = (x + 1)(x + 2) + 3.',
+              socratic:
+                '"x + 2, remainder 3" is a report of what you did rather than a statement about ' +
+                'x² + 3x + 5, and a remainder detached from the thing it was left over from says ' +
+                'nothing on its own. Every subtraction along the way was reversible, so the ' +
+                'three pieces go back together. What is the single line that puts x + 1, what you ' +
+                'divided into it, and what was left over into one equation — and what could you ' +
+                'do to that line, using only the expanding you already have, to settle whether ' +
+                'it holds for every x rather than merely recording your steps?',
+            },
           ],
           answer: 'x + 2, remainder 3 — that is, x + 2 + 3/(x + 1)',
         },

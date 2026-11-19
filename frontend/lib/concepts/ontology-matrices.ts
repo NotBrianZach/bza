@@ -37,13 +37,46 @@
  * ── Where it stops ────────────────────────────────────────────────────────
  *
  * Four concepts: what a matrix IS, multiplication, the determinant, and the
- * inverse. `gaussian-elimination` is deliberately left mapped even though it
- * sits inside this range — row reduction's answer is a matrix in a normal
- * form, and checking "is this in reduced row echelon form" is a `form` check
- * over a structure the engine has no type for. `eigenvalues` is left mapped
- * because its honest task is "solve the characteristic polynomial", which is
- * `factoring-quadratics` wearing a hat, and faking it as arithmetic would
- * teach neither.
+ * inverse. `eigenvalues` is left mapped because its honest task is "solve the
+ * characteristic polynomial", which is `factoring-quadratics` wearing a hat,
+ * and faking it as arithmetic would teach neither.
+ *
+ * ── THE FIFTH CONCEPT THIS FILE RESERVED, AND WHY IT WENT ELSEWHERE ───────
+ *
+ * This heading used to refuse `gaussian-elimination` in one sentence, and the
+ * refusal is reproduced rather than deleted because both halves of it are
+ * still true and neither was ever a block:
+ *
+ *   `gaussian-elimination` is deliberately left mapped even though it sits
+ *   inside this range — row reduction's answer is a matrix in a normal form,
+ *   and checking "is this in reduced row echelon form" is a `form` check over
+ *   a structure the engine has no type for.
+ *
+ * There is no matrix type and no `NamedForm` for echelon shape. What does not
+ * follow is "therefore it cannot be authored" — only "therefore it cannot be
+ * authored as a matrix task", and the heading two above this one had already
+ * settled what to do about that: ask for ONE ENTRY, with the grid in the
+ * prompt. The refusal argued from the answer's shape while the rest of the
+ * file argues that the answer's shape is never what gets asked for here.
+ *
+ * It is a concept of `expressions-and-equations` now rather than a fifth
+ * concept here, and the deciding reason is not taste. Row reduction on three
+ * equations IS three equations: with no grid to display, every worked example
+ * is written as rows of letters, every task asks for a number the elimination
+ * produces, and filing it beside the matrices would have shipped a matrix
+ * concept whose material never shows a matrix. The structural half is sharper
+ * still — the map node declared `exercises: ['systems-of-linear-equations']`,
+ * an `encompasses` edge, and an area's `links` carries `prerequisite` edges
+ * only. Had it come here, that credit edge would have joined two concepts in
+ * two different ontologies, which neither may declare and no `links` entry can
+ * express, so it would have been dropped in silence.
+ *
+ * What this subject keeps is the edge: `gaussian-elimination → determinant`,
+ * in `LINEAR_ALGEBRA.links`, because row reduction is how a determinant is
+ * computed past 3×3. So `determinant` now waits on row reduction in earnest
+ * rather than through an unwritten node — its gating set went from three
+ * concepts to two, and the two are `matrix-multiplication` and
+ * `gaussian-elimination`.
  */
 
 import type { Concept, ConceptEdge, ConceptOntology, Subject } from './types'
@@ -54,8 +87,11 @@ const subject: Subject = {
   covers:
     'A matrix as a linear map, multiplication as composition, the determinant, and when a map ' +
     'can be undone. Entries are the unit of work throughout — the engine has no matrix type, so ' +
-    'every question asks for one number. Nothing about row reduction, eigenvalues or any ' +
-    'decomposition: each needs an answer that is itself a matrix.',
+    'every question asks for one number. Nothing about eigenvalues or any decomposition: each ' +
+    'needs an answer that is itself a matrix, or a polynomial solved. Row reduction is written, ' +
+    'but not here — with no grid to display it is three equations, so it is authored as ' +
+    '`gaussian-elimination` in `expressions-and-equations` and reaches this subject as the ' +
+    'prerequisite of the determinant rather than as a concept of it.',
   medium: 'theorem',
   facetName: 'Concept',
   facetDoes: 'Which concept the statement has to be about.',
@@ -360,10 +396,19 @@ const CONCEPTS: Concept[] = [
             {
               label: 'Innermost first',
               detail: 'BC = (5·1 + 0·2, 3·1 + 1·2) = (5, 5).',
+              socratic:
+                'A(BC) brackets B with C and leaves A outside, and C is a single column rather ' +
+                'than a second square matrix. Which of the two available products does that ' +
+                'bracketing put first, what shape does it return, and what are its components?',
             },
             {
               label: 'Then apply A',
               detail: 'First component: 2·5 + (−1)·5 = 10 − 5 = 5.',
+              socratic:
+                'BC came out as the column (5, 5), so what is left is A against a single ' +
+                'column — the same row-against-column move as before, with A now supplying the ' +
+                'row. The problem asks for the first component only: which row of A is therefore ' +
+                'the only one in play, and what does that component come to?',
             },
             {
               label: 'And the other grouping',
@@ -371,6 +416,14 @@ const CONCEPTS: Concept[] = [
                 'AB has first row (7, −1), so (AB)C gives 7·1 + (−1)·2 = 5. The same, as it must ' +
                 'be — and note the arithmetic was genuinely different, which is why associativity ' +
                 'is a theorem rather than an observation.',
+              socratic:
+                'Regroup it as (AB)C instead. You already found 7 in position (1,1) of AB, and ' +
+                'its first row is (7, −1), so this route multiplies two matrices first and meets ' +
+                'C only at the end — genuinely different arithmetic from the route you just took. ' +
+                'What does the first component come to this time, and given that one disagreeing ' +
+                'entry was enough to separate AB from BA, what would it take to settle that the ' +
+                'two groupings agree every time rather than merely here — one matching component, ' +
+                'or something that is not arithmetic at all?',
             },
             {
               label: 'Why it is worth knowing',
@@ -378,6 +431,13 @@ const CONCEPTS: Concept[] = [
                 'It is what lets you choose the cheap order. A(BC) here multiplied a matrix by a ' +
                 'vector twice; (AB)C multiplied two matrices and then hit a vector. For large ' +
                 'matrices that choice is the difference between feasible and not.',
+              socratic:
+                'Both routes landed on the same number, so the bracketing is yours to choose — ' +
+                'and the two were not equally cheap. Count what each one actually did: A(BC) hit ' +
+                'a column with a matrix twice, while (AB)C built a full 2×2 product first and hit ' +
+                'a column once. At this size the difference is nothing. What happens to it when A ' +
+                'and B are 1000×1000 and C is still one column, and what does that make ' +
+                'associativity worth having?',
             },
           ],
           answer: '5',
@@ -647,11 +707,18 @@ const CONCEPTS: Concept[] = [
  *
  * The cross-subject edges this subject rests on — `function-concept` under
  * `matrices-and-maps`, `function-composition` under `matrix-multiplication`,
- * and the mapped `vectors-and-spans` and `gaussian-elimination` — are NOT
- * here. They cannot be: an edge naming a concept this ontology does not
- * contain fails `ontologyProblems` on the subject viewed alone. They live in
- * the linear-algebra area's `links`, which is the field for an edge whose
- * endpoints are both outside the area declaring it.
+ * `vectors-and-spans` under `matrices-and-maps`, and `gaussian-elimination`
+ * under `determinant` — are NOT here. They cannot be: an edge naming a concept
+ * this ontology does not contain fails `ontologyProblems` on the subject
+ * viewed alone. They live in the linear-algebra area's `links`, which is the
+ * field for an edge whose endpoints are both outside the area declaring it.
+ *
+ * Three of those four now name an AUTHORED concept rather than a map node, and
+ * `gaussian-elimination` is the one that changed most recently: the edge is
+ * the same edge and the entry was not touched, but the far end acquired
+ * material, so a prerequisite that gated nothing now gates. `links` never
+ * cared whether an end was a node or a concept, which is exactly why that kind
+ * of change is invisible from the entry.
  */
 const EDGES: ConceptEdge[] = [
   {

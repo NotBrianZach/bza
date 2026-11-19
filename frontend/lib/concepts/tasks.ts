@@ -43,7 +43,7 @@
  */
 
 import { generatedTaskById } from './generators'
-import type { ConceptOntology, PracticeTask } from './types'
+import type { ConceptOntology, PracticeTask, VariableDeclaration } from './types'
 
 /** Every task declares its symbols. Most of them are one real variable. */
 const REAL_X = [{ name: 'x', assumptions: { real: true } }]
@@ -164,8 +164,15 @@ const REAL_ABCD = [
  * The three system-elimination tasks reuse it for the six coefficients of
  * ax + by = c with dx + ey = f, which is what two linear equations in two
  * unknowns uses and all of what they use. It is no longer "the one task" and
- * six is still the widest any task in the build gets — a third equation would
- * be `gaussian-elimination`, which is still a map node. Same rule as
+ * six is still the widest any task in the build gets — and the sentence that
+ * used to end here, "a third equation would be `gaussian-elimination`, which is
+ * still a map node", turned out to predict the wrong thing. That concept is
+ * authored, two of its tasks reuse this very set, and six did not have to grow
+ * for it: carrying a 3×3 forward pass on the letters would take twelve
+ * coefficients, so the tasks carry ONE STEP of the method in general instead,
+ * and a step of it is never wider than a 2×2 elimination. The widest
+ * declaration is a fact about how general a single `given` is, not about how
+ * big the problems get. Same rule as
  * `REAL_ABC`: what a symbol MEANS is the prompt's job and what it may be
  * assumed to BE is this one's, so three sides and six coefficients share a
  * declaration rather than duplicating it under separate names.
@@ -252,6 +259,95 @@ const REAL_ABC_X = [
   { name: 'b', assumptions: { real: true } },
   { name: 'c', assumptions: { real: true } },
   { name: 'x', assumptions: { real: true } },
+]
+
+/**
+ * The sequence tasks, and `n` carries assumptions the other subjects' symbols
+ * do not.
+ *
+ * `n` is declared `integer` and `positive` because that is what a position IS
+ * — a sequence is a function on 1, 2, 3, … and nothing else. The declaration
+ * is inert for these three tasks, which substitute 6, 4 and 100 and evaluate
+ * to rationals either way; it is written because types.ts's note on
+ * `VariableDeclaration` is explicit that assumptions are declared rather than
+ * inferred, so `Symbol('n')` and `Symbol('n', integer=True, positive=True)`
+ * are different symbols to the engine. A later task on this concept that
+ * simplified rather than evaluated would get the wrong answer from the
+ * unqualified one, and would get it silently.
+ *
+ * The coefficients stay `real` for the reason `REAL_ABC_X` gives: they are the
+ * parameters of an arbitrary rule and whole numbers are not what is being
+ * taught. Three separate lists rather than one wide one, because
+ * `every symbol in the given has a stated input` means an unused symbol in a
+ * shared list fails the suite.
+ */
+const SEQUENCE_INDEX = { name: 'n', assumptions: { integer: true, positive: true } }
+
+const SEQUENCE_INDEX_C = [
+  SEQUENCE_INDEX,
+  { name: 'c', assumptions: { real: true } },
+]
+
+const SEQUENCE_INDEX_DC = [
+  SEQUENCE_INDEX,
+  { name: 'd', assumptions: { real: true } },
+  { name: 'c', assumptions: { real: true } },
+]
+
+/**
+ * The recurrence walk: a multiplier, an offset, and the first term.
+ *
+ * No `n`. The position is not a symbol here — it is the DEPTH of the nesting
+ * in the given, which is the whole difference between the two descriptions
+ * this concept compares. A recurrence task with an `n` in it would be a
+ * closed form wearing a recurrence's prompt.
+ */
+const SEQUENCE_RECURRENCE = [
+  { name: 'r', assumptions: { real: true } },
+  { name: 'b', assumptions: { real: true } },
+  { name: 'a', assumptions: { real: true } },
+]
+
+/**
+ * The sigma tasks. A separate index symbol from `SEQUENCE_INDEX` on purpose.
+ *
+ * `k` rather than `n` because in a sum the two are different things and the
+ * notation says so: `k` is the index that runs, `n` is normally the limit it
+ * runs to. Reusing one symbol for both would make the one distinction the
+ * first knowledge point is about — the value against the count — invisible in
+ * the task's own `given`.
+ *
+ * `k` carries `integer` and `positive` for the reason the sequence note gives,
+ * and `lo`/`hi` carry them too: a summation limit is a position in the same
+ * sense an index is. They are inert for these tasks, which substitute whole
+ * numbers and evaluate to integers either way, and declared because
+ * assumptions are declared rather than inferred.
+ */
+const SIGMA_INDEX_C: VariableDeclaration[] = [
+  { name: 'k', assumptions: { integer: true, positive: true } },
+  { name: 'c', assumptions: { real: true } },
+]
+
+const SIGMA_LIMITS_C: VariableDeclaration[] = [
+  { name: 'lo', assumptions: { integer: true, positive: true } },
+  { name: 'hi', assumptions: { integer: true, positive: true } },
+  { name: 'c', assumptions: { real: true } },
+]
+
+/**
+ * Linearity's four parts: the factor pulled out, the total it multiplies, the
+ * constant term, and how many of it there are.
+ *
+ * `s` is a TOTAL and not a term, which is the point of the task — the learner
+ * is never told a single one of the ten numbers it came from, and there is no
+ * symbol here for one, because a task that had one would be asking for a
+ * closed form the concept deliberately does not teach.
+ */
+const SIGMA_LINEARITY: VariableDeclaration[] = [
+  { name: 'p', assumptions: { real: true } },
+  { name: 's', assumptions: { real: true } },
+  { name: 'q', assumptions: { real: true } },
+  { name: 'm', assumptions: { integer: true, positive: true } },
 ]
 
 /**
@@ -2927,6 +3023,208 @@ export const TASKS: PracticeTask[] = [
     at: { a: '2', b: '3', c: '7', d: '2' },
   },
 
+  // ── expressions-and-equations: gaussian-elimination ────────────────────
+  //
+  // SEVEN MORE, AND THE SHAPE IS THE PREVIOUS CONCEPT'S SHAPE WITH ONE MORE
+  // LETTER IN PLAY — WHICH IS ALSO WHY THE CREDIT EDGE BETWEEN THEM IS REAL.
+  //
+  // `transform_to_form` is the kind row reduction asks for in every other
+  // telling: "put this in row echelon form". It is unavailable twice over —
+  // there is no `NamedForm` for echelon shape, and `expr.ts` cannot hold a grid
+  // to check the shape OF. So the demand is not half-expressed with a form that
+  // nearly fits, which is the trap types.ts names for `maxDenominatorDegree`;
+  // it is left out, and what is asked for instead is the numbers the pass
+  // produces. These seven are all of them.
+  //
+  // A TRIPLE COSTS THREE TASKS, which is the two-equation concept's "a point
+  // costs two" one letter up, and the three are deliberately not all on one
+  // knowledge point. `gaussian-forward-pass-for-z-1` is the z, because the
+  // forward pass is what produces it; `gaussian-back-substitute-for-y-1` and
+  // `-for-x-1` are the other two, because the upward pass is what produces
+  // those. The method splits the answer and the material splits with it, rather
+  // than stacking three coordinates on the first point and leaving the second
+  // with a drill.
+  //
+  // THE FORWARD-PASS `given` IS THE SAME EXPRESSION THE TWO-EQUATION
+  // ELIMINATION USES, and that is the whole argument for
+  // `gaussian-elimination=>systems-of-linear-equations` being a claim about
+  // these tasks rather than a plausible sentence. `(a*f - c*d)/(a*e - b*d)` is
+  // `solve-system-eliminate-for-y-1`'s expression verbatim, evaluated at the
+  // REDUCED coefficients instead of the original ones — because the last step
+  // of a 3×3 forward pass is a 2×2 elimination on rows the earlier steps made.
+  // A learner who reached that number performed the earlier concept on the way.
+  //
+  // WHAT THE `given`S ARE NOT is a 3×3 Cramer expression. Carrying the whole
+  // forward pass on the letters would be a ratio of two 3×3 determinants in
+  // twelve of them, past the widest declaration in this file and past the point
+  // where it is still the learner's own move written down once — which is the
+  // property that makes expressing a solve as an `evaluate` honest. So each
+  // `given` is ONE STEP of the method in general, at the inputs that step
+  // actually receives: a reduced coefficient, the final elimination, a
+  // back-substitution, the leftover. The prompts carry the equations and the
+  // comments carry the derivation of every input.
+  //
+  // `gaussian-reduced-coefficient-1` IS THE ONE THAT IS NOT A SOLVE and it
+  // earns its place the way the discriminant tasks do: the single arithmetic
+  // step most often got wrong in the whole method is subtracting a positive y
+  // term from a negative one, and a wrong coefficient there is undetectable
+  // from the final answer alone — it just produces a different number.
+  //
+  // THE LAST THREE ARE THE EMPTIED ROW, and the first two of them share
+  // `c - a - b` and differ in one input, exactly as `inconsistent-system-
+  // leftover-1` and `dependent-system-leftover-1` share `a*b - c` and differ in
+  // one. 11 − 6 − 2 = 3 means 0 = 3 and no triple satisfies all three
+  // equations; 8 − 6 − 2 = 0 means 0 = 0 and the third equation was the sum of
+  // the first two. Neither asks HOW MANY solutions there are, because that is a
+  // classification and no verifiable kind returns one.
+  // `gaussian-free-variable-pick-a-z-1` is the third, and the only one that
+  // evidences "a whole line of them" rather than "not none": it fixes z and
+  // asks for the x beside it, and the answer is 17/2 — not an integer, for the
+  // reason `dependent-system-pick-a-y-1` answers 1/2 and
+  // `solve-linear-non-integer-1` answers 7/4. A whole number can be reached by
+  // trying values, and a line is not a list of lattice points.
+  //
+  // All seven are exact rational arithmetic on whole numbers, so this subject
+  // still rules with no worker configured. That contract matters more here than
+  // anywhere: this is the top of the subject sitting directly above the
+  // arithmetic on the entry route, and it is the concept most likely to look as
+  // though it needs a service.
+  {
+    id: 'gaussian-reduced-coefficient-1',
+    knowledgePointId: 'clear-downwards-so-each-row-holds-one-letter-fewer',
+    kind: 'evaluate',
+    prompt:
+      'x + y + z = 6, x + 2y − z = 2 and 2x − y + z = 3. Before anything can be solved the third '
+      + 'equation has to lose its x, and its x term is 2x — so subtract TWICE the first equation '
+      + 'from it. Submit the coefficient of y in the row that comes out. It is the step in the '
+      + 'whole method most often got wrong, because the y term being subtracted is positive and '
+      + 'the one it is subtracted from is negative.',
+    given: 'a - b*c',
+    variables: REAL_ABC,
+    // a is the third equation's y coefficient, b the multiplier the first
+    // equation is taken through, c the first equation's y coefficient:
+    // −1 − 2·1 = −3, so the reduced row is −3y − z = −9. The z coefficient
+    // comes out the same way, 1 − 2·1 = −1, and the right side as 3 − 2·6 = −9.
+    reference: '-3',
+    at: { a: '-1', b: '2', c: '1' },
+  },
+  {
+    id: 'gaussian-forward-pass-for-z-1',
+    knowledgePointId: 'clear-downwards-so-each-row-holds-one-letter-fewer',
+    kind: 'evaluate',
+    prompt:
+      'Finish the forward pass on the same system and submit the value of z. Subtracting the '
+      + 'first equation from the second and twice the first from the third leaves two equations '
+      + 'in y and z alone; take y out of one of those using the other, and the row left holds z '
+      + 'by itself. The other two coordinates are asked for separately, because a solution here '
+      + 'is a triple and each coordinate is its own answer.',
+    given: '(a*f - c*d)/(a*e - b*d)',
+    variables: REAL_ABCDEF,
+    // The reduced pair is ay + bz = c with dy + ez = f, so eliminating y leaves
+    // (ae − bd)z = af − cd — `solve-system-eliminate-for-y-1`'s expression,
+    // because this step IS that concept's elimination on rows the pass made.
+    // The pair is y − 2z = −4 and −3y − z = −9, so a=1, b=−2, c=−4, d=−3,
+    // e=−1, f=−9: af − cd = −9 − 12 = −21 and ae − bd = −1 − 6 = −7, so z = 3.
+    // Against the originals at (1, 2, 3): 1 + 2 + 3 = 6, 1 + 4 − 3 = 2 and
+    // 2 − 2 + 3 = 3.
+    reference: '3',
+    at: { a: '1', b: '-2', c: '-4', d: '-3', e: '-1', f: '-9' },
+  },
+  {
+    id: 'gaussian-back-substitute-for-y-1',
+    knowledgePointId: 'back-substitution-runs-back-up-the-staircase',
+    kind: 'evaluate',
+    prompt:
+      'The forward pass on x + y + z = 6, x + 2y − z = 2, 2x − y + z = 3 leaves the staircase '
+      + 'x + y + z = 6, y − 2z = −4, −7z = −21. With z = 3 off the bottom row, move up one row '
+      + 'and submit the value of y. That row was built to hold exactly one letter you do not '
+      + 'already know by the time you arrive at it.',
+    given: '(c - b*d)/a',
+    variables: REAL_ABCD,
+    // The row is ay + bz = c and d is the z already known, so y = (c − bz)/a.
+    // At a=1, b=−2, c=−4, d=3: (−4 + 6)/1 = 2. Same expression as
+    // `dependent-system-pick-a-y-1` and the same move — one linear equation in
+    // one unknown once the other letter is a number — which is the point rather
+    // than a coincidence: back-substitution is the first concept of this
+    // subject's solve, repeated up the staircase.
+    reference: '2',
+    at: { a: '1', b: '-2', c: '-4', d: '3' },
+  },
+  {
+    id: 'gaussian-back-substitute-for-x-1',
+    knowledgePointId: 'back-substitution-runs-back-up-the-staircase',
+    kind: 'evaluate',
+    prompt:
+      'The top row of the same staircase, x + y + z = 6, with y = 2 and z = 3 both known now. '
+      + 'Submit the value of x. Then check the triple in 2x − y + z = 3 rather than in the top '
+      + 'row: the top row is the equation x came out of, so it cannot fail, while the third '
+      + 'original equation is one the pass only consumed on the way down and can.',
+    given: '(d - b*e - c*f)/a',
+    variables: REAL_ABCDEF,
+    // The row is ax + by + cz = d with e and f the two letters already known,
+    // so x = (d − be − cf)/a. At a=1, b=1, c=1, d=6, e=2, f=3: 6 − 2 − 3 = 1.
+    // The check the prompt asks for: 2(1) − 2 + 3 = 3, which is the third
+    // equation's right side, so the whole forward pass is confirmed in one line.
+    reference: '1',
+    at: { a: '1', b: '1', c: '1', d: '6', e: '2', f: '3' },
+  },
+  {
+    id: 'gaussian-emptied-row-contradiction-1',
+    knowledgePointId: 'a-row-that-empties-reports-instead-of-stalling',
+    kind: 'evaluate',
+    prompt:
+      'x + y + z = 6, x + 2y − z = 2 and 2x + 3y = 11. Clear downwards: the second row less the '
+      + 'first and the third row less twice the first come out with the SAME left side, y − 2z, '
+      + 'so taking y out of one using the other takes the z with it and the bottom row has no '
+      + 'letter left in it at all. Submit the number it leaves on the right. Anything other than '
+      + '0 means no triple satisfies all three equations, because 0 cannot equal it.',
+    given: 'c - a - b',
+    variables: REAL_ABC,
+    // a, b and c are the three right-hand sides. The second reduced row's right
+    // side is b − a = −4 and the third's is c − 2a = −1, so the leftover is
+    // (c − 2a) − (b − a) = c − a − b: 11 − 6 − 2 = 3, and the pass ends at
+    // 0 = 3. Read forwards, a + b is what the first two equations force
+    // 2x + 3y to be — 8 — and the third asks for 11.
+    reference: '3',
+    at: { a: '6', b: '2', c: '11' },
+  },
+  {
+    id: 'gaussian-emptied-row-dependent-1',
+    knowledgePointId: 'a-row-that-empties-reports-instead-of-stalling',
+    kind: 'evaluate',
+    prompt:
+      'The same clear on x + y + z = 6, x + 2y − z = 2 and 2x + 3y = 8 — one number changed. '
+      + 'Submit what the emptied row leaves on the right. A leftover of 0 says the third '
+      + 'equation was the sum of the first two and added no condition at all.',
+    given: 'c - a - b',
+    variables: REAL_ABC,
+    // Same expression and same first two inputs as the task above, one input
+    // different: 8 − 6 − 2 = 0, so the pass ends at 0 = 0, true for every
+    // triple. The pair is the two degenerate outcomes side by side, and it is
+    // as close as `evaluate` gets to a solution set.
+    reference: '0',
+    at: { a: '6', b: '2', c: '8' },
+  },
+  {
+    id: 'gaussian-free-variable-pick-a-z-1',
+    knowledgePointId: 'a-row-that-empties-reports-instead-of-stalling',
+    kind: 'evaluate',
+    prompt:
+      'A leftover of 0 leaves two rows holding a letter and three letters in play, so one of the '
+      + 'three may be chosen and the other two follow. Take z = 1/2 in x + y + z = 6 with '
+      + 'x + 2y − z = 2, and submit the x beside it. It is not a whole number, which is the '
+      + 'point: the solutions are every triple on a line, not a list of the tidy ones.',
+    given: '2*a - b - 3*c',
+    variables: REAL_ABC,
+    // a and b are the first two equations' right sides and c the chosen z. The
+    // reduced second row is y − 2z = b − a, so y = (b − a) + 2z, and the first
+    // row gives x = a − y − z = 2a − b − 3z. At a=6, b=2, c=1/2:
+    // 12 − 2 − 3/2 = 17/2, with y = −4 + 1 = −3. Checking (17/2, −3, 1/2) in
+    // all three: 17/2 − 3 + 1/2 = 6, 17/2 − 6 − 1/2 = 2, and 17 − 9 = 8.
+    reference: '17/2',
+    at: { a: '6', b: '2', c: '1/2' },
+  },
+
   // ── plane-geometry ──────────────────────────────────────────────────────
   //
   // Six `evaluate` tasks across three knowledge points, all settled by exact
@@ -4647,7 +4945,7 @@ export const TASKS: PracticeTask[] = [
 
   // ── functions-and-inverses ──────────────────────────────────────────────
   //
-  // Twelve tasks, one per knowledge point, all `evaluate` and all settled by
+  // Fifteen tasks, one per knowledge point, all `evaluate` and all settled by
   // exact rational arithmetic — so this subject, like arithmetic, is gradable
   // with no worker configured.
   //
@@ -4828,6 +5126,150 @@ export const TASKS: PracticeTask[] = [
     reference: '0',
   },
 
+  // The three on `sequences`, which came into this subject from the
+  // `sequences-and-series` map area. A THIRD constraint shapes them, alongside
+  // the two above:
+  //
+  //  3. THERE IS NO WAY TO WRITE A RECURRENCE. `parseExpression` has numbers,
+  //     symbols and five operators; `aₙ = 3aₙ₋₁ − 1` names a function of its
+  //     own index and the language has no such thing, for exactly the reason
+  //     it has no `f`. So a recurrence task is written as the walk SPELLED
+  //     OUT — 3(3(3·2 − 1) − 1) − 1 — which is the same move the composition
+  //     tasks above make, and for the same reason it is not a dodge: nesting
+  //     one application inside the next IS what following a recurrence does,
+  //     and the nesting is the step a learner loses count of.
+  //
+  // The honest gap: nothing here tests reaching a term the learner was not
+  // told the position of. "Which term equals 302" inverts the formula, and the
+  // answer is an index rather than a term — askable, and it belongs to
+  // `arithmetic-sequences` with the closed form it needs, which is still
+  // mapped.
+  {
+    id: 'sequence-term-1',
+    knowledgePointId: 'a-sequence-is-a-function-on-positions',
+    kind: 'evaluate',
+    prompt:
+      'A sequence has nth term n² + 1, so it begins 2, 5, 10, 17, … . Find the 6th term. The ' +
+      'position is the input: "the 6th term" means n = 6, and the answer is not 6.',
+    given: 'n^2 + c',
+    variables: SEQUENCE_INDEX_C,
+    at: { n: '6', c: '1' },
+    // 36 + 1. The 5th term, 26, is never needed — which is the knowledge point.
+    reference: '37',
+  },
+  {
+    id: 'recurrence-walk-1',
+    knowledgePointId: 'a-recurrence-needs-its-first-term',
+    kind: 'evaluate',
+    prompt:
+      'a₁ = 2, and each term after that is 3 times the one before it, minus 1. Find a₄. Written ' +
+      'out as one expression the walk is 3(3(3·2 − 1) − 1) − 1 — three applications of the rule ' +
+      'to reach the fourth term, because a₁ was given rather than computed.',
+    // Three nestings, not four: the innermost `r*a + b` IS a₂, so the depth of
+    // the expression is the number of applications and the off-by-one the
+    // knowledge point is about is visible in the shape of the given.
+    given: 'r*(r*(r*a + b) + b) + b',
+    variables: SEQUENCE_RECURRENCE,
+    at: { r: '3', b: '-1', a: '2' },
+    // 3·2 − 1 = 5, 3·5 − 1 = 14, 3·14 − 1 = 41.
+    reference: '41',
+  },
+  {
+    id: 'formula-beats-the-walk-1',
+    knowledgePointId: 'a-formula-and-a-recurrence-are-not-interchangeable',
+    kind: 'evaluate',
+    prompt:
+      'The sequence 5, 8, 11, 14, … is given both by the formula 3n + 2 and by a₁ = 5 with each ' +
+      'term 3 more than the one before. Find the 100th term. The formula takes one ' +
+      'substitution; the recurrence would take ninety-nine additions, and the two routes agree.',
+    given: 'd*n + c',
+    variables: SEQUENCE_INDEX_DC,
+    at: { n: '100', d: '3', c: '2' },
+    // 3·100 + 2. The same expression gives 5 at n = 1 and 14 at n = 4, which
+    // is what the worked example checks before it trusts the formula at 100.
+    reference: '302',
+  },
+
+  // The three on `sigma-notation`, which came out of the same map area one
+  // step above `sequences`. A FOURTH constraint, and it is the recurrence
+  // constraint again in a different costume:
+  //
+  //  4. THERE IS NO WAY TO WRITE A SIGMA. `parseExpression` has numbers,
+  //     symbols and five operators, and Σ binds an index over a range, which
+  //     is not an operator on two expressions. So an expansion task is the sum
+  //     SPELLED OUT, exactly as a recurrence task is the walk spelled out, and
+  //     for the same reason it is not a dodge: writing the four terms down IS
+  //     what reading the notation means.
+  //
+  // What that costs, stated rather than hidden: spelling the sum out puts the
+  // number of terms in front of the learner, so `sigma-expand-1` cannot test
+  // the inclusive count — the thing its own knowledge point is about. The
+  // count is tested by `sigma-constant-1` instead, where it is the factor in
+  // the answer and the prompt does NOT give it: a learner who reads 9 − 4 as
+  // the length submits 35 and is marked wrong on exactly the slip. The two
+  // tasks together cover the point that neither covers alone, which is why
+  // the second one looks like arithmetic and is not.
+  //
+  // The honest gap: nothing here rules a REARRANGEMENT. Linearity's content is
+  // that Σ(3aₖ + 5) and 3Σaₖ + Σ5 are the same sum, and `transform_to_form`
+  // is the kind that would ask for that — but no `NamedForm` describes "with
+  // the constants outside", and inventing one would need a checker in
+  // forms.ts that could see a sigma, which nothing can. So the rearrangement
+  // is performed in the worked example and the task rules the number it
+  // leaves, the same split the solve-for-x tasks use.
+  {
+    id: 'sigma-expand-1',
+    knowledgePointId: 'the-limits-name-which-terms',
+    kind: 'evaluate',
+    prompt:
+      'Total the sum of k² − 1 for k running from 3 to 6. Both limits are included, so written ' +
+      'out the sum is (3² − 1) + (4² − 1) + (5² − 1) + (6² − 1). The subtraction applies to the ' +
+      'square, not to k.',
+    // The four summands are the four values of k, offset from the lower limit,
+    // so the LENGTH of the expression is the number of terms — the same
+    // property the recurrence task gets from the depth of its nesting.
+    given: '(k^2 - c) + ((k + 1)^2 - c) + ((k + 2)^2 - c) + ((k + 3)^2 - c)',
+    variables: SIGMA_INDEX_C,
+    at: { k: '3', c: '1' },
+    // 8 + 15 + 24 + 35. The differences are 7, 9, 11 — deliberately not
+    // constant, so there is no pairing shortcut here and nothing of
+    // `arithmetic-sequences` is pre-empted.
+    reference: '82',
+  },
+  {
+    id: 'sigma-constant-1',
+    knowledgePointId: 'a-constant-term-still-counts-the-terms',
+    kind: 'evaluate',
+    prompt:
+      'Total the sum of the constant 7 for k running from 4 to 9. Nothing is substituted — the ' +
+      'term never mentions k — but the index still runs over a definite list of values, and the ' +
+      '7 is added once for each of them. Evaluate c·(hi − lo + 1) at lo = 4, hi = 9, c = 7.',
+    // The method's output expression, with the limits as symbols rather than
+    // the count as a number: the + 1 is visible and the 6 is not, so reading
+    // the length off the limits is the work and 35 is a reachable wrong answer.
+    given: 'c*(hi - lo + 1)',
+    variables: SIGMA_LIMITS_C,
+    at: { lo: '4', hi: '9', c: '7' },
+    // 7 · 6. Five copies would be 35, which is the slip the point is about.
+    reference: '42',
+  },
+  {
+    id: 'sigma-linearity-1',
+    knowledgePointId: 'linearity-moves-a-factor-out-and-splits-a-sum',
+    kind: 'evaluate',
+    prompt:
+      'The ten numbers a₁ … a₁₀ total 12, and you are told nothing else about them. Total the ' +
+      'sum of 3aₖ + 5 for k running from 1 to 10. Splitting across the plus and taking the 3 ' +
+      'outside leaves 3 × (the total of the aₖ) + 5 × (how many there are) — evaluate p·s + q·m ' +
+      'at p = 3, s = 12, q = 5, m = 10.',
+    given: 'p*s + q*m',
+    variables: SIGMA_LINEARITY,
+    at: { p: '3', s: '12', q: '5', m: '10' },
+    // 36 + 50. No individual aₖ appears anywhere in this task, which is the
+    // claim: the total of the ten was the only fact about them that was used.
+    reference: '86',
+  },
+
   // ── matrices-and-determinants ───────────────────────────────────────────
   //
   // EVERY TASK ASKS FOR ONE ENTRY, because the engine has no matrix type.
@@ -4842,8 +5284,15 @@ export const TASKS: PracticeTask[] = [
   //
   // The honest gap: nothing here tests laying a product out. A learner could
   // get every entry right and still not produce the grid. That is the
-  // verifier's limit, not the curriculum's, and it is why `gaussian-elimination`
-  // is left mapped — its answer IS a matrix in a normal form.
+  // verifier's limit, not the curriculum's.
+  //
+  // This comment used to end "and it is why `gaussian-elimination` is left
+  // mapped — its answer IS a matrix in a normal form". Both clauses are still
+  // true and the inference was not: the answer being a matrix is why that
+  // concept could not be asked for AS a matrix, and the tasks above are this
+  // file's own demonstration that nothing here ever is. It is authored in
+  // `expressions-and-equations`, where with no grid to display it is three
+  // equations and every task asks for a number the elimination produces.
   //
   // One matrix pair runs through the whole subject — A = [[2,-1],[3,4]] and
   // B = [[5,0],[3,1]] — so a learner meets the same numbers in every concept
