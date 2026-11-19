@@ -409,14 +409,36 @@ const CONCEPTS: Concept[] = [
               detail:
                 'Numerator degree 2, denominator degree 1. The quotient grows without bound ' +
                 'as x grows; A/(x + 1) tends to 0.',
+              socratic:
+                'A stands for one fixed number, so A/(x + 1) is that number spread over a ' +
+                'divisor that only grows — put x = 1000 into it, then put x = 1000 into ' +
+                '(x² + 3x + 5)/(x + 1). There is also a way to see the same thing without ' +
+                'substituting anything, by reading the highest power on the top against the ' +
+                'highest power on the bottom. What does each of the two expressions do as x ' +
+                'runs away, and which comparison of the two degrees is the one that told you ' +
+                'so in advance?',
             },
             {
               label: 'What the division buys',
               detail: 'Dividing first gives x + 2 + 3/(x + 1): a polynomial part plus a proper fraction.',
+              socratic:
+                'You have already divided these very two polynomials and found x + 2 with 3 ' +
+                'left over — as an identity, x² + 3x + 5 = (x + 1)(x + 2) + 3. Divide that ' +
+                'identity through by x + 1 using only the cancelling you already do, and take ' +
+                'what comes out as two pieces rather than one. Which piece supplies the growth ' +
+                'a lone A/(x + 1) could never produce, and in the piece that is still a ' +
+                'fraction, which way round do the top and bottom degrees come out now?',
             },
             {
               label: 'The rule',
               detail: 'Divide until the numerator degree is strictly below the denominator degree.',
+              socratic:
+                'It is tempting to settle on "divide when the numerator degree is the bigger ' +
+                'one", but try (x + 3)/(x + 1), where the two degrees are equal — put ' +
+                'x = 1000 into that and ask whether it is heading for 0 the way every ' +
+                'A/(x + 1) must. So what test on the two degrees does a fraction have to pass ' +
+                'before a sum of A/(…) terms can be attempted at all, and is the moment you ' +
+                'stop dividing a new rule or the one you already used to end the long division?',
             },
           ],
           answer: 'Because the fraction is improper. Dividing first gives x + 2 + 3/(x + 1).',

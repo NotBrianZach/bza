@@ -200,6 +200,57 @@
  * place to try, and the question to answer BEFORE writing it is what in it can
  * be asked as a value at all.
  *
+ * ── THE ELEVENTH PROMOTION WAS CHOSEN BY AN EDGE KIND, NOT BY A ROUTE ─────
+ *
+ * `distance-and-midpoint` is the first concept written here with no journey
+ * behind it. Every promotion above was argued from a route — "the journey it is
+ * on had N unwritten steps left and the other had M" — and that argument has
+ * run out: all ten journeys read zero unwritten, the route table in
+ * tests/atlas.mjs is empty, and the test it gave way to is not a weaker version
+ * of the same thing. Recomputing readiness from the tree left twenty-one map
+ * nodes with every prerequisite authored and no area anywhere near the
+ * five-node floor, so nothing was decided by availability.
+ *
+ * WHAT DECIDED IT WAS AN EDGE THAT COULD BE EXPRESSED IN EXACTLY ONE PLACE.
+ * The node declared `exercises: ['pythagoras']`, which `expandEdges` turns into
+ * an `encompasses`, and deleting the node deletes it with no suite going red —
+ * `encompasses` gates nothing, so its loss shows up only as a learner
+ * re-drilling what they just demonstrated. `pythagoras`'s own promotion note in
+ * this file predicted exactly this: it called the edge "half-live" and said
+ * "the remaining half is the other endpoint's promotion". Keeping it meant
+ * filing the concept in the subject holding the far end, because an area's
+ * `links` carries `prerequisite` edges ONLY and an `encompasses` across two
+ * files has no home at all. So the half-live edge is now live, and this subject
+ * has a coordinate concept in it.
+ *
+ * THE FILING IS THE PART TO ARGUE WITH, and the objection is this file's own:
+ * `subject.covers` describes a syllabus of figures taken "as far as it goes
+ * without a drawing", and `vectors-and-independence` already owns
+ * `cartesian-plane`, the dot product and three-dimensional coordinates. On
+ * subject matter the vectors win. They lose on the edge, and the edge is not a
+ * detail — the whole argument for `encompasses` existing as a kind is in
+ * types.ts, which calls it the thing that "makes credit computable" and names
+ * re-drilling the most recently demonstrated prerequisite "the dominant
+ * inefficiency in a domain that is mostly prerequisite structure". A filing
+ * that reads better and silently deletes that is the worse trade.
+ *
+ * It is also not a new precedent. ontology-algebra.ts took
+ * `gaussian-elimination` away from the matrices subject that had reserved it
+ * for exactly this reason, running the other way: the credit edge to
+ * `systems-of-linear-equations` "could exist nowhere but inside one ontology".
+ * Two promotions decided by `links` carrying one kind is enough to call it a
+ * rule — when a promoted node's `exercises` or `confusedWith` points at an
+ * authored concept, the subject holding that concept is the only candidate, and
+ * the subject-matter argument is a tie-break between whatever is left.
+ *
+ * WHAT IS NOT HERE, so that the boundary is a boundary and not a beachhead.
+ * Slope, the three forms of a line, the circle as an equation and the conics
+ * are still nodes of `euclidean-geometry`, and none of them has a credit edge
+ * into this subject — `lines-in-the-plane` and `loci-and-regions` both simply
+ * NEED this concept, which is an edge declared at their end and therefore
+ * untouched. So nothing about this promotion pulls the next one here, and
+ * `covers` says so rather than leaving it to be inferred.
+ *
  * ── TWO BETTER-PLACED CANDIDATES WERE BLOCKED, AND BY A TEST, NOT BY TASTE ─
  *
  * `real-number-line` and `ratio-and-rate` are both on the same route with
@@ -1250,6 +1301,28 @@
  * So: the three proof points and the three circle points together take it from
  * twenty-one to TWENTY-SEVEN, still with exactly one target in the file.
  *
+ * AND IT DRIFTED AGAIN, TWICE OVER, which settles the reading the paragraph
+ * above only guessed at. The tenth promotion wrote three untimed points and did
+ * not come back here either, so twenty-seven should have read THIRTY the moment
+ * `circle-measure` shipped; the eleventh makes it THIRTY-THREE, still with
+ * exactly one target. Two repairs of the same sentence for the same reason is
+ * no longer an oversight, it is what a hand-maintained number in a comment does
+ * when no assertion reads it — and the honest conclusion is the one the
+ * paragraph above reached and then did not act on. Treat this figure as a note,
+ * not an invariant. The invariant is in tests/concepts-logic.mjs, which counts
+ * the points and the targets and goes red.
+ *
+ * The three coordinate points are untimed for two of the reasons already on
+ * record and sharpen one of them. The first and the third are the
+ * "decision in front of trivial arithmetic" case: two subtractions and a root
+ * in one, a doubling and a subtraction in the other, with the content being
+ * which triangle to complete and which of two numbers already in view is the
+ * answer. The third is the sharpest instance of it in the file, because the
+ * WRONG number arrives first — a learner who is fast gets the displacement, so
+ * a speed target would reward the error by construction. The second is the
+ * finish-early case, which no concept above gave: its two errors are stopping
+ * after one coordinate and rounding a half, and both are what haste produces.
+ *
  * The proof points are untimed for one reason shared by all three, and it is a
  * reason none of the concepts above could give: the point of a proof is which
  * fact licenses which step, so rewarding speed rewards reaching for the
@@ -1367,7 +1440,20 @@ const subject: Subject = {
     'are still mapped only", which was this subject naming the material it excludes, and the ' +
     'exclusion is why the twelfth promotion went to `solid-measure` rather than here. The id is ' +
     'the boundary — a prism is not a figure in the plane, and the one move that subject is about ' +
-    'is the move out of it.',
+    'is the move out of it. Then ONE concept in coordinates, which is a boundary this subject ' +
+    'crossed rather than a sentence it always held: distance between two points as Pythagoras ' +
+    'with the legs read off the axes and the subtraction order erased by the squaring, the ' +
+    'midpoint as a per-axis average that costs two numbers and a carried half, and the two ' +
+    'halves it cuts shown to add to the whole — which is what puts it ON the segment, equal ' +
+    'distances alone putting it anywhere on the perpendicular bisector; then the relation run ' +
+    'backwards to recover an endpoint, where the error worth naming is handing back the ' +
+    'displacement to the midpoint instead of the coordinate asked for. Everything else analytic ' +
+    'is absent and stays absent — slope, the equations of a line, the circle as an equation, ' +
+    'the conics — and this concept is not the start of a coordinate syllabus. It is here ' +
+    'because an area\'s `links` carries `prerequisite` edges only, so the credit edge saying ' +
+    'that practising the distance formula practises Pythagoras could live in no file but the ' +
+    'one holding both ends. The vectors subject was the obvious home and would have cost that ' +
+    'edge.',
   medium: 'theorem',
   facetName: 'Concept',
   facetDoes: 'Which concept the statement has to be about.',
@@ -4575,12 +4661,428 @@ const CONCEPTS: Concept[] = [
       },
     ],
   },
+  {
+    id: 'distance-and-midpoint',
+    name: 'Distance and midpoint',
+    subjectId: subject.id,
+    scope: {
+      id: 'distance-and-midpoint',
+      label: 'Distance and midpoint',
+      hint: 'distance formula midpoint coordinate',
+      /*
+       * Carried verbatim from the map node, like every pattern above it and for
+       * the same reason: widening one while writing the material makes two
+       * changes at once, and the recognition figure in tests/atlas.mjs would
+       * move with no way to say which edit moved it.
+       */
+      match: /\b(distance formula|euclidean distance|midpoint)\b/i,
+    },
+    fidelity: 'checked',
+    /*
+     * THESE OBJECTIVES NAME `evaluate` AND NOTHING ELSE, which is a departure
+     * from every concept above them in this file and is deliberate.
+     *
+     * `pythagoras` names `justify` on all three of its objectives and
+     * `transform_to_form` on one; the other nine concepts here name `justify`
+     * somewhere too. That is defensible on the letter of types.ts — a justify
+     * task WOULD evidence those objectives — and no justify task exists
+     * anywhere in the build, so it is a promise with nothing behind it, which
+     * is the failure the "never empty" rule exists to prevent one step up.
+     * ontology-algebra.ts changed the habit for the same reason and it is
+     * followed here.
+     *
+     * The cost is that each objective had to be PHRASED so that a value really
+     * evidences it, which is the part worth copying rather than the rule. The
+     * first does not ask why the formula needs no absolute value; it asks for
+     * the difference between the two orderings, which is a number and is zero.
+     * The second does not ask whether the midpoint lies on the segment; it asks
+     * for the length of one of the two halves, which is half the whole. The
+     * third does not ask what a displacement is; it asks for a coordinate in a
+     * problem where the displacement is also on offer.
+     */
+    objectives: [
+      {
+        id: 'build-the-right-triangle-the-two-points-already-make',
+        statement:
+          'Produce the distance between two points from their coordinates alone, by taking the '
+          + 'two coordinate differences as the legs of a right triangle and the segment as its '
+          + 'hypotenuse; and show that swapping the two points leaves the answer unchanged, '
+          + 'which is why the formula carries no absolute value.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'average-each-axis-and-measure-the-half-it-makes',
+        statement:
+          'Produce a midpoint as TWO numbers rather than one, averaging each coordinate '
+          + 'separately and carrying a half rather than rounding it; and check the answer by '
+          + 'measuring one of the two halves it cuts the segment into against the whole.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'tell-a-coordinate-from-the-step-that-reaches-it',
+        statement:
+          'Recover an unknown endpoint from one endpoint and the midpoint by solving the '
+          + 'midpoint condition on each axis in turn; and give the coordinate that was asked '
+          + 'for rather than the displacement that reaches it, which the same problem also '
+          + 'offers and which the method produces one step early.',
+        taskKinds: ['evaluate'],
+      },
+    ],
+    knowledgePoints: [
+      {
+        id: 'the-legs-are-the-coordinate-differences',
+        conceptId: 'distance-and-midpoint',
+        statement:
+          'The distance between two points is not a new formula; it is Pythagoras with the two '
+          + 'legs read off the coordinates. Complete the right triangle whose other two sides '
+          + 'run along the axes: the horizontal one spans the difference of the '
+          + 'x-coordinates, the vertical one the difference of the y-coordinates, and the '
+          + 'segment itself is the hypotenuse — so d² = (x₂ − x₁)² + (y₂ − y₁)². The right '
+          + 'angle is there because the axes are perpendicular, not because the figure was '
+          + 'drawn that way. And the squares are what make the subtraction order irrelevant, '
+          + 'since (x₁ − x₂)² is the same number as (x₂ − x₁)²: that is why the formula is '
+          + 'written with no absolute value signs in it, and why there is no "first" point to '
+          + 'get wrong.',
+        position: 1,
+        /*
+         * No `automaticityTarget`, for the reason the Pythagoras points give and
+         * which applies here with one extra turn of the screw. The arithmetic is
+         * two subtractions, two squarings, an addition and a root, all of it
+         * already timed where it belongs — `two-sums-every-angle-chase-uses`
+         * times the subtraction and nothing here is faster than that. What the
+         * point is about is completing the triangle and noticing that the signs
+         * cannot matter, and a learner who is quick about the second half is
+         * usually one who never looked at the first.
+         */
+        workedExample: {
+          problem:
+            'Find the distance from A(−2, 1) to B(3, 13). Then compute it again with the points '
+            + 'taken in the other order, from B to A, and say what makes the two answers the '
+            + 'same number.',
+          subgoals: [
+            {
+              label: 'Complete the right triangle the two points already determine, before computing anything',
+              detail:
+                'A and B are the two ends of the hypotenuse. The third vertex is the point that '
+                + 'takes its x from one of them and its y from the other — (3, 1) here, B\'s x '
+                + 'with A\'s y — so the two legs run along the axes, one horizontal at height '
+                + 'y = 1 and one vertical at x = 3. Either choice of which point lends which '
+                + 'coordinate works; the other corner is (−2, 13) and gives the same two leg '
+                + 'lengths. Nothing has been calculated yet, and this is the only '
+                + 'step in the problem that is not arithmetic. It is also what makes this '
+                + 'Pythagoras rather than a separate fact: the right angle is at that third '
+                + 'vertex, and it is a right angle because the axes are perpendicular.',
+              socratic:
+                'You want the length of the segment joining two points. What third point turns '
+                + 'that segment into the hypotenuse of a right triangle whose other two sides '
+                + 'you can measure one coordinate at a time?',
+            },
+            {
+              label: 'Measure each leg as one coordinate difference, which is where the signed arithmetic sits',
+              detail:
+                'The horizontal leg runs from x = −2 across to x = 3, so its length is '
+                + '3 − (−2) = 5 — subtracting a negative, which is the step this calculation '
+                + 'most often loses. The vertical leg runs from y = 1 up to y = 13, so its '
+                + 'length is 13 − 1 = 12. Each leg uses one coordinate from each point and '
+                + 'ignores the other, because each runs along a single axis.',
+              socratic:
+                'The horizontal leg goes from x = −2 across to x = 3. How long is it, and which '
+                + 'number from each point does the vertical leg use instead?',
+            },
+            {
+              label: 'Add the two squares, because the side you were asked for is the hypotenuse',
+              detail:
+                'Both legs are known and the hypotenuse is not, so this is the adding direction '
+                + 'of the relation: d² = 5² + 12² = 25 + 144 = 169. What has been produced is '
+                + 'd² and not d. The slot assignment that `pythagoras` makes a whole knowledge '
+                + 'point of is settled here before any number is read — the segment is the '
+                + 'hypotenuse because the right angle is at the corner, not at either of the '
+                + 'points you were given.',
+              socratic:
+                'The legs are 5 and 12 and the side you want is the one opposite the right '
+                + 'angle. Does the relation have you add the two squares or subtract one from '
+                + 'the other?',
+            },
+            {
+              label: 'Take the positive root, and notice that a whole number here is luck',
+              detail:
+                'd = √169 = 13, so the distance is 13. Only the positive root is a distance, '
+                + 'for the reason `pythagoras` separates out carefully: nothing in d² = 169 '
+                + 'prefers either solution, and what rules one out is what d MEANS. The answer '
+                + 'came out whole because 5, 12, 13 is a Pythagorean triple; two points picked '
+                + 'at random give an irrational distance, and the exact answer is then a '
+                + 'reduced surd rather than a decimal.',
+              socratic:
+                'You have d² = 169. What is left to do to it, and should you expect a whole '
+                + 'number from a pair of points chosen at random?',
+            },
+            {
+              label: 'Swap the two points and watch the squaring erase the difference',
+              detail:
+                'Taken from B to A the differences come out as −2 − 3 = −5 and 1 − 13 = −12. '
+                + 'Neither is a length, since a length cannot be negative — but (−5)² = 25 and '
+                + '(−12)² = 144 are the same two numbers as before, so d² is 169 again and d is '
+                + '13. That is the whole reason the formula needs no absolute value: the order '
+                + 'of subtraction decides a sign and the squaring discards it. Note what this '
+                + 'does NOT say. The two differences are genuinely different numbers, and the '
+                + 'third point of this concept is about telling a difference apart from a '
+                + 'coordinate — there the sign is part of what the difference IS, and nothing '
+                + 'squares it away.',
+              socratic:
+                'Reversing the order makes both differences negative, and a length cannot be '
+                + 'negative. Why does the distance come out the same anyway?',
+            },
+          ],
+          answer:
+            'The distance is 13. The third vertex (3, 1) completes a right triangle whose legs '
+            + 'run along the axes: the horizontal one is 3 − (−2) = 5 and the vertical one is '
+            + '13 − 1 = 12. The segment is the hypotenuse, so the squares add — '
+            + 'd² = 25 + 144 = 169 — and d = √169 = 13, taking the positive root because a '
+            + 'distance is one. Taken the other way the differences are −5 and −12, which are '
+            + 'not lengths, but their squares are 25 and 144, the same two numbers, so d² is '
+            + '169 again. That is why the formula is written with no absolute value: the order '
+            + 'of subtraction decides a sign and the squaring discards it. The whole-number '
+            + 'answer is the exception rather than the rule, since it needs the two squares to '
+            + 'add to a square — 5, 12, 13 is a Pythagorean triple, and a pair of points picked '
+            + 'at random gives an irrational distance best left as a reduced surd.',
+        },
+      },
+      {
+        id: 'a-midpoint-is-an-average-per-axis-and-costs-two-numbers',
+        conceptId: 'distance-and-midpoint',
+        statement:
+          'The midpoint of a segment is the average of its two ends, taken one axis at a time: '
+          + 'M = ((x₁ + x₂)/2, (y₁ + y₂)/2). Averaging each coordinate on its own works because '
+          + 'the axes do not interact — halfway along the segment is independently halfway '
+          + 'across in x and halfway up in y. Two things follow that the formula does not say '
+          + 'by itself. The answer is a POINT, so it is two numbers and not one, and stopping '
+          + 'after the first axis answers half the question. And the halving is exact: the '
+          + 'midpoint of two points with whole coordinates need not have whole coordinates, so '
+          + 'a half that appears has to be carried rather than rounded away.',
+        position: 2,
+        /*
+         * No `automaticityTarget`. Two additions and two halvings would time
+         * beautifully, and that is the argument against it: what the point is
+         * about is that the answer is two numbers and that one of them is not a
+         * whole number, and both of those are things a learner gets wrong by
+         * finishing early. A speed reward on this point would reward stopping
+         * after the x and rounding the half, which are precisely the two errors
+         * it exists to stop. Same shape as the third point of
+         * `quadrilaterals-and-polygons`, where haste produces the wrong total.
+         */
+        workedExample: {
+          problem:
+            'Find the midpoint M of the segment from A(−2, 1) to B(3, 13) — the same two points '
+            + 'as the point above. Then measure A to M and M to B, and say what the two lengths '
+            + 'together establish that "the same distance from both ends" does not.',
+          subgoals: [
+            {
+              label: 'Average the two x-coordinates, and keep the half the division produces',
+              detail:
+                'The x of M is (−2 + 3)/2 = 1/2. Both ends have whole x-coordinates and the '
+                + 'midpoint does not, which is the ordinary case rather than a sign that '
+                + 'something has gone wrong: an average of two whole numbers is itself whole '
+                + 'only when the two share a parity. Rounding 1/2 to 0 or to 1 would move the '
+                + 'point off the middle of the segment, and the check in the last subgoal would '
+                + 'then fail by an amount you could measure.',
+              socratic:
+                'Halfway between x = −2 and x = 3 — what number is that, and what would be lost '
+                + 'by writing it as a whole one?',
+            },
+            {
+              label: 'Do the other axis separately, because the answer is a point rather than a length',
+              detail:
+                'The y of M is (1 + 13)/2 = 7, so M = (1/2, 7). It is the same move on '
+                + 'different numbers and it still has to be made: a learner who answers 1/2 has '
+                + 'given one of the two coordinates the question asked for. Nothing about the '
+                + 'x-average enters the y-average, which is exactly why a problem in two '
+                + 'dimensions is two problems in one.',
+              socratic:
+                'You have the x of the midpoint. What is still missing, and does the number you '
+                + 'just found change how you get it?',
+            },
+            {
+              label: 'Measure one half of the segment with the previous point\'s formula',
+              detail:
+                'From A(−2, 1) to M(1/2, 7) the legs are 1/2 − (−2) = 5/2 and 7 − 1 = 6, so '
+                + 'd² = 25/4 + 36 = 25/4 + 144/4 = 169/4 and that half is 13/2. From M to '
+                + 'B(3, 13) the legs are 3 − 1/2 = 5/2 and 13 − 7 = 6 — the same two numbers — '
+                + 'so the other half is 13/2 as well. The fractions were carried exactly, and '
+                + 'that is what makes the two agree: a midpoint rounded to (0, 7) or (1, 7) '
+                + 'gives halves of different lengths.',
+              socratic:
+                'You have the midpoint, and the point above gives you distances. How long is '
+                + 'each of the two pieces the midpoint cuts the segment into?',
+            },
+            {
+              label: 'Add the two halves and recognise the whole, which equal distances alone would not give you',
+              detail:
+                '13/2 + 13/2 = 13, and 13 is the A-to-B distance computed in the point above. '
+                + 'That sum is worth separating from the equality, because the equality is the '
+                + 'weaker of the two facts. Being the same distance from both ends puts a point '
+                + 'anywhere on the perpendicular bisector of AB: the apex of an isosceles '
+                + 'triangle on AB qualifies and is nowhere near the segment. What pins M to the '
+                + 'segment is that the two distances ADD to the whole — the triangle inequality '
+                + 'makes a route through M at least as long as the straight one, with equality '
+                + 'only when the three points are in line. So "midpoint" is two claims, and the '
+                + 'one people check is not the one that does the work.',
+              socratic:
+                'The two halves are equal — and so are the distances from the apex of an '
+                + 'isosceles triangle to the two ends of its base. What do you have here that '
+                + 'the apex has not got?',
+            },
+          ],
+          answer:
+            'M = (1/2, 7). The x is (−2 + 3)/2 = 1/2 and the y is (1 + 13)/2 = 7 — one average '
+            + 'per axis, because halfway along the segment is independently halfway across and '
+            + 'halfway up, and because the answer is a point it is two numbers rather than one. '
+            + 'The half is exact and is carried: an average of two whole numbers is whole only '
+            + 'when they share a parity. Each half of the segment then measures 13/2 by the '
+            + 'previous point\'s formula — A to M has legs 5/2 and 6, and M to B has legs 5/2 '
+            + 'and 6 as well — so the two halves are equal, and they also add to 13, which is '
+            + 'the whole distance from A to B. The sum is the stronger fact. Equal distances on '
+            + 'their own put a point anywhere on the perpendicular bisector of AB, including '
+            + 'apexes of isosceles triangles far from the segment; the distances adding to the '
+            + 'whole forces the three points to be in line, since the triangle inequality makes '
+            + 'a route through M at least as long as the straight one and lets it be equal only '
+            + 'when M is on it.',
+        },
+      },
+      {
+        id: 'a-coordinate-is-not-the-step-that-reaches-it',
+        conceptId: 'distance-and-midpoint',
+        statement:
+          'Both formulas above are built out of two different kinds of number, and running '
+          + 'either backwards is where the two get swapped. A coordinate says WHERE a point '
+          + 'is, measured from the origin; a difference of coordinates says how far and in '
+          + 'which direction you move, measured from wherever you started. Given one endpoint '
+          + 'and the midpoint, the other endpoint comes from solving the midpoint condition on '
+          + 'each axis: (x₁ + x₂)/2 = m gives x₂ = 2m − x₁, so the doubling comes first and the '
+          + 'subtraction second. The common wrong answer is m − x₁, and it is not a slip in the '
+          + 'arithmetic — it is a real number in the problem, the step from the known endpoint '
+          + 'to the midpoint, handed back where a place was asked for.',
+        position: 3,
+        /*
+         * No `automaticityTarget`, for the reason the Pythagoras slot-assignment
+         * point gives. The arithmetic is a doubling and a subtraction; the
+         * content is which of two numbers already in front of you is the answer,
+         * and the wrong one arrives sooner. A speed target would reward the
+         * learner who stopped at the displacement.
+         */
+        workedExample: {
+          problem:
+            'A segment has one endpoint A(−2, 1) and midpoint M(4, −3). Find the other '
+            + 'endpoint B. Then say what the number 6 is in this problem, given that it is the '
+            + 'commonest answer to the first coordinate and is not it.',
+          subgoals: [
+            {
+              label: 'Write the midpoint condition as an equation in the unknown coordinate, one axis at a time',
+              detail:
+                'M is the average of A and B, so on the x-axis (−2 + x)/2 = 4, where x is B\'s '
+                + 'x-coordinate. That is a linear equation in one unknown, and it is the whole '
+                + 'of the method: the backwards direction is not a second formula to learn but '
+                + 'the same relation read as a condition on x instead of as a recipe for M.',
+              socratic:
+                'The midpoint is the average of the two ends. Written as an equation whose '
+                + 'unknown is B\'s x-coordinate, what does that say here?',
+            },
+            {
+              label: 'Clear the halving first, so the 2 multiplies the midpoint and not the difference',
+              detail:
+                'Multiplying both sides by 2 gives −2 + x = 8. The 2 lands on the midpoint\'s '
+                + 'coordinate, and that is where the doubling in x₂ = 2m − x₁ comes from: the '
+                + 'whole segment is twice the half. Reaching for the subtraction first instead '
+                + '— 4 − (−2) = 6 — answers a different question, and the last subgoal says '
+                + 'which one.',
+              socratic:
+                'The left side of the equation is divided by 2. What do you do to both sides '
+                + 'first, and which of the two numbers does the 2 end up multiplying?',
+            },
+            {
+              label: 'Finish the solve, and watch the signed number one more time',
+              detail:
+                'From −2 + x = 8, adding 2 to both sides gives x = 10. Taking the −2 across is '
+                + 'what makes the number grow, exactly as subtracting a negative did in the '
+                + 'first point of this concept. So B\'s x-coordinate is 10.',
+              socratic:
+                'You have −2 + x = 8. What is x, and does getting rid of the −2 make it larger '
+                + 'or smaller?',
+            },
+            {
+              label: 'Repeat on the second axis rather than reusing the first answer',
+              detail:
+                '(1 + y)/2 = −3 gives 1 + y = −6 and then y = −7, so B = (10, −7). Two moves on '
+                + 'different numbers, and both signs bite: doubling a negative midpoint gives '
+                + '−6, and taking the +1 off that goes further down rather than back up. As in '
+                + 'the point above, a point costs two of these, and stopping after one answers '
+                + 'half the question.',
+              socratic:
+                'Do the y-axis the same way, from (1 + y)/2 = −3. What is y, and does it sit '
+                + 'above or below the midpoint\'s −3?',
+            },
+            {
+              label: 'Name what the rejected number actually is, which is what makes the error diagnosable',
+              detail:
+                'The step from A to M is (4 − (−2), −3 − 1) = (6, −4), and the step from M to B '
+                + 'is (10 − 4, −7 − (−3)) = (6, −4) — the same displacement twice, which is '
+                + 'what being the midpoint means. So 6 is real and it is the x-part of that '
+                + 'step. It is not B\'s x-coordinate, because a coordinate is measured from the '
+                + 'origin and a displacement from wherever you happened to start; 4 + 6 = 10 is '
+                + 'the bridge between the two. Answering 6 is therefore not bad arithmetic, it '
+                + 'is a difference offered where a place was wanted — and the tell is that the '
+                + 'two steps agree while neither of them answers the question.',
+              socratic:
+                '6 appears twice in this problem and is the answer to neither coordinate. What '
+                + 'is it the length and direction of, and what would you have to add it to in '
+                + 'order to reach B?',
+            },
+          ],
+          answer:
+            'B = (10, −7). On each axis the midpoint condition is an equation in the unknown '
+            + 'coordinate: (−2 + x)/2 = 4 gives −2 + x = 8 and then x = 10, and (1 + y)/2 = −3 '
+            + 'gives 1 + y = −6 and then y = −7. The halving is cleared first, which is why the '
+            + 'midpoint gets doubled — the whole segment is twice the half — and the known '
+            + 'endpoint is subtracted after, so x₂ = 2m − x₁. The number 6 is the x-part of the '
+            + 'displacement from A to M: that step is (4 − (−2), −3 − 1) = (6, −4), and the '
+            + 'step from M to B is (10 − 4, −7 − (−3)) = (6, −4) as well, the two being equal '
+            + 'being exactly what makes M the midpoint. So 6 is a how-far and B\'s coordinate '
+            + 'is a where, with 4 + 6 = 10 the bridge between them. Answering 6 is not an '
+            + 'arithmetic slip but a confusion of a difference with a place, which is the one '
+            + 'error this point exists to make nameable.',
+        },
+      },
+    ],
+  },
 ]
 
 /**
- * Thirteen edges: one prerequisite per promotion after the first, TWO for the
+ * Fifteen edges: one prerequisite per promotion after the first, TWO for the
  * seventh, TWO for the ninth and TWO for the tenth, plus the one interference
- * the fourth promotion brought with it.
+ * the fourth promotion brought with it and the one `encompasses` the eleventh
+ * did.
+ *
+ * THE ELEVENTH PROMOTION BROUGHT THE SUBJECT'S FIRST `encompasses`, which is
+ * the one edge KIND this list had not held and the one whose absence no suite
+ * can see.
+ *
+ * `distance-and-midpoint` declared `exercises: ['pythagoras']` on top of
+ * needing it, and `expandEdges` turns `exercises` into an `encompasses`. Both
+ * endpoints finish in this subject, so it is internal and sits below. What
+ * makes it worth a heading rather than a line is that losing it was free:
+ * `encompasses` gates nothing, so every assertion in both suites would have
+ * stayed green while the credit path quietly vanished. The list has now held
+ * three of the four kinds, and the two non-prerequisite ones arrived for
+ * opposite reasons — the interference because `similarity` happened to carry a
+ * `confusedWith`, this one because `pythagoras`'s own promotion note predicted
+ * it and said where to look.
+ *
+ * It is also the first promotion here whose stranded edges split BY KIND rather
+ * than only by file. The prerequisite on `pythagoras` came here, the
+ * prerequisite on `cartesian-plane` went to `EUCLIDEAN_GEOMETRY.links`, and the
+ * `encompasses` could have gone to neither if the concept had been filed with
+ * the vectors — `links` carries `prerequisite` only. See the note on the edge
+ * itself: that constraint is what decided the filing, against both the obvious
+ * subject and this one's own `covers`.
  *
  * THE TENTH PROMOTION CLOSED THE FORK, which is the last thing that could
  * happen to a prerequisite graph that had not happened here yet, and it is a
@@ -5253,6 +5755,87 @@ const EDGES: ConceptEdge[] = [
      *
      * `author:` for the same reason as every edge above it.
      */
+    promotedBy: 'author:plane-geometry',
+  },
+  {
+    id: 'pythagoras->distance-and-midpoint',
+    from: 'pythagoras',
+    to: 'distance-and-midpoint',
+    kind: 'prerequisite',
+    /*
+     * THE ELEVENTH PROMOTION'S PREREQUISITE, AND THE EXPENSIVE CASE WITH ONE
+     * ENDPOINT OUT OF TWO — the shape the fourth and fifth promotions had, back
+     * after five cheap ones.
+     *
+     * `distance-and-midpoint` declared `['cartesian-plane', 'pythagoras']`.
+     * `pythagoras` is a concept of this subject, so that edge is internal and
+     * is this entry. `cartesian-plane` is authored in
+     * `vectors-and-independence`, and an ontology may only name concepts it
+     * CONTAINS, so that one went to `EUCLIDEAN_GEOMETRY.links` — the eighth
+     * entry there.
+     *
+     * The claim is load-bearing in all three knowledge points, which is unusual
+     * enough to be worth stating: the first point IS Pythagoras, with the legs
+     * read off the coordinates instead of handed over, and it cites that
+     * concept's slot assignment and its positive-root-only rule by name. The
+     * second measures two halves of a segment with the first point's formula.
+     * The third subtracts a negative for the third time in the concept. Take
+     * this edge away and the first worked example has to prove a² + b² = c²
+     * before it can use it.
+     *
+     * `author:` rather than `atlas:euclidean-geometry`, like the thirteen above
+     * it: `expandEdges` stamped the area on this edge while it was the node's
+     * own `needs`, and the provenance moved with the edge.
+     */
+    promotedBy: 'author:plane-geometry',
+  },
+  {
+    id: 'distance-and-midpoint=>pythagoras',
+    from: 'distance-and-midpoint',
+    to: 'pythagoras',
+    kind: 'encompasses',
+    /*
+     * THE SUBJECT'S FIRST `encompasses` EDGE, AND THE ONLY STRANDING THAT WOULD
+     * HAVE COST NOTHING TO LOSE.
+     *
+     * The map node declared `exercises: ['pythagoras']` as well as needing it,
+     * and `expandEdges` turns `exercises` into an `encompasses` — the edge that
+     * makes credit computable, so that practising the coordinate distance
+     * formula counts as practising the relation underneath it and that relation
+     * does not come due as though untouched. Deleting the node deletes the
+     * edge, and NOTHING would have gone red: `encompasses` gates nothing, so a
+     * missing one shows up only as a learner re-drilling what they last
+     * demonstrated. The header of `pythagoras`'s own promotion wrote this down
+     * in advance — it called the edge "half-live", with "the remaining half the
+     * other endpoint's promotion" — which is the only reason it was looked for
+     * rather than lost.
+     *
+     * IT ALSO DECIDED WHICH SUBJECT THIS CONCEPT JOINED, and that is the
+     * structural fact worth carrying. `vectors-and-independence` was the
+     * obvious home: `cartesian-plane` is there, so is the dot product, and the
+     * covers of this subject says "congruence as far as it goes without a
+     * drawing", which is not coordinates. But an area's `links` carries
+     * `prerequisite` edges ONLY — the kind is hard-coded in `expandEdges` — so
+     * an `encompasses` whose two endpoints end up in different files is
+     * expressible NOWHERE. Filing the concept with the vectors would have
+     * forced this edge to be dropped. Filing it here keeps both of its
+     * endpoints in one ontology and spends a `links` entry on the prerequisite
+     * instead, which `links` can carry. The same trade decided
+     * `gaussian-elimination`'s filing in ontology-algebra.ts, for the same
+     * reason and in the opposite direction.
+     *
+     * The claim itself is as strong as an `encompasses` gets here. The first
+     * knowledge point is not an application of Pythagoras, it is Pythagoras: a
+     * learner who gets d² = 25 + 144 right has performed the adding direction
+     * of the relation and assigned its three slots, which is that concept's
+     * first and second points exactly.
+     */
+    rationale:
+      'The distance formula IS Pythagoras with the legs read off the coordinates, so a learner '
+      + 'who computes one has performed the other — the adding direction of the relation and '
+      + 'the slot assignment in front of it both. Carried over from the map node\'s '
+      + '`exercises`, which is the only stranding a promotion can lose without any test going '
+      + 'red.',
     promotedBy: 'author:plane-geometry',
   },
 ]

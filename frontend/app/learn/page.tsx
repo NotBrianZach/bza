@@ -946,6 +946,12 @@ export default function LearnPage() {
                learner had chosen it there — which is the point: the map becomes
                a way of choosing what to work on, not only what to look at. */
             onPractise={subjectId => { setSubject(subjectId); setTab('practice') }}
+            /* The same traversal the Practice tab's panel shows, from the same
+               response. One world, two views of it — the board and the map —
+               rather than two worlds that have to be kept in step. */
+            journey={state?.traversal ?? null}
+            openings={state?.traversal?.openings ?? []}
+            onTravelled={load}
           />
         )}
 

@@ -1,10 +1,11 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import Image from 'next/image'
-import { ArrowRight, BookOpen } from 'lucide-react'
+import { ArrowRight, BookOpen, KeyRound, Loader2, MapPin } from 'lucide-react'
+import { authedFetch } from '@/lib/authedFetch'
 import {
-  ARMATURE_MAP, RINGS, regionCoverage, regions,
+  ARMATURE_MAP, RINGS, regionCoverage, regionForConcept, regions,
   type PlacedRegion, type RegionCoverage,
 } from '@/lib/concepts/armature'
 import { MATHEMATICS, atlasCoverage } from '@/lib/concepts/atlas'
@@ -70,7 +71,38 @@ const DENSITY_LABEL: Record<string, string> = {
 const SUBJECT_NAME: Record<string, string> =
   Object.fromEntries(ONTOLOGIES.map(o => [o.subject.id, o.subject.name]))
 
-export default function ArmatureMap({ onBrowse, onPractise }: {
+/** Which region each concept stands in. Built once; the atlas is static. */
+const REGION_OF_CONCEPT: Map<string, string> = new Map(
+  MATHEMATICS.concepts
+    .map(c => [c.id, regionForConcept(c.subjectId)?.id])
+    .filter((p): p is [string, string] => !!p[1]),
+)
+
+interface Named { conceptId: string; conceptName: string }
+
+/** The traversal as the page already has it. See TraversalMap's TraversalView. */
+export interface Journey {
+  here: string | null
+  hereName: string | null
+  route: Named[]
+  reached: number
+  total: number
+  frontier: number
+}
+
+interface TraverseResponse {
+  outcome?: 'opens' | 'blocked' | 'not-yours' | 'interferes' | 'spent'
+  because?: string
+  detail?: string
+  door?: string
+  doorName?: string
+  nearestName?: string
+  missing?: Named[]
+  withName?: string
+  error?: string
+}
+
+export default function ArmatureMap({ onBrowse, onPractise, journey, openings, onTravelled }: {
   /**
    * Look at a region's mathematics — the mapped area, in the concept graph.
    *
@@ -91,6 +123,19 @@ export default function ArmatureMap({ onBrowse, onPractise }: {
    * me something to do" with nothing and look broken.
    */
   onPractise?: (subjectId: string) => void
+  /**
+   * The traversal, which turns the map from a thing you read into a board.
+   *
+   * Optional: with no journey the map is the browse surface it was, which is
+   * also what a signed-out reader gets. Nothing here invents a position — a
+   * party that has not started is nowhere, and the map says so rather than
+   * guessing a plausible starting city.
+   */
+  journey?: Journey | null
+  /** Where a learner may start, or the current frontier once they have. */
+  openings?: Named[]
+  /** Called after a move lands, so the page can reload the authoritative state. */
+  onTravelled?: () => void
 }) {
   /* Computed once. The atlas is a static document — nothing here depends on
      the session, and recomputing per render would be work done for no possible
@@ -102,6 +147,68 @@ export default function ArmatureMap({ onBrowse, onPractise }: {
 
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const selected = selectedId ? byId.get(selectedId) ?? null : null
+
+  const [busy, setBusy] = useState(false)
+  const [last, setLast] = useState<TraverseResponse | null>(null)
+
+  /**
+   * Where the party stands, and everywhere it has been — as regions.
+   *
+   * `here` can be null twice over and the two mean different things: no
+   * journey at all (signed out, or never started), or a journey standing at a
+   * concept whose subject this table does not place. The second should be
+   * impossible — `armatureProblems` fails the build if an authored subject
+   * belongs to no region — so it is left to resolve as "nowhere" rather than
+   * defended against, which would hide the failure if it ever happened.
+   */
+  const hereRegion = journey?.here ? REGION_OF_CONCEPT.get(journey.here) ?? null : null
+  const visited = useMemo(() => {
+    const seen = new Set<string>()
+    for (const r of journey?.route ?? []) {
+      const region = REGION_OF_CONCEPT.get(r.conceptId)
+      if (region) seen.add(region)
+    }
+    return seen
+  }, [journey])
+
+  /** Keys the party holds in a given region — the concepts reached there. */
+  const heldIn = useCallback((regionId: string) =>
+    (journey?.route ?? []).filter(r => REGION_OF_CONCEPT.get(r.conceptId) === regionId),
+  [journey])
+
+  /*
+   * Posting to the same endpoint TraversalMap uses, with the same body shapes.
+   *
+   * Deliberately not a second copy of the world: `onTravelled` tells the page
+   * to reload the authoritative state rather than this component merging the
+   * response into a local journey. Two code paths maintaining one world is how
+   * the frontier on the board and the frontier on the server drift apart —
+   * TraversalMap's own note, and it applies twice as hard now that both
+   * surfaces are showing the same walk.
+   */
+  const post = useCallback(async (body: Record<string, string>) => {
+    if (busy) return
+    setBusy(true)
+    try {
+      const response = await authedFetch('/api/learn/traverse', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      const data = (await response.json()) as TraverseResponse
+      setLast(data)
+      if (data.outcome === 'opens') {
+        /* Follow the party to where it landed, so the map moves with them
+           rather than leaving the panel on the city they departed from. */
+        if (data.door) setSelectedId(REGION_OF_CONCEPT.get(data.door) ?? null)
+        onTravelled?.()
+      }
+    } catch (e) {
+      setLast({ error: e instanceof Error ? e.message : 'the request failed' })
+    } finally {
+      setBusy(false)
+    }
+  }, [busy, onTravelled])
 
   return (
     <div className='space-y-3'>
@@ -137,6 +244,8 @@ export default function ArmatureMap({ onBrowse, onPractise }: {
             const cov = byId.get(region.id)
             const band = cov ? density(cov) : 'none'
             const isSelected = region.id === selectedId
+            const isHere = region.id === hereRegion
+            const wasVisited = visited.has(region.id) && !isHere
             /* Labels near the frame are anchored by their near edge instead of
                centred, or a long name runs off the map — "Hemgrad and Hemlith"
                sits at x=0.047. The label is positioned out of flow so moving it
@@ -153,26 +262,43 @@ export default function ArmatureMap({ onBrowse, onPractise }: {
                   top: `${(region.xy.y * 100).toFixed(3)}%`,
                 }}
                 className={`absolute block h-[18px] w-[18px] -translate-x-1/2 -translate-y-1/2 ${
-                  isSelected ? 'z-20' : 'z-10'
+                  isHere ? 'z-30' : isSelected ? 'z-20' : 'z-10'
                 } group focus:outline-none`}
                 aria-pressed={isSelected}
-                /* The accessible name carries the mathematics too: a screen
-                   reader on twenty-one identical dots otherwise gets twenty-one
-                   place names and no reason to pick one. */
+                aria-current={isHere ? 'location' : undefined}
+                /* The accessible name carries the mathematics AND the party's
+                   position: a screen reader on twenty-one identical dots
+                   otherwise gets twenty-one place names, no reason to pick one,
+                   and no way at all to find out where it is standing. */
                 aria-label={`${region.name} — ${region.areaName
                   ?? (region.role === 'broker' ? 'trades in other regions’ knowledge' : 'nothing written here')
-                }, ${DENSITY_LABEL[band]}`}
+                }, ${DENSITY_LABEL[band]}${
+                  isHere ? ', you are here' : wasVisited ? ', visited' : ''}`}
                 title={`${region.name} — ${region.areaName ?? region.epithet}`}
               >
+                {/* The party's own marker, drawn OUTSIDE the coverage dot and
+                    larger than it. Coverage is a property of the place and
+                    position is a property of you, so one must not be able to
+                    hide the other — a sky ring around a dark "nothing written"
+                    pin has to read as clearly as one around a bright pin. */}
+                {isHere && (
+                  <span className='pointer-events-none absolute -left-1 -top-1 block h-[26px] w-[26px] animate-pulse rounded-full border-2 border-sky-300' />
+                )}
                 <span
                   className={`absolute left-1 top-1 block h-2.5 w-2.5 border-2 shadow ${DOT[band]} ${
                     region.role === 'frontier' ? 'rounded-[2px]'
                       : region.role === 'broker' ? 'rounded-full border-dashed' : 'rounded-full'
-                  } ${isSelected ? 'ring-2 ring-sky-300' : ''} transition-transform group-hover:scale-125`}
+                  } ${isSelected ? 'ring-2 ring-sky-300' : ''} ${
+                    wasVisited ? 'ring-1 ring-sky-700' : ''
+                  } transition-transform group-hover:scale-125`}
                 />
                 <span
-                  className={`pointer-events-none absolute top-full mt-1 whitespace-nowrap rounded border border-gray-700 bg-gray-900/95 px-1 py-px text-[10px] text-gray-100 transition-opacity ${edge} ${
-                    isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100'
+                  className={`pointer-events-none absolute top-full mt-1 whitespace-nowrap rounded border px-1 py-px text-[10px] transition-opacity ${edge} ${
+                    isHere
+                      ? 'border-sky-600 bg-sky-950/95 text-sky-100'
+                      : 'border-gray-700 bg-gray-900/95 text-gray-100'
+                  } ${
+                    isSelected || isHere ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100'
                   }`}
                 >
                   {region.name}
@@ -182,9 +308,30 @@ export default function ArmatureMap({ onBrowse, onPractise }: {
           })}
         </div>
 
-        <div className='min-h-[140px]'>
+        <div className='min-h-[140px] space-y-3'>
+          {journey && (
+            <JourneyPanel
+              journey={journey}
+              openings={openings ?? []}
+              hereRegion={hereRegion}
+              busy={busy}
+              last={last}
+              onStart={id => post({ start: id })}
+            />
+          )}
           {selected
-            ? <RegionDetail cov={selected} onBrowse={onBrowse} onPractise={onPractise} />
+            ? (
+              <RegionDetail
+                cov={selected}
+                onBrowse={onBrowse}
+                onPractise={onPractise}
+                held={journey ? heldIn(selected.region.id) : []}
+                canTravel={!!journey && journey.route.length > 0}
+                busy={busy}
+                onOffer={id => post({ offer: id })}
+                isHere={selected.region.id === hereRegion}
+              />
+            )
             : <Unselected />}
         </div>
       </div>
@@ -203,6 +350,110 @@ export default function ArmatureMap({ onBrowse, onPractise }: {
   )
 }
 
+/**
+ * Where the party stands, and the one move available before they have moved.
+ *
+ * The constraint is the traversal's own, verbatim: you pick the key, never the
+ * door. So there is no control here that chooses a destination — the opening
+ * move picks a concept to START at, and every move after that is made by
+ * offering a key from a region's own panel. A "travel to Taiga" button would
+ * be the single thing that breaks the game.
+ */
+function JourneyPanel({ journey, openings, hereRegion, busy, last, onStart }: {
+  journey: Journey
+  openings: Named[]
+  hereRegion: string | null
+  busy: boolean
+  last: TraverseResponse | null
+  onStart: (conceptId: string) => void
+}) {
+  const started = journey.route.length > 0
+  const here = hereRegion ? regions().find(r => r.id === hereRegion) ?? null : null
+  return (
+    <div className='rounded-lg border border-sky-900/60 bg-sky-950/20 p-3'>
+      <div className='flex flex-wrap items-baseline justify-between gap-2'>
+        <h3 className='text-sm font-semibold text-gray-100'>Your journey</h3>
+        <span className='text-[11px] text-gray-500'>
+          {journey.reached} of {journey.total} reached · {journey.frontier} open
+        </span>
+      </div>
+      <p className='mt-0.5 text-[11px] italic text-gray-500'>
+        You pick the key, never the door.
+      </p>
+
+      {!started ? (
+        <>
+          <p className='mt-2 text-xs text-gray-400'>
+            You are nowhere yet. Choose where to make landfall — after that, the
+            road is not your decision.
+          </p>
+          <div className='mt-2 flex flex-wrap gap-1.5'>
+            {openings.map(door => (
+              <button
+                key={door.conceptId}
+                type='button'
+                onClick={() => onStart(door.conceptId)}
+                disabled={busy}
+                className='inline-flex items-center gap-1 rounded bg-sky-900 px-2 py-1 text-[11px] text-sky-100 hover:bg-sky-800 disabled:opacity-50'
+              >
+                {busy ? <Loader2 size={11} className='animate-spin' /> : <MapPin size={11} />}
+                {door.conceptName}
+              </button>
+            ))}
+          </div>
+        </>
+      ) : (
+        <p className='mt-2 flex items-center gap-1.5 text-xs text-gray-300'>
+          <MapPin size={12} className='shrink-0 text-sky-400' />
+          <span>
+            Standing in <strong className='text-gray-100'>{here?.name ?? 'parts unknown'}</strong>
+            {journey.hereName && <span className='text-gray-500'> — {journey.hereName}</span>}
+          </span>
+        </p>
+      )}
+
+      {last && <Outcome response={last} />}
+    </div>
+  )
+}
+
+/**
+ * What the world said about the move.
+ *
+ * A refused key is an outcome and not an error, because most keys will not fit
+ * and that is the game. Each refusal names what is missing, which is the half
+ * that makes it useful: "that road needs polynomial division, which you have
+ * not reached" is a next move, where "locked" is a wall.
+ */
+function Outcome({ response }: { response: TraverseResponse }) {
+  if (response.error) {
+    return <p className='mt-2 text-[11px] text-red-300'>{response.error}</p>
+  }
+  const opened = response.outcome === 'opens'
+  const where = response.door ? regions().find(r => r.id === REGION_OF_CONCEPT.get(response.door as string)) : null
+  return (
+    <div className={`mt-2 rounded border px-2 py-1.5 text-[11px] ${
+      opened ? 'border-emerald-900/60 bg-emerald-950/30 text-emerald-200'
+        : 'border-amber-900/60 bg-amber-950/20 text-amber-200'
+    }`}>
+      {opened
+        ? (
+          <p>
+            The road opens to <strong>{response.doorName}</strong>
+            {where && <> in <strong>{where.name}</strong></>}.
+            {response.detail && <span className='block text-emerald-300/80'>{response.detail}</span>}
+          </p>
+        )
+        : <p>{response.because}</p>}
+      {response.missing && response.missing.length > 0 && (
+        <p className='mt-1 text-amber-300/80'>
+          Still needs: {response.missing.map(m => m.conceptName).join(', ')}.
+        </p>
+      )}
+    </div>
+  )
+}
+
 function Unselected() {
   return (
     <div className='rounded-lg border border-gray-800 bg-gray-900 p-3'>
@@ -217,17 +468,30 @@ function Unselected() {
   )
 }
 
-function RegionDetail({ cov, onBrowse, onPractise }: {
+function RegionDetail({ cov, onBrowse, onPractise, held, canTravel, busy, onOffer, isHere }: {
   cov: RegionCoverage
   onBrowse?: (areaId: string, conceptId?: string) => void
   onPractise?: (subjectId: string) => void
+  /** Concepts the party has reached HERE. These are the keys it can offer. */
+  held: Named[]
+  canTravel: boolean
+  busy: boolean
+  onOffer: (conceptId: string) => void
+  isHere: boolean
 }) {
   const r: PlacedRegion = cov.region
   const ring = RINGS.find(x => x.id === r.ring)
   const band = density(cov)
   return (
     <div className='rounded-lg border border-gray-800 bg-gray-900 p-3'>
-      <h3 className='text-sm font-semibold text-gray-100'>{r.name}</h3>
+      <h3 className='flex items-center gap-1.5 text-sm font-semibold text-gray-100'>
+        {r.name}
+        {isHere && (
+          <span className='inline-flex items-center gap-1 rounded-full border border-sky-700 px-1.5 py-px text-[10px] font-normal text-sky-300'>
+            <MapPin size={9} /> you are here
+          </span>
+        )}
+      </h3>
       <p className='text-xs italic text-gray-500'>{r.epithet}</p>
       <p className='mt-1 text-[11px] text-gray-500'>
         {r.km.toLocaleString()} km from the continental centre · {ring?.name ?? r.ring}
@@ -298,6 +562,36 @@ function RegionDetail({ cov, onBrowse, onPractise }: {
         <p className='mt-2 text-xs font-semibold text-gray-300'>
           {r.role === 'broker' ? 'Trades in knowledge' : 'Past the edge of the atlas'}
         </p>
+      )}
+
+      {/* What the party holds here, offered as keys.
+          This is the move, and it lives on the REGION rather than in the
+          journey panel on purpose: a key is a thing you learned in a place, so
+          offering one should feel like setting out from somewhere. The door it
+          opens is still the graph's decision and may be in another region
+          entirely — which is exactly the moment the map earns itself, because
+          you watch the marker move. */}
+      {canTravel && held.length > 0 && (
+        <div className='mt-3 border-t border-gray-800 pt-2'>
+          <p className='text-[10px] uppercase tracking-wide text-gray-500'>
+            Keys you hold here
+          </p>
+          <div className='mt-1 flex flex-wrap gap-1'>
+            {held.map(k => (
+              <button
+                key={k.conceptId}
+                type='button'
+                onClick={() => onOffer(k.conceptId)}
+                disabled={busy}
+                title={`Offer ${k.conceptName} — the graph picks where it leads`}
+                className='inline-flex items-center gap-1 rounded border border-gray-700 bg-gray-950 px-1.5 py-0.5 text-[11px] text-gray-200 hover:border-sky-700 hover:text-sky-200 disabled:opacity-50'
+              >
+                {busy ? <Loader2 size={10} className='animate-spin' /> : <KeyRound size={10} />}
+                {k.conceptName}
+              </button>
+            ))}
+          </div>
+        </div>
       )}
 
       <p className='mt-2 text-[11px] leading-snug text-gray-400'>{r.because}</p>

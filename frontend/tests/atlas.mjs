@@ -100,6 +100,7 @@ const {
 } = req(join(outDir, 'concepts', 'probe.js'))
 const {
   ARMATURE_CENTER, armatureProblems, inwardOf, regionBy, regionCoverage, regionForArea,
+  regionForConcept,
   regions: armatureRegions,
 } = req(join(outDir, 'concepts', 'armature.js'))
 /*
@@ -1542,8 +1543,11 @@ t('and everything that depended on it still does',
  * `points-lines-angles`, `triangle-basics`, `congruence`, `similarity`,
  * `pythagoras`, `quadrilaterals-and-polygons`, `area-and-perimeter`,
  * `geometric-proof`, `circles` and `circle-measure` were the first ten nodes of
- * `euclidean-geometry` and are now the ten concepts of `plane-geometry`. The
- * assertions above already cover the collision half of all ten moves —
+ * `euclidean-geometry`, and `distance-and-midpoint` joined them at the
+ * fourteenth promotion — the first out of this area whose filing was decided by
+ * an edge KIND rather than by subject matter, and the first that no journey had
+ * asked for. The eleven are now the eleven concepts of `plane-geometry`. The
+ * assertions above already cover the collision half of all eleven moves —
  * `shippedAtlasProblems` would name any node that had been left behind — and
  * the rootless half, by naming the angle facts in `AUTHORED_ROOTS`.
  *
@@ -1671,9 +1675,9 @@ const EUCLID = AREAS.find(a => a.id === 'euclidean-geometry')
 const DEPARTED = [
   'points-lines-angles', 'triangle-basics', 'congruence', 'similarity', 'pythagoras',
   'quadrilaterals-and-polygons', 'area-and-perimeter', 'geometric-proof', 'circles',
-  'circle-measure',
+  'circle-measure', 'distance-and-midpoint',
 ]
-t('the area no longer declares any of the ten, and each carries its own subject',
+t('the area no longer declares any of the eleven, and each carries its own subject',
   DEPARTED.every(id =>
     EUCLID.nodes.every(n => n.id !== id) && areaOf(MATHEMATICS, id) === 'plane-geometry'),
   DEPARTED.map(id => `${id}:${areaOf(MATHEMATICS, id)}`).join(' '))
@@ -1750,14 +1754,95 @@ t('the area no longer declares any of the ten, and each carries its own subject'
  * never cared whether an end was a node or a concept, so a stale entry goes on
  * resolving and the composed graph silently carries the edge twice.
  */
+/*
+ * EIGHT NOW, AND THE FOURTEENTH PROMOTION'S ENTRY EXISTS BECAUSE THIS LIST
+ * CANNOT CARRY A KIND — which is a reason none of the seven above it had, and
+ * the first time the one-kind limitation has decided where a CONCEPT lives
+ * rather than only where an edge does.
+ *
+ * `distance-and-midpoint` declared `['cartesian-plane', 'pythagoras']` and also
+ * `exercises: ['pythagoras']`. Two of those three edges went into
+ * `PLANE_GEOMETRY.edges` — the prerequisite on `pythagoras` and the
+ * `encompasses` the `exercises` expands to — and the prerequisite on
+ * `cartesian-plane` is the entry below, by the familiar route: that concept is
+ * authored in `vectors-and-independence` and an ontology may only name concepts
+ * it CONTAINS.
+ *
+ * What is new is the counterfactual. `vectors-and-independence` was the better
+ * home on subject matter: it owns `cartesian-plane`, the dot product and the
+ * three dimensions, and `plane-geometry`'s `covers` describes a syllabus of
+ * figures taken as far as they go without a drawing. Filing it there would have
+ * reversed which edge came here — the plane's prerequisite would have been
+ * internal and Pythagoras's would have come back — and it would have DROPPED
+ * the `encompasses` entirely, because `expandEdges` hard-codes
+ * `kind: 'prerequisite'` on every row of this list and an `encompasses` across
+ * two files therefore has no home at all. So the filing was decided by this
+ * field's shape, and the asymmetry is worth asserting rather than describing:
+ * the two kinds are checked separately below, in the places each one had to go.
+ *
+ * It gates, like the fifth, sixth and seventh and unlike the first four:
+ * `cartesian-plane` has three knowledge points.
+ */
 const EUCLID_LINKS = (EUCLID.links ?? []).map(l => `${l.from}->${l.to}`).join(' ')
-t('the area asks for exactly the seven cross-file edges it has been handed, in order',
+t('the area asks for exactly the eight cross-file edges it has been handed, in order',
   EUCLID_LINKS === 'ratio-and-rate->similarity roots-and-irrationals->pythagoras '
     + 'real-number-line->cartesian-plane negative-numbers->cartesian-plane '
     + 'right-triangle-trig->dot-product-geometry circle-measure->solid-geometry '
-    + 'solid-geometry->three-dimensional-coordinates'
+    + 'solid-geometry->three-dimensional-coordinates '
+    + 'cartesian-plane->distance-and-midpoint'
   && (EUCLID.links ?? []).every(l => !!l.because),
   EUCLID_LINKS)
+/*
+ * The fourteenth promotion's edges, split BY KIND, which no promotion out of
+ * this area had done before and which is the only claim that would catch the
+ * cheaper filing.
+ *
+ * Three assertions, because three different things could have gone wrong and
+ * only one of them fails loudly on its own. The prerequisite on `pythagoras`
+ * had to land in the ontology (a missing gate shows up in the walk). The
+ * prerequisite on `cartesian-plane` had to land here (likewise). The
+ * `encompasses` had to land in the ontology and could not have landed anywhere
+ * else — and its absence shows up as NOTHING, which is why it is checked by
+ * name, with its rationale, and counted for duplicates.
+ */
+t('the departed node\'s two prerequisites went to two different homes, which the stamps record',
+  MATHEMATICS.edges.find(e =>
+    e.from === 'pythagoras' && e.to === 'distance-and-midpoint' && e.kind === 'prerequisite')
+    ?.promotedBy === 'author:plane-geometry'
+  && MATHEMATICS.edges.find(e =>
+    e.from === 'cartesian-plane' && e.to === 'distance-and-midpoint')
+    ?.promotedBy === 'atlas:euclidean-geometry',
+  MATHEMATICS.edges.filter(e => e.to === 'distance-and-midpoint')
+    .map(e => `${e.from}:${e.kind}:${e.promotedBy}`).join(' '))
+t('and its `exercises` survived as an encompasses, which `links` could not have carried at all',
+  MATHEMATICS.edges.filter(e =>
+    e.from === 'distance-and-midpoint' && e.to === 'pythagoras'
+    && e.kind === 'encompasses').length === 1
+  && !!MATHEMATICS.edges.find(e =>
+    e.from === 'distance-and-midpoint' && e.to === 'pythagoras')?.rationale
+  && (EUCLID.links ?? []).every(l => l.from !== 'distance-and-midpoint'),
+  MATHEMATICS.edges.filter(e => e.from === 'distance-and-midpoint')
+    .map(e => `${e.kind} -> ${e.to}`).join(' | '))
+/*
+ * And the constraint itself, from the composed graph rather than from the
+ * source — because "links carries prerequisite only" is a fact about
+ * `expandEdges`, and reading it off the field would only restate that no row
+ * has a `kind` property to read.
+ *
+ * Every link in every area must appear in `MATHEMATICS.edges` as a
+ * `prerequisite` and as nothing else. A row that somehow produced an
+ * `encompasses` would mean the filing argument above was unnecessary, and this
+ * is where that would be discovered.
+ */
+t('no links row anywhere produces an edge of any kind but prerequisite',
+  AREAS.flatMap(a => a.links ?? []).every(l =>
+    MATHEMATICS.edges.some(e => e.from === l.from && e.to === l.to && e.kind === 'prerequisite')
+    && !MATHEMATICS.edges.some(e =>
+      e.from === l.from && e.to === l.to && e.kind !== 'prerequisite')),
+  AREAS.flatMap(a => a.links ?? [])
+    .filter(l => MATHEMATICS.edges.some(e =>
+      e.from === l.from && e.to === l.to && e.kind !== 'prerequisite'))
+    .map(l => `${l.from}->${l.to}`).join(' '))
 /*
  * The collapsed entry, asserted from both sides — which is the only way to
  * catch it, since neither side fails on its own.
@@ -2375,11 +2460,48 @@ t('none of the sixth, seventh or eighth promotion\'s own nodes is a root of the 
  * check would be satisfied by the eighth and ninth entries too, whose
  * membership has nothing in common with this one's.
  */
-t('so the set is five, by named membership and never by count',
+/*
+ * AND THE FOURTEENTH FANNED IT OUT TO SIX, one leaving and TWO arriving, which
+ * is the ninth turnover and a shape only the merge has produced here before —
+ * and the merge was not a promotion.
+ *
+ * `distance-and-midpoint` left, and `lines-in-the-plane` and `loci-and-regions`
+ * both arrived, because it was the last in-area prerequisite of each of them at
+ * once. `lines-in-the-plane` needs it and `linear-functions`, a node of
+ * `functions`; `loci-and-regions` needs it and `linear-inequalities`, a node of
+ * `algebra-foundations`. So the usual rule produced two substitutions rather
+ * than one, and the departing node's own membership was spent at the same time:
+ * it had been a root since the merge brought it in.
+ *
+ * The size has now read 1, 1, 4, 4, 3, 3, 6, 5, 5, 7, 7, 6, 6, 5 and 6 across
+ * fifteen transitions. A `length === 6` check would be satisfied by the seventh,
+ * twelfth and thirteenth entries, whose membership has nothing in common with
+ * this one's — which is the seventh demonstration of why this set is asserted by
+ * name, and the first where a single promotion changed THREE of the claims it
+ * makes rather than one or two.
+ */
+t('so the set is six, by named membership and never by count',
   euclidRoots.slice().sort().join(',')
-  === 'constructions,distance-and-midpoint,isometries-and-symmetry,'
-    + 'non-euclidean-geometry,plane-transformations',
+  === 'constructions,isometries-and-symmetry,lines-in-the-plane,'
+    + 'loci-and-regions,non-euclidean-geometry,plane-transformations',
   euclidRoots.join(', '))
+/*
+ * The fan-out asserted as the RULE rather than as two more names, because "two
+ * nodes joined" is the observation and "each of them had exactly this node left
+ * inside the area" is the claim. Both halves are checked on each arrival: the
+ * node is in the area, it still names the departed concept, and its other
+ * prerequisite is in no area of the map this one belongs to.
+ */
+t('and both arrivals had the departed node as their last in-area prerequisite',
+  ['lines-in-the-plane', 'loci-and-regions'].every(id => {
+    const node = EUCLID.nodes.find(n => n.id === id)
+    return !!node
+      && (node.needs ?? []).includes('distance-and-midpoint')
+      && (node.needs ?? []).every(p => EUCLID.nodes.every(m => m.id !== p))
+      && euclidRoots.includes(id)
+  }),
+  ['lines-in-the-plane', 'loci-and-regions']
+    .map(id => `${id}:[${(EUCLID.nodes.find(n => n.id === id)?.needs ?? []).join(' ')}]`).join(' '))
 t('and the departed node is gone from the area entirely rather than merely off the root list',
   EUCLID.nodes.every(n => n.id !== 'three-dimensional-coordinates')
   && areaOf(MATHEMATICS, 'three-dimensional-coordinates') === 'vectors-and-independence',
@@ -2684,6 +2806,23 @@ t('and the node stranded no interference, which is the loss no other check sees'
  * "the list shrinks when the gate tightens" is not a rule either — what holds
  * is only that the membership changes, which is the whole argument for naming
  * members rather than counting them.
+ *
+ * AND THE SECOND ROUTE HAS SINCE BEEN CLOSED, which is worth amending rather
+ * than deleting because the amendment is the same lesson one turn further on.
+ * The fourteenth promotion authored `distance-and-midpoint`, which sits on
+ * `pythagoras`'s ONLY route up to here — `circles-analytic` through
+ * `lines-in-the-plane` — so the walk now stops at it and `pythagoras` drops out
+ * after all. Still seven: `pythagoras` left and `distance-and-midpoint`
+ * arrived, a second turnover at the same size on the same list.
+ *
+ * `cartesian-plane` is the member that now plays the role the comment above
+ * gave `pythagoras`, and it is a better instance of it: it survives through
+ * `linear-functions -> graphs-of-functions`, a branch in a different area
+ * entirely, so no promotion out of the geometry can reach it. The claim worth
+ * asserting is therefore the one about membership, and the sentence naming
+ * WHICH member has the second route has now been wrong once — which is what a
+ * claim about a path through unwritten nodes is, since authoring any node on
+ * the path changes it.
  */
 t('the dot product is now gated by the ratios, its gate shrinking from three to two',
   gatingPrerequisitesOf(MATHEMATICS, 'dot-product-geometry').slice().sort().join(' ')
@@ -2693,11 +2832,10 @@ t('and the oblique-triangle laws too, from three to two, in the departing node\'
   gatingPrerequisitesOf(MATHEMATICS, 'law-of-sines-cosines').slice().sort().join(' ')
     === 'right-triangle-trig triangle-basics',
   gatingPrerequisitesOf(MATHEMATICS, 'law-of-sines-cosines').join(', '))
-t('while the unit circle is tightened onto it with its gate the same size, one member swapped',
-  gatingPrerequisitesOf(MATHEMATICS, 'unit-circle').length === 7
-  && gatingPrerequisitesOf(MATHEMATICS, 'unit-circle').includes('right-triangle-trig')
-  && !gatingPrerequisitesOf(MATHEMATICS, 'unit-circle').includes('similarity')
-  && gatingPrerequisitesOf(MATHEMATICS, 'unit-circle').includes('pythagoras'),
+t('while the unit circle is tightened onto it with its gate the same size, members swapped twice',
+  gatingPrerequisitesOf(MATHEMATICS, 'unit-circle').slice().sort().join(' ')
+    === 'cartesian-plane circles completing-the-square distance-and-midpoint '
+      + 'domain-and-range linear-equations right-triangle-trig',
   gatingPrerequisitesOf(MATHEMATICS, 'unit-circle').join(', '))
 /*
  * The new subject's own identity, which is the one thing a ninth ontology can
@@ -2775,9 +2913,42 @@ t('and it still collides with no area id either, which is the half the ninth sub
  * further down this file and would be in its temporal dead zone here. The
  * number is restated in the message so a changed floor is visible either way.
  */
-t('the area is ten nodes against a floor of five, so nothing here was floor-bound',
-  EUCLID.nodes.length === 10 && EUCLID.nodes.length - 5 === 5,
+t('the area is nine nodes against a floor of five, so nothing here was floor-bound',
+  EUCLID.nodes.length === 9 && EUCLID.nodes.length - 5 === 4,
   `${EUCLID.nodes.length} nodes, ${EUCLID.nodes.length - 5} of headroom`)
+/*
+ * THE FOURTEENTH PROMOTION'S TWO DEPENDENTS INSIDE THE AREA, which moved their
+ * gating sets in OPPOSITE directions — and that is the whole reason both are
+ * asserted rather than one standing for the pair.
+ *
+ * `lines-in-the-plane` stayed at four: `pythagoras` left, the new concept
+ * arrived, and `cartesian-plane` survived through `linear-functions ->
+ * graphs-of-functions`, which is a route in the `functions` area. So its gate
+ * got stricter with no change of size.
+ *
+ * `loci-and-regions` went from four to THREE. It names `linear-inequalities`
+ * rather than `linear-functions`, and nothing behind that node reaches the
+ * plane — so `cartesian-plane` had no second route and dropped out with
+ * `pythagoras`, two members replaced by one.
+ *
+ * Same promotion, same area, two dependents, one list the same length and one
+ * shorter. The figure has to be computed on both sides rather than predicted,
+ * and the direction is a property of the DEPENDENT's other branches rather than
+ * of the promotion.
+ */
+t('its two in-area dependents moved in opposite directions, one swapping and one shrinking',
+  gatingPrerequisitesOf(MATHEMATICS, 'lines-in-the-plane').slice().sort().join(' ')
+    === 'cartesian-plane distance-and-midpoint domain-and-range linear-equations'
+  && gatingPrerequisitesOf(MATHEMATICS, 'loci-and-regions').slice().sort().join(' ')
+    === 'distance-and-midpoint linear-equations real-number-line',
+  `lines:[${gatingPrerequisitesOf(MATHEMATICS, 'lines-in-the-plane').join(' ')}] `
+  + `loci:[${gatingPrerequisitesOf(MATHEMATICS, 'loci-and-regions').join(' ')}]`)
+t('and the dependent in another area gained it too, the edge resolving across the file boundary',
+  gatingPrerequisitesOf(MATHEMATICS, 'arc-length-and-surface')
+    .includes('distance-and-midpoint')
+  && !gatingPrerequisitesOf(MATHEMATICS, 'arc-length-and-surface').includes('pythagoras')
+  && prerequisitesOf(MATHEMATICS, 'arc-length-and-surface').includes('distance-and-midpoint'),
+  gatingPrerequisitesOf(MATHEMATICS, 'arc-length-and-surface').join(', '))
 /*
  * THE WHOLE OF THE STRANDED EDGE HAD TO BECOME A `links` ENTRY, which no
  * earlier promotion out of this area could show.
@@ -2925,8 +3096,23 @@ const MOVED = {
   'algebra-foundations': [
     'absolute-value', 'percent', 'scientific-notation',
   ],
+  /*
+   * `distance-and-midpoint` is the fifth id to leave this table, by the
+   * fourteenth promotion, so the geometry row is down to six — and it is the
+   * third of the five to go to a subject rather than stay a node of the area
+   * that absorbed it. It left for `plane-geometry`, which makes that syllabus
+   * the destination of two of this row's five departures and the vectors the
+   * destination of two more.
+   *
+   * The row's remaining six are the whole of the coordinate half that is still
+   * mapped — slope and the forms of a line, the circle as an equation, the
+   * conics, the parametric curves, the transformations and the regions — and
+   * none of them is on any route, so this row reaching zero is no longer
+   * something the journeys will drive. It would now mean somebody chose to
+   * write analytic geometry.
+   */
   'euclidean-geometry': [
-    'distance-and-midpoint', 'lines-in-the-plane', 'circles-analytic', 'conic-sections',
+    'lines-in-the-plane', 'circles-analytic', 'conic-sections',
     'parametric-curves',
     'plane-transformations', 'loci-and-regions',
   ],
@@ -4276,6 +4462,58 @@ t('written never exceeds the concepts it is counted out of',
   armatureCov.every(c => c.written <= c.concepts))
 t('at least one region has material written, or the map is a lie',
   armatureCov.some(c => c.written > 0))
+
+/*
+ * The journey — the traversal read as movement across the world.
+ *
+ * These guard the decision that makes the Armature a board rather than a
+ * picture: /api/learn/traverse walks `composeAtlas([], ONTOLOGIES)` and not a
+ * single subject. The first assertion is the one that would have caught the
+ * original mistake, where the traversal was confined to RATIONAL_EXPRESSIONS
+ * and therefore to Ringed Mountains alone — a journey that could never leave
+ * one pin, which is not a journey.
+ */
+const JOURNEY = atlas.composeAtlas([], ONTOLOGIES)
+
+t('a journey can cross the world rather than sitting in one city',
+  new Set(JOURNEY.concepts.map(c => regionForConcept(c.subjectId)?.id)).size >= 4,
+  `only ${new Set(JOURNEY.concepts.map(c => regionForConcept(c.subjectId)?.id)).size} region(s) reachable`)
+
+t('every concept a journey can reach stands somewhere on the map',
+  JOURNEY.concepts.every(c => regionForConcept(c.subjectId)),
+  JOURNEY.concepts.filter(c => !regionForConcept(c.subjectId)).map(c => c.subjectId).join(', '))
+
+/*
+ * Why the mapped areas are excluded from the journey's graph, as an assertion
+ * rather than only as a comment. Both of the traverse route's invariants need
+ * material: `detailFor` fixes an arrival with its first knowledge point's
+ * statement, and the strength gate asks whether prerequisites are strong.
+ * A mapped node has neither, so composing the whole atlas would open doors
+ * onto concepts that cannot be arrived at coherently.
+ */
+t('every door a journey opens has material behind it',
+  JOURNEY.concepts.every(c => c.knowledgePoints.length > 0),
+  JOURNEY.concepts.filter(c => c.knowledgePoints.length === 0).map(c => c.id).slice(0, 5).join(', '))
+
+t('the journey graph is a valid ontology with no cycles',
+  ontologyProblems(JOURNEY).length === 0 && cycles(JOURNEY).length === 0,
+  ontologyProblems(JOURNEY).slice(0, 4).join(' | '))
+
+t('it has somewhere to start',
+  roots(JOURNEY).length > 0 && roots(JOURNEY).every(id => conceptById(JOURNEY, id)))
+
+/*
+ * A concept belongs to exactly one region, which is what lets the map answer
+ * "where am I" with a single pin. Guaranteed by armatureProblems refusing a
+ * subject claimed twice, and asserted here over real concepts rather than over
+ * the region table, so the guarantee is checked where it is used.
+ */
+t('no concept is in two places at once',
+  MATHEMATICS.concepts.every(c => {
+    const hits = armatureRegions().filter(r =>
+      r.area === c.subjectId || (r.authored ?? []).includes(c.subjectId))
+    return hits.length <= 1
+  }))
 
 
 console.log('\nrecognition coverage')

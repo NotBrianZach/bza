@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserFromToken } from '@/lib/apiQuota'
-import { RATIONAL_EXPRESSIONS } from '@/lib/concepts/ontology'
+import { composeAtlas } from '@/lib/concepts/atlas'
+import { ONTOLOGIES, RATIONAL_EXPRESSIONS } from '@/lib/concepts/ontology'
 import { conceptById, prerequisitesOf } from '@/lib/concepts/registry'
 import { conceptStrength, MASTERY_FLOOR, type StrengthTable } from '@/lib/concepts/scheduling'
 import { loadStrengths, loadTraversal, saveTraversal } from '@/lib/concepts/store'
@@ -33,7 +34,42 @@ import {
 
 export const dynamic = 'force-dynamic'
 
-const ONTOLOGY = RATIONAL_EXPRESSIONS
+/**
+ * Every authored subject as one graph, so a traversal is a journey.
+ *
+ * This was `RATIONAL_EXPRESSIONS` — one subject of twelve concepts. That made
+ * the walk real but small, and on the Armature it made it invisible: all three
+ * of the subjects in Ringed Mountains are one pin, so a traversal confined to
+ * one of them could never leave it. A world you cannot cross is a list.
+ *
+ * `composeAtlas([], ONTOLOGIES)` is the right widening and the mapped areas are
+ * deliberately NOT in it. Every concept here has knowledge points, which the
+ * two invariants below both depend on: `detailFor` fixes an arrival with its
+ * first knowledge point's statement, and the strength gate asks whether
+ * prerequisites are strong — neither has an answer for a mapped node, which
+ * carries no material by construction. Composing the whole atlas would open
+ * doors onto two hundred concepts with nothing behind them.
+ *
+ * Ten subjects across five regions, which is a journey: Ringed Mountains to
+ * Druuvruke to Krull to Paravgrad to Schalfrend.
+ */
+const ONTOLOGY = composeAtlas([], ONTOLOGIES)
+
+/**
+ * The storage key, held apart from `ONTOLOGY.subject.id`.
+ *
+ * `concept_traversals` is keyed (user_id, subject_id), so widening the graph
+ * changes which row a learner's walk lives in. A new key leaves every existing
+ * row untouched — nothing is migrated in place and nothing can be corrupted by
+ * this change — and `loadWorld` below adopts the old one once, so a learner who
+ * had walked rational expressions keeps their route rather than finding
+ * themselves back at the start of a bigger world.
+ *
+ * Not `composeAtlas`'s own 'mathematics' either, which is the id the FULL
+ * atlas composes under. These are different graphs and a shared key would mean
+ * one overwriting the other the first time anything walks the whole map.
+ */
+const TRAVERSAL_KEY = 'armature'
 
 const name = (id: string) => conceptById(ONTOLOGY, id)?.name ?? id
 
@@ -89,16 +125,30 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Body must be JSON' }, { status: 400 })
   }
 
-  const subjectId = ONTOLOGY.subject.id
+  const subjectId = TRAVERSAL_KEY
   const now = new Date().toISOString()
 
   let world: TraversalWorld
   let strengths: StrengthTable
   try {
-    ;[world, strengths] = await Promise.all([
+    /*
+     * The widening's one-time adoption.
+     *
+     * A learner who walked rational expressions under the old key has a route
+     * whose every concept is still a concept of the wider graph — the old
+     * subject is contained in the new one, not merely similar to it — so the
+     * world transfers whole and means the same thing. Read only when the new
+     * key is empty, so it happens once and the old row is then left alone
+     * rather than being written back to or deleted: if this widening is ever
+     * reverted, that row is still there and still correct.
+     */
+    const [fresh, old, loaded] = await Promise.all([
       loadTraversal(userId, subjectId),
+      loadTraversal(userId, RATIONAL_EXPRESSIONS.subject.id),
       loadStrengths(userId),
     ])
+    world = fresh.route.length === 0 && old.route.length > 0 ? old : fresh
+    strengths = loaded
   } catch (e) {
     return NextResponse.json(
       { error: e instanceof Error ? e.message : 'could not load the traversal' },

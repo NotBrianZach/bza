@@ -3897,13 +3897,13 @@ t('its fidelity claim matches what its option can do', fidelityMismatches(PG).le
 const PG_CONCEPT_IDS = [
   'points-lines-angles', 'triangle-basics', 'congruence', 'similarity', 'pythagoras',
   'quadrilaterals-and-polygons', 'area-and-perimeter', 'geometric-proof', 'circles',
-  'circle-measure',
+  'circle-measure', 'distance-and-midpoint',
 ]
-t('ten concepts, three knowledge points each',
-  PG.concepts.length === 10 && allKnowledgePoints(PG).length === 30
+t('eleven concepts, three knowledge points each',
+  PG.concepts.length === 11 && allKnowledgePoints(PG).length === 33
   && PG.concepts.every(c => c.knowledgePoints.length === 3),
   `${PG.concepts.length} concepts, ${allKnowledgePoints(PG).length} points`)
-t('all ten concepts are teachable AND practisable — a syllabus, not ten map entries',
+t('all eleven concepts are teachable AND practisable — a syllabus, not eleven map entries',
   PG_CONCEPT_IDS.every(id => isTeachable(PG, id) && isPractisable(PG, id)),
   PG_CONCEPT_IDS.filter(id => !isTeachable(PG, id) || !isPractisable(PG, id)).join(', '))
 /*
@@ -4013,6 +4013,20 @@ t('every objective names a task kind',
  * two children, and which two, is what would catch it.
  */
 const PG_PREREQS = PG.edges.filter(e => e.kind === 'prerequisite')
+/*
+ * The branch points, computed once rather than re-derived in each of the four
+ * assertions that used to inline it.
+ *
+ * It read `'congruence,triangle-basics'` in three places through four
+ * promotions, and the eleventh made it three members — which is the shape
+ * bza's own notes call a one-sided ratchet: an assertion written as "the forks
+ * are STILL exactly two" is phrased over the complement of whatever arrived
+ * last, so it goes red on success and has to be edited in three places at
+ * once. Named here so the next promotion edits one line, and so the per-
+ * promotion claims below can each hold the thing they are actually about.
+ */
+const pgForks = () => [...new Set(PG_PREREQS.map(e => e.from))]
+  .filter(from => PG_PREREQS.filter(e => e.from === from).length > 1).sort().join(',')
 t('the first five promotions still form one chain pointing upward',
   PG_PREREQS.map(e => `${e.from}->${e.to}`).slice(0, 4).join(' ')
     === 'points-lines-angles->triangle-basics triangle-basics->congruence '
@@ -4033,7 +4047,7 @@ t('and the sixth forks off congruence rather than extending that chain',
   && PG_PREREQS.filter(e => e.from === 'congruence').map(e => e.to).includes('similarity'),
   PG_PREREQS.map(e => `${e.from}->${e.to}`).join(' '))
 t('and the seventh, ninth and tenth each contributed TWO edges, so the count moves by two thrice',
-  PG_PREREQS.length === 12
+  PG_PREREQS.length === 13
   && PG_PREREQS.filter(e => e.to === 'area-and-perimeter').map(e => e.from).sort().join(',')
     === 'quadrilaterals-and-polygons,triangle-basics'
   && PG_PREREQS.filter(e => e.to === 'circles').map(e => e.from).sort().join(',')
@@ -4059,9 +4073,7 @@ t('and the eighth widens the congruence fork to three without adding a branch po
   PG_PREREQS.filter(e => e.from === 'congruence').map(e => e.to).sort().join(',')
     === 'geometric-proof,quadrilaterals-and-polygons,similarity'
   && PG_PREREQS.filter(e => e.to === 'geometric-proof').map(e => e.from).join(',') === 'congruence'
-  && [...new Set(PG_PREREQS.map(e => e.from))]
-    .filter(from => PG_PREREQS.filter(e => e.from === from).length > 1).sort().join(',')
-    === 'congruence,triangle-basics',
+  && PG_PREREQS.filter(e => e.from === 'geometric-proof').length === 1,
   PG_PREREQS.map(e => `${e.from}->${e.to}`).join(' '))
 t('and geometric-proof reaches the angle facts only through congruence',
   prerequisitesOf(PG, 'geometric-proof').join(',') === 'congruence'
@@ -4102,12 +4114,22 @@ t('while the seventh promotion\'s two-parent node joined a line to its own ances
     === 'quadrilaterals-and-polygons,triangle-basics'
   && PG_ANC('quadrilaterals-and-polygons').includes('triangle-basics'),
   PG_ANC('quadrilaterals-and-polygons').join(', '))
-t('and the merge added no branch point, so the forks are still exactly two',
-  [...new Set(PG_PREREQS.map(e => e.from))]
-    .filter(from => PG_PREREQS.filter(e => e.from === from).length > 1).sort().join(',')
-    === 'congruence,triangle-basics'
-  && PG_PREREQS.filter(e => e.from === 'geometric-proof').length === 1
-  && PG_PREREQS.filter(e => e.from === 'pythagoras').length === 1,
+/*
+ * The ninth promotion's "it added no branch point" is now asserted on
+ * `geometric-proof` alone, and the `pythagoras` half is DELETED rather than
+ * repaired — because repairing it would be the wrong fix twice over.
+ *
+ * The claim was that `circles`'s two parents each went from no children to
+ * one, so neither became a fork. That was true when it was written. The
+ * eleventh promotion gave `pythagoras` a second child, so the clause
+ * `filter(e => e.from === 'pythagoras').length === 1` is now a claim that this
+ * promotion did not happen — the same thing the seventh promotion's root
+ * assertion became, and the file's rule is to rehome the claim rather than
+ * weaken it. `geometric-proof` still has exactly one child and still carries
+ * the half of the ninth's claim that is stable.
+ */
+t('and the merge added no branch point at the parent that still has only the one child',
+  PG_PREREQS.filter(e => e.from === 'geometric-proof').map(e => e.to).join(',') === 'circles',
   PG_PREREQS.map(e => `${e.from}->${e.to}`).join(' '))
 t('and circles collects nothing from below its own pair, since both are authored here',
   gatingPrerequisitesOf(PG, 'circles').slice().sort().join(',')
@@ -4143,13 +4165,63 @@ t('the tenth is the first node with all three branches of the congruence fork be
   && PG_PREREQS.filter(e => e.from === 'congruence').map(e => e.to).sort().join(',')
     === 'geometric-proof,quadrilaterals-and-polygons,similarity',
   `circle-measure<-[${PG_ANC('circle-measure').join(' ')}]`)
-t('and it added no branch point either, so the forks are STILL exactly two',
-  [...new Set(PG_PREREQS.map(e => e.from))]
-    .filter(from => PG_PREREQS.filter(e => e.from === from).length > 1).sort().join(',')
-    === 'congruence,triangle-basics'
-  && PG_PREREQS.filter(e => e.from === 'circles').length === 1
+t('and it added no branch point either, its two parents each keeping one child',
+  PG_PREREQS.filter(e => e.from === 'circles').length === 1
   && PG_PREREQS.filter(e => e.from === 'area-and-perimeter').length === 1,
   PG_PREREQS.map(e => `${e.from}->${e.to}`).join(' '))
+/*
+ * THE ELEVENTH PROMOTION OPENED THE THIRD BRANCH POINT, which is the first time
+ * since the seventh that one has appeared, and the reason it gets its own
+ * assertion rather than an amended count.
+ *
+ * `distance-and-midpoint` names `pythagoras` and nothing else in this subject,
+ * and `pythagoras` had exactly one child — `circles`, from the ninth. So it now
+ * has two, and the fork set goes from two members to three. Four assertions
+ * above used to carry `'congruence,triangle-basics'` inline and three of them
+ * were really about one node's out-degree; they now say so, and the set itself
+ * is asserted once, here, by named membership for the reason the root-set
+ * assertions in tests/atlas.mjs give at length — a `length === 3` check would
+ * be satisfied by a fork accidentally opened at the wrong node.
+ *
+ * The subject also stopped having a single sink, which the tenth promotion's
+ * note in ontology-geometry.ts said would happen at the eleventh whichever node
+ * it turned out to be, and declined to assert for that reason. It is recorded
+ * here and not checked, on the same grounds.
+ */
+t('the eleventh opens a third branch point, at pythagoras, and names which three they are',
+  pgForks() === 'congruence,pythagoras,triangle-basics'
+  && PG_PREREQS.filter(e => e.from === 'pythagoras').map(e => e.to).sort().join(',')
+    === 'circles,distance-and-midpoint'
+  && PG_PREREQS.filter(e => e.to === 'distance-and-midpoint').map(e => e.from).join(',')
+    === 'pythagoras',
+  `forks: ${pgForks()}`)
+/*
+ * And the one edge of the promotion that no gating walk can see: the subject's
+ * first `encompasses`.
+ *
+ * The map node declared `exercises: ['pythagoras']`, which `expandEdges` turns
+ * into an `encompasses`, and deleting the node deletes it. Nothing else in
+ * either suite would have gone red — `encompasses` gates nothing, so a missing
+ * one shows up only as a learner re-drilling what they last demonstrated. This
+ * is therefore the assertion standing in for a failure mode that has none, and
+ * it is asserted in both directions: the edge exists with its reason, and the
+ * composed graph carries it exactly once, which is what a stray second
+ * declaration would break.
+ */
+t('and the subject\'s first encompasses edge, which gates nothing and would vanish silently',
+  edgesOfKind(PG, 'encompasses').map(e => `${e.from}=>${e.to}`).join(',')
+    === 'distance-and-midpoint=>pythagoras'
+  && edgesOfKind(PG, 'encompasses').every(e => !!e.rationale)
+  && encompassedBy(PG, 'distance-and-midpoint').join(',') === 'pythagoras',
+  PG.edges.filter(e => e.kind === 'encompasses').map(e => `${e.from}=>${e.to}`).join(', '))
+t('so practising the distance formula credits Pythagoras, at distance one',
+  encompassedClosure(PG, 'distance-and-midpoint').get('pythagoras') === 1,
+  [...encompassedClosure(PG, 'distance-and-midpoint').entries()]
+    .map(([id, d]) => `${id}:${d}`).join(' '))
+t('and the prerequisite in the other direction is not a cycle, since only prerequisites are walked',
+  cycles(PG).length === 0
+  && prerequisitesOf(PG, 'distance-and-midpoint').join(',') === 'pythagoras',
+  cycles(PG).map(c => c.join('->')).join(' | '))
 t('and it collects nothing from below its own pair, both of its parents being authored here',
   gatingPrerequisitesOf(PG, 'circle-measure').slice().sort().join(',')
     === 'area-and-perimeter,circles'
@@ -4221,7 +4293,7 @@ t('congruence reaches the angle facts only through the triangles',
 
 group('the eighth subject is gradable with no worker')
 const PG_TASKS = allKnowledgePoints(PG).flatMap(p => tasksForPoint(p.id))
-t('sixty tasks, two on each of the thirty points', PG_TASKS.length === 60
+t('sixty-six tasks, two on each of the thirty-three points', PG_TASKS.length === 66
   && allKnowledgePoints(PG).every(p => tasksForPoint(p.id).length === 2),
   `${PG_TASKS.length}`)
 /*
@@ -4304,8 +4376,21 @@ t('sixty tasks, two on each of the thirty points', PG_TASKS.length === 60
  */
 const PG_EVAL = PG_TASKS.filter(x => x.kind === 'evaluate')
 const PG_FORM = PG_TASKS.filter(x => x.kind === 'transform_to_form')
-t('fifty-eight evaluate and two transform_to_form, both surds that a right angle produced',
-  PG_EVAL.length === 58 && PG_FORM.length === 2
+/*
+ * `distance-and-midpoint` added six more, all `evaluate`, and here the pair
+ * above staying a pair is a refusal rather than a gap. A distance IS a root, so
+ * `surd_reduced` fits it exactly and a third form task was available for the
+ * asking. It was declined because it would have been the same question a fourth
+ * time: `roots-and-irrationals` owns reducing a surd, `pythagoras` borrowed it
+ * for a hypotenuse and `circles` for a tangent length, and what this concept
+ * contributes sits UPSTREAM of the radical — the two legs read off the
+ * coordinates. So the figures make the roots come out whole (5, 12, 13 for the
+ * segment and 13/2 for each half) and the irrational case is stated in the
+ * worked examples instead of drilled again. The two forms remain the two the
+ * subject genuinely needed.
+ */
+t('sixty-four evaluate and two transform_to_form, both surds that a right angle produced',
+  PG_EVAL.length === 64 && PG_FORM.length === 2
   && PG_EVAL.every(x => x.form === undefined)
   && PG_FORM.map(x => x.id).join(',')
     === 'reduce-the-hypotenuse-surd-1,reduce-the-tangent-length-surd-1'
@@ -4424,6 +4509,31 @@ t('answering the co-interior task with the angle it is not is settled, not shrug
  * as well, to confirm the task can fail — a difference that were identically
  * zero would score a learner correct for any angles at all.
  */
+/*
+ * The eleventh promotion's symmetry task, checked away from its authored inputs
+ * for the same reason — "the two orderings give the same answer" is the content
+ * of the first knowledge point, and one coincidence at the authored quadruple
+ * would prove nothing about it. The second quadruple shares no number with the
+ * first and puts both points in different quadrants.
+ *
+ * The companion distance task is NOT generalised the same way and must not be:
+ * `sqrt((c - a)^2 + (d - b)^2)` is 13 for these four coordinates and for no
+ * others worth naming, so there is nothing to check at a second input. That
+ * asymmetry is the same one the two congruence tasks below have, and it is why
+ * each is checked on its own terms rather than by one loop over the pair.
+ */
+t('the point-order task is zero for any two points, not just the authored pair', (() => {
+  const task = taskById('swapping-the-two-points-changes-nothing-1')
+  const read = (a, b, c, d) => {
+    const at = {
+      a: parseExpression(a, []), b: parseExpression(b, []),
+      c: parseExpression(c, []), d: parseExpression(d, []),
+    }
+    const v = exactValue(substitute(parseExpression(task.given, ['a', 'b', 'c', 'd']), at))
+    return v === null ? null : showExact(v)
+  }
+  return read('-2', '1', '3', '13') === '0' && read('7', '-5', '-11', '2') === '0'
+})())
 t('the AAA-dependence task is zero for any triangle, not just the authored one', (() => {
   const task = taskById('the-third-angle-was-never-free-1')
   const at = { a: parseExpression('20', []), b: parseExpression('35', []), c: parseExpression('125', []) }
@@ -4719,8 +4829,8 @@ t('the proof concept added three rulable chains and no unrulable ones',
     .map(p => `${p.id}:${tasksForPoint(p.id).map(x => x.kind).join('+')}`).join(' '))
 
 const PG_QUESTIONS = allQuestions(PG)
-t('a hundred and twenty questions, one per subgoal',
-  PG_QUESTIONS.length === 120, `${PG_QUESTIONS.length}`)
+t('a hundred and thirty-four questions, one per subgoal',
+  PG_QUESTIONS.length === 134, `${PG_QUESTIONS.length}`)
 t('every subgoal carries an authored socratic phrasing',
   allKnowledgePoints(PG).every(p => p.workedExample.subgoals.every(s => !!s.socratic)),
   allKnowledgePoints(PG).flatMap(p => p.workedExample.subgoals)

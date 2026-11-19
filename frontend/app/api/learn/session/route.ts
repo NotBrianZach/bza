@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getUserFromToken } from '@/lib/apiQuota'
 import { RATIONAL_EXPRESSIONS } from '@/lib/concepts/ontology'
 import { parseTaskId } from '@/lib/concepts/generators'
+import { composeAtlas } from '@/lib/concepts/atlas'
 import { getOntology, ONTOLOGIES } from '@/lib/concepts/ontology'
 import { conceptById } from '@/lib/concepts/registry'
 import { assemble, summarise } from '@/lib/concepts/scheduling'
@@ -47,6 +48,22 @@ export const dynamic = 'force-dynamic'
  */
 const DEFAULT_ONTOLOGY = ONTOLOGIES[0] ?? RATIONAL_EXPRESSIONS
 
+/**
+ * The traversal's graph and storage key, which must match app/api/learn/traverse
+ * EXACTLY.
+ *
+ * They are two halves of one feature: that route writes the world and this one
+ * displays it. They were already obliged to agree and happened to, because both
+ * said `ONTOLOGY.subject.id` and both meant the practised subject. Now that a
+ * traversal spans every authored subject, saying it twice in two files is the
+ * whole risk — so both say the same two lines and this comment is on both.
+ *
+ * See the traverse route for why the mapped areas are excluded and why the key
+ * is held apart from the composed subject's own id.
+ */
+const TRAVERSAL_ONTOLOGY = composeAtlas([], ONTOLOGIES)
+const TRAVERSAL_KEY = 'armature'
+
 export async function GET(req: NextRequest) {
   const userId = await getUserFromToken(req.headers.get('authorization'))
   if (!userId) return NextResponse.json({ error: 'Not signed in' }, { status: 401 })
@@ -84,7 +101,7 @@ export async function GET(req: NextRequest) {
   try {
     ;[strengths, world, awaitingReview] = await Promise.all([
       loadStrengths(userId),
-      loadTraversal(userId, ONTOLOGY.subject.id),
+      loadTraversal(userId, TRAVERSAL_KEY),
       // Counted here so the tab can carry a badge. A review queue nobody can see
       // the size of is a review queue nobody works, and the rows in it are the
       // engine's own failures — the most informative ones in the table.
@@ -98,11 +115,26 @@ export async function GET(req: NextRequest) {
     )
   }
 
-  // A learner who has not started a traversal is not restricted by it: the
-  // mastery floor alone decides what is introducible, which is what makes
-  // practice usable without walking the graph first. Supplying `reached` is
-  // strictly narrower, never wider.
-  const reached = world.route.length > 0 ? world.route : undefined
+  /*
+   * A learner who has not started a traversal is not restricted by it: the
+   * mastery floor alone decides what is introducible, which is what makes
+   * practice usable without walking the graph first. Supplying `reached` is
+   * strictly narrower, never wider.
+   *
+   * FILTERED TO THE PRACTISED SUBJECT, which the widening made necessary.
+   * `reached` is a hard filter in `assemble` — `if (reachedSet &&
+   * !reachedSet.has(concept.id)) continue` — so once a route can span ten
+   * subjects, carrying it whole into a session for one of them means a learner
+   * who walked geometry and then switched to rational expressions would be
+   * filtered down to nothing and served an empty practice set.
+   *
+   * Filtering restores exactly the old sentence above, now that "has not
+   * started a traversal" has to mean "has not reached anything HERE": an empty
+   * result becomes `undefined` and the subject is unrestricted, which is what
+   * that learner would have had before a global route existed.
+   */
+  const reachedHere = world.route.filter(id => conceptById(ONTOLOGY, id))
+  const reached = reachedHere.length > 0 ? reachedHere : undefined
   /**
    * A fixed number, not a clock read.
    *
@@ -117,6 +149,10 @@ export async function GET(req: NextRequest) {
   const assembly = assemble({ ontology: ONTOLOGY, strengths, now, size, reached, variantSeed: VARIANT_SEED, claimed })
   const progress = summarise(ONTOLOGY, strengths, now, claimed)
   const name = (id: string) => conceptById(ONTOLOGY, id)?.name ?? id
+  /* The same lookup over the traversal's wider graph. Two functions rather
+     than one, because which graph a name comes from is the distinction this
+     route now has to keep straight. */
+  const wideName = (id: string) => conceptById(TRAVERSAL_ONTOLOGY, id)?.name ?? id
 
   return NextResponse.json({
     subject: ONTOLOGY.subject,
@@ -159,11 +195,22 @@ export async function GET(req: NextRequest) {
       missing: b.missing.map(m => ({ conceptId: m, conceptName: name(m) })),
     })),
     progress,
+    /*
+     * Computed against TRAVERSAL_ONTOLOGY, not the practised subject.
+     *
+     * The world now spans every authored subject, so the practised subject can
+     * no longer name half of it: `name()` falls back to the raw id for anything
+     * it does not hold, and `openings` computed against one subject would offer
+     * doors out of a graph the learner is not standing in. Both would be wrong
+     * silently — a route rendered as `polynomial-division → factor-monic` with
+     * one id unresolved reads as a glitch, not as a bug in which graph was
+     * asked.
+     */
     traversal: {
-      ...traversalProgress(ONTOLOGY, world),
+      ...traversalProgress(TRAVERSAL_ONTOLOGY, world),
       here: world.here,
-      hereName: world.here ? name(world.here) : null,
-      route: world.route.map(id => ({ conceptId: id, conceptName: name(id) })),
+      hereName: world.here ? wideName(world.here) : null,
+      route: world.route.map(id => ({ conceptId: id, conceptName: wideName(id) })),
       // `openings`, NOT `frontier`. traversalProgress() spread above already
       // returns `frontier` as a COUNT, and naming this list `frontier` silently
       // overwrote it with an array of {conceptId, conceptName}. TraversalMap
@@ -176,8 +223,8 @@ export async function GET(req: NextRequest) {
       // `number & Named[]`, which is `never`, and `never` is assignable to the
       // `number` the component wants. The lie was in the type, so tsc agreed
       // with it.
-      openings: (world.route.length === 0 ? openingDoors(ONTOLOGY, world) : frontier(ONTOLOGY, world))
-        .map(id => ({ conceptId: id, conceptName: name(id) })),
+      openings: (world.route.length === 0 ? openingDoors(TRAVERSAL_ONTOLOGY, world) : frontier(TRAVERSAL_ONTOLOGY, world))
+        .map(id => ({ conceptId: id, conceptName: wideName(id) })),
     },
   })
 }

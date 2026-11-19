@@ -4749,6 +4749,170 @@ export const TASKS: PracticeTask[] = [
     at: { x: '20' },
   },
 
+  // ── plane-geometry, eleventh promotion: distance-and-midpoint ───────────
+  //
+  // Six tasks, two per knowledge point, all `evaluate`, every one settled by
+  // exact rational arithmetic with no worker — so the subject's no-worker
+  // contract holds unchanged and the pair of `surd_reduced` tasks above stays a
+  // pair.
+  //
+  // WHICH IS A DECISION HERE, NOT AN OUTCOME, and the decision runs the other
+  // way from `circle-measure`'s. There a form was wanted and none existed. Here
+  // one exists and was declined: a distance is a root, so `surd_reduced` fits,
+  // and asking for one would have been a third copy of a question
+  // `roots-and-irrationals` owns and `pythagoras` and `circles` have each
+  // already borrowed. What this concept adds in front of the root is the two
+  // legs, and that is upstream of the radical rather than in it. So the figures
+  // were chosen to make the roots come out whole — 5, 12, 13 for the distance
+  // and its halves — and the irrational case is stated in the worked examples
+  // and in the second objective's own phrasing rather than drilled a fourth
+  // time.
+  //
+  // THE UNSCORED PART, named as everywhere else in this subject: completing the
+  // right triangle. Which third point turns the segment into a hypotenuse is a
+  // decision and not a value, and a learner who writes the formula down from
+  // memory and substitutes correctly takes the mark without having made it.
+  // That is the same gap `pythagoras` records for its slot assignment, and the
+  // same answer is given to it — the task below that scores the SYMMETRY is
+  // built to make the half that can be scored carry as much of the content as
+  // possible, since "the order cannot matter" is the one claim in the first
+  // point that is a number.
+  //
+  // WHY `REAL_ABCD` AND NOT A COORDINATE-NAMED SET. Four reals is what two
+  // points cost, and the file's rule is the one `REAL_ABC` states: what a
+  // symbol MEANS is the prompt's job and what it may be assumed to BE is the
+  // declaration's. So two points share a declaration with two rectangles' sides
+  // and with the four coefficients of ax + b = cx + d rather than duplicating
+  // it under geometric names. Real rather than integer for the reason the rest
+  // of this subject gives — nothing about either formula needs whole
+  // coordinates, and the whole numbers in the prompts are a convenience of the
+  // points chosen.
+  {
+    id: 'the-distance-is-a-hypotenuse-1',
+    knowledgePointId: 'the-legs-are-the-coordinate-differences',
+    kind: 'evaluate',
+    prompt:
+      'A is the point (−2, 1) and B is (3, 13). The segment AB is the hypotenuse of a right '
+      + 'triangle whose legs run along the axes, so its length is the root of the sum of the two '
+      + 'squared coordinate differences. Evaluate sqrt((c - a)^2 + (d - b)^2) at a = -2, b = 1, '
+      + 'c = 3, d = 13, where (a, b) is A and (c, d) is B. Note which half of this task scores — '
+      + 'the arithmetic, not the decision. That the segment is the hypotenuse rather than a leg '
+      + 'is settled by the right angle being at the corner (3, 1), and it was handed to you in '
+      + 'this prompt rather than left for you to get right.',
+    given: 'sqrt((c - a)^2 + (d - b)^2)',
+    variables: REAL_ABCD,
+    // 3 − (−2) = 5 and 13 − 1 = 12, so 25 + 144 = 169 and the root is 13 exactly.
+    // A triple on purpose: this task is about reading the legs off the
+    // coordinates, and an irrational answer would have moved the difficulty into
+    // the radical, where `roots-and-irrationals` already owns it. The negative
+    // input is deliberate — 3 − (−2) is the subtraction the second subgoal says
+    // is most often lost.
+    reference: '13',
+    at: { a: '-2', b: '1', c: '3', d: '13' },
+  },
+  {
+    id: 'swapping-the-two-points-changes-nothing-1',
+    knowledgePointId: 'the-legs-are-the-coordinate-differences',
+    kind: 'evaluate',
+    prompt:
+      'Same two points. Taken from A to B the differences are 5 and 12; taken from B to A they '
+      + 'are −5 and −12, and neither of those is a length. Evaluate '
+      + '(c - a)^2 + (d - b)^2 - ((a - c)^2 + (b - d)^2) at a = -2, b = 1, c = 3, d = 13 — the '
+      + 'squared sum one way round, minus the squared sum the other. The answer is the whole '
+      + 'reason the formula is written with no absolute value signs in it, and it is the same '
+      + 'answer for ANY two points rather than a coincidence of these two.',
+    given: '(c - a)^2 + (d - b)^2 - ((a - c)^2 + (b - d)^2)',
+    variables: REAL_ABCD,
+    // Identically 0, since (a − c)² = (c − a)² term by term. The same shape as
+    // `the-third-angle-was-never-free-1` in `congruence`: the content is that
+    // the difference vanishes for every input, so tests/concepts-logic.mjs
+    // checks it at a second, unrelated quadruple as well.
+    reference: '0',
+    at: { a: '-2', b: '1', c: '3', d: '13' },
+  },
+  {
+    id: 'the-midpoint-x-is-an-average-1',
+    knowledgePointId: 'a-midpoint-is-an-average-per-axis-and-costs-two-numbers',
+    kind: 'evaluate',
+    prompt:
+      'Still A(−2, 1) and B(3, 13). The midpoint\'s x-coordinate is the average of the two '
+      + 'x-coordinates. Evaluate (a + b)/2 at a = -2, b = 3, where a and b are those two '
+      + 'x-coordinates and nothing to do with the y\'s. Give the answer exactly: both inputs are '
+      + 'whole numbers and this one is not, which is the ordinary case rather than a signal that '
+      + 'something has gone wrong — an average of two whole numbers is whole only when they share '
+      + 'a parity. The y-coordinate is the same move on 1 and 13 and is not asked here; the next '
+      + 'task uses both of them.',
+    given: '(a + b)/2',
+    variables: REAL_AB,
+    // (−2 + 3)/2 = 1/2. Deliberately not an integer: rounding it is one of the
+    // two errors the knowledge point exists to stop, and a whole-number midpoint
+    // would have hidden it. `exactValue` returns the rational, so no worker.
+    reference: '1/2',
+    at: { a: '-2', b: '3' },
+  },
+  {
+    id: 'the-midpoint-halves-the-distance-1',
+    knowledgePointId: 'a-midpoint-is-an-average-per-axis-and-costs-two-numbers',
+    kind: 'evaluate',
+    prompt:
+      'Same two points, and now measure from A to the midpoint. Evaluate '
+      + 'sqrt(((a + c)/2 - a)^2 + ((b + d)/2 - b)^2) at a = -2, b = 1, c = 3, d = 13, where '
+      + '(a, b) is A and (c, d) is B: the expression averages each axis to get the midpoint, '
+      + 'subtracts A from it, and applies the previous point\'s formula. Read the answer against '
+      + 'the-distance-is-a-hypotenuse-1, which gave 13 for the whole segment. Both halves come '
+      + 'out the same, and what puts the midpoint ON the segment is that they ADD to the whole — '
+      + 'equal distances alone would put it anywhere on the perpendicular bisector.',
+    given: 'sqrt(((a + c)/2 - a)^2 + ((b + d)/2 - b)^2)',
+    variables: REAL_ABCD,
+    // The midpoint is (1/2, 7), so the legs are 5/2 and 6 and the square is
+    // 25/4 + 36 = 169/4, whose root is 13/2 — exactly half of 13. Rational
+    // rather than integer on purpose: the carried half survives into the answer,
+    // so a learner who rounded the midpoint cannot reach it. `exactValue`
+    // settles sqrt(169/4) with no worker, which was checked before this task was
+    // written rather than assumed.
+    reference: '13/2',
+    at: { a: '-2', b: '1', c: '3', d: '13' },
+  },
+  {
+    id: 'recover-the-far-endpoint-x-1',
+    knowledgePointId: 'a-coordinate-is-not-the-step-that-reaches-it',
+    kind: 'evaluate',
+    prompt:
+      'A different segment: one endpoint A(−2, 1) and midpoint M(4, −3). The other endpoint B '
+      + 'satisfies (−2 + x)/2 = 4 on the x-axis, so clearing the halving first gives '
+      + 'x = 2(4) − (−2). Evaluate 2*b - a at a = -2, b = 4, where a is A\'s x-coordinate and b '
+      + 'is M\'s. The number 6 is also available in this problem — it is b − a, the step from A '
+      + 'to M — and it is the commonest wrong answer here. It is not wrong arithmetic: it is a '
+      + 'displacement handed back where a coordinate was asked for.',
+    given: '2*b - a',
+    variables: REAL_AB,
+    // 2(4) − (−2) = 8 + 2 = 10. The rejected 6 is 4 − (−2), the x-part of the
+    // displacement A→M, which is also the x-part of M→B — that the two agree is
+    // what makes M the midpoint, and neither of them answers the question.
+    reference: '10',
+    at: { a: '-2', b: '4' },
+  },
+  {
+    id: 'recover-the-far-endpoint-y-1',
+    knowledgePointId: 'a-coordinate-is-not-the-step-that-reaches-it',
+    kind: 'evaluate',
+    prompt:
+      'Same segment, other axis — because the answer is a POINT and one coordinate is half of '
+      + 'it. B\'s y satisfies (1 + y)/2 = −3, so y = 2(−3) − 1. Evaluate 2*b - a at a = 1, '
+      + 'b = -3, where a is now A\'s y-coordinate and b is M\'s. The same expression as '
+      + 'recover-the-far-endpoint-x-1 and the same two moves; what changes is that both signs '
+      + 'bite, since doubling a negative midpoint goes further down and taking the +1 off it '
+      + 'goes further down again.',
+    given: '2*b - a',
+    variables: REAL_AB,
+    // 2(−3) − 1 = −6 − 1 = −7. One expression, two tasks, because a point is two
+    // numbers — the shape `systems-of-linear-equations` established for the x
+    // and the y of one system. Picked so the answer is below BOTH the known
+    // endpoint and the midpoint, which "average" makes easy to doubt.
+    reference: '-7',
+    at: { a: '1', b: '-3' },
+  },
+
   // ── triangle-trigonometry ───────────────────────────────────────────────
   //
   // Six tasks, two per knowledge point: five `evaluate` and one

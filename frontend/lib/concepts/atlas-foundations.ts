@@ -1256,9 +1256,11 @@ const EUCLIDEAN_GEOMETRY: MapArea = {
   covers:
     'Geometry both ways round. Synthetic plane and solid geometry — circles, area and volume, ' +
     'and the deductive style the subject exists to teach — and then the same plane done with ' +
-    'algebra, where lines and conics are equations, distance and midpoint are formulas, a ' +
-    'transformation acts on coordinates, and three dimensions are a third number. ' +
-    'Ten of its nodes have left for the plane-geometry syllabus, where ' +
+    'algebra, where lines and conics are equations, a ' +
+    'transformation acts on coordinates, and three dimensions are a third number. Distance and ' +
+    'midpoint used to be named in that list and have been written, so they are pointed at ' +
+    'rather than described here. ' +
+    'Eleven of its nodes have left for the plane-geometry syllabus, where ' +
     'they have problems written for them, and this area points at them through `needs` rather ' +
     'than restating them: the undefined terms and the first angle facts — what a straight line ' +
     'and a full turn force, a vertical pair, and what a parallel pair forces across a ' +
@@ -1386,7 +1388,26 @@ const EUCLIDEAN_GEOMETRY: MapArea = {
     'count that syllabus teaches and the subject holds nothing curved to make it out of. ' +
     'That leaves this area owing NOTHING on either unfinished journey for the first time since ' +
     'the merge, which is the state the merge was argued for and not a sign the area is spent: ' +
-    'ten nodes are still here and none of them is on a route anybody is walking yet.',
+    'ten nodes are still here and none of them is on a route anybody is walking yet. ' +
+    'And distance and midpoint have gone as a fourteenth, which is the first departure from ' +
+    'this area that no route asked for — every journey reads zero unwritten now, so what chose ' +
+    'it was an edge rather than a destination: Pythagoras with the two legs read off the axes ' +
+    'and the subtraction order erased by the squaring, so there is no first point to get wrong; ' +
+    'the midpoint as a per-axis average that costs TWO numbers and a carried half, with the two ' +
+    'pieces it cuts shown to ADD to the whole, which is what puts it on the segment at all ' +
+    'since equal distances alone put it anywhere on the perpendicular bisector; and the same ' +
+    'relation run backwards to recover an endpoint, where the error worth naming is a ' +
+    'displacement handed back in place of a coordinate. It went to `plane-geometry` and not to ' +
+    'the vectors syllabus holding `cartesian-plane`, which is the better home on subject ' +
+    'matter, and the reason is that the node declared `exercises: [\'pythagoras\']` — an ' +
+    '`encompasses` edge, and `links` below carries `prerequisite` edges only, so an ' +
+    '`encompasses` across two files is expressible nowhere and filing it with the vectors ' +
+    'would have deleted it in silence. Eleven of this area\'s departures have now gone to ' +
+    '`plane-geometry`, two to the vectors and one to the solids. What stayed behind is the rest ' +
+    'of the analytic half and is untouched by it: slope and the three forms of a line, the ' +
+    'circle as an equation, the conics, the parametric curves and the regions — none of which ' +
+    'has a credit edge into any syllabus, so nothing about this promotion pulls the next one ' +
+    'after it.',
   /**
    * THIS AREA ABSORBED `COORDINATE_GEOMETRY`, AND IT IS THE SAME FLOOR AGAIN.
    *
@@ -2545,15 +2566,40 @@ const EUCLIDEAN_GEOMETRY: MapArea = {
      * it trips the check and needs the area merge that file's own note calls
      * for. That is a map question, not an authoring one.
      */
-    {
-      id: 'distance-and-midpoint',
-      match: /\b(distance formula|euclidean distance|midpoint)\b/i,
-      name: 'Distance and midpoint',
-      is: 'Pythagoras in coordinates, and the average of coordinates as the midpoint.',
-      needs: ['cartesian-plane', 'pythagoras'],
-      exercises: ['pythagoras'],
-      terms: 'distance formula midpoint coordinate',
-    },
+    /*
+     * `distance-and-midpoint` WAS HERE AND IS NOW A CONCEPT of `plane-geometry`,
+     * in ontology-geometry.ts — the fourteenth node to leave this area. See the
+     * block above the node list for why a promotion is a move out of this list
+     * rather than a fill-in: `atlasProblems` rejects a map node whose id
+     * collides with an authored concept.
+     *
+     * IT IS THE FIRST DEPARTURE FROM THIS AREA TO STRAND AN `encompasses`, and
+     * that is the stranding no test in the build can catch. The node declared
+     * `exercises: ['pythagoras']` as well as needing it, and `expandEdges`
+     * turns `exercises` into an `encompasses` — the edge that makes credit
+     * computable. Deleting the node deletes it, `encompasses` gates nothing, so
+     * both suites stay green while a learner silently starts re-drilling
+     * Pythagoras after every distance problem. It was re-declared in
+     * `PLANE_GEOMETRY.edges`; the only reason it was looked for is that
+     * ontology-geometry.ts predicted it when `pythagoras` itself was promoted,
+     * calling the edge "half-live" and naming "the other endpoint's promotion"
+     * as the remaining half.
+     *
+     * AND IT IS WHY THE CONCEPT DID NOT GO TO THE VECTORS. `cartesian-plane` is
+     * authored in `vectors-and-independence`, this node's other `needs`, and on
+     * subject matter that is plainly the better home for a coordinate concept.
+     * But `links` carries `prerequisite` only, so an `encompasses` across two
+     * files has nowhere to live: filing it there would have cost the edge. So
+     * the prerequisite on the plane came back here as this area's eighth
+     * `links` entry — see the note on it — and the other two edges went into
+     * the geometry syllabus together.
+     *
+     * The departure fanned this area's root set out from five to SIX, one
+     * leaving and TWO arriving, which is a shape no earlier promotion here
+     * produced. `lines-in-the-plane` and `loci-and-regions` each named this
+     * node and one concept outside the area, so this was the last in-area
+     * prerequisite for both of them at once.
+     */
     {
       id: 'lines-in-the-plane',
       match: /\b(linear equation|slope|line \(geometry\))\b/i,
@@ -2958,6 +3004,45 @@ const EUCLIDEAN_GEOMETRY: MapArea = {
         'a cross-section along a length has no picture for the axis the third number is ' +
         'measured on, and the cross product\'s whole content is that TWO directions pick out a ' +
         'plane and a third stands off it.',
+    },
+    {
+      /*
+       * The eighth, and the fourteenth promotion's — and it is the first entry
+       * here whose other half could NOT have become a `links` entry, which is
+       * the thing this list cannot express and therefore has to be told about.
+       *
+       * `distance-and-midpoint` declared `['cartesian-plane', 'pythagoras']`
+       * plus `exercises: ['pythagoras']`. The prerequisite on `pythagoras` and
+       * the `encompasses` both went into `PLANE_GEOMETRY.edges`, because that is
+       * the ontology the node joined. This one could not follow:
+       * `cartesian-plane` is a concept of `vectors-and-independence`, and an
+       * ontology may only name concepts it CONTAINS. Same route as the seventh
+       * entry, both ends authored and in two subjects neither of which is this
+       * area's.
+       *
+       * WHY THE CONCEPT WENT TO `plane-geometry` AND NOT TO THE VECTORS, which
+       * is the question this entry otherwise invites: `expandEdges` hard-codes
+       * `kind: 'prerequisite'` on every row of this list, so an `encompasses`
+       * whose endpoints end up in two files is expressible in no file at all.
+       * Filing the concept with `cartesian-plane` would have forced the credit
+       * edge to `pythagoras` to be dropped — and dropped silently, since
+       * `encompasses` gates nothing and no assertion in either suite reads it.
+       * So the filing was decided by this list's one-kind limitation rather
+       * than by subject matter, and the cost is this row. ontology-geometry.ts
+       * carries the full argument.
+       *
+       * It gates, like the seventh and unlike the first two: `cartesian-plane`
+       * is three knowledge points, so a learner really must demonstrate the
+       * plane before the distance formula is introduced.
+       */
+      from: 'cartesian-plane',
+      to: 'distance-and-midpoint',
+      because:
+        'The formula is about coordinates before it is about distance: its two legs are a ' +
+        'difference of x-coordinates and a difference of y-coordinates, so a learner for whom a ' +
+        'point is not yet an ordered pair of signed numbers has nothing to subtract. The right ' +
+        'angle it leans on is the plane\'s own — the legs are perpendicular because the axes ' +
+        'are, which is a fact about the coordinate system and not about the figure.',
     },
   ],
 }

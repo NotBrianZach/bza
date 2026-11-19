@@ -160,7 +160,13 @@ export const REGIONS: Region[] = [
     km: 1500, area: 'euclidean-geometry', xy: { x: 0.438, y: 0.331 },
     // Solids with the plane: the Stone Diggers cut in three dimensions.
     authored: ['plane-geometry', 'solid-measure'],
-    anchors: ['constructions', 'distance-and-midpoint', 'lines-in-the-plane'],
+    // `distance-and-midpoint` was the middle anchor until it was authored into
+    // `plane-geometry`. An anchor must be a node of `area`, so a promotion
+    // empties the slot rather than leaving it — and `armatureProblems` says so
+    // loudly, which is the one check this table has that the game's copy does
+    // not. `isometries-and-symmetry` replaces it: still synthetic, still about
+    // what a cut preserves, and still in the area.
+    anchors: ['constructions', 'isometries-and-symmetry', 'lines-in-the-plane'],
     because: 'The Stone Digger Guild cuts straight lines through mountains for a living, under elected assemblies that have to agree where the line goes. Compass, straightedge, and an argument about measurement.',
   },
   {
@@ -333,6 +339,26 @@ export function regionBy(key: string): PlacedRegion | null {
 
 export function regionForArea(areaId: string): PlacedRegion | null {
   return regions().find(r => r.area === areaId) ?? null
+}
+
+/**
+ * Which region a concept stands in, by the subject it belongs to.
+ *
+ * The bridge that turns the map from a thing you read into a board you play
+ * on. A traversal's position is a concept id; a concept carries a `subjectId`;
+ * and a subject is either one of the nineteen mapped areas or one of the ten
+ * authored ones — both of which this table already places. So "where am I"
+ * becomes a pin, and a route through the graph becomes a route across a world.
+ *
+ * Both partitions are checked, in that order, because a subject id is drawn
+ * from one namespace or the other and never both. `armatureProblems` is what
+ * guarantees the second lookup can succeed at all: it fails if any authored
+ * subject belongs to no region, so a concept whose subject ships cannot land
+ * nowhere.
+ */
+export function regionForConcept(subjectId: string): PlacedRegion | null {
+  return regions().find(r =>
+    r.area === subjectId || (r.authored ?? []).includes(subjectId)) ?? null
 }
 
 /**
