@@ -403,7 +403,20 @@ export default function LearnPage() {
             // the world map gives twenty-one named places with one idea each,
             // navigable before you know any of them. It is second rather than
             // first because the graph is the authority and this is the way in.
-            ['world', 'World'],
+            /*
+             * "RPG mode" and not "The Armature", which is what this was called
+             * and still is in the code (lib/concepts/armature.ts). The two
+             * names answer different questions and only one of them is the
+             * reader's: "Armature" says what the thing IS to somebody who
+             * already knows the feature exists, and "RPG mode" says what you
+             * get from clicking it. A tab label only ever gets to do the
+             * second.
+             *
+             * The `world` param is unchanged on purpose — it is in the home
+             * page's link and in anything anyone has already saved, and a URL
+             * is not a label.
+             */
+            ['world', 'RPG mode'],
             // Between the maps and the review queue on purpose: a walk is
             // entered from a map and leaves for a problem, so it sits on the
             // road between them rather than at the end of the row.

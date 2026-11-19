@@ -18,7 +18,7 @@
  */
 
 import { execFileSync } from 'node:child_process'
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
@@ -4621,6 +4621,32 @@ t('at least one region has material written, or the map is a lie',
  * and therefore to Ringed Mountains alone — a journey that could never leave
  * one pin, which is not a journey.
  */
+/*
+ * The interface calls it "RPG mode"; the code calls it the Armature. That
+ * split was a deliberate decision and it is the kind that drifts back — a new
+ * surface reaches for the module name because that is what the import says,
+ * and the product quietly grows a second name nobody chose.
+ *
+ * Source text rather than a render, because these are client components this
+ * harness cannot load. Deliberately narrow: it asserts the invariant — no
+ * user-facing string says Armature — rather than pinning every word of copy.
+ */
+const UI_FILES = ['app/learn/page.tsx', 'app/page.tsx', 'components/concepts/ArmatureMap.tsx']
+const uiSources = UI_FILES.map(p => ({ p, text: readFileSync(join(FRONTEND, p), 'utf8') }))
+
+t('the interface offers "RPG mode"',
+  uiSources.some(s => s.text.includes("'RPG mode'")))
+
+/* Comments and identifiers are where the code name BELONGS. A leak is the
+   word in a line that is neither — a label, an alt, a title, JSX text. */
+const nameLeaks = uiSources.flatMap(({ p, text }) => text.split('\n')
+  .map((line, i) => ({ p, n: i + 1, line }))
+  .filter(({ line }) => /Armature/.test(line))
+  .filter(({ line }) => !/^\s*(\*|\/\/|\/\*)/.test(line))
+  .filter(({ line }) => !/ArmatureMap|ARMATURE_|concepts.armature/.test(line)))
+t('no user-facing string calls it the Armature',
+  nameLeaks.length === 0, nameLeaks.map(l => `${l.p}:${l.n}`).join(', '))
+
 const JOURNEY = atlas.composeAtlas([], ONTOLOGIES)
 
 t('a journey can cross the world rather than sitting in one city',

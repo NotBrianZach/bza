@@ -15,6 +15,20 @@ import { conceptById } from '@/lib/concepts/registry'
 /**
  * The Armature — nineteen areas of mathematics given a geography.
  *
+ * ── TWO NAMES, ON PURPOSE ─────────────────────────────────────────────────
+ *
+ * In the code this is the Armature; in the interface it is "RPG mode". That
+ * is not drift, it is the two names answering different questions. "Armature"
+ * says what the thing is once you know it exists — the framework a form is
+ * modelled onto, which is what a prerequisite graph is to a subject. A tab
+ * label does not get to do that: it has one line to tell somebody who has
+ * never seen this what they get by clicking, and the answer is an RPG.
+ *
+ * So: no user-facing string here says "Armature", and the module, the file and
+ * the exports all still do. The `?tab=world` parameter also stays, because a
+ * URL is not a label and that one is already in the home page's link and in
+ * whatever anybody has saved.
+ *
  * The name is derived from Armat Sur, the tabletop setting the map and its
  * city names come from; see the header of lib/concepts/armature.ts for why
  * that particular word. The drawing keeps its original title, which is why
@@ -213,11 +227,10 @@ export default function ArmatureMap({ onBrowse, onPractise, journey, openings, o
   return (
     <div className='space-y-3'>
       <p className='text-xs leading-snug text-gray-400'>
-        Every sphere of influence on the Armature carries one area of mathematics, so
-        the atlas has a geography. Travelling outward from the centre runs roughly
-        rules → structure → change → analysis. That is a story, not a syllabus:
-        nothing here gates anything, and what actually has to come first is on the
-        Concepts tab.
+        Every sphere of influence carries one area of mathematics, so the atlas has a
+        geography. Travelling outward from the centre runs roughly rules → structure
+        → change → analysis. That is a story, not a syllabus: nothing here gates
+        anything, and what actually has to come first is on the Concepts tab.
       </p>
 
       <div className='grid gap-3 lg:grid-cols-[minmax(0,2fr)_minmax(220px,1fr)]'>
@@ -230,7 +243,7 @@ export default function ArmatureMap({ onBrowse, onPractise, journey, openings, o
         >
           <Image
             src={ARMATURE_MAP.src}
-            alt='The Armature — a geographical atlas of the areas of mathematics'
+            alt='A geographical atlas of the areas of mathematics, drawn as a fantasy world map'
             fill
             sizes='(max-width: 1024px) 100vw, 60vw'
             className='object-cover'
@@ -343,7 +356,7 @@ export default function ArmatureMap({ onBrowse, onPractise, journey, openings, o
           names and the only question is whether we explain it or look as
           though we were hiding it. */}
       <p className='text-[10px] text-gray-600'>
-        The Armature takes its geography, its city names and this atlas from the
+        This mode takes its geography, its city names and this atlas from the
         tabletop setting Armat&nbsp;Sur. The mathematics is ours.
       </p>
     </div>
