@@ -91,8 +91,13 @@ const {
  * list. Reaching it by index would re-break what the expressions-and-equations
  * block learned: a positional reference keeps reading correctly until the
  * registry is reordered, and then asserts the wrong subject in silence.
+ *
+ * `RATIONAL_EXPRESSIONS` is here for the same reason, added by the nineteenth
+ * promotion: its group asserts that the binomial theorem's `encompasses` edge
+ * is in THAT ontology's edge list specifically, since that is the edge no
+ * `links` entry could have carried and the reason the subject was chosen.
  */
-const { ONTOLOGIES, FUNCTIONS_AND_INVERSES: FUNCTIONS } = ontology
+const { ONTOLOGIES, FUNCTIONS_AND_INVERSES: FUNCTIONS, RATIONAL_EXPRESSIONS } = ontology
 const offerings = req(join(outDir, 'concepts', 'offerings.js'))
 const { conceptsInOffering, relatedConcepts, conceptHref } = offerings
 const {
@@ -3385,12 +3390,41 @@ t('and the merged geometry area declares none, which is why that merge stranded 
  * the practical case for naming members, over and above the argument. There is
  * no way to know which of the three outcomes a promotion will have without
  * computing the set on both sides of it.
+ *
+ * EIGHT AFTER THE NINETEENTH, WHICH IS SHRINKAGE AND THE CLEANEST CASE OF IT.
+ * `binomial-theorem` was a root here and is a concept of `rational-expressions`
+ * now. Nothing took its place, and the reason is structural rather than
+ * incidental: a node can only substitute into this set by having its last
+ * IN-AREA prerequisite authored away, and all three of this node's dependents
+ * live in other areas — `power-and-sum-rules`, `counting-principles` and
+ * `discrete-distributions`. A departing node with no in-area dependent can
+ * therefore only ever shrink this set.
+ *
+ * So the four promotions since the merge have produced shrinkage, fan-out,
+ * substitution and shrinkage, and the causes rather than the order are the
+ * thing to read: whether the set grows, holds or shrinks is decided entirely by
+ * how many nodes INSIDE this area had the departing node as their last
+ * remaining in-area prerequisite — three, then one, then none.
  */
-t('the merged algebra area has exactly these nine roots, one of them new since the systems',
+t('the merged algebra area has exactly these eight roots, the binomial having left',
   roots(areaOntology(ALGEBRA)).slice().sort().join(' ')
-    === 'absolute-value binomial-theorem complex-numbers linear-inequalities '
+    === 'absolute-value complex-numbers linear-inequalities '
       + 'nonlinear-systems percent radical-equations scientific-notation word-problems',
   roots(areaOntology(ALGEBRA)).slice().sort().join(' '))
+/*
+ * The departing node asserted on both halves, which is the shape the comment
+ * above argues for: that it has left the root set, AND that nothing replaced
+ * it. A check on the first alone would pass on a promotion that silently
+ * substituted a node in, and the substitution case is the one this area has
+ * already produced twice.
+ */
+t('and nothing substituted in behind it, because none of its dependents is a node here',
+  !roots(areaOntology(ALGEBRA)).includes('binomial-theorem')
+  && isTeachable(MATHEMATICS, 'binomial-theorem')
+  && dependentsOf(MATHEMATICS, 'binomial-theorem').length === 3
+  && dependentsOf(MATHEMATICS, 'binomial-theorem')
+    .every(d => !ALGEBRA.nodes.some(n => n.id === d)),
+  dependentsOf(MATHEMATICS, 'binomial-theorem').join(' '))
 t('and the promoted ratio is no longer one, because it is no longer a node of any area',
   !roots(areaOntology(ALGEBRA)).includes('ratio-and-rate')
   && isTeachable(MATHEMATICS, 'ratio-and-rate')
@@ -3479,6 +3513,120 @@ t('and the gate on both of those tightened onto the solve, which now stands betw
       .includes('variables-and-expressions')
   }),
   FANNED_OUT.map(id => `${id}: ${gatingPrerequisitesOf(MATHEMATICS, id).join('/')}`).join(' | '))
+
+/**
+ * THE NINETEENTH PROMOTION — AND THE FIRST WHOSE TWO `needs` WENT TO TWO
+ * DIFFERENT HOMES.
+ *
+ * `binomial-theorem` declared `needs: ['polynomial-arithmetic',
+ * 'exponent-rules']`. It was authored into `rational-expressions`, which
+ * contains the first and not the second, so one edge became an ordinary
+ * prerequisite in that ontology and the other had to become a `links` entry on
+ * the area it left. Every promotion before this one sent all of its stranded
+ * edges to a single destination, so the split is what this group is for.
+ *
+ * The `encompasses` is the part worth asserting hardest, because losing it is
+ * SILENT. `links` carries `from`, `to` and `because` and no edge KIND, so a
+ * credit edge is expressible only inside an ontology that holds both ends.
+ * Had this concept been filed with the exponent rules instead, the
+ * prerequisite would still have been expressible as a `links` entry and the
+ * `encompasses` would have been expressible nowhere at all — and nothing would
+ * have gone red, because `encompasses` affects what comes due rather than what
+ * gates. The choice of subject was made on this, so it is checked here.
+ */
+group('the nineteenth promotion — one node, two edge destinations')
+const BINOMIAL_LINKS = (ALGEBRA.links ?? [])
+  .filter(l => l.to === 'binomial-theorem' || l.from === 'binomial-theorem')
+t('the binomial theorem is authored, and is no longer a node of any area',
+  isTeachable(MATHEMATICS, 'binomial-theorem')
+  && areaOf(MATHEMATICS, 'binomial-theorem') === 'rational-expressions'
+  && !AREAS.some(a => a.nodes.some(n => n.id === 'binomial-theorem')),
+  `binomial-theorem@${areaOf(MATHEMATICS, 'binomial-theorem')}`)
+t('both of the needs it declared survive in the composed graph',
+  ['polynomial-arithmetic', 'exponent-rules'].every(id =>
+    prerequisitesOf(MATHEMATICS, 'binomial-theorem').includes(id)
+    && isTeachable(MATHEMATICS, id)),
+  prerequisitesOf(MATHEMATICS, 'binomial-theorem')
+    .map(id => `${id}@${areaOf(MATHEMATICS, id)}`).join(' '))
+/*
+ * The in-ontology half: both ends are concepts of `rational-expressions`, so
+ * the edge belongs there and NOT in `links`. A `links` entry for it would be a
+ * second copy of an edge `composeAtlas` already resolves, and a duplicate is
+ * not something it notices or any other test catches.
+ */
+t('the same-subject edge lives in the ontology and not in links',
+  RATIONAL_EXPRESSIONS.edges.some(e => e.kind === 'prerequisite'
+    && e.from === 'polynomial-arithmetic' && e.to === 'binomial-theorem')
+  && !BINOMIAL_LINKS.some(l => l.from === 'polynomial-arithmetic'),
+  BINOMIAL_LINKS.map(l => `${l.from}->${l.to}`).join(' '))
+/*
+ * The cross-subject half. `exponent-rules` is a concept of
+ * `exponents-and-logarithms`, so neither ontology may name this edge —
+ * `ontologyProblems` would report an unknown endpoint — and `links` is the only
+ * home. Asserted from both sides: present as a link with a reason, and absent
+ * from both ontologies' own edge lists.
+ */
+t('the cross-subject edge is a links entry on the area the node left, with a reason',
+  BINOMIAL_LINKS.filter(l => l.from === 'exponent-rules').length === 1
+  && !!BINOMIAL_LINKS.find(l => l.from === 'exponent-rules')?.because,
+  BINOMIAL_LINKS.map(l => `${l.from}->${l.to}`).join(' '))
+t('and no ontology declares it, which is why links had to',
+  ONTOLOGIES.every(o => !o.edges.some(e =>
+    e.from === 'exponent-rules' && e.to === 'binomial-theorem')),
+  ONTOLOGIES.filter(o => o.edges.some(e =>
+    e.from === 'exponent-rules' && e.to === 'binomial-theorem'))
+    .map(o => o.subject.id).join(' '))
+/*
+ * No per-concept duplicate check here, deliberately. The double-emit this
+ * promotion could have caused — leaving a `links` entry in place while also
+ * declaring the edge in the ontology — is already caught twice over by the
+ * whole-graph assertions near the top of this area's section: `no links entry
+ * has both of its ends inside its own area`, and `the composed graph holds no
+ * edge twice`. A third copy scoped to one concept would add a maintenance
+ * burden and no coverage.
+ */
+/*
+ * The credit edge — the one `links` could not have carried. It is what decided
+ * the subject, so a later move of this concept into another ontology should
+ * fail here rather than quietly drop it.
+ */
+t('the encompasses edge is declared, in the ontology, with a rationale',
+  RATIONAL_EXPRESSIONS.edges.some(e => e.kind === 'encompasses'
+    && e.from === 'binomial-theorem' && e.to === 'polynomial-arithmetic' && !!e.rationale),
+  RATIONAL_EXPRESSIONS.edges.filter(e => e.from === 'binomial-theorem')
+    .map(e => `${e.kind}->${e.to}`).join(' '))
+/*
+ * THE GATE, AND WHY THIS ONE IS DIFFERENT FROM EVERY OTHER `links` ENTRY ON
+ * THIS AREA. The entries above it were written while one end was an unwritten
+ * map node, and `gatingPrerequisitesOf` looks THROUGH an unteachable
+ * prerequisite rather than at it — so they stand in the graph and gate nobody.
+ * Both ends of this one are authored, so it gates on arrival.
+ *
+ * Asserted as "names both, and both are teachable" rather than by listing the
+ * set, because the gating walk returns NEAREST authored ancestors and a later
+ * promotion in between would change the set without breaking the claim.
+ */
+t('and it gates immediately, both ends being authored — unlike every other link on this area',
+  ['polynomial-arithmetic', 'exponent-rules'].every(id =>
+    gatingPrerequisitesOf(MATHEMATICS, 'binomial-theorem').includes(id)
+    && isTeachable(MATHEMATICS, id)),
+  gatingPrerequisitesOf(MATHEMATICS, 'binomial-theorem').join(' '))
+/*
+ * The three dependents, which are the edges a promotion does NOT touch. All
+ * three are declared at the far end, in three different files, so all three
+ * resolve through `composeAtlas` untouched. Each half is required, so the claim
+ * cannot pass vacuously on a node that has since been promoted away.
+ */
+const BINOMIAL_DEPENDENTS = ['power-and-sum-rules', 'counting-principles', 'discrete-distributions']
+t('its three dependents still declare the edge themselves, in three other areas',
+  BINOMIAL_DEPENDENTS.every(id => {
+    const area = AREAS.find(a => a.nodes.some(n => n.id === id))
+    if (!area || area.id === 'algebra-foundations') return false
+    return (area.nodes.find(n => n.id === id).needs ?? []).includes('binomial-theorem')
+      && prerequisitesOf(MATHEMATICS, id).includes('binomial-theorem')
+  }),
+  BINOMIAL_DEPENDENTS.map(id =>
+    `${id}@${AREAS.find(a => a.nodes.some(n => n.id === id))?.id}`).join(' '))
 
 /**
  * THE EIGHTEENTH PROMOTION — AND THE FIRST OUT OF THIS AREA WHOSE EFFECT

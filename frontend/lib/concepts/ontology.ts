@@ -157,6 +157,254 @@ const CONCEPTS: Concept[] = [
     ],
   },
 
+  /**
+   * The binomial theorem — the nineteenth promotion out of the atlas, and the
+   * first one taken for its RULABILITY rather than for a route.
+   *
+   * ── Why it was the one worth doing ───────────────────────────────────────
+   *
+   * All ten learning journeys read zero unwritten before this was authored, so
+   * the route demand that chose the previous several promotions is spent and
+   * the tie-break had to come from somewhere else. What decided it is that this
+   * concept settles LOCALLY. `exactValue` in numerals.ts is exact rational
+   * arithmetic — bigint over bigint — so an expansion evaluated at a stated
+   * input is ruled with no worker at all, while the expansion itself is a
+   * `transform_to_form` the CAS rules. That is the same two-halves shape
+   * `polynomial-roots` was taken for, and it is a property of the mathematics
+   * rather than of the authoring.
+   *
+   * `complex-numbers` was the obvious rival — it is the next node this
+   * ontology's own `quadratic-formula` points at, and it would have handed an
+   * edge back from `algebra-foundations.links`. It was declined on exactly the
+   * ground above. `exactValue` has no complex case, so EVERY expression
+   * containing the imaginary unit returns null: `(3 + 2i)(3 − 2i)` is
+   * unsettleable locally even though its value is the integer 13. Authoring it
+   * would have meant extending the named `WORKER_ONLY` list in
+   * tests/concepts-logic.mjs and then loosening the ratchet beside it, which
+   * asserts that at most three shipped `evaluate` tasks need the worker. That
+   * ratchet is a quality floor, and widening a floor to fit new material is
+   * the one move that makes the floor stop meaning anything. The concept is
+   * worth writing; it wants a complex case in `exactValue` first.
+   *
+   * ── Why it belongs in THIS subject ───────────────────────────────────────
+   *
+   * The node sat in `algebra-foundations`, and the area is not where an
+   * authored concept goes — the subject is. Its two prerequisites are
+   * `polynomial-arithmetic`, which this ontology owns, and `exponent-rules`,
+   * which `exponents-and-logarithms` owns, so the choice was between the two
+   * and it was not close. The binomial theorem is the general case of
+   * `expand-binomials`: that point teaches the four products two brackets owe,
+   * and this one teaches what to do when there are five brackets and sixteen
+   * products. Filing it with the exponent rules would have claimed the subject
+   * matter is powers, when the powers are the bookkeeping and the expansion is
+   * the content.
+   *
+   * It also decided where the two stranded edges could live, which is the part
+   * worth recording because `links` cannot express an edge KIND. Homing it
+   * here makes `polynomial-arithmetic → binomial-theorem` an ordinary
+   * prerequisite below (p15) AND lets the `encompasses` go in beside it (e12).
+   * Homed in the other subject, the prerequisite would have been expressible
+   * as a `links` entry and the `encompasses` would have been expressible
+   * NOWHERE — a `links` entry carries `from`, `to` and `because` and no kind —
+   * so the credit edge would have been silently lost. The `exponent-rules`
+   * edge is the one that could not come here, and it is a `links` entry on
+   * `algebra-foundations`, filed in the area that owned the departing node.
+   *
+   * ── What it does not cover ───────────────────────────────────────────────
+   *
+   * No general n. Every worked example and every task is a specific small
+   * exponent, read off a specific row, because the closed form needs a
+   * factorial and `ALLOWED_FUNCTIONS` in expr.ts has none — so `C(n, k)`
+   * cannot be written in a task's `given` at all. The recursive account is not
+   * a simplification for the learner's benefit: adding adjacent entries IS how
+   * the triangle is built, and it is the account that explains why the
+   * coefficients are symmetric. What is genuinely missing is the counting
+   * argument for why the entry is a count of subsets, and that is
+   * `counting-principles` on the map, which depends on this concept rather
+   * than the other way round.
+   */
+  {
+    id: 'binomial-theorem',
+    name: 'The binomial theorem',
+    subjectId: subject.id,
+    scope: {
+      id: 'binomial-theorem',
+      label: 'The binomial theorem',
+      hint: 'binomial theorem pascal triangle binomial coefficient',
+      // The map node's pattern, carried across unchanged and deliberately NOT
+      // widened to Pascal's triangle. `counting-principles` in
+      // atlas-structures.ts already matches `pascal's triangle`, and the
+      // article on the triangle is about the counting object rather than about
+      // this expansion. Two concepts claiming it would make the longer pattern
+      // win the sort in `conceptsInOffering`, which is the mistake the note on
+      // `factoring-quadratics`'s pattern records.
+      match: /\bbinomial (theorem|coefficient)\b/i,
+    },
+    fidelity: 'checked',
+    objectives: [
+      {
+        id: 'expand-a-binomial-power',
+        statement:
+          'Expand (a + b)ⁿ for a small n by reading the coefficients off row n of Pascal\'s ' +
+          'triangle, rather than multiplying the brackets together one pair at a time.',
+        taskKinds: ['transform_to_form', 'evaluate'],
+      },
+      {
+        id: 'check-an-expansion-by-substituting',
+        statement:
+          'Check a claimed expansion by evaluating both sides at a convenient value, and say ' +
+          'what one agreeing value does and does not establish.',
+        taskKinds: ['evaluate'],
+      },
+    ],
+    knowledgePoints: [
+      {
+        id: 'pascal-row-is-the-coefficients',
+        conceptId: 'binomial-theorem',
+        statement:
+          'The coefficients of (a + b)ⁿ are row n of Pascal\'s triangle, where each entry is the ' +
+          'sum of the two above it. So the coefficients of (a + b)⁵ are row 5, which you get ' +
+          'from row 4 by adding adjacent entries — no brackets multiplied at all.',
+        position: 1,
+        automaticityTarget: 40_000,
+        workedExample: {
+          problem: 'Expand (x + 2)⁴.',
+          subgoals: [
+            {
+              label: 'Which row, and how long is it?',
+              detail:
+                'n = 4, so row 4: 1, 4, 6, 4, 1. It comes from row 3 — 1, 3, 3, 1 — by adding ' +
+                'each adjacent pair and keeping a 1 at each end.',
+              socratic:
+                'Row 3 is 1, 3, 3, 1, and each entry of the next row is the sum of the two above ' +
+                'it. What are the entries of row 4, and why does it have five of them rather ' +
+                'than four?',
+            },
+            {
+              label: 'Pair each coefficient with a power of each part',
+              detail:
+                'The power of x runs down 4, 3, 2, 1, 0 while the power of 2 runs up 0, 1, 2, 3, ' +
+                '4. The two powers add to 4 in every term, because every term takes one part ' +
+                'from each of the four brackets.',
+              socratic:
+                'There are five terms and each carries a power of x and a power of 2. The first ' +
+                'is x⁴, which takes no 2 at all. Given that every term draws from all four ' +
+                'brackets, what do the two powers have to add to — and so what pair does each of ' +
+                'the other four terms carry?',
+            },
+            {
+              label: 'The row entry is not the whole coefficient',
+              detail:
+                '1·x⁴, 4·x³·2 = 8x³, 6·x²·4 = 24x², 4·x·8 = 32x, 1·16 = 16. The power of 2 ' +
+                'contributes a number as well, which is the step that gets dropped.',
+              socratic:
+                'The middle term is 6·x²·2². The 6 came from the triangle, but it is not what ' +
+                'stands in front of x² in the answer. What is, and what did the 2² contribute?',
+            },
+          ],
+          answer: 'x⁴ + 8x³ + 24x² + 32x + 16',
+        },
+      },
+      {
+        id: 'one-term-without-the-rest',
+        conceptId: 'binomial-theorem',
+        statement:
+          'Each term of the expansion is its own calculation: one entry of the row, times a ' +
+          'power of each part. So a question about a single term never requires expanding the ' +
+          'others — which is the whole reason the theorem is worth more than multiplying out.',
+        position: 2,
+        workedExample: {
+          problem: 'What is the term in x² in (2x − 1)⁵?',
+          subgoals: [
+            {
+              label: 'Which term am I after?',
+              detail:
+                'Only the (2x) part carries an x, so the power of x in a term is the power of ' +
+                '(2x) in it. Wanting x² fixes the power of (2x) at 2, and the powers add to 5, so ' +
+                'the power of (−1) is 3.',
+              socratic:
+                'The two parts here are (2x) and (−1), and only one of them carries an x. If the ' +
+                'term you want has x², what power does (2x) carry — and what does that leave for ' +
+                'the power of (−1)?',
+            },
+            {
+              label: 'Pick the entry that belongs to that split',
+              detail:
+                'Row 5 is 1, 5, 10, 10, 5, 1, indexed by the power of (−1) counting from zero. ' +
+                'The power of (−1) is 3, so the entry is the fourth one: 10.',
+              socratic:
+                'Row 5 has six entries — 1, 5, 10, 10, 5, 1 — one for each power of (−1) from 0 ' +
+                'to 5. You have just fixed that power at 3. Counting from zero, which entry is ' +
+                'yours?',
+            },
+            {
+              label: 'Do not leave the 2 or the minus sitting inside the bracket',
+              detail:
+                '(2x)² = 4x², not x², and (−1)³ = −1, which is where the sign comes from. So the ' +
+                'term is 10·4·(−1)·x² = −40x².',
+              socratic:
+                'You have 10·(2x)²·(−1)³. Two of those three factors contribute a number to the ' +
+                'coefficient and one of them also decides its sign. What is the coefficient of ' +
+                'x², sign included?',
+            },
+          ],
+          answer: '−40x²',
+        },
+      },
+      {
+        id: 'check-by-substituting-a-value',
+        conceptId: 'binomial-theorem',
+        statement:
+          'An expansion claims two expressions are equal at every value, so substituting one ' +
+          'convenient value can catch an error — and substituting 1 into (1 + x)ⁿ makes every ' +
+          'power equal 1, which leaves the row added up and is why row n sums to 2ⁿ.',
+        position: 3,
+        workedExample: {
+          problem: 'Check that (x + 2)⁴ = x⁴ + 8x³ + 24x² + 32x + 16 by substituting a value.',
+          subgoals: [
+            {
+              label: 'Pick a value that is easy on both sides',
+              detail: 'x = 1 makes every power of x equal 1. On the left, (1 + 2)⁴ = 3⁴ = 81.',
+              socratic:
+                'An expansion is a claim about every value of x, so any single value can catch a ' +
+                'mistake. Which value makes every power of x collapse to 1 — and what does the ' +
+                'unexpanded left-hand side come to there?',
+            },
+            {
+              label: 'At that value the right-hand side is just the coefficients',
+              detail: '1 + 8 + 24 + 32 + 16 = 81. The two sides agree.',
+              socratic:
+                'At x = 1 each term on the right is nothing but its own coefficient. What do the ' +
+                'five coefficients add to?',
+            },
+            {
+              label: 'What one value can and cannot settle',
+              detail:
+                'Agreement at a point is not a proof. Had 24x² + 32x been written 23x² + 33x, ' +
+                'the check at x = 1 would still have given 81. A degree-4 identity is settled by ' +
+                'five values, and x = −1 is the cheap second one.',
+              socratic:
+                'Suppose the 24x² and 32x had been mistyped as 23x² and 33x. Would the check at ' +
+                'x = 1 have noticed, and what does your answer say about how much a single ' +
+                'agreeing value proves?',
+            },
+            {
+              label: 'The substitution worth remembering',
+              detail:
+                'Putting a = b = 1 gives (1 + 1)ⁿ = 2ⁿ on one side and the row added up on the ' +
+                'other, so row n always sums to 2ⁿ: row 4 is 1 + 4 + 6 + 4 + 1 = 16 = 2⁴.',
+              socratic:
+                'Row 4 adds to 16 and row 5 adds to 32. Which substitution into (a + b)ⁿ turns ' +
+                'the expansion into exactly "add the row up", and so why must that total always ' +
+                'be a power of two?',
+            },
+          ],
+          answer: 'Both sides are 81 at x = 1, and row 4 sums to 2⁴ = 16.',
+        },
+      },
+    ],
+  },
+
   {
     id: 'factoring-quadratics',
     name: 'Factoring a quadratic',
@@ -1285,6 +1533,13 @@ const EDGES: ConceptEdge[] = [
     rationale: 'Finding a root gives you a factor, and the next step is dividing it out — so the division has to be available before the search is any use.' },
   { id: 'p14', from: 'quadratic-formula', to: 'polynomial-roots', kind: 'prerequisite', promotedBy: 'author',
     rationale: 'Dividing a known factor out of a cubic leaves a quadratic, so the cubic case is only finishable by someone who can finish that.' },
+  // The nineteenth promotion. The node declared
+  // `needs: ['polynomial-arithmetic', 'exponent-rules']`; the first is a concept
+  // of this ontology so the edge belongs here, and the second is a concept of
+  // `exponents-and-logarithms` — which no ontology may name from outside, so it
+  // is a `links` entry on `algebra-foundations`, the area the node left.
+  { id: 'p15', from: 'polynomial-arithmetic', to: 'binomial-theorem', kind: 'prerequisite', promotedBy: 'author',
+    rationale: 'The theorem is a shortcut for multiplying brackets out, and a shortcut is unreadable to somebody who cannot do the thing it shortcuts — the four products of two binomials are what row 2 of the triangle is counting.' },
 
   // ── encompasses ─────────────────────────────────────────────────────────
   // The edges that make credit computable. Each one says: a learner who just did
@@ -1309,6 +1564,13 @@ const EDGES: ConceptEdge[] = [
     rationale: 'The map node said so with `exercises`: factoring a cubic means dividing the found factor out, so the division is performed every time.' },
   { id: 'e11', from: 'polynomial-roots', to: 'factoring-quadratics', kind: 'encompasses', promotedBy: 'author',
     rationale: 'What is left after dividing a root out of a cubic is a quadratic to factor, so a completed cubic contains a completed quadratic.' },
+  // This edge is the reason the binomial theorem was homed in this subject
+  // rather than with the exponent rules. An `encompasses` can only be declared
+  // by an ontology that contains BOTH ends, and a `links` entry carries no edge
+  // kind, so filed in the other subject it would have been expressible nowhere
+  // and the credit would have been lost in silence.
+  { id: 'e12', from: 'binomial-theorem', to: 'polynomial-arithmetic', kind: 'encompasses', promotedBy: 'author',
+    rationale: 'Every term of the expansion is a product of powers that has to be worked out and the terms then stand as a collected sum, so a learner who has just expanded (2x − 1)⁵ has demonstrated the polynomial arithmetic rather than merely used it.' },
 
   // ── interferes_with ─────────────────────────────────────────────────────
   // Symmetric, authored, and each one carries its reason, because an unexplained

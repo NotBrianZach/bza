@@ -78,7 +78,14 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
     'move on both sides must be invertible and not merely the same. What stays behind of it is ' +
     'the answers that are not a single number — the inequality answered by an interval, and the ' +
     'system answered by a point or a line or nothing — which are still named here and not ' +
-    'written, because no way to ask for a solution set exists yet. So the old line between ' +
+    'written, because no way to ask for a solution set exists yet. The binomial theorem has ' +
+    'gone as a nineteenth, taking the expansion itself: that the coefficients of (a+b)^n are a ' +
+    'row of Pascal\'s triangle built by adding adjacent entries, that each term is its own ' +
+    'calculation so a single one can be written down without the others, and that putting ' +
+    'a=b=1 turns the expansion into the row added up and so into a power of two. What stays ' +
+    'behind of that one is nothing, because what would have stayed behind is the counting ' +
+    'argument for why an entry counts subsets, and the map files that in discrete mathematics, ' +
+    'where it depends on the theorem rather than the other way round. So the old line between ' +
     'number and algebra ' +
     '— nothing ' +
     'symbolic on one side, a letter standing for an unknown on the other — still holds of the ' +
@@ -137,11 +144,22 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
    * keeping, because it will not be true of the next merge. A merge has to
    * re-examine every `links` entry in BOTH areas, since an entry whose two
    * ends now sit in the SAME area has become an ordinary `needs` edge and must
-   * be deleted: `composeAtlas` would otherwise emit that edge twice, and a
-   * duplicate is not something it notices or any test catches.
+   * be deleted: `composeAtlas` would otherwise emit that edge twice, and
+   * `composeAtlas` itself does not notice.
+   *
+   * THIS SENTENCE USED TO END "and a duplicate is not something it notices or
+   * any test catches", AND THE SECOND HALF IS NO LONGER TRUE. tests/atlas.mjs
+   * asserts both `no links entry has both of its ends inside its own area` and
+   * `the composed graph holds no edge twice`, either of which fails on the
+   * hand-back being missed. Corrected rather than deleted because the claim was
+   * load-bearing when written — it is the reason this paragraph exists — and
+   * because a comment saying a hazard is unguarded, when it is guarded, costs
+   * the next author the work of re-deriving a check that is already there. The
+   * nineteenth promotion wrote exactly that duplicate before finding the
+   * original.
    * `number-and-arithmetic` arrived with `links` EMPTY — it had handed its
    * last entry back to `arithmetic-foundations` when `gcd-and-lcm` was
-   * promoted — and not one of the eight entries below has both ends inside
+   * promoted — and not one of the nine entries below has both ends inside
    * this area, so nothing had to go and nothing had to move. Nor did either
    * area carry a `confusedWith` on a node that moved: the single interference
    * in the merged area is `linear-inequalities ~ linear-equations`, and both
@@ -167,9 +185,9 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
    * Fifteen nodes against a floor of five was ten promotions, and the two
    * remaining journeys needed four of them from here: `real-number-line`,
    * `ratio-and-rate`, `linear-equations` and `systems-of-linear-equations`.
-   * All four have been taken, so it is eleven nodes, six promotions of room,
-   * and NOTHING owed on either unfinished route. Nothing in this area is held
-   * back by the floor and nothing in it comes close.
+   * All four have been taken, so it is ten nodes, five promotions of room,
+   * and NOTHING owed on any route — there is no unfinished one left. Nothing
+   * in this area is held back by the floor and nothing in it comes close.
    *
    * THE FOURTH WAS THE ONE THIS PARAGRAPH SAID WOULD NEVER HAPPEN, and the
    * sentence is worth quoting rather than quietly replacing: "the honest
@@ -204,18 +222,18 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
    * times now, rather than only been argued for.
    */
   /**
-   * EIGHTEEN NODES HAVE LEFT THE TWO AREAS THAT MADE THIS ONE, AND HAD TO.
+   * NINETEEN NODES HAVE LEFT THE TWO AREAS THAT MADE THIS ONE, AND HAD TO.
    *
    * Twelve from the number half — `place-value`, `integer-arithmetic`,
    * `order-of-operations`, `negative-numbers`, `divisibility`,
    * `fraction-arithmetic`, `prime-factorisation`, `gcd-and-lcm`,
    * `roots-and-irrationals`, `decimal-representation`, `real-number-line` and
    * `ratio-and-rate` — all now real concepts with worked examples and tasks,
-   * in ontology-arithmetic.ts. Six from the algebraic half:
+   * in ontology-arithmetic.ts. Seven from the algebraic half:
    * `variables-and-expressions`, `linear-equations` and
    * `systems-of-linear-equations` in ontology-algebra.ts, and
-   * `completing-the-square`, `quadratic-formula` and `polynomial-roots` in
-   * ontology.ts.
+   * `completing-the-square`, `quadratic-formula`, `polynomial-roots` and
+   * `binomial-theorem` in ontology.ts.
    *
    * `atlasProblems` rejects a map node whose id collides with an authored
    * concept — not as tidiness, but because the composed concept list would
@@ -225,13 +243,41 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
    * The count is kept current deliberately. It is the measurement of how far
    * this area has turned into a syllabus, and a comment saying "five" while
    * eleven have gone is the kind of rot that makes a reader distrust the rest
-   * of the file. Eighteen gone against eleven remaining is also the figure
-   * that forced the merge argued above, read four promotions later: ten of the
+   * of the file. Nineteen gone against ten remaining is also the figure
+   * that forced the merge argued above, read five promotions later: ten of the
    * first fourteen came out of a single area of fifteen, and what that left was
    * not a region of the map. The eleventh and twelfth are the two that could
    * not have happened without the merge, and they are the pair
    * ontology-geometry.ts spent three promotions calling the area-floor
    * casualties — so the merge is now fully cashed in rather than half.
+   *
+   * THE NINETEENTH WAS CHOSEN ON A GROUND NONE OF THE OTHER EIGHTEEN WERE, and
+   * the shift is the most useful thing this paragraph now records.
+   * `binomial-theorem` was not on a route — no node is, because all ten
+   * journeys read zero unwritten before it was written — and it was not an
+   * area-floor casualty, because this area has five nodes of headroom. It was
+   * taken because it RULES LOCALLY: `exactValue` is exact rational arithmetic,
+   * so an expansion evaluated at a stated input needs no worker, and the
+   * concept stays passable when the tunnel is down.
+   *
+   * The node that looked next in line, `complex-numbers`, was declined on the
+   * same axis and the reason is worth keeping because it is a fact about the
+   * TOOLING rather than about the map. `exactValue` has no complex case, so
+   * every expression containing the imaginary unit is unsettleable locally —
+   * `(3 + 2i)(3 − 2i)` included, whose value is the integer 13. Authoring it
+   * would have meant widening the ratchet in tests/concepts-logic.mjs that
+   * caps how many shipped `evaluate` tasks may need the worker. So the next
+   * promotion out of this area is gated on a change to numerals.ts and not on
+   * anything in this file, which is a new kind of entry for this list.
+   *
+   * WHAT THE ROUTE TABLE RUNNING DRY DID TO THE TIE-BREAK, stated once so the
+   * next author does not go looking for a route to serve. Node count, floor
+   * distance and route demand were the three heuristics the first eighteen
+   * promotions used, and all three are now spent or silent here. What is left
+   * is rulability, and it is a better criterion than the others rather than a
+   * fallback: a concept that cannot be ruled produces a chain that cannot
+   * become evidence, which `questionCoverage.chainsWithNoRuling` counts and
+   * the coverage line prints.
    *
    * THE SEVENTEENTH IS THE FIRST SINCE THE MERGE THAT THE MERGE HAD NOTHING TO
    * DO WITH, and that is worth separating out. `linear-equations` was never an
@@ -268,10 +314,10 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
    * The `needs` below still name the departed. That is the intended way for
    * the map to meet a syllabus: the edge resolves in `composeAtlas`, where
    * both endpoints exist. It is dropped by `areaOntology`, which keeps only
-   * edges internal to the area — so this area viewed alone has NINE roots
+   * edges internal to the area — so this area viewed alone has EIGHT roots
    * rather than one, being every node whose prerequisites have all been
    * authored out from under it, from `absolute-value` at the bottom to
-   * `binomial-theorem` near the top. That is the area view being honest about
+   * `radical-equations` near the top. That is the area view being honest about
    * its own boundary rather than a fault, and tests/atlas.mjs asserts the set
    * by NAMED membership, because a merge or a promotion can turn a root set
    * over completely without changing its size.
@@ -309,6 +355,23 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
    * is also why the assertion names its members and this paragraph does not
    * predict the next one.
    *
+   * THE NINETEENTH IS SHRINKAGE AGAIN, NINE TO EIGHT, and it is the cleanest
+   * instance of the rule this list keeps restating. `binomial-theorem` was a
+   * root here — both of its prerequisites had already been authored out from
+   * under it — and nothing replaced it, because it was the last in-area
+   * prerequisite of NOTHING. All three of its dependents live in other areas:
+   * `power-and-sum-rules` in differential calculus, `counting-principles` in
+   * discrete mathematics and `discrete-distributions` in probability. A node
+   * can only substitute into this set by being freed inside this area, and a
+   * departing node with no in-area dependent therefore always shrinks it.
+   *
+   * That is the fourth distinct outcome-by-cause in four promotions, and the
+   * causes are what to read rather than the sequence: shrinkage because the
+   * freed dependent was still gated from inside, fan-out because one node was
+   * the last in-area prerequisite of three, substitution because it was the
+   * last for exactly one, and shrinkage again because it was the last for none.
+   * Computing the set on both sides remains the only way to know which.
+   *
    * It was eight until `real-number-line` was promoted, and until that
    * promotion this paragraph was claiming an assertion that did not exist —
    * the named-membership check was written for `euclidean-geometry` and never
@@ -332,7 +395,7 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
    * entry would be a duplicate edge waiting to happen.
    *
    * The condition is the one `links` is documented with: an entry is needed
-   * when NEITHER end of the edge is a node of this area. All eight entries
+   * when NEITHER end of the edge is a node of this area. All nine entries
    * below satisfy that, and the two cases a promotion actually produces are a
    * departing node whose own prerequisite lives outside the ontology it is
    * joining — which costs an entry — and the hand-BACK, when the far end of an
@@ -951,14 +1014,29 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
       needs: ['systems-of-linear-equations', 'quadratic-formula'],
       terms: 'nonlinear system intersection simultaneous quadratic',
     },
-    {
-      id: 'binomial-theorem',
-      match: /\bbinomial (theorem|coefficient)\b/i,
-      name: 'The binomial theorem',
-      is: 'Expanding (a+b)^n by counting how many ways each term arises, which is where algebra first needs combinatorics.',
-      needs: ['polynomial-arithmetic', 'exponent-rules'],
-      terms: 'binomial theorem pascal triangle binomial coefficient',
-    },
+    // `binomial-theorem` stood here and is now AUTHORED in ontology.ts, beside
+    // `polynomial-arithmetic`, which is its prerequisite and the concept it
+    // generalises. It had to leave: `atlasProblems` refuses a map node whose id
+    // collides with an authored concept.
+    //
+    // ITS TWO `needs` WENT TO TWO DIFFERENT PLACES, which is why this departure
+    // is worth more than a line. `polynomial-arithmetic` is a concept of the
+    // ontology it joined, so that edge is an ordinary prerequisite there (p15).
+    // `exponent-rules` belongs to `exponents-and-logarithms`, and an authored
+    // ontology may only name concepts it contains — so that one is the `links`
+    // entry below. It gates nothing today for a reason that does not apply here:
+    // both ends are authored and teachable, so unlike the `complex-numbers`
+    // entry beside it, this one gates immediately.
+    //
+    // NOTHING WAS HANDED BACK AND NOTHING WAS STRANDED, both checked rather
+    // than assumed. No `links` entry on any area named this node, so there was
+    // no entry to delete. The node carried no `confusedWith`, which is the
+    // stranding no test catches — `expandEdges` turns one into an
+    // `interferes_with` and deleting the declaring node deletes the edge in
+    // silence. And its three dependents — `power-and-sum-rules`,
+    // `counting-principles` and `discrete-distributions` — all sit in OTHER
+    // areas and all DECLARE the edge themselves, so all three resolve through
+    // `composeAtlas` untouched. An edge is owned by the node that declares it.
     {
       id: 'inequality-proofs',
       name: 'Proving inequalities',
@@ -1065,6 +1143,39 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
         'A cubic with no rational root still has three roots, and saying so at all requires the ' +
         'complex numbers — which is where the fundamental theorem of algebra, the thing the ' +
         'root-finding techniques are groping toward, has to be met.',
+    },
+    {
+      /**
+       * THE EDGE `binomial-theorem` COULD NOT TAKE WITH IT.
+       *
+       * The node declared `needs: ['polynomial-arithmetic', 'exponent-rules']`
+       * and the two went to different places. The first joined the ontology the
+       * concept now lives in, where it is a plain prerequisite. This one could
+       * not: `exponent-rules` is a concept of `exponents-and-logarithms`, the
+       * binomial theorem is a concept of `rational-expressions`, and an
+       * authored ontology's edges may only name concepts it contains or
+       * `ontologyProblems` reports an unknown endpoint. Neither subject can
+       * take it, so `links` is the only place it fits — the same conclusion the
+       * `roots-and-irrationals → quadratic-formula` entry above reaches, and by
+       * the same route rather than that entry's changed one.
+       *
+       * IT DIFFERS FROM EVERY OTHER ENTRY HERE IN ONE RESPECT: it gates from
+       * the day it is written. The entries above it were written while one end
+       * was an unwritten map node, and `gatingPrerequisitesOf` looks THROUGH an
+       * unteachable prerequisite rather than at it, so they stood in the graph
+       * and gated nobody. Both ends of this one are authored and teachable, so
+       * the ordering it asks for takes effect immediately. That is the
+       * behaviour the file's rule — gating only ever tightens as material is
+       * authored — exists to produce, and this is the first entry here to show
+       * it on arrival rather than years later.
+       */
+      from: 'exponent-rules',
+      to: 'binomial-theorem',
+      because:
+        'Every term of (a + b)ⁿ is a product of powers whose exponents must add to n, so the ' +
+        'product rule is in use on every line of an expansion. The step it actually decides is ' +
+        'the one learners drop: when the bracket carries a coefficient, (2x)³ is 8x³ and not ' +
+        '2x³, because the exponent applies to the whole part and not just the letter.',
     },
     {
       from: 'fraction-arithmetic',

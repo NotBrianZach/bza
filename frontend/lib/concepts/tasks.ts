@@ -1305,6 +1305,109 @@ export const TASKS: PracticeTask[] = [
     reference: '34',
   },
 
+  /*
+   * ── binomial-theorem ───────────────────────────────────────────────────
+   *
+   * Three `transform_to_form` tasks and four `evaluate`, and the split is the
+   * reason this concept was the one promoted. The expansions need the CAS to
+   * rule equivalence; the evaluations are settled by `exactValue` alone, so
+   * the concept stays passable with the worker unreachable — the state the
+   * note on `expand-binomials-at-1` above explains is ordinary rather than
+   * hypothetical.
+   *
+   * No task asks for a general n. The closed form needs a factorial and
+   * `ALLOWED_FUNCTIONS` has none, so `C(n, k)` cannot appear in a `given` at
+   * all; every task names a specific small exponent and a specific row.
+   *
+   * The `given` of each transform task is deliberately NOT already in the
+   * demanded form — `(x + 2)^4` is an unexpanded power of a sum, so the form
+   * check refuses the input unchanged. A transform task whose given already
+   * satisfies its form is a free mark, which is the failure
+   * `maxDenominatorDegree` exists to prevent in the reduction case.
+   */
+  {
+    id: 'binomial-row-1',
+    knowledgePointId: 'pascal-row-is-the-coefficients',
+    kind: 'transform_to_form',
+    prompt: 'Expand this, reading the coefficients off row 4 of Pascal\'s triangle.',
+    given: '(x + 2)^4',
+    form: 'expanded',
+    variables: REAL_X,
+    reference: 'x^4 + 8*x^3 + 24*x^2 + 32*x + 16',
+  },
+  {
+    id: 'binomial-row-2',
+    knowledgePointId: 'pascal-row-is-the-coefficients',
+    kind: 'transform_to_form',
+    prompt:
+      'Expand this. The second part of the bracket is negative, so the signs alternate — row 3 ' +
+      'is still 1, 3, 3, 1.',
+    given: '(x - 3)^3',
+    form: 'expanded',
+    variables: REAL_X,
+    reference: 'x^3 - 9*x^2 + 27*x - 27',
+  },
+  {
+    id: 'binomial-row-at-1',
+    knowledgePointId: 'pascal-row-is-the-coefficients',
+    kind: 'evaluate',
+    prompt:
+      'Evaluate (x + 2)⁴ at x = 1. Expanding first and substituting first must give the same ' +
+      'number — that is what makes the expansion an identity rather than a guess.',
+    given: '(x + 2)^4',
+    variables: REAL_X,
+    at: { x: '1' },
+    reference: '81',
+  },
+  {
+    id: 'binomial-term-1',
+    knowledgePointId: 'one-term-without-the-rest',
+    kind: 'transform_to_form',
+    prompt:
+      'Expand this in full. Both parts of the bracket carry something other than x — a 2 and a ' +
+      'minus sign — and both have to come out of the bracket term by term.',
+    given: '(2*x - 1)^5',
+    form: 'expanded',
+    variables: REAL_X,
+    reference: '32*x^5 - 80*x^4 + 80*x^3 - 40*x^2 + 10*x - 1',
+  },
+  {
+    id: 'binomial-term-at-1',
+    knowledgePointId: 'one-term-without-the-rest',
+    kind: 'evaluate',
+    prompt:
+      'Evaluate (2x − 1)⁵ at x = 2. Substituting into the bracket first is three steps; ' +
+      'substituting into your expansion is six terms, and they have to agree.',
+    given: '(2*x - 1)^5',
+    variables: REAL_X,
+    at: { x: '2' },
+    reference: '243',
+  },
+  {
+    id: 'binomial-row-sum-1',
+    knowledgePointId: 'check-by-substituting-a-value',
+    kind: 'evaluate',
+    prompt:
+      'Evaluate (1 + x)⁵ at x = 1. Every power becomes 1, so what is left is row 5 of Pascal\'s ' +
+      'triangle added up.',
+    given: '(1 + x)^5',
+    variables: REAL_X,
+    at: { x: '1' },
+    reference: '32',
+  },
+  {
+    id: 'binomial-alternating-1',
+    knowledgePointId: 'check-by-substituting-a-value',
+    kind: 'evaluate',
+    prompt:
+      'Evaluate (1 + x)⁵ at x = −1. This is row 5 added up with the signs alternating, and the ' +
+      'answer is the reason x = −1 is the cheap second check on an expansion.',
+    given: '(1 + x)^5',
+    variables: REAL_X,
+    at: { x: '-1' },
+    reference: '0',
+  },
+
   // ── factoring-quadratics ────────────────────────────────────────────────
   {
     id: 'factor-monic-1',

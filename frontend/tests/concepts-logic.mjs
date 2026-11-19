@@ -1818,6 +1818,116 @@ t('the factor-theorem tasks that claim a root reference zero', (() => {
 t('and the one that does not claim a root is non-zero, so the test is a test',
   tasksForPoint('factor-theorem').some(x => x.reference !== '0'))
 
+/**
+ * The binomial theorem — the nineteenth promotion, and the first one chosen on
+ * RULABILITY rather than on a route or an area floor.
+ *
+ * All ten journeys read zero unwritten before it was written, so the heuristic
+ * that picked most of its predecessors was spent. What picked this one is the
+ * group above's invariant: an expansion evaluated at a stated input is settled
+ * by `exactValue` alone, so the concept is finishable with the worker
+ * unreachable, while the expansions themselves are transforms the CAS rules.
+ * Both halves from the concept's own content, no stand-in.
+ *
+ * `complex-numbers` was the rival and was declined on the same axis.
+ * `exactValue` is exact RATIONAL arithmetic and has no complex case, so every
+ * expression containing the imaginary unit is unsettleable locally —
+ * `(3 + 2i)(3 − 2i)` included, whose value is the integer 13. Writing it would
+ * have meant adding to `WORKER_ONLY` below and then widening the ratchet
+ * beside it that caps how many shipped `evaluate` tasks may need the worker.
+ * That is a quality floor, and widening a floor to admit new material is how a
+ * floor stops meaning anything.
+ */
+group('the binomial theorem is teachable, and settles without the worker')
+
+const BT = conceptById(O, 'binomial-theorem')
+const BT_TASKS = BT.knowledgePoints.flatMap(point => tasksForPoint(point.id))
+t('the concept is authored', !!BT && isTeachable(O, 'binomial-theorem'))
+t('three knowledge points, each with a worked example and labelled subgoals',
+  BT.knowledgePoints.length === 3
+  && BT.knowledgePoints.every(point => point.workedExample.subgoals.length >= 3
+    && point.workedExample.subgoals.every(s => s.label && s.detail)),
+  BT.knowledgePoints.map(point => `${point.id}:${point.workedExample.subgoals.length}`).join(' '))
+t('positions restart at 1 and run consecutively within the concept',
+  BT.knowledgePoints.map(point => point.position).join(',') === '1,2,3',
+  BT.knowledgePoints.map(point => point.position).join(','))
+t('every point has a task, so no chain is left unable to become evidence',
+  BT.knowledgePoints.every(point => tasksForPoint(point.id).length > 0),
+  BT.knowledgePoints.map(point => `${point.id}:${tasksForPoint(point.id).length}`).join(' '))
+/*
+ * EVERY subgoal carries an authored question, which across the whole build only
+ * about seven in ten do. Asserted at full coverage rather than as "some",
+ * because the value of the field is that a hand-written question beats one the
+ * tutor phrases at ask time, and a concept that ships partially authored
+ * strands the unphrased steps in exactly the state this field exists to fix.
+ */
+t('every subgoal carries an authored question, not just some of them',
+  BT.knowledgePoints.every(point => point.workedExample.subgoals.every(s => !!s.socratic)),
+  BT.knowledgePoints.flatMap(point => point.workedExample.subgoals)
+    .filter(s => !s.socratic).length + ' unphrased')
+/*
+ * And each one is really interrogative. A question ending in a full stop scores
+ * zero on `questionCoverage` however well it is phrased, so the punctuation is
+ * load-bearing rather than cosmetic — and the failure is invisible except as
+ * the coverage line moving less than the number of subgoals added.
+ */
+t('and each authored question is phrased as one, ending in a question mark',
+  BT.knowledgePoints.flatMap(point => point.workedExample.subgoals)
+    .every(s => s.socratic.trim().endsWith('?')),
+  BT.knowledgePoints.flatMap(point => point.workedExample.subgoals)
+    .filter(s => !s.socratic.trim().endsWith('?')).map(s => s.label).join(' | '))
+t('it ships both kinds, which is the ground it was chosen on', (() => {
+  const kinds = new Set(BT_TASKS.map(x => x.kind))
+  return kinds.has('evaluate') && kinds.has('transform_to_form')
+})(), [...new Set(BT_TASKS.map(x => x.kind))].join(','))
+/*
+ * NO ASSERTION HERE CHECKS THAT THE EXPANSIONS ARE RIGHT, AND THAT IS NOT AN
+ * OMISSION — it is worth a note because the gap looks real and this promotion
+ * wrote the duplicate before finding the original.
+ *
+ * `validateInstance` in generators.ts already settles it, and more rigorously
+ * than a hand-rolled check here would. For a `transform_to_form` task with a
+ * free symbol it proves the two sides are the same function by agreeing at
+ * `max(degreeBound + 1, 8)` points — a polynomial identity of degree d is
+ * decided by d + 1 distinct values, and the highest degree shipped by this
+ * concept is 5, so eight points is a proof rather than a sample. It also
+ * reports `reference does not satisfy its own shape claim` and `given already
+ * has the shape the task demands, so it asks for nothing`, which are the
+ * form-held and no-free-mark checks.
+ *
+ * The group further down runs it over every authored task, so a mis-stated row
+ * of Pascal's triangle fails there. Confirmed by injection rather than assumed:
+ * writing 23x² + 33x in place of 24x² + 32x — the error the third worked
+ * example uses as its own illustration, because it survives a check at x = 1 —
+ * turns that assertion red and names the point it broke at.
+ */
+/*
+ * The resilience claim, stated at this concept rather than left to the
+ * whole-build sweep above. Every `evaluate` task here rules its own reference
+ * correct with NO worker configured, which is what "chosen on rulability"
+ * actually cashes out as.
+ */
+const btEvalRulings = await Promise.all(BT_TASKS.filter(task => task.kind === 'evaluate')
+  .map(task => ruleEvaluate(task, task.reference, NO_WORKER)))
+t('every evaluate task rules its own reference correct with no worker at all',
+  btEvalRulings.length >= 3
+  && btEvalRulings.every(r => r.status === 'ruled' && r.verdict.ruling === 'correct'),
+  btEvalRulings.map(r => (r.status === 'ruled' ? r.verdict.ruling : r.status)).join(','))
+t('polynomial arithmetic gates it, the theorem being a shortcut for doing it longhand',
+  prerequisitesOf(O, 'binomial-theorem').includes('polynomial-arithmetic'))
+/*
+ * The credit edge, and the reason this concept is in THIS subject. An
+ * `encompasses` can only be declared by an ontology holding both ends, and an
+ * area `links` entry carries no edge kind — so filed with the exponent rules
+ * instead, this edge would have been expressible nowhere and lost in silence,
+ * with nothing going red because `encompasses` affects what comes DUE rather
+ * than what gates.
+ */
+t('and doing it exercises that arithmetic, so it does not come due as though untouched',
+  encompassedBy(O, 'binomial-theorem').includes('polynomial-arithmetic'),
+  encompassedBy(O, 'binomial-theorem').join(' '))
+t('nothing introduced a cycle', teachingOrder(O) !== null)
+
 group('coverage across both shipped subjects')
 t('every rational-expressions knowledge point has at least one task', (() => {
   const missing = allKnowledgePoints(O).filter(point => tasksForPoint(point.id).length === 0)
