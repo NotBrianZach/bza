@@ -173,7 +173,14 @@ export const REGIONS: Region[] = [
     id: 'krull', name: 'Krull', epithet: 'The Stalwart Machine',
     km: 1900, area: 'linear-algebra', xy: { x: 0.535, y: 0.164 },
     authored: ['vectors-and-independence', 'matrices-and-determinants'],
-    anchors: ['vector-spaces', 'eigenvalues', 'diagonalisation'],
+    // `vector-spaces` was the first anchor until the twentieth promotion wrote
+    // it into `vectors-and-independence`. An anchor must be a node of `area`,
+    // so the slot had to be refilled rather than left — `armatureProblems` says
+    // so loudly, which is the one check this table has that the game's copy
+    // does not. `basis-and-dimension` replaces it because it inherited the
+    // departing node's place in the area exactly: it was the node directly
+    // above the axioms and is now one of the two roots of the area view.
+    anchors: ['basis-and-dimension', 'eigenvalues', 'diagonalisation'],
     because: 'The Runeforger guild fabricates objects that conduct aether — shields, ignition surfaces, industrial equipment — which is arrays of conducting elements and what they do to what passes through them. A city named The Stalwart Machine keeps its mathematics in matrices.',
   },
   {

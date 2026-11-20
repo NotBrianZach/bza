@@ -514,18 +514,38 @@ const CONCEPTS: Concept[] = [
             {
               label: 'Turn it into the exponent question',
               detail: 'It asks for y with 2^y = −8.',
+              socratic:
+                'The problem has already told you that this names nothing; what it has not told ' +
+                'you is why, and you cannot get at the why while the expression is still written ' +
+                'as a logarithm. You have one rule for that, and it does not care whether the ' +
+                'argument looks friendly: log_b(x) = y says no more and no less than b^y = x. ' +
+                'Read log₂(−8) through it — what exactly would a value of y have to achieve to ' +
+                'count as the answer?',
             },
             {
               label: 'Ask what values 2^y can take',
               detail:
                 '2^y is positive for every real y — large y makes it large, very negative y makes ' +
                 'it a small positive fraction, and it never reaches 0 or crosses below it.',
+              socratic:
+                'There is now a single requirement to meet, and it is a requirement about 2^y ' +
+                'rather than about logarithms, so stop looking at the −8 and watch 2^y on its ' +
+                'own. Put in y = 3, then y = 0, then y = −1, then y = −10, and keep pushing y ' +
+                'downwards rather than deciding in advance where it is heading. How small can ' +
+                'you actually drive 2^y, and what is its sign doing the whole way down?',
             },
             {
               label: 'Conclude, and note the shape of the argument',
               detail:
                 'No real y works, so the expression names nothing. This is a statement about the ' +
                 'range of the exponential, not a missing rule.',
+              socratic:
+                'Two findings now sit side by side: the answer would have to make 2^y come out ' +
+                'at −8, and 2^y never comes out negative however you choose y. Someone could ' +
+                'still insist that log₂(−8) is merely waiting on a rule for negative arguments ' +
+                'that nobody has taught you yet. What do your two findings settle about ' +
+                'log₂(−8), and what in them makes that insistence the wrong account of what has ' +
+                'gone wrong?',
             },
           ],
           answer: 'Because 2^y is positive for every real y, so no exponent gives −8.',

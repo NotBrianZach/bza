@@ -52,6 +52,9 @@ function build() {
     // here: the region table is checked against the live atlas rather than a
     // snapshot, so a renamed area id fails this harness.
     join('lib', 'concepts', 'armature.ts'),
+    // The GM's prompt. Pure, so the prohibitions that keep a narrator from
+    // ruling on a learner are assertable rather than merely written down.
+    join('lib', 'concepts', 'narrate.ts'),
   ]
   try {
     execFileSync(process.execPath, [
@@ -105,9 +108,10 @@ const {
 } = req(join(outDir, 'concepts', 'probe.js'))
 const {
   ARMATURE_CENTER, armatureProblems, inwardOf, regionBy, regionCoverage, regionForArea,
-  regionForConcept,
+  regionForConcept, REGIONS: ARMATURE_REGIONS,
   regions: armatureRegions,
 } = req(join(outDir, 'concepts', 'armature.js'))
+const { SYSTEM: GM_SYSTEM, scenePrompt, settingOf, unnarratedScene } = req(join(outDir, 'concepts', 'narrate.js'))
 /*
  * `tasks.js` is not in `entries` and is emitted anyway, because offerings.ts
  * now imports `isPractisable` from it and tsc follows imports. Required here
@@ -1086,7 +1090,7 @@ group('vectors gated matrices, which is what authoring underneath means')
 const VEC_IDS = new Set(
   MATHEMATICS.concepts.filter(c => c.subjectId === 'vectors-and-independence').map(c => c.id),
 )
-t('the subject contributes six concepts', VEC_IDS.size === 6, `${VEC_IDS.size}`)
+t('the subject contributes seven concepts', VEC_IDS.size === 7, `${VEC_IDS.size}`)
 t('matrices now gates on vectors, not through them',
   gatingPrerequisitesOf(MATHEMATICS, 'matrices-and-maps').includes('vectors-and-spans'),
   gatingPrerequisitesOf(MATHEMATICS, 'matrices-and-maps').join(', '))
@@ -3771,8 +3775,14 @@ t('the row reduction is a concept of the equations subject, not a node of this a
  * note the trigonometry and geometry departures carry. The number is restated in
  * the message so a changed floor is visible either way.
  */
-t('ten nodes left, five clear of the floor, so the departure froze nothing',
-  LINALG.nodes.length === 10 && LINALG.nodes.length - 5 === 5,
+/*
+ * TEN AT THIS PROMOTION AND NINE SINCE, which is why the sentence names the
+ * headroom rather than the count: the twentieth promotion took `vector-spaces`
+ * out of the same area, and what both departures have to leave behind is room
+ * above the floor rather than a particular number of nodes.
+ */
+t('nine nodes left, four clear of the floor, so neither departure froze anything',
+  LINALG.nodes.length === 9 && LINALG.nodes.length - 5 === 4,
   `${LINALG.nodes.length} nodes, ${LINALG.nodes.length - 5} of headroom`)
 t('the stranded half of its needs is a links entry here, filed with the area that lost the node',
   LINALG.links.some(l => l.from === 'matrices-and-maps' && l.to === 'gaussian-elimination'
@@ -3821,8 +3831,21 @@ t('the gate tightened onto the row reduction in three places, in two files nobod
     .includes('gaussian-elimination'),
   ['determinant', 'rank-nullity', 'numerical-linear-algebra']
     .map(id => `${id}: ${gatingPrerequisitesOf(MATHEMATICS, id).join('/')}`).join(' | '))
-t('and the area view has one root left, which is a named substitution rather than a count',
-  roots(areaOntology(LINALG)).join(' ') === 'vector-spaces',
+/*
+ * THE ROOT THIS LEFT BEHIND HAS SINCE BEEN PROMOTED TOO, so the claim is split
+ * rather than rewritten: what the fourteenth promotion did to the root set was
+ * substitute `vector-spaces` in, and what the twentieth did was split it in
+ * two. Asserting only the current pair would lose the first half, which is the
+ * half that says the departing node had no in-area prerequisite.
+ *
+ * Both halves by named membership, never by length: one became two here, and a
+ * count saying so would make no claim about WHICH two — and getting the pair
+ * wrong is how a node silently loses its only prerequisite.
+ */
+t('and the area view has the two roots the axioms left, not the one they were',
+  roots(areaOntology(LINALG)).slice().sort().join(' ')
+    === 'basis-and-dimension inner-product-spaces'
+  && !LINALG.nodes.some(n => n.id === 'vector-spaces'),
   roots(areaOntology(LINALG)).join(' '))
 /*
  * The two stranding checks, as absences on the node that left — the pair that
@@ -3859,6 +3882,102 @@ t('the credit edge is intra-subject, which is the only way it could exist — li
   && AREAS.flatMap(a => a.links ?? []).every(l => l.kind === undefined),
   `both in ${areaOf(MATHEMATICS, 'gaussian-elimination')}; `
   + `${AREAS.flatMap(a => a.links ?? []).length} links entries, none kinded`)
+
+// ---------------------------------------------------------------------------
+
+/**
+ * THE TWENTIETH PROMOTION, AND THE ONLY ONE CHOSEN FOR WHERE THE NODE STOOD.
+ *
+ * `vector-spaces` was the SOLE ROOT of this area — every one of its ten nodes
+ * reached it — so the whole of linear algebra was gated behind one unwritten
+ * concept, and `gatingPrerequisitesOf` was answering for it by naming what IT
+ * rested on, in a subject two files away. Nothing else selected it: every
+ * journey reads zero unwritten, no area is near the floor, and about nineteen
+ * nodes have all their prerequisites written. The route table below is empty
+ * and stays empty.
+ *
+ * WHAT THIS SUITE HAS TO CHECK, in the order the mistakes would have been
+ * silent in:
+ *
+ *  - THE TWO EDGES POINTING IN. `basis-and-dimension` and
+ *    `inner-product-spaces` name the departing node in their OWN `needs`, so
+ *    those edges are declared on nodes that remain and survive untouched. That
+ *    is the half of a departure that needs no action and looks like the
+ *    dangerous half, and the way it would fail is not an error but a node
+ *    quietly rooted with nothing above it.
+ *  - NO `links` ENTRY, EITHER WAY. The node's own single `needs` pointed at a
+ *    concept of the subject it went to, so the stranded edge went into that
+ *    ontology and nothing was owed here; and no existing entry named it, so
+ *    nothing was handed back and there is no duplicate edge to find. Both are
+ *    asserted as absences, because a duplicate edge in the composed graph is
+ *    something `composeAtlas` does not notice.
+ *  - THE GATE, WHICH GREW RATHER THAN SHRANK. The fourteenth promotion's note
+ *    above says a tighter gate is a SHORTER list, and that is true when the
+ *    promoted concept HIDES farther ancestors behind itself. Here it does not:
+ *    `basis-and-dimension` names `linear-independence` in its own `needs` as
+ *    well, so that stays visible and the axioms are named beside it — one entry
+ *    became two. `rank-nullity`, two steps up, gains the axioms for the other
+ *    reason: the walk through its unteachable parent now stops one concept
+ *    nearer. Which direction a gate moves is a fact about the graph, so these
+ *    are asserted by membership and the counts are only in the message.
+ */
+group('the twentieth promotion, and the first out of this area\'s root')
+t('the axioms are a concept of the vectors subject, not a node of this area',
+  !LINALG.nodes.some(n => n.id === 'vector-spaces')
+  && areaOf(MATHEMATICS, 'vector-spaces') === 'vectors-and-independence'
+  && isTeachable(MATHEMATICS, 'vector-spaces'),
+  `${areaOf(MATHEMATICS, 'vector-spaces')}, `
+  + `node here: ${LINALG.nodes.some(n => n.id === 'vector-spaces')}`)
+t('its one stranded needs is an ontology edge, so this area owes no links entry for it',
+  MATHEMATICS.edges.filter(e => e.kind === 'prerequisite'
+    && e.from === 'linear-independence' && e.to === 'vector-spaces').length === 1
+  && MATHEMATICS.edges.find(e =>
+    e.from === 'linear-independence' && e.to === 'vector-spaces')
+    ?.promotedBy === 'author:vectors-and-independence'
+  && areaOf(MATHEMATICS, 'linear-independence') === 'vectors-and-independence',
+  MATHEMATICS.edges.filter(e => e.to === 'vector-spaces')
+    .map(e => `${e.from}:${e.promotedBy}`).join(' '))
+t('and no links entry of any area names it, so nothing was handed back or dropped',
+  AREAS.flatMap(a => (a.links ?? []).map(l => `${a.id}:${l.from}->${l.to}`))
+    .filter(s => s.includes('vector-spaces')).length === 0,
+  AREAS.flatMap(a => (a.links ?? []).map(l => `${a.id}:${l.from}->${l.to}`))
+    .filter(s => s.includes('vector-spaces')).join(' ') || 'none, as it should be')
+t('the two edges declared at the far end survive, once each, stamped by this area',
+  ['basis-and-dimension', 'inner-product-spaces'].every(id =>
+    MATHEMATICS.edges.filter(e => e.kind === 'prerequisite'
+      && e.from === 'vector-spaces' && e.to === id).length === 1
+    && MATHEMATICS.edges.find(e => e.from === 'vector-spaces' && e.to === id)
+      ?.promotedBy === 'atlas:linear-algebra'),
+  MATHEMATICS.edges.filter(e => e.from === 'vector-spaces')
+    .map(e => `${e.to}:${e.promotedBy}`).join(' '))
+t('the gate tightened onto the axioms in three places, and in two of them the list grew',
+  ['basis-and-dimension', 'inner-product-spaces', 'rank-nullity'].every(id =>
+    gatingPrerequisitesOf(MATHEMATICS, id).includes('vector-spaces'))
+  && gatingPrerequisitesOf(MATHEMATICS, 'basis-and-dimension')
+    .includes('linear-independence')
+  && gatingPrerequisitesOf(MATHEMATICS, 'inner-product-spaces')
+    .includes('dot-product-geometry'),
+  ['basis-and-dimension', 'inner-product-spaces', 'rank-nullity']
+    .map(id => `${id}: ${gatingPrerequisitesOf(MATHEMATICS, id).join('/')}`).join(' | '))
+t('and every gate it names is teachable, so each is somewhere to go',
+  ['basis-and-dimension', 'inner-product-spaces', 'rank-nullity'].every(id =>
+    gatingPrerequisitesOf(MATHEMATICS, id).every(p => isTeachable(MATHEMATICS, p))))
+/*
+ * The two stranding absences, looked for rather than inferred from a green
+ * suite — the same pair the fourteenth promotion recorded. `confusedWith`
+ * becomes an `interferes_with`, which constrains SELECTION and gates nothing,
+ * so losing one is invisible here; `exercises` becomes an `encompasses`, which
+ * between two ontologies is expressible nowhere and would therefore have CHOSEN
+ * the filing. The node declared neither, so the filing was decided on content.
+ */
+t('no interference and no credit edge were lost, the node having declared neither',
+  !MATHEMATICS.edges.some(e => e.kind === 'interferes_with'
+    && (e.from === 'vector-spaces' || e.to === 'vector-spaces'))
+  && !MATHEMATICS.edges.some(e => e.kind === 'encompasses'
+    && (e.from === 'vector-spaces' || e.to === 'vector-spaces')),
+  MATHEMATICS.edges.filter(e =>
+    (e.from === 'vector-spaces' || e.to === 'vector-spaces') && e.kind !== 'prerequisite')
+    .map(e => `${e.from}~${e.kind}~${e.to}`).join(' ') || 'neither, as the node declared')
 
 // ---------------------------------------------------------------------------
 
@@ -4646,6 +4765,84 @@ const nameLeaks = uiSources.flatMap(({ p, text }) => text.split('\n')
   .filter(({ line }) => !/ArmatureMap|ARMATURE_|concepts.armature/.test(line)))
 t('no user-facing string calls it the Armature',
   nameLeaks.length === 0, nameLeaks.map(l => `${l.p}:${l.n}`).join(', '))
+
+/*
+ * The game master, and the four things it may not do.
+ *
+ * RPG mode narrates with a language model, which is the one place on /learn
+ * where a model is near a learner's progress. The guard is that it is a
+ * NARRATOR and not a verifier: the traversal decides, and the GM is told. A
+ * prompt that drifted into congratulating or teaching would be a learning
+ * surface whose gate is a model's opinion, and the refusal in traversal.ts —
+ * the one thing documented as never relaxing — would relax whenever the prose
+ * came out warm.
+ *
+ * Asserted over the prompt text because that IS the mechanism. There is no
+ * runtime check that a scene stayed in its lane; the instruction is the
+ * whole of it, so the instruction is what has to be held.
+ */
+const GM_REGION = armatureRegions().find(r => r.id === 'hasspab')
+
+t('the game master is told it does not decide the outcome',
+  /not you/i.test(GM_SYSTEM) && /settled fact/i.test(GM_SYSTEM))
+t('it is forbidden from claiming the player has learned anything',
+  /learned, mastered, understood/i.test(GM_SYSTEM))
+t('it is forbidden from teaching or posing mathematics',
+  /Teach, define, explain, hint at, or pose any mathematics/i.test(GM_SYSTEM))
+t('it is forbidden from inventing doors or regions',
+  /Invent what lies through a door you were not told about/i.test(GM_SYSTEM))
+t('it is told to write prose rather than markdown',
+  /No markdown/i.test(GM_SYSTEM))
+
+/*
+ * A refusal must reach the model as a refusal. This is the outcome most at
+ * risk of being narrated into its opposite — "the road is closed" is a less
+ * pleasant scene to write than "you press on" — so the instruction says it
+ * three ways and this checks all three survive.
+ */
+const BLOCKED = scenePrompt({
+  kind: 'blocked', region: GM_REGION, missing: ['Long division', 'Place value'], visited: ['Krull'],
+})
+t('a closed road is stated as closed, and named',
+  /CLOSED/.test(BLOCKED.user) && /Long division and Place value/.test(BLOCKED.user))
+t('the model is told not to let them through or route around it',
+  /Do not let them through/.test(BLOCKED.user) && /do not suggest a way around/.test(BLOCKED.user))
+
+/*
+ * The area is deliberately absent from the scene request: naming "number
+ * theory" to a narrator is the surest way to get a scene about number theory,
+ * which prohibition two forbids. The region's own character IS sent, because
+ * it is what makes one city read differently from another.
+ */
+t('the scene request carries the place, not its mathematics',
+  BLOCKED.user.includes(settingOf(GM_REGION.because))
+  && !/number theory/i.test(BLOCKED.user)
+  && !BLOCKED.user.includes(GM_REGION.area))
+
+/*
+ * `settingOf` takes the first sentence of `because` on the convention that it
+ * is the setting and the rest is the argument for the assignment. That
+ * convention is what keeps the area out of the GM's context, so it is checked
+ * over every region rather than trusted — two of the nineteen DO name their
+ * area in the full text (Hasspab and Taiga), which is how the leak was found.
+ */
+const settingLeaks = armatureRegions()
+  .filter(r => r.areaName)
+  .filter(r => settingOf(r.because).toLowerCase().includes(r.areaName.toLowerCase()))
+t('no region\'s setting sentence names its own area',
+  settingLeaks.length === 0, settingLeaks.map(r => r.name).join(', '))
+t('and the trim is doing real work, not passing through',
+  armatureRegions().some(r => settingOf(r.because).length < r.because.length))
+
+t('every outcome produces a prompt and an unnarrated fallback',
+  ['start', 'arrive', 'blocked', 'not-yours', 'spent'].every(kind => {
+    const ctx = { kind, region: GM_REGION, missing: ['X'] }
+    const p = scenePrompt(ctx)
+    const bare = unnarratedScene(ctx)
+    return p.user.includes('OUTCOME:') && typeof bare === 'string' && bare.length > 20
+  }))
+t('the unnarrated fallback names the place rather than apologising',
+  unnarratedScene({ kind: 'arrive', region: GM_REGION }).includes(GM_REGION.name))
 
 const JOURNEY = atlas.composeAtlas([], ONTOLOGIES)
 

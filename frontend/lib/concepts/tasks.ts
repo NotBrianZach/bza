@@ -481,6 +481,27 @@ const PLANE_N_P = [
   { name: 'r3', assumptions: { real: true } },
 ]
 
+/**
+ * One coefficient from each of two polynomials, and the scalar in front of the
+ * first — for the twentieth promotion.
+ *
+ * `p2` and `q2` are subscripted by the POWER and not by position in a list,
+ * which is the opposite convention from the vector components above and is
+ * stated here because the two sit side by side. The coefficient of x² in a
+ * degree-≤2 polynomial is the THIRD entry of the triple (a₀, a₁, a₂), and
+ * naming it `p3` to match `u3` would hide the thing the task is about: the
+ * power is the index, which is why a polynomial can be read as a vector at all.
+ *
+ * Only the x² coefficients are declared. The other four numbers in the two
+ * polynomials cannot reach the answer — scaling and adding never move a term
+ * between powers — and declaring them would suggest they take part.
+ */
+const POLY_X2_COEFFS = [
+  { name: 'c', assumptions: { real: true } },
+  { name: 'p2', assumptions: { real: true } },
+  { name: 'q2', assumptions: { real: true } },
+]
+
 /** The three coordinates of a point, for substituting into a plane equation. */
 const PLANE_XYZ = [
   { name: 'x', assumptions: { real: true } },
@@ -6206,6 +6227,140 @@ export const TASKS: PracticeTask[] = [
     // and this task takes the one whose arithmetic is not the same as
     // `space-dot-product-1`'s.
     reference: '0',
+  },
+
+  /*
+   * The axioms — six tasks, two on each of the three points, the twentieth
+   * promotion. Every one exact with no worker, which is this subject's standing
+   * contract, and here it needed no choosing: there is not a square root in the
+   * concept.
+   *
+   * WHAT DID NEED CHOOSING IS THE VERDICTS. The content of a subspace test is
+   * that a value of 0 means "closed" and anything else means "not", so a task
+   * set that only ever returns 0 teaches the arithmetic and hides the decision —
+   * a learner can score full marks by answering 0 to everything. So the two
+   * closure tasks are the SAME `given` at two different inputs, where the two
+   * answers differ in KIND: `subspace-closed-sum-1` returns 0 on a plane
+   * through the origin and `not-a-subspace-constant-doubles-1` returns 12 on a
+   * plane that misses it. That is the habit `geometric-proof` established for a
+   * pair of tasks whose point is an asymmetry, and it is the only way the
+   * asymmetry gets scored rather than narrated.
+   *
+   * THE FIGURE IS THE ONE FROM THE CONCEPT BELOW IT, deliberately. n = (2, −1, 2)
+   * is `plane-constant-1`'s normal vector and (2, 4, 3) is `plane-membership-1`'s
+   * second point, so the plane a learner computed a constant for is the plane
+   * they now test for closure. The arithmetic is familiar and the question is
+   * new, which is the whole of what this concept adds to that one.
+   *
+   * NOT A DOT-PRODUCT CLAIM, though two of the `given`s are n·(u + v) with n's
+   * components written as literals. ontology-vectors.ts argues it beside the
+   * edges: the `encompasses` count one concept down counts
+   * `n1*r1 + n2*r2 + n3*r3` and deliberately excludes `2*x - y + 2*z`, so these
+   * two are the excluded shape and claim nothing.
+   */
+  {
+    id: 'polynomial-as-vector-1',
+    knowledgePointId: 'the-axioms-are-the-rules-the-components-already-used',
+    kind: 'evaluate',
+    prompt:
+      'p = 2 + 3x − x² and q = 1 − x + 4x². Find the coefficient of x² in 2p + q. Scaling ' +
+      'multiplies every coefficient and adding collects matching powers, so no other term of ' +
+      'either polynomial can reach the answer.',
+    // The two coefficients are NOT stated — the prompt gives the polynomials and
+    // picking −1 and 4 out of them is half of what the task asks. `c` is the
+    // scalar rather than a literal 2 in the `given`, because the point is that
+    // scaling is an operation the set is equipped with and not a number that
+    // happens to be there.
+    given: 'c*p2 + q2',
+    variables: POLY_X2_COEFFS,
+    at: { c: '2', p2: '-1', q2: '4' },
+    // 2·(−1) + 4 = 2. The same arithmetic as `combination-1`'s 2u + 3v on
+    // components, which is the knowledge point's claim.
+    reference: '2',
+  },
+  {
+    id: 'function-pointwise-sum-1',
+    knowledgePointId: 'the-axioms-are-the-rules-the-components-already-used',
+    kind: 'evaluate',
+    prompt:
+      'f(x) = x² and g(x) = 3x. Functions add pointwise — f + g is the function whose value at ' +
+      'each x is f(x) + g(x) — so find (f + g)(2). There is no list of components to add here, ' +
+      'and the sum is well defined anyway.',
+    given: 'x^2 + 3*x',
+    variables: REAL_X,
+    // 4 + 6 = 10. The whole content is that this obeys every rule the triples
+    // obeyed while having no finite coordinate list, which is the question
+    // `basis-and-dimension` exists to answer and is left to it.
+    at: { x: '2' },
+    reference: '10',
+  },
+  {
+    id: 'subspace-closed-sum-1',
+    knowledgePointId: 'a-subspace-is-a-subset-that-passes-three-checks',
+    kind: 'evaluate',
+    prompt:
+      'W is the set of points with 2x − y + 2z = 0, the plane through the origin with normal ' +
+      'n = (2, −1, 2). u = (2, 2, −1) and v = (1, 0, −1) are both in W. Add them componentwise ' +
+      'and evaluate the left-hand side at the sum. The value W demands is the one it demands of ' +
+      'every member.',
+    given: '2*(u1 + v1) - (u2 + v2) + 2*(u3 + v3)',
+    variables: VEC_UV_3D,
+    at: { u1: '2', u2: '2', u3: '-1', v1: '1', v2: '0', v3: '-1' },
+    // u + v = (3, 2, -2), so 6 - 2 - 4 = 0: closed. Paired with
+    // `not-a-subspace-constant-doubles-1`, which is this expression at a plane
+    // that misses the origin and returns 12.
+    reference: '0',
+  },
+  {
+    id: 'subspace-membership-solve-1',
+    knowledgePointId: 'a-subspace-is-a-subset-that-passes-three-checks',
+    kind: 'evaluate',
+    prompt:
+      'Exactly one z puts (2, 2, z) on the plane 2x − y + 2z = 0. Solving the condition for z ' +
+      'gives z = (y − 2x)/2; evaluate it at that point. This is the vector the closure task ' +
+      'above starts from, so the answer is checkable against it.',
+    given: '(u2 - 2*u1)/2',
+    variables: VEC_U,
+    at: { u1: '2', u2: '2' },
+    // (2 - 4)/2 = -1, which is u's third coordinate in `subspace-closed-sum-1`.
+    // The one task in the set whose answer is neither 0 nor a disqualification,
+    // so "answer 0" cannot carry a learner through the concept.
+    reference: '-1',
+  },
+  {
+    id: 'not-a-subspace-constant-doubles-1',
+    knowledgePointId: 'the-three-checks-are-independent',
+    kind: 'evaluate',
+    prompt:
+      'V is the plane 2x − y + 2z = 6. P = (1, 2, 3) and Q = (2, 4, 3) are both on it. Evaluate ' +
+      'the left-hand side at P + Q. Comparing what you get with what V demands is what settles ' +
+      'closure, and the comparison is the reason only one constant can ever pass.',
+    // Same `given` as `subspace-closed-sum-1`, at different inputs. The constant
+    // 6 is in the prompt deliberately and is not what is asked for: the answer
+    // is the value at the SUM, and a learner who reads 6 as the answer has
+    // missed the doubling the task is about.
+    given: '2*(u1 + v1) - (u2 + v2) + 2*(u3 + v3)',
+    variables: VEC_UV_3D,
+    at: { u1: '1', u2: '2', u3: '3', v1: '2', v2: '4', v3: '3' },
+    // P + Q = (3, 6, 6), so 6 - 6 + 12 = 12 = 2 x 6. n·(P + Q) = d + d, so
+    // closure forces d = 0 and the zero-vector check is the same condition.
+    reference: '12',
+  },
+  {
+    id: 'not-a-subspace-axes-1',
+    knowledgePointId: 'the-three-checks-are-independent',
+    kind: 'evaluate',
+    prompt:
+      'S is the set of points of the plane with xy = 0 — the two axes together. (1, 0) and ' +
+      '(0, 1) are both in S. Evaluate xy at their sum. S holds the zero vector and every scalar ' +
+      'multiple of a member, so this is the one check that can still go wrong.',
+    given: '(u1 + v1)*(u2 + v2)',
+    variables: VEC_UV_FULL,
+    at: { u1: '1', u2: '0', v1: '0', v2: '1' },
+    // (1, 0) + (0, 1) = (1, 1), so 1·1 = 1 and not 0. The failure the other two
+    // checks cannot predict, which is why the test has three parts: each axis is
+    // a subspace on its own and their union is not.
+    reference: '1',
   },
 
   // ── solid-measure, twelfth promotion: solid-geometry ────────────────────

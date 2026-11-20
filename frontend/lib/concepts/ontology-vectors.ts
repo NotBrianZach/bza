@@ -304,6 +304,47 @@
  * So the worked example says plainly that this is the determinant and that it
  * is met properly later. A cross-reference in prose costs nothing; a cycle in
  * the graph costs the ordering of every subject.
+ *
+ * ── THE AXIOMS ARRIVED SEVENTH, FROM A THIRD MAP FILE ────────────────────
+ *
+ * `vector-spaces` was the root node of `linear-algebra` in atlas-structures.ts
+ * and is the last concept below. It is the twentieth promotion, and the first
+ * thing to say about it is that it was chosen on a different criterion from the
+ * last several: no journey needed it, no area was near the stub floor, and
+ * about nineteen map nodes had every prerequisite written. What decided it was
+ * that the node was the SOLE ROOT of a ten-node area — every other node there
+ * reaches it — so the whole of linear algebra was gated behind one unwritten
+ * concept, and `gatingPrerequisitesOf` was answering for it by naming what IT
+ * rested on, two subjects away.
+ *
+ * WHY HERE. Its only `needs` is `linear-independence`, a concept of this file,
+ * and that is also the content argument rather than merely the cheap one: the
+ * axioms are the list of facts the span and independence arguments turned out
+ * to have used, so the subject that made those arguments is the one the summary
+ * belongs to. The alternative was a new ontology for abstract linear algebra,
+ * and the `covers` test the three subject-creating promotions used does not
+ * pass here — nothing in this file's boundary sentences excluded it. It said
+ * "components throughout", which is a statement about how the material is
+ * COMPUTED and still true: every task below is componentwise arithmetic.
+ *
+ * WHAT IT DELIBERATELY DOES NOT DO is name a dimension. Counting independent
+ * directions is `basis-and-dimension`, the node directly above it, and the one
+ * place this concept points forward is the last subgoal of its first point —
+ * function spaces obey every rule and have no finite component list, which is
+ * the question dimension exists to answer. Writing the count here would have
+ * taken the node above it as well, on material that wants a theorem (every
+ * basis of a space has the same size) rather than a check.
+ *
+ * ONE EDGE, NO `links`, AND A REFUSAL. The single stranded prerequisite is an
+ * ordinary `EDGES` entry, both ends being concepts of this ontology; the two
+ * edges INTO the node are declared at their far ends on nodes that remain, so
+ * they survive untouched. The node declared no `confusedWith` and no
+ * `exercises` — checked on it before deletion rather than inferred from the
+ * suites passing afterwards, since `expandEdges` turns a `confusedWith` into an
+ * `interferes_with`, interference constrains SELECTION rather than gating, and
+ * losing one leaves every suite green. The refusal is the `encompasses` edge,
+ * for the third time in this file; the note beside `EDGES` gives the precedent
+ * that settles it.
  */
 
 import type { Concept, ConceptEdge, ConceptOntology, Subject } from './types'
@@ -324,7 +365,12 @@ const subject: Subject = {
     'ANGLE is absent and deliberately: the identity hands back cos θ as an exact quotient and ' +
     'that quotient is the answer, while turning a cosine into a figure in degrees needs a table ' +
     'and is the inverse functions, which are not written. Lines in space are counted and not ' +
-    'parametrised, and nothing is curved — no spheres, and no surface that is not a plane.',
+    'parametrised, and nothing is curved — no spheres, and no surface that is not a plane. ' +
+    'It ends by naming the rules the rest of it used: the axioms, the three-part test for a ' +
+    'subset that is a space in its own right, and two sets that fail it in different ways — ' +
+    'which is what lets a polynomial and a function be vectors with no argument made twice. ' +
+    'Not the DIMENSION of a space, which is the count of independent directions and the first ' +
+    'thing the map asks after this.',
   medium: 'theorem',
   facetName: 'Concept',
   facetDoes: 'Which concept the statement has to be about.',
@@ -1579,6 +1625,298 @@ const CONCEPTS: Concept[] = [
       },
     ],
   },
+
+  {
+    id: 'vector-spaces',
+    name: 'Vector spaces',
+    subjectId: subject.id,
+    scope: {
+      id: 'vector-spaces',
+      /*
+       * Carried verbatim from the map node, `terms` string and all, for the
+       * reason the two promotions above state: the pattern decides against an
+       * article title, and widening it while the material appears would move
+       * the recognition figure in tests/atlas.mjs at the same time, leaving no
+       * way to say which edit moved it.
+       *
+       * It can afford to be generous where `three-dimensional-coordinates`
+       * could not, because "vector space" IS the phrase that means this
+       * concept — an article using it is about this, and the three sibling
+       * phrases in the hint (subspace, function space, polynomial space) are
+       * the examples the material is built out of rather than other topics.
+       */
+      label: 'Vector spaces',
+      hint: 'vector space axioms subspace function space polynomial space',
+      match: /\bvector space\b/i,
+    },
+    fidelity: 'checked',
+    /*
+     * EVERY OBJECTIVE NAMES ONLY `evaluate`, which is the rule `solid-measure`
+     * made and `sequences` was the first promotion into an older subject to
+     * keep. The five concepts above all name `justify` beside it and the build
+     * ships no `justify` task anywhere, so those objectives name an observation
+     * that cannot be made; matching the local style would have copied a fault
+     * by being neighbourly.
+     *
+     * The statements are written to the tasks for the same reason. "Decide
+     * whether W is a subspace" is the sentence this concept wants and it is
+     * not an `evaluate` claim — what `evaluate` evidences is the NUMBER the
+     * condition returns at a sum, which is what decides it. The deciding and
+     * the saying-why are in the `socratic` phrasings below, asked by a tutor
+     * and marked by nothing.
+     */
+    objectives: [
+      {
+        id: 'work-the-arithmetic-in-a-set-that-is-not-pairs',
+        statement:
+          'Produce a coefficient of a sum of polynomials and a value of a sum of functions — ' +
+          'the component arithmetic of this subject, performed on objects that have no ' +
+          'components.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'produce-the-numbers-the-subspace-test-turns-on',
+        statement:
+          'Produce the value a subset\'s defining condition returns at the sum of two of its ' +
+          'members, and the coordinate that puts a partly specified point into the subset.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'produce-the-value-that-disqualifies-a-set',
+        statement:
+          'Produce the value that fails the test for a plane missing the origin and for a pair ' +
+          'of axes taken together, which are the two ways a subset falls short of being a ' +
+          'subspace.',
+        taskKinds: ['evaluate'],
+      },
+    ],
+    knowledgePoints: [
+      {
+        id: 'the-axioms-are-the-rules-the-components-already-used',
+        conceptId: 'vector-spaces',
+        statement:
+          'A vector space is a set with an addition and a scaling obeying eight rules the ' +
+          'component arithmetic already obeyed: addition commutes and associates, there is a ' +
+          'zero and every vector has a negative, scaling distributes over a sum of vectors and ' +
+          'over a sum of scalars, scaling twice is scaling by the product of the two scalars, ' +
+          'and scaling by 1 changes nothing. Writing them down adds nothing to the plane. What ' +
+          'it buys is everything else, because no argument in this subject ever used the fact ' +
+          'that a ' +
+          'vector was a PAIR — so any other set with those two operations inherits span, ' +
+          'independence and every consequence drawn from them, with no change of argument.',
+        position: 1,
+        /*
+         * No `automaticityTarget` on any of the three points, which is a
+         * decision rather than an omission. The arithmetic here is a coefficient
+         * and a substitution and is already timed one concept down, where
+         * `space-adds-one-coordinate-and-one-term` carries the target for it.
+         * What this concept adds is a TEST — which three things to check, and
+         * which of them a value has just settled — and a timing target on that
+         * measures typing, which is the case types.ts names when it argues the
+         * field should usually be absent.
+         */
+        workedExample: {
+          problem:
+            'p = 2 + 3x − x² and q = 1 − x + 4x². Find the coefficient of x² in 2p + q, and ' +
+            'say which facts about polynomials the calculation used.',
+          subgoals: [
+            {
+              label: 'Scale and add in the only way the operations allow',
+              detail:
+                'Scaling 2p multiplies every coefficient of p by 2, and adding q collects terms ' +
+                'of matching power. Neither move carries anything from one power to another, so ' +
+                'the x² coefficient of the answer is built from the x² coefficients of p and q ' +
+                'and from nothing else in either polynomial.',
+              socratic:
+                'Scaling and adding polynomials never turns an x term into an x² term. Given ' +
+                'that, which of the six numbers written in p and q can affect the x² ' +
+                'coefficient of 2p + q?',
+            },
+            {
+              label: 'Compute the single coefficient asked for',
+              detail: 'p contributes −1 and q contributes 4, so the coefficient is 2·(−1) + 4 = 2.',
+              socratic:
+                'The x² term of p is −x² and the x² term of q is 4x². What is left after ' +
+                'doubling the first and adding the second?',
+            },
+            {
+              label: 'Audit the calculation for anything polynomial in it',
+              detail:
+                'There was nothing. The three coefficients of a degree-≤2 polynomial were ' +
+                'handled exactly as a triple (a₀, a₁, a₂) is handled — scale each entry, add ' +
+                'entrywise — so 2p + q was 2u + v on triples under another name. Every argument ' +
+                'this subject made about triples therefore holds for these polynomials: the ' +
+                'span of {1, x, x²} is all of them, 1 + x and 2 + 2x are dependent, and neither ' +
+                'claim has to be proved a second time.',
+              socratic:
+                'Write p and q as the triples (2, 3, −1) and (1, −1, 4). What is the difference ' +
+                'between the calculation you have just done and computing 2u + v?',
+            },
+            {
+              label: 'Push the same idea until the components run out',
+              detail:
+                'Functions add pointwise: f + g is the function whose value at each x is ' +
+                'f(x) + g(x). For f(x) = x² and g(x) = 3x that gives (f + g)(2) = 4 + 6 = 10. ' +
+                'All the rules hold — the zero function is a zero, −f is a negative, scaling ' +
+                'distributes — and yet there is no finite list of coordinates to read off, ' +
+                'because the rule has to be given at every x at once. So "vector" is a ' +
+                'behaviour and not a shape, which is why the next question the subject asks is ' +
+                'how many independent directions a space has rather than how many numbers an ' +
+                'element is written with.',
+              socratic:
+                'There are no components to add here and f + g is still perfectly well defined. ' +
+                'What is the rule that says what the sum is at one particular x?',
+            },
+          ],
+          answer:
+            '2 — and the only facts used were "scale each coefficient" and "add like powers", ' +
+            'which is entrywise arithmetic on triples',
+        },
+      },
+      {
+        id: 'a-subspace-is-a-subset-that-passes-three-checks',
+        conceptId: 'vector-spaces',
+        statement:
+          'A subset W of a vector space is a subspace when it contains the zero vector, is ' +
+          'closed under addition, and is closed under scaling. Pass those three and W is a ' +
+          'vector space in its own right, so nothing about it has to be proved again. The ' +
+          'example to keep is the plane through the origin: its condition is n·r = 0 for the ' +
+          'normal vector n, and both closures come out of one line of component algebra rather ' +
+          'than out of a new idea.',
+        position: 2,
+        workedExample: {
+          problem:
+            'W is the set of points in space with 2x − y + 2z = 0 — the plane through the ' +
+            'origin whose normal vector is n = (2, −1, 2). Take u = (2, 2, −1) and ' +
+            'v = (1, 0, −1), and test u + v.',
+          subgoals: [
+            {
+              label: 'Spend the cheapest of the three checks first',
+              detail:
+                'At (0, 0, 0) the left-hand side is 0, which is the value the condition demands, ' +
+                'so the zero vector is in W. This is the check to make first because it is one ' +
+                'substitution and, when it fails, it finishes the question outright.',
+              socratic:
+                'Before testing any sum, put (0, 0, 0) into 2x − y + 2z. What does it come to, ' +
+                'and what does the condition require of that number?',
+            },
+            {
+              label: 'Confirm that both vectors really are members',
+              detail:
+                'For u: 2·2 − 2 + 2·(−1) = 4 − 2 − 2 = 0. For v: 2·1 − 0 + 2·(−1) = 2 − 2 = 0. ' +
+                'Both satisfy the condition, so what follows is a question about two MEMBERS of ' +
+                'W and not about two arbitrary points of space — closure says nothing about ' +
+                'those.',
+              socratic:
+                'The closure claim is only about members of W. What does 2x − y + 2z come to at ' +
+                'u, and at v?',
+            },
+            {
+              label: 'Add the two vectors and test the result',
+              detail:
+                'u + v = (3, 2, −2), and 2·3 − 2 + 2·(−2) = 6 − 2 − 4 = 0, so the sum is in W ' +
+                'as well. That is one instance of closure under addition and not yet the claim.',
+              socratic:
+                'Add u and v componentwise and put the result into the condition — what value ' +
+                'does it return?',
+            },
+            {
+              label: 'Settle every pair at once, from the components',
+              detail:
+                'The left-hand side is the dot product n·r. Coordinate by coordinate, u + v ' +
+                'contributes nᵢ(uᵢ + vᵢ) = nᵢuᵢ + nᵢvᵢ to it, so the whole sum splits into ' +
+                'n·u + n·v = 0 + 0 = 0. Scaling is the same line: cu contributes ' +
+                'nᵢ(cuᵢ) = c(nᵢuᵢ), so n·(cu) = c(n·u) = 0. No numbers appear in either ' +
+                'argument, which is why one plane through the origin standing up to the test is ' +
+                'evidence about all of them.',
+              socratic:
+                'The condition is really n·r = 0, and each coordinate of u + v contributes ' +
+                'nᵢ(uᵢ + vᵢ) to that product. Expanding that bracket splits the whole sum into ' +
+                'what?',
+            },
+          ],
+          answer:
+            '0 — u + v satisfies the same condition, and splitting n·(u + v) shows every sum of ' +
+            'members must',
+        },
+      },
+      {
+        id: 'the-three-checks-are-independent',
+        conceptId: 'vector-spaces',
+        statement:
+          'The test has three parts because each can fail while the others hold. A plane that ' +
+          'misses the origin fails the zero check, and fails addition too — adding two of its ' +
+          'points doubles the constant, and 0 is the only constant that survives doubling. The ' +
+          'two axes taken together fail nothing but addition: the set holds the zero vector and ' +
+          'every scalar multiple of a member, and still loses a sum.',
+        position: 3,
+        workedExample: {
+          problem:
+            'Two sets that are not subspaces, failing differently. V is the plane ' +
+            '2x − y + 2z = 6, and P = (1, 2, 3) and Q = (2, 4, 3) are both on it. S is the set ' +
+            'of points of the plane with xy = 0 — the two axes together. Find what each set\'s ' +
+            'condition returns at P + Q, and at (1, 0) + (0, 1).',
+          subgoals: [
+            {
+              label: 'Disqualify the shifted plane in one substitution',
+              detail:
+                'At (0, 0, 0) the left-hand side of V\'s condition is 0 and the condition ' +
+                'demands 6, so the zero vector is not in V and V is not a subspace. It is a ' +
+                'perfectly good plane; what it is not is a set the algebra of this concept ' +
+                'applies to, which is a statement about that algebra rather than about its ' +
+                'geometry.',
+              socratic:
+                'V\'s condition reads 2x − y + 2z = 6. What does the left-hand side come to at ' +
+                'the origin, and what does the mismatch settle?',
+            },
+            {
+              label: 'Watch the constant double when two members are added',
+              detail:
+                'P and Q are both on V: 2 − 2 + 6 = 6 and 4 − 4 + 6 = 6. Their sum is ' +
+                'P + Q = (3, 6, 6), where the condition returns 2·3 − 6 + 2·6 = 6 − 6 + 12 = 12 ' +
+                '— which is 2 × 6 and not 6. The splitting from the previous point says why in ' +
+                'general: n·(P + Q) = n·P + n·Q = d + d, so a set with any member at all is ' +
+                'closed under addition only if d + d = d, and the only d satisfying that is 0. ' +
+                'For a set cut out by one linear equation the first check and the second are ' +
+                'therefore the same condition wearing two faces.',
+              socratic:
+                'P and Q each return 6, and the last point showed how n·(P + Q) splits. What ' +
+                'must the sum return — and which constants d could survive that?',
+            },
+            {
+              label: 'Find a set where the checks come apart properly',
+              detail:
+                'S = {(x, y) : xy = 0} is the two axes together. The zero vector is in it, since ' +
+                '0·0 = 0. Every scalar multiple of a member is in it, since ' +
+                '(cx)(cy) = c²·xy = 0. But (1, 0) and (0, 1) are both in S and their sum is ' +
+                '(1, 1), where the condition returns 1·1 = 1 rather than 0. Two checks pass, the ' +
+                'third fails, and no amount of the first two implies it — which is why the test ' +
+                'is three conditions and not one.',
+              socratic:
+                'Both axes belong to S, so (1, 0) and (0, 1) are members of it. Where does their ' +
+                'sum land, and what does xy come to there?',
+            },
+            {
+              label: 'Name what that failure costs and what repairs it',
+              detail:
+                'Each axis on its own IS a subspace — it is the span of one vector, which is the ' +
+                'line this subject met two concepts ago. The union of two subspaces is not one ' +
+                'unless one of them contains the other, because a sum can leave both pieces ' +
+                'while staying inside neither. The repair is the span: span{(1, 0), (0, 1)} is ' +
+                'the whole plane, and it is the smallest subspace containing S. Every span ' +
+                'passes the three checks automatically, which is where most subspaces come from.',
+              socratic:
+                'Each axis by itself is the span of a single vector, and so passes all three ' +
+                'checks. What goes wrong when you take the two axes together instead of the span ' +
+                'of both vectors?',
+            },
+          ],
+          answer:
+            '12 at P + Q, where V demands 6; and 1 at (1, 1), where S demands 0',
+        },
+      },
+    ],
+  },
 ]
 
 /**
@@ -1779,6 +2117,57 @@ const EDGES: ConceptEdge[] = [
       'Four of this concept\'s eight tasks evaluate a three-term dot product — two of them on a ' +
       'pair of vectors, one of them n·P for a plane\'s constant, one of them a vector against ' +
       'itself — so practising in space is evidence about the product as well.',
+  },
+
+  /*
+   * The twentieth promotion's ONE edge, and the one it refused.
+   *
+   * `vector-spaces` declared a single `needs`, pointing at `linear-independence`
+   * — a concept of this ontology — so the whole of what the node stranded is
+   * the entry below and no area `links` entry was needed. That is the cheapest
+   * shape a promotion can have and it is why this candidate was chosen over
+   * two with more dependents: a split `needs` costs a `links` entry three files
+   * away from anything that mentions the concept, and that entry is the one
+   * people drop.
+   *
+   * It is a LEAF of the subject, which no previous promotion here has been.
+   * The dot product forked the chain, the three dimensions were inserted into
+   * the middle of it, and this one hangs off the end: nothing in this ontology
+   * rests on the axioms. What rests on them is in the `linear-algebra` AREA —
+   * `basis-and-dimension` and `inner-product-spaces` both declare it in their
+   * own `needs`, at the far end, so those two edges survive the node's deletion
+   * untouched and resolve across the file boundary in `composeAtlas`. They are
+   * also the whole reason the promotion is worth making: those two nodes were
+   * gating on what the UNWRITTEN axioms rested on, and they now gate on the
+   * axioms themselves.
+   *
+   * NO `encompasses` EDGE, and this file now refuses one for the third time.
+   * The claim such an edge makes is about what PRACTISING exercises, measured
+   * against the tasks that exist, and the precedent that decides it is one
+   * concept down: `three-dimensional-coordinates` claims credit for the dot
+   * product on FOUR of its eight tasks and the four are the ones whose `given`
+   * is `n1*r1 + n2*r2 + n3*r3`, written symbol by symbol. `plane-membership-1`,
+   * whose `given` is `2*x - y + 2*z`, was deliberately left out of that count.
+   * Both of the closure tasks here are that same literal-coefficient shape —
+   * the learner substitutes into a linear expression and never writes n as a
+   * vector — so counting them as dot-product practice would claim credit on a
+   * shape the file has already declined to count. The component addition inside
+   * the brackets fails the same test for the same reason: `u + v` is formed
+   * inside one expression and never reported, so nothing here is evidence about
+   * `plane-vectors` either.
+   */
+  {
+    id: 'linear-independence->vector-spaces',
+    from: 'linear-independence',
+    to: 'vector-spaces',
+    kind: 'prerequisite',
+    promotedBy: 'author:vectors-and-independence',
+    rationale:
+      'The axioms are worth writing down only once the arguments they abstract have been made, ' +
+      'and the independence test is the sharpest of them: it decides whether a description is ' +
+      'redundant without ever asking what a vector is made of. A learner who has run the ' +
+      'cross-check has the experience the definition is a summary of; one who has not reads it ' +
+      'as a list of rules nobody needed.',
   },
 ]
 

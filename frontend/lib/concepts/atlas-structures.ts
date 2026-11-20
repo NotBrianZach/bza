@@ -21,20 +21,17 @@ const LINEAR_ALGEBRA: MapArea = {
   id: 'linear-algebra',
   name: 'Linear algebra',
   covers:
-    'Vectors, matrices and linear maps, from vector spaces and dimension through to the ' +
-    'spectral theorem and the singular value decomposition. Row reduction is no longer here: ' +
-    'it is authored as `gaussian-elimination` in `expressions-and-equations`, since the engine ' +
-    'has no matrix type and every question the method can be asked is about a number the ' +
-    'elimination produces, which makes the material equations rather than grids.',
+    'Vectors, matrices and linear maps, from dimension and rank through to the spectral ' +
+    'theorem and the singular value decomposition. Row reduction is no longer here: it is ' +
+    'authored as `gaussian-elimination` in `expressions-and-equations`, since the engine has ' +
+    'no matrix type and every question the method can be asked is about a number the ' +
+    'elimination produces, which makes the material equations rather than grids. Nor are the ' +
+    'AXIOMS: `vector-spaces` is authored in `vectors-and-independence`, the subject that made ' +
+    'the span and independence arguments the axioms are a summary of. So this area now begins ' +
+    'at the first question the axioms do not answer — how many independent directions a space ' +
+    'has — and the definition of a space is somewhere a learner arrives from the plane rather ' +
+    'than from the top of this list.',
   nodes: [
-    {
-      id: 'vector-spaces',
-      match: /\bvector space\b/i,
-      name: 'Vector spaces',
-      is: 'The axioms abstracted from coordinates, so polynomials and functions become vectors with no change of argument.',
-      needs: ['linear-independence'],
-      terms: 'vector space axioms subspace function space polynomial space',
-    },
     {
       id: 'basis-and-dimension',
       match: /\b(basis \(linear algebra\)|dimension \(vector space\)|linear independence)\b/i,
@@ -191,6 +188,62 @@ const LINEAR_ALGEBRA: MapArea = {
    * green while freeing the scheduler to introduce the two most confusable
    * concepts in a subject together. There was none to lose, and an absence has
    * to be looked for to be known.
+   *
+   * ── AND A SIXTH, WHICH WAS THIS AREA'S ONLY ROOT ─────────────────────────
+   *
+   * `vector-spaces` LEFT THIS AREA WHEN IT WAS AUTHORED, AND HAD TO. It is a
+   * concept of `vectors-and-independence` now, in ontology-vectors.ts, so a
+   * node of the same id here would collide with it and `atlasProblems` reports
+   * that as an error rather than merging the two.
+   *
+   * NINE NODES AFTER, against a stub floor of five, so the area keeps four
+   * spare and nothing here is frozen by the departure. Two departures have now
+   * cost this area two of its six nodes of headroom; the third would leave
+   * three, and the area has no other node whose prerequisites are written, so
+   * nothing is close.
+   *
+   * WHAT IT STRANDED WAS ONE EDGE AND THERE IS NO `links` ENTRY FOR IT. The
+   * node declared a single `needs`, `linear-independence`, which is authored in
+   * the very subject the concept went to — so both ends are concepts of one
+   * ontology and the edge is declared in that ontology's own `EDGES`. This is
+   * the cheapest shape a promotion can have and it is why this node was chosen
+   * over two candidates with more dependents: a split `needs` costs an entry
+   * down here, three files from anything that mentions the concept, and that is
+   * the entry people drop.
+   *
+   * NOTHING WAS HANDED BACK. No `links` entry of this area named
+   * `vector-spaces` at either end, so there was no duplicate edge to delete —
+   * the case the first entry below records, and the one no test catches.
+   *
+   * THE EDGES POINTING IN SURVIVED, which is the half of a departure that
+   * needs no action and is worth stating because it looks like the dangerous
+   * half. `basis-and-dimension` and `inner-product-spaces` each name
+   * `vector-spaces` in their OWN `needs`, so those two edges are declared on
+   * nodes that remain and resolve across the file boundary in `composeAtlas`
+   * untouched. Only a node's own `needs` is stranded by deleting it.
+   *
+   * THE AREA VIEW NOW HAS TWO ROOTS WHERE IT HAD ONE, and the direction is the
+   * surprise. The departing node was the single root of this area — every other
+   * node reaches it — and `areaOntology` filters each node's `needs` down to
+   * the ones inside the area, so the two nodes that named ONLY `vector-spaces`
+   * and something outside are now rooted themselves: `basis-and-dimension`
+   * (whose other `needs` is `linear-independence`, authored elsewhere) and
+   * `inner-product-spaces` (whose other is `dot-product-geometry`, likewise).
+   * A promotion usually shrinks a root set or substitutes into it; promoting a
+   * sole root SPLITS it into whichever dependents it was the last local
+   * prerequisite of. Which is why tests/atlas.mjs asserts the set by named
+   * membership and never by its length — a count would read "one became two"
+   * and say nothing about which two, and getting the pair wrong is how a node
+   * silently loses its only prerequisite.
+   *
+   * `confusedWith` and `exercises` on the departing node: NEITHER. Checked
+   * before deleting it, for the reason the paragraph above this section gives.
+   * The absence of `exercises` is the one that chose nothing here, and that is
+   * worth a line: an `encompasses` edge whose ends land in two ontologies is
+   * expressible nowhere — not in an ontology, which may only name concepts it
+   * contains, and not in `links`, which hard-codes `kind: 'prerequisite'` — so
+   * a node carrying one can only be filed in the subject holding the far end.
+   * This one carried none, so the filing was decided on content.
    */
   links: [
     /*

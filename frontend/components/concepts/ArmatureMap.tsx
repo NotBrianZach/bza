@@ -164,6 +164,9 @@ export default function ArmatureMap({ onBrowse, onPractise, journey, openings, o
 
   const [busy, setBusy] = useState(false)
   const [last, setLast] = useState<TraverseResponse | null>(null)
+  /** The GM's description of the last move. Null while none has been asked for. */
+  const [scene, setScene] = useState<{ text: string; source: string; note?: string } | null>(null)
+  const [sceneLoading, setSceneLoading] = useState(false)
 
   /**
    * Where the party stands, and everywhere it has been — as regions.
@@ -190,6 +193,37 @@ export default function ArmatureMap({ onBrowse, onPractise, journey, openings, o
     (journey?.route ?? []).filter(r => REGION_OF_CONCEPT.get(r.conceptId) === regionId),
   [journey])
 
+  /** Region names in order of arrival, for the GM's sense of the journey. */
+  const visitedNames = useMemo(() => {
+    const seen: string[] = []
+    for (const r of journey?.route ?? []) {
+      const id = REGION_OF_CONCEPT.get(r.conceptId)
+      const name = id ? all.find(x => x.id === id)?.name : null
+      if (name && seen[seen.length - 1] !== name) seen.push(name)
+    }
+    return seen
+  }, [journey, all])
+
+  /**
+   * Ask for a scene. Never blocks the move: the traversal has already
+   * happened and the map has already updated by the time this runs, so a slow
+   * or missing GM costs prose and nothing else.
+   */
+  const narrate = useCallback(async (body: Record<string, unknown>) => {
+    if (!body.regionId) return
+    setSceneLoading(true)
+    try {
+      const res = await authedFetch('/api/learn/narrate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      const data = await res.json() as { scene?: string; source?: string; note?: string; error?: string }
+      if (data.scene) setScene({ text: data.scene, source: data.source ?? 'gm', note: data.note })
+    } catch { /* the move stands; only the telling of it is missing */ }
+    finally { setSceneLoading(false) }
+  }, [])
+
   /*
    * Posting to the same endpoint TraversalMap uses, with the same body shapes.
    *
@@ -203,6 +237,7 @@ export default function ArmatureMap({ onBrowse, onPractise, journey, openings, o
   const post = useCallback(async (body: Record<string, string>) => {
     if (busy) return
     setBusy(true)
+    setScene(null)
     try {
       const response = await authedFetch('/api/learn/traverse', {
         method: 'POST',
@@ -211,27 +246,100 @@ export default function ArmatureMap({ onBrowse, onPractise, journey, openings, o
       })
       const data = (await response.json()) as TraverseResponse
       setLast(data)
-      if (data.outcome === 'opens') {
+
+      const landed = data.outcome === 'opens'
+      if (landed) {
         /* Follow the party to where it landed, so the map moves with them
            rather than leaving the panel on the city they departed from. */
         if (data.door) setSelectedId(REGION_OF_CONCEPT.get(data.door) ?? null)
         onTravelled?.()
+      }
+
+      /*
+       * The scene, asked for AFTER the rules have answered and from what they
+       * answered. The GM is told the outcome; it never picks one. See
+       * lib/concepts/narrate.ts — this ordering is the honesty guard, not an
+       * implementation detail, and a narration fetched first would be a model
+       * deciding whether a road opens.
+       */
+      if (data.outcome) {
+        const toRegion = landed && data.door
+          ? REGION_OF_CONCEPT.get(data.door) ?? hereRegion
+          : hereRegion
+        void narrate({
+          kind: body.start ? 'start' : landed ? 'arrive' : data.outcome,
+          regionId: toRegion ?? undefined,
+          fromRegionId: landed ? hereRegion ?? undefined : undefined,
+          arrivedAt: data.doorName,
+          missing: data.missing?.map(m => m.conceptName),
+          visited: visitedNames,
+        })
       }
     } catch (e) {
       setLast({ error: e instanceof Error ? e.message : 'the request failed' })
     } finally {
       setBusy(false)
     }
-  }, [busy, onTravelled])
+  }, [busy, onTravelled, hereRegion, visitedNames, narrate])
 
   return (
     <div className='space-y-3'>
-      <p className='text-xs leading-snug text-gray-400'>
-        Every sphere of influence carries one area of mathematics, so the atlas has a
-        geography. Travelling outward from the centre runs roughly rules → structure
-        → change → analysis. That is a story, not a syllabus: nothing here gates
-        anything, and what actually has to come first is on the Concepts tab.
-      </p>
+      {/* How to play, first and in three lines.
+          This was a paragraph about geography — true, and an answer to a
+          question nobody arriving here is asking. The complaint it replaces
+          was "still not clear how to actually play", and a player who cannot
+          find the verb is not going to be helped by learning that the rings
+          run rules to analysis. That note moved down to the legend. */}
+      <div className='rounded-lg border border-gray-800 bg-gray-900 p-3'>
+        <h3 className='text-xs font-semibold text-gray-100'>How to play</h3>
+        <ol className='mt-1.5 space-y-1 text-xs leading-snug text-gray-400'>
+          <li>
+            <span className='text-gray-200'>1. Make landfall.</span> Pick somewhere to start.
+            You arrive knowing one thing.
+          </li>
+          <li>
+            <span className='text-gray-200'>2. Offer what you know.</span> Click a city, then
+            click one of the things you hold there. That is your move — you are putting what you
+            know to use, and the world decides where it takes you.
+          </li>
+          <li>
+            <span className='text-gray-200'>3. Earn the next one.</span> Roads close when you
+            are not ready for them, and they say what is missing. Go and work that on the
+            Practice tab, then come back and try it again.
+          </li>
+        </ol>
+        <p className='mt-2 text-[11px] leading-snug text-gray-500'>
+          You pick the key, never the door. Where a road leads is the graph&rsquo;s decision, not
+          yours, so the journey goes where your own mathematics can carry it.
+        </p>
+      </div>
+
+      {/* The scene. Top of the page, because in a tabletop game the first
+          thing that happens is somebody tells you where you are. */}
+      {(scene || sceneLoading) && (
+        <div className='rounded-lg border border-amber-900/40 bg-amber-950/10 p-3'>
+          {sceneLoading && !scene
+            ? (
+              <p className='flex items-center gap-2 text-xs text-gray-500'>
+                <Loader2 size={12} className='animate-spin' /> The game master is writing…
+              </p>
+            )
+            : scene && (
+              <>
+                {scene.text.split(/\n{2,}/).map((para, i) => (
+                  <p key={i} className={`text-xs leading-relaxed text-gray-200 ${i > 0 ? 'mt-2' : ''}`}>
+                    {para}
+                  </p>
+                ))}
+                {/* Said plainly when there is no GM behind it, rather than
+                    passing off a stage direction as narration. */}
+                {scene.source !== 'gm' && scene.note && (
+                  <p className='mt-2 text-[10px] text-gray-500'>{scene.note}</p>
+                )}
+              </>
+            )}
+        </div>
+      )}
 
       <div className='grid gap-3 lg:grid-cols-[minmax(0,2fr)_minmax(220px,1fr)]'>
         <div
@@ -355,9 +463,13 @@ export default function ArmatureMap({ onBrowse, onPractise, journey, openings, o
           carries its own title in the corner, so a reader WILL notice the two
           names and the only question is whether we explain it or look as
           though we were hiding it. */}
-      <p className='text-[10px] text-gray-600'>
-        This mode takes its geography, its city names and this atlas from the
-        tabletop setting Armat&nbsp;Sur. The mathematics is ours.
+      <p className='text-[10px] leading-relaxed text-gray-600'>
+        Travelling outward from the centre runs roughly rules → structure → change →
+        analysis. That is a story rather than a syllabus: nothing on this map gates
+        anything, and what actually has to come first is on the Concepts tab.
+        <br />
+        This mode takes its geography, its city names and this atlas from the tabletop
+        setting Armat&nbsp;Sur. The mathematics is ours.
       </p>
     </div>
   )
@@ -400,19 +512,27 @@ function JourneyPanel({ journey, openings, hereRegion, busy, last, onStart }: {
             You are nowhere yet. Choose where to make landfall — after that, the
             road is not your decision.
           </p>
-          <div className='mt-2 flex flex-wrap gap-1.5'>
-            {openings.map(door => (
-              <button
-                key={door.conceptId}
-                type='button'
-                onClick={() => onStart(door.conceptId)}
-                disabled={busy}
-                className='inline-flex items-center gap-1 rounded bg-sky-900 px-2 py-1 text-[11px] text-sky-100 hover:bg-sky-800 disabled:opacity-50'
-              >
-                {busy ? <Loader2 size={11} className='animate-spin' /> : <MapPin size={11} />}
-                {door.conceptName}
-              </button>
-            ))}
+          {/* The place is named beside the thing you would know, because a
+              landfall is a decision about WHERE and a bare list of concept
+              names makes it a decision about what — which is the abstraction
+              this whole mode exists to undo. */}
+          <div className='mt-2 flex flex-col gap-1'>
+            {openings.map(door => {
+              const where = regions().find(r => r.id === REGION_OF_CONCEPT.get(door.conceptId))
+              return (
+                <button
+                  key={door.conceptId}
+                  type='button'
+                  onClick={() => onStart(door.conceptId)}
+                  disabled={busy}
+                  className='flex items-center gap-1.5 rounded bg-sky-950/60 px-2 py-1 text-left text-[11px] text-sky-100 hover:bg-sky-900 disabled:opacity-50'
+                >
+                  {busy ? <Loader2 size={11} className='shrink-0 animate-spin' /> : <MapPin size={11} className='shrink-0' />}
+                  <span className='font-medium'>{where?.name ?? 'Parts unknown'}</span>
+                  <span className='truncate text-sky-300/70'>— {door.conceptName}</span>
+                </button>
+              )
+            })}
           </div>
         </>
       ) : (
@@ -587,7 +707,7 @@ function RegionDetail({ cov, onBrowse, onPractise, held, canTravel, busy, onOffe
       {canTravel && held.length > 0 && (
         <div className='mt-3 border-t border-gray-800 pt-2'>
           <p className='text-[10px] uppercase tracking-wide text-gray-500'>
-            Keys you hold here
+            What you know here — click one to set out
           </p>
           <div className='mt-1 flex flex-wrap gap-1'>
             {held.map(k => (

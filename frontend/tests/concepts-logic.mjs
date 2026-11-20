@@ -5501,11 +5501,18 @@ t('and it displaced none of the four positions anything reads by index',
   && ONTOLOGIES[1] === EXPRESSIONS_AND_EQUATIONS
   && ONTOLOGIES[2] === getOntology('plane-geometry')
   && ONTOLOGIES[3] === getOntology('triangle-trigonometry'))
-t('the subject has no internal faults with six concepts in it',
+t('the subject has no internal faults with seven concepts in it',
   ontologyProblems(VI).length === 0, ontologyProblems(VI).join('; '))
 t('its fidelity claim matches what its option can do', fidelityMismatches(VI).length === 0)
-t('six concepts, and the dot product still carries the three it arrived with',
-  VI.concepts.length === 6
+/*
+ * The subject's SIZE is asserted here and moves on every promotion into it —
+ * six at the eleventh, seven at the twentieth. The half of the claim that is
+ * about this promotion is the second one: the dot product still carries the
+ * three knowledge points it arrived with, so a later concept has not been
+ * written by growing this one.
+ */
+t('seven concepts, and the dot product still carries the three it arrived with',
+  VI.concepts.length === 7
   && conceptById(VI, 'dot-product-geometry').knowledgePoints.length === 3,
   `${VI.concepts.length} concepts, `
   + `${conceptById(VI, 'dot-product-geometry').knowledgePoints.length} points on the new one`)
@@ -5671,8 +5678,15 @@ t('and no question contains its own answer by being an imperative with a mark on
   conceptById(VI, 'dot-product-geometry').knowledgePoints
     .flatMap(p => p.workedExample.subgoals)
     .filter(s => !isInterrogative(s.socratic)).map(s => s.label).join('; '))
+/*
+ * `chains` is a SUBJECT figure and not this concept's, so it moves on every
+ * promotion into the subject — nineteen when the dot product landed, twenty-two
+ * since the axioms did. The claim that belongs to this group is the zero beside
+ * it: a chain that cannot become evidence is worse than an unwritten concept,
+ * because it looks finished.
+ */
 t('the subject still has no chain that cannot become evidence',
-  DP_COV.chainsWithNoRuling === 0 && DP_COV.chains === 19,
+  DP_COV.chainsWithNoRuling === 0 && DP_COV.chains === 22,
   `${DP_COV.chains} chains, ${DP_COV.chainsWithNoRuling} with no ruling`)
 
 // ---------------------------------------------------------------------------
@@ -6182,6 +6196,175 @@ t('and it claims nothing back down to span, which the tasks would not support',
   !edgesOfKind(VI, 'encompasses').some(e =>
     e.from === 'three-dimensional-coordinates' && e.to === 'vectors-and-spans'),
   edgesOfKind(VI, 'encompasses').map(e => `${e.from}=>${e.to}`).join(' '))
+
+// ---------------------------------------------------------------------------
+
+/**
+ * `vector-spaces`, the twentieth promotion — and the first chosen on a
+ * structural argument rather than on demand.
+ *
+ * Nothing needed it. All ten journeys read zero unwritten, no area is near the
+ * stub floor, and about nineteen map nodes have every prerequisite written, so
+ * the question was which of nineteen rather than whether any. What decided it
+ * is a fact about the MAP and is asserted in tests/atlas.mjs, where the
+ * composed atlas is built: the node was the SOLE ROOT of the ten-node
+ * `linear-algebra` area, so every node there reached it and the whole area was
+ * gated behind one unwritten concept.
+ *
+ * WHAT THIS SUITE CAN SEE is the subject half, and three claims are worth
+ * having here because each would fail silently:
+ *
+ *  - It is a LEAF. The dot product forked the chain and the three dimensions
+ *    were inserted into the middle of it; nothing in this ontology rests on the
+ *    axioms. So the subject gains a second end, and `linear-independence` is
+ *    its parent by NAME — hung off `vectors-and-spans` instead, which is the
+ *    plausible mistake, it would gate the axioms behind span alone and leave
+ *    out the one argument that does not look at what a vector is made of.
+ *  - It claims NO credit downward, which is the third `encompasses` refusal
+ *    this subject has recorded. The precedent is next door: the thirteenth
+ *    promotion's credit claim counts `n1*r1 + n2*r2 + n3*r3` and deliberately
+ *    excludes `plane-membership-1`'s `2*x - y + 2*z`, and both closure tasks
+ *    here are that excluded shape.
+ *  - Its objectives name only `evaluate`, the rule `solid-measure` made. The
+ *    sentence this concept wants — "decide whether W is a subspace" — is not an
+ *    `evaluate` claim, and what `evaluate` evidences is the number the
+ *    condition returns at a sum.
+ */
+const VS = conceptById(VI, 'vector-spaces')
+const VS_POINTS = VS.knowledgePoints
+
+group('the twentieth promotion: the axioms, written as a leaf of the vectors subject')
+t('it is a concept of this subject with material, not a seventh name in the list',
+  !!VS && isTeachable(VI, 'vector-spaces') && isPractisable(VI, 'vector-spaces'),
+  `${VS ? 'present' : 'ABSENT'}`)
+t('three knowledge points numbered from 1, the shape every concept here but one has',
+  VS_POINTS.length === 3
+  && VS_POINTS.map(p => p.position).join(',') === '1,2,3',
+  `${VS_POINTS.length} points at ${VS_POINTS.map(p => p.position).join(',')}`)
+t('no point claims a figure, and none claims a timing target either',
+  VS_POINTS.every(p => p.visualRef === undefined && p.automaticityTarget === undefined),
+  VS_POINTS.filter(p => p.visualRef || p.automaticityTarget).map(p => p.id).join(' '))
+const VS_KINDS = new Set(VS_POINTS.flatMap(p => tasksForPoint(p.id)).map(x => x.kind))
+t('its objectives name only evaluate, and evaluate really ships a task on every point',
+  VS.objectives.length > 0
+  && VS.objectives.every(o => o.taskKinds.length > 0
+    && o.taskKinds.every(k => VS_KINDS.has(k)))
+  && [...VS_KINDS].join(',') === 'evaluate'
+  && VS_POINTS.every(p => tasksForPoint(p.id).length > 0),
+  VS.objectives.map(o => `${o.id}:${o.taskKinds.join('+')}`).join(' ')
+  + ` against ${[...VS_KINDS].join('+')}`)
+/*
+ * The parent, by name. `prerequisitesOf` is compared as a single string here
+ * rather than as a sorted set — which this file warns against elsewhere —
+ * because the claim is that there is EXACTLY ONE parent and which it is. A set
+ * comparison would be the same assertion with more ceremony; what the warning
+ * is about is a MULTI-parent list, where edge order is not stable.
+ */
+t('the axioms hang off independence and off nothing else here',
+  prerequisitesOf(VI, 'vector-spaces').join(' ') === 'linear-independence'
+  && dependentsOf(VI, 'vector-spaces').length === 0
+  && teachingOrder(VI) !== null,
+  `${prerequisitesOf(VI, 'vector-spaces').join(', ')} -> `
+  + `${dependentsOf(VI, 'vector-spaces').map(c => c.id ?? c).join(', ') || 'nothing in here'}`)
+t('and the subject still has one root, so nothing gained a second place to start',
+  roots(VI).length === 1 && roots(VI)[0] === 'cartesian-plane', roots(VI).join(', '))
+t('it claims no credit downward, which the tasks would not support',
+  !edgesOfKind(VI, 'encompasses').some(e => e.from === 'vector-spaces'),
+  edgesOfKind(VI, 'encompasses').map(e => `${e.from}=>${e.to}`).join(' '))
+
+group('the twentieth promotion is gradable with no worker')
+const VS_TASKS = VS_POINTS.flatMap(p => tasksForPoint(p.id))
+t('six tasks, two on each of the three points', VS_TASKS.length === 6
+  && VS_POINTS.every(p => tasksForPoint(p.id).length === 2),
+  `${VS_TASKS.length}`)
+t('all six are evaluate, so none of them claims a form',
+  VS_TASKS.every(x => x.kind === 'evaluate' && x.form === undefined),
+  VS_TASKS.map(x => `${x.id}:${x.kind}`).join(', '))
+t('every reference is exactly reproducible from the given — no worker consulted',
+  VS_TASKS.every(x => {
+    const at = {}
+    for (const [name, raw] of Object.entries(x.at)) at[name] = parseExpression(raw, [])
+    const truth = exactValue(substitute(parseExpression(x.given, x.variables.map(v => v.name)), at))
+    const claimed = exactValue(parseExpression(x.reference, x.variables.map(v => v.name)))
+    return truth !== null && claimed !== null && showExact(truth) === showExact(claimed)
+  }),
+  VS_TASKS.map(x => x.id).join(', '))
+const vsRulings = await Promise.all(VS_TASKS.map(x => ruleEvaluate(x, x.reference, NO_WORKER)))
+t('a correct answer is ruled correct with no worker configured',
+  vsRulings.every(r => r.verdict.ruling === 'correct'),
+  vsRulings.map((r, i) => `${VS_TASKS[i].id}:${r.verdict?.ruling ?? r.status}`).join(', '))
+/*
+ * THE VERDICTS HAD TO DIFFER IN KIND, which is the constraint that shaped this
+ * task set the way irrational magnitudes shaped the two before it.
+ *
+ * The content of a subspace test is that 0 means closed and anything else means
+ * not, so a set of tasks that all return 0 would teach the arithmetic and hide
+ * the decision — "answer 0" would score full marks across the concept. So the
+ * two closure tasks are the SAME `given` at two different inputs with answers
+ * that disagree in kind, which is the habit `geometric-proof` established for a
+ * pair whose point is an asymmetry, and the third point's second task returns
+ * neither 0 nor the disqualifying value.
+ *
+ * Asserted three ways because each failure is different: a diverging `given`
+ * would make the pair two unrelated tasks, equal references would lose the
+ * asymmetry, and an all-zero answer set would restore the free mark.
+ */
+t('the two closure tasks are one expression at two inputs, and disagree in kind',
+  taskById('subspace-closed-sum-1').given
+    === taskById('not-a-subspace-constant-doubles-1').given
+  && taskById('subspace-closed-sum-1').reference === '0'
+  && taskById('not-a-subspace-constant-doubles-1').reference === '12',
+  `${taskById('subspace-closed-sum-1').reference} vs `
+  + `${taskById('not-a-subspace-constant-doubles-1').reference}`)
+t('and no answer in the set is reachable by answering zero to everything',
+  VS_TASKS.filter(x => x.reference === '0').length === 1,
+  VS_TASKS.map(x => `${x.id}:${x.reference}`).join(' '))
+t('nothing here takes a square root, so the no-worker contract cost no choosing',
+  VS_TASKS.every(x => !/\^\(1\/2\)/.test(x.given) && !/sqrt/.test(x.given)),
+  VS_TASKS.filter(x => /\^\(1\/2\)|sqrt/.test(x.given)).map(x => x.id).join(' '))
+/*
+ * The one place a prompt could hand over its own answer, and the only one
+ * worth asserting.
+ *
+ * Every prompt here states the set's defining condition, so the constants 0 and
+ * 6 have to appear — a closure question with the condition withheld is not a
+ * question. The number that must NOT appear is the value at the SUM: 12 is what
+ * `not-a-subspace-constant-doubles-1` asks for, 6 is what the prompt tells the
+ * learner the set demands, and a prompt reading "the sum gives 12" would hand
+ * over the whole task. So this is checked on that one prompt rather than as a
+ * property of all six, where "contains no numeral it also references" would
+ * fail on every coordinate.
+ */
+t('the one prompt that could leak its answer states the condition and not the value',
+  !/\b12\b/.test(taskById('not-a-subspace-constant-doubles-1').prompt)
+  && /\b6\b/.test(taskById('not-a-subspace-constant-doubles-1').prompt)
+  && taskById('not-a-subspace-constant-doubles-1').reference === '12',
+  taskById('not-a-subspace-constant-doubles-1').prompt)
+/*
+ * EVERY SUBGOAL SHIPPED WITH ITS QUESTION WRITTEN, which the eleventh promotion
+ * argued is the single most valuable property of new material here. Twelve
+ * arrived and twelve are authored, so the build's authored fraction moves up
+ * rather than being diluted.
+ *
+ * `isInterrogative` is the check that the question clause lands LAST: it tests
+ * the final character, and a question with a statement after it is not one a
+ * tutor can ask. The thirteenth promotion had one written the wrong way round
+ * and this is where it failed before it shipped.
+ */
+const VS_SUBGOALS = VS_POINTS.flatMap(p => p.workedExample.subgoals)
+t('all twelve of its subgoals ship the question written, not just the label',
+  VS_SUBGOALS.length === 12 && VS_SUBGOALS.every(s => typeof s.socratic === 'string'),
+  `${VS_SUBGOALS.filter(s => !s.socratic).length} unwritten of ${VS_SUBGOALS.length}`)
+t('and every one of them ends on its question rather than on a statement',
+  VS_SUBGOALS.every(s => isInterrogative(s.socratic)),
+  VS_SUBGOALS.filter(s => !isInterrogative(s.socratic)).map(s => s.label).join('; '))
+t('every subgoal names a move rather than a step number, and no two in one example repeat',
+  VS_POINTS.every(p =>
+    p.workedExample.subgoals.every(s => s.label.length > 20 && !/^step\b/i.test(s.label))
+    && new Set(p.workedExample.subgoals.map(s => s.label)).size
+      === p.workedExample.subgoals.length),
+  VS_SUBGOALS.filter(s => s.label.length <= 20 || /^step\b/i.test(s.label))
+    .map(s => s.label).join(' | '))
 
 rmSync(outDir, { recursive: true, force: true })
 // ---------------------------------------------------------------------------
