@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserFromToken, checkQuota, logUsage } from '@/lib/apiQuota'
 import { librarianContext, sectionsNeeded } from '@/lib/librarian/context'
+import { describeSurfaces } from '@/lib/librarian/surfaces'
 import { describePage, pageContext } from '@/lib/librarian/page'
 
 /**
@@ -182,6 +183,8 @@ Their library (${books.length} text${books.length !== 1 ? 's' : ''}):
 ${bookList}
 
 ${conceptList ? `Relevant concepts from their library:\n${conceptList}\n` : ''}${extraContext ? `\n${extraContext}\n` : ''}${readingLine ? `\n${readingLine}\n` : ''}${page ? `\n${describePage(page)}\n` : ''}
+${describeSurfaces()}
+
 Help them find connections between books, recall what they've read, explore ideas, and think deeper. When referencing content, cite the book title and page number. Keep responses concise and conversational.
 
 You can also discuss their suggested feed and their maths practice when the sections above are present — including why a particular item appeared, what their feed is or is not covering, and what they are ready to practise or blocked on. Connect the three where there is a real connection: an article that bears on something they are reading, or a feed topic that a concept in their practice would help them read critically. Where there is no real connection, do not manufacture one.`

@@ -24,7 +24,7 @@
  */
 
 import { execFileSync } from 'node:child_process'
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
@@ -118,8 +118,27 @@ function buildPage() {
   return require(join(outDir, 'page.js'))
 }
 
+/** surfaces.ts imports nothing, so it compiles whole rather than in a slice. */
+function buildSurfaces() {
+  const src = readFileSync(join(FRONTEND, 'lib', 'librarian', 'surfaces.ts'), 'utf8')
+  const file = join(outDir, 'surfaces.ts')
+  writeFileSync(file, src)
+  const tsc = join(FRONTEND, 'node_modules', 'typescript', 'bin', 'tsc')
+  try {
+    execFileSync(process.execPath, [tsc, file, '--outDir', outDir, '--module', 'commonjs',
+      '--target', 'es2020', '--moduleResolution', 'node', '--esModuleInterop', '--skipLibCheck'],
+      { cwd: FRONTEND, stdio: 'pipe' })
+  } catch (e) {
+    const out = `${e.stdout ?? ''}${e.stderr ?? ''}`
+    if (out.trim()) console.error(out.trim())
+  }
+  const require = createRequire(import.meta.url)
+  return require(join(outDir, 'surfaces.js'))
+}
+
 const M = build()
 const P = buildPage()
+const S = buildSurfaces()
 
 // ── harness ──────────────────────────────────────────────────────────────────
 
@@ -356,6 +375,102 @@ test('describePage carries the blind notice into the prompt', () => {
   const prompt = P.describePage(r)
   assert(prompt.includes(r.blind), 'blind notice missing from the prompt text')
   assert(/WHAT YOU CANNOT SEE FROM HERE/.test(prompt), prompt)
+})
+
+// ── surfaces — what the app contains ─────────────────────────────────────────
+
+/*
+ * Written after a reader asked the librarian how to start RPG mode and was
+ * told to look for "introductory quests", a "Getting Started section" and
+ * community forums. None exist. Asked for a link it said it could not link to
+ * pages of this app, which is both untrue and the most useful thing it could
+ * have done.
+ *
+ * Nothing here can stop a model inventing; what it can do is make sure the
+ * instruction NOT to, and the facts to answer from, are both present and
+ * stay that way.
+ */
+
+test('the features list names the sections a reader would ask about', () => {
+  const text = S.describeSurfaces()
+  for (const expected of ['RPG mode', 'AI Play Along', 'Practice', 'Flashcards', 'Concept map']) {
+    assert(text.includes(expected), `missing from the features list: ${expected}`)
+  }
+})
+
+test('it forbids the specific things it was caught inventing', () => {
+  const text = S.describeSurfaces()
+  assert(/do not invent quests, tutorials, onboarding flows, achievements or community/i.test(text))
+  assert(/None of those exist here/.test(text))
+})
+
+test('it is told it can link, and told never to deny it', () => {
+  const text = S.describeSurfaces()
+  assert(/Never\s+say you are unable to link/i.test(text), 'the denial is not forbidden')
+  assert(text.includes('[RPG mode](/learn?tab=world)'), 'no worked link example')
+})
+
+test('knowing a feature is still not seeing the reader in it', () => {
+  // The list is exactly the context that tempts a model into "you'll see your
+  // journey on the left", so the boundary is restated after it.
+  assert(/not the same as seeing what the reader has done in it/i.test(S.describeSurfaces()))
+})
+
+test('RPG mode says how to actually start, since that was the question', () => {
+  const rpg = S.SURFACES.find(s => s.name === 'RPG mode')
+  assert(rpg, 'RPG mode is not in SURFACES')
+  assert(/landfall/i.test(rpg.is), 'does not say how to begin')
+  assert(/no quests and no tutorial/i.test(rpg.is), 'does not head off the invented version')
+  assert(rpg.path === '/learn?tab=world', rpg.path)
+})
+
+test('every surface carries a path that looks like a route of this app', () => {
+  for (const s of S.SURFACES) {
+    assert(s.path.startsWith('/'), `${s.name}: path is not absolute (${s.path})`)
+    assert(!/^https?:/.test(s.path), `${s.name}: external URL, not an app route`)
+    assert(s.is.length > 30, `${s.name}: description too thin to be useful`)
+  }
+})
+
+test('paths point at routes that exist in the app', () => {
+  // A stale path is a confident wrong answer, which is the failure this whole
+  // module exists to stop. Checked against the filesystem rather than a list,
+  // so deleting a route breaks this rather than breaking a reader's click.
+  for (const s of S.SURFACES) {
+    const route = s.path.split('?')[0].replace(/\/$/, '')
+    if (route === '') continue                        // the home page
+    const dir = join(FRONTEND, 'app', route.slice(1))
+    assert(
+      existsSync(join(dir, 'page.tsx')) || existsSync(dir),
+      `${s.name}: no route at ${route} — app/${route.slice(1)} does not exist`,
+    )
+  }
+})
+
+test('asking about the learn pages loads the practice state', () => {
+  // The conversation that prompted all this: "trying to test out the new rpg
+  // mode in learn" matched no practice trigger, so the librarian answered
+  // about practice without having looked.
+  for (const phrase of [
+    'trying to test out the new rpg mode in learn but it seems confusing',
+    'how do I start rpg mode',
+    'what is the tutor tab',
+    'where are my flashcards',
+  ]) {
+    assert(M.sectionsNeeded([user(phrase)]).practice, `did not trigger practice: "${phrase}"`)
+  }
+})
+
+test('and ordinary talk about books still does not', () => {
+  // `learn` is bounded on both sides for this reason: unbounded it matches
+  // "learned" and "learning", which is most of how people talk about reading.
+  for (const phrase of [
+    'what did I learn from Middlemarch',
+    'I am learning a lot from this chapter',
+    'unlearn the habit',
+  ]) {
+    assert(!M.sectionsNeeded([user(phrase)]).practice, `wrongly triggered practice: "${phrase}"`)
+  }
 })
 
 // ── report ───────────────────────────────────────────────────────────────────

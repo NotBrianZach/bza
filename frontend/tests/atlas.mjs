@@ -4771,7 +4771,14 @@ t('at least one region has material written, or the map is a lie',
  * `loadJourney`, where the adoption lives, never `loadTraversal` underneath
  * it. There is no behaviour here to assert without a database.
  */
-const JOURNEY_ROUTES = ['app/api/learn/session/route.ts', 'app/api/learn/traverse/route.ts']
+/* Three readers, not two. The librarian was the third and was found only by
+   a reader noticing the chat talking nonsense about RPG mode -- it still read
+   the per-subject key, so it reported no journey for everybody. */
+const JOURNEY_ROUTES = [
+  'app/api/learn/session/route.ts',
+  'app/api/learn/traverse/route.ts',
+  'lib/librarian/context.ts',
+]
 const journeySources = JOURNEY_ROUTES.map(p => ({ p, text: readFileSync(join(FRONTEND, p), 'utf8') }))
 
 t('both journey routes load it through loadJourney',
@@ -4779,8 +4786,13 @@ t('both journey routes load it through loadJourney',
   journeySources.filter(s => !/loadJourney\(userId\)/.test(s.text)).map(s => s.p).join(', '))
 
 /* Calling loadTraversal directly is how the adoption gets skipped. The shared
-   loader is the only caller that should name it. */
-const rawLoaders = journeySources.filter(s => /\bloadTraversal\(/.test(s.text))
+   loader is the only caller that should name it.
+   Comment lines are exempt — explaining what a file used to call is how the
+   reason survives, and a guard that forbade naming the old function would
+   force every one of these notes to be deleted. */
+const rawLoaders = journeySources.filter(s => s.text.split('\n')
+  .filter(line => !/^\s*(\*|\/\/|\/\*)/.test(line))
+  .some(line => /\bloadTraversal\(/.test(line)))
 t('neither route reaches past it to loadTraversal',
   rawLoaders.length === 0, rawLoaders.map(s => s.p).join(', '))
 

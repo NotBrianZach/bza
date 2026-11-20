@@ -36,7 +36,7 @@ import { RATIONAL_EXPRESSIONS } from '@/lib/concepts/ontology'
 import { ONTOLOGIES } from '@/lib/concepts/ontology'
 import { conceptById } from '@/lib/concepts/registry'
 import { assemble, MASTERY_FLOOR, summarise } from '@/lib/concepts/scheduling'
-import { loadStrengths, loadTraversal, pendingReviewCount } from '@/lib/concepts/store'
+import { loadJourney, loadStrengths, pendingReviewCount } from '@/lib/concepts/store'
 import { frontier, openingDoors } from '@/lib/concepts/traversal'
 import { verifierConfig } from '@/lib/concepts/verify'
 
@@ -209,9 +209,14 @@ export async function practiceContext(userId: string): Promise<string> {
     let strengths
     let world
     try {
+      /* `loadJourney`, like both learn routes. This read `loadTraversal(userId,
+         ontology.subject.id)` — the per-subject key from before a journey
+         spanned every authored subject — so after the widening it found an
+         empty world for every subject and the librarian reported, confidently,
+         that no journey had been started. A third copy of the same drift. */
       ;[strengths, world] = await Promise.all([
         loadStrengths(userId),
-        loadTraversal(userId, ontology.subject.id),
+        loadJourney(userId),
       ])
     } catch (e) {
       lines.push(`SUBJECT "${ontology.subject.name}": state could not be loaded (${e instanceof Error ? e.message : 'unknown'}). Say you cannot see it rather than guessing.`)
@@ -344,6 +349,18 @@ const PRACTICE_TRIGGERS = new RegExp([
   '\\b(review queue|blocked|prerequisite\\w*|study\\w*|revis\\w*|quiz\\w*)',
   '\\b(algebra\\w*|logarithm\\w*|exponent\\w*|polynomial\\w*|fraction\\w*|quadratic\\w*)',
   '\\b(what should i (work|do|learn|study))\\b',
+  // The learn pages by the names a reader uses for them. "trying out the new
+  // rpg mode in learn" matched none of the above, so the librarian answered
+  // about the practice state without having looked at it — correctly saying so,
+  // and unhelpfully, since the question was squarely about that section.
+  '\\b(rpg mode|rpg|armature|tutor\\w*|traversal|journey|flashcard\\w*)',
+  // "learn" only where it names the SECTION, never the verb. Word boundaries
+  // are not enough and a test proves it: `\blearn\b` fires on "what did I
+  // learn from Middlemarch", which is a question about a book and would have
+  // spent two database reads to answer it with the wrong context attached.
+  '\\blearn (tab|page|pages|section|mode)\\b',
+  '\\bin learn\\b',
+  '/learn\\b',
 ].join('|'), 'i')
 
 /**
