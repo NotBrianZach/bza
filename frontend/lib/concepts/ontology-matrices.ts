@@ -539,12 +539,25 @@ const CONCEPTS: Concept[] = [
             {
               label: 'Compute',
               detail: '2·2 − 4·1 = 4 − 4 = 0.',
+              socratic:
+                'The rule has not changed: ad − bc, with a and d the pair on the diagonal and b ' +
+                'and c the two off it — here 2 and 2 against 4 and 1. Nothing is negative this ' +
+                'time, so the subtraction does exactly what it looks like it does. What are the ' +
+                'two products, and what is left when you take the second away from the first?',
             },
             {
               label: 'Look at the columns',
               detail:
                 'They are (2, 1) and (4, 2), and the second is twice the first. The columns are ' +
                 'dependent, so their span is a line rather than the plane.',
+              socratic:
+                'Set the determinant aside for a moment and read the matrix the way the columns ' +
+                'rule reads it: e₁ lands on (2, 1), e₂ lands on (4, 2), and everything the map ' +
+                'reaches is what those two columns span between them. Two vectors span the whole ' +
+                'plane only when neither one is a multiple of the other. Hold (2, 1) and (4, 2) ' +
+                'side by side and compare them entry by entry — then say how much of the plane ' +
+                'the pair can reach: all of it, or something smaller, and if smaller, what shape ' +
+                'is that?',
             },
             {
               label: 'Connect the two',
@@ -552,6 +565,15 @@ const CONCEPTS: Concept[] = [
                 'Everything this matrix reaches lies on the line through (2, 1). Area is scaled ' +
                 'by 0 because the image has no area at all. The determinant vanishing and the ' +
                 'columns being dependent are the same fact.',
+              socratic:
+                'You now have two readings of the same matrix, arrived at independently: the ' +
+                'rule returned 0, and the columns reach no further than the line through (2, 1). ' +
+                'The last point established what a determinant measures — the factor every area ' +
+                'is multiplied by — and a line, however long, encloses no area whatever. Put ' +
+                'those together and the two readings stop being a coincidence: given where this ' +
+                'map sends the unit square, what value was the rule never going to be able to ' +
+                'return, and is the vanishing determinant a separate piece of evidence for the ' +
+                'collapse or another way of stating it?',
             },
           ],
           answer: '0 — the map collapses the plane onto a line',
