@@ -11,6 +11,7 @@ import {
 import { MATHEMATICS, atlasCoverage } from '@/lib/concepts/atlas'
 import { ONTOLOGIES } from '@/lib/concepts/ontology'
 import { conceptById } from '@/lib/concepts/registry'
+import TablePanel from './TablePanel'
 
 /**
  * The Armature — nineteen areas of mathematics given a geography.
@@ -456,6 +457,22 @@ export default function ArmatureMap({ onBrowse, onPractise, journey, openings, o
             : <Unselected />}
         </div>
       </div>
+
+      {/* The table, under the map and only where the party is actually
+          standing. Travel is the map's business and what happens while you are
+          somewhere is this — so it appears once you have made landfall and not
+          before, because there is no table to sit at when you are nowhere. */}
+      {journey && hereRegion && (() => {
+        const standing = all.find(r => r.id === hereRegion)
+        return standing
+          ? (
+            <TablePanel
+              region={standing}
+              held={(journey.route ?? []).map(r => r.conceptName)}
+            />
+          )
+          : null
+      })()}
 
       <Legend />
 

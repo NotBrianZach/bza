@@ -55,6 +55,9 @@ function build() {
     // The GM's prompt. Pure, so the prohibitions that keep a narrator from
     // ruling on a learner are assertable rather than merely written down.
     join('lib', 'concepts', 'narrate.ts'),
+    // The table's mechanics: tiers, dice, bands. Pure, so the one place a
+    // random number enters the engine is testable with the draw injected.
+    join('lib', 'concepts', 'rpg.ts'),
   ]
   try {
     execFileSync(process.execPath, [
@@ -111,7 +114,11 @@ const {
   regionForConcept, REGIONS: ARMATURE_REGIONS,
   regions: armatureRegions,
 } = req(join(outDir, 'concepts', 'armature.js'))
-const { SYSTEM: GM_SYSTEM, scenePrompt, settingOf, unnarratedScene } = req(join(outDir, 'concepts', 'narrate.js'))
+const {
+  SYSTEM: GM_SYSTEM, TABLE_SYSTEM, parseRollExpression, scenePrompt, settingOf,
+  splitRollRequest, tablePrompt, unnarratedScene,
+} = req(join(outDir, 'concepts', 'narrate.js'))
+const { BACKGROUNDS, SIDES, readBand, rollFor, sheetFor } = req(join(outDir, 'concepts', 'rpg.js'))
 /*
  * `tasks.js` is not in `entries` and is emitted anyway, because offerings.ts
  * now imports `isPractisable` from it and tsc follows imports. Required here
@@ -4843,6 +4850,110 @@ t('every outcome produces a prompt and an unnarrated fallback',
   }))
 t('the unnarrated fallback names the place rather than apologising',
   unnarratedScene({ kind: 'arrive', region: GM_REGION }).includes(GM_REGION.name))
+
+/*
+ * The table: tags, dice and the two things they must never decide.
+ *
+ * The tier markers are the Armat Sur rulebook's and a player who has read it
+ * must not find different dice on this side, so they are pinned rather than
+ * merely implemented.
+ */
+t('the tier markers are the setting\'s own',
+  SIDES['#'] === 1 && SIDES['~'] === 3 && SIDES[''] === 6 && SIDES['+'] === 10)
+
+/* A flat tag draws no die at all, which is what `#` means. Injecting a draw
+   that throws proves it rather than assuming it. */
+const noDraw = () => { throw new Error('a flat tag must not draw') }
+t('a flat tag adds one and rolls nothing',
+  rollFor([{ name: 'certain', tier: '#' }], noDraw).total === 1)
+
+t('opposition subtracts, and each die keeps its tag\'s place',
+  (() => {
+    const r = rollFor([
+      { name: 'trained hand', tier: '' },
+      { name: 'good tools', tier: '~' },
+      { name: 'time pressure', tier: '+', against: true },
+    ], sides => sides)   // every die rolls its maximum
+    return r.dice === 'd6 + d3 - d10' && r.results.join(',') === '6,3,-10' && r.total === -1
+  })())
+
+/* The bands are the rulebook's "Everyday rolls", which are the aether bands.
+   Checked at every boundary because an off-by-one here silently retunes the
+   whole game. */
+t('the outcome bands match the rulebook at every boundary',
+  readBand(-3).band === 'fails' && readBand(0).band === 'fails'
+  && readBand(1).band === 'barely' && readBand(3).band === 'barely'
+  && readBand(4).band === 'works' && readBand(7).band === 'works'
+  && readBand(8).band === 'better' && readBand(99).band === 'better')
+
+/*
+ * The roll grammar is the game's own roll_resolver grammar. It must accept
+ * what that accepts and refuse what it refuses — a malformed expression is
+ * dropped by the route rather than guessed at, so a parser that returned
+ * something plausible for nonsense would put invented dice on the table.
+ */
+t('a well-formed expression parses to tags, tiers and signs',
+  (() => {
+    const p = parseRollExpression('(silver tongued) + (leverage~) - (audience hostility+)')
+    return p?.length === 3 && p[0].tier === '' && p[1].tier === '~'
+      && p[2].tier === '+' && p[2].against === true && p[0].against === false
+  })())
+/*
+ * The unparenthesised form is accepted too, because it is what models
+ * actually return. Found by playing a turn against a real model: asked for
+ * `(silver tongued) - (hostility~)` it wrote `Place value + Surveyor - Guild
+ * protocol~`, the strict parser refused it, and the consequence was that dice
+ * never appeared at all.
+ */
+t('the form a model actually writes is accepted',
+  (() => {
+    const p = parseRollExpression('Place value + Surveyor - Guild protocol~')
+    return p?.length === 3
+      && p[0].name === 'Place value' && p[0].against === false
+      && p[2].name === 'Guild protocol' && p[2].tier === '~' && p[2].against === true
+  })())
+t('a hyphenated tag name survives the split',
+  parseRollExpression('well-read + obscurity~')?.length === 2)
+t('nonsense is still refused rather than half-read',
+  parseRollExpression('(a) (b)') === null
+  && parseRollExpression('(a) + (b) junk') === null
+  && parseRollExpression('') === null
+  && parseRollExpression('   ') === null)
+
+t('a roll request is lifted off the reply and the prose survives',
+  (() => {
+    const s = splitRollRequest('The guard folds his arms.\n\nROLL: (silver tongued) - (hostility~)')
+    return s.expression === '(silver tongued) - (hostility~)'
+      && s.text === 'The guard folds his arms.'
+  })())
+t('a reply with no roll is left alone',
+  splitRollRequest('Nothing happens.').expression === null
+  && splitRollRequest('Nothing happens.').text === 'Nothing happens.')
+
+/*
+ * The two prohibitions most at risk once the player can type freely: the
+ * obliging thing to do when somebody says "I work out the ratio" is to check
+ * their arithmetic, and the obliging thing when they ask for a hint is to give
+ * one. Both are the verifier's job and neither is the GM's.
+ */
+t('the table master is forbidden from rolling its own dice',
+  /do not write a\s*number/i.test(TABLE_SYSTEM) && /Do not decide it yourself/i.test(TABLE_SYSTEM))
+t('it may not roll to decide what the player knows',
+  /Never roll to find out whether the player knows/i.test(TABLE_SYSTEM))
+t('it still may not teach or judge a calculation',
+  /never the result and never whether it was right/i.test(TABLE_SYSTEM))
+
+/* The sheet is flavour plus earned tags, and it says which is which. A
+   background that read as an advantage would be a way to buy a better roll
+   from a dropdown. */
+const SHEET = sheetFor({ name: 'Vel', background: 'surveyor' }, ['Place value', 'Long division'], 'Krull')
+t('the sheet carries the character and the tags they earned',
+  SHEET.includes('Vel') && SHEET.includes('Surveyor')
+  && SHEET.includes('Long division') && SHEET.includes('Krull'))
+t('an empty sheet says so rather than looking broken',
+  sheetFor({ name: '', background: 'scribe' }, [], 'Krull').includes('none yet'))
+t('every background is colour, with no mechanical claim in its text',
+  BACKGROUNDS.every(b => !/\bd\d|\+\d|bonus|advantage/i.test(b.is)))
 
 const JOURNEY = atlas.composeAtlas([], ONTOLOGIES)
 
