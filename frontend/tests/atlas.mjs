@@ -118,7 +118,10 @@ const {
   SYSTEM: GM_SYSTEM, TABLE_SYSTEM, parseRollExpression, scenePrompt, settingOf,
   splitRollRequest, tablePrompt, unnarratedScene,
 } = req(join(outDir, 'concepts', 'narrate.js'))
-const { BACKGROUNDS, SIDES, readBand, rollFor, sheetFor } = req(join(outDir, 'concepts', 'rpg.js'))
+const {
+  BACKGROUNDS, DEFAULT_CHARACTER, MAX_TRAIT, RACES, SIDES, isMade, raceOf, readBand,
+  rollFor, sheetFor,
+} = req(join(outDir, 'concepts', 'rpg.js'))
 /*
  * `tasks.js` is not in `entries` and is emitted anyway, because offerings.ts
  * now imports `isPractisable` from it and tsc follows imports. Required here
@@ -5470,6 +5473,86 @@ t('an empty sheet says so rather than looking broken',
   sheetFor({ name: '', background: 'scribe' }, [], 'Krull').includes('none yet'))
 t('every background is colour, with no mechanical claim in its text',
   BACKGROUNDS.every(b => !/\bd\d|\+\d|bonus|advantage/i.test(b.is)))
+
+/*
+ * Making a character.
+ *
+ * Everybody was playing as "a traveller, scribe" — the default, behind a
+ * toggle most people never pressed. Four decisions taken on purpose is the
+ * difference between a character and a placeholder.
+ *
+ * The racial tags DO carry weight, unlike backgrounds, and that is not a
+ * contradiction of the rule above: they weigh on what happens in a SCENE. The
+ * last assertion in this group is the one that matters — nothing in the
+ * character can touch the mathematics.
+ */
+const MADE = { name: 'Vel', background: 'surveyor', race: 'dwarf', trait: 'Afraid of deep water' }
+
+t('a character is not made until it has a name',
+  isMade(MADE) && !isMade(DEFAULT_CHARACTER)
+  && !isMade({ ...MADE, name: '' }) && !isMade({ ...MADE, name: '   ' }))
+
+t('every race carries tags from the setting, with real tiers',
+  RACES.length >= 4 && RACES.every(r =>
+    r.tags.length >= 2 && r.tags.every(t => ['#', '~', '', '+'].includes(t.tier) && t.is.length > 20)))
+
+t('an unknown race resolves rather than crashing',
+  raceOf('dragon').id === RACES[0].id && raceOf('').id === RACES[0].id)
+
+/* The sheet is what the game master actually reads, so everything chosen has
+   to reach it — a choice that does not appear there is decoration. */
+const SHEET2 = sheetFor(MADE, ['Place value'], 'Krull')
+t('every choice reaches the sheet the game master reads',
+  SHEET2.includes('Vel') && SHEET2.includes('Dwarf') && SHEET2.includes('Surveyor')
+  && SHEET2.includes('Afraid of deep water'))
+t('racial tags reach it with their tiers attached, ready to roll',
+  SHEET2.includes('Dwarf strength') && SHEET2.includes('Blunt#')
+  && SHEET2.includes('Respect for authority~'))
+t('a sheet with no trait does not print an empty one',
+  !/INHERENT TAGS:.*,\s*$/m.test(sheetFor({ ...MADE, trait: '' }, [], 'Krull')))
+
+t('the trait is capped before it becomes a tag',
+  MAX_TRAIT > 0 && MAX_TRAIT <= 80)
+
+/*
+ * sheetFor is reached from two places that cannot promise a whole character:
+ * /api/learn/table casts a request body with `(body?.character ?? {}) as
+ * Character`, and localStorage holds sheets written before a character had a
+ * race or a trait. Both were live — the first a 500 on a malformed request,
+ * the second a crash on first render for anybody with an older sheet — and
+ * the test that found it was one constructing the OLD shape.
+ */
+t('a half-built character does not crash the sheet',
+  [
+    {},
+    null,
+    undefined,
+    { name: 'Vel' },
+    { name: 'Vel', background: 'surveyor' },            // the pre-race shape
+    { name: 'Vel', race: 'dwarf' },
+    { name: 1, background: [], race: {}, trait: 7 },    // nothing of the right type
+  ].every(input => {
+    const sheet = sheetFor(input, [], 'Krull')
+    return typeof sheet === 'string' && sheet.includes('NAME:') && sheet.includes('RACE:')
+  }))
+
+t('an unknown race or trade falls back rather than reaching the sheet raw',
+  (() => {
+    const sheet = sheetFor({ name: 'V', race: 'dragon', background: 'emperor' }, [], 'Krull')
+    return !sheet.includes('dragon') && !sheet.includes('emperor')
+  })())
+
+/*
+ * The boundary, asserted rather than trusted: a character sheet must not be a
+ * way to buy past a prerequisite. No race, tag, trade or trait names a concept
+ * or claims to open anything.
+ */
+const CHARACTER_TEXT = [
+  ...RACES.flatMap(r => [r.is, ...r.tags.map(t => `${t.name} ${t.is}`)]),
+  ...BACKGROUNDS.map(b => b.is),
+].join(' ')
+t('nothing in a character claims to open a road or teach anything',
+  !/prerequisite|unlock|open (a |the )?road|master\w*|learn\w*|concept/i.test(CHARACTER_TEXT))
 
 const JOURNEY = atlas.composeAtlas([], ONTOLOGIES)
 

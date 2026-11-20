@@ -407,7 +407,23 @@ const CONSTRAINTS = (() => {
  * reach, no false positives, and it is the only way to tell `document_jobs`'
  * `status` from `invoices`' when the two lists disagree.
  */
-const AMBIGUOUS_KEYS = new Set(['status', 'type', 'role', 'theme', 'name', 'value', 'id'])
+const AMBIGUOUS_KEYS = new Set([
+  'status', 'type', 'role', 'theme', 'name', 'value', 'id',
+  /*
+   * `tier` joined them. `profiles.tier` is free/pro/enterprise; the word is
+   * also the concept probe's own tiers ('frontier', 'review') and, since RPG
+   * mode, the Armat Sur dice markers — `tier: '~'` is a d3 and has never been
+   * near Postgres.
+   *
+   * It was already reporting four of these before RPG mode added ten more, at
+   * which point two thirds of this guard's output was noise about a word that
+   * means four different things. That is the exact failure the note above
+   * describes, so it takes the exact remedy: profiles.tier keeps its coverage
+   * through the table-scoped pass, where a write chained off .from('profiles')
+   * is what gets read.
+   */
+  'tier',
+])
 
 /**
  * A legacy column checked against the constraint it shadows.

@@ -4,7 +4,9 @@ import { regionBy } from '@/lib/concepts/armature'
 import {
   parseRollExpression, splitRollRequest, tablePrompt, type TableTurn,
 } from '@/lib/concepts/narrate'
-import { fairDraw, rollFor, sheetFor, type Character, type Tag, type Tier } from '@/lib/concepts/rpg'
+import {
+  fairDraw, normalizeCharacter, rollFor, sheetFor, type Tag, type Tier,
+} from '@/lib/concepts/rpg'
 
 /**
  * One turn at the table: the player says what they do, the game master answers.
@@ -63,7 +65,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'say what you do' }, { status: 400 })
   }
 
-  const character = (body?.character ?? {}) as Character
+  /* Normalised, not cast. The cast was a claim about a request body. */
+  const character = normalizeCharacter(body?.character)
   const held = Array.isArray(body?.held)
     ? (body.held as unknown[]).filter((h): h is string => typeof h === 'string')
     : []

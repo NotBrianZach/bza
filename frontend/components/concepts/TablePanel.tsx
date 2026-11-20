@@ -5,7 +5,9 @@ import { Dices, Loader2, Send, User } from 'lucide-react'
 import { authedFetch } from '@/lib/authedFetch'
 import type { PlacedRegion } from '@/lib/concepts/armature'
 import type { TableTurn } from '@/lib/concepts/narrate'
-import { BACKGROUNDS, DEFAULT_CHARACTER, type Character } from '@/lib/concepts/rpg'
+import {
+  BACKGROUNDS, DEFAULT_CHARACTER, MAX_TRAIT, RACES, isMade, raceOf, type Character,
+} from '@/lib/concepts/rpg'
 
 /**
  * The table: a character, a log, and a box to say what you do.
@@ -51,12 +53,29 @@ function loadLog(regionId: string): TableTurn[] {
 
 const CHARACTER_KEY = 'bza-table-character'
 
+/**
+ * A stored character, merged onto the defaults.
+ *
+ * Merged rather than cast. The previous version returned `parsed as Character`,
+ * which was true while a character was a name and a background and stopped
+ * being true the moment it grew a race and a trait: anybody with a sheet saved
+ * before this change would have had `character.trait` undefined, and
+ * `trait.trim()` would have thrown on first render. A cast is a claim about
+ * data written by an older version of the code, and that is exactly the claim
+ * nobody is in a position to make.
+ */
 function loadCharacter(): Character {
   try {
     const raw = localStorage.getItem(CHARACTER_KEY)
     const parsed = raw ? JSON.parse(raw) : null
-    if (parsed && typeof parsed.name === 'string' && typeof parsed.background === 'string') {
-      return parsed as Character
+    if (parsed && typeof parsed === 'object') {
+      return {
+        ...DEFAULT_CHARACTER,
+        ...(typeof parsed.name === 'string' ? { name: parsed.name } : {}),
+        ...(typeof parsed.background === 'string' ? { background: parsed.background } : {}),
+        ...(typeof parsed.race === 'string' ? { race: parsed.race } : {}),
+        ...(typeof parsed.trait === 'string' ? { trait: parsed.trait } : {}),
+      }
     }
   } catch { /* fall through */ }
   return DEFAULT_CHARACTER
@@ -71,10 +90,17 @@ export default function TablePanel({ region, held }: {
   const [log, setLog] = useState<TableTurn[]>([])
   const [action, setAction] = useState('')
   const [busy, setBusy] = useState(false)
+  /* Opens on creation for a sheet nobody has made, and stays shut afterwards.
+     Set from the stored character once it loads, not on first render, since
+     before that every character looks unmade. */
   const [sheetOpen, setSheetOpen] = useState(false)
   const endRef = useRef<HTMLDivElement | null>(null)
 
-  useEffect(() => { setCharacter(loadCharacter()) }, [])
+  useEffect(() => {
+    const loaded = loadCharacter()
+    setCharacter(loaded)
+    if (!isMade(loaded)) setSheetOpen(true)
+  }, [])
   useEffect(() => { setLog(loadLog(region.id)) }, [region.id])
   useEffect(() => { endRef.current?.scrollIntoView({ block: 'nearest' }) }, [log, busy])
 
@@ -130,6 +156,7 @@ export default function TablePanel({ region, held }: {
   }, [busy, log, region.id, character, held, persist])
 
   const bg = BACKGROUNDS.find(b => b.id === character.background) ?? BACKGROUNDS[0]
+  const made = isMade(character)
 
   return (
     <div className='rounded-lg border border-gray-800 bg-gray-900'>
@@ -145,38 +172,17 @@ export default function TablePanel({ region, held }: {
       </div>
 
       {sheetOpen && (
-        <div className='space-y-2 border-b border-gray-800 bg-gray-950/50 px-3 py-2'>
-          <input
-            value={character.name}
-            onChange={e => saveCharacter({ ...character, name: e.target.value.slice(0, 40) })}
-            placeholder='Your name'
-            className='w-full rounded border border-gray-700 bg-gray-900 px-2 py-1 text-xs text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500'
-          />
-          <div className='flex flex-wrap gap-1'>
-            {BACKGROUNDS.map(b => (
-              <button
-                key={b.id}
-                onClick={() => saveCharacter({ ...character, background: b.id })}
-                title={b.is}
-                className={`rounded-full border px-2 py-0.5 text-[11px] ${
-                  character.background === b.id
-                    ? 'border-sky-600 bg-sky-950 text-sky-200'
-                    : 'border-gray-700 text-gray-400 hover:border-gray-500'
-                }`}
-              >
-                {b.name}
-              </button>
-            ))}
-          </div>
-          <p className='text-[11px] leading-snug text-gray-500'>{bg.is}</p>
-          {/* Said plainly, because a player who thought a background helped
-              them roll would be choosing one for the wrong reason. */}
-          <p className='text-[10px] leading-snug text-gray-600'>
-            Your background is colour, not an advantage. The tags that carry weight are the
-            {held.length > 0 ? ` ${held.length} concepts you have reached` : ' concepts you reach'} on
-            the map.
-          </p>
-        </div>
+        <CharacterSheet
+          character={character}
+          onChange={saveCharacter}
+          held={held}
+          /* On a sheet that has not been made yet this is the first thing in
+             the panel rather than a drawer under it, and the composer is
+             hidden behind it — see the `made` guard below. Deciding who you
+             are is a step, not a setting. */
+          creating={!made}
+          onDone={() => setSheetOpen(false)}
+        />
       )}
 
       <div className='max-h-72 space-y-2 overflow-y-auto px-3 py-2'>
@@ -221,7 +227,12 @@ export default function TablePanel({ region, held }: {
         <div ref={endRef} />
       </div>
 
-      <div className='flex items-end gap-1.5 border-t border-gray-800 px-3 py-2'>
+      {/* No composer until there is somebody to act.
+          The alternative — letting a nameless default play and offering the
+          sheet as a setting — is what produced a world in which everyone was
+          "a traveller, scribe". Twenty seconds of deciding is the price of the
+          pronoun meaning anything. */}
+      <div className={`flex items-end gap-1.5 border-t border-gray-800 px-3 py-2 ${made ? '' : 'hidden'}`}>
         <textarea
           value={action}
           onChange={e => setAction(e.target.value)}
@@ -240,6 +251,150 @@ export default function TablePanel({ region, held }: {
           {busy ? <Loader2 size={11} className='animate-spin' /> : <Send size={11} />}
         </button>
       </div>
+    </div>
+  )
+}
+
+/**
+ * Making a character, and reading one back.
+ *
+ * ── Why creation is a step and not a settings drawer ──────────────────────
+ *
+ * It was a name field and five chips behind a toggle most people would never
+ * press, so everybody played as "a traveller, scribe" — a default nobody
+ * chose. Four small decisions taken on purpose before the first scene is the
+ * difference between a character and a placeholder, and it costs about twenty
+ * seconds.
+ *
+ * ── What the choices do, stated where they are made ───────────────────────
+ *
+ * Race carries real tags from the setting's own "Core X Tags" and the game
+ * master may reach for them in a roll. Background does not and says so. The
+ * trait is free text and is handed over as a tag like any other, which is why
+ * the hint asks for something that could go wrong — a sheet of pure
+ * advantages is a sheet the dice cannot do anything interesting with.
+ *
+ * None of it touches the mathematics, and the note at the foot says that
+ * plainly. A player who suspected their race might open a prerequisite would
+ * be choosing one for the wrong reason, and would be wrong.
+ */
+function CharacterSheet({ character, onChange, held, creating, onDone }: {
+  character: Character
+  onChange: (next: Character) => void
+  held: string[]
+  creating: boolean
+  onDone: () => void
+}) {
+  const bg = BACKGROUNDS.find(b => b.id === character.background) ?? BACKGROUNDS[0]
+  const race = raceOf(character.race)
+  return (
+    <div className='space-y-2.5 border-b border-gray-800 bg-gray-950/50 px-3 py-3'>
+      {creating && (
+        <p className='text-xs text-gray-300'>
+          Who are you? Four quick decisions, then the table is yours.
+        </p>
+      )}
+
+      <div>
+        <label className='text-[10px] uppercase tracking-wide text-gray-500'>Name</label>
+        <input
+          value={character.name}
+          onChange={e => onChange({ ...character, name: e.target.value.slice(0, 40) })}
+          placeholder='Who the world calls you'
+          autoFocus={creating}
+          className='mt-0.5 w-full rounded border border-gray-700 bg-gray-900 px-2 py-1 text-xs text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500'
+        />
+      </div>
+
+      <div>
+        <label className='text-[10px] uppercase tracking-wide text-gray-500'>
+          People — brings its own tags
+        </label>
+        <div className='mt-1 flex flex-wrap gap-1'>
+          {RACES.map(r => (
+            <button
+              key={r.id}
+              type='button'
+              onClick={() => onChange({ ...character, race: r.id })}
+              title={r.is}
+              className={`rounded-full border px-2 py-0.5 text-[11px] ${
+                character.race === r.id
+                  ? 'border-sky-600 bg-sky-950 text-sky-200'
+                  : 'border-gray-700 text-gray-400 hover:border-gray-500'
+              }`}
+            >
+              {r.name}
+            </button>
+          ))}
+        </div>
+        <p className='mt-1 text-[11px] leading-snug text-gray-500'>{race.is}</p>
+        {/* The tags themselves, with their tiers, because they are the part
+            that will actually turn up in a roll and the player should be able
+            to see what they are taking. */}
+        <ul className='mt-1 space-y-0.5'>
+          {race.tags.map(t => (
+            <li key={t.name} className='text-[11px] text-gray-400'>
+              <span className='font-mono text-gray-300'>{t.name}{t.tier}</span>
+              <span className='text-gray-500'> — {t.is}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div>
+        <label className='text-[10px] uppercase tracking-wide text-gray-500'>Trade</label>
+        <div className='mt-1 flex flex-wrap gap-1'>
+          {BACKGROUNDS.map(b => (
+            <button
+              key={b.id}
+              type='button'
+              onClick={() => onChange({ ...character, background: b.id })}
+              title={b.is}
+              className={`rounded-full border px-2 py-0.5 text-[11px] ${
+                character.background === b.id
+                  ? 'border-sky-600 bg-sky-950 text-sky-200'
+                  : 'border-gray-700 text-gray-400 hover:border-gray-500'
+              }`}
+            >
+              {b.name}
+            </button>
+          ))}
+        </div>
+        <p className='mt-1 text-[11px] leading-snug text-gray-500'>{bg.is}</p>
+      </div>
+
+      <div>
+        <label className='text-[10px] uppercase tracking-wide text-gray-500'>
+          One thing that is true of you
+        </label>
+        <input
+          value={character.trait}
+          onChange={e => onChange({ ...character, trait: e.target.value.slice(0, MAX_TRAIT) })}
+          placeholder='Afraid of deep water · Owes money in Krull · Never forgets a face'
+          className='mt-0.5 w-full rounded border border-gray-700 bg-gray-900 px-2 py-1 text-xs text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500'
+        />
+        <p className='mt-1 text-[11px] leading-snug text-gray-500'>
+          Yours, and the game master may use it as a tag. Pick something that could cost you
+          as easily as help you — those are the ones worth having.
+        </p>
+      </div>
+
+      {/* The boundary, last and in plain words. */}
+      <p className='text-[10px] leading-snug text-gray-600'>
+        None of this changes the mathematics. Your trade is colour; your people&rsquo;s tags and
+        your trait are for what happens in a scene. What opens a road is
+        {held.length > 0 ? ` the ${held.length} concepts you have reached` : ' the concepts you reach'} on
+        the map, and nothing here.
+      </p>
+
+      <button
+        type='button'
+        onClick={onDone}
+        disabled={creating && !character.name.trim()}
+        className='rounded bg-sky-900 px-3 py-1 text-[11px] text-sky-100 hover:bg-sky-800 disabled:opacity-40'
+      >
+        {creating ? 'Take your seat' : 'Done'}
+      </button>
     </div>
   )
 }
