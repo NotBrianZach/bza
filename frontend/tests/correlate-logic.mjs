@@ -149,7 +149,7 @@ const {
 const {
   MAX_SELF_REPLIES, CONTINUATION_OFF, CONTINUATION_LABELS, CONTINUATION_HINTS,
   CONTINUATION_STOPS, SELF_REPLY_GUIDANCE, moverOf, isSelfReply, selfRepliesSince,
-  selfRepliesLeft, selfReplyRefusal, RADIO_HINT, RADIO_LABEL, radioRefusal,
+  selfRepliesLeft, selfReplyRefusal, shouldAutoRadio, RADIO_HINT, RADIO_LABEL, radioRefusal,
 } = M.carry
 const { checkPerformability, composeOffering, vocabularyFor } = M.composed
 const {
@@ -2147,6 +2147,31 @@ t('radio needs music in play', radioRefusal(['artwork', 'passage']) !== null)
 t('and runs when it is there', radioRefusal(['music', 'artwork']) === null)
 t('an empty session is refused', radioRefusal([]) !== null)
 t('the refusal says what to do about it', /music/i.test(radioRefusal(['passage'])))
+
+/*
+ * "Keep going" starting itself after a music offering.
+ *
+ * Offering a track is an ask to hear where it goes, and the control that did
+ * that was a button you had to know to press. The two interesting assertions
+ * are the ones that keep it an OFFER: it must not start in a game with no
+ * music enabled, and it must not come back after somebody has switched it off
+ * — which is the failure that would read as the control not working.
+ */
+const AUTO = (over = {}) => shouldAutoRadio({
+  medium: 'music', radioOn: false, media: ['music', 'artwork'], dismissed: false, ...over,
+})
+
+t('a music offering starts it', AUTO() === true)
+t('any other medium does not', AUTO({ medium: 'artwork' }) === false
+  && AUTO({ medium: 'passage' }) === false && AUTO({ medium: 'film' }) === false)
+t('it does not restart a run already going', AUTO({ radioOn: true }) === false)
+t('it does not start where radio itself would be refused',
+  AUTO({ media: ['artwork', 'passage'] }) === false && AUTO({ media: [] }) === false)
+t('it agrees with radioRefusal rather than deciding media for itself',
+  ['music', 'artwork', 'passage'].every(m =>
+    AUTO({ media: [m] }) === (radioRefusal([m]) === null)))
+t('switching it off by hand stops it offering again',
+  AUTO({ dismissed: true }) === false)
 
 group('the self-reply prompt — reading your own offering as the move')
 const SELF_SYS = buildSystemPrompt(GAMES.tag, ALL_MEDIA, ALL_RELATIONS, DEFAULT_TUNING, true)

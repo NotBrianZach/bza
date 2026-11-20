@@ -22,7 +22,8 @@ import {
   type Tuning,
 } from '@/lib/correlate/tuning'
 import {
-  isSelfReply, radioRefusal, selfRepliesLeft, selfReplyRefusal, RADIO_HINT, RADIO_LABEL,
+  isSelfReply, radioRefusal, selfRepliesLeft, selfReplyRefusal, shouldAutoRadio,
+  RADIO_HINT, RADIO_LABEL,
 } from '@/lib/correlate/continuation'
 import {
   isStationTurn, stationRefusal, STATION_BASIS, STATION_HINT, STATION_LABEL,
@@ -168,6 +169,21 @@ export default function CorrelationBoard({
    * output and the board is the commentary, so voice says nothing.
    */
   const radioRef = useRef(false)
+  /**
+   * Whether the player has switched "keep going" off by hand in this session.
+   *
+   * A music offering starts it automatically (see `play`), and without this the
+   * automatic start would fight anybody who turned it off: play another track,
+   * it comes back, turn it off again. Once it has been dismissed, starting it
+   * is the player's to do for the rest of the session — the offer was made and
+   * declined, and making it again is not helpfulness.
+   *
+   * A ref rather than state because nothing renders from it, and a session
+   * rather than a stored preference because it is a reaction to one run rather
+   * than a standing choice. A reload offers once more, which is the right
+   * amount of persistence for something this cheap to decline.
+   */
+  const radioDismissed = useRef(false)
   /**
    * Whether a track is audibly playing, for the grammar's wake-word rule.
    *
@@ -1189,6 +1205,30 @@ export default function CorrelationBoard({
     setError('')
     setNotice('')
     setProblems([])
+
+    /* A music offering starts "keep going" by itself. The rule and its four
+       conditions live in continuation.ts, beside `radioRefusal` which it
+       consults; this is the call site. */
+    const willAutoRadio = shouldAutoRadio({
+      medium: draft.medium,
+      radioOn: radioRef.current,
+      media,
+      dismissed: radioDismissed.current,
+    })
+
+    /*
+     * Primed HERE, before the await, and that placement is the whole reason
+     * this is not two lines further down.
+     *
+     * The manual toggle primes inside the click for a stated reason — so the
+     * first track is not also waiting on a script download. An automatic start
+     * has a harder version of the same problem: after `await postTurn` the
+     * browser's user activation from this click may be gone, and a player who
+     * offered a track would get a radio that generates answers and never makes
+     * a sound. Priming on the synchronous path keeps it inside the gesture.
+     */
+    if (willAutoRadio) yt.prime()
+
     try {
       const data = await postTurn({
         // Always explicit, so the server never has to guess which turn a move
@@ -1232,11 +1272,38 @@ export default function CorrelationBoard({
       // move went through and is recorded, so painting the composer red would say
       // something untrue about the turn they actually took. The server's cap is
       // the real bound; this loop only asks.
+      /*
+       * Radio takes over from here, when a music offering started it.
+       *
+       * Switched on only for a turn that LANDED: a move the engine turned away
+       * established nothing, and handing it to a run would be answering a move
+       * that is on nobody's path.
+       *
+       * The notice matters as much as the start. A control that turns itself on
+       * silently is the kind of thing people describe as the app "doing
+       * something weird", so it says what happened and names the control that
+       * stops it — which is the one sitting lit a few centimetres away.
+       */
+      if (willAutoRadio && data.turn?.legal) {
+        changeTuning({ ...tuning, radio: true })
+        if (playingIndex < 0 && audible.length > 0) {
+          player.playQueue(audible, audible.length - 1)
+        }
+        radioSilent.current = 0
+        radioFailures.current = 0
+        setRadioStopped('')
+        setNotice(`${RADIO_LABEL} started — it will answer itself and play each one. `
+          + `Press ${RADIO_LABEL} to stop.`)
+        track('correlate_radio_toggled', { game: data.mode ?? branch.mode, on: true, auto: true })
+      }
+
       // Skipped entirely while radio is on. Both answer "who takes the next turn"
       // and radio is the one in force, so running a fixed-length run here as well
       // would spend the stored stop *and* hand over to the pump — two runs racing
       // for the same offering, and the panel says the stop is not being applied.
-      let from: string | null = data.turn?.legal && !radio ? data.turn.id : null
+      // `willAutoRadio` counts as on: radio is about to be in force, and reading
+      // the old value here would start a fixed run the pump then races.
+      let from: string | null = data.turn?.legal && !radio && !willAutoRadio ? data.turn.id : null
       const runs = continuationOf(tuning)
       if (from) selfReplyBusy.current = true
       for (let i = 0; i < runs && from; i++) {
@@ -1266,6 +1333,15 @@ export default function CorrelationBoard({
     // both answering the same offering, and the panel reporting a stop that is
     // not being applied.
     radio,
+    /*
+     * The automatic "keep going" start reads all of these, and the lesson
+     * directly above is why they are listed rather than assumed harmless:
+     * `radioBlocked` moves when the session's media change, and a stale copy
+     * would start a run in a game with the music switched off. Nothing uses
+     * `play`'s identity — it is in no effect's dependency list — so
+     * re-memoising it on playback changes costs an allocation and no renders.
+     */
+    radioBlocked, media, changeTuning, yt, player, audible, playingIndex,
   ])
 
   /**
@@ -2330,6 +2406,12 @@ export default function CorrelationBoard({
                       // Fetched inside the gesture that starts the run, so the
                       // first track is not also waiting on a script download.
                       if (next) yt.prime()
+                      /* Switching it off by hand stops the automatic start for
+                         the rest of the session. Otherwise the next music
+                         offering turns it straight back on, which reads as the
+                         control not working. Turning it back on clears that —
+                         somebody who wants it running has not declined it. */
+                      radioDismissed.current = !next
                       changeTuning({ ...tuning, radio: next })
                       // From the end of what is already here, not the top. Switching
                       // radio on is an ask for what comes next; replaying an hour of

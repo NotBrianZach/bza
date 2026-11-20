@@ -112,6 +112,39 @@ export function radioRefusal(media: readonly string[]): string | null {
       'music back in play for this game and it can start.'
 }
 
+/**
+ * Whether an offering should start "keep going" by itself.
+ *
+ * Offering a track is an ask to hear where it goes, and until now the thing
+ * that did that was a button you had to know to press. So music starts it.
+ *
+ * Here rather than in the board for the reason the rest of this file is here:
+ * it is a rule about who takes the next turn, it consults `radioRefusal`
+ * rather than re-deciding which media can carry a run, and a rule inlined in a
+ * component is a rule nothing can assert.
+ *
+ * The last two conditions are what keep it an offer rather than an imposition.
+ * `radioOn` — already running, nothing to start. `dismissed` — the player
+ * turned it off by hand, so the offer was made and declined; making it again
+ * every time they play a track is the behaviour people describe as a control
+ * that does not work.
+ */
+export function shouldAutoRadio(args: {
+  /** The medium of the offering just played. */
+  medium: string
+  /** Whether radio is already running. */
+  radioOn: boolean
+  /** Media enabled for this session, for `radioRefusal`. */
+  media: readonly string[]
+  /** Whether the player has switched it off by hand this session. */
+  dismissed: boolean
+}): boolean {
+  return args.medium === 'music'
+    && !args.radioOn
+    && !args.dismissed
+    && radioRefusal(args.media) === null
+}
+
 export const CONTINUATION_LABELS: Record<ContinuationDepth, string> = {
   0: 'Off',
   1: 'Once',
