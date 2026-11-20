@@ -260,7 +260,6 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
   const [cardSizes, setCardSizes] = useState<CardSizes>(DEFAULT_CARD_SIZES)
   const [metaDrawerOpen, setMetaDrawerOpen] = useState(false)
   const [metaDrawerTab, setMetaDrawerTab] = useState<'chat' | null>(null)
-  const [globalSearch, setGlobalSearch] = useState('')
   const [searchResults, setSearchResults] = useState<Array<{ bookId: number; bookTitle: string; page: number; snippet: string }>>([])
   const [searching, setSearching] = useState(false)
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -965,46 +964,6 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
           <div className="flex items-center justify-between flex-wrap gap-3 mb-3">
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">My Library</h1>
 
-            {/* Global search */}
-            {isAuthenticated && (
-              <div className="relative flex-1 max-w-xs hidden sm:block">
-                <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                <input
-                  type="text"
-                  value={globalSearch}
-                  onChange={e => {
-                    const q = e.target.value
-                    setGlobalSearch(q)
-                    if (searchTimerRef.current) clearTimeout(searchTimerRef.current)
-                    if (q.trim().length < 2) { setSearchResults([]); return }
-                    searchTimerRef.current = setTimeout(async () => {
-                      setSearching(true)
-                      try {
-                        const res = await authedFetch(`/api/search?q=${encodeURIComponent(q.trim())}`)
-                        const data = await res.json()
-                        setSearchResults(data.results ?? [])
-                      } catch { setSearchResults([]) }
-                      finally { setSearching(false) }
-                    }, 500)
-                  }}
-                  placeholder="Search all books…"
-                  className="input w-full pl-8 text-sm py-1.5"
-                />
-                {(searchResults.length > 0 || searching) && globalSearch.trim().length >= 2 && (
-                  <div className="absolute top-full left-0 right-0 mt-1 z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl max-h-72 overflow-y-auto">
-                    {searching && <div className="px-3 py-2 text-xs text-gray-400 flex items-center gap-2"><div className="spinner" style={{ width: 12, height: 12 }} /> Searching…</div>}
-                    {searchResults.map((r, i) => (
-                      <a key={i} href={`/books/${r.bookId}?page=${r.page}`} className="block px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700 last:border-0">
-                        <p className="text-xs font-medium text-gray-900 dark:text-gray-100 truncate">{r.bookTitle}</p>
-                        <p className="text-[10px] text-gray-400">p.{r.page}</p>
-                        <p className="text-xs text-gray-600 dark:text-gray-300 mt-0.5 line-clamp-2">{r.snippet}</p>
-                      </a>
-                    ))}
-                    {!searching && searchResults.length === 0 && <p className="px-3 py-3 text-xs text-gray-400 text-center">No results</p>}
-                  </div>
-                )}
-              </div>
-            )}
 
             <div className="flex items-center gap-2 sm:gap-3">
               {/* Desktop-only buttons */}
@@ -1272,7 +1231,22 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
         )}
 
 
-        {/* Search + type filter — always visible */}
+        {/*
+          * One search box, doing both jobs.
+          *
+          * There were two, a few centimetres apart, with the same icon and the
+          * placeholders "Search all books…" and "Search books…" — reported as
+          * a duplicate, which is how anybody would read it. They were not
+          * duplicates: the header one searched INSIDE books through
+          * /api/search and returned page snippets, and this one filters the
+          * grid by title. The difference was real and completely invisible.
+          *
+          * So the header one is gone and its job moved here. Typing filters
+          * the shelf as you type, which is instant and local, and the same
+          * query goes to the server for matches inside the pages, which
+          * appear underneath. Nothing was dropped; there is just one place to
+          * type now.
+          */}
         {(isAuthenticated || books.length > 0) && (
           <div className="mb-4">
             <div className="relative max-w-sm">
@@ -1280,8 +1254,34 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
               <input
                 type="text"
                 value={search}
-                onChange={e => setSearch(e.target.value)}
-                placeholder="Search books…"
+                onChange={e => {
+                  const q = e.target.value
+                  setSearch(q)
+                  /*
+                   * The title filter is synchronous and the content search is
+                   * not, deliberately. Filtering the shelf must not wait on a
+                   * round trip — it is the answer most of the time — so the
+                   * fetch is debounced underneath it and its results arrive
+                   * when they arrive.
+                   *
+                   * Signed-in only: /api/search reads the user's pages, and an
+                   * anonymous library lives in the browser where there is
+                   * nothing for it to search.
+                   */
+                  if (!isAuthenticated) return
+                  if (searchTimerRef.current) clearTimeout(searchTimerRef.current)
+                  if (q.trim().length < 2) { setSearchResults([]); setSearching(false); return }
+                  searchTimerRef.current = setTimeout(async () => {
+                    setSearching(true)
+                    try {
+                      const res = await authedFetch(`/api/search?q=${encodeURIComponent(q.trim())}`)
+                      const data = await res.json()
+                      setSearchResults(data.results ?? [])
+                    } catch { setSearchResults([]) }
+                    finally { setSearching(false) }
+                  }, 500)
+                }}
+                placeholder="Search your books and their pages…"
                 className="input pl-9 w-full"
               />
             </div>
@@ -1356,6 +1356,49 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
                 </div>
               )
             })()}
+
+            {/*
+              * Matches inside the pages, under the shelf rather than in a
+              * dropdown over it.
+              *
+              * A dropdown was right when this lived in the header and had
+              * nowhere else to go; here it would cover the books the same
+              * query just filtered, which are the better answer most of the
+              * time. Underneath, both are readable at once — the book you
+              * meant, and the page you were thinking of.
+              */}
+            {isAuthenticated && search.trim().length >= 2 && (searching || searchResults.length > 0) && (
+              <div className="mt-4">
+                <p className="text-[11px] uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-1.5 flex items-center gap-2">
+                  Inside your books
+                  {searching && <span className="spinner" style={{ width: 11, height: 11 }} />}
+                </p>
+                {searchResults.length > 0 && (
+                  <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden max-h-72 overflow-y-auto bg-white dark:bg-gray-800">
+                    {searchResults.map((r, i) => (
+                      <a
+                        key={i}
+                        href={`/books/${r.bookId}?page=${r.page}`}
+                        className="block px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700 last:border-0"
+                      >
+                        <p className="text-xs font-medium text-gray-900 dark:text-gray-100 truncate">{r.bookTitle}</p>
+                        <p className="text-[10px] text-gray-400">p.{r.page}</p>
+                        <p className="text-xs text-gray-600 dark:text-gray-300 mt-0.5 line-clamp-2">{r.snippet}</p>
+                      </a>
+                    ))}
+                  </div>
+                )}
+                {/* "Searching…" and "nothing in the pages" are different
+                    answers, and the second is only true once the first is
+                    over. Conflating them tells somebody their book does not
+                    contain a word while the request is still in flight. */}
+                {!searching && searchResults.length === 0 && (
+                  <p className="text-xs text-gray-400 dark:text-gray-500">
+                    Nothing inside the pages matched.
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         )}
 
