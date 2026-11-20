@@ -594,10 +594,27 @@ const CONCEPTS: Concept[] = [
             {
               label: 'Each determinant',
               detail: 'det(A) = 8 + 3 = 11. det(B) = 5·1 − 0·3 = 5.',
+              socratic:
+                'A is the matrix the first point in this concept already took apart, so one of ' +
+                'these two determinants you can recall rather than recompute — though it costs ' +
+                'nothing to check it. B is the new one, and it carries a 0 in the top-right ' +
+                'corner, which means one of the two products ad − bc calls for is zero before ' +
+                'you subtract anything. Which of the two products does that 0 kill, and what ' +
+                'does each of det(A) and det(B) come to?',
             },
             {
               label: 'Multiply',
               detail: '11 · 5 = 55, so det(AB) = 55 without computing a single entry of AB.',
+              socratic:
+                'Earlier in this subject you worked out a single entry of AB — 7, in position ' +
+                '(1,1) — and a determinant needs all four of them. So resist forming the matrix ' +
+                'and use the reading instead: the first point in this concept settled that a ' +
+                'determinant is the factor by which a map multiplies every area, anywhere in ' +
+                'the plane, and AB is the one map that does B\'s work and then A\'s. Send the ' +
+                'unit square through it in two stages, B scaling its area by one of your two ' +
+                'numbers and A scaling whatever comes out by the other. What is the ' +
+                'composite\'s area factor, what does that make det(AB), and how many entries ' +
+                'of AB did you need in order to say so?',
             },
             {
               label: 'The consequence worth keeping',
@@ -605,6 +622,16 @@ const CONCEPTS: Concept[] = [
                 'A product is singular exactly when one of its factors is. If either map ' +
                 'collapses a dimension, the composite cannot recover it — which is why a chain ' +
                 'of invertible maps is invertible and one bad link ruins it.',
+              socratic:
+                'Now stop using det(AB) = det(A)·det(B) to produce numbers and read it as a ' +
+                'statement about zero. A product of two numbers vanishes exactly when one of ' +
+                'the factors does — nothing else makes a product zero — and the previous point ' +
+                'established what a vanishing determinant says about a map. So suppose B ' +
+                'crushes the plane onto a line while A is as well behaved as you like: what ' +
+                'does the equation force det(AB) to be, and what has become of the composite? ' +
+                'Then push it along a longer chain of maps in which exactly one link collapses ' +
+                'a dimension — what is true of the whole chain, and what does that say about a ' +
+                'later map\'s prospects of undoing an earlier one\'s damage?',
             },
           ],
           answer: '55',

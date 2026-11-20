@@ -606,21 +606,119 @@ const INTEGRAL_CALCULUS: MapArea = {
   ],
 }
 
+/**
+ * ONE NODE LEFT THIS AREA WHEN IT WAS AUTHORED, AND IT HAD TO.
+ *
+ * `atlasProblems` REJECTS a map node whose id collides with an authored
+ * concept, so promoting one is a MOVE and never a fill-in. The node cannot
+ * stay here as a skeleton beside the syllabus entry — `composeAtlas`
+ * concatenates the two and the duplicate id is a fault, reported rather than
+ * silently resolved in either direction. That is the rule, and it is why this
+ * area is one node lighter than its `covers` used to describe.
+ *
+ * `functions-of-several-variables` was the departure, the twenty-first
+ * promotion, and it is now a concept of `functions-and-inverses` in
+ * ontology-functions.ts. Twelve nodes to ELEVEN, against a stub floor of five
+ * — tests/atlas.mjs asserts no area holds fewer than five nodes, so this area
+ * has six more promotions of slack and the floor played no part in choosing
+ * this one.
+ *
+ * WHY IT WENT TO THE FUNCTIONS SUBJECT rather than founding a multivariable
+ * one: this node's own `is` line said "a function of a point rather than a
+ * number", which is a claim about what the INPUT is, and that is the axis
+ * ontology-functions.ts is organised on. An area is a region of the MAP; a
+ * subject is a syllabus with problems in it, and the two have never been
+ * required to agree. The precedent is `sequences` and `sigma-notation`, both
+ * nodes of `sequences-and-series` in this same file and both authored there.
+ *
+ * WHY THIS NODE AND NOT ANOTHER, since nothing forced it — all ten journeys in
+ * journeys.ts have read zero unwritten steps on route since the fourteenth
+ * promotion, and no area is near the floor. Two grounds that outlived the
+ * expired ones: evaluating a rule in two letters at a stated pair is exact
+ * rational arithmetic, so every knowledge point could get a real `evaluate`
+ * task with no worker; and this node was the SOLE ROOT of the whole area, so
+ * all twelve nodes here were gated behind one unwritten concept and
+ * `gatingPrerequisitesOf` was answering for them two files away.
+ *
+ * ── THE EDGES, WHICH IS WHERE A PROMOTION LOSES SOMETHING SILENTLY ────────
+ *
+ * An edge is owned by the node that DECLARES it, so deleting this node
+ * stranded only the two on its own `needs`. They went to two different places,
+ * and the split is the thing to understand:
+ *
+ *  - `domain-and-range → functions-of-several-variables` has both ends in
+ *    ontology-functions.ts now, so it is an ordinary `EDGES` entry over there
+ *    and cost this area nothing.
+ *  - `three-dimensional-coordinates → functions-of-several-variables` is the
+ *    other one, and `three-dimensional-coordinates` is a concept of
+ *    `vectors-and-independence`. Two authored subjects, so NEITHER ontology
+ *    may name it — an ontology may only name concepts it CONTAINS, and
+ *    `ontologyProblems` reports an unknown endpoint otherwise — and it is this
+ *    area's first and only `links` entry. It GATES from the moment it exists,
+ *    because both of its ends are authored; a `links` entry pointing at a node
+ *    with no material gates nothing until that node is written, which is what
+ *    makes those ones easy to drop.
+ *
+ * THE EDGES POINTING IN WERE LEFT ALONE, as the rule says. `partial-
+ * derivatives` here and `complex-functions` in `complex-analysis` each name
+ * this concept in their own `needs`, at the far end, so `composeAtlas`
+ * resolves both across the file boundary and neither needed touching.
+ *
+ * AND NO `links` ENTRY WAS HANDED BACK. A promotion can make an existing entry
+ * redundant — if an area filed one because it owned neither end, and the
+ * promoted node lands in the same ontology as the far end, that edge becomes
+ * an ordinary `needs` there and the entry must be DELETED or the composed
+ * graph carries it twice, which `composeAtlas` does not notice and no suite
+ * checks. Every area's `links` was read for this id before the node was
+ * deleted. There were none: this area had an empty list, and no other area
+ * mentioned the node at either end.
+ *
+ * IT STRANDED NO `confusedWith` — checked on the node before deleting it
+ * rather than inferred from the suites passing afterwards. `expandEdges` turns
+ * one into an `interferes_with`, interference constrains SELECTION rather than
+ * gating, and dropping one leaves every suite green, so an absence here has to
+ * be looked for and not assumed. The node declared none, and no `exercises`
+ * either.
+ *
+ * THE ROOT SET SPLIT RATHER THAN SHRINKING: one root out, one root in, and the
+ * size happens not to have moved. `partial-derivatives` is the new root
+ * because this node was the last of its prerequisites INSIDE the area — its
+ * other, `chain-rule`, is a node of `differential-calculus`. Nothing else here
+ * named the departed node, so nothing else was promoted. A `length === 1`
+ * check would have passed on both sides of this while every claim it made went
+ * stale, which is why tests/atlas.mjs asserts this set by NAMED MEMBERSHIP.
+ *
+ * WHAT STAYED, and the boundary is the verifier's rather than the curriculum's.
+ * The departed node's `is` line also promised level curves, and a level curve
+ * is a claim about a drawing — the same line ontology-functions.ts draws in
+ * front of `graphs-of-functions`, one dimension further out. So what was
+ * authored is the ALGEBRA under that picture: match each number to its slot,
+ * hold one letter and a rule in the other is left, and read a domain off a
+ * condition on the pair. `partial-derivatives` still owns differentiating
+ * along a slice, which is the next move and needs no figure either.
+ */
 const MULTIVARIABLE_CALCULUS: MapArea = {
   id: 'multivariable-calculus',
   name: 'Multivariable calculus',
   covers:
     'Calculus on functions of several variables and on vector fields, up to the three classical ' +
-    'theorems that generalise the fundamental theorem.',
-  nodes: [
+    'theorems that generalise the fundamental theorem. What a function of several variables IS ' +
+    'has left this area — it is authored in the functions subject, since the move it makes is ' +
+    'to the input rather than to the calculus — so this area now starts at differentiating one, ' +
+    'and the level curves and surfaces that picture one are still here and still unwritten.',
+  links: [
     {
-      id: 'functions-of-several-variables',
-      match: /\bfunction of several (real )?variables\b|\bmultivariable calculus\b/i,
-      name: 'Functions of several variables',
-      is: 'A function of a point rather than a number, pictured by level curves instead of a graph.',
-      needs: ['three-dimensional-coordinates', 'domain-and-range'],
-      terms: 'function of two variables level curve contour surface',
+      from: 'three-dimensional-coordinates',
+      to: 'functions-of-several-variables',
+      because:
+        'Both ends are authored concepts of two different subjects, so neither ontology may '
+        + 'name this edge and it can only live here. The claim is the map\'s: a learner meets '
+        + 'z = f(x, y) as a surface in space, so the three coordinates come first. Note that '
+        + 'nothing in the authored material uses a third coordinate, which is why the edge '
+        + 'gates and no `encompasses` runs back along it.',
     },
+  ],
+  nodes: [
     {
       id: 'partial-derivatives',
       match: /\bpartial derivative/i,

@@ -111,6 +111,71 @@
  * the linearity example is handed the total of its terms rather than a rule
  * for them.
  *
+ * ── A SEVENTH CONCEPT, AND THE INPUT STOPS BEING A SINGLE NUMBER ──────────
+ *
+ * `functions-of-several-variables` was the root node of
+ * `multivariable-calculus` in atlas-analysis.ts and is authored here, the
+ * twenty-first promotion. It is the third concept this subject has taken from
+ * the analysis file and the first from a region of it above the sequences.
+ *
+ * WHY THIS SUBJECT rather than a multivariable one of its own: the node's own
+ * one-liner is "a function of a point rather than a number", and that is a
+ * claim about what the INPUT is, which is the axis this subject is organised
+ * on. `function-concept` establishes that one input gives one output,
+ * `sequences` changes the input to an index, and this changes it to a pair.
+ * Three concepts, one move each, on the same thing. Founding an eleventh
+ * ontology for it would have made the progression a coincidence of filing.
+ *
+ * WHY THIS NODE, since no journey asked for it — all ten still read zero
+ * unwritten steps on route, as they have since the fourteenth promotion, and
+ * no area is near the stub floor either. Three grounds, in the order they were
+ * applied:
+ *
+ *  1. IT IS RULABLE WITH NO WORKER. Evaluating a rule in two letters at a
+ *     stated pair is exact rational arithmetic and nothing else, so every
+ *     knowledge point gets a real `evaluate` task. That was the first filter
+ *     and it is what eliminated the candidate with the most dependents —
+ *     `graphs-of-functions`, whose refusal is two sections below and which
+ *     survives re-examination because it names the MOVE and not the answer's
+ *     shape.
+ *  2. IT WAS THE SOLE ROOT OF A TWELVE-NODE AREA. Every node of
+ *     `multivariable-calculus` was gated behind this one unwritten concept, so
+ *     `gatingPrerequisitesOf` was answering for all twelve of them two files
+ *     away. That is a stronger and more computable signal than dependent
+ *     count: `roots(areaOntology(AREA))` returns it per area.
+ *  3. It is not an `armature.ts` anchor, so no region slot had to be refilled.
+ *
+ * WHAT IT COSTS, which the two promotions before it did not. Its `needs` are
+ * `domain-and-range` — a concept of THIS file, so that edge is an ordinary
+ * `EDGES` entry below — and `three-dimensional-coordinates`, which is a
+ * concept of `vectors-and-independence`. Two authored subjects, so neither
+ * ontology may name that edge, and it is the first `links` entry
+ * `multivariable-calculus` has ever carried. The run of two promotions that
+ * cost this subject no `links` entry is over, and it ended for the reason the
+ * section above predicted rather than for a new one.
+ *
+ * THAT SECOND EDGE GATES AND EARNS NOTHING BACK, stated because the asymmetry
+ * is real and is not an oversight. Nothing in the material below uses a third
+ * coordinate: the pairs are pairs, and the surface a learner would draw to
+ * picture z = f(x, y) is exactly the part that stays mapped. So the
+ * prerequisite is preserved as the map declared it — it is the map's claim
+ * about what a learner should have met first, not this file's to revise — and
+ * there is deliberately no `encompasses` edge running back to it, because
+ * practising any of the six tasks exercises no part of three-dimensional
+ * coordinates at all.
+ *
+ * WHAT IT LEAVES BEHIND. The node's one-liner also says "pictured by level
+ * curves instead of a graph", and the picture is the half that does not come.
+ * A level curve is a claim about a drawing, which is the same boundary
+ * `graphs-of-functions` sits behind and the sharper case of it: there, the
+ * curve is at least a curve in the plane the learner already has, and here the
+ * object being drawn is a surface. So nothing below mentions a contour, and
+ * `partial-derivatives` — the one node this promotion releases to the root set
+ * — still owns the derivative along a slice. What IS here is the slice itself,
+ * which is the algebra under that whole picture: fix one letter and a rule in
+ * the other is left. A learner who cannot do that substitution cannot be
+ * taught a partial derivative, and it needs no figure.
+ *
  * ── Why both objectives name only `evaluate` ──────────────────────────────
  *
  * Every other concept in this file names `justify` alongside it, and there is
@@ -146,6 +211,18 @@
  * and a task that asked it and then graded by keyword would be the proxy
  * failure tasks.ts warns about dressed as a feature. So the graph stays on the
  * map, and everything above it stays mapped with it.
+ *
+ * THAT REFUSAL WAS RE-EXAMINED AT THE SEVENTH CONCEPT AND IT HELD, which is
+ * worth recording because four refusals elsewhere in this build have expired
+ * on inspection and every one of them described the ANSWER'S SHAPE — a set, a
+ * point, a matrix, a cosine — which can almost always be swapped for a
+ * deciding number. This one describes the MOVE: the content of reading a graph
+ * is a judgement about a drawing, and there is no number behind it to swap to.
+ * It also has the problem one step earlier than the others, in the STIMULUS:
+ * `visualRef` is to be omitted unless a figure genuinely exists, so there is
+ * no graph to put in front of the learner in the first place. `graphs-of-
+ * functions` had five dependents, more than any other candidate at the
+ * twenty-first promotion, and was passed over on this paragraph.
  *
  * ── Every task is exactly rulable, and two constraints shaped them ────────
  *
@@ -190,11 +267,15 @@ const subject: Subject = {
     'is a position rather than a number — a sequence, given by a formula or by a recurrence, ' +
     'and what each of those two costs to reach the hundredth term. Then the notation for adding ' +
     'a sequence up: which terms the limits name, and the two rearrangements that make such a ' +
-    'sum manipulable rather than only readable. Nothing about graphs — reading a curve is the ' +
-    'natural next step and its questions are about a picture, which this verifier cannot rule ' +
-    '— and so nothing about transformations, families or asymptotes either; and nothing about ' +
-    'the two named families of sequence or the closed forms for their sums, which are still on ' +
-    'the map.',
+    'sum manipulable rather than only readable. Then the case where the input is a PAIR: ' +
+    'matching each number to the letter whose place it stands in, holding one letter fixed to ' +
+    'leave a rule in the other, and a domain that is a condition on the two coordinates ' +
+    'together rather than a list of forbidden numbers. Nothing about graphs — reading a curve ' +
+    'is the natural next step and its questions are about a picture, which this verifier cannot ' +
+    'rule — and so nothing about transformations, families or asymptotes either, and nothing ' +
+    'about level curves or surfaces, which are the same boundary one dimension further out; ' +
+    'and nothing about the two named families of sequence or the closed forms for their sums, ' +
+    'which are still on the map.',
   medium: 'theorem',
   facetName: 'Concept',
   facetDoes: 'Which concept the statement has to be about.',
@@ -1159,6 +1240,245 @@ const CONCEPTS: Concept[] = [
       },
     ],
   },
+  {
+    id: 'functions-of-several-variables',
+    name: 'Functions of several variables',
+    subjectId: subject.id,
+    scope: {
+      id: 'functions-of-several-variables',
+      label: 'Functions of several variables',
+      hint: 'function of two variables level curve contour surface',
+      // Carried VERBATIM off the map node, hint and pattern both, and the hint
+      // is deliberately WIDER than the material. "level curve contour surface"
+      // names the half of this node that stays mapped — but the hint selects
+      // which encyclopaedia articles are about this concept, and the article
+      // "Level set" genuinely is. Narrowing it to what the knowledge points
+      // teach would make the offerings worse to make a boundary look tidier.
+      // `fidelity` is about recognition and `isTeachable` is about problems;
+      // the map's own header makes that split and this is the first promotion
+      // where the two pull in opposite directions.
+      //
+      // The pattern is the narrow half. `/\bfunction\b/i` would be the lazy
+      // version and tests/atlas.mjs already forbids it by name: "Function
+      // (mathematics)" is `function-concept`'s own article and is listed in
+      // that suite's over-broad table against this id specifically. So the
+      // pattern asks for the SPECIALISATION to be named in the title, which is
+      // how an encyclopaedia files it.
+      match: /\bfunction of several (real )?variables\b|\bmultivariable calculus\b/i,
+    },
+    fidelity: 'checked',
+    objectives: [
+      {
+        id: 'evaluate-a-rule-in-two-letters-at-an-ordered-pair',
+        statement:
+          'Evaluate a rule in two letters at a stated pair, matching each number to the letter ' +
+          'whose place it stands in, and show from a computed case that swapping the pair is a ' +
+          'different input rather than the same one written twice.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'hold-one-letter-and-evaluate-the-rule-that-is-left',
+        statement:
+          'Hold either of the two letters at a value, put that value in every place the letter ' +
+          'stood, and evaluate the one-variable rule that is left — then use the two slices ' +
+          'agreeing at a shared pair as a check on the substitution.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'decide-a-pair-against-a-two-coordinate-domain-condition',
+        statement:
+          'Decide whether a stated pair is in the domain when the condition involves both ' +
+          'coordinates together, and evaluate the function there when it is.',
+        taskKinds: ['evaluate'],
+      },
+    ],
+    knowledgePoints: [
+      {
+        id: 'the-input-is-an-ordered-pair',
+        conceptId: 'functions-of-several-variables',
+        statement:
+          'A function of two variables takes a PAIR of numbers and returns one number. The pair ' +
+          'is ordered: nothing in the two numbers says which letter each belongs to, and the ' +
+          'only thing that assigns them is the position they are written in.',
+        position: 1,
+        workedExample: {
+          problem: 'f(x, y) = x² + 3y. Find f(3, 1), then find f(1, 3).',
+          subgoals: [
+            {
+              label: 'Match each number to the letter whose place it stands in',
+              detail:
+                'f(3, 1) means x = 3 and y = 1. That is a fact about the ORDER the two numbers ' +
+                'were written in and about nothing else — the numbers themselves carry no label, ' +
+                'which is why the input is written as a pair in brackets rather than as a set.',
+              socratic:
+                'f(3, 1) hands you two numbers and the rule mentions two letters. What is the ' +
+                'only thing in that notation which decides which number goes with which letter?',
+            },
+            {
+              label: 'Substitute both and evaluate',
+              detail:
+                '3² + 3 × 1 = 9 + 3 = 12. The squaring belongs to x alone and the 3 multiplies y ' +
+                'alone, so the two coordinates are not doing the same job even before you choose ' +
+                'values for them.',
+              socratic:
+                'Each of the two letters has something different waiting for it before the ' +
+                'addition happens. Which operation is waiting for the 3 and which for the 1, and ' +
+                'what is the total?',
+            },
+            {
+              label: 'Swap the pair and run the same rule again',
+              detail:
+                'f(1, 3) = 1² + 3 × 3 = 1 + 9 = 10. Same two numbers, same rule, and a different ' +
+                'answer — because this time the 1 went into the squaring and the 3 into the ' +
+                'multiplication.',
+              socratic:
+                'You have the same two numbers and the same rule in front of you. Is there ' +
+                'anything about x² + 3y that would force the two answers to agree — and what is ' +
+                'the second one?',
+            },
+            {
+              label: 'Name what the two answers rule out',
+              detail:
+                '12 ≠ 10, so (3, 1) and (1, 3) are not two names for one input. This is why a ' +
+                'function of two variables is called a function of a POINT: a point has ' +
+                'coordinates in an order, and an unordered pair of numbers would not have been ' +
+                'enough to evaluate the rule. A rule like x + y would have given 4 both ways and ' +
+                'settled nothing, which is why this example is not symmetric.',
+              socratic:
+                'The two totals came out different. What does that settle about whether (3, 1) ' +
+                'and (1, 3) are the same input — and would the rule x + y have let you find it ' +
+                'out at all?',
+            },
+          ],
+          answer: 'f(3, 1) = 12 and f(1, 3) = 10',
+        },
+      },
+      {
+        id: 'holding-one-letter-leaves-a-rule-in-the-other',
+        conceptId: 'functions-of-several-variables',
+        statement:
+          'Fix one of the two letters at a value and what is left is an ordinary one-variable ' +
+          'rule in the other. The fixed value goes into EVERY place its letter stood, and which ' +
+          'letter you hold changes what kind of rule you are left with.',
+        position: 2,
+        workedExample: {
+          problem:
+            'f(x, y) = x²y + 4y. Hold y at 3 and find f(2, 3) from the rule in x that is left. ' +
+            'Then hold x at 2 instead and find f(2, 3) again from the rule in y.',
+          subgoals: [
+            {
+              label: 'Put the held value in every place its letter stood',
+              detail:
+                'y appears in both terms of x²y + 4y, so both of them take the 3, and the rule ' +
+                'left is 3x² + 12. Substituting into only the first term leaves 3x² + 4y, which ' +
+                'still mentions y and so is not a rule in x at all — and the usual way that ' +
+                'becomes a number is to read the leftover 4y as a bare 4, which gives 3x² + 4 ' +
+                'and is a slice of no function.',
+              socratic:
+                'The letter y occurs in two of the terms. If y is fixed at 3, how many of those ' +
+                'places does the 3 have to go into, and what does the result still mention?',
+            },
+            {
+              label: 'Evaluate the one-variable rule',
+              detail:
+                '3 × 2² + 12 = 12 + 12 = 24. Everything after the substitution was ordinary ' +
+                'one-variable work; the second variable is not consulted again, which is the ' +
+                'whole reason the move is worth making.',
+              socratic:
+                'You now have 3x² + 12 and the value 2 for x. Is any part of what is left to do ' +
+                'about the second variable at all?',
+            },
+            {
+              label: 'Hold the other letter instead and see what changes',
+              detail:
+                'Fixing x at 2 turns x²y + 4y into 4y + 4y = 8y, which is linear. The same ' +
+                'function is quadratic along one slice and linear along the other, so asking ' +
+                '"is f quadratic?" has no answer until you say which letter is being held.',
+              socratic:
+                'Holding y left you a squared term in x. Hold x at 2 instead and write down what ' +
+                'is left — what kind of rule is it this time, and what does that do to the ' +
+                'question of what kind of function f is?',
+            },
+            {
+              label: 'Check that the two slices agree where they cross',
+              detail:
+                '8 × 3 = 24, which is the number the first route gave. Both slices contain the ' +
+                'pair (2, 3), so they HAVE to agree there — a disagreement would mean one of the ' +
+                'two substitutions was wrong. That makes the second route a check rather than a ' +
+                'coincidence, and it is the cheapest check available on this kind of work.',
+              socratic:
+                'Both of your one-variable rules describe the same f, and the pair (2, 3) lies ' +
+                'on both slices. What must therefore be true of 3 × 2² + 12 and 8 × 3, and what ' +
+                'would a mismatch have told you about your own working?',
+            },
+          ],
+          answer: 'f(2, 3) = 24, reached as 3x² + 12 at x = 2 and as 8y at y = 3',
+        },
+      },
+      {
+        id: 'the-domain-is-a-condition-on-both-coordinates',
+        conceptId: 'functions-of-several-variables',
+        statement:
+          'Where a function of two variables is defined is a condition on the pair, not a list ' +
+          'of forbidden numbers. There can be no value of x that is refused for every y and no ' +
+          'value of y refused for every x, and the function still be undefined somewhere.',
+        position: 3,
+        workedExample: {
+          problem:
+            'f(x, y) = (x + y)/(x² − y). Find f(5, 4), and find the one value of y for which ' +
+            'f(5, y) is not defined.',
+          subgoals: [
+            {
+              label: 'Evaluate at the pair you were given',
+              detail:
+                '5² = 25, so the bottom is 25 − 4 = 21 and the top is 5 + 4 = 9. ' +
+                'f(5, 4) = 9/21 = 3/7. The squaring happens to the first coordinate before ' +
+                'anything is subtracted, and the sum on top is untouched by either.',
+              socratic:
+                'Both the top and the bottom of this fraction mention x and y. Which operation ' +
+                'reaches the 5 before any subtraction does, and what does that make the bottom?',
+            },
+            {
+              label: 'Read the forbidden set off the denominator as a condition on the pair',
+              detail:
+                'The only way f fails is x² − y = 0, which is y = x². No single number is ' +
+                'forbidden on either axis: pick any x at all and exactly one y fails, while every ' +
+                'other y is fine. So what the function refuses is a PAIR, and that is the thing a ' +
+                'one-variable domain has no way to say.',
+              socratic:
+                'Try to name a value of x that f refuses no matter what y is, and then a value of ' +
+                'y it refuses no matter what x is. If you can do neither, what kind of thing is it ' +
+                'that the function is actually refusing?',
+            },
+            {
+              label: 'Put the fixed first coordinate into that condition',
+              detail:
+                'y = 5² = 25, so f(5, y) is defined at every y except 25. The answer to watch for ' +
+                'is 5: that is where the two coordinates agree, which is a different curve ' +
+                'entirely, and f(5, 5) = 10/20 = 1/2 is perfectly ordinary.',
+              socratic:
+                'The condition is y = x² and the first coordinate is fixed at 5. Which y does that ' +
+                'forbid — and what actually happens if you test y = 5, where the two coordinates ' +
+                'are equal?',
+            },
+            {
+              label: 'Say what kind of object the forbidden set turned out to be',
+              detail:
+                'In one variable a domain is the line with some points removed, and it can be ' +
+                'written as a list of exceptions. Here it is the plane with a whole curve removed ' +
+                '— the parabola y = x² — and f is defined at every point off it. That is why ' +
+                '"where is this defined" stops being a list and becomes a condition.',
+              socratic:
+                'In one variable you could write a domain as "all reals except 1 and 2". Try to ' +
+                'write this one in that form, as a list of numbers — what goes wrong, and what has ' +
+                'to take the list\'s place?',
+            },
+          ],
+          answer: 'f(5, 4) = 3/7, and f(5, y) is undefined only at y = 25',
+        },
+      },
+    ],
+  },
 ]
 
 /**
@@ -1336,6 +1656,91 @@ const EDGES: ConceptEdge[] = [
    * in this build — not on the map and not in any ontology — so there is no
    * far endpoint to name. An authored interference nobody believes is worse
    * than none.
+   */
+  /**
+   * The seventh concept's prerequisite, and it is ONE OF TWO — which is what
+   * makes this the first promotion into this subject to cost an area a `links`
+   * entry.
+   *
+   * `domain-and-range → functions-of-several-variables` is the half that could
+   * come here, on the same single test as the fifth and sixth concepts: the
+   * endpoint is a concept of THIS ontology. The other half,
+   * `three-dimensional-coordinates → functions-of-several-variables`, names a
+   * concept of `vectors-and-independence`, so an edge written here would make
+   * `ontologyProblems` report an unknown endpoint and it is
+   * `MULTIVARIABLE_CALCULUS.links` instead. Neither end of it is a node any
+   * more, which is exactly the case `links` exists for and the case nothing
+   * forces anybody to remember: it gates from the moment it exists, and
+   * dropping it would have left every suite green.
+   *
+   * The edge is real and not merely inherited. "Where is this defined" is a
+   * harder question for a pair than for a number — the third knowledge point
+   * is that the answer stops being a list and becomes a condition — so the
+   * one-variable domain genuinely has to come first, and this subject is now
+   * two chains and a third branch sharing one root.
+   */
+  {
+    id: 'domain-and-range->functions-of-several-variables',
+    from: 'domain-and-range',
+    to: 'functions-of-several-variables',
+    kind: 'prerequisite',
+    promotedBy: 'author:functions-and-inverses',
+  },
+  /**
+   * ONE CREDIT EDGE AND NOT TWO, and both halves of that are argued rather
+   * than copied from the nearest neighbour.
+   *
+   * `=> function-concept` IS claimed, on the `sequences` standard: all six
+   * tasks substitute stated numbers into a rule and evaluate it, so there is
+   * no task here that is not the function concept in use. `several-variables-
+   * slice-x` and `several-variables-slice-y` evaluate a rule that one
+   * substitution has already been performed on, which is the function concept
+   * twice over rather than not at all.
+   *
+   * `=> domain-and-range` is NOT, even though `domain-and-range` is the other
+   * prerequisite and the parallel would look tidy. Only the two tasks on the
+   * third point decide anything against a domain; the other four never meet an
+   * undefined pair. Two of six is not a majority, and the `gcd-and-lcm`
+   * precedent in ontology-arithmetic.ts says a majority would not have been
+   * enough either — an `encompasses` edge is a claim about what practising
+   * this material ACTUALLY exercises, and a learner who got credit for the
+   * one-variable domain by evaluating x² + 3y at a pair would have it stop
+   * coming due when it had genuinely gone cold.
+   *
+   * And nothing runs back to `three-dimensional-coordinates`, which is the
+   * third decision in this group. That edge gates, correctly, and earns
+   * nothing: no task below uses a third coordinate.
+   */
+  {
+    id: 'functions-of-several-variables=>function-concept',
+    from: 'functions-of-several-variables',
+    to: 'function-concept',
+    kind: 'encompasses',
+    promotedBy: 'author:functions-and-inverses',
+    rationale:
+      'Every task here substitutes stated numbers into a rule and evaluates it, which is the ' +
+      'function concept in use — the only thing two variables add is that the input arrives as ' +
+      'a pair, so each of the six exercises it directly.',
+  },
+  /**
+   * NO `interferes_with` FOR THE SEVENTH CONCEPT EITHER, and the reason is the
+   * f⁻¹/x⁻¹ one in the header rather than an absence of candidates.
+   *
+   * The genuine confusion here is between holding a letter as a PARAMETER and
+   * feeding it as an INPUT — which is the second knowledge point's whole
+   * subject, and the thing a learner gets wrong about a slice. The concept
+   * that owns parameters is `parametric-and-implicit`, a node of the
+   * `functions` area, and an `interferes_with` whose far endpoint is not in
+   * this ontology fails `ontologyProblems` on the subject viewed alone. An
+   * area's `links` cannot carry it either: `expandEdges` hard-codes
+   * `kind: 'prerequisite'` there, so a cross-file interference is expressible
+   * NOWHERE in this build.
+   *
+   * So it is taught where a learner meets it instead, in the second point's
+   * third and fourth subgoals — hold the other letter, and the kind of rule
+   * changes. That is the same resolution `an-inverse-undoes-the-rule` got, and
+   * it is a real limit of the schema rather than a judgement about the
+   * mathematics.
    */
 ]
 

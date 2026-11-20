@@ -345,6 +345,60 @@
  * losing one leaves every suite green. The refusal is the `encompasses` edge,
  * for the third time in this file; the note beside `EDGES` gives the precedent
  * that settles it.
+ *
+ * ── AND THE COUNT ARRIVED EIGHTH, OUT OF THE SAME AREA ───────────────────
+ *
+ * `basis-and-dimension` was a node of `linear-algebra` and is the last concept
+ * below. The twentieth promotion's note two paragraphs up says what it
+ * deliberately left for this one — "WHAT IT DELIBERATELY DOES NOT DO is name a
+ * dimension. Counting independent directions is `basis-and-dimension`, the node
+ * directly above it" — so this was a recorded recommendation rather than an
+ * open question, and tasks.ts says the same thing beside
+ * `function-pointwise-sum-1`. The work was to check the premise rather than to
+ * re-argue the filing.
+ *
+ * WHAT SELECTED IT, since none of the usual selectors did. Every one of the ten
+ * journeys reads zero unwritten, so no route needed it; the smallest area on
+ * the map is nine nodes against a stub floor of five, so nothing was near the
+ * floor; and about nineteen nodes have every prerequisite written. What was
+ * left was RULABILITY, and that is what decided it against
+ * `inner-product-spaces`, which is tied with it on dependents (three each) and
+ * on edge cost (both of its `needs` land in this ontology too). A dimension is
+ * a count, a coordinate is an exact quotient, and an independence test is a
+ * product of integers; the inner-product concept's content is length and angle
+ * in a general space, which is square roots and an inverse cosine — the two
+ * things this subject has refused to put in front of a learner since the dot
+ * product.
+ *
+ * WHY HERE, beyond the recommendation: both of its `needs` are concepts of this
+ * file, and the content argument runs the same way. `linear-independence` ends
+ * by saying that "how many independent vectors" is the useful count rather than
+ * "how many vectors", and this is the concept that performs that count. The
+ * subject-creating test the three new-ontology promotions used does not pass
+ * either: nothing in this file's boundary sentences excluded a dimension, and
+ * the one sentence that mentioned it said the opposite — `covers` ended by
+ * naming the count as "the first thing the map asks after this", which is a
+ * forward reference and not a boundary. That sentence is now spent and the
+ * `covers` has been rewritten to say what the count IS.
+ *
+ * THE THREE POINTS, AND WHAT IS NOT AMONG THEM. A basis and the uniqueness of
+ * the address it gives; the theorem that every basis of one space has the same
+ * size; and the dimension as a count of directions rather than of entries.
+ * CHANGE OF BASIS IS NOT HERE, and it is named in the node's `terms`, so the
+ * shortfall is stated rather than left to be found — the way ontology-solids.ts
+ * stated its own. Converting an address in one basis into an address in another
+ * is a matrix acting on a coordinate vector, which is `matrices-and-maps` in a
+ * different subject, and the honest version of it here would be a second
+ * elimination with no new idea in it. The scope pattern still names the article,
+ * because the pattern is about what an offering may be ABOUT and this concept
+ * is where a reader arrives from.
+ *
+ * THE SAME-SIZE THEOREM IS DEMONSTRATED AND NOT PROVED, which is the other
+ * honest limit. The second point squeezes the plane's count from both sides —
+ * three vectors are always dependent, one never spans — and says in its last
+ * subgoal that the general theorem is the same squeeze in any space. The
+ * exchange lemma that makes that a proof is not written, and a worked example
+ * claiming it would be a worked example that does not work.
  */
 
 import type { Concept, ConceptEdge, ConceptOntology, Subject } from './types'
@@ -369,8 +423,15 @@ const subject: Subject = {
     'It ends by naming the rules the rest of it used: the axioms, the three-part test for a ' +
     'subset that is a space in its own right, and two sets that fail it in different ways — ' +
     'which is what lets a polynomial and a function be vectors with no argument made twice. ' +
-    'Not the DIMENSION of a space, which is the count of independent directions and the first ' +
-    'thing the map asks after this.',
+    'It ends on the count those axioms made worth asking: a basis is a spanning set that is ' +
+    'independent, which is what gives every vector exactly one address, and every basis of one ' +
+    'space turns out to have the same number of elements — so that number is a property of the ' +
+    'space and is its dimension. It counts directions and not entries, which is why a plane in ' +
+    'space has dimension 2 while each of its points is written with three coordinates, and why ' +
+    'a space of functions has no finite basis at all. Not the CHANGE of basis, which is a ' +
+    'matrix acting on an address and belongs with the matrices; and the same-size theorem is ' +
+    'demonstrated in the plane rather than proved in general, the exchange argument that would ' +
+    'prove it being somewhere this build does not go.',
   medium: 'theorem',
   facetName: 'Concept',
   facetDoes: 'Which concept the statement has to be about.',
@@ -1917,6 +1978,336 @@ const CONCEPTS: Concept[] = [
       },
     ],
   },
+
+  {
+    id: 'basis-and-dimension',
+    name: 'Basis and dimension',
+    subjectId: subject.id,
+    scope: {
+      id: 'basis-and-dimension',
+      label: 'Basis and dimension',
+      /*
+       * NARROWED from the map node, which is the opposite of what the three
+       * promotions above did, and the reason is a fault in the node's pattern
+       * rather than a change of taste.
+       *
+       * The node read
+       *
+       *   /\b(basis \(linear algebra\)|dimension \(vector space\)
+       *      |linear independence)\b/i
+       *
+       * and that pattern matched exactly one of its own three alternatives.
+       * `\b` is a boundary between a word character and a non-word one, and the
+       * group's `\b` sits after a closing parenthesis — so for the two
+       * disambiguated titles it can only match if the NEXT character is a word
+       * character, which at the end of "Basis (linear algebra)" there is not.
+       * Tested rather than reasoned about: the node claimed "Linear
+       * independence" and nothing else, and the two titles it was written for
+       * were never recognised at all. That is the same trap tests/atlas.mjs
+       * records for `test\b` against "Hypothesis testing", arriving from the
+       * other side — a suffix there, a bracket here.
+       *
+       * So the third alternative was doing all the work, and it is the one
+       * alternative that had to go: it was written while `linear-independence`
+       * was unwritten and the node was standing in for it. That concept is
+       * authored in this very file, three above, with `linear(ly)?
+       * (in)?dependen\w+` of its own, and the article titled "Linear
+       * independence" belongs to the concept whose material is about it.
+       *
+       * `change of basis` is in the node's `terms` and is a real article title,
+       * so it is named; `dimension theorem` is the same-size theorem of the
+       * second point below. Neither widens the claim to a bare word — "Basis",
+       * "Dimension", "Orthonormal basis" and "Hausdorff dimension" all stay
+       * out, and the last two matter: orthonormality is `inner-product-spaces`,
+       * still mapped, and a fractal dimension is not this count.
+       */
+      hint: 'basis dimension coordinates change of basis',
+      match: /\bbasis \(linear algebra\)|\bdimension \(vector space\)|\bchange of basis\b|\bdimension theorem\b/i,
+    },
+    fidelity: 'checked',
+    /*
+     * EVERY OBJECTIVE NAMES ONLY `evaluate`, as the concept above it does and
+     * for the reason stated there: the build ships no `justify` task anywhere,
+     * so an objective naming that kind names an observation that cannot be
+     * made.
+     *
+     * The statements are written to what `evaluate` can evidence, which in this
+     * concept took care. "Is this set a basis" and "what is the dimension" are
+     * the sentences the material is about and neither is a number. What a task
+     * can return is the number that DECIDES them — the cross-check that makes a
+     * coordinate exist, the cross product that settles independence in space,
+     * the triple product that shows a third vector adds nothing — so that is
+     * what the objectives claim, and the deciding is in the `socratic`
+     * phrasings, asked by a tutor and marked by nothing.
+     */
+    objectives: [
+      {
+        id: 'produce-the-coordinates-a-basis-assigns',
+        statement:
+          'Produce a coordinate of a plane vector relative to a given basis, and the number the ' +
+          'elimination divides by — which is the independence test, and is why the coordinates ' +
+          'exist at all.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'produce-the-two-values-that-bound-the-size',
+        statement:
+          'Produce the value that shows a third plane vector is redundant and the value that ' +
+          'shows a single one is not enough — the two bounds that leave every basis of the plane ' +
+          'with exactly two elements.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'produce-the-numbers-a-dimension-count-in-space-turns-on',
+        statement:
+          'Produce the cross product that settles whether two vectors of a plane in space are ' +
+          'independent, and the triple product that shows a third one lies in the plane they ' +
+          'already span.',
+        taskKinds: ['evaluate'],
+      },
+    ],
+    knowledgePoints: [
+      {
+        id: 'a-basis-is-a-spanning-set-with-nothing-spare',
+        conceptId: 'basis-and-dimension',
+        statement:
+          'A basis of a space is a set that spans it AND is independent. Spanning says every ' +
+          'vector is reachable; independence says it is reachable in only one way. Together they ' +
+          'turn vectors into coordinates: relative to a basis, each vector has exactly one ' +
+          'recipe, and that list of weights is its address. Independence is what makes the ' +
+          'address single-valued rather than merely tidy — and in the plane the number you ' +
+          'divide by to find it is the cross-check itself.',
+        position: 1,
+        /*
+         * No `automaticityTarget` on any of the three points. Finding a
+         * coordinate is an elimination, which is timed where it is taught —
+         * `the-cross-check` carries a target for the arithmetic this reuses —
+         * and the three things this concept adds are a decision, a theorem and
+         * a count. A timing target on "is this set a basis" measures typing,
+         * which is the case types.ts makes for the field usually being absent.
+         */
+        workedExample: {
+          problem:
+            'u = (2, −1) and v = (1, 3). Write w = (3, −5) in the basis {u, v} — that is, find ' +
+            'the weights c₁ and c₂ with c₁u + c₂v = w.',
+          subgoals: [
+            {
+              label: 'Check it is a basis before asking it for an address',
+              detail:
+                'The cross-check is 2·3 − (−1)·1 = 7. Non-zero, so u and v are independent, and ' +
+                'two independent vectors in the plane span it — which is what the span concept ' +
+                'established. So {u, v} is a basis and the question has an answer. A zero here ' +
+                'would have meant the pair reached only a line, and asking for an address in it ' +
+                'would be asking for a recipe that either does not exist or is not unique.',
+              socratic:
+                'Before looking for any weights, what does u₁v₂ − u₂v₁ come to for these two — ' +
+                'and what would a zero there have meant about the address you are about to ' +
+                'compute?',
+            },
+            {
+              label: 'Turn one vector equation into one equation per component',
+              detail:
+                'c₁u + c₂v = w has to hold in both components at once, so it is two equations: ' +
+                '2c₁ + c₂ = 3 from the first and −c₁ + 3c₂ = −5 from the second. This is the ' +
+                'step the span concept promised would turn reachability questions into systems.',
+              socratic:
+                'w has two components and the combination has to match it in both. What two ' +
+                'equations in c₁ and c₂ does that give?',
+            },
+            {
+              label: 'Eliminate, and watch the cross-check appear as the divisor',
+              detail:
+                'The first equation gives c₂ = 3 − 2c₁. Substituting into the second: ' +
+                '−c₁ + 3(3 − 2c₁) = −5, so −c₁ + 9 − 6c₁ = −5 and −7c₁ = −14, giving c₁ = 2 and ' +
+                'then c₂ = 3 − 4 = −1. The 7 is not a coincidence — it is the cross-check from ' +
+                'the first subgoal, and it is the divisor every coordinate in this basis is ' +
+                'built from. That is the mechanical reason independence is required rather than ' +
+                'preferred: a dependent pair makes that divisor zero.',
+              socratic:
+                'Substituting c₂ = 3 − 2c₁ into the second equation leaves a single multiple of ' +
+                'c₁ on the left. Which number is that multiple, and where in this problem have ' +
+                'you written it already?',
+            },
+            {
+              label: 'Establish that there is no second answer',
+              detail:
+                'Suppose weights d₁ and d₂ also reached w. Subtracting the two combinations ' +
+                'gives (c₁ − d₁)u + (c₂ − d₂)v = 0. If the two recipes differed at all, that is ' +
+                'a combination of u and v landing on the origin with weights not both zero — a ' +
+                'dependence, which the cross-check has already ruled out. So the differences are ' +
+                'both zero and the recipes were the same one. This is why "the coordinates of w" ' +
+                'is a phrase at all: without independence the plural would be wrong.',
+              socratic:
+                'Suppose somebody else\'s weights also reached w. Subtract their combination ' +
+                'from yours — what vector do you get, and what does the cross-check say about ' +
+                'the weights that produced it?',
+            },
+          ],
+          answer:
+            '(2, −1) — w = 2u − v, and the 7 the elimination divided by is the cross-check, ' +
+            'which is also what makes that address the only one',
+        },
+      },
+      {
+        id: 'every-basis-of-a-space-is-the-same-size',
+        conceptId: 'basis-and-dimension',
+        statement:
+          'Nothing stops a spanning set from being any size, and yet every BASIS of one space ' +
+          'has the same number of elements. In the plane the count is squeezed from both sides: ' +
+          'three plane vectors are always dependent, so three is too many, and one vector spans ' +
+          'only a line, so one is too few. Two is what is left. The theorem is that this squeeze ' +
+          'happens in every vector space — any two bases of one space have equally many ' +
+          'elements — which is what lets the number be named instead of merely computed.',
+        position: 2,
+        workedExample: {
+          problem:
+            'u = (2, −1), v = (1, 3) and w = (3, −5). Decide whether {u, v, w} is a basis of the ' +
+            'plane, and whether {u} on its own could be.',
+          subgoals: [
+            {
+              label: 'Reuse the address rather than hunting for weights again',
+              detail:
+                'The previous point found w = 2u − v, so w − 2u + v = 0. Checking: the first ' +
+                'component is 3 − 4 + 1 = 0 and the second is −5 + 2 + 3 = 0. That is a ' +
+                'combination of all three vectors landing on the origin with weights (−2, 1, 1), ' +
+                'which are not all zero — a dependence. So {u, v, w} spans the plane and is not ' +
+                'a basis of it: spanning was never the property in question.',
+              socratic:
+                'You already know w = 2u − v. Rearranged so that one side is the zero vector, ' +
+                'what combination of the three does that give — and which of its three weights ' +
+                'are zero?',
+            },
+            {
+              label: 'Notice that the dependence was forced, not lucky',
+              detail:
+                'Nothing about w was special. {u, v} spans the plane, so ANY third plane vector ' +
+                'has an address in it, computed exactly as the last point computed this one — ' +
+                'and that address, rearranged, is a dependence. So no set of three plane vectors ' +
+                'is ever independent, and no basis of the plane has three elements. Three is ' +
+                'ruled out for every choice at once rather than for this one.',
+              socratic:
+                'The address of ANY plane vector in {u, v} can be found the same way you found ' +
+                'w\'s. What does the existence of that address say about whether a third vector ' +
+                'could ever be independent of u and v?',
+            },
+            {
+              label: 'Close off the other direction as well',
+              detail:
+                'A single vector spans a line, so {u} can only be a basis if the plane is that ' +
+                'line. The cross-check on u and w is 2·(−5) − (−1)·3 = −10 + 3 = −7, which is ' +
+                'not zero, so w is not a multiple of u and sits off the line through u. One ' +
+                'vector is therefore not enough. The −7 is the 7 of the previous point with a ' +
+                'sign: w = 2u − v, and replacing v by w in the cross-check scales it by w\'s ' +
+                'v-coordinate, which is −1.',
+              socratic:
+                'If {u} were a basis of the plane on its own, every plane vector would have to ' +
+                'be a multiple of u. What does the cross-check of u and w come to, and what does ' +
+                'that settle?',
+            },
+            {
+              label: 'Read off what the two bounds leave',
+              detail:
+                'Three is too many and one is too few, and neither verdict used anything ' +
+                'specific about these vectors. So every basis of the plane has exactly two ' +
+                'elements, and the size is a fact about the plane rather than about the set ' +
+                'somebody happened to pick. The theorem says the same squeeze exists in every ' +
+                'vector space, with the same shape of argument: a set bigger than a basis is ' +
+                'dependent, a set smaller than one cannot span. A quantity that comes out the ' +
+                'same however it is measured deserves a name, and the next point gives it one.',
+              socratic:
+                'Three vectors are always dependent here and one never spans, and neither ' +
+                'conclusion mentioned u, v or w in particular. What is left for the size of a ' +
+                'basis of the plane to be?',
+            },
+          ],
+          answer:
+            '{u, v, w} is dependent — w − 2u + v = 0 — and {u} spans only a line, since the ' +
+            'cross-check of u and w is −7; so every basis of the plane has exactly two elements',
+        },
+      },
+      {
+        id: 'the-dimension-counts-directions-not-entries',
+        conceptId: 'basis-and-dimension',
+        statement:
+          'The dimension of a space is the size of any of its bases, which the previous point ' +
+          'makes a well-defined number. It counts independent DIRECTIONS and not the entries an ' +
+          'element is written with: the plane 2x − y + 2z = 0 has elements of three coordinates ' +
+          'and dimension 2, because one equation spends one of the three freedoms. And a space ' +
+          'need not have a finite basis at all — the functions of the previous concept add ' +
+          'pointwise, obey every axiom, and no finite set spans them — which is what ' +
+          '"infinite-dimensional" means and the last reason dimension is a count of directions ' +
+          'rather than of numbers on the page.',
+        position: 3,
+        workedExample: {
+          problem:
+            'W is the plane 2x − y + 2z = 0 through the origin. a = (1, 2, 0) and b = (0, 2, 1) ' +
+            'lie in it, and so do c = (2, −2, −3), u = (2, 2, −1) and v = (1, 0, −1). Find the ' +
+            'dimension of W, and check the answer against a second basis of it.',
+          subgoals: [
+            {
+              label: 'Count the freedoms before counting the entries',
+              detail:
+                'Solving the condition for y gives y = 2x + 2z. So x and z may be chosen freely ' +
+                'and y follows: two free choices, and every element still written as three ' +
+                'numbers. That is the first reading of "dimension 2 inside three coordinates", ' +
+                'and it is a count of what you may choose rather than of what you must write ' +
+                'down.',
+              socratic:
+                'Solve 2x − y + 2z = 0 for y. Once you have, how many of the three coordinates ' +
+                'are still free to choose — and how many numbers does it take to write the ' +
+                'result down?',
+            },
+            {
+              label: 'Exhibit a basis and let it confirm the count',
+              detail:
+                'a and b are both in W: 2 − 2 + 0 = 0 and 0 − 2 + 2 = 0. They are independent ' +
+                'because a × b = (2, −1, 2) is not the zero vector, which is the space version ' +
+                'of the cross-check. Two independent vectors inside a two-freedom set span it, ' +
+                'so {a, b} is a basis and dim W = 2. The cross product coming out as exactly ' +
+                'W\'s own normal vector is not a coincidence: it is perpendicular to both, and W ' +
+                'is precisely the set of points perpendicular to that normal.',
+              socratic:
+                'a and b both satisfy W\'s condition. What is a × b, and what does a non-zero ' +
+                'answer there settle about the pair?',
+            },
+            {
+              label: 'Test the theorem against a set that is one too big',
+              detail:
+                'c is not visibly built from a and b, so the question is settled by arithmetic ' +
+                'rather than by inspection: with n = a × b = (2, −1, 2), n·c = 4 + 2 − 6 = 0, so ' +
+                'c lies in the plane that a and b span — and c = 2a − 3b, which the zero was ' +
+                'evidence for before the weights were found. So {a, b, c} still spans W and the ' +
+                'dimension is still 2. Three vectors, two directions, exactly as three plane ' +
+                'vectors gave two in the point above.',
+              socratic:
+                'c is not obviously a combination of a and b. What does (a × b)·c come to, and ' +
+                'what does a zero there say about where c lies?',
+            },
+            {
+              label: 'Change the basis and get the same number back',
+              detail:
+                'u and v are in W as well — 4 − 2 − 2 = 0 and 2 − 0 − 2 = 0 — and they are ' +
+                'independent, since the first component of u × v is u₂v₃ − u₃v₂ = ' +
+                '2·(−1) − (−1)·0 = −2. So {u, v} is a second basis of the same plane, and it has ' +
+                'two elements like the first. That is the previous point\'s theorem arriving ' +
+                'where it is not obvious: nothing about u and v resembles a and b, and the count ' +
+                'is forced to agree anyway. What dimension is NOT is the entry count — every ' +
+                'vector here is written with three numbers and the dimension is 2 — and in the ' +
+                'function space of the previous concept there is no entry count at all, which is ' +
+                'the case the word "infinite-dimensional" is reserved for.',
+              socratic:
+                'u and v are in W too and look nothing like a and b. The first component of ' +
+                'u × v is u₂v₃ − u₃v₂ — what does it come to, and what does that force about the ' +
+                'number of vectors in this second basis?',
+            },
+          ],
+          answer:
+            '2 — {a, b} and {u, v} are both bases of W and both have two elements, while every ' +
+            'element of W is written with three coordinates',
+        },
+      },
+    ],
+  },
 ]
 
 /**
@@ -2168,6 +2559,105 @@ const EDGES: ConceptEdge[] = [
       'redundant without ever asking what a vector is made of. A learner who has run the ' +
       'cross-check has the experience the definition is a summary of; one who has not reads it ' +
       'as a list of rules nobody needed.',
+  },
+
+  /*
+   * THE TWENTY-SECOND PROMOTION'S TWO EDGES, AND THE REASON THERE IS NO THIRD.
+   *
+   * `basis-and-dimension` declared BOTH of its `needs` here —
+   * `vector-spaces` and `linear-independence` — and both are concepts of this
+   * ontology, so the whole of what the node stranded is the two entries below
+   * and no area `links` entry was owed. That is the same cheapest shape the
+   * axioms had one promotion earlier, and this time it was two edges rather
+   * than one: a promotion's `links` cost is about where each `needs` POINTS,
+   * not about how many there are.
+   *
+   * It is no longer a leaf, which the note above this one said the axioms were.
+   * The axioms are now an interior concept of the subject with this one hanging
+   * off them, and the subject has gained a second branch point: the axioms fork
+   * into nothing else, but `linear-independence` now has two dependents here.
+   *
+   * THE THREE EDGES OUT SURVIVED UNTOUCHED, which is the half of a departure
+   * that needs no action and looks like the dangerous half. `rank-nullity` and
+   * `eigenvalues` are nodes of `linear-algebra` and `field-extensions` is a
+   * node of `abstract-algebra`; all three name this concept in their OWN
+   * `needs`, so those edges are declared at the far end and resolve across the
+   * file boundary in `composeAtlas`. Three dependents in two different areas is
+   * also what made this the candidate worth taking.
+   *
+   * NOTHING WAS HANDED BACK. No `links` entry of any area named
+   * `basis-and-dimension` at either end — checked before the node was deleted —
+   * so there was no duplicate edge to remove. That case is real and no test
+   * catches it; see the deleted first entry of `LINEAR_ALGEBRA.links`.
+   *
+   * AND THE NODE DECLARED NO `confusedWith` AND NO `exercises`, checked on it
+   * before deletion rather than inferred from the suites passing afterwards.
+   * `expandEdges` turns a `confusedWith` into an `interferes_with`, which
+   * constrains SELECTION rather than gating, so losing one leaves every suite
+   * green while freeing the scheduler to introduce the two most confusable
+   * concepts in a subject together.
+   *
+   * ── THE `encompasses` EDGE THIS FILE HAS REFUSED THREE TIMES IS TAKEN ─────
+   *
+   * And it is taken on the test the three refusals were made with, not against
+   * it: the claim is about what PRACTISING exercises, measured against the
+   * tasks that exist rather than against the prose. Two of the six tasks below
+   * this concept compute the cross-check and compute it as the whole of their
+   * arithmetic — `basis-coordinate-1` divides by `u1*v2 - u2*v1`, which is
+   * `cross-check-independent-1`'s `given` written symbol for symbol, and
+   * `one-vector-is-not-enough-1` IS that expression with `w` for `v`. A learner
+   * cannot produce a coordinate in this concept without producing the
+   * independence number on the way, so a cross-check demonstrated here should
+   * not come due as though untouched.
+   *
+   * ONE EDGE AND NOT THREE, which is the part worth stating. `linear-
+   * independence` already claims credit down to `vectors-and-spans`, which
+   * claims it down to `plane-vectors`, and `encompassedClosure` is transitive —
+   * so this single edge credits the span and the components at depths 2 and 3
+   * with no further declaration. A second edge straight to `vectors-and-spans`
+   * would have been defensible on `basis-reconstruct-1`, whose `given` is
+   * `span-plane-1`'s verbatim, and would have added nothing but a duplicate
+   * route. And no edge runs back to `vector-spaces`: nothing in these tasks
+   * tests a subset for closure or touches an axiom, so credit for the axioms
+   * would be claimed on material that never exercises them.
+   */
+  {
+    id: 'vector-spaces->basis-and-dimension',
+    from: 'vector-spaces',
+    to: 'basis-and-dimension',
+    kind: 'prerequisite',
+    promotedBy: 'author:vectors-and-independence',
+    rationale:
+      'The count is a count of a SPACE, so there has to be a space to count the directions of. ' +
+      'The axioms are also what makes the answer worth more than an observation about pairs: a ' +
+      'dimension is a fact about any set with the two operations, and the polynomials and ' +
+      'functions the axioms admit are where the count stops being the length of a component ' +
+      'list.',
+  },
+  {
+    id: 'linear-independence->basis-and-dimension',
+    from: 'linear-independence',
+    to: 'basis-and-dimension',
+    kind: 'prerequisite',
+    promotedBy: 'author:vectors-and-independence',
+    rationale:
+      'A basis is a spanning set that is independent, so half of the definition is the previous ' +
+      'concept, and the cross-check is the arithmetic every coordinate here divides by. A ' +
+      'learner who has not met the test reads "and independent" as a tidiness condition rather ' +
+      'than as the thing that makes an address single-valued.',
+  },
+  {
+    id: 'basis-and-dimension=>linear-independence',
+    from: 'basis-and-dimension',
+    to: 'linear-independence',
+    kind: 'encompasses',
+    promotedBy: 'author:vectors-and-independence',
+    rationale:
+      'Finding a coordinate in a basis means dividing by the cross-check, and ruling out a ' +
+      'one-element basis means computing one: two of this concept\'s six tasks have ' +
+      '`u1*v2 - u2*v1` as their whole arithmetic, which is the independence concept\'s own task ' +
+      'verbatim. So a cross-check demonstrated here has been demonstrated, and should not come ' +
+      'due as though it had not.',
   },
 ]
 

@@ -587,22 +587,52 @@ const CONCEPTS: Concept[] = [
             {
               label: 'Split the product',
               detail: 'log₂(8 · 4) = log₂(8) + log₂(4) = 3 + 2 = 5.',
+              socratic:
+                'The problem names the product rule, which tells you which rule to reach for but ' +
+                'not what it does to the expression. What it offers is a trade: one logarithm ' +
+                'whose argument is 8 · 4, in exchange for something written in terms of 8 and 4 ' +
+                'separately. Make that trade and then finish it off — what stands in place of ' +
+                'log₂(8 · 4), and since 8 and 4 are each a power of 2, what is each of the ' +
+                'pieces worth?',
             },
             {
               label: 'Check without the rule',
               detail: '8 · 4 = 32 and log₂(32) = 5. The rule agreed.',
+              socratic:
+                'You have an answer of 5, and every step that produced it leaned on the rule you ' +
+                'were told to use — so if you had misremembered the rule, nothing so far would ' +
+                'have told you. There is a second route to the same expression that never ' +
+                'mentions the rule, because 8 · 4 is a number you can work out and then take the ' +
+                'log of directly. Take that route to the end — what answer does it give, and ' +
+                'supposing it matches, how much about the rule has that one match settled?',
             },
             {
               label: 'See why it had to work',
               detail:
                 '8 = 2³ and 4 = 2², so their product is 2³⁺². The addition in the exponent *is* ' +
                 'the addition of the logs — this rule and xᵃ · xᵇ = xᵃ⁺ᵇ are one fact.',
+              socratic:
+                'One case coming out right still leaves the 5 looking like luck, so go back to ' +
+                'where the 3 and the 2 came from: each is the exponent that puts 2 onto one of ' +
+                'the factors, which makes 8 · 4 a product of two powers of the same base — the ' +
+                'one shape you could already collapse before logarithms were mentioned at all. ' +
+                'Rewrite the product that way and apply that older rule: what becomes of the two ' +
+                'exponents, and what does that make of the idea that the logarithm product rule ' +
+                'is a separate fact to be remembered on its own?',
             },
             {
               label: 'Note what it does not say',
               detail:
                 'log₂(8 + 4) = log₂(12), which is not 3 + 2. The rule needs a product, and using ' +
                 'it on a sum is the most common error in the subject.',
+              socratic:
+                'The argument you just gave turned on multiplying powers of the same base, and ' +
+                '8 + 4 is not a multiplication — yet on the page log₂(8 + 4) looks so much like ' +
+                'log₂(8 · 4) that answering it 3 + 2 is the commonest error in the subject. Try ' +
+                'it honestly: add first, so that you are looking at log₂(12), and work out what ' +
+                'the answer 3 + 2 would be claiming about 2⁵ and 12. Which of those two numbers ' +
+                'does the claim get wrong, and which step of the derivation you just built is the ' +
+                'one that cannot run once the argument is a sum?',
             },
           ],
           answer: '5',

@@ -351,6 +351,62 @@ const SIGMA_LINEARITY: VariableDeclaration[] = [
 ]
 
 /**
+ * The two coordinates of a pair. The first declaration in this file with two
+ * symbols that are the SAME kind of thing.
+ *
+ * Everywhere above, a second symbol is a parameter of some sort — a multiplier,
+ * a limit, a coefficient — and `x` alone is the input. Here both are inputs,
+ * and the only thing distinguishing them is which slot of the pair they stand
+ * in, which is the first knowledge point's entire subject.
+ *
+ * `real` and nothing narrower on both. `integer` would be wrong rather than
+ * merely tight: `several-variables-domain-1` turns on 25 − 5 being 20 and not
+ * 0, and the third knowledge point's claim is that the forbidden set is a curve
+ * through the plane — a claim that needs the plane, not the lattice. Both
+ * carry a negative value in `several-variables-domain-2`, so `positive` is out
+ * for the same reason.
+ */
+const SEVERAL_VARIABLES_XY: VariableDeclaration[] = [
+  { name: 'x', assumptions: { real: true } },
+  { name: 'y', assumptions: { real: true } },
+]
+
+/**
+ * The same pair under neutral names, used by two tasks for one reason.
+ *
+ * `a` and `b` rather than `x` and `y` deliberately. In
+ * `several-variables-order-1` the expression `(a² + 3b) − (b² + 3a)` puts each
+ * symbol in BOTH roles, so naming them after the letters of the rule would say
+ * that `a` is the x — exactly the identification the task asks the learner to
+ * stop making automatically. In `several-variables-slice-y-1` the `a` is a held
+ * coordinate and the `b` is the one still running, which is the reverse of the
+ * slice above it. Neither task can honestly call its symbols x and y, and the
+ * shared list is the same claim in both: these are slots, not letters.
+ */
+const SEVERAL_VARIABLES_AB: VariableDeclaration[] = [
+  { name: 'a', assumptions: { real: true } },
+  { name: 'b', assumptions: { real: true } },
+]
+
+/**
+ * A slice: the letter being HELD, as a symbol, beside the one still running.
+ *
+ * `c` is the held value and it appears twice in `c*x^2 + 4*c`, which is the
+ * point of writing it as a symbol instead of substituting the 3 — the learner
+ * can see that the held value lands in every place its letter stood, and the
+ * commonest slip is to put it in one.
+ *
+ * `x` keeps `real` rather than taking the held letter's assumptions. A slice is
+ * a one-variable function on the whole line, and declaring otherwise would make
+ * the symbol narrower than the object.
+ */
+const SEVERAL_VARIABLES_SLICE_C: VariableDeclaration[] = [
+  { name: 'c', assumptions: { real: true } },
+  { name: 'x', assumptions: { real: true } },
+]
+
+
+/**
  * Matrix entries, named by position rather than by letter.
  *
  * `a11` rather than `a` because the subject's whole difficulty is which entry
@@ -500,6 +556,30 @@ const POLY_X2_COEFFS = [
   { name: 'c', assumptions: { real: true } },
   { name: 'p2', assumptions: { real: true } },
   { name: 'q2', assumptions: { real: true } },
+]
+
+/**
+ * Three plane vectors at once, for the twenty-second promotion.
+ *
+ * `u`, `v` and `w` with both components each, because the basis concept is the
+ * first in this subject to need all three in one expression: a coordinate is
+ * found from u, v AND the target, and the dependence that follows from it
+ * combines all three. `VEC_UW` and `VEC_UV_FULL` each hold two of the three
+ * and neither can be extended by a spread without declaring a symbol twice.
+ *
+ * Every one of the six is declared in each task that uses this set even where
+ * the `given` names only some of them, for the reason `PLANE_N_P` and
+ * `VEC_UV_3D` give: `at` is what decides which symbols a task substitutes, an
+ * unused declaration costs nothing, and a symbol missing from `at` fails an
+ * assertion.
+ */
+const VEC_UVW = [
+  { name: 'u1', assumptions: { real: true } },
+  { name: 'u2', assumptions: { real: true } },
+  { name: 'v1', assumptions: { real: true } },
+  { name: 'v2', assumptions: { real: true } },
+  { name: 'w1', assumptions: { real: true } },
+  { name: 'w2', assumptions: { real: true } },
 ]
 
 /** The three coordinates of a point, for substituting into a plane equation. */
@@ -5558,6 +5638,148 @@ export const TASKS: PracticeTask[] = [
     reference: '86',
   },
 
+  // The six on `functions-of-several-variables`, the twenty-first promotion
+  // and the first concept in this subject whose input is a pair. Two per
+  // point, which is the shape the last four promotions in the build settled
+  // on, and all six are rational-valued with no worker.
+  //
+  // THE ENGINE TOOK THIS CONCEPT WITHOUT A WORKAROUND, which is unusual enough
+  // to state: `parseExpression` has no trouble with two free symbols, and
+  // `at` is already a `Record<string, string>` rather than one value. So
+  // unlike the sigma tasks above — which could not write a Σ — and unlike the
+  // matrix tasks below, nothing here is a spelled-out stand-in for a notation
+  // the parser lacks. `x^2 + 3*y` at x = 3, y = 1 is the function, written as
+  // the function.
+  //
+  // What DID shape them is that two of the three points are about a DECISION
+  // rather than an arithmetic result, so each needed a number that cannot be
+  // reached without making the decision correctly:
+  //
+  //  - For the ordered pair, the difference f(3,1) − f(1,3). A learner who
+  //    reads the pair as unordered has no reason not to submit 0, and 0 is
+  //    wrong. Evaluating f at one pair cannot catch that, which is why the
+  //    pair of tasks is an evaluation AND a difference rather than two
+  //    evaluations.
+  //  - For the domain, two pairs that LOOK excluded and are not — (5,5),
+  //    where the coordinates are equal, and (−4,−16), where y is the negative
+  //    of x². Both are ordinary points of the domain, and the learner who has
+  //    the condition wrong as y = x, or who reads (−4)² as −16, is left
+  //    dividing by zero with no number to submit at all.
+  //
+  // The honest gap: nothing here rules "which y is excluded at x = 5". The
+  // answer is 25 and it is a perfectly good number, but the only `given` that
+  // produces it is `x^2`, and a prompt carrying that expression has handed
+  // over the whole of the decision it was meant to test. So the excluded value
+  // is found in the worked example and asked about in its subgoals, and the
+  // tasks rule the pairs that survive the condition instead — the same split
+  // the solve-for-x and sigma tasks use, for the same reason.
+  {
+    id: 'several-variables-pair-1',
+    knowledgePointId: 'the-input-is-an-ordered-pair',
+    kind: 'evaluate',
+    prompt:
+      'f(x, y) = x² + 3y. Find f(3, 1). The first number in the bracket is the x and the second '
+      + 'is the y, so the squaring takes one of them and the tripling takes the other.',
+    given: 'x^2 + 3*y',
+    variables: SEVERAL_VARIABLES_XY,
+    at: { x: '3', y: '1' },
+    // 9 + 3. Matching the slots the other way gives 1 + 9 = 10, which is the
+    // next task's business rather than a wrong answer to this one.
+    reference: '12',
+  },
+  {
+    id: 'several-variables-order-1',
+    knowledgePointId: 'the-input-is-an-ordered-pair',
+    kind: 'evaluate',
+    prompt:
+      'f(x, y) = x² + 3y again. Find f(3, 1) − f(1, 3). Writing a for whichever number is in '
+      + 'the first slot and b for the second, that difference is (a² + 3b) − (b² + 3a); evaluate '
+      + 'it at a = 3, b = 1.',
+    // The two readings of the same two numbers, subtracted. The deciding number
+    // is that this is NOT zero: a learner who treats the pair as unordered has
+    // no route to 2, and 0 is the answer that belief produces.
+    given: '(a^2 + 3*b) - (b^2 + 3*a)',
+    variables: SEVERAL_VARIABLES_AB,
+    at: { a: '3', b: '1' },
+    // 12 − 10.
+    reference: '2',
+  },
+  {
+    id: 'several-variables-slice-x-1',
+    knowledgePointId: 'holding-one-letter-leaves-a-rule-in-the-other',
+    kind: 'evaluate',
+    prompt:
+      'f(x, y) = x²y + 4y. Hold y at 3. The y stood in BOTH terms, so the 3 goes into both of '
+      + 'them and what is left is a rule in x alone: c·x² + 4c with c = 3. Find its value at '
+      + 'x = 5, which is f(5, 3).',
+    // The held value is a symbol rather than the number 3, so it appears twice
+    // and the substitution is visible as the thing it is. Putting the 3 into
+    // only the first term leaves 3x² + 4y, which still has a y in it and
+    // settles nothing; the reachable wrong answer is 79, from reading that
+    // leftover 4y as a bare 4.
+    given: 'c*x^2 + 4*c',
+    variables: SEVERAL_VARIABLES_SLICE_C,
+    at: { c: '3', x: '5' },
+    // 3 · 25 + 12 = 75 + 12. Directly: f(5,3) = 25 · 3 + 4 · 3 = 87.
+    reference: '87',
+  },
+  {
+    id: 'several-variables-slice-y-1',
+    knowledgePointId: 'holding-one-letter-leaves-a-rule-in-the-other',
+    kind: 'evaluate',
+    prompt:
+      'The same f(x, y) = x²y + 4y, held the other way. Fix x at 2; every term carries a y, so '
+      + 'what is left is a multiple of y — (a² + 4)·y with a = 2. Find its value at y = 7, which '
+      + 'is f(2, 7).',
+    // The companion to the task above and the content of the point: the SAME
+    // function is quadratic along the x-slice and linear along the y-slice, so
+    // the two `given` expressions must differ in degree. Asserted from the
+    // expressions themselves in tests/concepts-logic.mjs, because an edit that
+    // "tidied" these into one shape would delete the only evidence of it.
+    given: '(a^2 + 4)*b',
+    variables: SEVERAL_VARIABLES_AB,
+    at: { a: '2', b: '7' },
+    // 8 · 7. Directly: f(2,7) = 4 · 7 + 4 · 7 = 56.
+    reference: '56',
+  },
+  {
+    id: 'several-variables-domain-1',
+    knowledgePointId: 'the-domain-is-a-condition-on-both-coordinates',
+    kind: 'evaluate',
+    prompt:
+      'f(x, y) = (x + y)/(x² − y) is undefined exactly where its denominator is zero. Decide '
+      + 'whether (5, 5) is one of those pairs, and if it is not, evaluate f there: '
+      + '(x + y)/(x^2 - y) at x = 5, y = 5.',
+    given: '(x + y)/(x^2 - y)',
+    variables: SEVERAL_VARIABLES_XY,
+    at: { x: '5', y: '5' },
+    domainConditions: ['x^2 - y != 0'],
+    // 10/20. The pair has x = y, which is the condition a learner is most
+    // likely to have mistaken for y = x²; believing it leaves them with a zero
+    // denominator and no number to submit. The condition is stated here as
+    // well as in the prompt because `Verdict.conditions` is never dropped.
+    reference: '1/2',
+  },
+  {
+    id: 'several-variables-domain-2',
+    knowledgePointId: 'the-domain-is-a-condition-on-both-coordinates',
+    kind: 'evaluate',
+    prompt:
+      'The same f(x, y) = (x + y)/(x² − y). The pair excluded at x = −4 is (−4, 16), because '
+      + 'the condition is y = x² and a square has no sign to lose. Evaluate f at (−4, −16): '
+      + '(x + y)/(x^2 - y) at x = -4, y = -16.',
+    given: '(x + y)/(x^2 - y)',
+    variables: SEVERAL_VARIABLES_XY,
+    at: { x: '-4', y: '-16' },
+    domainConditions: ['x^2 - y != 0'],
+    // (−4 + −16)/(16 − (−16)) = −20/32 = −5/8. Two slips both end in a zero
+    // denominator rather than a wrong number: reading (−4)² as −16, and
+    // subtracting −16 as though it were +16. So the sign work is what the
+    // answer costs, and the negative first coordinate is why this task exists
+    // beside the one above rather than being a second (5, 5).
+    reference: '-5/8',
+  },
+
   // ── matrices-and-determinants ───────────────────────────────────────────
   //
   // EVERY TASK ASKS FOR ONE ENTRY, because the engine has no matrix type.
@@ -6361,6 +6583,150 @@ export const TASKS: PracticeTask[] = [
     // checks cannot predict, which is why the test has three parts: each axis is
     // a subspace on its own and their union is not.
     reference: '1',
+  },
+
+  /*
+   * The dimension — six tasks, two on each of the three points, the
+   * twenty-second promotion. Every one exact with no worker, which is this
+   * subject's standing contract and the reason this concept was taken ahead of
+   * `inner-product-spaces`: a count, a coordinate and a cross product are
+   * integers and an exact quotient, while length and angle in a general space
+   * are a square root and an inverse cosine.
+   *
+   * THE FIGURES ARE THE ONES THE SUBJECT ALREADY WALKED, and deliberately.
+   * u = (2, −1) and v = (1, 3) are `combination-1`'s pair and
+   * `cross-check-independent-1`'s, so the basis a learner is asked for an
+   * address in is the pair they already tested for independence; and
+   * n = (2, −1, 2) in the third point's two tasks is `cross-product-component-1`
+   * and `cross-product-perpendicular-1`'s own cross product of a = (1, 2, 0)
+   * and b = (0, 2, 1). The arithmetic is familiar and the question is new,
+   * which is what this concept adds to those.
+   *
+   * THE ONE NUMBER THAT HAD TO BE CHOSEN is w. A coordinate is
+   * `(v2*w1 - v1*w2)/(u1*v2 - u2*v1)`, so it is rational only if the numerator
+   * is a multiple of the cross-check, which is 7 here — picking w first would
+   * have given sevenths. So the weights were picked and w computed from them:
+   * 2u − v = (3, −5), whose address is therefore (2, −1). That also buys the
+   * pairing below, since the two coordinates come out positive and negative and
+   * neither is 0.
+   *
+   * WHY NOT A THIRD COORDINATE TASK. The six answers are 2, −5, 0, −7, −2 and
+   * 0, which is the spread the twentieth promotion's note argues for: a task
+   * set whose every answer is 0 teaches the arithmetic and hides the decision,
+   * and two of these six being 0 is what makes the zero MEAN something — in
+   * `three-plane-vectors-dependent-1` it means redundant and in
+   * `third-vector-redundant-1` it means "already in the plane those two span".
+   */
+  {
+    id: 'basis-coordinate-1',
+    knowledgePointId: 'a-basis-is-a-spanning-set-with-nothing-spare',
+    kind: 'evaluate',
+    prompt:
+      'u = (2, −1) and v = (1, 3) are a basis of the plane. Find the FIRST coordinate of ' +
+      'w = (3, −5) in it — the c₁ with c₁u + c₂v = w. Eliminating c₂ from the two component ' +
+      'equations gives c₁ = (v₂w₁ − v₁w₂)/(u₁v₂ − u₂v₁); the denominator is the cross-check, ' +
+      'which is why a basis has to be independent before this quotient means anything.',
+    given: '(v2*w1 - v1*w2)/(u1*v2 - u2*v1)',
+    variables: VEC_UVW,
+    at: { u1: '2', u2: '-1', v1: '1', v2: '3', w1: '3', w2: '-5' },
+    // (3·3 − 1·(−5))/(2·3 − (−1)·1) = 14/7 = 2. The denominator is
+    // `cross-check-independent-1`'s whole `given` and its answer of 7, which is
+    // the arithmetic the `encompasses` edge in ontology-vectors.ts is claimed
+    // on. Exact because w was chosen as 2u − v rather than picked first — any
+    // other w gives sevenths.
+    reference: '2',
+  },
+  {
+    id: 'basis-reconstruct-1',
+    knowledgePointId: 'a-basis-is-a-spanning-set-with-nothing-spare',
+    kind: 'evaluate',
+    prompt:
+      'The address of w in the basis {u, v} has come out as (2, −1), with u = (2, −1) and ' +
+      'v = (1, 3). Evaluate the SECOND component of 2u − v. This is the check that the address ' +
+      'really does rebuild w = (3, −5), rather than merely being a pair of numbers the ' +
+      'elimination produced.',
+    given: 'c1*u2 + c2*v2',
+    variables: VEC_WEIGHTED_2,
+    at: { c1: '2', c2: '-1', u2: '-1', v2: '3' },
+    // 2·(−1) + (−1)·3 = −5, which is w's second component. Same `given` as
+    // `span-plane-1` at different inputs: that task was handed its weights and
+    // asked whether they reached a target, and this one has FOUND them and
+    // checks back. ontology-vectors.ts declines a second `encompasses` edge to
+    // `vectors-and-spans` on the strength of this task alone, since the credit
+    // already arrives transitively through `linear-independence`.
+    reference: '-5',
+  },
+  {
+    id: 'three-plane-vectors-dependent-1',
+    knowledgePointId: 'every-basis-of-a-space-is-the-same-size',
+    kind: 'evaluate',
+    prompt:
+      'u = (2, −1), v = (1, 3), w = (3, −5), and w = 2u − v. Evaluate the first component of ' +
+      'w − 2u + v. A zero makes that a combination of all three vectors landing on the origin ' +
+      'with weights that are not all zero, which is what rules {u, v, w} out as a basis.',
+    given: 'w1 - 2*u1 + v1',
+    variables: VEC_UVW,
+    at: { u1: '2', u2: '-1', v1: '1', v2: '3', w1: '3', w2: '-5' },
+    // 3 − 4 + 1 = 0, and the second component gives −5 + 2 + 3 = 0 as well. The
+    // weights are (−2, 1, 1): not all zero, so a dependence. It is the address
+    // from `basis-coordinate-1` rearranged, which is the knowledge point's
+    // claim — every third plane vector has one, so three are never independent.
+    reference: '0',
+  },
+  {
+    id: 'one-vector-is-not-enough-1',
+    knowledgePointId: 'every-basis-of-a-space-is-the-same-size',
+    kind: 'evaluate',
+    prompt:
+      'Could {u} alone be a basis of the plane, with u = (2, −1)? Apply the cross-check to u and ' +
+      'w = (3, −5): evaluate u₁w₂ − u₂w₁. Anything but zero means w is off the line through u, ' +
+      'so one vector does not reach it.',
+    given: 'u1*w2 - u2*w1',
+    variables: VEC_UVW,
+    at: { u1: '2', u2: '-1', v1: '1', v2: '3', w1: '3', w2: '-5' },
+    // 2·(−5) − (−1)·3 = −7. Non-zero, so {u} spans a line and not the plane —
+    // the lower bound on a basis, as `three-plane-vectors-dependent-1` is the
+    // upper one. −7 rather than some unrelated number because w = 2u − v, so
+    // the crosswise expression scales the 7 of `cross-check-independent-1` by
+    // w's v-coordinate of −1; that is the second of the two tasks the
+    // `encompasses` edge is claimed on.
+    reference: '-7',
+  },
+  {
+    id: 'plane-basis-cross-product-1',
+    knowledgePointId: 'the-dimension-counts-directions-not-entries',
+    kind: 'evaluate',
+    prompt:
+      'W is the plane 2x − y + 2z = 0. u = (2, 2, −1) and v = (1, 0, −1) both lie in it. Find ' +
+      'the FIRST component of u × v, which is u₂v₃ − u₃v₂. A non-zero cross product means the ' +
+      'pair is independent, so two of them inside a two-freedom plane are a basis of it.',
+    given: 'u2*v3 - u3*v2',
+    variables: VEC_UV_3D,
+    at: { u1: '2', u2: '2', u3: '-1', v1: '1', v2: '0', v3: '-1' },
+    // 2·(−1) − (−1)·0 = −2. The whole product is (−2, 1, −2), which is −1 times
+    // the plane's normal (2, −1, 2) — it has to be perpendicular to both, and
+    // the normal is the only direction that is. Same `given` as
+    // `cross-product-component-1` at different inputs: that task built a
+    // perpendicular, and this one reads a non-zero answer as independence.
+    reference: '-2',
+  },
+  {
+    id: 'third-vector-redundant-1',
+    knowledgePointId: 'the-dimension-counts-directions-not-entries',
+    kind: 'evaluate',
+    prompt:
+      'a = (1, 2, 0) and b = (0, 2, 1) span a plane whose normal is n = a × b = (2, −1, 2). ' +
+      'Decide whether c = (2, −2, −3) adds a third direction by evaluating n·c. A zero means c ' +
+      'lies in the plane a and b already span, so three vectors would still be dimension 2.',
+    given: 'n1*r1 + n2*r2 + n3*r3',
+    variables: PLANE_N_P,
+    at: { n1: '2', n2: '-1', n3: '2', r1: '2', r2: '-2', r3: '-3' },
+    // 4 + 2 − 6 = 0, and indeed c = 2a − 3b. The point of asking it this way is
+    // that the weights are not visible: the triple product settles membership
+    // before anybody finds them. Same `given` as `plane-constant-1` at
+    // different inputs, and n is `cross-product-component-1`'s own answer, so
+    // this is that cross product being USED rather than computed again.
+    reference: '0',
   },
 
   // ── solid-measure, twelfth promotion: solid-geometry ────────────────────

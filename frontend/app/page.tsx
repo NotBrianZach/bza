@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { Book } from '@/types'
 import { supabase } from '@/lib/supabase'
 import { authedFetch } from '@/lib/authedFetch'
+import { chipForType, labelForType } from '@/lib/contentTypes'
 import { track } from '@/lib/analytics'
 import { booksQueries } from '@/lib/queries'
 import { getLocalBooks, deleteLocalBook, getStorageUsage } from '@/lib/localStorage'
@@ -1286,24 +1287,12 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
             </div>
             {/* Type filter chips — shown when 2+ distinct types exist */}
             {(() => {
+              /* The labels and colours live in lib/contentTypes.ts, typed
+                 against the content_type union so a new one cannot be
+                 forgotten, and with a fallback for values the database holds
+                 that no union mentions. Both were literals here, covering ten
+                 of twelve, which drew an empty chip for a chat or a manga. */
               const presentTypes = [...new Set(books.map(b => b.content_type).filter(Boolean))] as Book['content_type'][]
-              const TYPE_LABELS: Record<string, string> = {
-                fiction: 'Fiction', biography: 'Biography', textbook: 'Textbook', math_textbook: 'Math',
-                academic_paper: 'Academic', wikipedia_article: 'Wikipedia', news_article: 'News',
-                forum_thread: 'Forum', essay: 'Essay', reference: 'Reference',
-              }
-              const TYPE_CHIP: Record<string, string> = {
-                fiction:           'border-purple-200 text-purple-700 dark:border-purple-700 dark:text-purple-300',
-                biography:         'border-green-200 text-green-700 dark:border-green-700 dark:text-green-300',
-                textbook:          'border-blue-200 text-blue-700 dark:border-blue-700 dark:text-blue-300',
-                math_textbook:     'border-teal-200 text-teal-700 dark:border-teal-700 dark:text-teal-300',
-                academic_paper:    'border-indigo-200 text-indigo-700 dark:border-indigo-700 dark:text-indigo-300',
-                wikipedia_article: 'border-orange-200 text-orange-700 dark:border-orange-700 dark:text-orange-300',
-                news_article:      'border-sky-200 text-sky-700 dark:border-sky-700 dark:text-sky-300',
-                forum_thread:      'border-yellow-200 text-yellow-700 dark:border-yellow-700 dark:text-yellow-300',
-                essay:             'border-rose-200 text-rose-700 dark:border-rose-700 dark:text-rose-300',
-                reference:         'border-gray-200 text-gray-700 dark:border-gray-600 dark:text-gray-300',
-              }
               if (presentTypes.length < 2) return null
               return (
                 <div className="flex flex-wrap gap-1.5 mt-2">
@@ -1314,10 +1303,10 @@ const [quota, setQuota] = useState<import('@/lib/queries').UserQuota | null>(nul
                       className={`text-xs px-2.5 py-0.5 rounded-full border transition-colors ${
                         typeFilter === t
                           ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 border-transparent'
-                          : `bg-white dark:bg-gray-800 ${TYPE_CHIP[t!]} hover:opacity-80`
+                          : `bg-white dark:bg-gray-800 ${chipForType(t)} hover:opacity-80`
                       }`}
                     >
-                      {TYPE_LABELS[t!]}
+                      {labelForType(t)}
                     </button>
                   ))}
                   {typeFilter && (

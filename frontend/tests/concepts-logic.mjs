@@ -25,7 +25,7 @@
  */
 
 import { execFileSync } from 'node:child_process'
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
@@ -5506,13 +5506,13 @@ t('the subject has no internal faults with seven concepts in it',
 t('its fidelity claim matches what its option can do', fidelityMismatches(VI).length === 0)
 /*
  * The subject's SIZE is asserted here and moves on every promotion into it —
- * six at the eleventh, seven at the twentieth. The half of the claim that is
- * about this promotion is the second one: the dot product still carries the
- * three knowledge points it arrived with, so a later concept has not been
- * written by growing this one.
+ * six at the eleventh, seven at the twentieth, eight at the twenty-second. The
+ * half of the claim that is about this promotion is the second one: the dot
+ * product still carries the three knowledge points it arrived with, so a later
+ * concept has not been written by growing this one.
  */
-t('seven concepts, and the dot product still carries the three it arrived with',
-  VI.concepts.length === 7
+t('eight concepts, and the dot product still carries the three it arrived with',
+  VI.concepts.length === 8
   && conceptById(VI, 'dot-product-geometry').knowledgePoints.length === 3,
   `${VI.concepts.length} concepts, `
   + `${conceptById(VI, 'dot-product-geometry').knowledgePoints.length} points on the new one`)
@@ -5680,13 +5680,14 @@ t('and no question contains its own answer by being an imperative with a mark on
     .filter(s => !isInterrogative(s.socratic)).map(s => s.label).join('; '))
 /*
  * `chains` is a SUBJECT figure and not this concept's, so it moves on every
- * promotion into the subject — nineteen when the dot product landed, twenty-two
- * since the axioms did. The claim that belongs to this group is the zero beside
- * it: a chain that cannot become evidence is worse than an unwritten concept,
- * because it looks finished.
+ * promotion into the subject — nineteen when the dot product landed,
+ * twenty-two when the axioms did, twenty-five since the dimension did. The
+ * claim that belongs to this group is the zero beside it: a chain that cannot
+ * become evidence is worse than an unwritten concept, because it looks
+ * finished.
  */
 t('the subject still has no chain that cannot become evidence',
-  DP_COV.chainsWithNoRuling === 0 && DP_COV.chains === 22,
+  DP_COV.chainsWithNoRuling === 0 && DP_COV.chains === 25,
   `${DP_COV.chains} chains, ${DP_COV.chainsWithNoRuling} with no ruling`)
 
 // ---------------------------------------------------------------------------
@@ -5731,8 +5732,8 @@ t('it is a concept of that subject, which is still registered where things read 
   && ONTOLOGIES[1] === EXPRESSIONS_AND_EQUATIONS)
 t('it has no internal faults', ontologyProblems(FI).length === 0, ontologyProblems(FI).join('; '))
 t('its fidelity claim matches what its option can do', fidelityMismatches(FI).length === 0)
-t('six concepts, eighteen knowledge points',
-  FI.concepts.length === 6 && allKnowledgePoints(FI).length === 18,
+t('seven concepts, twenty-one knowledge points',
+  FI.concepts.length === 7 && allKnowledgePoints(FI).length === 21,
   `${FI.concepts.length} concepts, ${allKnowledgePoints(FI).length} points`)
 t('the concept is teachable AND practisable — a syllabus entry, not a renamed skeleton',
   isTeachable(FI, 'sequences') && isPractisable(FI, 'sequences'))
@@ -5825,6 +5826,17 @@ t('while the four older concepts here still name justify, of which the build shi
  * figures are asserted below so the direction is on the record and not just
  * the total: a promotion that shipped labels only would leave the total rising
  * and this ratio falling, which is the shape worth catching.
+ *
+ * And the twenty-first did it a third time with twelve more, taking the
+ * subject to 48 of 72 — still 66%, which is the first promotion here where the
+ * RATIO did not move. That is not a regression and it is worth saying why: a
+ * concept whose every subgoal is authored cannot lower the fraction, and it
+ * raises it only while the fraction is below 100%. Three fully-authored
+ * concepts into a file whose first four were labels-only, the ratio is
+ * converging on the unauthored remainder rather than stalling. The one-sided
+ * assertion below — strictly above the pre-promotion 16/40 — is the form that
+ * keeps meaning the same thing through that, which a `=== 60%` check would
+ * not.
  */
 const FI_COV = questionCoverage(FI)
 t('all nine of its subgoals ship the question written, not just the label',
@@ -5838,9 +5850,9 @@ t('while the labels stay imperative — the map draws moves, the tutor asks sent
   FI_SUBGOALS.filter(s => isInterrogative(s.label)).map(s => s.label).join('; '))
 t('every subgoal says what its move establishes, so none of them is a bare step',
   FI_SUBGOALS.every(s => typeof s.detail === 'string' && s.detail.length > 0))
-t('the subject is at eighteen chains and still has none that cannot become evidence',
-  FI_COV.chains === 18 && FI_COV.chainsWithNoRuling === 0
-  && FI_COV.authoredAsQuestions === 36 && FI_COV.questions === 60,
+t('the subject is at twenty-one chains and still has none that cannot become evidence',
+  FI_COV.chains === 21 && FI_COV.chainsWithNoRuling === 0
+  && FI_COV.authoredAsQuestions === 48 && FI_COV.questions === 72,
   `${FI_COV.chains} chains, ${FI_COV.chainsWithNoRuling} unrulable, `
   + `${FI_COV.authoredAsQuestions}/${FI_COV.questions} authored`)
 /*
@@ -6007,6 +6019,233 @@ t('every subgoal says what its move establishes',
 t('and none of them claims a speed target or a figure, since neither is the skill here',
   FI_SIG_POINTS.every(p => p.automaticityTarget === undefined && p.visualRef === undefined),
   FI_SIG_POINTS.map(p => `${p.id}:${p.automaticityTarget ?? 'none'}`).join(' '))
+
+/**
+ * `functions-of-several-variables`, the twenty-first promotion, and the first
+ * concept in this subject whose input is not a single number.
+ *
+ * WHY THIS NODE is the part that should not have to be rediscovered, so the
+ * two grounds that survived are asserted rather than described. Route demand
+ * had expired — all ten journeys read zero unwritten since the fourteenth —
+ * and no area was near the stub floor, so what was left was:
+ *
+ *  - RULABILITY WITH NO WORKER, which is the filter that ran first and which
+ *    eliminated the candidate with the most dependents. `graphs-of-functions`
+ *    has five, more than anything else ready, and ontology-functions.ts
+ *    refuses it in writing. That refusal was re-examined here against the
+ *    shape-vs-move test — four refusals in this build have expired and every
+ *    one described the ANSWER'S SHAPE — and it held, because reading a graph
+ *    is a judgement about a drawing with no number behind it to swap to. The
+ *    refusal is asserted below as still being in the file, so a future run
+ *    that overturns it has to delete the claim rather than quietly contradict
+ *    it.
+ *  - IT WAS THE SOLE ROOT OF A TWELVE-NODE AREA, so every node of
+ *    `multivariable-calculus` was gated behind one unwritten concept. The area
+ *    half of that is in tests/atlas.mjs, which builds the composed map.
+ *
+ * WHAT IT HAD TO GET RIGHT, in the order a mistake would have been silent in:
+ *
+ *  - THE TWO SLICE TASKS MUST DIFFER IN DEGREE. The second knowledge point's
+ *    content is that the SAME function is quadratic along one slice and linear
+ *    along the other, and the only durable evidence of that is the two tasks'
+ *    own `given` expressions. Asserted from them rather than from a promise in
+ *    a comment, because an edit that "tidied" the pair into one shape would
+ *    delete the point's whole subject while leaving every count intact.
+ *  - THE ORDER TASK MUST NOT BE ZERO. f(3,1) − f(1,3) is the one number in the
+ *    set that a learner who reads the pair as unordered cannot reach, and a
+ *    symmetric rule would have made it 0 and settled nothing. Asserted by
+ *    recomputing the difference from `given` and `at`.
+ *  - ONE CREDIT EDGE AND NOT TWO, which is the `gcd-and-lcm` judgement again:
+ *    all six tasks are the function concept in use, only two of six meet a
+ *    domain.
+ *  - EVERY SUBGOAL SHIPPED WITH ITS QUESTION, twelve of twelve.
+ */
+group('functions of several variables, the twenty-first promotion')
+
+const FI_SV = conceptById(FI, 'functions-of-several-variables')
+const FI_SV_POINTS = FI_SV.knowledgePoints
+const FI_SV_SUBGOALS = FI_SV_POINTS.flatMap(p => p.workedExample.subgoals)
+const FI_SV_TASKS = FI_SV_POINTS.flatMap(p => tasksForPoint(p.id))
+
+t('it is a concept of this subject with material, not a seventh name in the list',
+  !!FI_SV && isTeachable(FI, 'functions-of-several-variables')
+  && isPractisable(FI, 'functions-of-several-variables'))
+t('three knowledge points numbered from 1, the shape every concept here has',
+  FI_SV_POINTS.length === 3 && FI_SV_POINTS.map(p => p.position).join(',') === '1,2,3',
+  `${FI_SV_POINTS.length} points at ${FI_SV_POINTS.map(p => p.position).join(',')}`)
+t('six tasks, two on each of the three points, so no chain cannot become evidence',
+  FI_SV_TASKS.length === 6
+  && FI_SV_POINTS.every(p => tasksForPoint(p.id).length === 2),
+  `${FI_SV_TASKS.length} tasks: `
+  + FI_SV_POINTS.map(p => `${p.id}:${tasksForPoint(p.id).length}`).join(' '))
+t('every one is an evaluate task, which is the only kind its three objectives name',
+  FI_SV_TASKS.every(x => x.kind === 'evaluate')
+  && FI_SV.objectives.length === 3
+  && FI_SV.objectives.every(o => o.taskKinds.length > 0
+    && o.taskKinds.every(k => FI_SV_TASKS.some(x => x.kind === k))),
+  FI_SV.objectives.map(o => `${o.id}:${o.taskKinds.join('+')}`).join(' '))
+
+/*
+ * THE TWO SLICES DIFFER IN DEGREE, from the tasks' own expressions.
+ *
+ * `several-variables-slice-x-1` holds y and leaves `c*x^2 + 4*c`, which is
+ * quadratic in the running letter; `several-variables-slice-y-1` holds x and
+ * leaves `(a^2 + 4)*b`, which is linear in it. Checked by the running symbol
+ * appearing under a `^2` in one and not the other, and by both arriving at the
+ * value of the same f — 87 is f(5,3) and 56 is f(2,7) for f(x,y) = x²y + 4y,
+ * recomputed here rather than copied from the references.
+ */
+t('the two slice tasks differ in degree, which is the whole content of that point',
+  (() => {
+    const sx = taskById('several-variables-slice-x-1')
+    const sy = taskById('several-variables-slice-y-1')
+    const f = (x, y) => x * x * y + 4 * y
+    return /x\^2/.test(sx.given) && !/x\^2/.test(sy.given)
+      && /\(a\^2 \+ 4\)\*b/.test(sy.given) && !/b\^2/.test(sy.given)
+      && f(Number(sx.at.x), Number(sx.at.c)) === Number(sx.reference)
+      && f(Number(sy.at.a), Number(sy.at.b)) === Number(sy.reference)
+  })(),
+  `${taskById('several-variables-slice-x-1').given} vs `
+  + `${taskById('several-variables-slice-y-1').given}`)
+/*
+ * THE ORDER TASK IS NOT ZERO, recomputed from `given` and `at`. A symmetric
+ * rule — x + y, say — would make this difference 0 for every pair, and 0 is
+ * precisely the answer a learner produces by believing the pair is unordered.
+ * So the assertion is both that the arithmetic is right and that the example
+ * chosen can distinguish anything at all.
+ */
+t('the ordered-pair task turns on a difference a symmetric rule could not produce',
+  (() => {
+    const task = taskById('several-variables-order-1')
+    const a = Number(task.at.a)
+    const b = Number(task.at.b)
+    const f = (p, q) => p * p + 3 * q
+    return f(a, b) - f(b, a) === Number(task.reference)
+      && Number(task.reference) !== 0
+      && f(a, b) === Number(taskById('several-variables-pair-1').reference)
+  })(),
+  `f(3,1) - f(1,3) = ${taskById('several-variables-order-1').reference}`)
+/*
+ * THE TWO DOMAIN TASKS BOTH SIT ON PAIRS THAT LOOK EXCLUDED AND ARE NOT, which
+ * is what makes them tasks about the condition rather than two more
+ * evaluations. Each carries the condition it survives, since
+ * `Verdict.conditions` is never dropped — and each is checked against the
+ * denominator actually being non-zero there, which is the thing that would
+ * silently stop being true if somebody edited the pair.
+ */
+t('both domain tasks evaluate at a pair that only looks forbidden',
+  ['several-variables-domain-1', 'several-variables-domain-2'].every(id => {
+    const task = taskById(id)
+    const x = Number(task.at.x)
+    const y = Number(task.at.y)
+    // The references are exact fractions, so they are read as a pair of
+    // integers rather than parsed as arithmetic — a float comparison here
+    // would pass on a reference that had been rounded.
+    const [num, den] = task.reference.split('/').map(Number)
+    return task.domainConditions?.includes('x^2 - y != 0')
+      && x * x - y !== 0
+      && num * (x * x - y) === den * (x + y)
+  }),
+  ['several-variables-domain-1', 'several-variables-domain-2']
+    .map(id => `${id}:(${taskById(id).at.x},${taskById(id).at.y})`).join(' '))
+
+/*
+ * ONE CREDIT EDGE, AND THE ONE THAT IS ABSENT IS THE ARGUED HALF. Asserted per
+ * task, since both claims are about what the tasks do rather than about taste:
+ * all six substitute stated numbers into a rule, and only the two on the third
+ * point carry a domain condition.
+ */
+t('its credit edge reaches function-concept, which all six tasks earn',
+  FI.edges.some(e => e.kind === 'encompasses'
+    && e.from === 'functions-of-several-variables' && e.to === 'function-concept'
+    && !!e.rationale)
+  && FI_SV_TASKS.every(x => Object.keys(x.at ?? {}).length >= 2),
+  FI_SV_TASKS.map(x => `${x.id}:${Object.keys(x.at ?? {}).length}`).join(' '))
+t('and none reaches domain-and-range, which only two of the six would exercise',
+  !FI.edges.some(e => e.kind === 'encompasses'
+    && e.from === 'functions-of-several-variables' && e.to === 'domain-and-range')
+  && FI_SV_TASKS.filter(x => (x.domainConditions ?? []).length > 0).length === 2,
+  FI_SV_TASKS.filter(x => (x.domainConditions ?? []).length > 0).map(x => x.id).join(' '))
+/*
+ * THE PREREQUISITE THAT COULD COME HERE, BY NAME, and the one that could not
+ * is asserted in tests/atlas.mjs because it is an area `links` entry and this
+ * harness cannot see one. Named rather than counted for the usual reason: an
+ * edge accidentally hung off `function-concept` instead of `domain-and-range`
+ * would leave the root set, the edge count and `ontologyProblems` all
+ * unchanged while teaching that a pair's domain rests on nothing.
+ */
+t('the internal prerequisite is domain-and-range specifically, not merely some edge',
+  FI.edges.some(e => e.kind === 'prerequisite'
+    && e.from === 'domain-and-range' && e.to === 'functions-of-several-variables'
+    && !!e.promotedBy)
+  && cycles(FI).length === 0 && teachingOrder(FI) !== null,
+  FI.edges.filter(e => e.to === 'functions-of-several-variables')
+    .map(e => `${e.from}:${e.kind}`).join(' ') || 'MISSING')
+/*
+ * THE ROOT IS STILL ONE AND IT IS STILL `function-concept`, which is the claim
+ * a count cannot make. This concept hangs off `domain-and-range`, so the
+ * subject is now three branches on one root rather than two — and an edge
+ * misfiled onto the root itself would have left `roots(FI).length === 1` true.
+ */
+t('the subject still has one root and this concept hangs off the domain, not the root',
+  roots(FI).length === 1 && roots(FI)[0] === 'function-concept'
+  && prerequisitesOf(FI, 'functions-of-several-variables').join(',') === 'domain-and-range',
+  `roots ${roots(FI).join('/')}, needs `
+  + `${prerequisitesOf(FI, 'functions-of-several-variables').join('/')}`)
+
+t('all twelve subgoals ship the question written, not just the label',
+  FI_SV_SUBGOALS.length === 12
+  && FI_SV_SUBGOALS.every(s => typeof s.socratic === 'string'),
+  `${FI_SV_SUBGOALS.filter(s => !s.socratic).length} unwritten of ${FI_SV_SUBGOALS.length}`)
+t('and none contains its own answer by being an imperative with a mark on it',
+  FI_SV_SUBGOALS.every(s => isInterrogative(s.socratic)),
+  FI_SV_SUBGOALS.filter(s => !isInterrogative(s.socratic)).map(s => s.label).join('; '))
+t('the labels stay imperative, so the map still draws moves',
+  FI_SV_SUBGOALS.every(s => !isInterrogative(s.label)),
+  FI_SV_SUBGOALS.filter(s => isInterrogative(s.label)).map(s => s.label).join('; '))
+t('every subgoal says what its move establishes',
+  FI_SV_SUBGOALS.every(s => typeof s.detail === 'string' && s.detail.length > 0))
+/*
+ * NO FIGURE AND NO SPEED TARGET. The figure half is the load-bearing one here
+ * and is the reason this concept could be written at all: the node's `is` line
+ * promised level curves, and a `visualRef` naming one that does not exist is
+ * the placeholder types.ts forbids. So the picture stayed on the map and the
+ * algebra under it came here. No target either — all three points are
+ * judgements about which letter does what, and the arithmetic in each is one
+ * product or one division.
+ */
+t('no point claims a figure, which is why the level curves stayed on the map',
+  FI_SV_POINTS.every(p => p.visualRef === undefined
+    && p.automaticityTarget === undefined),
+  FI_SV_POINTS.map(p => `${p.id}:${p.visualRef ?? 'no figure'}`).join(' '))
+/*
+ * NOTHING HERE MENTIONS A CONTOUR, which is the boundary a reader can apply —
+ * the same shape as the `first term / common difference / common ratio` check
+ * the sigma group uses against the two sequence nodes that stayed. A level
+ * curve is `multivariable-calculus`'s to keep until somebody can draw one.
+ */
+t('and nothing here names a level curve, a contour or a surface',
+  !/level curve|contour|surface|graph of f/i.test(
+    JSON.stringify({ points: FI_SV_POINTS, tasks: FI_SV_TASKS, obj: FI_SV.objectives })),
+  'the picture has leaked into the concept that deliberately left it behind')
+/*
+ * AND THE REFUSAL THAT ELIMINATED THE BIGGEST CANDIDATE IS STILL IN THE FILE.
+ *
+ * `graphs-of-functions` had five dependents at this promotion, more than
+ * anything else ready, and was passed over on a written argument rather than on
+ * effort. Asserting the argument's presence is what stops the next run
+ * rediscovering the node, finding no trace of the reasoning, and either
+ * repeating the analysis or authoring it by accident. If it is ever overturned
+ * the overturning has to delete this assertion, which is the point.
+ */
+t('and the refusal that ruled out graphs-of-functions is still written down',
+  (() => {
+    const src = readFileSync(join(FRONTEND, 'lib', 'concepts', 'ontology-functions.ts'), 'utf8')
+    return /graphs-of-functions/.test(src)
+      && /cannot rule "the graph is increasing here"/.test(src)
+      && !FI.concepts.some(c => c.id === 'graphs-of-functions')
+  })(),
+  'the graphs refusal has gone from ontology-functions.ts without the node being authored')
 
 // ---------------------------------------------------------------------------
 
@@ -6214,12 +6453,18 @@ t('and it claims nothing back down to span, which the tasks would not support',
  * WHAT THIS SUITE CAN SEE is the subject half, and three claims are worth
  * having here because each would fail silently:
  *
- *  - It is a LEAF. The dot product forked the chain and the three dimensions
- *    were inserted into the middle of it; nothing in this ontology rests on the
- *    axioms. So the subject gains a second end, and `linear-independence` is
- *    its parent by NAME — hung off `vectors-and-spans` instead, which is the
+ *  - It WAS a LEAF, and is not one now. The dot product forked the chain and
+ *    the three dimensions were inserted into the middle of it; nothing in this
+ *    ontology rested on the axioms, so the subject gained a second end. The
+ *    twenty-second promotion wrote `basis-and-dimension` into this file and it
+ *    declares the axioms in its own `needs`, so they are an interior concept
+ *    with one dependent. The half of the claim that keeps working is the
+ *    PARENT, by NAME: hung off `vectors-and-spans` instead, which is the
  *    plausible mistake, it would gate the axioms behind span alone and leave
- *    out the one argument that does not look at what a vector is made of.
+ *    out the one argument that does not look at what a vector is made of. The
+ *    leaf half was one-sided — an assertion that nothing rests on this, which
+ *    the first thing that does refutes — so it goes red on success rather than
+ *    on a fault, and it is replaced below by the dependent's NAME.
  *  - It claims NO credit downward, which is the third `encompasses` refusal
  *    this subject has recorded. The precedent is next door: the thirteenth
  *    promotion's credit claim counts `n1*r1 + n2*r2 + n3*r3` and deliberately
@@ -6233,7 +6478,7 @@ t('and it claims nothing back down to span, which the tasks would not support',
 const VS = conceptById(VI, 'vector-spaces')
 const VS_POINTS = VS.knowledgePoints
 
-group('the twentieth promotion: the axioms, written as a leaf of the vectors subject')
+group('the twentieth promotion: the axioms, written into the vectors subject')
 t('it is a concept of this subject with material, not a seventh name in the list',
   !!VS && isTeachable(VI, 'vector-spaces') && isPractisable(VI, 'vector-spaces'),
   `${VS ? 'present' : 'ABSENT'}`)
@@ -6259,10 +6504,20 @@ t('its objectives name only evaluate, and evaluate really ships a task on every 
  * because the claim is that there is EXACTLY ONE parent and which it is. A set
  * comparison would be the same assertion with more ceremony; what the warning
  * is about is a MULTI-parent list, where edge order is not stable.
+ *
+ * THE OTHER HALF USED TO BE `dependentsOf(...).length === 0` and had to be
+ * rewritten by the twenty-second promotion, which is the lesson worth keeping
+ * out of this edit. "Nothing rests on this" is a one-sided claim: it is refuted
+ * by the first thing that does, so it goes red on SUCCESS rather than on a
+ * fault, and the suite reports authoring as breakage. Phrased over the
+ * dependent's NAME instead, it keeps catching the mistake that matters — the
+ * dimension hung off `vectors-and-spans` or off the plane rather than off the
+ * axioms — and survives the next promotion into the subject by being wrong
+ * about a name rather than about a count.
  */
-t('the axioms hang off independence and off nothing else here',
+t('the axioms hang off independence and off nothing else here, and the dimension off them',
   prerequisitesOf(VI, 'vector-spaces').join(' ') === 'linear-independence'
-  && dependentsOf(VI, 'vector-spaces').length === 0
+  && dependentsOf(VI, 'vector-spaces').map(c => c.id ?? c).join(' ') === 'basis-and-dimension'
   && teachingOrder(VI) !== null,
   `${prerequisitesOf(VI, 'vector-spaces').join(', ')} -> `
   + `${dependentsOf(VI, 'vector-spaces').map(c => c.id ?? c).join(', ') || 'nothing in here'}`)
@@ -6364,6 +6619,201 @@ t('every subgoal names a move rather than a step number, and no two in one examp
     && new Set(p.workedExample.subgoals.map(s => s.label)).size
       === p.workedExample.subgoals.length),
   VS_SUBGOALS.filter(s => s.label.length <= 20 || /^step\b/i.test(s.label))
+    .map(s => s.label).join(' | '))
+
+// ---------------------------------------------------------------------------
+
+/**
+ * `basis-and-dimension`, the twenty-second promotion — and the first chosen on
+ * RULABILITY with every other selector spent.
+ *
+ * The three selectors earlier promotions used are all dead. Every one of the
+ * ten journeys reads zero unwritten, so no route demanded it; the smallest area
+ * on the map is nine nodes against a stub floor of five, so nothing was frozen
+ * or nearly so; and about nineteen map nodes have every prerequisite written,
+ * so readiness narrowed the field to nineteen and no further. The node it was
+ * taken ahead of is `inner-product-spaces`, which TIES it on dependents (three
+ * each) and on edge cost (both of its `needs` are concepts of this ontology
+ * too), so neither of those broke it either. What broke it is that a dimension
+ * is a count, a coordinate is an exact quotient and an independence test is a
+ * product of integers, while length and angle in a general space are a square
+ * root and an inverse cosine — the two things this subject has refused to put
+ * in front of a learner since the dot product.
+ *
+ * WHAT THIS SUITE CAN SEE is the subject half. The map half — the area dropping
+ * to eight nodes, the root set going from two to three with only one member
+ * surviving, and the gate tightening onto this concept in seven places — is in
+ * tests/atlas.mjs, where the composed atlas is built.
+ *
+ * Four claims are worth having here because each would fail silently:
+ *
+ *  - THE PARENTS, BY NAME AND AS A SET. Two of them, so the comparison is a
+ *    sorted set rather than the single string the axioms use: `prerequisitesOf`
+ *    returns edge order, which is stable only by accident. The mistake it
+ *    catches is the concept hung off `vectors-and-spans` — plausible, since the
+ *    coordinate hunt IS a spanning question — which would gate it behind the
+ *    span without the independence test the coordinates divide by.
+ *  - THE CREDIT EDGE, TAKEN after three refusals in this file, and asserted
+ *    against the TASKS rather than against the prose. The claim is that two of
+ *    the six tasks have the cross-check as their whole arithmetic, so a
+ *    learner cannot produce a coordinate without producing the independence
+ *    number on the way.
+ *  - THAT IT IS ONE EDGE AND NOT THREE. `encompassedClosure` is transitive, so
+ *    the single edge credits `vectors-and-spans` at depth 2 and `plane-vectors`
+ *    at depth 3 with nothing else declared. A second edge straight to the span
+ *    would have been defensible on one task and would have added a duplicate
+ *    route; asserting the DEPTHS is what records that the transitivity was
+ *    checked rather than assumed.
+ *  - THE SAME-SIZE THEOREM IS DEMONSTRATED AND NOT PROVED. The exchange lemma
+ *    is not written, so the second point squeezes the plane's count from both
+ *    sides and says in its last subgoal that the general theorem is the same
+ *    squeeze. That shortfall is in the `covers` and in the concept header, and
+ *    the assertion here is the narrow mechanical half of it: both bounds are
+ *    tasks, so neither side of the squeeze is prose only.
+ */
+const BD = conceptById(VI, 'basis-and-dimension')
+const BD_POINTS = BD.knowledgePoints
+
+group('the twenty-second promotion: the dimension, written into the vectors subject')
+t('it is a concept of this subject with material, not an eighth name in the list',
+  !!BD && isTeachable(VI, 'basis-and-dimension') && isPractisable(VI, 'basis-and-dimension'),
+  `${BD ? 'present' : 'ABSENT'}`)
+t('three knowledge points numbered from 1, the shape every concept here but one has',
+  BD_POINTS.length === 3 && BD_POINTS.map(p => p.position).join(',') === '1,2,3',
+  `${BD_POINTS.length} points at ${BD_POINTS.map(p => p.position).join(',')}`)
+t('no point claims a figure, and none claims a timing target either',
+  BD_POINTS.every(p => p.visualRef === undefined && p.automaticityTarget === undefined),
+  BD_POINTS.filter(p => p.visualRef || p.automaticityTarget).map(p => p.id).join(' '))
+const BD_KINDS = new Set(BD_POINTS.flatMap(p => tasksForPoint(p.id)).map(x => x.kind))
+t('its objectives name only evaluate, and evaluate really ships a task on every point',
+  BD.objectives.length > 0
+  && BD.objectives.every(o => o.taskKinds.length > 0
+    && o.taskKinds.every(k => BD_KINDS.has(k)))
+  && [...BD_KINDS].join(',') === 'evaluate'
+  && BD_POINTS.every(p => tasksForPoint(p.id).length > 0),
+  BD.objectives.map(o => `${o.id}:${o.taskKinds.join('+')}`).join(' ')
+  + ` against ${[...BD_KINDS].join('+')}`)
+/*
+ * The parents as a sorted SET and not as an ordered string, which is the
+ * opposite choice from the axioms twenty lines up and for the stated reason:
+ * there are two of them, and `prerequisitesOf` returns edge order.
+ *
+ * The span is asserted from BOTH sides, which is what makes the claim about the
+ * plausible mistake rather than about the current edge list. It must not be a
+ * DIRECT parent — hanging the coordinate hunt off `vectors-and-spans` is the
+ * tempting edge, since finding weights IS a spanning question, and it would
+ * gate the concept behind the span without the independence test every
+ * coordinate divides by. And it must still be reached transitively, through
+ * independence, or the concept would rest on nothing that forms a combination.
+ * A one-sided version of this would pass on an edge list with both.
+ */
+t('it rests on the axioms and on independence, reaching the span only through them',
+  prerequisitesOf(VI, 'basis-and-dimension').slice().sort().join(' ')
+    === 'linear-independence vector-spaces'
+  && !prerequisitesOf(VI, 'basis-and-dimension').includes('vectors-and-spans')
+  && allPrerequisitesOf(VI, 'basis-and-dimension').includes('vectors-and-spans')
+  && roots(VI).length === 1 && roots(VI)[0] === 'cartesian-plane'
+  && teachingOrder(VI) !== null,
+  `${prerequisitesOf(VI, 'basis-and-dimension').join(', ')} | roots ${roots(VI).join(', ')}`)
+t('it claims credit back down to independence, and two of its tasks bear the claim out',
+  edgesOfKind(VI, 'encompasses').some(e =>
+    e.from === 'basis-and-dimension' && e.to === 'linear-independence' && !!e.rationale)
+  && ['basis-coordinate-1', 'one-vector-is-not-enough-1']
+    .every(id => /u1\*[vw]2 - u2\*[vw]1/.test(taskById(id).given))
+  && taskById('basis-coordinate-1').given.includes(taskById('cross-check-independent-1').given),
+  edgesOfKind(VI, 'encompasses').map(e => `${e.from}=>${e.to}`).join(' '))
+/*
+ * The transitivity, asserted by DEPTH. One declared edge, three concepts
+ * credited — so the claim that a second edge to the span would have been a
+ * duplicate route is checked rather than asserted in a comment, and a future
+ * reader adding one will see the depth change.
+ */
+t('one edge credits three concepts, the span and the components arriving transitively',
+  [...encompassedClosure(VI, 'basis-and-dimension')]
+    .map(([id, depth]) => `${id}:${depth}`).sort().join(' ')
+    === 'linear-independence:1 plane-vectors:3 vectors-and-spans:2'
+  && edgesOfKind(VI, 'encompasses').filter(e => e.from === 'basis-and-dimension').length === 1,
+  [...encompassedClosure(VI, 'basis-and-dimension')]
+    .map(([id, depth]) => `${id}:${depth}`).join(' '))
+
+group('the twenty-second promotion is gradable with no worker')
+const BD_TASKS = BD_POINTS.flatMap(p => tasksForPoint(p.id))
+t('six tasks, two on each of the three points', BD_TASKS.length === 6
+  && BD_POINTS.every(p => tasksForPoint(p.id).length === 2),
+  `${BD_TASKS.length}`)
+t('all six are evaluate, so none of them claims a form',
+  BD_TASKS.every(x => x.kind === 'evaluate' && x.form === undefined),
+  BD_TASKS.map(x => `${x.id}:${x.kind}`).join(', '))
+t('every reference is exactly reproducible from the given — no worker consulted',
+  BD_TASKS.every(x => {
+    const at = {}
+    for (const [name, raw] of Object.entries(x.at)) at[name] = parseExpression(raw, [])
+    const truth = exactValue(substitute(parseExpression(x.given, x.variables.map(v => v.name)), at))
+    const claimed = exactValue(parseExpression(x.reference, x.variables.map(v => v.name)))
+    return truth !== null && claimed !== null && showExact(truth) === showExact(claimed)
+  }),
+  BD_TASKS.map(x => x.id).join(', '))
+const bdRulings = await Promise.all(BD_TASKS.map(x => ruleEvaluate(x, x.reference, NO_WORKER)))
+t('a correct answer is ruled correct with no worker configured',
+  bdRulings.every(r => r.verdict.ruling === 'correct'),
+  bdRulings.map((r, i) => `${BD_TASKS[i].id}:${r.verdict?.ruling ?? r.status}`).join(', '))
+t('nothing here takes a square root, so the no-worker contract cost no choosing',
+  BD_TASKS.every(x => !/\^\(1\/2\)/.test(x.given) && !/sqrt/.test(x.given)),
+  BD_TASKS.filter(x => /\^\(1\/2\)|sqrt/.test(x.given)).map(x => x.id).join(' '))
+/*
+ * THE ONE NUMBER THAT HAD TO BE CHOSEN, and the assertion is what keeps the
+ * choice from being undone by somebody adding a task.
+ *
+ * A coordinate is `(v2*w1 - v1*w2)/(u1*v2 - u2*v1)`, which is rational only
+ * when the numerator is a multiple of the cross-check — 7 for this basis. So w
+ * was not picked: the weights were, and w = 2u − v = (3, −5) computed from
+ * them. The failure to catch is a SECOND coordinate task on a target chosen
+ * first, which would divide into sevenths, rule inconclusive rather than wrong,
+ * and be reported as a worker-only task somewhere else entirely. Checked as
+ * "the quotient task's answer is a whole number", which is the property the
+ * choice was made to secure.
+ */
+t('the one task that divides lands on a whole number, which is why w was derived and not picked',
+  /\//.test(taskById('basis-coordinate-1').given)
+  && /^-?\d+$/.test(taskById('basis-coordinate-1').reference)
+  && BD_TASKS.filter(x => /\//.test(x.given)).length === 1,
+  BD_TASKS.filter(x => /\//.test(x.given)).map(x => `${x.id}:${x.reference}`).join(' '))
+/*
+ * And the verdict spread, which the twentieth promotion's note argues for: a
+ * task set whose every answer is 0 teaches the arithmetic and hides the
+ * decision. Two of these six are 0 and they mean different things — redundant
+ * in one, "already in the plane those two span" in the other — so the zero
+ * carries information rather than being a free mark.
+ */
+t('no answer in the set is reachable by answering zero to everything',
+  BD_TASKS.filter(x => x.reference === '0').length === 2
+  && new Set(BD_TASKS.map(x => x.reference)).size === 5,
+  BD_TASKS.map(x => `${x.id}:${x.reference}`).join(' '))
+/*
+ * BOTH BOUNDS OF THE SQUEEZE ARE TASKS, which is the mechanical half of "the
+ * same-size theorem is demonstrated rather than proved". The theorem itself is
+ * not rulable here and the concept says so; what must not happen is one side of
+ * the argument existing only in prose, since then the point would look like two
+ * claims and be evidenced as one.
+ */
+t('both bounds on the size of a basis are tasks, so neither side of the squeeze is prose only',
+  tasksForPoint('every-basis-of-a-space-is-the-same-size')
+    .map(x => x.id).slice().sort().join(' ')
+    === 'one-vector-is-not-enough-1 three-plane-vectors-dependent-1',
+  tasksForPoint('every-basis-of-a-space-is-the-same-size').map(x => x.id).join(' '))
+const BD_SUBGOALS = BD_POINTS.flatMap(p => p.workedExample.subgoals)
+t('all twelve of its subgoals ship the question written, not just the label',
+  BD_SUBGOALS.length === 12 && BD_SUBGOALS.every(s => typeof s.socratic === 'string'),
+  `${BD_SUBGOALS.filter(s => !s.socratic).length} unwritten of ${BD_SUBGOALS.length}`)
+t('and every one of them ends on its question rather than on a statement',
+  BD_SUBGOALS.every(s => isInterrogative(s.socratic)),
+  BD_SUBGOALS.filter(s => !isInterrogative(s.socratic)).map(s => s.label).join('; '))
+t('every subgoal names a move rather than a step number, and no two in one example repeat',
+  BD_POINTS.every(p =>
+    p.workedExample.subgoals.every(s => s.label.length > 20 && !/^step\b/i.test(s.label))
+    && new Set(p.workedExample.subgoals.map(s => s.label)).size
+      === p.workedExample.subgoals.length),
+  BD_SUBGOALS.filter(s => s.label.length <= 20 || /^step\b/i.test(s.label))
     .map(s => s.label).join(' | '))
 
 rmSync(outDir, { recursive: true, force: true })

@@ -177,10 +177,20 @@ export const REGIONS: Region[] = [
     // it into `vectors-and-independence`. An anchor must be a node of `area`,
     // so the slot had to be refilled rather than left — `armatureProblems` says
     // so loudly, which is the one check this table has that the game's copy
-    // does not. `basis-and-dimension` replaces it because it inherited the
+    // does not. `basis-and-dimension` replaced it because it inherited the
     // departing node's place in the area exactly: it was the node directly
-    // above the axioms and is now one of the two roots of the area view.
-    anchors: ['basis-and-dimension', 'eigenvalues', 'diagonalisation'],
+    // above the axioms and became one of the two roots of the area view.
+    //
+    // AND THEN IT WENT THE SAME WAY, into the same subject, two promotions
+    // later — so this slot has now turned over twice for the same reason and
+    // the replacement is chosen on the same rule. `rank-nullity` inherited the
+    // departing node's place exactly as it had inherited the axioms': it was
+    // the node directly above it and is now one of the three roots of the area
+    // view. The pattern worth reading off this is that a region anchoring on
+    // the ROOT of a growing area will be refilled every time that area is
+    // authored out from underneath it, and the refill is always the node that
+    // was next.
+    anchors: ['rank-nullity', 'eigenvalues', 'diagonalisation'],
     because: 'The Runeforger guild fabricates objects that conduct aether — shields, ignition surfaces, industrial equipment — which is arrays of conducting elements and what they do to what passes through them. A city named The Stalwart Machine keeps its mathematics in matrices.',
   },
   {

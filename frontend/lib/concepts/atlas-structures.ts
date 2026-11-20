@@ -26,20 +26,14 @@ const LINEAR_ALGEBRA: MapArea = {
     'authored as `gaussian-elimination` in `expressions-and-equations`, since the engine has ' +
     'no matrix type and every question the method can be asked is about a number the ' +
     'elimination produces, which makes the material equations rather than grids. Nor are the ' +
-    'AXIOMS: `vector-spaces` is authored in `vectors-and-independence`, the subject that made ' +
-    'the span and independence arguments the axioms are a summary of. So this area now begins ' +
-    'at the first question the axioms do not answer — how many independent directions a space ' +
-    'has — and the definition of a space is somewhere a learner arrives from the plane rather ' +
-    'than from the top of this list.',
+    'AXIOMS, nor the DIMENSION: `vector-spaces` and `basis-and-dimension` are both authored in ' +
+    '`vectors-and-independence`, the subject that made the span and independence arguments the ' +
+    'axioms are a summary of and that owns the cross-check every coordinate divides by. So this ' +
+    'area now begins one question later again — not "how many independent directions does a ' +
+    'space have" but what a MAP does to them, which is a rank and a kernel — and both the ' +
+    'definition of a space and the count of its directions are somewhere a learner arrives from ' +
+    'the plane rather than from the top of this list.',
   nodes: [
-    {
-      id: 'basis-and-dimension',
-      match: /\b(basis \(linear algebra\)|dimension \(vector space\)|linear independence)\b/i,
-      name: 'Basis and dimension',
-      is: 'A minimal spanning set, and the theorem that every basis of a space has the same size.',
-      needs: ['vector-spaces', 'linear-independence'],
-      terms: 'basis dimension coordinates change of basis',
-    },
     {
       id: 'rank-nullity',
       match: /\b(rank(–|-)nullity|rank \(linear algebra\)|kernel \(linear algebra\))\b/i,
@@ -244,6 +238,81 @@ const LINEAR_ALGEBRA: MapArea = {
    * contains, and not in `links`, which hard-codes `kind: 'prerequisite'` — so
    * a node carrying one can only be filed in the subject holding the far end.
    * This one carried none, so the filing was decided on content.
+   *
+   * ── AND A SEVENTH, WHICH WAS ONE OF THE TWO ROOTS THE SIXTH LEFT ─────────
+   *
+   * `basis-and-dimension` LEFT THIS AREA WHEN IT WAS AUTHORED, AND HAD TO. It
+   * is a concept of `vectors-and-independence` now, in ontology-vectors.ts, so
+   * a node of the same id here would collide with it and `atlasProblems`
+   * reports that as an error rather than merging the two — the authored copy
+   * would be shadowed by a node with no knowledge points, and a written subject
+   * would silently read as unteachable.
+   *
+   * THE PARAGRAPH TWO SECTIONS UP IS NOW HALF HISTORY, and it is left standing
+   * rather than rewritten because the claim it made was true and is the reason
+   * this departure cost nothing. It said the two edges INTO `vector-spaces`
+   * survived that promotion untouched, `basis-and-dimension` and
+   * `inner-product-spaces` each declaring one in their own `needs`. One of
+   * those two declarations has now gone with its node — which is the same rule
+   * from the other side, and the edge did not go with it: `vector-spaces` is a
+   * concept of the subject this one joined, so the stranded edge is an ordinary
+   * `EDGES` entry there. The surviving half of that sentence is
+   * `inner-product-spaces`, which still declares it here.
+   *
+   * EIGHT NODES AFTER, against a stub floor of five, so the area keeps three
+   * spare. Three departures have now cost it three of its six nodes of
+   * headroom. The next one would leave two and the one after that would freeze
+   * the area, so this is the point at which the count starts mattering — and of
+   * the eight that remain, exactly one has every prerequisite written
+   * (`inner-product-spaces`), so there is one more departure available before
+   * anything else here could be authored at all.
+   *
+   * WHAT IT STRANDED WAS BOTH OF ITS `needs` AND THERE IS NO `links` ENTRY FOR
+   * EITHER. The node declared `vector-spaces` and `linear-independence`, and
+   * both are authored concepts of the subject it went to — so both edges are
+   * declared in that ontology's own `EDGES` and this area owes nothing. Worth
+   * noting against the sixth departure's note above, which calls a single
+   * stranded edge "the cheapest shape a promotion can have": the cost is about
+   * where each `needs` POINTS and not about how many there are, and two edges
+   * landing in one ontology is as cheap as one.
+   *
+   * NOTHING WAS HANDED BACK. No `links` entry of this area named
+   * `basis-and-dimension` at either end, so there was no duplicate edge to
+   * delete — the case the first entry below records, and the one no test
+   * catches.
+   *
+   * THE THREE EDGES POINTING IN SURVIVED. `rank-nullity` and `eigenvalues` are
+   * nodes of this area and `field-extensions` is a node of `abstract-algebra`;
+   * all three name the departing concept in their OWN `needs`, so those edges
+   * are declared on nodes that remain and resolve across the file boundary in
+   * `composeAtlas` untouched.
+   *
+   * THE AREA VIEW NOW HAS THREE ROOTS WHERE IT HAD TWO, AND ONLY ONE IS THE
+   * SAME ONE. The departing node was a root itself, so it left the set; and it
+   * was the last in-area prerequisite of `rank-nullity` (whose other `needs` is
+   * `gaussian-elimination`, authored elsewhere) and of `eigenvalues` (whose
+   * others are `determinant` and `polynomial-roots`, likewise), so both of them
+   * are now rooted. Two out, one in, two newly in: the set went from
+   * {`basis-and-dimension`, `inner-product-spaces`} to {`eigenvalues`,
+   * `inner-product-spaces`, `rank-nullity`}. A promotion out of a root both
+   * SHRINKS the set by its own member and SPLITS it into the dependents it was
+   * the last local prerequisite of, and both halves happened here at once —
+   * which is the reason tests/atlas.mjs asserts the set by named membership and
+   * never by its length. Two became three, and a count saying so would make no
+   * claim about which three.
+   *
+   * `confusedWith` and `exercises` on the departing node: NEITHER. Checked
+   * before deleting it, for the reason the sixth departure's note gives. The
+   * absence of `exercises` chose nothing here either, both `needs` pointing at
+   * one ontology already.
+   *
+   * IT WAS ALSO AN `armature.ts` ANCHOR, which is the fifth file a promotion
+   * can touch and the only one that is not in this directory's own dependency
+   * graph. Krull anchored on it, an anchor must be a node of its region's
+   * `area`, and `armatureProblems` fails loudly rather than quietly — so the
+   * slot was refilled with `rank-nullity`, which inherited the departing node's
+   * place in the area exactly as the departing node inherited the axioms'. That
+   * is twice running for this region, and the comment there says so.
    */
   links: [
     /*
