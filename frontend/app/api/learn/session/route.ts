@@ -6,7 +6,7 @@ import { composeAtlas } from '@/lib/concepts/atlas'
 import { getOntology, ONTOLOGIES } from '@/lib/concepts/ontology'
 import { conceptById } from '@/lib/concepts/registry'
 import { assemble, summarise } from '@/lib/concepts/scheduling'
-import { liveClaims, loadStrengths, loadTraversal, pendingReviewCount } from '@/lib/concepts/store'
+import { liveClaims, loadJourney, loadStrengths, pendingReviewCount } from '@/lib/concepts/store'
 import { frontier, openingDoors, traversalProgress } from '@/lib/concepts/traversal'
 import { verifierConfig } from '@/lib/concepts/verify'
 
@@ -49,20 +49,22 @@ export const dynamic = 'force-dynamic'
 const DEFAULT_ONTOLOGY = ONTOLOGIES[0] ?? RATIONAL_EXPRESSIONS
 
 /**
- * The traversal's graph and storage key, which must match app/api/learn/traverse
- * EXACTLY.
+ * The graph a traversal walks, which must match app/api/learn/traverse exactly.
  *
- * They are two halves of one feature: that route writes the world and this one
- * displays it. They were already obliged to agree and happened to, because both
- * said `ONTOLOGY.subject.id` and both meant the practised subject. Now that a
- * traversal spans every authored subject, saying it twice in two files is the
- * whole risk — so both say the same two lines and this comment is on both.
+ * These two are halves of one feature: that route writes the world and this
+ * one displays it. The previous version of this comment said "saying it twice
+ * in two files is the whole risk" and then said it twice anyway — the KEY and
+ * the adoption of a pre-widening walk were duplicated, one copy drifted, and
+ * RPG mode offered a landfall it then refused. Both now live in store.ts as
+ * `JOURNEY_KEY` and `loadJourney`, said once.
  *
- * See the traverse route for why the mapped areas are excluded and why the key
- * is held apart from the composed subject's own id.
+ * The graph itself is still duplicated, because it is a composition rather
+ * than a value and both routes genuinely need it. If it ever drifts the
+ * symptom is the same shape: one side naming concepts the other cannot find.
+ *
+ * See the traverse route for why the mapped areas are excluded.
  */
 const TRAVERSAL_ONTOLOGY = composeAtlas([], ONTOLOGIES)
-const TRAVERSAL_KEY = 'armature'
 
 export async function GET(req: NextRequest) {
   const userId = await getUserFromToken(req.headers.get('authorization'))
@@ -101,7 +103,7 @@ export async function GET(req: NextRequest) {
   try {
     ;[strengths, world, awaitingReview] = await Promise.all([
       loadStrengths(userId),
-      loadTraversal(userId, TRAVERSAL_KEY),
+      loadJourney(userId),
       // Counted here so the tab can carry a badge. A review queue nobody can see
       // the size of is a review queue nobody works, and the rows in it are the
       // engine's own failures — the most informative ones in the table.

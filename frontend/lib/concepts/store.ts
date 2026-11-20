@@ -484,6 +484,48 @@ export async function loadTraversal(userId: string, subjectId: string): Promise<
   return coerceWorld(world)
 }
 
+/**
+ * The journey's storage key, and the one it grew out of.
+ *
+ * A traversal used to be per-subject and walked `rational-expressions` alone.
+ * Widening it to every authored subject moved it to its own key, which leaves
+ * every existing row untouched — see app/api/learn/traverse.
+ */
+export const JOURNEY_KEY = 'armature'
+/** Literal rather than imported: ontology.ts is large and this is one string. */
+const LEGACY_JOURNEY_KEY = 'rational-expressions'
+
+/**
+ * The journey, with the one-time adoption of a pre-widening walk.
+ *
+ * ── WHY THIS IS A FUNCTION AND NOT TWO COPIES ─────────────────────────────
+ *
+ * It was two copies, for about a day, and they disagreed. The traverse route
+ * adopted the old world; the session route loaded only the new key. So anyone
+ * holding a pre-widening traversal was shown "you are nowhere yet, choose
+ * where to make landfall" by the session route and then told "This traversal
+ * has already started. Offer a key instead." by the traverse route when they
+ * clicked. RPG mode was unplayable for exactly the people who had used the
+ * feature before.
+ *
+ * The session route even carried a comment saying the two halves "must match
+ * EXACTLY" and that "saying it twice in two files is the whole risk". Saying
+ * it twice was still the implementation. So now it is said once, here, and
+ * both routes call this — which is the only version of that warning that
+ * cannot be ignored by the next person in a hurry.
+ *
+ * The old row is read but never written and never deleted: adoption is a
+ * read-through, so reverting the widening leaves that walk exactly where it
+ * was.
+ */
+export async function loadJourney(userId: string): Promise<TraversalWorld> {
+  const [fresh, legacy] = await Promise.all([
+    loadTraversal(userId, JOURNEY_KEY),
+    loadTraversal(userId, LEGACY_JOURNEY_KEY),
+  ])
+  return fresh.route.length === 0 && legacy.route.length > 0 ? legacy : fresh
+}
+
 export async function saveTraversal(
   userId: string, subjectId: string, world: TraversalWorld,
 ): Promise<void> {

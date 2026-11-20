@@ -4757,6 +4757,38 @@ t('at least one region has material written, or the map is a lie',
  * harness cannot load. Deliberately narrow: it asserts the invariant — no
  * user-facing string says Armature — rather than pinning every word of copy.
  */
+/*
+ * The two routes that share one journey must load it the same way.
+ *
+ * They did not, for a day. The traverse route adopted a pre-widening walk and
+ * the session route did not, so a learner holding one was shown "you are
+ * nowhere yet, choose where to make landfall" and then told "This traversal
+ * has already started" when they clicked. Both halves typechecked, both passed
+ * every test, and RPG mode was unplayable for precisely the people who had
+ * used the feature before.
+ *
+ * Source text, because the thing to hold is which FUNCTION they call —
+ * `loadJourney`, where the adoption lives, never `loadTraversal` underneath
+ * it. There is no behaviour here to assert without a database.
+ */
+const JOURNEY_ROUTES = ['app/api/learn/session/route.ts', 'app/api/learn/traverse/route.ts']
+const journeySources = JOURNEY_ROUTES.map(p => ({ p, text: readFileSync(join(FRONTEND, p), 'utf8') }))
+
+t('both journey routes load it through loadJourney',
+  journeySources.every(s => /loadJourney\(userId\)/.test(s.text)),
+  journeySources.filter(s => !/loadJourney\(userId\)/.test(s.text)).map(s => s.p).join(', '))
+
+/* Calling loadTraversal directly is how the adoption gets skipped. The shared
+   loader is the only caller that should name it. */
+const rawLoaders = journeySources.filter(s => /\bloadTraversal\(/.test(s.text))
+t('neither route reaches past it to loadTraversal',
+  rawLoaders.length === 0, rawLoaders.map(s => s.p).join(', '))
+
+/* And the key is named once. Two literals are what drifted. */
+const ownKeys = journeySources.filter(s => /=\s*'armature'/.test(s.text))
+t('neither route keeps its own copy of the storage key',
+  ownKeys.length === 0, ownKeys.map(s => s.p).join(', '))
+
 const UI_FILES = ['app/learn/page.tsx', 'app/page.tsx', 'components/concepts/ArmatureMap.tsx']
 const uiSources = UI_FILES.map(p => ({ p, text: readFileSync(join(FRONTEND, p), 'utf8') }))
 
