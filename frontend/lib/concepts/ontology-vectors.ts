@@ -399,6 +399,62 @@
  * subgoal that the general theorem is the same squeeze in any space. The
  * exchange lemma that makes that a proof is not written, and a worked example
  * claiming it would be a worked example that does not work.
+ *
+ * ── AND THE NINTH, WHICH OVERTURNS THE REFUSAL WRITTEN DIRECTLY ABOVE ─────
+ *
+ * `inner-product-spaces` was a node of `linear-algebra` and is the last concept
+ * below. The paragraph above it is the twenty-second promotion's own account of
+ * why it took the dimension INSTEAD of this one, and it is left standing
+ * because the comparison it made was fair and the sentence that decided it was
+ * not:
+ *
+ *   the inner-product concept's content is length and angle in a general
+ *   space, which is square roots and an inverse cosine — the two things this
+ *   subject has refused to put in front of a learner since the dot product.
+ *
+ * WHICH HALF OF THAT EXPIRED. The refusal names the SHAPE of an answer — a
+ * root, an inverse cosine — and tests/atlas.mjs records four refusals of
+ * exactly that form that all turned out to be overturnable, against one
+ * (`linear-inequalities`) that names a MOVE and still binds. A shape can be
+ * swapped for a deciding number; a move cannot. And the swap here is not a
+ * dodge, because length and angle are what an inner product YIELDS and not
+ * what it IS. What it is, is a rule with three properties, and the three
+ * questions that follow from the properties alone are all integer arithmetic:
+ * what number does a chosen rule return, which pairs does it send to zero, and
+ * what coefficient splits one vector along another. Not one task below takes a
+ * root, which is the same contract `vector-spaces` and `basis-and-dimension`
+ * each hold and is asserted per promotion rather than assumed.
+ *
+ * WHAT IS CARRIED RATHER THAN OVERTURNED is the angle, and that matters more
+ * than the overturn does. Nothing here asks for one, nothing here converts a
+ * quotient into degrees, and the third point's last subgoal says so by pointing
+ * at `24/25` — the projection coefficient comes out `13/7` under the weighted
+ * rule and `13/7` IS the answer, exactly as the cosine's quotient was. So the
+ * boundary sentence in `covers` is unchanged; it was never the inner product
+ * that pushed against it.
+ *
+ * WHY HERE. Both of its `needs` — `vector-spaces` and `dot-product-geometry` —
+ * are concepts of this file, so both stranded edges are ordinary `EDGES`
+ * entries and no area `links` entry is owed, which is the cheapest shape a
+ * promotion has and is the same shape the two before it had. The content
+ * argument runs the same way: the cosine point already SPLIT b into a multiple
+ * of a plus something perpendicular, used that split to derive the identity,
+ * and never computed one. This is the concept that computes it. The
+ * subject-creating test does not pass either — nothing in this file's boundary
+ * sentences excludes a general inner product, and the one sentence that came
+ * close was the refusal above, which is prose rather than a boundary.
+ *
+ * THE THREE POINTS, AND WHAT IS NOT AMONG THEM. The three properties and a
+ * weighted rule that satisfies them; orthogonality as a fact about a pair AND a
+ * rule; and the projection with its orthogonal remainder, which is
+ * Gram–Schmidt on two vectors. GRAM–SCHMIDT IN GENERAL IS NOT HERE, and it is
+ * named in the node's `terms`, so the shortfall is stated rather than left to
+ * be found. The third vector needs two projections subtracted and introduces no
+ * new idea; the induction that turns the two-vector step into an algorithm is
+ * where a basis of three starts mattering, and that is a change of basis and a
+ * matrix. NOR IS THE NORM, for the reason the overturn above gives: `⟨u, u⟩` is
+ * here and is where positivity gets used, and `√⟨u, u⟩` is the quantity whose
+ * shape the subject has declined since the dot product.
  */
 
 import type { Concept, ConceptEdge, ConceptOntology, Subject } from './types'
@@ -431,7 +487,15 @@ const subject: Subject = {
     'a space of functions has no finite basis at all. Not the CHANGE of basis, which is a ' +
     'matrix acting on an address and belongs with the matrices; and the same-size theorem is ' +
     'demonstrated in the plane rather than proved in general, the exchange argument that would ' +
-    'prove it being somewhere this build does not go.',
+    'prove it being somewhere this build does not go. It ends by generalising the one product ' +
+    'above: an inner product is any rule obeying three properties, the dot product is one of ' +
+    'them and a weighted rule on the same plane is another, so a right angle turns out to be a ' +
+    'fact about a PAIR AND A RULE rather than about two arrows — and the split of one vector ' +
+    'into a multiple of another plus a perpendicular remainder, which the cosine identity ' +
+    'assumed and never computed, is forced by the properties and so comes out differently under ' +
+    'each rule. Not the NORM and not Gram–Schmidt past two vectors: the first is a square root ' +
+    'of a product that is here, and the second subtracts two projections instead of one and ' +
+    'needs the change of basis to become an algorithm.',
   medium: 'theorem',
   facetName: 'Concept',
   facetDoes: 'Which concept the statement has to be about.',
@@ -2019,7 +2083,14 @@ const CONCEPTS: Concept[] = [
        * second point below. Neither widens the claim to a bare word — "Basis",
        * "Dimension", "Orthonormal basis" and "Hausdorff dimension" all stay
        * out, and the last two matter: orthonormality is `inner-product-spaces`,
-       * still mapped, and a fractal dimension is not this count.
+       * and a fractal dimension is not this count.
+       *
+       * "STILL MAPPED" is what this said about that concept and it is authored
+       * now, the promotion after this one, at the foot of this file. The
+       * reservation is therefore unchanged and still unfulfilled: that
+       * concept's pattern was carried verbatim from its node and does not reach
+       * "Orthonormal basis" either, so the article is claimed by nobody. The
+       * note beside it says why widening was left as its own change.
        */
       hint: 'basis dimension coordinates change of basis',
       match: /\bbasis \(linear algebra\)|\bdimension \(vector space\)|\bchange of basis\b|\bdimension theorem\b/i,
@@ -2304,6 +2375,327 @@ const CONCEPTS: Concept[] = [
           answer:
             '2 — {a, b} and {u, v} are both bases of W and both have two elements, while every ' +
             'element of W is written with three coordinates',
+        },
+      },
+    ],
+  },
+
+  {
+    id: 'inner-product-spaces',
+    name: 'Inner products and orthogonality',
+    subjectId: subject.id,
+    scope: {
+      id: 'inner-product-spaces',
+      label: 'Inner products and orthogonality',
+      /*
+       * Carried verbatim from the map node, which is what three of the four
+       * promotions into this file did and is the right default: the pattern
+       * decides against an article title, so widening it in the same edit that
+       * makes the material appear leaves no way to say which change moved the
+       * title table. `basis-and-dimension` is the exception and it narrowed
+       * rather than widened, because its pattern had a FAULT — a `\b` after a
+       * closing parenthesis, which matched only one of three alternatives.
+       *
+       * Checked for that same fault here before carrying it, since the trap is
+       * invisible otherwise: `fidelityMismatches` asks only whether a checked
+       * concept HAS a pattern, and the recognition figure counts patterns
+       * rather than testing them. All three alternatives end in a word
+       * character — "product", "orthogonalisation", "schmidt" — so the
+       * trailing `\b` is a real boundary for each, and tests/atlas.mjs now
+       * carries title rows for two of them rather than leaving that reasoned
+       * about.
+       *
+       * WHAT IT DOES NOT REACH, stated because the previous promotion promised
+       * it would. The comment beside `basis-and-dimension`'s pattern keeps
+       * "Orthonormal basis" out of the dimension on the ground that
+       * orthonormality is this concept — and this pattern does not claim that
+       * title either, nor the bare "Orthogonality", since `orthogonali[sz]ation`
+       * wants the derived noun. So that article is currently claimed by nobody.
+       * Widening is a one-word change and is deliberately NOT made here: it
+       * would move the title table in the same commit as the material, which is
+       * the attribution this file protects.
+       */
+      hint: 'inner product orthogonal gram schmidt projection orthonormal',
+      match: /\b(inner product|orthogonali[sz]ation|gram(–|-)schmidt)\b/i,
+    },
+    fidelity: 'checked',
+    /*
+     * EVERY OBJECTIVE NAMES ONLY `evaluate`, as the two concepts above it do
+     * and for the reason stated there: the build ships no `justify` task
+     * anywhere, so an objective naming that kind names an observation that
+     * cannot be made.
+     *
+     * The statements are written to what `evaluate` can evidence, which took
+     * the same care it took one concept up. "Is this rule an inner product" and
+     * "are these two perpendicular" are the sentences the material is about and
+     * neither is a number. What a task can return is the number that DECIDES
+     * them — the value a candidate rule hands back on a vector and itself, the
+     * two values one pair returns under two rules, the zero a remainder
+     * returns — so that is what the objectives claim, and the deciding is in
+     * the `socratic` phrasings, asked by a tutor and marked by nothing.
+     */
+    objectives: [
+      {
+        id: 'produce-the-number-a-chosen-rule-returns',
+        statement:
+          'Produce the value a weighted inner product returns on a pair of plane vectors, and ' +
+          'the value that disqualifies a candidate rule by making some non-zero vector\'s ' +
+          'product with itself negative.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'produce-the-two-values-that-disagree-about-a-right-angle',
+        statement:
+          'Produce the two values ONE pair of vectors returns under two different inner ' +
+          'products, one of them zero and one of them not — which is what makes a right angle ' +
+          'a fact about a pair and a rule rather than about two arrows.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'produce-the-coefficient-and-the-zero-it-was-solved-for',
+        statement:
+          'Produce the coefficient that splits one vector into a multiple of another plus a ' +
+          'remainder, and the value that remainder\'s inner product with the other returns — ' +
+          'which is the zero the coefficient was chosen to force.',
+        taskKinds: ['evaluate'],
+      },
+    ],
+    knowledgePoints: [
+      {
+        id: 'an-inner-product-is-three-properties-and-not-a-formula',
+        conceptId: 'inner-product-spaces',
+        statement:
+          'An inner product on a real vector space is a rule ⟨u, v⟩ taking two vectors to a ' +
+          'number, obeying three properties: it is symmetric, it is linear in each slot, and it ' +
+          'is positive-definite — ⟨u, u⟩ > 0 for every u except the zero vector. The dot product ' +
+          'obeys all three. So does the weighted rule ⟨u, v⟩ = 2u₁v₁ + 3u₂v₂ on the same plane, ' +
+          'and so does the integral of a product of two functions. This is the axioms\' move made ' +
+          'once more: every consequence drawn from the three properties holds for all of them, ' +
+          'with no argument repeated.',
+        position: 1,
+        /*
+         * No `automaticityTarget` on any of the three points, which follows the
+         * two concepts above rather than the two below the dot product. The
+         * arithmetic here is a weighted sum and a quotient, both timed where
+         * they are taught, and what this concept adds is a TEST, a
+         * disagreement and a derivation. A timing target on "which property
+         * does that refute" measures typing, which is the case types.ts names
+         * when it argues the field should usually be absent.
+         */
+        workedExample: {
+          problem:
+            'Take ⟨u, v⟩ = 2u₁v₁ + 3u₂v₂ on the plane, with u = (1, 4) and v = (5, −2). Find ' +
+            '⟨u, v⟩ and ⟨u, u⟩, and then say which property the rule 2u₁v₁ − 3u₂v₂ fails.',
+          subgoals: [
+            {
+              label: 'Read the weights off the rule before substituting anything',
+              detail:
+                'The rule pairs the components by position exactly as the dot product does — ' +
+                'first with first, second with second — and then weights the two products ' +
+                'differently: 2 on the first, 3 on the second. Nothing is paired across, and ' +
+                'setting both weights to 1 would give the dot product back, so the dot product ' +
+                'is one member of a family rather than the definition of the family.',
+              socratic:
+                'The rule is 2u₁v₁ + 3u₂v₂. Which two of the four numbers in u and v does the 2 ' +
+                'multiply together, and what rule would you be left with if both weights were 1?',
+            },
+            {
+              label: 'Compute the number the rule returns on this pair',
+              detail:
+                '2·1·5 = 10 and 3·4·(−2) = −24, so ⟨u, v⟩ = 10 − 24 = −14. The ordinary dot ' +
+                'product of the same two vectors is 1·5 + 4·(−2) = 5 − 8 = −3, a different ' +
+                'number. Two rules, one pair, two answers — which is the fact the next point is ' +
+                'entirely about.',
+              socratic:
+                'Substitute and add: what does the weighted rule return here? Now run the plain ' +
+                'dot product on the same two vectors — do the two rules agree?',
+            },
+            {
+              label: 'Spend the two properties that need no numbers, then the one that does',
+              detail:
+                'Symmetry holds because 2v₁u₁ + 3v₂u₂ is the same sum written backwards, and ' +
+                'linearity in each slot holds because multiplication distributes over addition; ' +
+                'neither argument looks at a component\'s value. Positive-definiteness is the ' +
+                'one that does: ⟨u, u⟩ = 2u₁² + 3u₂², which at u = (1, 4) is 2 + 48 = 50. In ' +
+                'general it is a sum of two terms neither of which can be negative, so it ' +
+                'vanishes only when both squares do — and that needs u₁ = u₂ = 0. The weights ' +
+                'being positive is what makes that argument run.',
+              socratic:
+                '⟨u, u⟩ comes out as 2u₁² + 3u₂². What would have to be true of u for that to ' +
+                'come to zero, and which fact about the numbers 2 and 3 is doing the work in ' +
+                'that answer?',
+            },
+            {
+              label: 'Break one weight and watch which property goes',
+              detail:
+                'Change the second weight to −3. The rule 2u₁v₁ − 3u₂v₂ is still symmetric and ' +
+                'still linear in each slot — both of those arguments were about the shape of the ' +
+                'sum, and the shape has not changed. But at w = (1, 1) it returns 2 − 3 = −1, so ' +
+                'a non-zero vector has a negative product with itself, and positive-definiteness ' +
+                'fails. One number settles it. That is why the three properties are listed ' +
+                'separately rather than rolled into one: the first two cannot imply the third, ' +
+                'exactly as the subspace test\'s three checks could not imply each other.',
+              socratic:
+                'Keep the rule but flip the second weight to −3, and try it on w = (1, 1) ' +
+                'against itself. What does it return — and which of the three properties has ' +
+                'that single number just refuted?',
+            },
+          ],
+          answer:
+            '⟨u, v⟩ = −14 and ⟨u, u⟩ = 50; and 2u₁v₁ − 3u₂v₂ fails positive-definiteness, since ' +
+            'at w = (1, 1) it returns −1',
+        },
+      },
+      {
+        id: 'a-right-angle-belongs-to-a-pair-and-a-rule',
+        conceptId: 'inner-product-spaces',
+        statement:
+          'Perpendicular means ⟨u, v⟩ = 0, so which pairs count depends on which inner product ' +
+          'is in use. Under the dot product (3, 2) and (−2, 3) are at right angles; under ' +
+          '⟨u, v⟩ = 2u₁v₁ + 3u₂v₂ they are not, and (1, −1) is instead. The arrows did not move. ' +
+          'What DOES survive the change of rule is every consequence of a zero — the Pythagorean ' +
+          'relation, and the projection in the next point — because those were derived from the ' +
+          'three properties and never from the picture.',
+        position: 2,
+        workedExample: {
+          problem:
+            'u = (3, 2). Find a whole-number vector orthogonal to u under the dot product, and ' +
+            'one orthogonal to u under ⟨u, v⟩ = 2u₁v₁ + 3u₂v₂, and test each against the other ' +
+            'rule.',
+          subgoals: [
+            {
+              label: 'Solve the zero condition rather than turning the arrow',
+              detail:
+                'u·v = 0 reads 3v₁ + 2v₂ = 0, which is one linear equation in two unknowns, so ' +
+                'its solutions are a line through the origin — the same "one equation spends one ' +
+                'freedom" count the dimension point made. Choosing v₁ = −2 gives v₂ = 3, so ' +
+                'v = (−2, 3), and 3·(−2) + 2·3 = −6 + 6 = 0. Swapping the components and ' +
+                'negating one is the familiar shortcut, and it is a shortcut for THIS rule only.',
+              socratic:
+                'u·v = 0 reads 3v₁ + 2v₂ = 0. How many of v\'s two components are you still free ' +
+                'to choose once that holds, and which whole-number v does the choice v₁ = −2 ' +
+                'give you?',
+            },
+            {
+              label: 'Put the same pair to the other rule',
+              detail:
+                '2·3·(−2) + 3·2·3 = −12 + 18 = 6, which is not zero. So under the weighted rule ' +
+                'u and v are not perpendicular, and nothing was redrawn to make that happen — ' +
+                'the two vectors are the same two vectors. A right angle is therefore not a ' +
+                'property of two arrows on their own.',
+              socratic:
+                'Neither arrow has moved. What does 2u₁v₁ + 3u₂v₂ return on this same pair, and ' +
+                'what does a non-zero answer now entitle you to say about the angle between them?',
+            },
+            {
+              label: 'Solve the zero condition again, for the weighted rule',
+              detail:
+                '⟨u, w⟩ = 0 reads 2·3·w₁ + 3·2·w₂ = 6w₁ + 6w₂ = 0, so w₁ = −w₂ and w = (1, −1) ' +
+                'is the whole-number choice: 2·3·1 + 3·2·(−1) = 6 − 6 = 0. Its dot product with ' +
+                'u is 3·1 + 2·(−1) = 1, also not zero. So each rule has its own line of vectors ' +
+                'it calls perpendicular to u, and the two lines are different.',
+              socratic:
+                'Now set 2u₁w₁ + 3u₂w₂ = 0 with u = (3, 2). What single equation in w₁ and w₂ ' +
+                'does that reduce to, and which whole-number w satisfies it?',
+            },
+            {
+              label: 'Separate what the change of rule costs from what it does not',
+              detail:
+                'Expanding ⟨u − v, u − v⟩ by linearity in each slot and then symmetry gives ' +
+                '⟨u, u⟩ − 2⟨u, v⟩ + ⟨v, v⟩, and that derivation never names a rule. So when the ' +
+                'middle term is zero, "the square on the third side is the sum of the other two ' +
+                'squares" still holds — with each square meaning that rule\'s own ⟨x, x⟩. The ' +
+                'arrows that count as perpendicular change; the consequences of a zero do not. ' +
+                'That is the whole return on stating three properties instead of a formula, and ' +
+                'it is why the next point\'s derivation can be run twice without being redone.',
+              socratic:
+                'Expanding ⟨u − v, u − v⟩ uses linearity and symmetry and nothing else. Which of ' +
+                'the three terms does a zero inner product remove — and did that expansion ever ' +
+                'need to know which of the two rules you were using?',
+            },
+          ],
+          answer:
+            '(−2, 3) is orthogonal to u under the dot product and returns 6 under the weighted ' +
+            'rule; (1, −1) is orthogonal under the weighted rule and returns 1 under the dot ' +
+            'product — so perpendicularity is a fact about a pair AND a rule',
+        },
+      },
+      {
+        id: 'the-projection-coefficient-is-forced-by-the-properties',
+        conceptId: 'inner-product-spaces',
+        statement:
+          'For u ≠ 0 every v splits as v = cu + r with ⟨r, u⟩ = 0, and the coefficient is not ' +
+          'chosen: taking the inner product of both sides with u gives ⟨v, u⟩ = c⟨u, u⟩, so ' +
+          'c = ⟨v, u⟩/⟨u, u⟩. That is the split the cosine identity assumed and never computed. ' +
+          'The derivation uses only the three properties — including positive-definiteness, ' +
+          'which is what makes ⟨u, u⟩ safe to divide by — so the same formula runs under any ' +
+          'inner product and returns a different number for each. The pair {u, r} is orthogonal ' +
+          'and spans what u and v spanned, which is Gram–Schmidt on two vectors.',
+        position: 3,
+        workedExample: {
+          problem:
+            'u = (1, 2) and v = (4, 3), under the dot product. Split v as cu + r with r ' +
+            'perpendicular to u, and check the remainder. Then run the same derivation under ' +
+            '⟨u, v⟩ = 2u₁v₁ + 3u₂v₂.',
+          subgoals: [
+            {
+              label: 'Force the coefficient instead of guessing it',
+              detail:
+                'Write v = cu + r and demand ⟨r, u⟩ = 0. Taking the inner product of both sides ' +
+                'with u, linearity gives ⟨v, u⟩ = c⟨u, u⟩ + ⟨r, u⟩, and the demand kills the ' +
+                'second term — so c = ⟨v, u⟩/⟨u, u⟩ and nothing was chosen. The division is ' +
+                'legitimate because ⟨u, u⟩ > 0 for u ≠ 0, which is the property the first point ' +
+                'showed a rule can fail; this is where it is used rather than merely checked.',
+              socratic:
+                'Write v = cu + r and take the inner product of both sides with u. Which of the ' +
+                'two terms on the right has to vanish if r is to be orthogonal to u, and what ' +
+                'does that leave c equal to?',
+            },
+            {
+              label: 'Compute the coefficient for these two vectors',
+              detail:
+                'v·u = 4·1 + 3·2 = 10 and u·u = 1 + 4 = 5, so c = 10/5 = 2 and the part of v ' +
+                'along u is 2u = (2, 4). Both numbers are dot products of the kind the previous ' +
+                'concept computed, one of them a vector with itself — so the formula is assembled ' +
+                'from two quantities already in hand rather than from anything new.',
+              socratic:
+                'What do v·u and u·u come to for u = (1, 2) and v = (4, 3), and what does their ' +
+                'quotient make the part of v that lies along u?',
+            },
+            {
+              label: 'Subtract, and check the remainder really is orthogonal',
+              detail:
+                'r = v − 2u = (4 − 2, 3 − 4) = (2, −1), and r·u = 2·1 + (−1)·2 = 2 − 2 = 0. The ' +
+                'zero is not a coincidence of these components: it is the condition c was solved ' +
+                'for, so it would come out for any v. And {u, r} = {(1, 2), (2, −1)} is a ' +
+                'perpendicular pair spanning the same plane u and v spanned, which is what ' +
+                'orthogonalising two vectors amounts to — a basis whose coordinates can be read ' +
+                'off one at a time, because asking for one weight no longer drags the other in.',
+              socratic:
+                'Subtract the part along u from v. What is the remainder, what does its dot ' +
+                'product with u come to — and was that zero always going to happen, or only for ' +
+                'this particular v?',
+            },
+            {
+              label: 'Run the same derivation under the other rule and watch the number move',
+              detail:
+                'Under ⟨u, v⟩ = 2u₁v₁ + 3u₂v₂ the two quantities are ⟨v, u⟩ = 2·4·1 + 3·3·2 = ' +
+                '8 + 18 = 26 and ⟨u, u⟩ = 2·1 + 3·4 = 14, so c = 26/14 = 13/7 and the remainder ' +
+                'is v − (13/7)u = (15/7, −5/7) — which this rule does send to zero: ' +
+                '2·(15/7)·1 + 3·(−5/7)·2 = 30/7 − 30/7 = 0. One derivation, two answers, because ' +
+                'the derivation used the properties and not the formula. And 13/7 is the answer ' +
+                'in the same way 24/25 was the answer to the cosine: a quotient pins the split ' +
+                'down exactly and 1.857 is a rounding of it.',
+              socratic:
+                'Nothing in the derivation of c mentioned which rule you were using. Recompute ' +
+                '⟨v, u⟩ and ⟨u, u⟩ with the weights 2 and 3 — what is c now, and what has that ' +
+                'done to which vector counts as the remainder?',
+            },
+          ],
+          answer:
+            'c = 2, so v = 2u + r with r = (2, −1) and r·u = 0; and under the weighted rule the ' +
+            'same derivation gives c = 13/7 with remainder (15/7, −5/7), which that rule sends ' +
+            'to zero',
         },
       },
     ],
@@ -2658,6 +3050,115 @@ const EDGES: ConceptEdge[] = [
       '`u1*v2 - u2*v1` as their whole arithmetic, which is the independence concept\'s own task ' +
       'verbatim. So a cross-check demonstrated here has been demonstrated, and should not come ' +
       'due as though it had not.',
+  },
+
+  /*
+   * THE TWENTY-THIRD PROMOTION'S THREE EDGES, AND THE SECOND BRANCH THEY CLOSE.
+   *
+   * `inner-product-spaces` declared BOTH of its `needs` here —
+   * `vector-spaces` and `dot-product-geometry` — so both stranded edges are the
+   * two entries below and no area `links` entry was owed, the same cheapest
+   * shape the two promotions above had. It is the third promotion running into
+   * this file whose whole `links` cost is nothing.
+   *
+   * WHAT IS NEW IS THE SHAPE OF IT IN THE SUBJECT. The twenty-second promotion
+   * added a second branch POINT — `linear-independence` gained two dependents —
+   * and this one is the first concept here to JOIN two branches back together.
+   * The dot product forked off `plane-vectors` at the second concept and the
+   * span line ran on through independence to the axioms; this rests on one end
+   * of each, so the two lines that separated five concepts ago meet. That is
+   * worth a line because it is what makes the concept's own derivation possible
+   * rather than merely allowed: it needs a product that returns a number, which
+   * is the fork, and a set with the axioms on it, which is the other.
+   *
+   * THE THREE EDGES OUT SURVIVED UNTOUCHED, which is the half of a departure
+   * that needs no action and looks like the dangerous half. `spectral-theorem`
+   * and `least-squares` are nodes of `linear-algebra` and
+   * `functional-analysis-intro` is a node of `real-analysis`, two map files
+   * apart; all three name this concept in their OWN `needs`, so those edges are
+   * declared at the far end and resolve across the file boundary in
+   * `composeAtlas`.
+   *
+   * NOTHING WAS HANDED BACK. No `links` entry of any area named
+   * `inner-product-spaces` at either end — checked before the node was deleted,
+   * because two identical edges in the composed graph is not a redundancy
+   * `composeAtlas` notices and no suite catches it.
+   *
+   * AND THE NODE DECLARED NO `confusedWith` AND NO `exercises`, checked on it
+   * before deletion rather than inferred from the suites passing afterwards.
+   * `expandEdges` turns a `confusedWith` into an `interferes_with`, which
+   * constrains SELECTION rather than gating, so losing one leaves every suite
+   * green while freeing the scheduler to introduce the two most confusable
+   * concepts in a subject together.
+   *
+   * ── THE `encompasses` EDGE, TAKEN, AND POINTED AT THE FORK ───────────────
+   *
+   * On the same test the three refusals in this file were made with: the claim
+   * is about what PRACTISING exercises, measured against the tasks that exist
+   * rather than against the prose. Two of the six tasks below have a dot
+   * product as the whole of their arithmetic —
+   * `perpendicular-under-the-dot-rule-1`'s `given` is `u1*v1 + u2*v2`, which is
+   * `dot-product-1`'s written symbol for symbol, and
+   * `projection-coefficient-1` divides that same expression by
+   * `u1*u1 + u2*u2`, which is `dot-product-self-1`'s. A learner cannot produce
+   * a projection coefficient here without producing both of the dot product's
+   * own numbers on the way.
+   *
+   * THE THIRD CANDIDATE IS DECLINED AND NAMING IT IS THE POINT.
+   * `orthogonal-remainder-1` is a dot product too — `(v1 - c*u1)*u1 +
+   * (v2 - c*u2)*u2` — but one of its two vectors is computed inside the
+   * expression and never written as a pair, which is the shape the thirteenth
+   * promotion deliberately excluded from its own count (`plane-membership-1`'s
+   * `2*x - y + 2*z`) and the twentieth used to refuse an edge outright. Two,
+   * not three, so the claim is stated at the shape a regex can see.
+   *
+   * ONE EDGE AND NOT TWO. `dot-product-geometry` already claims credit down to
+   * `plane-vectors` and `encompassedClosure` is transitive, so this single edge
+   * credits the components at depth 2 with nothing else declared — asserted by
+   * DEPTH in tests/concepts-logic.mjs, so the transitivity is checked rather
+   * than assumed. And NO edge runs back to `vector-spaces`: nothing in these
+   * tasks tests a subset for closure or touches an axiom. The axioms are what
+   * this concept's prose generalises over, which is not the same as what its
+   * arithmetic exercises, and `encompasses` is read by the scheduler as the
+   * second.
+   */
+  {
+    id: 'vector-spaces->inner-product-spaces',
+    from: 'vector-spaces',
+    to: 'inner-product-spaces',
+    kind: 'prerequisite',
+    promotedBy: 'author:vectors-and-independence',
+    rationale:
+      'The whole content of this concept is that a rule obeying three properties is enough, and ' +
+      '"enough for what" is the axioms: it is because a space is any set with the two ' +
+      'operations that a weighted rule on the plane and an integral of two functions are the ' +
+      'same object. A learner without the axioms reads the properties as a longer definition of ' +
+      'the dot product rather than as what replaces it.',
+  },
+  {
+    id: 'dot-product-geometry->inner-product-spaces',
+    from: 'dot-product-geometry',
+    to: 'inner-product-spaces',
+    kind: 'prerequisite',
+    promotedBy: 'author:vectors-and-independence',
+    rationale:
+      'This is that product generalised, so there has to be one to generalise. The specific ' +
+      'debt is the split: the cosine identity is derived by writing b as a multiple of a plus ' +
+      'something perpendicular to a, and the third point here is that split computed — so the ' +
+      'projection arrives as the thing a previous argument assumed rather than as a new formula.',
+  },
+  {
+    id: 'inner-product-spaces=>dot-product-geometry',
+    from: 'inner-product-spaces',
+    to: 'dot-product-geometry',
+    kind: 'encompasses',
+    promotedBy: 'author:vectors-and-independence',
+    rationale:
+      'Two of this concept\'s six tasks are a dot product and nothing else: one has ' +
+      '`u1*v1 + u2*v2` as its whole `given`, which is the product\'s own task verbatim, and the ' +
+      'projection coefficient divides that by `u1*u1 + u2*u2`, which is the self-product\'s. So ' +
+      'the product has been demonstrated by anybody who has produced a coefficient here, and ' +
+      'should not come due as though untouched.',
   },
 ]
 

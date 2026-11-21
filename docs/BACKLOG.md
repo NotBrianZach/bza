@@ -50,9 +50,34 @@ Two things not to get wrong when wiring it:
   wrapper must surface `UNREPORTED` somewhere a human sees it, or the one
   failure mode that loses money becomes invisible.
 
-Verified 2026-11-15: `systemctl --user list-timers --all` has no overage
-timer; the six timers present are poincare-sync, templedb-{ingest,backup,
-reconcile,agent-tick} and systemd-tmpfiles-clean.
+Verified 2026-11-20: nothing schedules it by any available route.
+`systemctl --user list-timers --all` still shows the same six timers
+(poincare-sync, templedb-{ingest,backup,reconcile,agent-tick},
+systemd-tmpfiles-clean) and no overage timer; `select count(*) from
+pg_extension where extname='pg_cron'` is 0, so no pg_cron job can exist
+whatever anyone schedules; `frontend/wrangler.jsonc` declares no cron
+triggers; and `graph who-uses reconcile-overages` turns up no caller — its
+two non-script hits, `frontend/lib/supabaseSchema.ts` and migration 58, are
+both prose references. Migration 58 sitting in `supabase/setup/archive/` is
+not removal of the billing path: every applied migration 50–69 is filed
+there, and the functions are live in `bza_public`.
+
+Sized 2026-11-20, because the paragraphs above read more urgent than the
+numbers support. The allowance is `app_config['billing.included_cents']` =
+500, so $5 per customer-month, and the largest single user-month ever
+recorded is 14.80¢ — 3% of one allowance. Lifetime `charged_cost` across all
+customers is 39.98¢ over 1565 rows, the current month's heaviest user is at
+1.26¢, and all three `billing_customers` rows sit at
+`overage_reported_cents` = 0. So `reconcile_all_overages()` would return
+zero rows today and the UNREPORTED path that can lose money has never
+fired. The gap is real and worth closing before usage grows, but it has
+never cost anything — decide this as a cadence question, not as a leak.
+
+When re-checking those numbers: `api_usage`'s time column is `timestamp`,
+not `created_at`, so a month filter on `created_at` errors rather than
+returning nothing. There is no `included_cents` column anywhere; it is an
+`app_config` key, and both functions take it as a parameter defaulting to
+500.
 
 ## 2. Who takes authored mathematics the rest of the way — DECISION NEEDED
 
@@ -65,12 +90,19 @@ What needs deciding is who reviews authored material and how often — not
 whether the restriction stays. Do not resolve it by giving an autonomous task
 publish rights.
 
-Verified 2026-11-16: `deployment_history` rows 413–420 are all
-`triggered_by=manual`, `deployed_by=zach`; `systemctl --user list-timers
---all` has no deploy timer. The gap is real but bounded, not an outage —
-production was 3 commits and 13 hours behind head when this was checked, all
-three authoring commits, and the previous deploy (2026-11-16T00:36Z) had
-shipped an authoring commit 28 minutes after it landed.
+Verified 2026-11-20: still no deploy timer, and `deployment_history` rows
+422–438 are every one `triggered_by=manual`, `deployed_by=zach` — 17 deploys
+across 2026-11-18 to 11-20, nine of them on the 20th alone and three inside
+half an hour that evening. (Row 431 reads `in_progress`; that status is
+written and never cleared, so it is cosmetic rather than a stuck deploy.)
+
+The premise holds, but the shape is the opposite of a backlog, and the
+earlier snapshot here — "3 commits and 13 hours behind head" on 11-16 —
+has not described the situation for days. The by-hand path is actively
+tended, so do not decide this as unshipped-work risk. What is actually
+unwritten is the cadence, and the cost of leaving it unwritten is that
+review depends entirely on one person's attention with nothing recording
+what that person is expected to cover.
 
 The reporting half of this item is closed: `bash scripts/verify-live-sha.sh`
 now prints the gap as a count plus the missing subjects, so "how far behind is

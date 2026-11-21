@@ -26,13 +26,18 @@ const LINEAR_ALGEBRA: MapArea = {
     'authored as `gaussian-elimination` in `expressions-and-equations`, since the engine has ' +
     'no matrix type and every question the method can be asked is about a number the ' +
     'elimination produces, which makes the material equations rather than grids. Nor are the ' +
-    'AXIOMS, nor the DIMENSION: `vector-spaces` and `basis-and-dimension` are both authored in ' +
-    '`vectors-and-independence`, the subject that made the span and independence arguments the ' +
-    'axioms are a summary of and that owns the cross-check every coordinate divides by. So this ' +
-    'area now begins one question later again — not "how many independent directions does a ' +
-    'space have" but what a MAP does to them, which is a rank and a kernel — and both the ' +
-    'definition of a space and the count of its directions are somewhere a learner arrives from ' +
-    'the plane rather than from the top of this list.',
+    'AXIOMS, nor the DIMENSION, nor the INNER PRODUCT: `vector-spaces`, `basis-and-dimension` ' +
+    'and `inner-product-spaces` are all three authored in `vectors-and-independence`, the ' +
+    'subject that made the span and independence arguments the axioms are a summary of, that ' +
+    'owns the cross-check every coordinate divides by, and that owns the one product of two ' +
+    'vectors returning a number. So this area now begins one question later again — not "how ' +
+    'many independent directions does a space have", nor "what does it mean for two of them to ' +
+    'be perpendicular", but what a MAP does to them, which is a rank and a kernel. The ' +
+    'definition of a space, the count of its directions and the rule that gives it angles are ' +
+    'all somewhere a learner arrives from the plane rather than from the top of this list. What ' +
+    'is still here and rests on the last of those is the ORTHOGONALITY THAT IS A THEOREM rather ' +
+    'than a definition: a symmetric matrix having an orthonormal eigenbasis, and the best answer ' +
+    'to an unsolvable system being a projection onto a column space.',
   nodes: [
     {
       id: 'rank-nullity',
@@ -57,14 +62,6 @@ const LINEAR_ALGEBRA: MapArea = {
       is: 'Choosing a basis of eigenvectors so the matrix becomes diagonal — and the obstruction when there are not enough.',
       needs: ['eigenvalues', 'rank-nullity'],
       terms: 'diagonalisation similar matrices jordan form multiplicity',
-    },
-    {
-      id: 'inner-product-spaces',
-      match: /\b(inner product|orthogonali[sz]ation|gram(–|-)schmidt)\b/i,
-      name: 'Inner products and orthogonality',
-      is: 'Generalising the dot product, which recovers length, angle and projection in any vector space that has one.',
-      needs: ['vector-spaces', 'dot-product-geometry'],
-      terms: 'inner product orthogonal gram schmidt projection orthonormal',
     },
     {
       id: 'spectral-theorem',
@@ -261,11 +258,21 @@ const LINEAR_ALGEBRA: MapArea = {
    *
    * EIGHT NODES AFTER, against a stub floor of five, so the area keeps three
    * spare. Three departures have now cost it three of its six nodes of
-   * headroom. The next one would leave two and the one after that would freeze
-   * the area, so this is the point at which the count starts mattering — and of
-   * the eight that remain, exactly one has every prerequisite written
-   * (`inner-product-spaces`), so there is one more departure available before
-   * anything else here could be authored at all.
+   * headroom. The next one would leave two and the one after that would leave
+   * one, so this is the point at which the count starts mattering.
+   *
+   * THE SENTENCE THAT USED TO FINISH THIS PARAGRAPH WAS WRONG AND IS WORTH
+   * KEEPING AS A CORRECTION. It said that of the eight remaining nodes "exactly
+   * one has every prerequisite written (`inner-product-spaces`), so there is
+   * one more departure available before anything else here could be authored at
+   * all". THREE did. Writing `basis-and-dimension` is what made `rank-nullity`
+   * and `eigenvalues` ready — they each name it in their own `needs` — so the
+   * promotion this paragraph describes created two of the three candidates its
+   * own last clause denied existed. Readiness was computed BEFORE the edit and
+   * written down as a claim about after it, and nothing tests a sentence, so it
+   * would have rotted here indefinitely. The lesson is narrow and repeatable:
+   * a promotion's effect on what is READY NEXT has to be recomputed after the
+   * node is deleted, not predicted from the state it was chosen in.
    *
    * WHAT IT STRANDED WAS BOTH OF ITS `needs` AND THERE IS NO `links` ENTRY FOR
    * EITHER. The node declared `vector-spaces` and `linear-independence`, and
@@ -313,6 +320,75 @@ const LINEAR_ALGEBRA: MapArea = {
    * slot was refilled with `rank-nullity`, which inherited the departing node's
    * place in the area exactly as the departing node inherited the axioms'. That
    * is twice running for this region, and the comment there says so.
+   *
+   * ── AND AN EIGHTH, WHICH IS THE CHEAPEST DEPARTURE THIS AREA HAS HAD ─────
+   *
+   * `inner-product-spaces` LEFT THIS AREA WHEN IT WAS AUTHORED, AND HAD TO. It
+   * is a concept of `vectors-and-independence` now, in ontology-vectors.ts, so
+   * a node of the same id here would collide with it and `atlasProblems`
+   * reports that as an error rather than merging the two.
+   *
+   * SEVEN NODES AFTER, against a stub floor of five, so the area keeps two
+   * spare. Four departures have now cost it four of its six nodes of headroom.
+   * Recomputed rather than predicted, which is the correction the paragraph
+   * above this one records: of the SEVEN that remain, two have every
+   * prerequisite written — `rank-nullity` and `eigenvalues`, both made ready by
+   * the twenty-second promotion — so the floor is still not what would stop the
+   * next one. Two departures of headroom and two ready candidates is the first
+   * time those two numbers have been equal, and it is the point at which the
+   * area's own `covers` stops being able to absorb another rewrite: a fifth
+   * departure leaves one spare and a sixth freezes it. What `atlas-foundations.ts`
+   * says to do then is MERGE the remnant into a neighbouring area, not lower the
+   * threshold, and that is a decision about the learner-facing map.
+   *
+   * WHAT IT STRANDED WAS BOTH OF ITS `needs` AND THERE IS NO `links` ENTRY FOR
+   * EITHER. The node declared `vector-spaces` and `dot-product-geometry`, and
+   * both are authored concepts of the subject it went to — so both edges are
+   * declared in that ontology's own `EDGES` and this area owes nothing. That is
+   * now three promotions running out of this area with a `links` cost of zero,
+   * which is a fact about where `vectors-and-independence` sits rather than
+   * luck: it holds every concept the unwritten half of this area rests on
+   * except the row reduction and the determinant.
+   *
+   * NOTHING WAS HANDED BACK. No `links` entry of this area — nor of any other —
+   * named `inner-product-spaces` at either end, checked before the node was
+   * deleted. That case is real and no test catches it: `composeAtlas` would
+   * have produced the same edge twice and said nothing. See the deleted first
+   * entry below.
+   *
+   * THE THREE EDGES POINTING IN SURVIVED, and they reach further than any
+   * previous departure's. `spectral-theorem` and `least-squares` are nodes of
+   * this area; `functional-analysis-intro` is a node of `real-analysis`, in
+   * atlas-analysis.ts. All three name the departing concept in their OWN
+   * `needs`, so all three are declared on nodes that remain and resolve across
+   * the file boundary in `composeAtlas` untouched. Only a node's own `needs` is
+   * stranded by deleting it.
+   *
+   * THE AREA VIEW LOST A ROOT AND GAINED NOTHING, which is the third distinct
+   * shape this one area has now produced. The fourteenth promotion SUBSTITUTED
+   * into the root set, the twentieth SPLIT it, the twenty-second did both at
+   * once — and this one only SHRINKS it, from {`eigenvalues`,
+   * `inner-product-spaces`, `rank-nullity`} to {`eigenvalues`,
+   * `rank-nullity`}. The departing node was a root itself, so it left; and it
+   * was the last in-area prerequisite of nothing, because both nodes that named
+   * it — `spectral-theorem` and `least-squares` — name a second node of this
+   * area as well (`diagonalisation` and `rank-nullity`), so neither became
+   * rooted. Three became two with both survivors unchanged, and that is only
+   * sayable by membership: a length check reading "three became two" would make
+   * no claim about which two, and cannot tell a shrink from a shrink-and-split.
+   *
+   * `confusedWith` and `exercises` on the departing node: NEITHER. Checked
+   * before deleting it, for the reason the sixth departure's note gives — and
+   * the `exercises` absence chose nothing here either, both `needs` pointing at
+   * one ontology already.
+   *
+   * IT WAS NOT AN `armature.ts` ANCHOR, which is the first of the four
+   * departures from this area that was not. Krull's three anchors are
+   * `rank-nullity`, `eigenvalues` and `diagonalisation`, and all three are
+   * still nodes here, so the fifth file a promotion can touch was untouched.
+   * Worth stating as an absence: the slot has turned over twice running and the
+   * reason it did not a third time is that this node was never the root the
+   * region anchors on.
    */
   links: [
     /*

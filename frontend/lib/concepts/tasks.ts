@@ -582,6 +582,29 @@ const VEC_UVW = [
   { name: 'w2', assumptions: { real: true } },
 ]
 
+/**
+ * A pair of plane vectors and the coefficient that splits one along the other,
+ * for the twenty-third promotion.
+ *
+ * `c` rather than a subscripted name because there is exactly one of it — the
+ * weight in v = cu + r — and `c1`/`c2` in `VEC_WEIGHTED` above mean something
+ * else: two weights in a linear combination of two vectors. Naming this one
+ * `c1` would read as the first of a pair that does not exist.
+ *
+ * Only one of the two projection tasks uses this set. The other asks for `c`
+ * itself and therefore must not be handed it, so it declares `VEC_UV_FULL` and
+ * the symbol is absent rather than declared-and-unused — the one place in this
+ * file where an unused declaration would cost something, since `at` is what a
+ * task substitutes and substituting the answer would make the question free.
+ */
+const VEC_UV_COEFF = [
+  { name: 'u1', assumptions: { real: true } },
+  { name: 'u2', assumptions: { real: true } },
+  { name: 'v1', assumptions: { real: true } },
+  { name: 'v2', assumptions: { real: true } },
+  { name: 'c', assumptions: { real: true } },
+]
+
 /** The three coordinates of a point, for substituting into a plane equation. */
 const PLANE_XYZ = [
   { name: 'x', assumptions: { real: true } },
@@ -6593,6 +6616,15 @@ export const TASKS: PracticeTask[] = [
    * integers and an exact quotient, while length and angle in a general space
    * are a square root and an inverse cosine.
    *
+   * THAT LAST CLAUSE IS WRONG AS A REASON AND THE TWENTY-THIRD PROMOTION SAYS
+   * SO, six tasks further down this file. It describes what an inner product
+   * YIELDS rather than what it is, and the three questions that follow from the
+   * properties alone — what a rule returns, which pairs it sends to zero, which
+   * coefficient splits a vector — are integers and one exact quotient. The
+   * comparison it made was fair; the sentence that broke the tie was not. Left
+   * standing rather than rewritten, because the refusal and its overturn
+   * together are the record of how the choice was made.
+   *
    * THE FIGURES ARE THE ONES THE SUBJECT ALREADY WALKED, and deliberately.
    * u = (2, −1) and v = (1, 3) are `combination-1`'s pair and
    * `cross-check-independent-1`'s, so the basis a learner is asked for an
@@ -6726,6 +6758,158 @@ export const TASKS: PracticeTask[] = [
     // before anybody finds them. Same `given` as `plane-constant-1` at
     // different inputs, and n is `cross-product-component-1`'s own answer, so
     // this is that cross product being USED rather than computed again.
+    reference: '0',
+  },
+
+  /*
+   * The inner product — six tasks, two on each of the three points, the
+   * twenty-third promotion. Every one `evaluate` and every one exact with no
+   * worker, which is this subject's standing contract and, this time, the whole
+   * argument for the promotion: the note six tasks above refused this concept
+   * because length and angle in a general space are a root and an inverse
+   * cosine. NOT ONE OF THESE SIX TAKES A ROOT. Three ask what a weighted rule
+   * returns, two ask which pairs it sends to zero, and one is a quotient of two
+   * dot products that comes out whole.
+   *
+   * THE WEIGHTS 2 AND 3, AND WHY NOT 1 AND 1. A weighted rule is the cheapest
+   * inner product that is not the dot product, and it has to DISAGREE with the
+   * dot product on something or the concept's second point has no content.
+   * Both weights positive is what keeps it an inner product; the second point's
+   * pair is chosen so the two rules disagree about a right angle, and the first
+   * point's negative weight is the counterexample that shows which property
+   * that would cost.
+   *
+   * THE FIGURES ARE CHOSEN AGAINST TWO CONSTRAINTS AT ONCE. u = (3, 2) and
+   * v = (−2, 3) in the second point are dot-orthogonal and weighted-non-
+   * orthogonal — 6, not 0 — and w = (1, −1) is the reverse, 0 against the
+   * weighted rule and 1 against the dot product; so one pair of tasks carries
+   * the disagreement in both directions. In the third point u = (1, 2) and
+   * v = (4, 3) were chosen so that v·u / u·u is WHOLE: the coefficient is
+   * 10/5 = 2 and the remainder (2, −1) has integer components. Under the
+   * weighted rule the same pair gives 26/14 = 13/7, which is exact and is in
+   * the worked example on purpose — it is the point that one derivation returns
+   * two numbers — but it is not asked for as a task, so no reference here is a
+   * fraction.
+   *
+   * WHAT IS UNSCORED: which property a value refuted. `signed-rule-fails-
+   * positivity-1` asks for the −1 and the prompt says what it means, but
+   * naming positive-definiteness is a `justify` question and this build ships
+   * no `justify` task anywhere. Same shortfall as the subspace test one
+   * concept up, and the objectives name only `evaluate` for the same reason.
+   */
+  {
+    id: 'weighted-inner-product-1',
+    knowledgePointId: 'an-inner-product-is-three-properties-and-not-a-formula',
+    kind: 'evaluate',
+    prompt:
+      'Take the rule ⟨u, v⟩ = 2u₁v₁ + 3u₂v₂, with u = (1, 4) and v = (5, −2). Evaluate ' +
+      '2*u1*v1 + 3*u2*v2. It pairs the components by position exactly as the dot product does ' +
+      'and then weights the two products differently, so setting both weights to 1 would give ' +
+      'the dot product back — which on this pair is 5 − 8 = −3, a different number from the one ' +
+      'you are about to get.',
+    given: '2*u1*v1 + 3*u2*v2',
+    variables: VEC_UVW,
+    at: { u1: '1', u2: '4', v1: '5', v2: '-2', w1: '1', w2: '1' },
+    // 2·1·5 = 10 and 3·4·(−2) = −24, so 10 − 24 = −14. Same `given` as
+    // `and-not-under-the-weighted-rule-1` at different inputs, which is this
+    // file's habit for a pair whose point is a comparison: there the answer is
+    // 6 and the question is whether it is zero, here it is −14 and the question
+    // is only what the rule returns.
+    reference: '-14',
+  },
+  {
+    id: 'signed-rule-fails-positivity-1',
+    knowledgePointId: 'an-inner-product-is-three-properties-and-not-a-formula',
+    kind: 'evaluate',
+    prompt:
+      'Now flip the second weight: 2u₁v₁ − 3u₂v₂. Evaluate it on w = (1, 1) against itself — ' +
+      'that is, evaluate 2*w1*w1 - 3*w2*w2. The rule is still symmetric and still linear in ' +
+      'each slot, since neither of those arguments looks at a value. One number is enough to ' +
+      'disqualify it anyway, and the sign of your answer is which number.',
+    given: '2*w1*w1 - 3*w2*w2',
+    variables: VEC_UVW,
+    at: { u1: '1', u2: '4', v1: '5', v2: '-2', w1: '1', w2: '1' },
+    // 2 − 3 = −1. A non-zero vector with a negative product against itself, so
+    // positive-definiteness fails — the one of the three properties the other
+    // two cannot imply. Asked as a value rather than as "which property", since
+    // naming the property is a `justify` and nothing here rules those.
+    reference: '-1',
+  },
+  {
+    id: 'perpendicular-under-the-dot-rule-1',
+    knowledgePointId: 'a-right-angle-belongs-to-a-pair-and-a-rule',
+    kind: 'evaluate',
+    prompt:
+      'u = (3, 2) and v = (−2, 3). Evaluate u·v = u1*v1 + u2*v2. A zero makes these two ' +
+      'perpendicular — under THIS rule, which is the qualification the next task is about.',
+    given: 'u1*v1 + u2*v2',
+    variables: VEC_UVW,
+    at: { u1: '3', u2: '2', v1: '-2', v2: '3', w1: '1', w2: '-1' },
+    // 3·(−2) + 2·3 = −6 + 6 = 0. `dot-product-1`'s `given` verbatim at new
+    // inputs, which is one of the two tasks the `encompasses` edge down to the
+    // dot product is claimed on.
+    reference: '0',
+  },
+  {
+    id: 'and-not-under-the-weighted-rule-1',
+    knowledgePointId: 'a-right-angle-belongs-to-a-pair-and-a-rule',
+    kind: 'evaluate',
+    prompt:
+      'The same two vectors, u = (3, 2) and v = (−2, 3), under ⟨u, v⟩ = 2u₁v₁ + 3u₂v₂. Evaluate ' +
+      '2*u1*v1 + 3*u2*v2. Neither arrow has moved since the previous task, so whatever you get ' +
+      'is a fact about the RULE — and if it is not zero, these two are not perpendicular under ' +
+      'it. For the record, w = (1, −1) is the reverse case: this rule sends it to 0 against u ' +
+      'and the dot product sends it to 1.',
+    given: '2*u1*v1 + 3*u2*v2',
+    variables: VEC_UVW,
+    at: { u1: '3', u2: '2', v1: '-2', v2: '3', w1: '1', w2: '-1' },
+    // 2·3·(−2) + 3·2·3 = −12 + 18 = 6. The pair that is orthogonal under one
+    // rule and not the other, which is the whole content of the point — and the
+    // reason the two tasks on it are the SAME inputs under two givens rather
+    // than two different pairs.
+    reference: '6',
+  },
+  {
+    id: 'projection-coefficient-1',
+    knowledgePointId: 'the-projection-coefficient-is-forced-by-the-properties',
+    kind: 'evaluate',
+    prompt:
+      'u = (1, 2) and v = (4, 3), under the dot product. Splitting v as cu + r with r ' +
+      'perpendicular to u forces c = (v·u)/(u·u), so evaluate ' +
+      '(u1*v1 + u2*v2) / (u1*u1 + u2*u2). Both halves are products you have computed before: ' +
+      'the top is a dot product of two vectors and the bottom is one of a vector with itself. ' +
+      'Dividing by the bottom is only legitimate because ⟨u, u⟩ is positive for a non-zero u, ' +
+      'which is the property the first point showed a rule can fail.',
+    given: '(u1*v1 + u2*v2) / (u1*u1 + u2*u2)',
+    variables: VEC_UV_FULL,
+    at: { u1: '1', u2: '2', v1: '4', v2: '3' },
+    // (4 + 6)/(1 + 4) = 10/5 = 2. The one task here that divides, and u and v
+    // were chosen so it lands whole: the numerator has to be a multiple of
+    // u·u = 5 or the answer is fifths. The weighted rule on the same pair gives
+    // 26/14 = 13/7, which is in the worked example and not asked for.
+    //
+    // The numerator is `dot-product-1`'s `given` and the denominator is
+    // `dot-product-self-1`'s, both verbatim — the second of the two tasks the
+    // `encompasses` edge is claimed on.
+    reference: '2',
+  },
+  {
+    id: 'orthogonal-remainder-1',
+    knowledgePointId: 'the-projection-coefficient-is-forced-by-the-properties',
+    kind: 'evaluate',
+    prompt:
+      'Same u = (1, 2) and v = (4, 3), and the coefficient came out c = 2, so the remainder is ' +
+      'r = v − 2u. Evaluate r·u = (v1 - c*u1)*u1 + (v2 - c*u2)*u2 to check that r really is ' +
+      'perpendicular to u. The answer is not a coincidence of these components — it is the ' +
+      'condition c was solved for, so the same thing happens for any v.',
+    given: '(v1 - c*u1)*u1 + (v2 - c*u2)*u2',
+    variables: VEC_UV_COEFF,
+    at: { u1: '1', u2: '2', v1: '4', v2: '3', c: '2' },
+    // r = (4 − 2, 3 − 4) = (2, −1), and 2·1 + (−1)·2 = 0. This is a dot product
+    // too, and it is deliberately NOT counted toward the `encompasses` edge:
+    // one of its two vectors is computed inside the expression and never
+    // written as a pair, which is the shape the thirteenth promotion excluded
+    // from its own count and the twentieth refused an edge over.
     reference: '0',
   },
 

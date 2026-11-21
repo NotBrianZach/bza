@@ -5506,13 +5506,17 @@ t('the subject has no internal faults with seven concepts in it',
 t('its fidelity claim matches what its option can do', fidelityMismatches(VI).length === 0)
 /*
  * The subject's SIZE is asserted here and moves on every promotion into it —
- * six at the eleventh, seven at the twentieth, eight at the twenty-second. The
- * half of the claim that is about this promotion is the second one: the dot
- * product still carries the three knowledge points it arrived with, so a later
- * concept has not been written by growing this one.
+ * six at the eleventh, seven at the twentieth, eight at the twenty-second, nine
+ * at the twenty-third. The half of the claim that is about this promotion is
+ * the second one: the dot product still carries the three knowledge points it
+ * arrived with, so a later concept has not been written by growing this one.
+ * That half is what makes the assertion worth keeping through four edits of the
+ * count — the twenty-third promotion rests ON the dot product, so growing it
+ * instead of adding beside it was the live mistake rather than a theoretical
+ * one.
  */
-t('eight concepts, and the dot product still carries the three it arrived with',
-  VI.concepts.length === 8
+t('nine concepts, and the dot product still carries the three it arrived with',
+  VI.concepts.length === 9
   && conceptById(VI, 'dot-product-geometry').knowledgePoints.length === 3,
   `${VI.concepts.length} concepts, `
   + `${conceptById(VI, 'dot-product-geometry').knowledgePoints.length} points on the new one`)
@@ -5681,13 +5685,17 @@ t('and no question contains its own answer by being an imperative with a mark on
 /*
  * `chains` is a SUBJECT figure and not this concept's, so it moves on every
  * promotion into the subject — nineteen when the dot product landed,
- * twenty-two when the axioms did, twenty-five since the dimension did. The
- * claim that belongs to this group is the zero beside it: a chain that cannot
- * become evidence is worse than an unwritten concept, because it looks
+ * twenty-two when the axioms did, twenty-five when the dimension did,
+ * twenty-eight since the inner product did. Three per promotion, which is the
+ * three-knowledge-point shape every concept in this file but one has; a
+ * promotion that moved it by anything else would be worth looking at.
+ *
+ * The claim that belongs to this group is the zero beside it: a chain that
+ * cannot become evidence is worse than an unwritten concept, because it looks
  * finished.
  */
 t('the subject still has no chain that cannot become evidence',
-  DP_COV.chainsWithNoRuling === 0 && DP_COV.chains === 25,
+  DP_COV.chainsWithNoRuling === 0 && DP_COV.chains === 28,
   `${DP_COV.chains} chains, ${DP_COV.chainsWithNoRuling} with no ruling`)
 
 // ---------------------------------------------------------------------------
@@ -6514,10 +6522,20 @@ t('its objectives name only evaluate, and evaluate really ships a task on every 
  * dimension hung off `vectors-and-spans` or off the plane rather than off the
  * axioms — and survives the next promotion into the subject by being wrong
  * about a name rather than about a count.
+ *
+ * IT SURVIVED EXACTLY THAT, ONE PROMOTION LATER, AND THE REWRITE IS ONE WORD
+ * DIFFERENT FROM THE ONE BEFORE IT. The twenty-third promotion made
+ * `inner-product-spaces` a second dependent of the axioms, so a single-name
+ * string went red on success again — one layer up from where the `length === 0`
+ * did. What is different is that the fix is now durable rather than deferred: a
+ * SET of names grows by having a member added, and the thing worth catching is
+ * membership, not arity. Sorted, because `dependentsOf` returns edge order and
+ * this file warns against comparing more than one of those as a string.
  */
-t('the axioms hang off independence and off nothing else here, and the dimension off them',
+t('the axioms hang off independence and off nothing else here, and two concepts off them',
   prerequisitesOf(VI, 'vector-spaces').join(' ') === 'linear-independence'
-  && dependentsOf(VI, 'vector-spaces').map(c => c.id ?? c).join(' ') === 'basis-and-dimension'
+  && dependentsOf(VI, 'vector-spaces').map(c => c.id ?? c).slice().sort().join(' ')
+    === 'basis-and-dimension inner-product-spaces'
   && teachingOrder(VI) !== null,
   `${prerequisitesOf(VI, 'vector-spaces').join(', ')} -> `
   + `${dependentsOf(VI, 'vector-spaces').map(c => c.id ?? c).join(', ') || 'nothing in here'}`)
@@ -6814,6 +6832,238 @@ t('every subgoal names a move rather than a step number, and no two in one examp
     && new Set(p.workedExample.subgoals.map(s => s.label)).size
       === p.workedExample.subgoals.length),
   BD_SUBGOALS.filter(s => s.label.length <= 20 || /^step\b/i.test(s.label))
+    .map(s => s.label).join(' | '))
+
+// ---------------------------------------------------------------------------
+
+/**
+ * `inner-product-spaces`, the twenty-third promotion — and the first to be
+ * taken by OVERTURNING the previous one's stated reason for passing it over.
+ *
+ * The group directly above is that reason, written down at the time: a
+ * dimension is a count while "length and angle in a general space are a square
+ * root and an inverse cosine — the two things this subject has refused to put
+ * in front of a learner since the dot product". The two concepts tied on
+ * dependents and on edge cost, so that sentence is what broke the tie, and it
+ * describes the SHAPE of an answer. tests/atlas.mjs records four refusals of
+ * that exact form that all turned out to be overturnable, against one
+ * (`linear-inequalities`) that names a MOVE and still binds — so a shape
+ * refusal is a claim to re-derive rather than a fact, and the way to re-derive
+ * it is to ask what the concept IS rather than what it yields. It is a rule
+ * with three properties, and the three questions following from the properties
+ * alone are integer arithmetic.
+ *
+ * WHAT THIS SUITE CAN SEE is the subject half. The map half — the area dropping
+ * to seven nodes, the root set shrinking without substituting or splitting, and
+ * the gate tightening onto this concept in five places — is in tests/atlas.mjs.
+ *
+ * Five claims are worth having here because each would fail silently:
+ *
+ *  - NOT ONE TASK TAKES A ROOT. This is the overturn, reduced to something
+ *    mechanical. If a later edit adds a norm task, the refusal above was right
+ *    after all and this assertion is where that surfaces — which is the only
+ *    honest way to leave an overturned refusal in a file.
+ *  - NO TASK ASKS FOR AN ANGLE, which is the half of the refusal that is
+ *    CARRIED rather than overturned, and is the subject's boundary as stated in
+ *    `covers`. The dot product's own group asserts the same thing about itself;
+ *    this is that boundary surviving a concept whose whole content is the
+ *    generalisation of the product the boundary was written for.
+ *  - THE PARENTS, BY NAME AND AS A SET, and they JOIN THE SUBJECT'S TWO
+ *    BRANCHES. This is the first concept here resting on one end of each: the
+ *    dot product forked off `plane-vectors` and the span line ran on to the
+ *    axioms. The plausible mistake is hanging it off the product alone — the
+ *    arithmetic all comes from there — which would gate a concept about what a
+ *    general space can carry behind no definition of a space.
+ *  - THE CREDIT EDGE, asserted against the TASKS and not the prose, and its
+ *    DEPTH. One edge, two concepts credited, because the product already claims
+ *    credit down to the components and `encompassedClosure` is transitive.
+ *  - THE TWO VALUES THAT DISAGREE ARE ONE PAIR UNDER TWO RULES. The point's
+ *    content is that a right angle belongs to a pair AND a rule, so the two
+ *    tasks on it must share their inputs and differ in their `given`. Two
+ *    different pairs would evidence the arithmetic and hide the claim.
+ */
+const IPS = conceptById(VI, 'inner-product-spaces')
+const IPS_POINTS = IPS.knowledgePoints
+
+group('the twenty-third promotion: the inner product, written into the vectors subject')
+t('it is a concept of this subject with material, not a ninth name in the list',
+  !!IPS && isTeachable(VI, 'inner-product-spaces') && isPractisable(VI, 'inner-product-spaces'),
+  `${IPS ? 'present' : 'ABSENT'}`)
+t('three knowledge points numbered from 1, the shape every concept here but one has',
+  IPS_POINTS.length === 3 && IPS_POINTS.map(p => p.position).join(',') === '1,2,3',
+  `${IPS_POINTS.length} points at ${IPS_POINTS.map(p => p.position).join(',')}`)
+t('no point claims a figure, and none claims a timing target either',
+  IPS_POINTS.every(p => p.visualRef === undefined && p.automaticityTarget === undefined),
+  IPS_POINTS.filter(p => p.visualRef || p.automaticityTarget).map(p => p.id).join(' '))
+const IPS_KINDS = new Set(IPS_POINTS.flatMap(p => tasksForPoint(p.id)).map(x => x.kind))
+t('its objectives name only evaluate, and evaluate really ships a task on every point',
+  IPS.objectives.length > 0
+  && IPS.objectives.every(o => o.taskKinds.length > 0
+    && o.taskKinds.every(k => IPS_KINDS.has(k)))
+  && [...IPS_KINDS].join(',') === 'evaluate'
+  && IPS_POINTS.every(p => tasksForPoint(p.id).length > 0),
+  IPS.objectives.map(o => `${o.id}:${o.taskKinds.join('+')}`).join(' ')
+  + ` against ${[...IPS_KINDS].join('+')}`)
+/*
+ * The parents as a sorted SET, since there are two and `prerequisitesOf`
+ * returns edge order. Both halves are asserted from both sides: the product
+ * must be a DIRECT parent, because every number here is one of its, and the
+ * axioms must be as well, because the content is what a rule on ANY space can
+ * carry. Hung off the product alone — the tempting edge — the concept would
+ * read as a longer dot product, which is exactly what its first point says it
+ * is not.
+ */
+t('it rests on the product and on the axioms, joining the two branches of the subject',
+  prerequisitesOf(VI, 'inner-product-spaces').slice().sort().join(' ')
+    === 'dot-product-geometry vector-spaces'
+  && roots(VI).length === 1 && roots(VI)[0] === 'cartesian-plane'
+  && teachingOrder(VI) !== null,
+  `${prerequisitesOf(VI, 'inner-product-spaces').join(', ')} | roots ${roots(VI).join(', ')}`)
+t('it claims credit back down to the product, and two of its tasks bear the claim out',
+  edgesOfKind(VI, 'encompasses').some(e =>
+    e.from === 'inner-product-spaces' && e.to === 'dot-product-geometry' && !!e.rationale)
+  && taskById('perpendicular-under-the-dot-rule-1').given
+    === taskById('dot-product-1').given
+  && taskById('projection-coefficient-1').given
+    .includes(taskById('dot-product-1').given)
+  && taskById('projection-coefficient-1').given
+    .includes(taskById('dot-product-self-1').given),
+  edgesOfKind(VI, 'encompasses').map(e => `${e.from}=>${e.to}`).join(' '))
+/*
+ * The transitivity, by DEPTH. One declared edge, two concepts credited — the
+ * product at 1 and the components at 2, the second arriving through the
+ * product's own `encompasses` edge. A second edge straight to `plane-vectors`
+ * would have added a duplicate route and nothing else, and asserting the depth
+ * is what records that it was checked rather than assumed.
+ */
+t('one edge credits two concepts, the components arriving through the product',
+  [...encompassedClosure(VI, 'inner-product-spaces')]
+    .map(([id, depth]) => `${id}:${depth}`).sort().join(' ')
+    === 'dot-product-geometry:1 plane-vectors:2'
+  && edgesOfKind(VI, 'encompasses')
+    .filter(e => e.from === 'inner-product-spaces').length === 1,
+  [...encompassedClosure(VI, 'inner-product-spaces')]
+    .map(([id, depth]) => `${id}:${depth}`).join(' '))
+/*
+ * And no credit back to the axioms, which is the refusal this concept records.
+ * Its prose generalises OVER the axioms and none of its tasks touches one — no
+ * closure test, no subspace, no appeal to an axiom by name — and `encompasses`
+ * is read by the scheduler as what practising exercises rather than as what the
+ * material is about. Fifth refusal of its kind in this file.
+ */
+t('and no credit back to the axioms, which its tasks never exercise',
+  !edgesOfKind(VI, 'encompasses').some(e =>
+    e.from === 'inner-product-spaces' && e.to === 'vector-spaces'),
+  edgesOfKind(VI, 'encompasses').map(e => `${e.from}=>${e.to}`).join(' '))
+
+group('the twenty-third promotion is gradable with no worker')
+const IPS_TASKS = IPS_POINTS.flatMap(p => tasksForPoint(p.id))
+t('six tasks, two on each of the three points', IPS_TASKS.length === 6
+  && IPS_POINTS.every(p => tasksForPoint(p.id).length === 2),
+  `${IPS_TASKS.length}`)
+t('all six are evaluate, so none of them claims a form',
+  IPS_TASKS.every(x => x.kind === 'evaluate' && x.form === undefined),
+  IPS_TASKS.map(x => `${x.id}:${x.kind}`).join(', '))
+t('every reference is exactly reproducible from the given — no worker consulted',
+  IPS_TASKS.every(x => {
+    const at = {}
+    for (const [name, raw] of Object.entries(x.at)) at[name] = parseExpression(raw, [])
+    const truth = exactValue(substitute(parseExpression(x.given, x.variables.map(v => v.name)), at))
+    const claimed = exactValue(parseExpression(x.reference, x.variables.map(v => v.name)))
+    return truth !== null && claimed !== null && showExact(truth) === showExact(claimed)
+  }),
+  IPS_TASKS.map(x => x.id).join(', '))
+const ipsRulings = await Promise.all(IPS_TASKS.map(x => ruleEvaluate(x, x.reference, NO_WORKER)))
+t('a correct answer is ruled correct with no worker configured',
+  ipsRulings.every(r => r.verdict.ruling === 'correct'),
+  ipsRulings.map((r, i) => `${IPS_TASKS[i].id}:${r.verdict?.ruling ?? r.status}`).join(', '))
+/*
+ * THE ASSERTION THE OVERTURN RESTS ON, and the one to read first if this
+ * concept ever goes red.
+ *
+ * The previous promotion passed this concept over because its content was "a
+ * square root and an inverse cosine". The answer to that was not that the
+ * refusal was careless — it was that a root and a cosine are what an inner
+ * product YIELDS, while what it IS is a rule with three properties, and the
+ * questions following from the properties are integers and one whole quotient.
+ * So the overturn is only as good as this line: a norm task added later makes
+ * the refusal retrospectively right, and this is where that would be caught
+ * rather than discovered by a learner handed √50.
+ */
+t('nothing here takes a square root, which is the whole of the overturned refusal',
+  IPS_TASKS.every(x => !/\^\(1\/2\)/.test(x.given) && !/sqrt/.test(x.given)),
+  IPS_TASKS.filter(x => /\^\(1\/2\)|sqrt/.test(x.given)).map(x => x.id).join(' '))
+/*
+ * And the half of that refusal which is CARRIED rather than overturned. The
+ * subject's `covers` has said since the dot product that the angle is absent
+ * deliberately: the identity hands back cos θ as an exact quotient and that
+ * quotient is the answer. Generalising the product is exactly the edit that
+ * could have let a degree figure in, so the boundary is re-asserted against the
+ * new tasks rather than assumed to have held.
+ */
+t('and no task asks for an angle, which is the subject\'s boundary and not the grader\'s',
+  IPS_TASKS.every(x => !/\b(what angle|which angle|find the angle|arccos|arcsin)\b/i
+    .test(`${x.prompt} ${x.given}`))
+  && IPS_TASKS.every(x => !/°/.test(x.prompt)),
+  IPS_TASKS.filter(x => /°|arccos|arcsin/i.test(`${x.prompt} ${x.given}`))
+    .map(x => x.id).join(' '))
+/*
+ * THE TWO TASKS ON THE SECOND POINT SHARE THEIR INPUTS AND DIFFER IN THEIR
+ * RULE, which is the point's content expressed as a constraint on the task set
+ * rather than as prose. "A right angle belongs to a pair AND a rule" is
+ * evidenced by one pair returning 0 under one rule and 6 under another; two
+ * different pairs would evidence the arithmetic and say nothing about the
+ * claim, and every suite would stay green.
+ */
+t('the pair that disagrees is ONE pair under two rules, which is the claim rather than the sum',
+  (() => {
+    const [a, b] = tasksForPoint('a-right-angle-belongs-to-a-pair-and-a-rule')
+    return JSON.stringify(a.at) === JSON.stringify(b.at)
+      && a.given !== b.given
+      && new Set([a.reference, b.reference]).size === 2
+      && [a.reference, b.reference].includes('0')
+  })(),
+  tasksForPoint('a-right-angle-belongs-to-a-pair-and-a-rule')
+    .map(x => `${x.given} = ${x.reference}`).join(' | '))
+/*
+ * The verdict spread, which the twentieth promotion's note argues for: a task
+ * set whose every answer is 0 teaches the arithmetic and hides the decision.
+ * Two of these six are 0 and they mean different things — "perpendicular under
+ * this rule" in one, "the remainder really is orthogonal, as it had to be" in
+ * the other — so the zero carries information rather than being a free mark.
+ */
+t('no answer in the set is reachable by answering zero to everything',
+  IPS_TASKS.filter(x => x.reference === '0').length === 2
+  && new Set(IPS_TASKS.map(x => x.reference)).size === 5,
+  IPS_TASKS.map(x => `${x.id}:${x.reference}`).join(' '))
+/*
+ * The one task that asks for the coefficient must not be HANDED it. `at`
+ * decides which symbols a task substitutes, so declaring `c` on the task that
+ * asks for `c` would substitute the answer into the question — which is the
+ * one place in this subject an unused-but-declared symbol costs something
+ * rather than nothing. Asserted as the absence, since the two tasks sit beside
+ * each other and the other one does declare it.
+ */
+t('the task that asks for the coefficient is not handed it, while the one that uses it is',
+  !taskById('projection-coefficient-1').variables.some(v => v.name === 'c')
+  && !('c' in taskById('projection-coefficient-1').at)
+  && taskById('orthogonal-remainder-1').variables.some(v => v.name === 'c')
+  && taskById('orthogonal-remainder-1').at.c === '2',
+  `${Object.keys(taskById('projection-coefficient-1').at).join(',')} | `
+  + `${Object.keys(taskById('orthogonal-remainder-1').at).join(',')}`)
+const IPS_SUBGOALS = IPS_POINTS.flatMap(p => p.workedExample.subgoals)
+t('all twelve of its subgoals ship the question written, not just the label',
+  IPS_SUBGOALS.length === 12 && IPS_SUBGOALS.every(s => typeof s.socratic === 'string'),
+  `${IPS_SUBGOALS.filter(s => !s.socratic).length} unwritten of ${IPS_SUBGOALS.length}`)
+t('and every one of them ends on its question rather than on a statement',
+  IPS_SUBGOALS.every(s => isInterrogative(s.socratic)),
+  IPS_SUBGOALS.filter(s => !isInterrogative(s.socratic)).map(s => s.label).join('; '))
+t('every subgoal names a move rather than a step number, and no two in one example repeat',
+  IPS_POINTS.every(p =>
+    p.workedExample.subgoals.every(s => s.label.length > 20 && !/^step\b/i.test(s.label))
+    && new Set(p.workedExample.subgoals.map(s => s.label)).size
+      === p.workedExample.subgoals.length),
+  IPS_SUBGOALS.filter(s => s.label.length <= 20 || /^step\b/i.test(s.label))
     .map(s => s.label).join(' | '))
 
 rmSync(outDir, { recursive: true, force: true })

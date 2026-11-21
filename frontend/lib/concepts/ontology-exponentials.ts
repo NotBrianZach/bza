@@ -651,9 +651,41 @@ const CONCEPTS: Concept[] = [
             {
               label: 'Bring the exponent down',
               detail: 'log₃(9⁴) = 4 · log₃(9).',
+              socratic:
+                'The one rule you have for taking a logarithm apart needs a product, and what you ' +
+                'are handed here is a power — so either this calls for some further rule nobody ' +
+                'has given you, or 9⁴ is a product already. Write 9⁴ out as the multiplication it ' +
+                'stands for, all four of its factors, and run the product rule across that exactly ' +
+                'as you ran it across 8 · 4. What sum does that leave you holding, and since every ' +
+                'term in the sum is the same term, how would you write it more shortly than as a ' +
+                'sum?',
             },
-            { label: 'Evaluate the simpler log', detail: '3² = 9, so log₃(9) = 2.' },
-            { label: 'Multiply', detail: '4 · 2 = 8. And indeed 9⁴ = 3⁸.' },
+            {
+              label: 'Evaluate the simpler log',
+              detail: '3² = 9, so log₃(9) = 2.',
+              socratic:
+                'What is left of the logarithm is log₃(9), and there is nothing inside it to break ' +
+                'apart — no product, no power — so no rule applies to it and none is wanted. That ' +
+                'makes it the plain exponent question from the definition again: the base is 3, the ' +
+                'argument is 9, and the exponent is what the notation leaves you to find. Climb the ' +
+                'powers of 3 rather than trusting that 9 looks familiar. Which one lands on 9, and ' +
+                'what does that tell you about why this logarithm has an exact answer at all, where ' +
+                'log₃(10) would not?',
+            },
+            {
+              label: 'Multiply',
+              detail: '4 · 2 = 8. And indeed 9⁴ = 3⁸.',
+              socratic:
+                'Two findings are on the table — that log₃(9⁴) equals 4 · log₃(9), and that ' +
+                'log₃(9) is 2 — and combining them takes arithmetic and nothing else. Do it, then ' +
+                'look at what the number you get is actually claiming: a base-3 logarithm names an ' +
+                'exponent on 3, so your answer asserts that one particular power of 3 is equal to ' +
+                '9⁴. That assertion can be checked with no logarithm in it anywhere, by replacing ' +
+                'the 9 inside 9⁴ with the power of 3 you found a moment ago and collapsing the two ' +
+                'exponents the way you did before logarithms were mentioned. Which power of 3 does ' +
+                'that route arrive at, and what does its agreeing with your answer settle — and ' +
+                'not settle — about the rule you used to get there?',
+            },
           ],
           answer: '8',
         },

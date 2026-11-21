@@ -1287,7 +1287,7 @@ group('vectors gated matrices, which is what authoring underneath means')
 const VEC_IDS = new Set(
   MATHEMATICS.concepts.filter(c => c.subjectId === 'vectors-and-independence').map(c => c.id),
 )
-t('the subject contributes eight concepts', VEC_IDS.size === 8, `${VEC_IDS.size}`)
+t('the subject contributes nine concepts', VEC_IDS.size === 9, `${VEC_IDS.size}`)
 t('matrices now gates on vectors, not through them',
   gatingPrerequisitesOf(MATHEMATICS, 'matrices-and-maps').includes('vectors-and-spans'),
   gatingPrerequisitesOf(MATHEMATICS, 'matrices-and-maps').join(', '))
@@ -4017,20 +4017,28 @@ t('the row reduction is a concept of the equations subject, not a node of this a
  * the message so a changed floor is visible either way.
  */
 /*
- * TEN AT THIS PROMOTION, NINE AFTER THE TWENTIETH AND EIGHT AFTER THE
- * TWENTY-SECOND, which is why the sentence names the HEADROOM rather than the
- * count: three promotions have now come out of this one area, and what each has
- * to leave behind is room above the floor rather than a particular number of
- * nodes. The literal is asserted beside it so the number is pinned as well as
- * the margin, and both are in the message.
+ * TEN AT THIS PROMOTION, NINE AFTER THE TWENTIETH, EIGHT AFTER THE
+ * TWENTY-SECOND AND SEVEN AFTER THE TWENTY-THIRD, which is why the sentence
+ * names the HEADROOM rather than the count: four promotions have now come out
+ * of this one area, and what each has to leave behind is room above the floor
+ * rather than a particular number of nodes. The literal is asserted beside it
+ * so the number is pinned as well as the margin, and both are in the message.
  *
- * Three of the six it started with are spent. The next departure leaves two and
- * the one after that freezes the area, so this is where the count starts
- * mattering — and only one of the eight remaining nodes has every prerequisite
- * written, so the floor will not be what stops the next one either.
+ * Four of the six it started with are spent. The next departure leaves one and
+ * the one after that freezes the area, and of the seven nodes remaining exactly
+ * two have every prerequisite written — `rank-nullity` and `eigenvalues` — so
+ * for the first time the headroom and the ready-candidate count are equal, and
+ * the floor is the thing that will stop the one after next rather than
+ * readiness.
+ *
+ * That count is RECOMPUTED and not inherited, which is the correction
+ * atlas-structures.ts now carries: the twenty-second promotion wrote down
+ * "exactly one has every prerequisite written" having computed it before its
+ * own edit, and authoring `basis-and-dimension` is what made those two ready.
+ * No assertion reads a sentence, so a stale one survives every green run.
  */
-t('eight nodes left, three clear of the floor, so no departure has frozen anything',
-  LINALG.nodes.length === 8 && LINALG.nodes.length - 5 === 3,
+t('seven nodes left, two clear of the floor, so no departure has frozen anything',
+  LINALG.nodes.length === 7 && LINALG.nodes.length - 5 === 2,
   `${LINALG.nodes.length} nodes, ${LINALG.nodes.length - 5} of headroom`)
 t('the stranded half of its needs is a links entry here, filed with the area that lost the node',
   LINALG.links.some(l => l.from === 'matrices-and-maps' && l.to === 'gaussian-elimination'
@@ -4080,24 +4088,32 @@ t('the gate tightened onto the row reduction in three places, in two files nobod
   ['determinant', 'rank-nullity', 'numerical-linear-algebra']
     .map(id => `${id}: ${gatingPrerequisitesOf(MATHEMATICS, id).join('/')}`).join(' | '))
 /*
- * THE ROOT THIS LEFT BEHIND HAS SINCE BEEN PROMOTED TWICE OVER, so the claim is
- * kept as a chain of edits rather than rewritten each time: the fourteenth
- * promotion SUBSTITUTED `vector-spaces` into the root set, the twentieth SPLIT
- * it in two, and the twenty-second both shrank it by one member and split it
- * again. Asserting only the current trio would lose the first two halves, and
- * the first is the one that says the departing node had no in-area
- * prerequisite.
+ * THE ROOT THIS LEFT BEHIND HAS SINCE BEEN PROMOTED THREE TIMES OVER, so the
+ * claim is kept as a chain of edits rather than rewritten each time: the
+ * fourteenth promotion SUBSTITUTED `vector-spaces` into the root set, the
+ * twentieth SPLIT it in two, the twenty-second both shrank it by one member and
+ * split it again, and the twenty-third only SHRANK it. Asserting only the
+ * current pair would lose the first three halves, and the first is the one that
+ * says the departing node had no in-area prerequisite.
  *
- * Every half by named membership, never by length: one became two and then
- * three, and only one member of the current set was in the previous one. A
- * count would read "two became three" and make no claim about WHICH three —
- * and getting the set wrong is how a node silently loses its only prerequisite.
+ * All four shapes are now on the record and they are genuinely different
+ * operations: substitute, split, both, shrink. The last is the one a
+ * direction-of-change check would most easily mistake for the third — three
+ * became two either way — and what distinguishes them is that BOTH survivors
+ * are unchanged here, nothing having become newly rooted. `spectral-theorem`
+ * and `least-squares` each named the departing node AND a second node of this
+ * area, so neither lost its last in-area prerequisite.
+ *
+ * Every half by named membership, never by length: one became two, then three,
+ * then two again, and the two are not the two it passed through. A count would
+ * read "three became two" and make no claim about WHICH two — and getting the
+ * set wrong is how a node silently loses its only prerequisite.
  */
-t('and the area view has the three roots the dimension left, not the two it was one of',
-  roots(areaOntology(LINALG)).slice().sort().join(' ')
-    === 'eigenvalues inner-product-spaces rank-nullity'
+t('and the area view has the two roots the inner product left, not the three it was one of',
+  roots(areaOntology(LINALG)).slice().sort().join(' ') === 'eigenvalues rank-nullity'
   && !LINALG.nodes.some(n => n.id === 'vector-spaces')
-  && !LINALG.nodes.some(n => n.id === 'basis-and-dimension'),
+  && !LINALG.nodes.some(n => n.id === 'basis-and-dimension')
+  && !LINALG.nodes.some(n => n.id === 'inner-product-spaces'),
   roots(areaOntology(LINALG)).join(' '))
 /*
  * The two stranding checks, as absences on the node that left — the pair that
@@ -4195,33 +4211,33 @@ t('and no links entry of any area names it, so nothing was handed back or droppe
   AREAS.flatMap(a => (a.links ?? []).map(l => `${a.id}:${l.from}->${l.to}`))
     .filter(s => s.includes('vector-spaces')).join(' ') || 'none, as it should be')
 /*
- * BOTH EDGES STILL EXIST ONCE EACH AND THEY ARE NO LONGER STAMPED THE SAME WAY,
- * which is why the `promotedBy` claim is now per edge rather than quantified
- * over the pair.
+ * BOTH EDGES STILL EXIST ONCE EACH AND BOTH HAVE NOW BEEN REHOMED, which is a
+ * claim about PROVENANCE rather than about existence and is the reason the
+ * `promotedBy` stamp is asserted at all.
  *
  * At the twentieth promotion both were declared on nodes that remained, so
  * `composeAtlas` stamped both `atlas:linear-algebra`. The twenty-second wrote
- * `basis-and-dimension` out of the area, which stranded the declaration — and
- * because `vector-spaces` is a concept of the subject it joined, the edge was
- * rehomed to that ontology's own `EDGES` and is stamped
- * `author:vectors-and-independence` now. The edge did not change; where it is
- * DECLARED did.
+ * `basis-and-dimension` out of the area and the twenty-third wrote
+ * `inner-product-spaces` out of it; each time the declaration was stranded, and
+ * each time `vector-spaces` was a concept of the subject the node joined, so
+ * the edge went to that ontology's own `EDGES` rather than to a `links` entry.
+ * Neither edge changed; where each is DECLARED did, and they have converged on
+ * one stamp from two.
  *
  * Asserted this way rather than loosened to "the edge exists" because the stamp
  * is the only thing that distinguishes a rehomed edge from a dropped one
  * silently replaced by a duplicate from somewhere else: an edge counted once
- * with the wrong provenance means two files both think they own it.
+ * with the wrong provenance means two files both think they own it. And the
+ * COUNT of edges out of the axioms is pinned at two, so a third arriving
+ * without its own group is caught here.
  */
-t('both edges survive once each, now stamped by the two different files that declare them',
+t('both edges survive once each, now declared by the one file that holds both ends',
   ['basis-and-dimension', 'inner-product-spaces'].every(id =>
     MATHEMATICS.edges.filter(e => e.kind === 'prerequisite'
-      && e.from === 'vector-spaces' && e.to === id).length === 1)
-  && MATHEMATICS.edges.find(e =>
-    e.from === 'vector-spaces' && e.to === 'inner-product-spaces')
-    ?.promotedBy === 'atlas:linear-algebra'
-  && MATHEMATICS.edges.find(e =>
-    e.from === 'vector-spaces' && e.to === 'basis-and-dimension')
-    ?.promotedBy === 'author:vectors-and-independence',
+      && e.from === 'vector-spaces' && e.to === id).length === 1
+    && MATHEMATICS.edges.find(e => e.from === 'vector-spaces' && e.to === id)
+      ?.promotedBy === 'author:vectors-and-independence')
+  && MATHEMATICS.edges.filter(e => e.from === 'vector-spaces').length === 2,
   MATHEMATICS.edges.filter(e => e.from === 'vector-spaces')
     .map(e => `${e.to}:${e.promotedBy}`).join(' '))
 /*
@@ -4367,23 +4383,34 @@ t('the gate tightened onto the dimension and five lists got shorter',
   ['rank-nullity', 'eigenvalues', 'diagonalisation']
     .map(id => `${id}: ${gatingPrerequisitesOf(MATHEMATICS, id).join('/')}`).join(' | '))
 /*
- * AND IT TURNED OVER AT CONSTANT SIZE IN FOUR PLACES, which is the half neither
- * a `length` check nor a direction-of-change check can see. For the four nodes
- * that reach the axioms through `inner-product-spaces` as WELL as through this
- * concept, `vector-spaces` stays named — so the list keeps its length while
- * `linear-independence` is replaced by `basis-and-dimension`. A suite that
- * asserted "the gate got shorter" over all nine would read these four as
- * nothing having happened.
+ * AND IT TURNED OVER AT CONSTANT SIZE IN FOUR PLACES — which was the half
+ * neither a `length` check nor a direction-of-change check could see, and which
+ * the TWENTY-THIRD PROMOTION HAS SINCE TAKEN HALF OF BACK.
+ *
+ * The reason the four stayed the same size was that each reached the axioms
+ * through `inner-product-spaces` as WELL as through this concept, so
+ * `vector-spaces` stayed named while `linear-independence` was replaced by
+ * `basis-and-dimension`. That second route is now written: the walk stops at
+ * `inner-product-spaces` and the axioms drop out of all four lists, each of
+ * which lost exactly one entry. So the claim that survives here is the
+ * turnover — `basis-and-dimension` in, `linear-independence` out — and the
+ * `vector-spaces` half has moved to the twenty-third promotion's own group,
+ * exactly as the twentieth's `rank-nullity` half moved to this one's.
+ *
+ * Kept as a chain rather than rewritten, and the negative is asserted in BOTH
+ * directions for the same reason it was the first time: a one-sided check over
+ * these four would pass on a list that had quietly lost the dimension too.
  */
 const SAME_SIZE_TURNOVER = [
   'spectral-theorem', 'least-squares', 'numerical-linear-algebra',
   'singular-value-decomposition',
 ]
-t('and in four more it turned over without changing size, which no count would show',
+t('and in four more it turned over, the axioms half having since been written out from under it',
   SAME_SIZE_TURNOVER.every(id =>
     gatingPrerequisitesOf(MATHEMATICS, id).includes('basis-and-dimension')
     && !gatingPrerequisitesOf(MATHEMATICS, id).includes('linear-independence')
-    && gatingPrerequisitesOf(MATHEMATICS, id).includes('vector-spaces')),
+    && !gatingPrerequisitesOf(MATHEMATICS, id).includes('vector-spaces')
+    && gatingPrerequisitesOf(MATHEMATICS, id).includes('inner-product-spaces')),
   SAME_SIZE_TURNOVER
     .map(id => `${id}: ${gatingPrerequisitesOf(MATHEMATICS, id).length} entries, `
       + `${gatingPrerequisitesOf(MATHEMATICS, id).join('/')}`).join(' | '))
@@ -4418,6 +4445,163 @@ const KRULL = regionBy('krull')
 t('the region that lost its anchor was refilled by name, for the second promotion running',
   KRULL?.anchors?.join(' ') === 'rank-nullity eigenvalues diagonalisation'
   && KRULL.anchors.every(id => LINALG.nodes.some(n => n.id === id))
+  && KRULL.authored?.includes('vectors-and-independence'),
+  `${KRULL?.anchors?.join(', ')} | authored ${KRULL?.authored?.join(', ')}`)
+
+// ---------------------------------------------------------------------------
+
+/**
+ * THE TWENTY-THIRD PROMOTION, AND THE FOURTH OUT OF THIS ONE AREA.
+ *
+ * `inner-product-spaces` went into `vectors-and-independence`, the same subject
+ * as both of the concepts it rested on, and the subject half is in
+ * tests/concepts-logic.mjs — including the reason it was taken, which is that
+ * the twenty-second promotion's written refusal of it described the SHAPE of an
+ * answer rather than a move, and this file's own record of four such refusals
+ * expiring is what says a shape refusal is a claim to re-derive.
+ *
+ * What belongs here is the map half, and six things would have failed silently:
+ *
+ *  - NO `links` ENTRY, EITHER WAY. Both `needs` pointed into the receiving
+ *    ontology, so both stranded edges went there and this area owed nothing;
+ *    and no entry of any area named the node, so nothing was handed back. Both
+ *    are absences, and a duplicate edge in the composed graph is something
+ *    `composeAtlas` does not notice. Third promotion running out of this area
+ *    with a `links` cost of zero.
+ *  - THE THREE EDGES OUT, which cross a file boundary this area's previous
+ *    departures did not. `spectral-theorem` and `least-squares` are nodes here;
+ *    `functional-analysis-intro` is a node of `real-analysis`, in
+ *    atlas-analysis.ts. All three declare the concept in their own `needs`, so
+ *    all three survive — and the way this fails is not an error but a node
+ *    quietly rooted with nothing above it.
+ *  - THE GATE, WHICH SHRANK IN FIVE PLACES AND BY EXACTLY ONE ENTRY EACH. Two
+ *    names left every list and one arrived, which is the ordinary tightening —
+ *    but it is also the half of the twenty-second promotion's four-place
+ *    constant-size turnover being taken back, so the two claims are asserted
+ *    together rather than separately.
+ *  - THAT IT WAS NOT AN ARMATURE ANCHOR. Krull's slot turned over at the
+ *    twentieth and again at the twenty-second, both times because the region
+ *    anchors on the root of a shrinking area. It did not this time, and an
+ *    absence has to be looked for to be known — the three anchors are asserted
+ *    unchanged and still nodes here.
+ *  - THE SCOPE PATTERN, CARRIED VERBATIM AND THEN TESTED. The twenty-second
+ *    promotion found that its node's pattern matched one of three alternatives
+ *    because of a `\b` after a bracket, and nothing had said so for as long as
+ *    the node existed. So this concept's alternatives are checked against real
+ *    titles below rather than reasoned about.
+ */
+group('the twenty-third promotion, and the fourth out of linear algebra')
+t('the inner product is a concept of the vectors subject, not a node of this area',
+  !LINALG.nodes.some(n => n.id === 'inner-product-spaces')
+  && areaOf(MATHEMATICS, 'inner-product-spaces') === 'vectors-and-independence'
+  && isTeachable(MATHEMATICS, 'inner-product-spaces')
+  && isPractisable(MATHEMATICS, 'inner-product-spaces'),
+  `${areaOf(MATHEMATICS, 'inner-product-spaces')}, `
+  + `node here: ${LINALG.nodes.some(n => n.id === 'inner-product-spaces')}`)
+t('both stranded needs are ontology edges, so this area owes no links entry for either',
+  ['vector-spaces', 'dot-product-geometry'].every(from =>
+    MATHEMATICS.edges.filter(e => e.kind === 'prerequisite'
+      && e.from === from && e.to === 'inner-product-spaces').length === 1
+    && MATHEMATICS.edges.find(e =>
+      e.from === from && e.to === 'inner-product-spaces')
+      ?.promotedBy === 'author:vectors-and-independence'
+    && areaOf(MATHEMATICS, from) === 'vectors-and-independence'),
+  MATHEMATICS.edges.filter(e => e.to === 'inner-product-spaces')
+    .map(e => `${e.from}@${areaOf(MATHEMATICS, e.from)}:${e.promotedBy}`).join(' '))
+t('and no links entry of any area names it, so nothing was handed back or dropped',
+  AREAS.flatMap(a => (a.links ?? []).map(l => `${a.id}:${l.from}->${l.to}`))
+    .filter(s => s.includes('inner-product-spaces')).length === 0,
+  AREAS.flatMap(a => (a.links ?? []).map(l => `${a.id}:${l.from}->${l.to}`))
+    .filter(s => s.includes('inner-product-spaces')).join(' ') || 'none, as it should be')
+/*
+ * The three edges out, with the area each is declared in named. Two are here
+ * and the third is in another map file, which is the claim a check scoped to
+ * `LINALG` would miss entirely — and `real-analysis` is further from linear
+ * algebra than either of the previous departures reached.
+ */
+t('the three edges declared at the far ends survive, once each, across two map files',
+  [['spectral-theorem', 'atlas:linear-algebra'],
+    ['least-squares', 'atlas:linear-algebra'],
+    ['functional-analysis-intro', 'atlas:real-analysis']].every(([id, stamp]) =>
+    MATHEMATICS.edges.filter(e => e.kind === 'prerequisite'
+      && e.from === 'inner-product-spaces' && e.to === id).length === 1
+    && MATHEMATICS.edges.find(e =>
+      e.from === 'inner-product-spaces' && e.to === id)?.promotedBy === stamp),
+  MATHEMATICS.edges.filter(e =>
+    e.kind === 'prerequisite' && e.from === 'inner-product-spaces')
+    .map(e => `${e.to}:${e.promotedBy}`).join(' '))
+/*
+ * THE GATE SHRANK IN FIVE PLACES, each by exactly one entry, and this is the
+ * other end of the twenty-second promotion's constant-size turnover.
+ *
+ * While this node had no material the walk passed through it and reported the
+ * two concepts behind it — `vector-spaces` and `dot-product-geometry`. It now
+ * stops here, so those two leave every one of the five lists and this one
+ * name arrives: six entries became five for three of them, four became three
+ * for `least-squares`, thirteen became twelve for `functional-analysis-intro`.
+ *
+ * Asserted as membership with the counts only in the message, which is this
+ * file's standing rule — but the DIRECTION is worth one line because it is not
+ * always this one: a gate shrinks when the promoted concept HIDES the ancestors
+ * it used to be walked through to, and grows when the node names some of them
+ * in its own `needs` as well. Here it hides both, so five lists all got shorter.
+ */
+const IPS_GATED = [
+  'spectral-theorem', 'least-squares', 'singular-value-decomposition',
+  'numerical-linear-algebra', 'functional-analysis-intro',
+]
+t('the gate tightened onto the inner product in five places, two of them in other files',
+  IPS_GATED.every(id =>
+    gatingPrerequisitesOf(MATHEMATICS, id).includes('inner-product-spaces')
+    && !gatingPrerequisitesOf(MATHEMATICS, id).includes('vector-spaces')
+    && !gatingPrerequisitesOf(MATHEMATICS, id).includes('dot-product-geometry')),
+  IPS_GATED.map(id => `${id}: ${gatingPrerequisitesOf(MATHEMATICS, id).length} entries, `
+    + `${gatingPrerequisitesOf(MATHEMATICS, id).join('/')}`).join(' | '))
+t('and every gate it names is teachable, so each is somewhere to go',
+  IPS_GATED.every(id =>
+    gatingPrerequisitesOf(MATHEMATICS, id).every(p => isTeachable(MATHEMATICS, p))))
+/*
+ * Its OWN gate did not move, which is the control for the five above. Both of
+ * its prerequisites were already teachable before the promotion, so this is the
+ * one list in the neighbourhood that should read the same either side of the
+ * edit — and a suite reporting five changes with no unchanged case beside them
+ * cannot tell a real tightening from a walk that broke.
+ */
+t('while its own gate is unchanged, both the concepts it rests on having been written already',
+  gatingPrerequisitesOf(MATHEMATICS, 'inner-product-spaces').slice().sort().join(' ')
+    === 'dot-product-geometry vector-spaces',
+  gatingPrerequisitesOf(MATHEMATICS, 'inner-product-spaces').join('/'))
+/*
+ * The two stranding absences, looked for on the node before it was deleted
+ * rather than inferred from a green suite — the fourth promotion running to
+ * record them. A `confusedWith` becomes an `interferes_with`, which constrains
+ * SELECTION and gates nothing, so dropping one is invisible to every suite
+ * here; an `exercises` becomes an `encompasses`, which between two ontologies
+ * is expressible nowhere and would therefore have CHOSEN the filing.
+ */
+t('no interference and no credit edge into it were lost, the node having declared neither',
+  !MATHEMATICS.edges.some(e => e.kind === 'interferes_with'
+    && (e.from === 'inner-product-spaces' || e.to === 'inner-product-spaces'))
+  && !MATHEMATICS.edges.some(e => e.kind === 'encompasses'
+    && e.to === 'inner-product-spaces'),
+  MATHEMATICS.edges.filter(e =>
+    (e.from === 'inner-product-spaces' || e.to === 'inner-product-spaces')
+    && e.kind !== 'prerequisite')
+    .map(e => `${e.from}~${e.kind}~${e.to}`).join(' ') || 'neither, as the node declared')
+/*
+ * THE ARMATURE ANCHOR THAT DID NOT TURN OVER, asserted because the previous two
+ * promotions out of this area both did and the pattern they recorded —
+ * "a region anchoring on the ROOT of a growing area will be refilled every time
+ * that area is authored out from underneath it" — predicts a third. It does not
+ * apply here, and the reason is specific rather than lucky: this node was a root
+ * of the area view but never one of Krull's anchors, so there was no slot to
+ * refill. Checking the absence is what distinguishes "nothing was owed" from
+ * "somebody forgot", which `armatureProblems` cannot tell apart.
+ */
+t('the region kept all three anchors, this node never having been one of them',
+  KRULL?.anchors?.join(' ') === 'rank-nullity eigenvalues diagonalisation'
+  && KRULL.anchors.every(id => LINALG.nodes.some(n => n.id === id))
+  && !KRULL.anchors.includes('inner-product-spaces')
   && KRULL.authored?.includes('vectors-and-independence'),
   `${KRULL?.anchors?.join(', ')} | authored ${KRULL?.authored?.join(', ')}`)
 
@@ -4919,6 +5103,36 @@ const TITLES = [
   ['Dimension (vector space)', 'basis-and-dimension'],
   ['Change of basis', 'basis-and-dimension'],
   ['Linear independence', 'linear-independence'],
+  /*
+   * A PATTERN CARRIED VERBATIM, AND TESTED RATHER THAN TRUSTED.
+   *
+   * `inner-product-spaces` was authored by the twenty-third promotion with its
+   * map node's pattern unchanged, which is the default three of the four
+   * promotions into that subject took. The exception was `basis-and-dimension`
+   * directly above, and the lesson it left is that "carried verbatim" is only
+   * safe if somebody has checked the thing being carried: that node's pattern
+   * matched one of its own three alternatives for as long as it existed and
+   * nothing said so, because `fidelityMismatches` asks whether a checked
+   * concept HAS a pattern and the recognition figure counts patterns rather
+   * than testing them.
+   *
+   * So these two rows are the check, one per alternative that names a real
+   * article. "Gram–Schmidt process" also pins the EN DASH: the pattern is
+   * `gram(–|-)schmidt`, and Wikipedia titles that name two people use an en
+   * dash where almost every author typing the pattern would use a hyphen.
+   * Dropping that branch would leave the alternative matching only the title
+   * nobody writes, which is this trap's third form after the suffix and the
+   * bracket.
+   *
+   * The third alternative, `orthogonali[sz]ation`, has no row because no
+   * article is titled with it alone — and that is the shortfall this concept
+   * records rather than hides: "Orthogonality" and "Orthonormal basis" are
+   * claimed by NOBODY, the row below having kept the second out of the
+   * dimension on the ground that it belongs here. Widening is one word and was
+   * deliberately not done in the same change as the material.
+   */
+  ['Inner product space', 'inner-product-spaces'],
+  ['Gram–Schmidt process', 'inner-product-spaces'],
 ]
 
 for (const [title, expected] of TITLES) {
@@ -4975,8 +5189,12 @@ const MUST_NOT = [
    * ALSO land here, which is the half that would have gone unnoticed.
    *
    * The other two are what a pattern on the bare words would have cost.
-   * Orthonormality is `inner-product-spaces`, still a mapped node of linear
-   * algebra, and a fractal dimension is not this count at all.
+   * Orthonormality is `inner-product-spaces` — a concept of the same subject
+   * since the twenty-third promotion, and still not the claimant of this
+   * title, since its own pattern was carried verbatim from its node and names
+   * `orthogonali[sz]ation` rather than the bare word. So the reservation this
+   * row makes is unfulfilled rather than wrong, and the title rows above say
+   * so. A fractal dimension is not this count at all.
    */
   ['Linear independence', ['basis-and-dimension']],
   ['Orthonormal basis', ['basis-and-dimension']],
