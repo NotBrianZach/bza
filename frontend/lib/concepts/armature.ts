@@ -178,9 +178,26 @@ export const REGIONS: Region[] = [
     // `plane-geometry`. An anchor must be a node of `area`, so a promotion
     // empties the slot rather than leaving it — and `armatureProblems` says so
     // loudly, which is the one check this table has that the game's copy does
-    // not. `isometries-and-symmetry` replaces it: still synthetic, still about
+    // not. `isometries-and-symmetry` replaced it: still synthetic, still about
     // what a cut preserves, and still in the area.
-    anchors: ['constructions', 'isometries-and-symmetry', 'lines-in-the-plane'],
+    //
+    // AND THEN IT WENT THE SAME WAY, one promotion later, so this slot has now
+    // turned over twice into the same subject. `plane-transformations` replaces
+    // it, and the choice needs saying because neither established refill rule
+    // picks it. Krull's rule is "the node that was next" — the dependent that
+    // inherits the departing node's place — and there is none to inherit it
+    // here: `isometries-and-symmetry`'s only dependent anywhere is
+    // `binary-operations`, in `abstract-algebra`, so an anchor cannot be taken
+    // from it. Paravgrad's fallback is to pick off the region's own `because`,
+    // and this region's two other anchors already hold the compass and the
+    // straight line it describes. What is left is the node holding the
+    // departing node's CONTENT: the same translations, rotations and
+    // reflections, written on coordinates. It is the first Druuvruke anchor
+    // from the analytic half of the area, which the region's `authored` list
+    // does not contradict — the guild's argument is about measurement either
+    // way, and the merge that put both halves in one area is what makes the
+    // distinction a matter of style here rather than of boundary.
+    anchors: ['constructions', 'plane-transformations', 'lines-in-the-plane'],
     because: 'The Stone Digger Guild cuts straight lines through mountains for a living, under elected assemblies that have to agree where the line goes. Compass, straightedge, and an argument about measurement.',
   },
   {
@@ -211,7 +228,37 @@ export const REGIONS: Region[] = [
     id: 'paravgrad', name: 'Paravgrad', epithet: 'The Northmost Port',
     km: 2000, area: 'trigonometry', xy: { x: 0.522, y: 0.150 },
     authored: ['triangle-trigonometry'],
-    anchors: ['law-of-sines-cosines', 'unit-circle', 'polar-coordinates'],
+    // `law-of-sines-cosines` was the first anchor until it was authored into
+    // `triangle-trigonometry`, the second concept of the subject this region
+    // already claims. An anchor must be a node of `area`, so a promotion out of
+    // `trigonometry` empties the slot and `armatureProblems` says so loudly.
+    //
+    // THE DOCUMENTED REFILL RULE DOES NOT APPLY HERE, AND THAT IS WHY THIS
+    // COMMENT IS LONGER THAN KRULL'S. Krull's slot has turned over twice on the
+    // rule "the refill is the node that was next" — the departing anchor was
+    // the root of a growing area, and the node directly above it inherited both
+    // its place and the anchor. That rule needs a node above the departing one.
+    // This one had NONE: no node in this area and no concept anywhere named
+    // `law-of-sines-cosines` as a need, so nothing inherited its place and
+    // there was no successor to promote into the slot.
+    //
+    // So the refill is chosen on the region's own `because` instead, which is
+    // what that field is for. The Black Fleet navigates — "position is an angle
+    // to a star and a bearing off a coast you cannot see" — and the departing
+    // node was the triangulation one, the node that turns two bearings and a
+    // distance into a position. The nearest remaining node about COMBINING
+    // angles is `angle-sum-identities`: resolving one bearing into another is
+    // that identity and nothing else in the area is. `radians` was the other
+    // candidate and is a change of UNIT, which is not what a fleet does.
+    //
+    // Reordered as well as refilled, which the old list is the argument for:
+    // `law-of-sines-cosines` sat first while needing nothing else here, so the
+    // list began with a node that depended on none of the others. These three
+    // are now in dependency order — `angle-sum-identities` rests on
+    // `pythagorean-identity` which rests on `unit-circle`, and
+    // `polar-coordinates` rests on `radians` which rests on `unit-circle` — so
+    // the circle comes first, which is also the order a reader walks them in.
+    anchors: ['unit-circle', 'angle-sum-identities', 'polar-coordinates'],
     because: 'The Black Fleet works the northmost water, where position is an angle to a star and a bearing off a coast you cannot see. Forty-four thousand people with no formal law and a very great deal of navigation.',
   },
   {

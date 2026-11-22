@@ -904,29 +904,28 @@ const regressed = MATHEMATICS.concepts
   .filter(c => gatingPrerequisitesOf(MATHEMATICS, c.id).some(p => FN_IDS.has(p)))
 
 /*
- * Seven, not four, and the three it gained all came from a DIFFERENT AREA and
+ * Eight, not four, and the four it gained all came from a DIFFERENT AREA and
  * from the same FILE — `sequences`, then `sigma-notation`, then
- * `functions-of-several-variables`, the first two nodes of
- * `sequences-and-series` and the third the root node of
- * `multivariable-calculus`, all three in atlas-analysis.ts. The subject's own
- * assertions are all phrased over `FN_IDS` rather than over the `functions`
- * area, so they kept holding through all three; the groups below are what
- * check each promotion.
+ * `functions-of-several-variables`, then `arithmetic-sequences`: three nodes of
+ * `sequences-and-series` and the root node of `multivariable-calculus`, all
+ * four in atlas-analysis.ts. The subject's own assertions are all phrased over
+ * `FN_IDS` rather than over the `functions` area, so they kept holding through
+ * all four; the groups below are what check each promotion.
  *
- * Three of the seven are therefore NOT in the `functions` map area, which is
+ * Four of the eight are therefore NOT in the `functions` map area, which is
  * why this number is not a statement about that area's size and never was.
  */
-t('the subject contributes seven concepts to the map', FN_IDS.size === 7, `${FN_IDS.size}`)
+t('the subject contributes eight concepts to the map', FN_IDS.size === 8, `${FN_IDS.size}`)
 /*
- * And by NAME, because the count alone cannot say which seven. Three of these
+ * And by NAME, because the count alone cannot say which eight. Four of these
  * were analysis-file nodes and four were written here, and once a node is
  * promoted the composed map stops recording where it came from — `areaOf`
  * reports the SUBJECT for every authored concept, so there is nothing to read
  * the origin off. The names are the only durable form of the claim.
  */
-t('and they are these seven, three of them promoted in from the analysis file',
+t('and they are these eight, four of them promoted in from the analysis file',
   [...FN_IDS].sort().join(' ')
-    === 'domain-and-range function-composition function-concept '
+    === 'arithmetic-sequences domain-and-range function-composition function-concept '
       + 'functions-of-several-variables inverse-functions sequences sigma-notation',
   [...FN_IDS].sort().join(' '))
 t('nothing that existed before it gained a gate on it',
@@ -1016,18 +1015,25 @@ group('a sequence is a function on the naturals, so it left analysis for the fun
 const SEQ_AREA = AREAS.find(a => a.id === 'sequences-and-series')
 /*
  * The three nodes that rested on `sequences` when it was promoted, split by
- * where they are NOW. Two are still nodes of this area; `sigma-notation` has
- * since been promoted into the same subject, so the claim "the node that
- * stayed still owns its edge" is no longer true of it and asserting it over
- * all three would be asserting the wrong thing about the third.
+ * where they are NOW. One is still a node of this area; `sigma-notation` and
+ * then `arithmetic-sequences` have since been promoted into the same subject,
+ * so the claim "the node that stayed still owns its edge" is no longer true of
+ * either of them and asserting it over all three would be asserting the wrong
+ * thing about two.
  *
- * Kept as two named lists rather than one, because the edge still exists and
- * still has to be checked — it just moved from a map node's `needs` to the
+ * Kept as two named lists rather than one, because the edges still exist and
+ * still have to be checked — they just moved from a map node's `needs` to the
  * ontology's `EDGES`, which is a different place to look. A single list would
  * have had to drop whichever half it could not express.
+ *
+ * The split has moved TWICE now, once per promotion, and the lists are the
+ * reason that was a one-line edit rather than an archaeology exercise. A
+ * single `['arithmetic-sequences', 'geometric-sequences', 'sigma-notation']`
+ * checked against map nodes would have gone red on each promotion with no
+ * indication that the edge was fine and only its declaration site had changed.
  */
-const SEQ_DEPENDENTS = ['arithmetic-sequences', 'geometric-sequences']
-const SEQ_DEPENDENTS_PROMOTED = ['sigma-notation']
+const SEQ_DEPENDENTS = ['geometric-sequences']
+const SEQ_DEPENDENTS_PROMOTED = ['sigma-notation', 'arithmetic-sequences']
 
 t('the area no longer declares the node, and it carries the functions subject',
   SEQ_AREA.nodes.every(n => n.id !== 'sequences')
@@ -1042,8 +1048,8 @@ t('and it is teachable AND practisable — a syllabus entry, not a renamed skele
  * note the trigonometry, geometry and linear-algebra departures carry. The
  * number is restated in the message so a changed floor is visible either way.
  */
-t('nine nodes left after the two departures, four clear of the floor',
-  SEQ_AREA.nodes.length === 9 && SEQ_AREA.nodes.length - 5 === 4,
+t('eight nodes left after the three departures, three clear of the floor',
+  SEQ_AREA.nodes.length === 8 && SEQ_AREA.nodes.length - 5 === 3,
   `${SEQ_AREA.nodes.length} nodes, ${SEQ_AREA.nodes.length - 5} of headroom`)
 
 t('its one stranded edge is in the ontology, and this area gave up no links entry',
@@ -1064,7 +1070,7 @@ t('its one stranded edge is in the ontology, and this area gave up no links entr
 t('and nothing was handed back — an empty links list had nothing to collapse',
   !(SEQ_AREA.links ?? []).some(l => l.from === 'sequences' || l.to === 'sequences'))
 
-t('the edges pointing into it survive, declared by the nodes that stayed',
+t('the edge pointing into it from the node that stayed survives, declared there',
   SEQ_DEPENDENTS.every(id =>
     SEQ_AREA.nodes.some(n => n.id === id && (n.needs ?? []).includes('sequences'))
     && prerequisitesOf(MATHEMATICS, id).includes('sequences')),
@@ -1078,7 +1084,7 @@ t('the edges pointing into it survive, declared by the nodes that stayed',
  * an edge written in neither place fails here rather than leaving a concept
  * resting on nothing.
  */
-t('and so does the third, re-declared in the ontology after it was promoted too',
+t('and so do the other two, re-declared in the ontology after they were promoted too',
   SEQ_DEPENDENTS_PROMOTED.every(id =>
     !SEQ_AREA.nodes.some(n => n.id === id)
     && FUNCTIONS.edges.some(e => e.kind === 'prerequisite'
@@ -1117,42 +1123,109 @@ t('and all three are now gated BY it, where the walk used to look through it',
  * the size held while a third of the membership turned over, which is exactly
  * the failure atlas-foundations.ts predicted and the reason this assertion
  * names its members.
+ *
+ * The third promotion took it 3 → 2. `arithmetic-sequences` left and nothing
+ * replaced it: a node can only substitute into this set by being freed INSIDE
+ * the area, and that one was the last in-area prerequisite of nothing — it was
+ * the last in-area prerequisite of NOTHING ANYWHERE, which is the stronger
+ * fact the group further down asserts.
+ *
+ * So one area has now produced all three outcomes — growth, turnover at
+ * constant size, and shrinkage — in three departures. A size check would have
+ * caught the first, passed the second while every claim it made went stale, and
+ * caught the third for the wrong reason. Naming the members is the only form of
+ * this assertion that has meant the same thing throughout.
  */
-t('the area root set held at three while a member turned over',
+t('the area root set shrank to two, with nothing substituting in',
   roots(areaOntology(SEQ_AREA)).slice().sort().join(' ')
-    === 'arithmetic-sequences geometric-sequences mathematical-induction',
+    === 'geometric-sequences mathematical-induction',
   roots(areaOntology(SEQ_AREA)).slice().sort().join(' '))
 /*
- * The substitution itself, stated as the reason rather than the outcome: the
- * node that arrived did so because the departing one was its last prerequisite
- * inside the area, and the node that did not arrive has one left.
+ * The second promotion's substitution, stated as the reason rather than the
+ * outcome: the node that arrived did so because the departing one was its last
+ * prerequisite inside the area, and the node that did not arrive has one left.
  */
-t('and the substitution happened for the stated reason, not by coincidence',
+t('and that substitution happened for the stated reason, not by coincidence',
   (SEQ_AREA.nodes.find(n => n.id === 'mathematical-induction').needs ?? [])
     .every(id => !SEQ_AREA.nodes.some(n => n.id === id))
   && (SEQ_AREA.nodes.find(n => n.id === 'infinite-series').needs ?? [])
     .some(id => SEQ_AREA.nodes.some(n => n.id === id)),
   `induction needs ${SEQ_AREA.nodes.find(n => n.id === 'mathematical-induction').needs.join('/')}, `
   + `series needs ${SEQ_AREA.nodes.find(n => n.id === 'infinite-series').needs.join('/')}`)
+/*
+ * And the third's shrinkage, likewise by its reason. The only way a departure
+ * can leave this set smaller is if no node of the area was waiting on it, so
+ * the claim is an absence over the area's own nodes — which is what makes it
+ * fail if a future edit gives some node here a `needs` on the departed
+ * concept and nobody re-measures the roots.
+ */
+t('and the shrinkage did too — no node here was waiting on the third departure',
+  SEQ_AREA.nodes.every(n => !(n.needs ?? []).includes('arithmetic-sequences')),
+  SEQ_AREA.nodes.filter(n => (n.needs ?? []).includes('arithmetic-sequences'))
+    .map(n => n.id).join(', ') || 'none')
 
 /*
  * The stranding no suite catches, asserted as an absence that stays true.
  * `expandEdges` turns `confusedWith` into `interferes_with`, so deleting a node
  * carrying one deletes that edge — and interference constrains SELECTION, not
  * gating, so every suite stays green. This node declared none, and the area's
- * one interference is between two nodes that both STAYED. Asserted together so
- * the next promotion out of either of those two cannot quietly take it.
+ * one interference is between two other nodes.
  */
-t('it stranded no interference, and the area\'s one pair is still both on the map',
+t('it stranded no interference of its own',
   !MATHEMATICS.edges.some(e => e.kind === 'interferes_with'
-    && (e.from === 'sequences' || e.to === 'sequences'))
-  && MATHEMATICS.edges.some(e => e.kind === 'interferes_with'
-    && e.from === 'geometric-sequences' && e.to === 'arithmetic-sequences')
-  && ['geometric-sequences', 'arithmetic-sequences']
-    .every(id => SEQ_AREA.nodes.some(n => n.id === id)),
+    && (e.from === 'sequences' || e.to === 'sequences')),
   MATHEMATICS.edges.filter(e => e.kind === 'interferes_with'
-    && SEQ_DEPENDENTS.concat('sequences').some(id => e.from === id || e.to === id))
+    && (e.from === 'sequences' || e.to === 'sequences'))
     .map(e => `${e.from}~${e.to}`).join(' ') || 'none')
+/*
+ * THE AREA'S ONE INTERFERENCE NOW HAS ONE END OFF THE MAP, AND IT SURVIVED —
+ * which is the half of the `confusedWith` rule this file had wrong until the
+ * third promotion out of this area tested it.
+ *
+ * The note on this area used to tell whoever promoted EITHER of the two named
+ * families to re-declare this edge in the receiving ontology's `EDGES`.
+ * `arithmetic-sequences` was promoted and nothing was re-declared, correctly:
+ * `expandEdges` walks an area's OWN nodes, the `confusedWith` is written on
+ * `geometric-sequences`, and that node stayed — so the area still emits the
+ * edge and `composeAtlas` resolves it with an authored concept at the far end.
+ * An edge is owned by the node that DECLARES it, exactly as for `needs`.
+ *
+ * Three claims, and each is a different way the next promotion could lose this:
+ *
+ *  - the composed edge exists AND still carries its rationale, since
+ *    tests/atlas.mjs requires one on every authored interference and a
+ *    re-declaration written by hand is where one gets dropped;
+ *  - there is exactly ONE of it, which is what a re-declaration in the
+ *    ontology would have broken — two identical `interferes_with` edges
+ *    constrain selection identically, so no other check in this build could
+ *    see the duplicate;
+ *  - and the ends are now split, one node and one authored concept, which is
+ *    the assertion that goes red if somebody promotes `geometric-sequences`
+ *    without moving the declaration. That one really would delete the edge in
+ *    silence, and it is the case the original warning was about.
+ */
+const AP_INTERFERENCE = MATHEMATICS.edges.filter(e => e.kind === 'interferes_with'
+  && e.from === 'geometric-sequences' && e.to === 'arithmetic-sequences')
+t('the pair survives the far end being promoted, declared once, by the node that stayed',
+  AP_INTERFERENCE.length === 1
+  && !!AP_INTERFERENCE[0].rationale
+  && SEQ_AREA.nodes.some(n => n.id === 'geometric-sequences'
+    && (n.confusedWith ?? []).some(c => c.id === 'arithmetic-sequences'))
+  && !SEQ_AREA.nodes.some(n => n.id === 'arithmetic-sequences')
+  && conceptById(MATHEMATICS, 'arithmetic-sequences')?.subjectId === 'functions-and-inverses',
+  `${AP_INTERFERENCE.length} edge(s), rationale ${!!AP_INTERFERENCE[0]?.rationale}, `
+  + `arithmetic end is ${conceptById(MATHEMATICS, 'arithmetic-sequences')?.subjectId ?? 'a map node'}`)
+/*
+ * And the thing a re-declaration would have been: an `interferes_with` in that
+ * ontology naming a concept it does not contain. Asserted as an absence over
+ * the ontology's own edges rather than over the composed map, because the
+ * composed map is the one view in which such an edge looks fine.
+ */
+t('and the receiving ontology did not try to carry it, which it is not allowed to',
+  !FUNCTIONS.edges.some(e => e.kind === 'interferes_with'
+    && (e.from === 'geometric-sequences' || e.to === 'geometric-sequences')),
+  FUNCTIONS.edges.filter(e => e.kind === 'interferes_with')
+    .map(e => `${e.from}~${e.to}`).join(' ') || 'no interference in the ontology')
 
 /*
  * The pattern survived the move WITH ITS ANCHOR. Asserted as the regex source
@@ -1310,6 +1383,132 @@ t('and it claims no credit for sequences, which two of its three tasks would not
   !MATHEMATICS.edges.some(e => e.kind === 'encompasses' && e.from === 'sigma-notation'),
   MATHEMATICS.edges.filter(e => e.from === 'sigma-notation')
     .map(e => `${e.kind}->${e.to}`).join(' '))
+
+// ---------------------------------------------------------------------------
+
+/**
+ * THE TWENTY-SIXTH PROMOTION WENT UP THE SAME AREA A THIRD TIME, AND IT IS THE
+ * FIRST IN THIS BUILD THAT GATES NOTHING.
+ *
+ * `arithmetic-sequences` sat beside `geometric-sequences` on the branch above
+ * `sequences`. What is new about it, and what each assertion below is for:
+ *
+ *  - THE BRANCH BECAME A FORK. `sequences` had one child and now has two, so
+ *    the edge is asserted by NAME: the root of the subject is unchanged, the
+ *    edge count is uninformative, and an edge hung off `sigma-notation` by
+ *    mistake would move neither.
+ *  - IT HAS NO DEPENDENTS, which is why no gate anywhere changed. Asserted as
+ *    an absence over the whole composed map rather than over this area, since
+ *    `sigma-notation` directly above had dependents in three different files
+ *    and that is the comparison being made.
+ *  - THE INTERFERENCE SURVIVED WITHOUT BEING TOUCHED. That is asserted in the
+ *    first promotion's group above, where the edge is, along with the two ways
+ *    a re-declaration would have broken it.
+ *  - THE SELECTION GROUND WAS WRITTEN DOWN IN ADVANCE, in this concept's own
+ *    receiving file and in tasks.ts, by the two promotions that preceded it out
+ *    of the same area. That is the first time in this build the content
+ *    boundary existed before the material did, and it is asserted from the
+ *    other side: the earlier concepts must STILL not contain what this one
+ *    teaches.
+ */
+group('the twenty-sixth promotion took the third node off the same branch')
+
+t('it left the area and is a concept of the functions subject, with material',
+  !SEQ_AREA.nodes.some(n => n.id === 'arithmetic-sequences')
+  && areaOf(MATHEMATICS, 'arithmetic-sequences') === 'functions-and-inverses'
+  && isTeachable(MATHEMATICS, 'arithmetic-sequences')
+  && isPractisable(MATHEMATICS, 'arithmetic-sequences'),
+  `${areaOf(MATHEMATICS, 'arithmetic-sequences')}, `
+  + `node here: ${SEQ_AREA.nodes.some(n => n.id === 'arithmetic-sequences')}`)
+
+t('its one prerequisite was already teachable, which is what made it promotable',
+  prerequisitesOf(MATHEMATICS, 'arithmetic-sequences').join(',') === 'sequences'
+  && isTeachable(MATHEMATICS, 'sequences'),
+  prerequisitesOf(MATHEMATICS, 'arithmetic-sequences').join(','))
+
+/*
+ * THE FORK, BY NAME AND FROM THE ONTOLOGY'S OWN EDGE LIST. `sequences` now has
+ * two children in one subject, which is the first time that has happened on
+ * this branch, and the two have to be named: an edge accidentally written
+ * `sigma-notation → arithmetic-sequences` would leave the subject's root
+ * unchanged, its edge count unchanged and `ontologyProblems` silent, while
+ * claiming you must be able to rearrange a sigma before you can say what the
+ * 20th term of 5, 9, 13 is.
+ */
+t('the branch above sequences is a fork now, and both children are named',
+  FUNCTIONS.edges.filter(e => e.kind === 'prerequisite' && e.from === 'sequences')
+    .map(e => e.to).slice().sort().join(' ') === 'arithmetic-sequences sigma-notation',
+  FUNCTIONS.edges.filter(e => e.kind === 'prerequisite' && e.from === 'sequences')
+    .map(e => e.to).join(' '))
+t('its stranded edge is in the ontology, and this area gave up no links entry',
+  FUNCTIONS.edges.some(e => e.kind === 'prerequisite'
+    && e.from === 'sequences' && e.to === 'arithmetic-sequences' && !!e.promotedBy)
+  && (SEQ_AREA.links ?? []).length === 0
+  && MATHEMATICS.edges.filter(e => e.kind === 'prerequisite'
+    && e.to === 'arithmetic-sequences').length === 1,
+  `${(SEQ_AREA.links ?? []).length} links, `
+  + `${MATHEMATICS.edges.filter(e => e.to === 'arithmetic-sequences' && e.kind === 'prerequisite').length} `
+  + 'composed edge(s)')
+
+/*
+ * NO DEPENDENTS ANYWHERE, which is the claim that makes "this promotion gated
+ * nothing" checkable instead of merely stated.
+ *
+ * Asserted over the whole composed map and not over this area, because the
+ * interesting comparison is with `sigma-notation` directly above — five
+ * dependents across three map files — and because an edge in another file is
+ * exactly the kind that gets forgotten. `geometric-sequences` is named in the
+ * message rather than the assertion: it is the node a reader expects to find
+ * here, and it rests on `sequences` and `exponential-functions` instead.
+ */
+t('nothing anywhere rests on it, so this promotion created no gate at all',
+  MATHEMATICS.edges.filter(e => e.kind === 'prerequisite'
+    && e.from === 'arithmetic-sequences').length === 0,
+  MATHEMATICS.edges.filter(e => e.from === 'arithmetic-sequences')
+    .map(e => `${e.kind}->${e.to}`).join(' ')
+  + `; geometric-sequences needs ${prerequisitesOf(MATHEMATICS, 'geometric-sequences').join('/')}`)
+
+/*
+ * NO CREDIT EDGE, and the verdict is `sigma-notation`'s rather than
+ * `sequences`'s. An `encompasses` claims that every task here exercises the
+ * other concept, and only one of the three does: the term task evaluates a
+ * rule at a position, the position task's answer is an index, and the sum task
+ * never produces a term. One of three fails the `gcd-and-lcm` standard, which
+ * a majority would also have failed.
+ */
+t('and it claims no credit for sequences, which two of its three tasks would not earn',
+  !MATHEMATICS.edges.some(e => e.kind === 'encompasses' && e.from === 'arithmetic-sequences'),
+  MATHEMATICS.edges.filter(e => e.from === 'arithmetic-sequences')
+    .map(e => `${e.kind}->${e.to}`).join(' ') || 'no outbound edges')
+
+/*
+ * THE RESERVATION, CHECKED FROM THE OTHER SIDE.
+ *
+ * Two earlier promotions out of this area wrote down in their own files that
+ * they were leaving this concept's content alone — the closed form from a first
+ * term and a difference, and summing by pairing the ends. The suite already
+ * checks the sigma expansion example is not an arithmetic progression
+ * (tests/concepts-logic.mjs, from that task's own numbers). What is asserted
+ * here is the complement, over the composed map: those two concepts still do
+ * not name a common difference, and this one does.
+ *
+ * Over the STATEMENTS and the worked examples rather than over the comments,
+ * since a comment promising a boundary is what this is meant to be independent
+ * of.
+ */
+const AP_CONCEPT = conceptById(MATHEMATICS, 'arithmetic-sequences')
+const textOf = c => c.knowledgePoints
+  .map(p => `${p.statement} ${p.workedExample.problem} ${p.workedExample.answer} `
+    + p.workedExample.subgoals.map(s => `${s.label} ${s.detail} ${s.socratic ?? ''}`).join(' '))
+  .join(' ')
+t('the two earlier concepts still leave the difference and the pairing to this one',
+  /common difference|constant difference/i.test(textOf(AP_CONCEPT))
+  && /pair/i.test(textOf(AP_CONCEPT))
+  && !/common difference|constant difference/i.test(textOf(conceptById(MATHEMATICS, 'sequences')))
+  && !/common difference|constant difference/i.test(textOf(conceptById(MATHEMATICS, 'sigma-notation'))),
+  ['sequences', 'sigma-notation']
+    .filter(id => /common difference|constant difference/i.test(textOf(conceptById(MATHEMATICS, id))))
+    .join(', ') || 'neither names it')
 
 // ---------------------------------------------------------------------------
 
@@ -2154,9 +2353,9 @@ const EUCLID = AREAS.find(a => a.id === 'euclidean-geometry')
 const DEPARTED = [
   'points-lines-angles', 'triangle-basics', 'congruence', 'similarity', 'pythagoras',
   'quadrilaterals-and-polygons', 'area-and-perimeter', 'geometric-proof', 'circles',
-  'circle-measure', 'distance-and-midpoint',
+  'circle-measure', 'distance-and-midpoint', 'isometries-and-symmetry',
 ]
-t('the area no longer declares any of the eleven, and each carries its own subject',
+t('the area no longer declares any of the twelve, and each carries its own subject',
   DEPARTED.every(id =>
     EUCLID.nodes.every(n => n.id !== id) && areaOf(MATHEMATICS, id) === 'plane-geometry'),
   DEPARTED.map(id => `${id}:${areaOf(MATHEMATICS, id)}`).join(' '))
@@ -2862,12 +3061,13 @@ t('the area viewed alone shows exactly the nodes whose prerequisites have all le
  * count that predicts the next value, which is why this is asserted by name and
  * has been since the fourth promotion.
  */
-t('none of the sixth, seventh or eighth promotion\'s own nodes is a root of the area any more',
+t('none of the sixth, seventh, eighth or fifteenth promotion\'s own nodes is a root of the area any more',
   !euclidRoots.includes('quadrilaterals-and-polygons')
   && !euclidRoots.includes('area-and-perimeter')
   && !euclidRoots.includes('geometric-proof')
   && !euclidRoots.includes('circles')
-  && euclidRoots.includes('isometries-and-symmetry'),
+  && !euclidRoots.includes('isometries-and-symmetry')
+  && euclidRoots.includes('constructions'),
   euclidRoots.join(', '))
 /*
  * THE TENTH PROMOTION THEN SUBSTITUTED, seven to seven, which is the fifth
@@ -2959,11 +3159,84 @@ t('none of the sixth, seventh or eighth promotion\'s own nodes is a root of the 
  * name, and the first where a single promotion changed THREE of the claims it
  * makes rather than one or two.
  */
-t('so the set is six, by named membership and never by count',
+/*
+ * AND THE FIFTEENTH SHRANK IT AGAIN, six to FIVE, with nothing arriving — which
+ * is the fifth promotion's shape for the third time and the sixteenth
+ * transition of this set.
+ *
+ * `isometries-and-symmetry` was a root itself, so it left; and it was the last
+ * in-area prerequisite of NOTHING, because its only dependent anywhere in the
+ * atlas is `binary-operations`, a node of `abstract-algebra`. So the departure
+ * takes one member out and promotes none, which is the simplest thing that can
+ * happen here and the only one of the five shapes that leaves the survivors
+ * untouched.
+ *
+ * The sizes now read 1, 1, 4, 4, 3, 3, 6, 5, 5, 7, 7, 6, 5 across fifteen
+ * promotions and a merge. Five of those transitions moved membership without
+ * moving size, and three different transitions have produced a set of five with
+ * three different memberships — which is the plainest argument this file has for
+ * never asserting the count: the number 5 has meant three unrelated things
+ * here.
+ */
+t('so the set is five, by named membership and never by count',
   euclidRoots.slice().sort().join(',')
-  === 'constructions,isometries-and-symmetry,lines-in-the-plane,'
+  === 'constructions,lines-in-the-plane,'
     + 'loci-and-regions,non-euclidean-geometry,plane-transformations',
   euclidRoots.join(', '))
+/*
+ * And the half of the departure that needed no action, asserted because it
+ * looks like the dangerous half. The edge INTO the promoted node is declared on
+ * `binary-operations`'s own `needs` in atlas-structures.ts, so it survived
+ * untouched and `composeAtlas` resolves it across two file boundaries. What
+ * moved is the GATE at the far end: the walk used to pass through an empty node
+ * and land on `congruence`, and it now stops at the concept itself. A gate
+ * SUBSTITUTES, which is the direction a count gets backwards — the list is the
+ * same length and names a different member.
+ */
+const BINOPS_GATE = gatingPrerequisitesOf(MATHEMATICS, 'binary-operations')
+t('and the node that rested on it is gated by it now, not through it onto congruence',
+  BINOPS_GATE.includes('isometries-and-symmetry')
+  && !BINOPS_GATE.includes('congruence')
+  && MATHEMATICS.edges.some(e => e.kind === 'prerequisite'
+    && e.from === 'isometries-and-symmetry' && e.to === 'binary-operations'),
+  BINOPS_GATE.join(', '))
+/*
+ * THE ARMATURE ANCHOR, BY NAME, AND THIS REGION HAD NO ASSERTION UNTIL NOW —
+ * which is the gap worth naming, because the slot had already turned over once
+ * without one.
+ *
+ * `armatureProblems` refuses an anchor that is not a node of its region's area,
+ * so a promotion cannot leave the slot pointing at a concept. What it cannot
+ * see is the two things the Paravgrad and Krull assertions exist for: whether
+ * the refill was CHOSEN, and whether the region quietly dropped to two anchors.
+ * Druuvruke lost `distance-and-midpoint` at the fourteenth promotion and
+ * `isometries-and-symmetry` at this one, and neither event was checked here.
+ *
+ * Neither documented rule picked the refill, which is the third distinct answer
+ * to "where does a refill come from" and is asserted as such. Krull's rule is
+ * "the node that was next" and needs a dependent in the area to inherit the
+ * slot: the departing node's only dependent anywhere is `binary-operations`, in
+ * `abstract-algebra`, so there is none. Paravgrad's fallback is the region's own
+ * `because`, and the compass and the straight line it names are already held by
+ * the other two anchors. So the slot went to the node holding the departing
+ * node's CONTENT — the same three motions written on coordinates — and the
+ * absence of the departed id is asserted alongside, since a list that still
+ * named it would fail `armatureProblems` loudly while a list that silently kept
+ * two members would not.
+ */
+const DRUUVRUKE = regionBy('druuvruke')
+t('and the region that lost it was refilled by name, on a third rule again',
+  DRUUVRUKE?.anchors?.join(' ') === 'constructions plane-transformations lines-in-the-plane'
+  && DRUUVRUKE.anchors.length === 3
+  && DRUUVRUKE.anchors.every(id => EUCLID.nodes.some(n => n.id === id))
+  && !DRUUVRUKE.anchors.includes('isometries-and-symmetry')
+  && DRUUVRUKE.authored?.includes('plane-geometry'),
+  `${DRUUVRUKE?.anchors?.join(', ')} | authored ${DRUUVRUKE?.authored?.join(', ')}`)
+t('and neither documented refill rule could have chosen it, there being no dependent in the area',
+  dependentsOf(MATHEMATICS, 'isometries-and-symmetry')
+    .map(d => d.id ?? d).join(' ') === 'binary-operations'
+  && !EUCLID.nodes.some(n => (n.needs ?? []).includes('isometries-and-symmetry')),
+  dependentsOf(MATHEMATICS, 'isometries-and-symmetry').map(d => d.id ?? d).join(' '))
 /*
  * The fan-out asserted as the RULE rather than as two more names, because "two
  * nodes joined" is the observation and "each of them had exactly this node left
@@ -3186,23 +3459,68 @@ t('and the departed nodes are not roots of it, because they are not in it',
  * about which two.
  */
 const TRIG = AREAS.find(a => a.id === 'trigonometry')
+/*
+ * The ontology by SUBJECT ID rather than by index, for the reason given where
+ * `FUNCTIONS_AND_INVERSES` is bound by name above: a positional reference keeps
+ * reading correctly until the registry is reordered and then asserts the wrong
+ * subject in silence. The second promotion needs it because its stranded-edge
+ * split is a claim about which EDGE LIST an edge landed in.
+ */
+const TRIANGLE_TRIG = ONTOLOGIES.find(o => o.subject.id === 'triangle-trigonometry')
 t('the ratios are gone from the area and carry the new subject',
   TRIG.nodes.every(n => n.id !== 'right-triangle-trig')
   && areaOf(MATHEMATICS, 'right-triangle-trig') === 'triangle-trigonometry'
   && isTeachable(MATHEMATICS, 'right-triangle-trig')
   && isPractisable(MATHEMATICS, 'right-triangle-trig'),
   `${areaOf(MATHEMATICS, 'right-triangle-trig')}`)
-t('and the area\'s two roots are the departing node\'s own in-area dependents, by name',
-  roots(areaOntology(TRIG)).slice().sort().join(' ') === 'law-of-sines-cosines unit-circle',
+/*
+ * AND THEN THE SECOND PROMOTION TOOK THE SET BACK TO ONE, so this one area has
+ * produced the growth case and the shrinkage case from two consecutive
+ * departures. That is the strongest argument in the file for naming members:
+ * a size assertion would have read 1 → 2 → 1 and said nothing either time, and
+ * a reader told only "promoting grows the root set" would now be wrong.
+ *
+ * The discriminator is the departing node's IN-AREA DEPENDENT COUNT.
+ * `right-triangle-trig` had two, so removing it substituted two members for
+ * one. `law-of-sines-cosines` had none — nothing in this area and no concept
+ * anywhere named it as a need — so removing it just took it out of the set.
+ */
+t('and the area has one root again, the second departure having had no dependents here',
+  roots(areaOntology(TRIG)).slice().sort().join(' ') === 'unit-circle',
   roots(areaOntology(TRIG)).slice().sort().join(' '))
+t('which is exactly because nothing in the area ever rested on the node that left',
+  !TRIG.nodes.some(n => (n.needs ?? []).includes('law-of-sines-cosines')),
+  TRIG.nodes.filter(n => (n.needs ?? []).includes('law-of-sines-cosines'))
+    .map(n => n.id).join(' ') || 'nothing did')
 /*
  * The floor literal rather than the `STUB_FLOOR` constant, which is declared
  * further down this file and would be in its temporal dead zone here. The
  * number is restated in the message so a changed floor is visible either way.
  */
-t('the area is twelve nodes against a floor of five, so nothing here was floor-bound',
-  TRIG.nodes.length === 12 && TRIG.nodes.length - 5 === 7,
+t('the area is eleven nodes against a floor of five, so neither promotion was floor-bound',
+  TRIG.nodes.length === 11 && TRIG.nodes.length - 5 === 6,
   `${TRIG.nodes.length} nodes, ${TRIG.nodes.length - 5} of headroom`)
+/*
+ * AND THE AREA IS NOW CLOSED TO FURTHER PROMOTION, WHICH THE HEADROOM HIDES.
+ * Six nodes of floor headroom and not one of them authorable: every node here
+ * sits above `unit-circle`, which needs `circles-analytic` from
+ * `euclidean-geometry` — still a map node. `law-of-sines-cosines` was the last
+ * node in this area with both prerequisites written, and it has gone.
+ *
+ * Worth asserting rather than leaving in a comment, because "the floor decides
+ * nothing here" has been true of this area through both promotions and reads as
+ * "this area is available". It is not: the next promotion that opens it is
+ * `circles-analytic`, in another area entirely.
+ */
+t('but nothing in it is ready, every node resting on the unwritten analytic circle',
+  TRIG.nodes.every(n => !isTeachable(MATHEMATICS, n.id)
+    && allPrerequisitesOf(MATHEMATICS, n.id).concat(n.id)
+      .some(id => id === 'circles-analytic' || !isTeachable(MATHEMATICS, id)))
+  && !isTeachable(MATHEMATICS, 'circles-analytic')
+  && TRIG.nodes.filter(n =>
+    (n.needs ?? []).every(id => isTeachable(MATHEMATICS, id))).length === 0,
+  TRIG.nodes.filter(n => (n.needs ?? []).every(id => isTeachable(MATHEMATICS, id)))
+    .map(n => n.id).join(' ') || 'none ready')
 /*
  * BOTH STRANDED EDGES HAD TO BECOME `links`, AND BOTH OF THEM GATE.
  *
@@ -3220,10 +3538,74 @@ t('the area is twelve nodes against a floor of five, so nothing here was floor-b
  * nothing for five promotions; these two gate from the moment they exist.
  */
 const TRIG_LINKS = (TRIG.links ?? []).map(l => `${l.from}->${l.to}`).join(' ')
-t('the area declares exactly the two cross-file edges the promotion stranded, in order',
-  TRIG_LINKS === 'similarity->right-triangle-trig pythagoras->right-triangle-trig'
+t('the area declares exactly the three cross-file edges the promotions stranded, in order',
+  TRIG_LINKS === 'similarity->right-triangle-trig pythagoras->right-triangle-trig '
+    + 'triangle-basics->law-of-sines-cosines'
   && (TRIG.links ?? []).every(l => !!l.because),
   TRIG_LINKS)
+/*
+ * THE SECOND PROMOTION SPLIT ITS TWO STRANDED EDGES BETWEEN THE TWO HOMES, and
+ * that is the cleanest statement of the filing rule available anywhere in the
+ * build — one promotion, both outcomes, so neither can be read as the general
+ * case.
+ *
+ * `law-of-sines-cosines` declared `right-triangle-trig` and `triangle-basics`.
+ * The first is a concept of the SAME subject the promoted node landed in, so it
+ * became an ordinary internal edge of `TRIANGLE_TRIGONOMETRY`. The second is a
+ * concept of `plane-geometry`, so it could not be named there at all and came
+ * here. What decides is the far endpoint's SUBJECT — not its area, not whether
+ * it is authored, and not which node declared the edge. `triangle-basics` is
+ * authored, teachable and practisable, and is still barred.
+ *
+ * Checked for duplication too: the edge that moved INTO the ontology must not
+ * also appear as a link somebody added for symmetry, which is the one fault
+ * `composeAtlas` does not report.
+ */
+t('the edge whose far end shares the new subject went to the ontology, not to links',
+  !(TRIG.links ?? []).some(l => l.from === 'right-triangle-trig')
+  && TRIANGLE_TRIG.edges.some(e =>
+    e.from === 'right-triangle-trig' && e.to === 'law-of-sines-cosines')
+  && MATHEMATICS.edges.filter(e =>
+    e.from === 'right-triangle-trig' && e.to === 'law-of-sines-cosines').length === 1,
+  MATHEMATICS.edges.filter(e => e.to === 'law-of-sines-cosines')
+    .map(e => `${e.from}:${e.promotedBy}`).join(' '))
+t('while the one whose far end is another subject\'s stayed barred despite having material',
+  isTeachable(MATHEMATICS, 'triangle-basics')
+  && isPractisable(MATHEMATICS, 'triangle-basics')
+  && !TRIANGLE_TRIG.concepts.some(c => c.id === 'triangle-basics')
+  && (TRIG.links ?? []).some(l =>
+    l.from === 'triangle-basics' && l.to === 'law-of-sines-cosines'),
+  `${areaOf(MATHEMATICS, 'triangle-basics')}`)
+/*
+ * THE ARMATURE ANCHOR, BY NAME, AND THE DOCUMENTED REFILL RULE DID NOT APPLY.
+ *
+ * `armatureProblems` already refuses an anchor that is not a node of its
+ * region's area, so a promotion out of `trigonometry` cannot leave the slot
+ * empty unnoticed. What it cannot see is whether the refill was CHOSEN, or
+ * whether the region quietly dropped to two anchors — the same two gaps the
+ * Krull assertions above exist for.
+ *
+ * Krull's slot has turned over twice on the rule "the refill is the node that
+ * was next", which needs a node directly above the departing one. This one had
+ * none: nothing in this area and no concept anywhere named
+ * `law-of-sines-cosines` as a need. So the rule those two promotions recorded
+ * is not general, and the refill here was chosen on the region's own `because`
+ * instead — a fleet that navigates by bearings, so the node about COMBINING
+ * angles. Asserting the ABSENCE of the departed id as well, because an anchor
+ * list that still named it would fail `armatureProblems` loudly while an anchor
+ * list that silently kept two members would not.
+ */
+const PARAVGRAD = regionBy('paravgrad')
+t('the region that lost its anchor was refilled by name, on a different rule from Krull\'s',
+  PARAVGRAD?.anchors?.join(' ') === 'unit-circle angle-sum-identities polar-coordinates'
+  && PARAVGRAD.anchors.length === 3
+  && PARAVGRAD.anchors.every(id => TRIG.nodes.some(n => n.id === id))
+  && !PARAVGRAD.anchors.includes('law-of-sines-cosines')
+  && PARAVGRAD.authored?.includes('triangle-trigonometry'),
+  `${PARAVGRAD?.anchors?.join(', ')} | authored ${PARAVGRAD?.authored?.join(', ')}`)
+t('and the rule that refilled Krull could not have applied, the node having had no dependents',
+  dependentsOf(MATHEMATICS, 'law-of-sines-cosines').length === 0,
+  dependentsOf(MATHEMATICS, 'law-of-sines-cosines').join(' ') || 'none, anywhere')
 t('and both resolve in the composed map, stamped with the area that owned the node',
   prerequisitesOf(MATHEMATICS, 'right-triangle-trig').slice().sort().join(' ')
     === 'pythagoras similarity'
@@ -3392,9 +3774,30 @@ t('and it still collides with no area id either, which is the half the ninth sub
  * further down this file and would be in its temporal dead zone here. The
  * number is restated in the message so a changed floor is visible either way.
  */
-t('the area is nine nodes against a floor of five, so nothing here was floor-bound',
-  EUCLID.nodes.length === 9 && EUCLID.nodes.length - 5 === 4,
+t('the area is eight nodes against a floor of five, so nothing here was floor-bound',
+  EUCLID.nodes.length === 8 && EUCLID.nodes.length - 5 === 3,
   `${EUCLID.nodes.length} nodes, ${EUCLID.nodes.length - 5} of headroom`)
+/*
+ * AND THE SENTENCE THAT CLAIM INVITES IS FALSE, which is why the comparison is
+ * asserted rather than left to the reader of three areas' comments.
+ *
+ * "Nothing here was floor-bound" is a fact about THIS area, and five promotions
+ * running have been able to say it. It reads as though the floor has stopped
+ * mattering anywhere, and `linear-algebra` is the counterexample: it is at seven
+ * nodes with two ready candidates, so spending both lands it on the floor, and
+ * what atlas-foundations.ts says to do then is MERGE the remnant into a
+ * neighbouring area rather than lower the threshold — a decision about the
+ * learner-facing map. The twelfth promotion into `plane-geometry` was chosen
+ * partly on that: `rank-nullity` has four dependents against this node's one
+ * and was passed over because taking it brings that decision forward.
+ *
+ * Asserted as the pair of headrooms, so that authoring either area out from
+ * under the other's comment goes red here rather than in prose nobody reads.
+ */
+const LINALG_AREA = AREAS.find(a => a.id === 'linear-algebra')
+t('while linear-algebra is at two of headroom, so "nothing is floor-bound" is per-area and not global',
+  LINALG_AREA.nodes.length - 5 === 2 && EUCLID.nodes.length - 5 === 3,
+  `euclid ${EUCLID.nodes.length - 5}, linalg ${LINALG_AREA.nodes.length - 5}`)
 /*
  * THE FOURTEENTH PROMOTION'S TWO DEPENDENTS INSIDE THE AREA, which moved their
  * gating sets in OPPOSITE directions — and that is the whole reason both are
@@ -5410,6 +5813,13 @@ const TITLES = [
   ['Mathematical induction', 'mathematical-induction'],
   ['Binomial theorem', 'binomial-theorem'],
   ['Law of sines', 'law-of-sines-cosines'],
+  /*
+   * Both branches of `/\blaw of (sines|cosines)\b/i`, which had a row for only
+   * one of them until the concept was authored. An alternation with N branches
+   * needs N rows or a dead branch is indistinguishable from a live one —
+   * dropping either of these two now reds exactly one row, which is the point.
+   */
+  ['Law of cosines', 'law-of-sines-cosines'],
   ['Euler\'s formula', 'eulers-formula'],
   ['Conic section', 'conic-sections'],
   ['Intermediate value theorem', 'intermediate-value-theorem'],
@@ -5525,6 +5935,23 @@ const TITLES = [
    * `modular-arithmetic` is a concept of its own in the number-theory area.
    */
   ['Absolute value', 'absolute-value'],
+  /*
+   * The twenty-sixth promotion, carried verbatim — and THREE rows, one per
+   * alternative, which is the lesson `basis-and-dimension` left two screens up
+   * applied rather than restated. That pattern had a dead branch nothing could
+   * see, because the single row testing it happened to exercise a live one.
+   * This pattern is `/\barithmetic (sequence|progression|series)\b/i` and each
+   * of its three branches now has an assertion of its own, so narrowing it to
+   * two cannot stay green.
+   *
+   * "Arithmetic progression" is where an encyclopaedia files this; the other
+   * two are the titles a reader would search for and are redirects to it in
+   * practice. All three were measured landing here, and nowhere else, before
+   * the pattern came across.
+   */
+  ['Arithmetic progression', 'arithmetic-sequences'],
+  ['Arithmetic sequence', 'arithmetic-sequences'],
+  ['Arithmetic series', 'arithmetic-sequences'],
 ]
 
 for (const [title, expected] of TITLES) {
@@ -5591,6 +6018,26 @@ const MUST_NOT = [
   ['Linear independence', ['basis-and-dimension']],
   ['Orthonormal basis', ['basis-and-dimension']],
   ['Hausdorff dimension', ['basis-and-dimension']],
+  /*
+   * What `arithmetic-sequences`'s pattern must keep refusing, and the first of
+   * these is the one a widening would actually take.
+   *
+   * An arithmetico-geometric sequence is `geometric-sequences`' — the row
+   * above the TITLES block does not claim it, but that node's own pattern
+   * does, and it is the right owner since the ratio is what makes the object
+   * hard. The only thing keeping this title off the arithmetic concept is that
+   * the alternation requires a SPACE after `arithmetic` and this title has a
+   * dash, so a relaxation to `/\barithmetic/i` steals it.
+   *
+   * "Arithmetic" and "Arithmetic mean" are what the same relaxation would also
+   * take. The first is the whole of `arithmetic-foundations`, a nine-concept
+   * subject; the second is a mean, which belongs to `descriptive-statistics`
+   * and is claimed by nobody today — recorded as a shortfall on the concept
+   * itself rather than fixed by widening the wrong pattern.
+   */
+  ['Arithmetico-geometric sequence', ['arithmetic-sequences']],
+  ['Arithmetic', ['arithmetic-sequences']],
+  ['Arithmetic mean', ['arithmetic-sequences']],
 ]
 for (const [title, forbidden] of MUST_NOT) {
   const ids = conceptsInOffering(MATHEMATICS, thm(title)).map(c => c.id)

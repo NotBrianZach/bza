@@ -176,6 +176,90 @@
  * the other is left. A learner who cannot do that substitution cannot be
  * taught a partial derivative, and it needs no figure.
  *
+ * ── AN EIGHTH CONCEPT, AND IT COLLECTS A DEBT THIS FILE WROTE DOWN TWICE ──
+ *
+ * `arithmetic-sequences` was a node of `sequences-and-series` in
+ * atlas-analysis.ts and is authored here, the twenty-sixth promotion. It is the
+ * fourth concept this subject has taken from the analysis file and the third
+ * from that one area, so the branch at the foot is now `function-concept` →
+ * `sequences` → {`sigma-notation`, `arithmetic-sequences`} — a fork, where it
+ * was a chain of three.
+ *
+ * WHY THIS NODE, and the first ground is unlike any earlier selection here: the
+ * content was RESERVED FOR IT IN WRITING, in this file and in tasks.ts, by the
+ * two promotions that came out of the same area. The fifth concept's section
+ * above says "nothing here teaches the closed form of an arithmetic sequence
+ * from its first term and common difference ... those are
+ * `arithmetic-sequences` and `geometric-sequences`, which stayed". The sixth's
+ * says a worked example "that totalled 5 + 7 + 9 + 11 by pairing would have
+ * taken `arithmetic-sequences`'s only real idea while leaving its node on the
+ * map", and chose a non-arithmetic sum to avoid it. And the `sequences` block
+ * in tasks.ts names an "honest gap" — "Which term equals 302" inverts the
+ * formula, and the answer is an index rather than a term — and says it "belongs
+ * to `arithmetic-sequences` with the closed form it needs, which is still
+ * mapped". All three are now spent, and the three knowledge points below are
+ * those three sentences in order: the closed form, the inversion, the pairing.
+ *
+ * That is a better selection signal than any of the three this build has used,
+ * and it is worth naming as a general one: a promotion that collects content a
+ * previous promotion deliberately declined to pre-empt cannot overlap anything
+ * already written, because the boundary was drawn from the other side first.
+ *
+ * The other grounds, in the order they were applied:
+ *
+ *  1. IT IS RULABLE WITH NO WORKER. A term, a position and a total are each a
+ *     plain rational, so every knowledge point gets a real `evaluate` task and
+ *     `exactValue` settles all three. No `sqrt`, no named function.
+ *  2. ITS ONE `needs` POINTED INSIDE THIS ONTOLOGY. `sequences` and nothing
+ *     else, so the stranded edge comes to `EDGES` below and
+ *     `SEQUENCES_AND_SERIES.links` stays empty for a THIRD time — which is
+ *     still a fact about this node's prerequisites and not about that area
+ *     being tidy. `mathematical-induction` is still sitting in that list unable
+ *     to avoid an entry, and the note where this node sat says so.
+ *  3. IT HAS NO DEPENDENTS AT ALL, which is the axis it loses on and the reason
+ *     it is third. Nothing on the map and nothing authored declares
+ *     `needs: ['arithmetic-sequences']` — `geometric-sequences` rests on
+ *     `sequences` and `exponential-functions`, not on this. So this promotion
+ *     creates no gate anywhere, measured rather than assumed, and it is the
+ *     first in this subject of which that is true. Rulability outranks
+ *     dependent count by the rule atlas-foundations.ts states — a concept that
+ *     cannot be ruled produces a chain that cannot become evidence — and the
+ *     candidate with the most dependents is still `graphs-of-functions`, still
+ *     refused two sections below.
+ *
+ * WHAT IT LEAVES BEHIND. `geometric-sequences` keeps its closed form and its
+ * sum to infinity, exactly as the fifth concept's section promised, and nothing
+ * below mentions a common ratio. The one place the two families meet in this
+ * material is the third point's fourth subgoal, which says what to do when the
+ * count of terms is odd; that argument is about pairing and is this concept's
+ * either way.
+ *
+ * ── The interference was ALREADY DECLARED, FROM THE OTHER END ──────────────
+ *
+ * atlas-analysis.ts told whoever promoted either of the two named families
+ * that the `confusedWith` between them "must be re-declared in the receiving
+ * ontology's `EDGES`, with its `rationale`, or it is gone without a sound".
+ * For THIS end that instruction is wrong, and following it was impossible, so
+ * the reason is recorded here as well as there.
+ *
+ * `expandEdges` walks an area's OWN nodes. The `confusedWith` is written on
+ * `geometric-sequences`, which stayed, so the area still declares it and
+ * `composeAtlas` still emits `geometric-sequences ~ arithmetic-sequences` with
+ * both endpoints present — the authored concept and the map node. Nothing was
+ * stranded. That is the same rule atlas-foundations.ts had to correct itself
+ * over for `needs`: an edge is owned by the node that DECLARES it, and this
+ * promotion did not touch the declaring end.
+ *
+ * And obeying the instruction would have failed two ways. An `interferes_with`
+ * in `EDGES` here naming `geometric-sequences` makes `ontologyProblems` report
+ * an unknown endpoint, because an ontology may only name concepts it CONTAINS.
+ * A `links` entry cannot carry it either — `expandEdges` hard-codes
+ * `kind: 'prerequisite'` there, and `links` is for edges the area owns NEITHER
+ * end of, which is not this. So the only two places it could go both reject it,
+ * and the one place it already lives is the right one. The instruction is
+ * correct for promoting `geometric-sequences`, the declaring end, and only
+ * there; the note in that file now says which end it means.
+ *
  * ── Why both objectives name only `evaluate` ──────────────────────────────
  *
  * Every other concept in this file names `justify` alongside it, and there is
@@ -202,6 +286,15 @@
  * 3 may come out and a square may not are in the subgoals. Naming `justify`
  * or `transform_to_form` in those objectives would have described a concept
  * this build does not serve.
+ *
+ * `arithmetic-sequences` holds to it too, and its keeping-out is the sharpest
+ * of the three because the node's own one-liner says "the argument, not the
+ * formula, is the content". The argument is that stepping one place in from
+ * each end at once leaves the pair's total unchanged, and the kind that would
+ * ask for it is `justify`. So the argument is made in the third point's
+ * subgoals, the `evaluate` task rules the total it produces, and the two
+ * objectives name only what that task can evidence. Naming `justify` would
+ * have been a truer description of the concept and an unreachable one.
  *
  * It stops at `graphs-of-functions` deliberately, and the boundary is the
  * verifier rather than the curriculum. Reading a graph is the natural next
@@ -270,12 +363,15 @@ const subject: Subject = {
     'sum manipulable rather than only readable. Then the case where the input is a PAIR: ' +
     'matching each number to the letter whose place it stands in, holding one letter fixed to ' +
     'leave a rule in the other, and a domain that is a condition on the two coordinates ' +
-    'together rather than a list of forbidden numbers. Nothing about graphs — reading a curve ' +
+    'together rather than a list of forbidden numbers. Then the first named family of sequence: ' +
+    'a constant difference, the term at any position, which position a given value occupies if ' +
+    'it occupies one, and the total of a run of them obtained by pairing the ends rather than ' +
+    'by adding. Nothing about graphs — reading a curve ' +
     'is the natural next step and its questions are about a picture, which this verifier cannot ' +
     'rule — and so nothing about transformations, families or asymptotes either, and nothing ' +
     'about level curves or surfaces, which are the same boundary one dimension further out; ' +
-    'and nothing about the two named families of sequence or the closed forms for their sums, ' +
-    'which are still on the map.',
+    'and nothing about the OTHER named family, whose constant ratio, closed form and sum to ' +
+    'infinity are still on the map.',
   medium: 'theorem',
   facetName: 'Concept',
   facetDoes: 'Which concept the statement has to be about.',
@@ -1479,6 +1575,259 @@ const CONCEPTS: Concept[] = [
       },
     ],
   },
+  {
+    id: 'arithmetic-sequences',
+    name: 'Arithmetic sequences and sums',
+    subjectId: subject.id,
+    scope: {
+      id: 'arithmetic-sequences',
+      label: 'Arithmetic sequences and sums',
+      hint: 'arithmetic sequence common difference sum of series',
+      // Carried VERBATIM off the map node, hint and pattern both.
+      //
+      // The pattern has three alternatives and ALL THREE WERE MEASURED LIVE
+      // before it came across, which is the lesson `basis-and-dimension` left:
+      // a stray `)` inside an alternation there made a pattern match only a
+      // sibling's title, and nothing in the suite could see it because the one
+      // row that existed tested a branch that worked. "Arithmetic progression",
+      // "Arithmetic sequence" and "Arithmetic series" each land here and
+      // nowhere else; all three are rows in tests/atlas.mjs's TITLES table, one
+      // per branch, so a future narrowing has to kill a named assertion.
+      //
+      // What the pattern REFUSES, and the refusal is load-bearing rather than
+      // incidental: "Arithmetico-geometric sequence" goes to
+      // `geometric-sequences`, because the space after `arithmetic` is not a
+      // dash. A relaxation to `/\barithmetic/i` would take that article, and
+      // would also take "Arithmetic" and "Arithmetic mean", neither of which is
+      // this concept. tests/atlas.mjs forbids the first of those by name.
+      //
+      // The shortfall, recorded rather than widened in the same change as the
+      // material: "Arithmetic mean" is claimed by NOBODY, and the pairing
+      // argument below is exactly the fact that an arithmetic sequence's mean
+      // is the mean of its two ends. Widening to reach it is one word and the
+      // wrong one here — a mean is `descriptive-statistics`, a node of the
+      // statistics area, and this concept would be claiming an article about a
+      // different subject's content.
+      match: /\barithmetic (sequence|progression|series)\b/i,
+    },
+    fidelity: 'checked',
+    objectives: [
+      {
+        id: 'name-any-term-from-the-first-term-and-the-difference',
+        statement:
+          'Read the constant difference off a sequence and name the term at any stated position, ' +
+          'counting the steps between positions rather than the positions themselves.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'run-the-formula-backwards-from-a-value-to-its-position',
+        statement:
+          'Given a value, find which term of the sequence it is by taking the first term off and ' +
+          'counting the steps the rest is made of — and read off the same division whether the ' +
+          'value is a term at all.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'total-a-run-from-its-two-ends-and-its-length',
+        statement:
+          'Total a run of an arithmetic sequence from its first term, its last term and how many ' +
+          'terms there are, without adding the terms in between.',
+        taskKinds: ['evaluate'],
+      },
+    ],
+    knowledgePoints: [
+      {
+        id: 'the-formula-counts-steps-not-positions',
+        conceptId: 'arithmetic-sequences',
+        statement:
+          'A sequence that goes up by the same amount every time is fixed by two numbers: where ' +
+          'it starts and how big the step is. Getting from position 1 to position n takes n − 1 ' +
+          'steps and not n, because position 1 is already occupied before any step is taken — so ' +
+          'the nth term is the first term plus (n − 1) differences.',
+        position: 1,
+        workedExample: {
+          problem: 'A sequence begins 5, 9, 13, 17, … . Find its 20th term.',
+          subgoals: [
+            {
+              label: 'Take the difference between neighbours, more than once',
+              detail:
+                '9 − 5 = 4, and 13 − 9 = 4, and 17 − 13 = 4. One subtraction gives a candidate ' +
+                'for the step; the repeats are what make it a constant difference rather than a ' +
+                'coincidence between the first two terms.',
+              socratic:
+                'There are four numbers in front of you, so there are three subtractions you can ' +
+                'do between neighbours. What would it mean about this sequence if they did not ' +
+                'all give the same answer?',
+            },
+            {
+              label: 'Count the steps standing between position 1 and position 20',
+              detail:
+                '19. The 5 is already sitting at position 1 before anything has been added, so ' +
+                'the additions happen in the gaps between positions and there is one fewer gap ' +
+                'than there are positions.',
+              socratic:
+                'The 5 is at position 1 and no addition has happened yet. How many additions ' +
+                'stand between it and position 20 — and is that the same as how many terms you ' +
+                'have passed?',
+            },
+            {
+              label: 'Replace nineteen identical additions with one multiplication',
+              detail:
+                '19 × 4 = 76, so the 20th term is 5 + 76 = 81. Nothing between the 17 and the 81 ' +
+                'had to be written down, which is what the formula buys over counting up.',
+              socratic:
+                'You know how many steps there are and how big each one is. Which single ' +
+                'operation stands in for taking the step over and over, and what is the first ' +
+                'term still doing afterwards?',
+            },
+            {
+              label: 'And identify where 85 comes from, since it is not an arithmetic slip',
+              detail:
+                '5 + 20 × 4 = 85, and 85 really is a term of this sequence — the 21st. Using n ' +
+                'where n − 1 was wanted does not produce a wrong number, it produces the right ' +
+                'number for the next position along, which is why the mistake survives a sanity ' +
+                'check on the size of the answer.',
+              socratic:
+                'Multiplying by 20 instead of 19 gives 85, and 85 is in this sequence. Which ' +
+                'position does it sit at, and what does that tell you about the kind of mistake ' +
+                'it was?',
+            },
+          ],
+          answer: '81',
+        },
+      },
+      {
+        id: 'a-value-tells-you-its-own-position-or-that-it-has-none',
+        conceptId: 'arithmetic-sequences',
+        statement:
+          'The formula runs backwards. Told a value and asked which term it is, take the first ' +
+          'term off and divide by the step: that counts the steps, and one more than it is the ' +
+          'position. A position has to be a whole number, so a division that does not come out ' +
+          'whole is not a failed calculation — it is the answer that the value is not in the ' +
+          'sequence.',
+        position: 2,
+        workedExample: {
+          problem: 'A sequence begins 2, 7, 12, 17, … . One of its terms is 302. Which term is it?',
+          subgoals: [
+            {
+              label: 'Write the same formula down before deciding what to solve for',
+              detail:
+                'The nth term is 2 + (n − 1) × 5. The formula does not change when the question ' +
+                'is reversed; what changes is which of its letters is the unknown. Here the value ' +
+                'is given and n is wanted, where in the previous point it was the other way.',
+              socratic:
+                'You are handed a value and asked for a position. Which letter in the nth-term ' +
+                'formula is the unknown this time — and does the formula itself have to be ' +
+                'rewritten?',
+            },
+            {
+              label: 'Subtract the first term, because it was never a step',
+              detail:
+                '302 − 2 = 300. That 300 is the part the repeated additions actually built; the 2 ' +
+                'was there before any of them happened and is not evidence about how many there ' +
+                'were.',
+              socratic:
+                'The 2 was already in place before a single 5 was added. How much of the 302 did ' +
+                'the additions contribute, and what do you have to do to the 302 to see only that ' +
+                'part?',
+            },
+            {
+              label: 'Divide by the step to count the steps, then turn steps into a position',
+              detail:
+                '300 ÷ 5 = 60 steps, so the position is 60 + 1 = 61. The + 1 is the same + 1 as ' +
+                'in the previous point and for the same reason — position 1 was occupied before ' +
+                'the first step — except that here it is being added back rather than subtracted ' +
+                'off.',
+              socratic:
+                'Sixty fives make up the 300. Sixty is a count of steps rather than of terms — so ' +
+                'what does the position come out as, and why is it not 60?',
+            },
+            {
+              label: 'Run the same three moves on a value that is not in the sequence',
+              detail:
+                'For 300: 300 − 2 = 298, and 298 ÷ 5 = 59.6. There is no such thing as 59.6 ' +
+                'steps, so 300 sits strictly between the 60th term and the 61st and is not a term ' +
+                'at all. The division answered the membership question on the way past, which is ' +
+                'why this method tells you more than checking terms one at a time ever could.',
+              socratic:
+                'Try those three moves on 300 instead of 302 and the division leaves 59.6. Is ' +
+                'that a position you have found, or is it telling you something else — and what?',
+            },
+          ],
+          answer: '61',
+        },
+      },
+      {
+        id: 'pairing-the-ends-turns-the-sum-into-a-multiplication',
+        conceptId: 'arithmetic-sequences',
+        statement:
+          'A run of an arithmetic sequence never has to be added up term by term. Step one place ' +
+          'in from each end at once and one term rises by the difference while the other falls by ' +
+          'it, so every such pair has the same total — the total of the two ends. The whole sum is ' +
+          'therefore that one total, taken half as many times as there are terms, and the terms ' +
+          'in the middle are never needed individually. Half, rather than "once per pair", ' +
+          'because an odd count leaves one term with no partner and the rule has to hold for it ' +
+          'too.',
+        position: 3,
+        workedExample: {
+          problem: 'Total 3 + 7 + 11 + 15 + 19 + 23 + 27 + 31 + 35 + 39.',
+          subgoals: [
+            {
+              label: 'Count the terms before pairing any of them',
+              detail:
+                'The difference is 4, so (39 − 3) ÷ 4 = 9 steps and there are 9 + 1 = 10 terms. ' +
+                'That is the previous point\'s move used as a tool rather than as the question: ' +
+                'the pairing needs to know how many pairs there will be, and nothing else about ' +
+                'the list.',
+              socratic:
+                'You are about to pair terms off from the two ends inwards. What is the one thing ' +
+                'you need to know first in order to say how many pairs that will give you?',
+            },
+            {
+              label: 'Add the two ends, then the next two inwards, and watch nothing change',
+              detail:
+                '3 + 39 = 42, 7 + 35 = 42, 11 + 31 = 42, 15 + 27 = 42, 19 + 23 = 42. Moving in ' +
+                'one place from the left adds 4 and moving in one place from the right takes 4 ' +
+                'away, and those two cancel exactly — which is the whole argument, and it holds ' +
+                'for any constant difference rather than for these numbers.',
+              socratic:
+                'Step one place inwards from each end at the same time. One of the two terms goes ' +
+                'up by 4 and the other goes down by 4 — what does that do to their total, and why ' +
+                'does it keep on doing it all the way to the middle?',
+            },
+            {
+              label: 'Ten terms make five pairs, so multiply instead of adding',
+              detail:
+                '5 × 42 = 210. Nine additions have become one multiplication. The step above ' +
+                'computed all five pairs in order to show the pattern, but its argument is what ' +
+                'means only the first ever has to be computed — the two ends and the count are ' +
+                'the whole of what the answer depends on, which is why this works just as well ' +
+                'on a run of five hundred terms.',
+              socratic:
+                'Ten terms, every pair totalling 42. How many pairs is that — and if you trusted ' +
+                'the last step\'s argument instead of checking it, how many of the five pairs ' +
+                'would you actually have had to add up?',
+            },
+            {
+              label: 'And what to do when the count of terms is odd',
+              detail:
+                'With eleven terms one is left stranded in the middle with no partner. Write the ' +
+                'sum out and then write it out again backwards underneath: now every column is a ' +
+                'pair of ends-inwards, there are eleven columns, each totals first + last, and ' +
+                'what you have is twice the sum. So the sum is 11 × (first + last) ÷ 2 — the same ' +
+                'rule, with the halving moved to the end, and it never needs the pairing to come ' +
+                'out even.',
+              socratic:
+                'Suppose there had been eleven terms instead of ten, so one is stranded in the ' +
+                'middle. What could you add to this sum that would give every single term a ' +
+                'partner — and what would you then have to do to the result?',
+            },
+          ],
+          answer: '210',
+        },
+      },
+    ],
+  },
 ]
 
 /**
@@ -1741,6 +2090,72 @@ const EDGES: ConceptEdge[] = [
    * changes. That is the same resolution `an-inverse-undoes-the-rule` got, and
    * it is a real limit of the schema rather than a judgement about the
    * mathematics.
+   */
+  /**
+   * The eighth concept's stranded edge, and the third one to come here for the
+   * one reason that decides every such case: the map node declared
+   * `needs: ['sequences']` and nothing else, and `sequences` is a concept of
+   * THIS ontology.
+   *
+   * The branch at the foot is now a FORK rather than a chain — `sequences` has
+   * two children, `sigma-notation` and this — which is why tests/atlas.mjs and
+   * tests/concepts-logic.mjs both assert this edge by NAME. The root is
+   * unchanged at `function-concept`, the edge COUNT is uninformative, and an
+   * edge accidentally hung off `sigma-notation` instead would leave both of
+   * those unmoved while teaching that you must be able to manipulate a sigma
+   * before you can say what the 20th term of 5, 9, 13 is.
+   */
+  {
+    id: 'sequences->arithmetic-sequences',
+    from: 'sequences',
+    to: 'arithmetic-sequences',
+    kind: 'prerequisite',
+    promotedBy: 'author:functions-and-inverses',
+  },
+  /**
+   * NO CREDIT EDGE FOR `arithmetic-sequences` EITHER, AND THE MEASUREMENT IS
+   * ONE OF THREE RATHER THAN A JUDGEMENT.
+   *
+   * `arithmetic-sequences => sequences` is the obvious candidate and it fails
+   * the `gcd-and-lcm` test in ontology-arithmetic.ts, the same test
+   * `sigma-notation` failed directly above. An `encompasses` edge claims that
+   * practising this material exercises the other concept, so every task has to
+   * perform the sub-skill — a majority is explicitly not enough, because the
+   * learner who gets credit they did not earn has the prerequisite stop coming
+   * due when it has genuinely gone cold.
+   *
+   * Counted per task. `ap-term-1` evaluates `a + (n − 1)d` at a stated
+   * position, which IS naming the nth term from a rule, so it earns it.
+   * `ap-position-1` runs the rule the other way and its answer is an index, so
+   * it never evaluates a sequence at a position. `ap-sum-1` produces a total
+   * and reaches it from the two ends and the count, so it never produces a
+   * term at all. One of three.
+   *
+   * The prerequisite above is the real relation and it is a strong one: you
+   * cannot be asked for the 20th term of anything until a position is an input.
+   * You then stop needing that skill, which is what the absence of this edge
+   * says.
+   */
+  /**
+   * AND NO `interferes_with`, BECAUSE THE EDGE THIS CONCEPT NEEDS ALREADY
+   * EXISTS AND IS DECLARED SOMEWHERE ELSE.
+   *
+   * This is the one place in the file where an interference is genuinely
+   * wanted, which makes it worth separating from the two "no far endpoint"
+   * notes above. `geometric-sequences` carries
+   * `confusedWith: ['arithmetic-sequences']` on its map node, with a rationale
+   * about parallel vocabulary and parallel sum formulas, and it is right:
+   * substituting into whichever of the two you recall produces a number either
+   * way, so the failure is silent.
+   *
+   * That node STAYED, so it still declares the edge, `expandEdges` still emits
+   * it and `composeAtlas` resolves it across the file boundary with the
+   * authored concept at one end. Re-declaring it here would be a duplicate in
+   * the composed map — which nothing reports, since an interference constrains
+   * selection and a doubled constraint constrains identically — and it would
+   * not even compile past `ontologyProblems`, an ontology being allowed to name
+   * only concepts it contains. The header section above has the full reason,
+   * because atlas-analysis.ts asked the next author to do exactly this.
    */
 ]
 

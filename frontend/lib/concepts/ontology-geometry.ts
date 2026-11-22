@@ -1343,6 +1343,63 @@
  * centre than the radius, so "assign the hypotenuse to the larger number"
  * never fails here while never being the reason. A timed point that can be
  * passed by the wrong method is worse than an untimed one.
+ *
+ * ── THE TWELFTH PROMOTION: `isometries-and-symmetry` ─────────────────────
+ *
+ * Chosen on the three factors ontology-algebra.ts and the atlas comments have
+ * settled on, in that order, and recorded here because the brief that asked for
+ * it carried a candidate list from a week earlier that was entirely spent.
+ *
+ *  - RULABILITY. A symmetry count, the order of a rotation and the angle two
+ *    mirrors compose to are whole numbers, so every ask in the concept is an
+ *    `evaluate` with an exact reference and the subject's no-worker contract
+ *    holds unchanged. This is the factor that can make material dishonest
+ *    rather than merely expensive, which is why it is first.
+ *  - A SINGLE-ONTOLOGY `needs`. The node declared `['congruence']` and nothing
+ *    else, so the one stranded edge is internal here and no area `links` entry
+ *    is owed. That is the cheapest shape a promotion can have, and the entry it
+ *    avoids is three files away from anything that mentions the concept — which
+ *    is the entry people drop.
+ *  - DEPENDENTS, as a tie-break only. One: `binary-operations` in
+ *    `abstract-algebra`, whose gate this tightens from `congruence` onto this
+ *    concept.
+ *
+ * `rank-nullity` had four dependents and was passed over, because its `needs`
+ * splits across two subjects and because `linear-algebra` is down to two nodes
+ * of stub-floor headroom with two ready candidates — so spending one of them
+ * brings forward the area-merge decision that atlas-foundations.ts reserves for
+ * a person. `euclidean-geometry` keeps three nodes of headroom after this one.
+ *
+ * WHAT THE CONCEPT IS ABOUT IS ITS OWN PREREQUISITE, which is the first time
+ * that has been true here and is the reason the figure objection does not land.
+ * `congruence` left the JUSTIFICATION of the criteria on the map — SSS being
+ * enough and SSA not is a claim about two triangles the reader has to be looking
+ * at — and this concept does not reopen that. It uses SSS as given, exactly as
+ * that concept does, and asks the question `congruence` could not: what is a
+ * congruence a congruence OF. The answer is one map, and counting the
+ * assumptions is the whole of the first worked example.
+ *
+ * TWO THINGS IT DELIBERATELY DOES NOT DO. There are no coordinates anywhere in
+ * it: `cartesian-plane` is not a prerequisite of this node, `plane-transformations`
+ * is the mapped node that does the same three motions with numbers, and writing
+ * a reflection as (x, −y) here would be using a concept the gate does not
+ * include. And the GROUP is not named, though the third point counts one: the
+ * axioms are `binary-operations`' content and this is the motivating example
+ * they are abstracted from, so naming them here would describe the abstraction
+ * before anything has been abstracted.
+ *
+ * ITS THREE POINTS ARE UNTIMED FOR REASONS ALREADY ON RECORD, taking the count
+ * to thirty-six with exactly one `automaticityTarget` in the file. The first is
+ * the "times an operation another point already times" case — the arithmetic is
+ * the 180-minus subtraction `two-sums-every-angle-chase-uses` measures, and
+ * what this point adds in front of it is a citation. The second and third are
+ * both the "decision in front of trivial arithmetic" case, and the third is the
+ * sharpest instance of the pass-by-the-wrong-method objection in the file: 2n
+ * answers the regular polygon on sight and gets the rectangle and the scalene
+ * triangle wrong, so a speed target would reward the one method the point
+ * exists to refuse. Treat that running total as a note rather than an
+ * invariant, which is the conclusion the two repairs above reached: the
+ * invariant is in tests/concepts-logic.mjs.
  */
 
 import type { Concept, ConceptEdge, ConceptOntology, Subject } from './types'
@@ -1453,7 +1510,28 @@ const subject: Subject = {
     'because an area\'s `links` carries `prerequisite` edges only, so the credit edge saying ' +
     'that practising the distance formula practises Pythagoras could live in no file but the ' +
     'one holding both ends. The vectors subject was the obvious home and would have cost that ' +
-    'edge.',
+    'edge. Then the maps themselves, which is congruence read a second time and from the other ' +
+    'end: an isometry as a map keeping every distance, with the angles following by SSS rather ' +
+    'than being assumed alongside — so that one hypothesis yields all six of a congruence\'s ' +
+    'equalities and a congruence statement\'s letter order is the record of where a map sent ' +
+    'each vertex, and so that the argument needs the three sides EQUAL rather than KNOWN and ' +
+    'survives two of them never being measured; two reflections in crossing mirrors composing ' +
+    'to a rotation through TWICE the angle between them, derived from each mirror bisecting the ' +
+    'angle it turns a point through, with the starting point dropping out of the sum — which is ' +
+    'what makes the composition one rotation rather than a motion that varies from point to ' +
+    'point — and with the order of the two reflections mattering everywhere except at ' +
+    'perpendicular mirrors; and a figure\'s symmetries counted as a full turn over the smallest ' +
+    'returning turn plus one per mirror line, the identity sitting in the first count and in ' +
+    'the second never, so that a regular n-gon has 2n and a scalene triangle has 1 rather than ' +
+    '0. The classification is taken as given, like the congruence criteria and the ' +
+    'inscribed-angle theorem: that every isometry of the plane is a translation, a rotation, a ' +
+    'reflection or a glide reflection needs an argument about where three fixed points can lie, ' +
+    'not the definition. The GROUP is absent, and deliberately: the composition facts here are ' +
+    'the motivating example the axioms are abstracted from, and `binary-operations` in ' +
+    '`abstract-algebra` is the node that abstracts them. So is every transformation written in ' +
+    'coordinates — `plane-transformations` is still mapped and is the same three maps done with ' +
+    'numbers — since this subject\'s one coordinate concept is here for an edge rather than as ' +
+    'the start of a syllabus.',
   medium: 'theorem',
   facetName: 'Concept',
   facetDoes: 'Which concept the statement has to be about.',
@@ -5053,13 +5131,483 @@ const CONCEPTS: Concept[] = [
       },
     ],
   },
+  {
+    id: 'isometries-and-symmetry',
+    name: 'Isometries and symmetry',
+    subjectId: subject.id,
+    scope: {
+      id: 'isometries-and-symmetry',
+      label: 'Isometries and symmetry',
+      hint: 'isometry reflection rotation translation symmetry group',
+      /*
+       * Carried verbatim from the map node, like the nine anchored patterns
+       * above it and for the reason `circles`' scope gives at length: widening
+       * a pattern while writing the material makes two changes at once, and the
+       * recognition figure in tests/atlas.mjs would move with no way to say
+       * which edit moved it.
+       *
+       * This one recalls better than most in the subject, which is worth a line
+       * because the previous three scopes each had to record a gap. The
+       * alternation takes "Isometry", "Symmetry group", "Reflection symmetry"
+       * and "Rotational symmetry", and those are the titles of four of the
+       * things actually taught below rather than four near misses. What it does
+       * not take is "Glide reflection" or "Dihedral group" — the first is named
+       * in the first knowledge point as a kind, the second is the object the
+       * third point counts without naming it — so the pattern still selects
+       * more precisely than it recalls, and `fidelity` is `checked` on the
+       * strength of the first claim rather than the second.
+       *
+       * It overlaps with `plane-transformations`, which is still a node of
+       * `euclidean-geometry` and whose own pattern ends `|\bisometr(y|ies)\b`.
+       * That overlap is not new — both matched "Isometry" while both were
+       * nodes — and nothing in the build requires a title to select one
+       * concept, so it is left alone here. Narrowing either pattern is a
+       * recognition decision and belongs on the map.
+       */
+      match: /\b(isometry|symmetry group|reflection symmetry|rotational symmetry)\b/i,
+    },
+    fidelity: 'checked',
+    /*
+     * EVERY OBJECTIVE HERE NAMES ONLY `evaluate`, WHICH IS A DEPARTURE FROM THIS
+     * SUBJECT AND IS THE POINT OF THE DEPARTURE.
+     *
+     * Twenty-eight of the objectives above name `justify`, and no `justify`
+     * task exists anywhere in this build — so those objectives name an
+     * observation that cannot be made. `ontology-solids.ts` decided against
+     * that for the tenth subject and tests/concepts-logic.mjs asserts it there;
+     * this is the first concept of the eighth subject to follow, because
+     * following it is cheaper than arguing with it and the alternative is
+     * promising three more unservable observations.
+     *
+     * The "say why" half of this concept is not dropped, it is MOVED. Every
+     * subgoal below carries a `socratic`, which is where types.ts puts a
+     * question nothing can rule, and the three best unrulable questions in the
+     * concept — why angle preservation is not a second assumption, why the
+     * starting point drops out of the doubling, and why a figure with no mirror
+     * line still has one symmetry — are asked there by the tutor rather than
+     * advertised here as practice. The honest reading of the 28 above is that
+     * they advertise it.
+     */
+    objectives: [
+      {
+        id: 'transfer-every-measurement-across-an-isometry-from-the-one-hypothesis',
+        statement:
+          'Given a figure, its image under an isometry and the correspondence between them, '
+          + 'produce every length and every angle of the image from the single assumption that '
+          + 'distances are kept — reading the lengths straight off the definition and the angles '
+          + 'off SSS, which asks for the three sides to be EQUAL rather than to be known. Decide '
+          + 'whether a proposed pair of figures can be related by an isometry at all, by finding '
+          + 'one pair of distances that disagree.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'compose-two-reflections-into-the-single-rotation-they-amount-to',
+        statement:
+          'Given two mirror lines crossing at a stated angle, produce the angle of the single '
+          + 'rotation the two reflections compose to — which is DOUBLE the angle between the '
+          + 'mirrors and not the angle itself — and run the doubling backwards to get the mirror '
+          + 'angle a required rotation demands. Decide whether reversing the order of the two '
+          + 'reflections changes the result, by testing the angle rather than by appealing to a '
+          + 'rule about composition.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'count-a-figures-symmetries-with-the-identity-among-them',
+        statement:
+          'Given a figure, produce the number of isometries that carry it onto itself: count the '
+          + 'rotations as a full turn divided by the smallest turn that returns the figure, count '
+          + 'the mirror lines separately, and add the two — having checked that the identity sits '
+          + 'in the first count exactly once and in the second not at all. Produce the count for '
+          + 'a figure with no mirror line and no partial turn that returns it, and get 1 rather '
+          + 'than 0.',
+        taskKinds: ['evaluate'],
+      },
+    ],
+    knowledgePoints: [
+      {
+        id: 'distance-is-the-only-hypothesis-and-the-angles-follow-by-sss',
+        conceptId: 'isometries-and-symmetry',
+        statement:
+          'An isometry of the plane is a map that keeps every distance: for any two points P and '
+          + 'Q, the images satisfy P′Q′ = PQ. Nothing is assumed about angles, and nothing needs '
+          + 'to be — take any three points of a figure that are not in a line, together with '
+          + 'their images; the three sides match in length, so SSS makes the two triangles '
+          + 'congruent and the angles match as well. One hypothesis delivers all six of '
+          + '`congruence`\'s equalities, which is why "congruent" and "some isometry carries one '
+          + 'onto the other" are the same claim, and why a congruence statement\'s letter order '
+          + 'is the record of where the map sent each vertex. The argument asks for the three '
+          + 'sides to be EQUAL and not to be KNOWN, so the angles transfer even when only one '
+          + 'length was ever measured. That every isometry of the plane is a translation, a '
+          + 'rotation, a reflection or a glide reflection is taken as given here, like the '
+          + 'congruence criteria are: it needs the classification argument rather than the '
+          + 'definition.',
+        position: 1,
+        /*
+         * No `automaticityTarget`. The only arithmetic is 180 − 53 − 59, which
+         * `two-sums-every-angle-chase-uses` already times, and what this point
+         * is about is which fact licensed carrying an angle across — so a speed
+         * reward would report one skill twice and reward reaching for the
+         * subtraction ahead of the citation. That is the reason the three proof
+         * points give, and it applies here for the same reason: the content is a
+         * licence, not a calculation.
+         */
+        workedExample: {
+          problem:
+            'An isometry of the plane carries triangle ABC to triangle DEF, sending A to D, B to '
+            + 'E and C to F. The only measurements recorded for ABC are ∠A = 53°, ∠B = 59° and '
+            + 'AB = 13 cm. State every measurement of DEF that can be stated, and say which fact '
+            + 'licensed the angles, given that the definition speaks only about distances.',
+          subgoals: [
+            {
+              label: 'Read where each vertex goes, before transferring any measurement',
+              detail:
+                'The map sends A to D, B to E and C to F, so AB has image DE, BC has EF and CA '
+                + 'has FD. That is what fixes which side of DEF is the 13 cm one — the '
+                + 'correspondence, not the size of the number. Pairing the sides by length '
+                + 'instead happens to work here only because one length was given, and it is the '
+                + 'habit that produces the wrong answer the moment there are two. The letter '
+                + 'order is doing exactly the job `congruence` gave it: naming a correspondence '
+                + 'rather than listing two triangles.',
+              socratic:
+                'The map sends A to D, B to E and C to F. Which side of DEF is the image of AB — '
+                + 'and what told you, the letters or the 13?',
+            },
+            {
+              label: 'Transfer the one distance you have, straight from the definition',
+              detail:
+                'An isometry satisfies P′Q′ = PQ for every pair of points. Apply that to the '
+                + 'single pair A, B: DE = AB = 13 cm, with nothing derived and nothing else '
+                + 'needed. This is the whole of what the hypothesis gives directly — a statement '
+                + 'about distances, one pair at a time — and everything else below is got out of '
+                + 'it rather than assumed alongside it.',
+              socratic:
+                'The word isometry makes one claim about a pair of points and their two images. '
+                + 'Applied to A and B alone, what does that claim give you?',
+            },
+            {
+              label: 'Get the angles from SSS, which asks for the sides to be equal and not for them to be known',
+              detail:
+                'The definition also gives EF = BC and FD = CA, because it speaks about EVERY '
+                + 'pair of points and not only the measured one. Neither of those two numbers was '
+                + 'recorded and neither is needed: SSS asks for three pairs of equal sides, and '
+                + 'three pairs of equal sides is precisely what the definition has just supplied. '
+                + 'So ABC and DEF are congruent, corresponding angles are equal, and ∠D = ∠A = '
+                + '53° with ∠E = ∠B = 59°. Notice what never went in — nothing about angles was '
+                + 'assumed, and two angle equalities came out.',
+              socratic:
+                'Only one of the three sides is a number you know. What do the other two pairs '
+                + 'still have in common — and which congruence criterion asks for exactly that '
+                + 'and nothing more?',
+            },
+            {
+              label: 'Close the third angle on the total, and say which triangle you closed it in',
+              detail:
+                '∠F = 180° − 53° − 59° = 68°, by the angle sum. It can be read in either '
+                + 'triangle and the answer is the same, which is the content rather than a '
+                + 'convenience: ∠C = 68° too, and the congruence is what entitles you to carry '
+                + 'the number across. A learner who computes 68° inside ABC and writes it at F '
+                + 'has used the correspondence of the first step a second time, which is worth '
+                + 'noticing because it is the only thing standing between the two triangles.',
+              socratic:
+                'Two of DEF\'s angles are 53° and 59°. What is the third — and would you have got '
+                + 'the same number working inside ABC instead?',
+            },
+            {
+              label: 'Count the assumptions, and say what that makes of the word congruent',
+              detail:
+                '`congruence` described two triangles as agreeing in six separate measurements, '
+                + 'three sides and three angles, and gave criteria for when three of the six '
+                + 'force the other three. This example made ONE assumption and all six '
+                + 'equalities followed from it. So a congruence is not a coincidence of six '
+                + 'readings: it is the trace of a single map, and the criteria are statements '
+                + 'about how little of the trace you have to see before the map must exist. EF '
+                + 'and FD were never measured and the conclusion does not care.',
+              socratic:
+                'You have finished with six equalities between the two triangles. How many '
+                + 'assumptions did the example actually start from?',
+            },
+          ],
+          answer:
+            'DE = 13 cm; EF = BC and FD = CA, equal to their originals but never recorded as '
+            + 'numbers; ∠D = 53°, ∠E = 59° and ∠F = 68°. The correspondence A→D, B→E, C→F is '
+            + 'what says DE rather than EF is the 13 cm side. The one distance transfers straight '
+            + 'from the definition, P′Q′ = PQ. The angles are NOT a second assumption: the '
+            + 'definition gives all three pairs of sides equal, which is SSS in full, so the '
+            + 'triangles are congruent and corresponding angles are equal — and SSS asks for the '
+            + 'sides to be equal rather than known, which is why two unmeasured sides cost '
+            + 'nothing. The third angle closes on the total, 180 − 53 − 59 = 68, and it is '
+            + 'readable in either triangle because they are congruent. One hypothesis about '
+            + 'distances produced all six of congruence\'s equalities, which is what makes '
+            + '"congruent" and "carried onto by an isometry" the same claim.',
+        },
+      },
+      {
+        id: 'two-reflections-compose-to-twice-the-angle-between-the-mirrors',
+        conceptId: 'isometries-and-symmetry',
+        statement:
+          'Reflecting in one line and then reflecting the result in a second line that crosses it '
+          + 'is a single rotation about the crossing point, through TWICE the angle between the '
+          + 'two mirrors. The doubling is the content: mirrors 35° apart turn a figure through '
+          + '70°, and perpendicular mirrors give a half turn rather than a quarter. The reason is '
+          + 'that each mirror bisects the angle it turns a point through, so the two half-angles '
+          + 'add to the angle between the mirrors and the total is twice it — and the point\'s '
+          + 'own starting position drops out of that sum, which is what makes the composition one '
+          + 'rotation for every point rather than a different motion for each. That is the '
+          + 'argument for a point whose first image falls INSIDE the angle between the mirrors, '
+          + 'which is the case worked below; when it falls outside, the two half-angles subtract '
+          + 'rather than add and the total is still twice the angle between the mirrors, by the '
+          + 'same two steps with one sign changed. The parallel case '
+          + 'is the same statement with a distance in place of an angle: two mirrors d apart '
+          + 'compose to a translation through 2d, perpendicular to them. Order matters. '
+          + 'Reflecting in the second mirror first turns the figure through the same 2θ the other '
+          + 'way, so the two orders agree only where a turn of 2θ and a turn of −2θ are the same '
+          + 'rotation — which needs 4θ to be a whole number of turns, and for mirrors strictly '
+          + 'between 0° and 180° that happens at 90° and nowhere else.',
+        position: 2,
+        /*
+         * No `automaticityTarget`. Doubling 35 is the fastest arithmetic in the
+         * concept and would time beautifully, which is exactly the trap — the
+         * error the point exists to stop is answering θ where 2θ was wanted,
+         * and that is a learner who computed FAST and once. A speed target
+         * would reward the reflex being corrected, which is the argument the
+         * third point of `circle-measure` makes about answering k where k² was
+         * wanted.
+         */
+        workedExample: {
+          problem:
+            'Two mirror lines m and n cross at O with a 35° angle between them. A point P is '
+            + 'reflected in m, and that image is then reflected in n; the first image P₁ lies '
+            + 'between the two mirrors, 20° from m and 15° from n. Identify the single isometry '
+            + 'that takes P to P₂. Then say what changes if the two reflections are done in the '
+            + 'other order, and find the angle between the mirrors that would make the '
+            + 'composition a half turn.',
+          subgoals: [
+            {
+              label: 'Fix what the two reflections do to the distance from O, before any angle is computed',
+              detail:
+                'O lies on m and on n, so each reflection leaves O exactly where it is, and each '
+                + 'keeps every distance. So OP = OP₁ = OP₂: P₂ is as far from O as P was. '
+                + 'Whatever the composition turns out to be, it moves points around O without '
+                + 'changing how far from it they are, which is what a rotation about O does. The '
+                + 'angle is all that is left to find, and that is worth establishing first — it '
+                + 'is the step that says the answer will be a rotation rather than a translation '
+                + 'or a reflection.',
+              socratic:
+                'O lies on both mirrors. What does each reflection do to O itself, and what does '
+                + 'that force about the three lengths OP, OP₁ and OP₂?',
+            },
+            {
+              label: 'Double each half-angle, because a mirror bisects the angle it turns a point through',
+              detail:
+                'P₁ is 20° from m and P is its mirror image in m, so P is 20° from m on the other '
+                + 'side: ∠POP₁ = 2 × 20° = 40°. The same at the second mirror — P₁ is 15° from n, '
+                + 'so P₂ is 15° beyond n and ∠P₁OP₂ = 2 × 15° = 30°. Each reflection contributes '
+                + 'twice the angle between the point and the mirror, and that is where every '
+                + 'factor of 2 in this knowledge point comes from. It is one fact used twice, not '
+                + 'two facts.',
+              socratic:
+                'P₁ sits 20° from m. Where does its mirror image in m sit — and so how big is '
+                + 'the angle from P round to P₁?',
+            },
+            {
+              label: 'Add the two turns, and watch the starting position drop out',
+              detail:
+                'The total turn is 40° + 30° = 70°, and 70° = 2 × 35°. The 20 and the 15 have '
+                + 'gone: they entered only as 2(20 + 15), and 20 + 15 is the angle between the '
+                + 'mirrors precisely because P₁ lies between them. So the answer depends on the '
+                + 'mirrors alone, and a different starting point would have given the same 70° '
+                + 'from a different pair of half-angles — 5° and 30° instead of 20° and 15°, say. '
+                + 'That is what entitles the two reflections to be called one rotation: a motion '
+                + 'that varied from point to point would not be a single isometry at all. A point '
+                + 'whose first image falls OUTSIDE the two mirrors needs the same two steps with '
+                + 'one sign changed, the half-angles subtracting rather than adding, and the '
+                + 'total comes out at 70° there too.',
+              socratic:
+                'You have 40° and 30°. What do they total — and which of the three numbers 20, '
+                + '15 and 35 did that total actually need?',
+            },
+            {
+              label: 'Reverse the order and compare, rather than assuming composition behaves like multiplication',
+              detail:
+                'Reflecting in n first and then in m runs the same argument with the mirrors '
+                + 'swapped, so the turn is again 2 × 35° = 70° — but measured from n towards m, '
+                + 'which is the opposite sense. The two results are a 70° rotation and a −70° '
+                + 'rotation, 140° apart, so the order is not bookkeeping: P₂ genuinely lands in '
+                + 'two different places. They would agree only if a turn of 2θ and a turn of −2θ '
+                + 'were the same rotation, and that needs their difference 4θ to be a whole '
+                + 'number of turns.',
+              socratic:
+                'Swap the two mirrors in the argument above and you get 70° a second time. So '
+                + 'why are the two final positions not the same point?',
+            },
+            {
+              label: 'Run the doubling backwards for the half turn, and find the one angle where order stops mattering',
+              detail:
+                'A half turn is 180°, and 2θ = 180° gives θ = 90°: perpendicular mirrors. That is '
+                + 'also the only mirror angle strictly between 0° and 180° at which 4θ is a whole '
+                + 'number of turns, since 4 × 90° = 360° and the next multiple would need θ = '
+                + '180°, which is one line twice rather than two mirrors. So perpendicular '
+                + 'mirrors are exactly the case where m-then-n and n-then-m agree. The two '
+                + 'questions in this step have one answer and that is not a coincidence: a half '
+                + 'turn is its own reverse.',
+              socratic:
+                'You want the composition to be a half turn. What does that make 2θ, and so what '
+                + 'is θ — and what does that same angle do to the disagreement found in the step '
+                + 'above?',
+            },
+          ],
+          answer:
+            'P to P₂ is a rotation about O through 70°. Both mirrors pass through O, so O is '
+            + 'fixed by both and OP = OP₁ = OP₂, which is why the composition is a rotation about '
+            + 'O. Each mirror bisects the angle it turns the point through: ∠POP₁ = 2 × 20° = 40° '
+            + 'and ∠P₁OP₂ = 2 × 15° = 30°, totalling 70° = 2 × 35°. The half-angles 20 and 15 '
+            + 'appear only as their sum, which is the angle between the mirrors, so the same 70° '
+            + 'comes out for every starting point — one rotation, not a point-by-point motion. In '
+            + 'the other order the turn is 70° the other way, landing 140° from the first result, '
+            + 'so the order of two reflections is not interchangeable. The composition is a half '
+            + 'turn when 2θ = 180°, that is when the mirrors are perpendicular — and θ = 90° is '
+            + 'also the only angle strictly between 0° and 180° at which the two orders agree, '
+            + 'since that needs 4θ to be a whole number of turns.',
+        },
+      },
+      {
+        id: 'a-figures-symmetries-are-counted-with-the-identity-among-them',
+        conceptId: 'isometries-and-symmetry',
+        statement:
+          'A symmetry of a figure is an isometry that carries the figure onto ITSELF rather than '
+          + 'onto a copy somewhere else. The identity — the map that moves nothing — keeps every '
+          + 'distance and sends the figure to itself, so it is always one of them, and leaving it '
+          + 'out is what makes a square come out as seven. Count the rotations and the '
+          + 'reflections separately and add: if the smallest turn that returns the figure is r°, '
+          + 'the rotations number 360/r, and the reflections are one per mirror line. A regular '
+          + 'n-gon has n of each, so 2n in all, and the axes are arranged according to the parity '
+          + 'of n — for even n half of them join opposite vertices and half join opposite edge '
+          + 'midpoints, while for odd n a vertex has no opposite vertex and every axis runs from '
+          + 'a vertex to the midpoint of the side facing it. The count falls as fast as the '
+          + 'regularity: a rectangle that is not a square keeps two rotations and two axes, '
+          + 'because a quarter turn and a diagonal reflection would each stand a long side where '
+          + 'a short one was. A scalene triangle has exactly ONE symmetry — a mirror line would '
+          + 'fix one vertex and swap the other two, forcing the two sides at that vertex equal, '
+          + 'and `congruence` has already established what equal sides do in a triangle — so its '
+          + 'answer is 1 and not 0.',
+        position: 3,
+        /*
+         * No `automaticityTarget`. The arithmetic is one division and one
+         * addition, and the content is which maps belong in the two lists —
+         * so a speed reward would train answering 2n on sight, which gets the
+         * regular polygon right and the rectangle and the scalene triangle
+         * wrong. A timed point that can be passed by the wrong method is worse
+         * than an untimed one, which is the argument the second point of
+         * `circles` makes about the external point always being the further
+         * one.
+         */
+        workedExample: {
+          problem:
+            'Count the symmetries of a regular hexagon, of a regular pentagon, of a rectangle '
+            + 'that is not a square, and of a scalene triangle. For the hexagon and the pentagon '
+            + 'say how the mirror lines are arranged, and say which of the four counts is the one '
+            + 'that gets answered wrongly.',
+          subgoals: [
+            {
+              label: 'Count the rotations from the smallest turn that returns the figure',
+              detail:
+                'The hexagon comes back to itself after 60°, and after every multiple of it: 0°, '
+                + '60°, 120°, 180°, 240°, 300°. That is 360/60 = 6 rotations, and the 0° one is '
+                + 'the identity, which belongs in the list because a map that moves nothing still '
+                + 'carries the figure onto itself. A 360° turn is not a seventh — it is the same '
+                + 'map as 0° — which is why the list stops one step short of a full turn. The '
+                + 'pentagon returns after 72°, giving 360/72 = 5.',
+              socratic:
+                'A regular hexagon returns to itself after a 60° turn. Which turns smaller than a '
+                + 'full revolution also return it — and is the do-nothing turn one of them?',
+            },
+            {
+              label: 'Count the mirror lines, and let the parity of n decide how they are arranged',
+              detail:
+                'The hexagon has 3 axes through pairs of opposite vertices and 3 more through '
+                + 'pairs of opposite edge midpoints: 6 in all. The pentagon cannot be split that '
+                + 'way, because 5 is odd and a vertex has no opposite vertex — each of its axes '
+                + 'runs from a vertex to the midpoint of the side facing it, giving 5. So both '
+                + 'come out at n by arrangements that are not the same arrangement, and a learner '
+                + 'who counts the hexagon\'s three vertex-to-vertex axes and stops has halved the '
+                + 'answer.',
+              socratic:
+                'A hexagon has 3 pairs of opposite vertices. Are those all of its mirror lines — '
+                + 'and what has to change in the counting when the number of sides is odd?',
+            },
+            {
+              label: 'Add the two counts, having checked that nothing sits in both lists',
+              detail:
+                'Hexagon: 6 + 6 = 12. Pentagon: 5 + 5 = 10. The thing worth checking before '
+                + 'adding is whether any map has been counted twice, and the identity is the '
+                + 'candidate — it is in the rotation list, at 0°. It is not in the reflection '
+                + 'list: a reflection moves every point that is not on its axis, so no reflection '
+                + 'is the identity. The two lists are therefore disjoint and the addition is '
+                + 'safe, which is where the 2n for a regular n-gon comes from.',
+              socratic:
+                'You have 6 rotations and 6 reflections. Before adding them, is there any single '
+                + 'map that appears in both lists?',
+            },
+            {
+              label: 'Take the regularity away and run the same count on a weaker figure',
+              detail:
+                'A rectangle that is not a square returns after 180° and not before, so 360/180 = '
+                + '2 rotations — a quarter turn would stand the long side where the short side '
+                + 'was. Its axes are the two lines through opposite edge midpoints, and the '
+                + 'diagonals are NOT axes for that same reason, a diagonal reflection sending a '
+                + 'long side onto a short one. So 2 + 2 = 4, against the square\'s 8: the square '
+                + 'is the rectangle that owns the other four.',
+              socratic:
+                'Which of the square\'s eight symmetries does a 5 cm by 3 cm rectangle lose — and '
+                + 'what length would each of the lost ones have had to change?',
+            },
+            {
+              label: 'Count the figure that looks like it has none, which is the answer people get wrong',
+              detail:
+                'A scalene triangle has no two sides equal. A mirror line of a triangle has to fix '
+                + 'one vertex and swap the other two, which makes the two sides meeting at the '
+                + 'fixed vertex equal — and `congruence` established what equal sides and equal '
+                + 'angles do to each other in a triangle — so a scalene triangle has no axis at '
+                + 'all. The smallest turn that returns it is a full one, so 360/360 = 1 rotation. '
+                + 'The count is 1 + 0 = 1, not 0: the figure has exactly one symmetry, the '
+                + 'identity, and "it has no symmetry" is wrong by exactly the map that is easiest '
+                + 'to forget.',
+              socratic:
+                'A scalene triangle has no mirror line, and no turn short of a full one returns '
+                + 'it. Is its count of symmetries therefore 0 — and if not, what is left?',
+            },
+          ],
+          answer:
+            '12 for the regular hexagon, 10 for the regular pentagon, 4 for the non-square '
+            + 'rectangle and 1 for the scalene triangle. The rotations are 360/r from the '
+            + 'smallest returning turn r: 360/60 = 6, 360/72 = 5, 360/180 = 2 and 360/360 = 1, '
+            + 'the identity being the 0° member of each list and a 360° turn not a separate map. '
+            + 'The reflections are one per axis: 6 for the hexagon, three joining opposite '
+            + 'vertices and three joining opposite edge midpoints because 6 is even; 5 for the '
+            + 'pentagon, each from a vertex to the midpoint of the side facing it because 5 is '
+            + 'odd; 2 for the rectangle, through the edge midpoints only, since a diagonal would '
+            + 'send a long side onto a short one; and none at all for the scalene triangle, where '
+            + 'an axis would force two sides equal. The sums are safe because no reflection is '
+            + 'the identity, so the two lists never overlap — which gives 2n for a regular n-gon. '
+            + 'The count worth stating slowly is the last one: 1, not 0.',
+        },
+      },
+    ],
+  },
 ]
 
 /**
- * Fifteen edges: one prerequisite per promotion after the first, TWO for the
+ * Sixteen edges: one prerequisite per promotion after the first, TWO for the
  * seventh, TWO for the ninth and TWO for the tenth, plus the one interference
  * the fourth promotion brought with it and the one `encompasses` the eleventh
  * did.
+ *
+ * THE TWELFTH PROMOTION ADDED ONE PREREQUISITE AND NOTHING ELSE, which makes it
+ * the cheapest since the sixth and is the shape this list has held most often.
+ * The note on `congruence->isometries-and-symmetry` at the bottom carries the
+ * argument; the short version is that a node declaring one `needs` that points
+ * at a concept of this subject strands exactly one edge and that edge is
+ * internal, so `EUCLIDEAN_GEOMETRY.links` was neither added to nor relieved.
  *
  * THE ELEVENTH PROMOTION BROUGHT THE SUBJECT'S FIRST `encompasses`, which is
  * the one edge KIND this list had not held and the one whose absence no suite
@@ -5836,6 +6384,57 @@ const EDGES: ConceptEdge[] = [
       + 'the slot assignment in front of it both. Carried over from the map node\'s '
       + '`exercises`, which is the only stranding a promotion can lose without any test going '
       + 'red.',
+    promotedBy: 'author:plane-geometry',
+  },
+  {
+    id: 'congruence->isometries-and-symmetry',
+    from: 'congruence',
+    to: 'isometries-and-symmetry',
+    kind: 'prerequisite',
+    /*
+     * THE FOURTH CHILD OF `congruence`, AND THE CHEAPEST PROMOTION THIS SUBJECT
+     * HAS HAD SINCE THE SIXTH.
+     *
+     * The node declared `needs: ['congruence']` and nothing else, so this one
+     * edge is the whole of what the twelfth promotion stranded, and both of its
+     * endpoints were already concepts here — so it is internal to the ontology
+     * and `EUCLIDEAN_GEOMETRY.links` needed no entry and gave none up. That is
+     * the one-for-one cheap case, which the seventh promotion's note says is
+     * about where each `needs` POINTS rather than how many there are.
+     *
+     * `author:` rather than `atlas:euclidean-geometry`, like the fourteen above
+     * it: `expandEdges` stamped the area on this edge while it was the node's
+     * own `needs`, and the provenance moved with the edge.
+     *
+     * The claim is load-bearing rather than ordering, and more plainly so than
+     * any edge above it. The first knowledge point does not merely use
+     * `congruence`, it is ABOUT it: SSS is what turns the single
+     * distance-preserving hypothesis into all six of a congruence's equalities,
+     * and the worked example's last move is to count the assumptions and
+     * conclude that a congruence is the trace of one map. The third point then
+     * uses the base-angle fact from that concept's third point to rule out a
+     * mirror line in a scalene triangle. Take the edge away and the first
+     * example has no criterion to appeal to and the third has no reason for its
+     * answer of 1.
+     *
+     * It is the FOURTH edge out of `congruence` and adds no branch point, which
+     * is the eighth promotion's shape rather than the sixth's: `congruence` was
+     * already a fork of out-degree three, so this widens a fork instead of
+     * opening one and the subject still has exactly two branch points. Worth
+     * separating for the reason the header gives — "the tree grew" and "the tree
+     * branched" are different claims, and only the first is true here.
+     *
+     * `confusedWith` and `exercises` on the departing node: NEITHER, checked
+     * before it was deleted. The `confusedWith` absence is the one that had to
+     * be looked for: `expandEdges` turns one into an `interferes_with`, which
+     * gates nothing, so losing one leaves every suite green while freeing the
+     * scheduler to introduce the two most confusable concepts in the subject
+     * together. There was a real candidate for one here — `plane-transformations`
+     * is the same three maps written in coordinates and is still a node — so the
+     * absence is worth recording rather than assumed. Adding one would be a
+     * claim about learner confusion made up during an authoring pass, which is
+     * what the scope comments forbid for patterns and the same argument covers.
+     */
     promotedBy: 'author:plane-geometry',
   },
 ]

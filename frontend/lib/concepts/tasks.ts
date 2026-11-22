@@ -99,9 +99,14 @@ const REAL_ABC = [
  * evaluated at all — the suite reports it, correctly.
  *
  * Real rather than integer, matching the plane-geometry tasks it joins and for
- * the same reason. Two of the six pairs here are angle measures and four are
- * pairs of side lengths — one from the triangle inequality and three from
- * Pythagoras — and nothing in either fact is about whole numbers:
+ * the same reason. The pairs it carries are angle measures, pairs of side
+ * lengths — from the triangle inequality and from Pythagoras — a surface and a
+ * radius, and, since the twelfth promotion, a returning turn with a count of
+ * mirror lines. (That list used to be a tally of six, which three later
+ * promotions each falsified without visiting it; the kinds of thing the symbols
+ * stand for is the durable claim and the count was not, for the reason
+ * ontology-geometry.ts's header gives about hand-maintained numbers.) Nothing
+ * in any of those facts is about whole numbers:
  * 180 − (180 − a − b) = a + b holds for every pair of angles, and a triangle's
  * sides are not required to be integers. The whole-number values in the
  * prompts are a convenience of the figures chosen, and in the Pythagoras cases
@@ -111,6 +116,67 @@ const REAL_ABC = [
 const REAL_AB = [
   { name: 'a', assumptions: { real: true } },
   { name: 'b', assumptions: { real: true } },
+]
+
+/**
+ * Two sides and a COSINE, for the oblique-triangle tasks.
+ *
+ * `k` rather than a name like `cosA` because the parser takes single symbols
+ * and because what the symbol means is the prompt's job, which is the rule
+ * `REAL_ABC` states. Three of the four cosine-law tasks use this set: the two
+ * sides enclosing an angle plus the cosine of that angle is exactly the data
+ * the cosine law takes, and the ambiguous-case pair is the same three numbers
+ * read with one of the sides facing the angle instead of enclosing it.
+ *
+ * Real rather than `positive`, and here that is not inherited caution — it is
+ * required. A cosine is negative precisely when the angle is wider than a
+ * right angle, which is half the content of the first knowledge point, and
+ * `positive` on `k` would be an assumption that forbids the obtuse case.
+ * `a^2 - b^2*(1 - k^2)` is also a subtraction whose SIGN is the answer, the
+ * same shape as the two converse-of-Pythagoras tasks that gave `REAL_ABC` its
+ * reason.
+ */
+const REAL_ABK = [
+  { name: 'a', assumptions: { real: true } },
+  { name: 'b', assumptions: { real: true } },
+  { name: 'k', assumptions: { real: true } },
+]
+
+/**
+ * Two sides and the two sines facing them, for the sine law's own claim.
+ *
+ * Four symbols because the claim IS about two vertices at once: the law says
+ * a/sin A and c/sin C are the same number, and an expression with one vertex
+ * in it cannot say so. A set with a spare would not do — every declared symbol
+ * must have a stated input, the rule `REAL_BC` and `REAL_AB` were split out
+ * for.
+ *
+ * `s` and `u` for the two sines rather than reusing `b`, which in every other
+ * triangle task in this file is a LENGTH. A symbol that means a side in six
+ * tasks and a sine in one is the authoring fault this file avoids by naming
+ * each set for what its tasks do.
+ */
+const REAL_ACSU = [
+  { name: 'a', assumptions: { real: true } },
+  { name: 'c', assumptions: { real: true } },
+  { name: 's', assumptions: { real: true } },
+  { name: 'u', assumptions: { real: true } },
+]
+
+/**
+ * One side and two sines, for the sine law used in its recovering direction.
+ *
+ * A separate declaration from `REAL_ACSU` rather than that set with `c` left
+ * unused, for the reason given three times above: a task whose inputs do not
+ * cover its symbols cannot be evaluated, and the suite reports it. The side
+ * here is the one the quotient is FORMED from and the two sines are the angle
+ * it was formed at and the angle being recovered — three numbers, which is
+ * what the law needs once one complete side-and-facing-sine pair exists.
+ */
+const REAL_AST = [
+  { name: 'a', assumptions: { real: true } },
+  { name: 's', assumptions: { real: true } },
+  { name: 't', assumptions: { real: true } },
 ]
 
 /**
@@ -348,6 +414,49 @@ const SIGMA_LINEARITY: VariableDeclaration[] = [
   { name: 's', assumptions: { real: true } },
   { name: 'q', assumptions: { real: true } },
   { name: 'm', assumptions: { integer: true, positive: true } },
+]
+
+/**
+ * The arithmetic-sequence tasks. Three lists, and the differences between them
+ * are the three questions the concept asks rather than bookkeeping.
+ *
+ * `a` is the first term in all three and `d` the common difference in all
+ * three; what changes is the third symbol, and it changes because the unknown
+ * does. `n` is a POSITION and is given, so the answer is a term. `v` is a VALUE
+ * and is given, so the answer is a position — the same formula read backwards,
+ * which is the second knowledge point. `b` is the LAST TERM, which is given
+ * instead of the count, and the count being derivable from the two ends is the
+ * third point's whole reason for existing.
+ *
+ * Three lists rather than one wide one, for the reason the note above the
+ * sequence declarations gives: `every symbol in the given has a stated input`
+ * is asserted over the shipped set, so an unused symbol in a shared list fails
+ * the suite rather than sitting there harmlessly.
+ *
+ * `n` carries `integer` and `positive` as every position in this file does.
+ * `a`, `d`, `v` and `b` are plain `real`, and that is deliberately wider than
+ * the numbers these three tasks substitute: a constant difference may be
+ * negative or fractional, and declaring `d` an integer would make the symbol
+ * narrower than the object. There is no symbol anywhere here for the COUNT of
+ * terms, which is the point of the third list — a task handed the count would
+ * not be asking the question the point is about.
+ */
+const AP_TERM: VariableDeclaration[] = [
+  { name: 'a', assumptions: { real: true } },
+  { name: 'n', assumptions: { integer: true, positive: true } },
+  { name: 'd', assumptions: { real: true } },
+]
+
+const AP_POSITION: VariableDeclaration[] = [
+  { name: 'v', assumptions: { real: true } },
+  { name: 'a', assumptions: { real: true } },
+  { name: 'd', assumptions: { real: true } },
+]
+
+const AP_SUM: VariableDeclaration[] = [
+  { name: 'a', assumptions: { real: true } },
+  { name: 'b', assumptions: { real: true } },
+  { name: 'd', assumptions: { real: true } },
 ]
 
 /**
@@ -5539,6 +5648,267 @@ export const TASKS: PracticeTask[] = [
     at: { a: '8', b: '17', x: '72' },
   },
 
+  // ── triangle-trigonometry, second concept: the oblique-triangle laws ────
+  //
+  // Six more tasks on the same subject, five `evaluate` and one
+  // `transform_to_form`, all settled with no worker — the same split as the
+  // three points above and settled the same way.
+  //
+  // WHAT MAKES THEM EXACT IS NOT WHAT MAKES THE RATIOS EXACT, and the
+  // difference decides every figure below. There the triples were chosen so
+  // that a quotient of two whole sides is rational. Here the cosine of the
+  // named angle has to be rational too, and by the cosine law rearranged that
+  // is automatic for a triangle with three whole sides — but it cuts the
+  // other way as well: an angle that is a whole number of DEGREES and has a
+  // rational cosine must be 90°, 60° or 120°, those being the only rational
+  // cosines a rational multiple of π has. So the figures are 5-7-8 and 3-7-8,
+  // which have a 60° angle facing their 7 and no other whole-degree angle at
+  // all; the right-triangle rule "whole sides or whole angles, never both" is
+  // the special case of that at 90°. ontology-trigonometry.ts's header argues
+  // it in full and tests/atlas.mjs checks it by computing the three cosines
+  // rather than by reading these comments.
+  //
+  // THE SINE-LAW TASKS NAME NO ANGLE AT ALL, which is not a stricter choice
+  // than the cosine ones but a forced one. The sines this build can write
+  // exactly are 1/2, √2/2, √3/2 and 1, and a quotient of two of those is
+  // rational only when they are equal — so a sine-law task with named angles
+  // has an irrational answer and `exactValue` correctly returns null. Giving
+  // the angles by their rational SINES instead is the first concept's own
+  // discipline ("sin A = 7/25", no angle named) and it buys a whole family:
+  // 25-39-56 has sines 3/5, 5/13 and 56/65 against the one quotient 65.
+  //
+  // THE SURD TASK IS ON THE COSINE POINT, and that is a fact about the laws
+  // rather than a convenience. The cosine law produces a², so `sqrt(76)` is
+  // the honest next step of the learner's own working; the sine law produces a
+  // side directly and its irrational outputs arrive already reduced. Which
+  // matters more than it sounds: `surd_reduced` only checks that each radicand
+  // is square-free, so the authentic sine-law expression `10*sqrt(3)/sqrt(2)`
+  // PASSES the form check unchanged and a task given it would rule its own
+  // input correct. `sqrt(76)` is refused by the same checker, naming the
+  // square 4.
+  //
+  // WHAT IS UNSCORED: which law applies to the data. Choosing between them is
+  // the second point's content and every prompt below hands the choice over by
+  // naming the law — a ruling cannot see a decision that was made before the
+  // expression was written, and this file says so wherever it is true rather
+  // than letting a coverage figure imply otherwise.
+  {
+    id: 'the-correction-term-off-pythagoras-1',
+    knowledgePointId: 'the-cosine-law-is-pythagoras-with-one-correction-term',
+    kind: 'evaluate',
+    prompt:
+      'Two sides of a triangle meeting at one vertex are 5 and 8, and the angle they enclose '
+      + 'is 60°, so its cosine is 1/2 — derived from the altitude of an equilateral triangle, '
+      + 'not looked up. The cosine law gives the side facing that angle as '
+      + 'sqrt(a^2 + b^2 - 2*a*b*k), where a and b are the two enclosing sides and k is the '
+      + 'cosine. Evaluate sqrt(a^2 + b^2 - 2*a*b*k) at a = 5, b = 8, k = 1/2. Read the answer '
+      + 'against what Pythagoras alone would have claimed, which is sqrt(89): the gap between '
+      + 'the two is the whole of the correction term, and the answer must come out SHORTER, '
+      + 'because closing the angle from a right angle to 60° brings the far ends of the two '
+      + 'sides together.',
+    given: 'sqrt(a^2 + b^2 - 2*a*b*k)',
+    variables: REAL_ABK,
+    // 25 + 64 − 2·5·8·(1/2) = 89 − 40 = 49, and √49 = 7 exactly — the root
+    // through `exactRoot`, the same path `sqrt(c^2 - b^2)/b` takes two tasks
+    // above. The triangle is 5, 7, 8.
+    //
+    // 7 < √89 ≈ 9.43 as the prompt promises. The figure names ONE angle and
+    // its three sides are whole numbers, which is legitimate here and would
+    // not be for a right triangle: 60° is one of the three whole-degree angles
+    // an all-integer triangle may have. The other two angles of 5-7-8 have
+    // cosines 11/14 and 1/7, neither of which belongs to a whole number of
+    // degrees, and neither is stated.
+    reference: '7',
+    at: { a: '5', b: '8', k: '1/2' },
+  },
+  {
+    id: 'the-sign-of-the-cosine-is-the-obtuse-verdict-1',
+    knowledgePointId: 'the-cosine-law-is-pythagoras-with-one-correction-term',
+    kind: 'evaluate',
+    prompt:
+      'Now the law backwards, from three sides to a cosine: a triangle has sides 3, 7 and 8, '
+      + 'and the question is what kind of angle faces the longest of them. Rearranged, the '
+      + 'cosine of the angle facing a is (b^2 + c^2 - a^2)/(2*b*c). Evaluate it at a = 8, '
+      + 'b = 3, c = 7. The SIGN is the answer you were asked for — negative means a² has '
+      + 'overshot b² + c², so the angle has opened past a right angle — and it is available '
+      + 'without the angle itself, which would need the inverse cosine and is four nodes up '
+      + 'the map. Compare the-correction-term-off-pythagoras-1, where the same quantity came '
+      + 'out positive for a 60° angle.',
+    given: '(b^2 + c^2 - a^2)/(2*b*c)',
+    variables: REAL_ABC,
+    // (9 + 49 − 64)/42 = −6/42 = −1/7. Negative, so the angle facing the 8 is
+    // wider than a right angle — the converse of Pythagoras read as a
+    // comparison rather than an equality.
+    //
+    // 3 + 7 = 10 > 8, so the triangle exists. It is the OTHER root of the
+    // ambiguous case in the third point: 3-7-8 and 5-7-8 both have a 60° angle
+    // facing their 7, and this task is the reason they are genuinely different
+    // triangles rather than one relabelled — the angle facing the 8 has cosine
+    // −1/7 here and +1/7 there.
+    //
+    // `REAL_ABC` rather than `REAL_ABK`: the three inputs are three SIDES, and
+    // the two converse-of-Pythagoras tasks in `pythagoras` use this same set
+    // for the same reason, a subtraction of squares whose sign is the ruling.
+    reference: '-1/7',
+    at: { a: '8', b: '3', c: '7' },
+  },
+  {
+    id: 'the-cosine-law-left-a-surd-1',
+    knowledgePointId: 'the-cosine-law-is-pythagoras-with-one-correction-term',
+    kind: 'transform_to_form',
+    prompt:
+      'A triangle has two sides of 6 and 10 enclosing an angle of 60°. The cosine law gives '
+      + 'the square of the facing side directly: 36 + 100 - 2*6*10*(1/2) = 76. So the side is '
+      + '√76, and 76 is not a perfect square — write it with no square factor left under the '
+      + 'radical. This is where an oblique triangle differs from the three whole-number '
+      + 'triples above: the cosine law hands you a², and an a² with no exact root is the '
+      + 'normal case rather than the awkward one. Leave it as √76 and nothing is wrong except '
+      + 'that a square is still in there.',
+    given: 'sqrt(76)',
+    form: 'surd_reduced',
+    variables: [],
+    // 76 = 4 × 19 with 4 = 2², so 2√19, and 19 is square-free so nothing
+    // further comes out. Ruled by `asSurd`'s normal form with no worker, the
+    // same way `the-derived-quotient-at-thirty-degrees-1` is.
+    //
+    // A fourth radicand distinct from every other in the build — 75 gave 5√3
+    // here, and `pythagoras` has 180 → 6√5 and 192 → 8√3 — so this is not a
+    // recall of any of them, and the square that comes out is 4 rather than
+    // 25, 36 or 64.
+    //
+    // THE GIVEN HAS TO BE A SINGLE RADICAL WITH A SQUARE IN IT. `surd_reduced`
+    // checks only that each radicand is square-free, so the authentic
+    // sine-law expression `10*sqrt(3)/sqrt(2)` passes unchanged — 3 and 2 are
+    // both square-free — and a task given that would accept its own input,
+    // which is the free mark types.ts warns about. Verified by ruling
+    // `sqrt(76)` as an answer to itself: refused, naming the square 4.
+    //
+    // The figure states two whole sides, one whole angle and an irrational
+    // third side, so the sides-and-angles constraint is satisfied the way the
+    // 5, 5√3, 10 triangle above satisfies it rather than the way 5-7-8 does.
+    reference: '2*sqrt(19)',
+  },
+  {
+    id: 'the-quotient-is-the-same-at-two-vertices-1',
+    knowledgePointId: 'the-ratio-of-a-side-to-the-sine-facing-it-is-one-number',
+    kind: 'evaluate',
+    prompt:
+      'A triangle has the side 39 facing an angle whose sine is 3/5, and the side 56 facing an '
+      + 'angle whose sine is 56/65. The sine law claims the quotient side-over-facing-sine is '
+      + 'ONE number for the whole triangle, so the two quotients must agree — and the way to '
+      + 'ask that as an arithmetic question is to subtract them. Evaluate a/s - c/u at a = 39, '
+      + 's = 3/5, c = 56, u = 56/65. An answer of 0 is the law holding; any other answer would '
+      + 'be the law failing on these numbers, and nothing in the arithmetic forces 0 — the '
+      + 'four inputs look independent. No angle is named anywhere in this task, and none is '
+      + 'needed.',
+    given: 'a/s - c/u',
+    variables: REAL_ACSU,
+    // 39 ÷ 3/5 = 65 and 56 ÷ 56/65 = 65, so the difference is exactly 0.
+    //
+    // A reference of 0 is the content here rather than a degenerate case, and
+    // it is checked the way a 0 reference has to be: by perturbing each input
+    // and confirming the value MOVES. a = 40 gives 5/3, s = 2/5 gives 65/2,
+    // c = 57 gives −65/56, u = 55/65 gives −13/11. So no input is idle and the
+    // 0 is not an artefact of the expression's shape.
+    //
+    // The triangle is 25, 39, 56 with sines 3/5, 5/13 and 56/65 — all three
+    // rational, which is why a sine-law task can be `evaluate` at all. Its
+    // three cosines are 4/5, 12/13 and −33/65, NONE of them 0 or ±1/2, so this
+    // triangle has no whole-degree angle to name and the prompt correctly
+    // names none. Consistency checked both ways: (56/65)² + (33/65)² = 1.
+    reference: '0',
+    at: { a: '39', s: '3/5', c: '56', u: '56/65' },
+  },
+  {
+    id: 'one-complete-pair-recovers-a-third-side-1',
+    knowledgePointId: 'the-ratio-of-a-side-to-the-sine-facing-it-is-one-number',
+    kind: 'evaluate',
+    prompt:
+      'Same triangle: the side 39 faces an angle of sine 3/5, and at a second vertex only the '
+      + 'sine is known, 5/13. Because the quotient is one number for the triangle, the side '
+      + 'facing that second angle is the first side times the ratio of the two sines. Evaluate '
+      + 'a*t/s at a = 39, s = 3/5, t = 5/13. Note which direction the ratio runs — the sine '
+      + 'being recovered on top — and check the answer for sense before trusting it: 5/13 is '
+      + 'the smaller sine, so the side facing it has to come out SHORTER than 39.',
+    given: 'a*t/s',
+    variables: REAL_AST,
+    // 39 × (5/13) ÷ (3/5) = 39 × 25/39 = 25, and 25 < 39 as the prompt
+    // promises. Writing it the other way up gives 39 × 39/25, which is larger
+    // than 39 and is the error the sense check is for.
+    //
+    // The same relation as `the-quotient-is-the-same-at-two-vertices-1` used
+    // in its recovering direction instead of its asserting one, which is the
+    // pairing `a-known-hypotenuse-multiplies-down-1` and
+    // `a-known-opposite-side-divides-up-1` make for the ratios: one law, two
+    // directions, and the decision the ruling cannot see is which.
+    reference: '25',
+    at: { a: '39', s: '3/5', t: '5/13' },
+  },
+  {
+    id: 'the-ambiguous-case-has-two-positive-roots-1',
+    knowledgePointId: 'two-sides-and-a-non-included-angle-can-describe-two-triangles',
+    kind: 'evaluate',
+    prompt:
+      'A triangle has a 60° angle, the side facing it is 7, and one of the two sides enclosing '
+      + 'it is 8. The cosine law in the missing side c is then a quadratic, '
+      + 'c² - (2*b*k)c + (b² - a²) = 0, and its two roots are the two possible lengths. The '
+      + 'LARGER root is b*k + sqrt(b^2*k^2 - b^2 + a^2). Evaluate it at a = 7, b = 8, k = 1/2. '
+      + 'Then note what the quadratic has done that no formula could: with a = 7 facing the '
+      + 'angle rather than enclosing it, the data admits a second triangle as well, and its '
+      + 'third side is the other root — the same expression with the sign before the radical '
+      + 'reversed, which comes out 3.',
+    given: 'b*k + sqrt(b^2*k^2 - b^2 + a^2)',
+    variables: REAL_ABK,
+    // 4 + √(16 − 64 + 49) = 4 + √1 = 5, exactly, the root through `exactRoot`.
+    // The minus branch gives 4 − 1 = 3, so the two triangles are 5, 7, 8 and
+    // 3, 7, 8 — and both really do have cos = 1/2 facing their 7, checked:
+    // (25 + 64 − 49)/80 = 1/2 and (9 + 64 − 49)/48 = 1/2.
+    //
+    // Both of those triangles are figures in the tasks above —
+    // `the-correction-term-off-pythagoras-1` built 5-7-8 from SAS data and
+    // `the-sign-of-the-cosine-is-the-obtuse-verdict-1` read 3-7-8's obtuse
+    // angle. That is deliberate: the two tasks together are what makes the
+    // ambiguity concrete rather than algebraic, since the learner has already
+    // met both answers as triangles.
+    //
+    // Only the larger root is a task. The smaller is named in the prompt
+    // instead, because a second task differing by one character would measure
+    // the same move twice and the clearance task below measures the thing that
+    // DECIDED there were two.
+    reference: '5',
+    at: { a: '7', b: '8', k: '1/2' },
+  },
+  {
+    id: 'the-side-has-to-clear-the-perpendicular-1',
+    knowledgePointId: 'two-sides-and-a-non-included-angle-can-describe-two-triangles',
+    kind: 'evaluate',
+    prompt:
+      'Same data: a = 7 facing a 60° angle, b = 8 enclosing it. Two positive roots need the '
+      + 'quadratic\'s discriminant to be positive, and a quarter of that discriminant tidies '
+      + 'to a^2 - b^2*(1 - k^2). Evaluate it at a = 7, b = 8, k = 1/2. The quantity '
+      + 'b^2*(1 - k^2) has a meaning in the figure: drop the perpendicular from the far vertex '
+      + 'onto the other arm of the angle, and Pythagoras in that right triangle — hypotenuse '
+      + 'b, one leg b*k — makes the perpendicular\'s square b^2 - b^2*k^2. It is the shortest '
+      + 'the facing side could possibly be, so a positive answer says the side you were given '
+      + 'CLEARS that perpendicular and a negative one says it falls short, with no triangle at '
+      + 'all. Here it clears by the narrowest whole-number margin there is.',
+    given: 'a^2 - b^2*(1 - k^2)',
+    variables: REAL_ABK,
+    // 49 − 64 × 3/4 = 49 − 48 = 1. Positive, so two triangles, and 1 is the
+    // smallest positive value a whole-number figure can give — 48 is
+    // (4√3)² = (8 sin 60°)².
+    //
+    // The sign is the ruling, which is why `REAL_ABK` is real rather than
+    // positive, and the perturbations show it is live on every input: a = 6
+    // gives −12 (the side falls short, no triangle), a = 9 gives 33 (but then
+    // a > b and the product of the roots turns negative, so one triangle
+    // rather than two), b = 9 gives −47/4, k = 1/3 gives −71/9. So each of the
+    // three inputs moves the answer and two of them move it across zero, which
+    // is the boundary the task is about.
+    reference: '1',
+    at: { a: '7', b: '8', k: '1/2' },
+  },
+
   // ── functions-and-inverses ──────────────────────────────────────────────
   //
   // Fifteen tasks, one per knowledge point, all `evaluate` and all settled by
@@ -5735,11 +6105,20 @@ export const TASKS: PracticeTask[] = [
   //     one application inside the next IS what following a recurrence does,
   //     and the nesting is the step a learner loses count of.
   //
-  // The honest gap: nothing here tests reaching a term the learner was not
-  // told the position of. "Which term equals 302" inverts the formula, and the
-  // answer is an index rather than a term — askable, and it belongs to
+  // The honest gap that WAS here, and it has been collected rather than
+  // deleted, because what filled it is the argument for writing such a note at
+  // all. The sentence said: nothing here tests reaching a term the learner was
+  // not told the position of; "Which term equals 302" inverts the formula, the
+  // answer is an index rather than a term, it is askable, and it belongs to
   // `arithmetic-sequences` with the closed form it needs, which is still
   // mapped.
+  //
+  // `arithmetic-sequences` is authored now and `ap-position-1` is that task,
+  // with that number in it. The gap stays recorded here because a note naming
+  // the concept that should own a missing question is what let a later
+  // promotion pick it up knowing it could not overlap anything already
+  // written — which is worth more than the note being tidied away once it came
+  // true.
   {
     id: 'sequence-term-1',
     knowledgePointId: 'a-sequence-is-a-function-on-positions',
@@ -5829,7 +6208,13 @@ export const TASKS: PracticeTask[] = [
     at: { k: '3', c: '1' },
     // 8 + 15 + 24 + 35. The differences are 7, 9, 11 — deliberately not
     // constant, so there is no pairing shortcut here and nothing of
-    // `arithmetic-sequences` is pre-empted.
+    // `arithmetic-sequences` was pre-empted. That concept is authored now and
+    // `ap-sum-1` is the pairing task, which makes this choice load-bearing
+    // rather than merely polite: had this example been an arithmetic one, the
+    // two tasks would be the same question and the earlier concept would hold
+    // the later one's only argument. The assertion in tests/concepts-logic.mjs
+    // derives the differences from this task's own `given` and `at`, so a
+    // later edit to "simplify" the example reintroduces the overlap loudly.
     reference: '82',
   },
   {
@@ -5864,6 +6249,91 @@ export const TASKS: PracticeTask[] = [
     // 36 + 50. No individual aₖ appears anywhere in this task, which is the
     // claim: the total of the ten was the only fact about them that was used.
     reference: '86',
+  },
+
+  // The three on `arithmetic-sequences`, the twenty-sixth promotion and the
+  // third concept to come into this subject from `sequences-and-series`. One
+  // per point, as the sigma tasks above are.
+  //
+  // EACH `given` IS THE METHOD'S OUTPUT EXPRESSION WITH THE NUMBERS LEFT AS
+  // SYMBOLS, which is the shape `sigma-constant-1` above settled on and the
+  // reason these three can be ruled at all. The alternative was to hand the
+  // learner the answer's ingredients already combined, and then the one move
+  // each point is about would have happened in the prompt.
+  //
+  // What that buys, task by task, is that THE CHARACTERISTIC WRONG ANSWER IS
+  // REACHABLE rather than being arithmetically impossible:
+  //
+  //  - `ap-term-1` keeps the `n - 1` visible and the 19 hidden, so the slip
+  //    the point exists for — multiplying by the position instead of by the
+  //    steps — lands on 85 rather than on a parse error. 85 is the 21st term
+  //    of the same sequence, which is why the worked example names it.
+  //  - `ap-position-1` keeps the `+ 1` visible and the 60 hidden, so stopping
+  //    at the step count gives 60.
+  //  - `ap-sum-1` keeps BOTH the `+ 1` and the halving visible and the 10
+  //    hidden, so forgetting the count's `+ 1` gives 189 and forgetting to
+  //    halve gives 420.
+  //
+  // All six of those numbers were evaluated through `exactValue` before these
+  // tasks were written, so each is a real value of the task's own `given`
+  // under a named misreading rather than a number somebody expected a learner
+  // to produce. The suite re-derives the three references from the givens
+  // independently.
+  //
+  // NO `domainConditions` ON ANY OF THE THREE, and the omission is checked
+  // rather than overlooked. Two of the givens divide by `d`, so `d != 0` looks
+  // like the honest declaration — but a zero common difference is not a
+  // forbidden input to a question about THIS sequence, it is a different
+  // sequence, and `domainConditions` are carried into every ruling as
+  // conditions on the learner's answer. The three tasks substitute d = 4, 5
+  // and 4; there is no input at which any of them is undefined, which is the
+  // test the rational-expression tasks above apply.
+  {
+    id: 'ap-term-1',
+    knowledgePointId: 'the-formula-counts-steps-not-positions',
+    kind: 'evaluate',
+    prompt:
+      'A sequence begins 5, 9, 13, 17, … . Find its 20th term. The step is the difference '
+      + 'between neighbours and the number of steps is not the number of terms — evaluate '
+      + 'a + (n − 1)·d at a = 5, n = 20, d = 4.',
+    given: 'a + (n - 1)*d',
+    variables: AP_TERM,
+    at: { a: '5', n: '20', d: '4' },
+    // 5 + 19 · 4. Multiplying by 20 gives 85, which is this sequence's 21st
+    // term — the slip produces a real term at the wrong position rather than a
+    // number that looks wrong.
+    reference: '81',
+  },
+  {
+    id: 'ap-position-1',
+    knowledgePointId: 'a-value-tells-you-its-own-position-or-that-it-has-none',
+    kind: 'evaluate',
+    prompt:
+      'A sequence begins 2, 7, 12, 17, … and one of its terms is 302. Which term is it? Take the '
+      + 'first term off, divide by the step to count the steps, and turn that count into a '
+      + 'position — evaluate (v − a)/d + 1 at v = 302, a = 2, d = 5.',
+    given: '(v - a)/d + 1',
+    variables: AP_POSITION,
+    at: { v: '302', a: '2', d: '5' },
+    // 300/5 + 1. Stopping at the step count gives 60, which is why the + 1 is
+    // in the given and the 60 is not.
+    reference: '61',
+  },
+  {
+    id: 'ap-sum-1',
+    knowledgePointId: 'pairing-the-ends-turns-the-sum-into-a-multiplication',
+    kind: 'evaluate',
+    prompt:
+      'Total 3 + 7 + 11 + 15 + 19 + 23 + 27 + 31 + 35 + 39. Every pair taken inwards from the '
+      + 'two ends has the same total, so the sum is that total times the number of pairs — '
+      + 'evaluate ((b − a)/d + 1)/2 · (a + b) at a = 3, b = 39, d = 4.',
+    given: '((b - a)/d + 1)/2 * (a + b)',
+    variables: AP_SUM,
+    at: { a: '3', b: '39', d: '4' },
+    // (36/4 + 1)/2 · 42 = 5 · 42. Dropping the count's + 1 gives 189 and
+    // dropping the halving gives 420; both are slips the pairing argument is
+    // what rules out, and neither is a different arithmetic error.
+    reference: '210',
   },
 
   // The six on `functions-of-several-variables`, the twenty-first promotion
@@ -7331,6 +7801,166 @@ export const TASKS: PracticeTask[] = [
     // different measures were computed.
     reference: '288',
     at: { a: '144', b: '6' },
+  },
+
+  // ── plane-geometry, twelfth promotion: isometries-and-symmetry ──────────
+  //
+  // Six tasks, two per knowledge point, all `evaluate`, every one settled by
+  // exact rational arithmetic with no worker — so the subject's no-worker
+  // contract holds unchanged and the pair of `surd_reduced` tasks stays a pair.
+  //
+  // DECLINED FOR THE SECOND TIME RUNNING, and for a different reason from
+  // `distance-and-midpoint`'s. There a form fitted and was declined as a fourth
+  // copy of a question `roots-and-irrationals` owns. Here no form fits at all:
+  // every quantity this concept produces is a whole number of degrees or a
+  // count of maps, and `NamedForm` is a union of claims about the SHAPE of an
+  // expression. There is nothing syntactic to demand of "12", so the gap
+  // `pythagoras` and `circles` filled with `transform_to_form` does not open.
+  //
+  // THE SAME EXPRESSION TWICE AT OPPOSITE ENDS OF ITS RANGE, which is this
+  // subject's habit and is the third point's whole argument.
+  // `count-a-regular-polygons-symmetries-1` and
+  // `the-scalene-triangle-has-one-symmetry-and-not-none-1` are both
+  // `360/a + b`: at a = 60, b = 6 it answers 12 and at a = 360, b = 0 it
+  // answers 1. One formula covers the most symmetric figure in the concept and
+  // the least, which is what makes "the identity is a symmetry" a consequence
+  // rather than a caveat — a learner who thinks the answer should be 0 has to
+  // disagree with the arithmetic rather than with a rule. Asserted as a pair in
+  // tests/concepts-logic.mjs.
+  //
+  // WHAT STAYS UNSCORED is named rather than left to be noticed, as in every
+  // block above. In the first pair it is the SSS step: a learner handed
+  // "evaluate 180 − a − b" has been told that the image's two angles equal the
+  // original's, which is the move the knowledge point exists for. In the third
+  // pair it is the two counts themselves — the task supplies r and the number
+  // of axes, and working out that a hexagon has six axes rather than three is
+  // the content. The prompts say so. What IS scored in both cases is the thing
+  // the point's error is about: that the total closes at 180 in whichever
+  // triangle you read it, and that the two counts add to 1 rather than 0.
+  {
+    id: 'the-image-closes-on-the-same-angle-total-1',
+    knowledgePointId: 'distance-is-the-only-hypothesis-and-the-angles-follow-by-sss',
+    kind: 'evaluate',
+    prompt:
+      'An isometry carries triangle ABC to DEF, sending A to D, B to E and C to F, and the only '
+      + 'angles recorded are ∠A = 53° and ∠B = 59°. SSS has already given you ∠D = ∠A and '
+      + '∠E = ∠B — the definition supplies three pairs of equal sides even though two of them '
+      + 'were never measured, which is the criterion in full — and that step is what this task '
+      + 'hands you. Evaluate 180 − a − b at a = 53, b = 59 to get ∠F. The number can be read in '
+      + 'either triangle and that is the content: the congruence is what entitles an angle '
+      + 'computed inside ABC to be written at F. Compare third-angle-then-carried-across-1 in '
+      + '`congruence`, which is this subtraction reached from three measured parts rather than '
+      + 'from one hypothesis about distances.',
+    given: '180 - a - b',
+    variables: REAL_AB,
+    // 180 − 53 − 59 = 68. The figure states only ONE side as a number
+    // (AB = 13 cm in the worked example), so there is no triangle here with
+    // three whole sides and whole angles — see the note on REAL_ABC and the
+    // sides-and-angles rule the oblique-triangle block states in full.
+    reference: '68',
+    at: { a: '53', b: '59' },
+  },
+  {
+    id: 'one-disagreeing-pair-refutes-an-isometry-1',
+    knowledgePointId: 'distance-is-the-only-hypothesis-and-the-angles-follow-by-sss',
+    kind: 'evaluate',
+    prompt:
+      'A map sends A to D, B to E and C to F and is offered as an isometry. The recorded '
+      + 'distances are AB = 13 with DE = 13, BC = 14 with EF = 14, and CA = 15 with FD = 16. '
+      + 'Evaluate b − a at b = 16, a = 15 — the third pair. Anything other than 0 settles it: the '
+      + 'definition says P′Q′ = PQ for EVERY pair of points, so one pair that disagrees refutes '
+      + 'the whole claim and the two pairs that matched are worth nothing against it. What this '
+      + 'task hands you is which pair to subtract; that checking the agreeing pairs could never '
+      + 'have settled anything is the knowledge point.',
+    given: 'b - a',
+    variables: REAL_AB,
+    // 16 − 15 = 1. Non-zero, so no isometry carries ABC onto DEF — and the
+    // triangles are not congruent either, 13-14-15 against 13-14-16, which is
+    // the same refutation read through SSS.
+    reference: '1',
+    at: { b: '16', a: '15' },
+  },
+  {
+    id: 'the-starting-point-drops-out-of-the-doubling-1',
+    knowledgePointId: 'two-reflections-compose-to-twice-the-angle-between-the-mirrors',
+    kind: 'evaluate',
+    prompt:
+      'Two mirrors m and n cross at 35°, and the first image P₁ lies between them, 20° from m and '
+      + '15° from n. Each mirror bisects the angle it turns the point through, so the two turns '
+      + 'are 2 × 20° and 2 × 15°, and the claim is that their total is twice the angle between '
+      + 'the mirrors. Evaluate (2a + 2b) − 2c at a = 20, b = 15, c = 35. Zero is the content: the '
+      + 'half-angles enter only as their sum, so the answer depends on the mirrors and not on '
+      + 'where P started, which is what makes the composition one rotation rather than a '
+      + 'different motion for each point. It is NOT identically zero — at a = 20, b = 16, c = 35 '
+      + 'it is 2, which says P₁ was not between the mirrors as described, so misreading the '
+      + 'figure does not earn a free 0.',
+    given: '(2*a + 2*b) - 2*c',
+    variables: REAL_ABC,
+    // 40 + 30 − 70 = 0, and the composition is a 70° rotation about the
+    // crossing point. Zero exactly when a + b = c, which is what P₁ lying
+    // between the mirrors means.
+    reference: '0',
+    at: { a: '20', b: '15', c: '35' },
+  },
+  {
+    id: 'the-two-orders-agree-only-at-the-right-angle-1',
+    knowledgePointId: 'two-reflections-compose-to-twice-the-angle-between-the-mirrors',
+    kind: 'evaluate',
+    prompt:
+      'Reflecting in m then n turns a figure through 2θ, and reflecting in n then m turns it '
+      + 'through 2θ the other way. The two are the same rotation exactly when a turn of 2θ and a '
+      + 'turn of −2θ agree, which needs their difference 4θ to be a whole number of turns. '
+      + 'Evaluate 4x − 360 at x = 90. Zero says perpendicular mirrors are the case where the '
+      + 'order of the two reflections does not matter — and 90° is the only mirror angle strictly '
+      + 'between 0° and 180° where it does not, since the next multiple of 360 would need '
+      + 'θ = 180°, which is one line twice rather than two mirrors. At x = 35 the same expression '
+      + 'is −220, which is the two 70° rotations of the worked example landing 140° apart.',
+    given: '4*x - 360',
+    variables: REAL_X,
+    // 360 − 360 = 0. At 35 it is −220 and at 45 it is −180, so the expression
+    // separates the right angle from its neighbours rather than reporting a
+    // property every mirror pair has.
+    reference: '0',
+    at: { x: '90' },
+  },
+  {
+    id: 'count-a-regular-polygons-symmetries-1',
+    knowledgePointId: 'a-figures-symmetries-are-counted-with-the-identity-among-them',
+    kind: 'evaluate',
+    prompt:
+      'A regular hexagon returns to itself after a 60° turn, and it has 6 mirror lines — 3 '
+      + 'through pairs of opposite vertices and 3 through pairs of opposite edge midpoints. '
+      + 'Evaluate 360/a + b at a = 60, b = 6: the division counts the rotations, the 0° one '
+      + 'included, and b adds the reflections. The answer is 12, which is 2n at n = 6. What this '
+      + 'task hands you is the two counts; that the identity belongs in the first of them, that '
+      + 'it is in neither list twice, and that a hexagon has six axes rather than three are the '
+      + 'knowledge point.',
+    given: '360/a + b',
+    variables: REAL_AB,
+    // 360/60 = 6 rotations (0°, 60°, 120°, 180°, 240°, 300°) and 6 axes, so 12.
+    // A 360° turn is not a seventh rotation: it is the same map as 0°.
+    reference: '12',
+    at: { a: '60', b: '6' },
+  },
+  {
+    id: 'the-scalene-triangle-has-one-symmetry-and-not-none-1',
+    knowledgePointId: 'a-figures-symmetries-are-counted-with-the-identity-among-them',
+    kind: 'evaluate',
+    prompt:
+      'The same expression, on a scalene triangle. It has no mirror line — one would fix a vertex '
+      + 'and swap the other two, forcing the two sides at that vertex equal — so b = 0; and no '
+      + 'turn short of a full one returns it, so a = 360. Evaluate 360/a + b at a = 360, b = 0. '
+      + 'The answer is 1 rather than 0, and that is the whole of the task: the identity is a '
+      + 'symmetry, so a figure with no symmetry in the ordinary sense still has exactly one. Read '
+      + 'it against count-a-regular-polygons-symmetries-1, which is this expression at the other '
+      + 'end of the same scale.',
+    given: '360/a + b',
+    variables: REAL_AB,
+    // 360/360 = 1 rotation, which IS the identity, and no axes: 1 + 0 = 1. The
+    // tempting 0 is not an arithmetic slip — it is the identity left out of the
+    // first count, which is the error the knowledge point is built on.
+    reference: '1',
+    at: { a: '360', b: '0' },
   },
 ]
 

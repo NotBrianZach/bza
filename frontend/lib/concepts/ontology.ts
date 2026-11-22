@@ -783,18 +783,47 @@ const CONCEPTS: Concept[] = [
         workedExample: {
           problem: 'Is (x + 3)/((x + 3)(x − 5)) the same function as 1/(x − 5)?',
           subgoals: [
-            { label: 'Simplify the formula', detail: 'The factor x + 3 cancels, leaving 1/(x − 5).' },
+            {
+              label: 'Simplify the formula',
+              detail: 'The factor x + 3 cancels, leaving 1/(x − 5).',
+              socratic:
+                'Written out in factors, the top of this fraction is not merely similar to ' +
+                'part of the bottom — it is one of the bottom\'s two factors, standing there ' +
+                'on its own. Cancelling it is the same move as turning 6/(6 · 7) into 1/7, ' +
+                'and it is worth saying out loud which operation that move actually is, done ' +
+                'to the top and the bottom alike. Which factor goes, what single expression ' +
+                'are you left holding, and what did you have to take for granted about ' +
+                'x + 3 in order to be allowed to do that to it?',
+            },
             {
               label: 'Compare domains',
               detail:
                 'The first is undefined at x = −3. The second is perfectly defined there, with ' +
                 'value −1/8.',
+              socratic:
+                'Set the cancelling aside for a moment and feed x = −3 to each of the two ' +
+                'expressions exactly as it is written. In (x + 3)/((x + 3)(x − 5)) that asks ' +
+                'you to work out a top, work out a bottom, and divide the one by the other; ' +
+                'in 1/(x − 5) it asks you to divide 1 by a number you can name. Those are ' +
+                'not the same demand, and only one of them can be met. What does each ' +
+                'expression report back at x = −3, and so which real numbers does each of ' +
+                'them accept?',
             },
             {
               label: 'The verdict, stated precisely',
               detail:
                 'Same formula after cancelling, different functions. They agree on the common ' +
                 'domain, which is every real x except −3 and 5.',
+              socratic:
+                'You now have two findings that pull against each other: after the ' +
+                'cancelling the same formula does the calculating in both, and yet there is ' +
+                'a number one of them accepts and the other refuses. Deciding the question ' +
+                'as asked means first settling what has to match before two functions count ' +
+                'as one and the same — whether a shared rule for calculating is enough by ' +
+                'itself, or whether something else travels with a function and has to agree ' +
+                'too. Once you have settled that, what is your verdict here, and what is the ' +
+                'strongest true statement left about how these two are related — holding for ' +
+                'exactly which x?',
             },
           ],
           answer: 'No. They agree on the common domain only, which excludes x = −3.',

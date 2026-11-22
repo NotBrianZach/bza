@@ -4579,13 +4579,13 @@ t('its fidelity claim matches what its option can do', fidelityMismatches(PG).le
 const PG_CONCEPT_IDS = [
   'points-lines-angles', 'triangle-basics', 'congruence', 'similarity', 'pythagoras',
   'quadrilaterals-and-polygons', 'area-and-perimeter', 'geometric-proof', 'circles',
-  'circle-measure', 'distance-and-midpoint',
+  'circle-measure', 'distance-and-midpoint', 'isometries-and-symmetry',
 ]
-t('eleven concepts, three knowledge points each',
-  PG.concepts.length === 11 && allKnowledgePoints(PG).length === 33
+t('twelve concepts, three knowledge points each',
+  PG.concepts.length === 12 && allKnowledgePoints(PG).length === 36
   && PG.concepts.every(c => c.knowledgePoints.length === 3),
   `${PG.concepts.length} concepts, ${allKnowledgePoints(PG).length} points`)
-t('all eleven concepts are teachable AND practisable — a syllabus, not eleven map entries',
+t('all twelve concepts are teachable AND practisable — a syllabus, not twelve map entries',
   PG_CONCEPT_IDS.every(id => isTeachable(PG, id) && isPractisable(PG, id)),
   PG_CONCEPT_IDS.filter(id => !isTeachable(PG, id) || !isPractisable(PG, id)).join(', '))
 /*
@@ -4729,7 +4729,7 @@ t('and the sixth forks off congruence rather than extending that chain',
   && PG_PREREQS.filter(e => e.from === 'congruence').map(e => e.to).includes('similarity'),
   PG_PREREQS.map(e => `${e.from}->${e.to}`).join(' '))
 t('and the seventh, ninth and tenth each contributed TWO edges, so the count moves by two thrice',
-  PG_PREREQS.length === 13
+  PG_PREREQS.length === 14
   && PG_PREREQS.filter(e => e.to === 'area-and-perimeter').map(e => e.from).sort().join(',')
     === 'quadrilaterals-and-polygons,triangle-basics'
   && PG_PREREQS.filter(e => e.to === 'circles').map(e => e.from).sort().join(',')
@@ -4751,12 +4751,47 @@ t('and the seventh, ninth and tenth each contributed TWO edges, so the count mov
  * parent by accident, which is the failure the sixth promotion's note already
  * identified. So the claim held here is WHICH three.
  */
-t('and the eighth widens the congruence fork to three without adding a branch point',
+t('and the eighth widens the congruence fork without adding a branch point',
   PG_PREREQS.filter(e => e.from === 'congruence').map(e => e.to).sort().join(',')
-    === 'geometric-proof,quadrilaterals-and-polygons,similarity'
+    === 'geometric-proof,isometries-and-symmetry,quadrilaterals-and-polygons,similarity'
   && PG_PREREQS.filter(e => e.to === 'geometric-proof').map(e => e.from).join(',') === 'congruence'
   && PG_PREREQS.filter(e => e.from === 'geometric-proof').length === 1,
   PG_PREREQS.map(e => `${e.from}->${e.to}`).join(' '))
+/*
+ * THE TWELFTH PROMOTION WIDENED THAT SAME FORK TO FOUR, which is why the
+ * assertion above holds the named set and why its title no longer says "to
+ * three" — the figure was the one-sided-ratchet shape the block above `pgForks`
+ * warns about, phrased over the complement of whatever arrived last. Membership
+ * is the durable claim; the size is not.
+ *
+ * Its own claim is asserted separately and is about the EDGE rather than the
+ * fork: `isometries-and-symmetry` is reached from `congruence` and from nowhere
+ * else, which is the check that would catch the edge being hung off a plausible
+ * neighbour. `similarity` is the plausible one — both concepts are about two
+ * figures agreeing — and it is not a prerequisite here, because what this
+ * concept needs from below is SSS and the base-angle theorem, both of which are
+ * `congruence`'s.
+ */
+t('and the twelfth takes that fork to four, hanging off congruence specifically',
+  PG_PREREQS.filter(e => e.to === 'isometries-and-symmetry').map(e => e.from).join(',')
+    === 'congruence'
+  && prerequisitesOf(PG, 'isometries-and-symmetry').join(',') === 'congruence'
+  && allPrerequisitesOf(PG, 'isometries-and-symmetry').includes('triangle-basics')
+  && allPrerequisitesOf(PG, 'isometries-and-symmetry').includes('points-lines-angles')
+  && !allPrerequisitesOf(PG, 'isometries-and-symmetry').includes('similarity'),
+  allPrerequisitesOf(PG, 'isometries-and-symmetry').join(', '))
+/*
+ * And it is a LEAF of this subject: nothing in `plane-geometry` depends on it,
+ * and its one dependent anywhere in the build is `binary-operations`, a node of
+ * `abstract-algebra`. So the fork set did not move, and the claim is written as
+ * "no edge leaves this node" alongside the named set rather than as a count,
+ * since a count would read the same if an edge had been added out of it to a
+ * node that already had a parent.
+ */
+t('and nothing in this subject rests on it, so the three branch points are unmoved',
+  PG_PREREQS.filter(e => e.from === 'isometries-and-symmetry').length === 0
+  && pgForks() === 'congruence,pythagoras,triangle-basics',
+  `${pgForks()} | out: ${PG_PREREQS.filter(e => e.from === 'isometries-and-symmetry').length}`)
 t('and geometric-proof reaches the angle facts only through congruence',
   prerequisitesOf(PG, 'geometric-proof').join(',') === 'congruence'
   && allPrerequisitesOf(PG, 'geometric-proof').includes('points-lines-angles')
@@ -4828,24 +4863,38 @@ t('and circles collects nothing from below its own pair, since both are authored
  * holds. So the ancestry of the named three is the only thing that separates the
  * two events.
  *
- * `congruence` forked three ways — `similarity` at the fourth promotion,
- * `quadrilaterals-and-polygons` at the sixth, `geometric-proof` at the eighth.
- * `circles` reconverged two of the three and provably not the third: the
- * assertion above holds that the polygons are deliberately NOT behind it.
- * `circle-measure` reaches all three, because its second parent
- * `area-and-perimeter` sits on the polygons branch. So this is the first concept
- * of the subject with every child of `congruence` in its ancestry.
+ * `congruence` forked three ways when this was written — `similarity` at the
+ * fourth promotion, `quadrilaterals-and-polygons` at the sixth,
+ * `geometric-proof` at the eighth; it has a fourth child now and the paragraph
+ * below this one says what that did to the claim. `circles` reconverged two of
+ * the three and provably not the third: the assertion above holds that the
+ * polygons are deliberately NOT behind it. `circle-measure` reaches all three,
+ * because its second parent `area-and-perimeter` sits on the polygons branch.
+ * So this is the first concept of the subject with all three of those branches
+ * in its ancestry.
  *
  * The contrast against `circles` is asserted in the same breath rather than
  * separately, because the claim is comparative: "has all three" means nothing
  * here unless the node one promotion down is known not to.
+ *
+ * THE TWELFTH PROMOTION GAVE `congruence` A FOURTH CHILD AND DID NOT FALSIFY
+ * THIS, which is worth stating because the obvious reading says it should have.
+ * The claim was written as "every child of `congruence` in its ancestry", and
+ * `isometries-and-symmetry` is a child of `congruence` that is NOT behind
+ * `circle-measure`. But it cannot be behind anything: it is a leaf of the
+ * subject, so no concept here has it as an ancestor and the quantified form of
+ * the claim became unsatisfiable rather than false. So the assertion now names
+ * the three branches it was always about and adds the exclusion explicitly —
+ * which is the one-sided-ratchet repair the block above `pgForks` describes,
+ * done before the ratchet fired rather than after.
  */
-t('the tenth is the first node with all three branches of the congruence fork behind it',
+t('the tenth is the first node with all three authored branches of the congruence fork behind it',
   ['similarity', 'quadrilaterals-and-polygons', 'geometric-proof']
     .every(id => PG_ANC('circle-measure').includes(id))
   && !PG_ANC('circles').includes('quadrilaterals-and-polygons')
+  && !PG_ANC('circle-measure').includes('isometries-and-symmetry')
   && PG_PREREQS.filter(e => e.from === 'congruence').map(e => e.to).sort().join(',')
-    === 'geometric-proof,quadrilaterals-and-polygons,similarity',
+    === 'geometric-proof,isometries-and-symmetry,quadrilaterals-and-polygons,similarity',
   `circle-measure<-[${PG_ANC('circle-measure').join(' ')}]`)
 t('and it added no branch point either, its two parents each keeping one child',
   PG_PREREQS.filter(e => e.from === 'circles').length === 1
@@ -4975,7 +5024,7 @@ t('congruence reaches the angle facts only through the triangles',
 
 group('the eighth subject is gradable with no worker')
 const PG_TASKS = allKnowledgePoints(PG).flatMap(p => tasksForPoint(p.id))
-t('sixty-six tasks, two on each of the thirty-three points', PG_TASKS.length === 66
+t('seventy-two tasks, two on each of the thirty-six points', PG_TASKS.length === 72
   && allKnowledgePoints(PG).every(p => tasksForPoint(p.id).length === 2),
   `${PG_TASKS.length}`)
 /*
@@ -5071,8 +5120,23 @@ const PG_FORM = PG_TASKS.filter(x => x.kind === 'transform_to_form')
  * worked examples instead of drilled again. The two forms remain the two the
  * subject genuinely needed.
  */
-t('sixty-four evaluate and two transform_to_form, both surds that a right angle produced',
-  PG_EVAL.length === 64 && PG_FORM.length === 2
+/*
+ * `isometries-and-symmetry` added the last six, all `evaluate`, and the pair
+ * above stays a pair for a THIRD reason — which is what makes it worth writing
+ * down rather than noting a third concept that happened not to need a form.
+ *
+ * `circle-measure` wanted a form and none existed: every measure it produces is
+ * a multiple of π and no `NamedForm` speaks about one. `distance-and-midpoint`
+ * had one that fitted and declined it, as a fourth copy of a question
+ * `roots-and-irrationals` owns. Here there is nothing for a form to be about at
+ * all: every quantity in the concept is a whole number of degrees or a count of
+ * maps, and a `NamedForm` is a claim about the SHAPE of an expression, so "12"
+ * admits no syntactic demand. Wanted-and-absent, available-and-declined,
+ * inapplicable — the three ways a subject can fail to gain a form, and the
+ * ordered pair below has now survived all three.
+ */
+t('seventy evaluate and two transform_to_form, both surds that a right angle produced',
+  PG_EVAL.length === 70 && PG_FORM.length === 2
   && PG_EVAL.every(x => x.form === undefined)
   && PG_FORM.map(x => x.id).join(',')
     === 'reduce-the-hypotenuse-surd-1,reduce-the-tangent-length-surd-1'
@@ -5510,9 +5574,68 @@ t('the proof concept added three rulable chains and no unrulable ones',
   PG.concepts.find(c => c.id === 'geometric-proof').knowledgePoints
     .map(p => `${p.id}:${tasksForPoint(p.id).map(x => x.kind).join('+')}`).join(' '))
 
+/*
+ * THE TWELFTH PROMOTION'S SHARED EXPRESSION, AS A PAIR, which is this subject's
+ * habit of making the repetition the content and is the third instance of it.
+ *
+ * `count-a-regular-polygons-symmetries-1` and
+ * `the-scalene-triangle-has-one-symmetry-and-not-none-1` are the same
+ * `360/a + b`, at a = 60, b = 6 and at a = 360, b = 0. One formula covers the
+ * most symmetric figure in the concept and the least, which is what makes "the
+ * identity is a symmetry" a consequence rather than a caveat: a learner who
+ * expects 0 has to disagree with the arithmetic rather than with a rule.
+ * Asserted as a pair because each task alone is unremarkable and the agreement
+ * is the claim — exactly as with `a*b - c*d` above.
+ *
+ * The rectangle is read as well, at a = 180, b = 2, and it is not a task. It is
+ * here because the two authored inputs sit at the ends of the range and a
+ * reading between them is what shows the expression is not a two-case lookup.
+ */
+t('one symmetry count serves the regular polygon, the rectangle and the scalene triangle', (() => {
+  const task = taskById('count-a-regular-polygons-symmetries-1')
+  const twin = taskById('the-scalene-triangle-has-one-symmetry-and-not-none-1')
+  const read = (a, b) => {
+    const at = { a: parseExpression(a, []), b: parseExpression(b, []) }
+    const v = exactValue(substitute(parseExpression(task.given, ['a', 'b']), at))
+    return v === null ? null : showExact(v)
+  }
+  // 360/60 + 6 = 12 for the hexagon, 360/72 + 5 = 10 for the pentagon,
+  // 360/180 + 2 = 4 for the non-square rectangle, and 360/360 + 0 = 1 for the
+  // scalene triangle. The last is the one the point is built on: 1 and not 0.
+  return task.given === twin.given && read('60', '6') === '12' && read('72', '5') === '10'
+    && read('180', '2') === '4' && read('360', '0') === '1'
+})())
+/*
+ * And the doubling, which has to be able to FAIL or the task is a free mark.
+ *
+ * `(2a + 2b) - 2c` is zero exactly when a + b = c, which is what it means for
+ * the first mirror image to lie between the two mirrors. A learner who misreads
+ * the figure gets a non-zero answer rather than a 0 the expression would have
+ * produced whatever they put in — which is the check
+ * `the-four-angles-are-two-angles-twice-1` is asserted for in the polygons, and
+ * the reason neither task is an identity dressed up as a claim.
+ */
+t('the mirror doubling is zero only where the image lies between the mirrors', (() => {
+  const task = taskById('the-starting-point-drops-out-of-the-doubling-1')
+  const read = (a, b, c) => {
+    const at = {
+      a: parseExpression(a, []), b: parseExpression(b, []), c: parseExpression(c, []),
+    }
+    const v = exactValue(substitute(parseExpression(task.given, ['a', 'b', 'c']), at))
+    return v === null ? null : showExact(v)
+  }
+  // The authored 20, 15, 35 gives 0; 20, 16, 35 gives 2 and 25, 15, 35 gives
+  // 10, so the expression separates the configuration the point describes from
+  // the ones it does not. A second valid pair of half-angles on the same
+  // mirrors — 5 and 30 — also gives 0, which is the claim that the starting
+  // point drops out rather than a coincidence of 20 and 15.
+  return read('20', '15', '35') === '0' && read('5', '30', '35') === '0'
+    && read('20', '16', '35') === '2' && read('25', '15', '35') === '10'
+})())
+
 const PG_QUESTIONS = allQuestions(PG)
-t('a hundred and thirty-four questions, one per subgoal',
-  PG_QUESTIONS.length === 134, `${PG_QUESTIONS.length}`)
+t('a hundred and forty-nine questions, one per subgoal',
+  PG_QUESTIONS.length === 149, `${PG_QUESTIONS.length}`)
 t('every subgoal carries an authored socratic phrasing',
   allKnowledgePoints(PG).every(p => p.workedExample.subgoals.every(s => !!s.socratic)),
   allKnowledgePoints(PG).flatMap(p => p.workedExample.subgoals)
@@ -5660,14 +5783,29 @@ t('and it displaced none of the three positions anything reads by index',
   && ONTOLOGIES[2] === getOntology('plane-geometry'))
 t('it has no internal faults', ontologyProblems(TT).length === 0, ontologyProblems(TT).join('; '))
 t('its fidelity claim matches what its option can do', fidelityMismatches(TT).length === 0)
-t('one concept, three knowledge points',
-  TT.concepts.length === 1 && allKnowledgePoints(TT).length === 3,
+t('two concepts, six knowledge points',
+  TT.concepts.length === 2 && allKnowledgePoints(TT).length === 6,
   `${TT.concepts.length} concepts, ${allKnowledgePoints(TT).length} points`)
-t('the concept is teachable AND practisable — a syllabus, not a map entry',
-  isTeachable(TT, 'right-triangle-trig') && isPractisable(TT, 'right-triangle-trig'))
-t('its points number from 1, which is per concept and not per subject',
+t('both concepts are teachable AND practisable — a syllabus, not a map entry',
+  ['right-triangle-trig', 'law-of-sines-cosines'].every(id =>
+    isTeachable(TT, id) && isPractisable(TT, id)),
+  ['right-triangle-trig', 'law-of-sines-cosines']
+    .map(id => `${id}:${isTeachable(TT, id)}/${isPractisable(TT, id)}`).join(' '))
+t('its points number from 1 per CONCEPT, which the second concept is the first proof of',
   TT.concepts.every(c => c.knowledgePoints.map(p => p.position).join(',') === '1,2,3'),
   TT.concepts.map(c => `${c.id}:${c.knowledgePoints.map(p => p.position).join('')}`).join(' '))
+/*
+ * The positions assertion above was vacuous as a claim about the SUBJECT while
+ * the subject held one concept: "restarts at 1 per concept, not per subject" is
+ * unobservable until there are two, so until this promotion the line could not
+ * tell the two rules apart. It can now — six points numbered 1,2,3,1,2,3 rather
+ * than 1..6 — and the message prints both concepts so which one drifted is
+ * visible. Asserted here separately from the shape above, because the shape
+ * would still pass if a future third concept numbered its points 4,5,6.
+ */
+t('and the subject therefore has two points at each of positions 1, 2 and 3',
+  [1, 2, 3].every(n => allKnowledgePoints(TT).filter(p => p.position === n).length === 2),
+  allKnowledgePoints(TT).map(p => p.position).join(','))
 t('every knowledge point has a task, so no chain is left unable to become evidence',
   allKnowledgePoints(TT).every(p => tasksForPoint(p.id).length > 0),
   allKnowledgePoints(TT).filter(p => tasksForPoint(p.id).length === 0).map(p => p.id).join(', '))
@@ -5685,40 +5823,126 @@ t('every objective names a task kind, and every kind it names really ships a tas
   TT.concepts.flatMap(c => c.objectives.map(o => `${o.id}:${o.taskKinds.join('+')}`)).join(' ')
   + ` against ${[...TT_KINDS].join('+')}`)
 /*
- * THE EMPTY EDGE LIST IS A BOUNDARY, NOT AN OMISSION — the same claim
- * `expressions-and-equations` makes, reached by the other of the two routes
- * into `links`.
+ * THE EDGE LIST WAS EMPTY AS A BOUNDARY AND NOW HOLDS EXACTLY ONE, WHICH IS
+ * THE SAME BOUNDARY MEASURED FROM THE OTHER SIDE.
  *
- * There the single concept's prerequisites were unwritten map nodes. Here both
- * of them, `similarity` and `pythagoras`, are fully AUTHORED concepts — they
- * simply belong to `plane-geometry`, and an ontology's edges may only name
- * concepts it CONTAINS. So being authored in another subject fails the
- * containment test exactly as being unwritten does, and an edge added here
- * naming `pythagoras` would look right and would make `ontologyProblems`
- * report an unknown endpoint.
+ * While the subject held one concept there was no internal pair to join, and
+ * the single concept's prerequisites, `similarity` and `pythagoras`, are fully
+ * AUTHORED concepts that simply belong to `plane-geometry` — and an ontology's
+ * edges may only name concepts it CONTAINS, so being authored in another
+ * subject fails the containment test exactly as being unwritten does.
+ *
+ * The second concept's `needs` SPLIT on that rule, which is why this block is
+ * worth asserting rather than just updating. `right-triangle-trig` is in this
+ * subject, so that edge is the one below. `triangle-basics` is authored,
+ * teachable and practisable, and is a concept of `plane-geometry` — so it is
+ * still barred, and it went to `TRIGONOMETRY.links` with the other two. One
+ * promotion, both outcomes, so neither is the general case: what decides is
+ * the far endpoint's SUBJECT and not whether it has material.
  */
-t('it declares no edges, and the single concept is therefore its own root',
-  TT.edges.length === 0 && roots(TT).length === 1 && roots(TT)[0] === 'right-triangle-trig')
-t('and its two real prerequisites are authored concepts of another subject, hence links',
-  ['similarity', 'pythagoras'].every(id =>
-    isTeachable(PG, id) && !TT.concepts.some(c => c.id === id)),
-  ['similarity', 'pythagoras'].map(id => `${id}:${isTeachable(PG, id)}`).join(' '))
+t('it declares one edge, the second concept resting on the first',
+  TT.edges.length === 1
+  && TT.edges[0].from === 'right-triangle-trig'
+  && TT.edges[0].to === 'law-of-sines-cosines'
+  && TT.edges[0].kind === 'prerequisite'
+  && !!TT.edges[0].rationale,
+  TT.edges.map(e => `${e.from}->${e.to}:${e.kind}`).join(' '))
+t('so the first concept is still the subject\'s only root, now with something above it',
+  roots(TT).length === 1 && roots(TT)[0] === 'right-triangle-trig',
+  roots(TT).join(' '))
+t('and the prerequisites in ANOTHER subject are barred even though they have material',
+  ['similarity', 'pythagoras', 'triangle-basics'].every(id =>
+    isTeachable(PG, id) && isPractisable(PG, id) && !TT.concepts.some(c => c.id === id)
+    && !TT.edges.some(e => e.from === id || e.to === id)),
+  ['similarity', 'pythagoras', 'triangle-basics']
+    .map(id => `${id}:${isTeachable(PG, id)}`).join(' '))
 t('no knowledge point claims a figure, because there are none to claim',
   allKnowledgePoints(TT).every(p => p.visualRef === undefined))
 
+/*
+ * EVERY SUBGOAL ASKED AS A QUESTION — and this subject had no such check at
+ * all until now, which is why it is added here rather than only extended.
+ * `partial-fractions`, `geometric-proof` and `absolute-value` each carry the
+ * pair; the ninth subject shipped without it and has been relying on the
+ * build-wide coverage figure, which reports a fraction and names no subject.
+ *
+ * WRITTEN NULL-SAFE, which the three precedents are not. `isInterrogative`
+ * calls `trimEnd()`, so it THROWS on a missing `socratic` — exactly the state
+ * the assertion above exists to report. Unguarded, a dropped field makes the
+ * presence check fail and then kills the run on the next line, taking every
+ * later assertion with it and reporting "1 failed". So the shape check filters
+ * to the subgoals that HAVE a string before asking whether it is a question,
+ * and the presence check is what reports the absence.
+ */
+const TT_SUBGOALS = allKnowledgePoints(TT).flatMap(p => p.workedExample.subgoals)
+t('twenty-five subgoals across the six worked examples', TT_SUBGOALS.length === 25,
+  `${TT_SUBGOALS.length}`)
+t('every subgoal carries an authored socratic phrasing',
+  TT_SUBGOALS.every(s => typeof s.socratic === 'string' && s.socratic.length > 0),
+  TT_SUBGOALS.filter(s => typeof s.socratic !== 'string' || !s.socratic.length)
+    .map(s => s.label).join(', '))
+t('and every one of them is actually phrased as a question',
+  TT_SUBGOALS.filter(s => typeof s.socratic === 'string')
+    .every(s => isInterrogative(s.socratic)),
+  TT_SUBGOALS.filter(s => typeof s.socratic === 'string' && !isInterrogative(s.socratic))
+    .map(s => s.label).join(', '))
+t('while the labels stay imperative — the map draws moves, the tutor asks sentences',
+  TT_SUBGOALS.every(s => !isInterrogative(s.label)),
+  TT_SUBGOALS.filter(s => isInterrogative(s.label)).map(s => s.label).join(', '))
+
 group('the ninth subject is gradable with no worker')
 const TT_TASKS = allKnowledgePoints(TT).flatMap(p => tasksForPoint(p.id))
-t('six tasks, two on each of the three points', TT_TASKS.length === 6
-  && allKnowledgePoints(TT).every(p => tasksForPoint(p.id).length === 2),
-  `${TT_TASKS.length}`)
+/*
+ * THIRTEEN TASKS, AND THE TWO-PER-POINT SHAPE IS BROKEN ON PURPOSE AT ONE
+ * POINT, so the number is stated as a shape rather than as a total.
+ *
+ * Two per point held across all three points of the first concept and holds on
+ * two of the three in the second. The cosine-law point carries THREE because it
+ * carries three distinct moves rather than one move drilled three times: the law
+ * forwards from two sides and the included angle, the law backwards from three
+ * sides to a cosine whose SIGN is the verdict, and the surd that an oblique
+ * triangle's third side normally is. Its two objectives want all three —
+ * `produce-the-third-side...` names `transform_to_form` and
+ * `read-the-corrections-sign...` names `evaluate` — so dropping any one of them
+ * would leave an objective in that concept evidenced by nothing.
+ *
+ * Asserted per point by name rather than as `every(p => length === 2)`, because
+ * the uniform version would now be false and the fix of relaxing it to `>= 2`
+ * would stop catching a point that quietly grew a fourth.
+ */
+t('thirteen tasks: two on every point but the cosine law, which carries three',
+  TT_TASKS.length === 13
+  && tasksForPoint('the-cosine-law-is-pythagoras-with-one-correction-term').length === 3
+  && allKnowledgePoints(TT)
+    .filter(p => p.id !== 'the-cosine-law-is-pythagoras-with-one-correction-term')
+    .every(p => tasksForPoint(p.id).length === 2),
+  allKnowledgePoints(TT).map(p => `${p.id}:${tasksForPoint(p.id).length}`).join(' '))
 const TT_EVAL = TT_TASKS.filter(x => x.kind === 'evaluate')
 const TT_FORM = TT_TASKS.filter(x => x.kind === 'transform_to_form')
-t('five evaluate and one transform_to_form, the surd an equilateral triangle produced',
-  TT_EVAL.length === 5 && TT_FORM.length === 1
+t('eleven evaluate and two transform_to_form, one surd per concept',
+  TT_EVAL.length === 11 && TT_FORM.length === 2
   && TT_EVAL.every(x => x.form === undefined)
-  && TT_FORM[0].id === 'the-derived-quotient-at-thirty-degrees-1'
-  && TT_FORM[0].form === 'surd_reduced',
+  && TT_FORM.map(x => x.id).sort().join(' ')
+    === 'the-cosine-law-left-a-surd-1 the-derived-quotient-at-thirty-degrees-1'
+  && TT_FORM.every(x => x.form === 'surd_reduced'),
   TT_TASKS.map(x => `${x.id}:${x.kind}:${x.form}`).join(', '))
+/*
+ * THE SURD TASK SITS ON THE COSINE POINT AND THAT IS A FACT ABOUT THE TWO LAWS.
+ * The cosine law produces a², so a given of `sqrt(76)` is the honest next step
+ * of the learner's own working; the sine law produces a side directly.
+ *
+ * Which is load-bearing rather than tidy, and the reason is a property of
+ * `surd_reduced` that only shows up under test: it checks that each radicand is
+ * square-free and nothing more, so the authentic sine-law expression
+ * `10*sqrt(3)/sqrt(2)` PASSES the form check unchanged — 3 and 2 are both
+ * square-free — and a task with that given would rule its own input correct.
+ * Asserted as the property rather than as the choice, since the choice is only
+ * defensible while the property holds.
+ */
+t('each surd task\'s given is a single radical with a square still in it',
+  TT_FORM.every(x => /^sqrt\(\d+\)$/.test(x.given)
+    && [4, 9, 25, 36, 49, 64, 100].some(sq => Number(x.given.slice(5, -1)) % sq === 0)),
+  TT_FORM.map(x => `${x.id}:${x.given}`).join(' '))
 t('every evaluate reference is exactly reproducible from the given — no worker consulted',
   TT_EVAL.every(x => {
     const at = {}
@@ -5752,6 +5976,26 @@ t('and refuses the given back unreduced, naming the square that can still come o
   && /25/.test(ttSurdUnreduced.verdict.brokeAt?.detail ?? ''),
   ttSurdUnreduced.verdict.brokeAt?.detail ?? '')
 /*
+ * BOTH DIRECTIONS ON THE SECOND SURD TOO, driven off its own `given` and
+ * `reference` rather than off repeated literals. The retyped-literal trap is
+ * that `includes('2*sqrt(19)')` agrees with the arithmetic in the test and not
+ * with the task, so an authored reference changed to 2*sqrt(18) would still
+ * pass; reading the fields makes the task the subject of the assertion.
+ *
+ * Refusing the given back is the half that matters, since a checker comparing
+ * only VALUES would mark √76 correct against itself.
+ */
+const TT_SURD2 = TT_FORM.find(x => x.id === 'the-cosine-law-left-a-surd-1')
+const tt2Surd = await ruleTransform(TT_SURD2, TT_SURD2.reference, NO_WORKER)
+t('the cosine law\'s surd rules correct with no worker, from the task\'s own reference',
+  tt2Surd.verdict.ruling === 'correct' && /no worker was needed/.test(tt2Surd.verdict.method),
+  tt2Surd.verdict.method)
+const tt2Unreduced = await ruleTransform(TT_SURD2, TT_SURD2.given, NO_WORKER)
+t('and refuses its own given back, naming the square 4 that can still come out',
+  tt2Unreduced.verdict.ruling === 'incorrect'
+  && /\b4\b/.test(tt2Unreduced.verdict.brokeAt?.detail ?? ''),
+  tt2Unreduced.verdict.brokeAt?.detail ?? '')
+/*
  * THE TWO CONSTRAINTS THE HEADER SAYS SHAPED THE SUBJECT, ASSERTED.
  *
  * No task asks for an angle. The inverse direction is `inverse-trig`, four
@@ -5763,23 +6007,66 @@ t('and refuses the given back unreduced, naming the square that can still come o
  * break too — but it would break as a RULING failure and would not say why,
  * which is what this names.
  *
- * And exactly one task states a degree measure, which is the sides-and-angles
- * constraint holding. A right triangle cannot have three whole-number sides
- * AND whole-number acute angles; the figure does not exist and nothing in this
- * build would catch it. So the five tasks that describe a triangle by whole
- * sides state no angle, and the one that names 30° and 60° is the one whose
- * answer is irrational — which is why the test reads the KIND rather than the
- * id: an `evaluate` task naming a degree would be the fault, because its
- * answer would have to be rational.
+ * And the sides-and-angles constraint, which the second concept forced to be
+ * RESTATED rather than merely re-checked. This block used to read "exactly one
+ * task names a degree measure", and that was the right assertion for a subject
+ * made only of right triangles: a right triangle cannot have three whole-number
+ * sides AND whole-number acute angles, the figure does not exist, and nothing
+ * in this build would catch it — so the tasks describing a triangle by whole
+ * sides stated no angle, and the single one naming 30° and 60° was the one
+ * whose answer is irrational.
+ *
+ * Four of the oblique tasks name 60° and have whole-number sides, which the old
+ * assertion would have called a fault and which is in fact fine. The general
+ * rule, argued in full in ontology-trigonometry.ts's header:
+ *
+ *   In a triangle with three whole-number sides, every angle has a RATIONAL
+ *   cosine, by the cosine law rearranged. A whole number of degrees is a
+ *   rational multiple of π, and the only rational cosines a rational multiple
+ *   of π has are 0 and ±1/2 — so such an angle is 90°, 60° or 120° and nothing
+ *   else. Two at once would need two of those three to sum below 180°, which
+ *   leaves 60° twice, i.e. the equilateral triangle.
+ *
+ * The right-triangle wording is that rule at 90°. So the check below computes
+ * all three cosines of every integer triangle the subject uses and requires at
+ * most one to be a whole-degree cosine — which is a live computation on the
+ * figures rather than a scrape of the prose, and which would catch "sides 5, 7,
+ * 8 with angles of 60° and 50°" exactly as the old one caught its own case.
  */
 t('no task asks for an angle, which is the subject\'s boundary and not the grader\'s',
   TT_TASKS.every(x => !/\b(what angle|which angle|find the angle|arcsin|arccos|arctan)\b/i
     .test(x.prompt)),
   TT_TASKS.filter(x => /angle\?/.test(x.prompt)).map(x => x.id).join(', '))
-t('and exactly one task names a degree measure, the one whose answer is irrational',
-  TT_TASKS.filter(x => /°/.test(x.prompt)).length === 1
-  && TT_TASKS.filter(x => /°/.test(x.prompt))[0].kind === 'transform_to_form',
-  TT_TASKS.filter(x => /°/.test(x.prompt)).map(x => `${x.id}:${x.kind}`).join(', '))
+t('every degree measure the subject names is one it can write a ratio for exactly',
+  TT_TASKS.flatMap(x => x.prompt.match(/(\d+)°/g) ?? [])
+    .every(d => ['30°', '60°'].includes(d)),
+  [...new Set(TT_TASKS.flatMap(x => x.prompt.match(/\d+°/g) ?? []))].join(' '))
+t('and no evaluate task names a degree but 60°, the only one with a non-zero rational cosine',
+  TT_EVAL.flatMap(x => x.prompt.match(/\d+°/g) ?? []).every(d => d === '60°'),
+  TT_EVAL.map(x => `${x.id}:${(x.prompt.match(/\d+°/g) ?? []).join('+') || '-'}`).join(' '))
+/*
+ * The rule itself, on the figures. `TT_FIGURES` is every all-integer triangle
+ * the subject's tasks and worked examples describe; a cosine is a whole-degree
+ * one when it is 0 or ±1/2.
+ *
+ * Non-vacuous in both directions, which matters because "at most one" is
+ * satisfied by zero: 5-7-8 and 3-7-8 have exactly one each — the 60° they name
+ * — and 25-39-56 has none, which is why the sine-law tasks that use it name no
+ * angle at all. Both halves are asserted, so a figure losing its 60° or gaining
+ * a second whole-degree angle each go red.
+ */
+const TT_FIGURES = [[5, 7, 8], [3, 7, 8], [25, 39, 56]]
+const wholeDegreeCosines = ([p, q, r]) =>
+  [[p, q, r], [q, r, p], [r, p, q]]
+    .map(([x, y, z]) => (y * y + z * z - x * x) / (2 * y * z))
+    .filter(c => c === 0 || c === 0.5 || c === -0.5)
+    .length
+t('no integer figure in the subject states two whole-degree angles, which would be impossible',
+  TT_FIGURES.every(f => wholeDegreeCosines(f) <= 1),
+  TT_FIGURES.map(f => `${f.join('-')}:${wholeDegreeCosines(f)}`).join(' '))
+t('and the two that name 60° really have one, while the sine-law figure has none to name',
+  TT_FIGURES.map(wholeDegreeCosines).join(',') === '1,1,0',
+  TT_FIGURES.map(f => `${f.join('-')}:${wholeDegreeCosines(f)}`).join(' '))
 
 // ---------------------------------------------------------------------------
 // The tenth subject: the measure of a solid
@@ -6312,8 +6599,8 @@ t('it is a concept of that subject, which is still registered where things read 
   && ONTOLOGIES[1] === EXPRESSIONS_AND_EQUATIONS)
 t('it has no internal faults', ontologyProblems(FI).length === 0, ontologyProblems(FI).join('; '))
 t('its fidelity claim matches what its option can do', fidelityMismatches(FI).length === 0)
-t('seven concepts, twenty-one knowledge points',
-  FI.concepts.length === 7 && allKnowledgePoints(FI).length === 21,
+t('eight concepts, twenty-four knowledge points',
+  FI.concepts.length === 8 && allKnowledgePoints(FI).length === 24,
   `${FI.concepts.length} concepts, ${allKnowledgePoints(FI).length} points`)
 t('the concept is teachable AND practisable — a syllabus entry, not a renamed skeleton',
   isTeachable(FI, 'sequences') && isPractisable(FI, 'sequences'))
@@ -6417,6 +6704,15 @@ t('while the four older concepts here still name justify, of which the build shi
  * assertion below — strictly above the pre-promotion 16/40 — is the form that
  * keeps meaning the same thing through that, which a `=== 60%` check would
  * not.
+ *
+ * The twenty-sixth added twelve more, 60 of 84, and the ratio moved again —
+ * 66.7% to 71.4%. So the previous paragraph's explanation was right and its
+ * implied prediction was not: the ratio stalled at the twenty-first because 48
+ * and 72 happened to be in the same proportion as 36 and 60, not because a
+ * limit had been reached. Which is the argument for the one-sided form a
+ * second time. The unauthored remainder is the same 24 subgoals it has been
+ * since the file's first four concepts were written, and every promotion
+ * dilutes them further without touching them.
  */
 const FI_COV = questionCoverage(FI)
 t('all nine of its subgoals ship the question written, not just the label',
@@ -6430,9 +6726,9 @@ t('while the labels stay imperative — the map draws moves, the tutor asks sent
   FI_SUBGOALS.filter(s => isInterrogative(s.label)).map(s => s.label).join('; '))
 t('every subgoal says what its move establishes, so none of them is a bare step',
   FI_SUBGOALS.every(s => typeof s.detail === 'string' && s.detail.length > 0))
-t('the subject is at twenty-one chains and still has none that cannot become evidence',
-  FI_COV.chains === 21 && FI_COV.chainsWithNoRuling === 0
-  && FI_COV.authoredAsQuestions === 48 && FI_COV.questions === 72,
+t('the subject is at twenty-four chains and still has none that cannot become evidence',
+  FI_COV.chains === 24 && FI_COV.chainsWithNoRuling === 0
+  && FI_COV.authoredAsQuestions === 60 && FI_COV.questions === 84,
   `${FI_COV.chains} chains, ${FI_COV.chainsWithNoRuling} unrulable, `
   + `${FI_COV.authoredAsQuestions}/${FI_COV.questions} authored`)
 /*
@@ -6826,6 +7122,264 @@ t('and the refusal that ruled out graphs-of-functions is still written down',
       && !FI.concepts.some(c => c.id === 'graphs-of-functions')
   })(),
   'the graphs refusal has gone from ontology-functions.ts without the node being authored')
+
+// ---------------------------------------------------------------------------
+
+/**
+ * `arithmetic-sequences`, the twenty-sixth promotion, and the first in this
+ * build whose content was RESERVED FOR IT IN WRITING before it was written.
+ *
+ * WHY THIS NODE. Route demand has selected nothing since the fourteenth
+ * promotion and no area is near the stub floor, so the live criteria are
+ * rulability, whether the `needs` point inside one ontology, and dependent
+ * count — in that order. This node wins the first two outright: a term, a
+ * position and a total are each a plain rational, and its one `needs` is
+ * `sequences`, already a concept of this subject. It loses the third outright
+ * too, having no dependents anywhere, which is asserted in tests/atlas.mjs
+ * over the composed map.
+ *
+ * What is new is a fourth ground that outranked all of them. The fifth concept
+ * in this file wrote down that it was leaving "the closed form of an arithmetic
+ * sequence from its first term and common difference" alone; the sixth chose a
+ * non-arithmetic sum so that no worked example "would have taken
+ * `arithmetic-sequences`'s only real idea"; and tasks.ts recorded an "honest
+ * gap" — the inversion, "which term equals 302" — and named this concept as
+ * its owner. All three debts are collected below, in that order, and a
+ * promotion that collects a reservation cannot overlap what is already written
+ * because the boundary was drawn from the other side first.
+ *
+ * WHAT IT HAD TO GET RIGHT, in the order a mistake would have been silent in:
+ *
+ *  - THE CHARACTERISTIC WRONG ANSWER HAS TO BE REACHABLE. Each point is about
+ *    an off-by-one — steps against positions, twice — so each `given` keeps the
+ *    ±1 visible and the computed count hidden. Asserted by evaluating the named
+ *    misreading of each task's own `given` and checking it lands on the number
+ *    the material says it does. A task that handed the learner the count would
+ *    leave every count in this file intact while deleting the content.
+ *  - 85 MUST BE A TERM OF THE FIRST TASK'S OWN SEQUENCE. That is the first
+ *    point's fourth subgoal: the slip produces a real term at the wrong
+ *    position, which is why it survives a sanity check on the size of the
+ *    answer. Derived from the task rather than read out of the prose.
+ *  - NO CREDIT EDGE, which is `sigma-notation`'s verdict rather than
+ *    `sequences`'. One of three tasks evaluates a rule at a position.
+ *  - THE INTERFERENCE MUST NOT BE RE-DECLARED HERE. atlas-analysis.ts asked
+ *    for exactly that and it would have been a duplicate the composed map
+ *    cannot report; the assertions for it are in tests/atlas.mjs, which has
+ *    the map node at the other end.
+ *  - EVERY SUBGOAL SHIPPED WITH ITS QUESTION, twelve of twelve.
+ */
+group('arithmetic sequences, the twenty-sixth promotion, collecting a reserved idea')
+
+const FI_AP = conceptById(FI, 'arithmetic-sequences')
+const FI_AP_POINTS = FI_AP.knowledgePoints
+const FI_AP_SUBGOALS = FI_AP_POINTS.flatMap(p => p.workedExample.subgoals)
+const FI_AP_TASKS = FI_AP_POINTS.flatMap(p => tasksForPoint(p.id))
+
+t('it is a concept of this subject with material, not an eighth name in the list',
+  !!FI_AP && isTeachable(FI, 'arithmetic-sequences')
+  && isPractisable(FI, 'arithmetic-sequences'))
+t('three knowledge points numbered from 1, the shape every concept here has',
+  FI_AP_POINTS.length === 3 && FI_AP_POINTS.map(p => p.position).join(',') === '1,2,3',
+  `${FI_AP_POINTS.length} points at ${FI_AP_POINTS.map(p => p.position).join(',')}`)
+t('three tasks, one per point, so no chain is left unable to become evidence',
+  FI_AP_TASKS.length === 3
+  && FI_AP_POINTS.every(p => tasksForPoint(p.id).length === 1),
+  `${FI_AP_TASKS.length} tasks: `
+  + FI_AP_POINTS.map(p => `${p.id}:${tasksForPoint(p.id).length}`).join(' '))
+t('every one is an evaluate task, which is the only kind its three objectives name',
+  FI_AP_TASKS.every(x => x.kind === 'evaluate')
+  && FI_AP.objectives.length === 3
+  && FI_AP.objectives.every(o => o.taskKinds.length > 0
+    && o.taskKinds.every(k => FI_AP_TASKS.some(x => x.kind === k))),
+  FI_AP.objectives.map(o => `${o.id}:${o.taskKinds.join('+')}`).join(' '))
+
+/*
+ * THE REACHABLE WRONG ANSWERS, computed from each task's own `given` and `at`
+ * under the misreading the material names.
+ *
+ * This is the guard the concept most needs and the one no count could give. All
+ * three points are about an off-by-one, so what makes a task teach rather than
+ * merely ask is that the ±1 is still in the expression the learner evaluates
+ * and the count it produces is not. A later edit that "simplified"
+ * `a + (n - 1)*d` to `a + 19*d`, or handed `ap-sum-1` its 10 terms, would leave
+ * every assertion above green and every task's reference correct while removing
+ * the only thing being tested.
+ *
+ * Each row is a named misreading, spelled as an expression over the SAME
+ * symbols and evaluated at the SAME inputs, so nothing here agrees with a
+ * literal copied out of the prose.
+ *
+ * `apValue` returns a sentinel rather than throwing, and that is not defensive
+ * style — it is the fix for a crash this group had and which was found by
+ * injecting the fault above. `parseExpression` THROWS a `ParseError` on a
+ * symbol the task does not declare, and a task that has had its off-by-one
+ * precomputed away is a task that no longer declares `n`. So the one edit this
+ * assertion exists to catch was the one edit that killed the run before it
+ * could report anything, taking every later assertion in the file with it. The
+ * third instance of that shape in this build, after `teachingOrder(...).length`
+ * on a duplicate id and `isInterrogative` on a missing socratic: an assertion
+ * whose subject can fail needs the failure to be a VALUE, most of all when the
+ * failure is what is being reported.
+ */
+const apValue = (task, src) => {
+  try {
+    const symbols = task.variables.map(v => v.name)
+    const at = {}
+    for (const [name, raw] of Object.entries(task.at)) at[name] = parseExpression(raw, [])
+    const value = exactValue(substitute(parseExpression(src, symbols), at))
+    return value === null ? 'no rational value' : showExact(value)
+  } catch (e) {
+    return `unreadable: ${e.message}`
+  }
+}
+t('each task keeps its off-by-one visible, so the named slip lands on the stated number',
+  apValue(taskById('ap-term-1'), 'a + n*d') === '85'
+  && apValue(taskById('ap-position-1'), '(v - a)/d') === '60'
+  && apValue(taskById('ap-sum-1'), '((b - a)/d)/2 * (a + b)') === '189'
+  && apValue(taskById('ap-sum-1'), '((b - a)/d + 1) * (a + b)') === '420',
+  `${apValue(taskById('ap-term-1'), 'a + n*d')} / `
+  + `${apValue(taskById('ap-position-1'), '(v - a)/d')} / `
+  + `${apValue(taskById('ap-sum-1'), '((b - a)/d)/2 * (a + b)')} / `
+  + `${apValue(taskById('ap-sum-1'), '((b - a)/d + 1) * (a + b)')}`)
+/*
+ * AND 85 IS A TERM OF THE SAME SEQUENCE, which is the first point's fourth
+ * subgoal and the reason that slip is worth four lines of worked example. The
+ * position is recomputed from the task's own `a` and `d` rather than asserted
+ * as 21: the claim is that the wrong multiplication lands on the NEXT position,
+ * and that is a fact about the formula, not about these three numbers.
+ */
+t('and the first slip lands on the next position rather than on a wrong number',
+  (() => {
+    const slip = apValue(taskById('ap-term-1'), 'a + n*d')
+    const next = apValue(taskById('ap-term-1'), 'a + ((n + 1) - 1)*d')
+    /*
+     * BOTH SIDES HAVE TO BE NUMBERS, not merely equal to each other — which is
+     * the vacuous form this assertion had until the fault injection reached it.
+     * `apValue` reports an unparseable misreading as a sentinel STRING now, and
+     * two sentinels compare equal, so an edit that broke the task would have
+     * made this pass by breaking both halves of it at once. The same shape as
+     * the drained-list quantifier recorded in tests/atlas.mjs.
+     */
+    return /^\d+$/.test(slip) && slip === next && slip !== taskById('ap-term-1').reference
+  })(),
+  `slip ${apValue(taskById('ap-term-1'), 'a + n*d')}, `
+  + `term n+1 ${apValue(taskById('ap-term-1'), 'a + ((n + 1) - 1)*d')}`)
+/*
+ * THE SECOND POINT'S MEMBERSHIP HALF, from the task's own numbers. Its fourth
+ * subgoal says that running the same three moves on 300 leaves 59.6 steps and
+ * that a non-integer step count is the answer rather than a failed sum. Checked
+ * by doing it: the division must NOT be a whole number, which is the whole
+ * claim, and a value chosen carelessly would have made the subgoal false while
+ * the task stayed correct.
+ */
+t('the value the second point rejects really is rejected by its own arithmetic',
+  apValue(taskById('ap-position-1'), '(300 - a)/d') === '298/5'
+  && apValue(taskById('ap-position-1'), '(v - a)/d') === '60',
+  `300 gives ${apValue(taskById('ap-position-1'), '(300 - a)/d')} steps, `
+  + `302 gives ${apValue(taskById('ap-position-1'), '(v - a)/d')}`)
+
+/*
+ * THE CREDIT EDGE THAT IS NOT THERE, asserted per task as the sigma group does
+ * it. `sequences` earns one because all three of its tasks substitute a
+ * position into a rule; here only `ap-term-1` does, since `ap-position-1`'s
+ * answer is an index and `ap-sum-1` never produces a term. The per-task half is
+ * the presence of an `n` — a declared POSITION — in the variable list, which is
+ * the same test the sigma group applies with `k`.
+ */
+t('no encompasses edge, because only one of the three tasks evaluates a rule at a position',
+  !FI.edges.some(e => e.kind === 'encompasses' && e.from === 'arithmetic-sequences')
+  && FI_AP_TASKS.filter(x => x.variables.some(v => v.name === 'n')).length === 1,
+  FI_AP_TASKS.map(x => `${x.id}:${x.variables.map(v => v.name).join('')}`).join(' '))
+/*
+ * THE FORK, BY NAME. `sequences` has two children now and the root is still
+ * one, so neither the root set nor the edge count can say where this was
+ * attached. An edge hung off `sigma-notation` would leave both unmoved.
+ */
+t('the subject forked above the sequence, and this hangs off the sequence itself',
+  roots(FI).length === 1 && roots(FI)[0] === 'function-concept'
+  && prerequisitesOf(FI, 'arithmetic-sequences').join(',') === 'sequences'
+  && FI.edges.filter(e => e.kind === 'prerequisite' && e.from === 'sequences')
+    .map(e => e.to).slice().sort().join(' ') === 'arithmetic-sequences sigma-notation'
+  && cycles(FI).length === 0 && teachingOrder(FI) !== null,
+  `roots ${roots(FI).join('/')}, needs `
+  + `${prerequisitesOf(FI, 'arithmetic-sequences').join('/')}, children of sequences: `
+  + FI.edges.filter(e => e.kind === 'prerequisite' && e.from === 'sequences')
+    .map(e => e.to).join('/'))
+
+t('all twelve subgoals ship the question written, not just the label',
+  FI_AP_SUBGOALS.length === 12
+  && FI_AP_SUBGOALS.every(s => typeof s.socratic === 'string'),
+  `${FI_AP_SUBGOALS.filter(s => !s.socratic).length} unwritten of ${FI_AP_SUBGOALS.length}`)
+/*
+ * The null-safe form, which matters here rather than being defensive style:
+ * `isInterrogative` calls `trimEnd()`, so on a missing `socratic` it THROWS —
+ * killing the run and every assertion after it — and a missing `socratic` is
+ * exactly what the assertion above exists to report.
+ */
+t('and none contains its own answer by being an imperative with a mark on it',
+  FI_AP_SUBGOALS.every(s => typeof s.socratic === 'string' && isInterrogative(s.socratic)),
+  FI_AP_SUBGOALS.filter(s => typeof s.socratic !== 'string' || !isInterrogative(s.socratic))
+    .map(s => s.label).join('; '))
+t('the labels stay imperative, so the map still draws moves',
+  FI_AP_SUBGOALS.every(s => !isInterrogative(s.label)),
+  FI_AP_SUBGOALS.filter(s => isInterrogative(s.label)).map(s => s.label).join('; '))
+t('every subgoal says what its move establishes',
+  FI_AP_SUBGOALS.every(s => typeof s.detail === 'string' && s.detail.length > 0))
+/*
+ * NO FIGURE AND NO SPEED TARGET ON ANY OF THE THREE.
+ *
+ * The figure is the easy half — there is nothing to draw that is not the list
+ * itself. The target is the argued half, and the answer is different from
+ * `sequences`, which does claim one on its substitution point. Every point here
+ * turns on a DECISION about what to count: steps or positions, a position or a
+ * non-membership, pairs or terms. The arithmetic left once the decision is made
+ * is one product or one division, so a target would measure that instead — the
+ * case types.ts describes as measuring typing.
+ */
+t('no point claims a figure or a speed target, since the content is what to count',
+  FI_AP_POINTS.every(p => p.visualRef === undefined && p.automaticityTarget === undefined),
+  FI_AP_POINTS.map(p => `${p.id}:${p.automaticityTarget ?? 'no target'}`).join(' '))
+/*
+ * THE BOUNDARY WITH THE FAMILY THAT STAYED, the same shape as the sigma group's
+ * check against the two nodes that were then unwritten. `geometric-sequences`
+ * keeps its constant ratio, its closed form and its sum to infinity, which the
+ * fifth concept's section in this file promised and which this material must
+ * not quietly take — nothing structural would notice, since that node has no
+ * material to be shadowed.
+ */
+t('and nothing here names a common ratio or a sum to infinity, which stayed on the map',
+  !/common ratio|geometric|sum to infinity/i.test(
+    JSON.stringify({ points: FI_AP_POINTS, tasks: FI_AP_TASKS, obj: FI_AP.objectives })),
+  'the other named family has leaked into this concept')
+/*
+ * AND THE THREE RESERVATIONS ARE DISCHARGED, checked in the files that made
+ * them rather than from this concept's own prose.
+ *
+ * Two of the three are promises to leave something alone, so the discharge is
+ * that the promise is still kept AND the content now exists here: the earlier
+ * concepts must still not name a common difference, and this one must. The
+ * third is tasks.ts's "honest gap", which named the inverting task and the
+ * number in it; `ap-position-1` is that task, so the check is that the number
+ * survived into it.
+ *
+ * Asserted because the alternative is a future run re-deriving the content
+ * boundary from scratch, and because a reservation nobody collects reads
+ * exactly like one that was never made.
+ */
+t('the two earlier concepts still keep off the difference, and this one owns it',
+  /common difference|constant difference/i.test(
+    JSON.stringify({ points: FI_AP_POINTS, obj: FI_AP.objectives }))
+  && !/common difference/i.test(JSON.stringify({
+    seq: conceptById(FI, 'sequences').knowledgePoints,
+    sig: conceptById(FI, 'sigma-notation').knowledgePoints,
+  })),
+  'the reservation has been broken from one side or the other')
+t('and the honest gap tasks.ts recorded is the task it named, with its number',
+  taskById('ap-position-1').at.v === '302'
+  && /302/.test(taskById('ap-position-1').prompt)
+  && readFileSync(join(FRONTEND, 'lib', 'concepts', 'tasks.ts'), 'utf8')
+    .includes('Which term equals 302'),
+  `v = ${taskById('ap-position-1').at.v}`)
 
 // ---------------------------------------------------------------------------
 

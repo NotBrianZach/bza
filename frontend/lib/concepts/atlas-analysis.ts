@@ -35,13 +35,15 @@ const SEQUENCES_AND_SERIES: MapArea = {
   name: 'Sequences and series',
   covers:
     'Lists indexed by the naturals, their sums, and when an infinite sum means anything. ' +
-    'Two things have left for the functions-and-inverses syllabus, where they have problems ' +
-    'written for them, and this area points at both through `needs` rather than restating ' +
+    'Three things have left for the functions-and-inverses syllabus, where they have problems ' +
+    'written for them, and this area points at them through `needs` rather than restating ' +
     'them: what a sequence IS — a function whose input is a position, given by a formula or by ' +
-    'a recurrence — and the notation for adding one up, which terms its limits name and the two ' +
-    'rearrangements that make such a sum manipulable. What stayed is everything that needs an ' +
-    'argument rather than a reading: the two named families and the closed forms for their ' +
-    'sums, proof by induction, and when an infinite sum totals anything. Convergence is stated ' +
+    'a recurrence — the notation for adding one up, which terms its limits name and the two ' +
+    'rearrangements that make such a sum manipulable, and the arithmetic family, whose term at ' +
+    'a position, position of a term and total by pairing the ends are all plain numbers. What ' +
+    'stayed is what needs an argument rather than a reading, or a limit rather than either: ' +
+    'the geometric family with its constant ratio and its sum to infinity, proof by induction, ' +
+    'and when an infinite sum totals anything. Convergence is stated ' +
     'and tested here; it is proved in real analysis.',
   nodes: [
     /**
@@ -80,11 +82,30 @@ const SEQUENCES_AND_SERIES: MapArea = {
      * quietly freed to introduce the two most confusable concepts in the
      * subject together. This node declared none, and neither did
      * `sigma-notation` when it followed. The one in this area is on
-     * `geometric-sequences`, pointing at `arithmetic-sequences`, and both ends
-     * are still here — so whoever promotes either of those two next has the
-     * case neither of these two did: that edge must be re-declared in the
-     * receiving ontology's `EDGES`, with its `rationale`, or it is gone without
-     * a sound.
+     * `geometric-sequences`, pointing at `arithmetic-sequences`.
+     *
+     * THIS PARAGRAPH THEN TOLD THE NEXT AUTHOR THE WRONG THING, and the third
+     * departure is the correction, so the rule is restated here rather than
+     * left to be found two notes down. It said that whoever promoted EITHER of
+     * those two must re-declare the edge in the receiving ontology's `EDGES`
+     * with its `rationale` "or it is gone without a sound". That is true of
+     * `geometric-sequences` only, because `expandEdges` walks an area's OWN
+     * nodes and `geometric-sequences` is the node that DECLARES this edge.
+     * Promoting `arithmetic-sequences` — the far end — stranded nothing: the
+     * declaring node stayed, so the area still emits the edge and
+     * `composeAtlas` resolves it with an authored concept at one end. An edge
+     * is owned by the node that declares it, which is the rule
+     * atlas-foundations.ts had to correct itself over for `needs` and which is
+     * no different for a `confusedWith`.
+     *
+     * Worse, obeying it at that end was impossible in both directions — the
+     * ontology may name only concepts it contains, and `links` hard-codes
+     * `kind: 'prerequisite'` — so the full account is in the note where that
+     * node sat. What survives of the warning is this: promoting
+     * `geometric-sequences` really does delete this edge in silence, because
+     * interference constrains SELECTION rather than gating and every suite
+     * stays green while the scheduler is freed to introduce the two most
+     * confusable concepts in the area together.
      *
      * NOR DID IT HAND AN EDGE BACK. The opposite failure is a `links` entry
      * that existed because the area owned NEITHER end, whose two ends both
@@ -96,7 +117,7 @@ const SEQUENCES_AND_SERIES: MapArea = {
      *
      * THE THREE EDGES POINTING INTO IT WERE LEFT ALONE, as the rule says.
      * `arithmetic-sequences`, `geometric-sequences` and `sigma-notation` each
-     * named it in their own `needs` and all three stayed, so all three still
+     * named it in their own `needs` and all three stayed at the time, so all three still
      * owned their edges and `composeAtlas` resolved them across the file
      * boundary. What changed without a line being edited in any of them is
      * that those edges now GATE: they used to point at a node with no
@@ -124,17 +145,104 @@ const SEQUENCES_AND_SERIES: MapArea = {
      * more promotions of room and nothing in it was held back. The floor is why
      * the departure order matters at all, and atlas-foundations.ts is explicit
      * that a drained area's answer is to MERGE into a neighbour rather than to
-     * lower the threshold. One of those five has since been spent and nothing
+     * lower the threshold. Two of those five have since been spent and nothing
      * here is close to needing that decision.
      */
-    {
-      id: 'arithmetic-sequences',
-      match: /\barithmetic (sequence|progression|series)\b/i,
-      name: 'Arithmetic sequences and sums',
-      is: 'Constant difference, with the sum obtained by pairing the ends — the argument, not the formula, is the content.',
-      needs: ['sequences'],
-      terms: 'arithmetic sequence common difference sum of series',
-    },
+    /**
+     * `arithmetic-sequences` LEFT THIS AREA TOO, THE THIRD DEPARTURE FROM IT
+     * AND THE TWENTY-SIXTH IN THE BUILD. Same structural rule — `atlasProblems`
+     * rejects a node whose id collides with an authored concept, so a promotion
+     * is a MOVE and never a fill-in. The long version is in the note above
+     * `geometric-sequences` and in atlas-foundations.ts; what follows is only
+     * what is DIFFERENT about the third one.
+     *
+     * IT IS A CONCEPT OF `functions-and-inverses` NOW, beside `sequences` and
+     * `sigma-notation`, which makes that branch a FORK where it was a chain:
+     * `function-concept` → `sequences` → {`sigma-notation`, this}. Three of the
+     * four concepts that subject has taken from this file came out of this one
+     * area.
+     *
+     * ITS ONE STRANDED EDGE WENT TO THE ONTOLOGY FOR THE THIRD TIME, and the
+     * note above `geometric-sequences` asked the next departure to check
+     * whether that was tidiness or luck. It is neither, and the right word is
+     * the one atlas-foundations.ts uses: it is a property of where the
+     * departing node's prerequisites LIVE. This node declared
+     * `needs: ['sequences']` and nothing else, and `sequences` had been a
+     * concept of that file since the first departure, so the edge could be
+     * restated there. `links` is empty a third time and
+     * `mathematical-induction` is still sitting in this list unable to avoid an
+     * entry whenever its turn comes, since it needs `geometric-proof` and that
+     * is the geometry subject's.
+     *
+     * NOTHING WAS HANDED BACK, `links` being empty and an empty list having
+     * nothing to collapse.
+     *
+     * NO EDGE POINTED INTO IT AT ALL, which is new here and is the reason this
+     * promotion GATES NOTHING. The two departures above had three and five
+     * dependents between them, every one of which gained a gate the day the
+     * node it rested on got material. Nothing on the map and nothing authored
+     * declares `needs: ['arithmetic-sequences']` — `geometric-sequences`
+     * directly above rests on `sequences` and `exponential-functions`, not on
+     * this — so no walk anywhere changes. Worth stating because "authoring
+     * tightens the gate" has been true of every promotion out of this area so
+     * far and a reader would reasonably assume it again.
+     *
+     * THE INTERFERENCE SURVIVED, AND THE NOTE ABOVE `geometric-sequences` WAS
+     * WRONG ABOUT THIS END. That note tells whoever promotes either of the two
+     * named families that the `confusedWith` between them "must be re-declared
+     * in the receiving ontology's `EDGES`, with its `rationale`, or it is gone
+     * without a sound". It is right for `geometric-sequences` and wrong here,
+     * and the correction is the same one atlas-foundations.ts had to make for
+     * `needs`: an edge is owned by the node that DECLARES it.
+     *
+     * The `confusedWith` is written on `geometric-sequences`, which stayed.
+     * `expandEdges` walks an area's OWN nodes, so the area still declares that
+     * edge and `composeAtlas` still emits
+     * `geometric-sequences ~ arithmetic-sequences`, now with a map node at one
+     * end and an authored concept at the other. Nothing was stranded and there
+     * was nothing to re-declare.
+     *
+     * Following the instruction would in fact have been impossible, which is
+     * the part worth having in writing before somebody spends a run on it.
+     * `FUNCTIONS_AND_INVERSES` may name only concepts it CONTAINS, so an
+     * `interferes_with` there pointing at `geometric-sequences` makes
+     * `ontologyProblems` report an unknown endpoint. And `links` cannot carry
+     * it: `expandEdges` hard-codes `kind: 'prerequisite'` for every entry
+     * there, and in any case `links` is for edges this area owns NEITHER end
+     * of. A cross-file interference is expressible nowhere in this build —
+     * ontology-functions.ts says the same thing about `f⁻¹` against `x⁻¹` — so
+     * the only safe move was to leave the declaring end alone and check that
+     * the composed edge was still there. tests/atlas.mjs now asserts it from
+     * the composed map AND asserts that only one end is a node of this area,
+     * which is the shape that would have caught a re-declaration as a
+     * duplicate.
+     *
+     * The instruction still stands for the other end, and that is why it has
+     * not been deleted: promoting `geometric-sequences` DOES strand this edge,
+     * and if both families end up in `functions-and-inverses` it can and must
+     * be restated in that ontology's `EDGES` with its rationale.
+     *
+     * THE ROOT SET SHRANK, THREE TO TWO, and it is the cause
+     * atlas-foundations.ts records under `binomial-theorem` rather than either
+     * of the two this area has shown. This node was a root here — its only
+     * prerequisite had been authored out from under it by the first departure —
+     * and nothing replaced it, because a node can only substitute into this set
+     * by being freed INSIDE this area and this one was the last in-area
+     * prerequisite of nothing. The roots were `arithmetic-sequences`,
+     * `geometric-sequences` and `mathematical-induction`; they are the latter
+     * two. tests/atlas.mjs asserts the pair by name, as it asserted the triple.
+     *
+     * So this area has now produced growth (1 → 3), turnover at constant size
+     * (3 → 3) and shrinkage (3 → 2), in that order, from three departures. The
+     * outcome depends on the DEPENDENTS of the node that leaves and not on the
+     * node, which is why the set is computed on both sides of a promotion here
+     * rather than predicted.
+     *
+     * HEADROOM. Nine nodes became eight, against the floor of five, so three
+     * more promotions of room. Nothing here is near needing the merge decision
+     * atlas-foundations.ts describes, and that decision belongs to a human
+     * either way.
+     */
     {
       id: 'geometric-sequences',
       match: /\bgeometric (sequence|progression|series)\b/i,
@@ -178,9 +286,11 @@ const SEQUENCES_AND_SERIES: MapArea = {
      *
      * NO `confusedWith` AGAIN, so no `interferes_with` was silently deleted —
      * the stranding no suite catches. This area's one interference is still
-     * `geometric-sequences` → `arithmetic-sequences` and both of those nodes
-     * are still here, so the warning in the note above is still addressed to
-     * whoever promotes one of them.
+     * `geometric-sequences` → `arithmetic-sequences`, and at this point both of
+     * those nodes were still here. The third departure took the far end and
+     * the edge survived, for the reason the note above now gives; the warning
+     * is addressed to whoever promotes `geometric-sequences`, the end that
+     * declares it.
      *
      * NOTHING WAS HANDED BACK, because `links` was empty and an empty list has
      * nothing to collapse.
@@ -206,8 +316,15 @@ const SEQUENCES_AND_SERIES: MapArea = {
      * needs `sequence-convergence` and that is still here. Three in, three out,
      * one member different — a `length === 3` check would have passed.
      *
+     * The third departure then SHRANK it, three to two, for a third distinct
+     * reason. The note where that node sat has the account; the short version
+     * is that growth, turnover and shrinkage have now all come out of this one
+     * area, so there is no pattern here to read off and the set is computed on
+     * both sides of a promotion rather than predicted.
+     *
      * HEADROOM. Ten nodes became nine, against the floor of five, so four more
-     * promotions of room. The floor is why departure order matters at all and
+     * promotions of room at the time, and eight nodes with three of room after
+     * the third departure. The floor is why departure order matters at all and
      * nothing here is near needing the merge decision atlas-foundations.ts
      * describes.
      */

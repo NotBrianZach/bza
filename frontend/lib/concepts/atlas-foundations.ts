@@ -1580,7 +1580,7 @@ const EUCLIDEAN_GEOMETRY: MapArea = {
     'transformation acts on coordinates, and three dimensions are a third number. Distance and ' +
     'midpoint used to be named in that list and have been written, so they are pointed at ' +
     'rather than described here. ' +
-    'Eleven of its nodes have left for the plane-geometry syllabus, where ' +
+    'Twelve of its nodes have left for the plane-geometry syllabus, where ' +
     'they have problems written for them, and this area points at them through `needs` rather ' +
     'than restating them: the undefined terms and the first angle facts — what a straight line ' +
     'and a full turn force, a vertical pair, and what a parallel pair forces across a ' +
@@ -1708,7 +1708,7 @@ const EUCLIDEAN_GEOMETRY: MapArea = {
     'count that syllabus teaches and the subject holds nothing curved to make it out of. ' +
     'That leaves this area owing NOTHING on either unfinished journey for the first time since ' +
     'the merge, which is the state the merge was argued for and not a sign the area is spent: ' +
-    'ten nodes are still here and none of them is on a route anybody is walking yet. ' +
+    'eight nodes are still here and none of them is on a route anybody is walking yet. ' +
     'And distance and midpoint have gone as a fourteenth, which is the first departure from ' +
     'this area that no route asked for — every journey reads zero unwritten now, so what chose ' +
     'it was an edge rather than a destination: Pythagoras with the two legs read off the axes ' +
@@ -1727,7 +1727,26 @@ const EUCLIDEAN_GEOMETRY: MapArea = {
     'of the analytic half and is untouched by it: slope and the three forms of a line, the ' +
     'circle as an equation, the conics, the parametric curves and the regions — none of which ' +
     'has a credit edge into any syllabus, so nothing about this promotion pulls the next one ' +
-    'after it.',
+    'after it. ' +
+    'And the isometries have gone as a fifteenth, which is the departure that says what the ' +
+    'third one was ABOUT: a map keeping every distance, with the angles following by SSS rather ' +
+    'than assumed beside them — so one hypothesis yields all six of a congruence\'s equalities, ' +
+    'a congruence statement\'s letter order is the record of where a map sent each vertex, and ' +
+    'the argument needs the three sides EQUAL rather than KNOWN, which is why two of them never ' +
+    'being measured costs nothing; two reflections in crossing mirrors composing to a rotation ' +
+    'through TWICE the angle between them, each mirror bisecting the angle it turns a point ' +
+    'through and the point\'s own position dropping out of the sum, with the order of the two ' +
+    'reflections mattering at every mirror angle except the right one; and a figure\'s ' +
+    'symmetries counted as a full turn over the smallest returning turn plus one per mirror ' +
+    'line, so that a regular n-gon has 2n, its axes arranged by the parity of n, and a scalene ' +
+    'triangle has 1 rather than 0. What stayed behind of that one is the CLASSIFICATION — that ' +
+    'every isometry of the plane is a translation, a rotation, a reflection or a glide ' +
+    'reflection, which is an argument about where three fixed points can lie and is used in the ' +
+    'syllabus rather than derived there, exactly as the congruence criteria and the ' +
+    'inscribed-angle theorem are — and so did everything the same motions become in ' +
+    'coordinates, since `plane-transformations` is still a node here and is where a reflection ' +
+    'is written as a rule on a pair of numbers. Twelve of this area\'s departures have now gone ' +
+    'to `plane-geometry`, two to the vectors and one to the solids.',
   /**
    * THIS AREA ABSORBED `COORDINATE_GEOMETRY`, AND IT IS THE SAME FLOOR AGAIN.
    *
@@ -2792,15 +2811,76 @@ const EUCLIDEAN_GEOMETRY: MapArea = {
      * ontology-solids.ts records that the sphere costs exactly one borrowed
      * fact and not two, since V = (1/3) × S × r follows from the third.
      */
+    /*
+     * `isometries-and-symmetry` WAS HERE AND IS NOW A CONCEPT of
+     * `plane-geometry`, in ontology-geometry.ts — the FIFTEENTH node to leave
+     * this area and the twelfth of them to land in that subject. It had to
+     * leave: `atlasProblems` rejects a map node whose id collides with an
+     * authored concept, so a node of this id surviving here would shadow the
+     * written material with a skeleton that has no knowledge points, and a
+     * finished syllabus would silently read as unteachable.
+     *
+     * EIGHT NODES AFTER, against a stub floor of five, so three spare. The floor
+     * decided nothing here and is not close to deciding anything — but the
+     * sentence to read next to that is the one in `linear-algebra`'s block,
+     * which is at TWO spare with two ready candidates. The floor is a
+     * per-area fact and "nothing is frozen" is not a statement about the map.
+     *
+     * IT IS THE CHEAP CASE WITH ONE `needs`, the fourth time this area has given
+     * one of those up and the first since `geometric-proof`. The node declared
+     * `needs: ['congruence']` and nothing else; `congruence` has been a concept
+     * of `plane-geometry` since the third promotion, so both ends of the
+     * stranded edge are in one ontology and it is an ordinary `EDGES` entry
+     * there. `links` below was neither added to nor relieved and still holds
+     * exactly its eight.
+     *
+     * NOTHING WAS HANDED BACK, checked rather than assumed. No `links` entry of
+     * this area, nor of any other, names `isometries-and-symmetry` at either
+     * end — which matters because `links` resolves an endpoint whether it is a
+     * node or a concept, so an entry left standing would have gone on working
+     * and `composeAtlas` would carry the same edge twice with nothing red. The
+     * thirteenth promotion is where that case is written up; this is the check
+     * it created, run and come back negative.
+     *
+     * IT STRANDED NO `confusedWith`, and here that absence took looking for
+     * rather than noting. `expandEdges` turns one into an `interferes_with`,
+     * which constrains SELECTION rather than gating, so losing one leaves every
+     * suite green while freeing the scheduler to introduce the two most
+     * confusable concepts in a subject together. This node had a plausible
+     * partner — `plane-transformations`, three entries below, is the same three
+     * motions written on coordinates and matches "isometry" with its own
+     * pattern — and declared nothing. So the absence is recorded, and declaring
+     * one now would be inventing a claim about learner confusion during an
+     * authoring pass, which is what the scope comments forbid for patterns and
+     * the same argument covers. No `exercises` either, so no `encompasses` was
+     * at stake and the filing was decided on content.
+     *
+     * THE ONE EDGE POINTING IN SURVIVED and it reaches further than any of this
+     * area's departures except the solids'. `binary-operations` is a node of
+     * `abstract-algebra`, names this concept in its OWN `needs`, and is
+     * therefore still the owner of that edge, which `composeAtlas` resolves
+     * across the file boundary untouched. What moved is the GATE at the far end:
+     * the walk used to pass through an empty node and land on `congruence`, and
+     * `isometries-and-symmetry` now has material of its own, so that is what a
+     * learner has to demonstrate. A gate SUBSTITUTES — it does not lengthen.
+     *
+     * THE ROOT SET SHRANK, six to FIVE, and this time nothing arrived. The node
+     * was a root itself, so it left; and it was the last in-area prerequisite of
+     * NOTHING, because its only dependent anywhere in the atlas is in another
+     * area. That is the simplest of the five shapes this set has produced — a
+     * fan-out twice, three substitutions, a doubling and now a second plain
+     * shrinkage — and it is still only sayable by membership. A reading of
+     * "six became five" makes no claim about which five, and this set has moved
+     * membership without moving size four times.
+     *
+     * IT WAS AN `armature.ts` ANCHOR, which is the fifth file a promotion can
+     * touch and the only one outside this directory's dependency graph.
+     * Druuvruke anchored on it, an anchor must be a node of its region's `area`,
+     * and `armatureProblems` fails loudly — so the slot was refilled. The note
+     * there says why the refill is `plane-transformations` and why the usual
+     * rule could not pick it.
+     */
 
-    {
-      id: 'isometries-and-symmetry',
-      match: /\b(isometry|symmetry group|reflection symmetry|rotational symmetry)\b/i,
-      name: 'Isometries and symmetry',
-      is: 'Reflections, rotations and translations as the maps that preserve distance, and symmetry as invariance under them.',
-      needs: ['congruence'],
-      terms: 'isometry reflection rotation translation symmetry group',
-    },
     {
       id: 'constructions',
       match: /\bstraightedge and compass\b|\bcompass[- ]and[- ]straightedge\b/i,
@@ -3064,7 +3144,13 @@ const EUCLIDEAN_GEOMETRY: MapArea = {
       id: 'plane-transformations',
       match: /\b(translation|rotation|reflection|dilation) (of|in) the plane\b|\bisometr(y|ies)\b/i,
       name: 'Transformations of the plane',
-      is: 'Translation, rotation, reflection and scaling as operations on coordinates, and which of them preserve distance — the first place geometry is studied through what leaves a figure unchanged.',
+      // The `is` line used to end "the first place geometry is studied through
+      // what leaves a figure unchanged", and the fifteenth promotion made that
+      // false: `isometries-and-symmetry` is authored now and does invariance
+      // first, synthetically. What is left here is the part that is genuinely
+      // this node's, which is the coordinates — a reflection as a rule on a
+      // pair of numbers rather than as a mirror.
+      is: 'Translation, rotation, reflection and scaling as operations on coordinates, and which of them preserve distance — the synthetic versions being authored, this is where a motion becomes a rule on a pair of numbers.',
       needs: ['cartesian-plane', 'congruence'],
       terms: 'translation rotation reflection dilation isometry symmetry transformation',
     },
@@ -3373,19 +3459,31 @@ const TRIGONOMETRY: MapArea = {
   covers:
     'The circular functions from both directions: ratios in a right triangle, and coordinates on ' +
     'the unit circle. Includes identities, the inverse functions, the oblique-triangle laws and ' +
-    'polar coordinates. The right-triangle ratios themselves have left this area and are ' +
-    'written — see `triangle-trigonometry` in ontology-trigonometry.ts; what is still mapped ' +
-    'here is everything circular, which is the larger half.',
+    'polar coordinates. The right-triangle ratios and the oblique-triangle laws have BOTH left ' +
+    'this area and are written — see `triangle-trigonometry` in ontology-trigonometry.ts; what ' +
+    'is still mapped here is everything circular, which is the larger half and is now the whole ' +
+    'of what remains. Nothing left in this area is about a triangle.',
   /*
-   * ONE NODE HAS LEFT THIS AREA, AND IT WAS THE AREA'S ONLY ROOT.
+   * TWO NODES HAVE LEFT THIS AREA, AND BOTH WENT INTO THE SAME SUBJECT.
    *
    * `right-triangle-trig` was promoted into authored material as a ninth
-   * subject ontology, `triangle-trigonometry`. Promoting a node DELETES it from
-   * here, because `atlasProblems` rejects a map node whose id collides with an
-   * authored concept — the two would be one id with two different fidelities
-   * and two different caveats. So a promotion is a move out of this list and
-   * not a fill-in, and this comment is what stops the next reader looking for
-   * a node the `covers` sentence above still half-describes.
+   * subject ontology, `triangle-trigonometry`, and `law-of-sines-cosines`
+   * followed it into that same subject as its second concept. Promoting a node
+   * DELETES it from here, because `atlasProblems` rejects a map node whose id
+   * collides with an authored concept — the two would be one id with two
+   * different fidelities and two different caveats. So a promotion is a move
+   * out of this list and not a fill-in, and this comment is what stops the next
+   * reader looking for a node the `covers` sentence above still half-describes.
+   *
+   * THE SECOND DEPARTURE WAS RESERVED BY THE FIRST, which is the part a later
+   * reader should take from this area rather than from the subject file. When
+   * `right-triangle-trig` left, ontology-trigonometry.ts argued for a brand new
+   * subject holding one concept, and the argument it gave for that being
+   * acceptable was explicitly that this node was reachable: "`law-of-sines-
+   * cosines` names this concept and `triangle-basics` as its only needs, so it
+   * is the natural second member". That claim has now been collected. A
+   * one-concept subject justified by a named reachable successor is a promise
+   * about THIS list, and it has been kept.
    *
    * WHY THIS AREA GAVE UP A NODE AT ALL, since the question has a short
    * answer and the file's other areas have a long one: it was the only
@@ -3396,44 +3494,82 @@ const TRIGONOMETRY: MapArea = {
    * product stands between them and the three dimensions. ontology-
    * trigonometry.ts's header argues it in full.
    *
-   * THE DEPARTURE CHANGED THE AREA'S ROOT SET FROM ONE NODE TO TWO, which is
-   * the part worth recording because it looks like the opposite of a loss.
+   * THE ROOT SET WENT ONE → TWO → ONE, AND THE SAME AREA PRODUCED BOTH MOVES.
+   * This is the clearest case in the build of why tests/atlas.mjs asserts a
+   * root set by NAMED MEMBERSHIP and never by size.
+   *
    * Inside `areaOntology` an edge reaching outside the area is filtered away,
-   * so this area's roots were just the nodes with no need INSIDE it — and that
-   * was `right-triangle-trig` alone, every other node resting on something
-   * here. Removing it promoted both of its in-area dependents, `unit-circle`
-   * and `law-of-sines-cosines`, to roots. An area whose standalone view has
-   * two roots instead of one is not drained; it is two chains where there was
-   * a tree with a stem. Which is why tests/atlas.mjs asserts the root set by
-   * NAMED MEMBERSHIP: a count would have gone 1 → 2 and said nothing about
-   * which nodes those are.
+   * so this area's roots are just the nodes with no need INSIDE it. Before any
+   * promotion that was `right-triangle-trig` alone, every other node resting on
+   * something here. Removing it promoted both of its in-area dependents,
+   * `unit-circle` and `law-of-sines-cosines`, to roots — growth, and the
+   * opposite of what "an area gave up a node" sounds like. Removing the second
+   * of those two has now taken the set back to `unit-circle` alone, because
+   * NOTHING in this area ever named `law-of-sines-cosines` as a need. A
+   * departing root with no in-area dependents simply leaves the set; a
+   * departing root with two SUBSTITUTES two members for one.
    *
-   * THE AREA IS AT TWELVE NODES AGAINST A STUB FLOOR OF FIVE, so the floor
-   * that decided several earlier promotions had no part in this one. Seven
-   * more could leave before `AREAS.filter(a => a.nodes.length < 5)` has
-   * anything to say. The constraint here is dependency depth instead:
-   * `unit-circle` needs `circles-analytic` from another area, so this area
-   * cannot author its way upward on its own, and `law-of-sines-cosines` — whose
-   * two needs are now BOTH authored — is the one node of the twelve that is
-   * ready. It is also the natural second member of the subject that just left,
-   * which is the reason that subject is named for the triangle rather than for
-   * this area.
+   * So the three readings an author might generalise from — promoting grows the
+   * root set, promoting shrinks it, promoting swaps members at constant size —
+   * are all wrong as rules, and this one area has now exhibited two of the
+   * three. What decides it is the departing node's in-area dependent count, and
+   * the only safe move is to compute the set before and after.
    *
-   * THE TWO `links` BELOW ARE THE DEPARTING NODE'S OWN `needs`, REHOMED. An
-   * edge is owned by the node that DECLARES it, so promoting this node
-   * stranded exactly the two edges written on it and left every edge pointing
-   * INTO it alone — `unit-circle` and `law-of-sines-cosines` still declare
-   * their need of it, and `composeAtlas` resolves those against the authored
-   * concept with no edit here. Neither stranded edge could go into
+   * THE AREA IS AT ELEVEN NODES AGAINST A STUB FLOOR OF FIVE, so the floor that
+   * decided several earlier promotions had no part in either of these. Six more
+   * could leave before `AREAS.filter(a => a.nodes.length < 5)` has anything to
+   * say.
+   *
+   * AND NOW NOTHING HERE IS READY, WHICH IS A HARDER STOP THAN THE FLOOR. The
+   * constraint was always dependency depth rather than headroom: `unit-circle`
+   * needs `circles-analytic`, which is still a map node and lives in
+   * `euclidean-geometry`, so `unit-circle` is not ready — and it is the only
+   * root. Every other node in this area sits above it. So this area cannot
+   * author its way upward on its own at all,
+   * and `law-of-sines-cosines` was the last node in it whose prerequisites were
+   * both written. Whoever comes here next for a promotion should leave again
+   * and take `circles-analytic` first; authoring it is what reopens this area,
+   * and nothing inside the area can.
+   *
+   * THE THREE `links` BELOW ARE THE DEPARTING NODES' OWN `needs`, REHOMED. An
+   * edge is owned by the node that DECLARES it, so promoting a node strands
+   * exactly the edges written ON it and leaves every edge pointing INTO it
+   * alone — `composeAtlas` resolves those against the authored concept with no
+   * edit here. The first two came from `right-triangle-trig` and the third from
+   * `law-of-sines-cosines`. None of them could go into
    * `TRIANGLE_TRIGONOMETRY.edges`: an authored ontology may only name concepts
-   * it CONTAINS, and `similarity` and `pythagoras` are concepts of
-   * `plane-geometry`. So `links` is their only home, and it is declared HERE —
-   * in the area that owned the departing node — rather than in
-   * `EUCLIDEAN_GEOMETRY`, which holds the other endpoints. The edges were this
-   * node's own `needs` and this node lived here, so this is where the
+   * it CONTAINS, and `similarity`, `pythagoras` and `triangle-basics` are all
+   * concepts of `plane-geometry`. So `links` is their only home, and it is
+   * declared HERE — in the area that owned the departing node — rather than in
+   * `EUCLIDEAN_GEOMETRY`, which holds the other endpoints. The edges were these
+   * nodes' own `needs` and these nodes lived here, so this is where the
    * dependency was decided and this is where it keeps being asserted. Filing
    * them under the geometry area would read as geometry making a claim about
    * trigonometry.
+   *
+   * THE SECOND PROMOTION SPLIT ITS STRANDED EDGES, WHICH IS THE CLEANEST
+   * STATEMENT OF THE RULE ANYWHERE IN THE BUILD. `law-of-sines-cosines`
+   * declared two `needs` and they went to different places:
+   *
+   *     right-triangle-trig   same subject as the promoted node
+   *                             -> TRIANGLE_TRIGONOMETRY.edges
+   *     triangle-basics       a concept of plane-geometry
+   *                             -> the third links entry below
+   *
+   * So where a stranded edge goes is decided by the FAR endpoint's SUBJECT —
+   * not by its area, not by whether it is authored, and not by which node
+   * declared it. `triangle-basics` is authored, teachable and practisable, and
+   * it still cannot be named in the receiving ontology. One promotion produced
+   * both outcomes at once, so neither can be read as the general case.
+   *
+   * AND NOTHING POINTED INTO THE SECOND NODE AT ALL, which is why that
+   * promotion rehomed one edge and gained nothing. No node in this area and no
+   * concept anywhere named `law-of-sines-cosines` as a need, so it gated
+   * nothing while it was mapped and gates nothing now that it is written. Two
+   * promotions running have had that shape. The sentence this comment used to
+   * carry — that `unit-circle` and `law-of-sines-cosines` both still declared
+   * their need of the ratios — is now true of `unit-circle` alone, the other
+   * having become an ordinary internal edge of the subject they both left for.
    *
    * BOTH OF THEM GATE, WHICH IS NOT THE USUAL CASE FOR A NEW `links` ENTRY.
    * `EUCLIDEAN_GEOMETRY`'s first link pointed at an unwritten node and
@@ -3470,6 +3606,18 @@ const TRIGONOMETRY: MapArea = {
         'c² = a² + b² with b positive forces c > a, which is why a sine of an acute angle is ' +
         'always less than 1 and an impossible one can be refused before any arithmetic. Without ' +
         'it the quotients are three unrelated fractions.',
+    },
+    {
+      from: 'triangle-basics',
+      to: 'law-of-sines-cosines',
+      because:
+        'Both laws are proved by cutting an oblique triangle with one perpendicular and reading ' +
+        'a ratio in each half, so the proof assumes that the three angles total 180° and that ' +
+        'the longer side faces the larger angle — which is what this node is. The ambiguous ' +
+        'case needs more of it than that: deciding whether a root of the quadratic is a real ' +
+        'triangle is the triangle inequality, and the two answers differ by which side faces ' +
+        'the wider angle. A learner without those facts can compute both roots and has no way ' +
+        'to say that either describes a figure.',
     },
   ],
   nodes: [
@@ -3529,14 +3677,6 @@ const TRIGONOMETRY: MapArea = {
       is: 'Arcsine and its relatives, which exist only because the domain was cut down — and the cut is why the range looks arbitrary.',
       needs: ['trig-equations', 'inverse-functions'],
       terms: 'arcsin arccos arctan inverse trigonometric principal branch',
-    },
-    {
-      id: 'law-of-sines-cosines',
-      match: /\blaw of (sines|cosines)\b/i,
-      name: 'The laws of sines and cosines',
-      is: 'Solving triangles that have no right angle, with the ambiguous case as a genuine two-answer situation rather than a trap.',
-      needs: ['right-triangle-trig', 'triangle-basics'],
-      terms: 'law of sines law of cosines ambiguous case solving triangles',
     },
     {
       id: 'polar-coordinates',

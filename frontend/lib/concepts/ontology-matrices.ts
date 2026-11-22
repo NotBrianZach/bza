@@ -806,12 +806,29 @@ const CONCEPTS: Concept[] = [
             {
               label: 'Compute it',
               detail: '6·2 − 3·4 = 12 − 12 = 0.',
+              socratic:
+                'Every determinant you have taken in this subject has been ad − bc on a matrix ' +
+                'whose b was −1, so the subtraction kept handing something back rather than ' +
+                'taking anything away. [[6, 3], [4, 2]] has no negative entry anywhere in it, ' +
+                'which means for the first time the second product is a genuine deduction from ' +
+                'the first. Which two pairs of entries does ad − bc single out here, what does ' +
+                'each of those two products come to, and what is left once you have subtracted?',
             },
             {
               label: 'The formula fails — but that is a symptom',
               detail:
                 'Dividing the adjugate by 0 is undefined. On its own that only says this ' +
                 'particular recipe does not apply.',
+              socratic:
+                'Carry that number back to the formula from two points ago. The bracket it asks ' +
+                'for, [[d, −b], [−c, a]], is [[2, −3], [−4, 6]] here, and writing it down gave ' +
+                'you no trouble at all — swapping and negating four numbers never does. Then the ' +
+                'whole bracket is to be divided by what you have just computed, and division is ' +
+                'the one step you already identified as capable of refusing. Be careful how much ' +
+                'that settles, though: a recipe breaking down is a fact about the recipe, and ' +
+                'plenty of quantities are reachable by some other route when one method stalls. ' +
+                'So what exactly has the breakdown established, and what has it not yet ' +
+                'established about whether any matrix at all can undo this one?',
             },
             {
               label: 'The real reason',
@@ -820,12 +837,36 @@ const CONCEPTS: Concept[] = [
                 'the whole plane is crushed onto a line. The vectors (1, −2) and (0, 0) both map ' +
                 'to the origin. An inverse would have to send the origin back to both, and a map ' +
                 'returns one output.',
+              socratic:
+                'Argue it from the map instead of from the recipe. The determinant concept ' +
+                'settled that this number is the factor by which the matrix multiplies every ' +
+                'area, and you have just found the factor for this one; separately, a matrix\'s ' +
+                'two columns are where the two basis vectors land, so hold (6, 4) against ' +
+                '(3, 2) and say what has become of the plane. That comparison gives you ' +
+                'something sharper than a shape, too. This matrix sends (x, y) to ' +
+                'x·(6, 4) + y·(3, 2), so the relation between the columns is itself a recipe for ' +
+                'a combination that cancels: produce a nonzero (x, y) that lands on the origin. ' +
+                'The origin was already going there. An inverse is a map, and a map returns one ' +
+                'output per input — so what would an inverse of this matrix be obliged to do ' +
+                'with the origin, and which of those two requirements does that break?',
             },
             {
               label: 'The same argument you have seen before',
               detail:
                 'This is `it-has-to-be-one-to-one` from inverse functions, in two dimensions. A ' +
                 'matrix is a function; the condition for undoing one has not changed.',
+              socratic:
+                'Say back what you have just shown with every piece of matrix vocabulary taken ' +
+                'out of it: two different inputs arrived at the same output, so no rule could ' +
+                'send that output back. Nothing in that sentence mentions determinants, columns ' +
+                'or 2×2 anything — and the first point of this concept had already warned you ' +
+                'that every step of the inverse formula except the division works on any four ' +
+                'numbers whatever, which was a hint that the real obstruction was never going to ' +
+                'be arithmetic. You have met this argument in another subject, about an ' +
+                'operation on plain numbers that sent two of them to one, and a matrix is after ' +
+                'all a function from the plane to the plane. Where have you seen it, what ' +
+                'condition on a function did it name as the price of being undoable, and what ' +
+                'does moving from one variable to two change about that condition?',
             },
           ],
           answer: '0 — the map is not one-to-one, so nothing can undo it',

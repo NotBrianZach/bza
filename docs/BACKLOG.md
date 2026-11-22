@@ -71,19 +71,26 @@ Migration 58 sitting in `supabase/setup/archive/` is not removal of the
 billing path: every applied migration 50–69 is filed there, and the
 functions are live in `bza_public`.
 
-Sized 2026-11-20 and re-measured 2026-11-21 unchanged, because the
-paragraphs above read more urgent than the numbers support. Every figure
-below is a fresh query, not a quotation — the recorded peak was once 13×
-low because it was copied forward instead of re-run. The allowance is
+Sized 2026-11-20 and re-measured on each parked run since, latest
+2026-11-21 23:00 CST, because the paragraphs above read more urgent than
+the numbers support. Every figure below is a fresh query, not a quotation
+— the recorded peak was once 13× low because it was copied forward
+instead of re-run. The allowance is
 `app_config['billing.included_cents']` =
 500, so $5 per customer-month, and the largest single user-month ever
-recorded is 14.80¢ — 3% of one allowance. Lifetime `charged_cost` across all
-customers is 39.98¢ over 1565 rows, the current month's heaviest user is at
-1.26¢, and all three `billing_customers` rows sit at
-`overage_reported_cents` = 0. So `reconcile_all_overages()` would return
-zero rows today and the UNREPORTED path that can lose money has never
-fired. The gap is real and worth closing before usage grows, but it has
-never cost anything — decide this as a cadence question, not as a leak.
+recorded is 14.80¢, in 2026-08 — 3% of one allowance. Lifetime
+`charged_cost` across all customers is 39.98¢ over 1568 rows, the current
+month's heaviest user is at 1.26¢, and all three `billing_customers` rows
+sit at `overage_reported_cents` = 0. So `reconcile_all_overages()` would
+return zero rows today and the UNREPORTED path that can lose money has
+never fired. The gap is real and worth closing before usage grows, but it
+has never cost anything — decide this as a cadence question, not as a leak.
+
+The row count is the only figure that has moved between re-measurements:
+1565 on the morning of 2026-11-21, 1568 that evening, with the lifetime
+total still 39.98¢ at both. Usage is arriving and costing a rounding
+error, so a risen row count is not evidence the sizing has changed —
+re-run the sum, not just the count.
 
 When re-checking those numbers: `api_usage`'s time column is `timestamp`,
 not `created_at`, so a month filter on `created_at` errors rather than
@@ -102,14 +109,23 @@ What needs deciding is who reviews authored material and how often — not
 whether the restriction stays. Do not resolve it by giving an autonomous task
 publish rights.
 
-Verified 2026-11-21: still no deploy timer, and `deployment_history` rows
-422–438 are every one `triggered_by=manual`, `deployed_by=zach` — 17 deploys
-across 2026-11-18 to 11-20, nine of them on the 20th alone and three inside
-half an hour that evening. (Row 431 reads `in_progress`; that status is
-written and never cleared, so it is cosmetic rather than a stuck deploy.)
-438 is still head as of 2026-11-21 09:00 CST, so the range above is a
-re-check rather than a new measurement — the burst ended the evening of
-the 20th and nothing has deployed since.
+Verified 2026-11-21 23:00 CST: still no deploy timer, and
+`deployment_history` rows 422–439 are every one `triggered_by=manual`,
+`deployed_by=zach` — 18 deploys, nine of them inside a single day, all
+`success` except row 431, which reads `in_progress` because that status is
+written and never cleared, not because a deploy is stuck.
+
+Row 439 is head and landed 2026-11-21 19:12 CST, 28 hours after 438. The
+run before this one recorded 438 as head and added "nothing has deployed
+since", which was true when written at 09:00 and false by that evening. So
+a quiet day in this history is not the practice stopping, and a re-check
+that turns up no new row should not be written down as one.
+
+Read `deployment_history.started_at` as UTC. Row 439 stores
+`2026-11-22 01:12:55` for a deploy a human would place on Saturday
+evening, so dates taken raw from that column run up to six hours ahead of
+the day anyone would name — which is how "nine on the 20th" and "09:00
+CST" came to sit in one paragraph on two different clocks.
 
 The premise holds, but the shape is the opposite of a backlog, and the
 earlier snapshot here — "3 commits and 13 hours behind head" on 11-16 —
