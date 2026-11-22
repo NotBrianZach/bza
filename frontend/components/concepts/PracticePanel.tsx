@@ -67,13 +67,34 @@ interface RulingResponse {
 }
 
 export default function PracticePanel({
-  tasks, verifierConfigured, onAdvance, onRefresh, onTaskChange, focusTaskId,
+  tasks, verifierConfigured, onAdvance, onRefresh, onRuled, onTaskChange, focusTaskId,
 }: {
   tasks: PracticeTaskView[]
   verifierConfigured: boolean
   /** Called when a task is settled either way, so the parent can refresh progress. */
   onAdvance?: () => void
   onRefresh?: () => void
+  /**
+   * Every ruling, including the two `onAdvance` deliberately swallows.
+   *
+   * `onAdvance` fires only for `correct` and `incorrect`, because its job is
+   * "something changed, go and re-read the session" and the other two change
+   * nothing. That is right for a refresh and wrong for a story: RPG mode has
+   * to hear `inconclusive`, which docs/RPG_AND_THE_GRAPH.md §6 calls a scene
+   * rather than a failure, and `abandoned`, which is a scene too.
+   *
+   * So this is a second callback rather than a widening of the first. Widening
+   * `onAdvance` would have made every inconclusive ruling re-fetch the
+   * session, which is a request that cannot return anything new.
+   */
+  /**
+   * `assisted` comes along because only this component knows it: the
+   * assistance toggle is local state here, and `Verdict` does not carry it.
+   * RPG mode wants it as a circumstance of the scene — §5's mapping, where a
+   * commission done with help moves strength less, as `summarise()` already
+   * models — so it has to cross the boundary with the ruling or not at all.
+   */
+  onRuled?: (taskId: string, verdict: Verdict, assisted: boolean) => void
   /**
    * Which task is on screen.
    *
@@ -149,12 +170,18 @@ export default function PracticePanel({
       if (data.status === 'ruled' && (data.verdict?.ruling === 'correct' || data.verdict?.ruling === 'incorrect')) {
         onAdvance?.()
       }
+      // Every ruling, though — see the prop note. The id is passed with it
+      // because by the time a caller reacts the panel may have moved on, and a
+      // ruling attributed to the wrong problem is worse than none.
+      if (data.status === 'ruled' && data.verdict) {
+        onRuled?.(task.id, data.verdict, assistance !== 'none')
+      }
     } catch (e) {
       setResult({ error: e instanceof Error ? e.message : 'the request failed' })
     } finally {
       setBusy(false)
     }
-  }, [task, busy, answer, assistance, onAdvance])
+  }, [task, busy, answer, assistance, onAdvance, onRuled])
 
   if (!task) {
     return (

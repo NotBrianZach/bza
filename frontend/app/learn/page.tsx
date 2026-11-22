@@ -12,7 +12,11 @@ import { TRAVERSAL_GAME } from '@/lib/concepts/traversal'
 import { MASTERY_FLOOR } from '@/lib/concepts/scheduling'
 import { practisableConcepts } from '@/lib/concepts/tasks'
 import { openingForPoint } from '@/lib/concepts/socratic'
-import ArmatureMap from '@/components/concepts/ArmatureMap'
+import { offerFor } from '@/lib/concepts/commission'
+import {
+  INITIAL, transition, type ChartEvent, type ErrandState,
+} from '@/lib/concepts/commissionChart'
+import ArmatureMap, { type TakeWork } from '@/components/concepts/ArmatureMap'
 import ConceptBrowser from '@/components/concepts/ConceptBrowser'
 import ClaimsList from '@/components/concepts/ClaimsList'
 import ConceptGraph from '@/components/concepts/ConceptGraph'
@@ -230,6 +234,111 @@ export default function LearnPage() {
     setWalkTarget({ conceptId })
     setTab('tutor')
   }, [])
+
+  /**
+   * Work taken from a refused road — docs/RPG_AND_THE_GRAPH.md §4.
+   *
+   * The state it is IN lives in `errand` and belongs to the statechart in
+   * lib/concepts/commissionChart.ts; everything else in this object is data
+   * hanging off that state — the task that was chosen, the prose the game
+   * master wrote, the ruling the verifier returned.
+   *
+   * It crosses a tab boundary exactly as `focusTaskId` and `walkTarget` do —
+   * taken on the RPG tab, resolved on the Practice tab — so it lives above
+   * both for the same reason.
+   */
+  const [commission, setCommission] = useState<null | (TakeWork & {
+    /**
+     * The subject whose session can satisfy this commission.
+     *
+     * Load-bearing, and not merely informational. Taking work usually CHANGES
+     * the practised subject, and the session for the new one is fetched
+     * asynchronously — so for a moment `state` still holds the previous
+     * subject's tasks. Without this, the effect below reads that stale
+     * response, finds no task for the concept, and sets `miss`, which
+     * short-circuits it forever. The learner would be told "no problem for
+     * Long division right now" by a response that was never asked about long
+     * division.
+     */
+    subjectId: string
+    /**
+     * Where the errand is, as the statechart says.
+     *
+     * This replaced three booleans-by-implication — `taskId === null` meaning
+     * pending, `miss` meaning unavailable, `framing === null` meaning
+     * un-narrated — which between them could represent states the errand
+     * cannot actually be in, and did: the bug this file carried was a
+     * `miss` set while the session for the right subject had not arrived.
+     *
+     * Every change to this value goes through `transition` in
+     * lib/concepts/commissionChart.ts. Nothing here assigns a state
+     * literal, which is the property that makes the chart the authority
+     * rather than documentation of what the component happens to do.
+     */
+    errand: ErrandState
+    taskId: string | null
+    framing: string | null
+    source: string | null
+    note: string | null
+    /** The verifier's word, once there is one. Narrated, never judged here. */
+    ruling: string | null
+    /** Whether help was used, for the scene. A circumstance, not a fault. */
+    assisted?: boolean
+  })>(null)
+
+  /**
+   * Send an event to the errand region.
+   *
+   * The context the guards read is only meaningful for the ROAD region, and
+   * the road is not modelled in this component at all — `offerKey` and the
+   * strength table own it on the server, and the whole point of the two
+   * regions being orthogonal is that this component cannot move it. So the
+   * context here is a constant that no errand transition consults, and the
+   * errand transitions carry no guards. If one ever does, this is where the
+   * real numbers have to start arriving.
+   */
+  const fire = useCallback((event: ChartEvent) => {
+    setCommission(c => c && ({
+      ...c,
+      errand: transition('errand', c.errand, event, { strength: 0, floor: 1, standingThere: false }),
+    }))
+  }, [])
+
+  /**
+   * Take the work a road wanted.
+   *
+   * Sets the subject the way the Practice tab's own picker would — the same
+   * move `onPractise` makes for a region — and then leaves the rest to the
+   * effect below, because the task cannot be chosen until the session for that
+   * subject has been fetched.
+   *
+   * `offerFor` decides whether there is work at all, and the button that calls
+   * this has already asked the same question; asking twice is deliberate. The
+   * button is drawn from the atlas and this runs on a click, and the one thing
+   * neither should do is set a commission for a concept with no problems.
+   */
+  const takeWork = useCallback((work: TakeWork) => {
+    const offer = offerFor(work.conceptId, work.conceptName)
+    if (offer.kind !== 'workable') return
+    setSubject(offer.subjectId)
+    setScope('subject')
+    /* The two events the chart says this click is, run from the initial state
+       rather than assigning `working.pending` directly. Longer by one line
+       and it means the component cannot disagree with the chart about where
+       taking work lands — `take-work` targets the compound state and the
+       initial child is what decides. */
+    const NO_GUARD = { strength: 0, floor: 1, standingThere: false }
+    const errand = transition('errand',
+      transition('errand', INITIAL.errand, 'refused', NO_GUARD), 'take-work', NO_GUARD)
+    setCommission({
+      ...work,
+      subjectId: offer.subjectId,
+      errand,
+      taskId: null, framing: null, source: null, note: null, ruling: null,
+    })
+    setFocusTaskId(null)
+    setTab('practice')
+  }, [])
   /**
    * Which concept the map is looking at.
    *
@@ -341,6 +450,164 @@ export default function LearnPage() {
 
   useEffect(() => { load() }, [load])
 
+  /**
+   * Resolve a commission once the session that can satisfy it has arrived.
+   *
+   * `takeWork` sets the subject and cannot do more: the task has to come from
+   * `assemble()`, and `assemble()` runs on the server behind the session
+   * request that the subject change has only just triggered. So this waits for
+   * the response and then does the two things that need it — focus the task,
+   * and ask the game master to frame it.
+   *
+   * ── A MISS IS REPORTED, NEVER SWALLOWED ───────────────────────────────────
+   *
+   * The session can perfectly well come back with no task for the concept: it
+   * is served eight tasks across whatever is introducible, and the concept the
+   * road wanted may not be introducible yet — its OWN prerequisites may be
+   * short. `offerFor` cannot know that (it reads no strengths; see its header),
+   * so the honest handling is here.
+   *
+   * The failure this avoids is the quiet one. Focus nothing, say nothing, and
+   * the learner lands on the Practice tab looking at some other concept's
+   * problem, having just been told they were being handed long division. They
+   * would do that problem believing it was the work the road wanted. So a miss
+   * sets `miss` and the banner says the concept was not in this set and points
+   * at the blocked list, which is where its own prerequisites are named.
+   *
+   * ── THE FRAMING CANNOT FAIL THE WORK ──────────────────────────────────────
+   *
+   * The commission route is asked for prose and nothing else. Every failure
+   * path — no key, no quota, a dead model — returns the bare errand from
+   * `unframedCommission`, and this does not even check: `framing` is whatever
+   * came back, and a thrown request leaves it null, which the banner renders as
+   * the concept name alone. The work below it is unaffected either way.
+   */
+  useEffect(() => {
+    /* One state, not three flags: this resolves exactly once, out of the one
+       state that means "taken on, task not here yet". */
+    if (!commission || commission.errand !== 'working.pending') return
+    if (!state || state.error || loading) return
+    /* The response has to be the one for the commission's own subject. See the
+       note on `subjectId` for the misreport this prevents — it is the whole
+       reason that field exists, and `working.pending` is the chart's name for
+       the window in which the mistake was possible. */
+    if (state.subject?.id !== commission.subjectId) return
+
+    const task = (state.tasks ?? []).find(t => t.conceptId === commission.conceptId)
+    if (!task) {
+      fire('no-task')
+      return
+    }
+
+    setFocusTaskId(task.id)
+    setCommission(c => c && ({
+      ...c,
+      taskId: task.id,
+      errand: transition('errand', c.errand, 'task-shown',
+        { strength: 0, floor: 1, standingThere: false }),
+    }))
+
+    /* No cleanup flag. The worst a late response can do is set a framing for a
+       commission the learner has moved on from, and the setter is guarded on
+       the task id still matching — which is cheaper than an abort and says the
+       same thing. */
+    if (!commission.regionId) return
+    authedFetch('/api/learn/commission', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        regionId: commission.regionId,
+        taskId: task.id,
+        blockedRoad: commission.blockedRoad,
+      }),
+    })
+      .then(r => r.json())
+      .then((d: { framing?: string; source?: string; note?: string }) => {
+        setCommission(c => (c && c.taskId === task.id
+          ? { ...c, framing: d.framing ?? null, source: d.source ?? null, note: d.note ?? null }
+          : c))
+      })
+      .catch(() => { /* the work stands; only the telling of it is missing */ })
+  }, [commission, state, loading, fire])
+
+  /**
+   * The verifier ruled, so the game master says what the room did about it.
+   *
+   * This is the step that closes §3's loop. Up to here a commission was a
+   * framing and then silence: you did the work on the Practice tab and the
+   * fiction never heard the answer. Now the ruling goes back to the GM as
+   * settled fact and comes back as a scene.
+   *
+   * ── WHAT THIS MUST NOT BECOME ─────────────────────────────────────────────
+   *
+   * A judgement. Nothing here forms, softens or interprets the ruling — the
+   * word is passed through, the route validates it against the four the
+   * verifier can produce, and the prompt is told to narrate THAT. In
+   * particular `inconclusive` is forwarded exactly like the other three: §6
+   * calls it a scene rather than a failure, the chart gives it no edge to
+   * `correct` or `incorrect`, and this is the third place that has to agree.
+   *
+   * It fires for a ruling on THIS commission's task and no other. Practising
+   * something else while an errand is open is allowed and common, and a scene
+   * about the wrong problem would be a lie the fiction told itself.
+   */
+  const onRuled = useCallback((taskId: string, verdict: { ruling: string }, assisted: boolean) => {
+    setCommission(c => {
+      if (!c || c.taskId !== taskId) return c
+      const event = `ruled-${verdict.ruling}` as ChartEvent
+      const next = transition('errand', c.errand, event,
+        { strength: 0, floor: 1, standingThere: false })
+      /* An event the chart does not handle leaves the state alone, and that
+         is the signal to do nothing rather than narrate: a ruling word the
+         chart has no state for is one this code has never seen, and inventing
+         a scene for it is how an unknown ruling becomes a confident one. */
+      if (next === c.errand) return c
+      return {
+        ...c,
+        errand: next,
+        ruling: verdict.ruling,
+        assisted,
+        /* The framing is cleared so the ruling effect below has something to
+           fill. The hand-over has done its job by this point — the work is
+           done — and keeping both would put two paragraphs of game master in
+           one card. */
+        framing: null, source: null, note: null,
+      }
+    })
+  }, [])
+
+  /**
+   * Fetch the scene for a ruling once the chart has recorded one.
+   *
+   * Separate from `onRuled` because that runs inside a state updater and must
+   * stay pure. Keyed on the errand being a `ruled.*` state with no prose yet,
+   * which is the same "one state, not three flags" shape as the resolve effect
+   * above.
+   */
+  useEffect(() => {
+    if (!commission || !commission.ruling || commission.framing) return
+    if (!commission.errand.startsWith('ruled.')) return
+    if (!commission.regionId || !commission.taskId) return
+    const forTask = commission.taskId
+    authedFetch('/api/learn/commission', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        regionId: commission.regionId,
+        taskId: forTask,
+        ruling: commission.ruling,
+        assisted: commission.assisted === true,
+      }),
+    })
+      .then(r => r.json())
+      .then((d: { framing?: string; source?: string; note?: string }) => {
+        setCommission(c => (c && c.taskId === forTask
+          ? { ...c, framing: d.framing ?? null, source: d.source ?? null, note: d.note ?? null }
+          : c))
+      })
+      .catch(() => { /* the ruling stands; only the telling of it is missing */ })
+  }, [commission])
+
   /*
    * The links in: ?tab=concepts&concept=<id> from /play, and
    * ?tab=concepts&scope=atlas from the home page's Learn band.
@@ -372,7 +639,56 @@ export default function LearnPage() {
       // on the tutor tab a named concept means "offer me its derivations".
       if (wanted === 'tutor') setWalkTarget({ conceptId: concept })
     }
+    /*
+     * The practised subject, and it is the one parameter here that is also
+     * WRITTEN back — see the effect below for why that is a different
+     * decision from the tab and not an inconsistency.
+     *
+     * Validated against ONTOLOGIES rather than `state.subjects`, because
+     * this runs on mount and the session response has not arrived yet. That
+     * is the right list anyway: ONTOLOGIES is what /api/learn/session can
+     * actually serve problems from, so a subject outside it would set the
+     * picker to something the route then silently replaces with its own
+     * default — the mismatch DEFAULT_SUBJECT exists to prevent.
+     */
+    const wantedSubject = q.get('subject')
+    if (wantedSubject && ONTOLOGIES.some(o => o.subject.id === wantedSubject)) {
+      setSubject(wantedSubject)
+    }
   }, [])
+
+  /*
+   * Keep ?subject= in the URL so the choice survives a reload.
+   *
+   * The note on `linkedConcept` says nothing is pushed back into the URL
+   * because "the link is an entry point, not a synchronised view", and that
+   * is still right for the tab and the scope — a remembered scope is the
+   * hazard it describes, where a learner who glanced at the whole atlas
+   * comes back to three hundred nodes having asked for nothing.
+   *
+   * The subject is the exception and the asymmetry is deliberate. It is not
+   * a view of the same material, it decides WHICH material the session
+   * serves, and losing it on reload sent the learner back to
+   * ONTOLOGIES[0] — which is how six of the seven authored subjects were
+   * reachable only by hand-editing a URL. A chosen subject is a decision;
+   * a glanced-at map is not.
+   *
+   * `replaceState`, not `push`: the back button should leave this page
+   * rather than walk the subjects visited on it, which is the same
+   * reasoning the tab note gives for not writing itself back at all.
+   *
+   * Skipped while null, because null means "whatever the route defaults
+   * to" and there is no id to write. The consequence worth knowing: once a
+   * subject has been chosen the parameter stays, since nothing in the UI
+   * returns the picker to "default" — every control sets a concrete id.
+   */
+  useEffect(() => {
+    if (!subject) return
+    const q = new URLSearchParams(window.location.search)
+    if (q.get('subject') === subject) return
+    q.set('subject', subject)
+    window.history.replaceState(null, '', `${window.location.pathname}?${q}`)
+  }, [subject])
 
   return (
     <main className='min-h-screen bg-gray-950 text-gray-100'>
@@ -540,7 +856,12 @@ export default function LearnPage() {
                 Practising
                 <select
                   value={subject ?? state.subject?.id ?? ''}
-                  onChange={e => setSubject(e.target.value)}
+                  /* Scope follows the subject here too, for the reason
+                     spelled out at ArmatureMap's `onPractise`: choosing what
+                     to practise and then opening Concepts should draw the
+                     thing just chosen, not whichever of the three views was
+                     last looked at. Both doors into `setSubject` now agree. */
+                  onChange={e => { setSubject(e.target.value); setScope('subject') }}
                   className='rounded border border-gray-700 bg-gray-900 px-2 py-1 text-xs text-gray-200 focus:border-emerald-700 focus:outline-none'
                 >
                   {state.subjects?.map(s => (
@@ -558,11 +879,168 @@ export default function LearnPage() {
               />
             )}
 
+            {/* The commission: the game master's hand-over, above the engine's
+                problem — docs/RPG_AND_THE_GRAPH.md §3.
+
+                The layout IS the safety argument, so it is worth saying what
+                each part is. The italic prose is the GM's and contains no
+                mathematics, because the route never showed it any: it is told
+                the concept and the task's KIND and nothing else, so it cannot
+                restate a problem it has not seen. The problem itself is
+                rendered by PracticePanel below, verbatim from assemble(),
+                exactly as it is on any other visit to this tab. Two visibly
+                different kinds of text, one of which a verifier stands behind.
+
+                A learner reads the reason to care from the first and the
+                mathematics from the second. If a later change has the GM
+                paraphrasing the task, that is the failure §10 names first. */}
+            {commission && (
+              <div className='rounded-lg border border-amber-900/50 bg-amber-950/20 p-3'>
+                <p className='flex flex-wrap items-center gap-x-2 text-[10px] uppercase tracking-wide text-amber-400/70'>
+                  <span>Commissioned work</span>
+                  <span className='normal-case tracking-normal text-amber-300/60'>
+                    · {commission.conceptName}
+                    {commission.blockedRoad && <> · the road to {commission.blockedRoad} wanted it</>}
+                  </span>
+                  <button
+                    onClick={() => { setCommission(null); setFocusTaskId(null) }}
+                    className='ml-auto normal-case tracking-normal text-amber-400/60 underline hover:text-amber-200'
+                  >
+                    put it down
+                  </button>
+                </p>
+                {/* One branch per state the errand can be in, which is the
+                    point of having a chart: there is no combination of flags
+                    to get wrong, and a state with no branch here is a visible
+                    omission rather than a blank card. */}
+                {commission.errand === 'unavailable' ? (
+                  <p className='mt-1.5 text-[12px] leading-relaxed text-amber-200/80'>
+                    This set has no problem for {commission.conceptName} right now — it is probably
+                    not introducible yet, which means something it rests on is short. Look for it
+                    under &ldquo;Not yet introducible&rdquo; below.
+                  </p>
+                ) : commission.framing ? (
+                  <p className='mt-1.5 text-[12px] italic leading-relaxed text-amber-100'>
+                    {commission.framing}
+                  </p>
+                ) : (
+                  <p className='mt-1.5 flex items-center gap-1.5 text-[12px] text-amber-200/70'>
+                    <Loader2 size={12} className='animate-spin' />
+                    {commission.errand.startsWith('ruled.')
+                      ? 'Word is getting around…'
+                      : `There is work here on ${commission.conceptName}.`}
+                  </p>
+                )}
+                {/* The ruling, named next to the scene about it.
+                    `inconclusive` says what it means in the interface too, and
+                    not only in the prompt and the chart: the engine declining
+                    to settle something is the one ruling a learner will read as
+                    a failure unless told otherwise, and §6 says it is not one. */}
+                {commission.errand === 'ruled.inconclusive' && (
+                  <p className='mt-1.5 text-[11px] leading-relaxed text-amber-300/70'>
+                    The engine could not settle this one. That is a statement about the engine, not
+                    about you — it is not counted as wrong, and it has gone for review.
+                  </p>
+                )}
+                {/* Another problem on the same concept, from any ruling. The
+                    chart's `try-again` edge hangs off the `ruled` superstate
+                    for exactly this: it is the same offer whichever of the four
+                    came back, and it is what makes an inconclusive liveable. */}
+                {commission.errand.startsWith('ruled.') && (
+                  <button
+                    onClick={() => { fire('try-again'); setCommission(c => c && ({ ...c, taskId: null, ruling: null, framing: null })) }}
+                    className='mt-1.5 rounded-full border border-amber-700/60 px-2 py-0.5 text-[11px] text-amber-100 hover:bg-amber-900/40'
+                  >
+                    another problem on {commission.conceptName}
+                  </button>
+                )}
+                {commission.note && (
+                  <p className='mt-1.5 text-[11px] text-amber-400/60'>{commission.note}</p>
+                )}
+                {/* The one thing the fiction must not be allowed to imply.
+                    Stated in the interface and not only in the prompt, because
+                    the prompt governs what the GM writes and this governs what
+                    the learner concludes — and "I did the errand, so the road
+                    opens" is the conclusion the whole §4 design is one careless
+                    sentence away from. */}
+                {/* Keyed on the chart rather than on `taskId`, and shown
+                    through the ruling as well as before it. After a CORRECT
+                    ruling is the moment a player is most likely to conclude
+                    the errand was a key, and the GM is forbidden from saying
+                    anything either way — so the interface is the only thing
+                    that can answer it. */}
+                {(commission.errand.startsWith('working.') || commission.errand.startsWith('ruled.')) && (
+                  <p className='mt-1.5 text-[11px] text-amber-400/50'>
+                    Doing this does not open the road. The road opens when this concept is at or
+                    above {Math.round(MASTERY_FLOOR * 100)}% strength, which is the same gate as
+                    before — this is only how you get to the work.
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* A learner who has never demonstrated anything is led through a
+                worked example BEFORE the graded problem, not after it.
+
+                Same mechanism as the offer below the panel — the stepped walk
+                over the worked example on the knowledge point — in a different
+                place, for a different reader. Below the problem it is a way out
+                of being stuck, which is the right shape for somebody who has
+                been here before. On a first visit it is the whole answer to
+                "what is this and what do I do", and a first visit currently
+                opens on a marked problem with the example mentioned underneath
+                it, which is the wrong way round: you cannot be stuck on
+                something you have not understood the shape of yet.
+
+                Keyed to the FIRST task rather than to `currentTask`, so it is
+                there on the first paint. `currentTask` is reported upward by
+                the panel after it mounts, so a card gated on it appears a beat
+                late — tolerable for a hint, not for the thing a new learner is
+                supposed to read first.
+
+                Nothing dismisses it and nothing has to: `demonstrated` passes 0
+                the first time a point is answered unaided, which retires the
+                card at exactly the moment it stops being true that the learner
+                has never done this. */}
+            {(() => {
+              const first = state.tasks?.[0]
+              if (!first) return null
+              if ((state.progress?.demonstrated ?? 0) > 0) return null
+              const opening = openingForPoint(MATHEMATICS, first.knowledgePointId)
+              if (!opening) return null
+              return (
+                <div className='rounded-lg border border-sky-900/50 bg-sky-950/30 p-3'>
+                  <p className='text-sm font-medium text-sky-100'>New here? Start with the example.</p>
+                  <p className='mt-1 text-[12px] leading-relaxed text-sky-200/80'>
+                    There is a worked example on the same knowledge point as the first problem below —
+                    {' '}{opening.steps} step{opening.steps === 1 ? '' : 's'}, asked one at a time, in
+                    different numbers. Nothing in it is marked, so there is nothing to get wrong.
+                  </p>
+                  <button
+                    onClick={() => {
+                      setWalkTarget({ pointId: opening.knowledgePointId })
+                      setTab('tutor')
+                    }}
+                    className='mt-2 rounded-full border border-sky-700 px-3 py-1 text-[12px] text-sky-100 hover:bg-sky-900/50'
+                  >
+                    lead me through it
+                  </button>
+                  {/* The problems are still right there, and saying so is what
+                      keeps this an offer rather than a gate. The practice set
+                      below is unchanged and unblocked by this card. */}
+                  <p className='mt-2 text-[11px] text-sky-400/70'>
+                    Or ignore this and answer the problem below — that is the one that counts.
+                  </p>
+                </div>
+              )
+            })()}
+
             <PracticePanel
               tasks={state.tasks ?? []}
               verifierConfigured={state.verifier?.configured ?? false}
               onAdvance={load}
               onRefresh={load}
+              onRuled={onRuled}
               onTaskChange={setCurrentTask}
               focusTaskId={focusTaskId}
             />
@@ -580,6 +1058,18 @@ export default function LearnPage() {
               if (!currentTask) return null
               const opening = openingForPoint(MATHEMATICS, currentTask.knowledgePointId)
               if (!opening) return null
+              /* Not twice on one screen. The first-visit card above offers the
+                 same walk over the same point, and two controls that do the
+                 same thing read as two different things. Its own condition,
+                 repeated rather than hoisted into a variable, because hoisting
+                 would put the knowledge of when that card renders in a third
+                 place — this reads as "whatever that card decided, stay out of
+                 its way". */
+              const firstVisitCardShowing =
+                (state.progress?.demonstrated ?? 0) === 0 &&
+                !!state.tasks?.[0] &&
+                !!openingForPoint(MATHEMATICS, state.tasks[0].knowledgePointId)
+              if (firstVisitCardShowing) return null
               return (
                 <div className='flex flex-wrap items-center gap-2 rounded-lg border border-gray-800 bg-gray-900 px-3 py-2 text-[11px]'>
                   <span className='text-gray-400'>
@@ -957,8 +1447,25 @@ export default function LearnPage() {
                practised subject is exactly what the Practice tab's own picker
                does, so a region with authored material behaves as though the
                learner had chosen it there — which is the point: the map becomes
-               a way of choosing what to work on, not only what to look at. */
-            onPractise={subjectId => { setSubject(subjectId); setTab('practice') }}
+               a way of choosing what to work on, not only what to look at.
+
+               Scope comes back to 'subject' with it. Without that, choosing a
+               region here and then opening Concepts drew whatever scope was
+               last set — and `onBrowse` directly above sets 'atlas' — so the
+               map showed three hundred nodes for a learner who had just
+               narrowed to one region. The two doors now disagree on purpose:
+               browsing widens the view, practising narrows it. */
+            onPractise={subjectId => {
+              setSubject(subjectId)
+              setScope('subject')
+              setTab('practice')
+            }}
+            /* The third door, and the only one a REFUSAL opens. onBrowse
+               widens the view and onPractise narrows it to a region's subject;
+               this one goes to a single concept, because a refused road names
+               a single concept and anything wider would be answering a
+               narrower question than the player asked. */
+            onTakeWork={takeWork}
             /* The same traversal the Practice tab's panel shows, from the same
                response. One world, two views of it — the board and the map —
                rather than two worlds that have to be kept in step. */

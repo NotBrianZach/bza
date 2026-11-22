@@ -734,18 +734,55 @@ const CONCEPTS: Concept[] = [
               detail:
                 'The unknown is in the exponent, so no amount of dividing or subtracting reaches ' +
                 'it. Something has to undo the exponentiation.',
+              socratic:
+                'Every equation you have solved until now let you peel operations off the unknown ' +
+                'one at a time — divide both sides, subtract from both sides — until the unknown ' +
+                'stood alone. Try that honestly here rather than deciding in advance that it ' +
+                'fails: divide both sides of 2^x = 32 by 2 and write down what you are left ' +
+                'holding, then go back to the original and subtract 2 from both sides and write ' +
+                'that down too. In each case, where has the x ended up, and what is it about the ' +
+                'place x occupies in 2^x that lets both of those moves pass it by?',
             },
             {
               label: 'Apply the inverse to both sides',
               detail: 'log₂(2^x) = log₂(32). The left side is x, by the definition of the logarithm.',
+              socratic:
+                'What is holding the x is "2 raised to", and you have met exactly one thing that ' +
+                'answers a question about 2 raised to something: log₂(x) = y says no more and no ' +
+                'less than 2^y = x. Nothing may be done to one side of an equation alone, so ' +
+                'write log₂ in front of each side and look at what each becomes. Read the left ' +
+                'one straight off that definition rather than through any of the rules — which ' +
+                'exponent on 2 produces 2^x, and so what is standing on the left-hand side once ' +
+                'you have answered that?',
             },
-            { label: 'Read off the answer', detail: 'x = log₂(32) = 5.' },
+            {
+              label: 'Read off the answer',
+              detail: 'x = log₂(32) = 5.',
+              socratic:
+                'The equation now reads x = log₂(32), which looks like an answer and is not quite ' +
+                'one: it names x by an expression rather than by a number, and whether that ' +
+                'expression is a number you can write down depends on the 32. That right-hand ' +
+                'side is asking only the backwards exponent question from the definition, so ' +
+                'answer it by climbing the powers of 2 rather than by recognising the shape. ' +
+                'What does x come out at, and what is it about 32 in particular that let this ' +
+                'finish on a whole number, where 2^x = 30 would have left you holding the ' +
+                'expression?',
+            },
             {
               label: 'Check that nothing was lost',
               detail:
                 'log₂ is one-to-one, so the new equation has exactly the solutions the old one had. ' +
                 'Squaring both sides would not have this property, which is why this step is safe ' +
                 'and that one needs a check.',
+              socratic:
+                'The second step did not rearrange the equation, it swapped it: you stopped ' +
+                'working on 2^x = 32 and started working on log₂(2^x) = log₂(32), and the number ' +
+                'you finished with is a solution of the second one. Someone is entitled to ask ' +
+                'what makes it a solution of the first. Hold the move up against squaring both ' +
+                'sides, which turns x = −3 into x² = 9 and then hands you a 3 that solves nothing ' +
+                'in the original. What is true of log₂ — about how many different arguments it ' +
+                'can send to the same value — that is not true of squaring, and what does that ' +
+                'buy you about the solutions of the equation you were actually asked?',
             },
           ],
           answer: 'x = 5',

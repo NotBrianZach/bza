@@ -188,6 +188,263 @@ export const TABLE_SYSTEM = [
   'the doing and the room around it, never the result and never whether it was right.',
 ].join('\n')
 
+/**
+ * The GM framing a piece of work the ENGINE chose.
+ *
+ * docs/RPG_AND_THE_GRAPH.md §2 calls this the third row of a table this
+ * codebase has already filled in twice:
+ *
+ *   offerKey + the strength gate decide  → the GM narrates the arrival or refusal
+ *   the server's dice decide             → the GM narrates the result
+ *   assemble() picks and the verifier rules → the GM frames it and narrates the ruling
+ *
+ * So this is not a new kind of trust. It is the existing kind, applied to a
+ * third decider.
+ *
+ * ── THE GM IS NOT SHOWN THE MATHEMATICS, AND THAT IS NOT A COMPROMISE ─────
+ *
+ * The design says the GM "is handed both and writes the ask in the world's
+ * terms". Handed the task text, a model restates it — that is the obliging
+ * thing to do with a problem you have been shown, and §10's first item is
+ * "mathematics the verifier never saw: if a scene contains a sum, the sum came
+ * from assemble() and the answer went to the verifier".
+ *
+ * A prohibition can ask a model not to restate what it was given. Not giving
+ * it makes restating impossible. So the GM gets three things — where the
+ * player is, what the work is ABOUT (a concept name) and what SHAPE it takes
+ * (the task's kind: evaluate, simplify, factor) — and never the prompt, the
+ * given, the numbers or the answer.
+ *
+ * The consequence is deliberate and worth stating plainly: the framing is
+ * scenery for the work, not a paraphrase of it. "The quartermaster needs the
+ * consignment reconciled before the gate shuts" sits ABOVE the real task,
+ * which the app renders verbatim from `assemble()` exactly as the Practice tab
+ * does. A learner reads the reason to care from the GM and the mathematics
+ * from the engine, and the two are visibly different kinds of text.
+ *
+ * ── WHAT IT MAY NOT DO, ON TOP OF THE FOUR ────────────────────────────────
+ *
+ * A fifth prohibition, because this is the one surface where a GM is told that
+ * mathematics is about to happen: it must not have anybody in the scene do the
+ * work, state what the work comes to, or say whether it went well. It has not
+ * been told, and at the moment this prompt runs nobody knows — the learner has
+ * not answered yet and the verifier has not ruled.
+ */
+export const COMMISSION_SYSTEM = [
+  SYSTEM,
+  '',
+  'FRAMING A PIECE OF WORK:',
+  'The player has taken on a piece of work in this place. You are told what the work is ABOUT and',
+  'what shape it takes. You are NOT told the problem itself and you must not ask for it: the',
+  'problem is put to the player by the engine, directly below what you write, and it is not yours.',
+  '',
+  'Write who in this place needs the work done, and why it matters to them today. One short',
+  'paragraph, three sentences at most. Concrete and local: a name, a trade, a deadline, a',
+  'consequence. End on the work being handed over, not on encouragement.',
+  '',
+  'YOU MUST NOT, IN ADDITION TO EVERYTHING ABOVE:',
+  '- State, restate, invent or imply the problem, any part of it, or any number in it. Not as a',
+  '  worked example, not as "the ledger reads 48 crates", not as a quantity in passing. The work is',
+  '  mathematics the engine chose and only the engine states it.',
+  '- Have anybody in the scene do the work, check it, or know the answer. Nobody knows: the player',
+  '  has not done it yet and the verifier has not ruled.',
+  '- Say or hint whether it will go well, be hard, be easy, or be beneath them.',
+].join('\n')
+
+export interface CommissionContext {
+  region: PlacedRegion
+  /** What the work is about. A concept name, never an id. */
+  conceptName: string
+  /**
+   * The shape of the task the engine chose — `evaluate`, `simplify`, `factor`.
+   * The nearest thing to the mathematics the GM is allowed, and it is allowed
+   * because a kind is a category rather than a problem.
+   */
+  kind: string
+  /** Why the work came up: the road this concept was blocking. */
+  blockedRoad?: string | null
+}
+
+/**
+ * The framing request.
+ *
+ * Same shape as `scenePrompt` and the same omission: the AREA is not sent, for
+ * the reason given there. The concept NAME is sent, which is a narrower thing
+ * — "Long division" tells the GM what trade to invent, where "number theory"
+ * tells it what to write a lesson about.
+ */
+export function commissionPrompt(ctx: CommissionContext): { system: string; user: string } {
+  const lines: string[] = []
+  lines.push(`PLACE: ${ctx.region.name}, "${ctx.region.epithet}".`)
+  lines.push(`WHAT THIS PLACE IS: ${settingOf(ctx.region.because)}`)
+  lines.push('')
+  lines.push(`THE WORK IS ABOUT: ${ctx.conceptName}.`)
+  lines.push(`THE SHAPE OF IT: a ${ctx.kind} task. You are not told the task.`)
+  if (ctx.blockedRoad) {
+    /* Why the player is here at all. Given because it is the one thing that
+       makes this scene follow from the last one — they were refused a road and
+       went looking for the work that would satisfy it. Stated as the reason
+       for the errand, not as a promise: the road opens when the strength gate
+       is satisfied, and nothing in this scene may suggest the work is a key. */
+    lines.push(`WHY IT CAME UP: the player was refused the road to ${ctx.blockedRoad} and is doing `
+      + 'this work because of it. Do not promise that it will open the road, and do not mention the '
+      + 'road opening at all.')
+  }
+  lines.push('')
+  lines.push('Write the hand-over.')
+  return { system: COMMISSION_SYSTEM, user: lines.join('\n') }
+}
+
+/**
+ * A hand-over with no model behind it.
+ *
+ * Flat, like `unnarratedScene`, and for the same reason. It still names the
+ * place and the concept, so the work is situated even with no key configured.
+ */
+export function unframedCommission(ctx: CommissionContext): string {
+  return `In ${ctx.region.name}, there is work to be done on ${ctx.conceptName}.`
+    + (ctx.blockedRoad ? ` The road to ${ctx.blockedRoad} wanted it.` : '')
+}
+
+/**
+ * The GM narrating a ruling it did not make and could not have made.
+ *
+ * The other half of §3's third row. `commissionPrompt` frames work the engine
+ * chose; this describes what the room does about the verifier's answer. Both
+ * ends are hand-offs and neither is a judgement.
+ *
+ * ── INCONCLUSIVE IS A SCENE, NOT A FAILURE ────────────────────────────────
+ *
+ * §6, and it is the reason this prompt is longer than it looks like it needs
+ * to be. The verifier's default ruling is `inconclusive` — it refuses rather
+ * than guesses — and a narrator handed a word it does not understand will
+ * round it to one it does. Both roundings are claims the engine explicitly
+ * declined to make.
+ *
+ * The chart makes the same point structurally: `ruled.inconclusive` is a
+ * sibling of `correct` and `incorrect` with no edge to either. This is the
+ * prose half of that, and both exist because one of them will be edited by
+ * somebody who has not read the other.
+ *
+ * ── AND CONGRATULATION IS WORST EXACTLY HERE ──────────────────────────────
+ *
+ * §10's fifth item: a scene following a `correct` ruling is the most tempting
+ * place in the product to tell somebody they have mastered something, and
+ * mastery is a number with a floor rather than a feeling. The standing
+ * prohibition in `SYSTEM` already covers it; it is restated because this is
+ * the one surface where the model has a reason to break it.
+ *
+ * ── IT STILL SEES NO MATHEMATICS ──────────────────────────────────────────
+ *
+ * Same as the framing: the concept name and the task's kind, plus the ruling
+ * word and whether help was used. Never the problem, never the answer, never
+ * what the answer should have been. A scene cannot leak a solution it was not
+ * given.
+ */
+export const RULING_SYSTEM = [
+  SYSTEM,
+  '',
+  'NARRATING A RULING:',
+  'The player took on a piece of work in this place and it has now been ruled on by the engine.',
+  'You are told the ruling as settled fact. Describe what the room does about it — one short',
+  'paragraph, three sentences at most. The people who wanted the work done react; the day moves on.',
+  '',
+  'THE FOUR RULINGS AND WHAT EACH ONE IS:',
+  '- CORRECT: the work was right. The room accepts it and uses it. Do NOT tell the player they have',
+  '  learned, mastered or understood anything — you have seen one piece of work and nothing else,',
+  '  and whether they know this is a number you have not been shown. Describe the work being',
+  '  accepted, never the person being competent.',
+  '- INCORRECT: the work was wrong. Something in the world is now inconvenient because of it. Do',
+  '  not say what the right answer was — you were not told it — and do not have anybody explain it.',
+  '- INCONCLUSIVE: the engine could not settle whether it was right. This is NOT a failure and it',
+  '  is NOT a success. Nobody in the room can say, and the honest scene is one where the question',
+  '  stays open and somebody has to decide what to do anyway. Never imply it was wrong. Never imply',
+  '  it was accepted. Both are claims the engine refused to make and they are not yours to make',
+  '  either.',
+  '- ABANDONED: the work was put down unfinished. Describe it being set aside. No reproach.',
+  '',
+  'YOU MUST NOT, IN ADDITION TO EVERYTHING ABOVE:',
+  '- State the problem, the answer, or what the answer should have been. You have not been told any',
+  '  of them.',
+  '- Congratulate, or say the player is getting better, or that anything is now unlocked, open, or',
+  '  within reach. Whether a road opens is decided elsewhere by a number, and you are not told it.',
+  '- Soften a ruling, hedge it, or suggest it might be revisited.',
+].join('\n')
+
+export interface RulingContext {
+  region: PlacedRegion
+  conceptName: string
+  /** The verifier's word. The four the engine can produce, and nothing else. */
+  ruling: 'correct' | 'incorrect' | 'inconclusive' | 'abandoned'
+  /**
+   * Whether the learner used help.
+   *
+   * Told because it is a CIRCUMSTANCE, which is the one thing §5 says the
+   * fiction may know about: a commission completed with help moves strength
+   * less, as `summarise()` already models, and a scene in which the
+   * quartermaster's own clerk sat alongside you is both true and better. It is
+   * not permission to editorialise about it — the prohibitions above still
+   * stand.
+   */
+  assisted?: boolean
+}
+
+/** What the engine settled, stated as fact in the same shape as `outcomeLine`. */
+function rulingLine(ctx: RulingContext): string {
+  switch (ctx.ruling) {
+    case 'correct':
+      return 'RULING: CORRECT. The work was right. Show it being accepted and used. Say nothing '
+        + 'about what the player now knows.'
+    case 'incorrect':
+      return 'RULING: INCORRECT. The work was wrong. Show the inconvenience that follows. Do not '
+        + 'reveal or have anybody work out the right answer.'
+    case 'inconclusive':
+      return 'RULING: INCONCLUSIVE. The engine could not settle it, so nobody in the room can say '
+        + 'whether it was right. Write the scene where the question stays open and a decision has '
+        + 'to be made anyway. Do not imply it was wrong and do not imply it was accepted.'
+    case 'abandoned':
+      return 'RULING: ABANDONED. The work was put down unfinished. Show it being set aside, '
+        + 'without reproach.'
+  }
+}
+
+export function rulingPrompt(ctx: RulingContext): { system: string; user: string } {
+  const lines: string[] = []
+  lines.push(`PLACE: ${ctx.region.name}, "${ctx.region.epithet}".`)
+  lines.push(`WHAT THIS PLACE IS: ${settingOf(ctx.region.because)}`)
+  lines.push('')
+  lines.push(`THE WORK WAS ABOUT: ${ctx.conceptName}. You were never told the problem itself.`)
+  if (ctx.assisted) {
+    lines.push('THE PLAYER USED HELP. That is a circumstance of the scene, not a fault to remark on.')
+  }
+  lines.push('')
+  lines.push(rulingLine(ctx))
+  lines.push('')
+  lines.push('Write what the room does.')
+  return { system: RULING_SYSTEM, user: lines.join('\n') }
+}
+
+/**
+ * A ruling with no model behind it.
+ *
+ * Flat, and `inconclusive` gets the longest line of the four because it is the
+ * one a bare sentence most easily turns into a failure.
+ */
+export function unnarratedRuling(ctx: RulingContext): string {
+  const where = ctx.region.name
+  switch (ctx.ruling) {
+    case 'correct':
+      return `The work on ${ctx.conceptName} was right, and ${where} takes it.`
+    case 'incorrect':
+      return `The work on ${ctx.conceptName} was wrong. ${where} will have to manage.`
+    case 'inconclusive':
+      return `Nobody in ${where} could say whether the work on ${ctx.conceptName} was right. `
+        + 'The question is still open; it was not ruled against you.'
+    case 'abandoned':
+      return `The work on ${ctx.conceptName} was set aside unfinished.`
+  }
+}
+
 /** The line that states the outcome as fact, which the GM narrates around. */
 function outcomeLine(ctx: SceneContext): string {
   const here = ctx.region.name

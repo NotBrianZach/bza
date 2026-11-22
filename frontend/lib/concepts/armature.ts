@@ -146,7 +146,21 @@ export const REGIONS: Region[] = [
     // Three authored subjects land here: the rules of number, the manipulation
     // of expressions, and the rational expressions built out of both.
     authored: ['arithmetic-foundations', 'expressions-and-equations', 'rational-expressions'],
-    anchors: ['word-problems', 'linear-inequalities', 'absolute-value'],
+    // `absolute-value` was the third anchor until the twentieth promotion wrote
+    // it into `arithmetic-foundations`. An anchor must be a node of `area`, so a
+    // promotion empties the slot rather than leaving it, and `armatureProblems`
+    // says so loudly — the one check this table has that the game's copy does
+    // not. `absolute-value-equations` replaces it: the node directly above the
+    // one that left, still in the area, and still about the bars, so the
+    // region's character is unchanged.
+    //
+    // It is NOT the refill rule krull's slot has used twice. There the
+    // replacement inherited the departing node's place as a ROOT of the area
+    // view; this one does not and cannot, because `linear-inequalities` is its
+    // other prerequisite and is still a node here, gating it from inside. So
+    // "the node that was next" is the durable half of that rule and "which
+    // became a root" was a property of an area being authored bottom-up.
+    anchors: ['word-problems', 'linear-inequalities', 'absolute-value-equations'],
     because: 'The Golden Scribes are trained at Zurramat\'s palace in literacy, rhetoric and "the principles of the golden law" — the rules every other region\'s practice is then interpreted under. The centre of the continent holds the rules everything else is derived from.',
   },
   {

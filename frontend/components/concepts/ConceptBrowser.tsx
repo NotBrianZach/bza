@@ -46,6 +46,17 @@ export default function ConceptBrowser({
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState<string | null>(initialOpen ?? null)
   const [showCandidates, setShowCandidates] = useState(false)
+  /**
+   * Whether the subject's `covers` note is open. Closed by default.
+   *
+   * This IS the right surface for that field — a browser is where somebody
+   * reads about a subject, and the note is the only written account of what
+   * one contains. What was wrong was rendering it unconditionally, because
+   * `covers` has no length contract: 217 characters for rational expressions,
+   * 9,057 for plane geometry. Unconditional, it pushed the concept list below
+   * the fold on four of the ten subjects.
+   */
+  const [showCovers, setShowCovers] = useState(false)
 
   const problems = useMemo(() => ontologyProblems(ontology), [ontology])
   const order = useMemo(() => teachingOrder(ontology), [ontology])
@@ -78,7 +89,27 @@ export default function ConceptBrowser({
       {/* ── header ───────────────────────────────────────────────────── */}
       <div className='rounded-lg border border-gray-800 bg-gray-900 p-4'>
         <h2 className='text-lg font-semibold text-gray-100'>{ontology.subject.name}</h2>
-        <p className='mt-1 text-sm text-gray-400'>{ontology.subject.covers}</p>
+        {/* The note, behind a toggle that says how much of it there is. "What
+            this covers" alone would make the length a surprise every time, and
+            the surprise is the whole complaint: this field reaches 9,057
+            characters and the reader has no way to know which subject they are
+            about to get three hundred words of. */}
+        <button
+          onClick={() => setShowCovers(v => !v)}
+          aria-expanded={showCovers}
+          className='mt-1 flex items-center gap-1 text-xs text-gray-500 hover:text-gray-300'
+        >
+          <ChevronDown size={12} className={`transition-transform ${showCovers ? 'rotate-180' : ''}`} />
+          What this subject covers
+          <span className='text-gray-600'>
+            · {ontology.subject.covers.length < 1000
+              ? `${ontology.subject.covers.length} characters`
+              : `${(ontology.subject.covers.length / 1000).toFixed(1)}k characters`}
+          </span>
+        </button>
+        {showCovers && (
+          <p className='mt-1.5 text-sm leading-relaxed text-gray-400'>{ontology.subject.covers}</p>
+        )}
 
         <dl className='mt-3 grid grid-cols-2 gap-3 text-xs sm:grid-cols-4'>
           <Stat label='Concepts' value={String(ontology.concepts.length)} />

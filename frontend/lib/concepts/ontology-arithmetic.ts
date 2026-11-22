@@ -58,9 +58,30 @@
  * rational arithmetic in numerals.ts — bigint over bigint, no CAS. Arithmetic
  * is the one subject in the build where that is not a partial capability but
  * the whole of it, so this subject is fully rulable on a deployment with no
- * math worker configured. `exactValue` returns null for a `function` node, so
- * nothing here uses `abs` even where the mathematics would suggest it; that is
- * also why `absolute-value` is left on the map rather than authored here.
+ * math worker configured.
+ *
+ * THIS PARAGRAPH USED TO END WITH A REFUSAL THAT HAD EXPIRED, and the shape of
+ * the error is worth more than the correction. It said: "`exactValue` returns
+ * null for a `function` node, so nothing here uses `abs` even where the
+ * mathematics would suggest it; that is also why `absolute-value` is left on
+ * the map rather than authored here."
+ *
+ * The premise was true when written and is not true now. numerals.ts grew a
+ * `case 'function'` branch — for `sqrt` first, then `abs`, then `log` — and it
+ * handles `abs` EXACTLY, by sign of the rational it already has: `abs(x)` at
+ * x = −8 is 8, with no worker consulted and nothing approximated. So the one
+ * fact the refusal rested on had been reversed, by a change made for a
+ * different concept in a different subject, and nothing re-read the sentence
+ * that depended on it.
+ *
+ * `absolute-value` is the thirteenth concept here as a result, and the lesson
+ * generalises past it: a refusal that names a MECHANISM — "this function
+ * returns null", "no form can demand this" — has an expiry date set by somebody
+ * else's work, and unlike a refusal about the mathematics it will not announce
+ * that it has passed. The two neighbouring cases in this file are
+ * `prime-factorisation`'s missing form, which also expired (`prime_factored`
+ * exists now), and the one in `roots-and-irrationals` about irrational roots,
+ * which never will. Check which kind you are reading before you obey it.
  *
  * `given` is symbolic with an `at` table rather than a bare numeral, following
  * the convention the exponents tasks set. It is not decoration: the test suite
@@ -215,6 +236,137 @@
  * own view. It is not on either unfinished journey, so it buys readiness rather
  * than distance. The journeys themselves each lose one unwritten step, which is
  * what made this concept worth taking over a node on only one of them.
+ *
+ * ── THE THIRTEENTH CONCEPT WAS CHOSEN BY DISBELIEVING THIS FILE ────────────
+ *
+ * `absolute-value`. The paragraph on local rulability above used to end by
+ * declining it, and that refusal is reproduced and withdrawn where it was
+ * written rather than quietly deleted. Nothing about the map changed; what
+ * changed was `exactValue`, two subjects away, and the sentence depending on it
+ * went on reading as a decision long after it had stopped being one.
+ *
+ * It is the cheap shape for the fifth time here, and the cheapest instance of
+ * it the subject has had: the node declared exactly ONE `needs`,
+ * `negative-numbers`, which is a concept of this file — so the single stranded
+ * edge is restated in `EDGES` below and `algebra-foundations` needed no `links`
+ * entry in either direction. One edge is the floor for a non-root node, so no
+ * later promotion out of that area can cost less.
+ *
+ * WHY IT IS RULABLE, which is the factor that selected it and the one worth
+ * being precise about. Every answer in the concept is an INTEGER, because
+ * `abs` of a rational is a rational and the inputs are whole numbers. No task
+ * here needs the worker and none goes near the ratchet in
+ * tests/concepts-logic.mjs that caps how many shipped `evaluate` tasks may.
+ * Compare `complex-numbers`, declined in atlas-foundations.ts on this same axis
+ * and still correctly declined: `exactValue` has no complex case, so that one
+ * is gated on a change to numerals.ts in the way this one used to be and no
+ * longer is.
+ *
+ * WHERE THE SUBJECT'S OWN LINE FALLS, since this concept is the one most likely
+ * to cross it. `covers` ends "Nothing symbolic — the moment a letter stands for
+ * an unknown it is algebra", and the material here uses letters throughout: `x`
+ * in a worked example, `a` and `b` in a task's `given`. That is substitution,
+ * not an unknown — every letter has a stated value and nothing is ever solved
+ * for. The symbolic half of this topic is a separate node and STAYS mapped:
+ * `absolute-value-equations`, where |x − 3| = 5 asks for the two numbers
+ * satisfying a condition and the case split is the content. So the line holds
+ * exactly, and the node above this one is where it holds.
+ *
+ * WHAT IT COSTS THE GATE, MEASURED RATHER THAN PREDICTED, BECAUSE THE OBVIOUS
+ * PREDICTION IS WRONG. `absolute-value-equations` is the only dependent, and
+ * while this was a skeleton `gatingPrerequisitesOf` looked straight through it
+ * to `negative-numbers`. The natural thing to write is that the gate grew by
+ * one. It did not:
+ *
+ *   before   linear-equations, real-number-line, negative-numbers
+ *   after    linear-equations, real-number-line, absolute-value
+ *
+ * Three entries either way, with one member REPLACED. `gatingPrerequisitesOf`
+ * names the nearest teachable ancestors, so authoring a concept does not add
+ * itself to a gate — it takes the place of whatever that node used to reach
+ * through it. What really tightened is the chain beneath the gate: clearing
+ * `absolute-value` requires `negative-numbers` to be strong first, so the node
+ * above is a demonstration deeper from a cold account while its gate is the
+ * same length. A check on the gate's SIZE would have seen nothing happen, which
+ * is the fourth time in this build that a set turned over at constant size.
+ *
+ * ── THE FOURTEENTH ANSWERS A QUESTION THIS FILE HAD LEFT OPEN ─────────────
+ *
+ * `percent`, and it is the first promotion here that the receiving file had
+ * already written down a job for. The note beside `ratio-and-rate`'s stranded
+ * edge in `EDGES` ends "Whoever promotes `percent` should look at the pair
+ * again from that end", because an `interferes_with` between the two could not
+ * be declared from the ratio end while percent was a map node — an ontology may
+ * only name concepts it CONTAINS. That question is answered below, beside the
+ * pair, and the answer is NO. Being asked is what selected this concept; the
+ * answer being no is not a smaller result than yes would have been, because the
+ * alternative was an undeclarable edge going on undeclared with nobody having
+ * decided anything.
+ *
+ * It is the cheap shape for the sixth time here. The node declared
+ * `needs: ['ratio-and-rate', 'decimal-representation']`, both concepts of this
+ * file, so both stranded edges are restated in `EDGES` below and
+ * `algebra-foundations` needed no `links` entry in either direction. That was
+ * the whole of what the node declared: no `confusedWith` and no `exercises`,
+ * checked on the node before deleting it rather than inferred from the suites
+ * staying green, since staying green is what they would have done either way.
+ *
+ * WHY IT IS RULABLE, which is the factor that chose it over the seventeen other
+ * nodes with every prerequisite already authored. All three knowledge points end
+ * in a NUMBER — an amount, a price before a discount, and where a price finishes
+ * after two changes — so no task here stands in for anything. That is the
+ * property `ratio-and-rate` was the first concept in this subject to have, and
+ * this is the second. Every answer is an exact rational, so the subject's
+ * "gradable with no worker" contract is untouched.
+ *
+ * WHAT IT COSTS THE GATE, AND IT IS THE FIRST PROMOTION IN THIS SUBJECT TO
+ * SHORTEN ONE. Every measurement above this concludes that
+ * `gatingPrerequisitesOf` SUBSTITUTES rather than accumulates, and that is
+ * right about every case above. Substitution is not the only thing it can do:
+ *
+ *   before   ratio-and-rate, decimal-representation, sigma-notation
+ *   after    percent, sigma-notation
+ *
+ * `descriptive-statistics`, in the statistics area, is the sole dependent. It
+ * needs `percent` and `sigma-notation`, and while percent was a skeleton the
+ * walk passed through it and came out at BOTH of its prerequisites. Authoring it
+ * collapses those two entries into one, because nearest-ancestor means one entry
+ * per BRANCH and this promotion put a single teachable node in front of a branch
+ * that had forked. Three becomes two.
+ *
+ * SO THE RULE IS ABOUT THE DEPARTING NODE'S ARITY, and the discriminator is
+ * sharp enough to be worth stating as one. A promotion shortens a dependent's
+ * gate by however many entries the authored node was reaching that nothing else
+ * in the gate already supplied, less one — so it substitutes when that number
+ * is one and shortens when it is more. Both measurements this file records are
+ * on single-`needs` nodes and neither could have shown anything else:
+ *
+ *   ratio-and-rate  (1 need)   similarity                2 -> 2  substitution
+ *   absolute-value  (1 need)   absolute-value-equations  3 -> 3  substitution
+ *   percent         (2 needs)  descriptive-statistics    3 -> 2  SHORTER
+ *
+ * AND IT IS NOT THE FIRST IN THE BUILD, which a first draft of this paragraph
+ * claimed. `area-and-perimeter` in ontology-geometry.ts has two `needs` as well
+ * and took `circle-measure` from four gates to three on 2026-11-15, by this
+ * same collapse. That is a confirmation rather than a counterexample: four
+ * measured cases, the two shortenings both on two-`needs` nodes and the two
+ * substitutions both on one-`needs` nodes, with no case going the other way.
+ * The overclaim was caught by reading the record instead of the comments, which
+ * is the thing worth copying — ontology-geometry.ts does not mention the gate it
+ * shortened, so a reader working from these files alone would believe the
+ * narrower rule twice over.
+ *
+ * All four were computed, not predicted, by emptying a concept's
+ * `knowledgePoints` to reconstruct the "before" and calling
+ * `gatingPrerequisitesOf` on both. That is the only reliable way to get a
+ * "before" after the fact, and it is how the correction above was established.
+ *
+ * WHAT IT DOES NOT UNBLOCK, which is worth saying because every promotion before
+ * it unblocked something. `descriptive-statistics` is mechanically ready now, its
+ * other prerequisite being authored, but it is a statistics concept and nothing
+ * in this subject's vicinity was waiting on percent at all. This is the first
+ * promotion here bought purely for the material rather than for a route or for
+ * what it opens.
  */
 
 import type { Concept, ConceptEdge, ConceptOntology, Subject } from './types'
@@ -241,9 +393,23 @@ const subject: Subject = {
     'opposite directions, because sending x to 1/x reverses order on the positives; and scaling ' +
     'as multiplication by the factor the other quantity grew by rather than addition of the ' +
     'difference, with what a relationship gives at zero as the test of whether it may be scaled ' +
-    'at all. Percent is the neighbouring node and is mapped only, as are the word problems ' +
-    'above it. Nothing symbolic — the moment a letter ' +
-    'stands for an unknown it is algebra. What is left of whole-number arithmetic is what ' +
+    'at all. Distance on that line is here as well: the absolute value ' +
+    'as how far a number is from zero rather than as an instruction to delete a minus sign, so ' +
+    'that its definition has two branches and which one applies is decided by the sign of what ' +
+    'is inside; that the branch returning −x returns the POSITIVE number, since what the letter ' +
+    'holds is already negative wherever that branch is used; and that |a − b| is the gap ' +
+    'between two numbers and therefore does not care which way round they are subtracted. ' +
+    'Solving an equation with the bars in it is NOT here — that is a case split producing a set ' +
+    'of two numbers, it is mapped as `absolute-value-equations`, and it is where this subject\'s ' +
+    'line falls. Percent is the last concept and is the comparison by division again with its ' +
+    'denominator fixed at 100, so it names no amount until a base is handed to it: a change of ' +
+    'p percent is a single multiplication by a factor rather than an amount to be added on or ' +
+    'taken off, which is why the reverse question — what was the price before the discount — is ' +
+    'a division and not a second percentage; and successive changes multiply their factors, so ' +
+    'a rise and a fall of the same percentage do not cancel but lose, because the fall is taken ' +
+    'of the bigger base. The word problems above it are mapped only. Nothing symbolic — the moment a letter ' +
+    'stands for an unknown it is algebra. Every letter in this subject has a stated value and ' +
+    'is substituted, never solved for. What is left of whole-number arithmetic is what ' +
     'rests on the gcd rather than on the primes: the Euclidean algorithm and the congruences, ' +
     'which are mapped in the number-theory area and still unwritten.',
   medium: 'theorem',
@@ -764,6 +930,259 @@ const CONCEPTS: Concept[] = [
             },
           ],
           answer: '10',
+        },
+      },
+    ],
+  },
+
+  {
+    id: 'absolute-value',
+    name: 'Absolute value',
+    subjectId: subject.id,
+    scope: {
+      id: 'absolute-value',
+      label: 'Absolute value',
+      hint: 'absolute value modulus distance from zero',
+      /*
+       * Carried verbatim from the map node, so the concept trail recognises
+       * exactly what it recognised before and the four-concept ceiling in
+       * tests/atlas.mjs is unaffected by the promotion.
+       *
+       * Note what it does NOT match, since the `hint` names them and a reader
+       * will wonder: "modulus" and "distance from zero" are search words for
+       * the provider, not claims about a title. Widening the pattern to the
+       * bare word "modulus" would claim every title about modular arithmetic
+       * and about the modulus of a complex number, neither of which is this
+       * concept. Left as it was rather than improved in the same change that
+       * promoted it — a pattern widening is its own decision with its own
+       * TITLES rows.
+       */
+      match: /\babsolute value\b/i,
+    },
+    fidelity: 'checked',
+    objectives: [
+      {
+        id: 'choose-the-branch-the-sign-selects',
+        statement:
+          'Evaluate an absolute value by working out what is inside it first and applying the '
+          + 'branch the sign of that number selects, rather than by looking for a minus sign to '
+          + 'delete.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'show-that-the-bars-change-the-number',
+        statement:
+          'Produce the number that separates |x| from x when x is negative — the quotient that '
+          + 'is −1 rather than 1, and the difference that is twice the size rather than zero — so '
+          + 'that "|x| = x" is held as a statement about the non-negative numbers and not as an '
+          + 'identity.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'read-a-pair-of-bars-as-a-gap',
+        statement:
+          'Compute the distance between two numbers as |a − b|, including when they lie on '
+          + 'opposite sides of zero, and get the same answer subtracting either way round.',
+        taskKinds: ['evaluate'],
+      },
+    ],
+    knowledgePoints: [
+      {
+        id: 'distance-from-zero-has-two-branches',
+        conceptId: 'absolute-value',
+        statement:
+          '|x| is how far x is from 0, so it is never negative. The definition has two branches '
+          + '— |x| = x when x is zero or positive, and |x| = −x when x is negative — and which '
+          + 'one applies is decided by the sign of what is inside the bars. "Delete the minus '
+          + 'sign" is a rule about how a number happens to be WRITTEN, which is why it stops '
+          + 'working the moment the inside is an expression: there may be no minus sign there to '
+          + 'delete, or one that is not the sign of the whole.',
+        position: 1,
+        automaticityTarget: 10_000,
+        workedExample: {
+          problem:
+            'Evaluate |x − 9| at x = 4 and at x = 14, and say which branch of the definition each '
+            + 'one uses.',
+          subgoals: [
+            {
+              label: 'Work out the inside before choosing a branch',
+              detail:
+                'At x = 4 the inside is 4 − 9 = −5. At x = 14 it is 14 − 9 = 5. Nothing about '
+                + 'the bars can be decided until those two numbers exist, because the branch is '
+                + 'selected by the sign of the inside and by nothing else.',
+              socratic:
+                'The definition has two branches and only one of them applies. What do you have '
+                + 'to work out before you can tell which?',
+            },
+            {
+              label: 'Apply the branch the sign selects',
+              detail:
+                '−5 is negative, so the second branch applies: |−5| = −(−5) = 5. 5 is positive, '
+                + 'so the first branch applies and |5| = 5. The same expression used different '
+                + 'branches at the two inputs.',
+              socratic:
+                'The inside came out as −5 at one input and 5 at the other, and both gave the '
+                + 'same answer. Which branch of the definition did each one use?',
+            },
+            {
+              label: 'Notice what the written form never told you',
+              detail:
+                'x − 9 is written with a minus sign in it at both inputs, and at neither was that '
+                + 'the thing to remove. The minus in −(−5) is not in the expression at all; it is '
+                + 'the one the definition puts there. A rule about deleting a visible sign cannot '
+                + 'even be attempted on a letter, because a letter carries its sign invisibly.',
+              socratic:
+                'x − 9 is written with a minus sign in it at both inputs, and the answer is '
+                + 'positive at both. So what is wrong with "cross out the minus" as the rule '
+                + 'here?',
+            },
+            {
+              label: 'Read what the bars measured, which is the point of writing them this way',
+              detail:
+                '4 is five below 9 and 14 is five above it, so both gave 5. |x − 9| is the '
+                + 'distance from x to 9, and it agrees on the two sides because a distance does '
+                + 'not record a direction. That is the same claim as "distance from zero", with '
+                + 'the zero moved: |x| is |x − 0|.',
+              socratic:
+                '4 and 14 both gave 5. Where do 4 and 14 sit in relation to 9, and what does that '
+                + 'make |x − 9| a measurement of?',
+            },
+          ],
+          answer:
+            '5 at both inputs. At x = 4 the inside is −5, which is negative, so the second branch '
+            + 'gives −(−5) = 5; at x = 14 the inside is 5, which is positive, so the first branch '
+            + 'gives 5. Both say that x is 5 away from 9.',
+        },
+      },
+      {
+        id: 'the-negative-branch-returns-the-positive-number',
+        conceptId: 'absolute-value',
+        statement:
+          'The branch |x| = −x looks as though the absolute value could come out negative. It '
+          + 'cannot: that branch is only ever used when x is negative, and negating a negative '
+          + 'number gives a positive one of the same size. Two numbers settle how far |x| is from '
+          + 'x — the quotient |x|/x, which is −1 for every negative x and 1 for every positive '
+          + 'one, and the difference |x| − x, which is twice the size rather than zero. So '
+          + '"|x| = x" is a statement that holds for the non-negative numbers and fails for every '
+          + 'other one, rather than an identity.',
+        position: 2,
+        workedExample: {
+          problem:
+            'At x = −5, evaluate −x, then |x|, then |x|/x and |x| − x. Decide whether |x| = x.',
+          subgoals: [
+            {
+              label: 'Evaluate the suspicious branch before judging it',
+              detail:
+                '−x at x = −5 is −(−5) = 5. The minus in front of the letter is an instruction to '
+                + 'negate whatever the letter holds, and what it holds here is already negative, '
+                + 'so negating it produces a positive number. Nothing in "−x" says "a negative '
+                + 'number"; it says "the other sign from x".',
+              socratic:
+                'Here x stands for −5. What number is −x, and is it negative?',
+            },
+            {
+              label: 'Check it against what the definition requires',
+              detail:
+                '|x| has to be the distance from −5 to 0, which is 5. The branch produced 5. So '
+                + 'the branch that reads as though it returns something negative returns exactly '
+                + 'the right positive number, for precisely the inputs it is used on.',
+              socratic:
+                'The definition says |x| is how far x is from 0. How far is −5 from 0, and does '
+                + 'the branch −x agree with that?',
+            },
+            {
+              label: 'Divide, to turn the difference between |x| and x into a number',
+              detail:
+                '|x|/x = 5/(−5) = −1. A quotient of −1 says the two are the same size and '
+                + 'opposite in sign. At any positive x the same quotient is 1, and at x = 0 there '
+                + 'is no quotient at all. So the quotient is a two-valued record of which branch '
+                + 'was used.',
+              socratic:
+                'You now have |x| = 5 and x = −5. What does dividing one by the other tell you '
+                + 'that stating them side by side does not?',
+            },
+            {
+              label: 'Subtract, to measure the gap rather than only its direction',
+              detail:
+                '|x| − x = 5 − (−5) = 10, which is twice the size of x. At any non-negative x the '
+                + 'same difference is 0. The quotient said which way |x| and x differ; the '
+                + 'difference says by how much, and the two answers together are why "|x| = x" '
+                + 'cannot be repaired into an identity by being more careful.',
+              socratic:
+                'The quotient told you the signs disagree. What does |x| − x come to here, and '
+                + 'what would it come to at x = 5?',
+            },
+          ],
+          answer:
+            '−x = 5, |x| = 5, |x|/x = −1 and |x| − x = 10. So |x| ≠ x at x = −5: the two are the '
+            + 'same size and opposite in sign, and they differ by 10, which is twice the size of '
+            + 'x. |x| = x holds exactly when x is zero or positive.',
+        },
+      },
+      {
+        id: 'the-bars-measure-a-gap-either-way-round',
+        conceptId: 'absolute-value',
+        statement:
+          '|a − b| is the distance between a and b on the line, which is why it does not matter '
+          + 'which way round you subtract: a − b and b − a are the same size with opposite signs, '
+          + 'and the bars discard the sign. It also means the two numbers\' own signs need no '
+          + 'separate treatment — one expression covers both numbers on the same side of zero, '
+          + 'where the gap is a difference, and on opposite sides, where it is a sum.',
+        position: 3,
+        automaticityTarget: 12_000,
+        workedExample: {
+          problem:
+            'Evaluate |a − b| and |b − a| at a = −4 and b = 7, and say why the two had to agree.',
+          subgoals: [
+            {
+              label: 'Subtract one way and take the size',
+              detail:
+                'a − b = −4 − 7 = −11, so |a − b| = 11. Subtracting a positive number from a '
+                + 'negative one is where a sign error is most likely, and the bars do not rescue '
+                + 'it: a wrong inside gives a wrong size, because the bars only discard a sign '
+                + 'they are given.',
+              socratic:
+                'a stands for −4 and b for 7. What is a − b, and what does that make |a − b|?',
+            },
+            {
+              label: 'Subtract the other way and watch which part changes',
+              detail:
+                'b − a = 7 − (−4) = 11, so |b − a| = 11. The inside moved from −11 to 11: the '
+                + 'size is untouched and only the sign has changed, and the sign is the one thing '
+                + 'the bars throw away.',
+              socratic:
+                'Now subtract the other way round. What has changed about the inside, and what '
+                + 'has not?',
+            },
+            {
+              label: 'Name why it had to happen, rather than noting that it did',
+              detail:
+                'b − a = −(a − b) for any two numbers at all, and |−t| = |t| by the two branches '
+                + 'of the definition: at most one of t and −t is negative, the branch used on it '
+                + 'returns the other one, and if neither is negative they are both 0. So the '
+                + 'agreement is forced by the definition and is not a coincidence of these two '
+                + 'numbers.',
+              socratic:
+                'You got 11 both ways. What is the relationship between a − b and b − a that '
+                + 'makes this happen for every pair of numbers rather than just this one?',
+            },
+            {
+              label: 'Read the number as a position on the line',
+              detail:
+                '−4 and 7 are 4 and 7 from zero on opposite sides, so the gap between them is '
+                + '4 + 7 = 11. Had they been on the same side it would have been a difference '
+                + 'instead: between 4 and 7 the gap is 3. One expression, |a − b|, delivers both '
+                + 'cases without the author having to ask which side anything is on, and that is '
+                + 'what makes it worth writing rather than a pair of rules.',
+              socratic:
+                '11 is 4 + 7. Why do the two distances from zero add here, and what would the '
+                + 'gap be instead if a were 4 rather than −4?',
+            },
+          ],
+          answer:
+            '11 both ways. a − b = −11 and b − a = 11, and the bars keep the size and discard the '
+            + 'sign, so |a − b| = |b − a| for every pair. Here the number is the gap between −4 '
+            + 'and 7, which is 4 + 7 = 11 because they lie on opposite sides of zero.',
         },
       },
     ],
@@ -2942,6 +3361,308 @@ const CONCEPTS: Concept[] = [
       },
     ],
   },
+  {
+    id: 'percent',
+    name: 'Percent',
+    subjectId: subject.id,
+    scope: {
+      id: 'percent',
+      label: 'Percent',
+      hint: 'percent percentage increase discount',
+      /*
+       * Carried verbatim from the map node, as the three promotions before this
+       * one were, and for their reason: widening a pattern in the same change
+       * that adds a concept would move the recognition figure in
+       * tests/atlas.mjs on an edit that also moves the concept count, and there
+       * would be no way afterwards to say which half did it.
+       *
+       * It is already title-shaped and the anchor is doing real work. `^percent`
+       * rather than the word anywhere, because "percent" appears inside
+       * "percentage point of a distribution" and in the names of indices, and
+       * neither of those is this concept. The `\b` after the optional "age" is
+       * what keeps "Percentile" out: there is no word boundary between the `t`
+       * and the `i`, so a quantile article does not read as this concept. That
+       * is the one near-miss worth having tested rather than argued, and
+       * tests/atlas.mjs tests it.
+       */
+      match: /^percent(age)?\b/i,
+    },
+    fidelity: 'checked',
+    /*
+     * `evaluate` ONLY, and the absence of `justify` is the decision rather than
+     * an oversight. The three concepts above this one name `['evaluate',
+     * 'justify']`, following a convention that runs to 28 objectives across the
+     * build — and zero `justify` tasks exist anywhere in it. An objective naming
+     * a kind nothing serves can never be satisfied, which is the "complete but
+     * unreachable" failure types.ts warns about arriving one step removed, so
+     * `absolute-value` stopped doing it and this follows that instead.
+     *
+     * The consequence is that each statement below is trimmed to what an
+     * `evaluate` task actually evidences. The arguing half of this concept — why
+     * the percent settles no amount, why the two reverse readings differ, why
+     * equal percentages lose — has not been dropped; it is in the knowledge
+     * points and in every subgoal's `socratic`, which is where an unrulable ask
+     * belongs when no task kind can carry it.
+     */
+    objectives: [
+      {
+        id: 'take-a-percent-of-a-stated-base',
+        statement:
+          'Convert a percent to the fraction it abbreviates and compute that fraction of a '
+          + 'stated base.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'reverse-a-percentage-change',
+        statement:
+          'Recover the quantity a percentage change was applied TO, given the result, by '
+          + 'dividing by the factor — and compute how far that differs from applying the '
+          + 'percentage back the other way.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'compose-two-percentage-changes',
+        statement:
+          'Combine two successive percentage changes by multiplying their factors and compute '
+          + 'the net change, including the case where equal rises and falls fail to cancel.',
+        taskKinds: ['evaluate'],
+      },
+    ],
+    knowledgePoints: [
+      {
+        id: 'a-percent-abbreviates-a-fraction-and-needs-a-base',
+        conceptId: 'percent',
+        statement:
+          'Percent is "per hundred", so the symbol supplies a denominator that never appears in '
+          + 'the question: 60% is 60/100, which is 3/5, which is 0.6. That makes it a ratio with '
+          + 'one term already fixed, and it inherits what a ratio does and does not settle — it '
+          + 'fixes a quotient and no amount. 60% of 30 is 18 and 60% of 45 is 27, and a percent '
+          + 'with no base attached is not a quantity at all.',
+        position: 1,
+        /*
+         * No `automaticityTarget`. The error this point exists to stop is
+         * reading the percent as the amount, which is a misreading, so speed
+         * here would reward grabbing the number that is already written down.
+         * Same reasoning as the three points above, and the arithmetic
+         * underneath is one multiplication and one division that `place-value`
+         * already times.
+         */
+        workedExample: {
+          problem:
+            '60% of class A passed and 60% of class B passed. A has 30 pupils and B has 45. How '
+            + 'many passed in each, and what did the 60% settle on its own?',
+          subgoals: [
+            {
+              label: 'Read the hundred out of the symbol, which is where the fraction comes from',
+              detail:
+                '60% means 60 per hundred, so it is the fraction 60/100 = 3/5 = 0.6. The '
+                + 'denominator is supplied by the sign rather than by the question, which is the '
+                + 'whole of what "percent" contributes — once it is written as 3/5 there is '
+                + 'nothing left in it that is specific to percentages.',
+              socratic:
+                'The symbol % stands in for a number that appears nowhere in the question. What '
+                + 'number is it, and what does it do to the 60?',
+            },
+            {
+              label: 'Apply the fraction to each base separately, which is two multiplications',
+              detail:
+                '30 · 3/5 = 18 and 45 · 3/5 = 27. The percent is an operator waiting for '
+                + 'something to act on: handed a base it produces an amount, and handed nothing '
+                + 'it produces nothing. So the question needed both class sizes and could not '
+                + 'have been answered from the 60% for either class.',
+              socratic:
+                'Why can "60% passed" not be turned into a number of pupils until you are told '
+                + 'the class size — and what exactly do you do to the class size once you have '
+                + 'it?',
+            },
+            {
+              label: 'Check each against the definition, not the two answers against each other',
+              detail:
+                '18/30 = 3/5 and 27/45 = 3/5, both dividing through by 6 and by 9. So both '
+                + 'answers satisfy the stated 60% while being different numbers, which is the '
+                + 'thing a check against the other answer would have flagged as an error. The '
+                + 'definition is the only available check, because it is the only thing the '
+                + 'question asserted.',
+              socratic:
+                'Your two answers are 18 and 27, which are not equal. What check shows that both '
+                + 'of them are nevertheless 60%?',
+            },
+            {
+              label: 'Read off what the percent never said, which is the point of the question',
+              detail:
+                '60% is equally true of 18 out of 30, of 27 out of 45 and of 3 out of 5, so it '
+                + 'fixed the quotient and left the size open — exactly as 3 : 5 does, because '
+                + 'this IS 3 : 5 with the second term written as 100. The base is the second '
+                + 'fact and it was needed. Run it the other way and the base alone does no '
+                + 'better: 45 pupils is consistent with any number of them passing.',
+              socratic:
+                '18 out of 30 and 27 out of 45 are both 60%, and so is 3 out of 5. Given that, '
+                + 'how much of your answer did the 60% supply, and where did the rest of it come '
+                + 'from?',
+            },
+          ],
+          answer:
+            '18 and 27. 60% is 60/100 = 3/5, so A gives 30 · 3/5 = 18 and B gives 45 · 3/5 = 27 '
+            + '— and both check against the definition, since 18/30 and 27/45 are each 3/5. The '
+            + '60% settled only the quotient: it is equally true of 3 out of 5. Each class size '
+            + 'is the second fact, and it is what settles the amount.',
+        },
+      },
+      {
+        id: 'a-change-is-a-factor-so-reversing-it-is-a-division',
+        conceptId: 'percent',
+        statement:
+          'A change of p percent is a single multiplication: up by 20% is × 6/5, down by 20% is '
+          + '× 4/5. Written that way the reverse question answers itself — if the old price was '
+          + 'multiplied by 4/5 to give the new one, the old price is the new one DIVIDED by 4/5. '
+          + 'Applying the percentage back the other way is a different calculation and gives a '
+          + 'different answer, because it takes its 20% of the new price rather than of the old.',
+        position: 2,
+        /*
+         * Untimed for the read-it-slowly reason, in its sharpest form in this
+         * concept: the error is multiplying where you should divide, and a speed
+         * reward would train reaching for whichever of the two is to hand.
+         */
+        workedExample: {
+          problem: 'A coat costs £84 in a 20%-off sale. What was its price before the discount?',
+          subgoals: [
+            {
+              label: 'Turn the discount into the factor the old price was multiplied BY',
+              detail:
+                'Taking 20% off leaves 80% behind, so the sale price is the old price × 80/100 = '
+                + '× 4/5. This is the move the whole point rests on: a percentage change is one '
+                + 'multiplication, not a subtraction performed separately, and until it is '
+                + 'written as a factor there is nothing to undo.',
+              socratic:
+                'The sale took 20% off. What single number was the old price multiplied by to '
+                + 'give £84?',
+            },
+            {
+              label: 'Undo a multiplication by dividing, which is what makes the question answerable',
+              detail:
+                'The old price × 4/5 = 84, so the old price is 84 ÷ 4/5 = 84 · 5/4 = 105. The '
+                + 'unknown is the INPUT of a known multiplication, so the inverse operation is '
+                + 'division — and dividing by 4/5 is multiplying by 5/4, which is why this is one '
+                + 'step rather than a new problem.',
+              socratic:
+                'You know the old price was multiplied by 4/5 and that the result was £84. Which '
+                + 'operation takes you back to the old price?',
+            },
+            {
+              label: 'Price the wrong move, and watch it fail its own test',
+              detail:
+                'Adding 20% to £84 gives 84 · 6/5 = £100.80. Take 20% off that and you get '
+                + '£80.64, not £84 — so the answer does not satisfy the condition the question '
+                + 'stated. The reason is the base: the discount was 20% of 105, which is £21, '
+                + 'while adding 20% back takes 20% of 84, which is £16.80. Same percentage, '
+                + 'different base, and £4.20 of difference.',
+              socratic:
+                'Adding 20% back to £84 gives £100.80. Take 20% off £100.80 and you do not get '
+                + '£84 — so what is different about the two numbers each 20% was taken of?',
+            },
+            {
+              label: 'Check forwards, because forwards is the direction the question defined',
+              detail:
+                '20% of 105 is 21, and 105 − 21 = 84. That is the only check that uses the fact '
+                + 'the question gave, which is why it is the one to run: it re-derives the given '
+                + 'from the answer. A check that applied some other percentage to 84 would be '
+                + 'testing a claim nobody made.',
+              socratic:
+                'You have an answer of £105. What single calculation starting from £105 would '
+                + 'have to produce £84, and does yours?',
+            },
+          ],
+          answer:
+            '£105. A 20% discount multiplies by 4/5, so the old price is 84 ÷ 4/5 = 84 · 5/4 = '
+            + '105 — and 20% of 105 is 21, with 105 − 21 = 84, which is the given re-derived. '
+            + 'Adding 20% to 84 instead gives £100.80, and 20% off £100.80 is £80.64 rather than '
+            + '£84: that move takes its 20% of the sale price (£16.80) where the discount took '
+            + 'its 20% of the original (£21).',
+        },
+      },
+      {
+        id: 'successive-changes-multiply-so-equal-ones-do-not-cancel',
+        conceptId: 'percent',
+        statement:
+          'Two changes applied in turn multiply their factors, so a 20% rise followed by a 20% '
+          + 'fall is × 6/5 then × 4/5, which is × 24/25 — a 4% LOSS, not a return to the start. '
+          + 'The order makes no difference, since multiplication commutes. What is asymmetric is '
+          + 'the base: the rise was 20% of the smaller number and the fall was 20% of the larger '
+          + 'one. The fall that does undo a rise of p percent is the q with those two factors '
+          + 'multiplying to 1, and it is always less than p.',
+        position: 3,
+        /*
+         * Untimed because the content is a decision with an argument behind it —
+         * the second of the two reasons this subject uses, and the same shape as
+         * the point above it. The arithmetic carrying the decision is two
+         * multiplications, already timed lower down this file.
+         */
+        workedExample: {
+          problem:
+            'A share costs £50, rises 20% in one year and falls 20% the next. Where does it '
+            + 'finish, and what single percentage change is that?',
+          subgoals: [
+            {
+              label: 'Turn each change into a factor, which is what lets them go on one line',
+              detail:
+                'Up 20% is × 6/5 and down 20% is × 4/5. Each change has to be a factor before '
+                + 'the two can be combined at all — as amounts they are £10 and £12 and there is '
+                + 'no operation that puts those together, because they are measured against '
+                + 'different starting prices.',
+              socratic:
+                'You have two separate percentage changes. What do you turn each one into so '
+                + 'that the pair can be combined without going back to the money?',
+            },
+            {
+              label: 'Multiply the factors and read the net change off the product',
+              detail:
+                '6/5 · 4/5 = 24/25, so the price finishes at 24/25 = 96% of where it started: '
+                + 'down 4%. On £50 that is 50 · 6/5 = 60 then 60 · 4/5 = 48, and 48 is indeed '
+                + '96% of 50. The order is immaterial — 4/5 · 6/5 is the same 24/25, and £50 '
+                + 'falling first gives 40 then rising gives 48 as well.',
+              socratic:
+                'Your two factors are 6/5 and 4/5. What is their product, and what does a '
+                + 'product of 24/25 say about where the price finished?',
+            },
+            {
+              label: 'Find where the loss came from, which is the bases and not the percentages',
+              detail:
+                'The rise was 20% of £50 = £10, and the fall was 20% of £60 = £12. The same '
+                + 'percentage moved the price by £2 more on the way down, and £2 is 4% of £50 — '
+                + 'which is the whole of the loss, accounted for exactly. So the 4% is not a '
+                + 'residue of the arithmetic; it is the second percentage having a larger base '
+                + 'to be taken of.',
+              socratic:
+                'Both changes were 20%, but one moved the price by £10 and the other by £12. '
+                + 'What was each of those 20%s taken of?',
+            },
+            {
+              label: 'State the condition for an undoing, which equal percentages fail',
+              detail:
+                'To return to the start the two factors must multiply to 1. So a rise of p '
+                + 'percent is undone by a fall of q where (1 + p/100)(1 − q/100) = 1, giving '
+                + 'q = 100p/(100 + p) — for p = 20 that is 50/3, about 16.7%, and a check '
+                + 'confirms it: 6/5 · (1 − (50/3)/100) = 1 exactly. Since 100 + p is always more '
+                + 'than 100, q is always less than p, for the reason the subgoal above gives: '
+                + 'the fall acts on the larger base. Equal percentages therefore always lose, '
+                + 'whatever p is and in whichever order.',
+              socratic:
+                'A 20% fall did not undo a 20% rise. What would the two factors have had to '
+                + 'multiply to — and can you say, before computing it, whether the fall that '
+                + 'does undo a rise is more or less than the rise?',
+            },
+          ],
+          answer:
+            '£48, which is a 4% fall. Up 20% is × 6/5 and down 20% is × 4/5, so the pair is '
+            + '× 24/25 = 96%: 50 → 60 → 48, and 4/5 · 6/5 is the same 24/25, so the order does '
+            + 'not matter. The £2 lost is the gap between 20% of £50 = £10 and 20% of £60 = £12, '
+            + 'and £2 is 4% of £50. Undoing a 20% rise needs a fall of 100 · 20/120 = 50/3 ≈ '
+            + '16.7%, not 20%, and the undoing fall is always the smaller percentage because it '
+            + 'is taken of the larger base.',
+        },
+      },
+    ],
+  },
 ]
 
 /**
@@ -2998,6 +3719,47 @@ const EDGES: ConceptEdge[] = [
    * another authored subject, so it lives in the area's `links`. See
    * atlas-foundations.ts.
    */
+  /**
+   * THE ONE EDGE THAT CAME DOWN OFF THE MAP WITH `absolute-value`, AND THE
+   * SMALLEST A PROMOTION OUT OF THAT AREA CAN BE.
+   *
+   * The node declared `needs: ['negative-numbers']` and nothing else, so this
+   * is the whole of what the promotion stranded. `negative-numbers` is a
+   * concept of THIS subject, so the edge has an owner here and
+   * `algebra-foundations` needed no `links` entry — the cheap shape for the
+   * fifth time in this file, and at one edge rather than two it is the floor
+   * for it. A node with no `needs` at all would be a root of the whole map,
+   * which is a much stronger claim than this concept makes.
+   *
+   * It is a real gate and the sharpest one in the subject, because the
+   * prerequisite is not merely used — it is the thing the concept is most
+   * confusable with. The second knowledge point is entirely about −x at a
+   * negative x, so a learner who is not already fluent that −(−5) = 5 cannot
+   * read the branch |x| = −x as anything but a contradiction. The signed
+   * arithmetic has to be settled first or the definition looks broken.
+   *
+   * THE EDGE POINTING THE OTHER WAY WAS LEFT ALONE, as the rule says, and it is
+   * the only one there is: `absolute-value-equations` names this concept in its
+   * own `needs`, that node STAYED in `algebra-foundations`, so it still
+   * DECLARES the edge and owns it, and `composeAtlas` resolves it across the
+   * file boundary. Checked on the node rather than assumed, along with its
+   * `confusedWith` and `exercises` — both empty, so nothing was stranded
+   * silently. The `confusedWith` check is the one worth naming: `expandEdges`
+   * turns one into an `interferes_with`, deleting the declaring node deletes
+   * the edge, and no suite goes red because interference constrains selection
+   * rather than gating.
+   */
+  {
+    id: 'negative-numbers->absolute-value',
+    from: 'negative-numbers',
+    to: 'absolute-value',
+    kind: 'prerequisite',
+    promotedBy: 'author:arithmetic-foundations',
+    rationale:
+      'The branch |x| = −x is only ever used where x is negative, so the whole of the second '
+      + 'knowledge point is the claim that −(−5) is 5. A learner who is not already sure of that '
+      + 'reads the definition of absolute value as a contradiction rather than as a rule.',
+  },
   {
     id: 'divisibility->fraction-arithmetic',
     from: 'divisibility',
@@ -3377,6 +4139,132 @@ const EDGES: ConceptEdge[] = [
    * `percent` is still a map node, and an ontology may only name concepts it
    * contains. Whoever promotes `percent` should look at the pair again from
    * that end.
+   *
+   * THAT HAS NOW HAPPENED and the answer is no, argued with the fourteenth
+   * promotion's edges immediately below. The prompt was right to be left: the
+   * pair needed deciding and only one end could decide it.
+   */
+
+  /**
+   * THE FOURTEENTH PROMOTION'S TWO STRANDED EDGES, BOTH THE CHEAP SHAPE.
+   *
+   * `percent` declared `needs: ['ratio-and-rate', 'decimal-representation']`
+   * and both of those are concepts of THIS subject, so both edges have an owner
+   * here and neither crosses a subject boundary. `algebra-foundations` needed
+   * no `links` change in either direction — the sixth cheap case in this
+   * subject, and the last one it can produce out of that area, since `percent`
+   * was the only node left there naming two authored arithmetic concepts.
+   *
+   * Both are real gates rather than formalities, and they gate different halves
+   * of the concept:
+   *
+   *  - `ratio-and-rate` supplies what the concept IS. A percent is that
+   *    comparison with its second term fixed at 100, and the first knowledge
+   *    point does not merely cite it — the point's conclusion is the ratio
+   *    point's conclusion specialised, that the quotient is fixed and the
+   *    amount is not, and the worked example says "this IS 3 : 5" in those
+   *    words. A learner who has not met that has no reason to expect 60% to
+   *    leave anything open.
+   *  - `decimal-representation` supplies the other way the fraction gets
+   *    written. Every factor in the second and third points is introduced as a
+   *    fraction and used as one — 4/5, 6/5, 24/25 — and the concept is
+   *    unreadable without knowing that 24/25 and 0.96 are one number rather
+   *    than two. That equivalence is exactly what the decimals concept
+   *    establishes, and it is what lets "× 24/25" and "96% of the start" be the
+   *    same sentence in the third point's second subgoal.
+   */
+  {
+    id: 'ratio-and-rate->percent',
+    from: 'ratio-and-rate',
+    to: 'percent',
+    kind: 'prerequisite',
+    promotedBy: 'author:arithmetic-foundations',
+    rationale:
+      'A percent IS a ratio with its denominator fixed at 100, and the first knowledge point\'s '
+      + 'conclusion — that it settles the quotient and leaves the amount open — is the ratio '
+      + 'concept\'s own conclusion specialised rather than a new claim. There is no reason to '
+      + 'expect 60% to leave anything undecided until a ratio has been seen to.',
+  },
+  {
+    id: 'decimal-representation->percent',
+    from: 'decimal-representation',
+    to: 'percent',
+    kind: 'prerequisite',
+    promotedBy: 'author:arithmetic-foundations',
+    rationale:
+      'Every percentage change here is handled as a fraction — × 4/5, × 6/5, × 24/25 — and read '
+      + 'back as a percentage of the start, so the concept needs 24/25 and 0.96 to be one number '
+      + 'rather than two. Establishing that a fraction\'s expansion is the same number written '
+      + 'differently is what the decimals concept does.',
+  },
+
+  /*
+   * NO `percent ~ ratio-and-rate` INTERFERENCE, WHICH IS THE QUESTION THE BLOCK
+   * ABOVE ASKED AND THE ANSWER TO IT.
+   *
+   * The case for one is real and it is the one `ratio-and-rate` set out: a
+   * percent is a ratio with its denominator fixed, the map node's own `is` line
+   * named "compounding a percent of the wrong base" as the recurring error, and
+   * a learner meeting both at once has two ways to read every comparison.
+   *
+   * It is declined for the reason `absolute-value ~ negative-numbers` is
+   * declined below — the same rule, applied to the same shape, so this is the
+   * second instance rather than a fresh judgement. `interferes_with` is a HARD
+   * selection constraint: never introduce these two in one set. These two are
+   * in a PREREQUISITE relation, which this promotion has just made explicit, so
+   * the sessions the constraint would forbid are exactly the sensible ones — a
+   * learner meeting percent while the ratio is still fresh is the intended
+   * order, not a hazard. Compare the one interference this file does declare,
+   * `negative-numbers ~ order-of-operations`: siblings with no edge between
+   * them, where nothing about the curriculum order separates them already and
+   * each supplies the other's most plausible wrong answer.
+   *
+   * The misconception is not dropped, it is placed. Taking a percentage of the
+   * wrong base is the whole subject of the second knowledge point's third
+   * subgoal, which prices the wrong move and shows it failing its own test, and
+   * of the third point's third subgoal, which accounts for the entire 4% loss
+   * as the gap between 20% of 50 and 20% of 60. An interference edge would have
+   * addressed it by keeping the two concepts apart; a subgoal addresses it by
+   * putting the error in front of the learner with its arithmetic attached.
+   *
+   * So the answer to the open question is NO, and recording that is the point.
+   * An undeclarable edge that nobody has decided about reads the same as one
+   * that was considered and rejected, which is why the prompt was left on the
+   * ratio end in the first place.
+   */
+
+  /*
+   * AND NO `percent => ratio-and-rate` EDGE, measured against the tasks
+   * actually shipped rather than against the prose, which is this list's
+   * standard and would have given the opposite answer.
+   *
+   * The prose would support it about as strongly as prose can: the first
+   * knowledge point's conclusion IS the ratio point's conclusion, and the
+   * concept is introduced as that concept with a term fixed. But an
+   * `encompasses` edge is a claim about what PRACTISING exercises, and the
+   * shipped tasks are where that gets settled — which is already what keeps
+   * `ratio-and-rate => fraction-arithmetic` and `gcd-and-lcm =>
+   * prime-factorisation` out of this list.
+   *
+   * Measured that way it fails, and by a narrower margin than either of those
+   * two. Two of the three tasks are genuinely proportional reasoning —
+   * `reverse-a-discount-1` divides by a scale factor and `equal-rises-and-falls-1`
+   * composes two of them — so a learner who did either did something
+   * `ratio-and-rate` is about. The third, `percent-of-a-stated-base-1`, is one
+   * multiplication and one division of whole numbers, and nothing in it asks a
+   * ratio question: it does not count parts, choose which way up a quotient
+   * goes, or test anything at zero. Two of three is not enough, and the
+   * asymmetry is why: the effect of an encompasses edge is to stop a concept
+   * coming due, so a learner who practised only the third would be credited for
+   * the ratios on evidence containing none of them, and the cost lands on them
+   * as a weak concept that has quietly stopped being asked about.
+   *
+   * What would make it correct is a task here that asks for the BASE from a
+   * part and a percent, with numbers that do not divide — "7% of what is 3",
+   * whose answer is 300/7 — since recovering a whole from one part is the
+   * share-a-total move with the denominator fixed, and a non-integer answer is
+   * what stops it collapsing into a whole-number division. Add the edge with
+   * that task, not before it.
    */
 
   /**
@@ -3437,6 +4325,70 @@ const EDGES: ConceptEdge[] = [
       'Deciding divisibility is performing a division and looking at the remainder, so it ' +
       'exercises the division it is a question about.',
   },
+
+  /**
+   * `absolute-value => negative-numbers`, AND IT IS THE FIRST CREDIT EDGE IN
+   * THIS FILE THAT PASSES THE MEASUREMENT RATHER THAN FAILING IT.
+   *
+   * Three proposals have been declined below and above on the same rule — an
+   * `encompasses` edge is a claim about what PRACTISING exercises, measured
+   * against the tasks actually shipped — and each failed at one task out of
+   * three. This one is four out of four, so it is recorded as the positive case
+   * rather than added quietly:
+   *
+   *  - `abs-two-branches-1` computes 2 − 9 and then negates the result.
+   *  - `abs-negative-branch-1` divides a positive by a negative.
+   *  - `abs-gap-size-1` is 7 − (−7), which is `negative-numbers`'s own third
+   *    knowledge point almost verbatim.
+   *  - `abs-distance-between-1` computes −9 − 6.
+   *
+   * There is no way to answer any of the four without doing signed arithmetic,
+   * which is the standard the three rejections were measured against and
+   * missed. So a learner who has just worked through this concept should not
+   * find the signed numbers coming due as though untouched — which is the
+   * inefficiency `encompasses` exists to prevent, and the one this subject has
+   * so far had no instance of it strong enough to prevent.
+   */
+  {
+    id: 'absolute-value=>negative-numbers',
+    from: 'absolute-value',
+    to: 'negative-numbers',
+    kind: 'encompasses',
+    promotedBy: 'author:arithmetic-foundations',
+    rationale:
+      'Every task in the concept computes the inside of the bars first, and at every one of them '
+      + 'the inside is a signed subtraction or a negation of a negative number — so an absolute '
+      + 'value answered correctly is evidence about the signs as well as about the bars.',
+  },
+
+  /*
+   * NO `absolute-value ~ negative-numbers` INTERFERENCE, which is a decision
+   * and not a gap, so it is written down beside the pair it concerns.
+   *
+   * The case for one is real: "delete the minus sign" is a habit formed on
+   * signed numbers, and it is the exact wrong rule for absolute value, which is
+   * why the map node's own `is` line was about it. That is a plausible
+   * interference and it was checked for before the node was deleted —
+   * `confusedWith` was EMPTY, so nothing was stranded and nothing is being
+   * restated here.
+   *
+   * It is not added either, and the reason is what `interferes_with` does
+   * rather than what it describes. It is a hard selection constraint: never
+   * introduce these two in one set. These two are in a PREREQUISITE relation,
+   * so the sensible session is often exactly the one the constraint would
+   * forbid — a learner meeting the bars while the signs are still fresh is the
+   * ordinary case, not a hazard, and the misconception is addressed where it
+   * belongs, in the first knowledge point's third subgoal. Compare the one
+   * interference this file does declare, `negative-numbers ~ order-of-operations`:
+   * those are siblings with no edge between them, each supplying the other's
+   * most plausible wrong answer, and nothing about the curriculum order
+   * separates them already.
+   *
+   * Adding an interference on a prerequisite pair would also be a new editorial
+   * claim invented during a promotion, which is the thing a promotion should
+   * not do silently. If somebody wants it, it belongs in its own change with
+   * its own argument.
+   */
 
   /*
    * NO `prime-factorisation => divisibility` EDGE, AND THE REASON IS THE RULE

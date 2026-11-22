@@ -675,16 +675,40 @@ const CONCEPTS: Concept[] = [
             {
               label: 'Get the determinant',
               detail: 'det = 2·4 − (−1)·3 = 11.',
+              socratic:
+                'The inverse of [[a, b], [c, d]] is (1/det)·[[d, −b], [−c, a]], so the whole ' +
+                'bracket is about to be scaled by a single number and nothing can be scaled ' +
+                'until you have it. You have met this A already — it is the matrix the ' +
+                'determinant concept opened with — so this is a check rather than fresh work, ' +
+                'and the trap it carried is still here: b is −1, so subtracting bc takes ' +
+                'nothing away. What are the two products ad − bc calls for, and what does the ' +
+                'determinant come to?',
             },
             {
               label: 'Build the adjugate',
               detail:
                 'Swap the diagonal and negate the off-diagonal: [[4, 1], [−3, 2]]. Entry (1,1) ' +
                 'is 4, which was d.',
+              socratic:
+                'Set the 11 aside and read only the bracket, [[d, −b], [−c, a]], slot against ' +
+                'slot with [[a, b], [c, d]]. Not one entry has stayed where it was: the two on ' +
+                'the diagonal have traded places with each other, and the two off it have kept ' +
+                'their slots but changed sign. A has b = −1, so one of those sign changes will ' +
+                'not look like a sign change once you write it down. Fill the bracket in with ' +
+                'A\'s own four numbers, then answer what the problem actually asked about ' +
+                'position (1,1) — which of A\'s entries has landed there, and what number is it?',
             },
             {
               label: 'Divide',
               detail: '4/11.',
+              socratic:
+                'The 1/det sits outside the bracket, which means it multiplies every entry ' +
+                'rather than picking one out — so apply it to the entry you have just found. ' +
+                'Then look at the fraction before you commit to it: 11 is prime and 4 is no ' +
+                'multiple of it, so nothing cancels and the only thing left to get wrong is ' +
+                'which of the two numbers ends up on top. Which of 4/11 and 11/4 is entry ' +
+                '(1,1) of A⁻¹, and what in the formula settles that rather than which of them ' +
+                'looks tidier?',
             },
             {
               label: 'What the formula is really saying',
@@ -692,6 +716,17 @@ const CONCEPTS: Concept[] = [
                 'Every step but the last is arithmetic on the entries and would work on any ' +
                 'matrix. Only the division can fail, and it fails exactly when det = 0 — so ' +
                 '"not invertible" and "determinant zero" are the same condition, not two tests.',
+              socratic:
+                'Now run the recipe in your head on any four numbers you like, including a ' +
+                'matrix you suspect has no inverse at all. Swapping two of them and negating ' +
+                'the other two is something you can always do — that part of the procedure has ' +
+                'no way of refusing, whatever it is handed. Division is not like that: ' +
+                'arithmetic refuses exactly one divisor and no others. So walk back over the ' +
+                'three steps you have just done and say which single one of them is the only ' +
+                'one that can ever fail, what that forces to be true of the matrix on the ' +
+                'occasions when it does, and whether "A has no inverse" and "det A = 0" are ' +
+                'therefore two things a learner should check or one condition going under two ' +
+                'names?',
             },
           ],
           answer: '4/11',
@@ -711,10 +746,26 @@ const CONCEPTS: Concept[] = [
               label: 'Row 1 of A⁻¹ against column 1 of A',
               detail:
                 'Row 1 of the adjugate is (4, 1); column 1 of A is (2, 3). So (4·2 + 1·3)/11.',
+              socratic:
+                'The product being checked is A⁻¹A, in that order, and this subject has already ' +
+                'shown that swapping the two factors generally changes the answer — so which ' +
+                'matrix stands where is part of the question rather than a detail. A⁻¹ also ' +
+                'arrives with its 1/11 outside the bracket, multiplying every entry rather than ' +
+                'picking one out, so it need not join the pairing at all. Which of A⁻¹ and A ' +
+                'supplies row 1, which supplies column 1, which four numbers does that leave in ' +
+                'play, and where does the 1/11 wait meanwhile?',
             },
             {
               label: 'Compute',
               detail: '(8 + 3)/11 = 11/11 = 1.',
+              socratic:
+                'Row 1 of the adjugate is (4, 1) and column 1 of A is (2, 3). The 1 there is the ' +
+                'entry the inverse formula negated, and because A\'s b was already −1 that ' +
+                'negation handed back a positive number; the one visibly negative entry, −3, ' +
+                'sits in the bracket\'s second row and never meets row 1. So all four numbers in ' +
+                'front of you are positive and no sign is lying in wait. The 1/11 is still ' +
+                'outside. Which pairing does the rule call for, what do the two products come to ' +
+                'when added, and what is entry (1,1) of A⁻¹A once the 1/11 is applied?',
             },
             {
               label: 'Why 1 is the right answer',
@@ -722,6 +773,20 @@ const CONCEPTS: Concept[] = [
                 'Entry (1,1) of the identity is 1. The numerator came out as exactly the ' +
                 'determinant, which is not a coincidence — that cancellation is the whole reason ' +
                 'the formula is divided by det.',
+              socratic:
+                'Entry (1,1) of the identity is 1, so this entry of A⁻¹A is exactly what the ' +
+                'definition demands of it. The part worth stopping on is the numerator: before ' +
+                'the division it was 8 + 3 = 11, and 11 is not a new number in this subject — it ' +
+                'is what ad − bc returned for this same A in the previous concept, and what you ' +
+                'divided by in the previous point. So the sum the row-against-column rule ' +
+                'produced and the determinant sitting under the formula turned out to be the ' +
+                'same number, which is the only reason the fraction reduced at all. Test whether ' +
+                'that was luck about these four entries: take any [[a, b], [c, d]] with a ' +
+                'nonzero determinant, write down row 1 of its adjugate against column 1 of the ' +
+                'matrix itself, and multiply them out in the letters rather than in numbers. ' +
+                'What is the numerator in general, and what does that make the 1/det in the ' +
+                'inverse formula — a tidying step applied afterwards, or the one thing that was ' +
+                'always going to turn this product into the identity?',
             },
           ],
           answer: '1',

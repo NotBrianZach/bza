@@ -50,20 +50,32 @@ Two things not to get wrong when wiring it:
   wrapper must surface `UNREPORTED` somewhere a human sees it, or the one
   failure mode that loses money becomes invisible.
 
-Verified 2026-11-20: nothing schedules it by any available route.
-`systemctl --user list-timers --all` still shows the same six timers
-(poincare-sync, templedb-{ingest,backup,reconcile,agent-tick},
-systemd-tmpfiles-clean) and no overage timer; `select count(*) from
-pg_extension where extname='pg_cron'` is 0, so no pg_cron job can exist
-whatever anyone schedules; `frontend/wrangler.jsonc` declares no cron
-triggers; and `graph who-uses reconcile-overages` turns up no caller — its
-two non-script hits, `frontend/lib/supabaseSchema.ts` and migration 58, are
-both prose references. Migration 58 sitting in `supabase/setup/archive/` is
-not removal of the billing path: every applied migration 50–69 is filed
-there, and the functions are live in `bza_public`.
+Verified 2026-11-21 (all four checks re-run, nothing moved): nothing
+schedules it by any available route. `systemctl --user list-timers --all`
+still shows the same six timers (poincare-sync,
+templedb-{ingest,backup,reconcile,agent-tick}, systemd-tmpfiles-clean) and
+no overage timer; `select count(*) from pg_extension where
+extname='pg_cron'` is 0, so no pg_cron job can exist whatever anyone
+schedules; `frontend/wrangler.jsonc` declares no cron triggers; and `graph
+who-uses reconcile-overages` turns up no caller.
 
-Sized 2026-11-20, because the paragraphs above read more urgent than the
-numbers support. The allowance is `app_config['billing.included_cents']` =
+That search returns five files, every one a prose mention: the script
+itself, `frontend/lib/supabaseSchema.ts`, migrations 57 and 58, and this
+backlog file. Expect it to include this item — naming the script here is
+what puts `docs/BACKLOG.md` in the results, so the hit count rises when
+this item gets edited and that is not a caller appearing. An earlier
+version of this line promised "two non-script hits" and was wrong on both
+counts the moment it was committed.
+
+Migration 58 sitting in `supabase/setup/archive/` is not removal of the
+billing path: every applied migration 50–69 is filed there, and the
+functions are live in `bza_public`.
+
+Sized 2026-11-20 and re-measured 2026-11-21 unchanged, because the
+paragraphs above read more urgent than the numbers support. Every figure
+below is a fresh query, not a quotation — the recorded peak was once 13×
+low because it was copied forward instead of re-run. The allowance is
+`app_config['billing.included_cents']` =
 500, so $5 per customer-month, and the largest single user-month ever
 recorded is 14.80¢ — 3% of one allowance. Lifetime `charged_cost` across all
 customers is 39.98¢ over 1565 rows, the current month's heaviest user is at
@@ -90,11 +102,14 @@ What needs deciding is who reviews authored material and how often — not
 whether the restriction stays. Do not resolve it by giving an autonomous task
 publish rights.
 
-Verified 2026-11-20: still no deploy timer, and `deployment_history` rows
+Verified 2026-11-21: still no deploy timer, and `deployment_history` rows
 422–438 are every one `triggered_by=manual`, `deployed_by=zach` — 17 deploys
 across 2026-11-18 to 11-20, nine of them on the 20th alone and three inside
 half an hour that evening. (Row 431 reads `in_progress`; that status is
 written and never cleared, so it is cosmetic rather than a stuck deploy.)
+438 is still head as of 2026-11-21 09:00 CST, so the range above is a
+re-check rather than a new measurement — the burst ended the evening of
+the 20th and nothing has deployed since.
 
 The premise holds, but the shape is the opposite of a backlog, and the
 earlier snapshot here — "3 commits and 13 hours behind head" on 11-16 —

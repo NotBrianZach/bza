@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from 'react'
 import Image from 'next/image'
-import { ArrowRight, BookOpen, KeyRound, Loader2, MapPin } from 'lucide-react'
+import { ArrowRight, BookOpen, Hammer, KeyRound, Loader2, MapPin } from 'lucide-react'
 import { authedFetch } from '@/lib/authedFetch'
 import {
   ARMATURE_MAP, RINGS, regionCoverage, regionForConcept, regions,
@@ -11,6 +11,7 @@ import {
 import { MATHEMATICS, atlasCoverage } from '@/lib/concepts/atlas'
 import { ONTOLOGIES } from '@/lib/concepts/ontology'
 import { conceptById } from '@/lib/concepts/registry'
+import { offersFor } from '@/lib/concepts/commission'
 import TablePanel from './TablePanel'
 
 /**
@@ -95,6 +96,26 @@ const REGION_OF_CONCEPT: Map<string, string> = new Map(
 
 interface Named { conceptId: string; conceptName: string }
 
+/**
+ * A refusal turned into an errand — what the page needs to act on one.
+ *
+ * `regionId` is where the party is standing, because the game master's framing
+ * of the work is a scene in a place and a commission taken nowhere has nothing
+ * to be about. Null when the journey has not started, in which case there is no
+ * refusal to take work from either.
+ *
+ * `blockedRoad` is the thing that was refused, carried only so the framing can
+ * say why the errand came up. It is NOT a promise that the work opens it: the
+ * road opens when the strength gate is satisfied and the commission route is
+ * told not to mention the road opening at all.
+ */
+export interface TakeWork {
+  conceptId: string
+  conceptName: string
+  blockedRoad: string | null
+  regionId: string | null
+}
+
 /** The traversal as the page already has it. See TraversalMap's TraversalView. */
 export interface Journey {
   here: string | null
@@ -117,7 +138,7 @@ interface TraverseResponse {
   error?: string
 }
 
-export default function ArmatureMap({ onBrowse, onPractise, journey, openings, onTravelled }: {
+export default function ArmatureMap({ onBrowse, onPractise, onTakeWork, journey, openings, onTravelled }: {
   /**
    * Look at a region's mathematics — the mapped area, in the concept graph.
    *
@@ -138,6 +159,19 @@ export default function ArmatureMap({ onBrowse, onPractise, journey, openings, o
    * me something to do" with nothing and look broken.
    */
   onPractise?: (subjectId: string) => void
+  /**
+   * Take on the work a refused road wants — docs/RPG_AND_THE_GRAPH.md §4.
+   *
+   * Distinct from `onPractise` and not a special case of it. That one answers
+   * "give me something to do in this region" with a subject; this one answers
+   * "the road wanted long division, so give me long division" with a concept,
+   * which the parent then has to land on a specific task for.
+   *
+   * It opens no road and cannot. The road opens when the strength gate is
+   * satisfied, exactly as before — this is a way of arriving at the work, not
+   * a second key. See lib/concepts/commission.ts.
+   */
+  onTakeWork?: (work: TakeWork) => void
   /**
    * The traversal, which turns the map from a thing you read into a board.
    *
@@ -439,6 +473,7 @@ export default function ArmatureMap({ onBrowse, onPractise, journey, openings, o
               busy={busy}
               last={last}
               onStart={id => post({ start: id })}
+              onTakeWork={onTakeWork}
             />
           )}
           {selected
@@ -501,13 +536,14 @@ export default function ArmatureMap({ onBrowse, onPractise, journey, openings, o
  * offering a key from a region's own panel. A "travel to Taiga" button would
  * be the single thing that breaks the game.
  */
-function JourneyPanel({ journey, openings, hereRegion, busy, last, onStart }: {
+function JourneyPanel({ journey, openings, hereRegion, busy, last, onStart, onTakeWork }: {
   journey: Journey
   openings: Named[]
   hereRegion: string | null
   busy: boolean
   last: TraverseResponse | null
   onStart: (conceptId: string) => void
+  onTakeWork?: (work: TakeWork) => void
 }) {
   const started = journey.route.length > 0
   const here = hereRegion ? regions().find(r => r.id === hereRegion) ?? null : null
@@ -562,7 +598,15 @@ function JourneyPanel({ journey, openings, hereRegion, busy, last, onStart }: {
         </p>
       )}
 
-      {last && <Outcome response={last} />}
+      {/* The region is added HERE rather than inside `Outcome`, which has a
+          response and no idea where the party is standing. Keeping it that way
+          means the refusal renderer stays a function of the refusal. */}
+      {last && (
+        <Outcome
+          response={last}
+          onTakeWork={onTakeWork && (work => onTakeWork({ ...work, regionId: hereRegion }))}
+        />
+      )}
     </div>
   )
 }
@@ -575,7 +619,11 @@ function JourneyPanel({ journey, openings, hereRegion, busy, last, onStart }: {
  * that makes it useful: "that road needs polynomial division, which you have
  * not reached" is a next move, where "locked" is a wall.
  */
-function Outcome({ response }: { response: TraverseResponse }) {
+function Outcome({ response, onTakeWork }: {
+  response: TraverseResponse
+  /** Without `regionId` — the caller knows where the party is and this does not. */
+  onTakeWork?: (work: Omit<TakeWork, 'regionId'>) => void
+}) {
   if (response.error) {
     return <p className='mt-2 text-[11px] text-red-300'>{response.error}</p>
   }
@@ -599,6 +647,58 @@ function Outcome({ response }: { response: TraverseResponse }) {
         <p className='mt-1 text-amber-300/80'>
           Still needs: {response.missing.map(m => m.conceptName).join(', ')}.
         </p>
+      )}
+      {/* The refusal as a next move rather than a wall — §4 of
+          docs/RPG_AND_THE_GRAPH.md, and the half the design calls the smallest
+          version worth building.
+
+          Naming what is missing was always the useful half, and it still
+          stopped short of the only thing a player can do about it: the work.
+          "That road needs long division" and then another tab, another picker,
+          and finding the concept yourself.
+
+          Each missing concept resolves through `offersFor`, which answers in
+          one of two ways and never guesses. `workable` means a shipped subject
+          has problems for it, so the button leads somewhere. `unwritten` means
+          the concept is on the map and nothing is authored — sixteen of the
+          twenty-one regions are like this — and it says so rather than
+          offering a button into an empty practice set, which would be worse
+          than the dead end it replaced.
+
+          None of this opens anything. The road opens when conceptStrength
+          crosses the floor, which is the gate that was always there. */}
+      {onTakeWork && response.missing && response.missing.length > 0 && (
+        <div className='mt-1.5 flex flex-wrap items-center gap-1.5 border-t border-amber-900/40 pt-1.5'>
+          {offersFor(response.missing).map(offer => (
+            offer.kind === 'workable' ? (
+              <button
+                key={offer.conceptId}
+                type='button'
+                onClick={() => onTakeWork({
+                  conceptId: offer.conceptId,
+                  conceptName: offer.conceptName,
+                  /* The road, for the game master's framing. `nearestName` is
+                     what the traversal calls the thing being blocked — see the
+                     blocked branch of /api/learn/traverse. */
+                  blockedRoad: response.nearestName ?? null,
+                })}
+                title={`Work on ${offer.conceptName}, in ${offer.subjectName}`}
+                className='flex items-center gap-1 rounded-full border border-amber-700/60 px-2 py-0.5 text-[11px] text-amber-100 hover:bg-amber-900/40'
+              >
+                <Hammer size={10} className='shrink-0' />
+                take the work on {offer.conceptName}
+              </button>
+            ) : (
+              <span
+                key={offer.conceptId}
+                className='text-[11px] text-amber-400/60'
+                title='A concept can be on the map with nothing authored behind it. That is most of the atlas.'
+              >
+                nothing is written for {offer.conceptName} yet
+              </span>
+            )
+          ))}
+        </div>
       )}
     </div>
   )

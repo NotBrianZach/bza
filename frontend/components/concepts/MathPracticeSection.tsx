@@ -98,10 +98,30 @@ export default function MathPracticeSection({
         </Link>
       </div>
 
+      {/* What this band is, and NOT `subject.covers`.
+
+          `covers` was here and it is the wrong field for a one-line slot. It is
+          the maintainer's note on what a subject contains, written for whoever
+          edits the ontology, and it has no length contract at all: across the
+          ten shipped subjects it runs from 217 characters to 9,057. Arithmetic
+          foundations — the DEFAULT subject, so the one most people got — is
+          3,229, and it ends on which neighbouring nodes are mapped-only and
+          which congruences are still unwritten. True, useful to an author,
+          and three hundred words of it landed on the home page under a
+          heading reading "Maths practice".
+
+          First-sentence extraction was the obvious fix and does not work here.
+          It is the right trick for `because` in narrate.ts because that field
+          has a known two-part shape; `covers` has none, and its first
+          sentence alone is 1,000 characters for triangle trigonometry and 695
+          for plane geometry. There is no blurb inside this field to find.
+
+          So the slot gets the sentence that was already its fallback, which is
+          the better copy anyway: a band on a dashboard should say what the
+          feature does, not what one subject happens to contain. Which subject
+          is being practised is named below, next to the figures. */}
       <p className="text-xs text-gray-500 dark:text-gray-400 mb-3 max-w-2xl leading-relaxed">
-        {peek?.subject
-          ? peek.subject.covers
-          : 'Work problems and have the answer checked symbolically rather than compared to a string.'}
+        Work problems and have the answer checked symbolically rather than compared to a string.
       </p>
 
       {loading && (

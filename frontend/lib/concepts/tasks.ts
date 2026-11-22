@@ -1337,6 +1337,119 @@ export const TASKS: PracticeTask[] = [
     reference: '10',
   },
 
+  /*
+   * ── percent ─────────────────────────────────────────────────────────────
+   *
+   * Three `evaluate` tasks, one per knowledge point, exact rational arithmetic
+   * throughout so the subject's "gradable with no worker" contract still holds
+   * over every task it owns.
+   *
+   * The second concept in this subject that owes no proxy apology, after
+   * `ratio-and-rate` directly above, and for its reason: every point here ends
+   * in a NUMBER. An amount, a price before a discount and a price after two
+   * changes are all values, so nothing stands in for anything.
+   *
+   * What each one asks, and why it is the content rather than beside it:
+   *
+   *  - the first is the percent applied to a base, with `/100` written out in
+   *    the `given`. That division is the disputed quantity — the error the
+   *    point exists to stop is reading the percent as the amount — so a learner
+   *    who makes it cannot reach the reference. The prompt names the second
+   *    base, 80, because the point is that the SAME percent gives a different
+   *    amount, and one evaluation cannot show two.
+   *  - the second is the gap between the two readings of a reverse percentage:
+   *    divide by the factor, or apply the percentage back the other way. A
+   *    non-zero answer refutes the second arithmetically, which is the
+   *    refutation-by-value shape `plane-geometry` found five times over. It
+   *    vanishes only at p = 0, since 100² = (100+p)(100−p) forces p = 0 — so
+   *    the two readings agree exactly when there is no change to reverse.
+   *  - the third composes two changes and asks where the price ENDS relative to
+   *    where it started, so a learner who believes equal percentages cancel
+   *    predicts 0 and the reference refutes it. Worth knowing about this one:
+   *    its reference is 0 for some inputs and that is the content rather than a
+   *    defect, since (100+p)(100−q) = 10000 is exactly the undoing condition.
+   *    At p = 25 the undoing fall is q = 20, which the prompt gives as the
+   *    contrast — the pair that does cancel is not the equal one.
+   *
+   * None of the three is 0 at its own inputs, and none has an
+   * input-independent reference: the first moves with both p and b, the second
+   * with s and p, the third with all of b, p and q. A task whose answer does
+   * not move when its input moves can be answered without the content, which is
+   * the trap `absolute-value` had to pair a task to get out of.
+   *
+   * Different numbers from the worked examples in all three, since none of them
+   * is establishing a specific claim an example made: 35% of 120 rather than
+   * 60% of 30, a 10% discount leaving 180 rather than a 20% one leaving 84, and
+   * 25% either way on 64 rather than 20% either way on 50.
+   *
+   * What stays unscored is which of 100 − p and 100 + p belongs in a reverse
+   * percentage's denominator. Both appear in the second task's `given`, so the
+   * learner is told; choosing between them unprompted is the step a single
+   * expression cannot ask for, and the second knowledge point's first two
+   * subgoals are where it is taught.
+   */
+  {
+    id: 'percent-of-a-stated-base-1',
+    knowledgePointId: 'a-percent-abbreviates-a-fraction-and-needs-a-base',
+    kind: 'evaluate',
+    prompt:
+      '35% of a club\'s 120 members voted in favour. How many is that? The % sign supplies the '
+      + 'denominator 100, which is why it is written out below rather than hidden in the '
+      + 'arithmetic — reading the 35 as the answer is the error this task checks against. '
+      + 'Evaluate p * b / 100 at p = 35, b = 120. Had the club had 80 members the same 35% '
+      + 'would have been 28 instead, which is the half of the point one evaluation cannot show '
+      + 'you: the percent fixes the quotient and the base fixes the amount.',
+    given: 'p * b / 100',
+    variables: [
+      { name: 'p', assumptions: { integer: true, positive: true } },
+      { name: 'b', assumptions: { integer: true, positive: true } },
+    ],
+    at: { p: '35', b: '120' },
+    reference: '42',
+  },
+  {
+    id: 'reverse-a-discount-1',
+    knowledgePointId: 'a-change-is-a-factor-so-reversing-it-is-a-division',
+    kind: 'evaluate',
+    prompt:
+      'A jacket costs £180 after a 10% discount. The correct reading divides by the factor it '
+      + 'was multiplied by, giving s * 100 / (100 - p); the wrong one applies the percentage '
+      + 'back the other way, giving s * (100 + p) / 100. Evaluate '
+      + 's * 100 / (100 - p) - s * (100 + p) / 100 at s = 180, p = 10 — the gap between the two '
+      + 'in pounds. Anything other than 0 means they are different calculations rather than two '
+      + 'routes to one answer, and they agree only when p = 0, since 100 * 100 = (100 + p)(100 - p) '
+      + 'forces it. Which of 100 - p and 100 + p belongs underneath is handed to you here, and '
+      + 'that choice is the step no single expression can ask you to make.',
+    given: 's * 100 / (100 - p) - s * (100 + p) / 100',
+    variables: [
+      { name: 's', assumptions: { integer: true, positive: true } },
+      { name: 'p', assumptions: { integer: true, positive: true } },
+    ],
+    at: { s: '180', p: '10' },
+    reference: '2',
+  },
+  {
+    id: 'equal-rises-and-falls-1',
+    knowledgePointId: 'successive-changes-multiply-so-equal-ones-do-not-cancel',
+    kind: 'evaluate',
+    prompt:
+      'A £64 holding rises 25% and then falls 25%. Each change is a multiplication by a factor, '
+      + 'so the pair is b * (100 + p) / 100 * (100 - q) / 100, and subtracting b gives the net '
+      + 'change in pounds. Evaluate b * (100 + p) / 100 * (100 - q) / 100 - b at b = 64, p = 25, '
+      + 'q = 25. A learner who thinks equal percentages cancel predicts 0; the sign of what you '
+      + 'get says which way the holding actually moved. The fall that WOULD have undone the rise '
+      + 'is q = 20 rather than q = 25, and at that value this expression really is 0 — the pair '
+      + 'that cancels is not the equal one, because the fall acts on the larger base.',
+    given: 'b * (100 + p) / 100 * (100 - q) / 100 - b',
+    variables: [
+      { name: 'b', assumptions: { integer: true, positive: true } },
+      { name: 'p', assumptions: { integer: true, positive: true } },
+      { name: 'q', assumptions: { integer: true, positive: true } },
+    ],
+    at: { b: '64', p: '25', q: '25' },
+    reference: '-4',
+  },
+
   // ── polynomial-arithmetic ───────────────────────────────────────────────
   {
     id: 'expand-binomials-1',
@@ -2758,6 +2871,98 @@ export const TASKS: PracticeTask[] = [
     variables: WHOLE_ABC,
     at: { a: '5', b: '3', c: '8' },
     reference: '10',
+  },
+  /*
+   * `absolute-value`, THE FIRST TASKS IN THE BUILD TO USE `abs`.
+   *
+   * Worth a block, because the concept was declined in writing for years on
+   * the ground that they could not exist. ontology-arithmetic.ts's header said
+   * "`exactValue` returns null for a `function` node, so nothing here uses
+   * `abs`", and that stopped being true when numerals.ts grew its
+   * `case 'function'` branch — `abs` is handled there exactly, by the sign of a
+   * rational it already holds. So all four of these are settled locally with no
+   * worker, like every other task in this subject, and none of them goes near
+   * the ratchet in tests/concepts-logic.mjs capping how many shipped `evaluate`
+   * tasks may need one.
+   *
+   * Every answer is an integer, and that is a property of the concept rather
+   * than of careful input choice: `abs` of a whole number is a whole number,
+   * and there is nothing else in the material.
+   *
+   * THE SECOND POINT CARRIES TWO, AND THEY ASK DIFFERENT QUESTIONS. The
+   * quotient `abs(x)/x` is the sign claim — it is −1 at every negative x, which
+   * is the whole of what it reports — and a learner could land on it by
+   * remembering "negative, so −1" without having understood anything. So the
+   * difference `abs(x) - x` sits beside it, where the answer depends on the
+   * input and the two wrong readings are both visible in it: a learner who
+   * believes |x| = x gets 0, and one who negates the wrong term gets 0 as well,
+   * while the right answer is twice the size. One task of the pair is cheap to
+   * guess and the other is not, which is why neither is sufficient alone.
+   *
+   * NO TASK ASKS FOR THE SYMMETRY, deliberately. The third point's claim is
+   * |a − b| = |b − a|, whose natural ask is `abs(a - b) - abs(b - a)` — and the
+   * answer to that is 0 for every pair of inputs, so a learner who writes 0
+   * without reading the question is marked correct. A task whose reference is
+   * independent of its inputs is not evidence, which is the proxy-task failure
+   * this file warns about wearing a more flattering shape. The symmetry is
+   * argued in the worked example's third subgoal instead, and the task asks for
+   * the gap itself, where the number is the thing being claimed.
+   */
+  {
+    id: 'abs-two-branches-1',
+    knowledgePointId: 'distance-from-zero-has-two-branches',
+    kind: 'evaluate',
+    prompt:
+      'Evaluate |x − 9| at x = 2. Work out what is inside the bars first, then apply the branch '
+      + 'the sign of that number selects — there is a minus sign written in x − 9 at every input '
+      + 'and at none of them is it the thing to delete. The answer is how far 2 is from 9.',
+    given: 'abs(x - a)',
+    variables: [
+      { name: 'x', assumptions: { integer: true } },
+      { name: 'a', assumptions: { integer: true } },
+    ],
+    at: { x: '2', a: '9' },
+    reference: '7',
+  },
+  {
+    id: 'abs-negative-branch-1',
+    knowledgePointId: 'the-negative-branch-returns-the-positive-number',
+    kind: 'evaluate',
+    prompt:
+      'Evaluate |x|/x at x = −12. The answer is 1 or −1 and nothing else, whatever x is — so the '
+      + 'question is which, and that is the question of whether the bars changed the number.',
+    given: 'abs(x)/x',
+    variables: [{ name: 'x', assumptions: { integer: true } }],
+    at: { x: '-12' },
+    reference: '-1',
+  },
+  {
+    id: 'abs-gap-size-1',
+    knowledgePointId: 'the-negative-branch-returns-the-positive-number',
+    kind: 'evaluate',
+    prompt:
+      'Evaluate |x| − x at x = −7. Anybody who thinks |x| and x are the same number here will '
+      + 'write 0; the right answer says how far apart they really are.',
+    given: 'abs(x) - x',
+    variables: [{ name: 'x', assumptions: { integer: true } }],
+    at: { x: '-7' },
+    reference: '14',
+  },
+  {
+    id: 'abs-distance-between-1',
+    knowledgePointId: 'the-bars-measure-a-gap-either-way-round',
+    kind: 'evaluate',
+    prompt:
+      'Evaluate |a − b| at a = −9 and b = 6. The two numbers are on opposite sides of zero, so '
+      + 'the gap between them is not the difference of their sizes — and subtracting the other '
+      + 'way round must give the same answer.',
+    given: 'abs(a - b)',
+    variables: [
+      { name: 'a', assumptions: { integer: true } },
+      { name: 'b', assumptions: { integer: true } },
+    ],
+    at: { a: '-9', b: '6' },
+    reference: '15',
   },
   {
     id: 'divides-exactly-1',

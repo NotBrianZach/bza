@@ -1,0 +1,130 @@
+/**
+ * One worked exchange, written out, for a player who has never taken a turn.
+ *
+ * This exists because /play used to open on an argument. Two bullets explained
+ * the loop, a third pointed at the cards, and two registry cards listed the
+ * twelve media and the seven relations — sixty lines of prose above the first
+ * thing anybody could click. Every sentence was true and none of it was
+ * learnable in that form: "a turn proposes a connection and makes it
+ * perceptible" means nothing until you have seen one turn.
+ *
+ * So the explanation is now an example. The registries are still reachable (the
+ * disclosure on /play holds them), but what greets a new player is two turns of
+ * a real-shaped game with the relation named where it was actually used.
+ *
+ * ── Why this is hard-coded, and must stay hard-coded ──────────────────────
+ *
+ * It would be tempting to seed a real session and show that instead. Three
+ * reasons not to:
+ *
+ *  1. The honesty guards. A reply on this page did not come back from the turn
+ *     route, so it must never be rendered as though it had. Labelling it an
+ *     example in the UI is the only defensible presentation, and once it is
+ *     labelled an example there is nothing for a database row to add.
+ *  2. Every catalogue here is a live third-party search. A seeded session would
+ *     go stale the first time Deezer re-ids a track, and the failure would be
+ *     silent — a tutorial with a dead player and no error.
+ *  3. A new player has no library, so `passage` cannot appear in an example
+ *     that is supposed to be reproducible by the person reading it. The two
+ *     media below are the two keyless catalogues, plus one composed medium that
+ *     needs no provider at all.
+ *
+ * The works named are real and uncontroversially so, because a fabricated
+ * painting in a teaching example is the kind of small lie that this section's
+ * whole design is against. Nothing fetches them: they are here to be read.
+ *
+ * ── Why the types come from the registries ────────────────────────────────
+ *
+ * `medium` and `relation` are the registry ids, not strings. A relation renamed
+ * or retired in lib/correlate/relations.ts is a compile error here rather than
+ * a tutorial quietly teaching a move the engine no longer has — which is the
+ * exact way the old intro prose rotted, stating as universal two things that
+ * had become per-game.
+ */
+
+import type { MediumId, RelationId } from './types'
+
+export interface ExampleMove {
+  medium: MediumId
+  title: string
+  /** Null for a composed move, which has no author but the player. */
+  attribution: string | null
+  /** Which part of it is in play. Never "all of it" — see `Offering.framing`. */
+  framing: string
+  /** Composed media only: what the player would actually be asked to do. */
+  steps?: string[]
+}
+
+export interface ExampleTurn {
+  move: ExampleMove
+  /** What the interpreter made of the move, in its voice. */
+  reading: string
+  /** The relation the reply used, as it would have been ruled. */
+  relation: RelationId
+  reply: ExampleMove
+  /** What survived the change of medium. */
+  carried: string
+  /** What did not. Naming this is half of playing well. */
+  lost: string
+}
+
+/**
+ * Two turns, because one turn cannot show the thing that makes this a game:
+ * the reply becomes the next move. The first is a change of medium between two
+ * catalogues; the second leaves the catalogues entirely for something the
+ * player does with their own body, which is the move nobody guesses is
+ * available.
+ */
+export const EXAMPLE_CHAIN: ExampleTurn[] = [
+  {
+    move: {
+      medium: 'music',
+      title: 'Clair de Lune',
+      attribution: 'Claude Debussy',
+      framing: 'The opening, before the left hand arrives — about twenty seconds.',
+    },
+    reading:
+      'Held, unhurried, and deliberately unresolved: the phrase keeps declining to land on ' +
+      'the note you expect, so the attention stays suspended rather than satisfied.',
+    relation: 'translation',
+    reply: {
+      medium: 'artwork',
+      title: 'Water Lilies (Agapanthus)',
+      attribution: 'Claude Monet',
+      framing: 'The surface at the centre, where the reflections stop being readable as sky.',
+    },
+    carried:
+      'The suspension. Neither one resolves — the eye finds no edge to settle on, the way ' +
+      'the phrase finds no note.',
+    lost:
+      'The order. The music arrives in a sequence you cannot skip; the painting hands you ' +
+      'everything at once and lets you choose where to begin.',
+  },
+  {
+    move: {
+      medium: 'artwork',
+      title: 'Water Lilies (Agapanthus)',
+      attribution: 'Claude Monet',
+      framing: 'The same centre — now as the thing being answered rather than the answer.',
+    },
+    reading:
+      'A surface with no fixed footing. Read as an instruction rather than an image, it asks ' +
+      'for weight that is never quite committed.',
+    relation: 'embodiment',
+    reply: {
+      medium: 'gesture',
+      title: 'Standing on an unmade decision',
+      attribution: null,
+      framing: 'Thirty seconds, standing, eyes open.',
+      steps: [
+        'Stand with your weight evenly on both feet.',
+        'Shift about a tenth of it onto the left foot — far less than a step.',
+        'Hold there without correcting, and notice that nothing has settled.',
+      ],
+    },
+    carried: 'The refusal to settle, now as something you are doing rather than something you perceive.',
+    lost:
+      'The beauty. The painting is lovely and the posture is mildly uncomfortable, which is ' +
+      'the honest cost of carrying a quality into a body.',
+  },
+]

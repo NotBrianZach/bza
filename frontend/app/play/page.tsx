@@ -3,7 +3,7 @@
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, ChevronDown, Loader2, Plus, RotateCcw, Search, Shuffle, Trash2, X } from 'lucide-react'
+import { ArrowLeft, BookOpen, ChevronDown, Loader2, Plus, RotateCcw, Search, Shuffle, Trash2, X } from 'lucide-react'
 import { ThemeToggle } from '@/components/ThemeProvider'
 import { ensureSession } from '@/lib/anonAuth'
 import { track } from '@/lib/analytics'
@@ -15,6 +15,7 @@ import { MEDIUM_LIST, getMedium, mediaByProvider } from '@/lib/correlate/media'
 import { RELATION_LIST } from '@/lib/correlate/relations'
 import type { CorrelationSession, MediumId } from '@/lib/correlate/types'
 import CorrelationBoard from '@/components/correlate/CorrelationBoard'
+import ExampleChain from '@/components/correlate/ExampleChain'
 import GamePicker from '@/components/correlate/GamePicker'
 
 export const dynamic = 'force-dynamic'
@@ -64,6 +65,29 @@ function PlayPageInner() {
   const [loading, setLoading] = useState(true)
   const [starting, setStarting] = useState<string | null>(null)
   const [error, setError] = useState('')
+  /**
+   * Whether the two registry cards are showing.
+   *
+   * They used to be unconditional and above everything — the media and the
+   * seven relations, twelve rows and seven rows, before the first control on
+   * the page. Neither is wrong and neither is readable on arrival: a list of
+   * seven relations means nothing to somebody who has not seen one used, which
+   * is exactly what the example below now does instead. Closed by default,
+   * one click away forever, and `ExampleChain` links straight at it.
+   */
+  const [showRules, setShowRules] = useState(false)
+  /**
+   * Whether the worked example is showing — `null` means "whatever suits".
+   *
+   * The default is a question about the player, not about the page: somebody
+   * with no games has never seen a turn, and somebody with six does not need
+   * two of them written out above their own. So the default follows
+   * `sessions.length`, and this override exists only to let either kind of
+   * player disagree. It is deliberately NOT persisted: a returning player who
+   * opened it once wants it that session, not as a new permanent fixture at the
+   * top of the page.
+   */
+  const [exampleOverride, setExampleOverride] = useState<boolean | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -221,6 +245,15 @@ function PlayPageInner() {
   }
 
   const hiddenMedia = MEDIUM_LIST.filter(m => !media.includes(m.id))
+  /**
+   * Whether the worked example shows: the player's choice if they made one,
+   * otherwise "only if you have never played".
+   *
+   * Written as `?? ` rather than seeding the state from `sessions.length` in an
+   * effect, so there is one source of truth for the default and it cannot get
+   * out of step with the list it is derived from.
+   */
+  const showExample = exampleOverride ?? sessions.length === 0
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -243,44 +276,42 @@ function PlayPageInner() {
             </p>
           </div>
         </div>
-        {/* How to take a turn, and nothing else.
-            What was here before argued for the section rather than explaining it —
-            that the reply is always real, that the medium is the interesting choice.
-            Both are true and neither is a player's problem on arrival; the games
-            make those points by being played.
+        {/* What used to be here: two bullets stating the loop, a line pointing at
+            the game cards, and the two registry cards below — sixty lines of prose
+            above the first thing on the page anybody could click.
 
-            It also stated as universal two things that vary by game, which is why
-            the third line points at the cards instead of qualifying here: every card
-            already says who names the connection and whether a move can be turned
-            away, and says it from `declaredRelation` and `enforcesConstraint` rather
-            than from prose that could drift. "Which connection to follow" is kept
-            deliberately — in most games you follow one without naming it, and
-            following is not declaring. */}
-        <ul className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed max-w-2xl mb-2 space-y-1">
-          <li>
-            Every game runs the same loop — <em>your offering → a reading of it → a reply
-            offering → what carried across</em>.
-          </li>
-          <li>
-            Every turn is two choices: which connection to follow, and <em>which medium can
-            carry it</em>.
-          </li>
-        </ul>
-        <p className="text-xs text-gray-400 dark:text-gray-500 max-w-2xl mb-6">
-          Each game below says who names the connection, and whether a move can be turned away.
-        </p>
+            Every sentence of it was true. None of it was learnable in that form.
+            "Your offering → a reading of it → a reply offering → what carried
+            across" is a correct description of the loop and an unreadable one,
+            because all four nouns are terms of art that the sentence introduces at
+            the same time. So the loop is now shown instead of stated, by
+            `ExampleChain` below, which is the same four stages with something
+            under each arrow — and the relations are named where one was used
+            rather than listed seven-at-once before any of them has a referent.
 
-        {/* The two registries, stated once. A player who understands these two lists
-            understands every game in the section.
+            The line about who names the connection is dropped rather than moved:
+            every game card already says it, from `declaredRelation` and
+            `enforcesConstraint` rather than from prose that could drift, which was
+            the reason the old line only pointed at the cards. */}
 
-            This card was headed "What an offering can be", which collided with the
-            "An offering is" row on all eleven game cards below — two labels
-            defining the same noun, fifteen centimetres apart, answering different
-            questions. They are not redundant: this one answers *what material*
-            (and is the only place the providers are named), while a game card
-            answers *what role* — a clue, an argument, a building material. The
-            overlap was in the wording, so the wording is what changed: this card
-            names the source, and the cards below say "Plays as". */}
+        {/* The registries, one click away rather than unconditional. Both cards are
+            unchanged; what changed is that a player meets them when they want them.
+
+            Kept in the disclosure and NOT folded into the example: they are the
+            only place the providers are named, and "which catalogues is this
+            searching" is a fair question to be able to answer without starting a
+            game. */}
+        <button
+          onClick={() => setShowRules(v => !v)}
+          aria-expanded={showRules}
+          className="flex items-center gap-1.5 mb-4 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+        >
+          <BookOpen size={13} />
+          Where the offerings come from, and what a reply can do
+          <ChevronDown size={13} className={`transition-transform ${showRules ? 'rotate-180' : ''}`} />
+        </button>
+
+        {showRules && (
         <div className="grid sm:grid-cols-2 gap-4 mb-8">
           <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
             <p className="text-[10px] uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-2">Where the offerings come from</p>
@@ -318,6 +349,7 @@ function PlayPageInner() {
             </ul>
           </div>
         </div>
+        )}
 
         {loading ? (
           <div className="flex items-center justify-center py-20 text-gray-400">
@@ -325,6 +357,38 @@ function PlayPageInner() {
           </div>
         ) : (
           <>
+            {/* The example, above the player's own games and above the picker.
+
+                Gated on `loading` by sitting inside this branch, which matters
+                more than it looks: the default is "show it when you have no
+                games", and before the request lands everybody has no games. An
+                example that appears for half a second and vanishes under a
+                returning player's list would be worse than never showing it. */}
+            {showExample && (
+              <ExampleChain
+                onStart={startGame}
+                starting={starting}
+                onShowRules={() => setShowRules(true)}
+              />
+            )}
+            {/* The way back to it for a player who has games, and the way out of
+                it for one who does not. One control, because the override is one
+                piece of state and a second button would imply a second.
+
+                Unconditional, and that is the whole of the bug it is written to
+                avoid: gated on `sessions.length > 0 || showExample`, a
+                first-time player who hid the example removed the only control
+                that could bring it back — no games to satisfy the first clause,
+                and hiding it had just falsified the second. A toggle must not be
+                reachable only in one of the two states it toggles between. */}
+            <button
+              onClick={() => setExampleOverride(!showExample)}
+              className="flex items-center gap-1.5 mb-8 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+            >
+              <ChevronDown size={13} className={`transition-transform ${showExample ? 'rotate-180' : ''}`} />
+              {showExample ? 'Hide the example' : 'Show the example game again'}
+            </button>
+
             {sessions.length > 0 && (
               <section className="mb-10">
                 <div className="flex items-baseline gap-2 mb-3">

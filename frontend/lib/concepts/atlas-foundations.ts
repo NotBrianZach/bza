@@ -51,7 +51,7 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
   id: 'algebra-foundations',
   name: 'Number and algebra',
   covers:
-    'Number and the letters that stand for it: percent, scientific notation, and then ' +
+    'Number and the letters that stand for it: scientific notation, and then ' +
     'equations, inequalities, systems and quadratics. These were two areas until the number ' +
     'half had been almost entirely written out. The arithmetic underneath — place value, the ' +
     'written algorithms, order of operations, signed numbers, divisibility, fractions, prime ' +
@@ -70,9 +70,13 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
     'twelfth, and what went is the whole node: that a ratio is a claim about a quotient and so ' +
     'needs a second number before it says any amount, that a rate of unlike quantities has two ' +
     'reciprocal ways up which compare in opposite directions, and that scaling multiplies where ' +
-    'the additive reading adds. What stays behind of that one is percent, which is the same ' +
-    'comparison with its denominator fixed and is the next node here whose prerequisites are ' +
-    'all written. Linear equations in one unknown have gone the same way as a thirteenth, ' +
+    'the additive reading adds. What stays behind of that one is nothing: percent was the ' +
+    'remnant and has followed it as a twenty-first, taking the same comparison with its ' +
+    'denominator fixed at 100 — that the symbol supplies the hundred so a percent names no ' +
+    'amount until a base is handed to it, that a percentage change is one multiplication by a ' +
+    'factor so reversing it is a division and not the percentage applied the other way, and ' +
+    'that successive changes multiply their factors, which is why equal rises and falls lose ' +
+    'instead of cancelling. Linear equations in one unknown have gone the same way as a thirteenth, ' +
     'taking the whole of what solving one is: undoing the operations in reverse order, ' +
     'collecting the unknown when it stands on both sides, and why the rule is that the same ' +
     'move on both sides must be invertible and not merely the same. What stays behind of it is ' +
@@ -85,7 +89,13 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
     'a=b=1 turns the expansion into the row added up and so into a power of two. What stays ' +
     'behind of that one is nothing, because what would have stayed behind is the counting ' +
     'argument for why an entry counts subsets, and the map files that in discrete mathematics, ' +
-    'where it depends on the theorem rather than the other way round. So the old line between ' +
+    'where it depends on the theorem rather than the other way round. The absolute value has ' +
+    'gone as a twentieth, taking what it IS: distance from zero, a definition in two branches ' +
+    'selected by the sign of what is inside rather than by a minus sign being visible, and the ' +
+    'gap between two numbers that comes out the same whichever way round they are subtracted. ' +
+    'What stays behind of that one is the equations — asking which numbers satisfy a condition ' +
+    'with the bars in it is a case split producing two answers, and it is named here and not ' +
+    'written for the same reason the inequalities are not. So the old line between ' +
     'number and algebra ' +
     '— nothing ' +
     'symbolic on one side, a letter standing for an unknown on the other — still holds of the ' +
@@ -222,7 +232,7 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
    * times now, rather than only been argued for.
    */
   /**
-   * NINETEEN NODES HAVE LEFT THE TWO AREAS THAT MADE THIS ONE, AND HAD TO.
+   * TWENTY NODES HAVE LEFT THE TWO AREAS THAT MADE THIS ONE, AND HAD TO.
    *
    * Twelve from the number half — `place-value`, `integer-arithmetic`,
    * `order-of-operations`, `negative-numbers`, `divisibility`,
@@ -235,6 +245,17 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
    * `completing-the-square`, `quadratic-formula`, `polynomial-roots` and
    * `binomial-theorem` in ontology.ts.
    *
+   * AND THE TWENTIETH CROSSES THAT LINE, which is the one thing worth noting
+   * about the arithmetic twelve becoming thirteen. `absolute-value` was a node
+   * of the ALGEBRAIC half of this area — it is below `absolute-value-equations`
+   * and nowhere near place value — and it was authored into
+   * `arithmetic-foundations` anyway, because a distance from zero on the number
+   * line is arithmetic and because its sole prerequisite, `negative-numbers`,
+   * is a concept of that subject. So the twelve-and-seven split above is a
+   * record of where nodes came FROM and has stopped predicting where they go.
+   * Which subject receives a promoted node is decided by where its own
+   * prerequisites live, not by which half of this area it sat in.
+   *
    * `atlasProblems` rejects a map node whose id collides with an authored
    * concept — not as tidiness, but because the composed concept list would
    * then hold two entries for the id and the shadowing copy has no knowledge
@@ -243,7 +264,7 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
    * The count is kept current deliberately. It is the measurement of how far
    * this area has turned into a syllabus, and a comment saying "five" while
    * eleven have gone is the kind of rot that makes a reader distrust the rest
-   * of the file. Nineteen gone against ten remaining is also the figure
+   * of the file. Twenty gone against nine remaining is also the figure
    * that forced the merge argued above, read five promotions later: ten of the
    * first fourteen came out of a single area of fifteen, and what that left was
    * not a region of the map. The eleventh and twelfth are the two that could
@@ -269,6 +290,36 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
    * caps how many shipped `evaluate` tasks may need the worker. So the next
    * promotion out of this area is gated on a change to numerals.ts and not on
    * anything in this file, which is a new kind of entry for this list.
+   *
+   * THE LAST SENTENCE WAS TRUE OF `complex-numbers` AND WRONG ABOUT THE AREA,
+   * and the twentieth promotion is what showed the difference. It said "the
+   * next promotion out of this area is gated on a change to numerals.ts", which
+   * read a block on one node as a block on the whole area and was never
+   * checked against the others — the same error ontology-arithmetic.ts made
+   * three promotions earlier by computing readiness before an edit and writing
+   * it down as a claim about after it. `absolute-value` went next, and it needed
+   * no change to numerals.ts because the change it needed had already been made
+   * for `sqrt`.
+   *
+   * THE TWENTIETH WAS CHOSEN BY DISBELIEVING A COMMENT IN THE RECEIVING FILE,
+   * which is the fourth distinct ground in this list and the only one where the
+   * refusal was CORRECT when written. ontology-arithmetic.ts declined
+   * `absolute-value` in its own header because `exactValue` returned null for a
+   * function node, so no task in that subject could contain `abs`. That was a
+   * true statement about numerals.ts. It stopped being one when a
+   * `case 'function'` branch was added there — for `sqrt`, then `abs`, then
+   * `log` — and nothing re-read the sentence that depended on it.
+   *
+   * So the taxonomy this list keeps is now three deep and the third entry is
+   * the dangerous one. A refusal about the MATHEMATICS does not expire
+   * (`roots-and-irrationals` on irrational answers). A refusal that was WRONG
+   * WHEN WRITTEN can be read again and withdrawn (`linear-equations`,
+   * `systems-of-linear-equations`). A refusal naming a MECHANISM — a function
+   * that returns null, a form that does not exist — was right and has an expiry
+   * date set by work nobody connected to it, and it will not tell you when it
+   * passes. `complex-numbers` directly above is the same shape and has NOT
+   * expired, which is why the pair is worth keeping side by side: the lesson is
+   * to re-check the mechanism, not to distrust the conclusion.
    *
    * WHAT THE ROUTE TABLE RUNNING DRY DID TO THE TIE-BREAK, stated once so the
    * next author does not go looking for a route to serve. Node count, floor
@@ -314,9 +365,9 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
    * The `needs` below still name the departed. That is the intended way for
    * the map to meet a syllabus: the edge resolves in `composeAtlas`, where
    * both endpoints exist. It is dropped by `areaOntology`, which keeps only
-   * edges internal to the area — so this area viewed alone has EIGHT roots
+   * edges internal to the area — so this area viewed alone has SIX roots
    * rather than one, being every node whose prerequisites have all been
-   * authored out from under it, from `absolute-value` at the bottom to
+   * authored out from under it, from `scientific-notation` at the bottom to
    * `radical-equations` near the top. That is the area view being honest about
    * its own boundary rather than a fault, and tests/atlas.mjs asserts the set
    * by NAMED membership, because a merge or a promotion can turn a root set
@@ -372,6 +423,49 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
    * last for exactly one, and shrinkage again because it was the last for none.
    * Computing the set on both sides remains the only way to know which.
    *
+   * SEVEN AFTER THE TWENTIETH, AND IT IS THE FIRST CAUSE REPEATING. Eight to
+   * seven: `absolute-value` was a root here and has gone, and
+   * `absolute-value-equations` — its only dependent, and a node of this area —
+   * did NOT take its place, because `linear-inequalities` is its other
+   * prerequisite and is still here gating it from inside. So this is the FIRST
+   * cause again, the one `real-number-line`'s promotion showed, and not the
+   * fourth: the departing node did have an in-area dependent, which is what
+   * distinguishes it from `binomial-theorem` above, and that dependent was
+   * still gated from inside anyway. Two different reasons produce the same
+   * shrinkage, and only the computed set tells them apart from each other or
+   * from a substitution.
+   *
+   * SIX AFTER THE TWENTY-FIRST, AND IT IS THE BINOMIAL'S CAUSE RATHER THAN THE
+   * ONE DIRECTLY ABOVE. `percent` was a root here and is a concept of
+   * `arithmetic-foundations` now. Seven to six, the other six untouched.
+   *
+   * Nothing substituted in, and this time the reason is that the node had no
+   * in-area dependent AT ALL — its only dependent anywhere is
+   * `descriptive-statistics`, over in the statistics area. So it is the
+   * `binomial-theorem` cause, not the `absolute-value` one, and the two are now
+   * both on the record twice each: a node with no in-area dependent can only
+   * shrink this set, and a node whose in-area dependent is still gated from
+   * inside shrinks it too. The identical observable, twice over from four
+   * different causes, is the whole argument for computing the set rather than
+   * reasoning about it.
+   *
+   * What distinguishes this departure from the other three is OUTSIDE this
+   * area: the gate on `descriptive-statistics` got SHORTER, three entries to
+   * two, where every other promotion out of here substituted at constant
+   * length. The note beside the departed node says why —
+   * `gatingPrerequisitesOf` names one ancestor per BRANCH, this node had two
+   * prerequisites and both were gate entries, and authoring it collapsed the
+   * fork into a single node. Every earlier measurement OUT OF THIS AREA was
+   * taken on a node with one prerequisite, so none of them could have shown it.
+   *
+   * It is not the first in the build, and the scope of that sentence is the
+   * whole of what a draft of it got wrong. `area-and-perimeter`, which also has
+   * two `needs`, took `circle-measure` from four gates to three in
+   * `plane-geometry` on 2026-11-15 by the identical collapse. Neither
+   * ontology-geometry.ts nor this file recorded it, so the narrower rule reads
+   * as universal in both — which is why the correction is written here with its
+   * scope attached rather than as another unqualified superlative.
+   *
    * It was eight until `real-number-line` was promoted, and until that
    * promotion this paragraph was claiming an assertion that did not exist —
    * the named-membership check was written for `euclidean-geometry` and never
@@ -405,14 +499,56 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
    * reconcile. Every entry under `links` below came from the algebraic half.
    */
   nodes: [
-    {
-      id: 'absolute-value',
-      match: /\babsolute value\b/i,
-      name: 'Absolute value',
-      is: 'Distance from zero, which is why it is a function of sign rather than an instruction to delete a minus.',
-      needs: ['negative-numbers'],
-      terms: 'absolute value modulus distance from zero',
-    },
+    /*
+     * `absolute-value` was here and is now authored in ontology-arithmetic.ts,
+     * so it had to leave — same rule, twentieth time across the two areas that
+     * made this one. See the block above the node list.
+     *
+     * ITS ONE `needs` LEFT WITH IT, AND ONE IS THE FLOOR. The node declared
+     * `needs: ['negative-numbers']` and nothing else, so that single edge is
+     * the whole of what the promotion stranded, and `negative-numbers` is a
+     * concept of the subject the node joined — so the edge is restated in that
+     * ontology's own `EDGES` and this area needed no `links` change in either
+     * direction. The cheap shape for the fifth time in this subject, and the
+     * cheapest it can be: a node with no `needs` at all would be a root of the
+     * whole map.
+     *
+     * WHAT MADE THIS ONE POSSIBLE WAS NOT THE MAP. Every departure above was
+     * unblocked by something in this file or in the test suite — a merge, a
+     * route, a refusal reread against types.ts. This one was declined IN
+     * WRITING by ontology-arithmetic.ts, on the ground that `exactValue`
+     * returned null for a function node so no task here could contain `abs`.
+     * That premise was reversed by a change made for `sqrt` in a different
+     * subject, and the sentence resting on it went on reading as a decision.
+     * The distinction this list already draws — a refusal that EXPIRED versus
+     * one that was WRONG WHEN WRITTEN — gains a third kind with this
+     * departure: a refusal that was right, that names a MECHANISM, and whose
+     * expiry date is therefore set by somebody else's unrelated work. It will
+     * not announce that it has passed. The one beside `complex-numbers` below
+     * is the same shape and has NOT expired, so the two sit here as a matched
+     * pair rather than as a rule.
+     *
+     * The edge pointing the OTHER way was left alone and is the only one there
+     * is: `absolute-value-equations`, immediately below, names this concept in
+     * its own `needs`, that node STAYED here, so it still DECLARES the edge and
+     * `composeAtlas` resolves it across the file boundary. It also GATES now
+     * where before the walk looked straight through an empty node to the signed
+     * numbers — but the gate did not get LONGER, which is the half worth
+     * measuring. `absolute-value-equations` was gated by `linear-equations`,
+     * `real-number-line` and `negative-numbers`, and is now gated by the first
+     * two plus this concept: three entries either way, one member replaced,
+     * because `gatingPrerequisitesOf` names nearest teachable ancestors rather
+     * than accumulating them. The chain beneath the gate is a step deeper and
+     * the gate itself is the same length.
+     *
+     * The node carried no `confusedWith` and no `exercises`, both checked
+     * before it was deleted rather than inferred from the suites staying green,
+     * since staying green is exactly what they would have done either way. What
+     * the promotion ADDED on that axis is an `encompasses` edge in the
+     * receiving subject — every one of the four tasks computes a signed
+     * subtraction inside the bars — which is the first credit edge in that file
+     * to pass its own measurement rather than be declined by it.
+     */
     /*
      * `prime-factorisation` was here and is now authored in
      * ontology-arithmetic.ts, so it had to leave — same rule, seventh time in
@@ -510,6 +646,14 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
      * upward, every into-edge is a future stranded edge, which is the lesson
      * `EUCLIDEAN_GEOMETRY`'s comment reaches by the same route.
      *
+     * ONE OF THE THREE, now that `percent` has gone the same way as a
+     * twenty-first, and the prediction in the sentence above has therefore been
+     * borne out on two of the three edges it was written about. Only
+     * `scientific-notation` is still a node here declaring an into-edge at this
+     * concept. The count in a sentence like that is worth correcting each time
+     * rather than left to rot, because the roster reads as a list of edges
+     * somebody has checked and it is a list of edges waiting to move.
+     *
      * Worth noting for whoever promotes the next one: this area is down to five
      * nodes, and tests/atlas.mjs asserts that no area has fewer than five
      * ("no area is a stub"). The next promotion out of here trips that check,
@@ -560,6 +704,21 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
      * warns a `length` check would sail through. tests/atlas.mjs asserts it by
      * name.
      *
+     * IT WAS A ROOT FOR NINE PROMOTIONS AND HAS NOW BEEN PROMOTED ITSELF, so
+     * that paragraph is a record and not a description. Becoming a root of an
+     * area's own view is what readiness LOOKS like here — every prerequisite
+     * authored out from under the node — so a node arriving in this set is a
+     * node that has just become promotable, and the set is the queue. This one
+     * left the set the way `systems-of-linear-equations` did, by being taken.
+     *
+     * The derived claim above it needs no correction and that is worth one
+     * line: the two edges this concept's promotion left pointing at it from
+     * inside the area are down to one, since `percent` declared its own and
+     * took it along, while `word-problems` is still a node here and still owns
+     * the other. A dependent staying is what keeps an edge local, which is the
+     * rule the paragraph above states, and it has now been tested in both
+     * directions on the same pair.
+     *
      * And the `links` entry in `EUCLIDEAN_GEOMETRY` from this concept to
      * `similarity` has started GATING. It was the one entry in that list which
      * gated nothing, because the walk passed straight through a node with no
@@ -569,14 +728,64 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
      * between that entry and `roots-and-irrationals->pythagoras` had to be
      * rewritten rather than deleted, and tests/atlas.mjs says why.
      */
-    {
-      id: 'percent',
-      match: /^percent(age)?\b/i,
-      name: 'Percent',
-      is: 'A ratio with a fixed denominator, where the recurring error is compounding a percent of the wrong base.',
-      needs: ['ratio-and-rate', 'decimal-representation'],
-      terms: 'percent percentage increase discount',
-    },
+    /*
+     * `percent` was here and is now authored in ontology-arithmetic.ts, so it
+     * had to leave — same rule, twenty-first time across the two areas that
+     * made this one. See the block above the node list.
+     *
+     * BOTH of its own edges left with it and BOTH are restated inside that
+     * subject. The node declared
+     * `needs: ['ratio-and-rate', 'decimal-representation']` and both of those
+     * are concepts of the subject it has joined, so every stranded edge has an
+     * owner there, none crosses a subject boundary, and this area needed no
+     * `links` change in either direction. The cheap shape for the sixth time in
+     * this subject.
+     *
+     * IT IS ALSO THE LAST CHEAP MULTI-EDGE CASE THIS AREA CAN PRODUCE, which is
+     * a measurement and not a guess. Six nodes are left here with every
+     * prerequisite written, and they fall into exactly two groups:
+     *
+     *  - `scientific-notation` and `complex-numbers` name ONE concept each
+     *    (`decimal-representation`, `quadratic-formula`). A single-prerequisite
+     *    node is cheap trivially — one subject is all one edge can reach — which
+     *    is the floor `absolute-value` hit and not an instance of this shape.
+     *  - `word-problems`, `linear-inequalities`, `radical-equations` and
+     *    `nonlinear-systems` name two each, and every one of the four is SPLIT
+     *    across two subjects. So each of them costs a `links` entry when it
+     *    goes.
+     *
+     * `percent` was the only node here naming two concepts of one subject, so
+     * no later departure can be cheap and multi-edged at once. tests/atlas.mjs
+     * had the same fact in a different form — this node was its only available
+     * example of a map node resting on two authored arithmetic concepts — and
+     * that assertion retires with the node rather than moving on to a
+     * successor.
+     *
+     * The node carried no `confusedWith` and no `exercises`, both checked on it
+     * before it was deleted rather than inferred from the suites staying green,
+     * since staying green is exactly what they would have done either way. What
+     * the promotion ADDED on the `confusedWith` axis is a decision and not an
+     * edge: ontology-arithmetic.ts had asked, beside `ratio-and-rate`, whether
+     * the two interfere, and could not answer from that end because an ontology
+     * may only name concepts it contains. The answer is written there now and
+     * it is no — the pair is in a prerequisite relation, so the sessions an
+     * interference would forbid are the sensible ones, and the misconception
+     * the map node's `is` line named is handled in two subgoals instead.
+     *
+     * THE ONE CONSEQUENCE A READER WOULD NOT PREDICT is that a gate got
+     * SHORTER, which no promotion out of THIS area had done before. Its only
+     * dependent is `descriptive-statistics`, over in the statistics area, which
+     * needs this concept and `sigma-notation`. While this node was a skeleton
+     * the gating walk passed through it and came out at BOTH of its
+     * prerequisites, so that node was gated by `ratio-and-rate`,
+     * `decimal-representation` and `sigma-notation`. It is gated by `percent`
+     * and `sigma-notation` now: three to two. `gatingPrerequisitesOf` names
+     * nearest teachable ancestors, which is one entry per BRANCH, and this
+     * promotion put a single teachable node in front of a branch that had
+     * forked. Every earlier measurement in this file concluded that a gate
+     * substitutes at constant length, and every earlier measurement was taken
+     * on a node with exactly one prerequisite.
+     */
     /*
      * `roots-and-irrationals` was here and is now authored in
      * ontology-arithmetic.ts, so it had to leave — same rule, ninth time in

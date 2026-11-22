@@ -2683,8 +2683,8 @@ t('and it is the subject with a root that needs nothing',
   roots(ONTOLOGIES[0]).some(id => gatingPrerequisitesOf(ONTOLOGIES[0], id).length === 0))
 t('and resolves by id', getOntology('arithmetic-foundations') === A)
 t('it has no internal faults', ontologyProblems(A).length === 0, ontologyProblems(A).join('; '))
-t('twelve concepts, thirty-six knowledge points',
-  A.concepts.length === 12 && allKnowledgePoints(A).length === 36,
+t('fourteen concepts, forty-two knowledge points',
+  A.concepts.length === 14 && allKnowledgePoints(A).length === 42,
   `${A.concepts.length} concepts, ${allKnowledgePoints(A).length} points`)
 t('every concept is teachable — this is a syllabus, not a map',
   A.concepts.every(c => isTeachable(A, c.id)))
@@ -2711,8 +2711,8 @@ const coldSet = assemble({ ontology: A, strengths: COLD, now: '2026-10-23T12:00:
 t('a cold account gets three tasks, all from place value',
   coldSet.tasks.length === 3 && coldSet.tasks.every(x => conceptOfPoint(A, x.knowledgePointId).id === 'place-value'),
   `${coldSet.tasks.length} tasks`)
-t('and the other eleven concepts are reported blocked rather than silently absent',
-  coldSet.blocked.length === 11,
+t('and the other thirteen concepts are reported blocked rather than silently absent',
+  coldSet.blocked.length === 13,
   coldSet.blocked.map(b => b.conceptId).join(', '))
 t('each blocked concept names a TEACHABLE thing to go and do', coldSet.blocked.every(b =>
   b.missing.length > 0 && b.missing.every(m => isTeachable(A, m))))
@@ -2813,9 +2813,31 @@ const ARITH_TASKS = allKnowledgePoints(A).flatMap(p => tasksForPoint(p.id))
  * `real-number-line` directly above, where every task had to stand in for a
  * claim about an infinite set. The block in tasks.ts makes the comparison in
  * full.
+ *
+ * `absolute-value` added three points and FOUR tasks, so this is the second
+ * concept here that is not one apiece. The extra one is on the middle point,
+ * and the reason is a property of the ask rather than of the concept: that
+ * point's natural question is `abs(x)/x`, whose answer is −1 at EVERY negative
+ * input, so it can be answered from the sign of x alone without any of the
+ * content. `abs(x) - x` sits beside it, where the answer depends on the input
+ * and both wrong readings produce 0. A task whose reference does not move when
+ * its input moves is weak evidence even when it is correct, and pairing is the
+ * cheaper fix than finding one question that does both jobs.
+ *
+ * `percent` added three points and three tasks, one apiece, and it is the
+ * second concept here owing no proxy apology — the same property
+ * `ratio-and-rate` has and for the same reason, since an amount, a price before
+ * a discount and a price after two changes are all values. It needed no extra
+ * task either, and the comparison with `absolute-value` directly above is the
+ * exact one: what forced the pairing there is an input-independent reference,
+ * and all three of these move with every variable they declare. The third is
+ * the one worth reading, because its reference IS 0 at some inputs —
+ * (100+p)(100−q) = 10000 is precisely the undoing condition — and that is its
+ * content rather than the defect, which is why the property asserted in the
+ * group below is "not 0 at its own inputs" and not "never 0".
  */
-t('thirty-nine tasks, and every point has at least one',
-  ARITH_TASKS.length === 39 && allKnowledgePoints(A).every(p => tasksForPoint(p.id).length > 0),
+t('forty-six tasks, and every point has at least one',
+  ARITH_TASKS.length === 46 && allKnowledgePoints(A).every(p => tasksForPoint(p.id).length > 0),
   `${ARITH_TASKS.length}`)
 /*
  * NOT "all of them are evaluate" any more, and the change is the point rather
@@ -2834,7 +2856,7 @@ t('thirty-nine tasks, and every point has at least one',
  * arriving here unnoticed is still visible.
  */
 t('two are transform_to_form and the rest evaluate — both graded locally',
-  ARITH_TASKS.filter(x => x.kind === 'evaluate').length === 37
+  ARITH_TASKS.filter(x => x.kind === 'evaluate').length === 44
   && ARITH_TASKS.filter(x => x.kind === 'transform_to_form').length === 2,
   ARITH_TASKS.reduce((acc, x) => ({ ...acc, [x.kind]: (acc[x.kind] ?? 0) + 1 }), {}),
 )
@@ -3106,6 +3128,556 @@ t('and it rests on the primes, which is the needs that came off the node',
 t('and taking a gcd claims no credit for the factorisation it is read off',
   !encompassedBy(A, 'gcd-and-lcm').includes('prime-factorisation'),
   encompassedBy(A, 'gcd-and-lcm').join(', '))
+
+/**
+ * `absolute-value` — THE CONCEPT THIS FILE'S HEADER USED TO SAY COULD NOT EXIST.
+ *
+ * The twentieth promotion out of `algebra-foundations`, and the first anywhere
+ * chosen by disbelieving a refusal that was CORRECT when it was written.
+ * ontology-arithmetic.ts declined this concept because "`exactValue` returns
+ * null for a `function` node, so nothing here uses `abs`" — a true statement
+ * about numerals.ts, reversed later by a `case 'function'` branch added for
+ * `sqrt`, and never re-read.
+ *
+ * So the first assertion in this group is the mechanism itself, and it is the
+ * load-bearing one: if somebody removes the `abs` branch from `exactValue`,
+ * this concept's whole claim to be locally rulable goes with it and the suite
+ * should say which concept broke and why, rather than reporting four
+ * inconclusive tasks. The generic group above would catch the symptom; this
+ * catches the cause.
+ *
+ * Then the mathematics of all three worked examples, re-derived here and
+ * compared against WHAT THE EXAMPLE SAYS rather than against a number repeated
+ * in this file — the standard the two groups above hold to, for the same
+ * reason: a wrong worked example is the worst thing that file can contain and
+ * no structural check would notice one.
+ */
+group('absolute-value — the concept an expired refusal was holding back')
+const AV = conceptById(A, 'absolute-value')
+const AV_SUBGOALS = AV.knowledgePoints.flatMap(p => p.workedExample.subgoals)
+const avAnswer = i => AV.knowledgePoints[i].workedExample.answer
+const AV_TASKS = AV.knowledgePoints.flatMap(p => tasksForPoint(p.id))
+
+/*
+ * `avExact` rather than `exactly`, and the difference is the point of having
+ * it. `exactly` throws on a null value, so an assertion written with it does
+ * not go RED when `exactValue` stops settling something — it kills the run at
+ * that line and every assertion after it, including the ones that would name
+ * the cause. This group exists to report a broken mechanism, so it must
+ * survive the mechanism being broken.
+ */
+const avExact = src => { const v = exactValue(parseExpression(src, [])); return v === null ? null : showExact(v) }
+t('exactValue settles abs exactly, which is the fact the refusal denied',
+  avExact('abs(0 - 8)') === '8' && avExact('abs(8)') === '8',
+  'if this is red, the concept below is no longer locally rulable and the refusal is live again')
+/*
+ * And that it is EXACT rather than merely non-null, which is the property the
+ * subject's contract needs. A float path would pass the check above.
+ */
+t('…and on a fraction too, so it is the rational branch and not a numeric one',
+  avExact('abs(0 - 3/7)') === '3/7' && avExact('abs(3/7)') === '3/7')
+
+t('three points, at positions 1, 2, 3 — which restart per concept, not per subject',
+  AV.knowledgePoints.length === 3
+  && AV.knowledgePoints.map(p => p.position).join(',') === '1,2,3',
+  AV.knowledgePoints.map(p => p.position).join(','))
+
+/* First point: |x − 9| at x = 4 and x = 14, both branches, both answers 5. */
+t('the first example\'s two inputs really do straddle 9, so the two branches are both used',
+  avExact('4 - 9') === '-5' && avExact('14 - 9') === '5')
+t('and both give 5, which is what it answers',
+  avExact('abs(4 - 9)') === '5' && avExact('abs(14 - 9)') === '5'
+  && avAnswer(0).includes('5 at both inputs'),
+  avAnswer(0))
+t('the distance reading it finishes on holds: both inputs are 5 from 9',
+  avExact('abs(4 - 9)') === avExact('abs(14 - 9)')
+  && avAnswer(0).includes('5 away from 9')
+  && AV.knowledgePoints[0].workedExample.subgoals[3].detail
+    .includes('|x| is |x − 0|'),
+  avAnswer(0))
+
+/* Second point: x = −5. −x = 5, |x| = 5, |x|/x = −1, |x| − x = 10. */
+t('the second example\'s four numbers are the ones it states',
+  avExact('0 - (0 - 5)') === '5'
+  && avExact('abs(0 - 5)') === '5'
+  && avExact('abs(0 - 5)/(0 - 5)') === '-1'
+  && avExact('abs(0 - 5) - (0 - 5)') === '10',
+  avAnswer(1))
+t('…and the answer string says all four of them',
+  ['−x = 5', '|x| = 5', '|x|/x = −1', '|x| − x = 10'].every(s => avAnswer(1).includes(s)),
+  avAnswer(1))
+/*
+ * The general claim the point makes, checked at a second input rather than
+ * trusted: the quotient is 1 on the positives and −1 on the negatives, and the
+ * difference is 0 on the non-negatives. Those are the three facts the subgoals
+ * assert about inputs the example does not use.
+ */
+t('the quotient is 1 on the positives and the difference 0, which is the half the example claims without showing',
+  avExact('abs(5)/5') === '1' && avExact('abs(5) - 5') === '0'
+  && avExact('abs(0 - 5)/(0 - 5)') === '-1')
+t('and |x| − x is twice the size at a negative input, not merely nonzero',
+  avExact('abs(0 - 5) - (0 - 5)') === avExact('2*abs(0 - 5)'))
+
+/* Third point: a = −4, b = 7. Both subtractions give 11; 4 + 7 = 11. */
+t('the third example\'s two subtractions are the stated −11 and 11',
+  avExact('(0 - 4) - 7') === '-11' && avExact('7 - (0 - 4)') === '11')
+t('so both absolute values are 11, which is what it answers',
+  avExact('abs((0 - 4) - 7)') === '11' && avExact('abs(7 - (0 - 4))') === '11'
+  && avAnswer(2).includes('11 both ways'),
+  avAnswer(2))
+t('and the gap really is the SUM of the two distances from zero, since they are on opposite sides',
+  avExact('abs(0 - 4) + abs(7)') === '11' && avAnswer(2).includes('4 + 7 = 11'),
+  avAnswer(2))
+/*
+ * The contrast the last subgoal draws — same side, so a difference instead —
+ * checked because it is the one number in this concept's prose that is not in
+ * any `answer` string and therefore not pinned by the assertions above.
+ */
+t('while two numbers on the same side give a difference: between 4 and 7 the gap is 3',
+  avExact('abs(4 - 7)') === '3'
+  && AV.knowledgePoints[2].workedExample.subgoals[3].detail.includes('the gap is 3'))
+
+/**
+ * THE TASKS, AND THE MEASUREMENT THE CREDIT EDGE RESTS ON.
+ *
+ * `absolute-value => negative-numbers` is the first `encompasses` edge in this
+ * subject to be ADDED rather than declined, and the rule it had to meet is the
+ * one that killed the other three: the claim is about what practising
+ * exercises, measured against the tasks actually shipped. The measurement is
+ * that the argument of every `abs` in the concept is NEGATIVE at that task's
+ * own stated inputs — so there is no way to answer any of the four without
+ * doing signed arithmetic.
+ *
+ * Asserted by computing the argument rather than by reading the inputs,
+ * because the strongest case is the task whose inputs are both POSITIVE:
+ * `abs-two-branches-1` is 2 and 9, and the signed arithmetic is 2 − 9. A check
+ * on the `at` values would have missed it and would have looked like it
+ * passed.
+ */
+const absArgument = task => {
+  const symbols = task.variables.map(v => v.name)
+  const at = {}
+  for (const [name, raw] of Object.entries(task.at)) at[name] = parseExpression(raw, [])
+  const find = node => {
+    if (node.kind === 'function' && node.name === 'abs') return node.args[0]
+    for (const child of [
+      ...(node.args ?? []), node.operand, node.left, node.right,
+      node.numerator, node.denominator, node.base, node.exponent,
+    ]) {
+      if (!child) continue
+      const hit = find(child)
+      if (hit) return hit
+    }
+    return null
+  }
+  const arg = find(parseExpression(task.given, symbols))
+  return arg === null ? null : exactValue(substitute(arg, at))
+}
+t('four tasks: two on the middle point, one on each of the others',
+  AV_TASKS.length === 4
+  && tasksForPoint(AV.knowledgePoints[0].id).length === 1
+  && tasksForPoint(AV.knowledgePoints[1].id).length === 2
+  && tasksForPoint(AV.knowledgePoints[2].id).length === 1,
+  AV.knowledgePoints.map(p => `${p.id}:${tasksForPoint(p.id).length}`).join(' '))
+t('every one of them puts an `abs` in its given, which no task in the build did before',
+  AV_TASKS.every(x => /\babs\(/.test(x.given)),
+  AV_TASKS.map(x => `${x.id}:${x.given}`).join(' '))
+t('and the argument of every one is NEGATIVE at its own inputs — the measurement the credit edge rests on',
+  AV_TASKS.every(x => {
+    const v = absArgument(x)
+    return v !== null && v.n < 0n
+  }),
+  AV_TASKS.map(x => `${x.id}:${(() => { const v = absArgument(x); return v ? showExact(v) : 'null' })()}`).join(' '))
+t('including the one whose stated inputs are both positive, which an `at` check would have passed',
+  (() => {
+    const x = taskById('abs-two-branches-1')
+    return Object.values(x.at).every(raw => exactValue(parseExpression(raw, [])).n > 0n)
+      && absArgument(x).n < 0n
+  })(),
+  'inputs 2 and 9; argument 2 − 9')
+t('so the credit edge is carried, unlike the three this subject declined',
+  encompassedBy(A, 'absolute-value').includes('negative-numbers')
+  && prerequisitesOf(A, 'absolute-value').includes('negative-numbers'),
+  encompassedBy(A, 'absolute-value').join(', '))
+/*
+ * The interference that was checked for and NOT declared. The map node carried
+ * no `confusedWith`, so nothing was stranded — and none was invented during the
+ * promotion either, because these two are in a prerequisite relation and
+ * `interferes_with` would forbid the session that teaches them together.
+ * Asserted so the absence reads as a decision rather than as an omission,
+ * which is the shape the stranding no test catches would otherwise hide in.
+ */
+t('and no interference was invented between a concept and its own prerequisite',
+  !A.edges.some(e => e.kind === 'interferes_with'
+    && (e.from === 'absolute-value' || e.to === 'absolute-value')),
+  A.edges.filter(e => e.kind === 'interferes_with').map(e => `${e.from}~${e.to}`).join(' '))
+/*
+ * And the task that is deliberately NOT here. The third point's claim is
+ * |a − b| = |b − a|, whose direct ask is `abs(a - b) - abs(b - a)` — and that
+ * is 0 at every pair of inputs, so a learner writing 0 unread is marked
+ * correct. A reference that does not move when the inputs move is not
+ * evidence. Asserted as the property rather than as "no such task exists",
+ * since the property is the reason and would catch the same mistake made with
+ * a different expression.
+ */
+t('no task in the concept has a reference that is 0 regardless of its inputs',
+  AV_TASKS.every(x => avExact(x.reference) !== '0'),
+  AV_TASKS.map(x => `${x.id}:${x.reference}`).join(' '))
+t('…though the symmetry it would have asked about does hold at that task\'s own inputs',
+  avExact('abs((0 - 9) - 6)') === avExact('abs(6 - (0 - 9))')
+  && avExact('abs((0 - 9) - 6)') === taskById('abs-distance-between-1').reference)
+
+/* Every subgoal asked as a question, the standard this subject now holds to. */
+t('twelve subgoals across the three worked examples', AV_SUBGOALS.length === 12,
+  `${AV_SUBGOALS.length}`)
+t('every subgoal carries an authored socratic phrasing',
+  AV_SUBGOALS.every(s => typeof s.socratic === 'string' && s.socratic.length > 0),
+  AV_SUBGOALS.filter(s => !s.socratic).map(s => s.label).join(', '))
+t('and every one of them is actually phrased as a question',
+  AV_SUBGOALS.every(s => isInterrogative(s.socratic)),
+  AV_SUBGOALS.filter(s => !isInterrogative(s.socratic)).map(s => s.label).join(', '))
+t('while the labels stay imperative — the map draws moves, the tutor asks sentences',
+  AV_SUBGOALS.every(s => !isInterrogative(s.label)))
+/*
+ * One timing target, on the first point only, and the absences are the claim.
+ * Reading |−6| quickly is a real automaticity; realising that −x is the
+ * positive one is not a speed skill, and a target there would measure typing.
+ * The third point gets one because computing a gap is a fluency.
+ */
+t('the middle point carries no automaticity target, and the other two do',
+  AV.knowledgePoints[1].automaticityTarget === undefined
+  && typeof AV.knowledgePoints[0].automaticityTarget === 'number'
+  && typeof AV.knowledgePoints[2].automaticityTarget === 'number',
+  AV.knowledgePoints.map(p => `${p.position}:${p.automaticityTarget ?? 'none'}`).join(' '))
+/*
+ * Every objective names a kind this concept actually SHIPS. 28 objectives
+ * elsewhere in the build name `justify`, of which zero exist as tasks — an
+ * objective naming a kind nothing serves is the "complete but unreachable"
+ * failure types.ts warns about, one step removed. This concept names only
+ * `evaluate`, and the assertion is what keeps that true of it.
+ */
+t('every objective names only task kinds the concept actually ships',
+  AV.objectives.length === 3 && AV.objectives.every(o => o.taskKinds.length > 0
+    && o.taskKinds.every(k => AV_TASKS.some(x => x.kind === k))),
+  AV.objectives.map(o => `${o.id}:${o.taskKinds.join('+')}`).join(' '))
+
+/**
+ * `percent` — the fourteenth concept, and the two things it is here to pin.
+ *
+ * The arithmetic of all three worked examples is re-derived rather than read,
+ * for the reason `prime-factorisation`'s group gives: a wrong worked example is
+ * the worst thing these files can contain and the only thing no structural
+ * check would notice. Every assertion below reads the AUTHORED string and
+ * compares it against a computed value, so repeating a number in this file
+ * cannot make it pass.
+ *
+ * And the two judgements the promotion made by declining something. Both are
+ * absences, so both would read as omissions if nothing asserted them — which is
+ * the shape the stranding no suite catches hides in.
+ */
+group('percent — the ratio with its denominator fixed')
+const PC = conceptById(A, 'percent')
+const PC_SUBGOALS = PC.knowledgePoints.flatMap(p => p.workedExample.subgoals)
+const pcAnswer = i => PC.knowledgePoints[i].workedExample.answer
+const PC_TASKS = PC.knowledgePoints.flatMap(p => tasksForPoint(p.id))
+const pcExact = src => { const v = exactValue(parseExpression(src, [])); return v === null ? null : showExact(v) }
+
+t('three points, at positions 1, 2, 3 — which restart per concept, not per subject',
+  PC.knowledgePoints.length === 3
+  && PC.knowledgePoints.map(p => p.position).join(',') === '1,2,3',
+  PC.knowledgePoints.map(p => p.position).join(','))
+
+/*
+ * The scope pattern's near-miss, which is the one claim its comment makes that
+ * is worth testing rather than arguing. `/^percent(age)?\b/i` has to take
+ * "Percentage point" and reject "Percentile", and the whole of the difference
+ * is that there is no word boundary between the `t` and the `i`. Carried
+ * verbatim from the map node, so this also pins that the promotion did not
+ * widen recognition while nobody was looking.
+ */
+t('the pattern takes the titles that ARE this concept',
+  ['Percent', 'Percentage', 'Percentage point'].every(s => PC.scope.match.test(s)))
+t('…and rejects the quantile that merely starts the same way',
+  !PC.scope.match.test('Percentile') && !PC.scope.match.test('Percentiles'))
+t('…and is anchored, so a ratio that mentions one in passing is not it',
+  !PC.scope.match.test('Likelihood-ratio test gives a percentage'))
+t('and its fidelity claim is what the option can actually do',
+  PC.fidelity === 'checked' && PC.caveat === undefined
+  && fidelityMismatches(A).length === 0)
+
+/*
+ * EVERY STATED NUMBER IS INTERPOLATED FROM A COMPUTED ONE, never typed twice.
+ *
+ * This matters more than it looks and the first draft of this group got it
+ * wrong. `pcAnswer(1).includes('84 · 5/4 = ')` with the value left off, or
+ * `includes('84 · 5/4 = 105')` with the 105 typed here, both pass when the
+ * authored answer is changed to 106 — the first because it never reads the
+ * value and the second because the literal in this file agrees with the
+ * arithmetic rather than with the prose. Fault injection found it: changing the
+ * answer string to 106 left both suites green.
+ *
+ * The form that bites is a template: compute, then require the authored string
+ * to contain what was computed. Then the only way to pass is for the prose and
+ * the arithmetic to agree, which is the thing worth guarding.
+ *
+ * `pcExact` parses decimals exactly, so an authored "£100.80" can be compared
+ * against a computed 504/5 by parsing the authored spelling rather than by
+ * converting it here. That is what the decimal bridges below do.
+ */
+
+/* First point: 60% of 30 and of 45. 60/100 = 3/5; 18 and 27; both check back. */
+t('the first example\'s percent really is the fraction it claims',
+  pcExact('60/100') === '3/5' && pcExact('0.6') === pcExact('60/100')
+  && PC.knowledgePoints[0].workedExample.subgoals[0].detail
+    .includes(`60/100 = ${pcExact('60/100')} = 0.6`),
+  PC.knowledgePoints[0].workedExample.subgoals[0].detail)
+t('and 3/5 of the two bases gives the two numbers the answer states',
+  pcAnswer(0).includes(`30 · 3/5 = ${pcExact('30*3/5')}`)
+  && pcAnswer(0).includes(`45 · 3/5 = ${pcExact('45*3/5')}`),
+  `${pcExact('30*3/5')} and ${pcExact('45*3/5')} | ${pcAnswer(0)}`)
+t('and both answers check back against the definition, which is the subgoal\'s claim',
+  pcExact('18/30') === pcExact('60/100') && pcExact('27/45') === pcExact('60/100')
+  && PC.knowledgePoints[0].workedExample.subgoals[2].detail
+    .includes(`18/30 = ${pcExact('18/30')}`)
+  && PC.knowledgePoints[0].workedExample.subgoals[2].detail
+    .includes(`27/45 = ${pcExact('27/45')}`),
+  PC.knowledgePoints[0].workedExample.subgoals[2].detail)
+t('…so the point it finishes on holds: a third pair satisfies the same percent',
+  pcExact('3/5') === pcExact('18/30') && pcAnswer(0).includes('3 out of 5'),
+  pcAnswer(0))
+
+/* Second point: 20% off leaves 84. Original 105, not 100.80. */
+t('the second example\'s discount factor undoes to the price it states',
+  pcAnswer(1).includes(`84 · 5/4 = ${pcExact('84*5/4')}`)
+  && PC.knowledgePoints[1].workedExample.subgoals[1].detail
+    .includes(`84 · 5/4 = ${pcExact('84*5/4')}`),
+  `84 · 5/4 = ${pcExact('84*5/4')} | ${pcAnswer(1)}`)
+t('and the forward check it runs really does re-derive the given',
+  pcExact('105 - 20*105/100') === '84'
+  && pcAnswer(1).includes(`20% of 105 is ${pcExact('20*105/100')}`)
+  && pcAnswer(1).includes(`105 − ${pcExact('20*105/100')} = 84`),
+  pcAnswer(1))
+t('the wrong move lands where the example says, which is not the answer',
+  pcExact('100.80') === pcExact('84*6/5') && pcExact('84*6/5') !== pcExact('84*5/4')
+  && pcAnswer(1).includes('£100.80'),
+  `84 · 6/5 = ${pcExact('84*6/5')}, authored as 100.80 = ${pcExact('100.80')}`)
+t('…and taking 20% off THAT fails to come back to 84, which is why it is wrong',
+  pcExact('80.64') === pcExact('(84*6/5)*4/5') && pcExact('(84*6/5)*4/5') !== '84'
+  && pcAnswer(1).includes('£80.64'),
+  `20% off 100.80 = ${pcExact('(84*6/5)*4/5')}, authored as 80.64 = ${pcExact('80.64')}`)
+t('and the two bases the subgoal names carry the two amounts it names',
+  pcExact('16.80') === pcExact('20*84/100')
+  && PC.knowledgePoints[1].workedExample.subgoals[2].detail
+    .includes(`£${pcExact('20*105/100')}`)
+  && PC.knowledgePoints[1].workedExample.subgoals[2].detail.includes('£16.80'),
+  `20% of 105 = ${pcExact('20*105/100')}, 20% of 84 = ${pcExact('20*84/100')}`)
+
+/* Third point: +20% then −20% on 50. Net ×24/25, finishing at 48, down 4%. */
+t('the third example\'s two factors multiply to the one it states',
+  pcAnswer(2).includes(`× ${pcExact('6/5*4/5')} = 96%`)
+  && pcExact('6/5*4/5') === pcExact('0.96'),
+  `6/5 · 4/5 = ${pcExact('6/5*4/5')} | ${pcAnswer(2)}`)
+t('and stepping through the money gives the price it finishes on',
+  pcAnswer(2).includes(`50 → ${pcExact('50*6/5')} → ${pcExact('50*6/5*4/5')}`)
+  && pcExact('50*6/5*4/5') === '48',
+  `50 → ${pcExact('50*6/5')} → ${pcExact('50*6/5*4/5')}`)
+t('the order really is immaterial, which the answer claims in both forms',
+  pcExact('4/5*6/5') === pcExact('6/5*4/5') && pcExact('50*4/5*6/5') === pcExact('50*6/5*4/5')
+  && pcAnswer(2).includes(`4/5 · 6/5 is the same ${pcExact('4/5*6/5')}`),
+  pcAnswer(2))
+t('the percentage it reports is the loss it computes, not a figure beside it',
+  pcAnswer(2).includes(`£${pcExact('50 - 50*6/5*4/5')} lost`)
+  && pcAnswer(2).includes(`${pcExact('100*(50 - 50*6/5*4/5)/50')}% of £50`),
+  `loss ${pcExact('50 - 50*6/5*4/5')}, which is ${pcExact('100*(50 - 50*6/5*4/5)/50')}% of 50`)
+t('and the loss is exactly the gap between the two bases\' 20%s',
+  pcExact('20*60/100 - 20*50/100') === pcExact('50 - 50*6/5*4/5')
+  && pcAnswer(2).includes(`20% of £50 = £${pcExact('20*50/100')}`)
+  && pcAnswer(2).includes(`20% of £60 = £${pcExact('20*60/100')}`),
+  `${pcExact('20*50/100')} vs ${pcExact('20*60/100')}, gap ${pcExact('20*60/100 - 20*50/100')}`)
+/*
+ * The general condition in the last subgoal, which is the only claim in this
+ * concept that is not about the specific numbers — so it is checked by
+ * substituting it back, not by re-stating it. q = 100p/(100 + p) at p = 20
+ * multiplied into the rise factor must give exactly 1, and that is the whole
+ * claim; the particular value is interpolated from the same expression the
+ * subgoal spells out.
+ */
+t('the undoing fall the last subgoal derives is the one that actually undoes it',
+  pcExact('6/5*(1 - (100*20/(100 + 20))/100)') === '1'
+  && pcAnswer(2).includes(`100 · 20/120 = ${pcExact('100*20/(100 + 20)')}`),
+  `q = ${pcExact('100*20/(100 + 20)')},`
+  + ` and 6/5 · (1 − q/100) = ${pcExact('6/5*(1 - (100*20/(100 + 20))/100)')}`)
+t('…and it really is the SMALLER percentage, which is the claim that generalises',
+  (() => {
+    const q = exactValue(parseExpression('100*20/(100 + 20)', []))
+    // q < 20 as exact rationals: q.n/q.d < 20, i.e. q.n < 20 * q.d.
+    return q !== null && q.n < 20n * q.d
+  })()
+  && PC.knowledgePoints[2].workedExample.subgoals[3].detail.includes('always less than p'),
+  `q = ${pcExact('100*20/(100 + 20)')} against p = 20`)
+
+t('three tasks, one on each point', PC_TASKS.length === 3
+  && PC.knowledgePoints.every(p => tasksForPoint(p.id).length === 1),
+  PC.knowledgePoints.map(p => `${p.id}:${tasksForPoint(p.id).length}`).join(' '))
+/*
+ * NO TASK HERE HAS AN INPUT-INDEPENDENT REFERENCE, which is the trap
+ * `absolute-value` above had to ship a second task to get out of and the reason
+ * this concept needed none.
+ *
+ * Asserted by PERTURBING each task's own `at` and requiring the value to move,
+ * rather than by checking the reference is non-zero. Those are different
+ * claims: `abs(a - b) - abs(b - a)` is 0 at every input, and an expression that
+ * happened to be 7 at every input would pass a non-zero check while being just
+ * as answerable without the content.
+ *
+ * The third task is why this had to be a perturbation check and not "no
+ * reference is 0". Its reference IS 0 at q = 20, because (100+p)(100−q) = 10000
+ * is exactly the undoing condition — which is content rather than a defect, and
+ * the prompt says so. A blanket "never 0" rule would have forbidden the best
+ * task in the concept.
+ */
+const pcMoves = task => {
+  const symbols = task.variables.map(v => v.name)
+  const valueAt = table => {
+    const at = {}
+    for (const [name, raw] of Object.entries(table)) at[name] = parseExpression(raw, [])
+    const v = exactValue(substitute(parseExpression(task.given, symbols), at))
+    return v === null ? null : showExact(v)
+  }
+  const base = valueAt(task.at)
+  // One variable at a time, so a hit names which one the answer depends on.
+  return task.variables.every(v => {
+    const bumped = { ...task.at, [v.name]: String(Number(task.at[v.name]) + 1) }
+    const moved = valueAt(bumped)
+    return base !== null && moved !== null && moved !== base
+  })
+}
+t('every task\'s answer moves when any one of its inputs moves',
+  PC_TASKS.every(pcMoves),
+  PC_TASKS.filter(x => !pcMoves(x)).map(x => x.id).join(', ') || 'all three depend on every variable')
+t('…and the third one is 0 at the fall that DOES undo the rise, which is its content',
+  (() => {
+    const x = taskById('equal-rises-and-falls-1')
+    const at = {}
+    for (const [n, raw] of Object.entries({ ...x.at, q: '20' })) at[n] = parseExpression(raw, [])
+    const undone = exactValue(substitute(parseExpression(x.given, x.variables.map(v => v.name)), at))
+    return showExact(undone) === '0' && x.reference === '-4' && /q = 20/.test(x.prompt)
+  })(),
+  'at q = 25 the reference is −4; at q = 20 the same expression is 0')
+t('each task uses different numbers from its own worked example, so it is not a recall',
+  tasksForPoint(PC.knowledgePoints[0].id).every(x => x.at.p === '35')
+  && tasksForPoint(PC.knowledgePoints[1].id).every(x => x.at.p === '10')
+  && tasksForPoint(PC.knowledgePoints[2].id).every(x => x.at.p === '25'),
+  PC_TASKS.map(x => `${x.id}:${JSON.stringify(x.at)}`).join(' '))
+
+/*
+ * BOTH stranded edges restated inside this subject, which is what made the
+ * promotion cheap — and the measurement rather than the claim, since `percent`
+ * naming two concepts of one file is the property that cannot recur in that
+ * area. Checked as prerequisites OF the concept, in THIS ontology, because that
+ * is where they had to land for `algebra-foundations` to need no `links` entry.
+ */
+t('both of its own edges live in this subject, so neither crossed a boundary',
+  prerequisitesOf(A, 'percent').slice().sort().join(' ') === 'decimal-representation ratio-and-rate'
+  && ['ratio-and-rate', 'decimal-representation'].every(id => conceptById(A, id) !== undefined),
+  prerequisitesOf(A, 'percent').join(', '))
+t('and it is teachable and practisable, which a restated edge is no use without',
+  isTeachable(A, 'percent') && isPractisable(A, 'percent'))
+/*
+ * THE INTERFERENCE THAT WAS ASKED FOR BY NAME AND DECLINED.
+ *
+ * This is the one absence in the build that somebody specifically requested a
+ * decision on: the note beside `ratio-and-rate`'s stranded edge in
+ * ontology-arithmetic.ts ends "Whoever promotes `percent` should look at the
+ * pair again from that end", because an ontology may only name concepts it
+ * contains and the far end was a map node. The answer is no, for the reason
+ * `absolute-value ~ negative-numbers` is also absent — these two are in a
+ * PREREQUISITE relation, and `interferes_with` is a hard constraint that would
+ * forbid the session teaching them in their intended order.
+ *
+ * Asserted as the pair rather than as one, because the rule is now the
+ * subject's and not a one-off: no interference anywhere in this file runs
+ * between a concept and its own prerequisite.
+ */
+t('no interference was invented between percent and the ratio it specialises',
+  !A.edges.some(e => e.kind === 'interferes_with'
+    && (e.from === 'percent' || e.to === 'percent')),
+  A.edges.filter(e => e.kind === 'interferes_with').map(e => `${e.from}~${e.to}`).join(' '))
+t('and that is the subject\'s rule now, not a judgement about this pair alone',
+  A.edges.filter(e => e.kind === 'interferes_with').every(e =>
+    !prerequisitesOf(A, e.to).includes(e.from) && !prerequisitesOf(A, e.from).includes(e.to)),
+  A.edges.filter(e => e.kind === 'interferes_with').map(e => `${e.from}~${e.to}`).join(' '))
+/*
+ * And the credit edge declined, with the measurement that declined it. The
+ * standard is what PRACTISING exercises, read off the shipped tasks: two of the
+ * three scale by a factor and so do something `ratio-and-rate` is about, and
+ * `percent-of-a-stated-base-1` does not — it is one multiplication and one
+ * division with no factor in it at all. Two of three is not enough, because an
+ * encompasses edge stops a concept coming due and a learner who practised only
+ * the third would be credited for ratios on evidence containing none.
+ *
+ * Asserted on the two-of-three split rather than on the edge's absence alone,
+ * so that adding a factor to the first task — which is what would make the edge
+ * correct — turns this red and sends the next reader to the argument.
+ */
+t('the credit edge is declined, and exactly two of the three tasks earn it',
+  !encompassedBy(A, 'percent').includes('ratio-and-rate')
+  && PC_TASKS.filter(x => /\(100 [-+] [pq]\)/.test(x.given)).length === 2,
+  `${PC_TASKS.filter(x => /\(100 [-+] [pq]\)/.test(x.given)).map(x => x.id).join(' ')}`
+  + ` | encompasses: ${encompassedBy(A, 'percent').join(', ') || 'none'}`)
+
+/* Every subgoal asked as a question, the standard this subject holds to. */
+t('twelve subgoals across the three worked examples', PC_SUBGOALS.length === 12,
+  `${PC_SUBGOALS.length}`)
+t('every subgoal carries an authored socratic phrasing',
+  PC_SUBGOALS.every(s => typeof s.socratic === 'string' && s.socratic.length > 0),
+  PC_SUBGOALS.filter(s => !s.socratic).map(s => s.label).join(', '))
+/*
+ * The type guard is load-bearing, not belt-and-braces. `isInterrogative` calls
+ * `trimEnd()` on what it is given, so it THROWS on a missing socratic rather
+ * than returning false — and a missing socratic is precisely what the assertion
+ * above exists to report. Without the guard, deleting one turns that red into a
+ * red followed by a crash, which takes every assertion after it in the file.
+ * Found by injecting exactly that fault. The same null-unsafety is in the
+ * `absolute-value` group above and in several others; it is left alone here
+ * because fixing it is not this promotion's change, but it is the same bug.
+ */
+t('and every one of them is actually phrased as a question',
+  PC_SUBGOALS.every(s => typeof s.socratic === 'string' && isInterrogative(s.socratic)),
+  PC_SUBGOALS.filter(s => typeof s.socratic !== 'string' || !isInterrogative(s.socratic))
+    .map(s => s.label).join(', '))
+t('while the labels stay imperative — the map draws moves, the tutor asks sentences',
+  PC_SUBGOALS.every(s => !isInterrogative(s.label)))
+t('every subgoal says which move it makes AND what the move establishes',
+  PC_SUBGOALS.every(s => s.label.length > 0 && s.detail.length > 0))
+/*
+ * No timing target on any of the three, and that is the claim rather than a
+ * copy of the neighbours. Each of these points is a read-it-slowly one: the
+ * first error is reading the percent as the amount, the second is multiplying
+ * where you should divide, and the third is believing equal percentages cancel.
+ * A speed reward on any of them trains reaching for the number already written
+ * down. The arithmetic underneath is multiplication and division of whole
+ * numbers, which `place-value` already times.
+ */
+t('no point here is timed, every one of them being a read-it-slowly point',
+  PC.knowledgePoints.every(p => p.automaticityTarget === undefined),
+  PC.knowledgePoints.map(p => `${p.position}:${p.automaticityTarget ?? 'none'}`).join(' '))
+t('and none claims a figure that does not exist',
+  PC.knowledgePoints.every(p => p.visualRef === undefined))
+/*
+ * Every objective names a kind this concept actually SHIPS, which is the
+ * standard `absolute-value` introduced and this is the second concept to hold.
+ * The three concepts before those two name `justify` as well, of which the
+ * build contains zero tasks — so this is the assertion that keeps the newer
+ * convention from drifting back.
+ */
+t('every objective names only task kinds the concept actually ships',
+  PC.objectives.length === 3 && PC.objectives.every(o => o.taskKinds.length > 0
+    && o.taskKinds.every(k => PC_TASKS.some(x => x.kind === k))),
+  PC.objectives.map(o => `${o.id}:${o.taskKinds.join('+')}`).join(' '))
+t('…and `justify` is not among them, there being no such task anywhere in the build',
+  PC.objectives.every(o => !o.taskKinds.includes('justify'))
+  && !PC_TASKS.some(x => x.kind === 'justify'))
 
 // NOTE: the companion claim — that authoring these five TIGHTENED the gate on
 // the two algebra subjects, so neither is introducible on a cold account any

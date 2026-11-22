@@ -730,16 +730,43 @@ const CONCEPTS: Concept[] = [
         workedExample: {
           problem: 'What is the domain of (x + 3)/(x² − 2x − 15)?',
           subgoals: [
-            { label: 'Where is it undefined?', detail: 'Exactly where the denominator vanishes.' },
+            {
+              label: 'Where is it undefined?',
+              detail: 'Exactly where the denominator vanishes.',
+              socratic:
+                'Putting a number into this expression means doing three things with it: ' +
+                'working out x + 3, working out x² − 2x − 15, and then one division. The ' +
+                'first two are polynomials, and a polynomial never refuses a number — ' +
+                'whatever you feed it, it hands something back. So only the third step is ' +
+                'capable of failing at all. Which part of the fraction does that leave you ' +
+                'having to interrogate, and what exactly would it have to be doing at some ' +
+                'value of x for the expression as a whole to have no value there?',
+            },
             {
               label: 'Solve the denominator',
               detail: 'x² − 2x − 15 = (x + 3)(x − 5), which is zero at x = −3 and x = 5.',
+              socratic:
+                'What you are holding now is a condition to satisfy rather than an ' +
+                'expression to tidy: x² − 2x − 15 = 0. Nothing about it is new — it is the ' +
+                'same quadratic you would have factored had nobody put it underneath a ' +
+                'fraction. Factor it, and then notice what you are looking at: a product of ' +
+                'two things set equal to zero, which is a far stronger piece of information ' +
+                'than a product set equal to, say, 6. What are the two factors, and what ' +
+                'property of zero in particular lets you trade the one quadratic equation ' +
+                'for two linear ones?',
             },
             {
               label: 'State the domain',
               detail:
                 'All real x except −3 and 5. Note that x = −3 is excluded even though it also ' +
                 'makes the numerator zero — 0/0 is not a value.',
+              socratic:
+                'Both of the values you found are ruled out, but one of them is doing ' +
+                'something extra — put x = −3 into the top of the fraction as well, and read ' +
+                'what the whole expression says there, top and bottom together. That pattern ' +
+                'tempts a learner into treating it as a cancellation that rescues the point. ' +
+                'What would x = −3 have to have in order to belong to the domain, and once ' +
+                'you have settled whether it has it, which x are left?',
             },
           ],
           answer: 'All real x with x ≠ −3 and x ≠ 5.',

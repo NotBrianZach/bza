@@ -58,6 +58,16 @@ function build() {
     // The table's mechanics: tiers, dice, bands. Pure, so the one place a
     // random number enters the engine is testable with the draw injected.
     join('lib', 'concepts', 'rpg.ts'),
+    // The seam between RPG mode and the practice engine. Pure, which is the
+    // reason it is a module and not three lines inside a component: "does this
+    // ever offer work that cannot be done" is the §10 prohibition most worth
+    // asserting, and it is only assertable if the answer is a function.
+    join('lib', 'concepts', 'commission.ts'),
+    // The commission statechart. It imports NOTHING, which is why it is the
+    // one entry in this list that compiles with zero errors — and the reason
+    // the properties below are assertable at all: a chart that is data can be
+    // walked, and one hidden in a component's useState cannot.
+    join('lib', 'concepts', 'commissionChart.ts'),
   ]
   try {
     execFileSync(process.execPath, [
@@ -115,9 +125,17 @@ const {
   regions: armatureRegions,
 } = req(join(outDir, 'concepts', 'armature.js'))
 const {
-  SYSTEM: GM_SYSTEM, TABLE_SYSTEM, parseRollExpression, scenePrompt, settingOf,
-  splitRollRequest, tablePrompt, unnarratedScene,
+  COMMISSION_SYSTEM, RULING_SYSTEM, SYSTEM: GM_SYSTEM, TABLE_SYSTEM, commissionPrompt,
+  parseRollExpression, rulingPrompt, scenePrompt, settingOf, splitRollRequest, tablePrompt,
+  unframedCommission, unnarratedRuling, unnarratedScene,
 } = req(join(outDir, 'concepts', 'narrate.js'))
+const {
+  anyWorkable, offerFor, offersFor, ontologyOwning,
+} = req(join(outDir, 'concepts', 'commission.js'))
+const {
+  GUARDS, INITIAL, INITIAL_CHILD, TRANSITIONS, isRuled, selfAndAncestors, statesOf,
+  transition: chartStep,
+} = req(join(outDir, 'concepts', 'commissionChart.js'))
 const {
   BACKGROUNDS, DEFAULT_CHARACTER, MAX_TRAIT, RACES, SIDES, isMade, raceOf, readBand,
   rollFor, sheetFor,
@@ -129,7 +147,10 @@ const {
  * ABOUT — and so that if offerings ever stops needing it, this require fails
  * loudly instead of the practisable assertions below going vacuous.
  */
-const { isPractisable } = req(join(outDir, 'concepts', 'tasks.js'))
+/* `TASKS` alongside it for the commission group, which asserts that no task's
+   prompt text reaches the game master. That assertion is only worth anything
+   if it quantifies over the real task list. */
+const { TASKS, isPractisable } = req(join(outDir, 'concepts', 'tasks.js'))
 
 let pass = 0
 const failures = []
@@ -154,9 +175,30 @@ const loops = cycles(MATHEMATICS)
 t('the prerequisite graph is acyclic', loops.length === 0,
   loops.slice(0, 3).map(l => l.join(' → ')).join(' | '))
 
+/*
+ * NULL-SAFE, AND THE REASON IS A FAULT THIS LINE USED TO HIDE BY CRASHING ON.
+ *
+ * `teachingOrder` returns null rather than a short list when it cannot order the
+ * graph, which is what it does when two concepts share an id — and a duplicate
+ * id is exactly what a half-finished promotion produces, the node left on the
+ * map beside the concept now authored. The assertion four lines above reports
+ * that cause by name and correctly. Then this line threw on `null.length`,
+ * killing the run and taking every later assertion with it, including all of
+ * the ones a promotion adds about itself. The output read "1 failed" and
+ * stopped.
+ *
+ * Found by injecting that fault during the twenty-first promotion rather than by
+ * reading, because a crash and a red look the same in a summary line. Same shape
+ * as `avExact` in tests/concepts-logic.mjs and the same rule: an assertion whose
+ * subject is a function that can return null needs the null-safe form, most of
+ * all when the thing it would be reporting is the reason for the null.
+ */
+const order = teachingOrder(MATHEMATICS)
 t('every concept is reachable in a teaching order',
-  teachingOrder(MATHEMATICS).length === MATHEMATICS.concepts.length,
-  `${teachingOrder(MATHEMATICS).length} of ${MATHEMATICS.concepts.length}`)
+  order !== null && order.length === MATHEMATICS.concepts.length,
+  order === null
+    ? 'teachingOrder returned null — the graph could not be ordered; see the assertions above'
+    : `${order.length} of ${MATHEMATICS.concepts.length}`)
 
 // ---------------------------------------------------------------------------
 
@@ -325,10 +367,28 @@ t('place value is a root of the whole map, and was not teachable before',
 t('the authored arithmetic ids appear exactly once each in the composed concept list',
   ['place-value', 'integer-arithmetic', 'order-of-operations', 'negative-numbers', 'divisibility',
     'fraction-arithmetic', 'prime-factorisation', 'gcd-and-lcm', 'roots-and-irrationals',
-    'decimal-representation', 'real-number-line', 'ratio-and-rate']
+    'decimal-representation', 'real-number-line', 'ratio-and-rate', 'absolute-value', 'percent']
     .every(id => MATHEMATICS.concepts.filter(c => c.id === id).length === 1))
 t('and they carry their own subject, not the area they left',
-  MATHEMATICS.concepts.filter(c => c.subjectId === 'arithmetic-foundations').length === 12)
+  MATHEMATICS.concepts.filter(c => c.subjectId === 'arithmetic-foundations').length === 14)
+/*
+ * The thirteenth is the one that did not come from the number half of the area,
+ * and it is worth one assertion of its own. `absolute-value` sat below
+ * `absolute-value-equations` in the ALGEBRAIC half and was authored into the
+ * arithmetic subject anyway, because its sole prerequisite is a concept of
+ * that subject. Which subject receives a promoted node is decided by where its
+ * own prerequisites live — not by which half of the merged area it sat in, and
+ * the twelve-and-seven split in atlas-foundations.ts is a record of origin
+ * rather than a rule about destination.
+ */
+t('and the thirteenth came from the algebraic half of the area, not the number half',
+  areaOf(MATHEMATICS, 'absolute-value') === 'arithmetic-foundations'
+  && prerequisitesOf(MATHEMATICS, 'absolute-value').join(' ') === 'negative-numbers'
+  && areaOf(MATHEMATICS, 'negative-numbers') === 'arithmetic-foundations'
+  && AREAS.find(a => a.id === 'algebra-foundations').nodes
+    .some(n => n.id === 'absolute-value-equations'),
+  `absolute-value@${areaOf(MATHEMATICS, 'absolute-value')}`
+  + ` needs ${prerequisitesOf(MATHEMATICS, 'absolute-value').join('+')}`)
 /*
  * This cross-boundary example has now moved up twice, and the reason is worth
  * stating once rather than re-deriving each time: the illustration has to be a
@@ -367,34 +427,190 @@ t('and they carry their own subject, not the area they left',
  * All three are worth asserting rather than one. A bug in `composeAtlas`'s edge
  * resolution could resolve an edge into an area that kept its node and drop one
  * into an area that did not, and these differ on exactly that.
+ *
+ * AND THE ONE-EDGE EXEMPLAR WAS RETIRED IN ITS TURN, which is the paragraph
+ * above happening to the assertion rather than to the comment. The single-edge
+ * half of this check named `absolute-value`, and the twentieth promotion
+ * authored it — so the claim "a node STILL ON THE MAP names an authored
+ * arithmetic concept in its own `needs`" stopped being about that node.
+ *
+ * `scientific-notation` replaces it and is the last candidate for the role:
+ * `linear-inequalities` already holds the other half of this assertion, and
+ * `percent` is the two-edge case below. A reader looking for a successor after
+ * the next promotion out of that area will not find one in this subject, which
+ * is itself a measurement of how completely the number half has been written.
+ *
+ * AND THE TWO-EDGE HALF IS NOW GONE FOR GOOD, which is the prediction three
+ * paragraphs up coming true on its second attempt. It said the form had "no
+ * successor" when `real-number-line` was promoted, was wrong because `percent`
+ * became one, and the twenty-first promotion has taken `percent`. This time the
+ * claim is measured rather than reasoned: no map node anywhere in the atlas
+ * names two authored `arithmetic-foundations` concepts in its own `needs`, and
+ * the assertion below checks that it is zero rather than asserting an example
+ * that does not exist. An `[]`-shaped exemplar would pass vacuously, which is
+ * the trap a list that has run out sets for whoever maintains it next.
+ *
+ * `percent`'s own dependent is the nearest thing to a successor and it is NOT
+ * one: `descriptive-statistics` names `percent` and `sigma-notation`, which is
+ * one arithmetic concept and one from `functions-and-inverses`. It is worth
+ * asserting anyway, and in a stronger form than this group has had — it is the
+ * first one-edge example whose node is in a DIFFERENT AREA from the concept it
+ * reaches, so it exercises cross-area and cross-file resolution at once where
+ * every example above it was same-area.
+ *
+ * Checked as "is still a node of the area" on both, so neither half can go
+ * vacuously true by naming a concept — `prerequisitesOf` answers for an
+ * authored concept just as readily, and the thing under test is specifically
+ * the cross-FILE resolution.
  */
 t('the nodes that used to need them still do, across the file boundary',
-  prerequisitesOf(MATHEMATICS, 'absolute-value').includes('negative-numbers')
-  && prerequisitesOf(MATHEMATICS, 'linear-inequalities').includes('real-number-line'),
-  `${prerequisitesOf(MATHEMATICS, 'absolute-value').join('/')} | `
+  prerequisitesOf(MATHEMATICS, 'scientific-notation').includes('decimal-representation')
+  && prerequisitesOf(MATHEMATICS, 'linear-inequalities').includes('real-number-line')
+  && ['scientific-notation', 'linear-inequalities'].every(id =>
+    AREAS.find(a => a.id === 'algebra-foundations').nodes.some(n => n.id === id)),
+  `${prerequisitesOf(MATHEMATICS, 'scientific-notation').join('/')} | `
   + prerequisitesOf(MATHEMATICS, 'linear-inequalities').join('/'))
-t('and the two-edge form is back: percent rests on two authored arithmetic concepts at once',
-  ['ratio-and-rate', 'decimal-representation'].every(id =>
-    prerequisitesOf(MATHEMATICS, 'percent').includes(id)
-    && isTeachable(MATHEMATICS, id)
-    && areaOf(MATHEMATICS, id) === 'arithmetic-foundations')
-  && AREAS.find(a => a.id === 'algebra-foundations').nodes.some(n => n.id === 'percent'),
-  prerequisitesOf(MATHEMATICS, 'percent')
+t('the two-edge form has no instance left anywhere, which is measured and not assumed',
+  (() => {
+    const arith = new Set(MATHEMATICS.concepts
+      .filter(c => c.subjectId === 'arithmetic-foundations').map(c => c.id))
+    const mapped = AREAS.flatMap(a => a.nodes)
+    // Non-vacuous: there ARE mapped nodes resting on this subject, just none on two.
+    const onOne = mapped.filter(n => (n.needs ?? []).filter(id => arith.has(id)).length === 1)
+    const onTwo = mapped.filter(n => (n.needs ?? []).filter(id => arith.has(id)).length >= 2)
+    return onOne.length > 0 && onTwo.length === 0
+  })(),
+  AREAS.flatMap(a => a.nodes)
+    .map(n => [n.id, (n.needs ?? []).filter(id =>
+      areaOf(MATHEMATICS, id) === 'arithmetic-foundations').length])
+    .filter(([, k]) => k >= 2).map(([id, k]) => `${id}:${k}`).join(' ') || 'none on two')
+/*
+ * And the successor that is not one, in the stronger cross-AREA form. Every
+ * example this group has used sat in `algebra-foundations` and reached a
+ * concept promoted out of that same area; this node is in `statistics`, so the
+ * edge crosses an area boundary as well as a file one. It names only ONE
+ * arithmetic concept, which is why it cannot restore the two-edge form.
+ */
+t('and percent is now itself reached across a file boundary, from another area entirely',
+  prerequisitesOf(MATHEMATICS, 'descriptive-statistics').includes('percent')
+  && AREAS.find(a => a.id === 'statistics').nodes.some(n => n.id === 'descriptive-statistics')
+  && areaOf(MATHEMATICS, 'percent') === 'arithmetic-foundations'
+  && isTeachable(MATHEMATICS, 'percent'),
+  prerequisitesOf(MATHEMATICS, 'descriptive-statistics')
     .map(id => `${id}@${areaOf(MATHEMATICS, id)}`).join(' '))
 /*
- * And the half of that which is easy to lose: `percent` is the DECLARING end
- * and it stayed on the map, so neither edge needed a `links` entry. A promotion
+ * And the half of that which is easy to lose: `percent` declared both of those
+ * edges itself, so promoting it moved both into the receiving ontology and
+ * `algebra-foundations` needed no `links` entry in either direction. A promotion
  * costs one only when neither end of an edge is a node of the area — not, as
  * two comments in this codebase used to say, whenever something that stayed
- * depended on the node that left. Asserted because the wrong rule predicts a
- * `links` entry here, and a spurious one would be a duplicate edge waiting to
- * happen.
+ * depended on the node that left. Asserted as "no entry mentions it at all",
+ * which covers both the one the wrong rule predicted while the node was here
+ * and the one a careless promotion would have added on the way out. A spurious
+ * entry is a duplicate edge waiting to happen and no suite reports one.
  */
-t('and neither of those edges needed a links entry, since percent itself stayed',
+t('and neither of those edges ever needed a links entry, in either direction',
   (AREAS.find(a => a.id === 'algebra-foundations').links ?? [])
-    .every(l => l.to !== 'percent'),
+    .every(l => l.to !== 'percent' && l.from !== 'percent'),
   (AREAS.find(a => a.id === 'algebra-foundations').links ?? [])
     .map(l => `${l.from}->${l.to}`).join(' '))
+/*
+ * THE GATE THAT GOT SHORTER, which every comment in these files had
+ * generalised away as impossible.
+ *
+ * `gatingPrerequisitesOf` names NEAREST teachable ancestors, so the established
+ * reading is that a promotion SUBSTITUTES into a gate rather than lengthening
+ * it — correct, and asserted several times above against several pairs. What
+ * those cases have in common is that the promoted node had exactly ONE
+ * prerequisite, so one entry could only ever be replaced by one entry.
+ *
+ * `percent` has two. While it was a skeleton the walk through it FORKED and
+ * came out at both, so `descriptive-statistics` was gated by `ratio-and-rate`,
+ * `decimal-representation` and `sigma-notation`. It is gated by `percent` and
+ * `sigma-notation` now. Three to two, because nearest-ancestor means one entry
+ * per branch and this promotion put a single teachable node in front of a fork.
+ *
+ * THE DISCRIMINATOR IS THE PROMOTED NODE'S ARITY, measured on four cases by
+ * reconstructing each "before" — emptying a concept's `knowledgePoints` and
+ * re-walking — rather than by reading the comments that record them:
+ *
+ *   ratio-and-rate      (1 need)   similarity                2 -> 2
+ *   absolute-value      (1 need)   absolute-value-equations  3 -> 3
+ *   area-and-perimeter  (2 needs)  circle-measure            4 -> 3
+ *   percent             (2 needs)  descriptive-statistics    3 -> 2
+ *
+ * The `area-and-perimeter` row is the one that matters for anybody extending
+ * this: it happened on 2026-11-15 and NOTHING in these files mentions it, so a
+ * reader working from the comments would conclude that shortening is impossible
+ * and that this promotion was the first of its kind. A draft of this paragraph
+ * said exactly that. Two instances each way, the split falling cleanly on the
+ * arity, no case going the other direction.
+ *
+ * Asserted by MEMBERSHIP on both sides of the change rather than by length, for
+ * the reason the root-set block below gives at length: the length moving is the
+ * novel part here, and it is still not what the claim is about.
+ */
+t('the gate on the one dependent got SHORTER, which a substitution cannot do',
+  (() => {
+    const g = gatingPrerequisitesOf(MATHEMATICS, 'descriptive-statistics')
+    return g.includes('percent') && g.includes('sigma-notation')
+      && !g.includes('ratio-and-rate') && !g.includes('decimal-representation')
+      && g.length === 2
+  })(),
+  gatingPrerequisitesOf(MATHEMATICS, 'descriptive-statistics').join(', '))
+t('…and the two entries it replaced are still teachable, so they were not lost but covered',
+  ['ratio-and-rate', 'decimal-representation'].every(id =>
+    isTeachable(MATHEMATICS, id) && prerequisitesOf(MATHEMATICS, 'percent').includes(id)),
+  prerequisitesOf(MATHEMATICS, 'percent').join(', '))
+/*
+ * THE ARITY RULE ITSELF, asserted rather than left in the comment above.
+ *
+ * A four-row table in a comment is the thing this file keeps catching itself
+ * writing — a figure nothing reads, which goes stale silently. So the "before"
+ * is reconstructed here the only way it can be after the fact: empty a
+ * concept's `knowledgePoints`, which is exactly what makes `isTeachable` false
+ * and sends the gating walk through it, then re-walk.
+ *
+ * `unauthored` takes a LIST because two of the four cases need a second concept
+ * held back as well — `circle-measure`'s gate was measured when `circles` was
+ * still unwritten, and authoring `circles` later collapsed that branch too, so
+ * reconstructing the 2026-11-15 reading means standing both of them down.
+ *
+ * What is asserted is the implication, not the four numbers: a one-`needs` node
+ * substitutes and a two-`needs` node shortens. If a later promotion finds a
+ * two-`needs` node that merely substitutes — which happens whenever the
+ * dependent already reached one of the two by another route — this goes red and
+ * the rule gets the exception it needs rather than being quietly wrong.
+ */
+const unauthored = ids => ({
+  ...MATHEMATICS,
+  concepts: MATHEMATICS.concepts.map(c =>
+    ids.includes(c.id) ? { ...c, knowledgePoints: [] } : c),
+})
+const gateSizes = (promoted, dependent, alsoHeldBack = []) => {
+  const before = gatingPrerequisitesOf(unauthored([promoted, ...alsoHeldBack]), dependent)
+  const after = gatingPrerequisitesOf(unauthored(alsoHeldBack), dependent)
+  return { before: before.length, after: after.length, needs: prerequisitesOf(MATHEMATICS, promoted).length }
+}
+const ARITY_CASES = [
+  ['ratio-and-rate', 'similarity', []],
+  ['absolute-value', 'absolute-value-equations', []],
+  ['area-and-perimeter', 'circle-measure', ['circles']],
+  ['percent', 'descriptive-statistics', []],
+]
+t('a one-need promotion substitutes into a gate and a two-need one shortens it',
+  ARITY_CASES.every(([promoted, dependent, held]) => {
+    const { before, after, needs } = gateSizes(promoted, dependent, held)
+    return needs === 1 ? after === before : after < before
+  }),
+  ARITY_CASES.map(([p, d, h]) => {
+    const { before, after, needs } = gateSizes(p, d, h)
+    return `${p}(${needs}) -> ${d}: ${before}->${after}`
+  }).join(' | '))
+t('…and the reconstruction is not vacuous — every "before" is longer than one entry',
+  ARITY_CASES.every(([p, d, h]) => gateSizes(p, d, h).before > 1
+    && gateSizes(p, d, h).after > 0),
+  ARITY_CASES.map(([p, d, h]) => `${d}:${gateSizes(p, d, h).before}`).join(' '))
 /*
  * The edges INTO the promoted decimals, declared by nodes that stayed. This is
  * the case that needed no `links` entry at all — see the removal note in
@@ -407,12 +623,25 @@ t('and neither of those edges needed a links entry, since percent itself stayed'
  * down off the map with it. A list of surviving into-edges is a list of future
  * stranded edges, and this is the second time this group has had to shorten
  * one.
+ *
+ * ONE NOW, `percent` having gone the same way as a twenty-first — the third
+ * shortening, and the paragraph above has therefore been right about every
+ * entry it ever listed. `scientific-notation` is the last map node declaring an
+ * edge into the decimals, so the next promotion to touch it empties this claim
+ * rather than shortening it, and the honest move then is to delete the
+ * assertion the way the `ROUTE_STILL_UNWRITTEN` row below was deleted rather
+ * than emptied. Asserted with the node-still-mapped check attached, so it
+ * cannot pass by naming a concept once that happens.
  */
-t('and the two nodes that still need the promoted decimals both reach it',
-  ['percent', 'scientific-notation'].every(id =>
-    prerequisitesOf(MATHEMATICS, id).includes('decimal-representation')),
-  ['percent', 'scientific-notation']
-    .map(id => `${id}: ${prerequisitesOf(MATHEMATICS, id).join('/')}`).join(' | '))
+t('and the one node that still needs the promoted decimals reaches it',
+  prerequisitesOf(MATHEMATICS, 'scientific-notation').includes('decimal-representation')
+  && AREAS.find(a => a.id === 'algebra-foundations').nodes
+    .some(n => n.id === 'scientific-notation'),
+  `scientific-notation: ${prerequisitesOf(MATHEMATICS, 'scientific-notation').join('/')}`)
+t('…and percent, which used to be the other one, reaches it as a concept now',
+  prerequisitesOf(MATHEMATICS, 'percent').includes('decimal-representation')
+  && !AREAS.some(a => a.nodes.some(n => n.id === 'percent')),
+  prerequisitesOf(MATHEMATICS, 'percent').join('/'))
 t('and the decimals\' own needs were restated inside the subject, not dropped',
   prerequisitesOf(MATHEMATICS, 'decimal-representation').includes('fraction-arithmetic')
   && prerequisitesOf(MATHEMATICS, 'decimal-representation').includes('prime-factorisation'),
@@ -3343,8 +3572,30 @@ t('the two drained areas are gone from the map',
  * eight nodes nothing is waiting on.
  */
 const MOVED = {
+  /*
+   * `absolute-value` is the SIXTH id to leave this table, by the twentieth
+   * promotion, so the algebra row is down to two. It is the first to leave
+   * this row for the arithmetic syllabus rather than for one of the algebraic
+   * ones — the row's three earlier departures went to `arithmetic-foundations`
+   * as well, but all three were number-half nodes, and this one was not. So
+   * this row reaching zero would not mean the algebra syllabus had grown by
+   * three, for the same reason the geometry row's note gives about
+   * `dot-product-geometry`.
+   *
+   * What is left in it is `percent` and `scientific-notation`, which are the
+   * two nodes here whose prerequisites are all written and which nothing is
+   * waiting on.
+   *
+   * `percent` is the SEVENTH id to leave, by the twenty-first promotion, so the
+   * algebra row is down to one. It went to the arithmetic syllabus like the
+   * four before it — and unlike `absolute-value` it IS a number-half node, so
+   * this row reaching zero is back to meaning what it originally did. One id
+   * left, and the row's note will have to go with it when `scientific-notation`
+   * is written: a one-element table is still a table, and an empty one is the
+   * thing this file deletes rather than keeps.
+   */
   'algebra-foundations': [
-    'absolute-value', 'percent', 'scientific-notation',
+    'scientific-notation',
   ],
   /*
    * `distance-and-midpoint` is the fifth id to leave this table, by the
@@ -3467,6 +3718,34 @@ t('all four the promotions took back out are cross-file again, which is the whol
     && prerequisitesOf(MATHEMATICS, to).includes(from)),
   SPENT.map(([f, x]) =>
     `${f}@${areaOf(MATHEMATICS, f)} -> ${x}@${areaOf(MATHEMATICS, x)}`).join(' | '))
+/*
+ * A FIFTH ONE WENT SOMEWHERE THE LIST ABOVE CANNOT DESCRIBE, so it gets its own
+ * assertion rather than a row it would fail.
+ *
+ * `ratio-and-rate -> percent` is in `SURVIVING`: the merge made it internal to
+ * `algebra-foundations`. Both of its ends have since been authored — the twelfth
+ * promotion took the lower, the twenty-first the upper — so it is internal
+ * AGAIN, to a SUBJECT this time, and it lives in that ontology's own `EDGES`
+ * instead of being resolved by `composeAtlas` at all. Every row of `SPENT`
+ * asserts `areaOf(from) !== areaOf(to)`, and this edge fails that for the best
+ * available reason, which is why adding it there would have been wrong.
+ *
+ * So a merge-rescued edge has three fates and the map has now produced all
+ * three: still crossing the dissolved boundary, cross-file again because one end
+ * was authored, and internal to one subject because BOTH were. The comment above
+ * `SPENT` names only the first two, and reaching the third is a stronger
+ * success condition than the zero it was watching for — an edge the composed
+ * graph no longer has to reconcile at all.
+ */
+t('and a fifth went further: both ends authored, so it is internal to one subject',
+  areaOf(MATHEMATICS, 'ratio-and-rate') === 'arithmetic-foundations'
+  && areaOf(MATHEMATICS, 'percent') === 'arithmetic-foundations'
+  && !SPENT.some(([f, x]) => f === 'ratio-and-rate' && x === 'percent')
+  && SURVIVING.some(([f, x]) => f === 'ratio-and-rate' && x === 'percent')
+  && ONTOLOGIES.find(o => o.subject.id === 'arithmetic-foundations').edges
+    .some(e => e.from === 'ratio-and-rate' && e.to === 'percent' && e.kind === 'prerequisite'),
+  `ratio-and-rate@${areaOf(MATHEMATICS, 'ratio-and-rate')}`
+  + ` -> percent@${areaOf(MATHEMATICS, 'percent')}`)
 /*
  * And WHY each is cross-file again, which the comparison of two `areaOf` values
  * does not say: the lower end is no longer a node of any area at all. That is
@@ -3650,12 +3929,108 @@ t('and the merged geometry area declares none, which is why that merge stranded 
  * thing to read: whether the set grows, holds or shrinks is decided entirely by
  * how many nodes INSIDE this area had the departing node as their last
  * remaining in-area prerequisite — three, then one, then none.
+ *
+ * SIX AFTER THE TWENTY-FIRST, AND IT IS THE SECOND CAUSE RECURRING. `percent`
+ * was a root here and is a concept of `arithmetic-foundations` now. Seven to
+ * six, the other six untouched, nothing substituting in — and the reason is the
+ * BINOMIAL'S and not the one directly below: this node had no in-area dependent
+ * at all, its only dependent anywhere being `descriptive-statistics` over in
+ * `statistics`. So each of the two shrinkage causes now has two instances and
+ * they remain indistinguishable from the set alone.
+ *
+ * What IS new about this departure is outside this area and outside this block:
+ * the gate on its dependent got shorter, three entries to two, which no earlier
+ * promotion OUT OF HERE managed — `area-and-perimeter` had already done it in
+ * `plane-geometry`, which the group above records with the measurement. The
+ * reason is arity: every earlier departure from this area had one prerequisite
+ * and this one had two. Nothing about the root set records any of that, which
+ * is worth knowing — this list tracks what a promotion frees INSIDE the area,
+ * and the interesting effect of this one was entirely outside it.
+ *
+ * SEVEN AFTER THE TWENTIETH, AND IT IS THE FIRST CAUSE RECURRING RATHER THAN A
+ * FIFTH ONE. `absolute-value` was a root here and is a concept of
+ * `arithmetic-foundations` now. Eight to seven, with the other seven members
+ * untouched.
+ *
+ * Nothing substituted in, and the reason is NOT the one directly above. The
+ * binomial shrank this set because it had no in-area dependent at all; this
+ * node has exactly one, `absolute-value-equations`, which is a node of this
+ * area and still did not become a root — because `linear-inequalities` is its
+ * other prerequisite, is still here, and still gates it from inside. That is
+ * the `real-number-line` cause, two promotions before the binomial, happening
+ * again.
+ *
+ * Which is the sharpest argument this block has yet produced for its own
+ * shape. Two different causes give the identical observable — eight becomes
+ * seven, one member gone, nothing new — so a check on the SET tells you that
+ * it shrank and only the dependents tell you why. The assertion below is
+ * paired with one on the dependent specifically, because "nothing substituted
+ * in" is the half that a length check cannot distinguish from "something
+ * substituted in and something else left".
  */
-t('the merged algebra area has exactly these eight roots, the binomial having left',
+t('the merged algebra area has exactly these six roots, percent having left too',
   roots(areaOntology(ALGEBRA)).slice().sort().join(' ')
-    === 'absolute-value complex-numbers linear-inequalities '
-      + 'nonlinear-systems percent radical-equations scientific-notation word-problems',
+    === 'complex-numbers linear-inequalities '
+      + 'nonlinear-systems radical-equations scientific-notation word-problems',
   roots(areaOntology(ALGEBRA)).slice().sort().join(' '))
+/*
+ * The twenty-first departure's cause, and it is the BINOMIAL'S rather than the
+ * absolute value's directly below — so the two causes that produce identical
+ * shrinkage now have two instances each, which is the strongest form the
+ * argument for computing this set can take.
+ *
+ * `percent` had no in-area dependent at all. Its only dependent anywhere is
+ * `descriptive-statistics`, in `statistics`, so nothing inside this area could
+ * have been freed by the departure and nothing was. Checked as the absence
+ * across EVERY area's nodes rather than as "not a root", since "nothing
+ * substituted in" and "the one thing that could have did not" are the two
+ * causes and only this distinguishes them.
+ */
+t('and nothing substituted in behind percent, which had no in-area dependent to free',
+  !roots(areaOntology(ALGEBRA)).includes('percent')
+  && isTeachable(MATHEMATICS, 'percent')
+  && !AREAS.some(a => a.nodes.some(n => n.id === 'percent'))
+  && dependentsOf(MATHEMATICS, 'percent').join(' ') === 'descriptive-statistics'
+  && !ALGEBRA.nodes.some(n => (n.needs ?? []).includes('percent')),
+  `dependents: ${dependentsOf(MATHEMATICS, 'percent').join(' ')}`
+  + ` @${dependentsOf(MATHEMATICS, 'percent').map(id => areaOf(MATHEMATICS, id)).join(' ')}`)
+/*
+ * The departing node on both halves, and then the CAUSE, which is what tells
+ * this shrinkage apart from the binomial's directly below. Its one dependent
+ * really is a node of this area — so the claim cannot go vacuously true the way
+ * an optional-chained lookup on a departed node would — and it really is still
+ * gated from inside, by a prerequisite that is still a node here.
+ */
+t('and nothing substituted in behind the absolute value, though it HAD an in-area dependent',
+  !roots(areaOntology(ALGEBRA)).includes('absolute-value')
+  && isTeachable(MATHEMATICS, 'absolute-value')
+  && !AREAS.some(a => a.nodes.some(n => n.id === 'absolute-value'))
+  && dependentsOf(MATHEMATICS, 'absolute-value').join(' ') === 'absolute-value-equations'
+  && ALGEBRA.nodes.some(n => n.id === 'absolute-value-equations')
+  && !roots(areaOntology(ALGEBRA)).includes('absolute-value-equations'),
+  dependentsOf(MATHEMATICS, 'absolute-value').join(' '))
+t('because its other prerequisite is still a node here, gating it from inside',
+  (ALGEBRA.nodes.find(n => n.id === 'absolute-value-equations')?.needs ?? [])
+    .filter(id => ALGEBRA.nodes.some(n => n.id === id)).join(' ') === 'linear-inequalities',
+  (ALGEBRA.nodes.find(n => n.id === 'absolute-value-equations')?.needs ?? [])
+    .map(id => `${id}@${areaOf(MATHEMATICS, id)}`).join(' '))
+/*
+ * And the gate, which moved without getting longer. While `absolute-value` was
+ * a skeleton the walk looked straight through it to `negative-numbers`; it
+ * gates in its own right now and has taken that entry's place. Three before,
+ * three after, one member replaced — because `gatingPrerequisitesOf` names
+ * NEAREST teachable ancestors rather than accumulating them, so a promotion
+ * substitutes into a gate instead of adding to it. Asserted on the member
+ * rather than on the length for the reason this whole block exists.
+ */
+t('and the gate on the equations above it substituted rather than grew',
+  (() => {
+    const g = gatingPrerequisitesOf(MATHEMATICS, 'absolute-value-equations')
+    return g.includes('absolute-value')
+      && !g.includes('negative-numbers')
+      && gatingPrerequisitesOf(MATHEMATICS, 'absolute-value').join(' ') === 'negative-numbers'
+  })(),
+  gatingPrerequisitesOf(MATHEMATICS, 'absolute-value-equations').join('/'))
 /*
  * The departing node asserted on both halves, which is the shape the comment
  * above argues for: that it has left the root set, AND that nothing replaced
@@ -5133,6 +5508,23 @@ const TITLES = [
    */
   ['Inner product space', 'inner-product-spaces'],
   ['Gram–Schmidt process', 'inner-product-spaces'],
+  /*
+   * The twentieth promotion, carried verbatim as well — and this one really
+   * has only one alternative, `\babsolute value\b`, so a single row checks all
+   * of it. That is the first pattern in this table where "carried verbatim"
+   * needs no further check, and it is worth noting against the lesson
+   * `basis-and-dimension` left directly above: that lesson is about patterns
+   * with alternations, and a one-branch pattern cannot hide a dead branch.
+   *
+   * What the row does NOT reserve is the shortfall, recorded rather than
+   * widened in the same change as the material. The concept's `hint` names
+   * "modulus" and "distance from zero" — search words for the provider — and
+   * the pattern names neither, so "Modulus" is claimed by NOBODY. Widening to
+   * the bare word is one edit and the wrong one: it would claim every title
+   * about modular arithmetic and about the modulus of a complex number, and
+   * `modular-arithmetic` is a concept of its own in the number-theory area.
+   */
+  ['Absolute value', 'absolute-value'],
 ]
 
 for (const [title, expected] of TITLES) {
@@ -5511,6 +5903,56 @@ t('no user-facing string calls it the Armature',
   nameLeaks.length === 0, nameLeaks.map(l => `${l.p}:${l.n}`).join(', '))
 
 /*
+ * `covers` is a maintainer's note and may not be rendered as a blurb.
+ *
+ * It is the written account of what a subject contains, aimed at whoever edits
+ * the ontology: arithmetic foundations ends on which neighbouring nodes are
+ * mapped-only and which congruences are still unwritten. Useful, and not copy.
+ *
+ * The thing that makes this a rule rather than a preference is that the field
+ * has no length contract and never had one. Across the ten shipped subjects it
+ * runs from 217 characters to over 9,000, it is edited by the authoring cron
+ * daily, and it grows — so any slot sized for one subject is wrong for
+ * another. It was rendered unconditionally in the home page's practice band,
+ * where 3,229 characters of it landed under a heading reading "Maths
+ * practice", and reported as exactly that.
+ *
+ * Asserted as a property of the SOURCE rather than of the text, because the
+ * text is content and will keep moving. First-sentence extraction is not an
+ * escape either — see the comment in MathPracticeSection for why that works
+ * for `because` and not for this.
+ */
+const COVERS_SPREAD = ONTOLOGIES.map(o => o.subject.covers.length)
+t('covers has no usable length bound, which is why the rule below exists',
+  Math.max(...COVERS_SPREAD) > 4 * Math.min(...COVERS_SPREAD),
+  `${Math.min(...COVERS_SPREAD)}..${Math.max(...COVERS_SPREAD)} characters`)
+
+/*
+ * Comments stripped, then the rule is simply "this file does not read the
+ * field". Written that way after the first version of this assertion failed to
+ * bite: it pattern-matched the exact expression that had been removed —
+ * `{peek?.subject ? peek.subject.covers : ...}` — and a re-introduction one
+ * character different would have walked straight past it. Asserting the
+ * ABSENCE of a reference needs no guess about how the reference would be
+ * spelled, and this file's own comments discuss `covers` at length, which is
+ * why they have to come out first.
+ *
+ * Proven by injecting the removed expression back and watching this fail.
+ */
+const stripComments = src => src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '')
+const BAND = stripComments(
+  readFileSync(join(FRONTEND, 'components', 'concepts', 'MathPracticeSection.tsx'), 'utf8'))
+t('the home page practice band does not read the subject note at all',
+  !/\.covers/.test(BAND),
+  (BAND.match(/.*\.covers.*/g) ?? []).slice(0, 3).join(' | '))
+
+const BROWSER = readFileSync(join(FRONTEND, 'components', 'concepts', 'ConceptBrowser.tsx'), 'utf8')
+t('the concept browser renders it only behind a disclosure',
+  /showCovers\s*&&/.test(BROWSER) && /subject\.covers\}/.test(BROWSER))
+t('and says how much of it there is before you open it',
+  /covers\.length/.test(BROWSER))
+
+/*
  * The game master, and the four things it may not do.
  *
  * RPG mode narrates with a language model, which is the one place on /learn
@@ -5679,6 +6121,388 @@ t('it may not roll to decide what the player knows',
   /Never roll to find out whether the player knows/i.test(TABLE_SYSTEM))
 t('it still may not teach or judge a calculation',
   /never the result and never whether it was right/i.test(TABLE_SYSTEM))
+
+// ---------------------------------------------------------------------------
+
+group('the game master may frame work it did not choose and cannot see')
+
+/*
+ * docs/RPG_AND_THE_GRAPH.md §3, and §10's first two items as assertions.
+ *
+ * The seam is the one place in the product where a narrator is told that
+ * mathematics is about to happen, which makes it the one place where "the GM
+ * never authors a problem and never judges an answer" can quietly stop being
+ * true. Every assertion below is one sentence of that design.
+ */
+
+/* Which concepts can be worked at all. Derived from the shipped ontologies
+   rather than named, because a hard-coded id here would keep passing while the
+   concept it names was promoted, retired or renamed — which is the failure
+   this suite has recorded four times under other headings. */
+const WORKABLE_CONCEPTS = ONTOLOGIES.flatMap(o =>
+  o.concepts.filter(c => isPractisable(o, c.id)).map(c => ({ subjectId: o.subject.id, concept: c })))
+const MAPPED_ONLY = MATHEMATICS.concepts.filter(c => c.knowledgePoints.length === 0)
+
+t('there is something to work and something that cannot be worked',
+  WORKABLE_CONCEPTS.length > 0 && MAPPED_ONLY.length > 0,
+  `${WORKABLE_CONCEPTS.length} workable, ${MAPPED_ONLY.length} mapped-only`)
+
+t('every concept with problems resolves to the subject that owns it',
+  WORKABLE_CONCEPTS.every(({ subjectId, concept }) => {
+    const offer = offerFor(concept.id, concept.name)
+    return offer.kind === 'workable' && offer.subjectId === subjectId
+  }),
+  WORKABLE_CONCEPTS.filter(({ concept }) => offerFor(concept.id, concept.name).kind !== 'workable')
+    .map(({ concept }) => concept.id).slice(0, 4).join(', '))
+
+/*
+ * The §10 prohibition: "a commission that cannot be completed". Sixteen of the
+ * twenty-one regions hold mapped areas with no material, so a refusal can name
+ * a concept with nothing behind it — and a button leading to an empty practice
+ * set is worse than the dead end it replaced, because the dead end did not
+ * promise.
+ */
+t('a concept with nothing authored is never offered as work',
+  MAPPED_ONLY.every(c => offerFor(c.id, c.name).kind === 'unwritten'),
+  MAPPED_ONLY.filter(c => offerFor(c.id, c.name).kind !== 'unwritten')
+    .map(c => c.id).slice(0, 4).join(', '))
+
+t('a refusal naming only unwritten concepts offers no work at all',
+  !anyWorkable(offersFor(MAPPED_ONLY.slice(0, 3).map(c => ({ conceptId: c.id, conceptName: c.name })))))
+
+t('offersFor answers once per missing concept, in order',
+  (() => {
+    const missing = [
+      { conceptId: MAPPED_ONLY[0].id, conceptName: MAPPED_ONLY[0].name },
+      { conceptId: WORKABLE_CONCEPTS[0].concept.id, conceptName: WORKABLE_CONCEPTS[0].concept.name },
+    ]
+    const offers = offersFor(missing)
+    return offers.length === 2
+      && offers[0].kind === 'unwritten' && offers[1].kind === 'workable'
+  })())
+
+t('a shipped concept has an owning ontology and a map-only one does not',
+  !!ontologyOwning(WORKABLE_CONCEPTS[0].concept.id) && !ontologyOwning(MAPPED_ONLY[0].id))
+
+/* The framing prompt inherits every prohibition the scene prompt has, by
+   construction rather than by being written out again. Asserted because a
+   future edit could easily rebuild this prompt standalone and lose the four. */
+t('the framing prompt carries the whole of the GM system prompt',
+  COMMISSION_SYSTEM.startsWith(GM_SYSTEM))
+
+t('it is forbidden from stating the problem or any number in it',
+  /must not[\s\S]*State, restate, invent or imply the problem/i.test(COMMISSION_SYSTEM)
+  && /any number in it/i.test(COMMISSION_SYSTEM))
+t('nobody in the scene may do the work, check it, or know the answer',
+  /Have anybody in the scene do the work, check it, or know the answer/i.test(COMMISSION_SYSTEM))
+t('it may not predict how the work will go',
+  /whether it will go well/i.test(COMMISSION_SYSTEM))
+/* `\s+` and not a space: the prompt is an array of lines joined with newlines,
+   and this sentence happens to break across two of them. A literal-space
+   regex here passed when written and would fail the moment anybody rewrapped
+   the paragraph, which is the opposite of what this assertion is for. */
+t('it is told the problem is not its to ask for',
+  /you must not ask for it/i.test(COMMISSION_SYSTEM)
+  && /problem is put to the player by the engine/i.test(COMMISSION_SYSTEM))
+
+/*
+ * The strongest version of §10's first item: the GM is not shown the
+ * mathematics, so it cannot restate mathematics.
+ *
+ * A prohibition asks a model not to repeat what it was given. Not giving it
+ * makes repeating impossible, and this is the assertion that keeps it that way
+ * — if somebody later threads the task text through for a "more faithful"
+ * framing, this fails.
+ *
+ * Tasks under twenty characters are excluded, not because they are safe but
+ * because a prompt that short can genuinely occur inside a region's setting
+ * sentence, and a test that fails on a coincidence teaches people to ignore
+ * it.
+ */
+const FRAME_REGION = armatureRegions()[0]
+const FRAMED = commissionPrompt({
+  region: FRAME_REGION,
+  conceptName: WORKABLE_CONCEPTS[0].concept.name,
+  kind: 'evaluate',
+  blockedRoad: 'Long division',
+})
+t('the framing request names the concept and the shape of the task',
+  FRAMED.user.includes(WORKABLE_CONCEPTS[0].concept.name) && /a evaluate task/.test(FRAMED.user))
+t('the framing request contains no task prompt from the engine',
+  TASKS.filter(k => (k.prompt ?? '').length >= 20).every(k => !FRAMED.user.includes(k.prompt)),
+  TASKS.filter(k => (k.prompt ?? '').length >= 20).filter(k => FRAMED.user.includes(k.prompt))
+    .map(k => k.id).slice(0, 3).join(', '))
+t('it tells the GM outright that it has not been shown the task',
+  /You are not told the task/.test(FRAMED.user))
+
+/* §4's load-bearing sentence, in the prompt: the errand is not a key. The
+   road opens when the strength gate is satisfied, so the framing must not
+   mention the road opening even though it is told which road was refused. */
+t('the framing is told the road it mentions, and told not to promise it',
+  FRAMED.user.includes('Long division')
+  && /Do not promise that it will open the road/.test(FRAMED.user)
+  && /do not mention the road opening at all/.test(FRAMED.user))
+
+t('an unframed commission still situates the work',
+  (() => {
+    const bare = unframedCommission({
+      region: FRAME_REGION, conceptName: 'Long division', kind: 'evaluate', blockedRoad: null,
+    })
+    return bare.includes(FRAME_REGION.name) && bare.includes('Long division')
+  })())
+
+/*
+ * The route, read as text — the same technique as the UI_FILES group above and
+ * for the same reason: what matters is a property of the source, not of a
+ * value it computes.
+ *
+ * Nothing the client sends may reach the prompt as text. The body carries a
+ * task id and the route resolves the task itself, so the two facts the GM is
+ * told both come from the engine's tables on the server side. A `kind` read
+ * out of the body would be a free-text slot with a game master behind it.
+ */
+const COMMISSION_ROUTE = readFileSync(join(FRONTEND, 'app', 'api', 'learn', 'commission', 'route.ts'), 'utf8')
+t('the commission route resolves the task from its id, server-side',
+  /taskById\(/.test(COMMISSION_ROUTE))
+t('it never takes the task kind, prompt or concept name from the request body',
+  !/body\??\.\s*(kind|prompt|given|conceptName)/.test(COMMISSION_ROUTE),
+  (COMMISSION_ROUTE.match(/body\??\.\s*\w+/g) ?? []).join(' '))
+t('it refuses to frame work that nothing is authored for',
+  /offerFor\(/.test(COMMISSION_ROUTE) && /no work to frame/.test(COMMISSION_ROUTE))
+
+/*
+ * §10: "dice that open roads. rollFor reads no concept graph and writes to
+ * none. That property is currently true and is worth asserting."
+ *
+ * It is true in the strongest possible way — rpg.ts imports nothing at all —
+ * so this asserts the absence rather than the shape. A single import of
+ * traversal, scheduling or the registry would be the thing to catch.
+ */
+const RPG_SOURCE = readFileSync(join(FRONTEND, 'lib', 'concepts', 'rpg.ts'), 'utf8')
+t('the dice read no concept graph and can open no road',
+  !/from '\.\/(traversal|scheduling|registry|atlas|tasks|store)'/.test(RPG_SOURCE),
+  (RPG_SOURCE.match(/^import .*$/gm) ?? []).join(' | '))
+
+// ---------------------------------------------------------------------------
+
+group('the commission chart: two regions, and the errand cannot move the road')
+
+/*
+ * The chart is data, so these are properties rather than opinions.
+ *
+ * Every assertion in this group is one sentence of docs/RPG_AND_THE_GRAPH.md
+ * that was previously enforced by a comment asking people not to do something.
+ * The two that matter most are orthogonality and the single guarded edge: they
+ * are "no new gate, and nothing new that can open a road" (§4), expressed so
+ * that adding the edge would turn this suite red instead of shipping.
+ */
+
+const ERRAND_STATES = statesOf('errand')
+const ROAD_STATES = statesOf('road')
+const NO_GUARD_CTX = { strength: 0, floor: 1, standingThere: false }
+
+t('both regions have states and they do not overlap',
+  ERRAND_STATES.length > 1 && ROAD_STATES.length === 2
+  && ERRAND_STATES.every(s => !ROAD_STATES.includes(s)),
+  `${ERRAND_STATES.join(' ')} || ${ROAD_STATES.join(' ')}`)
+
+/* THE property. Flattened into one machine, "finishing the work opens the
+   road" is one edge somebody adds without noticing. Kept orthogonal it is
+   unspellable, and this is what says so. */
+t('no errand transition names a road state, and no road transition names an errand state',
+  TRANSITIONS.every(tr => (tr.region === 'errand'
+    ? !ROAD_STATES.includes(tr.to) && !ROAD_STATES.includes(tr.from)
+    : !ERRAND_STATES.includes(tr.to) && !ERRAND_STATES.includes(tr.from))),
+  TRANSITIONS.filter(tr => (tr.region === 'errand'
+    ? ROAD_STATES.includes(tr.to) : ERRAND_STATES.includes(tr.to)))
+    .map(tr => `${tr.region}:${tr.from}-${tr.event}->${tr.to}`).join(', '))
+
+const intoOpen = TRANSITIONS.filter(tr => tr.to === 'open')
+t('exactly one transition opens a road, and it is guarded on the mastery floor',
+  intoOpen.length === 1 && intoOpen[0].guard === 'atOrAboveFloor'
+  && intoOpen[0].event === 'strength-recomputed',
+  intoOpen.map(tr => `${tr.from}-${tr.event}->${tr.to} guard=${tr.guard}`).join(', '))
+
+/* The guard is `>=` and the floor is a boundary somebody will eventually
+   re-derive. At exactly the floor the road opens. */
+t('the gate opens AT the floor, not above it',
+  GUARDS.atOrAboveFloor({ strength: 0.75, floor: 0.75, standingThere: false })
+  && !GUARDS.atOrAboveFloor({ strength: 0.7499, floor: 0.75, standingThere: false }))
+
+/* §7: decay changes what you can reach next, never where you are standing. */
+t('decay cannot close a road the party is standing on',
+  GUARDS.belowFloorAndNotStandingThere({ strength: 0.1, floor: 0.75, standingThere: false })
+  && !GUARDS.belowFloorAndNotStandingThere({ strength: 0.1, floor: 0.75, standingThere: true }))
+
+/*
+ * Reachability, by walking the chart rather than by reading it. An
+ * unreachable state is a state somebody wrote a UI branch for that nobody can
+ * ever see — which is the statechart equivalent of the vacuous assertions
+ * this suite has caught three times.
+ */
+const EVENTS = [...new Set(TRANSITIONS.map(tr => tr.event))]
+function reachable(region, from) {
+  const seen = new Set([from])
+  const queue = [from]
+  while (queue.length > 0) {
+    const at = queue.shift()
+    for (const event of EVENTS) {
+      /* Both guard outcomes, so a guarded edge is explored rather than
+         decided by whichever context this test happened to pass. */
+      for (const ctx of [
+        { strength: 1, floor: 0.75, standingThere: false },
+        { strength: 0, floor: 0.75, standingThere: false },
+      ]) {
+        const next = chartStep(region, at, event, ctx)
+        if (!seen.has(next)) { seen.add(next); queue.push(next) }
+      }
+    }
+  }
+  return seen
+}
+const reachedErrand = reachable('errand', INITIAL.errand)
+const reachedRoad = reachable('road', INITIAL.road)
+
+/* Compound states are excluded as TARGETS: you never rest in `working` or
+   `ruled`, you rest in one of their children, and `transition` resolves a
+   compound target through INITIAL_CHILD on the way in. */
+const LEAF_ERRAND = ERRAND_STATES.filter(s => !ERRAND_STATES.some(o => o !== s && o.startsWith(`${s}.`)))
+t('every leaf state of the errand is reachable from the initial state',
+  LEAF_ERRAND.every(s => reachedErrand.has(s)),
+  LEAF_ERRAND.filter(s => !reachedErrand.has(s)).join(', '))
+t('both road states are reachable',
+  ROAD_STATES.every(s => reachedRoad.has(s)),
+  ROAD_STATES.filter(s => !reachedRoad.has(s)).join(', '))
+
+/*
+ * §6, as the absence of an edge. "Inconclusive must never be narrated as
+ * success, and it must never be narrated as being wrong." Both are claims the
+ * engine declined to make, and a chart in which one ruling can become another
+ * is a chart in which some later convenience rounds it.
+ */
+const RULING_STATES = ERRAND_STATES.filter(s => isRuled(s))
+t('there are four rulings and `ruled` itself is not one of them',
+  RULING_STATES.length === 4 && !isRuled('ruled') && !isRuled('working.awaiting'),
+  RULING_STATES.join(', '))
+t('no ruling can transition into a different ruling',
+  TRANSITIONS.every(tr => !(isRuled(tr.from) && isRuled(tr.to))),
+  TRANSITIONS.filter(tr => isRuled(tr.from) && isRuled(tr.to))
+    .map(tr => `${tr.from}-${tr.event}->${tr.to}`).join(', '))
+t('and no event turns an inconclusive into a correct or an incorrect',
+  EVENTS.every(event => {
+    const next = chartStep('errand', 'ruled.inconclusive', event, NO_GUARD_CTX)
+    return next !== 'ruled.correct' && next !== 'ruled.incorrect'
+  }))
+
+/* You never enter `ruled` generically — inventing a default child would be
+   inventing a ruling. `working` does have one, and it is the asynchronous
+   state, which is the whole reason the bug this chart replaced was possible. */
+t('entering the compound `working` lands on `pending`, not on `awaiting`',
+  chartStep('errand', 'offered', 'take-work', NO_GUARD_CTX) === 'working.pending')
+t('`ruled` has no initial child, so no ruling can be entered by default',
+  INITIAL_CHILD.ruled === undefined && INITIAL_CHILD.working === 'working.pending')
+
+/* A transition on a superstate applies to every substate. This is the feature
+   a flat machine lacks, and the test is that it actually works rather than
+   that it is written down. */
+t('put-down leaves the errand from every substate of working and ruled',
+  ['working.pending', 'working.awaiting', 'working.submitted', ...RULING_STATES]
+    .every(s => chartStep('errand', s, 'put-down', NO_GUARD_CTX) === 'none'),
+  ['working.pending', 'working.awaiting', 'working.submitted', ...RULING_STATES]
+    .filter(s => chartStep('errand', s, 'put-down', NO_GUARD_CTX) !== 'none').join(', '))
+t('try-again returns every ruling to a fresh problem on the same concept',
+  RULING_STATES.every(s => chartStep('errand', s, 'try-again', NO_GUARD_CTX) === 'working.awaiting'))
+
+/* Determinism. Two edges on the same (state, event) with no guard between
+   them means the order of the array decides the behaviour, which is the bug
+   that is hardest to see by reading. */
+const collisions = []
+for (const tr of TRANSITIONS) {
+  const peers = TRANSITIONS.filter(o =>
+    o !== tr && o.region === tr.region && o.from === tr.from && o.event === tr.event)
+  for (const peer of peers) {
+    if (!tr.guard || !peer.guard || tr.guard === peer.guard) {
+      collisions.push(`${tr.region}:${tr.from}-${tr.event}`)
+    }
+  }
+}
+t('no two transitions compete for the same state and event',
+  collisions.length === 0, [...new Set(collisions)].join(', '))
+
+t('an unhandled event leaves the state alone rather than throwing',
+  chartStep('errand', 'none', 'submitted', NO_GUARD_CTX) === 'none'
+  && chartStep('road', 'shut', 'put-down', NO_GUARD_CTX) === 'shut')
+
+t('every transition says why it exists',
+  TRANSITIONS.every(tr => typeof tr.note === 'string' && tr.note.length > 20),
+  TRANSITIONS.filter(tr => (tr.note ?? '').length <= 20).map(tr => tr.from).join(', '))
+
+t('hierarchy resolves nearest-first',
+  selfAndAncestors('working.submitted').join('>') === 'working.submitted>working')
+
+// ---------------------------------------------------------------------------
+
+group('the game master narrates a ruling it did not make')
+
+t('the ruling prompt carries the whole of the GM system prompt',
+  RULING_SYSTEM.startsWith(GM_SYSTEM))
+t('it names all four rulings the verifier can produce',
+  ['CORRECT', 'INCORRECT', 'INCONCLUSIVE', 'ABANDONED'].every(r =>
+    new RegExp(`- ${r}:`).test(RULING_SYSTEM)))
+
+/* §6 in the prompt, beside §6 in the chart. Both exist because one of them
+   will be edited by somebody who has not read the other. */
+/* `\s+` between the clauses, for the reason given in the framing group: these
+   prompts are arrays of lines joined with newlines, and asserting across a
+   wrap with a literal space is a test that passes until somebody reflows the
+   paragraph. This one did exactly that on the first run. */
+t('inconclusive is neither a failure nor a success, in those words',
+  /NOT a failure and it\s+is NOT a success/.test(RULING_SYSTEM))
+t('and the prompt forbids implying either',
+  /Never imply it was wrong/.test(RULING_SYSTEM) && /Never imply\s+it was accepted/.test(RULING_SYSTEM))
+
+t('it may not state the answer it was never given',
+  /State the problem, the answer, or what the answer should have been/.test(RULING_SYSTEM))
+/* §10's fifth item, at the one place it is most tempting. */
+t('it may not congratulate or say anything is now open',
+  /Congratulate/.test(RULING_SYSTEM) && /unlocked, open, or/.test(RULING_SYSTEM))
+t('it may not soften or hedge a ruling',
+  /Soften a ruling, hedge it/.test(RULING_SYSTEM))
+
+const INCONCLUSIVE = rulingPrompt({
+  region: FRAME_REGION, conceptName: 'Long division', ruling: 'inconclusive',
+})
+t('the inconclusive scene is asked for as an open question, not a verdict',
+  /the question stays open/.test(INCONCLUSIVE.user)
+  && /Do not imply it was wrong and do not imply it was accepted/.test(INCONCLUSIVE.user))
+t('no ruling prompt is given the problem or the answer',
+  TASKS.filter(k => (k.prompt ?? '').length >= 20).every(k => !INCONCLUSIVE.user.includes(k.prompt))
+  && /You were never told the problem itself/.test(INCONCLUSIVE.user))
+
+/* Assistance is a circumstance of the scene — §5 — and not a fault. Both
+   halves asserted, because "told about it" without "do not remark on it" is
+   how a helpful model produces a scene about somebody needing help. */
+const ASSISTED = rulingPrompt({
+  region: FRAME_REGION, conceptName: 'Long division', ruling: 'correct', assisted: true,
+})
+t('help is passed to the scene as a circumstance, not a fault',
+  /THE PLAYER USED HELP/.test(ASSISTED.user) && /not a fault to remark on/.test(ASSISTED.user))
+t('and is absent when there was none',
+  !/USED HELP/.test(INCONCLUSIVE.user))
+
+t('an unnarrated inconclusive still says it was not ruled against you',
+  unnarratedRuling({ region: FRAME_REGION, conceptName: 'Long division', ruling: 'inconclusive' })
+    .includes('not ruled against you'))
+t('every ruling has a bare form that names the concept',
+  ['correct', 'incorrect', 'inconclusive', 'abandoned'].every(ruling =>
+    unnarratedRuling({ region: FRAME_REGION, conceptName: 'Long division', ruling })
+      .includes('Long division')))
+
+/* The route validates the ruling rather than passing a string into a prompt
+   whose whole job is to narrate a ruling faithfully. */
+t('the commission route accepts only the four rulings the verifier produces',
+  /unknown ruling/.test(COMMISSION_ROUTE)
+  && /RULINGS\s*=\s*\['correct', 'incorrect', 'inconclusive', 'abandoned'\]/.test(COMMISSION_ROUTE))
 
 /* The sheet is flavour plus earned tags, and it says which is which. A
    background that read as an advantage would be a way to buy a better roll
