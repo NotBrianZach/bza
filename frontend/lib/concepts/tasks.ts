@@ -714,6 +714,43 @@ const VEC_UV_COEFF = [
   { name: 'c', assumptions: { real: true } },
 ]
 
+/**
+ * One row of a matrix and one candidate kernel vector, for the thirtieth
+ * promotion.
+ *
+ * `a1`/`a2`/`a3` for the row, reusing `VEC_A_3D`'s naming because a row IS a
+ * vector here and the task is a dot product of it against something; `k` for
+ * the candidate, because the question every task in that pair asks is whether
+ * this particular vector is in the KERNEL. Naming it `v` would make the two
+ * tasks read as a pair of arbitrary vectors, which is exactly the reading the
+ * point exists to refuse — the kernel is one line and not a shape.
+ */
+const MATRIX_ROW_AND_CANDIDATE = [
+  ...VEC_A_3D,
+  { name: 'k1', assumptions: { real: true } },
+  { name: 'k2', assumptions: { real: true } },
+  { name: 'k3', assumptions: { real: true } },
+]
+
+/**
+ * A column count and a nullity, for the one task that is the theorem itself.
+ *
+ * `integer` and not `real`, which is the whole point of the pair: both are
+ * COUNTS, and the theorem's content is that the two of them and the number of
+ * columns cannot be chosen independently. `n` is the number of columns and not
+ * of rows — the distinction the task's prompt turns on, since the number of
+ * rows never enters the arithmetic.
+ *
+ * `n` here is unrelated to `n1`/`n2`/`n3` in `PLANE_N_P`, which are a normal
+ * vector's components. Two tasks of the same concept use both, and each prompt
+ * names its own symbols; a shared constant for the two would be a single
+ * declaration list describing two different objects.
+ */
+const COLUMNS_AND_NULLITY = [
+  { name: 'n', assumptions: { integer: true, positive: true } },
+  { name: 'k', assumptions: { integer: true } },
+]
+
 /** The three coordinates of a point, for substituting into a plane equation. */
 const PLANE_XYZ = [
   { name: 'x', assumptions: { real: true } },
@@ -1557,6 +1594,135 @@ export const TASKS: PracticeTask[] = [
     ],
     at: { b: '64', p: '25', q: '25' },
     reference: '-4',
+  },
+
+  /*
+   * ── scientific-notation ─────────────────────────────────────────────────
+   *
+   * Three `evaluate` tasks, one per knowledge point, exact rational arithmetic
+   * throughout. `10^n` with n substituted from `at` is settled by `exactValue`'s
+   * integer-power branch, including the negative exponent in the second task, so
+   * none of these goes in `WORKER_ONLY` and the subject's "gradable with no
+   * worker" contract still holds over every task it owns.
+   *
+   * THE REFERENCE MAY BE ANSWERED IN THE NOTATION BEING TAUGHT, which is worth
+   * stating because it is the opposite of the limitation this concept was
+   * expected to have. `ruleEvaluate` compares exact rationals rather than
+   * strings, so `4 * 10^5` and `400000` are the same answer and both are marked
+   * correct against a reference of `400000`. That was verified against
+   * `ruleEvaluate` before these were written rather than assumed from reading
+   * it — all three were run with the scientific-notation form as the answer.
+   * The consequence is that the learner is never forced to abandon the form to
+   * be graded, which is as close as an `evaluate` task gets to ruling on the
+   * notation itself.
+   *
+   * What is still unscored is the CHOICE of a and n. "Put this in scientific
+   * notation" asks for a pair, no task kind carries a pair, and no `NamedForm`
+   * in forms.ts can see a power of ten — the same mechanism that keeps
+   * `sigma-notation` from naming `transform_to_form`. So the choosing is done
+   * in the worked examples and these tasks rule the number it produces. The
+   * third task is the nearest thing to an exception: the form rules out a digit
+   * part of 11 on its own, so a learner who makes the aligned-addition error
+   * can detect it without the arithmetic, and the subgoal says so.
+   *
+   * What each one asks, and why it is the content rather than beside it:
+   *
+   *  - the first is a refutation by value, the shape `plane-geometry` found five
+   *    times and `percent`'s second task reuses. Counting the zeros after the
+   *    point and counting the places give −3 and −4, and the task evaluates the
+   *    gap between the two readings. A learner is not asked which is right; they
+   *    are shown that the two name different numbers, and by how much. It
+   *    vanishes only at a = 0, since a/10³ = a/10⁴ forces it — so the readings
+   *    agree exactly when there is no quantity to write.
+   *  - the second multiplies two quantities and is the one task here whose
+   *    `given` hands over nothing: the digit product and the exponent sum are
+   *    both left to the learner. Adding the exponents versus multiplying them
+   *    is sixteen orders of magnitude apart at these inputs, and the product
+   *    leaves the admissible range, so the renormalising step is exercised
+   *    rather than described.
+   *  - the third adds two quantities with different exponents, where the
+   *    plausible error — add the digit parts, keep the larger exponent — gives
+   *    15 × 10⁷ against a true 6.9 × 10⁷, more than double. The alignment is
+   *    the content and the sum is what reports whether it happened.
+   *
+   * None of the three is 0 at its own inputs and none has an input-independent
+   * reference: the first moves with a, z and p, the second with all four, the
+   * third with all four. A task whose answer does not move when its input moves
+   * can be answered without the content, which is the trap `absolute-value` had
+   * to pair a task to get out of.
+   *
+   * Different numbers from the worked examples in all three — 5 at 10⁻³ against
+   * 10⁻⁴ rather than the example's comparison of 0.0005 with 52 000, 8 × 10⁶
+   * times 5 × 10⁻² rather than 5 × 10⁴ times 4 × 10³, and 6 × 10⁷ plus 9 × 10⁶
+   * rather than 7 × 10⁵ plus 4 × 10⁴ — since none of them is establishing a
+   * specific claim an example made. The one deliberate carry-over is the digit
+   * 5 in the first, which is the same digit the example mis-counts, because the
+   * task is the arithmetic that settles that exact dispute.
+   */
+  {
+    id: 'count-the-places-not-the-zeros-1',
+    knowledgePointId: 'the-exponent-counts-the-shift-not-the-zeros',
+    kind: 'evaluate',
+    prompt:
+      '0.0005 is to be written as 5 × 10ⁿ. Counting the zeros between the point and the 5 gives '
+      + 'three; counting the places the digits have to shift gives four, and the exponent is a '
+      + 'count of places. Rather than being told which is right, evaluate the gap between the '
+      + 'two readings: evaluate a / 10^z - a / 10^p at a = 5, z = 3, p = 4. Anything other than 0 '
+      + 'means they name different numbers rather than one number written two ways, and the '
+      + 'result is nine times the 0.0005 being written — so the mis-count is not a rounding '
+      + 'matter. The two readings agree only when a = 0, since a/10³ = a/10⁴ forces it.',
+    given: 'a / 10^z - a / 10^p',
+    variables: [
+      { name: 'a', assumptions: { integer: true, positive: true } },
+      { name: 'z', assumptions: { integer: true } },
+      { name: 'p', assumptions: { integer: true } },
+    ],
+    at: { a: '5', z: '3', p: '4' },
+    reference: '0.0045',
+  },
+  {
+    id: 'multiply-and-renormalise-1',
+    knowledgePointId: 'multiplying-adds-the-exponents-and-may-need-renormalising',
+    kind: 'evaluate',
+    prompt:
+      'A probe collects 8 × 10⁶ samples, each of mass 5 × 10⁻² grams. The digit parts multiply '
+      + 'and the exponents ADD; multiplying the exponents instead would put the answer sixteen '
+      + 'orders of magnitude away. Evaluate a * 10^m * b * 10^n at a = 8, m = 6, b = 5, n = -2 '
+      + 'for the total mass in grams. Writing your answer in scientific notation needs one '
+      + 'further step, because the digit parts take the product outside 1 ≤ a < 10 and a factor '
+      + 'of ten has to move from the digit part into the exponent — dropping that ten instead of '
+      + 'carrying it leaves you a tenth of the right answer. Either writing is accepted here: '
+      + '4 * 10^5 and 400000 are the same number.',
+    given: 'a * 10^m * b * 10^n',
+    variables: [
+      { name: 'a', assumptions: { integer: true, positive: true } },
+      { name: 'm', assumptions: { integer: true } },
+      { name: 'b', assumptions: { integer: true, positive: true } },
+      { name: 'n', assumptions: { integer: true } },
+    ],
+    at: { a: '8', m: '6', b: '5', n: '-2' },
+    reference: '400000',
+  },
+  {
+    id: 'align-before-adding-1',
+    knowledgePointId: 'adding-needs-a-common-power-of-ten',
+    kind: 'evaluate',
+    prompt:
+      'Two counts are 6 × 10⁷ and 9 × 10⁶. Evaluate a * 10^m + b * 10^n at a = 6, m = 7, b = 9, '
+      + 'n = 6 for the total. The exponents differ, so the digit parts 6 and 9 are counts of '
+      + 'different-sized units and cannot be added as they stand — one term has to be rewritten '
+      + 'on the other\'s power of ten first. A learner who adds the digit parts and keeps the '
+      + 'larger exponent gets 15 × 10⁷, more than double the true total, and that answer also '
+      + 'fails the form on its own: a digit part of 15 is outside 1 ≤ a < 10.',
+    given: 'a * 10^m + b * 10^n',
+    variables: [
+      { name: 'a', assumptions: { integer: true, positive: true } },
+      { name: 'm', assumptions: { integer: true } },
+      { name: 'b', assumptions: { integer: true, positive: true } },
+      { name: 'n', assumptions: { integer: true } },
+    ],
+    at: { a: '6', m: '7', b: '9', n: '6' },
+    reference: '69000000',
   },
 
   // ── polynomial-arithmetic ───────────────────────────────────────────────
@@ -7586,6 +7752,149 @@ export const TASKS: PracticeTask[] = [
     // written as a pair, which is the shape the thirteenth promotion excluded
     // from its own count and the twentieth refused an edge over.
     reference: '0',
+  },
+
+  /*
+   * The rank and the kernel — six tasks, two on each of the three points, the
+   * thirtieth promotion. Every one `evaluate`, every one exact with no worker,
+   * which is this subject's standing contract.
+   *
+   * ONE MATRIX RUNS THROUGH ALL SIX, and it is
+   *
+   *     A = [[1, 2, 3], [2, 4, 6], [1, 1, 1]]
+   *
+   * chosen so that every number the concept needs is small and none of them is
+   * an accident. Row 2 is twice row 1, so the rank is at most 2; rows 1 and 3
+   * are independent, so it is exactly 2; three columns less two pivots leaves
+   * one free, so the nullity is 1. Its columns are c₁ = (1, 2, 1),
+   * c₂ = (2, 4, 1), c₃ = (3, 6, 1) — every one of them satisfying y = 2x, which
+   * is the plane the image IS.
+   *
+   * THE KERNEL VECTOR AND THE COLUMN DEPENDENCE ARE THE SAME THREE NUMBERS,
+   * which is the reason this matrix rather than a smaller one. The kernel is
+   * the line through (1, −2, 1), and 1·c₁ − 2·c₂ + 1·c₃ = 0 is that triple read
+   * as weights on the columns. So the first point finds the dependence with a
+   * triple product and the second finds it again by eliminating, and a learner
+   * can see that the two answers are one fact rather than two.
+   *
+   * THREE OF THE SIX GIVENS ARE `basis-and-dimension`'S OWN, VERBATIM, and that
+   * is what the `encompasses` edge in ontology-vectors.ts is claimed on rather
+   * than on the prose. `u2*v3 - u3*v2` is `plane-basis-cross-product-1`'s, and
+   * `n1*r1 + n2*r2 + n3*r3` is `third-vector-redundant-1`'s, used twice here at
+   * different inputs.
+   *
+   * NOTHING HERE TAKES A ROOT AND NOTHING ASKS FOR AN ANGLE, which are the two
+   * boundaries this subject has held since the dot product. Neither cost
+   * anything to keep: a rank is a count and a kernel test is a dot product.
+   */
+  {
+    id: 'image-two-columns-independent-1',
+    knowledgePointId: 'the-rank-counts-the-directions-the-columns-reach',
+    kind: 'evaluate',
+    prompt:
+      'A = [[1, 2, 3], [2, 4, 6], [1, 1, 1]], so its first two columns are u = (1, 2, 1) and ' +
+      'v = (2, 4, 1). Evaluate the FIRST component of u × v, which is u₂v₃ − u₃v₂. Anything but ' +
+      'zero means the two columns are independent, so the image contains a whole plane and the ' +
+      'rank is at least 2.',
+    given: 'u2*v3 - u3*v2',
+    variables: VEC_UV_3D,
+    at: { u1: '1', u2: '2', u3: '1', v1: '2', v2: '4', v3: '1' },
+    // 2·1 − 1·4 = −2. The whole product is (−2, 1, 0), which is the normal of
+    // the plane y = 2x — and all THREE columns lie in it, which is what the
+    // next task uses. Same `given` as `plane-basis-cross-product-1` at
+    // different inputs: that task settled independence inside a plane given in
+    // advance, and this one produces the plane.
+    reference: '-2',
+  },
+  {
+    id: 'image-third-column-adds-nothing-1',
+    knowledgePointId: 'the-rank-counts-the-directions-the-columns-reach',
+    kind: 'evaluate',
+    prompt:
+      'The first two columns of A span a plane whose normal is n = (−2, 1, 0). Decide whether the ' +
+      'third column r = (3, 6, 1) reaches out of that plane by evaluating n·r. A zero means it ' +
+      'does not, so the three columns between them reach only two directions and the rank is ' +
+      'exactly 2 rather than merely at least 2.',
+    given: 'n1*r1 + n2*r2 + n3*r3',
+    variables: PLANE_N_P,
+    at: { n1: '-2', n2: '1', n3: '0', r1: '3', r2: '6', r3: '1' },
+    // −6 + 6 + 0 = 0, and indeed c₃ = 2c₂ − c₁. The pair with the task above is
+    // the same squeeze `basis-and-dimension` used on the plane — one value
+    // bounds the count from below and one from above — and the weights behind
+    // this zero are not visible here, which is what the kernel point finds.
+    reference: '0',
+  },
+  {
+    id: 'kernel-vector-is-killed-1',
+    knowledgePointId: 'the-kernel-is-what-the-map-kills-and-the-nullity-counts-it',
+    kind: 'evaluate',
+    prompt:
+      'Row 1 of A is a = (1, 2, 3), and eliminating gave k = (1, −2, 1) as a candidate for the ' +
+      'kernel. Evaluate a·k. A zero is row 1 sending k to zero, which is one of the three ' +
+      'conditions Ak = 0 asks for.',
+    given: 'a1*k1 + a2*k2 + a3*k3',
+    variables: MATRIX_ROW_AND_CANDIDATE,
+    at: { a1: '1', a2: '2', a3: '3', k1: '1', k2: '-2', k3: '1' },
+    // 1 − 4 + 3 = 0. Row 2 gives 2 − 8 + 6 = 0 and row 3 gives 1 − 2 + 1 = 0,
+    // so all three hold and k really is in the kernel — checked against the
+    // ORIGINAL rows rather than the reduced ones, which is the worked example's
+    // third subgoal.
+    reference: '0',
+  },
+  {
+    id: 'kernel-is-one-particular-line-1',
+    knowledgePointId: 'the-kernel-is-what-the-map-kills-and-the-nullity-counts-it',
+    kind: 'evaluate',
+    prompt:
+      'Same row a = (1, 2, 3), and now the candidate k = (1, −1, 1) — which has the same signs as ' +
+      'the kernel vector and is not it. Evaluate a·k. A non-zero answer means row 1 alone already ' +
+      'rules this vector out, so the kernel is the particular line through (1, −2, 1) rather than ' +
+      'any vector that looks roughly right.',
+    given: 'a1*k1 + a2*k2 + a3*k3',
+    variables: MATRIX_ROW_AND_CANDIDATE,
+    at: { a1: '1', a2: '2', a3: '3', k1: '1', k2: '-1', k3: '1' },
+    // 1 − 2 + 3 = 2. Same `given` as the task above at different inputs, which
+    // is the point's content expressed as a task pair: one dot product decides
+    // membership, and it is the SAME dot product either way. A set of tasks
+    // that only ever showed the zero would teach that the test returns zero.
+    reference: '2',
+  },
+  {
+    id: 'what-the-kernel-costs-the-image-1',
+    knowledgePointId: 'the-two-counts-add-to-the-number-of-columns',
+    kind: 'evaluate',
+    prompt:
+      'A has three columns and a kernel of dimension 1, so the theorem fixes the rank at 2 and the ' +
+      'image is the plane with normal n = (−2, 1, 0). That means some vector of space is NOT hit. ' +
+      'Test r = (0, 1, 0) by evaluating n·r: a non-zero answer is that vector sitting off the ' +
+      'image, which is the one direction the kernel cost.',
+    given: 'n1*r1 + n2*r2 + n3*r3',
+    variables: PLANE_N_P,
+    at: { n1: '-2', n2: '1', n3: '0', r1: '0', r2: '1', r3: '0' },
+    // 0 + 1 + 0 = 1. Same `given` as `image-third-column-adds-nothing-1` at
+    // different inputs, and the contrast is the whole task: a zero there said a
+    // column was already inside the image, a one here says a target is outside
+    // it. The trade only reads this way because A is square — a 2×4 matrix
+    // kills two directions without missing any, which the worked example says.
+    reference: '1',
+  },
+  {
+    id: 'rank-from-the-nullity-1',
+    knowledgePointId: 'the-two-counts-add-to-the-number-of-columns',
+    kind: 'evaluate',
+    prompt:
+      'C has 5 columns, 40 rows, and a kernel that is a plane. Evaluate n − k with n the number of ' +
+      'COLUMNS and k the dimension of the kernel to get the rank. Three judgements come before the ' +
+      'subtraction: a plane has dimension 2, the count the theorem spends is the columns and never ' +
+      'the rows, and the answer is the rank. No elimination is performed on C at all.',
+    given: 'n - k',
+    variables: COLUMNS_AND_NULLITY,
+    at: { n: '5', k: '2' },
+    // 5 − 2 = 3. The 40 rows are in the prompt because they are the number a
+    // reader reaches for and the theorem never touches: rank ≤ 5 whatever the
+    // rows do. Trivial arithmetic on purpose — the theorem IS this subtraction,
+    // and what it buys is that nobody reduces a 40×5 grid to get the 3.
+    reference: '3',
   },
 
   // ── solid-measure, twelfth promotion: solid-geometry ────────────────────

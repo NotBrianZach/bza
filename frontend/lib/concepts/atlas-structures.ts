@@ -30,23 +30,19 @@ const LINEAR_ALGEBRA: MapArea = {
     'and `inner-product-spaces` are all three authored in `vectors-and-independence`, the ' +
     'subject that made the span and independence arguments the axioms are a summary of, that ' +
     'owns the cross-check every coordinate divides by, and that owns the one product of two ' +
-    'vectors returning a number. So this area now begins one question later again — not "how ' +
-    'many independent directions does a space have", nor "what does it mean for two of them to ' +
-    'be perpendicular", but what a MAP does to them, which is a rank and a kernel. The ' +
-    'definition of a space, the count of its directions and the rule that gives it angles are ' +
-    'all somewhere a learner arrives from the plane rather than from the top of this list. What ' +
-    'is still here and rests on the last of those is the ORTHOGONALITY THAT IS A THEOREM rather ' +
-    'than a definition: a symmetric matrix having an orthonormal eigenbasis, and the best answer ' +
-    'to an unsolvable system being a projection onto a column space.',
+    'vectors returning a number. NOR IS THE RANK, which is the sentence this area has now had to ' +
+    'withdraw: it used to say the area begins at "what a MAP does to them, which is a rank and a ' +
+    'kernel", and `rank-nullity` is authored in that same subject as of the thirtieth promotion — ' +
+    'because a rank and a nullity are dimensions, and the question "how many directions does ' +
+    'this reach" belongs with the concept that taught the counting rather than with the grids. So ' +
+    'this area begins one question later still, and the question is the EIGENVALUE: not how far a ' +
+    'map reaches, but which directions it leaves alone. The definition of a space, the count of ' +
+    'its directions, the rule that gives it angles and the measure of what a map hits and kills ' +
+    'are all somewhere a learner arrives from the plane rather than from the top of this list. ' +
+    'What is still here and rests on the last two of those is the ORTHOGONALITY THAT IS A ' +
+    'THEOREM rather than a definition: a symmetric matrix having an orthonormal eigenbasis, and ' +
+    'the best answer to an unsolvable system being a projection onto a column space.',
   nodes: [
-    {
-      id: 'rank-nullity',
-      match: /\b(rank(–|-)nullity|rank \(linear algebra\)|kernel \(linear algebra\))\b/i,
-      name: 'Rank, kernel and the rank–nullity theorem',
-      is: 'What a map hits and what it kills, with their dimensions summing to the dimension of the source.',
-      needs: ['basis-and-dimension', 'gaussian-elimination'],
-      terms: 'rank nullity kernel null space image column space',
-    },
     {
       id: 'eigenvalues',
       match: /\beigen(value|vector|decomposition)/i,
@@ -111,11 +107,13 @@ const LINEAR_ALGEBRA: MapArea = {
    * root of the entire map, practisable from a cold account by somebody who
    * had never met a letter standing for a number.
    *
-   * Edges pointing the other way — `eigenvalues` needs `determinant`,
-   * `rank-nullity` and `numerical-linear-algebra` need `gaussian-elimination`
-   * — are declared on the nodes that REMAIN, so they survive untouched and
-   * resolve across the file boundary in `composeAtlas`. Only the incoming ones
-   * are restated here.
+   * Edges pointing the other way — `eigenvalues` needs `determinant`, and
+   * `numerical-linear-algebra` needs `gaussian-elimination` — are declared on
+   * the nodes that REMAIN, so they survive untouched and resolve across the
+   * file boundary in `composeAtlas`. Only the incoming ones are restated here.
+   * `rank-nullity` used to be named in that list for its own row-reduction
+   * edge; it is an authored concept now and the edge is a `links` entry below,
+   * which is the ninth departure's section.
    *
    * Two of the four reach into another authored subject rather than into the
    * map, which is exactly what `links` is for: an edge whose endpoints are
@@ -389,6 +387,107 @@ const LINEAR_ALGEBRA: MapArea = {
    * Worth stating as an absence: the slot has turned over twice running and the
    * reason it did not a third time is that this node was never the root the
    * region anchors on.
+   *
+   * ── AND A NINTH, WHICH SPENDS THE SECOND-TO-LAST NODE OF HEADROOM ────────
+   *
+   * `rank-nullity` LEFT THIS AREA WHEN IT WAS AUTHORED, AND HAD TO. It is a
+   * concept of `vectors-and-independence` now, in ontology-vectors.ts, so a
+   * node of the same id here would collide with it and `atlasProblems` reports
+   * that as an error rather than merging the two — the authored copy would be
+   * shadowed by a node with no knowledge points, and a written subject would
+   * silently read as unteachable.
+   *
+   * SIX NODES AFTER, against a stub floor of five, so the area keeps ONE spare.
+   * Five departures have now cost it five of its six nodes of headroom.
+   * Recomputed rather than predicted, which is the correction the seventh
+   * departure's note records: of the SIX that remain, exactly one has every
+   * prerequisite written — `eigenvalues`, made ready by the twenty-second
+   * promotion alongside this node — so for the first time the headroom and the
+   * ready-candidate count are both ONE, and spending it would land the area on
+   * the floor. The paragraph above predicted this as "a fifth departure leaves
+   * one spare and a sixth freezes it", and the prediction is now the state.
+   *
+   * WHAT TO DO AT THAT POINT IS NOT TO LOWER THE FLOOR. atlas-foundations.ts
+   * says to MERGE the remnant into a neighbouring area, which is a decision
+   * about the learner-facing map and belongs to a person rather than to an
+   * authoring run. The merge that is already precedent — `coordinate-geometry`
+   * into `euclidean-geometry` — is the shape, and the neighbour here is not
+   * obvious: what remains of this area is the spectral half, which sits as
+   * naturally beside `real-analysis` as beside anything in the foundations.
+   * Stated here rather than decided.
+   *
+   * WHAT IT STRANDED WAS ONE EDGE OF ITS TWO, AND THERE IS A `links` ENTRY FOR
+   * IT. The node declared `basis-and-dimension` and `gaussian-elimination`.
+   * The first is authored in the subject the concept went to, so that edge is
+   * an ordinary entry in that ontology's own `EDGES`. The second is authored
+   * in `expressions-and-equations`, a different subject — and an authored
+   * ontology's edges may only name concepts it contains, so neither ontology
+   * could declare it. That is the last entry below, filed with the area that
+   * OWNED the departing node rather than with the subject holding the far end,
+   * which is the rule when neither end is local.
+   *
+   * IT ENDS THREE PROMOTIONS OF ZERO `links` COST, and the eighth departure's
+   * note is the reason that run had to end: it said a zero cost was "a fact
+   * about where `vectors-and-independence` sits rather than luck — it holds
+   * every concept the unwritten half of this area rests on except the row
+   * reduction and the determinant", and this is the first departure since whose
+   * `needs` reaches one of the two exceptions. The sentence was right and it
+   * named its own expiry.
+   *
+   * IT GATES IMMEDIATELY, both ends having material, which is why dropping it
+   * would be the expensive kind of silence: the concept would rest on the
+   * dimension alone and a learner could reach "the nullity is the number of
+   * free columns" without ever having eliminated anything.
+   *
+   * NOTHING WAS HANDED BACK. No `links` entry of this area — nor of any other —
+   * named `rank-nullity` at either end, checked before the node was deleted.
+   * That case is real and no test catches it: `composeAtlas` would have
+   * produced the same edge twice and said nothing. See the deleted first entry
+   * below.
+   *
+   * THE FOUR EDGES POINTING IN SURVIVED, and they reach into two map files this
+   * area's previous departures never touched. `diagonalisation` and
+   * `least-squares` are nodes of this area; `homology` is a node of `topology`,
+   * further down this same file, and `multiple-regression` is a node of
+   * `statistics`, in atlas-uncertainty.ts. All four name the departing concept
+   * in their OWN `needs`, so all four are declared on nodes that remain and
+   * resolve across the file boundary in `composeAtlas`. Only a node's own
+   * `needs` is stranded by deleting it.
+   *
+   * THE AREA VIEW SUBSTITUTED, WHICH IS THE FIRST SHAPE THIS AREA PRODUCED AND
+   * THE FIRST ONE IT HAS REPEATED. The departing node was a root itself, so it
+   * left the set; and it was the last in-area prerequisite of `least-squares`
+   * (whose other `needs` is `inner-product-spaces`, authored elsewhere), so
+   * that node is now rooted. `diagonalisation` named it too and did NOT become
+   * rooted, `eigenvalues` being a second node of this area above it. So the set
+   * went from {`eigenvalues`, `rank-nullity`} to {`eigenvalues`,
+   * `least-squares`}: one out, one in, SIZE UNCHANGED AT TWO. That is exactly
+   * why tests/atlas.mjs asserts the set by named membership and never by its
+   * length — a count here reads "two and still two" and would pass while every
+   * claim it makes about which two is stale.
+   *
+   * `confusedWith` and `exercises` on the departing node: NEITHER. Checked
+   * before deleting it, for the reason the sixth departure's note gives. The
+   * `exercises` absence CHOSE nothing here and that is worth one line, because
+   * this is the first departure from this area where it could have: the node's
+   * two `needs` land in two different subjects, so had it carried an
+   * `encompasses` edge that edge would have joined two concepts in two
+   * ontologies, which neither may declare and no `links` entry can express —
+   * and the filing would have been forced to the subject holding the far end
+   * rather than decided on content.
+   *
+   * IT WAS AN `armature.ts` ANCHOR, AND KRULL'S SLOT HAS NOW TURNED OVER THREE
+   * TIMES ON ONE RULE. The region anchored on it, an anchor must be a node of
+   * its region's `area`, and `armatureProblems` fails loudly rather than
+   * quietly — so the slot was refilled with `least-squares`, which inherited
+   * the departing node's place as a root of the area view exactly as that node
+   * inherited `basis-and-dimension`'s and that one inherited the axioms'. The
+   * rule the eighth departure's note wrote down — "a region anchoring on the
+   * ROOT of a growing area will be refilled every time that area is authored
+   * out from underneath it, and the refill is always the node that was next" —
+   * predicted this one, and the comment there says so. What is new is that the
+   * rule had TWO candidates to choose between for the first time, and only one
+   * of them became a root; see the note in armature.ts.
    */
   links: [
     /*
@@ -504,6 +603,35 @@ const LINEAR_ALGEBRA: MapArea = {
         'independent — a zero determinant is the computation, dependence is what it says. ' +
         'Without independence first, "det = 0 so there is no inverse" is a rule to remember ' +
         'rather than a thing that follows.',
+    },
+    {
+      /*
+       * The edge the ninth departure stranded, restated — and the entry that
+       * ends three promotions of owing nothing.
+       *
+       * It lives here rather than in either ontology because both of its ends
+       * are authored concepts in OTHER subjects: `gaussian-elimination` is in
+       * `expressions-and-equations` and `rank-nullity` is in
+       * `vectors-and-independence`, so an edge on either subject's own `EDGES`
+       * would name a concept that ontology does not contain and
+       * `ontologyProblems` would reject it when the subject is viewed alone.
+       *
+       * It is also the half of that promotion that had to be written down
+       * rather than noticed: the other stranded edge went to the receiving
+       * ontology, where it sits beside the concept and cannot be missed, and
+       * this one lives in the area the concept left, three files away from
+       * anything that mentions it. The fourteenth promotion's entry above says
+       * the same thing about the same hazard, which is why both are spelled out
+       * instead of one referring to the other.
+       */
+      from: 'gaussian-elimination',
+      to: 'rank-nullity',
+      because:
+        'The rank is the number of pivots and the nullity the number of free columns, so both ' +
+        'counts are produced BY the elimination — "two of the three unknowns are pinned and one ' +
+        'is free" is the whole content of the theorem and is a sentence about a reduced system. ' +
+        'Without row reduction first, a rank is a number somebody asserts about a grid rather ' +
+        'than a count a learner has watched being made.',
     },
   ],
 }

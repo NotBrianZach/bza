@@ -861,13 +861,47 @@ const CONCEPTS: Concept[] = [
         workedExample: {
           problem: 'Simplify (x² − 2x − 15)/(x² − 25).',
           subgoals: [
-            { label: 'Factor both', detail: '(x + 3)(x − 5) over (x − 5)(x + 5).' },
-            { label: 'Cancel the common factor', detail: 'x − 5 appears in both, so it cancels.' },
+            {
+              label: 'Factor both',
+              detail: '(x + 3)(x − 5) over (x − 5)(x + 5).',
+              socratic:
+                'Nothing in this fraction can be struck out as it stands, and the reason is ' +
+                'worth naming before you start: cancelling is division, and division needs a ' +
+                'multiplication already standing there to take hold of. The top is a sum of ' +
+                'three terms and the bottom a difference of two, so neither is yet presented ' +
+                'as anything times anything. One of the two is a standard pattern you should ' +
+                'recognise on sight rather than hunt for by trial, and the other wants the ' +
+                'pair-of-numbers search you already use on a monic quadratic. What do you ' +
+                'have to do to x² − 2x − 15 and to x² − 25 before cancelling is even a ' +
+                'question that can be asked, and what does each of them become?',
+            },
+            {
+              label: 'Cancel the common factor',
+              detail: 'x − 5 appears in both, so it cancels.',
+              socratic:
+                'You are now looking at four brackets rather than two sums: (x + 3)(x − 5) on ' +
+                'the top and (x − 5)(x + 5) on the bottom. Compare them as whole brackets — ' +
+                'x + 3 and x + 5 are not the same thing however alike they look — so there is ' +
+                'at most one match to find. Striking that match out is not an erasure either; ' +
+                'it is dividing the top and the bottom by one and the same expression, exactly ' +
+                'as 35/(7 · 9) becomes 5/9 by dividing both by 7. Which bracket is the match, ' +
+                'what single fraction does that leave you holding, and what did you have to ' +
+                'take for granted about that bracket in order to be allowed to divide by it?',
+            },
             {
               label: 'Record what the domain lost',
               detail:
                 'x ≠ 5 from the factor that cancelled, and x ≠ −5 from the one that remains. ' +
                 'The first condition is invisible in the answer and has to be carried.',
+              socratic:
+                'The expression you were handed refuses two values of x, and you can read both ' +
+                'of them straight off its factored bottom. Now put the same question to the ' +
+                'fraction you have arrived at: how many of those two does it refuse? That gap ' +
+                'is the whole difficulty of this step — the cancelling was legitimate, and yet ' +
+                '(x + 3)/(x + 5) standing on its own is not a true replacement for what you ' +
+                'started with. Which of the two values has gone out of sight, which one is ' +
+                'still on display in the answer, and what therefore has to travel alongside ' +
+                '(x + 3)/(x + 5) before the two say the same thing about every real number?',
             },
           ],
           answer: '(x + 3)/(x + 5), for x ≠ 5 and x ≠ −5',

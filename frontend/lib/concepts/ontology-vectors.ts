@@ -455,6 +455,79 @@
  * matrix. NOR IS THE NORM, for the reason the overturn above gives: `⟨u, u⟩` is
  * here and is where positivity gets used, and `√⟨u, u⟩` is the quantity whose
  * shape the subject has declined since the dot product.
+ *
+ * ── AND THE TENTH, WHICH IS WHAT A MAP DOES TO A SPACE ───────────────────
+ *
+ * `rank-nullity` was a node of `linear-algebra` and is the last concept below.
+ * It is the thirtieth promotion and the fifth out of that one area, which is
+ * the number that decides how this file is read next: the area is at six nodes
+ * against a stub floor of five, so it has one departure of room left and
+ * `eigenvalues` is the one candidate there with every prerequisite written.
+ * Spending it lands the area on the floor, and what atlas-foundations.ts says
+ * to do then is MERGE the remnant into a neighbouring area rather than lower
+ * the threshold — a decision about the learner-facing map and not one to take
+ * while authoring.
+ *
+ * WHAT SELECTED IT. No route asked: every one of the ten journeys has read zero
+ * unwritten since the fourteenth promotion, so route demand ranks nothing and
+ * the three factors that remain are rulability, where the `needs` point, and
+ * dependents. It has FOUR dependents — `diagonalisation`, `least-squares`,
+ * `homology`, `multiple-regression`, in three different areas — which is the
+ * most of any candidate that is rulable at all. `graphs-of-functions` has five
+ * and was passed over again: its content is a judgement about a drawing,
+ * `visualRef` must be omitted when no figure exists, so there is no graph to
+ * show.
+ *
+ * THE RULABILITY WAS THE QUESTION AND IT IS NOT THE OBVIOUS ANSWER. "What is
+ * the rank of A" has a number for an answer, so the concept reads cheap — but
+ * the engine has no matrix type, `parseExpression` knowing numbers, symbols and
+ * five operators, so no task can be handed a grid and asked to reduce it. What
+ * made it writable is the same move ontology-matrices.ts made for the
+ * determinant and this file made for the dimension: ask for the number that
+ * DECIDES the count rather than for the count. A cross product puts a second
+ * direction in the image, a triple product refuses a third, a row's dot product
+ * with a candidate accepts or rejects it as a kernel vector, and the theorem
+ * itself is a subtraction. Not one task takes a root and not one asks for an
+ * angle, which are this subject's two standing boundaries.
+ *
+ * WHY HERE, which was the one real choice. `matrices-and-determinants` is the
+ * other candidate and the `is` line argues for it — "what a map hits and what
+ * it kills" is a map, and that subject's `covers` ends on "when a map can be
+ * undone", of which a zero nullity is the sharp version. It lost on both tests
+ * this file uses. The CONTENT test: a rank and a nullity are DIMENSIONS, and
+ * the concept directly beneath this one ends by saying a dimension "counts
+ * directions and not entries" — this is that count performed on the columns of
+ * a matrix and on the vectors it kills, so the subject that made the counting
+ * argument is the one the application belongs to. The IDIOM test is the sharper
+ * one: that subject's `covers` declares "entries are the unit of work
+ * throughout — the engine has no matrix type, so every question asks for one
+ * number", and not one question here is about an entry. They are cross
+ * products, dot products and counts, which is this file's arithmetic verbatim.
+ * Filing it there would have shipped a matrix concept whose material never asks
+ * for a matrix entry, which is the mirror of the reason `gaussian-elimination`
+ * went to the equations subject rather than staying with the matrices.
+ *
+ * THE THREE POINTS, AND WHAT IS NOT AMONG THEM. The image as the span of the
+ * columns with the rank as its dimension; the kernel with the nullity as its
+ * dimension, and a kernel vector read as a dependence among the columns; and
+ * the two counts adding to the number of COLUMNS, spent in the direction that
+ * saves an elimination. THE THEOREM IS DEMONSTRATED AND NOT PROVED, which is
+ * the same honest limit `basis-and-dimension` recorded for the same-size
+ * theorem. The second subgoal of the third point gives the argument in full for
+ * a matrix whose elimination has been performed — each column takes exactly one
+ * label, pivot or free, so the two counts partition the columns — and what is
+ * missing from it is that a basis of the image really is the pivot columns,
+ * which wants the exchange lemma that file also declined to write. A worked
+ * example claiming the general proof would be a worked example that does not
+ * work.
+ *
+ * NOR IS THE ROW RANK, and the node's `terms` names neither it nor the
+ * transpose, so this is a shortfall of the concept rather than of the pattern.
+ * That row rank equals column rank is the surprising half of the subject and
+ * its proof is a second elimination on the transpose; the first point says
+ * plainly that the rows say what is KILLED and the columns say what is REACHED,
+ * which is the distinction a learner needs before the two counts coinciding is
+ * interesting rather than confusing.
  */
 
 import type { Concept, ConceptEdge, ConceptOntology, Subject } from './types'
@@ -495,7 +568,18 @@ const subject: Subject = {
     'assumed and never computed, is forced by the properties and so comes out differently under ' +
     'each rule. Not the NORM and not Gram–Schmidt past two vectors: the first is a square root ' +
     'of a product that is here, and the second subtracts two projections instead of one and ' +
-    'needs the change of basis to become an algorithm.',
+    'needs the change of basis to become an algorithm. It ends by spending the count on a MAP: ' +
+    'everything a matrix can reach is a combination of its columns, so the image is their span ' +
+    'and the rank is its dimension — which is why three columns can reach a plane and no more. ' +
+    'What the map kills is the kernel, a space in its own right whose dimension is the nullity, ' +
+    'and a vector in it is the same three numbers as a dependence among the columns read the ' +
+    'other way round. The two counts add to the number of COLUMNS and never of rows, because ' +
+    'elimination gives each column exactly one label, so knowing either count is knowing both — ' +
+    'and for a square matrix that is a trade: what is lost on the way in is missed on the way ' +
+    'out. Not the ROW rank, whose equality with the column rank is the surprise of the subject ' +
+    'and wants a second elimination on the transpose; and the theorem is demonstrated on a ' +
+    'matrix already reduced rather than proved, the missing step being that the pivot columns ' +
+    'are a basis of the image, which is the same exchange argument the count above left out.',
   medium: 'theorem',
   facetName: 'Concept',
   facetDoes: 'Which concept the statement has to be about.',
@@ -2700,6 +2784,332 @@ const CONCEPTS: Concept[] = [
       },
     ],
   },
+  {
+    id: 'rank-nullity',
+    name: 'Rank, kernel and the rank–nullity theorem',
+    subjectId: subject.id,
+    scope: {
+      id: 'rank-nullity',
+      label: 'Rank, kernel and the rank–nullity theorem',
+      /*
+       * REPAIRED rather than carried verbatim, and it is the SAME FAULT
+       * `basis-and-dimension` found two promotions ago — which is the reason
+       * that note was written down at length rather than fixed in silence.
+       *
+       * The node read
+       *
+       *   /\b(rank(–|-)nullity|rank \(linear algebra\)
+       *      |kernel \(linear algebra\))\b/i
+       *
+       * and two of its three alternatives could never match. `\b` is a boundary
+       * between a word character and a non-word one, and the group's trailing
+       * `\b` sits after a closing parenthesis — so a disambiguated title can
+       * only match when the NEXT character is a word character, which at the
+       * end of "Rank (linear algebra)" there is not. So the node claimed
+       * "Rank–nullity theorem" and nothing else for as long as it existed, and
+       * nothing said so: `fidelityMismatches` asks only whether a checked
+       * concept HAS a pattern, and the recognition figure counts patterns
+       * rather than testing them.
+       *
+       * The repair is the same one that file made — a leading `\b` per
+       * alternative and a trailing one only where the alternative ends in a
+       * word character — and the three alternatives are otherwise UNCHANGED.
+       * Fixing a dead branch is not widening: it makes the pattern claim what
+       * it was written to claim, and tests/atlas.mjs now carries a title row
+       * for each of the three rather than leaving any of them reasoned about.
+       *
+       * The en dash in `rank(–|-)nullity` is the node's and is kept. Wikipedia
+       * titles the article with an en dash, as it does Gram–Schmidt, and almost
+       * everybody typing the pattern would use a hyphen — so dropping either
+       * branch leaves the alternative matching only the form nobody writes.
+       *
+       * WHAT IT DOES NOT REACH, stated rather than widened in the same change
+       * as the material. "Row and column spaces" and "Null space" are real
+       * articles and this pattern claims neither; `column space` is claimed by
+       * `matrices-and-maps`, which is the right owner of the phrase, and the
+       * other two are unclaimed. Widening is its own change for the reason the
+       * three promotions above give: a pattern edit and a material edit in one
+       * commit leaves no way to say which moved the title table.
+       */
+      hint: 'rank nullity kernel null space image column space',
+      match: /\brank(–|-)nullity\b|\brank \(linear algebra\)|\bkernel \(linear algebra\)/i,
+    },
+    fidelity: 'checked',
+    /*
+     * EVERY OBJECTIVE NAMES ONLY `evaluate`, as the three concepts above it do
+     * and for the reason stated there: the build ships no `justify` task
+     * anywhere, so an objective naming that kind names an observation that
+     * cannot be made.
+     *
+     * The statements are written to what `evaluate` can evidence, and this
+     * concept is the clearest case in the file of why that distinction is not
+     * pedantry. "What is the rank of A" and "what is its kernel" are the
+     * sentences the material is about; the first answer is a count nothing here
+     * can compute in one step and the second is a LINE. What a task can return
+     * is the number that DECIDES each — the cross product that puts a second
+     * direction in the image, the triple product that refuses a third, the dot
+     * product that accepts or rejects a candidate kernel vector, and the
+     * subtraction the theorem is — so that is what the objectives claim, and
+     * the deciding is in the `socratic` phrasings, asked by a tutor and marked
+     * by nothing.
+     */
+    objectives: [
+      {
+        id: 'produce-the-two-values-that-pin-the-rank',
+        statement:
+          'Produce the cross product that shows two columns of a matrix reach independent ' +
+          'directions and the triple product that shows a third one reaches no further — the two ' +
+          'values that bound the rank from below and from above.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'produce-the-value-that-decides-kernel-membership',
+        statement:
+          'Produce the value a row of a matrix returns on a candidate kernel vector, and the ' +
+          'value it returns on a near miss — which is what makes the kernel one particular line ' +
+          'rather than a shape to be recognised.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'produce-the-count-the-theorem-hands-back',
+        statement:
+          'Produce the rank a stated nullity forces with no elimination performed, and the value ' +
+          'showing a vector the image misses — which is the direction the kernel cost.',
+        taskKinds: ['evaluate'],
+      },
+    ],
+    knowledgePoints: [
+      {
+        id: 'the-rank-counts-the-directions-the-columns-reach',
+        conceptId: 'rank-nullity',
+        statement:
+          'Ax is x₁ times the first column plus x₂ times the second and so on, so everything the ' +
+          'map can reach is a combination of the columns: the image IS their span. Its dimension ' +
+          'is the rank. Counting columns is therefore not counting directions — three columns can ' +
+          'reach a plane and no more, and the rank is the honest count of how far the map gets.',
+        position: 1,
+        /*
+         * No `automaticityTarget` on any of the three points. The arithmetic is
+         * a cross product and a dot product, both timed where they are taught,
+         * and what this concept adds is two counts and a trade between them. A
+         * timing target on "which direction did the kernel cost" measures
+         * typing, which is the case types.ts names when it argues the field
+         * should usually be absent.
+         */
+        workedExample: {
+          problem:
+            'A = [[1, 2, 3], [2, 4, 6], [1, 1, 1]]. Find the rank of A, and say which set the ' +
+            'image actually is.',
+          subgoals: [
+            {
+              label: 'Read the image off the columns rather than off the rows',
+              detail:
+                'Ax = x₁(1, 2, 1) + x₂(2, 4, 1) + x₃(3, 6, 1), because the jth column is where ' +
+                'the jth basis vector lands and the map respects addition and scaling. So as x ' +
+                'runs over everything, Ax runs over exactly the span of the three columns — the ' +
+                'image is a span, which is why a dimension can be asked of it at all. The rows ' +
+                'say which vectors are KILLED and are the next point; they do not say what is ' +
+                'reached.',
+              socratic:
+                'Write Ax out as a combination of A\'s three columns. As x ranges over the whole ' +
+                'of space, what set does Ax range over — and is that a set you already know how ' +
+                'to put a dimension on?',
+            },
+            {
+              label: 'Bound the count from below with the first two columns',
+              detail:
+                'c₁ = (1, 2, 1) and c₂ = (2, 4, 1), and the independence test in space is the ' +
+                'cross product: c₁ × c₂ = (2·1 − 1·4, 1·2 − 1·1, 1·4 − 2·2) = (−2, 1, 0). It is ' +
+                'not the zero vector, so the two columns are independent and the image contains ' +
+                'the whole plane they span. The rank is at least 2. And the answer is useful ' +
+                'twice: a cross product is perpendicular to both inputs, so (−2, 1, 0) is the ' +
+                'normal of that plane.',
+              socratic:
+                'c₁ = (1, 2, 1) and c₂ = (2, 4, 1). What does c₁ × c₂ come to, what does a ' +
+                'non-zero answer entitle you to say about the rank — and what else is that ' +
+                'particular vector good for?',
+            },
+            {
+              label: 'Bound it from above by asking the third column one question',
+              detail:
+                'A vector lies in the plane exactly when its dot product with the normal is ' +
+                'zero, so test c₃ = (3, 6, 1): (−2)·3 + 1·6 + 0·1 = −6 + 6 = 0. It is in the ' +
+                'plane, so it adds no direction and the rank is exactly 2. Note what this did ' +
+                'NOT need: the weights that write c₃ in terms of the other two are nowhere in ' +
+                'the calculation. Membership is settled before anybody finds them, which is the ' +
+                'same move the dimension concept made with a triple product.',
+              socratic:
+                'The plane the first two columns span has normal (−2, 1, 0). What single number ' +
+                'decides whether c₃ = (3, 6, 1) lies in that plane, what is it here, and did you ' +
+                'have to find how c₃ is built out of c₁ and c₂ to get it?',
+            },
+            {
+              label: 'Name the image instead of settling for its size',
+              detail:
+                'The normal is (−2, 1, 0), so the image is the set of (x, y, z) with −2x + y = ' +
+                '0, which is the plane y = 2x — with z free, so it really is a plane in space ' +
+                'rather than a line. All three columns satisfy it: 2 = 2·1, 4 = 2·2, 6 = 2·3. ' +
+                'So "rank 2" is not merely a smaller number than 3; it says A crushes the whole ' +
+                'of space onto one plane, and the rank is the dimension of the thing left.',
+              socratic:
+                'Turn the normal (−2, 1, 0) into an equation on (x, y, z). Which plane is that, ' +
+                'do all three columns satisfy it — and what does a rank of 2 rather than 3 tell ' +
+                'you about where every output of A lives?',
+            },
+          ],
+          answer:
+            'the rank is 2, and the image is the plane y = 2x — the first two columns are ' +
+            'independent and the third lies in the plane they span',
+        },
+      },
+      {
+        id: 'the-kernel-is-what-the-map-kills-and-the-nullity-counts-it',
+        conceptId: 'rank-nullity',
+        statement:
+          'The kernel is the set of x with Ax = 0. It passes the three subspace checks — the ' +
+          'zero vector is in it, and a sum or a multiple of killed vectors is killed — so it is ' +
+          'a space in its own right and has a dimension, called the nullity. A kernel vector is ' +
+          'the same thing as a dependence among the columns, read the other way round: its ' +
+          'components ARE the weights that combine the columns to nothing.',
+        position: 2,
+        workedExample: {
+          problem:
+            'Same A = [[1, 2, 3], [2, 4, 6], [1, 1, 1]]. Find its kernel and the nullity, and say ' +
+            'what a kernel vector tells you about the columns.',
+          subgoals: [
+            {
+              label: 'Reduce the rows instead of guessing a vector',
+              detail:
+                'Ax = 0 is three equations: x + 2y + 3z = 0, 2x + 4y + 6z = 0, x + y + z = 0. ' +
+                'Row 2 minus twice row 1 is 0 = 0 and tells you nothing — which is the rank being ' +
+                '2 showing up as a row rather than as a column. Row 3 minus row 1 is ' +
+                '−y − 2z = 0. Two surviving equations in three unknowns, so one unknown is left ' +
+                'free and the kernel is a line rather than a point.',
+              socratic:
+                'Write Ax = 0 as three equations and take row 2 minus twice row 1. What is left ' +
+                'of that equation, how many of the three are then saying something, and what ' +
+                'does that leave you free to choose?',
+            },
+            {
+              label: 'Back-substitute from the equation with fewest unknowns',
+              detail:
+                '−y − 2z = 0 gives y = −2z. Putting that into x + 2y + 3z = 0 gives x − 4z + 3z ' +
+                '= 0, so x = z. Choosing z = 1 gives k = (1, −2, 1), and every multiple of it is ' +
+                'in the kernel too. One free choice means one dimension: the nullity is 1, and ' +
+                'the kernel is the line through (1, −2, 1).',
+              socratic:
+                'From −y − 2z = 0 and x + 2y + 3z = 0, write x and y in terms of z. Which vector ' +
+                'does z = 1 give you, and how many independent choices did you make on the way ' +
+                'to it?',
+            },
+            {
+              label: 'Check against the original rows and not the reduced ones',
+              detail:
+                'Row 1: 1 − 4 + 3 = 0. Row 2: 2 − 8 + 6 = 0. Row 3: 1 − 2 + 1 = 0. All three, ' +
+                'so Ak = 0 and k really is in the kernel. Checking against the rows you reduced ' +
+                'TO would only confirm the arithmetic of the reduction; checking against the ' +
+                'rows you started with is what confirms the answer to the question asked. And ' +
+                'each check is a dot product of a row with k, which is the one calculation this ' +
+                'point can be tested on.',
+              socratic:
+                'Take k = (1, −2, 1) back to the three rows you started with. What does each row ' +
+                'return on it — and why is checking there worth more than checking against the ' +
+                'reduced rows?',
+            },
+            {
+              label: 'Read the same three numbers as weights on the columns',
+              detail:
+                'Ak = 1·c₁ + (−2)·c₂ + 1·c₃, so Ak = 0 says c₁ − 2c₂ + c₃ = 0, which rearranges ' +
+                'to c₃ = 2c₂ − c₁: (4, 8, 2) − (1, 2, 1) = (3, 6, 1). That is exactly the ' +
+                'redundancy the previous point established with a triple product, and the two ' +
+                'calculations are one fact. A non-zero kernel and dependent columns are the same ' +
+                'claim, which is why a map that kills something cannot reach everything.',
+              socratic:
+                'Multiply out Ak as a combination of the columns with k\'s components as the ' +
+                'weights. Which column does that equation let you write in terms of the other ' +
+                'two, and where did you meet that same redundancy before?',
+            },
+          ],
+          answer:
+            'the kernel is the line through (1, −2, 1), so the nullity is 1 — and those three ' +
+            'numbers are the weights showing c₃ = 2c₂ − c₁',
+        },
+      },
+      {
+        id: 'the-two-counts-add-to-the-number-of-columns',
+        conceptId: 'rank-nullity',
+        statement:
+          'Rank plus nullity is the number of COLUMNS, never the number of rows. Elimination ' +
+          'gives each column exactly one label — pivot or free — and the pivots count the ' +
+          'image\'s directions while the free ones count the kernel\'s, so neither count can ' +
+          'move without the other moving the other way. Knowing one of the two is knowing both.',
+        position: 3,
+        workedExample: {
+          problem:
+            'Check the theorem on A = [[1, 2, 3], [2, 4, 6], [1, 1, 1]], then spend it on ' +
+            'C, which has 5 columns, 40 rows and a kernel that is a plane.',
+          subgoals: [
+            {
+              label: 'Add the two counts and see nothing is left over',
+              detail:
+                'The rank came out 2 and the nullity 1, and A has three columns: 2 + 1 = 3. The ' +
+                'elimination is where that comes from rather than from the answers happening to ' +
+                'fit. It found two pivots — x and y were pinned — and left z free, and three ' +
+                'columns had between them exactly those three labels.',
+              socratic:
+                'You have a rank of 2 and a nullity of 1. What do they come to, which of A\'s ' +
+                'three measurements does that match, and which step of the work handed out the ' +
+                'three labels being counted?',
+            },
+            {
+              label: 'See why no column can take both labels or neither',
+              detail:
+                'A pivot column\'s unknown is determined once the free ones are chosen, so it ' +
+                'contributes no freedom to the kernel; a free column\'s unknown is chosen, so it ' +
+                'contributes one. Every column gets one label and no column gets two, so the two ' +
+                'counts partition the columns — which is why they must add to the number of ' +
+                'columns and not merely happen to. This is a count of A\'s INPUTS, so the number ' +
+                'of rows cannot appear in it.',
+              socratic:
+                'Each unknown is either pinned by a pivot or free to choose. Can one be both, can ' +
+                'it be neither — and which of A\'s two dimensions is therefore the one the two ' +
+                'counts have to add up to?',
+            },
+            {
+              label: 'Read the theorem as a trade, with the condition it needs',
+              detail:
+                'A is square, so inputs and outputs live in the same space, and there the ' +
+                'theorem is a trade: nullity 1 forces rank 2, so the image is a plane and some ' +
+                'vector of space is not hit. (0, 1, 0) is one — the normal test gives ' +
+                '(−2)·0 + 1·1 + 0·0 = 1, not zero. What is lost on the way in is missed on the ' +
+                'way out. The condition is real and the trade fails without it: a matrix with ' +
+                '2 rows and 4 columns has nullity at least 2 while its image can still be the ' +
+                'whole of its two-dimensional target, so it kills two directions and misses none.',
+              socratic:
+                'A kills a line, so its image is a plane rather than the whole of space. Test ' +
+                '(0, 1, 0) against the normal (−2, 1, 0) — is it hit? And would that trade still ' +
+                'read the same way if A had 2 rows and 4 columns?',
+            },
+            {
+              label: 'Spend it in the direction that saves the elimination',
+              detail:
+                'C has 5 columns and a kernel of dimension 2, so the rank is 5 − 2 = 3 and no ' +
+                'row of C was looked at. The 40 rows are the number a reader reaches for and the ' +
+                'theorem never touches: they bound nothing here, because the count being ' +
+                'partitioned is the columns. So at most 3 of C\'s 5 columns are independent, ' +
+                'and the image is 3-dimensional — three facts about a grid nobody reduced.',
+              socratic:
+                'C has 5 columns, 40 rows, and a kernel that is a plane. What is its rank, which ' +
+                'of the two measurements did you use — and how much of C did you have to look at?',
+            },
+          ],
+          answer:
+            '2 + 1 = 3 for A, whose image misses (0, 1, 0); and C has rank 5 − 2 = 3, so at most ' +
+            'three of its five columns are independent',
+        },
+      },
+    ],
+  },
 ]
 
 /**
@@ -3159,6 +3569,120 @@ const EDGES: ConceptEdge[] = [
       'projection coefficient divides that by `u1*u1 + u2*u2`, which is the self-product\'s. So ' +
       'the product has been demonstrated by anybody who has produced a coefficient here, and ' +
       'should not come due as though untouched.',
+  },
+
+  /*
+   * THE THIRTIETH PROMOTION'S TWO EDGES, AND THE FIRST `links` COST THIS FILE
+   * HAS OWED IN FOUR PROMOTIONS.
+   *
+   * `rank-nullity` declared two `needs` and they point at two different
+   * subjects, which is the shape the three promotions above did not have.
+   * `basis-and-dimension` is a concept of this ontology, so that edge is the
+   * entry below like any other. `gaussian-elimination` is authored in
+   * `expressions-and-equations` — and an ontology's edges may only name
+   * concepts it CONTAINS, so being authored in another subject fails that test
+   * exactly as being unwritten would. It is a `links` entry of
+   * `LINEAR_ALGEBRA` in atlas-structures.ts, filed with the area that OWNED
+   * the departing node rather than with the subject holding the far end, which
+   * is the rule when neither end is local. It gates immediately, both ends
+   * having material.
+   *
+   * Worth stating against the note three sections up, which calls a single
+   * stranded edge "the cheapest shape a promotion can have" and was then
+   * corrected by the twenty-second: the cost is about where each `needs`
+   * POINTS. Two edges into one ontology is free; one edge out of it is not,
+   * and this concept has one of each.
+   *
+   * THE FOUR EDGES OUT SURVIVED UNTOUCHED, and they reach further than any
+   * previous departure from that area. `diagonalisation` and `least-squares`
+   * are nodes of `linear-algebra`; `homology` is a node of `topology` and
+   * `multiple-regression` a node of `statistics`, in a map file this subject
+   * has never touched. All four name this concept in their OWN `needs`, so all
+   * four are declared at the far end and resolve across the file boundary in
+   * `composeAtlas`. Four dependents in three areas is also what made this the
+   * candidate worth taking: no journey asked for it, every route being written.
+   *
+   * NOTHING WAS HANDED BACK. No `links` entry of any area named `rank-nullity`
+   * at either end — checked before the node was deleted, because two identical
+   * edges in the composed graph is not a redundancy `composeAtlas` notices and
+   * no suite catches it.
+   *
+   * AND THE NODE DECLARED NO `confusedWith` AND NO `exercises`, checked on it
+   * before deletion rather than inferred from the suites passing afterwards.
+   * `expandEdges` turns a `confusedWith` into an `interferes_with`, which
+   * constrains SELECTION rather than gating, so losing one leaves every suite
+   * green while freeing the scheduler to introduce the two most confusable
+   * concepts in a subject together. The `exercises` absence CHOSE nothing here
+   * and that is worth a line: an `encompasses` edge whose ends land in two
+   * ontologies is expressible nowhere, so a node carrying one can only be filed
+   * in the subject holding the far end — and this node's two `needs` are in two
+   * subjects, so had it carried one the filing would have been forced.
+   *
+   * ── THE `encompasses` EDGE, TAKEN, AND POINTED AT THE COUNT ──────────────
+   *
+   * On the same test the three refusals in this file were made with: the claim
+   * is about what PRACTISING exercises, measured against the tasks that exist
+   * rather than against the prose. THREE of the six tasks below have a
+   * `basis-and-dimension` task's `given` verbatim.
+   * `image-two-columns-independent-1`'s is `u2*v3 - u3*v2`, which is
+   * `plane-basis-cross-product-1`'s written symbol for symbol; and
+   * `image-third-column-adds-nothing-1` and `what-the-kernel-costs-the-image-1`
+   * are both `n1*r1 + n2*r2 + n3*r3`, which is `third-vector-redundant-1`'s. A
+   * learner cannot bound a rank here without producing the dimension concept's
+   * own two numbers on the way.
+   *
+   * THE THREE OTHERS ARE DECLINED AND NAMING THEM IS THE POINT. The two kernel
+   * tasks are a dot product of a matrix ROW against a candidate, which is not
+   * any task of the dimension concept, and `rank-from-the-nullity-1` is a
+   * subtraction of two counts. Three of six, so the claim is stated at the
+   * shape a regex can see.
+   *
+   * ONE EDGE AND NOT FOUR. `basis-and-dimension` already claims credit down to
+   * `linear-independence`, which claims it down to `vectors-and-spans`, which
+   * claims it down to `plane-vectors` — and `encompassedClosure` is transitive,
+   * so this single edge credits three further concepts at depths 2, 3 and 4
+   * with nothing else declared. Asserted by DEPTH in tests/concepts-logic.mjs,
+   * so the transitivity is checked rather than assumed, and it is the deepest
+   * chain this file has.
+   *
+   * AND NO EDGE TO `three-dimensional-coordinates`, THOUGH THE CROSS PRODUCT IS
+   * ITS OWN TASK VERBATIM — `image-two-columns-independent-1` is
+   * `cross-product-component-1`'s `given` symbol for symbol. The refusal is on
+   * the COUNT: that is ONE task of six, below the bar every credit edge in this
+   * file has been taken at, and `basis-and-dimension` had the identical case
+   * one promotion earlier with its own `plane-basis-cross-product-1` and
+   * declined it. The tempting reason — that the concept is not on this one's
+   * prerequisite path — is FALSE and is recorded because the first draft of
+   * this comment used it: the three dimensions gate `vectors-and-spans`, which
+   * the thirteenth promotion inserted them above, so they are on every path
+   * through this subject. tests/concepts-logic.mjs asserts the reachability in
+   * the direction that caught that.
+   */
+  {
+    id: 'basis-and-dimension->rank-nullity',
+    from: 'basis-and-dimension',
+    to: 'rank-nullity',
+    kind: 'prerequisite',
+    promotedBy: 'author:vectors-and-independence',
+    rationale:
+      'A rank and a nullity are both dimensions, so the count has to exist before either can be ' +
+      'asked for — and the specific debt is sharper than that. The rank is found by deciding how ' +
+      'many of the columns are independent directions, which is the previous concept\'s own ' +
+      'squeeze applied to a particular set of vectors; a learner without it reads "rank 2" as a ' +
+      'label the elimination produced rather than as the dimension of the plane the map lands on.',
+  },
+  {
+    id: 'rank-nullity=>basis-and-dimension',
+    from: 'rank-nullity',
+    to: 'basis-and-dimension',
+    kind: 'encompasses',
+    promotedBy: 'author:vectors-and-independence',
+    rationale:
+      'Three of this concept\'s six tasks are the dimension concept\'s own arithmetic verbatim: ' +
+      'the cross product that bounds the rank from below is `plane-basis-cross-product-1`\'s ' +
+      '`given`, and the two triple products that bound it from above and name a vector the image ' +
+      'misses are `third-vector-redundant-1`\'s. So somebody who has pinned a rank has counted ' +
+      'directions, and the count should not come due as though untouched.',
   },
 ]
 

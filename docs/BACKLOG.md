@@ -50,14 +50,28 @@ Two things not to get wrong when wiring it:
   wrapper must surface `UNREPORTED` somewhere a human sees it, or the one
   failure mode that loses money becomes invisible.
 
-Verified 2026-11-21 (all four checks re-run, nothing moved): nothing
-schedules it by any available route. `systemctl --user list-timers --all`
-still shows the same six timers (poincare-sync,
-templedb-{ingest,backup,reconcile,agent-tick}, systemd-tmpfiles-clean) and
-no overage timer; `select count(*) from pg_extension where
-extname='pg_cron'` is 0, so no pg_cron job can exist whatever anyone
+Verified 2026-11-22 13:15 CST (all four checks re-run): nothing schedules
+it by any available route. `systemctl --user list-timers --all` shows
+**seven** timers and no overage timer; `select count(*) from pg_extension
+where extname='pg_cron'` is 0, so no pg_cron job can exist whatever anyone
 schedules; `frontend/wrangler.jsonc` declares no cron triggers; and `graph
 who-uses reconcile-overages` turns up no caller.
+
+The timer count is the one thing that has moved, and it is not this item
+getting closer: the seventh is `templedb-deploy-verify-bza.timer`,
+installed 2026-11-22 11:31 CST, which health-checks production hourly and
+has nothing to do with billing. The other six are unchanged
+(poincare-sync, templedb-{ingest,backup,reconcile,agent-tick},
+systemd-tmpfiles-clean). Read a rising timer count as somebody scheduling
+something *else* until you have read the unit, because this list is the
+natural place to expect the fix to show up.
+
+The pg_cron check is worth keeping first in that list because it is
+structural rather than a snapshot: the installed extensions are plpgsql,
+pg_stat_statements, uuid-ossp, pgcrypto, supabase_vault, pg_jsonschema and
+plpgsql_check. Scheduling inside the database is not an option anyone can
+take without installing an extension first, so this is a host-timer
+decision whatever else changes.
 
 That search returns five files, every one a prose mention: the script
 itself, `frontend/lib/supabaseSchema.ts`, migrations 57 and 58, and this
@@ -72,7 +86,7 @@ billing path: every applied migration 50–69 is filed there, and the
 functions are live in `bza_public`.
 
 Sized 2026-11-20 and re-measured on each parked run since, latest
-2026-11-21 23:00 CST, because the paragraphs above read more urgent than
+2026-11-22 13:15 CST, because the paragraphs above read more urgent than
 the numbers support. Every figure below is a fresh query, not a quotation
 — the recorded peak was once 13× low because it was copied forward
 instead of re-run. The allowance is
@@ -86,11 +100,20 @@ return zero rows today and the UNREPORTED path that can lose money has
 never fired. The gap is real and worth closing before usage grows, but it
 has never cost anything — decide this as a cadence question, not as a leak.
 
-The row count is the only figure that has moved between re-measurements:
-1565 on the morning of 2026-11-21, 1568 that evening, with the lifetime
-total still 39.98¢ at both. Usage is arriving and costing a rounding
-error, so a risen row count is not evidence the sizing has changed —
-re-run the sum, not just the count.
+The row count had been the only figure that moved between
+re-measurements: 1565 on the morning of 2026-11-21, 1568 that evening,
+with the lifetime total still 39.98¢ at both. Usage is arriving and
+costing a rounding error, so a risen row count is not evidence the sizing
+has changed — re-run the sum, not just the count.
+
+On 2026-11-22 even the count held: all six figures above came back
+byte-identical to the previous evening's, 1568 rows included. Fourteen
+hours of a weekend added no metered usage at all. That is the sizing
+argument's strongest form so far — this is not a leak that is slowly
+filling, it is a path that is barely used — and it is also the reason not
+to treat a quiet re-measurement as a reason to stop measuring. The figure
+that would change the verdict is a user-month approaching 500¢, and
+nothing here is within two orders of magnitude of it.
 
 When re-checking those numbers: `api_usage`'s time column is `timestamp`,
 not `created_at`, so a month filter on `created_at` errors rather than
@@ -109,17 +132,26 @@ What needs deciding is who reviews authored material and how often — not
 whether the restriction stays. Do not resolve it by giving an autonomous task
 publish rights.
 
-Verified 2026-11-21 23:00 CST: still no deploy timer, and
-`deployment_history` rows 422–439 are every one `triggered_by=manual`,
-`deployed_by=zach` — 18 deploys, nine of them inside a single day, all
+Verified 2026-11-22 13:15 CST: still no deploy timer, and
+`deployment_history` rows 422–440 are every one `triggered_by=manual`,
+`deployed_by=zach` — 19 deploys, nine of them inside a single day, all
 `success` except row 431, which reads `in_progress` because that status is
 written and never cleared, not because a deploy is stuck.
 
-Row 439 is head and landed 2026-11-21 19:12 CST, 28 hours after 438. The
-run before this one recorded 438 as head and added "nothing has deployed
-since", which was true when written at 09:00 and false by that evening. So
-a quiet day in this history is not the practice stopping, and a re-check
-that turns up no new row should not be written down as one.
+Row 440 is head and landed 2026-11-22 11:37 CST, 16 hours after 439, which
+itself landed 28 hours after 438. The run before last recorded 438 as head
+and added "nothing has deployed since", which was true when written at
+09:00 and false by that evening. So a quiet day in this history is not the
+practice stopping, and a re-check that turns up no new row should not be
+written down as one.
+
+**Production is serving the graph head exactly as of this check** —
+`/api/version` answers `B5A0EC2C5462247E` and that is the head of
+`vcs log bza --all-sessions`. No previous refresh of this item has been
+able to say that; every earlier one measured production some commits
+behind. The gap is zero because a human deployed six minutes after the
+commit landed, not because anything automated closed it, so read this as
+a snapshot of one attentive moment rather than as the item resolving.
 
 Read `deployment_history.started_at` as UTC. Row 439 stores
 `2026-11-22 01:12:55` for a deploy a human would place on Saturday
@@ -135,6 +167,75 @@ unwritten is the cadence, and the cost of leaving it unwritten is that
 review depends entirely on one person's attention with nothing recording
 what that person is expected to cover.
 
-The reporting half of this item is closed: `bash scripts/verify-live-sha.sh`
-now prints the gap as a count plus the missing subjects, so "how far behind is
-production" is one command rather than a manual sha comparison.
+The reporting half of this item is closed, and as of 2026-11-22 it is also
+scheduled. `bash scripts/verify-live-sha.sh` prints the gap as a count plus
+the missing subjects, so "how far behind is production" is one command
+rather than a manual sha comparison; and
+`templedb-deploy-verify-bza.timer` now asks the same question hourly via
+`templedb deploy health-check bza --target production`, going red when
+production answers with something other than the graph head.
+
+That timer narrows the item rather than closing it. It measures the gap;
+it does not decide who looks at the answer, how often, or what they are
+expected to have reviewed before a deploy — which is the whole of what is
+unwritten here. Nothing deploys as a result of it firing, and nothing
+should: the restriction on autonomous publishing is the correct part of
+this arrangement. So the cost of leaving the cadence unwritten is now
+narrower but unchanged in kind: review still depends entirely on one
+person's attention, and the new timer tells that person they are behind
+without recording what being caught up would mean. Item 3 is a defect in
+that timer's signal and is independent of this decision.
+
+## 3. The hourly deploy health-check cannot say which failure it hit
+
+`templedb deploy health-check bza --target production` runs two checks and
+folds both into one exit code — `return 0 if all_passed else 1`, where
+either check's `fail`/`timeout` clears `all_passed`. The two conditions are
+not remotely alike:
+
+- **live commit** differs from the graph head: somebody committed and
+  nobody has deployed yet. Routine. `scripts/verify-live-sha.sh` says so
+  in its own comments — "deploys here are manual, so drift between
+  releases is the normal state rather than a fault".
+- **HTTP Response** fails: nobody can reach the site, or this laptop
+  cannot resolve it. One of those needs waking somebody up.
+
+Both exit 1, so `systemctl --user status templedb-deploy-verify-bza`
+reports the same `status=1/FAILURE` either way and the only way to learn
+which happened is to open the journal.
+
+Verified 2026-11-22 13:15 CST. The timer was installed 11:31 CST and had
+run three times, failing all three, with three different meanings:
+
+    11:26  HTTP 200 OK    live commit FAIL  live 4F2B8338, graph 158F5F0D
+    11:31  HTTP 200 OK    live commit FAIL  live 4F2B8338, graph B5A0EC2C
+    13:12  HTTP FAIL      NameResolutionError on aireadalong.com
+
+The first two are drift. The third is this host's DNS, not an outage:
+`getent hosts aireadalong.com` and `curl /api/version` both succeeded
+three minutes later. So the unit has produced three reds, no two for the
+same reason, and not one of them the production fault it exists to catch.
+
+Why this will not settle down on its own: the expected sha is the
+all-sessions graph head, so it moves on every autonomous commit rather
+than on review. It moved `158F5F0D` → `B5A0EC2C` inside the five minutes
+between the first two runs. Since 2026-11-16 there have been 87 bza
+commits against 21 production deploys (`vcs_commits.commit_timestamp` and
+`deployment_history.started_at`, both UTC), and two whole days — 11-17 and
+11-21 — carry 8 and 12 commits with no deploy at all. Red is therefore the
+ordinary resting state of this unit, which is how a signal gets ignored
+before the one failure that matters.
+
+The fix with no decision in it is distinct exit codes: unreachable must
+not look like drifted. Do **not** silence drift instead — the unit's own
+description is "is bza (production) still serving the graph head", so
+drift being red is the author's intent and changing that is a decision,
+not a fix. Making the two distinguishable is not.
+
+Two things about the size of this, because neither is in the symptom.
+The code is in the **templedb** project (`src/cli/commands/deploy_ops.py`,
+`health_check`), not in this tree, so it is not a bza workspace edit and
+the bza suites say nothing about it. And `templedb` on PATH is the
+nix-packaged binary, so a committed fix stays inert until a NixOS rebuild
+— which an agent on commit policy cannot do. An unattended run can land
+the change and must then say it is not live yet.

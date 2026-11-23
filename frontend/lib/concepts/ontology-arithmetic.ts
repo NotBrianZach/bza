@@ -3663,6 +3663,325 @@ const CONCEPTS: Concept[] = [
       },
     ],
   },
+  {
+    id: 'scientific-notation',
+    name: 'Scientific notation and estimation',
+    subjectId: subject.id,
+    scope: {
+      id: 'scientific-notation',
+      label: 'Scientific notation and estimation',
+      hint: 'scientific notation order of magnitude significant figures estimation',
+      /*
+       * Carried verbatim from the map node, as the four promotions before this
+       * one were, and for their reason: widening a pattern in the same change
+       * that adds a concept would move the recognition figure in
+       * tests/atlas.mjs on an edit that also moves the concept count, and there
+       * would be no way afterwards to say which half did it.
+       *
+       * It is already title-shaped and all three alternatives are phrases
+       * rather than words — "scientific notation", "order of magnitude",
+       * "significant figure" — so the `\b` anchor is enough and no `^` is
+       * wanted. Unlike `^percent`, none of the three has a near-miss to keep
+       * out: there is no longer phrase beginning with "scientific notation"
+       * that is about something else, which is why this pattern needed no
+       * argument where that one needed a paragraph.
+       */
+      match: /\b(scientific notation|order of magnitude|significant figure)/i,
+    },
+    fidelity: 'checked',
+    /*
+     * `evaluate` ONLY, following `absolute-value` and `percent` rather than the
+     * older convention above them that names `justify` alongside it. Zero
+     * `justify` tasks exist anywhere in this build, so an objective naming the
+     * kind can never be satisfied — the "complete but unreachable" failure
+     * types.ts warns about, arriving one step removed.
+     *
+     * This concept pays less for that restriction than any other in the
+     * subject, which is the reason it was selected. Every one of its three
+     * points ends in a NUMBER — a quantity written out, a product, a total — so
+     * nothing below stands in for anything and the subject's "gradable with no
+     * worker" contract holds over all three tasks without a proxy apology.
+     *
+     * What is NOT rulable here is the one thing the form itself asks for: "put
+     * this in scientific notation" wants the PAIR (a, n), and no task kind
+     * carries a pair. `transform_to_form` would be the kind and there is no
+     * `NamedForm` in forms.ts that can see a power of ten, which is the same
+     * mechanism that keeps `sigma-notation` from naming it. So the choosing of
+     * a and n is performed in the worked examples, each `evaluate` task rules
+     * the number that choice produces, and the questions about WHY the exponent
+     * is what it is live in the subgoals' `socratic`.
+     *
+     * One consequence is worth recording because it is better than the
+     * workaround it replaces: `ruleEvaluate` compares exact rationals, so a
+     * learner who answers `4 * 10^5` is marked correct against a reference of
+     * `400000`. The answers may therefore be given IN the notation being
+     * taught, verified rather than assumed — see the task block in tasks.ts.
+     */
+    objectives: [
+      {
+        id: 'write-a-quantity-on-a-power-of-ten',
+        statement:
+          'Convert between a quantity written out in full and the form a × 10ⁿ with '
+          + '1 ≤ a < 10, and compute what a mis-counted exponent costs.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'multiply-quantities-in-the-notation',
+        statement:
+          'Multiply two quantities in scientific notation by multiplying the digit parts and '
+          + 'adding the exponents, and compute the result when the product leaves the '
+          + 'admissible range and has to be renormalised.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'add-quantities-in-the-notation',
+        statement:
+          'Add two quantities in scientific notation by first rewriting them on a common power '
+          + 'of ten, and compute the total.',
+        taskKinds: ['evaluate'],
+      },
+    ],
+    knowledgePoints: [
+      {
+        id: 'the-exponent-counts-the-shift-not-the-zeros',
+        conceptId: 'scientific-notation',
+        statement:
+          'Scientific notation writes a quantity as a × 10ⁿ with 1 ≤ a < 10, and that single '
+          + 'condition on a is what makes the writing unique: 0.0005 is 5 × 10⁻⁴ and nothing '
+          + 'else. The exponent counts the PLACES the digits shift to put a\'s units digit where '
+          + 'the units belong, which is not the number of zeros on the page — 0.0005 shows three '
+          + 'zeros after the point and its exponent is −4. Once two quantities are both in this '
+          + 'form the exponents alone order them by size, which is what makes orders of '
+          + 'magnitude comparable at a glance.',
+        position: 1,
+        /*
+         * No `automaticityTarget`. The error this point exists to stop is a
+         * mis-count of the exponent, so timing it would reward grabbing the
+         * zeros that are already visible — the faster reading is the wrong one
+         * here, which is the one case where speed actively measures the defect.
+         */
+        workedExample: {
+          problem:
+            'Write 0.0005 and 52 000 in scientific notation, say which is larger and by roughly '
+            + 'what factor, and work out what counting the zeros after the point rather than the '
+            + 'places would have cost on the first one.',
+          subgoals: [
+            {
+              label: 'Fix the digit part first, since the range decides it before n is touched',
+              detail:
+                'The form demands 1 ≤ a < 10, so a is settled by the digits alone and without '
+                + 'reference to the size: 0.0005 has the single significant digit 5, and 52 000 '
+                + 'gives 5.2. Neither 0.5 nor 52 is admissible. That is the whole of what the '
+                + 'condition buys — one writing per quantity, so two quantities can afterwards '
+                + 'be compared on their exponents without being compared on anything else.',
+              socratic:
+                'The digits of 52 000 could be written as 52, 5.2 or 0.52 times some power of '
+                + 'ten, and all three are the same number. What rules two of them out?',
+            },
+            {
+              label: 'Count the shift to the units place, which is where the exponent comes from',
+              detail:
+                'Getting from 0.0005 to 5 shifts the digits four places, so 0.0005 is 5 divided '
+                + 'by 10⁴, that is 5 × 10⁻⁴. Getting from 52 000 to 5.2 shifts four places the '
+                + 'other way, so 52 000 = 5.2 × 10⁴. The size of n records how far the digits '
+                + 'moved and its sign records which way, and nothing else is encoded in it.',
+              socratic:
+                'You have written the digit part of 0.0005 as 5. What has to be done to that 5 '
+                + 'to get back to the quantity you started with — and how is that recorded as a '
+                + 'power of ten?',
+            },
+            {
+              label: 'Settle the zero-count against the place-count, since the two disagree',
+              detail:
+                '0.0005 shows three zeros between the point and the 5 and its exponent is −4, so '
+                + 'the two counts differ — and they differ by one whenever the digit part is a '
+                + 'single digit, because the digit itself occupies a place the zeros do not '
+                + 'show. Zeros are a fact about how the number is printed; the exponent is a '
+                + 'count of places. Settling it by arithmetic rather than by preference: '
+                + '5 × 10⁻³ is 0.005, and 5/10³ − 5/10⁴ = 0.0045, which is nine times the '
+                + '0.0005 being written.',
+              socratic:
+                'Counting the zeros after the point gives three and counting places gives four. '
+                + 'Rather than deciding which feels right — what number is 5 × 10⁻³, and how far '
+                + 'is it from 0.0005?',
+            },
+            {
+              label: 'Read the comparison off the exponents, which is what the form was for',
+              detail:
+                '5 × 10⁻⁴ against 5.2 × 10⁴: the exponents are −4 and 4, so the second is about '
+                + '10⁸ times the first, and the digit parts 5 and 5.2 barely disturb that — '
+                + 'exactly 1.04 × 10⁸, since 5.2/5 = 1.04. Written out as 0.0005 and 52 000 the '
+                + 'same comparison needs the zeros counted on both sides; in this form it needs '
+                + 'one subtraction. That is the sense in which the notation makes orders of '
+                + 'magnitude comparable at a glance, and it is why the range condition on a '
+                + 'matters: without it the exponents would not be comparable.',
+              socratic:
+                'Without multiplying anything out, roughly how many times bigger is 5.2 × 10⁴ '
+                + 'than 5 × 10⁻⁴ — and which part of each writing did you use to say so?',
+            },
+          ],
+          answer:
+            '0.0005 = 5 × 10⁻⁴ and 52 000 = 5.2 × 10⁴. The second is larger by a factor of '
+            + '1.04 × 10⁸, read off as 10⁴⁻⁽⁻⁴⁾ = 10⁸ with 5.2/5 = 1.04 correcting it. Counting '
+            + 'the three visible zeros instead of the four places would have given 5 × 10⁻³ = '
+            + '0.005, ten times too big, and the gap 5/10³ − 5/10⁴ is 0.0045 — nine times the '
+            + 'quantity being written, so the mis-count is not a rounding matter.',
+        },
+      },
+      {
+        id: 'multiplying-adds-the-exponents-and-may-need-renormalising',
+        conceptId: 'scientific-notation',
+        statement:
+          'A product in this notation splits into two independent pieces, because '
+          + '(a × 10ᵐ)(b × 10ⁿ) is only a reordering of a product: the digit parts multiply and '
+          + 'the exponents ADD. Adding rather than multiplying them is the step to get right — '
+          + '10⁴ · 10³ is 10⁷, not 10¹². The result can then leave the form, since ab may reach '
+          + '10 or more: 5 × 10⁴ times 4 × 10³ is 20 × 10⁷, which is the right number written '
+          + 'the wrong way, and renormalising moves one factor of ten out of the digit part and '
+          + 'into the exponent to give 2 × 10⁸.',
+        position: 2,
+        workedExample: {
+          problem:
+            'A machine stamps 5 × 10⁴ parts a day, and each part carries 4 × 10³ grains of alloy '
+            + 'powder. How many grains does a day\'s run use? Give the answer in scientific '
+            + 'notation.',
+          subgoals: [
+            {
+              label: 'Separate digits from powers, which turns one hard product into two easy ones',
+              detail:
+                '(5 × 10⁴)(4 × 10³) can be reordered as (5 · 4) × (10⁴ · 10³), because '
+                + 'multiplication does not care about order. So the digit parts and the powers '
+                + 'never interact: one multiplication of two small numbers and one question '
+                + 'about exponents, in place of multiplying 50 000 by 4 000.',
+              socratic:
+                'You have four things multiplied together: 5, 10⁴, 4 and 10³. Which two belong '
+                + 'together, and what does grouping them that way let you avoid doing?',
+            },
+            {
+              label: 'Add the exponents, because a power of ten counts factors of ten',
+              detail:
+                '10⁴ · 10³ is four factors of ten multiplied by three more, which is seven '
+                + 'factors of ten: 10⁷. The '
+                + 'exponents add because they are counts of the same factor. Multiplying them '
+                + 'would give 10¹², and the check that it cannot be right is available without '
+                + 'any arithmetic: 10⁴ · 10³ is smaller than 10⁴ · 10⁴ = 10⁸, so no answer with '
+                + 'an exponent above 8 is possible.',
+              socratic:
+                'Write 10⁴ · 10³ out as a string of tens multiplied together and count them. '
+                + 'Does adding 4 and 3 give that count, or does multiplying them?',
+            },
+            {
+              label: 'Notice the digit part has left the admissible range',
+              detail:
+                '5 · 4 = 20, and 20 is not in 1 ≤ a < 10, so 20 × 10⁷ is the right quantity in '
+                + 'the wrong form. Nothing has gone wrong arithmetically at this stage and the '
+                + 'number needs no correction — the only thing outstanding is which of several '
+                + 'equal writings is the standard one. Distinguishing those two situations is '
+                + 'the point of this step.',
+              socratic:
+                'Your answer so far is 20 × 10⁷. Is that the wrong number, or the right number '
+                + 'written the wrong way — and what would tell you which?',
+            },
+            {
+              label: 'Move one factor of ten from the digit part into the exponent',
+              detail:
+                '20 × 10⁷ = 2 × 10 × 10⁷ = 2 × 10⁸. The digit part is divided by ten and the '
+                + 'exponent rises by one, so the quantity is unchanged — which is the check: '
+                + '20 × 10⁷ and 2 × 10⁸ are both 200 000 000. Dropping the spare ten instead of '
+                + 'passing it across gives 2 × 10⁷, ten times too small, and that is the error '
+                + 'this step exists to prevent rather than a hypothetical one.',
+              socratic:
+                'You need to turn the 20 into a 2, which divides it by ten. What must happen to '
+                + 'the power of ten so that the quantity you are writing does not change?',
+            },
+          ],
+          answer:
+            '2 × 10⁸ grains, that is 200 000 000. The digit parts give 5 · 4 = 20 and the powers '
+            + 'give 10⁴ · 10³ = 10⁷, so the product is 20 × 10⁷; the digit part is outside '
+            + '1 ≤ a < 10, and moving one factor of ten across gives 2 × 10⁸. Multiplying the '
+            + 'exponents instead of adding them would have given 20 × 10¹², and dropping the '
+            + 'carried ten rather than passing it to the exponent would have given 2 × 10⁷.',
+        },
+      },
+      {
+        id: 'adding-needs-a-common-power-of-ten',
+        conceptId: 'scientific-notation',
+        statement:
+          'Addition has no rule like the product\'s, and the reason is that the digit parts of '
+          + '7 × 10⁵ and 4 × 10⁴ are counts of different units — hundred-thousands in one case '
+          + 'and ten-thousands in the other. Putting both on the SAME power of ten is what makes '
+          + 'them addable, and then the digit parts add while the shared exponent factors out '
+          + 'unchanged: 7 × 10⁵ + 4 × 10⁴ = 7 × 10⁵ + 0.4 × 10⁵ = 7.4 × 10⁵. This is the '
+          + 'column-alignment rule of written addition restated in the other notation, and what '
+          + 'it guards against is adding 7 and 4 to get 11 × 10⁵.',
+        position: 3,
+        workedExample: {
+          problem:
+            'One reservoir holds 7 × 10⁵ cubic metres and a second holds 4 × 10⁴. What do the '
+            + 'two hold together, in scientific notation?',
+          subgoals: [
+            {
+              label: 'Ask what each digit part counts, which is why they cannot simply be added',
+              detail:
+                'The 7 counts units of 10⁵ and the 4 counts units of 10⁴, so they are counts of '
+                + 'different-sized units: seven hundred-thousands and four ten-thousands. Adding '
+                + '7 and 4 would add a count of one thing to a count of another, which is the '
+                + 'same objection that stops you adding the 7 of 0.7 to the 4 of 40 and getting '
+                + '11 of anything.',
+              socratic:
+                'The two digit parts here are 7 and 4. Before adding them — what is each one a '
+                + 'count OF, and are those the same unit?',
+            },
+            {
+              label: 'Rewrite one of them on the other\'s power of ten',
+              detail:
+                '4 × 10⁴ = 0.4 × 10⁵: the digit part is divided by ten and the exponent raised '
+                + 'by one, which is the quantity-preserving move from the previous point run in '
+                + 'the other direction. Both terms are now counts of 10⁵, which is what the '
+                + 'addition needs. Rewriting the larger one downward works equally well — '
+                + '7 × 10⁵ = 70 × 10⁴, giving 74 × 10⁴ — and the two routes agree, because the '
+                + 'choice of shared exponent is a choice of unit and not of answer.',
+              socratic:
+                'You want both quantities written as some number of 10⁵. What is 4 × 10⁴ as a '
+                + 'number of 10⁵, and what did you do to the 4 to keep the quantity the same?',
+            },
+            {
+              label: 'Add the digit parts and factor the shared power out',
+              detail:
+                '7 × 10⁵ + 0.4 × 10⁵ = (7 + 0.4) × 10⁵ = 7.4 × 10⁵. The exponent is common to '
+                + 'both terms so it comes out as a factor, and it is not added to anything — '
+                + 'adding exponents is what a PRODUCT does, and importing that habit here is the '
+                + 'second way this calculation goes wrong. 7.4 is already in 1 ≤ a < 10, so no '
+                + 'renormalising is needed this time.',
+              socratic:
+                'Both terms are now a number of 10⁵. What does taking the 10⁵ out as a common '
+                + 'factor leave you with — and does the exponent itself change?',
+            },
+            {
+              label: 'Check against the written-out numbers, the one independent check available',
+              detail:
+                '700 000 + 40 000 = 740 000, and 7.4 × 10⁵ is 740 000. The check earns its place '
+                + 'because the plausible error produces a plausible-looking answer: adding the '
+                + 'digit parts unaligned gives 11 × 10⁵ = 1 100 000, which is too big by '
+                + '360 000, nearly half again the true total. It also has a tell — a digit part '
+                + 'of 11 is outside the admissible range, so the form itself reports the error '
+                + 'before any arithmetic does.',
+              socratic:
+                'Write both quantities out in full and add them. Does your 7.4 × 10⁵ agree — and '
+                + 'what is there about the answer 11 × 10⁵ that the form alone rules out?',
+            },
+          ],
+          answer:
+            '7.4 × 10⁵ cubic metres, that is 740 000. The exponents differ, so one term is '
+            + 'rewritten first: 4 × 10⁴ = 0.4 × 10⁵, and then 7 × 10⁵ + 0.4 × 10⁵ = 7.4 × 10⁵. '
+            + 'Going via 10⁴ instead gives 70 × 10⁴ + 4 × 10⁴ = 74 × 10⁴, the same quantity. '
+            + 'Adding the digit parts without aligning them would have given 11 × 10⁵ = '
+            + '1 100 000, too big by 360 000, and its digit part of 11 is outside the range the '
+            + 'form allows.',
+        },
+      },
+    ],
+  },
 ]
 
 /**
@@ -4196,6 +4515,58 @@ const EDGES: ConceptEdge[] = [
       + 'back as a percentage of the start, so the concept needs 24/25 and 0.96 to be one number '
       + 'rather than two. Establishing that a fraction\'s expansion is the same number written '
       + 'differently is what the decimals concept does.',
+  },
+
+  /**
+   * THE ONE EDGE THAT CAME DOWN WITH `scientific-notation`, AND IT IS THE
+   * CHEAPEST SHAPE THIS SUBJECT HAS SEEN.
+   *
+   * The node declared `needs: ['decimal-representation']` and nothing else, and
+   * that concept is authored HERE, so the single stranded edge has an owner in
+   * this list and nothing crossed a subject boundary. `algebra-foundations`
+   * needed no `links` change in either direction — not because the promotion
+   * was done carefully, but because a one-prerequisite node cannot cost one:
+   * one edge reaches one subject, and either it is this one or it is not.
+   *
+   * atlas-foundations.ts predicted exactly this and called it "cheap
+   * trivially", distinguishing it from the six multi-edge cheap cases above.
+   * The distinction is worth keeping: those six were cheap because the node's
+   * several prerequisites happened to land in one subject, which is a fact
+   * about the map that could have gone the other way. This one was cheap by
+   * arity, which could not have.
+   *
+   * The edge is a real gate and not a formality, and what it gates is narrower
+   * than the pairing suggests. This concept does not need the terminating or
+   * recurring half of the decimals at all — no expansion is computed anywhere
+   * below. What it needs is the one claim underneath both halves: that a
+   * decimal with n places IS a fraction over 10ⁿ. Every digit part here is a
+   * decimal read as a count of a power of ten — 5.2 as 52/10, 0.4 × 10⁵ as
+   * 4 × 10⁴ — and the renormalising move in the second and third points is that
+   * reading applied twice. A learner for whom 0.4 is a separate kind of object
+   * from 4/10 cannot follow the step that carries a factor of ten across.
+   *
+   * `place-value` is NOT declared, and the omission is deliberate rather than an
+   * oversight about where the idea comes from. Its third point already says the
+   * places past the point are 10⁻¹, 10⁻² and so on, which is this notation's
+   * whole premise — so the dependency is real but it is DISCHARGED by the
+   * decimals, which rest on place value themselves. Declaring it as well would
+   * add an edge that `gatingPrerequisitesOf` would never name, since it reports
+   * nearest teachable ancestors and `decimal-representation` stands between.
+   * An edge that can never appear in a gate is not a prerequisite, it is a
+   * citation.
+   */
+  {
+    id: 'decimal-representation->scientific-notation',
+    from: 'decimal-representation',
+    to: 'scientific-notation',
+    kind: 'prerequisite',
+    promotedBy: 'author:arithmetic-foundations',
+    rationale:
+      'Every digit part in this concept is a decimal read as a count of a power of ten — 5.2 as '
+      + '52/10, and 4 × 10⁴ rewritten as 0.4 × 10⁵ — so the concept rests on a decimal with n '
+      + 'places being a fraction over 10ⁿ rather than a second kind of number. That is the claim '
+      + 'the decimals concept establishes, and without it the step that moves a factor of ten '
+      + 'between the digit part and the exponent cannot be followed.',
   },
 
   /*

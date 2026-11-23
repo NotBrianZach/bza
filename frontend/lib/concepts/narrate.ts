@@ -186,6 +186,24 @@ export const TABLE_SYSTEM = [
   'You still may not teach, define, hint at or pose any mathematics, and you still may not say',
   'the player has learned or understood anything. If they describe doing a calculation, narrate',
   'the doing and the room around it, never the result and never whether it was right.',
+  '',
+  'WHEN THE SCENE GENUINELY NEEDS A QUANTITY SETTLED, ASK FOR WORK. Exactly like a roll: you',
+  'request it and stop, and something other than you supplies it. On the last line of your reply,',
+  'alone, write:',
+  'WORK:',
+  'That is the whole line. You do NOT say what the work is about and you do NOT write the problem',
+  '— the engine chooses a problem the player is ready for and puts it on the table underneath what',
+  'you wrote. Naming the subject would be choosing what they practise, which is not yours to',
+  'choose, and writing the problem would be mathematics nobody checked.',
+  '',
+  'So the rule you have had all along is unchanged and now has one sanctioned exception: you may',
+  'ASK for work, you may never WRITE it. Set the scene that needs it — who wants the figure, what',
+  'turns on it, what the room is like while they wait — and end on WORK:.',
+  '',
+  'Use it when a number genuinely matters to what happens next: a consignment to reconcile, a span',
+  'to measure, a dose to divide. Do NOT use it to gate progress you have already decided, do not',
+  'use it as a punishment, and do not ask for work and a roll in the same reply — they are two',
+  'different things being settled and only one can be on the table at a time.',
 ].join('\n')
 
 /**
@@ -508,6 +526,29 @@ export interface TableTurn {
   text: string
   /** Present on a gm turn that called for one, once the server has rolled it. */
   roll?: { expression: string; dice: string; results: number[]; total: number; reading: string }
+  /**
+   * Work the engine put on the table in answer to a `WORK:` request.
+   *
+   * The problem lives on the TURN rather than in component state, so it is
+   * part of the transcript: a player who closes the tab mid-problem comes
+   * back to the scene with the problem still in it, which is the behaviour a
+   * log already promises for everything else at the table.
+   *
+   * `prompt` and `given` are the engine's own strings, passed through
+   * untouched. The game master never sees them — see the WORK: protocol in
+   * TABLE_SYSTEM — so there is nothing here it could have paraphrased.
+   */
+  work?: {
+    taskId: string
+    conceptName: string
+    kind: string
+    prompt: string
+    given: string
+    at?: Record<string, string> | null
+    domainConditions?: string[]
+    /** The verifier's word, once the player has answered. */
+    ruling?: 'correct' | 'incorrect' | 'inconclusive' | 'abandoned'
+  }
 }
 
 const MAX_LOG = 10
@@ -529,6 +570,15 @@ export function tablePrompt(args: {
   action: string
   /** A roll the player just made, which this turn must narrate the result of. */
   resolved?: TableTurn['roll']
+  /**
+   * Work the verifier has just ruled on, which this turn must narrate.
+   *
+   * The exact counterpart of `resolved`, and the symmetry is the argument:
+   * dice and the verifier are both things that settle something the game
+   * master asked for and may not decide. Each comes back as fact and each
+   * gets narrated as it stands.
+   */
+  ruled?: { conceptName: string; ruling: NonNullable<NonNullable<TableTurn['work']>['ruling']>; assisted?: boolean }
 }): { system: string; user: string } {
   const lines: string[] = []
   lines.push(args.sheet)
@@ -558,6 +608,38 @@ export function tablePrompt(args: {
     lines.push(`  ${args.resolved.dice} = ${args.resolved.results.join(' ')} = ${args.resolved.total}`)
     lines.push(`  ${args.resolved.reading}`)
     lines.push('Do not call for another roll in this reply.')
+  } else if (args.ruled) {
+    /* The ruling as settled fact, with the four readings restated inline
+       rather than by importing RULING_SYSTEM wholesale. At the table the GM
+       is mid-scene and needs the one ruling it got, not a rubric for all
+       four — and §6's rule about `inconclusive` is the one that has to
+       survive the abbreviation, so it is the line that gets the most words. */
+    lines.push(`THE WORK HAS BEEN RULED ON by the engine. You did not see the problem and you did `
+      + `not judge the answer. Narrate what the room does about this result, as it stands:`)
+    lines.push(`  the work was on ${args.ruled.conceptName}`)
+    switch (args.ruled.ruling) {
+      case 'correct':
+        lines.push('  RULING: CORRECT — the work was right. Show it accepted and used. Say nothing '
+          + 'about what the player now knows or understands.')
+        break
+      case 'incorrect':
+        lines.push('  RULING: INCORRECT — the work was wrong. Show the inconvenience. Do not reveal '
+          + 'the right answer; you were not told it.')
+        break
+      case 'inconclusive':
+        lines.push('  RULING: INCONCLUSIVE — the engine could not settle whether it was right. This '
+          + 'is NOT a failure and NOT a success. Nobody in the room can say. Write the scene where '
+          + 'the question stays open and a decision has to be made anyway. Do not imply it was '
+          + 'wrong and do not imply it was accepted.')
+        break
+      case 'abandoned':
+        lines.push('  RULING: ABANDONED — the work was set aside unfinished. No reproach.')
+        break
+    }
+    if (args.ruled.assisted) {
+      lines.push('  The player used help. A circumstance of the scene, not a fault to remark on.')
+    }
+    lines.push('Do not ask for more work and do not call for a roll in this reply.')
   } else {
     lines.push(`PLAYER DOES: ${args.action}`)
   }
@@ -578,6 +660,48 @@ export function splitRollRequest(reply: string): { text: string; expression: str
   const expression = lines[idx].replace(/^\s*ROLL:\s*/, '').trim()
   lines.splice(idx, 1)
   return { text: lines.join('\n').trim(), expression: expression || null }
+}
+
+/**
+ * Pull a `WORK:` line off the end of a reply.
+ *
+ * The same move as `splitRollRequest` and for the same reason: the model
+ * requests, something else supplies. A roll is supplied by the server's dice;
+ * work is supplied by `assemble()`. Neither is the model's to produce, and in
+ * both cases the marker is how it says so without producing it.
+ *
+ * ── WHY IT CARRIES NOTHING ────────────────────────────────────────────────
+ *
+ * `ROLL:` has an expression because which tags bear on an action is a
+ * narrative judgement and the GM is the thing that can make it. `WORK:` has
+ * no argument because the equivalent judgement — WHICH mathematics — is not a
+ * narrative one. It belongs to the scheduler, which knows what is
+ * introducible, what is on cooldown, what interferes with what and where the
+ * mastery floor sits. A `WORK: long division` would be a storyteller's sense
+ * of pacing quietly replacing all of that.
+ *
+ * So the line is bare, and anything the model puts after it is discarded
+ * rather than honoured — deliberately, because a model that has been told to
+ * write `WORK:` alone will occasionally write `WORK: the ledger` anyway, and
+ * the safe reading of that is "work was requested" rather than "work on the
+ * ledger".
+ *
+ * ── A ROLL AND WORK TOGETHER ──────────────────────────────────────────────
+ *
+ * The prompt forbids it; this handles it anyway, because a prompt is not a
+ * parser. Work wins and the roll is dropped: both are things being settled by
+ * something other than the model, and settling two at once makes a turn whose
+ * outcome has no single shape. Returning work rather than the roll is the
+ * conservative half of that choice — a dropped roll costs a flourish, where a
+ * dropped `WORK:` would silently turn a scene that was supposed to contain
+ * real mathematics into one that only talks about it.
+ */
+export function splitWorkRequest(reply: string): { text: string; wantsWork: boolean } {
+  const lines = reply.split('\n')
+  const idx = lines.findIndex(l => /^\s*WORK:/i.test(l))
+  if (idx === -1) return { text: reply.trim(), wantsWork: false }
+  lines.splice(idx, 1)
+  return { text: lines.join('\n').trim(), wantsWork: true }
 }
 
 export interface ParsedTag { name: string; tier: string; against: boolean }

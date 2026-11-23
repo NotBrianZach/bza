@@ -262,8 +262,10 @@
  * and `systems-of-linear-equations`, two names for one unwritten node. Now the
  * walk stops at the node itself. `determinant` in `matrices-and-determinants`
  * goes from three gating concepts to two, and `rank-nullity` and
- * `numerical-linear-algebra` in `linear-algebra` do the same, with no edit to
- * any of the three. A tighter gate is a SHORTER list, so the quantity to assert
+ * `numerical-linear-algebra` — both nodes of `linear-algebra` at the time, the
+ * first of them a concept of `vectors-and-independence` since the thirtieth
+ * promotion — do the same, with no edit to any of the three. A tighter gate is
+ * a SHORTER list, so the quantity to assert
  * is membership and not length — and the figure has to be computed before and
  * after rather than predicted, because which way the count moves depends on how
  * many prerequisites the promoted node had.

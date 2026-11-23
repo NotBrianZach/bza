@@ -51,7 +51,7 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
   id: 'algebra-foundations',
   name: 'Number and algebra',
   covers:
-    'Number and the letters that stand for it: scientific notation, and then ' +
+    'Number and the letters that stand for it: the complex numbers, and then ' +
     'equations, inequalities, systems and quadratics. These were two areas until the number ' +
     'half had been almost entirely written out. The arithmetic underneath — place value, the ' +
     'written algorithms, order of operations, signed numbers, divisibility, fractions, prime ' +
@@ -76,7 +76,18 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
     'amount until a base is handed to it, that a percentage change is one multiplication by a ' +
     'factor so reversing it is a division and not the percentage applied the other way, and ' +
     'that successive changes multiply their factors, which is why equal rises and falls lose ' +
-    'instead of cancelling. Linear equations in one unknown have gone the same way as a thirteenth, ' +
+    'instead of cancelling. Scientific notation has followed as a twenty-second out of this ' +
+    'area, taking the notation and the arithmetic of it: that a × 10ⁿ with 1 ≤ a < 10 has one ' +
+    'writing per quantity, so exponents alone order quantities by size and orders of magnitude ' +
+    'become comparable at a glance; that the exponent counts the places the digits shift and ' +
+    'not the zeros that happen to be printed; that a product multiplies the digit parts and ' +
+    'ADDS the exponents, then may need a factor of ten moved out of the digit part to get back ' +
+    'inside the range; and that a sum needs both terms on a common power of ten before the ' +
+    'digit parts can be added at all, which is column alignment in the other notation. What ' +
+    'stays behind of that one is significant figures and estimation — the departing node\'s ' +
+    'search terms named both and the authored material teaches neither, so they are named here ' +
+    'and not written, with the complication that the recognition pattern went with the concept ' +
+    'and still claims them. Linear equations in one unknown have gone the same way as a thirteenth, ' +
     'taking the whole of what solving one is: undoing the operations in reverse order, ' +
     'collecting the unknown when it stands on both sides, and why the rule is that the same ' +
     'move on both sides must be invertible and not merely the same. What stays behind of it is ' +
@@ -195,9 +206,27 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
    * Fifteen nodes against a floor of five was ten promotions, and the two
    * remaining journeys needed four of them from here: `real-number-line`,
    * `ratio-and-rate`, `linear-equations` and `systems-of-linear-equations`.
-   * All four have been taken, so it is ten nodes, five promotions of room,
-   * and NOTHING owed on any route — there is no unfinished one left. Nothing
-   * in this area is held back by the floor and nothing in it comes close.
+   * All four have been taken, and NOTHING is owed on any route — there is no
+   * unfinished one left.
+   *
+   * THE FIGURE IN THIS PARAGRAPH IS THE KIND THAT ROTS, so it is stated as a
+   * count that can be checked rather than left as prose. It read "ten nodes,
+   * five promotions of room" when the four route nodes had just been taken;
+   * `absolute-value`, `percent` and `scientific-notation` have gone since,
+   * none of them for a route, and it is SEVEN nodes and two promotions of
+   * room. Whoever takes the next one should correct this sentence rather than
+   * adding another beside it — a paragraph accumulating revisions of one
+   * number is harder to trust than a wrong number, because a reader cannot
+   * tell which revision is current.
+   *
+   * WHAT THE LAST TWO ARE SPENT ON IS NOT A FREE CHOICE, which is the part a
+   * budget framed in nodes hides. Of the seven, `complex-numbers` and
+   * `linear-inequalities` each carry a live refusal, and the remaining five —
+   * `absolute-value-equations`, `word-problems`, `radical-equations`,
+   * `nonlinear-systems`, `inequality-proofs` — are the ones whose answers are
+   * sets, intervals and arguments rather than values. So the floor is no
+   * longer what binds here and has not been for some time: the verifier is.
+   * Two promotions of room against five candidates is not a shortage of room.
    *
    * THE FOURTH WAS THE ONE THIS PARAGRAPH SAID WOULD NEVER HAPPEN, and the
    * sentence is worth quoting rather than quietly replacing: "the honest
@@ -900,14 +929,89 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
      * observed out of this one area, which is the strongest case available for
      * checking the set by name rather than by size.
      */
-    {
-      id: 'scientific-notation',
-      match: /\b(scientific notation|order of magnitude|significant figure)/i,
-      name: 'Scientific notation and estimation',
-      is: 'Writing a quantity as a digit times a power of ten, which is what makes orders of magnitude comparable at a glance.',
-      needs: ['decimal-representation'],
-      terms: 'scientific notation order of magnitude significant figures estimation',
-    },
+    /**
+     * `scientific-notation` LEFT THIS AREA WHEN IT WAS AUTHORED, AND HAD TO.
+     *
+     * It is a real concept now — three knowledge points, worked examples and
+     * tasks — in ontology-arithmetic.ts, under `arithmetic-foundations`.
+     * `atlasProblems` rejects a map node whose id collides with an authored
+     * concept, and not as tidiness: the composed concept list would hold two
+     * entries for the id, and the shadowing copy has no knowledge points, so a
+     * fully authored concept would silently read as unteachable.
+     *
+     * ITS ONE EDGE LEFT WITH IT AND IS RESTATED INSIDE THAT SUBJECT. The node
+     * declared `needs: ['decimal-representation']` and nothing else, and that
+     * concept is authored in the subject this node has joined, so the single
+     * stranded edge has an owner there and nothing crossed a subject boundary.
+     * This area needed no `links` change in either direction.
+     *
+     * THAT WAS CHEAP BY ARITY RATHER THAN BY LUCK, which is the distinction the
+     * note on `percent` above predicted and is worth preserving. The six cheap
+     * multi-edge departures from this area were cheap because a node's several
+     * prerequisites all happened to land in one subject — a fact about the map
+     * that could have gone the other way, and did for the four nodes still
+     * here. A one-prerequisite node cannot cost a `links` entry at all: one
+     * edge reaches one subject, and either it is the receiving one or it is
+     * not. `complex-numbers` below is the only node left here of that shape.
+     *
+     * NOTHING POINTED INTO IT, MEASURED RATHER THAN ASSUMED. `dependentsOf`
+     * returns empty for this id across the composed map, so no surviving node
+     * named it in its own `needs` and no `links` entry mentioned it. This is
+     * therefore the one departure out of this area that neither stranded an
+     * edge pointing in nor tightened a gate anywhere — the "authoring tightens
+     * the gate" effect the `real-number-line` note above describes has no
+     * instance here, because there was nothing above this node to tighten.
+     *
+     * The node carried no `confusedWith`, no `exercises` and no `encompasses`,
+     * all three checked on it before it was deleted rather than inferred from
+     * the suites staying green. Staying green is exactly what they would have
+     * done either way: `expandEdges` turns a node's `confusedWith` into an
+     * `interferes_with` edge, deleting the node deletes the edge, and nothing
+     * goes red because interference constrains SELECTION rather than gating.
+     *
+     * THE ROOT SET OF THIS AREA SHRANK, from six to five, which is the
+     * `real-number-line` shape rather than the `linear-equations` one. This
+     * node's only prerequisite was outside the area, so it was a root itself;
+     * and it had no dependents at all, so no node took its place. A departing
+     * node promotes a dependent to root only when it was the LAST of that
+     * dependent's prerequisites inside the area, and with no dependents the
+     * condition cannot fire. Measured before and after rather than predicted:
+     * {`scientific-notation`, `linear-inequalities`, `word-problems`,
+     * `complex-numbers`, `radical-equations`, `nonlinear-systems`} became that
+     * set without the first member, with `absolute-value-equations` and
+     * `inequality-proofs` still gated from inside as before. Asserted by named
+     * membership in tests/atlas.mjs, which is what catches a turnover at
+     * constant size.
+     *
+     * SEVEN NODES LEFT HERE, AND THE FLOOR IS FIVE. tests/atlas.mjs asserts no
+     * area has fewer than five nodes ("no area is a stub"), so this area can
+     * release two more and then stops. Of the seven, `complex-numbers` is
+     * refused on a live mechanism — `exactValue` has no complex case, so every
+     * expression containing the imaginary unit is unsettleable locally and
+     * authoring it would mean widening the ratchet in tests/concepts-logic.mjs
+     * that caps how many shipped `evaluate` tasks may need the worker — and
+     * `linear-inequalities` carries a refusal of its own. The next author
+     * should re-read both mechanisms rather than trusting either sentence; that
+     * is the third entry in the taxonomy above, and it is the dangerous one.
+     *
+     * WHAT IT LEAVES BEHIND, and this one is a debt rather than a boundary. The
+     * node's `match` and `terms` named significant figures and estimation
+     * alongside the notation, and the authored concept carries that pattern
+     * VERBATIM — the convention the last five promotions followed, since
+     * widening or narrowing a pattern in the same change that adds a concept
+     * would move the recognition figure in tests/atlas.mjs on an edit that also
+     * moves the concept count, leaving no way to say which half did it. But the
+     * material teaches the notation and its arithmetic only: how a and n are
+     * fixed, that a product adds exponents and may need renormalising, and that
+     * a sum needs a common power of ten first. Rounding to a stated number of
+     * significant figures, and estimation as a technique, are named by the
+     * pattern and taught nowhere. So an offering titled "Significant figures"
+     * resolves to this concept and will be met with material about the
+     * notation. That is the honest reading and it is the one thing about this
+     * promotion a reader should not have to discover: the fix is a narrowed
+     * pattern or a second concept, in a change that moves the recognition
+     * figure and nothing else.
+     */
     /**
      * `variables-and-expressions` LEFT THIS AREA WHEN IT WAS AUTHORED, AND HAD TO.
      *

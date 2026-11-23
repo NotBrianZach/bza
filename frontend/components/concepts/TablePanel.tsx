@@ -128,14 +128,23 @@ export default function TablePanel({ region, held }: {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ regionId, character, held, ...payload }),
-      }).then(r => r.json() as Promise<{ text?: string; roll?: TableTurn['roll']; error?: string }>)
+      }).then(r => r.json() as Promise<{
+        text?: string
+        roll?: TableTurn['roll']
+        work?: NonNullable<TableTurn['work']>
+        error?: string
+      }>)
 
       const first = await post({ log: withPlayer, action: text.trim() })
       if (first.error) {
         persist([...withPlayer, { who: 'gm', text: first.error }], regionId)
         return
       }
-      const gmTurn: TableTurn = { who: 'gm', text: first.text ?? '', roll: first.roll }
+      /* `work` rides on the turn, so the problem is part of the transcript
+         rather than component state — see TableTurn.work. */
+      const gmTurn: TableTurn = {
+        who: 'gm', text: first.text ?? '', roll: first.roll, work: first.work,
+      }
       const withGm = [...withPlayer, gmTurn]
       persist(withGm, regionId)
 
@@ -154,6 +163,53 @@ export default function TablePanel({ region, held }: {
       setBusy(false)
     }
   }, [busy, log, region.id, character, held, persist])
+
+  /**
+   * The verifier has ruled on work that was on the table, so hand the ruling
+   * back to the game master to narrate.
+   *
+   * Exactly the shape the roll already has: the answer went somewhere the
+   * model is not, came back as fact, and goes into the next prompt as fact.
+   * `/api/learn/verify` did the ruling and moved strength — this route only
+   * ever gets told what it decided.
+   *
+   * The ruling is written onto the TURN so the transcript carries it. A log
+   * that showed a problem with no outcome after a reload would be a scene
+   * that forgot what happened in it.
+   */
+  const settleWork = useCallback(async (
+    turnIndex: number,
+    ruling: NonNullable<TableTurn['work']>['ruling'],
+    assisted: boolean,
+  ) => {
+    const regionId = region.id
+    const marked = log.map((t, i) => (
+      i === turnIndex && t.work ? { ...t, work: { ...t.work, ruling } } : t))
+    persist(marked, regionId)
+    const work = log[turnIndex]?.work
+    if (!work || !ruling) return
+    setBusy(true)
+    try {
+      const res = await authedFetch('/api/learn/table', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          regionId,
+          character,
+          held,
+          log: marked,
+          ruled: { conceptName: work.conceptName, ruling, assisted },
+        }),
+      })
+      const data = await res.json() as { text?: string }
+      if (data.text) persist([...marked, { who: 'gm', text: data.text }], regionId)
+    } catch {
+      /* The ruling stands and is on the turn; only the telling of it is
+         missing, same as everywhere else the narrator is optional. */
+    } finally {
+      setBusy(false)
+    }
+  }, [log, region.id, character, held, persist])
 
   const bg = BACKGROUNDS.find(b => b.id === character.background) ?? BACKGROUNDS[0]
   const made = isMade(character)
@@ -216,6 +272,13 @@ export default function TablePanel({ region, held }: {
                 </p>
                 <p className='text-[11px] text-amber-200/70'>{turn.roll.reading}</p>
               </div>
+            )}
+            {turn.work && (
+              <WorkCard
+                work={turn.work}
+                busy={busy}
+                onRuled={(ruling, assisted) => settleWork(i, ruling, assisted)}
+              />
             )}
           </div>
         ))}
@@ -395,6 +458,157 @@ function CharacterSheet({ character, onChange, held, creating, onDone }: {
       >
         {creating ? 'Take your seat' : 'Done'}
       </button>
+    </div>
+  )
+}
+
+/**
+ * Work the engine put on the table, answered at the table.
+ *
+ * ── THE LAYOUT IS THE SAFETY ARGUMENT, AGAIN ──────────────────────────────
+ *
+ * docs/RPG_AND_THE_GRAPH.md §3 put the problem on the Practice tab because
+ * that is where the verifier lives. That was the wrong read of its own goal:
+ * a commission that ejects you from the scene to answer it is not
+ * mathematics happening INSIDE the fiction, it is a tab switch with a story
+ * attached. So the problem is here, and the honesty comes from where each
+ * piece of text originates rather than from which tab it is on.
+ *
+ * The prose above this card is the game master's and contains no
+ * mathematics, because the GM was never shown any — it wrote `WORK:` and
+ * stopped, and /api/learn/table chose the task afterwards. The problem in
+ * this card is `assemble()`'s own string, passed through untouched. The
+ * answer goes to /api/learn/verify, the same route and the same verifier the
+ * Practice tab uses, which rules it and moves strength. The ruling comes back
+ * and the GM narrates it without ever having judged it.
+ *
+ * So: the GM frames, the engine poses, the verifier rules. Three parties, and
+ * the one that can write fiction is the one that can do least.
+ *
+ * ── WHAT MUST NOT CREEP IN ────────────────────────────────────────────────
+ *
+ * A hint button. The Practice tab has assistance and it is modelled —
+ * `assistedOnly` in `summarise()` means something precise and costs strength.
+ * Here the only assistance is the one the verify route already understands,
+ * reported honestly as a circumstance. Anything the GM offered instead would
+ * be mathematics nobody checked, which is the first thing §10 forbids.
+ */
+function WorkCard({ work, busy, onRuled }: {
+  work: NonNullable<TableTurn['work']>
+  busy: boolean
+  onRuled: (ruling: NonNullable<TableTurn['work']>['ruling'], assisted: boolean) => void
+}) {
+  const [answer, setAnswer] = useState('')
+  const [sending, setSending] = useState(false)
+  const [assisted, setAssisted] = useState(false)
+  const [note, setNote] = useState<string | null>(null)
+
+  const settled = !!work.ruling
+
+  const submit = useCallback(async () => {
+    if (sending || settled || !answer.trim()) return
+    setSending(true)
+    setNote(null)
+    try {
+      const res = await authedFetch('/api/learn/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          taskId: work.taskId,
+          answer,
+          assistance: assisted ? 'worked' : 'none',
+        }),
+      })
+      const data = await res.json() as {
+        status?: string
+        verdict?: { ruling?: string }
+        message?: string
+        error?: string
+      }
+      /* An unreadable answer is not a ruling. The verify route says so
+         explicitly and the table has to respect that distinction — turning
+         "I could not parse that" into a scene about being wrong would be the
+         table inventing a verdict. */
+      if (data.status !== 'ruled' || !data.verdict?.ruling) {
+        setNote(data.message || data.error || 'That could not be read as an answer.')
+        return
+      }
+      onRuled(data.verdict.ruling as NonNullable<TableTurn['work']>['ruling'], assisted)
+    } catch {
+      setNote('The verifier could not be reached, so nothing was ruled.')
+    } finally {
+      setSending(false)
+    }
+  }, [answer, assisted, sending, settled, work.taskId, onRuled])
+
+  return (
+    <div className='mt-1.5 rounded border border-sky-900/60 bg-sky-950/30 px-2 py-1.5'>
+      <p className='flex flex-wrap items-baseline gap-x-2 text-[10px] uppercase tracking-wide text-sky-400/80'>
+        <span>The work</span>
+        <span className='normal-case tracking-normal text-sky-300/70'>
+          {work.conceptName} · {work.kind}
+        </span>
+      </p>
+      {/* Verbatim from the engine. Not restyled into prose, because the point
+          is that this text is of a different kind from the scene above it. */}
+      <p className='mt-1 text-xs leading-relaxed text-sky-50'>{work.prompt}</p>
+      {work.given && (
+        <p className='mt-0.5 font-mono text-[11px] text-sky-200/90'>{work.given}</p>
+      )}
+      {work.at && Object.keys(work.at).length > 0 && (
+        <p className='mt-0.5 font-mono text-[11px] text-sky-200/70'>
+          {Object.entries(work.at).map(([k, v]) => `${k} = ${v}`).join(', ')}
+        </p>
+      )}
+      {(work.domainConditions ?? []).length > 0 && (
+        <p className='mt-0.5 text-[10px] text-sky-300/60'>
+          holds where {work.domainConditions!.join(', ')}
+        </p>
+      )}
+
+      {settled ? (
+        <p className='mt-1.5 text-[11px] text-sky-300/80'>
+          Ruled <strong>{work.ruling}</strong>
+          {work.ruling === 'inconclusive' && (
+            <span className='text-sky-400/70'>
+              {' '}— the engine could not settle it. Not counted against you; it has gone for review.
+            </span>
+          )}
+        </p>
+      ) : (
+        <div className='mt-1.5 flex flex-wrap items-center gap-1.5'>
+          <input
+            value={answer}
+            onChange={e => setAnswer(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') submit() }}
+            disabled={sending || busy}
+            placeholder='your answer'
+            aria-label={`Your answer to the work on ${work.conceptName}`}
+            className='min-w-0 flex-1 rounded border border-sky-800 bg-gray-900 px-2 py-1 font-mono text-xs text-sky-50 placeholder-sky-700 focus:border-sky-600 focus:outline-none'
+          />
+          <button
+            type='button'
+            onClick={submit}
+            disabled={sending || busy || !answer.trim()}
+            className='rounded bg-sky-900 px-2 py-1 text-[11px] text-sky-100 hover:bg-sky-800 disabled:opacity-40'
+          >
+            {sending ? <Loader2 size={11} className='animate-spin' /> : 'Hand it over'}
+          </button>
+          {/* The same declaration the Practice tab asks for, in the same
+              words, because it means the same thing to `summarise()` and a
+              different word here would read as a different promise. */}
+          <label className='flex items-center gap-1 text-[10px] text-sky-400/70'>
+            <input
+              type='checkbox'
+              checked={assisted}
+              onChange={e => setAssisted(e.target.checked)}
+              disabled={sending || busy}
+            />
+            I had help
+          </label>
+        </div>
+      )}
+      {note && <p className='mt-1 text-[11px] text-amber-300/80'>{note}</p>}
     </div>
   )
 }

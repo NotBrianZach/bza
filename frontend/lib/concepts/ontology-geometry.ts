@@ -1370,6 +1370,16 @@
  * brings forward the area-merge decision that atlas-foundations.ts reserves for
  * a person. `euclidean-geometry` keeps three nodes of headroom after this one.
  *
+ * THAT DEFERRAL WAS SPENT BY THE THIRTIETH PROMOTION, which wrote
+ * `rank-nullity` into `vectors-and-independence`, and the paragraph is kept
+ * because its arithmetic was right and its conclusion was a judgement. The
+ * split `needs` did cost an area `links` entry, exactly as predicted; the
+ * headroom reading was the half that needed a second look, since "brings
+ * forward the merge decision" is one promotion of distance rather than the
+ * decision itself. `linear-algebra` is now at ONE node of headroom with ONE
+ * ready candidate, so the next run out of that area is the one that has to stop
+ * and ask rather than this one having been wrong to defer.
+ *
  * WHAT THE CONCEPT IS ABOUT IS ITS OWN PREREQUISITE, which is the first time
  * that has been true here and is the reason the figure objection does not land.
  * `congruence` left the JUSTIFICATION of the criteria on the map — SSS being

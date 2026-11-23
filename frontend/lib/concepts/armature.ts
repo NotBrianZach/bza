@@ -221,7 +221,24 @@ export const REGIONS: Region[] = [
     // the ROOT of a growing area will be refilled every time that area is
     // authored out from underneath it, and the refill is always the node that
     // was next.
-    anchors: ['rank-nullity', 'eigenvalues', 'diagonalisation'],
+    //
+    // AND A THIRD TIME, into the same subject again, at the thirtieth
+    // promotion. The prediction above held and the rule picked the refill, but
+    // it had TWO candidates to choose between for the first time and the rule's
+    // two halves came apart on them. `diagonalisation` and `least-squares` both
+    // name `rank-nullity` in their own `needs`, so both are "the node that was
+    // next"; only `least-squares` INHERITED its place, because
+    // `diagonalisation` has `eigenvalues` above it inside this area and so did
+    // not become a root. So "the dependent that becomes a root" is the half
+    // that discriminates and "the node directly above" is the half that
+    // happened to agree twice. `diagonalisation` is an anchor already in any
+    // case, so taking it would have shrunk the region to two.
+    //
+    // It also reads right against the `because`: the Runeforger guild makes
+    // things that have to work, and least squares is the answer you give when
+    // the system cannot be solved exactly — which is every real measurement a
+    // fabricator takes.
+    anchors: ['least-squares', 'eigenvalues', 'diagonalisation'],
     because: 'The Runeforger guild fabricates objects that conduct aether — shields, ignition surfaces, industrial equipment — which is arrays of conducting elements and what they do to what passes through them. A city named The Stalwart Machine keeps its mathematics in matrices.',
   },
   {
