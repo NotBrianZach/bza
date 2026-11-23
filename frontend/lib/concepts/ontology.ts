@@ -917,12 +917,45 @@ const CONCEPTS: Concept[] = [
         workedExample: {
           problem: 'Is (x + 3)/(x + 5) equal to 3/5?',
           subgoals: [
-            { label: 'What was cancelled?', detail: 'An x out of a sum — but x is a term there, not a factor.' },
+            {
+              label: 'What was cancelled?',
+              detail: 'An x out of a sum — but x is a term there, not a factor.',
+              socratic:
+                'Somebody has got from (x + 3)/(x + 5) to 3/5, and before judging whether they ' +
+                'were allowed to, say what they actually did: set the two fractions side by ' +
+                'side and name the thing that stood in the first and is gone from the second, ' +
+                'on the top and on the bottom alike. Then hold that move beside a cancellation ' +
+                'nobody would object to — the (x − 5) coming out of ' +
+                '(x + 3)(x − 5)/((x − 5)(x + 5)). There the bracket that cancelled was joined ' +
+                'to the bracket beside it by one operation; here the thing struck out is joined ' +
+                'to the 3 by a different one. What was struck out, and how does its standing ' +
+                'inside x + 3 differ from the standing (x − 5) had in that other fraction?',
+            },
             {
               label: 'Why that is illegal',
               detail: 'Cancellation divides both parts by the same thing, and x + 3 is not x times anything.',
+              socratic:
+                'You have named the move: an x gone from the top and an x gone from the bottom. ' +
+                'Now make the charge precise, because calling it illegal is not yet a reason. ' +
+                'Striking a thing out of the top is dividing the top by it — that is exactly ' +
+                'what makes an honest cancellation honest — so put the claim to the test on ' +
+                'the top alone. If dividing x + 3 by x really left 3 behind, then x + 3 would ' +
+                'have to be x multiplied by 3. Multiply those two and see whether you land on ' +
+                'x + 3. What does x multiplied by 3 actually come to, and which requirement of ' +
+                'cancelling does striking the x out of x + 3 therefore fail?',
             },
-            { label: 'Test it', detail: 'At x = 1 the expression is 4/6 = 2/3, and 3/5 is not 2/3.' },
+            {
+              label: 'Test it',
+              detail: 'At x = 1 the expression is 4/6 = 2/3, and 3/5 is not 2/3.',
+              socratic:
+                'Everything so far has been structural, and structure is the real reason. But ' +
+                'there is a cheaper and more final way to settle a claim that two expressions ' +
+                'are equal, and it is worth having in hand: an equality between expressions is ' +
+                'a promise about every value of x at once, so it can be examined one value at ' +
+                'a time. Take the easiest value you can — x = 1 — work out (x + 3)/(x + 5) ' +
+                'there, and set that against 3/5. What does each side come to, and how much of ' +
+                'the original claim does a single disagreement of that kind settle?',
+            },
           ],
           answer: 'No. Cancelling needs a common factor, and a term of a sum is not one.',
         },
