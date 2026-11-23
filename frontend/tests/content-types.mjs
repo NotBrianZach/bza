@@ -140,6 +140,108 @@ test('a known type keeps its curated label rather than the fallback', () => {
   assert(M.labelForType('wikipedia_article') === 'Wikipedia', M.labelForType('wikipedia_article'))
 })
 
+// ---------------------------------------------------------------------------
+// A saved chat has to stay a chat.
+//
+// `content_type === 'chat_book'` is the ONE thing that decides whether a book
+// can be continued — BookReader reads exactly that and renders the input bar
+// off it. The chat-book creator held a conversation and then saved it through
+// `upload(file, { articleType: 'reference' })`, which set content_type to
+// `reference`: the saved conversation opened as static prose with no way to
+// add to it. Reported as "once a chat is a book you can't continue it".
+//
+// The two tests above pass either way, which is the point of adding these.
+// They assert that `chat_book` has a LABEL; nothing asserted that anything
+// ever produces one. A label for a type nothing creates is a chip that can
+// never be clicked.
+//
+// Source assertions rather than behavioural ones, for the usual reason: the
+// alternative is a Supabase round trip in a unit suite. What matters is a
+// property of the code — which function the creator calls — and that is
+// readable without a database.
+
+const CREATOR = readFileSync(
+  join(FRONTEND, 'components', 'upload', 'ChatBookCreator.tsx'), 'utf8')
+
+test('the chat-book creator creates a chat book, not a reference book', () => {
+  assert(/booksQueries\.createChatBook\(/.test(CREATOR), 'calls createChatBook')
+  assert(!/booksQueries\.upload\(/.test(CREATOR), 'does not go through upload()')
+  assert(!/articleType:\s*'reference'/.test(CREATOR), "no articleType: 'reference'")
+})
+
+test('the local-storage path carries the type too', () => {
+  // A signed-out user got the same dead-end book, by a different route.
+  const local = CREATOR.slice(CREATOR.indexOf('useLocalStorage'))
+  assert(/content_type:\s*'chat_book'/.test(local), 'saveLocalBook gets chat_book')
+})
+
+test('createChatBook can be seeded, or a saved transcript has nowhere to go', () => {
+  const BOOKS = readFileSync(join(FRONTEND, 'lib', 'queries', 'books.ts'), 'utf8')
+  assert(/async createChatBook\(title: string, initialMarkdown\?: string\)/.test(BOOKS),
+    'createChatBook takes initial content')
+  assert(/content_type:\s*'chat_book'/.test(BOOKS), 'and sets the type')
+})
+
+test('the creator writes turns in the shape the reader appends in', () => {
+  // Both render, so a mismatch looks like nothing is wrong — until a
+  // continued conversation carries two conventions with the seam exactly
+  // where the save happened.
+  const READER = readFileSync(join(FRONTEND, 'components', 'BookReader.tsx'), 'utf8')
+  const readerUsesBold = /\*\*You:\*\*/.test(READER) && /\*\*Assistant:\*\*/.test(READER)
+  const creatorUsesBold = /\*\*You:\*\*/.test(CREATOR) && /\*\*Assistant:\*\*/.test(CREATOR)
+  assert(readerUsesBold, 'reader appends **You:** / **Assistant:**')
+  assert(creatorUsesBold, 'creator seeds the same way')
+  assert(!/## You\\n/.test(CREATOR), 'and no longer uses ## headings')
+})
+
+// ---------------------------------------------------------------------------
+// The prompt box is a textarea everywhere, not a one-line input.
+//
+// A single-line `<input>` cannot grow, so a paragraph scrolls sideways and the
+// text you wrote is present and invisible. That was true of all three chat
+// surfaces. One shared component now, so the next surface cannot quietly get
+// the old control.
+
+test('every chat surface composes in the shared PromptInput', () => {
+  /*
+   * The rule is about the MESSAGE box, not about `type="text"` anywhere.
+   *
+   * The first version of this banned `type="text"` outright and failed on
+   * ChatBookCreator's conversation-title field — which is correctly a
+   * one-line input, as PromptInput's own header says. An assertion broad
+   * enough to forbid a legitimate control is one somebody will satisfy by
+   * making the control worse.
+   *
+   * So: the surface must use PromptInput, and no single-line input may be
+   * bound to the state that holds the message being composed.
+   */
+  for (const [rel, messageState] of [
+    [['components', 'upload', 'ChatBookCreator.tsx'], 'input'],
+    [['components', 'reader', 'ChatBookReader.tsx'], 'chatInput'],
+    [['components', 'ChatPanel.tsx'], 'inputValue'],
+  ]) {
+    const src = readFileSync(join(FRONTEND, ...rel), 'utf8')
+    const name = rel[rel.length - 1]
+    assert(/<PromptInput/.test(src), `${name} uses PromptInput`)
+    const oneLineOnMessage = new RegExp(
+      `<input[^>]*type="text"[^>]*value=\\{${messageState}\\}`, 's')
+    assert(!oneLineOnMessage.test(src),
+      `${name} binds no one-line input to ${messageState}`)
+  }
+})
+
+test('PromptInput sends on Enter, newlines on Shift+Enter, and survives an IME', () => {
+  const P = readFileSync(join(FRONTEND, 'components', 'PromptInput.tsx'), 'utf8')
+  assert(/<textarea/.test(P), 'it is a textarea')
+  assert(/e\.key === 'Enter' && !e\.shiftKey/.test(P), 'Enter sends, Shift+Enter does not')
+  // An IME accepts a candidate with Enter. Without this a Japanese or Chinese
+  // keyboard sends half a word, which makes the control unusable rather than
+  // merely annoying.
+  assert(/isComposing/.test(P), 'composition is checked before sending')
+  // The height reset before measuring is what lets the box SHRINK again.
+  assert(/height = 'auto'/.test(P), 'height is reset before measuring scrollHeight')
+})
+
 rmSync(outDir, { recursive: true, force: true })
 console.log(`\n${passed} passed, ${failures.length} failed`)
 if (failures.length) process.exit(1)

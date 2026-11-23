@@ -4,7 +4,7 @@ import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
 import rehypeKatex from 'rehype-katex'
 import rehypeRaw from 'rehype-raw'
-import { Loader2 } from 'lucide-react'
+import { PromptInput } from '../PromptInput'
 
 interface ChatBookReaderProps {
   scrollContainerRef: RefObject<HTMLDivElement>
@@ -41,27 +41,22 @@ export function ChatBookReader({
         </div>
       </div>
 
+      {/* The bar is no longer a fixed 64px of one-line input, so the content
+          pane's padding-bottom above is a floor rather than an exact fit: the
+          bar grows upward over the prose while composing and the last turn
+          stays reachable by scrolling. Sized for the common case rather than
+          the ten-row one, which is momentary. */}
       <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 p-3 z-10">
-        <form
-          onSubmit={e => { e.preventDefault(); onSend() }}
-          className="flex gap-2 max-w-prose mx-auto"
-        >
-          <input
-            type="text"
+        <div className="max-w-prose mx-auto">
+          <PromptInput
             value={chatInput}
-            onChange={e => setChatInput(e.target.value)}
-            placeholder="Type a message…"
+            onChange={setChatInput}
+            onSend={onSend}
+            sending={chatSending}
             disabled={chatSending}
-            className="flex-1 text-sm border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            sendLabel="Send"
           />
-          <button
-            type="submit"
-            disabled={chatSending || !chatInput.trim()}
-            className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-40 text-sm flex items-center gap-1"
-          >
-            {chatSending ? <Loader2 size={14} className="animate-spin" /> : 'Send'}
-          </button>
-        </form>
+        </div>
       </div>
     </>
   )

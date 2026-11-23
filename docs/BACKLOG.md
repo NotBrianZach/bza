@@ -183,59 +183,9 @@ should: the restriction on autonomous publishing is the correct part of
 this arrangement. So the cost of leaving the cadence unwritten is now
 narrower but unchanged in kind: review still depends entirely on one
 person's attention, and the new timer tells that person they are behind
-without recording what being caught up would mean. Item 3 is a defect in
-that timer's signal and is independent of this decision.
-
-## 3. The hourly deploy health-check cannot say which failure it hit
-
-`templedb deploy health-check bza --target production` runs two checks and
-folds both into one exit code — `return 0 if all_passed else 1`, where
-either check's `fail`/`timeout` clears `all_passed`. The two conditions are
-not remotely alike:
-
-- **live commit** differs from the graph head: somebody committed and
-  nobody has deployed yet. Routine. `scripts/verify-live-sha.sh` says so
-  in its own comments — "deploys here are manual, so drift between
-  releases is the normal state rather than a fault".
-- **HTTP Response** fails: nobody can reach the site, or this laptop
-  cannot resolve it. One of those needs waking somebody up.
-
-Both exit 1, so `systemctl --user status templedb-deploy-verify-bza`
-reports the same `status=1/FAILURE` either way and the only way to learn
-which happened is to open the journal.
-
-Verified 2026-11-22 13:15 CST. The timer was installed 11:31 CST and had
-run three times, failing all three, with three different meanings:
-
-    11:26  HTTP 200 OK    live commit FAIL  live 4F2B8338, graph 158F5F0D
-    11:31  HTTP 200 OK    live commit FAIL  live 4F2B8338, graph B5A0EC2C
-    13:12  HTTP FAIL      NameResolutionError on aireadalong.com
-
-The first two are drift. The third is this host's DNS, not an outage:
-`getent hosts aireadalong.com` and `curl /api/version` both succeeded
-three minutes later. So the unit has produced three reds, no two for the
-same reason, and not one of them the production fault it exists to catch.
-
-Why this will not settle down on its own: the expected sha is the
-all-sessions graph head, so it moves on every autonomous commit rather
-than on review. It moved `158F5F0D` → `B5A0EC2C` inside the five minutes
-between the first two runs. Since 2026-11-16 there have been 87 bza
-commits against 21 production deploys (`vcs_commits.commit_timestamp` and
-`deployment_history.started_at`, both UTC), and two whole days — 11-17 and
-11-21 — carry 8 and 12 commits with no deploy at all. Red is therefore the
-ordinary resting state of this unit, which is how a signal gets ignored
-before the one failure that matters.
-
-The fix with no decision in it is distinct exit codes: unreachable must
-not look like drifted. Do **not** silence drift instead — the unit's own
-description is "is bza (production) still serving the graph head", so
-drift being red is the author's intent and changing that is a decision,
-not a fix. Making the two distinguishable is not.
-
-Two things about the size of this, because neither is in the symptom.
-The code is in the **templedb** project (`src/cli/commands/deploy_ops.py`,
-`health_check`), not in this tree, so it is not a bza workspace edit and
-the bza suites say nothing about it. And `templedb` on PATH is the
-nix-packaged binary, so a committed fix stays inert until a NixOS rebuild
-— which an agent on commit policy cannot do. An unattended run can land
-the change and must then say it is not live yet.
+without recording what being caught up would mean. A defect in that
+timer's signal — it could not say whether production was unreachable or
+merely behind, both exiting 1 — was item 3 of this file and is fixed in
+templedb as of 2026-11-23, taking effect at the next NixOS rebuild. It
+was always independent of this decision, and closing it did not move
+this one.

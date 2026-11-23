@@ -400,16 +400,32 @@ export const booksQueries = {
   },
 
   /**
-   * Create a new chat book (empty markdown file, content_type: chat_book)
+   * Create a new chat book (content_type: chat_book, so it stays continuable).
+   *
+   * `initialMarkdown` exists because a chat book is not always born empty.
+   * ChatBookCreator holds a conversation first and saves it afterwards, and
+   * it used to save it through `upload()` as a plain markdown file with
+   * `articleType: 'reference'` — which produced a book whose `content_type`
+   * was `reference`, and `BookReader` decides whether a book can be
+   * continued with exactly `content_type === 'chat_book'`. So the saved
+   * conversation rendered as static prose with no input box: you could read
+   * the chat you had and never add to it. Reported as "once a chat is a book
+   * you can't continue it".
+   *
+   * Seeding the content here rather than creating empty and appending keeps
+   * it one round trip and, more to the point, keeps the storage file and the
+   * `total_pages` count consistent from the start.
    */
-  async createChatBook(title: string): Promise<Book> {
+  async createChatBook(title: string, initialMarkdown?: string): Promise<Book> {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) throw new Error('Not authenticated')
 
     const timestamp = Date.now()
     const slug = title.replace(/[^a-zA-Z0-9-]/g, '_').slice(0, 50)
     const filePath = `${user.id}/${timestamp}_${slug}.md`
-    const seed = `# ${title}\n\n`
+    const seed = initialMarkdown && initialMarkdown.trim()
+      ? initialMarkdown
+      : `# ${title}\n\n`
 
     const { error: uploadError } = await supabase.storage
       .from('books')
@@ -423,7 +439,10 @@ export const booksQueries = {
         user_id: user.id,
         title,
         file_path: filePath,
-        total_pages: 1,
+        /* Derived from the seed, not hard-coded to 1. A conversation saved
+           from the creator can be many pages long, and a book claiming one
+           page while holding twenty paginates wrong on first open. */
+        total_pages: Math.max(1, Math.ceil(seed.length / charPageLength)),
         char_page_length: charPageLength,
         content_type: 'chat_book',
         article_type: 'chat_book',

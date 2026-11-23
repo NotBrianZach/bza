@@ -5,7 +5,8 @@ import { Book, ChatMessage } from '@/types'
 import { chatQueries } from '@/lib/queries'
 import { track } from '@/lib/analytics'
 import UpgradeGate from './UpgradeGate'
-import { Send, Loader2, MessageCircle, X } from 'lucide-react'
+import { Loader2, MessageCircle, X } from 'lucide-react'
+import { PromptInput } from './PromptInput'
 
 interface ChatPanelProps {
   book: Book
@@ -59,9 +60,8 @@ export default function ChatPanel({ book, isOpen, onClose }: ChatPanelProps) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
 
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault()
-
+  /* No FormEvent — PromptInput owns the form and the key handling. */
+  const handleSendMessage = async () => {
     if (!inputValue.trim() || isSending) return
 
     track('chat_message_sent', { book_id: book.id, content_type: book.content_type, len: inputValue.trim().length })
@@ -196,29 +196,20 @@ export default function ChatPanel({ book, isOpen, onClose }: ChatPanelProps) {
         )}
       </div>
 
-      {/* Input Area */}
+      {/* Input Area — the third copy of the same one-line box, and included
+          here although the report was about the chat-book creator: a question
+          about a book is exactly as likely to be a paragraph, and leaving one
+          of three surfaces on the old control would be the drift the shared
+          component exists to prevent. */}
       <div className="border-t border-gray-200 bg-white p-4">
-        <form onSubmit={handleSendMessage} className="flex gap-2">
-          <input
-            type="text"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Ask about the book..."
-            disabled={isSending}
-            className="input flex-1"
-          />
-          <button
-            type="submit"
-            disabled={!inputValue.trim() || isSending}
-            className="btn btn-primary px-4"
-          >
-            {isSending ? (
-              <Loader2 size={20} className="animate-spin" />
-            ) : (
-              <Send size={20} />
-            )}
-          </button>
-        </form>
+        <PromptInput
+          value={inputValue}
+          onChange={setInputValue}
+          onSend={() => handleSendMessage()}
+          sending={isSending}
+          disabled={isSending}
+          placeholder="Ask about the book..."
+        />
       </div>
       <UpgradeGate
         open={quotaGateOpen}

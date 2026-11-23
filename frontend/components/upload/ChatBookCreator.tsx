@@ -2,7 +2,8 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { AlertCircle, MessageSquare, Send, Loader2, Save } from 'lucide-react'
+import { AlertCircle, MessageSquare, Loader2, Save } from 'lucide-react'
+import { PromptInput } from '../PromptInput'
 import { booksQueries } from '@/lib/queries'
 import { supabase } from '@/lib/supabase'
 import { saveLocalBook, saveBookContent } from '@/lib/localStorage'
@@ -23,14 +24,15 @@ export function ChatBookCreator({ useLocalStorage, onSuccess }: { useLocalStorag
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  const handleSend = async (e: React.FormEvent) => {
-    e.preventDefault()
+  /* No FormEvent: PromptInput owns the form and its key handling, and calls
+     this with nothing. The parameter was only ever there to be
+     preventDefault'd. */
+  const handleSend = async () => {
     if (!input.trim() || isSending) return
 
     const text = input.trim()
@@ -115,34 +117,45 @@ export function ChatBookCreator({ useLocalStorage, onSuccess }: { useLocalStorag
     setError(null)
 
     try {
-      // Format chat as readable markdown
+      /*
+       * Format chat as readable markdown, in the shape the READER APPENDS IN.
+       *
+       * This used `## You` / `## Assistant` headings while
+       * BookReader.sendChatBookMessage appends `**You:**` / `**Assistant:**`.
+       * Both render, so nothing looked broken — but a conversation continued
+       * after saving would have had two different conventions in one
+       * document, the seam landing exactly where the save happened. Since
+       * the whole point of this change is that the book stays continuable,
+       * matching the append format is part of the fix rather than a tidy-up.
+       */
       const title = chatTitle || 'Chat conversation'
       let markdown = `# ${title}\n\n`
-      markdown += `*Created ${new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}*\n\n---\n\n`
+      markdown += `*Created ${new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}*\n\n---\n`
 
       for (const msg of messages) {
         if (msg.role === 'user') {
-          markdown += `## You\n\n${msg.content}\n\n`
+          markdown += `\n\n**You:** ${msg.content}\n\n`
         } else {
-          markdown += `## Assistant\n\n${msg.content}\n\n---\n\n`
+          markdown += `**Assistant:** ${msg.content}\n\n---\n`
         }
       }
 
-      const blob = new Blob([markdown], { type: 'text/markdown' })
-      const file = new File([blob], 'chat.md', { type: 'text/markdown' })
-
       if (useLocalStorage) {
-        const { fileToText } = await import('@/lib/pdfToMarkdown')
-        const text = await fileToText(file)
         const nb = saveLocalBook({
           user_id: '', title, file_path: 'local',
-          total_pages: Math.ceil(text.length / 2000), summary: '',
+          total_pages: Math.max(1, Math.ceil(markdown.length / 2000)), summary: '',
+          /* The local path has to carry the type too, or a signed-out user
+             gets the same dead-end book the signed-in one used to. */
+          content_type: 'chat_book',
         })
-        saveBookContent(nb.id, text)
+        saveBookContent(nb.id, markdown)
         onSuccess?.()
         router.push(`/books/${nb.id}`)
       } else {
-        const book = await booksQueries.upload(file, { title, articleType: 'reference' })
+        /* createChatBook, not upload(). See its header: `upload` would set
+           content_type from articleType, and only 'chat_book' is continuable.
+           It also skips a pointless round trip through File → text. */
+        const book = await booksQueries.createChatBook(title, markdown)
         onSuccess?.()
         router.push(`/books/${book.id}`)
       }
@@ -200,24 +213,16 @@ export function ChatBookCreator({ useLocalStorage, onSuccess }: { useLocalStorag
       )}
 
       {/* Input */}
-      <form onSubmit={handleSend} className="flex gap-2 mb-3">
-        <input
-          ref={inputRef}
-          type="text"
+      <div className="mb-3">
+        <PromptInput
           value={input}
-          onChange={e => setInput(e.target.value)}
-          placeholder="Type a message…"
+          onChange={setInput}
+          onSend={() => handleSend()}
+          sending={isSending}
           disabled={isSending}
-          className="input flex-1 text-sm"
+          autoFocus
         />
-        <button
-          type="submit"
-          disabled={!input.trim() || isSending}
-          className="btn btn-primary px-3"
-        >
-          {isSending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
-        </button>
-      </form>
+      </div>
 
       {/* Save as book */}
       <button
