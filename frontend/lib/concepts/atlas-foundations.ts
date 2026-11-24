@@ -106,7 +106,17 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
     'gap between two numbers that comes out the same whichever way round they are subtracted. ' +
     'What stays behind of that one is the equations — asking which numbers satisfy a condition ' +
     'with the bars in it is a case split producing two answers, and it is named here and not ' +
-    'written for the same reason the inequalities are not. So the old line between ' +
+    'written for the same reason the inequalities are not. Radical equations have gone as a ' +
+    'twenty-third, taking the whole of what solving one is: that squaring both sides is not ' +
+    'invertible, so the numbers it produces are candidates and the check in the original is ' +
+    'part of the method; that a root has to stand alone on its side before squaring removes it, ' +
+    'because the square of a difference keeps the root in the middle term; that a discarded ' +
+    'candidate is not an intruder but the solution of the same equation with the other side\'s ' +
+    'sign flipped, which squaring folds into the one quadratic; and that the index is what ' +
+    'forces the check, an even power sending two numbers to one where an odd power sends each ' +
+    'to its own. What stays behind of that one is the inequality — asking which numbers satisfy ' +
+    'a condition with a root in it is answered by an interval, and it is named here and not ' +
+    'written for the same reason the other two are not. So the old line between ' +
     'number and algebra ' +
     '— nothing ' +
     'symbolic on one side, a letter standing for an unknown on the other — still holds of the ' +
@@ -212,21 +222,46 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
    * THE FIGURE IN THIS PARAGRAPH IS THE KIND THAT ROTS, so it is stated as a
    * count that can be checked rather than left as prose. It read "ten nodes,
    * five promotions of room" when the four route nodes had just been taken;
-   * `absolute-value`, `percent` and `scientific-notation` have gone since,
-   * none of them for a route, and it is SEVEN nodes and two promotions of
-   * room. Whoever takes the next one should correct this sentence rather than
-   * adding another beside it — a paragraph accumulating revisions of one
-   * number is harder to trust than a wrong number, because a reader cannot
-   * tell which revision is current.
+   * `absolute-value`, `percent`, `scientific-notation` and `radical-equations`
+   * have gone since, none of them for a route, and it is SIX nodes and ONE
+   * promotion of room. Whoever takes the next one should correct this sentence
+   * rather than adding another beside it — a paragraph accumulating revisions
+   * of one number is harder to trust than a wrong number, because a reader
+   * cannot tell which revision is current.
    *
-   * WHAT THE LAST TWO ARE SPENT ON IS NOT A FREE CHOICE, which is the part a
-   * budget framed in nodes hides. Of the seven, `complex-numbers` and
-   * `linear-inequalities` each carry a live refusal, and the remaining five —
-   * `absolute-value-equations`, `word-problems`, `radical-equations`,
-   * `nonlinear-systems`, `inequality-proofs` — are the ones whose answers are
-   * sets, intervals and arguments rather than values. So the floor is no
+   * ONE PROMOTION OF ROOM IS THE SHAPE `linear-algebra` IS ALREADY IN, and
+   * saying so is the useful part of the figure. That area holds six nodes
+   * against the same floor with one ready candidate, and its own note records
+   * that the merge question arrives next however you count it. This area is one
+   * promotion behind it on the same path. Nothing here is urgent and nothing
+   * here should be fixed by touching the threshold — what a drained area wants
+   * is a neighbour, which is the argument the block above makes and a decision
+   * about the learner-facing map rather than an authoring call.
+   *
+   * WHAT THE LAST ONE IS SPENT ON IS NOT A FREE CHOICE, which is the part a
+   * budget framed in nodes hides. Of the six, `complex-numbers` and
+   * `linear-inequalities` each carry a live refusal, and `inequality-proofs`,
+   * `absolute-value-equations` and `word-problems` are the ones whose answers
+   * are sets, intervals and arguments rather than values. So the floor is no
    * longer what binds here and has not been for some time: the verifier is.
-   * Two promotions of room against five candidates is not a shortage of room.
+   * One promotion of room against four candidates is not a shortage of room.
+   *
+   * THAT LIST HAD A FIFTH ENTRY AND IT WAS WRONG, which is the most useful
+   * correction this paragraph has had to make. `radical-equations` stood beside
+   * `inequality-proofs` as a concept whose answers "are sets, intervals and
+   * arguments rather than values", and nothing about it was ever like that: a
+   * radical equation has a finite list of candidates, each of them a number,
+   * and deciding whether one belongs is a substitution whose outcome is a
+   * value. It has been authored with nine `evaluate` tasks and no new task
+   * kind. The error was a grouping — four concepts that genuinely cannot be
+   * ruled, and one swept in with them because it sits in the same part of a
+   * syllabus — and it is the third kind of refusal this file's taxonomy
+   * already names, the one that was WRONG WHEN WRITTEN and needed nothing but
+   * reading again. The two that remain under a mechanism refusal are still
+   * there and should be re-checked rather than trusted; what this correction
+   * adds is that a refusal stated over a LIST deserves the same suspicion one
+   * at a time, because a list is where a wrong entry hides behind four right
+   * ones.
    *
    * THE FOURTH WAS THE ONE THIS PARAGRAPH SAID WOULD NEVER HAPPEN, and the
    * sentence is worth quoting rather than quietly replacing: "the honest
@@ -261,18 +296,28 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
    * times now, rather than only been argued for.
    */
   /**
-   * TWENTY NODES HAVE LEFT THE TWO AREAS THAT MADE THIS ONE, AND HAD TO.
+   * TWENTY-THREE NODES HAVE LEFT THE TWO AREAS THAT MADE THIS ONE, AND HAD TO.
    *
-   * Twelve from the number half — `place-value`, `integer-arithmetic`,
+   * Fourteen from the number half — `place-value`, `integer-arithmetic`,
    * `order-of-operations`, `negative-numbers`, `divisibility`,
    * `fraction-arithmetic`, `prime-factorisation`, `gcd-and-lcm`,
-   * `roots-and-irrationals`, `decimal-representation`, `real-number-line` and
-   * `ratio-and-rate` — all now real concepts with worked examples and tasks,
-   * in ontology-arithmetic.ts. Seven from the algebraic half:
-   * `variables-and-expressions`, `linear-equations` and
-   * `systems-of-linear-equations` in ontology-algebra.ts, and
+   * `roots-and-irrationals`, `decimal-representation`, `real-number-line`,
+   * `ratio-and-rate`, `percent` and `scientific-notation` — all now real
+   * concepts with worked examples and tasks, in ontology-arithmetic.ts. Seven
+   * from the algebraic half: `variables-and-expressions`, `linear-equations`
+   * and `systems-of-linear-equations` in ontology-algebra.ts, and
    * `completing-the-square`, `quadratic-formula`, `polynomial-roots` and
    * `binomial-theorem` in ontology.ts.
+   *
+   * THAT IS TWENTY-ONE, AND THE OTHER TWO WENT SOMEWHERE NEITHER HALF POINTS
+   * AT. `absolute-value` is the twentieth and is dealt with in the paragraph
+   * immediately below, which is where this list first stopped predicting where
+   * a node would land. `radical-equations` is the twenty-third and went further
+   * still: to `exponents-and-logarithms`, a subject this area has never fed
+   * before and one that was written whole rather than grown out of the map. So
+   * the destination column of this roster now holds four ontologies rather than
+   * two, and the split by "which half of this area it sat in" has stopped
+   * carrying any information about where a promotion goes.
    *
    * AND THE TWENTIETH CROSSES THAT LINE, which is the one thing worth noting
    * about the arithmetic twelve becoming thirteen. `absolute-value` was a node
@@ -293,13 +338,26 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
    * The count is kept current deliberately. It is the measurement of how far
    * this area has turned into a syllabus, and a comment saying "five" while
    * eleven have gone is the kind of rot that makes a reader distrust the rest
-   * of the file. Twenty gone against nine remaining is also the figure
-   * that forced the merge argued above, read five promotions later: ten of the
+   * of the file. Twenty-three gone against six remaining is also the figure
+   * that forced the merge argued above, read eight promotions later: ten of the
    * first fourteen came out of a single area of fifteen, and what that left was
    * not a region of the map. The eleventh and twelfth are the two that could
    * not have happened without the merge, and they are the pair
    * ontology-geometry.ts spent three promotions calling the area-floor
    * casualties — so the merge is now fully cashed in rather than half.
+   *
+   * IT WAS ALLOWED TO ROT ANYWAY, two promotions' worth, and the correction is
+   * worth more than the number. The headline read TWENTY while twenty-two had
+   * gone: `percent` and `scientific-notation` each updated their own departure
+   * notes and the `covers` ordinals and left this count alone. So "kept current
+   * deliberately" describes an intention and not a practice, and the reason is
+   * structural — the count lives in one place and the evidence for it is spread
+   * over a `covers` paragraph, a roster and one note per departure, with
+   * nothing reading any of them. No assertion can fix that, because the
+   * departed nodes are gone from the data and what is left is prose. What the
+   * next author can do is check this headline against the highest ordinal in
+   * `covers` before adding anything, which is a ten-second test and is how this
+   * instance was found.
    *
    * THE NINETEENTH WAS CHOSEN ON A GROUND NONE OF THE OTHER EIGHTEEN WERE, and
    * the shift is the most useful thing this paragraph now records.
@@ -394,13 +452,21 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
    * The `needs` below still name the departed. That is the intended way for
    * the map to meet a syllabus: the edge resolves in `composeAtlas`, where
    * both endpoints exist. It is dropped by `areaOntology`, which keeps only
-   * edges internal to the area — so this area viewed alone has SIX roots
+   * edges internal to the area — so this area viewed alone has FOUR roots
    * rather than one, being every node whose prerequisites have all been
-   * authored out from under it, from `scientific-notation` at the bottom to
-   * `radical-equations` near the top. That is the area view being honest about
-   * its own boundary rather than a fault, and tests/atlas.mjs asserts the set
-   * by NAMED membership, because a merge or a promotion can turn a root set
-   * over completely without changing its size.
+   * authored out from under it: `complex-numbers`, `linear-inequalities`,
+   * `nonlinear-systems` and `word-problems`. That is the area view being
+   * honest about its own boundary rather than a fault, and tests/atlas.mjs
+   * asserts the set by NAMED membership, because a merge or a promotion can
+   * turn a root set over completely without changing its size.
+   *
+   * The two names this sentence used to give as its endpoints — "from
+   * `scientific-notation` at the bottom to `radical-equations` near the top" —
+   * have both been promoted, and the pair is a small lesson in what to put in a
+   * comment. Naming the extremes of a set made the sentence readable and gave
+   * it two independent ways to go stale, and it went stale both ways within
+   * three promotions. The members are listed outright now: no shorter to read,
+   * and wrong all at once rather than quietly half-wrong.
    *
    * IT HAS NOW DONE EXACTLY THAT, which is the best possible argument for that
    * last sentence and is why this paragraph is worth reading twice. The
@@ -470,7 +536,11 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
    *
    * Nothing substituted in, and this time the reason is that the node had no
    * in-area dependent AT ALL — its only dependent anywhere is
-   * `descriptive-statistics`, over in the statistics area. So it is the
+   * `descriptive-statistics`, which was over in the statistics area and is an
+   * authored concept of `data-summaries` now, so the edge that used to be that
+   * node's `needs` is a `links` entry on `STATISTICS`. The departure changed
+   * nothing about the claim below and is noted because the location in it was
+   * about to go stale. So it is the
    * `binomial-theorem` cause, not the `absolute-value` one, and the two are now
    * both on the record twice each: a node with no in-area dependent can only
    * shrink this set, and a node whose in-area dependent is still gated from
@@ -790,6 +860,15 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
      * that assertion retires with the node rather than moving on to a
      * successor.
      *
+     * THE PREDICTION HELD ON THE FIRST OF THE FOUR TO GO. `radical-equations`
+     * was promoted two departures later and cost exactly the one `links` entry
+     * this paragraph said it would, `quadratic-formula → radical-equations`,
+     * with `rational-exponents → radical-equations` going to the receiving
+     * ontology. Three of the four are still here and the grouping still holds
+     * of them, so the bullet is left as written rather than narrowed to the
+     * survivors: a prediction that came true is worth more standing beside its
+     * instance than edited down to the cases that have not been tested yet.
+     *
      * The node carried no `confusedWith` and no `exercises`, both checked on it
      * before it was deleted rather than inferred from the suites staying green,
      * since staying green is exactly what they would have done either way. What
@@ -803,8 +882,12 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
      *
      * THE ONE CONSEQUENCE A READER WOULD NOT PREDICT is that a gate got
      * SHORTER, which no promotion out of THIS area had done before. Its only
-     * dependent is `descriptive-statistics`, over in the statistics area, which
-     * needs this concept and `sigma-notation`. While this node was a skeleton
+     * dependent is `descriptive-statistics` — a node of the statistics area
+     * when this was written and an authored concept of `data-summaries` since
+     * — which needs this concept and `sigma-notation`. The measurement below
+     * is unaffected: both of those are still its gate, which is why the edges
+     * became `links` entries that really gate rather than inert ones. While
+     * this node was a skeleton
      * the gating walk passed through it and came out at BOTH of its
      * prerequisites, so that node was gated by `ratio-and-rate`,
      * `decimal-representation` and `sigma-notation`. It is gated by `percent`
@@ -993,6 +1076,15 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
      * `linear-inequalities` carries a refusal of its own. The next author
      * should re-read both mechanisms rather than trusting either sentence; that
      * is the third entry in the taxonomy above, and it is the dangerous one.
+     *
+     * ONE OF THOSE TWO WAS TAKEN: `radical-equations`, as the twenty-third
+     * departure, leaving SIX and one promotion of room. The figure is kept in
+     * the budget paragraph above the node list rather than restated here, since
+     * a count maintained in two places is a count maintained in neither — which
+     * is exactly how the departure total above was allowed to rot by two. This
+     * paragraph is left as the record of where the budget stood when
+     * `scientific-notation` went, with the one sentence of arithmetic it needs
+     * to stay readable.
      *
      * WHAT IT LEAVES BEHIND, and this one is a debt rather than a boundary. The
      * node's `match` and `terms` named significant figures and estimation
@@ -1312,14 +1404,91 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
     // from — and the edge is kept anyway rather than narrowed to match what is
     // written, because dropping it would loosen the ordering on the strength of
     // what happens to be authored today.
-    {
-      id: 'radical-equations',
-      match: /\bradical equation\b/i,
-      name: 'Radical equations',
-      is: 'Squaring both sides is not invertible, so every solution has to be checked — extraneous roots are produced by the method, not by error.',
-      needs: ['quadratic-formula', 'rational-exponents'],
-      terms: 'radical equation extraneous solution',
-    },
+    /*
+     * `radical-equations` was here and is now authored in
+     * ontology-exponentials.ts, so it had to leave — same rule, twenty-third
+     * time across the two areas that made this one. See the block above the
+     * node list.
+     *
+     * ITS TWO `needs` WENT TO TWO DIFFERENT HOMES, which is the second time
+     * that has happened here and the first time the SUBJECT was the decision.
+     * The node declared `needs: ['quadratic-formula', 'rational-exponents']`,
+     * and those two are concepts of two different subjects, so wherever it
+     * went one edge became an ordinary prerequisite and the other became a
+     * `links` entry below. `binomial-theorem` had the same split at the
+     * nineteenth promotion and made the choice on a credit edge: filing it with
+     * the exponent rules would have left its `encompasses` expressible nowhere,
+     * because `links` carries `from`, `to` and `because` and no edge KIND.
+     *
+     * There was no such tie-breaker here, and the one that decided it is worth
+     * stating because it will recur. `rational-exponents` says what a radical
+     * IS; `quadratic-formula` is a tool the method HAPPENS to need, and the
+     * squared equation would be a cubic or a linear one in other examples
+     * without changing a word of what the concept teaches. A promoted node
+     * belongs with the prerequisite that supplies its meaning rather than its
+     * arithmetic. ontology-exponentials.ts argues it beside the concept and
+     * declines the credit edge there on a measurement, so the nineteenth
+     * promotion's deciding factor is absent in both directions rather than
+     * merely unmentioned.
+     *
+     * THE NODE'S `match` DID NOT COME ACROSS, AND THAT IS THE ONE DEPARTURE
+     * FROM THE CONVENTION IN THIS FILE. The last five promotions carried a
+     * node's pattern over verbatim, so the recognition figure in
+     * tests/atlas.mjs could not move on a change that also moved the concept
+     * count. This node's pattern was `/\bradical equation\b/i`, and
+     * `conceptsInOffering` tests a pattern against the offering's TITLE and
+     * nothing else: no encyclopaedia article is called "radical equation", so
+     * the pattern could never have fired, and this node was counted among the
+     * concepts that "can be recognised from a title" for its whole life while
+     * recognising none. The authored concept is `guided` and carries a caveat
+     * saying so, and 267 of 294 becomes 266 of 294 — a figure that is more
+     * nearly true after the change than before it. Widening to `radical`
+     * instead would have taken its own prerequisite's articles, which is the
+     * argument ontology-exponentials.ts makes in full.
+     *
+     * The node carried no `confusedWith`, no `exercises` and no `encompasses`,
+     * all three checked on it before it was deleted rather than inferred from
+     * the suites staying green — which is exactly what they would have done
+     * either way, since `expandEdges` turns a `confusedWith` into an
+     * `interferes_with` edge and interference constrains SELECTION rather than
+     * gating. What the promotion ADDED on that axis is a new interference and
+     * not a rehomed one: solving an exponential equation and solving a radical
+     * one are the same instruction with two different inverses, one of which is
+     * one-to-one. It is argued where it is declared.
+     *
+     * The edge pointing the OTHER way was left alone, and it is in a file
+     * neither this one nor the receiving ontology touched.
+     * `trig-substitution-setup` in `TRIGONOMETRY` names this concept in its own
+     * `needs`, that node stayed, so it still DECLARES the edge and
+     * `composeAtlas` resolves it across the boundary. Its GATE moved anyway —
+     * the walk used to look straight through an empty node and come out at both
+     * of its prerequisites, and it stops here now — so a promotion out of this
+     * file changed what gates a node further down the same file with no edit to
+     * it.
+     *
+     * AND IT GOT SHORTER, which is the second instance in this file of
+     * something the first eleven promotions out of here all concluded was
+     * impossible. Nine entries to eight: `quadratic-formula` and
+     * `rational-exponents` both left the gate and `radical-equations` is the
+     * single entry that replaced them. `gatingPrerequisitesOf` names the
+     * nearest teachable ancestor on each BRANCH, this node had two
+     * prerequisites and both were gate entries in their own right, and
+     * authoring it put one teachable node in front of a fork. Same mechanism as
+     * `percent`'s effect on `descriptive-statistics`, three to two, and the
+     * note beside that departure is where it is argued — so the rule is now
+     * confirmed twice rather than once, and the earlier "a gate substitutes at
+     * constant length" readings stand corrected as measurements taken only on
+     * single-prerequisite nodes. Measured on both sides rather than predicted;
+     * tests/atlas.mjs holds the figures.
+     *
+     * THE ROOT SET OF THIS AREA SHRANK, five to four, and it is the
+     * `binomial-theorem` cause for the third time: this node had no in-area
+     * dependent at all, its only dependent anywhere being
+     * `trig-substitution-setup` in another area, so nothing inside this area
+     * could have been freed and nothing was. Not the `absolute-value` cause,
+     * where the in-area dependent existed and was gated from inside — the two
+     * produce identical shrinkage and only the computed set tells them apart.
+     */
     {
       id: 'nonlinear-systems',
       name: 'Nonlinear systems',
@@ -1522,6 +1691,47 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
       because:
         'x^(1/2) is defined to agree with the square root, so the radical has to mean something ' +
         'before the fractional exponent can be given that meaning.',
+    },
+    {
+      /**
+       * THE EDGE `radical-equations` COULD NOT TAKE WITH IT.
+       *
+       * The node declared `needs: ['quadratic-formula', 'rational-exponents']`
+       * and the two went to different places, the same split
+       * `exponent-rules → binomial-theorem` above records. The second joined
+       * the ontology the concept now lives in, where it is a plain
+       * prerequisite. This one could not: `quadratic-formula` is a concept of
+       * `rational-expressions`, `radical-equations` is a concept of
+       * `exponents-and-logarithms`, and an authored ontology's edges may only
+       * name concepts it contains or `ontologyProblems` reports an unknown
+       * endpoint. Neither subject can take it, so `links` is the only place it
+       * fits.
+       *
+       * IT IS THE MIRROR IMAGE OF THAT ENTRY, which is the thing about it worth
+       * a note. There, the node went to the subject holding
+       * `polynomial-arithmetic` and the exponent rules were left behind; here
+       * the node went to the subject holding `rational-exponents` and the
+       * quadratic formula is what was left behind. The two entries therefore
+       * run between the same two subjects in opposite directions, and both are
+       * here rather than one in each area's list, because `links` is filed with
+       * the area that OWNED the departing node and both nodes were owned by
+       * this one.
+       *
+       * Like that entry and unlike the three above it, this one GATES from the
+       * day it is written: both of its ends are authored and teachable, so
+       * `gatingPrerequisitesOf` looks AT the prerequisite rather than through
+       * it. The entries written while one end was an empty map node stood in
+       * the graph and gated nobody until somebody authored that end.
+       */
+      from: 'quadratic-formula',
+      to: 'radical-equations',
+      because:
+        'Isolating the root and squaring leaves a polynomial equation, and in every radical ' +
+        'equation anybody sets by hand it is a quadratic — √(x + 7) = x + 1 squares to ' +
+        'x² + x − 6 = 0. So the candidates a learner then has to check are produced by the ' +
+        'formula or by factoring, and somebody who cannot reach them has nothing to check. The ' +
+        'ordering is about where the candidates come from and not about the extraneous root: ' +
+        'that one is a fact about the squaring, and the quadratic is innocent of it.',
     },
   ],
 }
@@ -1848,9 +2058,28 @@ const EUCLIDEAN_GEOMETRY: MapArea = {
     'reflection, which is an argument about where three fixed points can lie and is used in the ' +
     'syllabus rather than derived there, exactly as the congruence criteria and the ' +
     'inscribed-angle theorem are — and so did everything the same motions become in ' +
-    'coordinates, since `plane-transformations` is still a node here and is where a reflection ' +
+    'coordinates, since `plane-transformations` was still a node here and was where a reflection ' +
     'is written as a rule on a pair of numbers. Twelve of this area\'s departures have now gone ' +
-    'to `plane-geometry`, two to the vectors and one to the solids.',
+    'to `plane-geometry`, two to the vectors and one to the solids. ' +
+    'And that node has gone as a sixteenth, to `plane-geometry` beside the isometries it was ' +
+    'the other half of, which makes it the first departure from here that no dependent was ' +
+    'waiting on: it has zero dependents anywhere on the map, so what chose it was that an ' +
+    'honest task could be set — a transformation as a rule on the PAIR, with the slots kept ' +
+    'separate from the signs, since a reflection in an axis and a quarter turn each produce one ' +
+    'minus sign and are told apart only by which slot each number lands in; distance ' +
+    'preservation COMPUTED by putting both endpoints through the rule and measuring between the ' +
+    'images, which turns the isometries\' one hypothesis into something checkable and shows a ' +
+    'scaling failing the check, with the factor entering each leg once, each square twice and ' +
+    'leaving the root once; and a centre that is not the origin, where the rule becomes three ' +
+    'moves and the wrong answer the origin rule gives is computed in full and then refuted by ' +
+    'the one distance a rotation about a centre may not change. What stayed behind of it is ' +
+    'nothing, which no other departure from this area can say: the node\'s content was the four ' +
+    'maps in coordinates and all of it went. Thirteen of this area\'s departures have now gone ' +
+    'to `plane-geometry`, two to the vectors and one to the solids. Seven nodes are left and ' +
+    'none of them is on a route anybody is walking; exactly two of the seven — the ' +
+    'constructions and the non-Euclidean geometry — are ready in the sense that every ' +
+    'prerequisite is written, and both were passed over here because what they ask for is a ' +
+    'procedure carried out on paper or a decision about axioms rather than a value.',
   /**
    * THIS AREA ABSORBED `COORDINATE_GEOMETRY`, AND IT IS THE SAME FLOOR AGAIN.
    *
@@ -1989,8 +2218,20 @@ const EUCLIDEAN_GEOMETRY: MapArea = {
    * below have twice turned that set over without changing its size, which a
    * `length === N` check passes while every claim it makes has gone stale.
    *
-   * TWO OF THE THREE THE MERGE ADDED ARE STILL THERE, and the third is the
-   * eleventh promotion: `dot-product-geometry` was a root of this area for
+   * NONE OF THE THREE THE MERGE ADDED IS STILL THERE, and the three went one
+   * per promotion — `dot-product-geometry` at the eleventh,
+   * `distance-and-midpoint` at the fourteenth and `plane-transformations` at
+   * the sixteenth. Each arrived as a root for the same reason it was writable,
+   * every prerequisite outside the area and nothing here holding it back, and
+   * each left as one. So "arrived by merge" turned out to predict "left by
+   * promotion" in all three cases, which is the strongest statement this file
+   * can make that the area view is about this area's BOUNDARY rather than
+   * about the mathematics: a node whose prerequisites all sit elsewhere is
+   * both the easiest thing to write and the least attached to where it was
+   * filed. The paragraph below is the first of the three and is kept as
+   * written, because the shape it records is the one the other two repeated.
+   *
+   * The eleventh promotion: `dot-product-geometry` was a root of this area for
    * exactly the reason it was writable — every prerequisite outside, nothing
    * here holding it back — and it left as one. That is the shape the fifth and
    * seventh promotions had, a shrink with no substitution, and it happened for
@@ -2545,6 +2786,29 @@ const EUCLIDEAN_GEOMETRY: MapArea = {
      * `area-and-perimeter`: this node appeared in it once, under `congruence`,
      * and stranded exactly one edge.
      *
+     * TWO OF THOSE FOUR HAVE SINCE BEEN PROMOTED THEMSELVES, and both edges
+     * moved rather than breaking — worth recording here because it is the
+     * case this paragraph's rule does NOT cover. `mathematical-induction` is
+     * an authored concept of `functions-and-inverses` as of the thirty-second
+     * promotion, and `propositional-logic` one of
+     * `statements-and-connectives` as of the thirty-fifth. Neither has a
+     * `needs` to own its edge with any more, and no ontology may hold either,
+     * both ends in both cases being authored concepts of two different
+     * subjects — so they are `SEQUENCES_AND_SERIES.links` and
+     * `DISCRETE_MATHEMATICS.links`, each its own area's first and only entry.
+     * "An edge is owned by the node that declares it" is what meant nothing
+     * here needed attention while those were nodes; it says nothing about
+     * where the edge goes when the DECLARING end is promoted, and the answer
+     * both times was the area the declarer left, not the area or subject
+     * holding the far end.
+     *
+     * The standing fact that leaves is worth more than the two filings: this
+     * node is now gated upon by written material in two subjects that have
+     * never heard of it, and BOTH of those edges are recorded somewhere other
+     * than here. Nothing in this file would tell a reader so, which is the
+     * argument for keeping this paragraph as the fan-out drains rather than
+     * shortening it to a line.
+     *
      * THE ROOT SET SUBSTITUTED, and this is the half of the fifth promotion's
      * rule that had never been shown from this side. `circles` did NOT become
      * a root when `pythagoras` left, because its other prerequisite was this
@@ -2951,9 +3215,14 @@ const EUCLIDEAN_GEOMETRY: MapArea = {
      * which constrains SELECTION rather than gating, so losing one leaves every
      * suite green while freeing the scheduler to introduce the two most
      * confusable concepts in a subject together. This node had a plausible
-     * partner — `plane-transformations`, three entries below, is the same three
-     * motions written on coordinates and matches "isometry" with its own
-     * pattern — and declared nothing. So the absence is recorded, and declaring
+     * partner — `plane-transformations`, which was three entries below in this
+     * list and is the same three motions written on coordinates, matching
+     * "isometry" with its own pattern — and declared nothing. That partner was
+     * itself promoted at the sixteenth, into the SAME subject, so the pair now
+     * sits side by side in ontology-geometry.ts and the refusal is restated
+     * there rather than reconsidered: being in one file makes the clash easy to
+     * see and still supplies no observation of a learner confusing them.
+     * So the absence is recorded, and declaring
      * one now would be inventing a claim about learner confusion during an
      * authoring pass, which is what the scope comments forbid for patterns and
      * the same argument covers. No `exercises` either, so no `encompasses` was
@@ -2981,8 +3250,11 @@ const EUCLIDEAN_GEOMETRY: MapArea = {
      * touch and the only one outside this directory's dependency graph.
      * Druuvruke anchored on it, an anchor must be a node of its region's `area`,
      * and `armatureProblems` fails loudly — so the slot was refilled. The note
-     * there says why the refill is `plane-transformations` and why the usual
-     * rule could not pick it.
+     * there says why the refill was `plane-transformations` and why the usual
+     * rule could not pick it. That refill lasted one promotion: the sixteenth
+     * authored it too, so the same slot has now turned over three times running
+     * and all three departures went into `plane-geometry`. armature.ts carries
+     * the current occupant and the reasoning for it.
      */
 
     {
@@ -3058,9 +3330,14 @@ const EUCLIDEAN_GEOMETRY: MapArea = {
      *
      * Two edges pointing the OTHER way were left untouched, because an edge is
      * owned by the node that DECLARES it: `distance-and-midpoint` and
-     * `plane-transformations` both name `cartesian-plane` in their own `needs`,
-     * both stayed here, so both survive as written and `composeAtlas` resolves
-     * them across the file boundary.
+     * `plane-transformations` both named `cartesian-plane` in their own `needs`
+     * and both stayed here at the time, so both survived as written and
+     * `composeAtlas` resolved them across the file boundary. Both have since
+     * been promoted themselves — the fourteenth and the sixteenth — and each
+     * carried its own edge into `links` on the way out, which is where the two
+     * rows running into `cartesian-plane` from this area's departures come
+     * from. So "the far end owns it" protected these two edges only until the
+     * near end stopped being a node.
      *
      * This area is down to nine nodes, which is clear of the five-node stub
      * threshold tests/atlas.mjs enforces. That threshold is the reason the plane
@@ -3244,20 +3521,56 @@ const EUCLIDEAN_GEOMETRY: MapArea = {
       needs: ['lines-in-the-plane', 'function-concept'],
       terms: 'parametric equations parameter t path trace curve',
     },
-    {
-      id: 'plane-transformations',
-      match: /\b(translation|rotation|reflection|dilation) (of|in) the plane\b|\bisometr(y|ies)\b/i,
-      name: 'Transformations of the plane',
-      // The `is` line used to end "the first place geometry is studied through
-      // what leaves a figure unchanged", and the fifteenth promotion made that
-      // false: `isometries-and-symmetry` is authored now and does invariance
-      // first, synthetically. What is left here is the part that is genuinely
-      // this node's, which is the coordinates — a reflection as a rule on a
-      // pair of numbers rather than as a mirror.
-      is: 'Translation, rotation, reflection and scaling as operations on coordinates, and which of them preserve distance — the synthetic versions being authored, this is where a motion becomes a rule on a pair of numbers.',
-      needs: ['cartesian-plane', 'congruence'],
-      terms: 'translation rotation reflection dilation isometry symmetry transformation',
-    },
+    /*
+     * `plane-transformations` STOOD HERE AND WAS AUTHORED AT THE SIXTEENTH
+     * PROMOTION, into `plane-geometry` beside the isometries it was the
+     * coordinate half of.
+     *
+     * Its `is` line had already been rewritten once, by the fifteenth
+     * promotion, to give up the invariance claim to
+     * `isometries-and-symmetry` and keep only the coordinates. That turned out
+     * to be the shape of the syllabus rather than a concession: the authored
+     * concept tells a quarter turn from a reflection by the SLOTS each number
+     * lands in, computes distance preservation instead of assuming it, and
+     * handles a centre that is not the origin. None of the three is a claim
+     * about a drawing, which is what made this node promotable at all when
+     * three of its neighbours here still are not.
+     *
+     * It was chosen on rulability and not on structure. It has ZERO dependents
+     * anywhere in the atlas, so it is the first promotion out of this area that
+     * unblocked nothing — every journey has read zero unwritten since the
+     * fourteenth, so there is no route to advance and the live tie-break is
+     * whether an honest task can be set. `constructions` and
+     * `non-euclidean-geometry` are both ready here and were both passed over
+     * for that reason: what can be built with two tools is a procedure carried
+     * out on paper, and dropping the parallel postulate is a decision about
+     * axioms. Neither has an answer that is a number.
+     *
+     * ITS STRANDED EDGES SPLIT, so this is the expensive case:
+     * `congruence` is a concept of `plane-geometry` and that edge is internal
+     * there, while `cartesian-plane` is a concept of `vectors-and-independence`
+     * and an ontology may only name concepts it CONTAINS — so that one is the
+     * ninth entry in `links` below.
+     *
+     * IT STRANDED NO `confusedWith` and declared no `exercises`, both checked
+     * on the node before it was deleted rather than inferred from the suites
+     * passing afterwards. The first is the stranding no test catches:
+     * `expandEdges` turns a `confusedWith` into an `interferes_with`,
+     * interference constrains SELECTION rather than introduction, and dropping
+     * one leaves every suite green. There was a real candidate for one in the
+     * other direction — `isometries-and-symmetry` is these same maps done
+     * synthetically — and ontology-geometry.ts records twice over why neither
+     * concept declares it: nobody has observed the confusion, and inventing one
+     * during an authoring pass is the same move the scope comments forbid for
+     * patterns. `similarity` is still the only promotion out of this area that
+     * stranded one.
+     *
+     * AND IT EMPTIED AN ARMATURE SLOT. This node was one of Druuvruke's three
+     * anchors, and `armatureProblems` refuses an anchor that is not a node of
+     * its region's `area` — so the slot had to be refilled rather than left.
+     * That is the THIRD consecutive turnover of the same slot and the
+     * reasoning is in armature.ts, where it belongs.
+     */
     {
       id: 'loci-and-regions',
       match: /\blocus\b|\bloci\b|\bregion in the plane\b/i,
@@ -3553,6 +3866,50 @@ const EUCLIDEAN_GEOMETRY: MapArea = {
         'point is not yet an ordered pair of signed numbers has nothing to subtract. The right ' +
         'angle it leans on is the plane\'s own — the legs are perpendicular because the axes ' +
         'are, which is a fact about the coordinate system and not about the figure.',
+    },
+    {
+      /*
+       * NINE NOW, AND THE SIXTEENTH PROMOTION'S ENTRY IS THE SECOND ROW RUNNING
+       * INTO `cartesian-plane` FROM A NODE THIS AREA AUTHORED — which is worth
+       * separating from the row above it, because the two look identical and
+       * were filed for different reasons.
+       *
+       * `distance-and-midpoint` could have been filed with the vectors, and
+       * the only thing that stopped it was that doing so would have dropped an
+       * `encompasses` this list cannot carry. There is no such forcing here.
+       * `plane-transformations` declared `['cartesian-plane', 'congruence']`
+       * and no `exercises`, so both candidate homes cost exactly one row of
+       * this list — the vectors would have sent `congruence` here and
+       * `plane-geometry` sends the plane here — and the filing was decided on
+       * subject matter instead. It went to `plane-geometry` because the
+       * concept it is the other half of is there: the material tells a quarter
+       * turn from a reflection using the correspondence `congruence` supplies,
+       * and checks a composition against `isometries-and-symmetry`'s doubling
+       * rule. Filing it with the vectors would have put the two halves of one
+       * topic in two files to save nothing.
+       *
+       * So the rule this list has now demonstrated nine times has a sharper
+       * statement than "where the other endpoint lives". Where a stranded edge
+       * GOES is decided by which file its far endpoint is in, always and with
+       * no exceptions. Which home a CONCEPT takes is decided by subject matter
+       * except when a kind this list cannot carry forces it, which has happened
+       * once — and the row above is that once.
+       *
+       * It gates, like the fifth through eighth: `cartesian-plane` has three
+       * knowledge points, so a learner must demonstrate the plane before a
+       * transformation written on coordinates is introduced.
+       */
+      from: 'cartesian-plane',
+      to: 'plane-transformations',
+      because:
+        'A transformation here IS a rule on an ordered pair — (x, y) to (−y, x) for a quarter ' +
+        'turn, to (−x, y) for a reflection — so a learner for whom a point is not yet two ' +
+        'signed numbers in a fixed order has nothing for the rule to act on. The whole content ' +
+        'of the first knowledge point is that a reflection and a quarter turn are told apart by ' +
+        'WHICH SLOT each number lands in rather than by the sign either produces, and a slot is ' +
+        'exactly what the plane contributes: without an agreed first and second coordinate there ' +
+        'is no swap to notice. The quadrants matter too, since three of the four need a ' +
+        'coordinate to be allowed below zero and every image computed here lands in one.',
     },
   ],
 }

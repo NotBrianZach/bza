@@ -185,7 +185,60 @@ narrower but unchanged in kind: review still depends entirely on one
 person's attention, and the new timer tells that person they are behind
 without recording what being caught up would mean. A defect in that
 timer's signal — it could not say whether production was unreachable or
-merely behind, both exiting 1 — was item 3 of this file and is fixed in
-templedb as of 2026-11-23, taking effect at the next NixOS rebuild. It
-was always independent of this decision, and closing it did not move
-this one.
+merely behind, both exiting 1 — was an earlier item 3 of this file and is
+fixed in templedb as of 2026-11-23, taking effect at the next NixOS
+rebuild. It was always independent of this decision, and closing it did
+not move this one.
+
+The "production is serving the graph head" line above lasted about eight
+hours and should not be re-read as the current state. As of 2026-11-24
+05:26 UTC production is eight commits behind, and for once that is NOT a
+cadence observation: the human deployed twice on 2026-11-23 and both
+builds failed, which is item 3 below. So when refreshing this item, check
+`deployment_history.status` before reading a gap as inattention — a run
+that measures the distance to head and writes down "nobody deployed" will
+be wrong in exactly the way that hides a broken build.
+
+## 3. Nothing type-checks until the deploy builds
+
+`next build` is the only thing in this project that runs `tsc`, and it runs it
+inside the deploy. The three concepts suites all execute the emitted
+JavaScript, where the types are gone, so a type error in `lib/concepts/`
+leaves concepts-logic, atlas and journeys green — 1383, 649 and 27 passing
+with nothing to say. The first thing that notices is the production build, and
+what it does about it is fail the deploy.
+
+Verified 2026-11-24 05:26 UTC, by reproducing it: a missing
+`: VariableDeclaration[]` on `COLUMNS_AND_NULLITY` in
+`frontend/lib/concepts/tasks.ts`, introduced by the rank-nullity promotion
+(C1D3ED875476CA71, 2026-11-23 01:05 UTC), broke `next build` for the
+following 28 hours. `deployment_history` rows 441 and 442 both read
+`Build failed (exit 1)`; nothing reached production between B5A0EC2C's deploy
+at 2026-11-22 17:37 UTC and the commit that added this item. Eight commits of
+authored mathematics were unshippable and all three suites were green for the
+whole of it. The reproduction was two `next build` runs on one tree differing
+only in that annotation: exit 0 with it, exit 1 and `Type error` without.
+
+The slot for the gate already exists and is empty.
+`projects.deployment_config` for bza has `app_deploy.pre_deploy_test: null`,
+and `app_deploy_service.py` runs that command in `working_dir` and aborts the
+deploy on a non-zero exit — so `npx tsc --noEmit` there converts this class of
+defect from a failed deploy into a refused one.
+
+What is actually unsettled is where the check belongs, and the two answers
+differ in more than cost:
+
+- `pre_deploy_test` catches it at deploy time. Cheap, one config value, and it
+  protects every future deploy — but it fires a day after the author left, and
+  it tells the deployer a build is broken rather than telling the author a
+  commit is.
+- Catching it at commit time is what would actually have helped here, and it
+  needs a typescript the authoring tasks do not have: the edit workspaces ship
+  without `node_modules`, which is why the suites are plain `node` scripts in
+  the first place.
+
+Neither is large. Doing neither is what cost 28 hours. Note that whoever wires
+the first option needs a policy permitting the `deploy` subcommands — the
+autonomous content tasks are denied every `deploy` verb, read-only ones
+included, which is why the run that found this could fix the type error but not
+the gap.

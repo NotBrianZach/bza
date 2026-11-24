@@ -87,6 +87,20 @@
  * where it is stated". (x²)^(1/2) = x is defined at every real x and false at
  * every negative one, so substitution refutes it; a logarithm of a negative
  * number has no value to compare at all. tasks.ts argues it where the task is.
+ *
+ * **A seventh concept arrived from the map: `radical-equations`.** It is the
+ * only concept here that was not authored with the subject, and the two things
+ * worth knowing about it are both recorded beside it rather than here — why it
+ * was filed with the roots instead of with the quadratic formula, and why it is
+ * the second `guided` concept, which cost the recognition figure a point by
+ * retiring a pattern that had never matched anything. The paragraph above the
+ * concept argues both.
+ *
+ * It does mean the sentence at the top of this header — one subject, written to
+ * test whether the schema was a schema — has stopped describing the file. The
+ * schema took a promoted node as readily as it took the original six: no field
+ * was added, no edge kind was wanted that did not exist, and the only thing
+ * that moved was `fidelity`, in the direction of honesty.
  */
 
 import type { Concept, ConceptEdge, ConceptOntology, Subject } from './types'
@@ -95,10 +109,13 @@ const subject: Subject = {
   id: 'exponents-and-logarithms',
   name: 'Exponents and logarithms',
   covers:
-    'Integer exponent rules through solving a one-step exponential equation. Real bases, ' +
-    'positive where a logarithm requires it. Nothing about e or natural growth, nothing about ' +
-    'complex exponents, and no calculus — the derivative of a logarithm is the usual next step ' +
-    'and is not in here.',
+    'Integer exponent rules through solving a one-step exponential equation, and the other ' +
+    'equation a power has to be undone in: one with the unknown under a root, where squaring ' +
+    'both sides is not invertible and so hands back candidates the equation does not have. Real ' +
+    'bases, positive where a logarithm requires it. Nothing about e or natural growth, nothing ' +
+    'about complex exponents, and no calculus — the derivative of a logarithm is the usual next ' +
+    'step and is not in here. Nothing about an inequality with a root in it either: the answer ' +
+    'to one is an interval and no task kind here expresses a solution set.',
   medium: 'theorem',
   facetName: 'Concept',
   facetDoes: 'Which concept the statement has to be about.',
@@ -431,6 +448,413 @@ const CONCEPTS: Concept[] = [
             },
           ],
           answer: 'The power rule was used on a negative base with a fractional exponent, where it does not hold.',
+        },
+      },
+    ],
+  },
+
+  /**
+   * PROMOTED FROM THE MAP, AND FILED HERE RATHER THAN WITH THE QUADRATIC.
+   *
+   * `radical-equations` was a node of `algebra-foundations` declaring
+   * `needs: ['quadratic-formula', 'rational-exponents']`. Those two live in two
+   * different subjects, so the receiving subject was a real choice and only one
+   * of the two edges could become an ordinary prerequisite here — the other had
+   * to go to that area's `links`, which atlas-foundations.ts argues where it
+   * happened.
+   *
+   * It is here because `rational-exponents` says what a radical IS, and
+   * `quadratic-formula` is only a tool the method HAPPENS to need: the squared
+   * equation is a quadratic in the examples anybody sets by hand, and would be
+   * a cubic or a linear equation in others without changing one word of what
+   * this concept teaches. The subject a concept joins should be the one that
+   * supplies its meaning rather than its arithmetic, which is the same
+   * distinction ontology-vectors.ts drew between what a concept IS and what it
+   * YIELDS.
+   *
+   * It also discharges a forward reference this file already carried.
+   * `take-logs-of-both-sides`'s last subgoal holds the log step up against
+   * squaring both sides — "turns x = −3 into x² = 9 and then hands you a 3 that
+   * solves nothing in the original" — and ontology-algebra.ts says, inside
+   * `linear-equations`'s worked example, that this is "where the extraneous
+   * roots of a radical equation come from". Both were written before any
+   * concept existed to point at. There is one now.
+   *
+   * ── WHY IT IS GUIDED, WHICH COST THE RECOGNITION FIGURE A POINT ──────────
+   *
+   * The map node carried `match: /\bradical equation\b/i` and the convention
+   * for the last several promotions has been to bring a node's pattern across
+   * verbatim, so that the recognition figure in tests/atlas.mjs cannot move on
+   * a change that also moves the concept count. That is not what happened here,
+   * and the reason is that the pattern was DEAD.
+   *
+   * `conceptsInOffering` (offerings.ts) tests `scope.match` against
+   * `offering.title` and against nothing else. No encyclopaedia article is
+   * titled "radical equation" — what covers this is filed under the roots, under
+   * extraneous solutions, or under equation solving in general — so the pattern
+   * could never have fired on a real offering, and the node was counted among
+   * the concepts that "can be recognised from a title" for its whole life while
+   * recognising none. 267 of 294 becomes 266 of 294, and the figure is more
+   * nearly true after the change than before it.
+   *
+   * Widening instead was the other option and it is worse. The pattern that
+   * would fire is `radical`, and `rational-exponents` directly above already
+   * holds it — so widening would hand this concept its prerequisite's articles
+   * and make the longer pattern win the specificity sort in
+   * `conceptsInOffering`. Retiring a dead branch is not narrowing, the same way
+   * repairing one is not widening; ontology-vectors.ts records the other half of
+   * that pair, where `rank-nullity` shipped with two of three alternatives dead
+   * and nothing said so.
+   *
+   * So this is the second `guided` concept in the subject, which turns
+   * `conceptFacet`'s caveat from one of six into two of seven. Its sibling in
+   * that state is `solving-exponential-equations`, which is the right company:
+   * both are about SOLVING something, and a provider that files by object has
+   * no title for a method.
+   */
+  {
+    id: 'radical-equations',
+    name: 'Radical equations',
+    subjectId: subject.id,
+    scope: {
+      id: 'radical-equations',
+      label: 'Radical equations',
+      // The map node's own `terms`, verbatim. Only the `match` was dropped, and
+      // only because it matched nothing — see the block above.
+      hint: 'radical equation extraneous solution',
+      // No `match`: see `fidelity`.
+    },
+    fidelity: 'guided',
+    caveat:
+      'No encyclopaedia article is called "radical equation", and a title is all the provider ' +
+      'gives this registry to match on — so nothing here can decide membership. What covers this ' +
+      'is filed under the roots themselves, under extraneous solutions, or under solving ' +
+      'equations in general, and none of those is wrong. So this concept steers the search and ' +
+      'filters nothing. Expect it to lean, not to obey.',
+    objectives: [
+      {
+        id: 'solve-a-radical-equation',
+        statement:
+          'Isolate the root, square, and submit the number the equation has — having checked ' +
+          'every candidate the squaring produced.',
+        // `evaluate` only, and the restraint is deliberate. Every other
+        // objective in this file names `justify` as well, and there is not one
+        // `justify` task anywhere in the build: the kind is declared
+        // unverifiable, tests/concepts-logic.mjs refuses to ship a task of an
+        // unverifiable kind, and naming it here would promise an observation
+        // that can never be made. The unrulable half of this concept — why the
+        // step is not invertible — is asked in `socratic` instead, where the
+        // tutor asks it and nothing pretends to rule it.
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'tell-a-solution-from-an-extraneous-root',
+        statement:
+          'Decide which of the candidates belong to the original equation by evaluating its ' +
+          'sides at each, and name the equation the discarded one does solve.',
+        taskKinds: ['evaluate'],
+      },
+    ],
+    knowledgePoints: [
+      {
+        id: 'squaring-can-create-a-solution',
+        conceptId: 'radical-equations',
+        statement:
+          'Squaring both sides can hand you a solution the original equation does not have. ' +
+          'A = B and A² = B² are different questions — the second is also satisfied wherever ' +
+          'A = −B — so a number that comes out of a squaring is a candidate, not yet an answer.',
+        position: 1,
+        workedExample: {
+          problem: 'Square both sides of √x = −2. What is the solution of the equation you get, and what does it solve?',
+          subgoals: [
+            {
+              label: 'Read the original equation before touching it',
+              detail:
+                '√x means the non-negative square root, so the left side is never negative, and ' +
+                '−2 always is. No value of x can make them equal: the equation has no solution, ' +
+                'and that is settled before any algebra.',
+              socratic:
+                'Nothing has been done to this equation yet, so do not start solving it. Take ' +
+                'the two sides one at a time: as x runs over every number for which √x has a ' +
+                'value at all, what values can the left side take, and what values can the right ' +
+                'side take? Do those two collections of numbers have anything in common?',
+            },
+            {
+              label: 'Square both sides and read off the new equation',
+              detail:
+                '(√x)² is x and (−2)² is 4, so the squared equation is x = 4. That one has a ' +
+                'solution, and the equation it came from has none.',
+              socratic:
+                'Square each side separately and write down the equation you are left holding. ' +
+                'How many numbers satisfy that one — and how does that count compare with the ' +
+                'count you just settled for the equation you started from?',
+            },
+            {
+              label: 'Name what the squaring did to the question',
+              detail:
+                'Squaring sends 2 and −2 to the same 4, so the squared equation cannot tell the ' +
+                'sign of either side. It is satisfied where √x = −2 and equally where √x = 2, ' +
+                'and the 4 is a solution of the second of those.',
+              socratic:
+                'The step did not rearrange the equation, it replaced it with a different one. ' +
+                'Two numbers of the same size and opposite sign have the same square — say which ' +
+                'pair is in play here. Of the two equations √x = −2 and √x = 2, which does your ' +
+                'squared equation distinguish, and so which of them did its solution come from?',
+            },
+            {
+              label: 'Say what that costs on every radical equation, not just this one',
+              detail:
+                'Because the squared equation can have solutions the original does not, the check ' +
+                'in the original is part of the method and not a precaution. Here the original was ' +
+                'transparent enough to settle in advance; in general it is not.',
+              socratic:
+                'You happen to have known from the first line that this equation had no solution. ' +
+                'Suppose you had not, and had squared and reached x = 4 with no idea whether it ' +
+                'belonged: at which point in the work would you have found out that it did not — ' +
+                'and what does that make of the idea that checking is an optional last step?',
+            },
+          ],
+          answer:
+            'x = 4 is the solution of x = 4, and solves nothing in √x = −2, which has no ' +
+            'solution. The squaring created it.',
+        },
+      },
+      {
+        id: 'isolate-the-radical-before-squaring',
+        conceptId: 'radical-equations',
+        statement:
+          'Squaring only removes a root that stands alone on its side, because (a − b)² is not ' +
+          'a² − b². Isolating the root first is an invertible move and costs nothing; squaring ' +
+          'too early leaves the root behind, multiplied by something.',
+        position: 2,
+        workedExample: {
+          problem: 'Solve √(x + 7) − x = 1.',
+          subgoals: [
+            {
+              label: 'Square it where it stands, and see what survives',
+              detail:
+                'Squaring the left side as written gives (x + 7) − 2x√(x + 7) + x², because the ' +
+                'square of a difference has three terms. The root is still there and is now ' +
+                'multiplied by −2x. Nothing was removed and the equation is harder than it was.',
+              socratic:
+                'Square the left side exactly as it is written — all of it, as one bracket — and ' +
+                'expand what you get rather than stopping at the first line. How many terms does ' +
+                'the expansion have, which of them still contain a root sign, and is the equation ' +
+                'you are now holding easier or harder than the one you began with?',
+            },
+            {
+              label: 'Put the root on its own first',
+              detail:
+                'Add x to both sides: √(x + 7) = x + 1. Adding a quantity to both sides can be ' +
+                'undone by subtracting it, so this move neither loses a solution nor invents one.',
+              socratic:
+                'The obstacle is that the root is sharing its side with a −x. Move things so that ' +
+                'the root stands alone, and say which move you used. Can that move be undone by ' +
+                'another one of the same kind — and so does the equation you now have exactly the ' +
+                'solutions of the one you started with, or only some of them?',
+            },
+            {
+              label: 'Now square, and solve what is left',
+              detail:
+                'x + 7 = (x + 1)² = x² + 2x + 1, so x² + x − 6 = 0, which factors as ' +
+                '(x + 3)(x − 2) = 0. The candidates are x = 2 and x = −3.',
+              socratic:
+                'With the root standing alone, squaring takes it away for good. Write both sides ' +
+                'squared, expand the right one, and collect everything onto one side. What ' +
+                'quadratic are you looking at, and what two numbers does it give you?',
+            },
+            {
+              label: 'Check both candidates in the equation as it was first written',
+              detail:
+                'At x = 2 the left side is √9 − 2 = 3 − 2 = 1, which is what the equation asks ' +
+                'for. At x = −3 it is √4 + 3 = 2 + 3 = 5, which is not. So x = 2 is the solution ' +
+                'and x = −3 is extraneous.',
+              socratic:
+                'Two candidates came out of a squaring, so on the strength of the point above ' +
+                'neither of them is a solution yet. Put each one back into the equation as it was ' +
+                'first written — not into the quadratic, and not into the isolated form — and work ' +
+                'the left side out. What does each come to, and which of the two is this equation ' +
+                'actually about?',
+            },
+            {
+              label: 'Note that the quadratic itself was never wrong',
+              detail:
+                'Both candidates really are roots of x² + x − 6, and that polynomial was derived ' +
+                'correctly. The extra solution is not an arithmetic slip anywhere in the working: ' +
+                'it is produced by the squaring, which is why no amount of care in the algebra ' +
+                'removes the need for the check.',
+              socratic:
+                'Substitute −3 into x² + x − 6 and see what it gives. If that number is a genuine ' +
+                'root of the quadratic, and the quadratic was derived from the equation without a ' +
+                'mistake, then where in the working did a number that solves nothing get in — and ' +
+                'is there any way of being more careful that would have kept it out?',
+            },
+          ],
+          answer:
+            'x = 2. The candidate x = −3 is a root of the quadratic and not a solution of the ' +
+            'equation; the squaring, not an error, is what produced it.',
+        },
+      },
+      {
+        id: 'an-extraneous-root-solves-the-other-sign',
+        conceptId: 'radical-equations',
+        statement:
+          'An extraneous root is not a random intruder. Squaring cannot tell √A = B from ' +
+          '√A = −B, so the candidates it creates are the solutions of both equations put ' +
+          'together — which is why a discarded one makes the two sides come out the same size ' +
+          'with opposite signs.',
+        position: 3,
+        workedExample: {
+          problem:
+            'Why did squaring √(x + 7) = x + 1 produce a −3, and could it have been spotted ' +
+            'before the check?',
+          subgoals: [
+            {
+              label: 'Evaluate the two sides of the isolated equation at the candidate',
+              detail:
+                'At x = −3 the root is √4 = 2 and x + 1 is −2. They are not equal, so −3 is not a ' +
+                'solution — and they are the same size.',
+              socratic:
+                'Work out each side of √(x + 7) = x + 1 separately at x = −3, and write the two ' +
+                'numbers down side by side rather than only deciding whether they match. They do ' +
+                'not match, which you already knew. What else is there to say about the ' +
+                'relationship between those particular two numbers?',
+            },
+            {
+              label: 'Name the equation those two numbers DO satisfy',
+              detail:
+                '2 is −(−2), so at x = −3 the root equals minus the other side. The candidate is ' +
+                'a solution of √(x + 7) = −(x + 1).',
+              socratic:
+                'You have 2 on one side and −2 on the other. Leave the equation you were asked ' +
+                'and write down an equation in x that those two values genuinely satisfy at ' +
+                'x = −3 — one built from the same root and the same x + 1. Which equation is it?',
+            },
+            {
+              label: 'See that squaring folds the two equations into one',
+              detail:
+                'Squaring √(x + 7) = x + 1 and squaring √(x + 7) = −(x + 1) give the SAME ' +
+                'equation x + 7 = (x + 1)², because (−(x + 1))² is (x + 1)². So the quadratic is ' +
+                'the two equations at once, and its roots are the solutions of both together.',
+              socratic:
+                'Square both of those equations — the one you were asked and the one you just ' +
+                'wrote down — and compare the results line by line. What do you notice, and if ' +
+                'one equation is all that is left of two, whose solutions is the quadratic ' +
+                'reporting?',
+            },
+            {
+              label: 'Turn it into a test that says WHICH candidate fails',
+              detail:
+                'A candidate is extraneous exactly when the two sides of the isolated equation ' +
+                'come out with opposite signs there. At x = 2 both sides are 3 — same sign, so it ' +
+                'survives. The check stops being a hunt and becomes a reading of two signs.',
+              socratic:
+                'You know which equation −3 belongs to, and you found that out by looking at the ' +
+                'two numbers the sides of √(x + 7) = x + 1 come to there. Work out that same pair ' +
+                'of numbers at x = 2, then set the two pairs beside each other: what is different ' +
+                'about them, and what one condition on a candidate\'s pair would have sorted both ' +
+                'candidates without substituting into the original at all?',
+            },
+            {
+              label: 'Say what the sign test does not cover',
+              detail:
+                'It is a test on the ISOLATED equation, the one that was actually squared, and it ' +
+                'speaks only about candidates with a sign to compare. A candidate that makes what ' +
+                'is under the root negative fails for a different reason — there is no value on ' +
+                'the left to have a sign. Neither candidate here does that: x + 7 is 9 at x = 2 ' +
+                'and 4 at x = −3.',
+              socratic:
+                'The test compares the signs of two numbers, so it needs both of them to exist. ' +
+                'Imagine a candidate at which x + 7 came out negative. What would the left side ' +
+                'of the isolated equation be at that number, what would the test have to compare, ' +
+                'and so is a failure of that kind the same thing as an extraneous root?',
+            },
+          ],
+          answer:
+            '−3 solves √(x + 7) = −(x + 1), which squares to the same quadratic. The two sides ' +
+            'of the equation asked come out as 2 and −2 there: same size, opposite signs, which ' +
+            'is the signature of a candidate the squaring folded in.',
+        },
+      },
+      {
+        id: 'the-even-index-is-what-forces-the-check',
+        conceptId: 'radical-equations',
+        statement:
+          'It is the EVEN power that makes a check necessary, not the root sign. Squaring sends ' +
+          'two numbers to one and so cannot be undone; cubing sends each real number to a cube ' +
+          'of its own and can. √x = −2 has no solution at all, and ∛x = −2 has one that needs no ' +
+          'checking.',
+        position: 4,
+        workedExample: {
+          problem: 'Undo the root in √x = −2 and in ∛x = −2 the same way. Why does only one of them have a solution?',
+          subgoals: [
+            {
+              label: 'Raise both sides to the index, in both equations',
+              detail:
+                'Squaring the first gives x = 4. Cubing the second gives x = −8. The two moves ' +
+                'are the same move: apply the power that undoes the root. Neither number is a ' +
+                'solution yet.',
+              socratic:
+                'Each equation has a root on the left, and each root is undone by one particular ' +
+                'power. Apply that power to both sides of each equation and write down the two ' +
+                'results. What number does each equation hand you, and on the strength of the ' +
+                'first point in this concept, what are those two numbers so far?',
+            },
+            {
+              label: 'Check each against the equation it came from',
+              detail:
+                '√4 = 2, which is not −2, so 4 fails. For the other, (−2)³ = −8, so ∛(−8) is ' +
+                '−2 and the candidate passes. One check discards and the other does not.',
+              socratic:
+                'Put each candidate back into its own equation. For the second one it is easier ' +
+                'to test the cube root by cubing: ask what (−2)³ comes to and compare it with the ' +
+                'candidate. Which of the two candidates survives, and which does not?',
+            },
+            {
+              label: 'Find the property that separates the two powers',
+              detail:
+                '2 and −2 have the same square, so squaring loses the sign and cannot be undone. ' +
+                'No two different real numbers have the same cube, so cubing loses nothing. ' +
+                'x ↦ x² is two-to-one on the reals and x ↦ x³ is one-to-one.',
+              socratic:
+                'The only difference between the two equations is the index of the root, so that ' +
+                'is where the difference in behaviour has to come from. Hunt for two different ' +
+                'numbers with the same square, then try to find two different numbers with the ' +
+                'same cube. How did each search go, and what does that say about which of the two ' +
+                'powers can be undone?',
+            },
+            {
+              label: 'Read the same fact off the other side',
+              detail:
+                'An even root returns only non-negative values, so √x = c has no solution ' +
+                'whenever c is negative, before any algebra. An odd root returns every real ' +
+                'number, so ∛x = c always has exactly one solution. The range of the root and the ' +
+                'invertibility of the power are the same fact told twice.',
+              socratic:
+                'Go back to the two left-hand sides and ask what values each can take as x ranges ' +
+                'over everything it is allowed to be. One of them reaches −2 and the other does ' +
+                'not. How does that pair of answers settle the number of solutions each equation ' +
+                'has, without undoing anything — and is it telling you something new, or the same ' +
+                'thing you found by comparing squares and cubes?',
+            },
+            {
+              label: 'State when the check is part of the method',
+              detail:
+                'Raise both sides to an EVEN power and candidates can be gained, so every one has ' +
+                'to be checked. Raise to an ODD power and none can be, so no check is needed for ' +
+                'that reason. The root sign on the page does not decide it; the index does.',
+              socratic:
+                'Both of your moves were "undo the root by raising both sides to its index", one ' +
+                'of them has to be followed by a check and the other does not, and the only thing ' +
+                'that differs between them is the index itself. What is the condition on the ' +
+                'index — and what does your condition predict for a fourth root and for a fifth, ' +
+                'neither of which you have worked?',
+            },
+          ],
+          answer:
+            '√x = −2 has no solution: the 4 is a solution of the squared equation only, because ' +
+            'squaring cannot tell 2 from −2. ∛x = −2 has the solution x = −8, and cubing being ' +
+            'one-to-one is why no check was needed to establish it.',
         },
       },
     ],
@@ -808,6 +1232,21 @@ const EDGES: ConceptEdge[] = [
   { id: 'xp5', from: 'logarithm-definition', to: 'solving-exponential-equations', kind: 'prerequisite', promotedBy: 'author',
     rationale: 'The solving step is "apply the inverse", which requires knowing the log *is* the inverse.' },
   { id: 'xp6', from: 'logarithm-rules', to: 'solving-exponential-equations', kind: 'prerequisite', promotedBy: 'author' },
+  /*
+   * THE STRANDED HALF OF A PROMOTED NODE'S `needs`, RESTATED HERE BECAUSE BOTH
+   * ENDS ARE CONCEPTS OF THIS SUBJECT.
+   *
+   * `radical-equations` declared `needs: ['quadratic-formula',
+   * 'rational-exponents']` while it was a map node, and promoting it stranded
+   * both — an edge is owned by the node that DECLARES it, so a promotion
+   * strands exactly the `needs` written on the node and nothing else. This one
+   * has an owner here. The other names a concept of `rational-expressions`,
+   * which this ontology may not mention — `ontologyProblems` reports an unknown
+   * endpoint — so it is a `links` entry on the area the node left, argued in
+   * atlas-foundations.ts.
+   */
+  { id: 'xp7', from: 'rational-exponents', to: 'radical-equations', kind: 'prerequisite', promotedBy: 'author',
+    rationale: 'Squaring both sides is only a safe-looking move while the root is a mystery; the reason it loses a solution is that x^(1/2) is defined to be the NON-NEGATIVE root, which is this concept and not the equation-solving. A learner for whom √9 could be −3 has no reason why any candidate should ever fail.' },
 
   // ── encompasses ─────────────────────────────────────────────────────────
   //
@@ -824,6 +1263,32 @@ const EDGES: ConceptEdge[] = [
   { id: 'xe3', from: 'rational-exponents', to: 'exponent-rules', kind: 'encompasses', promotedBy: 'author' },
   { id: 'xe4', from: 'zero-and-negative-exponents', to: 'exponent-rules', kind: 'encompasses', promotedBy: 'author',
     rationale: 'Both derivations run the product rule and then divide.' },
+  /*
+   * NO `encompasses` FROM `radical-equations` TO `rational-exponents`, AND THE
+   * MEASUREMENT IS THE REASON RATHER THAN AN OVERSIGHT.
+   *
+   * It is the obvious edge to want: six of the nine tasks the promotion shipped
+   * evaluate a square root, so practising radical equations plainly involves
+   * taking roots. But `encompasses` is a claim about what PRACTISING a concept
+   * exercises, measured against the tasks that exist, and the two knowledge
+   * points of `rational-exponents` are the notational identity x^(1/n) = ⁿ√x
+   * and the condition on (xᵃ)ᵇ = xᵃᵇ. Not one of the nine tasks writes a
+   * fractional exponent or uses either fact: they want √9 to BE 3, which is
+   * arithmetic, and `roots-and-irrationals` in `arithmetic-foundations` is where
+   * that is taught. A learner who finished all nine would have demonstrated
+   * nothing about reading a root as a power, so crediting the prerequisite
+   * would stop it coming due on the strength of work that did not touch it —
+   * the exact inefficiency, run backwards, that the edge kind exists to
+   * prevent.
+   *
+   * The prerequisite edge xp7 below is a different claim and stands: you cannot
+   * see why a candidate fails without knowing that √ names the non-negative
+   * root. Needing a fact to understand a method is not the same as rehearsing
+   * it by carrying the method out. ontology-arithmetic.ts declines the credit
+   * edge on `gcd-and-lcm` by the same measurement and ontology-vectors.ts
+   * declines one on `basis-and-dimension`, so this is the third refusal of that
+   * shape and the first in this file.
+   */
 
   // ── interferes_with ─────────────────────────────────────────────────────
   {
@@ -849,6 +1314,49 @@ const EDGES: ConceptEdge[] = [
       'x⁻² and x^(1/2) are both "an exponent that is not a counting number", and the two rules ' +
       'answer different questions — one takes a reciprocal, the other takes a root. Introduced ' +
       'together, learners read x^(1/2) as 1/x² and x⁻² as a root.',
+  },
+  /*
+   * THE THIRD PAIR, AND IT IS A CLAIM ABOUT THE SAME MOVE RATHER THAN THE SAME
+   * SHAPE.
+   *
+   * `radical-equations` arrived from the map with no `confusedWith` on it — the
+   * node was checked for one before it was deleted, since `expandEdges` turns a
+   * node's `confusedWith` into an `interferes_with` edge and deleting the node
+   * deletes the edge with every suite staying green. So this is not a rehomed
+   * interference. It is a new one, and it is here because the subject's own
+   * material already draws it.
+   *
+   * Both concepts say "apply the inverse of what is wrapping the unknown to
+   * both sides". For an exponential that inverse is a logarithm, which is
+   * one-to-one, so the step loses nothing and invents nothing. For a radical it
+   * is a power, and an even power is two-to-one, so the step can invent a
+   * solution. Taught in one sitting, the shared instruction is what gets
+   * remembered and the difference between the two inverses is what gets
+   * dropped — the learner squares an exponential equation, or solves a radical
+   * one and stops without checking, which is the single commonest failure in
+   * either topic.
+   *
+   * `take-logs-of-both-sides`'s fourth subgoal already holds the two moves up
+   * against each other, so a reader may reasonably object that the material
+   * WANTS them together. It wants the contrast, which costs nothing: that
+   * subgoal names squaring and needs no concept scheduled beside it.
+   * `interferes_with` constrains which pair may be INTRODUCED in one session,
+   * and introducing the two methods together is exactly what collapses them.
+   * Same resolution as xi1 above, where the kinship that makes a credit edge
+   * true is what makes the pair confusable.
+   */
+  {
+    id: 'xi3',
+    from: 'solving-exponential-equations',
+    to: 'radical-equations',
+    kind: 'interferes_with',
+    promotedBy: 'author',
+    rationale:
+      'Both are "undo what wraps the unknown by applying its inverse to both sides", and the ' +
+      'two inverses differ in the one respect that decides whether the answer needs checking: ' +
+      'log_b is one-to-one, an even power is not. Introduced together, the shared instruction ' +
+      'survives and the distinction does not — learners take logs of a radical equation, or ' +
+      'square an exponential one, or solve a radical equation correctly and never check.',
   },
 
   // ── candidate_prerequisite ──────────────────────────────────────────────

@@ -3,9 +3,10 @@
  *
  * ── WHY THIS IS A SEPARATE THING FROM AN ONTOLOGY ─────────────────────────
  *
- * `ontology.ts` and `ontology-exponentials.ts` are *syllabi*. Every concept in
- * them carries objectives and knowledge points with hand-checked worked
- * examples, because every concept in them is meant to be practised. That is the
+ * The `ontology-*.ts` files, and `ontology.ts` itself, are *syllabi* — there
+ * are a dozen of them now, and this sentence used to name two by hand. Every
+ * concept in them carries objectives and knowledge points with hand-checked
+ * worked examples, because every concept in them is meant to be practised. That is the
  * right standard for material a learner is assessed against and it is the wrong
  * standard for a map: at roughly forty lines of authored prose per knowledge
  * point, requiring one before a concept may be *named* means mathematics cannot
@@ -23,8 +24,8 @@
  *
  * ── THE ATLAS NEVER RE-DECLARES AN AUTHORED CONCEPT ───────────────────────
  *
- * Where the map meets the two authored subjects, it does NOT restate them. It
- * points at their real ids. `integration-partial-fractions` needs
+ * Where the map meets an authored subject, it does NOT restate it. It points
+ * at the real ids. `integration-partial-fractions` needs
  * `partial-fractions-linear`, the actual concept in the actual syllabus, so
  * mastering the authored material genuinely opens the mapped node behind it and
  * the two halves are one graph rather than two drawings of overlapping things.

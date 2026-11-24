@@ -640,33 +640,214 @@ const DISCRETE_MATHEMATICS: MapArea = {
   id: 'discrete-mathematics',
   name: 'Discrete mathematics',
   covers:
-    'Logic, sets, counting, graphs and recurrences — the mathematics of finite and countable ' +
-    'structures, and the formal apparatus of proof.',
+    'Sets, counting, graphs and recurrences — the mathematics of finite and countable ' +
+    'structures. The three bottom layers of the logic now have problems written for them and ' +
+    'live outside this area. A letter standing for a whole statement, the connectives as ' +
+    'finite tables, and which rearrangements of an implication are the same claim are the ' +
+    'statements-and-connectives syllabus; a statement with a hole in it, the two words that ' +
+    'close the hole, and why the order of two different ones changes the claim are the ' +
+    'predicates-and-quantifiers syllabus; choosing which end of an implication to start from, ' +
+    'assuming a claim false to reach something impossible, and splitting into cases that leave ' +
+    'nothing out are the methods-of-proof syllabus. This area points at all three rather than ' +
+    'restating any, and keeps the layers above them: the sets and relations those arguments are ' +
+    'used on, the counting, the graphs, and the formal systems — where derivation inside a ' +
+    'stated calculus is a different subject from the arguments a person writes for another ' +
+    'person, and is the one still mapped only.',
+  /**
+   * THREE NODES HAVE LEFT THIS AREA, ON THREE CONSECUTIVE PROMOTIONS, UP ONE
+   * CHAIN, AND EACH WAS THE ROOT AT THE TIME.
+   *
+   * `propositional-logic` went first, to ontology-logic.ts as the single member
+   * of a twelfth subject; `quantifiers` followed it, to ontology-quantifiers.ts
+   * as the single member of a thirteenth; `proof-techniques` followed that, to
+   * ontology-proof.ts as the single member of a fourteenth. All three are real
+   * concepts now. `atlasProblems` rejects a map node whose id collides with an
+   * authored concept — the composed list would hold two entries for the id, and
+   * the shadowing copy has no knowledge points, so a fully authored concept
+   * would read as unteachable. So promoting is a MOVE out of this array and not
+   * a fill-in, and each node had to go.
+   *
+   * THE AREA HAS LOST ITS ROOT THREE TIMES AND HAS NOT LOST ITS ENTRY POINT
+   * ONCE, which is the part worth explaining rather than counting. Every node
+   * here stood on those three eventually, in that order, and the root set in
+   * the composed graph has moved up the same chain one step per promotion:
+   * `propositional-logic`, then `quantifiers`, then `proof-techniques`, and now
+   * `sets` — which was three steps up when this comment was first written.
+   * Nothing is stranded and nothing became unreachable: the edge `sets`
+   * declares still resolves, because it resolves against the composed atlas,
+   * where the far end is now a concept with problems instead of a skeleton.
+   *
+   * THE EDGES POINTING IN NEEDED NO ATTENTION ON THE DAY, every time, for the
+   * reason the eighth promotion out of `euclidean-geometry` recorded: an edge is
+   * owned by the node that DECLARES it. `sets`, `graph-colouring-planarity` and
+   * `division-algorithm` all name `proof-techniques` in their own `needs`, they
+   * stayed, and `composeAtlas` resolves all three untouched.
+   *
+   * THE EDGE EACH NODE DECLARED ITSELF IS THE ONE THAT MOVED, which is why
+   * there are now THREE entries in `links` where there was one. That is the
+   * case the rule above does NOT cover: when the DECLARING end is promoted, its
+   * `needs` have nowhere left to live, and the answer is the area the declarer
+   * left rather than the area or subject holding the far end. Every far end is
+   * an authored concept of another subject — `geometric-proof` in
+   * `plane-geometry`, `propositional-logic` in `statements-and-connectives`,
+   * `quantifiers` in `predicates-and-quantifiers` — so no ontology may hold any
+   * of the three edges, because an authored ontology's edges may only name
+   * concepts it contains. An area's `links` is the only place in the build that
+   * can say "an authored concept rests on an authored concept of a third
+   * subject".
+   *
+   * THE SECOND PROMOTION SHOWED THE CHAIN'S SHAPE AND THE THIRD CONFIRMED IT IS
+   * A RULE RATHER THAN AN ACCIDENT. This is worth stating as a rule because it
+   * looks like a mistake twice over. The thirty-fifth promotion's comment here
+   * said of `quantifiers` that "it stayed, and `composeAtlas` resolves it
+   * untouched", and asserted the ABSENCE of a `links` entry for it; the
+   * thirty-sixth said the same of `proof-techniques` while adding the entry for
+   * `quantifiers`. Each was right when written and each was undone one
+   * promotion later, because the moment a declaring end is authored the edge it
+   * owned is stranded and the absence becomes a missing entry.
+   *
+   * THE RULE, STATED ONCE SO THE FOURTH PROMOTION UP THIS CHAIN DOES NOT HAVE
+   * TO REDISCOVER IT: walking up a chain strands exactly ONE edge per step —
+   * the one the node being promoted declares — and invalidates exactly the
+   * previous promotion's claim that no entry was needed for it. So when
+   * promoting, check not only the node's own `needs` but whether the previous
+   * promotion's assertions rest on this node staying put. Here that cost two
+   * rewrites in tests/atlas.mjs, both anticipated in the comments beside them.
+   * `sets` is the next one, and when it goes this `links` will hold four.
+   *
+   * NO `confusedWith` WAS LOST ANY OF THE THREE TIMES, and it was checked
+   * rather than assumed. `expandEdges` in atlas.ts turns a node's
+   * `confusedWith` into an `interferes_with` edge, so deleting a node DELETES
+   * that edge, and nothing goes red when it happens: interference constrains
+   * SELECTION rather than gating, so every suite stays green while the
+   * scheduler is freed to introduce the two most confusable concepts in a
+   * subject together. None of the three declared one, so there was nothing to
+   * re-home — but the check is the one a promotion forgets, and the candidates
+   * are worth recording. ontology-functions.ts argues that
+   * `mathematical-induction` and `propositional-logic` genuinely interfere, and
+   * ontology-quantifiers.ts that `mathematical-induction` and `quantifiers` do;
+   * a third pair now joins them, since induction is a proof technique for one
+   * shape of domain and `proof-techniques` is the account of the other four, so
+   * a learner meeting them in either order will take one for the other. All
+   * three were unexpressible while both ends were nodes and are unexpressible
+   * still, every end now being an authored concept of a different subject.
+   * `links` hard-codes `prerequisite` and cannot carry an interference either.
+   * A cross-subject `interferes_with` has no home in this build, which is the
+   * fifth time that has had to be written down and the third pair it costs.
+   */
+  links: [
+    /*
+     * The one edge the departing node declared itself, restated.
+     *
+     * It GATES immediately and for real, which is unusual for a `links` entry:
+     * most are written while the far end is still an unwritten node and
+     * constrain nothing until somebody authors it. Both ends have material
+     * here, so `gatingPrerequisitesOf` on the written concept returns exactly
+     * this one, and a learner cannot be shown a truth table until the first
+     * proofs about figures are strong.
+     *
+     * If `geometric-proof` ever MOVED into `statements-and-connectives` — which
+     * is the shape the reasoning-subject question in ontology-functions.ts and
+     * ontology-logic.ts leaves open — this edge would become an ordinary
+     * `needs` there and the entry below would have to be DELETED. Two
+     * identical edges in the composed graph is not a duplicate `composeAtlas`
+     * notices, and no test reports one. tests/atlas.mjs asserts the subject of
+     * the far end for exactly that reason.
+     */
+    {
+      from: 'geometric-proof',
+      to: 'propositional-logic',
+      because:
+        'The geometry is where a learner first meets a converse and a contrapositive at all — ' +
+        'on one proved statement about triangles, used on three particular triangles, which is ' +
+        'meeting the rearrangement before having a notation for it. This concept is the second ' +
+        'pass: the same distinction as a subtraction of two columns, true of every implication ' +
+        'rather than of that one. Taken in the other order the truth table is a table of ' +
+        'symbols with nothing it has ever decided, and the rule that a proposed counterexample ' +
+        'must pass the hypothesis first — the one fact both concepts share — arrives as ' +
+        'bookkeeping instead of as something a learner has already been caught by.',
+    },
+    /*
+     * The edge the SECOND departing node declared itself, restated — and the
+     * entry the thirty-fifth promotion asserted was absent.
+     *
+     * It gates immediately and for real, like the one above and unlike most
+     * `links` entries, which are written while the far end is still an
+     * unwritten node and constrain nothing until somebody authors it. Both ends
+     * have material, so `gatingPrerequisitesOf('quantifiers')` returns exactly
+     * this one and a learner cannot be shown "for all" and "there exists" until
+     * the truth table for "if ... then" is strong. That is the right order: the
+     * material writes a universal as "and" repeated and an existential as "or"
+     * repeated, so a learner who has not met those two connectives as tables
+     * meets the quantifiers as a notation instead of as a generalisation.
+     *
+     * If the two logic subjects were ever MERGED — which ontology-quantifiers.ts
+     * argues is an easy change somebody may want, and is the reason it refused
+     * the cheaper filing — this edge would become an ordinary `needs` in the
+     * merged ontology and the entry below would have to be DELETED. Two
+     * identical edges in the composed graph is not a duplicate `composeAtlas`
+     * notices and no test reports one, so tests/atlas.mjs asserts the far end's
+     * subject by name for exactly that reason.
+     */
+    {
+      from: 'propositional-logic',
+      to: 'quantifiers',
+      because:
+        'A quantifier over a finite domain is one of the connectives repeated: "for all" is ' +
+        '"and" across the domain and "there exists" is "or" across it, which is how this ' +
+        'build asks and grades every question about either. A learner who has not met "and" ' +
+        'and "or" as TABLES has nothing for the repetition to be a repetition of, and meets ' +
+        'the two quantifiers as a pair of symbols to be translated rather than as the same ' +
+        'two connectives at a larger scale. The negation rule is the sharper half of it: ' +
+        '"not every x works" becoming "some x fails" is De Morgan one layer up, and the ' +
+        'proof that the two are one claim is the earlier concept\'s subtraction of columns ' +
+        'applied to a product.',
+    },
+    /*
+     * The edge the THIRD departing node declared itself, restated — and the
+     * entry the thirty-sixth promotion asserted was absent, in the same words
+     * the thirty-fifth used about the entry above.
+     *
+     * It gates immediately and for real, like both of the others and unlike
+     * most `links` entries, which are written while the far end is still an
+     * unwritten node and constrain nothing until somebody authors it. Both ends
+     * have material, so `gatingPrerequisitesOf('proof-techniques')` returns
+     * exactly this one and a learner cannot be shown the four shapes of
+     * argument until "for all" and "there exists" are strong. That is the right
+     * order and it is the sharper of the three: ontology-proof.ts's whole
+     * premise is that a quantified claim over a domain that does NOT run out
+     * cannot be settled by multiplying, so a learner who has not met the
+     * finite-domain product has not met the wall these techniques exist to get
+     * over, and meets them as four styles rather than as four answers to one
+     * problem.
+     *
+     * If the logic subjects were ever MERGED, or a single REASONING subject
+     * founded out of them and `mathematical-induction` and `geometric-proof` —
+     * which ontology-proof.ts argues is the change founding a fourteenth
+     * subject keeps available rather than forecloses — this edge would become an
+     * ordinary `needs` in the merged ontology and the entry below would have to
+     * be DELETED. Two identical edges in the composed graph is not a duplicate
+     * `composeAtlas` notices and no test reports one, so tests/atlas.mjs asserts
+     * the far end's subject by name for exactly that reason, as it does for the
+     * two above.
+     */
+    {
+      from: 'quantifiers',
+      to: 'proof-techniques',
+      because:
+        'The quantifiers are where the licence to settle a universal claim by writing all its ' +
+        'cases down runs out, and these four techniques are what replaces it. That concept ' +
+        'ends on the fact: a product needs a LAST factor, so "every whole number has a ' +
+        'successor" is not a computation and an argument about an ARBITRARY member has to take ' +
+        'over. Taken in this order the first technique is the answer to a question the learner ' +
+        'has already been stopped by; taken in the other it is four styles of writing with ' +
+        'nothing either has had to do. The negation rule is the half that is used rather than ' +
+        'merely motivating: a proof by contradiction begins by negating the claim, and "there ' +
+        'is no largest prime" only becomes a finite list you can multiply because the earlier ' +
+        'concept says what the negation of a universal is.',
+    },
+  ],
   nodes: [
-    {
-      id: 'propositional-logic',
-      match: /\b(propositional (logic|calculus)|boolean algebra|truth table)\b/i,
-      name: 'Propositional logic',
-      is: 'Connectives and truth tables, with implication as the one whose truth table surprises everybody.',
-      needs: ['geometric-proof'],
-      terms: 'propositional logic truth table implication contrapositive tautology',
-    },
-    {
-      id: 'quantifiers',
-      match: /\bquantifier\b/i,
-      name: 'Quantifiers',
-      is: 'For-all and there-exists, where the order of two different quantifiers changes the claim entirely.',
-      needs: ['propositional-logic'],
-      terms: 'quantifier universal existential negation of quantifier scope',
-    },
-    {
-      id: 'proof-techniques',
-      match: /\b(mathematical proof|proof by contradiction|contraposition)\b/i,
-      name: 'Proof techniques',
-      is: 'Direct, contrapositive, contradiction and cases — four shapes of argument, each suited to a shape of statement.',
-      needs: ['quantifiers'],
-      terms: 'direct proof contradiction contrapositive proof by cases counterexample',
-    },
     {
       id: 'sets',
       match: /\bset (theory|operations)\b|^set \(mathematics\)/i,

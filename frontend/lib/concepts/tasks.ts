@@ -460,6 +460,36 @@ const AP_SUM: VariableDeclaration[] = [
 ]
 
 /**
+ * The induction tasks. Two lists, and the split is the index against the
+ * claim's own parameter.
+ *
+ * `k` carries `integer` AND `positive` on both, which is load-bearing rather
+ * than tidy: every claim these tasks are about is quantified over the
+ * naturals, and an inductive step at k = −1 or k = 1/2 is not a weaker version
+ * of the step but a different statement. The three `transform_to_form`
+ * references are identities over all of ℝ and would pass equivalence without
+ * the assumption; the point of declaring it is that the SYMBOL means a
+ * position in the claim, the same discipline `AP_TERM`'s `n` follows.
+ *
+ * `c` is the false claim's constant offset, declared `real` rather than
+ * `integer`, and the looseness is the second knowledge point's content: the
+ * reason the step cannot detect the offset has nothing to do with what KIND
+ * of number it is, and a task whose symbol said `integer` would quietly
+ * suggest otherwise. There is no symbol anywhere here for the number of terms
+ * or for the sum itself — `induction-base-later-1` makes the learner add
+ * 1 + 2 + 3 + 4 by hand against a closed form, and handing either side over as
+ * a symbol would be handing over the comparison the task exists for.
+ */
+const INDUCTION_INDEX: VariableDeclaration[] = [
+  { name: 'k', assumptions: { integer: true, positive: true } },
+]
+
+const INDUCTION_OFFSET: VariableDeclaration[] = [
+  { name: 'n', assumptions: { integer: true, positive: true } },
+  { name: 'c', assumptions: { real: true } },
+]
+
+/**
  * The two coordinates of a pair. The first declaration in this file with two
  * symbols that are the SAME kind of thing.
  *
@@ -745,8 +775,25 @@ const MATRIX_ROW_AND_CANDIDATE = [
  * vector's components. Two tasks of the same concept use both, and each prompt
  * names its own symbols; a shared constant for the two would be a single
  * declaration list describing two different objects.
+ *
+ * Annotated rather than left to inference, which the two differing assumption
+ * lists make necessary: `n` carries `positive` and `k` does not, so an
+ * unannotated literal infers the element type as a union whose `k` member
+ * reads `positive?: undefined`, and `undefined` is not assignable to the
+ * `Record<string, boolean>` the field declares. The annotation checks each
+ * entry against the interface instead of unioning the entries first.
+ *
+ * Nothing under tests/ catches this. concepts-logic, atlas and journeys all
+ * run the emitted JavaScript, where the types are gone, so they stay green
+ * while `next build` — which has `typescript.ignoreBuildErrors: false` on
+ * purpose — exits 1 and takes the whole production deploy with it. This
+ * constant did that to `deployment_history` rows 441 and 442, both of which
+ * read `Build failed (exit 1)`, and nothing shipped in between. Every other
+ * unannotated declaration list in this file happens to use one identical set
+ * of keys throughout, which is the only reason they infer cleanly; adding a
+ * key to a single entry of any of them needs the annotation too.
  */
-const COLUMNS_AND_NULLITY = [
+const COLUMNS_AND_NULLITY: VariableDeclaration[] = [
   { name: 'n', assumptions: { integer: true, positive: true } },
   { name: 'k', assumptions: { integer: true } },
 ]
@@ -786,6 +833,249 @@ const WHOLE_DIGITS = [
   { name: 'd2', assumptions: { integer: true } },
   { name: 'd1', assumptions: { integer: true } },
   { name: 'd0', assumptions: { integer: true } },
+]
+
+/**
+ * How many values are in the list, on its own. The narrowest declaration in the
+ * file and the one whose assumptions do the most work.
+ *
+ * `integer` AND `positive`, for the reason `SEQUENCE_INDEX` gives and more
+ * sharply: a COUNT of things is not a real number, and the two tasks using this
+ * are precisely about the arithmetic of (n + 1)/2 landing on a whole position
+ * for an odd n and between two positions for an even one. A symbol declared
+ * `real` would make "n is odd or n is even" a statement about an arbitrary
+ * number, which is not a case split at all.
+ *
+ * Inert for the local rulings — both tasks substitute a numeral and evaluate to
+ * a rational either way — and declared because types.ts is explicit that
+ * assumptions are stated rather than inferred.
+ */
+const SAMPLE_COUNT: VariableDeclaration[] = [
+  { name: 'n', assumptions: { integer: true, positive: true } },
+]
+
+/**
+ * Five values of a list, plus how many of them there are.
+ *
+ * `n` is the count and carries `integer`/`positive` like every count in this
+ * file; the five values are plain `real`. That is deliberately wider than the
+ * whole pounds the prompts use: a list of measurements is not a list of
+ * integers, and the mean of five whole numbers is normally not whole. The
+ * donations happen to divide exactly because a worked example that ends in
+ * 11.3 would be teaching long division.
+ *
+ * The count is a symbol rather than the literal 5, and that is the content: the
+ * mean divides by HOW MANY THERE ARE, and a learner who reads a hard-coded 5 as
+ * part of the formula has learned the wrong thing. There is no symbol here for
+ * the total, because a task handed the total would have skipped the only
+ * summation in the point.
+ */
+const SAMPLE_FIVE_AND_COUNT: VariableDeclaration[] = [
+  { name: 'a', assumptions: { real: true } },
+  { name: 'b', assumptions: { real: true } },
+  { name: 'c', assumptions: { real: true } },
+  { name: 'd', assumptions: { real: true } },
+  { name: 'e', assumptions: { real: true } },
+  { name: 'n', assumptions: { integer: true, positive: true } },
+]
+
+/**
+ * Five values of a list, plus the mean as a sixth symbol.
+ *
+ * A separate list from `SAMPLE_FIVE_AND_COUNT` rather than that one with `n`
+ * renamed, because `m` is a different KIND of thing: the count is a whole
+ * number of items and the mean is a value in the same units as the data, so the
+ * two cannot share assumptions. `m` is `real` and must be — the mean of a list
+ * of integers is not an integer, and the deviations task leans on `m` being
+ * exactly the mean rather than near it.
+ *
+ * The mean is HANDED to both tasks rather than computed inside them. That is a
+ * deliberate narrowing of what they score: point 1 already rules the mean, and
+ * these two are about what happens to the deviations once you have it. A
+ * `given` that recomputed the mean five times over would make a slip in the
+ * division look like a failure to understand why the deviations cancel.
+ */
+const SAMPLE_FIVE_AND_MEAN: VariableDeclaration[] = [
+  { name: 'a', assumptions: { real: true } },
+  { name: 'b', assumptions: { real: true } },
+  { name: 'c', assumptions: { real: true } },
+  { name: 'd', assumptions: { real: true } },
+  { name: 'e', assumptions: { real: true } },
+  { name: 'm', assumptions: { real: true } },
+]
+
+/**
+ * How many letters a truth table is over. Used once, for 2ⁿ.
+ *
+ * `integer` and `positive`, like `SAMPLE_COUNT` and for the sharper half of its
+ * reason: n counts the letters, and 2ⁿ is the number of rows, so a non-integer
+ * n does not name a smaller table — it names nothing. Declaring it `real` would
+ * make "2^n rows" a claim about an arbitrary exponent, which is a statement
+ * about powers rather than about how many cases there are.
+ */
+const LETTER_COUNT: VariableDeclaration[] = [
+  { name: 'n', assumptions: { integer: true, positive: true } },
+]
+
+/**
+ * Two truth values, as 1 and 0.
+ *
+ * `integer` IS THE STRONGEST THING THE SCHEMA CAN SAY HERE, and the gap is
+ * worth naming rather than papering over. What these symbols really satisfy is
+ * p ∈ {0, 1}, and `VariableDeclaration.assumptions` is a flag set mirroring the
+ * worker's — `integer`, `positive`, `real` — with no way to express membership
+ * of a two-element set. `domainConditions` cannot carry it either: it holds
+ * conditions like `x != 1`, and the condition wanted here is an equation.
+ *
+ * So the restriction is stated in the PROMPTS, which are printed verbatim, and
+ * ontology-logic.ts makes it the first knowledge point's content rather than a
+ * footnote. That is not a workaround for the three tasks that need it, it is
+ * the honest place for it: the restriction is a fact about what the 1-and-0
+ * encoding IS, and a learner who reads it as a declaration on a symbol has
+ * learnt the wrong thing. The one task where it bites — the excluded middle,
+ * whose expression equals 1 only because p² = p — says so in its prompt and
+ * gives the value at p = 1/2 that breaks it.
+ *
+ * Not `positive`, which would be false: false is 0.
+ */
+const TRUTH_VALUES: VariableDeclaration[] = [
+  { name: 'p', assumptions: { integer: true } },
+  { name: 'q', assumptions: { integer: true } },
+]
+
+/** One truth value. The excluded-middle task mentions no second letter. */
+const TRUTH_VALUE: VariableDeclaration[] = [
+  { name: 'p', assumptions: { integer: true } },
+]
+
+/**
+ * A predicate's truth value at each member of a four-member domain.
+ *
+ * `integer` for `TRUTH_VALUES`' reason and with its gap: what these really
+ * satisfy is membership of {0, 1}, and `assumptions` is a flag set with no way
+ * to say so. The restriction lives in the prompts and in
+ * ontology-quantifiers.ts's first knowledge point, which is the honest place for
+ * it rather than a workaround for the schema.
+ *
+ * ONE LIST FOR TWO READINGS, declared once on purpose. In the first two points
+ * the four symbols are P's value at each of the four domain members; in the
+ * third they are the value of an INNER quantified statement at each of the four
+ * outer values — "is there a y for this x", or "does every x work for this y".
+ * Those are different readings of the same kind of thing: a truth value, as a 1
+ * or a 0, and the assumptions a declaration can carry are identical. So a second
+ * list would differ only in its name, which is what `TRUTH_VALUE` versus
+ * `TRUTH_VALUES` is not — there the arity of the statement differs and
+ * declaring an unmentioned `q` would claim a four-row table where there are two.
+ * Each prompt says which reading it is using, because that is the part a
+ * declaration cannot carry.
+ *
+ * Four rather than the six the first worked example uses, and the gap is
+ * deliberate: the example is richer than the tasks because it also changes the
+ * domain, and a task that declared six symbols to score one product would be
+ * five of bookkeeping per fact.
+ */
+const FOUR_TRUTH_VALUES: VariableDeclaration[] = [
+  { name: 'a', assumptions: { integer: true } },
+  { name: 'b', assumptions: { integer: true } },
+  { name: 'c', assumptions: { integer: true } },
+  { name: 'd', assumptions: { integer: true } },
+]
+
+/**
+ * Which member of the whole numbers a universal claim is being tested at.
+ *
+ * `integer` and NOT `positive`, which is the whole reason this is not
+ * `LETTER_COUNT` with the comment rewritten. The claim under test is "for every
+ * whole number n, n² + n + 11 is prime", and its domain includes 0 — the worked
+ * example's search starts there and n = 0 is one of the ten supporting cases. A
+ * `positive` declaration would quietly narrow the domain of the claim the task
+ * is about, which in a subject whose first point is "the domain is part of the
+ * claim" would be the material contradicting its own symbol.
+ */
+const WHOLE_NUMBER_INDEX: VariableDeclaration[] = [
+  { name: 'n', assumptions: { integer: true } },
+]
+
+/**
+ * The arbitrary whole number a CASE is written in terms of.
+ *
+ * `integer` and NOT `positive`, for `WHOLE_NUMBER_INDEX`'s reason read one layer
+ * in. The claims these tasks belong to range over every whole number, and k = 0
+ * is a legitimate member of each case — it is n = 1 in the odd case, n = 2 in
+ * the 3k + 2 case — so `positive` would quietly exclude the smallest instance of
+ * exactly the thing being proved. Both prompts that use it name k = 0 as one of
+ * the further values the answer is unchanged at, so a `positive` declaration
+ * would also contradict its own prompt.
+ *
+ * This is the subject's whole encoding in one declaration: a case is a FORM,
+ * `2*k + 1` or `3*k + 2`, and "for an arbitrary member of the case" means the
+ * answer does not mention k. Two of the tasks below are expressions that are
+ * identically 1 for that reason, and the k cancelling is the fact being taught
+ * rather than a convenience of the arithmetic.
+ */
+const CASE_INDEX: VariableDeclaration[] = [
+  { name: 'k', assumptions: { integer: true } },
+]
+
+/**
+ * A particular whole number a claim is being tested at, with nothing else named.
+ *
+ * Separate from `WHOLE_NUMBER_INDEX` despite declaring the same symbol with the
+ * same assumption, because that list's comment is a claim about the domain of
+ * ONE statement — "for every whole number n, n² + n + 11 is prime" — and reusing
+ * it here would attach that reading to two tasks that are about division. The
+ * two tasks sharing this one divide by a stated constant: 2 ÷ 4 to refute a
+ * converse, and 30031 ÷ 59 to produce the second factor of a number assumed to
+ * have none.
+ */
+const NUMBER_UNDER_TEST: VariableDeclaration[] = [
+  { name: 'n', assumptions: { integer: true } },
+]
+
+/**
+ * A number, a divisor, and a candidate quotient — the three symbols a remainder
+ * is read off.
+ *
+ * ONE LIST FOR TWO POINTS ON PURPOSE, and the expression `n - p*k` is shared
+ * with it. In the contradiction point it answers "does any prime on the list
+ * divide 30031", where a remainder of 1 means none of them does; in the cases
+ * point it answers "which case is 2027 in", where a remainder of 2 means the
+ * case a two-case split forgot. Those are two different facts and ONE move, and
+ * two differently-written expressions would have said they were two moves.
+ * ontology-quantifiers.ts shares a `given` across a point boundary for the same
+ * reason and says so in the same words.
+ *
+ * All three `integer` and none `positive`: the move is defined for 0 and the
+ * claims it serves do not exclude it, and nothing here divides by a symbol, so
+ * `p != 0` is not a condition any ruling needs.
+ */
+const DIVIDEND_DIVISOR_QUOTIENT: VariableDeclaration[] = [
+  { name: 'n', assumptions: { integer: true } },
+  { name: 'p', assumptions: { integer: true } },
+  { name: 'k', assumptions: { integer: true } },
+]
+
+/**
+ * Six primes a list is assumed to exhaust.
+ *
+ * Six rather than a shorter run because the point of the task is that the number
+ * built comes out COMPOSITE, and the shortest list for which it does is this
+ * one: 2 · 3 · 5 · 7 + 1 is 211 and prime, and 2 · 3 · 5 · 7 · 11 · 13 + 1 is
+ * 30031 = 59 × 509. The worked example uses both, and the task uses the one that
+ * makes the misreading visible.
+ *
+ * `integer`, not `positive`, by the file's convention, and the real restriction
+ * — that each is prime — is not something `assumptions` can carry. It lives in
+ * the prompt, which is printed verbatim, the way the {0, 1} restriction does for
+ * `FOUR_TRUTH_VALUES`.
+ */
+const SIX_PRIMES: VariableDeclaration[] = [
+  { name: 'a', assumptions: { integer: true } },
+  { name: 'b', assumptions: { integer: true } },
+  { name: 'c', assumptions: { integer: true } },
+  { name: 'd', assumptions: { integer: true } },
+  { name: 'e', assumptions: { integer: true } },
+  { name: 'f', assumptions: { integer: true } },
 ]
 
 export const TASKS: PracticeTask[] = [
@@ -2957,6 +3247,207 @@ export const TASKS: PracticeTask[] = [
     // `acceptsUnevaluated` in types.ts for why the exemption has to be the
     // author's call and cannot be inferred.
     acceptsUnevaluated: true,
+  },
+
+  // ── exponents-and-logarithms: radical-equations ─────────────────────────
+  //
+  // NINE TASKS, ALL `evaluate`, ALL RULED LOCALLY AND EXACTLY, AND THE LAST
+  // CLAUSE IS WHY THIS CONCEPT COULD BE AUTHORED AT ALL.
+  //
+  // atlas-foundations.ts had this node on a list of five whose "answers are
+  // sets, intervals and arguments rather than values", alongside
+  // `inequality-proofs`. That is true of the other four and was never true of
+  // this one: a radical equation has a finite list of candidates, each of which
+  // is a number, and deciding whether one belongs is done by evaluating the two
+  // sides there and comparing. The whole content of the concept is a
+  // substitution whose outcome is a value, which is precisely what `evaluate`
+  // asks for. The sentence is corrected where it was written.
+  //
+  // Every root taken here is a root of a perfect square, which is a constraint
+  // and not a coincidence. `exactValue` returns a rational for `sqrt(9)` and
+  // null for `sqrt(2)`, and a task whose own truth is null grades the learner
+  // against the author's unvouched reference instead of against the
+  // mathematics — see the note on `root-as-exponent-1` above, which is the task
+  // that forced exact rational roots into numerals.ts. So the arithmetic is
+  // chosen to keep the ruling local. The mathematics does not suffer for it:
+  // extraneous roots arise from the SIGN of the two sides, and a surd would add
+  // nothing to that and would cost the ruling.
+  //
+  // THE TASKS COME IN PAIRS WHOSE TWO VERDICTS DIFFER IN KIND, which is this
+  // build's established way of making an asymmetry scoreable — the shape
+  // `gained-solution-satisfies-the-new-equation-1` and its partner introduced
+  // for `linear-equations`, and the one ontology-geometry.ts uses for a
+  // converse against its contrapositive. Three pairs here:
+  //
+  //  - one number satisfying the SQUARED equation and failing the ORIGINAL,
+  //    which is an invented solution caught in the act;
+  //  - one expression at two candidates, coming to 1 at the survivor and 5 at
+  //    the casualty, which is the check doing its job;
+  //  - the same two candidates against the equation the squaring FOLDED IN,
+  //    coming to 0 at the casualty and 6 at the survivor — 0 being the claim
+  //    that the root equals minus the other side there.
+  //
+  // Neither half of any pair shows anything alone. The first is "4 − 4 = 0",
+  // the second is one subtraction, and read apart they are arithmetic. Read
+  // together each pair is the solution set having changed under a step, which
+  // is the only form that fact can take in a build with no `solve` kind.
+  //
+  // `isolate-then-solve-1` is the one task here that is a solve, and it is
+  // expressed the way the six `linear-equations` solves are: `given` carries
+  // the method written out on the letters — the quadratic formula — and the
+  // learner submits the number. The `+` branch is asked for because it gives
+  // the LARGER root, which is also the one that survives the check; the
+  // casualty is reached by the two tasks either side of it rather than by a
+  // second formula task, since asking for both roots would test the formula
+  // twice and the concept once.
+  {
+    id: 'squared-equation-admits-the-candidate-1',
+    knowledgePointId: 'squaring-can-create-a-solution',
+    kind: 'evaluate',
+    prompt:
+      '√x = −2 was squared, giving x = 4. Evaluate x − 4 at x = 4. A value of 0 means 4 '
+      + 'satisfies the squared equation.',
+    given: 'x - 4',
+    variables: REAL_X,
+    // 4 − 4 = 0, so 4 solves the equation the squaring produced. Half of a
+    // pair; the other half shows it solves nothing in the equation squared.
+    reference: '0',
+    at: { x: '4' },
+  },
+  {
+    id: 'original-rejects-the-candidate-1',
+    knowledgePointId: 'squaring-can-create-a-solution',
+    kind: 'evaluate',
+    prompt:
+      'Now the same x = 4 in the equation that was squared. √x = −2 says √x + 2 = 0, so '
+      + 'evaluate √x + 2 at x = 4. Anything other than 0 means 4 is not a solution of it — and '
+      + 'the equation it does solve was produced by the squaring, not found by it.',
+    given: 'sqrt(x) + 2',
+    variables: REAL_X,
+    // √4 + 2 = 2 + 2 = 4, which is not 0. Written as `sqrt(x) + 2` rather than
+    // as the two sides separately because `given` is one expression and a
+    // difference from zero is how an equation is tested inside one. The root is
+    // of a perfect square, so `exactValue` settles it with no worker.
+    reference: '4',
+    at: { x: '4' },
+  },
+  {
+    id: 'isolate-then-solve-1',
+    knowledgePointId: 'isolate-the-radical-before-squaring',
+    kind: 'evaluate',
+    prompt:
+      'Solve √(x + 7) − x = 1. Add x to both sides so the root stands alone, square, and you '
+      + 'are left with x² + x − 6 = 0. Submit the LARGER of the two numbers that quadratic '
+      + 'gives — it is also the one that survives the check.',
+    given: '(-b + sqrt(b^2 - 4*a*c))/(2*a)',
+    variables: REAL_ABC,
+    // a = 1, b = 1, c = −6: the discriminant is 1 + 24 = 25, so the formula
+    // gives (−1 + 5)/2 = 2 on the `+` branch and (−1 − 5)/2 = −3 on the other.
+    // Checking 2 against the equation itself: √9 − 2 = 3 − 2 = 1. The −3 is the
+    // extraneous one and is reached by the two tasks below.
+    //
+    // A perfect-square discriminant, which is the opposite of the choice
+    // `formula-irrational-1` makes two hundred lines up. That task wants the
+    // surd because keeping the answer exact is its knowledge point; this one
+    // wants the ruling local, because the quadratic is scaffolding here and the
+    // concept is what happens after it.
+    reference: '2',
+    at: { a: '1', b: '1', c: '-6' },
+  },
+  {
+    id: 'survivor-satisfies-the-original-1',
+    knowledgePointId: 'isolate-the-radical-before-squaring',
+    kind: 'evaluate',
+    prompt:
+      'Squaring √(x + 7) − x = 1 produced the candidates 2 and −3. Evaluate the left side, '
+      + '√(x + 7) − x, at x = 2. A value of 1 means this candidate is a solution of the '
+      + 'equation as it was written.',
+    given: 'sqrt(x+7) - x',
+    variables: REAL_X,
+    // √9 − 2 = 3 − 2 = 1, which is what the equation asks for.
+    reference: '1',
+    at: { x: '2' },
+  },
+  {
+    id: 'casualty-fails-the-original-1',
+    knowledgePointId: 'isolate-the-radical-before-squaring',
+    kind: 'evaluate',
+    prompt:
+      'The same left side at the other candidate, x = −3. Anything other than 1 means −3 is not '
+      + 'a solution — and nothing in the working was wrong, since −3 really is a root of '
+      + 'x² + x − 6.',
+    given: 'sqrt(x+7) - x',
+    variables: REAL_X,
+    // √4 − (−3) = 2 + 3 = 5, which is not 1. One expression at two inputs, 1 at
+    // the survivor and 5 at the casualty: the verdicts differ in kind rather
+    // than in size, which is the only way this build can score the asymmetry.
+    reference: '5',
+    at: { x: '-3' },
+  },
+  {
+    id: 'casualty-solves-the-folded-equation-1',
+    knowledgePointId: 'an-extraneous-root-solves-the-other-sign',
+    kind: 'evaluate',
+    prompt:
+      'Squaring cannot tell √(x + 7) = x + 1 from √(x + 7) = −(x + 1), because the two squared '
+      + 'are the same equation. The second says √(x + 7) + (x + 1) = 0. Evaluate '
+      + '√(x + 7) + (x + 1) at x = −3.',
+    given: 'sqrt(x+7) + (x+1)',
+    variables: REAL_X,
+    // √4 + (−3 + 1) = 2 + (−2) = 0. A value of 0 is the claim: at this
+    // candidate the root equals MINUS the other side, so −3 is a solution of
+    // the equation the squaring folded in, and that is where it came from.
+    reference: '0',
+    at: { x: '-3' },
+  },
+  {
+    id: 'survivor-fails-the-folded-equation-1',
+    knowledgePointId: 'an-extraneous-root-solves-the-other-sign',
+    kind: 'evaluate',
+    prompt:
+      'The same expression at the surviving candidate, x = 2. Anything other than 0 means this '
+      + 'one is NOT a solution of the folded-in equation — so the two candidates the quadratic '
+      + 'gave belong to one equation each.',
+    given: 'sqrt(x+7) + (x+1)',
+    variables: REAL_X,
+    // √9 + (2 + 1) = 3 + 3 = 6. Both sides of the equation asked come out as 3
+    // here — same sign — which is the test the knowledge point's fourth subgoal
+    // states, and it agrees with the substitution two tasks up.
+    reference: '6',
+    at: { x: '2' },
+  },
+  {
+    id: 'even-power-cannot-be-undone-1',
+    knowledgePointId: 'the-even-index-is-what-forces-the-check',
+    kind: 'evaluate',
+    prompt:
+      'Evaluate x² at x = −2. Then note that 2² gives the same answer. A step that sends two '
+      + 'different numbers to one cannot be undone, which is the whole reason a squaring needs '
+      + 'to be followed by a check.',
+    given: 'x^2',
+    variables: REAL_X,
+    // 4, and 2² is 4 as well. The pair with the task below is one shape at one
+    // input, and the verdicts differ in kind: this value is shared with another
+    // input and that one is not.
+    reference: '4',
+    at: { x: '-2' },
+  },
+  {
+    id: 'odd-power-can-be-undone-1',
+    knowledgePointId: 'the-even-index-is-what-forces-the-check',
+    kind: 'evaluate',
+    prompt:
+      'Now x³ at x = −2. No other real number cubes to this, so cubing both sides of ∛x = −2 '
+      + 'loses nothing and the candidate it gives needs no check. The index decides it, not the '
+      + 'root sign.',
+    given: 'x^3',
+    variables: REAL_X,
+    // −8, and nothing else cubed is −8. This is also the check on ∛(−8) = −2
+    // run the easy way round: the cube root of −8 is −2 exactly because
+    // (−2)³ = −8, and cubing is something `exactValue` settles where a cube
+    // root is not in the expression language's function set at all.
+    reference: '-8',
+    at: { x: '-2' },
   },
 
   // ── arithmetic-foundations ──────────────────────────────────────────────
@@ -6502,6 +6993,178 @@ export const TASKS: PracticeTask[] = [
     reference: '210',
   },
 
+  // The six on `mathematical-induction`, the thirty-second promotion and the
+  // FOURTH concept this subject has taken from `sequences-and-series`. Two per
+  // point.
+  //
+  // THIS IS THE FIRST CONCEPT IN THE BUILD WHOSE SUBJECT IS AN ARGUMENT AND
+  // WHOSE TASKS ARE NOT ALL `evaluate`, and the reason is worth stating
+  // because `geometric-proof` — the other argument-shaped concept — could not
+  // do it. There, every chain ends in a claim about a figure, so the
+  // refutation had to be asked as the two values it reduces to. Here the
+  // inductive step IS a factorisation: you have the induction hypothesis plus
+  // one new term, and the work is recognising it as the same formula one
+  // position along. `transform_to_form` with `factored` rules exactly that —
+  // equivalence AND shape, both checked locally in forms.ts with no worker —
+  // so the step is ruled as the move it is rather than as a number it leaves.
+  //
+  // WHAT FORCED THE DENOMINATOR OUT OF THE TWO FACTORISATION TASKS, measured
+  // rather than assumed. The natural reference for the step on
+  // 1 + … + n = n(n + 1)/2 is `(k + 1)(k + 2)/2`, and `checkFactored` REFUSES
+  // it: the division makes `factors()` see one factor of degree 2, so it
+  // reports "is a single factor of degree 2 and is not written as a product"
+  // and a learner submitting the correct answer would be marked wrong. The
+  // repair is the move a human makes anyway — double both sides, factor, halve
+  // at the end — so `induction-step-factor-1` asks for the DOUBLED identity
+  // and the worked example's third subgoal does the doubling explicitly. That
+  // is a real constraint of the form checker shaping the task, and it is the
+  // honest shape rather than a workaround: clearing a denominator before
+  // factoring is what the step looks like on paper.
+  //
+  // `(k + 1)*(k + 2)*(1/2)` DOES pass the check, and was rejected as a
+  // reference. It is nobody's way of writing that expression, and a reference
+  // the learner would never produce turns an equivalence check into a guessing
+  // game about punctuation.
+  //
+  // THE CHARACTERISTIC WRONG ANSWER IS REACHABLE ON ALL SIX, verified through
+  // `exactValue` before these were written rather than predicted:
+  //
+  //  - `induction-next-term-1` adds the (k + 1)th term, which is k + 1 and not
+  //    k. Adding k gives 35 against 36 — the commonest slip in the step, and
+  //    one that lands on a plausible number rather than a parse error.
+  //  - `induction-base-value-1` keeps the + c OUTSIDE the halving, so reading
+  //    it inside gives 5/2. The point is about computing the two sides
+  //    separately, and a non-integer answer is the loudest possible signal
+  //    that the claim's right side was misread rather than merely mis-added.
+  //  - `induction-base-later-1` shares its `given` with the task above and
+  //    that is deliberate — see its own comment.
+  //  - `induction-increment-sixes-1` divides the INCREMENT by 6. Dividing the
+  //    instance at k + 1 instead gives 56, and dividing by 3 — stopping where
+  //    the factorisation stops — gives 42. Both are the two halves of the
+  //    fourth subgoal's argument failing separately.
+  //
+  // NO `domainConditions` ON ANY OF THE SIX. `induction-increment-sixes-1`
+  // divides by a literal 6 and the other five divide by a literal 2 or by
+  // nothing, so there is no input at which any of them is undefined — which is
+  // the test the `AP_*` tasks above apply and the rational-expression tasks
+  // before them.
+  {
+    id: 'induction-step-factor-1',
+    knowledgePointId: 'the-step-must-land-on-the-claim-with-k-plus-one-in-it',
+    kind: 'transform_to_form',
+    form: 'factored',
+    prompt:
+      'Assuming 1 + 2 + … + k = k(k + 1)/2, the sum to k + 1 is k(k + 1)/2 + (k + 1). Doubling '
+      + 'both sides to clear the halving leaves k(k + 1) + 2(k + 1). Write that as a product. '
+      + 'The step succeeds if what you get is the doubled claim at k + 1, so you are aiming at '
+      + 'something you can compare with (k + 1)(k + 2) — but get there by taking out the common '
+      + 'factor rather than by expanding and matching.',
+    // A sum of two terms, so the given does not already satisfy `factored` —
+    // confirmed through `checkForm`, which is the property the suite asserts
+    // over every transform task in the build.
+    given: 'k*(k + 1) + 2*(k + 1)',
+    variables: INDUCTION_INDEX,
+    // (k + 1)(k + 2). Both sides are 72 at k = 7 and 20 at k = 3; the identity
+    // is k² + 3k + 2 either way, so the equivalence check settles it and the
+    // form check is what refuses the given back unchanged.
+    reference: '(k + 1)*(k + 2)',
+  },
+  {
+    id: 'induction-next-term-1',
+    knowledgePointId: 'the-step-must-land-on-the-claim-with-k-plus-one-in-it',
+    kind: 'evaluate',
+    prompt:
+      'Assuming 1 + 2 + … + k = k(k + 1)/2, the sum to k + 1 is the sum to k plus the one new '
+      + 'term. That new term is the (k + 1)th. Evaluate k(k + 1)/2 + (k + 1) at k = 7, and check '
+      + 'it against the claim at k + 1 — which is (k + 1)(k + 2)/2, or 8 × 9/2.',
+    given: 'k*(k + 1)/2 + (k + 1)',
+    variables: INDUCTION_INDEX,
+    at: { k: '7' },
+    // 28 + 8. The target (k + 1)(k + 2)/2 is 8 · 9/2 = 36 too, which is the
+    // whole claim of the step. Adding k rather than k + 1 gives 35 — a term too
+    // few, which is the slip the second subgoal is about.
+    reference: '36',
+  },
+  {
+    id: 'induction-base-value-1',
+    knowledgePointId: 'a-claim-can-be-inherited-and-false-at-every-natural',
+    kind: 'evaluate',
+    prompt:
+      'It is claimed that 1 + 2 + … + n = n(n + 1)/2 + 3, and the inductive step for that claim '
+      + 'is valid. Test the base case: evaluate the claim\'s right-hand side n(n + 1)/2 + c at '
+      + 'n = 1, c = 3. The left-hand side at n = 1 is the sum of a single term, so it is 1 — and '
+      + 'the claim survives only if the two agree.',
+    given: 'n*(n + 1)/2 + c',
+    variables: INDUCTION_OFFSET,
+    at: { n: '1', c: '3' },
+    // 1 + 3, against a left-hand side of 1. Reading the + c inside the halving
+    // gives 5/2, which is the misreading worth catching here: the offset is
+    // added to the formula, not to the product under it.
+    reference: '4',
+  },
+  {
+    id: 'induction-base-later-1',
+    knowledgePointId: 'a-claim-can-be-inherited-and-false-at-every-natural',
+    kind: 'evaluate',
+    // THE SAME `given` AS THE TASK ABOVE, WITH A DIFFERENT `at`, AND THAT IS
+    // THE TASK. The point's claim is that a valid step transmits an error
+    // EXACTLY, so the gap is constant rather than shrinking — and the only way
+    // to put that in front of a learner is the same formula at two positions.
+    // A different expression here would be asking a different question, and
+    // evaluating one position twice would be asking none.
+    prompt:
+      'Same claim: 1 + 2 + … + n = n(n + 1)/2 + 3. You might hope it goes wrong only near the '
+      + 'start. Evaluate n(n + 1)/2 + c at n = 4, c = 3, then add up 1 + 2 + 3 + 4 by hand and '
+      + 'compare the two — the size of the difference is what the question is about.',
+    given: 'n*(n + 1)/2 + c',
+    variables: INDUCTION_OFFSET,
+    at: { n: '4', c: '3' },
+    // 10 + 3, against a hand-totalled 1 + 2 + 3 + 4 = 10. Still 3 out, which
+    // is the point: the step is valid, so it carries the error forward
+    // undiminished and no later case will ever look any better.
+    reference: '13',
+  },
+  {
+    id: 'induction-increment-factor-1',
+    knowledgePointId: 'with-no-term-to-add-the-step-is-about-the-increment',
+    kind: 'transform_to_form',
+    form: 'factored',
+    prompt:
+      'To prove n³ − n is always a multiple of 6, the step needs the gap between consecutive '
+      + 'instances rather than a term to add. Write ((k + 1)³ − (k + 1)) − (k³ − k) as a '
+      + 'product. Expand first and watch the cubes cancel — the difference of two cubics is a '
+      + 'quadratic, which is why the step is easier than either instance it compares.',
+    // A sum of three terms before expansion, so it does not already satisfy
+    // `factored`. Confirmed through `checkForm`, as the task above was.
+    given: '(k + 1)^3 - (k + 1) - (k^3 - k)',
+    variables: INDUCTION_INDEX,
+    // 3k(k + 1). Both sides are 126 at k = 6 and 18 at k = 2. Note what the
+    // form check does and does not settle: it rules that the answer is a
+    // product, and the FACTOR OF 6 is not in it — 3k(k + 1) is visibly a
+    // multiple of 3 and the evenness of k(k + 1) is an arithmetic fact from
+    // outside the algebra. That is the fourth subgoal's whole content and the
+    // honest limit of what a form checker can rule here.
+    reference: '3*k*(k + 1)',
+  },
+  {
+    id: 'induction-increment-sixes-1',
+    knowledgePointId: 'with-no-term-to-add-the-step-is-about-the-increment',
+    kind: 'evaluate',
+    prompt:
+      'The increment between consecutive instances of n³ − n is 3k(k + 1). How many sixes is it '
+      + 'at k = 6? Evaluate (((k + 1)³ − (k + 1)) − (k³ − k))/6 at k = 6 — written as the '
+      + 'difference rather than as 3k(k + 1) so that the two instances, 210 and 336, are the '
+      + 'numbers you are working with.',
+    given: '((k + 1)^3 - (k + 1) - (k^3 - k))/6',
+    variables: INDUCTION_INDEX,
+    at: { k: '6' },
+    // 126/6. Dividing the instance at k + 1 instead of the increment gives
+    // 336/6 = 56, and dividing by 3 — stopping where the factorisation stops,
+    // before the evenness argument — gives 42. Both are real values of this
+    // task's own expression under a named misreading.
+    reference: '21',
+  },
+
   // The six on `functions-of-several-variables`, the twenty-first promotion
   // and the first concept in this subject whose input is a pair. Two per
   // point, which is the shape the last four promotions in the build settled
@@ -8270,6 +8933,1329 @@ export const TASKS: PracticeTask[] = [
     // first count, which is the error the knowledge point is built on.
     reference: '1',
     at: { a: '360', b: '0' },
+  },
+
+  // ── plane-geometry, thirteenth promotion: plane-transformations ──────────
+  //
+  // Six tasks, two per knowledge point, all `evaluate`, every one settled by
+  // exact rational arithmetic with no worker — so the subject's no-worker
+  // contract holds unchanged and the pair of `surd_reduced` tasks stays a pair.
+  //
+  // DECLINED FOR THE THIRD TIME RUNNING, on the same ground as
+  // `isometries-and-symmetry` rather than `distance-and-midpoint`'s. The
+  // answers here are coordinates, squared distances and whole distances, which
+  // are all values; `NamedForm` is a union of claims about the SHAPE of an
+  // expression and there is nothing syntactic to demand of "2". The one place
+  // a form came close is the second point, where a distance is a root — but the
+  // figures are chosen to make every root whole (5, 5 and 15), for exactly the
+  // reason `distance-and-midpoint` gives: reducing a surd is a question
+  // `roots-and-irrationals` owns and `pythagoras` and `circles` have each
+  // already borrowed, and what this concept contributes sits around the
+  // radical rather than in it.
+  //
+  // THE UNSCORED PART, named as everywhere else in this subject, and it is
+  // larger here than in any concept above. Every one of the four rules in the
+  // first knowledge point is handed to the learner in the prompt, because
+  // `evaluate` substitutes into a `given` and the `given` IS the rule — so
+  // "which rule is a quarter turn" cannot be the thing scored, only the
+  // arithmetic the rule then licenses. The tasks are therefore built to put as
+  // much of the content as possible INTO that arithmetic: the first pair
+  // computes a squared distance between two images rather than one image's
+  // coordinate, so a learner who mixes up the slots gets a different number
+  // rather than a differently-labelled answer; and the third pair runs the
+  // three-move composition at a centre, where the order of the moves is
+  // visible in the expression and a wrong order gives a wrong value.
+  //
+  // THE SAME GIVEN AT TWO INPUTS, TWICE, which is the shape this subject
+  // already uses for `straight-line-remainder-1`/`full-turn-remainder-1` and
+  // for the two ends of `360/a + b`. Here it carries two different claims:
+  //
+  //  - The first pair is `((-a) - (-b))^2 + (b - a)^2`, the squared distance
+  //    between the reflection's image and the quarter turn's. At (5, 2) it is
+  //    18 and at (4, 4) it is 0, and the pair IS the content — the two maps
+  //    disagree at a general point and agree exactly on the line y = x, which
+  //    one task alone would have left invisible while drilling the arithmetic.
+  //    tests/concepts-logic.mjs checks the vanishing at a third point on that
+  //    line, since "it is zero on y = x" is a claim about the line and not
+  //    about (4, 4).
+  //
+  //  - The second pair is `sqrt((c - a)^2 + (d - b)^2)`, which is
+  //    `the-distance-is-a-hypotenuse-1`'s own expression reused deliberately.
+  //    The content of this point is the COMPARISON of three distances, so the
+  //    measuring instrument has to be the same one each time or the comparison
+  //    says nothing. At the rotated images it answers 5, matching the original
+  //    segment; at the images scaled by 3 it answers 15. Asserted as a pair
+  //    with the earlier task below, because a single one of them would show a
+  //    distance being computed and not a distance being preserved.
+  //
+  // WHY `REAL_ABCD` AND `REAL_AB` RATHER THAN COORDINATE-NAMED SETS, which is
+  // `distance-and-midpoint`'s rule unchanged: what a symbol MEANS is the
+  // prompt's job and what it may be assumed to BE is the declaration's. The
+  // third pair is the one worth reading the prompt for — there (a, b) is the
+  // CENTRE and (c, d) is the point, the opposite of the second pair's two
+  // points, and nothing in the declaration could say so.
+  {
+    id: 'the-two-maps-disagree-away-from-the-mirror-1',
+    knowledgePointId: 'a-transformation-is-a-rule-on-the-pair-and-the-slots-are-half-of-it',
+    kind: 'evaluate',
+    prompt:
+      'Take P(5, 2). Reflected in the y-axis it goes to (−a, b); given a quarter turn '
+      + 'anticlockwise about the origin it goes to (−b, a). Both images carry exactly one minus '
+      + 'sign, in the same slot, so the signs cannot tell the two maps apart. Evaluate '
+      + '((-a) - (-b))^2 + (b - a)^2 at a = 5, b = 2 — the squared distance between the two '
+      + 'images, using the squared form because the distance itself is irrational here and '
+      + 'nothing in the question needs it to be otherwise. Note which half of this task scores: '
+      + 'the arithmetic, not the rules. That a quarter turn is (−y, x) rather than (y, −x) was '
+      + 'handed to you, and the way to settle it for yourself is to send (1, 0) through both and '
+      + 'see which lands on the positive y-axis.',
+    given: '((-a) - (-b))^2 + (b - a)^2',
+    variables: REAL_AB,
+    // The images are (−5, 2) and (−2, 5). x-difference (−5) − (−2) = −3,
+    // y-difference 2 − 5 = −3, so 9 + 9 = 18. Squared on purpose: the real
+    // distance is 3√2, `exactValue` returns null on a surd, and asking for the
+    // reduced surd would be the question `roots-and-irrationals` owns for a
+    // fourth time. A NON-zero answer is the content — the two maps are
+    // different maps — and the next task is the same expression where it
+    // vanishes.
+    reference: '18',
+    at: { a: '5', b: '2' },
+  },
+  {
+    id: 'the-two-maps-agree-on-the-mirror-line-1',
+    knowledgePointId: 'a-transformation-is-a-rule-on-the-pair-and-the-slots-are-half-of-it',
+    kind: 'evaluate',
+    prompt:
+      'The same two maps and the same expression, at a different point: Q(4, 4), which sits on '
+      + 'the line y = x. Evaluate ((-a) - (-b))^2 + (b - a)^2 at a = 4, b = 4. Read the answer '
+      + 'against the-two-maps-disagree-away-from-the-mirror-1, which gave 18. A reflection in '
+      + 'the y-axis and a quarter turn anticlockwise are not the same map, and this is the whole '
+      + 'set of points at which they nevertheless agree — the expression is '
+      + '2(b − a)² once simplified, so it vanishes exactly when a = b and nowhere else. The pair '
+      + 'of tasks is the point: one of them alone would have drilled the arithmetic and said '
+      + 'nothing about where the two maps coincide.',
+    given: '((-a) - (-b))^2 + (b - a)^2',
+    variables: REAL_AB,
+    // Both images are (−4, 4), so the squared distance is 0. The expression is
+    // identically 2(b − a)², which is why this is a statement about the line
+    // y = x rather than a coincidence at (4, 4) — tests/concepts-logic.mjs
+    // evaluates it at a third point on that line to hold the general claim,
+    // since a single zero proves nothing about a locus.
+    reference: '0',
+    at: { a: '4', b: '4' },
+  },
+  {
+    id: 'the-quarter-turn-returns-the-distance-1',
+    knowledgePointId: 'distance-preservation-is-computed-here-and-assumed-there',
+    kind: 'evaluate',
+    prompt:
+      'A is (1, 2) and B is (4, 6), so AB = 5 — the legs are 3 and 4. A quarter turn '
+      + 'anticlockwise about the origin, (x, y) → (−y, x), sends A to (−2, 1) and B to (−6, 4). '
+      + 'Evaluate sqrt((c - a)^2 + (d - b)^2) at a = -2, b = 1, c = -6, d = 4, where (a, b) and '
+      + '(c, d) are those two IMAGES. This is the same expression '
+      + 'the-distance-is-a-hypotenuse-1 uses, deliberately — the content here is a comparison of '
+      + 'distances, so the measuring instrument has to be the same one. Watch the legs as you '
+      + 'go: they were 3 and 4 and they are now −4 and 3, so the quarter turn did move them '
+      + 'about. Whether it changed the distance is what you are computing rather than what you '
+      + 'are being told.',
+    given: 'sqrt((c - a)^2 + (d - b)^2)',
+    variables: REAL_ABCD,
+    // −6 − (−2) = −4 and 4 − 1 = 3, so 16 + 9 = 25 and the root is 5 exactly —
+    // the same 5 as the original segment. A 3-4-5 chosen so that the root is
+    // whole at every stage of the comparison: an irrational would have moved
+    // the difficulty into the radical, where `roots-and-irrationals` owns it,
+    // and would have made the three distances harder to set side by side.
+    reference: '5',
+    at: { a: '-2', b: '1', c: '-6', d: '4' },
+  },
+  {
+    id: 'the-scaling-multiplies-the-distance-once-1',
+    knowledgePointId: 'distance-preservation-is-computed-here-and-assumed-there',
+    kind: 'evaluate',
+    prompt:
+      'The same two points and the same expression, under a scaling by 3 about the origin, '
+      + '(x, y) → (3x, 3y): A(1, 2) goes to (3, 6) and B(4, 6) goes to (12, 18). Evaluate '
+      + 'sqrt((c - a)^2 + (d - b)^2) at a = 3, b = 6, c = 12, d = 18. Read the answer against '
+      + 'the-quarter-turn-returns-the-distance-1, which gave 5 for the same segment, and against '
+      + 'the original AB of 5. Before you divide the two answers, notice how many times the 3 '
+      + 'went in: it multiplied each leg once, so each squared leg twice, so the number under '
+      + 'the root is nine times what it was. The answer is not nine times 5, and the reason is '
+      + 'the square root.',
+    given: 'sqrt((c - a)^2 + (d - b)^2)',
+    variables: REAL_ABCD,
+    // 12 − 3 = 9 and 18 − 6 = 12, so 81 + 144 = 225 and the root is 15 exactly
+    // = 3 × 5. The factor enters twice under the root and leaves once through
+    // it, which is `circle-measure`'s exponent count done on two coordinates.
+    // 15 against the previous task's 5 is what makes the scaling fail the
+    // isometry test on the evidence rather than by definition.
+    reference: '15',
+    at: { a: '3', b: '6', c: '12', d: '18' },
+  },
+  {
+    id: 'rotate-about-a-centre-the-x-coordinate-1',
+    knowledgePointId: 'the-centre-is-part-of-the-rule-and-the-origin-rule-does-not-know-it',
+    kind: 'evaluate',
+    prompt:
+      'Rotate P(7, 3) a quarter turn anticlockwise about C(4, 1), not about the origin. The rule '
+      + '(x, y) → (−y, x) is about the origin, so it is applied to the DISPLACEMENT P − C and '
+      + 'the centre is then added back: the image\'s x-coordinate is a − (d − b), where (a, b) '
+      + 'is C and (c, d) is P. Evaluate a - (d - b) at a = 4, b = 1, c = 7, d = 3 — and note '
+      + 'that the first coordinate subtracts the old VERTICAL displacement, which is the (−y) of '
+      + 'the origin rule with the centre put back on either side. The origin rule used directly '
+      + 'on P would give −3 here, which is a real point and the answer to a different question.',
+    given: 'a - (d - b)',
+    variables: REAL_ABCD,
+    // P − C = (3, 2); the origin rule turns that to (−2, 3); adding C back
+    // gives (4 − 2, 1 + 3) = (2, 4). So the x-coordinate is 4 − (3 − 1) = 2.
+    // The rejected −3 is (−y) applied straight to P, which rotates about the
+    // origin instead — and C decides between the two: CP² = 3² + 2² = 13, and
+    // (2, 4) gives (2 − 4)² + (4 − 1)² = 13 while (−3, 7) gives 49 + 36 = 85.
+    // `c` is declared and unused in this expression, deliberately: it is the
+    // other half of the point P, the next task uses it, and dropping it would
+    // make the two tasks disagree about what the four symbols mean.
+    reference: '2',
+    at: { a: '4', b: '1', c: '7', d: '3' },
+  },
+  {
+    id: 'rotate-about-a-centre-the-y-coordinate-1',
+    knowledgePointId: 'the-centre-is-part-of-the-rule-and-the-origin-rule-does-not-know-it',
+    kind: 'evaluate',
+    prompt:
+      'Same rotation, other axis — because the answer is a POINT and one coordinate is half of '
+      + 'it. The image\'s y-coordinate is b + (c - a): the second coordinate ADDS the old '
+      + 'horizontal displacement where the first subtracted the vertical one. Evaluate '
+      + 'b + (c - a) at a = 4, b = 1, c = 7, d = 3, with (a, b) still C and (c, d) still P. The '
+      + 'asymmetry between this expression and rotate-about-a-centre-the-x-coordinate-1\'s is '
+      + 'the whole of what a quarter turn does: one subtraction and one addition, not two of '
+      + 'either. Check your pair of answers against C before trusting them — a rotation about C '
+      + 'cannot change a point\'s distance from C, and CP² = 13.',
+    given: 'b + (c - a)',
+    variables: REAL_ABCD,
+    // 1 + (7 − 4) = 4, so the image is (2, 4). One expression per coordinate
+    // and two tasks, because a point is two numbers — the shape
+    // `distance-and-midpoint` established for recovering an endpoint. Here the
+    // two expressions genuinely DIFFER rather than being the same one at two
+    // inputs, and that difference is the content: `a - (d - b)` against
+    // `b + (c - a)`. Checks out against the centre: (2 − 4)² + (4 − 1)² =
+    // 4 + 9 = 13 = CP².
+    reference: '4',
+    at: { a: '4', b: '1', c: '7', d: '3' },
+  },
+
+  // ── data-summaries, fourteenth promotion: descriptive-statistics ────────
+  //
+  // Eight tasks — three on the first point, two on the second, three on the
+  // third — every one `evaluate`, every one settled by exact rational
+  // arithmetic with no worker. The sixth subject in the build to hold that
+  // contract, and the first whose material is a function of a LIST rather than
+  // of one or two numbers.
+  //
+  // NOT TWO PER POINT, AND THE SHAPE IS THE CONTENT RATHER THAN A DISTRIBUTION.
+  // The first point makes one claim about the mean and TWO about the median —
+  // that it is a position, and that an even-length list has no value at that
+  // position — and the second of those is not a special case of the first, it is
+  // the fact that makes the median a position at all. The third point likewise
+  // claims a sign and claims a robustness, and the sign claim is a PAIR: one
+  // expression at two inputs whose answers differ in sign, which is the only
+  // way an asymmetry gets scored rather than described. The middle point gets
+  // two because it makes exactly two claims: the signed deviations cancel, and
+  // the squares of them do not.
+  //
+  // NO `transform_to_form` ANYWHERE, which is a fact about the subject. A
+  // `NamedForm` is a claim about the SHAPE of an expression and nothing here
+  // asks for a shape — every question is "which number does this list give".
+  // The one answer that could have been a surd is the standard deviation, and
+  // the eight-value sample was chosen so its variance is 4 and its root exactly
+  // 2, because the step being taught is that the root restores the UNITS and a
+  // radicand would have made it about radicals instead.
+  //
+  // THREE SAMPLES, REUSED ACROSS THE POINTS ON PURPOSE. The five donations
+  // 5, 10, 15, 20, 200 are the lopsided one: mean 50, median 15, and four of
+  // the five below the mean. The eight values 2, 4, 4, 4, 5, 5, 7, 9 are the
+  // arithmetic one: total 40, mean 5, squared deviations 32, variance 4,
+  // standard deviation 2, and an even length so the median position is 4.5.
+  // The five marks 5, 16, 17, 18, 19 exist for ONE job — a mean-minus-median
+  // gap that is negative — since every other list in the file is right-tailed
+  // and a pair of positive examples would not have shown that the sign is the
+  // reading.
+  //
+  // THE DIVISOR IS n AND THE PROMPTS SAY SO. `the-variance-is-the-mean-of-the-
+  // squared-deviations-1` divides by 8, not by 7, so a learner checking against
+  // a calculator's `s` button gets 32/7 ≈ 4.571 and a contradiction. The prompt
+  // names both numbers and says which question each answers, because that
+  // disagreement is the subject's own boundary — n − 1 estimates a population
+  // nobody has seen — and a silent 4 would read as an arithmetic error.
+  //
+  // NO FIGURE IS DESCRIBED AND NONE IS NEEDED, which is the opposite of the
+  // constraint `plane-geometry` and `solid-measure` work under. There is no
+  // sides-and-angles hazard here because there is no figure at all: a histogram
+  // and a box plot are where a list's shape is normally read, reading a shape
+  // off a drawing is the judgement this build has declined to grade five times,
+  // and the third point teaches the part of the shape that is a SIGN.
+  {
+    id: 'the-mean-is-the-total-shared-out-by-the-count-1',
+    knowledgePointId: 'the-mean-keeps-the-total-and-the-median-keeps-the-position',
+    kind: 'evaluate',
+    prompt:
+      'Five club members gave, in pounds: 200, 15, 5, 20, 10. Evaluate (a+b+c+d+e)/n at '
+      + 'a = 5, b = 10, c = 15, d = 20, e = 200, n = 5 to get the mean donation. The divisor is '
+      + 'a SYMBOL rather than a 5 on purpose: the mean divides by how many values there are, and '
+      + 'reading the 5 as part of the formula is the error that makes a six-value list go wrong. '
+      + 'Read your answer backwards to check it means something — if all five had given that '
+      + 'amount, the club would hold exactly the money it actually holds. Compare it with '
+      + 'the-median-sits-at-a-position-not-at-a-value-1, which asks for the other centre of the '
+      + 'same list; choosing between the two is what this point teaches and neither task shows '
+      + 'it alone.',
+    given: '(a+b+c+d+e)/n',
+    variables: SAMPLE_FIVE_AND_COUNT,
+    // 5 + 10 + 15 + 20 + 200 = 250, and 250 ÷ 5 = 50. The list is handed to the
+    // learner unordered in the prompt's sentence and ordered in the inputs,
+    // which is free here and is the point of the next task: the mean does not
+    // care and the median cannot be computed until it does.
+    //
+    // The donations divide exactly because a worked example ending in 11.3
+    // would be teaching long division. `SAMPLE_FIVE_AND_COUNT` still declares
+    // the five values `real` — a list of measurements is not a list of
+    // integers, and the whole numbers here are a convenience of the figures.
+    reference: '50',
+    at: { a: '5', b: '10', c: '15', d: '20', e: '200', n: '5' },
+  },
+  {
+    id: 'the-median-sits-at-a-position-not-at-a-value-1',
+    knowledgePointId: 'the-mean-keeps-the-total-and-the-median-keeps-the-position',
+    kind: 'evaluate',
+    prompt:
+      'The same five donations, now in order: 5, 10, 15, 20, 200. Evaluate (n+1)/2 at n = 5 to '
+      + 'get the POSITION the median sits at — not the median itself, which is the value you '
+      + 'then read off at that position. The distinction is the whole point: the median is a '
+      + 'rank, so it is unmoved by how far the 200 is from everything else, where the mean in '
+      + 'the task above is not. Having got the position, the median of this list is £15, and the '
+      + 'mean is £50.',
+    given: '(n+1)/2',
+    variables: SAMPLE_COUNT,
+    // (5 + 1)/2 = 3, so the third of 5, 10, 15, 20, 200, which is 15. The task
+    // asks for the POSITION and not the value, deliberately: a task whose
+    // answer were 15 would be ruled correct by a learner who picked the middle
+    // of the list by eye, and the thing worth scoring is that there is a
+    // formula for which slot to look in.
+    reference: '3',
+    at: { n: '5' },
+  },
+  {
+    id: 'an-even-length-list-has-no-value-at-its-middle-position-1',
+    knowledgePointId: 'the-mean-keeps-the-total-and-the-median-keeps-the-position',
+    kind: 'evaluate',
+    prompt:
+      'Now eight values: 2, 4, 4, 4, 5, 5, 7, 9. Evaluate (n+1)/2 at n = 8. The same expression '
+      + 'as the task above at a different input, and the answer is a HALF — there is no value at '
+      + 'position four and a half, which is why an even-length list\'s median is taken as the '
+      + 'mean of the two values it falls between, here (4 + 5)/2 = 4.5, and need not be one of '
+      + 'the numbers in the list at all. That the position and the median are both 4.5 on this '
+      + 'list is a coincidence of these particular numbers and is worth not learning: in '
+      + '2, 4, 4, 4, 6, 6, 7, 9 the position is still four and a half and the median is 5.',
+    given: '(n+1)/2',
+    variables: SAMPLE_COUNT,
+    // (8 + 1)/2 = 9/2. One expression at two inputs where the two answers
+    // differ in KIND rather than in size — a whole position means a value of
+    // the list IS the median, a half position means it is a number computed
+    // from two of them — which is the shape `geometric-proof` established for
+    // scoring an asymmetry and the only way the even case gets ruled at all.
+    //
+    // `9/2` rather than `4.5`, and either is accepted: `exactValue` reads a
+    // decimal as the fraction it literally is, so a learner answering 4.5 and
+    // one answering 9/2 get the same ruling.
+    reference: '9/2',
+    at: { n: '8' },
+  },
+  {
+    id: 'the-signed-deviations-sum-to-zero-on-any-list-1',
+    knowledgePointId: 'the-signed-deviations-cancel-which-is-why-the-squares-are-there',
+    kind: 'evaluate',
+    prompt:
+      'The donations 5, 10, 15, 20, 200 have mean 50. Evaluate '
+      + '(a-m)+(b-m)+(c-m)+(d-m)+(e-m) at a = 5, b = 10, c = 15, d = 20, e = 200, m = 50 to get '
+      + 'the total of the signed distances from the mean. This is the obvious way to measure '
+      + 'spread and the answer is what rules it out — and this is the least symmetric list in '
+      + 'the subject, with four values pulling one way and one pulling the other, so the answer '
+      + 'is not an accident of nice data. Why it had to come out that way: the sum is '
+      + 'Σx − n·m, and n·m IS Σx by the definition of the mean.',
+    given: '(a-m)+(b-m)+(c-m)+(d-m)+(e-m)',
+    variables: SAMPLE_FIVE_AND_MEAN,
+    // −45 − 40 − 35 − 30 + 150 = 0. The four negatives total −150 against the
+    // single +150, so the cancellation is one value balancing four rather than
+    // a symmetry — which is why this task uses the lopsided donations and the
+    // variance task below uses the eight-value sample.
+    //
+    // A reference of 0 and that is the ruling, in the same way the two
+    // converse-of-Pythagoras tasks in `pythagoras` are rulings on a sign:
+    // zero here means the method measures nothing, and a learner who answers
+    // 150 has added the magnitudes and lost the point.
+    reference: '0',
+    at: { a: '5', b: '10', c: '15', d: '20', e: '200', m: '50' },
+  },
+  {
+    id: 'the-variance-is-the-mean-of-the-squared-deviations-1',
+    knowledgePointId: 'the-signed-deviations-cancel-which-is-why-the-squares-are-there',
+    kind: 'evaluate',
+    prompt:
+      'The eight values 2, 4, 4, 4, 5, 5, 7, 9 total 40, so their mean is 5. Evaluate '
+      + '((a-m)^2 + 3*(b-m)^2 + 2*(c-m)^2 + (d-m)^2 + (e-m)^2)/8 at a = 2, b = 4, c = 5, d = 7, '
+      + 'e = 9, m = 5 to get the variance. Two things in the expression are the content. The '
+      + 'multipliers 3 and 2 are how many times the values 4 and 5 OCCUR: there are eight terms '
+      + 'in the total and only five different values, and summarising the five distinct values '
+      + 'instead gives 30 ÷ 5 = 6 rather than 4 — a tidy number that describes a different '
+      + 'list. And the divisor is 8, the count of the list, because a variance is a MEAN of the '
+      + 'squares. A calculator\'s `s` button divides by 7 and returns 32/7, about 4.571; that is '
+      + 'not a different arithmetic but a different question, since dividing by n − 1 corrects a '
+      + 'bias in estimating a population nobody has seen and nothing here estimates anything. '
+      + 'The standard deviation is the square root of your answer.',
+    given: '((a-m)^2 + 3*(b-m)^2 + 2*(c-m)^2 + (d-m)^2 + (e-m)^2)/8',
+    variables: SAMPLE_FIVE_AND_MEAN,
+    // (2−5)² = 9; 3 × (4−5)² = 3; 2 × (5−5)² = 0; (7−5)² = 4; (9−5)² = 16.
+    // Total 32, and 32 ÷ 8 = 4, so the standard deviation is √4 = 2 exactly —
+    // which is why this sample and not another: a variance that is not a
+    // perfect square would make the last step of the worked example a surd and
+    // the point is that the root restores the units.
+    //
+    // 6 is the named wrong answer and it is exact rather than a slip: it is
+    // (9 + 1 + 0 + 4 + 16)/5, the variance of the five DISTINCT values against
+    // the same mean 5. Both numbers are whole, which is what makes dropping
+    // the multiplicities silent.
+    //
+    // 32/7 is the second named wrong answer and is not wrong about anything
+    // except which question was asked. Naming it in the prompt is deliberate:
+    // a learner who checks against a spreadsheet gets it, and an unexplained 4
+    // would read as an error in this file.
+    reference: '4',
+    at: { a: '2', b: '4', c: '5', d: '7', e: '9', m: '5' },
+  },
+  {
+    id: 'a-positive-gap-puts-the-tail-on-the-high-side-1',
+    knowledgePointId: 'the-sign-of-the-gap-names-the-tail-and-the-quartiles-ignore-it',
+    kind: 'evaluate',
+    prompt:
+      'The donations in order: 5, 10, 15, 20, 200. Evaluate (a+b+c+d+e)/5 - c at a = 5, b = 10, '
+      + 'c = 15, d = 20, e = 200 to get the mean minus the median. The expression names the '
+      + 'median as c because c is the THIRD of five ordered slots, which is where '
+      + '(n + 1)/2 put it. What matters is the SIGN of your answer and not its size: positive '
+      + 'means the long tail runs to the high values and has dragged the mean up past the '
+      + 'middle. Read this against and-a-negative-gap-puts-it-on-the-low-side-1, which is the '
+      + 'identical expression on a different list and comes out the other way — one of the two '
+      + 'alone would look like a fact about this subtraction rather than about the list.',
+    given: '(a+b+c+d+e)/5 - c',
+    variables: REAL_ABCDE,
+    // 250/5 − 15 = 50 − 15 = 35. Positive, so the tail is high — which the
+    // list confirms: 200 sits far above the other four and nothing sits far
+    // below them.
+    //
+    // The 5 is a literal here where `the-mean-is-the-total-shared-out-by-the-
+    // count-1` makes it a symbol, and the difference is not an inconsistency.
+    // That task is about dividing by the count; this expression is specifically
+    // "an ordered list of FIVE", in which the middle slot is the third — so the
+    // count is fixed by the shape of the expression and a symbol would have
+    // claimed the `- c` works for any n.
+    reference: '35',
+    at: { a: '5', b: '10', c: '15', d: '20', e: '200' },
+  },
+  {
+    id: 'and-a-negative-gap-puts-it-on-the-low-side-1',
+    knowledgePointId: 'the-sign-of-the-gap-names-the-tail-and-the-quartiles-ignore-it',
+    kind: 'evaluate',
+    prompt:
+      'Five marks out of 20, in order: 5, 16, 17, 18, 19. Evaluate the same '
+      + '(a+b+c+d+e)/5 - c at a = 5, b = 16, c = 17, d = 18, e = 19. Same expression, same five '
+      + 'slots, and the answer has the opposite sign — negative, so this list\'s long tail runs '
+      + 'to the LOW values, which is the single mark of 5 among four in the high teens. Its SIZE '
+      + 'is not comparable with the 35 the donations gave: one list is in pounds and the other '
+      + 'in marks, and the gap carries the units of the data. The sign is the whole reading.',
+    given: '(a+b+c+d+e)/5 - c',
+    variables: REAL_ABCDE,
+    // 5 + 16 + 17 + 18 + 19 = 75, so 75/5 − 17 = 15 − 17 = −2. Negative, so
+    // the tail is low.
+    //
+    // One expression at two inputs whose verdicts differ in KIND — tail high
+    // against tail low — rather than in magnitude, which is the shape
+    // `geometric-proof` settled for scoring an asymmetry and the reason these
+    // are two tasks rather than one. The marks exist in this file for this job
+    // alone: every other list here is right-tailed.
+    //
+    // A mark out of 20 and nothing about the figures is impossible, which is
+    // worth noting only because the geometry subjects cannot say it: there is
+    // no figure here, so there is no sides-and-angles hazard to avoid.
+    reference: '-2',
+    at: { a: '5', b: '16', c: '17', d: '18', e: '19' },
+  },
+  {
+    id: 'the-interquartile-range-reads-only-the-middle-of-the-list-1',
+    knowledgePointId: 'the-sign-of-the-gap-names-the-tail-and-the-quartiles-ignore-it',
+    kind: 'evaluate',
+    prompt:
+      'Split 2, 4, 4, 4, 5, 5, 7, 9 into two halves of four and take each half\'s median: the '
+      + 'lower half is 2, 4, 4, 4 and the upper half is 5, 5, 7, 9. Evaluate '
+      + '(c+d)/2 - (a+b)/2 at a = 4, b = 4, c = 5, d = 7 to get the interquartile range — a and '
+      + 'b are the lower half\'s middle two and c and d the upper half\'s. Now replace the 9 by '
+      + '90. The range goes from 9 − 2 = 7 to 90 − 2 = 88, up by exactly the 81 the value moved; '
+      + 'all four of the inputs above are UNCHANGED, because the median of four numbers is the '
+      + 'mean of its middle two and 90 is not one of them. Conventions for interpolating a '
+      + 'quartile differ and a spreadsheet gives 1.5 here rather than your answer; what does not '
+      + 'depend on the convention is that replacing the largest value leaves it alone.',
+    given: '(c+d)/2 - (a+b)/2',
+    variables: REAL_ABCD,
+    // Q₁ = (4 + 4)/2 = 4, Q₃ = (5 + 7)/2 = 6, so the interquartile range is 2.
+    // After 9 → 90 the upper half is 5, 5, 7, 90 and its median is still
+    // (5 + 7)/2 = 6, so the four inputs and the answer are both unchanged —
+    // which is the claim, and asserting it as "the inputs do not move" is
+    // stronger than computing the same number twice.
+    //
+    // The convention is Tukey's: halves of four, each half's own median. Linear
+    // interpolation between order statistics — `QUARTILE.INC` — puts Q₃ at
+    // position 6.25 and gives 5.5, hence 1.5 rather than 2. Both are named in
+    // the prompt because a convention nobody states is how a learner concludes
+    // their arithmetic is broken, and under BOTH of them the figure survives
+    // the swap: the robustness is a property of which order statistics a
+    // quartile reads and the value is a property of the convention.
+    reference: '2',
+    at: { a: '4', b: '4', c: '5', d: '7' },
+  },
+
+  // ── statements-and-connectives, thirty-fifth promotion: propositional-logic
+  //
+  // Eight tasks — three on the first point, two on the second, three on the
+  // third — every one `evaluate`, every one settled by exact rational
+  // arithmetic with no worker. The seventh subject in the build to hold that
+  // contract.
+  //
+  // THE ENCODING IS THE ONLY WAY THESE QUESTIONS BECOME NUMBERS, and it is
+  // taught rather than used. `evaluate` asks for a value and a truth value is
+  // not one, so true is written 1 and false 0, and each connective is the
+  // polynomial that reproduces its table: ¬p is 1 − p, p ∧ q is pq, p ∨ q is
+  // p + q − pq, and p → q is 1 − p + pq. Those hold on {0, 1} and nowhere
+  // else. ontology-logic.ts spends a section on the hazard that creates — a
+  // learner concluding the polynomial IS the connective — and the repair is
+  // the third task below, which shows the arithmetic breaking at p = 1/2 on
+  // purpose. A promotion that had quietly used the encoding to get gradable
+  // numbers would have shipped the same eight answers and taught something
+  // false.
+  //
+  // NO `transform_to_form` ANYWHERE, which is a fact about the subject. A
+  // `NamedForm` is a claim about the SHAPE of an expression, and the only
+  // demand of that kind available here — "write this column as a polynomial in
+  // p and q" — would grade the shape of an encoding rather than anything
+  // logical. The third point's whole content is that two expressions are
+  // EQUAL, which is what an `evaluate` on their difference asks and what no
+  // form check can say.
+  //
+  // NO `counterexample` EITHER, and the second point is exactly where it would
+  // go. "Produce a number that ends in 6 and is odd" is the ask, and ruling it
+  // needs a checker that can test a produced object against a claim; this file
+  // declares the kind verifiable and ships none of it, as ontology-geometry.ts
+  // records. It is asked as the two values it reduces to instead — the row
+  // that refutes and the row that does not — which is less than the real ask
+  // and is the honest amount less.
+  //
+  // THREE DIFFERENCES OF COLUMNS, AND TWO OF THEM ARE IDENTITIES. The
+  // contrapositive task and the De Morgan task both have reference 0 because
+  // their two expressions are the same polynomial, so the answer is 0 at every
+  // row rather than at the row the task happens to substitute — which is why
+  // each prompt says so and names a second row. The converse task is the one
+  // where the difference survives, and it survives as exactly q − p, so its
+  // answer is −1 rather than 0 and the SIGN is the reading. That asymmetry is
+  // one expression at two inputs whose answers differ in sign, which is the
+  // shape `geometric-proof` settled for scoring an asymmetry and the reason the
+  // prompt gives both rows.
+  //
+  // NO `domainConditions` ON ANY OF THE EIGHT. Every expression is a
+  // polynomial, every substitution is an integer, and nothing divides by
+  // anything — so there is no value of any symbol at which a ruling would need
+  // qualifying. The restriction that does exist, p ∈ {0, 1}, is not a domain
+  // condition in this schema's sense and could not be written as one; see
+  // `TRUTH_VALUES`.
+  {
+    id: 'a-table-over-n-letters-has-two-to-the-n-rows-1',
+    knowledgePointId: 'a-connective-is-a-finite-table-and-a-row-is-a-computation',
+    kind: 'evaluate',
+    prompt:
+      'A truth table has one row for every way its letters can come out true or false. Evaluate '
+      + '2^n at n = 3 to get the number of rows for three letters. The base is 2 because each '
+      + 'letter has two possibilities and the exponent is the number of letters, so every letter '
+      + 'you add DOUBLES the table — each existing row splits into one where the new letter is '
+      + 'true and one where it is false. Your answer is the reason exhausting the rows counts as '
+      + 'a proof here: it is a number you can write out in full, and once you have, there is no '
+      + 'further case hiding. Compare a claim about all triangles, where a hundred cases that '
+      + 'fit establish nothing, because the triangles do not run out.',
+    given: '2^n',
+    variables: LETTER_COUNT,
+    // 2³ = 8. Asked as 2^n at a stated n rather than as the literal 8, because
+    // the content is that the count is a POWER of two and not that three
+    // letters give eight: a task whose answer were 8 would be ruled correct by
+    // a learner who had written the eight rows out and counted them, which is
+    // the one thing this point does not need scored.
+    reference: '8',
+    at: { n: '3' },
+  },
+  {
+    id: 'or-is-inclusive-so-both-true-makes-it-true-1',
+    knowledgePointId: 'a-connective-is-a-finite-table-and-a-row-is-a-computation',
+    kind: 'evaluate',
+    prompt:
+      'Write true as 1 and false as 0. Then "p or q" is p + q − pq, which is that connective\'s '
+      + 'table rewritten as arithmetic. Evaluate p + q - p*q at p = 1, q = 1 — the row where '
+      + 'BOTH statements are true. If a box is both red and heavy, your answer is what "the box '
+      + 'is red or heavy" says about it. That row is the one worth being sure of: mathematics '
+      + 'always means the INCLUSIVE or, where English usually means the exclusive one — "tea or '
+      + 'coffee" offers you one of them. The exclusive connective is a different column and has '
+      + 'to be said out loud when it is meant. Check the other three rows while you are here: '
+      + '1 + 0 − 0 = 1, 0 + 1 − 0 = 1, and 0 + 0 − 0 = 0, so the only false row is the one where '
+      + 'neither holds.',
+    given: 'p + q - p*q',
+    variables: TRUTH_VALUES,
+    // 1 + 1 − 1·1 = 1. The both-true row specifically: the other three are
+    // uncontroversial and are given in the prompt rather than asked, because
+    // this is the single row on which the English reading and the mathematical
+    // one disagree and it is the whole claim of the task.
+    reference: '1',
+    at: { p: '1', q: '1' },
+  },
+  {
+    id: 'the-excluded-middle-is-a-tautology-only-on-the-two-values-1',
+    knowledgePointId: 'a-connective-is-a-finite-table-and-a-row-is-a-computation',
+    kind: 'evaluate',
+    prompt:
+      '"P or not P" puts p and 1 − p into the or-formula: p + (1 − p) − p(1 − p). Evaluate '
+      + 'p + (1-p) - p*(1-p) at p = 1. Then do it at p = 0 and you get 1 again, so the column is '
+      + 'all ones and the statement is true whatever P says — a TAUTOLOGY. Now the part that is '
+      + 'the real lesson. That expression simplifies to 1 − p + p², which is NOT the constant 1: '
+      + 'at p = 1/2 it is 1 − 1/2 + 1/4 = 3/4. It agrees with the table only because p² = p when '
+      + 'p is 0 or 1, and for no other number. So this arithmetic is a way of computing a row '
+      + 'and never a definition of what "or" and "not" mean — the table is the definition, and '
+      + 'the encoding is a tool that works on exactly two inputs.',
+    given: 'p + (1-p) - p*(1-p)',
+    variables: TRUTH_VALUE,
+    // 1 + 0 − 1·0 = 1, and at p = 0 it is 0 + 1 − 0 = 1.
+    //
+    // Declares `p` alone rather than reusing `TRUTH_VALUES`, because the
+    // statement mentions one letter and a declared-but-unmentioned `q` would
+    // say this compound has a four-row table when it has two.
+    //
+    // THE TASK EXISTS FOR ITS PROMPT'S SECOND HALF rather than for its answer,
+    // which is the only one of the eight that is true of it. 1 is also the
+    // answer at the other row, so the number alone scores nothing the previous
+    // task has not already scored. What it buys is a learner who has computed
+    // 1 − p + p² and has been shown it is 3/4 at a half, in the one place in
+    // this subject where the encoding visibly stops being the mathematics.
+    reference: '1',
+    at: { p: '1' },
+  },
+  {
+    id: 'a-false-hypothesis-makes-an-implication-true-1',
+    knowledgePointId: 'an-implication-is-false-in-exactly-one-of-its-four-rows',
+    kind: 'evaluate',
+    prompt:
+      'The column for "if p then q" is 1 − p + pq. Evaluate 1 - p + p*q at p = 0, q = 0 — the '
+      + 'row where both statements are false. Your answer says that "if 2 + 2 = 5 then 7 is '
+      + 'even" is a TRUE statement, which is the part of this table that feels wrong and is the '
+      + 'part worth understanding: an implication claims nothing at all about what happens when '
+      + 'its hypothesis fails, so there is nothing there for it to be wrong about — and a '
+      + 'connective has to return a value for every row of its table rather than leave two of '
+      + 'them blank. Do p = 0, q = 1 as well and you get the same answer, so BOTH '
+      + 'false-hypothesis rows go this way and neither depends on the conclusion.',
+    given: '1 - p + p*q',
+    variables: TRUTH_VALUES,
+    // 1 − 0 + 0·0 = 1.
+    //
+    // Paired with the task below: one expression at two inputs whose answers
+    // differ, which is how the asymmetry gets scored rather than described.
+    // This is the row a learner expects to be false and is not.
+    reference: '1',
+    at: { p: '0', q: '0' },
+  },
+  {
+    id: 'the-one-row-that-refutes-an-implication-1',
+    knowledgePointId: 'an-implication-is-false-in-exactly-one-of-its-four-rows',
+    kind: 'evaluate',
+    prompt:
+      'The same expression, one row along. Evaluate 1 - p + p*q at p = 1, q = 0 — hypothesis '
+      + 'true, conclusion false. This is the only one of the four rows whose answer is not 1, so '
+      + 'an implication makes exactly ONE claim: that this combination does not occur. The '
+      + 'consequence is a rule about refutation. To break "if a whole number ends in 6 then it '
+      + 'is even" you must produce something sitting in THIS row — a number that ends in 6 and '
+      + 'is odd — and nothing else will do. The number 15 is odd, so it has half of what is '
+      + 'wanted, but it does not end in 6, so it sits in a row where the implication is true and '
+      + 'refutes nothing. A proposed counterexample has to pass the hypothesis before anything '
+      + 'else about it means anything.',
+    given: '1 - p + p*q',
+    variables: TRUTH_VALUES,
+    // 1 − 1 + 1·0 = 0.
+    //
+    // Shares its `given` with the task above and differs only in `at`, which is
+    // the point: the two rows are the same connective and the learner is
+    // scored on knowing which one carries the claim.
+    //
+    // The prompt stops short of saying the number claim is TRUE, deliberately.
+    // Four rows fix what a refutation would look like and decide nothing about
+    // the digits; that argument is 10k + 6 = 2(5k + 3) and belongs to
+    // `divisibility`. The worked example says the same thing at more length.
+    reference: '0',
+    at: { p: '1', q: '0' },
+  },
+  {
+    id: 'an-implication-and-its-contrapositive-never-differ-1',
+    knowledgePointId: 'the-contrapositive-is-the-same-column-and-the-converse-is-not',
+    kind: 'evaluate',
+    prompt:
+      'The contrapositive of "if p then q" is "if not q then not p", which is the implication\'s '
+      + 'own formula with the negated letters substituted into it: 1 − (1 − q) + (1 − q)(1 − p). '
+      + 'Evaluate (1 - p + p*q) - (1 - (1-q) + (1-q)*(1-p)) at p = 1, q = 0 to get the '
+      + 'difference between the original column and the contrapositive\'s. Then try any other '
+      + 'row and you will get the same answer, because the second expression multiplies out to '
+      + '1 − p + pq — the first one exactly. The two are the same polynomial, so they agree in '
+      + 'all four rows at once rather than in four rows that were checked one at a time, and '
+      + 'that is what makes a contrapositive the same claim and not a second one. Proving either '
+      + 'has proved both, free of charge.',
+    given: '(1 - p + p*q) - (1 - (1-q) + (1-q)*(1-p))',
+    variables: TRUTH_VALUES,
+    // 1 − (1 − q) is q, and (1 − q)(1 − p) is 1 − p − q + pq, so the
+    // contrapositive is q + 1 − p − q + pq = 1 − p + pq. The difference is
+    // identically zero, and at p = 1, q = 0 both sides are 0.
+    //
+    // A row is substituted because `evaluate` needs one, and the prompt says
+    // the answer does not depend on which — the claim is the identity and the
+    // single row is how this schema can ask about it.
+    reference: '0',
+    at: { p: '1', q: '0' },
+  },
+  {
+    id: 'an-implication-and-its-converse-differ-by-q-minus-p-1',
+    knowledgePointId: 'the-contrapositive-is-the-same-column-and-the-converse-is-not',
+    kind: 'evaluate',
+    prompt:
+      'The converse of "if p then q" is "if q then p", whose column is 1 − q + qp. Evaluate '
+      + '(1 - p + p*q) - (1 - q + q*p) at p = 1, q = 0. Unlike the contrapositive, this '
+      + 'difference does NOT vanish: the 1s cancel and pq and qp are the same term, so what is '
+      + 'left is exactly q − p. That is 0 in the two rows where the letters agree — where the '
+      + 'converse happens to match by accident of those rows rather than by meaning the same '
+      + 'thing — and ±1 in the other two, where the SIGN says which of the pair is the true one. '
+      + 'Your answer is negative, so here the original is false and the converse is true. At '
+      + 'p = 0, q = 1 it is +1 the other way. "If a quadrilateral is a square then it has four '
+      + 'right angles" and its converse are that second row: a rectangle longer than it is wide '
+      + 'has the angles without being a square.',
+    given: '(1 - p + p*q) - (1 - q + q*p)',
+    variables: TRUTH_VALUES,
+    // (1 − p + pq) − (1 − q + qp) = q − p. At p = 1, q = 0 that is −1; at
+    // p = 0, q = 1 it is +1; at both-true and both-false it is 0.
+    //
+    // The negative row is the one asked, and asked rather than the positive
+    // one because a learner who subtracted in the wrong order gets +1 and the
+    // task should catch that. The prompt gives the other row so the pair is
+    // visible without a second task: the content is that the sign reads, which
+    // needs both and is not a claim either value makes alone.
+    reference: '-1',
+    at: { p: '1', q: '0' },
+  },
+  {
+    id: 'de-morgan-is-two-columns-that-coincide-1',
+    knowledgePointId: 'the-contrapositive-is-the-same-column-and-the-converse-is-not',
+    kind: 'evaluate',
+    prompt:
+      '"Not (p and q)" is 1 − pq. "Not p or not q" puts 1 − p and 1 − q into the or-formula: '
+      + '(1 − p) + (1 − q) − (1 − p)(1 − q). Evaluate '
+      + '(1 - p*q) - ((1-p) + (1-q) - (1-p)*(1-q)) at p = 1, q = 0 to get the difference between '
+      + 'them. It is the same answer at every row, because the second expression is '
+      + '(2 − p − q) − (1 − p − q + pq) = 1 − pq, which is the first. So the two statements are '
+      + 'LOGICALLY EQUIVALENT — their columns agree everywhere — and "the box is not both red '
+      + 'and heavy" says exactly what "the box is not red, or it is not heavy" says, which is '
+      + 'worth knowing because the second is the one people doubt. Note this identity needs no '
+      + 'appeal to p² = p, unlike the excluded middle: it is an identity in p and q outright.',
+    given: '(1 - p*q) - ((1-p) + (1-q) - (1-p)*(1-q))',
+    variables: TRUTH_VALUES,
+    // (1 − p) + (1 − q) = 2 − p − q, and (1 − p)(1 − q) = 1 − p − q + pq, so
+    // the right-hand side is 1 − pq, which is the left. Identically zero, and
+    // at p = 1, q = 0 both sides are 1.
+    //
+    // THE SECOND ZERO IN THE POINT, AND THAT IS THE REASON IT IS HERE. The
+    // contrapositive task establishes that a zero difference means one claim;
+    // this one applies the same test to a pair whose equivalence a learner has
+    // no intuition for, so the method is what transfers rather than the
+    // particular rearrangement. It is also the file's one identity that holds
+    // without the {0, 1} restriction, which the prompt points out — the
+    // contrast with the excluded middle is what keeps that restriction a fact
+    // a learner can check rather than a caveat they are asked to accept.
+    reference: '0',
+    at: { p: '1', q: '0' },
+  },
+
+  // ── predicates-and-quantifiers, thirty-sixth promotion: quantifiers
+  //
+  // Nine tasks, three on each point, every one `evaluate` and every one settled
+  // by exact rational arithmetic with no worker. The eighth subject in the
+  // build to hold that contract.
+  //
+  // THE ENCODING IS THE TWELFTH SUBJECT'S, EXTENDED BY EXACTLY ONE STEP, and
+  // the step is the content rather than a convenience. There, true was 1 and
+  // false 0 and each connective was the polynomial reproducing its table. Here
+  // a quantifier over a finite domain is that connective REPEATED across the
+  // domain: "for all" is the product of the values, "there exists" is 1 minus
+  // the product of the opposites, and the witness count is their sum. So the
+  // two quantifiers are not new connectives and the tasks say so by SHARING
+  // their expressions — see the next paragraph.
+  //
+  // SIX DISTINCT `given`s ACROSS NINE TASKS, AND THE REUSE IS THE CLAIM.
+  // `a*b*c*d` is asked twice and `1 - (1-a)*(1-b)*(1-c)*(1-d)` three times, at
+  // different rows. That is the implication pair's shape from the twelfth
+  // subject — one expression at two inputs — carried across a point boundary on
+  // purpose: the universal over a predicate and the universal over four inner
+  // existentials are the SAME product, and two different expressions would say
+  // they were two facts. A learner who has computed the product once meets it
+  // again in the quantifier-order point with the symbols meaning something else
+  // and the arithmetic unchanged, which is what "a quantifier is a repeated
+  // connective" amounts to.
+  //
+  // THE DOMAIN OF EVERY FINITE-DOMAIN TASK IS 1, 2, 3, 4, stated in each
+  // prompt. The first worked example uses six members because it also changes
+  // the domain mid-problem; the tasks use four because the extra two would be
+  // bookkeeping. What the prompts must not do is leave the domain out, since
+  // the subject's first point is that a quantified claim quoted without its
+  // domain is not a statement.
+  //
+  // ONE IDENTITY, AND IT NEEDS NO RESTRICTION. The duality task's difference is
+  // identically zero because 1 − (1 − a) is a outright, so "not every x
+  // satisfies P" and "some x fails P" are one expression written twice. Its
+  // prompt points out that this needs no appeal to a² = a, which is the
+  // contrast the twelfth subject drew between De Morgan and the excluded middle
+  // — and the contrast is what keeps the {0, 1} restriction a fact a learner
+  // can check rather than a caveat they are asked to accept.
+  //
+  // NO `transform_to_form` AND NO `counterexample`, for the reasons
+  // ontology-quantifiers.ts argues. The natural `counterexample` ask here is
+  // "produce an n for which n² + n + 11 is composite"; ruling it needs a checker
+  // that can test a produced object against a claim, which this file declares
+  // verifiable and ships none of. It is asked as the VALUE at the refuting n
+  // instead, with the prompt naming 121 = 11 × 11, which is less than the real
+  // ask and is the honest amount less.
+  //
+  // NO `domainConditions` ON ANY OF THE NINE. Every expression is a polynomial,
+  // every substitution an integer, and nothing divides by anything. The
+  // restriction that does exist is membership of {0, 1} for eight of them, which
+  // is not a domain condition in this schema's sense; see `FOUR_TRUTH_VALUES`.
+  // The ninth substitutes n = 10, which is a member of a domain rather than a
+  // truth value, and `WHOLE_NUMBER_INDEX` says why it is not declared positive.
+  {
+    id: 'the-witness-count-answers-both-quantifiers-1',
+    knowledgePointId:
+      'a-quantifier-closes-a-hole-and-over-a-finite-domain-it-is-a-repeated-connective',
+    kind: 'evaluate',
+    prompt:
+      'Let P(x) be "x divides 6" and let the domain be the four numbers 1, 2, 3, 4. Fill the '
+      + 'hole one value at a time, writing true as 1 and false as 0: 6 ÷ 1 = 6 so a = 1, '
+      + '6 ÷ 2 = 3 so b = 1, 6 ÷ 3 = 2 so c = 1, and 6 ÷ 4 = 1.5 so d = 0. Now evaluate '
+      + 'a + b + c + d at those values to get the WITNESS COUNT — how many members of the '
+      + 'domain satisfy P. Your answer is what both quantifiers are about to be read off: "there '
+      + 'exists x with P(x)" asks only whether this count is at least 1, and "for all x, P(x)" '
+      + 'asks whether it is all four. One count, two questions, and the two quantifiers are two '
+      + 'thresholds on it rather than two separate things to work out.',
+    given: 'a + b + c + d',
+    variables: FOUR_TRUTH_VALUES,
+    // 1 + 1 + 1 + 0 = 3. Three of the four numbers divide 6; 4 does not.
+    //
+    // Asked FIRST of the three, because the count is what makes the two
+    // quantifiers one fact. A task set that opened with the product would teach
+    // "for all" as a trick with multiplication rather than as a threshold on
+    // something a learner has already counted.
+    reference: '3',
+    at: { a: '1', b: '1', c: '1', d: '0' },
+  },
+  {
+    id: 'for-all-is-and-repeated-so-one-zero-factor-kills-it-1',
+    knowledgePointId:
+      'a-quantifier-closes-a-hole-and-over-a-finite-domain-it-is-a-repeated-connective',
+    kind: 'evaluate',
+    prompt:
+      'Same predicate and same domain: P(x) is "x divides 6" over 1, 2, 3, 4, with values a = 1, '
+      + 'b = 1, c = 1, d = 0. "For all x, P(x)" claims every value is 1 at once, which is "and" '
+      + 'repeated across the domain — and in this arithmetic "and" is multiplication. Evaluate '
+      + 'a*b*c*d at those values. Your answer says the universal claim is FALSE, and the way it '
+      + 'is false is the lesson: the product is 0 because of the SINGLE factor at x = 4, and the '
+      + 'three 1s in front of it make no difference whatever. That is "one counterexample '
+      + 'refutes a universal claim", written as arithmetic. Change d to 1 — which is what '
+      + 'happens if you take the domain to be 1, 2, 3, 6 instead — and the product becomes 1, '
+      + 'because the domain is part of the claim and not decoration.',
+    given: 'a*b*c*d',
+    variables: FOUR_TRUTH_VALUES,
+    // 1 · 1 · 1 · 0 = 0.
+    //
+    // SHARES ITS EXPRESSION WITH THE QUANTIFIER-ORDER TASK three points down,
+    // where the same product is taken over four inner existentials instead of
+    // four predicate values and comes out 1. That is deliberate: a universal is
+    // one product whatever its factors mean, and asserting the shared `given`
+    // is what records the claim.
+    reference: '0',
+    at: { a: '1', b: '1', c: '1', d: '0' },
+  },
+  {
+    id: 'there-exists-is-or-repeated-over-the-domain-1',
+    knowledgePointId:
+      'a-quantifier-closes-a-hole-and-over-a-finite-domain-it-is-a-repeated-connective',
+    kind: 'evaluate',
+    prompt:
+      'Same predicate P(x) = "x divides 6", same domain 1, 2, 3, 4, same values a = 1, b = 1, '
+      + 'c = 1, d = 0. "There exists x with '
+      + 'P(x)" is "or" repeated across the domain, and the previous concept proved that an "or" '
+      + 'is 1 minus the product of the opposites. Evaluate 1 - (1-a)*(1-b)*(1-c)*(1-d). The '
+      + 'opposites here are 0, 0, 0, 1, their product is 0, and your answer is 1: the '
+      + 'existential is TRUE. Note how little it takes — a single factor of 1 among the values '
+      + 'makes one of the opposites 0 and kills their product, which is the mirror image of the '
+      + 'universal being killed by a single 0. That is why refuting "for all" costs one object '
+      + 'and refuting "there exists" costs every object in the domain.',
+    given: '1 - (1-a)*(1-b)*(1-c)*(1-d)',
+    variables: FOUR_TRUTH_VALUES,
+    // 1 − (0 · 0 · 0 · 1) = 1 − 0 = 1.
+    //
+    // The third of three on one row, which is the point of the trio: the same
+    // four values are summed, multiplied, and co-multiplied, and the learner
+    // ends holding one count and two readings of it rather than three
+    // unconnected answers.
+    reference: '1',
+    at: { a: '1', b: '1', c: '1', d: '0' },
+  },
+  {
+    id: 'nine-cases-in-a-row-are-not-a-proof-1',
+    knowledgePointId: 'negating-a-quantifier-swaps-it-and-one-object-refutes-a-universal',
+    kind: 'evaluate',
+    prompt:
+      'Somebody claims that n² + n + 11 is prime for every whole number n. They have checked '
+      + 'n = 0 through n = 9 and got 11, 13, 17, 23, 31, 41, 53, 67, 83 and 101 — all ten prime. '
+      + 'Evaluate n^2 + n + 11 at n = 10. Your answer is 121, which is 11 × 11 and therefore not '
+      + 'prime, so this single value refutes the universal claim; and because the search ran in '
+      + 'order it is also the SMALLEST n that does. Ten supporting cases is real evidence and it '
+      + 'is not a proof. What the ten do establish is the smaller claim "for every n with '
+      + '0 ≤ n ≤ 9, n² + n + 11 is prime", which is true and is proved, because that domain is '
+      + 'finite and the ten checks exhaust it.',
+    given: 'n^2 + n + 11',
+    variables: WHOLE_NUMBER_INDEX,
+    // 100 + 10 + 11 = 121 = 11².
+    //
+    // THIS IS THE `counterexample` ASK REDUCED TO A VALUE, which is the honest
+    // amount less than the real one. "Produce an n for which this is composite"
+    // needs a checker that can test a produced object against a claim; the kind
+    // is declared verifiable in this file and ships nothing. So the n is GIVEN
+    // and the value asked, with the factorisation in the prompt rather than in
+    // the ruling. A learner who answers 121 has not been scored on noticing
+    // that 121 is composite, and the prompt says it instead of pretending
+    // otherwise.
+    reference: '121',
+    at: { n: '10' },
+  },
+  {
+    id: 'negating-a-universal-gives-an-existential-as-the-same-expression-1',
+    knowledgePointId: 'negating-a-quantifier-swaps-it-and-one-object-refutes-a-universal',
+    kind: 'evaluate',
+    prompt:
+      'Over a four-member domain with P\'s values a, b, c, d, "for all x, P(x)" is the product '
+      + 'abcd, so "NOT every x satisfies P" is 1 − abcd. The other way of saying it is "SOME x '
+      + 'fails P" — an existential over the opposite predicate, whose values are 1 − a, 1 − b, '
+      + '1 − c, 1 − d — which is 1 − (1 − (1−a))(1 − (1−b))(1 − (1−c))(1 − (1−d)). Evaluate '
+      + '(1 - a*b*c*d) - (1 - (1-(1-a))*(1-(1-b))*(1-(1-c))*(1-(1-d))) at a = 1, b = 1, c = 1, '
+      + 'd = 0 to get the difference between those two readings. Try any other row and you get '
+      + 'the same answer, because 1 − (1 − a) is a outright: the second expression IS 1 − abcd. '
+      + 'So negating a universal gives an existential as one expression written twice rather '
+      + 'than as a rule to memorise — and note that this collapse needs NO appeal to a² = a, '
+      + 'unlike the excluded middle in the previous concept.',
+    given: '(1 - a*b*c*d) - (1 - (1-(1-a))*(1-(1-b))*(1-(1-c))*(1-(1-d)))',
+    variables: FOUR_TRUTH_VALUES,
+    // 1 − (1 − a) is a, so the right-hand expression is 1 − abcd, which is the
+    // left. Identically zero — checked at all sixteen rows in
+    // tests/concepts-logic.mjs rather than only at the one substituted, because
+    // a reference of 0 is the easiest thing in this file to produce by
+    // accident.
+    //
+    // A row is substituted because `evaluate` needs one, and the prompt says
+    // the answer does not depend on which: the claim is the identity, and a
+    // single row is how this schema can ask about one.
+    reference: '0',
+    at: { a: '1', b: '1', c: '1', d: '0' },
+  },
+  {
+    id: 'one-counterexample-is-enough-and-the-complements-count-them-1',
+    knowledgePointId: 'negating-a-quantifier-swaps-it-and-one-object-refutes-a-universal',
+    kind: 'evaluate',
+    prompt:
+      'Back to P(x) = "x divides 6" over 1, 2, 3, 4, with values a = 1, b = 1, c = 1, d = 0. A '
+      + 'counterexample is a member where the value is 0, so the number of counterexamples is '
+      + 'the sum of the opposites. Evaluate (1-a) + (1-b) + (1-c) + (1-d). Your answer is 1, and '
+      + 'that is the whole reading of the universal claim: "for all x, P(x)" is false exactly '
+      + 'when this count is at least 1, and ONE object out of four was enough. Compare the other '
+      + 'quantifier. To refute "there exists x with P(x)" you would need this count to reach 4 — '
+      + 'every member ruled out, with no shortcut — which is why "find a counterexample" is a '
+      + 'reasonable instruction and "find no counterexample" reports a search rather than '
+      + 'finishing a proof.',
+    given: '(1-a) + (1-b) + (1-c) + (1-d)',
+    variables: FOUR_TRUTH_VALUES,
+    // 0 + 0 + 0 + 1 = 1. The witness count was 3 of 4; this is the other 1.
+    //
+    // Paired with the first task of the subject by arithmetic rather than by
+    // cross-reference: the two answers sum to the size of the domain, which is
+    // the duality as a count instead of as an identity. The identity task above
+    // is the same fact as an expression, and having both is the point — one is
+    // checkable at a row, the other at every row.
+    reference: '1',
+    at: { a: '1', b: '1', c: '1', d: '0' },
+  },
+  {
+    id: 'for-every-x-there-is-a-y-chosen-afresh-each-time-1',
+    knowledgePointId:
+      'two-different-quantifiers-do-not-commute-and-one-order-is-the-stronger-claim',
+    kind: 'evaluate',
+    prompt:
+      'Let the domain be 1, 2, 3, 4 and let R(x, y) mean x + y = 5. Take the claim "for every x '
+      + 'there is a y with R(x, y)". Walk the four values of x and ask whether SOME y works for '
+      + 'each: x = 1 takes y = 4, x = 2 takes y = 3, x = 3 takes y = 2, x = 4 takes y = 1. So '
+      + 'the four inner existentials are a = 1, b = 1, c = 1, d = 1. The outer "for every x" is '
+      + 'those four joined by "and", which is their product — the same product a universal '
+      + 'always is, with inner quantified statements in place of a predicate\'s values. Evaluate '
+      + 'a*b*c*d. Your answer says the claim is TRUE, and the four witnesses were four '
+      + 'different numbers: nothing in the sentence asked them to be the same one.',
+    given: 'a*b*c*d',
+    variables: FOUR_TRUTH_VALUES,
+    // 1 · 1 · 1 · 1 = 1.
+    //
+    // SHARES ITS EXPRESSION WITH THE SECOND TASK OF THE SUBJECT, which is the
+    // claim rather than a saving: a universal is one product whatever its
+    // factors stand for. There the four factors were a predicate's values and
+    // the answer was 0; here they are four inner existentials and it is 1.
+    reference: '1',
+    at: { a: '1', b: '1', c: '1', d: '1' },
+  },
+  {
+    id: 'swapping-to-there-is-one-y-for-every-x-makes-it-false-1',
+    knowledgePointId:
+      'two-different-quantifiers-do-not-commute-and-one-order-is-the-stronger-claim',
+    kind: 'evaluate',
+    prompt:
+      'Same domain 1, 2, 3, 4 and same relation x + y = 5, with the two quantifiers swapped: '
+      + '"there is a y such that for every x, R(x, y)". The choice of y now sits OUTSIDE the '
+      + '"for every x", so one y must be fixed in advance and serve all four. Check each: y = 1 '
+      + 'works only at x = 4, y = 2 only at x = 3, y = 3 only at x = 2, y = 4 only at x = 1. So '
+      + 'the four inner universals are a = 0, b = 0, c = 0, d = 0. The outer "there is a y" is '
+      + 'those four joined by "or". Evaluate 1 - (1-a)*(1-b)*(1-c)*(1-d). Your answer is 0 — the '
+      + 'claim is FALSE, where the other order was true, and the only thing that changed was '
+      + 'which quantifier came first. Subtract this from the previous answer and you get 1; that '
+      + 'difference can be 0 or 1 and never −1, because one y serving everybody serves each in '
+      + 'particular, so this order is the STRONGER claim.',
+    given: '1 - (1-a)*(1-b)*(1-c)*(1-d)',
+    variables: FOUR_TRUTH_VALUES,
+    // 1 − (1 · 1 · 1 · 1) = 1 − 1 = 0.
+    //
+    // The all-zero row of the existential expression, which no task in the
+    // first point reaches: there the question was whether anything satisfies a
+    // predicate and something did. Here it is the row that carries the content,
+    // because a mixed-order pair is only interesting when the stronger claim
+    // fails.
+    reference: '0',
+    at: { a: '0', b: '0', c: '0', d: '0' },
+  },
+  {
+    id: 'a-uniform-witness-closes-the-gap-between-the-two-orders-1',
+    knowledgePointId:
+      'two-different-quantifiers-do-not-commute-and-one-order-is-the-stronger-claim',
+    kind: 'evaluate',
+    prompt:
+      'Same domain 1, 2, 3, 4, same quantifier order "there is a y such that for every x", and a '
+      + 'new relation: R(x, y) means "xy is even". Fix each y and ask whether every x works. '
+      + 'y = 1 fails at x = 1, since 1 · 1 = 1, so a = 0. y = 2 gives 2, 4, 6, 8 — all even — so '
+      + 'b = 1. y = 3 fails at x = 1, so c = 0. y = 4 gives 4, 8, 12, 16, all even, so d = 1. '
+      + 'Evaluate 1 - (1-a)*(1-b)*(1-c)*(1-d) at those values. Your answer is 1: the stronger '
+      + 'order is TRUE here, which forces the weaker one true as well, so the difference between '
+      + 'the two orders closes to 0. What closed it is a single UNIFORM witness — y = 2 works for '
+      + 'all four x at once, where x + y = 5 had a different y for each. "One that works for all '
+      + 'of them, or only one for each" is the entire question quantifier order asks.',
+    given: '1 - (1-a)*(1-b)*(1-c)*(1-d)',
+    variables: FOUR_TRUTH_VALUES,
+    // 1 − (1 · 0 · 1 · 0) = 1 − 0 = 1. y = 2 and y = 4 both serve every x; the
+    // claim needs only that one of them does.
+    //
+    // THE THIRD TASK ON ONE EXPRESSION, and the row is chosen so that two of
+    // the four factors are 1 rather than one. A row with a single 1 would be
+    // indistinguishable from the first point's existential and would leave "a
+    // uniform witness need not be unique" unsaid; here the learner computes a
+    // product containing two zeros and sees that either witness alone would
+    // have done.
+    reference: '1',
+    at: { a: '0', b: '1', c: '0', d: '1' },
+  },
+
+  // ── methods-of-proof, thirty-seventh promotion: proof-techniques
+  //
+  // Nine tasks, three on each point: seven `evaluate` settled by exact rational
+  // arithmetic with no worker, and two `transform_to_form` that need the worker
+  // for equivalence. The concept therefore grades without one, which is what
+  // the WORKERLESS_CONCEPTS assertion above requires, while still asking the
+  // one demand of shape this material genuinely has.
+  //
+  // THE ENCODING IS NOT THE LOGIC SUBJECTS', AND THAT IS DELIBERATE. Nothing
+  // here is a truth table, so nothing is a 0 or a 1 standing for a truth value.
+  // What the arithmetic encodes is the proofs' own machinery:
+  //
+  //     a case, as a form      2*k, 2*k + 1, 3*k + 2
+  //     "p divides n"          n - p*k, which is 0 exactly when it does
+  //     a remainder            the same expression, read as what is left over
+  //     "for an arbitrary n"   an expression whose value does not mention k
+  //
+  // THE LAST LINE IS THE CONCEPT AND IT IS WHY TWO OF THE NINE LOOK TRIVIAL.
+  // `(2*k+1)^2 - 4*(k^2 + k)` and `(3*k+2)^2 - 3*(3*k^2 + 4*k + 1)` are both
+  // identically 1, so the answer is 1 whichever k is substituted — the k has
+  // CANCELLED rather than been chosen small. That is the whole difference
+  // between a proof about every member of a case and a check at one member, and
+  // it is the previous concept's lesson inverted: there, ten agreeable values of
+  // n settled nothing because the value depended on n. Each of the two prompts
+  // names two further values of k with the same answer, because one substitution
+  // reads as a check until a second one agrees.
+  //
+  // ONE EXPRESSION SHARED ACROSS A POINT BOUNDARY, as the thirteenth subject
+  // shares two. `n - p*k` is asked in the contradiction point at n = 30031,
+  // p = 13 and in the cases point at n = 2027, p = 3. One move — read the
+  // remainder — answering two different questions: whether anything on a list
+  // divides a number, and which case a number falls in. Two differently-written
+  // expressions would have said those were two moves.
+  //
+  // NO `counterexample` AND NO `justify`, and the refusals land in different
+  // places than the thirteenth subject's. The natural `counterexample` ask is
+  // "produce a prime that is not on the list"; ruling it needs a checker that
+  // can test a produced object against a claim, which this file declares
+  // verifiable and ships nowhere. So the factor 59 is GIVEN and the quotient
+  // asked, with the prompt saying that finding 59 was the real question. The
+  // `justify` ask is bigger and is the concept itself — "prove that if n² is
+  // even then n is even" — and naming the kind in an objective would promise an
+  // observation nothing in this build can make. The arguments are carried by the
+  // worked examples, whose subgoals are all phrased as questions.
+  //
+  // `prime_factored` WAS CONSIDERED AND REFUSED. "Write 30031 as a product of
+  // primes" is a lovely-looking task and it is the `counterexample` ask wearing
+  // a form: finding the factors IS the whole of the question, so the form would
+  // grade the thing the file has just said it cannot rule.
+  //
+  // NO `domainConditions` ON ANY OF THE NINE. The two divisions are by stated
+  // constants — n/4 and n/59 — rather than by a symbol, so there is no value of
+  // a declared variable at which anything is undefined.
+  {
+    id: 'the-contrapositive-hands-you-a-form-to-substitute-1',
+    knowledgePointId: 'the-contrapositive-lets-you-choose-which-end-to-start-from',
+    kind: 'transform_to_form',
+    form: 'expanded',
+    prompt:
+      'You are proving "if n² is even then n is even", and you have chosen to prove the '
+      + 'contrapositive instead because the original hands you n² = 2m with nothing to '
+      + 'substitute for n. The contrapositive\'s hypothesis is "n is odd", which IS a form: '
+      + 'n = 2k + 1. Multiply out (2*k+1)^2 completely, as a sum of terms with no bracket left '
+      + 'unexpanded. The point of the demand is that the unexpanded power cannot be read for '
+      + 'parity at all — you cannot look at (2k + 1)² and see a 2 to take out — and the '
+      + 'multiplied-out form can: group the first two terms as 2(2k² + 2k) and the remaining 1 '
+      + 'is the leftover that makes it odd.',
+    given: '(2*k+1)^2',
+    variables: CASE_INDEX,
+    // 4k² + 4k + 1.
+    //
+    // THE ONLY FORM DEMAND THIS SUBJECT HAS, and it is the move rather than a
+    // claim about an encoding — which is the thing the two logic subjects below
+    // could not manage. `expanded` is exactly right: the checker refuses the
+    // given as "an unexpanded power of a sum" and accepts the reference as "a
+    // sum of 3 terms, fully multiplied out". Note it also refuses
+    // `2*(2*k^2 + 2*k) + 1`, as an unexpanded bracket — so the prompt asks for
+    // the fully multiplied-out form and mentions the grouping as a reading of
+    // it rather than as the answer.
+    reference: '4*k^2 + 4*k + 1',
+  },
+  {
+    id: 'an-arbitrary-odd-square-leaves-remainder-one-1',
+    knowledgePointId: 'the-contrapositive-lets-you-choose-which-end-to-start-from',
+    kind: 'evaluate',
+    prompt:
+      'Same proof. You have (2k + 1)² = 4k² + 4k + 1 and want to say it is odd, which means '
+      + 'showing that what is left after taking out every available 2 is exactly 1. The even '
+      + 'part is 4k² + 4k, which is 4(k² + k). Evaluate (2*k+1)^2 - 4*(k^2 + k) at k = 7. Your '
+      + 'answer is the remainder on division by 2 — and the reason this single computation '
+      + 'proves something about EVERY odd number is that the k cancels: at k = 0 it reads '
+      + '1 − 0 = 1, at k = 7 it reads 225 − 224 = 1, at k = 12 it reads 625 − 624 = 1. Compare '
+      + 'the previous concept, where n² + n + 11 was prime at ten values of n and that settled '
+      + 'nothing, because there the answer depended on n and here it does not.',
+    given: '(2*k+1)^2 - 4*(k^2 + k)',
+    variables: CASE_INDEX,
+    // 4k² + 4k + 1 − 4k² − 4k = 1, identically.
+    //
+    // ASKED AT k = 7 AND IDENTICALLY 1, which is the one task shape this
+    // concept needed and could not get from the kinds alone. "This holds for an
+    // arbitrary member of the case" is not a value `evaluate` can ask for; what
+    // it can ask for is a value that does not depend on the member, and the
+    // prompt names two further k so that the independence is observed rather
+    // than asserted.
+    reference: '1',
+    at: { k: '7' },
+  },
+  {
+    id: 'the-converse-is-a-different-claim-and-this-one-is-false-1',
+    knowledgePointId: 'the-contrapositive-lets-you-choose-which-end-to-start-from',
+    kind: 'evaluate',
+    prompt:
+      'The converse is the rearrangement you may NOT prove instead, and the reason is not that '
+      + 'it is always false. For "if n² is even then n is even" the converse is also true, which '
+      + 'is why truth cannot tell you which sentence you proved. So take a statement where it '
+      + 'fails: "if n is divisible by 4 then n is even" is true, and its converse claims every '
+      + 'even number is divisible by 4. Test that at the smallest even number above zero by '
+      + 'evaluating n/4 at n = 2. Your answer is not a whole number, so 2 is even and not '
+      + 'divisible by 4: the converse is refuted while the original stands, and one object was '
+      + 'enough to do it.',
+    given: 'n/4',
+    variables: NUMBER_UNDER_TEST,
+    // 2/4 = 1/2, which is not a whole number.
+    //
+    // THE ONE PLACE A NON-INTEGER ANSWER IS THE POINT. Every other value in
+    // this subject is a whole number, and here the answer being a fraction is
+    // the refutation — "n is divisible by 4" says n/4 is a whole number, and
+    // 1/2 is not one. `exactValue` settles it, so it grades with no worker like
+    // the rest. Answering `2/4` is refused by `ruleEvaluate`'s default, which is
+    // correct: the substituted-and-stopped form has not done the division the
+    // question is about.
+    reference: '1/2',
+    at: { n: '2' },
+  },
+  {
+    id: 'build-a-number-from-a-list-assumed-to-be-every-prime-1',
+    knowledgePointId: 'a-contradiction-assumes-the-negation-and-reaches-something-impossible',
+    kind: 'evaluate',
+    prompt:
+      'You are proving there is no largest prime by assuming there is one, which makes the '
+      + 'primes a finite list you can write out. Suppose that list were a = 2, b = 3, c = 5, '
+      + 'd = 7, e = 11, f = 13 — every prime there is. Evaluate a*b*c*d*e*f + 1 at those values. '
+      + 'The product alone is divisible by every prime on the list, because each one is a factor '
+      + 'of it; adding 1 is the smallest change that spoils all six of those divisions at once, '
+      + 'and your answer is the number the rest of the argument is about.',
+    given: 'a*b*c*d*e*f + 1',
+    variables: SIX_PRIMES,
+    // 2 · 3 · 5 · 7 · 11 · 13 = 30030, and 30030 + 1 = 30031.
+    //
+    // THE LIST IS GIVEN AS SIX SYMBOLS RATHER THAN AS THE NUMERAL 30031,
+    // because the construction is the content: the number is the product of
+    // whatever the list happened to be, plus one, and a task that handed over
+    // 30031 would ask the learner to divide a number somebody else built.
+    reference: '30031',
+    at: { a: '2', b: '3', c: '5', d: '7', e: '11', f: '13' },
+  },
+  {
+    id: 'a-remainder-of-one-means-nothing-on-the-list-divides-it-1',
+    knowledgePointId: 'a-contradiction-assumes-the-negation-and-reaches-something-impossible',
+    kind: 'evaluate',
+    prompt:
+      'N = 30031 and the list was 2, 3, 5, 7, 11, 13. Take the largest of them: 13 divides the '
+      + 'product 30030 exactly, since 30030 = 13 × 2310. Evaluate n - p*k at n = 30031, p = 13, '
+      + 'k = 2310. Your answer is the remainder when N is divided by 13, and because it is not 0 '
+      + 'the prime 13 does not divide N. The same computation works for every other prime on the '
+      + 'list — 30030 is also 2 × 15015, 3 × 10010, 5 × 6006, 7 × 4290 and 11 × 2730 — so each '
+      + 'leaves the same remainder and NOTHING on the list divides N.',
+    given: 'n - p*k',
+    variables: DIVIDEND_DIVISOR_QUOTIENT,
+    // 30031 − 13 · 2310 = 30031 − 30030 = 1.
+    //
+    // SHARES ITS EXPRESSION WITH THE CASES POINT two tasks down, where the same
+    // three symbols are a number, 3, and a candidate quotient, and the answer 2
+    // means something else entirely. One move, two facts, and the shared `given`
+    // is how that is recorded.
+    reference: '1',
+    at: { n: '30031', p: '13', k: '2310' },
+  },
+  {
+    id: 'the-number-built-need-not-be-prime-1',
+    knowledgePointId: 'a-contradiction-assumes-the-negation-and-reaches-something-impossible',
+    kind: 'evaluate',
+    prompt:
+      'The argument is finished: N = 30031 has a prime factor, nothing on the list divides it, '
+      + 'so there is a prime off a list that was assumed to hold them all. Now check the thing '
+      + 'the argument never claimed. Almost everybody reads it as "the product of the primes '
+      + 'plus one is prime", and with the shorter list 2, 3, 5, 7 it happens to be — '
+      + '2 × 3 × 5 × 7 + 1 = 211, which is prime. With this list it is not: 59 divides 30031. '
+      + 'Evaluate n/59 at n = 30031 to get the other factor. Both 59 and your answer are prime, '
+      + 'so N is composite, and nothing breaks — 59 is exactly the prime off the list that the '
+      + 'argument promised was there.',
+    given: 'n/59',
+    variables: NUMBER_UNDER_TEST,
+    // 30031 ÷ 59 = 509. Both 59 and 509 are prime, and both exceed 13.
+    //
+    // THIS IS THE `counterexample` ASK REDUCED TO A DIVISION, which is the
+    // honest amount less than the real one. The real question is "produce a
+    // prime not on the list", and ruling it needs a checker that can test a
+    // produced object against a claim; the kind is declared verifiable in this
+    // file and ships nothing. So 59 is given, the quotient is asked, and the
+    // prompt says that finding 59 was the question. A learner who answers 509
+    // has not been scored on noticing that 30031 is composite.
+    reference: '509',
+    at: { n: '30031' },
+  },
+  {
+    id: 'expand-the-case-a-split-left-out-1',
+    knowledgePointId: 'a-proof-by-cases-works-only-if-the-cases-leave-nothing-out',
+    kind: 'transform_to_form',
+    form: 'expanded',
+    prompt:
+      'Somebody proves "n² leaves remainder 0 or 1 on division by 3, never 2" by checking '
+      + 'n = 3k and n = 3k + 1, and stops. Dividing by 3 can leave 0, 1 or 2, so there is a '
+      + 'third case they have said nothing about: n = 3k + 2. Multiply out (3*k+2)^2 completely, '
+      + 'as a sum of terms with no bracket left unexpanded. As with the odd case earlier, the '
+      + 'unexpanded square cannot be read for a remainder — you cannot look at (3k + 2)² and see '
+      + 'what is left after the 3s come out — and the multiplied-out form can.',
+    given: '(3*k+2)^2',
+    variables: CASE_INDEX,
+    // 9k² + 12k + 4.
+    //
+    // The second and last form demand, deliberately the same demand on the same
+    // shape as the first point's: a case is a form, and reading a case for a
+    // remainder means multiplying the form out. Two points, one technique, and
+    // the parallel is the reason both are `expanded` rather than one of them
+    // being something cleverer.
+    reference: '9*k^2 + 12*k + 4',
+  },
+  {
+    id: 'the-missing-case-leaves-remainder-one-for-every-k-1',
+    knowledgePointId: 'a-proof-by-cases-works-only-if-the-cases-leave-nothing-out',
+    kind: 'evaluate',
+    prompt:
+      'You have (3k + 2)² = 9k² + 12k + 4 and want its remainder on division by 3. Take off the '
+      + 'largest multiple of 3 inside it, which is 3(3k² + 4k + 1) = 9k² + 12k + 3. Evaluate '
+      + '(3*k+2)^2 - 3*(3*k^2 + 4*k + 1) at k = 5. Your answer is the remainder, and the k has '
+      + 'cancelled out of it: at k = 0 it reads 4 − 3 = 1, at k = 5 it reads 289 − 288 = 1, at '
+      + 'k = 9 it reads 841 − 840 = 1. So every number of the form 3k + 2 has a square leaving '
+      + 'that remainder, the third case holds, and the proof is finally complete.',
+    given: '(3*k+2)^2 - 3*(3*k^2 + 4*k + 1)',
+    variables: CASE_INDEX,
+    // 9k² + 12k + 4 − (9k² + 12k + 3) = 1, identically.
+    //
+    // The second identically-1 task, at k = 5 where the first is at k = 7, and
+    // the pair is the subject's one structural claim: a case is settled when the
+    // case letter has gone from the answer. Asked on a DIFFERENT split from the
+    // first so that the independence does not read as a property of 2.
+    reference: '1',
+    at: { k: '5' },
+  },
+  {
+    id: 'which-case-a-number-is-in-decides-whether-a-split-covers-it-1',
+    knowledgePointId: 'a-proof-by-cases-works-only-if-the-cases-leave-nothing-out',
+    kind: 'evaluate',
+    prompt:
+      'The two-case proof covered n = 3k and n = 3k + 1, so it covered 2025 = 3 × 675 and '
+      + '2026 = 3 × 675 + 1. Evaluate n - p*k at n = 2027, p = 3, k = 675. Your answer is the '
+      + 'remainder that says which case 2027 is in — and it is the case neither of their two '
+      + 'covered, so their proof says nothing whatever about 2027². Note what this is NOT: the '
+      + 'claim is true at 2027 as well, which the previous task established for every number of '
+      + 'this form. An incomplete split can reach a true conclusion, so the truth of the answer '
+      + 'is never the check. Counting the cases against the split is, and it is done before the '
+      + 'computing rather than after it.',
+    given: 'n - p*k',
+    variables: DIVIDEND_DIVISOR_QUOTIENT,
+    // 2027 − 3 · 675 = 2027 − 2025 = 2.
+    //
+    // THE SHARED EXPRESSION'S SECOND USE. In the contradiction point `n - p*k`
+    // answered "does anything on the list divide N" and a remainder of 1 meant
+    // no; here it answers "which case is this number in" and a remainder of 2
+    // names the case that was dropped. Reading a remainder is one move, and
+    // asking it twice with the same expression is what says so.
+    reference: '2',
+    at: { n: '2027', p: '3', k: '675' },
   },
 ]
 

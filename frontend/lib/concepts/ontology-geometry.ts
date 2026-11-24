@@ -515,11 +515,39 @@
  *
  *   Induction, and the formal treatment of implication. Both are figure-free,
  *   and both are left out because the MAP has already placed them above this
- *   node rather than inside it. `mathematical-induction` is in
- *   `sequences-and-series` and names `geometric-proof` in its own `needs`;
- *   `propositional-logic` is in `discrete-mathematics`, names this node too, and
+ *   node rather than inside it. `propositional-logic` is in
+ *   `discrete-mathematics`, names this node in its own `needs`, and
  *   atlas-structures.ts argues at length that the geometry is the real entry
  *   point and the logic is the second pass.
+ *
+ *   The implication half is now authored too, promoted thirty-fifth into a
+ *   twelfth subject, `statements-and-connectives` in ontology-logic.ts — and
+ *   the boundary came under real pressure in the doing, which is why this is
+ *   worth more than a status update. That concept's ONLY prerequisite is this
+ *   node, and this subject therefore held every endpoint it needed, so filing
+ *   it HERE would have cost zero `links` entries where a new subject costs
+ *   one. The cost rule `radical-equations` was placed by would have said to
+ *   take it. It was refused on the strength of the paragraph below, and
+ *   ontology-logic.ts quotes that paragraph as the reason: a subject may not be
+ *   handed a concept its own file has already written out of itself, and the
+ *   cost rule is a tie-break between honest homes rather than a licence to
+ *   pick the cheap one. The edge is `DISCRETE_MATHEMATICS.links` instead, that
+ *   area's first and only entry, and it gates — `gatingPrerequisitesOf` on the
+ *   logic reports this concept and nothing else.
+ *
+ *   Induction was a node of `sequences-and-series` when that was written and
+ *   is now an authored concept of `functions-and-inverses`, promoted
+ *   thirty-second. The boundary is unchanged and the promotion endorsed it:
+ *   that file's own header says it chose induction's home partly because this
+ *   subject holds neither of its prerequisites, and ontology-functions.ts
+ *   carries the three knowledge points — the step, the base case, and the
+ *   increment form for a claim that is not a sum — none of which this concept
+ *   should grow. What DID change is where the edge is written. It is no longer
+ *   on a map node's `needs`: both ends are authored concepts of two different
+ *   subjects, so no ontology may name it and it is
+ *   `SEQUENCES_AND_SERIES.links`, that area's first and only entry. It still
+ *   gates, and `gatingPrerequisitesOf` still reports this concept in front of
+ *   the induction.
  *
  *   That second one is the sharpest boundary in this concept, because
  *   `propositional-logic` lists "contrapositive" among its own `terms` and the
@@ -527,11 +555,24 @@
  *   arbitrary: what is written here is the contrapositive of ONE proved
  *   statement about triangles, used on three specific triangles, which is a
  *   learner meeting the rearrangement before having a notation for it. What is
- *   above is the truth table — implication as a connective, the equivalence
- *   proved rather than demonstrated, and the quantifier negation that makes the
- *   third point's "every" into a "there exists". So this concept must not grow
+ *   above is the truth table — implication as a connective, and the
+ *   equivalence proved rather than demonstrated. So this concept must not grow
  *   a general account of implication, and the reason is the map's, not a limit
  *   of what prose can carry.
+ *
+ *   AUTHORING THE CONCEPT ABOVE HELD THAT LINE AND CORRECTED ONE WORD OF IT.
+ *   This sentence used to end "and the quantifier negation that makes the third
+ *   point's 'every' into a 'there exists'", and that was wrong about where the
+ *   quantifiers go. `quantifiers` is its OWN map node, directly above the
+ *   logic and still unwritten, and ontology-logic.ts disclaims them in its
+ *   `covers` by name — a table over letters standing for whole statements
+ *   cannot express "for all", let alone that swapping two different
+ *   quantifiers changes a claim. So the third point's universal/existential
+ *   asymmetry is this concept's, exactly as written, and the concept that
+ *   generalises it is two nodes up rather than one. Everything else in the
+ *   sentence survived verbatim: the truth table and the proved equivalence are
+ *   both there, the equivalence as the difference of two columns coming out
+ *   identically zero.
  *
  * ── THE NINTH PROMOTION TOOK THE NODE THIS FILE HAD WRITTEN OFF IN PROSE ──
  *
@@ -1391,15 +1432,21 @@
  *
  * TWO THINGS IT DELIBERATELY DOES NOT DO. There are no coordinates anywhere in
  * it: `cartesian-plane` is not a prerequisite of this node, `plane-transformations`
- * is the mapped node that does the same three motions with numbers, and writing
+ * is the concept that does the same motions with numbers — a NODE when this was
+ * written and the thirteenth promotion since — and writing
  * a reflection as (x, −y) here would be using a concept the gate does not
- * include. And the GROUP is not named, though the third point counts one: the
+ * include. That separation survived the promotion unchanged, which is the point
+ * of saying so: the two concepts sit side by side in this file now and neither
+ * is a prerequisite of the other, so this one still reaches no coordinates and
+ * that one still rests on `congruence` rather than on this. And the GROUP is not named, though the third point counts one: the
  * axioms are `binary-operations`' content and this is the motivating example
  * they are abstracted from, so naming them here would describe the abstraction
  * before anything has been abstracted.
  *
  * ITS THREE POINTS ARE UNTIMED FOR REASONS ALREADY ON RECORD, taking the count
- * to thirty-six with exactly one `automaticityTarget` in the file. The first is
+ * to thirty-six with exactly one `automaticityTarget` in the file — and to
+ * thirty-nine at the thirteenth promotion, whose three points are untimed for
+ * the same two reasons and say so individually. The first is
  * the "times an operation another point already times" case — the arithmetic is
  * the 180-minus subtraction `two-sums-every-angle-chase-uses` measures, and
  * what this point adds in front of it is a citation. The second and third are
@@ -1538,10 +1585,33 @@ const subject: Subject = {
     'reflection or a glide reflection needs an argument about where three fixed points can lie, ' +
     'not the definition. The GROUP is absent, and deliberately: the composition facts here are ' +
     'the motivating example the axioms are abstracted from, and `binary-operations` in ' +
-    '`abstract-algebra` is the node that abstracts them. So is every transformation written in ' +
-    'coordinates — `plane-transformations` is still mapped and is the same three maps done with ' +
-    'numbers — since this subject\'s one coordinate concept is here for an edge rather than as ' +
-    'the start of a syllabus.',
+    '`abstract-algebra` is the node that abstracts them. Then those same maps in coordinates, ' +
+    'which is the sentence this one used to end by excluding — it said every transformation ' +
+    'written in coordinates was still mapped only, and that this subject\'s one coordinate ' +
+    'concept was here for an edge rather than as the start of a syllabus. The second half of ' +
+    'that is still true and the first half is not: a transformation as a rule on the PAIR, with ' +
+    'the slots and the signs separated, since a reflection in an axis and a quarter turn both ' +
+    'produce exactly one minus sign and are told apart by which slot each number lands in — the ' +
+    'half turn being the one rotation that moves no slots and so really is two sign flips, and ' +
+    'the reflection in y = x the one map that is a pure swap with no sign at all; distance ' +
+    'preservation COMPUTED rather than assumed, by putting both endpoints through the rule and ' +
+    'measuring between the images, so that a scaling is shown to fail the test and a scale ' +
+    'factor is seen entering each leg once, each square twice and leaving the root once; and a ' +
+    'centre that is not the origin, where the rule is three moves rather than one — subtract the ' +
+    'centre, apply the origin rule to the displacement, add the centre back — with the wrong ' +
+    'answer the origin rule gives computed in full and then refuted by the one distance a ' +
+    'rotation about a centre may not change. The direction of that second point is the boundary ' +
+    'between this concept and the isometries above it: there, keeping every distance is the ' +
+    'hypothesis and all six of a congruence\'s equalities are deduced from it; here it is a ' +
+    'conclusion checked at one pair of points, which is a check and not a proof, and the proof ' +
+    'stays where it was. Nothing synthetic is reproved in coordinates — the quarter turn got by ' +
+    'composing two reflections 45° apart is CHECKED against the doubling rule rather than ' +
+    'deriving it. The classification is still taken as given, there is still no group, and the ' +
+    'rest of the analytic half stays absent and stays absent: slope, the equations of a line, ' +
+    'the circle as an equation, the conics, the parametric curves and the regions are all still ' +
+    'mapped only. Two coordinate concepts is not a coordinate syllabus — the first is here ' +
+    'because an area\'s `links` could not carry its credit edge, and the second because the maps ' +
+    'it is about are the ones the concept beside it proves things about.',
   medium: 'theorem',
   facetName: 'Concept',
   facetDoes: 'Which concept the statement has to be about.',
@@ -5167,12 +5237,20 @@ const CONCEPTS: Concept[] = [
        * more precisely than it recalls, and `fidelity` is `checked` on the
        * strength of the first claim rather than the second.
        *
-       * It overlaps with `plane-transformations`, which is still a node of
-       * `euclidean-geometry` and whose own pattern ends `|\bisometr(y|ies)\b`.
-       * That overlap is not new — both matched "Isometry" while both were
-       * nodes — and nothing in the build requires a title to select one
-       * concept, so it is left alone here. Narrowing either pattern is a
-       * recognition decision and belongs on the map.
+       * It overlaps with `plane-transformations`, whose own pattern ends
+       * `|\bisometr(y|ies)\b`. That overlap is not new — both matched
+       * "Isometry" while both were nodes — and nothing in the build requires a
+       * title to select one concept, so it is left alone here. Narrowing either
+       * pattern is a recognition decision and belongs on the map.
+       *
+       * THAT CONCEPT IS NO LONGER A NODE, which this comment said it was until
+       * the thirteenth promotion wrote it into this subject. Both patterns are
+       * unchanged and the overlap is unchanged with them; what changed is that
+       * the clash is now visible in one file instead of split across two, and
+       * that neither pattern can any longer be adjusted "on the map" — a
+       * promoted concept's scope lives here. So the decision to leave both
+       * alone has become a decision this file owns rather than one it defers,
+       * and the reason for it is the same: no title has to pick one concept.
        */
       match: /\b(isometry|symmetry group|reflection symmetry|rotational symmetry)\b/i,
     },
@@ -5604,10 +5682,456 @@ const CONCEPTS: Concept[] = [
       },
     ],
   },
+  {
+    id: 'plane-transformations',
+    name: 'Transformations of the plane',
+    subjectId: subject.id,
+    scope: {
+      id: 'plane-transformations',
+      label: 'Transformations of the plane',
+      hint: 'translation rotation reflection dilation coordinates image',
+      /*
+       * Carried verbatim from the map node, like the ten anchored patterns
+       * above it, and this one has the most to record of any of them because
+       * the two halves of the alternation do not behave alike.
+       *
+       * The second branch, `\bisometr(y|ies)\b`, recalls real titles:
+       * "Isometry" and "Euclidean plane isometry" are both pages about exactly
+       * these four maps, the second one listing their coordinate forms. The
+       * FIRST branch almost certainly recalls nothing — it demands the literal
+       * phrase "translation of the plane", "rotation in the plane" and so on,
+       * and the encyclopaedia titles those pages "Translation (geometry)" and
+       * "Rotation (mathematics)". So the pattern is live on one branch and
+       * effectively dead on the other, which is the same honest split
+       * `isometries-and-symmetry` records above and is why `fidelity` is
+       * claimed on the strength of what the pattern ADMITS rather than of how
+       * much it recalls: nothing it takes is off-concept.
+       *
+       * Widening the first branch during this authoring pass is the change the
+       * scope comments forbid, for the reason `circles` gives at length —
+       * the recognition figure in tests/atlas.mjs would move and there would
+       * be no way to say which edit moved it. The pattern has been this
+       * node's since the merge and it stays this concept's unchanged.
+       *
+       * AND THE OVERLAP WITH `isometries-and-symmetry` IS NOW INSIDE ONE
+       * ONTOLOGY, which is new. That concept's own scope comment noted the
+       * clash while this was still a map node and declined to narrow either
+       * pattern, on the ground that nothing in the build requires a title to
+       * select exactly one concept and that narrowing is a recognition
+       * decision belonging on the map. Promoting this node does not change
+       * either premise — both patterns are unchanged, both still admit
+       * "Isometry", and the decision is still the map's. What it does change is
+       * that a reader can now see both patterns in one file, so the clash is
+       * discoverable rather than split across two.
+       */
+      match: /\b(translation|rotation|reflection|dilation) (of|in) the plane\b|\bisometr(y|ies)\b/i,
+    },
+    fidelity: 'checked',
+    /*
+     * EVERY OBJECTIVE NAMES ONLY `evaluate`, following
+     * `isometries-and-symmetry` rather than the twenty-eight above it that name
+     * `justify`. No `justify` task exists anywhere in this build, so those
+     * objectives name an observation that cannot be made; this is the second
+     * concept of the subject to decline to add to them.
+     *
+     * The "say why" half is MOVED rather than dropped, to the `socratic` field
+     * on every subgoal below — which is where types.ts puts a question nothing
+     * can rule. The three best unrulable questions here are why a reflection
+     * can be told from a quarter turn by the SLOTS rather than by the signs,
+     * why a scale factor leaves the root once and not twice, and why a
+     * translation has no centre to subtract.
+     */
+    objectives: [
+      {
+        id: 'produce-an-image-point-from-the-rule-rather-than-from-the-picture',
+        statement:
+          'Given a point and a named transformation about the origin — a translation, a '
+          + 'reflection in either axis or in the line y = x, a quarter or half turn, or a scaling '
+          + '— produce the image by applying the rule to the pair of coordinates, keeping track '
+          + 'of WHICH SLOT each number lands in separately from which sign it carries. Decide '
+          + 'whether two named transformations send a given point to the same place by computing '
+          + 'both images and comparing them, rather than by comparing the two descriptions.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'compute-a-distance-before-and-after-rather-than-assuming-it-held',
+        statement:
+          'Given two points and a transformation, produce the distance between the two IMAGES '
+          + 'and set it against the distance between the originals — so that "this map preserves '
+          + 'distance" is a computed result here rather than the hypothesis it is in '
+          + '`isometries-and-symmetry`. Produce the factor a scaling multiplies a distance by, '
+          + 'and show it entering each leg once and therefore leaving the square root once.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'apply-a-rule-about-the-origin-at-a-centre-that-is-not-the-origin',
+        statement:
+          'Given a rotation or a scaling about a stated centre other than the origin, produce '
+          + 'the image of a point by subtracting the centre, applying the origin rule to the '
+          + 'displacement that leaves, and adding the centre back — and check the one length the '
+          + 'map was not allowed to change. Decide which point a transformation holds fixed, '
+          + 'given that a rotation or scaling holds its centre and a translation holds none.',
+        taskKinds: ['evaluate'],
+      },
+    ],
+    knowledgePoints: [
+      {
+        id: 'a-transformation-is-a-rule-on-the-pair-and-the-slots-are-half-of-it',
+        conceptId: 'plane-transformations',
+        statement:
+          'In coordinates a transformation is a rule that takes the pair (x, y) to another pair, '
+          + 'and the same rule applies at every point of the plane. The four that matter here are '
+          + 'a translation, (x, y) → (x + h, y + k); a reflection, which negates ONE coordinate '
+          + 'for an axis — (x, −y) in the x-axis, (−x, y) in the y-axis — or SWAPS the two for '
+          + 'the line y = x, giving (y, x); a rotation about the origin, (−y, x) for a quarter '
+          + 'turn anticlockwise, (−x, −y) for a half turn and (y, −x) for a quarter turn '
+          + 'clockwise; and a scaling by k about the origin, (kx, ky). Reading those as sign rules '
+          + 'alone is what makes a quarter turn indistinguishable from a reflection, because both '
+          + 'of them produce one minus sign. The difference is the SLOTS: a reflection in an axis '
+          + 'leaves each number where it was, and a quarter turn moves each number to the other '
+          + 'slot before any sign is applied. The half turn is the one rotation that changes no '
+          + 'slots, which is why it is the one that really is just two sign flips. A useful check '
+          + 'on all of it: reflecting in y = x and then in the y-axis gives (−y, x), which is the '
+          + 'quarter turn — and the two mirrors are 45° apart, so '
+          + '`isometries-and-symmetry`\'s doubling says the composition turns through 90°. The '
+          + 'coordinates agree with the synthetic argument rather than replacing it.',
+        position: 1,
+        /*
+         * No `automaticityTarget`. The arithmetic in a transformation rule is
+         * one sign flip, so a speed target would measure how fast a learner
+         * can negate a number — and the content of the point is the SLOT
+         * decision in front of that, which the prompts say outright is the
+         * unscored half. This is the "decision in front of trivial arithmetic"
+         * case the three proof points name, in its sharpest form in the file.
+         */
+        workedExample: {
+          problem:
+            'Take P(5, 2). Find its image under a reflection in the y-axis, and its image under a '
+            + 'quarter turn anticlockwise about the origin. Both answers contain a 5, a 2 and one '
+            + 'minus sign, so say what actually distinguishes them. Then find the single '
+            + 'reflection that sends P to (2, 5), and check the quarter turn a second way by '
+            + 'composing two reflections.',
+          subgoals: [
+            {
+              label: 'Apply the reflection by naming the slot it leaves alone, not the sign it changes',
+              detail:
+                'A reflection in the y-axis is (x, y) → (−x, y). The y-coordinate is untouched '
+                + 'and the x-coordinate changes sign, and — the part worth saying out loud — '
+                + 'neither number moves to the other slot. So P(5, 2) goes to (−5, 2). The '
+                + 'mirror is the y-axis, the thing measured across it is the x-coordinate, and '
+                + 'that is the whole rule.',
+              socratic:
+                'The mirror is the y-axis. Which of a point\'s two coordinates measures how far '
+                + 'it is from that mirror, and what does that make the rule?',
+            },
+            {
+              label: 'Apply the quarter turn, which moves both numbers before it changes either sign',
+              detail:
+                'A quarter turn anticlockwise about the origin is (x, y) → (−y, x). Check it on '
+                + 'the simplest point: (1, 0) is one step along the positive x-axis, and a quarter '
+                + 'turn anticlockwise should carry it to (0, 1) on the positive y-axis — the rule '
+                + 'gives (−0, 1) = (0, 1), so the signs are the right way round. Applied to '
+                + 'P(5, 2) it gives (−2, 5). Note the order of operations inside the rule: the 2 '
+                + 'travels to the first slot and THEN picks up the minus sign.',
+              socratic:
+                'You are told a quarter turn anticlockwise is either (−y, x) or (y, −x). Send the '
+                + 'point (1, 0) through both and see which one lands on the positive y-axis — '
+                + 'which is it?',
+            },
+            {
+              label: 'Compare the two images and identify what separates them',
+              detail:
+                '(−5, 2) against (−2, 5). Both have exactly one minus sign and both have it on '
+                + 'the first coordinate, so the signs do not separate them at all. What separates '
+                + 'them is that the reflection kept 5 in the first slot and the rotation moved it '
+                + 'to the second. A learner who has memorised these as "a reflection flips a sign '
+                + 'and so does a quarter turn" has stored the half of each rule that the two '
+                + 'share and dropped the half that tells them apart.',
+              socratic:
+                'The two images are (−5, 2) and (−2, 5). Each carries one minus sign in the same '
+                + 'place, so the signs cannot be what distinguishes the two maps. What is?',
+            },
+            {
+              label: 'Run the question backwards to name a map from its effect',
+              detail:
+                'P(5, 2) → (2, 5) keeps both numbers and swaps their slots, changing no sign. '
+                + 'The rule that does exactly that is (x, y) → (y, x), the reflection in the line '
+                + 'y = x. It is worth having because it is the one reflection in this list that '
+                + 'is a pure slot swap, which makes it the cleanest demonstration that slots and '
+                + 'signs are two independent things a rule can do.',
+              socratic:
+                'Going from (5, 2) to (2, 5), no number has changed and no sign has changed — '
+                + 'only where each number sits. Which line are you reflecting in?',
+            },
+            {
+              label: 'Compose the two reflections and check the answer against the synthetic rule',
+              detail:
+                'Reflect P in y = x to get (2, 5), then reflect that in the y-axis to get '
+                + '(−2, 5) — which is exactly the quarter turn\'s image from the second step. In '
+                + 'general (x, y) → (y, x) → (−y, x), so the composition IS the quarter-turn '
+                + 'rule and not merely an agreement at this point. And it had to be: the line '
+                + 'y = x and the y-axis meet at 45°, and `isometries-and-symmetry` showed two '
+                + 'reflections in mirrors θ apart compose to a rotation through 2θ, so 2 × 45° = '
+                + '90°. The coordinates are a second route to a fact already proved without them, '
+                + 'which is the right relationship between the two concepts — this one does not '
+                + 'reprove the synthetic results, it checks against them.',
+              socratic:
+                'Reflect (5, 2) in y = x and then reflect the result in the y-axis. The two '
+                + 'mirrors are 45° apart — what does the doubling rule predict you should get, '
+                + 'and do you?',
+            },
+          ],
+          answer:
+            'The reflection in the y-axis sends P(5, 2) to (−5, 2); the quarter turn '
+            + 'anticlockwise sends it to (−2, 5). Both images carry one minus sign, on the first '
+            + 'coordinate in each case, so the signs distinguish nothing — what distinguishes the '
+            + 'maps is the SLOTS: the reflection leaves each number where it was, and the '
+            + 'quarter turn moves each to the other slot and then signs one of them. The '
+            + 'reflection sending P to (2, 5) is the one in the line y = x, rule (x, y) → (y, x), '
+            + 'a pure slot swap with no sign change. Composing it with the reflection in the '
+            + 'y-axis gives (x, y) → (y, x) → (−y, x), which is the quarter-turn rule itself — '
+            + 'and the two mirrors are 45° apart, so the doubling in '
+            + '`isometries-and-symmetry` predicts a 90° rotation and gets one.',
+        },
+      },
+      {
+        id: 'distance-preservation-is-computed-here-and-assumed-there',
+        conceptId: 'plane-transformations',
+        statement:
+          'A transformation acts on every point, so a distance has TWO images to be measured '
+          + 'between and whether it survived is a question you can settle by arithmetic. Apply '
+          + 'the rule to both endpoints, then apply the distance formula to the two images. A '
+          + 'translation, a reflection and a rotation all come back with the distance they started '
+          + 'with; a scaling by k comes back with |k| times it. That is the exact inversion of '
+          + '`isometries-and-symmetry`, where keeping every distance is the HYPOTHESIS that a map '
+          + 'is assumed to satisfy and everything else is deduced from it — here it is the '
+          + 'conclusion, checked one pair of points at a time, and the scaling is the map that '
+          + 'fails the check and so is not an isometry at all. The factor is worth watching '
+          + 'carefully: scaling by k multiplies each coordinate difference by k, so it multiplies '
+          + 'each squared difference by k², so it multiplies the sum under the root by k² — and '
+          + 'the root takes it back to |k|. The factor enters twice and comes out once, which is '
+          + 'why trebling a figure trebles its distances rather than making them nine times '
+          + 'bigger. Note that one check is a check, not a proof: computing the distance at one '
+          + 'pair of points shows the map did not break it there. `isometries-and-symmetry` is '
+          + 'where "for every pair of points" is argued.',
+        position: 2,
+        /*
+         * No `automaticityTarget`. The arithmetic is the distance formula,
+         * which `distance-and-midpoint` already owns and does not time either,
+         * and what this point adds in front of it is the decision to apply the
+         * rule to BOTH endpoints before measuring anything. Timing it would
+         * report one skill twice and reward reaching for the formula ahead of
+         * the two substitutions it needs.
+         */
+        workedExample: {
+          problem:
+            'A is (1, 2) and B is (4, 6). Find the distance AB. Then find the distance between '
+            + 'the two images under a quarter turn anticlockwise about the origin, and the '
+            + 'distance between the two images under a scaling by 3 about the origin. Say which '
+            + 'of the two maps is an isometry, and account for the factor in the other.',
+          subgoals: [
+            {
+              label: 'Measure the original first, so there is something for the images to be compared against',
+              detail:
+                'The coordinate differences are 4 − 1 = 3 and 6 − 2 = 4, so AB = √(9 + 16) = '
+                + '√25 = 5. A 3-4-5 on purpose: the point of this example is the comparison of '
+                + 'three distances, and an irrational would move the difficulty into the radical '
+                + 'where `roots-and-irrationals` already owns it.',
+              socratic:
+                'Before transforming anything — what is the distance from (1, 2) to (4, 6)?',
+            },
+            {
+              label: 'Apply the rule to BOTH endpoints, because a distance is not a point',
+              detail:
+                'The quarter turn is (x, y) → (−y, x). A(1, 2) goes to (−2, 1) and B(4, 6) goes '
+                + 'to (−6, 4). This is the step most easily skipped: a transformation maps the '
+                + 'whole plane, so the image of a segment is the segment between the two image '
+                + 'points, and transforming one endpoint gives a length that is not any distance '
+                + 'in the problem.',
+              socratic:
+                'You want the distance between the images of A and B. How many points do you '
+                + 'have to put through the rule before you can measure anything?',
+            },
+            {
+              label: 'Measure the image and notice that the legs changed while their squares did not total differently',
+              detail:
+                'From (−2, 1) to (−6, 4) the differences are −6 − (−2) = −4 and 4 − 1 = 3, so '
+                + 'the distance is √(16 + 9) = √25 = 5. The same 5. The legs are NOT the same, '
+                + 'though — they were 3 and 4 and they are now −4 and 3 — so the quarter turn did '
+                + 'move the legs around and sign one of them. What it could not do is change the '
+                + 'total of their squares, and the subtraction order never mattered because the '
+                + 'squaring erases it, which is `distance-and-midpoint`\'s first point.',
+              socratic:
+                'The image legs are −4 and 3 where the originals were 3 and 4. The legs have '
+                + 'clearly changed — so why has the distance not?',
+            },
+            {
+              label: 'Do the scaling, and count how many times the factor enters and how many times it leaves',
+              detail:
+                'Scaling by 3 about the origin is (x, y) → (3x, 3y), so A goes to (3, 6) and B to '
+                + '(12, 18). The differences are 12 − 3 = 9 and 18 − 6 = 12 — each the original '
+                + 'leg times 3 — so the distance is √(81 + 144) = √225 = 15. That is 3 × 5 and '
+                + 'not 9 × 5: the factor multiplied each leg once, so it multiplied each square '
+                + 'twice over, so it multiplied the sum under the root by 9 — and the root handed '
+                + 'back a single 3. This is `circle-measure`\'s exponent count reappearing as '
+                + 'arithmetic on two coordinates.',
+              socratic:
+                'The legs went from 3 and 4 to 9 and 12, so the number under the root went from '
+                + '25 to 225 — nine times bigger. Why is the distance only three times bigger?',
+            },
+            {
+              label: 'Name which map is an isometry, on the evidence rather than on the word',
+              detail:
+                'The quarter turn returned 5 for 5 and the scaling returned 15 for 5, so the '
+                + 'quarter turn passed the test at this pair of points and the scaling failed it. '
+                + 'A scaling by any k other than 1 or −1 is therefore not an isometry, and this '
+                + 'is where the word earns its definition rather than being handed one. Both '
+                + 'directions of the comparison are worth keeping: `isometries-and-symmetry` '
+                + 'begins by ASSUMING distance is kept and gets all six of a congruence\'s '
+                + 'equalities out of it, and the assumption is exactly the thing this arithmetic '
+                + 'tests. One pair of points is not a proof that the quarter turn keeps every '
+                + 'distance — it is a check that it kept this one.',
+              socratic:
+                'One map gave 5 for 5 and the other gave 15 for 5. Which of them fits the '
+                + 'definition of an isometry — and does the arithmetic you did prove it for every '
+                + 'pair of points, or only show it for this one?',
+            },
+          ],
+          answer:
+            'AB = √(3² + 4²) = 5. Under the quarter turn A(1, 2) → (−2, 1) and B(4, 6) → '
+            + '(−6, 4), giving √((−4)² + 3²) = √25 = 5 — unchanged, though the legs themselves '
+            + 'went from 3 and 4 to −4 and 3. Under the scaling by 3, A → (3, 6) and B → '
+            + '(12, 18), giving √(9² + 12²) = √225 = 15, which is 3 × 5. The factor multiplies '
+            + 'each leg once and so each square twice, making the number under the root nine '
+            + 'times bigger, and the square root returns a single factor of 3. So the quarter '
+            + 'turn is an isometry and the scaling is not, decided by computing rather than by '
+            + 'definition — which is the inversion of `isometries-and-symmetry`, where distance '
+            + 'preservation is the one hypothesis assumed. One pair of points checks the map '
+            + 'here; it does not prove it.',
+        },
+      },
+      {
+        id: 'the-centre-is-part-of-the-rule-and-the-origin-rule-does-not-know-it',
+        conceptId: 'plane-transformations',
+        statement:
+          'The rules (−y, x) and (kx, ky) are rules about the ORIGIN, and using them when the '
+          + 'centre is somewhere else is the commonest way to get a transformation wrong in '
+          + 'coordinates. A rotation or a scaling about a centre C is three moves: subtract C to '
+          + 'get the displacement from it, apply the origin rule to that displacement, and add C '
+          + 'back because the answer is a point and not a displacement. For a quarter turn '
+          + 'anticlockwise about C(a, b), the point (c, d) therefore goes to '
+          + '(a − (d − b), b + (c − a)) — and the asymmetry in that expression is the content: the '
+          + 'new first coordinate SUBTRACTS the old vertical displacement and the new second '
+          + 'coordinate ADDS the old horizontal one, which is the (−y, x) of the origin rule with '
+          + 'the centre put back on either side. The three moves also say which point each map '
+          + 'holds still. A rotation or scaling about C sends C to itself, because its '
+          + 'displacement from C is (0, 0) and every rule here sends (0, 0) to (0, 0); so C is '
+          + 'the one point you can check an answer against, since the distance from C must '
+          + 'survive a rotation exactly. A translation has no centre to subtract and no fixed '
+          + 'point at all, which is not an omission in the rule but the reason the rule is the '
+          + 'simplest one in the concept.',
+        position: 3,
+        /*
+         * No `automaticityTarget`. Both tasks on this point are two
+         * subtractions and an addition, which is `integer-arithmetic`'s
+         * material, and what the point contributes is the ORDER of the three
+         * moves — a learner who is fast here is a learner who applied the
+         * origin rule straight to the point, which is exactly the error the
+         * point exists to stop. Timing it would reward the wrong method, the
+         * same objection the third point of `isometries-and-symmetry` records
+         * against timing 2n.
+         */
+        workedExample: {
+          problem:
+            'Rotate P(7, 3) a quarter turn anticlockwise about C(4, 1) rather than about the '
+            + 'origin. Then say what the origin rule alone would have given, and use C to show '
+            + 'which of the two answers can possibly be right.',
+          subgoals: [
+            {
+              label: 'Subtract the centre, because the rule is about a displacement and not about a point',
+              detail:
+                'P − C = (7 − 4, 3 − 1) = (3, 2). That pair is where P sits RELATIVE to C: three '
+                + 'to the right and two up. The origin rule knows how to turn a displacement '
+                + 'through a quarter turn, and the whole reason this subtraction comes first is '
+                + 'that it converts the question into the one the rule can answer.',
+              socratic:
+                'The rule you know turns things about the origin, and you need to turn about '
+                + '(4, 1). What can you compute from P and C that the origin rule is able to act '
+                + 'on?',
+            },
+            {
+              label: 'Apply the origin rule to the displacement, and to nothing else',
+              detail:
+                'A quarter turn anticlockwise is (x, y) → (−y, x), so (3, 2) becomes (−2, 3). '
+                + 'This is the only step where the rule appears, and it is applied to (3, 2) and '
+                + 'not to (7, 3). The result is still a displacement — it says where the image '
+                + 'sits relative to C, two to the left and three up — so it is not yet an answer '
+                + 'to the question asked.',
+              socratic:
+                'Your displacement is (3, 2). Put it through (x, y) → (−y, x) — and before you '
+                + 'move on, is the pair you get a point on the plane or a step from somewhere?',
+            },
+            {
+              label: 'Add the centre back, because the question asked for a point',
+              detail:
+                'C + (−2, 3) = (4 − 2, 1 + 3) = (2, 4). That is the image. Stopping at (−2, 3) '
+                + 'is the error `distance-and-midpoint` names in its own third point in the other '
+                + 'direction — a displacement handed back where a coordinate was asked for — and '
+                + 'it is the same mistake, one step later in a longer calculation. Written out in '
+                + 'general the three moves give (a − (d − b), b + (c − a)), which is worth '
+                + 'reading for its shape: the first coordinate subtracts the old VERTICAL '
+                + 'displacement and the second adds the old HORIZONTAL one.',
+              socratic:
+                'You have (−2, 3), which is where the image sits relative to C(4, 1). What is '
+                + 'left to do to turn that into the image\'s coordinates?',
+            },
+            {
+              label: 'Compute what the origin rule alone would have said, so the error has a number',
+              detail:
+                'Applying (−y, x) straight to P(7, 3) gives (−3, 7). It is a legitimate point — '
+                + 'it is P rotated a quarter turn about the ORIGIN — and it is not the answer to '
+                + 'this question. The two answers (2, 4) and (−3, 7) are far apart, so this is '
+                + 'not a small-print distinction; skipping the centre rotates about the wrong '
+                + 'point entirely.',
+              socratic:
+                'What do you get if you apply (−y, x) directly to (7, 3) — and which question is '
+                + 'that the right answer to?',
+            },
+            {
+              label: 'Check against the one length a rotation about C is not allowed to change',
+              detail:
+                'C is the only point a rotation about C holds still, so every other point must '
+                + 'keep its distance from C exactly. CP² = 3² + 2² = 13. For the answer (2, 4): '
+                + '(2 − 4)² + (4 − 1)² = 4 + 9 = 13, so it is on the right circle about C. For '
+                + '(−3, 7): (−3 − 4)² + (7 − 1)² = 49 + 36 = 85, which is not 13 — the origin '
+                + 'rule moved P off the circle about C, and that is a check anybody can run on '
+                + 'their own answer without being told which one is right. Squared distances are '
+                + 'compared rather than distances, because √13 is irrational and nothing here '
+                + 'needs it to be anything else.',
+              socratic:
+                'A rotation about C keeps every point\'s distance from C. Test both candidate '
+                + 'answers against CP² = 13 — which one survives?',
+            },
+          ],
+          answer:
+            'P(7, 3) goes to (2, 4). Subtract the centre to get the displacement P − C = (3, 2); '
+            + 'apply the origin rule (x, y) → (−y, x) to that displacement, giving (−2, 3); add '
+            + 'the centre back, giving (4 − 2, 1 + 3) = (2, 4). In general a quarter turn '
+            + 'anticlockwise about C(a, b) sends (c, d) to (a − (d − b), b + (c − a)) — the first '
+            + 'coordinate subtracting the vertical displacement and the second adding the '
+            + 'horizontal one. The origin rule used directly on P would have given (−3, 7), '
+            + 'which is P turned about the origin and answers a different question. C decides '
+            + 'between them: CP² = 3² + 2² = 13, and (2, 4) gives (2 − 4)² + (4 − 1)² = 13 while '
+            + '(−3, 7) gives 49 + 36 = 85. A rotation about C may not move a point off its circle '
+            + 'about C, so only the first answer is possible.',
+        },
+      },
+    ],
+  },
 ]
 
 /**
- * Sixteen edges: one prerequisite per promotion after the first, TWO for the
+ * Seventeen edges: one prerequisite per promotion after the first, TWO for the
  * seventh, TWO for the ninth and TWO for the tenth, plus the one interference
  * the fourth promotion brought with it and the one `encompasses` the eleventh
  * did.
@@ -6444,6 +6968,64 @@ const EDGES: ConceptEdge[] = [
      * absence is worth recording rather than assumed. Adding one would be a
      * claim about learner confusion made up during an authoring pass, which is
      * what the scope comments forbid for patterns and the same argument covers.
+     *
+     * THAT CANDIDATE IS NOW A CONCEPT OF THIS SUBJECT, and the refusal still
+     * stands — which is worth recording, because the obvious reading of the
+     * thirteenth promotion is that the obstacle was the node being a node.
+     * It was not. The objection was that nobody has observed the confusion;
+     * the two concepts being in one file does not supply an observation, it
+     * only makes the pair easier to look at. What HAS changed is that an
+     * `interferes_with` between them would now be expressible — both endpoints
+     * are concepts here — so if the confusion is ever seen, this is the file
+     * it goes in and no `links` entry is involved.
+     */
+    promotedBy: 'author:plane-geometry',
+  },
+  {
+    id: 'congruence->plane-transformations',
+    from: 'congruence',
+    to: 'plane-transformations',
+    kind: 'prerequisite',
+    /*
+     * THE FIFTH CHILD OF `congruence`, AND THE FIRST PROMOTION INTO THIS
+     * SUBJECT WHOSE STRANDED EDGES SPLIT TWO WAYS SINCE THE ELEVENTH.
+     *
+     * The node declared `needs: ['cartesian-plane', 'congruence']`.
+     * `congruence` is a concept here, so that edge is this one and is internal.
+     * `cartesian-plane` is an authored concept of `vectors-and-independence`,
+     * and an authored ontology may only name concepts it CONTAINS, so that one
+     * went to `EUCLIDEAN_GEOMETRY.links` — the expensive case, by the familiar
+     * route, and the area file carries the argument for filing it there.
+     *
+     * `author:` rather than `atlas:euclidean-geometry`, like the sixteen above
+     * it: `expandEdges` stamped the area on this edge while it was the node's
+     * own `needs`, and the provenance moved with the edge.
+     *
+     * WHY `congruence` AND NOT `isometries-and-symmetry`, which is the edge a
+     * reader will expect and which is NOT here. The two concepts are the same
+     * four maps done two ways, so a prerequisite between them looks obvious.
+     * It is not the map's claim and inventing it would change what gates what
+     * for every learner as a side effect of an authoring pass — the thing this
+     * file records itself refusing for `integer-arithmetic` and for the
+     * interference above. The map says this node rests on `congruence`, and
+     * the material bears that out rather than merely tolerating it: the first
+     * knowledge point tells a quarter turn from a reflection, which is the
+     * distinction `congruence` makes available by giving a correspondence a
+     * letter order, and the second point's whole argument is against the
+     * definition of an isometry as a map that keeps distance, which is
+     * `congruence`'s SSS read from the other end. Nothing in the concept needs
+     * the mirror-composition result or the symmetry count — point 1 CHECKS its
+     * answer against the doubling rule and point 2 cites the hypothesis, and a
+     * citation in a worked example is not a gate.
+     *
+     * It is the FIFTH edge out of `congruence` and adds no branch point, which
+     * is the twelfth promotion's shape repeated: `congruence` was already a
+     * fork of out-degree four, so this widens a fork rather than opening one
+     * and the subject still has exactly three branch points. And it leaves
+     * this concept a LEAF, like `isometries-and-symmetry` beside it — nothing
+     * in the subject rests on either, and this node's dependents anywhere in
+     * the atlas number zero, which is the first promotion out of this area
+     * that unblocked nothing.
      */
     promotedBy: 'author:plane-geometry',
   },

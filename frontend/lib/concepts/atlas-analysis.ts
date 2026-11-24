@@ -39,12 +39,53 @@ const SEQUENCES_AND_SERIES: MapArea = {
     'written for them, and this area points at them through `needs` rather than restating ' +
     'them: what a sequence IS — a function whose input is a position, given by a formula or by ' +
     'a recurrence — the notation for adding one up, which terms its limits name and the two ' +
-    'rearrangements that make such a sum manipulable, and the arithmetic family, whose term at ' +
-    'a position, position of a term and total by pairing the ends are all plain numbers. What ' +
-    'stayed is what needs an argument rather than a reading, or a limit rather than either: ' +
-    'the geometric family with its constant ratio and its sum to infinity, proof by induction, ' +
-    'and when an infinite sum totals anything. Convergence is stated ' +
+    'rearrangements that make such a sum manipulable, the arithmetic family, whose term at ' +
+    'a position, position of a term and total by pairing the ends are all plain numbers, and ' +
+    'proof by induction, whose step turns out to be a factorisation and whose base case is two ' +
+    'numbers compared. What stayed is what needs a limit rather than a reading: the geometric ' +
+    'family with its constant ratio and its sum to infinity, and when an infinite sum totals ' +
+    'anything. Convergence is stated ' +
     'and tested here; it is proved in real analysis.',
+  /**
+   * THE FIRST `links` ENTRY THIS AREA HAS EVER CARRIED, added by the fourth
+   * departure and predicted by name in three of the notes below.
+   *
+   * `geometric-proof → mathematical-induction` has both ends authored, in two
+   * DIFFERENT subjects — the proof in `plane-geometry`, the induction in
+   * `functions-and-inverses` — so neither ontology may name it: an ontology
+   * may only name concepts it CONTAINS, and `ontologyProblems` reports an
+   * unknown endpoint otherwise. This is the only place it can live, and the
+   * area that owned the DEPARTING node is where such an entry is filed, not
+   * the one holding the far end.
+   *
+   * The claim is the map's rather than the receiving syllabus's: a learner
+   * should have met what a proof IS — a chain of cited facts, and the
+   * asymmetry between refuting a universal claim and establishing one —
+   * before being shown a proof technique. ontology-geometry.ts argues the same
+   * boundary from its end, and says induction is deliberately left out of
+   * `geometric-proof` because the map places it above that node rather than
+   * inside it.
+   *
+   * NO `encompasses` RUNS BACK ALONG IT, and `links` could not carry one
+   * anyway — `expandEdges` hard-codes `kind: 'prerequisite'` for every entry
+   * here. That is the right answer on the merits too: none of the six tasks on
+   * the induction cites a geometric fact or writes a two-column chain, so
+   * practising it exercises no part of deductive proof and a credit edge would
+   * stop that concept coming due when it had genuinely gone cold.
+   */
+  links: [
+    {
+      from: 'geometric-proof',
+      to: 'mathematical-induction',
+      because:
+        'Both ends are authored concepts of two different subjects, so neither ontology may '
+        + 'name this edge and it can only live here. The claim is the map\'s: what a proof is, '
+        + 'and that one case refutes a universal claim while no number of cases establishes '
+        + 'one, comes before a technique for establishing one. Both ends being written means '
+        + 'this edge GATES from the moment it exists, unlike a links entry pointing at an '
+        + 'unwritten node.',
+    },
+  ],
   nodes: [
     /**
      * `sequences` LEFT THIS AREA WHEN IT WAS AUTHORED, AND HAD TO.
@@ -328,14 +369,102 @@ const SEQUENCES_AND_SERIES: MapArea = {
      * nothing here is near needing the merge decision atlas-foundations.ts
      * describes.
      */
-    {
-      id: 'mathematical-induction',
-      match: /\bmathematical induction\b|^induction \(/i,
-      name: 'Induction',
-      is: 'Proving a statement for every natural by proving it is inherited — the base case is not a formality.',
-      needs: ['sigma-notation', 'geometric-proof'],
-      terms: 'mathematical induction base case inductive step strong induction',
-    },
+    /**
+     * `mathematical-induction` LEFT THIS AREA TOO, THE FOURTH DEPARTURE FROM
+     * IT AND THE THIRTY-SECOND IN THE BUILD. Same structural rule —
+     * `atlasProblems` rejects a node whose id collides with an authored
+     * concept, so a promotion is a MOVE and never a fill-in. The long version
+     * is in the notes above and in atlas-foundations.ts; what follows is only
+     * what is DIFFERENT about the fourth one.
+     *
+     * IT IS A CONCEPT OF `functions-and-inverses` NOW, above `sigma-notation`,
+     * so that branch is two deep below the fork: `function-concept` →
+     * `sequences` → {`sigma-notation` → this, `arithmetic-sequences`}. Four of
+     * the five concepts that subject has taken from this file came out of this
+     * one area.
+     *
+     * THE `links` LIST IS NO LONGER EMPTY, AND THREE SEPARATE NOTES IN THIS
+     * FILE SAID THIS WOULD BE THE NODE THAT ENDED IT. They were right, and the
+     * mechanism is exactly the one they named rather than a new one. This node
+     * declared `needs: ['sigma-notation', 'geometric-proof']`. The first is a
+     * concept of the receiving ontology, so that edge went to its `EDGES` like
+     * the three before it. The second is a concept of `plane-geometry`, and an
+     * authored ontology may name only concepts it CONTAINS — `ontologyProblems`
+     * reports an unknown endpoint otherwise — so no ontology could hold it and
+     * it is the entry below.
+     *
+     * Worth being precise about what made it expensive, because "its
+     * prerequisite was in another file" is the half that generalises and the
+     * other half is not what a reader expects: `geometric-proof` is FULLY
+     * AUTHORED, with material and tasks. A `links` entry is about which
+     * SUBJECT an endpoint belongs to, never about whether anybody has written
+     * it. So this edge GATES from the moment it exists, which makes it one of
+     * the easy ones to notice — the hard ones point at an unwritten node and
+     * gate nothing until it is written, and dropping one of those leaves every
+     * suite green.
+     *
+     * NOTHING WAS HANDED BACK. A promotion can make an existing `links` entry
+     * redundant, if an area filed one because it owned neither end and the
+     * promoted node lands in the same ontology as the far end — then the edge
+     * becomes an ordinary `needs` there and the entry must be DELETED, or the
+     * composed graph carries it twice, which `composeAtlas` does not notice and
+     * no suite checks. Every area's `links` was read for this id at both ends
+     * before the node was deleted. This area's was empty, and no other area
+     * mentions it.
+     *
+     * IT STRANDED NO `confusedWith` — checked on the node before deleting it
+     * rather than inferred from the suites passing afterwards, which they would
+     * have either way. `expandEdges` turns a `confusedWith` into an
+     * `interferes_with`, interference constrains SELECTION rather than gating,
+     * and deleting the declaring node deletes the edge in silence. This node
+     * declared none and no `exercises` either. The area's one interference is
+     * still `geometric-sequences → arithmetic-sequences`, declared by the node
+     * that stayed.
+     *
+     * THE THREE EDGES POINTING INTO IT SURVIVE UNTOUCHED, declared by the nodes
+     * that stayed and in two other map FILES: `supremum-and-completeness` in
+     * `real-analysis` further down this file, and `combinatorial-identities`
+     * and `trees` in atlas-structures.ts. Not one of those files was edited —
+     * an edge is owned by the node that DECLARES it — and what changed without
+     * a line being touched is that all three now GATE, where
+     * `gatingPrerequisitesOf` used to look straight through a node with no
+     * material.
+     *
+     * THE ROOT SET SHRANK AGAIN, TWO TO ONE, for the same cause as the third
+     * departure and with a different shape of evidence. This node was a root
+     * here — it became one when `sigma-notation`, its only in-area
+     * prerequisite, was authored out from under it — and nothing replaced it,
+     * because a node can only substitute into this set by being freed INSIDE
+     * the area and this one was the last in-area prerequisite of nothing here.
+     * `geometric-sequences` is now the area's sole root.
+     *
+     * So four departures from one area have produced growth (1 → 3), turnover
+     * at constant size (3 → 3) and shrinkage twice (3 → 2, 2 → 1). The outcome
+     * depends on the DEPENDENTS of the node that leaves and not on the node,
+     * which is why the set is computed on both sides of a promotion here rather
+     * than predicted.
+     *
+     * AND IT MADE ONE ASSERTION IN tests/atlas.mjs UNWRITABLE FROM THIS AREA,
+     * which is the trap worth recording for the fifth departure. The second
+     * promotion's group asserted its substitution by reading
+     * `SEQ_AREA.nodes.find(n => n.id === 'mathematical-induction').needs` — a
+     * claim about a node that has now left, which does not go vacuous but
+     * THROWS on `undefined.needs`. That is the loud end of the failure mode
+     * atlas-foundations.ts records as a silently-passing optional chain: write
+     * it as `(find(...)?.needs ?? [])` and it would have passed forever while
+     * asserting nothing. It is restated over the composed map instead, where
+     * both of its endpoints still exist.
+     *
+     * HEADROOM. Eight nodes became seven, against the floor of five that
+     * tests/atlas.mjs enforces as "no area is a stub", so two more promotions
+     * of room. That is now the tightest this area has been, and it is worth
+     * naming what it is NOT: `algebra-foundations` and `linear-algebra` are
+     * both at six with one departure of room each, and a promotion out of
+     * either is the merge decision atlas-foundations.ts describes rather than
+     * an authoring job. This area is not there yet and the next run may still
+     * take `geometric-sequences`, `sequence-convergence` or `infinite-series`
+     * from it without raising that question.
+     */
     {
       id: 'sequence-convergence',
       match: /\b(limit of a sequence|convergent sequence)\b/i,

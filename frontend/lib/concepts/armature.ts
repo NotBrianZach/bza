@@ -95,8 +95,15 @@ export interface Region {
    *
    * The atlas is two partitions, not one. `AREAS` are the nineteen mapped
    * areas, every one of which is unwritten by construction — a map node
-   * carries no knowledge points. The ten authored subjects are siblings of
-   * them in the composed graph, and they hold ALL 62 written concepts.
+   * carries no knowledge points. The authored subjects are siblings of them in
+   * the composed graph, and they hold EVERY written concept there is.
+   *
+   * Stated without a count on purpose. This sentence read "the ten authored
+   * subjects ... ALL 62 written concepts" and both numerals were stale by two
+   * subjects and eighteen concepts, because nothing reads them and so nothing
+   * went red. The claim that does work here is the partition, which is true at
+   * any size; `atlasCoverage` is where the figures live, and
+   * `regionCoverage` below prints them per region on every run.
    *
    * So a map that only knew about `area` would shade every region "nothing
    * written" and be a picture of exactly the half of mathematics there is
@@ -197,7 +204,35 @@ export const REGIONS: Region[] = [
     // does not contradict — the guild's argument is about measurement either
     // way, and the merge that put both halves in one area is what makes the
     // distinction a matter of style here rather than of boundary.
-    anchors: ['constructions', 'plane-transformations', 'lines-in-the-plane'],
+    //
+    // AND THEN IT WENT THE SAME WAY AGAIN, one promotion later, into
+    // `plane-geometry` for the third consecutive time — so this slot has now
+    // turned over three times and every occupant has left by the same route.
+    // `loci-and-regions` replaces it, and for the second time running neither
+    // Krull's rule nor the content rule can pick the refill. Krull's needs a
+    // dependent in the area to inherit the slot and the departing node has no
+    // dependent anywhere in the atlas at all. The content rule picked the last
+    // occupant because it held the departing node's material; nothing left in
+    // the area holds any of THIS one's, whose content was the four maps written
+    // on coordinates and all of which went with it.
+    //
+    // So the region's own `because` decides, which is Paravgrad's fallback, and
+    // it has exactly one clause the other two anchors do not already spend. The
+    // compass is `constructions` and the straight line is `lines-in-the-plane`;
+    // what is left is the elected assemblies "that have to agree where the line
+    // goes", and a locus is precisely the set of points a condition agrees on —
+    // with the region rather than the boundary being what `loci-and-regions`
+    // adds to it. It also keeps the analytic-half presence in this region that
+    // the last occupant introduced, which is worth keeping rather than
+    // accidental: the guild's argument is about measurement, and a shaded
+    // region is a measured claim about where a cut may fall.
+    //
+    // A note for whoever meets the fourth turnover: five of this area's seven
+    // remaining nodes are analytic and the two that are not are both anchors
+    // already. If this slot empties again, the honest answer may be that the
+    // region's `because` has been fully spent and the clause wants rewriting
+    // rather than a fourth anchor hunted out of what is left.
+    anchors: ['constructions', 'loci-and-regions', 'lines-in-the-plane'],
     because: 'The Stone Digger Guild cuts straight lines through mountains for a living, under elected assemblies that have to agree where the line goes. Compass, straightedge, and an argument about measurement.',
   },
   {
@@ -293,13 +328,111 @@ export const REGIONS: Region[] = [
   {
     id: 'gal-garad', name: 'Gal-garad', epithet: 'The Crucible of the Sun',
     km: 2450, area: 'statistics', xy: { x: 0.366, y: 0.373 },
+    // The first authored subject in the uncertainty half of the atlas, claimed
+    // here because `data-summaries`' one concept was promoted out of this
+    // region's own area. `armatureProblems` requires every authored subject to
+    // be claimed exactly once, so a new ontology that appeared nowhere in this
+    // table would fail loudly — which is the one check this table has that the
+    // game's copy does not.
+    //
+    // NO ANCHOR SLOT EMPTIED, which is why this comment is three lines where
+    // Krull's and Druuvruke's are forty. An anchor must be a node of `area`, so
+    // a promotion normally vacates one and the refill is a judgement; none of
+    // the three below is `descriptive-statistics`, and all three are still
+    // nodes here. The region anchors on the inferential end of the subject and
+    // the concept that left is the descriptive one, so its character is
+    // untouched — which also means the `because` below still reads correctly: a
+    // guild arbitrator weighing economic impact is inferring from aggregates,
+    // and summarising a list is the step before that argument starts.
+    authored: ['data-summaries'],
     anchors: ['hypothesis-testing', 'linear-regression', 'sampling-and-bias'],
     because: 'Guild arbitrators settle disputes by weighing "economic impact, social precedent, and martial necessity" — a million people whose justice is an inference from aggregates, with all the bias that implies.',
   },
   {
     id: 'burdervruke', name: 'Burdervruke', epithet: 'The Chambered Mountain',
     km: 3000, area: 'discrete-mathematics', xy: { x: 0.688, y: 0.224 },
-    anchors: ['counting-principles', 'graphs', 'propositional-logic'],
+    //
+    // AN ANCHOR SLOT WAS VACATED HERE AND REFILLED, which is the case the
+    // statistics region three entries up got to say it had avoided. The
+    // thirty-fifth promotion took `propositional-logic` out of
+    // `discrete-mathematics` and into the `statements-and-connectives`
+    // subject. An anchor must be a node of `area` — `armatureProblems` builds
+    // its membership set from `subjectId`, and an authored concept's
+    // `subjectId` is its SUBJECT — so the id stopped resolving and the region
+    // had to be re-decided rather than merely re-typed.
+    //
+    // Dropping to two anchors was the wrong repair, because `because` below is
+    // three clauses and they are the three anchors in order: "who counts" is
+    // the counting, "who may sit with whom" is the graphs, and "what follows
+    // from what" is the logic. Deleting the third would have left a sentence
+    // promising something the table no longer points at.
+    //
+    // `proof-techniques` is the refill, and it is the best match for that
+    // clause rather than the nearest unused id. It is the node that now sits
+    // where the departing one did in the area's order — two steps up, behind
+    // `quantifiers` — and its content is literally what follows from what:
+    // direct, contrapositive, contradiction and cases, four shapes of argument
+    // each suited to a shape of statement. `quantifiers` was the other
+    // candidate and is the closer node, and it loses because its subject is
+    // the SCOPE of a claim rather than the inference from one, which is a
+    // worse fit for a mountain whose offices decide eligibility.
+    //
+    // THAT CHOICE PAID FOR THE NEXT PROMOTION, which is worth recording
+    // because it was not why it was made. The thirty-sixth promotion took
+    // `quantifiers` — the candidate rejected here — so had the refill gone the
+    // other way this slot would have emptied a second time one run later and
+    // the region would have been re-decided twice. Preferring the better match
+    // to the nearer one bought exactly one run.
+    //
+    // AND THEN THE SAME SLOT EMPTIED AGAIN, because the thirty-seventh
+    // promotion took `proof-techniques` itself, into a fourteenth subject. So
+    // the refill above was right about fit and was not durable, and the lesson
+    // the thirty-fifth promotion drew from it — prefer fit to proximity — is
+    // true and incomplete. What it missed is that fit and PROMOTABILITY are
+    // different questions: `proof-techniques` had a single prerequisite, that
+    // prerequisite was the node promoted immediately before it, and a node one
+    // step above the last departure is the likeliest next departure there is.
+    //
+    // `formal-logic-and-incompleteness` IS THE SECOND REFILL, AND IT IS CHOSEN
+    // ON BOTH QUESTIONS AT ONCE.
+    //
+    // On fit it is better than what it replaces, not merely adequate. The third
+    // clause of `because` is "what follows from what", and that node is axioms,
+    // derivation and models — what follows from what as a formal relation
+    // inside a stated calculus, up to the statement that any adequate system
+    // has truths it cannot prove. A mountain that runs on offices and
+    // eligibility rules is a rule book before it is four styles of argument,
+    // and ontology-proof.ts hands this reading over explicitly: it writes
+    // formal derivation out of its own subject and names this node as where it
+    // lives.
+    //
+    // On durability it is safe by construction rather than by luck. Its `needs`
+    // are `computability-and-complexity` and `quantifiers`, and the first of
+    // those is unwritten and stands behind `graph-algorithms`, so this node
+    // cannot become a ready candidate until at least two promotions have landed
+    // elsewhere in this area. An anchor that cannot be promoted soon is the
+    // property to select for, and neither of the two previous refills was
+    // checked against it.
+    //
+    // Dropping to two anchors is still the wrong repair, for the reason stated
+    // above: `because` is three clauses and they are the three anchors in
+    // order. "Who counts" is the counting, "who may sit with whom" is the
+    // graphs, and "what follows from what" is now the formal systems.
+    //
+    // The region claims the authored subjects of this area, which it did not
+    // before the thirty-fifth promotion and now does three times.
+    // `armatureProblems` checks that every shipped subject is claimed exactly
+    // once, so a new one that nobody claims holds real material appearing
+    // nowhere on the map — and the claim belongs to the region holding the
+    // area the concept was promoted OUT of, which is this one. All three logic
+    // and proof subjects came out of `discrete-mathematics`, so all three are
+    // claimed here, and the consolidation ontology-proof.ts leaves open — one
+    // REASONING subject in place of several — would make this list shorter
+    // rather than moving an entry elsewhere.
+    authored: [
+      'statements-and-connectives', 'predicates-and-quantifiers', 'methods-of-proof',
+    ],
+    anchors: ['counting-principles', 'graphs', 'formal-logic-and-incompleteness'],
     because: 'Eligibility for the Great Chamber requires tier-three professional commendation and a certificate of physical condition; the Migration and Visa Office decides who may enter at all. A mountain that runs on rules about who counts, who may sit with whom, and what follows from what.',
   },
   {

@@ -97,7 +97,15 @@
  * gets a real `evaluate` task; its one prerequisite is inside one ontology; and
  * five mapped nodes rest on it — `mathematical-induction`, `infinite-series`,
  * `riemann-sums`, `expectation` and `descriptive-statistics` — which is more
- * than any other rulable candidate had.
+ * than any other rulable candidate had. THREE of those five are still mapped,
+ * and the two that are not went to two different places, which is the part
+ * worth reading. `mathematical-induction` was authored HERE, the ninth concept,
+ * so that edge is in `EDGES` below rather than on a node.
+ * `descriptive-statistics` went to `data-summaries`, the eleventh subject, and
+ * its edge could NOT come here — an ontology may only name concepts it contains
+ * — so it is a `links` entry on `STATISTICS` in atlas-uncertainty.ts instead.
+ * Same promotion shape, two different filings, and which one you get depends
+ * entirely on whether the dependent landed in this subject.
  *
  * WHAT IT LEAVES BEHIND IN TURN, and the line is in the same place the fifth
  * concept drew it. This teaches the NOTATION and the two rearrangements, which
@@ -215,7 +223,11 @@
  *     `SEQUENCES_AND_SERIES.links` stays empty for a THIRD time — which is
  *     still a fact about this node's prerequisites and not about that area
  *     being tidy. `mathematical-induction` is still sitting in that list unable
- *     to avoid an entry, and the note where this node sat says so.
+ *     to avoid an entry, and the note where this node sat says so. That
+ *     prediction was collected by the NINTH concept below: the induction is
+ *     authored here, its `geometric-proof` edge is that area's first `links`
+ *     entry, and the run of three empty-`links` promotions is over for exactly
+ *     the reason this clause gave.
  *  3. IT HAS NO DEPENDENTS AT ALL, which is the axis it loses on and the reason
  *     it is third. Nothing on the map and nothing authored declares
  *     `needs: ['arithmetic-sequences']` — `geometric-sequences` rests on
@@ -347,6 +359,105 @@
  * taught where it actually helps — in the worked example for
  * `an-inverse-undoes-the-rule`, which is where a learner meets the notation.
  * An authored interference that nobody believes is worse than none.
+ *
+ * ── A NINTH CONCEPT, AND IT IS THE FIRST METHOD OF ARGUMENT IN HERE ───────
+ *
+ * `mathematical-induction` was a node of `sequences-and-series` in
+ * atlas-analysis.ts and is authored here, the thirty-second promotion. It is
+ * the fifth concept this subject has taken from the analysis file and the
+ * FOURTH from that one area, which is more than any other area has given to
+ * any other subject.
+ *
+ * WHY THIS SUBJECT, and this is the first filing decision in this file that
+ * was genuinely close rather than settled by the node's own one-liner. Every
+ * concept here so far has been an OBJECT organised on what its input is — a
+ * number, an index, a pair — and this one is a method of proof. So the test
+ * ontology-geometry.ts states for founding a new subject ("every existing
+ * subject declares a boundary in its `covers` that this falls outside of")
+ * arguably passes: induction is not a function, and `plane-geometry` is about
+ * the plane figure and says in its own file that the MAP places induction
+ * above `geometric-proof` rather than inside it.
+ *
+ * What decided it instead is the rule `radical-equations` was filed by, which
+ * is about COST and is measurable rather than editorial: a home that holds
+ * NEITHER prerequisite leaves the concept edge-isolated and costs TWO `links`
+ * entries. The node declared `needs: ['sigma-notation', 'geometric-proof']`.
+ * A new subject holds neither, so both edges would have become `links`
+ * entries on the area; this subject holds `sigma-notation`, so exactly one
+ * does. One entry against two, and the one it keeps is the one whose far end
+ * is in a subject that will never contain a sum.
+ *
+ * THE OPEN QUESTION THAT DECISION DOES NOT CLOSE, stated so the next run does
+ * not have to rediscover it: whether this build wants a REASONING subject.
+ * `propositional-logic` is a node of `discrete-mathematics`, is ready, needs
+ * only `geometric-proof`, and is the obvious second member of one — and so is
+ * `geometric-proof` itself, which would have to MOVE out of `plane-geometry`
+ * for such a subject to be more than a pair of strays. That is a change to
+ * the learner-facing syllabus of two existing subjects, which is the same
+ * family of decision as merging a drained map area, and it is not an
+ * authoring run's to take. If it is ever taken, this concept moves with it
+ * and the `links` entry on `SEQUENCES_AND_SERIES` becomes an ontology edge.
+ *
+ * THAT QUESTION IS STILL OPEN AND ONE OF ITS THREE PIECES HAS MOVED.
+ * `propositional-logic` is an authored concept as of the thirty-fifth
+ * promotion, in a twelfth subject of its own — `statements-and-connectives`,
+ * ontology-logic.ts. What that subject deliberately does NOT do is claim the
+ * reasoning layer: it holds letters standing for whole statements and the
+ * finite tables that join them, and its `covers` disclaims proof technique and
+ * the quantifiers by name, so it is a concept that would MOVE into a reasoning
+ * subject rather than a subject that pre-empts one. The paragraph above is
+ * therefore unchanged in substance — the decision still needs a person, and it
+ * still has to move `geometric-proof` to be worth taking — and what it would
+ * now consolidate is three authored concepts in three subjects rather than two
+ * concepts and a map node. The cost of that has gone up, which is a reason to
+ * put the question in front of somebody rather than to leave it drifting.
+ *
+ * WHY THIS NODE, since no journey asked for it — all ten have read zero
+ * unwritten steps on route since the fourteenth promotion, and the two map
+ * areas closest to the stub floor (`algebra-foundations` and `linear-algebra`,
+ * both at six against five) are the ones a promotion must now leave alone,
+ * since the next departure from either IS the merge decision. Three grounds,
+ * in the order applied:
+ *
+ *  1. IT IS RULABLE, AND THE REFUSAL THAT LOOKS LIKE IT APPLIES DOES NOT.
+ *     "Every chain ends in an argument and `justify` is not machine-rulable"
+ *     is what held `geometric-proof` back for one promotion, and
+ *     `bza`'s own history records that it expired: an argument-shaped concept
+ *     ships rulable tasks when you ask for the VALUE the argument turns on.
+ *     Here the step is a factorisation — `transform_to_form` with `factored`,
+ *     equivalence plus shape, no worker — and the base case is two numbers
+ *     compared. Six tasks, two per point, every one exact rational
+ *     arithmetic.
+ *  2. THREE DEPENDENTS, which was the most of any candidate not under a live
+ *     refusal: `supremum-and-completeness` in `real-analysis`, and
+ *     `combinatorial-identities` and `trees` in `discrete-mathematics`. All
+ *     three declare the edge themselves and none of their files was touched.
+ *  3. It is not an `armature.ts` anchor. The Kalkreath Mountains region is
+ *     this area's, and its three anchors are `sequence-convergence`,
+ *     `infinite-series` and `convergence-tests`, all of which stayed — so no
+ *     region slot had to be refilled.
+ *
+ * WHAT IT MUST NOT PRE-EMPT, and the answer is the same node the sixth
+ * concept wrote around. `arithmetic-sequences` owns deriving the total of a
+ * run by pairing the ends, and the first worked example below proves
+ * 1 + 2 + … + n = n(n + 1)/2 — which IS an arithmetic sum, and whose pairing
+ * derivation is that concept's. The two are not the same material and the
+ * distinction is the pedagogical point rather than a dodge: pairing DERIVES
+ * the formula from nothing, and induction VERIFIES a formula it is handed. A
+ * learner who can do one still cannot do the other. Nothing below pairs
+ * anything, nothing below derives n(n + 1)/2 from scratch, and the formula
+ * arrives in the problem statement as a claim rather than as a result.
+ *
+ * WHAT IT LEAVES BEHIND. Strong induction, named in the node's `terms` and
+ * absent here, which is the one gap worth stating: assuming every earlier
+ * case rather than just the previous one needs a claim whose instances are
+ * not reached one at a time, and the standard examples are the existence of a
+ * prime factor and the closed form of a two-term recurrence. The first is
+ * `prime-factorisation`'s territory with an induction on top, and the second
+ * needs a recurrence that `sequences` introduces and no concept here solves.
+ * So what is written is ordinary induction, three times, on three different
+ * kinds of claim — and the third point is there precisely so the concept does
+ * not read as a fact about sums.
  */
 
 import type { Concept, ConceptEdge, ConceptOntology, Subject } from './types'
@@ -366,7 +477,15 @@ const subject: Subject = {
     'together rather than a list of forbidden numbers. Then the first named family of sequence: ' +
     'a constant difference, the term at any position, which position a given value occupies if ' +
     'it occupies one, and the total of a run of them obtained by pairing the ends rather than ' +
-    'by adding. Nothing about graphs — reading a curve ' +
+    'by adding. Then the one thing here that is a method of ARGUMENT rather than an object: ' +
+    'proving a claim for every natural by proving it is inherited — what instance the step has ' +
+    'to land on and why it is written down before the algebra starts, why a claim can be ' +
+    'inherited perfectly and be false at every natural so that the base case is a computation ' +
+    'rather than a formality, and what the step becomes when the claim is not about a sum and ' +
+    'there is no term to add. Strong induction is named as absent: assuming every earlier case ' +
+    'rather than the previous one needs a claim whose instances are not reached one at a time, ' +
+    'and the natural examples are about prime factors and recurrences that sit elsewhere. ' +
+    'Nothing about graphs — reading a curve ' +
     'is the natural next step and its questions are about a picture, which this verifier cannot ' +
     'rule — and so nothing about transformations, families or asymptotes either, and nothing ' +
     'about level curves or surfaces, which are the same boundary one dimension further out; ' +
@@ -1605,9 +1724,13 @@ const CONCEPTS: Concept[] = [
       // material: "Arithmetic mean" is claimed by NOBODY, and the pairing
       // argument below is exactly the fact that an arithmetic sequence's mean
       // is the mean of its two ends. Widening to reach it is one word and the
-      // wrong one here — a mean is `descriptive-statistics`, a node of the
-      // statistics area, and this concept would be claiming an article about a
-      // different subject's content.
+      // wrong one here — a mean is `descriptive-statistics`, which is an
+      // authored concept of `data-summaries` now rather than a node of the
+      // statistics area, so this concept would be claiming an article about
+      // another SUBJECT's content and not merely about unwritten territory.
+      // That strengthens the refusal rather than expiring it: the right owner
+      // exists, has material, and still does not take the title either — the
+      // shortfall is recorded in ontology-statistics.ts as well.
       match: /\barithmetic (sequence|progression|series)\b/i,
     },
     fidelity: 'checked',
@@ -1824,6 +1947,302 @@ const CONCEPTS: Concept[] = [
             },
           ],
           answer: '210',
+        },
+      },
+    ],
+  },
+  {
+    id: 'mathematical-induction',
+    name: 'Induction',
+    subjectId: subject.id,
+    scope: {
+      id: 'mathematical-induction',
+      label: 'Induction',
+      hint: 'mathematical induction base case inductive step',
+      /*
+       * Carried VERBATIM off the map node, which is the discipline
+       * `area-and-perimeter`'s scope states and the reason this is `checked`
+       * without argument: widening a pattern during an authoring pass makes
+       * two changes at once, and the recognition figure in tests/atlas.mjs
+       * then moves with no way to say which edit moved it.
+       *
+       * THE FIRST BRANCH IS VERIFIED AND THE SECOND IS NOT, and the
+       * difference is worth writing down because `conceptsInOffering`
+       * (offerings.ts) does `const subject = offering.title` and tests this
+       * pattern against the TITLE and nothing else — no extract, no
+       * categories. So a branch that no article is TITLED with is dead, and
+       * `fidelityMismatches` cannot see that: it only asks whether a
+       * `checked` concept HAS a pattern.
+       *
+       * `\bmathematical induction\b` fires on a real title — the TITLES table
+       * in tests/atlas.mjs has the row, so the claim is asserted rather than
+       * assumed, and it is what makes `checked` honest here on its own.
+       * `^induction \(` is the unverified half: it is anchored, so it can only
+       * take a title that BEGINS "Induction (", and whether the provider has
+       * such a page in the mathematical sense was not established. It is left
+       * exactly as the node wrote it rather than deleted, because deleting it
+       * is as much an unmeasured edit as widening would be — and if it is
+       * dead it is harmless, since the first branch carries the concept.
+       * Whoever next audits the `checked` patterns should ask that question of
+       * this one; it is the same fault `radical-equations` was repaired for,
+       * caught early rather than late.
+       */
+      match: /\bmathematical induction\b|^induction \(/i,
+    },
+    fidelity: 'checked',
+    objectives: [
+      {
+        id: 'carry-out-the-step-by-landing-on-the-claim-with-k-plus-one-in-it',
+        statement:
+          'Write down the instance the step has to REACH before working towards it, build it out ' +
+          'of the assumed instance plus the one new term rather than from scratch, and clear the ' +
+          'denominator and factor until what you have is the assumed formula with k + 1 written ' +
+          'in place of k.',
+        taskKinds: ['transform_to_form', 'evaluate'],
+      },
+      {
+        id: 'compute-both-sides-at-the-base-and-say-what-a-failure-there-costs',
+        statement:
+          'Evaluate a claimed formula and the quantity it claims to equal separately at the base, ' +
+          'and say why a claim whose step is valid everywhere establishes nothing when those two ' +
+          'numbers differ — including why checking a later case does not rescue it.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'run-the-step-on-a-claim-that-is-not-about-a-sum',
+        statement:
+          'For a claim with no term to add, form the difference between consecutive instances, ' +
+          'factor it, and say which part of "this increment carries the property" the ' +
+          'factorisation establishes and which part still needs an argument about the factors.',
+        taskKinds: ['transform_to_form', 'evaluate'],
+      },
+    ],
+    knowledgePoints: [
+      {
+        id: 'the-step-must-land-on-the-claim-with-k-plus-one-in-it',
+        conceptId: 'mathematical-induction',
+        statement:
+          'The inductive step is not "check the next case". You are allowed to assume the claim ' +
+          'at k, and you have to arrive at the claim at k + 1 — which is the SAME formula with ' +
+          'k + 1 written everywhere k was. So write that target down first, then build it out of ' +
+          'the assumption by adding the one new term, and the rest is algebra on an expression ' +
+          'whose destination you already know. A step worked forwards from the assumption with ' +
+          'no target in mind is how a learner ends up proving something true and unrelated.',
+        position: 1,
+        /*
+         * No `automaticityTarget`. The content is recognising the target
+         * before reaching it, and rewarding speed rewards starting to
+         * manipulate — which is the error the point exists to stop. The
+         * factorisation underneath it is already timed nowhere, and should
+         * not be timed here either.
+         */
+        workedExample: {
+          problem:
+            'It is claimed that 1 + 2 + … + n = n(n + 1)/2 for every natural n. Carry out the ' +
+            'inductive step.',
+          subgoals: [
+            {
+              label: 'Write down what may be assumed and what must be reached, before touching either',
+              detail:
+                'Assume 1 + 2 + … + k = k(k + 1)/2. The instance to be reached is the claim with ' +
+                'k + 1 in place of k on BOTH sides: 1 + 2 + … + (k + 1) = (k + 1)(k + 2)/2, since ' +
+                'substituting k + 1 into n(n + 1)/2 gives (k + 1)((k + 1) + 1)/2. Getting the ' +
+                '(k + 2) rather than a (k + 1) is the whole of this step\'s bookkeeping, and it ' +
+                'is done before any algebra so that the algebra has somewhere to go.',
+              socratic:
+                'You are about to prove something about k + 1. Substitute k + 1 into the claimed ' +
+                'formula — what exactly is the expression you have to end up staring at?',
+            },
+            {
+              label: 'Build the longer sum out of the assumption rather than from scratch',
+              detail:
+                'The sum to k + 1 is the sum to k with one more term on the end, and that term is ' +
+                'the (k + 1)th, which is k + 1. So it is k(k + 1)/2 + (k + 1). This is the only ' +
+                'place the assumption is spent, and spending it is the difference between an ' +
+                'induction and a fresh calculation: nothing below re-derives the sum to k.',
+              socratic:
+                'The sum to k + 1 contains the sum to k inside it. What is the single thing left ' +
+                'over — and which of the two is the one you are allowed to replace by a formula?',
+            },
+            {
+              label: 'Clear the denominator and factor, which is where the (k + 2) appears',
+              detail:
+                'Doubling both sides turns k(k + 1)/2 + (k + 1) into k(k + 1) + 2(k + 1), and ' +
+                'both terms carry a (k + 1). Taking it out leaves (k + 1)(k + 2). So the doubled ' +
+                'sum is (k + 1)(k + 2) and the sum itself is (k + 1)(k + 2)/2. The (k + 2) was ' +
+                'not aimed at — it fell out of the common factor — which is why this is a ' +
+                'derivation and not a rearrangement towards a known answer.',
+              socratic:
+                'Both terms of k(k + 1) + 2(k + 1) carry the same bracket. Take out whatever ' +
+                'they share — what is left inside, and is the result the expression you wrote ' +
+                'down as the target?',
+            },
+            {
+              label: 'Compare with the target, and discharge the base case in one line',
+              detail:
+                'That is exactly the instance written down first, so the step holds for every k. ' +
+                'The proof still needs somewhere to start: at n = 1 the sum is the single term 1 ' +
+                'and the formula gives 1 × 2/2 = 1, so the base case holds too and the two ' +
+                'obligations together carry the claim to every natural. The base case is one line ' +
+                'HERE and is the next point\'s entire subject, because it is one line only when ' +
+                'it passes.',
+              socratic:
+                'The step is done, and it says the claim is inherited. Inherited from what — and ' +
+                'what is the smallest amount of work that supplies it?',
+            },
+          ],
+          answer:
+            'The step holds. Assuming 1 + … + k = k(k + 1)/2, the sum to k + 1 is ' +
+            'k(k + 1)/2 + (k + 1); doubling gives k(k + 1) + 2(k + 1) = (k + 1)(k + 2), so the ' +
+            'sum to k + 1 is (k + 1)(k + 2)/2, which is the claim with k + 1 in place of n. With ' +
+            'the base case 1 = 1 × 2/2 at n = 1, the claim holds for every natural n.',
+        },
+      },
+      {
+        id: 'a-claim-can-be-inherited-and-false-at-every-natural',
+        conceptId: 'mathematical-induction',
+        statement:
+          'The step proves an IMPLICATION — if it holds at k then it holds at k + 1 — and an ' +
+          'implication true at every k still says nothing about any particular n, because it has ' +
+          'nowhere to start. A claim can be inherited perfectly and be false at every single ' +
+          'natural. Only computing both sides at the base catches it, and the reason the step ' +
+          'cannot is structural: the step only ever compares CONSECUTIVE instances, so a constant ' +
+          'error is invisible to it however far you run it.',
+        position: 2,
+        workedExample: {
+          problem:
+            'It is claimed that 1 + 2 + … + n = n(n + 1)/2 + 3 for every natural n. Is the claim ' +
+            'true, and does induction settle it?',
+          subgoals: [
+            {
+              label: 'Run the step first, and watch it succeed',
+              detail:
+                'Assume the sum to k is k(k + 1)/2 + 3. Adding the (k + 1)th term gives ' +
+                'k(k + 1)/2 + (k + 1) + 3, and the previous point showed the first two of those ' +
+                'collapse to (k + 1)(k + 2)/2. So it is (k + 1)(k + 2)/2 + 3, which is the claim ' +
+                'with k + 1 in place of n. The step is valid — not nearly valid, not valid for ' +
+                'large k. The 3 rode along untouched because the step never does anything to it.',
+              socratic:
+                'Do the step on this claim exactly as you did on the last one. At what point in ' +
+                'the algebra does the extra 3 cause you any difficulty at all?',
+            },
+            {
+              label: 'Compute the two sides at the base separately, and subtract',
+              detail:
+                'At n = 1 the left side is the sum of one term, which is 1 — there is nothing to ' +
+                'compute, which is what makes the base case cheap and what makes skipping it ' +
+                'tempting. The right side is 1 × 2/2 + 3 = 4. They differ by 3, so the claim is ' +
+                'false at n = 1 and the induction has no starting point.',
+              socratic:
+                'Put n = 1 into each side of the claim on its own, without looking at the other. ' +
+                'What two numbers do you get, and does the claim survive them?',
+            },
+            {
+              label: 'Check a later case too, and find the same gap rather than a vanishing one',
+              detail:
+                'At n = 4 the left side is 1 + 2 + 3 + 4 = 10 and the right is 4 × 5/2 + 3 = 13. ' +
+                'Still 3 out. That is the step\'s validity showing up as a symptom: a valid step ' +
+                'transmits whatever error it is handed exactly, so the gap is CONSTANT rather ' +
+                'than shrinking. Testing further cases will never do anything but reproduce it.',
+              socratic:
+                'Try n = 4. You could have hoped the claim goes wrong only near the start — what ' +
+                'does the size of the error at n = 4 tell you about that hope?',
+            },
+            {
+              label: 'Separate what the failed base case proves from what it does not',
+              detail:
+                'The failed base case proves that THIS induction establishes nothing; on its own ' +
+                'it does not prove the claim false at every n, because a failing hypothesis says ' +
+                'nothing about the conclusion. What proves that is the previous point: the sum ' +
+                'really is n(n + 1)/2, so this claim overshoots by exactly 3 everywhere. Two ' +
+                'different arguments, and collapsing them is the mistake worth avoiding — "the ' +
+                'base case failed" is a verdict on the proof, not on the claim.',
+              socratic:
+                'The base case failed. Does that by itself tell you the formula is wrong at ' +
+                'n = 100 — and if not, what does?',
+            },
+          ],
+          answer:
+            'The claim is false, and the induction settles nothing. The step is valid: assuming ' +
+            'the sum to k is k(k + 1)/2 + 3 gives (k + 1)(k + 2)/2 + 3 at k + 1. But at n = 1 the ' +
+            'sum is 1 while the formula gives 4, so there is nothing for the step to inherit ' +
+            'from. The true sum is n(n + 1)/2, so the claim is 3 too large at every natural n — ' +
+            'which is a separate argument from the failed base case rather than a consequence of ' +
+            'it.',
+        },
+      },
+      {
+        id: 'with-no-term-to-add-the-step-is-about-the-increment',
+        conceptId: 'mathematical-induction',
+        statement:
+          'Induction is not a fact about sums. When the claim is something like "this expression ' +
+          'is always a multiple of 6" there is no term to add, so the step subtracts consecutive ' +
+          'instances instead and shows the DIFFERENCE carries the property: if instance k has it ' +
+          'and the increment has it, instance k + 1 has it. The move is the same — build k + 1 ' +
+          'out of k — and only the arithmetic linking them changes.',
+        position: 3,
+        workedExample: {
+          problem:
+            'Prove that n³ − n is a multiple of 6 for every natural n.',
+          subgoals: [
+            {
+              label: 'Check the base case, where the property is easiest to mistake for an absence',
+              detail:
+                'At n = 1, n³ − n is 1 − 1 = 0, and 0 is a multiple of 6 because 0 = 6 × 0. A ' +
+                'learner who reads 0 as "no multiple" stops the proof at its first line over a ' +
+                'convention rather than over any mathematics, which is why it is worth saying out ' +
+                'loud rather than passing over.',
+              socratic:
+                'At n = 1 the expression comes to 0. Is 0 a multiple of 6 — and what would you ' +
+                'have to multiply 6 by to get it?',
+            },
+            {
+              label: 'Name what the step must establish, which is a claim about a DIFFERENCE',
+              detail:
+                'Assume k³ − k is a multiple of 6. The next instance is (k + 1)³ − (k + 1). There ' +
+                'is no "next term" to append — the two instances are separate expressions rather ' +
+                'than a short sum and a longer one — so the only way the assumption can help is ' +
+                'if the GAP between them is also a multiple of 6. Multiple-of-6 is closed under ' +
+                'addition, so assumption plus increment settles the next instance.',
+              socratic:
+                'You may assume something about k³ − k and you need something about ' +
+                '(k + 1)³ − (k + 1). Nothing is being added to a sum here — so what quantity ' +
+                'relating those two expressions would let the assumption do any work?',
+            },
+            {
+              label: 'Compute the increment and factor it',
+              detail:
+                'Expanding, (k + 1)³ − (k + 1) = k³ + 3k² + 3k + 1 − k − 1 = k³ + 3k² + 2k. ' +
+                'Subtracting k³ − k leaves 3k² + 3k, and both terms carry a 3k, so the increment ' +
+                'is 3k(k + 1). The cubes cancelled, which is the reason this is worth doing at ' +
+                'all: the difference of two cubics is a quadratic, so the step is easier than ' +
+                'either instance it compares.',
+              socratic:
+                'Subtract k³ − k from (k + 1)³ − (k + 1). What happened to the cubic terms — and ' +
+                'what is the common factor of what survived?',
+            },
+            {
+              label: 'Argue the increment is a multiple of SIX, which the factorisation alone does not give',
+              detail:
+                '3k(k + 1) is visibly three times something, so it is a multiple of 3 — and that ' +
+                'is all the algebra establishes. The other half comes from k(k + 1) being a ' +
+                'product of two CONSECUTIVE integers, one of which must be even, so k(k + 1) is ' +
+                'even and 3k(k + 1) is a multiple of 3 and of 2, hence of 6. That evenness is an ' +
+                'arithmetic fact brought in from outside the factorisation, and it is where this ' +
+                'step is actually made. At k = 6 the increment is 3 × 6 × 7 = 126, which is ' +
+                '6 × 21, and the instances 210 and 336 differ by exactly that.',
+              socratic:
+                'The factor of 3 is written in front of you. Where is the factor of 2 going to ' +
+                'come from — and what do you know about any two consecutive whole numbers that ' +
+                'guarantees it?',
+            },
+          ],
+          answer:
+            'A multiple of 6 for every natural n. Base case: at n = 1 the expression is 0 = 6 × 0. ' +
+            'Step: ((k + 1)³ − (k + 1)) − (k³ − k) = 3k² + 3k = 3k(k + 1), and k(k + 1) is a ' +
+            'product of consecutive integers so is even, making the increment a multiple of both ' +
+            '3 and 2 and hence of 6. A multiple of 6 plus a multiple of 6 is a multiple of 6, so ' +
+            'the property passes from k to k + 1 and holds everywhere.',
         },
       },
     ],
@@ -2156,6 +2575,98 @@ const EDGES: ConceptEdge[] = [
    * not even compile past `ontologyProblems`, an ontology being allowed to name
    * only concepts it contains. The header section above has the full reason,
    * because atlas-analysis.ts asked the next author to do exactly this.
+   */
+  /**
+   * The ninth concept's prerequisite, AND IT IS ONLY ONE OF THE TWO THE NODE
+   * DECLARED — which is the thing three separate comments in atlas-analysis.ts
+   * said would happen the first time this area released a node whose
+   * prerequisites were not all in one file.
+   *
+   * `sigma-notation → mathematical-induction` is the half that can come here,
+   * on the single test that decides every such case: the endpoint is a concept
+   * of THIS ontology. The other half, `geometric-proof →
+   * mathematical-induction`, names a concept of `plane-geometry`, so an edge
+   * written here would make `ontologyProblems` report an unknown endpoint, and
+   * it is `SEQUENCES_AND_SERIES.links` instead — that area's FIRST links entry
+   * after three departures that each kept it empty. Both of its ends are
+   * authored, so it gates from the moment it exists, which is the case that is
+   * easy to drop and leaves every suite green when dropped.
+   *
+   * THE BRANCH AT THE FOOT IS NOW TWO DEEP ON ONE OF ITS PRONGS:
+   * `function-concept` → `sequences` → {`sigma-notation` →
+   * `mathematical-induction`, `arithmetic-sequences`}. So `sigma-notation`
+   * stops being a leaf, which is worth naming because the shape of this
+   * subject has until now been chains hanging off one root rather than
+   * anything two levels deep below a fork. tests/atlas.mjs and
+   * tests/concepts-logic.mjs both assert this edge by NAME: hung off
+   * `sequences` instead it would leave the root set, the edge count and
+   * `ontologyProblems` all unmoved while teaching that induction needs no
+   * summation notation, which is false of every worked example below.
+   *
+   * THE EDGE IS REAL AND NOT MERELY INHERITED FROM THE MAP. The first two
+   * knowledge points are both about a summation formula — what the step has to
+   * land on, and a formula that is inherited and wrong — and a learner who
+   * cannot read Σ or tell how many terms a pair of limits names cannot be
+   * handed either. The third point deliberately leaves sums behind, which is
+   * why the prerequisite is a genuine gate rather than a description of all
+   * three.
+   */
+  {
+    id: 'sigma-notation->mathematical-induction',
+    from: 'sigma-notation',
+    to: 'mathematical-induction',
+    kind: 'prerequisite',
+    promotedBy: 'author:functions-and-inverses',
+  },
+  /**
+   * NO CREDIT EDGE, AND THIS ONE IS DECIDED ON THE SUMS RATHER THAN ON TASTE.
+   *
+   * `mathematical-induction => sigma-notation` is the obvious candidate and it
+   * fails the `gcd-and-lcm` test in ontology-arithmetic.ts, the same test
+   * `sigma-notation` and `arithmetic-sequences` both failed above. An
+   * `encompasses` edge claims that practising this material exercises the
+   * other concept, so EVERY task has to perform the sub-skill — a majority is
+   * explicitly not enough, because the learner who gets credit they did not
+   * earn has the prerequisite stop coming due when it has genuinely gone cold.
+   *
+   * Counted per task, of the six. `induction-step-factor-1` and
+   * `induction-increment-factor-1` are factorisations with no sum in them at
+   * all. `induction-next-term-1` and `induction-base-value-1` evaluate a
+   * CLOSED FORM, which is the opposite of expanding a sigma — the whole point
+   * of n(n + 1)/2 is that the terms are never visited. `induction-base-later-1`
+   * is the one task where a learner adds 1 + 2 + 3 + 4 by hand, and totalling
+   * four numbers is not sigma notation. And `induction-increment-sixes-1` is
+   * about a cube. Zero of six, which is a cleaner verdict than either of the
+   * two above it got.
+   *
+   * So the prerequisite is a strong relation and the credit edge would be
+   * false: you need the notation to READ these claims and you then spend the
+   * whole concept not using it.
+   *
+   * NO `interferes_with` EITHER, and for once not because the far endpoint is
+   * in another file. The genuine confusion this concept carries is between the
+   * two obligations — a learner who has done the step believes the proof is
+   * finished — and that is INTERNAL to the concept, which is what the second
+   * knowledge point exists to be. `interferes_with` relates two concepts and
+   * cannot say "these two halves of one concept are confusable", so it is
+   * taught where it is met rather than declared. The nearest real candidate is
+   * `propositional-logic`, whose implication-and-contrapositive content is
+   * exactly what makes "the step proves an implication" land — and it is a
+   * node of `discrete-mathematics`, so an `interferes_with` naming it fails
+   * `ontologyProblems` here and `links` hard-codes `prerequisite` and cannot
+   * carry it either. A cross-file interference is expressible NOWHERE in this
+   * build, which is the third time this file has had to record that.
+   *
+   * AUTHORING THAT CANDIDATE DID NOT HELP, which is the fact worth adding
+   * rather than a correction. `propositional-logic` is a concept of
+   * `statements-and-connectives` as of the thirty-fifth promotion, so the
+   * reason the edge cannot be written has changed and the conclusion has not:
+   * it used to be an unwritten node, and it is now an authored concept of
+   * ANOTHER subject, which fails the containment test exactly as being
+   * unwritten did. The two most confusable concepts in this neighbourhood both
+   * have material now, so the scheduler is free to introduce them together and
+   * is likelier than before to actually do it. The missing expressiveness is
+   * `links` carrying an edge KIND; nothing else in the build would fix this.
    */
 ]
 

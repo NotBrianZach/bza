@@ -37,15 +37,49 @@ import { FUNCTIONS_AND_INVERSES } from './ontology-functions'
 import { MATRICES_AND_DETERMINANTS } from './ontology-matrices'
 import { VECTORS_AND_INDEPENDENCE } from './ontology-vectors'
 import { EXPONENTS_AND_LOGARITHMS } from './ontology-exponentials'
+import { DATA_SUMMARIES } from './ontology-statistics'
+import { STATEMENTS_AND_CONNECTIVES } from './ontology-logic'
+import { PREDICATES_AND_QUANTIFIERS } from './ontology-quantifiers'
+import { METHODS_OF_PROOF } from './ontology-proof'
 import type { ConceptEdge, ConceptOntology, Subject } from './types'
 import type { Concept } from './types'
 
 export { ARITHMETIC_FOUNDATIONS } from './ontology-arithmetic'
 export { EXPRESSIONS_AND_EQUATIONS } from './ontology-algebra'
+/*
+ * Re-exported by the thirty-fifth promotion, which is the first thing that
+ * needed this subject by NAME rather than through `ONTOLOGIES`. Its group in
+ * tests/atlas.mjs asserts that this ontology does not contain
+ * `propositional-logic` — the concept whose only prerequisite it holds, and
+ * which it could therefore have taken for free. A negative claim about a
+ * specific subject cannot be made through a positional reference.
+ */
+export { PLANE_GEOMETRY } from './ontology-geometry'
 export { FUNCTIONS_AND_INVERSES } from './ontology-functions'
 export { MATRICES_AND_DETERMINANTS } from './ontology-matrices'
 export { VECTORS_AND_INDEPENDENCE } from './ontology-vectors'
 export { EXPONENTS_AND_LOGARITHMS } from './ontology-exponentials'
+export { DATA_SUMMARIES } from './ontology-statistics'
+export { STATEMENTS_AND_CONNECTIVES } from './ontology-logic'
+/*
+ * Re-exported by the thirty-sixth promotion for the same reason the geometry
+ * above is: its group in tests/atlas.mjs makes a NEGATIVE claim about this
+ * specific subject — that it does not contain `propositional-logic` and that
+ * `statements-and-connectives` does not contain `quantifiers` — which is the
+ * only form a test can give to a filing refused on grounds other than cost. A
+ * positional reference cannot say which subject it is about.
+ */
+export { PREDICATES_AND_QUANTIFIERS } from './ontology-quantifiers'
+/*
+ * Re-exported by the thirty-seventh promotion, and here the negative claim is
+ * doubled rather than merely repeated: BOTH logic subjects could have taken
+ * `proof-techniques` for less than a new subject costs, and both had already
+ * written it out of their own `covers` by name. So its group in
+ * tests/atlas.mjs asserts that neither of them contains it and that this one
+ * does, which is three claims about three specific subjects and none of them
+ * reachable positionally.
+ */
+export { METHODS_OF_PROOF } from './ontology-proof'
 
 const subject: Subject = {
   id: 'rational-expressions',
@@ -996,14 +1030,49 @@ const CONCEPTS: Concept[] = [
             {
               label: 'What denominator do both divide?',
               detail: '(x + 3)(x − 5). The factors are distinct, so their product is the least one.',
+              socratic:
+                'As they stand these two cannot be added at all, and the reason is the same ' +
+                'one that stops you adding a quarter to a sixth: a sum of fractions only ' +
+                'collapses into one when the two are counting in the same units, and 1/4 + 1/6 ' +
+                'goes nowhere until both are rewritten over twelfths. So the first thing to ' +
+                'settle is not the answer but what you are going to rewrite these two over — ' +
+                'and whatever you choose, each of x + 3 and x − 5 has to divide it exactly, or ' +
+                'that one cannot be re-expressed over it. Now look at the two denominators ' +
+                'together: they share no factor, and neither is a multiple of the other. What ' +
+                'is the smallest expression both of them divide, and what does their having ' +
+                'nothing in common tell you about why you cannot manage with anything smaller?',
             },
             {
               label: 'Re-express each over it',
               detail: '1/(x + 3) = (x − 5)/D and 2/(x − 5) = 2(x + 3)/D, where D = (x + 3)(x − 5).',
+              socratic:
+                'You have fixed on (x + 3)(x − 5) as the denominator both fractions are going ' +
+                'to sit over, and each one now has to be rewritten so that it does — without ' +
+                'its value changing, because rewriting a fraction is not the same as altering ' +
+                'it. The licence for that is the one that turns 1/4 into 3/12: multiply the top ' +
+                'and the bottom by the same thing and the fraction is untouched, whereas ' +
+                'multiplying only the bottom makes it a different number. So take each fraction ' +
+                'in turn, ask what its denominator is short of, and then do that same thing to ' +
+                'its numerator as well. Watch the second one especially — the multiplier has to ' +
+                'act on the whole of its numerator, not sit beside it. What is each fraction ' +
+                'short of, and what numerator does each of them end up carrying once both are ' +
+                'written over the common denominator?',
             },
             {
               label: 'Add the numerators',
               detail: '(x − 5) + 2(x + 3) = x − 5 + 2x + 6 = 3x + 1.',
+              socratic:
+                'Both fractions now sit over one and the same denominator, which is the whole ' +
+                'point of the last two steps: it turns the addition from a problem into a ' +
+                'single stroke, the way three twelfths and four twelfths make seven twelfths. ' +
+                'Attend to what the twelfths do and do not do in that sum, because the same ' +
+                'thing happens here, and the commonest wrong answer to a question like this one ' +
+                'has the two denominators combined somehow along the way. What you are adding ' +
+                'is the numerators, and one of them is still carrying a bracket with a 2 ' +
+                'outside it, which has to be cleared before the two can be collected into one ' +
+                'expression. What does that second numerator come to once the bracket is ' +
+                'multiplied out, what do the two numerators then add to, and what is standing ' +
+                'underneath the single fraction you finish with?',
             },
           ],
           answer: '(3x + 1)/((x + 3)(x − 5))',
@@ -1046,22 +1115,74 @@ const CONCEPTS: Concept[] = [
             {
               label: 'What shape is the answer?',
               detail: 'A/(x + 3) + B/(x − 5), with A and B constants. One term per distinct factor.',
+              socratic:
+                'What is wanted here is an undoing, so start from what the doing looks like: ' +
+                'when two fractions over different denominators are added, each numerator is ' +
+                'multiplied by the other denominator and the sum lands over the product of the ' +
+                'two. The fraction in front of you sits over exactly such a product, ' +
+                '(x + 3)(x − 5), whose two factors share nothing — so it is the kind of thing ' +
+                'an addition produces, and the work is to name the two fractions that produced ' +
+                'it. Fix their shape before computing anything, because everything after this ' +
+                'step is filling that shape in. So: what denominator does each of the two ' +
+                'fractions have to carry, and then count — the numerator 3x + 1 has two ' +
+                'coefficients in it, so how many unknown numbers do the two pieces need between ' +
+                'them, and what does that settle about whether a plain constant on top of each ' +
+                'is too little, too much, or exactly right?',
             },
             {
               label: 'Clear the denominators',
               detail:
                 'Multiply through by (x + 3)(x − 5): 3x + 1 = A(x − 5) + B(x + 3). This must hold ' +
                 'for every x, which is what licenses the next step.',
+              socratic:
+                'You are holding a claimed equality between the fraction you were given and a ' +
+                'sum of two fractions with unknown constants on top, and there is no getting at ' +
+                'those constants while they sit underneath denominators. The move is the one ' +
+                'that clears fractions out of any equality: multiply both sides by something ' +
+                'every denominator divides, and here that can only be (x + 3)(x − 5) itself. It ' +
+                'has three places to act — the left-hand side, the A term and the B term — and ' +
+                'in each of them a denominator does not vanish into nothing but into whichever ' +
+                'factor of the product it had not accounted for. Work those three out and write ' +
+                'the line down, then stand back from it: there is not a denominator left ' +
+                'anywhere in it, and both sides are plain polynomials. What does each of the ' +
+                'three terms come to, and for how many values of x does the line you have ' +
+                'written have to hold?',
             },
             {
               label: 'Choose x to isolate one unknown at a time',
               detail: 'x = 5 gives 16 = 8B, so B = 2. x = −3 gives −8 = −8A, so A = 1.',
+              socratic:
+                'The line in front of you carries both unknowns at once, which looks like a ' +
+                'reason to multiply everything out and match coefficients — and that would ' +
+                'work. But notice how A and B are each placed: A is multiplied by (x − 5) and ' +
+                'nothing else, B by (x + 3) and nothing else. A bracket like that has no fixed ' +
+                'value; it depends on the x you put in, and for a bracket of that form there is ' +
+                'one value of x that makes it come to nothing at all. Whatever is multiplying ' +
+                'nothing then leaves the line, unknown and all, and you are left looking at the ' +
+                'other unknown on its own. So choose the two values of x worth trying here and ' +
+                'take them one at a time, working out the left-hand side as well as the right. ' +
+                'Which value empties which bracket, what one-unknown statement does each ' +
+                'substitution leave standing, and what do A and B come to?',
             },
             {
               label: 'Check by recombining',
               detail:
                 '1/(x + 3) + 2/(x − 5) = ((x − 5) + 2(x + 3))/D = (3x + 1)/D. This is the previous ' +
                 'concept run backwards, which is why doing this exercises that.',
+              socratic:
+                'You have two constants, but they came out of a substitution, and a slip in the ' +
+                'arithmetic there would have handed you two numbers just as confidently as the ' +
+                'right ones did. So put the two fractions you have just written back together ' +
+                'before you accept them: a common denominator, each numerator multiplied by ' +
+                'whichever factor its own denominator was missing, then the numerators added — ' +
+                'which is the previous concept at work, and the reason practising this ' +
+                'practises that. Mind what you have to land on, too. The decomposition claims ' +
+                'that your sum and the fraction you started from are the same expression, so ' +
+                'recombining carries that claim out in full rather than sampling it. What do ' +
+                'the two numerators add to over the common denominator, how does that stand ' +
+                'against the 3x + 1 you began with, and why does getting it back settle the ' +
+                'whole of the claim when trying a single value of x could only ever have ' +
+                'overturned it?',
             },
           ],
           answer: '1/(x + 3) + 2/(x − 5)',
@@ -1083,18 +1204,54 @@ const CONCEPTS: Concept[] = [
               detail:
                 'The identity 3x + 1 = A(x − 5) + B(x + 3) has no denominator. Both sides are ' +
                 'polynomials, defined everywhere.',
+              socratic:
+                'Two expressions are in play here and the objection only reaches one of them. ' +
+                'The fraction you were handed, (3x + 1)/((x + 3)(x − 5)), carries (x − 5) ' +
+                'underneath, and at x = 5 that denominator comes to nothing, so the fraction ' +
+                'genuinely has no value there — about that much the objection is right. But ' +
+                'x = 5 was never put into that fraction. It was put into the line the previous ' +
+                'point produced, 3x + 1 = A(x − 5) + B(x + 3), and the multiplying-through that ' +
+                'produced that line did not destroy the awkward factors so much as move them. ' +
+                'So read it again looking for one thing only, division: where in that line does ' +
+                'a denominator appear at all, what kind of expression does that leave standing ' +
+                'on each side, and at which values of x does each side have a value?',
             },
             {
               label: 'Why the identity is still the right one',
               detail:
                 'Two polynomials agreeing at every point except finitely many agree everywhere — ' +
                 'their difference is a polynomial with infinitely many roots, so it is zero.',
+              socratic:
+                'Granting that both sides are polynomials does not finish the argument, because ' +
+                'of how that line was come by. Multiplying an equality through by ' +
+                '(x + 3)(x − 5) is a legitimate move only where that product is not zero — at ' +
+                'x = 5 and at x = −3 it is multiplying by nothing, which establishes nothing — ' +
+                'so what you are entitled to so far is that the two polynomials agree at every ' +
+                'x apart from those two, and the two values you most want to use are exactly ' +
+                'the ones left out. For most pairs of functions that gap would be fatal. Here ' +
+                'the way to close it is to stop comparing the two sides and subtract one from ' +
+                'the other, because the difference is a single polynomial and you already know ' +
+                'a great deal about where it takes the value zero. At how many values of x do ' +
+                'you know it vanishes, what is the highest degree it could have, how many roots ' +
+                'can a polynomial of that degree have unless it is the zero polynomial, and ' +
+                'what does the comparison force about the two sides at x = 5?',
             },
             {
               label: 'What this does not license',
               detail:
                 'It does not make the original expression defined at x = 5. The decomposition ' +
                 'inherits that exclusion and carries it.',
+              socratic:
+                'The identity does hold at x = 5, then, and reading B off it is sound. It is ' +
+                'worth being exact about how far that reaches, because the easy over-reading is ' +
+                'that the objection was simply mistaken, and it was not. Nothing in the ' +
+                'argument went back and gave (3x + 1)/((x + 3)(x − 5)) a value at x = 5; what ' +
+                'was shown is that a different expression, the cleared line, is defined there ' +
+                'and may be used to pin down A and B. Now turn to the answer those constants ' +
+                'build, 1/(x + 3) + 2/(x − 5), and try putting x = 5 into that. At which values ' +
+                'of x is the decomposition itself undefined, how does that set stand against ' +
+                'the excluded points of the fraction you started from, and so when the ' +
+                'decomposition is said to equal that fraction, over which x does the claim run?',
             },
           ],
           answer:
@@ -1139,11 +1296,62 @@ const CONCEPTS: Concept[] = [
               detail:
                 'A/(x + 1) + B/(x + 1)². Not B/(x + 1)² alone: the numerator x + 4 has two ' +
                 'coefficients to match and one unknown cannot match two.',
+              socratic:
+                'The rule carried over from the distinct case was one term per factor with a ' +
+                'constant on top, and here that rule has almost nothing to work with: the ' +
+                'denominator (x + 1)² is built out of a single distinct factor, so read ' +
+                'literally it offers you one term, B/(x + 1)², and stops. Test that offer by ' +
+                'counting rather than by feel. A single constant on top is one number, and the ' +
+                'only number you get to choose, whereas the numerator you have to reproduce, ' +
+                'x + 4, is pinned down by two — the coefficient of x and the constant term — ' +
+                'and both have to come out right. So count each side of that: how many numbers ' +
+                'does the one-term shape let you pick, how many does x + 4 require you to hit, ' +
+                'and what does the shortfall settle about B/(x + 1)² standing alone? Then look ' +
+                'for more room without reaching for factors the denominator does not have. ' +
+                '(x + 1)² has a divisor smaller than itself, and a fraction over that divisor ' +
+                'would still combine back over (x + 1)² rather than introducing anything new ' +
+                'underneath. Which denominators does that make available to you, and how many ' +
+                'unknown constants does the shape then carry against the two the numerator ' +
+                'demands?',
             },
-            { label: 'Clear the denominators', detail: 'x + 4 = A(x + 1) + B.' },
+            {
+              label: 'Clear the denominators',
+              detail: 'x + 4 = A(x + 1) + B.',
+              socratic:
+                'Clearing fractions is the same move as in the distinct case — multiply the ' +
+                'whole equality by something every denominator divides — and with (x + 1) and ' +
+                '(x + 1)² underneath, the smallest such thing is (x + 1)² itself. What is worth ' +
+                'watching is that the three places it acts do not all respond alike. In the ' +
+                'distinct case every term lost its own denominator and picked up the other ' +
+                'factor, so each one came out carrying something; here the two denominators are ' +
+                'a factor and that same factor squared, so the multiplier is used up completely ' +
+                'against one of them and only partly against the other. Work through the three ' +
+                'places — the left-hand side, the A term and the B term — keeping track in each ' +
+                'of how much of (x + 1)² is spent cancelling and how much is left over beside ' +
+                'the unknown. What does each of the three come to, which of A and B ends up ' +
+                'with a bracket next to it and which is left bare, and for how many values of x ' +
+                'does the line you have written have to hold?',
+            },
             {
               label: 'Solve',
               detail: 'x = −1 gives B = 3. Comparing the coefficients of x gives A = 1.',
+              socratic:
+                'The substitution trick from the distinct case still has one move left in it, ' +
+                'but only one. There A sat beside (x − 5) and B beside (x + 3): two different ' +
+                'brackets with two different roots, so each unknown had a value of x that swept ' +
+                'the other away. Look at the line in front of you now and notice that only one ' +
+                'of the unknowns is multiplied by a bracket at all. So there is exactly one ' +
+                'value of x that empties anything, and it settles one constant while leaving ' +
+                'the other exactly where it was — the bare term has no bracket to be caught by, ' +
+                'and no choice of x will remove it. Take that substitution first and see which ' +
+                'of the two it hands you. Then for the one still outstanding, stop trying to ' +
+                'make terms vanish and use what the line is: an identity, true for every x, and ' +
+                'two polynomials that agree for every x must agree term by term, so the single ' +
+                'x on the left has to be accounted for by whatever carries an x on the right. ' +
+                'Which value of x do you substitute and which constant does it give, what must ' +
+                'the other constant be once you match the coefficients of x on the two sides, ' +
+                'and what does the constant term then offer you as a check you have not already ' +
+                'spent?',
             },
           ],
           answer: '1/(x + 1) + 3/(x + 1)²',
@@ -1186,22 +1394,93 @@ const CONCEPTS: Concept[] = [
             {
               label: 'Is x² + 1 actually irreducible?',
               detail: 'Discriminant 0² − 4·1·1 = −4 < 0, so yes over the reals. Check before assuming.',
+              socratic:
+                'Every denominator so far arrived already broken into linear pieces, and the ' +
+                'method leaned on that twice over: one term per factor, and a root of each ' +
+                'factor to substitute. This one offers (x − 1), which is of that kind, and ' +
+                'x² + 1, which at least is not. Before deciding what sort of fraction may sit ' +
+                'over it, settle whether it is a new case at all, because the two outcomes lead ' +
+                'different ways and nothing later will warn you if you guessed. Were it to split ' +
+                'into real linear factors, you would have no new method to learn — just the ' +
+                'distinct-linear one with three brackets instead of two, and a root apiece. Were ' +
+                'it not to split, there is no real root in it for a substitution to use and the ' +
+                'shape itself has to change. You already have a way of telling those apart that ' +
+                'does not require finding any factors: the quadratic under factoring that you ' +
+                'could not break was diagnosed from its coefficients alone. Apply that to ' +
+                'x² + 1, minding that the coefficient of x is zero rather than missing. What do ' +
+                'the three coefficients come to, what does the test built from them return, what ' +
+                'does that settle about factors over the reals, and why is this worth a ' +
+                'calculation rather than a glance at an expression that looks unbreakable?',
             },
             {
               label: 'What shape?',
               detail:
                 'A/(x − 1) + (Bx + C)/(x² + 1). Three unknowns for a numerator with up to three ' +
                 'coefficients to match.',
+              socratic:
+                'The counting you did for the repeated factor is the tool again, and this time it ' +
+                'has to earn its keep in the other direction. Begin with what the rule as it ' +
+                'stands offers: one term per distinct factor with a constant on top, so a term ' +
+                'over (x − 1) and a term over (x² + 1), which is two numbers for you to choose. ' +
+                'Then count what must be matched, and count it from the recombining rather than ' +
+                'from the 2x + 1 in front of you. Adding two such fractions lands the sum over ' +
+                '(x − 1)(x² + 1), and whatever stands on top of that product is what your shape ' +
+                'has to be able to produce; that denominator is a cubic, so a proper fraction ' +
+                'over it can carry a numerator of a degree you should name, with a definite ' +
+                'number of coefficients in it, and your shape must be able to hit all of them. ' +
+                'The extra room cannot come from a new denominator the way it did for the ' +
+                'repeated factor — you have just established that x² + 1 does not split, so ' +
+                'there is no smaller divisor of it to put a fraction over. It has to come from ' +
+                'the top instead, and the one thing limiting how large a numerator may sit over ' +
+                'x² + 1 is that the piece has to stay a proper fraction. So how many unknowns ' +
+                'does the constant-on-top shape give you against the number to be matched, what ' +
+                'is the largest numerator x² + 1 will take without that piece turning improper, ' +
+                'how many unknowns does the shape then carry, and what is the shape you are ' +
+                'going to fill in?',
             },
             {
               label: 'Clear the denominators',
               detail: '2x + 1 = A(x² + 1) + (Bx + C)(x − 1).',
+              socratic:
+                'Clearing is the same move for the third time — multiply the whole equality by ' +
+                'the smallest thing every denominator divides, which here can only be the ' +
+                'product (x − 1)(x² + 1) — so the only question is what the three places it acts ' +
+                'come to. Two are familiar: the left-hand side parts with its denominator ' +
+                'entirely, and the A term loses (x − 1) and picks up whichever factor it had not ' +
+                'accounted for. The third is new in one respect only, that what sits on top of ' +
+                'x² + 1 is no longer a single letter. Keep it bracketed as you multiply, because ' +
+                'it is a sum and the factor it collects multiplies both parts of it; dropping ' +
+                'that bracket is the slip that makes the rest of the point come out wrong ' +
+                'without ever looking wrong. Write the line down before expanding anything, then ' +
+                'look ahead at what expanding it would do: what degree the right-hand side ' +
+                'reaches, and therefore how many coefficients stand ready to be compared against ' +
+                'the left. What do the three places come to, how many coefficients does each ' +
+                'side carry once expanded, and for how many values of x does the line you have ' +
+                'written have to hold?',
             },
             {
               label: 'Solve — one substitution, then coefficients',
               detail:
                 'x = 1 gives 3 = 2A, so A = 3/2. Comparing x²: 0 = A + B, so B = −3/2. Comparing ' +
                 'constants: 1 = A − C, so C = 1/2.',
+              socratic:
+                'Both terms on the right carry a bracket, and in the distinct case a bracket ' +
+                'apiece was exactly what let a substitution be found for each unknown — so look ' +
+                'at which two brackets these are before expecting two substitutions. One is ' +
+                '(x − 1), and emptying a bracket of that form is what you did twice over. The ' +
+                'other is x² + 1, and the first step of this point was a finding about precisely ' +
+                'that expression: no real root, which is another way of saying there is no value ' +
+                'you can put in to make it come to nothing. So the substitution route reaches ' +
+                'some of the three unknowns and then stops, and for whatever is left you fall ' +
+                'back on what the line is rather than on emptying things — an identity in x, two ' +
+                'polynomials agreeing at every value, which forces them to agree coefficient by ' +
+                'coefficient. Count before you compare, though. Each side carries three ' +
+                'coefficients, so there are three comparisons available, and fewer than three ' +
+                'unknowns will still be outstanding once the substitution has been taken. ' +
+                'Which value of x do you substitute and which unknown does it hand you, how many ' +
+                'of the three comparisons do you actually need and which values do they give, ' +
+                'and what does the comparison you did not need tell you when you go back and ' +
+                'make it?',
             },
           ],
           answer: '(3/2)/(x − 1) + (−(3/2)x + 1/2)/(x² + 1)',
@@ -1274,18 +1553,50 @@ const CONCEPTS: Concept[] = [
             {
               label: 'Half the coefficient of x',
               detail: 'b = 6, so half of it is 3. The bracket is (x + 3).',
+              socratic:
+                'This is not a factoring problem — what you are aiming at is one squared ' +
+                'bracket, (x + p)², with a constant after it to repair whatever that bracket ' +
+                'gets wrong. So everything turns on choosing p, and the only part of the ' +
+                'original that can decide it is the 6x, since the 5 has not been consulted ' +
+                'yet. Expand (x + p)² for yourself and look at its middle term alone: what is ' +
+                'the coefficient of x there, written in terms of p? Set that against the 6x ' +
+                'the bracket has to reproduce. What must p be, and why is the number inside ' +
+                'the bracket not the 6 itself?',
             },
             {
               label: 'What did the bracket add?',
               detail: '(x + 3)² = x² + 6x + 9. The 9 is not in the original, so subtract it.',
+              socratic:
+                'You fixed p from the middle term alone, so (x + 3)² is certain to reproduce ' +
+                'the x² and the 6x correctly — those were what chose it. The constant is the ' +
+                'part nothing was ever matched against. Expand (x + 3)² in full and set it ' +
+                'beside x² + 6x + 5: what constant has the bracket brought with it, which of ' +
+                'the two expressions does that constant actually belong to, and what ' +
+                'therefore has to happen to it before the two sides can be equal?',
             },
             {
               label: 'Put the constant back',
               detail: 'x² + 6x + 5 = (x + 3)² − 9 + 5 = (x + 3)² − 4.',
+              socratic:
+                'Taking 9 off (x + 3)² hands back x² + 6x and nothing else, while the ' +
+                'expression you started from also carries a 5. Two constants are in play at ' +
+                'once, then — the one that undoes what the bracket added, and the one that ' +
+                'was in the problem from the start — and they arrive from different places, ' +
+                'so neither may quietly stand in for the other. Write the line out with both ' +
+                'still showing before you combine them. Why is (x + 3)² − 9 wrong, why is ' +
+                '(x + 3)² + 5 wrong, and what do the two constants come to together?',
             },
             {
               label: 'Check by expanding',
               detail: '(x + 3)² − 4 = x² + 6x + 9 − 4 = x² + 6x + 5. It agrees.',
+              socratic:
+                'Expanding back is the check you already used on a pair of factored brackets, ' +
+                'and it earns more here, because two separate choices could have gone wrong ' +
+                'rather than one: the number inside the bracket and the constant outside it. ' +
+                'Expand (x + 3)² − 4 the whole way down to three terms. What does it come to, ' +
+                'which of those two choices would a mismatch in the x term have pointed at as ' +
+                'against a mismatch in the constant, and for how many values of x does the ' +
+                'agreement you are checking have to hold?',
             },
           ],
           answer: '(x + 3)² − 4',
@@ -1864,12 +2175,100 @@ export const RATIONAL_EXPRESSIONS: ConceptOntology = {
  * prism around the time they meet the sine and long before rational
  * expressions, which is where every school course puts it. Appending it last
  * would have claimed the solids come after determinants.
+ *
+ * DATA_SUMMARIES IS NINTH, DIRECTLY BEHIND THE FUNCTIONS SUBJECT, and this is
+ * the first position in the array that a school course would disagree with.
+ *
+ * Its single concept needs `percent`, in `arithmetic-foundations` at index 0,
+ * and `sigma-notation`, which is a concept of `functions-and-inverses` at index
+ * 7 — so the earliest honest place for it is directly behind that one. A
+ * learner meets the median long before they meet an inverse function in any
+ * real curriculum, and the array cannot say so, because registry order is read
+ * as a tie-break but must never contradict a prerequisite. The disagreement is
+ * a fact about where this build files Σ rather than about where the mean
+ * belongs, and it is written down here so that nobody reads index 8 as a claim
+ * about school order.
+ *
+ * Inserting here rather than appending moves `vectors-and-independence` and
+ * `matrices-and-determinants` one place along, which is safe: the five
+ * positions read by name anywhere are 0 through 4, each asserted in
+ * tests/concepts-logic.mjs, and all five are untouched. Appending last would
+ * have claimed a learner meets the quartiles after determinants, which is the
+ * same mistake the three paragraphs above refused for the geometry, the ratios
+ * and the solids.
+ *
+ * STATEMENTS_AND_CONNECTIVES IS SIXTH, AND THE CHOICE IS THE SOLIDS' ARGUMENT
+ * RUN AGAIN WITH ONE SLOT LESS ROOM.
+ *
+ * Its single concept needs `geometric-proof` and nothing else in the build, so
+ * it rests on the plane geometry at index 2 exactly as the ratios and the
+ * solids do, and none of the three is a prerequisite of either other. They are
+ * siblings of one parent, and ordering siblings is not information this array
+ * carries. So the earliest slot the prerequisite ALLOWS is index 3.
+ *
+ * It is not taken, and the reason is a change since the solids went in. That
+ * paragraph could say "index 3 is read by name in tests/concepts-logic.mjs and
+ * index 4 is read by nobody"; index 4 is now read by name too, by the solids'
+ * own block. Positions 0 through 4 are therefore all asserted, and index 5 is
+ * the earliest free slot — which moves `rational-expressions` and the four
+ * after it one place along and leaves every asserted position intact.
+ *
+ * What the position claims is only that a learner meets the truth table for
+ * "if ... then" after the first proofs about figures and before polynomial
+ * division, which is both true of a school course and the weakest claim
+ * available. Appending it last would have said the logic comes after
+ * determinants, which is the mistake the four paragraphs above refused for the
+ * geometry, the ratios, the solids and the quartiles.
+ *
+ * PREDICATES_AND_QUANTIFIERS IS SEVENTH, AND IT IS THE FIRST POSITION IN THIS
+ * ARRAY THAT A PREREQUISITE DECIDES ON ITS OWN.
+ *
+ * Every paragraph above had to pick between slots a prerequisite allowed,
+ * because each of those subjects rested on something early and the choice was
+ * about which index a test read by name. This one rests on
+ * `propositional-logic`, a concept of `statements-and-connectives` at index 5,
+ * so the earliest slot the prerequisite ALLOWS is 6 — and 6 was free, index 5
+ * being the furthest anything reads positionally. The constraint and the
+ * convenience coincided for once and there was nothing to weigh.
+ *
+ * What the position claims is only that a learner meets "for all" and "there
+ * exists" directly after the truth table they generalise and before polynomial
+ * division, which is the weakest claim available and is true of any course that
+ * teaches the two at all. It moves `rational-expressions` and the five after it
+ * one place along, which is safe for the reason the solids' paragraph gives:
+ * positions 0 through 5 are each asserted by name in tests/concepts-logic.mjs
+ * and all six are untouched.
+ *
+ * METHODS_OF_PROOF IS EIGHTH, BY THE SAME RULE ONE STEP FURTHER UP, AND THE
+ * PRECEDENT NOW HAS A COST THAT IS WORTH NAMING.
+ *
+ * It rests on `quantifiers`, a concept of `predicates-and-quantifiers` at index
+ * 6, so the earliest slot its prerequisite allows is 7 — and 7 was free in the
+ * sense that matters: index 6 is the furthest anything reads positionally after
+ * the paragraph above, so nothing asserted by index moves except
+ * `data-summaries`, which is read by index at 10 and is now 11.
+ *
+ * THAT IS THE SECOND PROMOTION RUNNING TO MOVE IT, and the third to move it
+ * since it was written: 8, then 9, then 10, now 11. A by-index assertion on a
+ * subject that sits in the middle of this array is therefore a maintenance cost
+ * paid by every future promotion that inserts below it, and the relational
+ * assertion beside it — that it comes after the subject holding its
+ * prerequisite — has needed no edits at all. Future subjects should prefer the
+ * relational form and leave one literal behind only where a position is really
+ * load-bearing, which it is for index 0: `ONTOLOGIES[0]` is what
+ * /api/learn/session and /learn open on.
+ *
+ * What this position claims is only that a learner meets the shapes of an
+ * argument directly after the quantified claims they are arguments about and
+ * before polynomial division — the weakest claim available, and true of any
+ * course that teaches them at all.
  */
 export const ONTOLOGIES: ConceptOntology[] = [
   ARITHMETIC_FOUNDATIONS, EXPRESSIONS_AND_EQUATIONS, PLANE_GEOMETRY,
-  TRIANGLE_TRIGONOMETRY, SOLID_MEASURE, RATIONAL_EXPRESSIONS,
-  EXPONENTS_AND_LOGARITHMS, FUNCTIONS_AND_INVERSES, VECTORS_AND_INDEPENDENCE,
-  MATRICES_AND_DETERMINANTS,
+  TRIANGLE_TRIGONOMETRY, SOLID_MEASURE, STATEMENTS_AND_CONNECTIVES,
+  PREDICATES_AND_QUANTIFIERS, METHODS_OF_PROOF, RATIONAL_EXPRESSIONS,
+  EXPONENTS_AND_LOGARITHMS, FUNCTIONS_AND_INVERSES, DATA_SUMMARIES,
+  VECTORS_AND_INDEPENDENCE, MATRICES_AND_DETERMINANTS,
 ]
 
 export function getOntology(subjectId: string): ConceptOntology | null {

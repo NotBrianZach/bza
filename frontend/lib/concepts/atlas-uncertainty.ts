@@ -10,6 +10,16 @@
  *
  * `statistics` therefore rests on `probability` throughout and never the
  * reverse.
+ *
+ * ONE NODE HAS LEFT THIS FILE, AND IT IS THE ONE THE SENTENCE ABOVE WAS NEVER
+ * TRUE OF. `descriptive-statistics` is authored now — the `data-summaries`
+ * subject in ontology-statistics.ts, the first written concept anywhere in
+ * either of these two areas. It rested on `percent` and `sigma-notation` and on
+ * nothing in `probability` at all, because describing a list you have is not
+ * reasoning in either direction: there is no mechanism in it and no inference
+ * out of it. So the split this file is organised around has three sides rather
+ * than two, and the third one is the smallest and the only one written. The
+ * departure block above `STATISTICS` records what happened to its edges.
  */
 
 import type { MapArea } from './atlas'
@@ -160,22 +170,124 @@ const PROBABILITY: MapArea = {
   ],
 }
 
+/**
+ * ONE NODE LEFT THIS AREA WHEN IT WAS AUTHORED, AND IT HAD TO.
+ *
+ * `atlasProblems` rejects a map node whose id collides with an authored
+ * concept — see atlas.ts, which argues it at length: the point of naming a
+ * concept in `needs` is to POINT at it, and a node of the same id would shadow
+ * the authored copy in the composed concept list with a copy that has no
+ * knowledge points. So a subject that was fully written would read as
+ * unteachable. Promoting a node is therefore a MOVE and not a fill-in, and the
+ * node has to be deleted from here on the way out.
+ *
+ * `descriptive-statistics` is the one that has gone, into the `data-summaries`
+ * subject in ontology-statistics.ts — the eleventh authored ontology, and the
+ * FIRST authored concept anywhere in the uncertainty half of the atlas. The
+ * two areas in this file held thirty-two nodes between them with nothing
+ * written for any of them; they hold thirty-one now.
+ *
+ * Sixteen nodes went down to fifteen, against the five-node stub floor
+ * tests/atlas.mjs asserts. The floor decided nothing here and is not close:
+ * every one of this area's remaining nodes is unwritten, so there are ten
+ * promotions of room before the question even arises. That is NOT true of
+ * `algebra-foundations` or `linear-algebra`, both of which sit at six with
+ * ready candidates they cannot spend, which is why the brief for a promotion
+ * run has to check the area before the concept.
+ *
+ * ── WHAT HAPPENED TO THE DEPARTING NODE'S FOUR EDGES ──────────────────────
+ *
+ * An edge belongs to the node that DECLARES it, which is what makes this
+ * bookkeeping rather than a judgement, and the four split three ways:
+ *
+ *  1. The two `needs` it declared ITSELF are stranded and are now the `links`
+ *     entries below. Both of their far ends are authored concepts of OTHER
+ *     subjects — `percent` in `arithmetic-foundations`, `sigma-notation` in
+ *     `functions-and-inverses` — and an authored ontology may only name
+ *     concepts it contains, so neither edge could go in `data-summaries`. This
+ *     is the first promotion in the build whose stranded edges reach two
+ *     different authored subjects, so the `links` entries are forced rather
+ *     than chosen: there is no single ontology that could have held both.
+ *  2. `sampling-and-bias` names `descriptive-statistics` in its own `needs`,
+ *     and that edge needed NOTHING done to it. It is declared by a node that
+ *     stayed, `expandEdges` still emits it, and both of its endpoints exist in
+ *     the composed graph — one as an authored concept and one as a node. A
+ *     `links` entry for it would be a second copy of an edge that already
+ *     exists, and `composeAtlas` does not report duplicates.
+ *  3. There was no `confusedWith` and no `exercises` to lose, and that is
+ *     checked rather than remembered. `expandEdges` turns a node's
+ *     `confusedWith` into an `interferes_with` edge, so deleting a node deletes
+ *     that edge and NOTHING goes red — interference constrains selection rather
+ *     than gating, so every suite stays green while the scheduler is quietly
+ *     freed to introduce the two most confusable concepts in the subject
+ *     together. The two interference pairs in this file are `bayes-theorem` ~
+ *     `conditional-probability` and `hypothesis-testing` ~ `bayes-theorem`, and
+ *     all four of those nodes are still here.
+ */
 const STATISTICS: MapArea = {
   id: 'statistics',
   name: 'Statistics',
   covers:
-    'From data back to the mechanism: description, estimation, intervals, testing, and regression. ' +
+    'From data back to the mechanism: estimation, intervals, testing, and regression. ' +
     'Every inferential claim here is a probability statement about the procedure, not about the ' +
-    'hypothesis.',
-  nodes: [
+    'hypothesis. DESCRIPTION IS NO LONGER PART OF THIS AREA and that is the one thing worth ' +
+    'reading before looking for it: a mean, a median, a variance and an interquartile range are ' +
+    'functions of a list somebody already has, they make no claim about anything unobserved, and ' +
+    'they are written — as `descriptive-statistics` in the `data-summaries` subject. Everything ' +
+    'left here rests on `probability`, which is the direction of reasoning this area is split ' +
+    'from that one along, and on the data having come from somewhere, which is ' +
+    '`sampling-and-bias` and is the first node above the written material.',
+  links: [
+    /*
+     * The two edges the departing node declared itself. Both far ends are
+     * authored concepts of other subjects, so neither can live in
+     * `data-summaries` — `ontologyProblems` reports an unknown endpoint for an
+     * edge naming a concept its ontology does not contain — and an area's
+     * `links` is the only place in the build that can express "an authored
+     * concept rests on an authored concept of a third subject".
+     *
+     * Filed HERE, in the area that owned the departing node, rather than in
+     * `algebra-foundations` or `functions` where the far ends were promoted
+     * from. That is the established rule and the reason is ownership: this area
+     * is where somebody looking for what became of this node will come, and the
+     * far subjects have no record that the edge exists.
+     *
+     * Both of them GATE, immediately and for real, which is unusual for a
+     * `links` entry: most are written while the far node is still unwritten and
+     * constrain nothing until it is authored. Here both ends have material, so
+     * `gatingPrerequisitesOf` on the written concept returns exactly these two
+     * and a learner cannot be shown the median until percentages and Σ are
+     * strong.
+     *
+     * If either far concept ever MOVED into `data-summaries`, that edge would
+     * become an ordinary `needs` there and the entry below would have to be
+     * DELETED — two identical edges in the composed graph is not a duplicate
+     * `composeAtlas` notices, and no test reports one. tests/atlas.mjs asserts
+     * the subject of each far end for exactly that reason.
+     */
     {
-      id: 'descriptive-statistics',
-      match: /\b(descriptive statistics|median|quartile|histogram)\b/i,
-      name: 'Describing data',
-      is: 'Centre, spread and shape of a sample, with the mean-versus-median choice determined by the tail rather than by taste.',
-      needs: ['percent', 'sigma-notation'],
-      terms: 'mean median mode quartile standard deviation histogram boxplot skew',
+      from: 'percent',
+      to: 'descriptive-statistics',
+      because:
+        'Every summary here is a share of a whole — what fraction of the list sits below the ' +
+        'median, how much of the spread one value accounts for — and a percentage is the form ' +
+        'those are read in. It is also the only prerequisite that was ever on the critical ' +
+        'path: while `percent` was a skeleton this gate forked through it and came out at ' +
+        '`ratio-and-rate` and `decimal-representation` as well, so authoring percentages made ' +
+        'the gate on this concept SHORTER rather than substituting into it.',
     },
+    {
+      from: 'sigma-notation',
+      to: 'descriptive-statistics',
+      because:
+        'A mean is Σxᵢ / n and a variance is Σ(xᵢ − x̄)² / n, so both of this concept\'s ' +
+        'measures are sums over a list before they are anything else. Σ is also where the ' +
+        'proof that the signed deviations cancel is written down — Σxᵢ − n·x̄ with n·x̄ = Σxᵢ ' +
+        '— which is the one fact the subject proves rather than computes, and it cannot be ' +
+        'stated without the notation.',
+    },
+  ],
+  nodes: [
     {
       id: 'sampling-and-bias',
       match: /\b(sampling \(statistics\)|selection bias|survey methodology)\b/i,

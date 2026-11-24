@@ -327,7 +327,10 @@
  *   before   ratio-and-rate, decimal-representation, sigma-notation
  *   after    percent, sigma-notation
  *
- * `descriptive-statistics`, in the statistics area, is the sole dependent. It
+ * `descriptive-statistics` is the sole dependent — a node of the statistics
+ * area when this was written and an authored concept of `data-summaries`
+ * since, which changes nothing in the measurement below and everything about
+ * where its edges live. It
  * needs `percent` and `sigma-notation`, and while percent was a skeleton the
  * walk passed through it and came out at BOTH of its prerequisites. Authoring it
  * collapses those two entries into one, because nearest-ancestor means one entry
@@ -362,11 +365,21 @@
  * "before" after the fact, and it is how the correction above was established.
  *
  * WHAT IT DOES NOT UNBLOCK, which is worth saying because every promotion before
- * it unblocked something. `descriptive-statistics` is mechanically ready now, its
- * other prerequisite being authored, but it is a statistics concept and nothing
- * in this subject's vicinity was waiting on percent at all. This is the first
- * promotion here bought purely for the material rather than for a route or for
- * what it opens.
+ * it unblocked something. `descriptive-statistics` was mechanically ready the
+ * moment this shipped, its other prerequisite being authored, but it is a
+ * statistics concept and nothing in this subject's vicinity was waiting on
+ * percent at all. This is the first promotion here bought purely for the
+ * material rather than for a route or for what it opens.
+ *
+ * AND IT WAS CASHED IN BY THE FOURTEENTH PROMOTION, which is the sentence above
+ * turning out to be the whole story rather than a hedge. `descriptive-statistics`
+ * is authored — `data-summaries` in ontology-statistics.ts, an eleventh subject
+ * rather than a concept of this one, because nothing here is a function of a
+ * LIST. So this concept's one dependent is written and its edge is a `links`
+ * entry on `STATISTICS` in atlas-uncertainty.ts, since an ontology may only name
+ * concepts it contains and the far end is in another subject. No map node names
+ * `percent` at all now, and tests/atlas.mjs asserts that rather than an
+ * exemplar it no longer has.
  */
 
 import type { Concept, ConceptEdge, ConceptOntology, Subject } from './types'
