@@ -3,9 +3,11 @@
 import { useCallback, useMemo, useState } from 'react'
 import { Clipboard, Loader2, Send } from 'lucide-react'
 import { authedFetch } from '@/lib/authedFetch'
+import { fuzzySearch } from '@/lib/fuzzy'
 import {
-  calcRecord, DEFAULT_SETTINGS, DOUBLE_DIGITS, evaluateRpn, formatValue, precisionIsAdvisory,
-  RpnError, sha256Hex, toOrgDrawer, toWorkerTree, type AngleMode, type RpnSettings, type Value,
+  calcRecord, CONSTANT_WORDS, DEFAULT_SETTINGS, DOUBLE_DIGITS, evaluateRpn, formatValue,
+  OPERATORS, precisionIsAdvisory, RpnError, sha256Hex, toOrgDrawer, toWorkerTree,
+  type AngleMode, type RpnSettings, type Value,
 } from '@/lib/concepts/rpn'
 
 /**
@@ -37,19 +39,85 @@ export default function RpnCalculator() {
   const [copied, setCopied] = useState(false)
   const [sending, setSending] = useState(false)
   const [exact, setExact] = useState<{ display: string | null; latex: string | null; conditions: string[]; note: string } | null>(null)
+  /**
+   * The held stack and registers — the thing that makes this a calculator.
+   *
+   * The engine always had `dup`, `drop`, `swap` and `over`, and this component
+   * discarded the stack after every entry, so none of them could do the one
+   * thing they are for. Emacs calc's model: an entry is evaluated ON TOP of
+   * what is already there, and what it leaves stays for the next one.
+   */
+  const [stack, setStack] = useState<Value[]>([])
+  const [registers, setRegisters] = useState<Map<string, Value>>(new Map())
+  const [finder, setFinder] = useState('')
 
+  /**
+   * The live preview of the entry being typed, against a COPY of both.
+   *
+   * The copy is not tidiness, it is required. `evaluateRpn` mutates the
+   * register map by design — see its header — so previewing `7 sto radius`
+   * on every keystroke against the real map would store a register while you
+   * were still typing its name, leaving `r`, `ra`, `rad`… behind. The stack
+   * is already copied by the engine; the registers have to be copied here.
+   */
   const evaluated = useMemo(() => {
     if (!input.trim()) return null
     try {
-      return { ok: true as const, result: evaluateRpn(input, settings) }
+      return {
+        ok: true as const,
+        result: evaluateRpn(input, settings, { stack, registers: new Map(registers) }),
+      }
     } catch (e) {
       return { ok: false as const, message: e instanceof RpnError ? e.message : 'could not be evaluated' }
     }
-  }, [input, settings])
+  }, [input, settings, stack, registers])
 
-  const top: Value | null = evaluated?.ok && evaluated.result.stack.length > 0
-    ? evaluated.result.stack[evaluated.result.stack.length - 1]
-    : null
+  /**
+   * Commit the entry: fold it into the held stack and clear the box.
+   *
+   * This is where the real register map is handed over, so a `sto` only
+   * happens once and only when you meant it.
+   */
+  const commit = useCallback(() => {
+    if (!input.trim()) return
+    const next = new Map(registers)
+    try {
+      const result = evaluateRpn(input, settings, { stack, registers: next })
+      setStack(result.stack)
+      setRegisters(next)
+      setInput('')
+      setExact(null)
+    } catch {
+      /* The error is already on screen from the preview; leaving the text in
+         the box is what lets it be corrected rather than retyped. */
+    }
+  }, [input, settings, stack, registers])
+
+  /* The preview's stack when there is one, otherwise the held stack — so the
+     readout and the send button act on what you can see. */
+  const shown: Value[] = evaluated?.ok ? evaluated.result.stack : stack
+  const top: Value | null = shown.length > 0 ? shown[shown.length - 1] : null
+
+  /**
+   * Everything you can type, for the finder.
+   *
+   * Built from the registries rather than listed: OPERATORS is the operator
+   * and function table, CONSTANT_WORDS the constants, and the stack and
+   * register words are the ones the engine handles inline. A function added
+   * to the engine appears here without anybody remembering to add it, which
+   * is the only reason a palette like this stays true.
+   */
+  const vocabulary = useMemo(() => [
+    ...Object.keys(OPERATORS).map(name => ({ name, kind: 'operator' })),
+    ...Object.keys(CONSTANT_WORDS).map(name => ({ name, kind: 'constant' })),
+    ...['dup', 'drop', 'swap', 'over'].map(name => ({ name, kind: 'stack' })),
+    ...['sto', 'rcl'].map(name => ({ name, kind: 'register' })),
+  ], [])
+
+  const found = useMemo(
+    () => (finder.trim() ? fuzzySearch(vocabulary, finder, v => v.name).map(m => m.item) : []),
+    [finder, vocabulary],
+  )
 
   const copyDrawer = useCallback(async () => {
     if (!evaluated?.ok) return
@@ -111,12 +179,121 @@ export default function RpnCalculator() {
         </span>
       </div>
 
+      {/* The held stack, top first, numbered the way Calc numbers it.
+          Shown above the entry box because that is where it is on a real
+          calculator and where your eye already is after an entry.
+
+          The PREVIEW stack while you are typing, the held one otherwise, so
+          the rows move as you type rather than after you commit. */}
+      {shown.length > 0 && (
+        <ol className='rounded border border-gray-800 bg-gray-950 px-2 py-1.5 font-mono text-sm'>
+          {[...shown].reverse().map((v, i) => (
+            <li key={shown.length - i} className='flex gap-2'>
+              <span className='w-6 shrink-0 text-right text-[11px] text-gray-600'>{i + 1}:</span>
+              <span className={i === 0 ? 'text-emerald-200' : 'text-gray-400'}>
+                {formatValue(v, settings)}
+              </span>
+            </li>
+          ))}
+        </ol>
+      )}
+
       <input
         value={input}
         onChange={e => setInput(e.target.value)}
+        onKeyDown={e => {
+          if (e.key === 'Enter') { e.preventDefault(); commit() }
+        }}
         placeholder='3 4 + 2 /'
+        aria-label='RPN entry'
         className='w-full rounded border border-gray-700 bg-gray-950 px-3 py-2 font-mono text-sm text-gray-100 placeholder:text-gray-600 focus:border-emerald-700 focus:outline-none'
       />
+
+      <div className='flex flex-wrap items-center gap-2 text-[11px]'>
+        <span className='text-gray-500'>
+          Enter folds the entry into the stack · <code>dup drop swap over</code> ·{' '}
+          <code>sto name</code> / <code>rcl name</code>
+        </span>
+        {(stack.length > 0 || registers.size > 0) && (
+          <button
+            type='button'
+            onClick={() => { setStack([]); setRegisters(new Map()); setExact(null) }}
+            className='ml-auto rounded border border-gray-700 px-1.5 py-0.5 text-gray-400 hover:text-gray-200'
+          >
+            clear stack and registers
+          </button>
+        )}
+      </div>
+
+      {/* Registers. Absent until there are some — an empty panel teaches
+          nothing and the words are documented on the line above. */}
+      {registers.size > 0 && (
+        <div className='rounded border border-gray-800 bg-gray-950 px-2 py-1.5'>
+          <p className='text-[10px] uppercase tracking-wide text-gray-600'>registers</p>
+          <ul className='mt-0.5 space-y-0.5 font-mono text-xs'>
+            {[...registers.entries()].map(([name, v]) => (
+              <li key={name} className='flex items-baseline gap-2'>
+                <button
+                  type='button'
+                  title={`append rcl ${name}`}
+                  onClick={() => setInput(s => `${s}${s && !s.endsWith(' ') ? ' ' : ''}rcl ${name} `)}
+                  className='text-sky-300 hover:underline'
+                >
+                  {name}
+                </button>
+                <span className='text-gray-400'>{formatValue(v, settings)}</span>
+                <button
+                  type='button'
+                  aria-label={`forget ${name}`}
+                  onClick={() => setRegisters(m => { const n = new Map(m); n.delete(name); return n })}
+                  className='ml-auto text-[10px] text-gray-600 hover:text-red-400'
+                >
+                  forget
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* The finder.
+          Built from the registries, so it cannot fall behind the engine —
+          see `vocabulary`. Clicking appends rather than replacing, because
+          you are composing an entry and the thing you looked up is usually
+          the next token rather than the whole of it. */}
+      <div>
+        <input
+          value={finder}
+          onChange={e => setFinder(e.target.value)}
+          placeholder='find a function — sqrt, log, atan…'
+          aria-label='Find a function'
+          className='w-full rounded border border-gray-800 bg-gray-950 px-2 py-1 text-xs text-gray-200 placeholder:text-gray-600 focus:border-sky-700 focus:outline-none'
+        />
+        {found.length > 0 && (
+          <ul className='mt-1 flex flex-wrap gap-1'>
+            {found.slice(0, 24).map(v => (
+              <li key={`${v.kind}-${v.name}`}>
+                <button
+                  type='button'
+                  title={v.kind}
+                  onClick={() => {
+                    setInput(s => `${s}${s && !s.endsWith(' ') ? ' ' : ''}${v.name} `)
+                    setFinder('')
+                  }}
+                  className='rounded border border-gray-700 px-1.5 py-0.5 font-mono text-[11px] text-gray-300 hover:border-sky-600 hover:text-sky-200'
+                >
+                  {v.name}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+        {finder.trim() && found.length === 0 && (
+          <p className='mt-1 text-[11px] text-gray-500'>
+            Nothing matches “{finder.trim()}”. The engine knows {vocabulary.length} words.
+          </p>
+        )}
+      </div>
 
       <div className='flex flex-wrap items-center gap-3 text-xs'>
         <label className='flex items-center gap-1.5 text-gray-400'>

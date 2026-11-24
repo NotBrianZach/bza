@@ -1078,6 +1078,122 @@ const SIX_PRIMES: VariableDeclaration[] = [
   { name: 'f', assumptions: { integer: true } },
 ]
 
+/**
+ * Two set sizes and the size of their overlap — the three numbers a union is
+ * counted from.
+ *
+ * `integer` and not `positive`, which is the one assumption worth arguing about
+ * here. A size is never negative, so `positive` looks like the tighter and
+ * therefore better declaration, and it would be wrong: the EMPTY set has size 0
+ * and is the case the second knowledge point turns on, since two disjoint sets
+ * are exactly the ones whose correction term is zero. Declaring the overlap
+ * positive would make the disjoint case undeclarable in the very subject that
+ * explains it.
+ *
+ * Shared by two tasks across a point boundary, which is the point of one list
+ * rather than two. In the operations point `a + b - c` counts a union of two
+ * divisor sets; in the identities point it counts a union of two DIFFERENCES,
+ * which is one side of `A \ (B ∩ C) = (A \ B) ∪ (A \ C)`. The repair is the same
+ * move either way — the sum double-counts the overlap, so one copy comes off —
+ * and two differently-named lists would have implied those were two facts.
+ */
+const SET_SIZES_AND_OVERLAP: VariableDeclaration[] = [
+  { name: 'a', assumptions: { integer: true } },
+  { name: 'b', assumptions: { integer: true } },
+  { name: 'c', assumptions: { integer: true } },
+]
+
+/**
+ * One set's size and the size of its overlap with whatever is being taken away.
+ *
+ * `a - c` is `|A| − |A ∩ B|`, which is `|A \ B|`: the members of A that survive
+ * are all of them less the ones that are also in B. THREE tasks share this, which
+ * is further than any previous subject has carried one expression, and the reason
+ * is that the three questions look unrelated until they are written the same way:
+ *
+ *   at (6, 6)  the second half of a double inclusion — nothing of B is left out
+ *              of A, so B ⊆ A, so with A ⊆ B already in hand the sets are equal
+ *   at (6, 4)  the divisors of 12 that do not divide 18
+ *   at (6, 2)  the left-hand side of the identity in the third point
+ *
+ * The first of those is the one the shared expression earns its place on. A ⊆ B
+ * is just the case where the overlap IS the smaller set, so the inclusion is not
+ * a different kind of fact from a difference — it is a difference that comes out
+ * zero. Three expressions would have hidden that.
+ */
+const SET_SIZE_AND_OVERLAP: VariableDeclaration[] = [
+  { name: 'a', assumptions: { integer: true } },
+  { name: 'c', assumptions: { integer: true } },
+]
+
+/**
+ * A universe and a subset of it, which is the one operation that needs both.
+ *
+ * Separate from `SET_SIZE_AND_OVERLAP` despite being two sizes subtracted,
+ * because the SYMBOL is the content: `u` is there to be named. "Not in A" has no
+ * answer until the universe is stated, and the same six divisors of 12 have a
+ * complement of 14 inside the numbers 1 to 20 and of 6 inside the numbers 1 to
+ * 12. Writing that as `a - c` would have made the universe look like an overlap
+ * and lost the one thing the task is about.
+ */
+const UNIVERSE_AND_SUBSET: VariableDeclaration[] = [
+  { name: 'u', assumptions: { integer: true } },
+  { name: 'a', assumptions: { integer: true } },
+]
+
+/**
+ * How many members a set has, when the question is how many subsets follow.
+ *
+ * One symbol, and the exponent position is the whole reason this is a list of its
+ * own rather than a reuse of `NUMBER_UNDER_TEST`. `2^n` is the only place in the
+ * authored tasks where a declared variable sits in an exponent, and what it
+ * encodes is an independent binary choice per member — in or out, n times over.
+ * That is the content of the count, and a list whose comment is about division
+ * would attach the wrong reading to it.
+ */
+const MEMBER_COUNT: VariableDeclaration[] = [
+  { name: 'n', assumptions: { integer: true } },
+]
+
+/**
+ * How many entries were written down, and how many of them named an object
+ * already written.
+ *
+ * `n - d` is the number of members the list actually contributes. The subtraction
+ * is of WRITING rather than of objects, which is the first knowledge point's
+ * whole claim: a set is fixed by which things belong to it, so the second 2 in
+ * 1, 2, 2, 3, 6, 6, 6 adds nothing and neither do the second and third 6.
+ * Declared apart from every other two-symbol subtraction in this file because
+ * neither symbol is a set size — `n` counts marks on a page.
+ */
+const WRITTEN_ENTRIES: VariableDeclaration[] = [
+  { name: 'n', assumptions: { integer: true } },
+  { name: 'd', assumptions: { integer: true } },
+]
+
+/**
+ * How many sets a claim is about, and how many regions a diagram of that many
+ * circles can supply.
+ *
+ * `2^n - r` is the number of membership cases a picture cannot give a region to.
+ * Both figures are exact: n sets have 2ⁿ cases, and n circles in general position
+ * cut the plane into at most n² − n + 2 pieces, so `r` is a number the asker
+ * computes rather than estimates. The two agree at n = 1, 2, 3 and part company
+ * at 4, which is why the task is asked at 4 — the answer 2 is the exact size of
+ * the gap between a Venn diagram and a proof, and at n = 3 it would have been 0
+ * and said the opposite.
+ *
+ * Separate from `MEMBER_COUNT` even though both declare `n`, and the reason is
+ * the same one `NUMBER_UNDER_TEST`'s comment gives about `WHOLE_NUMBER_INDEX`:
+ * there `n` counts the MEMBERS of one set and here it counts the SETS, which are
+ * two different readings of one letter inside one concept. Sharing the list would
+ * have claimed they were one.
+ */
+const CASES_AND_REGIONS: VariableDeclaration[] = [
+  { name: 'n', assumptions: { integer: true } },
+  { name: 'r', assumptions: { integer: true } },
+]
+
 export const TASKS: PracticeTask[] = [
   /*
    * ── fraction-arithmetic ─────────────────────────────────────────────────
@@ -10256,6 +10372,321 @@ export const TASKS: PracticeTask[] = [
     // asking it twice with the same expression is what says so.
     reference: '2',
     at: { n: '2027', p: '3', k: '675' },
+  },
+
+  // ── sets-and-membership, thirty-eighth promotion: sets
+  //
+  // Nine tasks, three on each point, and ALL NINE are `evaluate` settled by
+  // exact rational arithmetic with no worker. That is the first subject since
+  // the thirteenth where the kind list is a single entry, and it is a real
+  // absence rather than a thin pass — see the refusal of `transform_to_form`
+  // below.
+  //
+  // THE ENCODING IS SIZES, which is the only thing about a set that is a number:
+  //
+  //     a set                     its size: a, b, u
+  //     an overlap                c, the size of the intersection
+  //     "in A and not in B"       a - c, which is |A| - |A ∩ B|
+  //     "in A or in B"            a + b - c, the sum with the double count repaired
+  //     "in or out, each member"  2^n, the number of subsets
+  //     "the membership cases"    2^n again, now of n SETS rather than n members
+  //
+  // ONE EXPRESSION SHARED ACROSS TWO POINT BOUNDARIES, which is further than any
+  // previous subject has carried one. `a - c` is asked at (6, 6) in the first
+  // point, at (6, 4) in the second and at (6, 2) in the third. The first of
+  // those is what the sharing is for: A ⊆ B is the case where the overlap IS the
+  // smaller set, so an inclusion is a difference that came out zero rather than
+  // a different kind of fact. Three expressions would have hidden that, and the
+  // lists' own comments carry the argument.
+  //
+  // `a + b - c` IS ASKED TWICE AND THE SECOND TIME IS THE POINT. At (6, 6, 4) it
+  // counts a union of two divisor sets; at (2, 3, 1) it counts a union of two
+  // DIFFERENCES, which is the right-hand side of the identity the third point
+  // proves. Its answer 4 matches the left-hand side's 4 — and that prompt says
+  // plainly that two counts agreeing is a CHECK and not a proof. That is the
+  // thirty-seventh subject's lesson inverted one more turn: there a value that
+  // still mentioned k settled nothing, and here two values that agree settle
+  // nothing either, because equal sizes do not make equal sets. {1, 2} and
+  // {3, 4} is the two-second refutation and the prompt gives it.
+  //
+  // THE DIAGRAM TASK IS THE ONE THAT CARRIES THE CONCEPT'S HARDEST CLAIM, and
+  // both of its numbers are exact rather than illustrative. n sets have 2ⁿ
+  // membership cases; n circles in general position cut the plane into at most
+  // n² − n + 2 regions. Those agree at n = 1, 2 and 3 — 2 and 2, 4 and 4, 8 and
+  // 8 — so the three-circle picture everybody is shown is genuinely complete,
+  // which is why it misleads. At n = 4 it is 16 against 14 and the answer is the
+  // shortfall, 2. Asked at 4 and not at 3 for that reason: at 3 the answer is 0
+  // and says the opposite of the lesson.
+  //
+  // WHAT CANNOT BE ASKED FOR IS A SET. The engine grades an expression, so
+  // "write down A ∩ B" has no form — the same wall ontology-matrices.ts hit with
+  // "every question asks for one number" because there is no matrix type. The
+  // cost is specific: a learner can be asked how big an intersection is and not
+  // which members are in it, so no task here can catch somebody who has the
+  // right count by the wrong route. The three worked examples list every member
+  // of every set they use, which is the compensation and is the reason they are
+  // long.
+  //
+  // NO `transform_to_form`, AND THIS SUBJECT IS WORSE OFF THAN THE FOURTEENTH
+  // FOR IT. The forms this file ships are claims about an ALGEBRAIC shape —
+  // expanded, factored, a completed square, a prime factorisation, a reduced
+  // surd — and there is no demand of shape in this material. `2^n` is not asked
+  // as a form because the question is how many subsets there are, not how to
+  // write the count. The one place a shape genuinely IS the answer is the
+  // membership condition itself — "x in A, and not (x in B and x in C)" — and
+  // that is a sentence, not an expression. A form invented for it would grade
+  // the shape of an encoding, which is what the two logic subjects refused.
+  //
+  // NO `counterexample` AND NO `justify`. The natural `counterexample` ask is
+  // "produce a member of A that is not in B"; ruling it needs a checker that can
+  // test a produced object against a claim, which this file declares verifiable
+  // and ships nowhere. The `justify` ask is the concept itself — "prove
+  // A \ (B ∩ C) = (A \ B) ∪ (A \ C)" — and naming the kind in an objective would
+  // promise an observation nothing in this build can make.
+  //
+  // NO `domainConditions` ON ANY OF THE NINE. Every expression is a sum or
+  // difference of counts, or 2 raised to one, so there is no value of a declared
+  // variable at which anything is undefined — not even the empty case, where
+  // 2^0 = 1 is the correct and meaningful answer that the empty set has exactly
+  // one subset.
+  {
+    id: 'each-member-is-an-independent-in-or-out-choice-1',
+    knowledgePointId: 'a-set-is-fixed-by-what-belongs-to-it-and-equality-is-two-inclusions',
+    kind: 'evaluate',
+    prompt:
+      'A is the set of divisors of 12, so A = {1, 2, 3, 4, 6, 12} and it has 6 members. Count '
+      + 'its subsets WITHOUT listing them: a subset is settled by going through the members one '
+      + 'at a time and deciding in or out, so 6 members give 6 independent two-way choices. '
+      + 'Evaluate 2^n at n = 6. Your answer counts the empty set, where every decision was '
+      + '"out", and A itself, where every decision was "in" — both are subsets by the '
+      + 'definition, and they are the two that are easiest to forget precisely because the '
+      + 'definition makes them trivial.',
+    given: '2^n',
+    variables: MEMBER_COUNT,
+    // 2⁶ = 64.
+    //
+    // ASKED ON SIX MEMBERS RATHER THAN FOUR, which matters only because the
+    // diagram task in the third point evaluates `2^n` at 4. Two tasks with the
+    // same expression, the same substitution and the same answer would read as
+    // one task duplicated, and the two are about different things: here n counts
+    // the MEMBERS of one set, there it counts the SETS a claim is about.
+    reference: '64',
+    at: { n: '6' },
+  },
+  {
+    id: 'repetition-in-the-writing-adds-no-members-1',
+    knowledgePointId: 'a-set-is-fixed-by-what-belongs-to-it-and-equality-is-two-inclusions',
+    kind: 'evaluate',
+    prompt:
+      'Somebody writes down the common divisors of 12 and 18 and gets careless: "1, 2, 2, 3, 6, '
+      + '6, 6" — seven entries. A set is fixed by WHICH objects belong to it, so an entry naming '
+      + 'an object already named adds nothing: the second 2 is one such, and so are the second '
+      + 'and third 6. Evaluate n - d at n = 7, d = 3. Your answer is how many members the set '
+      + 'actually has. What you subtracted was writing and not objects — and for the same reason '
+      + 'the order is irrelevant too, so "6, 3, 2, 1" is this same set written a fourth way.',
+    given: 'n - d',
+    variables: WRITTEN_ENTRIES,
+    // 7 − 3 = 4, and the set is {1, 2, 3, 6}.
+    //
+    // THE NUMBERS ARE THE WORKED EXAMPLE'S, which is deliberate: {1, 2, 3, 6} is
+    // the intersection the first point builds and the divisors of 6, so the
+    // answer 4 is the same 4 that becomes the overlap in the second point's
+    // tasks. A learner meets one set of numbers across the whole concept rather
+    // than a fresh pair per question.
+    reference: '4',
+    at: { n: '7', d: '3' },
+  },
+  {
+    id: 'a-difference-of-zero-closes-the-second-inclusion-1',
+    knowledgePointId: 'a-set-is-fixed-by-what-belongs-to-it-and-equality-is-two-inclusions',
+    kind: 'evaluate',
+    prompt:
+      'B is the set of divisors of 12, with 6 members, and A is some subset of it that also has '
+      + '6 members. You already have A ⊆ B, which was given. To get B = A you need the other '
+      + 'inclusion, B ⊆ A, and that holds exactly when no member of B is left out of A. The '
+      + 'count of what is left out is |B| − |B ∩ A|, and since A ⊆ B the overlap is the whole of '
+      + 'A. Evaluate a - c at a = 6, c = 6. Your answer of zero IS the second inclusion, so the '
+      + 'two sets are equal. One warning the answer does not carry: this argument used B being '
+      + 'FINITE. The even numbers are a subset of the whole numbers and are not all of them, '
+      + 'however sizes are compared there — that is `cardinality`, three nodes further up.',
+    given: 'a - c',
+    variables: SET_SIZE_AND_OVERLAP,
+    // 6 − 6 = 0.
+    //
+    // THE SHARED EXPRESSION'S FIRST USE, AND THE ONE IT EARNS ITS PLACE ON. The
+    // same `a - c` counts a difference in the next point and a side of an
+    // identity in the one after. Writing an inclusion as a difference that came
+    // out zero is the claim: A ⊆ B is the case where the overlap IS the smaller
+    // set, so the inclusion is not a second kind of fact.
+    //
+    // The prompt names the finite assumption rather than leaving it, because the
+    // step is false without it and the concept where it fails is on the map
+    // above this one. Naming the boundary is cheaper than a learner finding it.
+    reference: '0',
+    at: { a: '6', c: '6' },
+  },
+  {
+    id: 'the-union-count-repairs-a-double-count-1',
+    knowledgePointId: 'each-operation-is-a-condition-on-membership-and-the-sizes-need-one-repair',
+    kind: 'evaluate',
+    prompt:
+      'A is the divisors of 12 and B the divisors of 18, six members each. Their common '
+      + 'divisors are the divisors of gcd(12, 18) = 6, which is {1, 2, 3, 6}, so the overlap has '
+      + '4 members. Evaluate a + b - c at a = 6, b = 6, c = 4. Your answer is the size of '
+      + 'A ∪ B, and the subtraction is a REPAIR rather than a term of a formula: adding 6 and 6 '
+      + 'counts each of 1, 2, 3 and 6 twice, once as a divisor of 12 and again as a divisor of '
+      + '18, so one copy of the overlap has to come off. Writing the union out gives '
+      + '{1, 2, 3, 4, 6, 9, 12, 18} and confirms it. Stopping at 6 + 6 = 12 is the commonest '
+      + 'error here, and it claims a union with four members nobody can name.',
+    given: 'a + b - c',
+    variables: SET_SIZES_AND_OVERLAP,
+    // 6 + 6 − 4 = 8, and the union listed out has 8 members.
+    //
+    // THE OVERLAP IS GIVEN AS A SIZE AND ITS MEMBERS ARE NAMED, which is the
+    // compromise this whole subject runs on: the answer has to be a number, so
+    // the prompt states the four members so that the 4 is a count of something
+    // the learner can see rather than a figure handed over.
+    //
+    // Had the sets been disjoint the correction would be 0 and the addition
+    // alone right — the special case, not the rule, and the prompt says so.
+    reference: '8',
+    at: { a: '6', b: '6', c: '4' },
+  },
+  {
+    id: 'a-difference-drops-exactly-the-overlap-1',
+    knowledgePointId: 'each-operation-is-a-condition-on-membership-and-the-sizes-need-one-repair',
+    kind: 'evaluate',
+    prompt:
+      'Same two sets. A \\ B is "in A and not in B", so walk through A\'s six members and drop '
+      + 'the ones that fail the second condition. The ones that fail are precisely the members '
+      + 'of A that are also in B, which is A ∩ B = {1, 2, 3, 6}. Evaluate a - c at a = 6, '
+      + 'c = 4. Your answer is the size of A \\ B — and writing it out gives {4, 12}, the '
+      + 'divisors of 12 that do not divide 18. Notice what the count never needed: the members '
+      + 'of the difference. It needed the size of A and the size of the overlap, both already in '
+      + 'hand from the previous question.',
+    given: 'a - c',
+    variables: SET_SIZE_AND_OVERLAP,
+    // 6 − 4 = 2, and A \ B = {4, 12}.
+    //
+    // THE SHARED EXPRESSION'S SECOND USE. In the first point `a - c` at (6, 6)
+    // was the second half of a double inclusion; here at (6, 4) it is a
+    // difference. Same move — all of the set less the part that is also in the
+    // other — and the first case is just this one coming out zero.
+    reference: '2',
+    at: { a: '6', c: '4' },
+  },
+  {
+    id: 'a-complement-has-no-size-until-the-universe-is-named-1',
+    knowledgePointId: 'each-operation-is-a-condition-on-membership-and-the-sizes-need-one-repair',
+    kind: 'evaluate',
+    prompt:
+      'Now the one operation that needs something stated first. A is still the divisors of 12, '
+      + 'six members, and the question is how many things are NOT in A — which has no answer at '
+      + 'all until you say not-in-A-among-what. Take the universe U = {1, 2, ..., 20}, which has '
+      + '20 members and contains all six divisors of 12. Evaluate u - a at u = 20, a = 6. Your '
+      + 'answer is the size of the complement inside THAT universe. Inside U\' = {1, 2, ..., 12} '
+      + 'the same A has a complement of 12 − 6 = 6 members, and inside all the whole numbers it '
+      + 'has infinitely many. One set, three answers, so a universe left unstated is not a small '
+      + 'omission. The intersection and the difference needed no universe, because both of their '
+      + 'conditions point at a set that was given.',
+    given: 'u - a',
+    variables: UNIVERSE_AND_SUBSET,
+    // 20 − 6 = 14.
+    //
+    // THE SYMBOL IS THE CONTENT, which is why this is not `a - c` with a renamed
+    // list. `u` exists to be named, and the prompt gives the other two answers
+    // the other two universes produce so that "it depends on the universe" is a
+    // computation the learner has watched rather than a caution.
+    reference: '14',
+    at: { u: '20', a: '6' },
+  },
+  {
+    id: 'count-the-left-side-of-the-identity-1',
+    knowledgePointId: 'an-identity-is-proved-by-double-inclusion-and-a-diagram-runs-out-at-four-sets',
+    kind: 'evaluate',
+    prompt:
+      'The identity is A \\ (B ∩ C) = (A \\ B) ∪ (A \\ C), and this question counts the left '
+      + 'side on particular sets. A is the divisors of 12 (six members), B the divisors of 18 '
+      + 'and C the divisors of 20. B ∩ C is the divisors of gcd(18, 20) = 2, which is {1, 2}, '
+      + 'and both of those are in A — so the part of A being taken away has 2 members. Evaluate '
+      + 'a - c at a = 6, c = 2. Your answer is the size of A \\ (B ∩ C), and writing it out '
+      + 'gives {3, 4, 6, 12}.',
+    given: 'a - c',
+    variables: SET_SIZE_AND_OVERLAP,
+    // 6 − 2 = 4, and A \ (B ∩ C) = {3, 4, 6, 12}.
+    //
+    // THE SHARED EXPRESSION'S THIRD USE, and the point boundary it crosses is
+    // the second one. A difference is a difference whether what is taken away
+    // was given as a set or built as an intersection, which is the thing a third
+    // expression would have obscured.
+    reference: '4',
+    at: { a: '6', c: '2' },
+  },
+  {
+    id: 'count-the-right-side-and-weigh-what-the-agreement-proves-1',
+    knowledgePointId: 'an-identity-is-proved-by-double-inclusion-and-a-diagram-runs-out-at-four-sets',
+    kind: 'evaluate',
+    prompt:
+      'Now the right side, (A \\ B) ∪ (A \\ C), on the same three sets. A \\ B = {4, 12} has 2 '
+      + 'members and A \\ C = {3, 6, 12} has 3, and they share 12, so the overlap has 1. That is '
+      + 'a union, so it needs the same repair as before: evaluate a + b - c at a = 2, b = 3, '
+      + 'c = 1. Your answer matches the left side\'s 4, and here is what that is worth — it is a '
+      + 'CHECK at one triple of sets and not a proof. Two sets of the same size need not be the '
+      + 'same set at all: {1, 2} and {3, 4} both have 2 members. The proof is the double '
+      + 'inclusion in the worked example, which takes an arbitrary member of one side and '
+      + 'rearranges its membership condition into the other, and which mentions no particular '
+      + 'number anywhere.',
+    given: 'a + b - c',
+    variables: SET_SIZES_AND_OVERLAP,
+    // 2 + 3 − 1 = 4, and the union listed out is {3, 4, 6, 12} — the same four
+    // members the left side has.
+    //
+    // THE SECOND USE OF `a + b - c` AND THE REASON IT IS SHARED: the correction
+    // does not care that the two sets being united are themselves differences.
+    //
+    // AND THE PROMPT REFUSES ITS OWN EVIDENCE, which is this subject's version of
+    // the thirty-seventh's "a value that still mentions k settles nothing". There
+    // one substitution looked like a proof until a second agreed; here two counts
+    // agreeing looks like a proof and is strictly weaker, because equal sizes do
+    // not make equal sets. The refutation is given in the prompt rather than left
+    // for the learner to supply, since a learner who could supply it would not
+    // have needed the warning.
+    reference: '4',
+    at: { a: '2', b: '3', c: '1' },
+  },
+  {
+    id: 'four-circles-cannot-draw-four-sets-1',
+    knowledgePointId: 'an-identity-is-proved-by-double-inclusion-and-a-diagram-runs-out-at-four-sets',
+    kind: 'evaluate',
+    prompt:
+      'A Venn diagram settles an identity by giving every membership case its own region and '
+      + 'shading both sides. So count both. n sets have 2^n membership cases — in or out of each '
+      + 'one — and n circles in general position cut the plane into at most n² − n + 2 regions, '
+      + 'which for n = 4 is 16 − 4 + 2 = 14. Evaluate 2^n - r at n = 4, r = 14. Your answer is '
+      + 'how many of the four-set cases have nowhere to be drawn. Then notice the figure you '
+      + 'were actually shown: at n = 3 the two counts are 8 and 3² − 3 + 2 = 8, so the '
+      + 'three-circle picture is complete and really does settle a three-set identity. That is '
+      + 'why it misleads — the method works for exactly the case everybody is taught and stops '
+      + 'one set later. Venn\'s own four-set figure uses ellipses rather than circles. The '
+      + 'membership argument never counted the sets, so it is untouched at four and at forty.',
+    given: '2^n - r',
+    variables: CASES_AND_REGIONS,
+    // 2⁴ − 14 = 16 − 14 = 2.
+    //
+    // BOTH NUMBERS ARE EXACT AND NEITHER IS ILLUSTRATIVE. 2ⁿ is the count of
+    // membership cases, including "in none of them"; n² − n + 2 is the maximum
+    // number of regions n circles cut the plane into, attained when every pair
+    // meets twice and no three are concurrent. They agree at n = 1 (2 and 2),
+    // n = 2 (4 and 4) and n = 3 (8 and 8), and separate from n = 4.
+    //
+    // ASKED AT n = 4 BECAUSE THE ANSWER AT n = 3 IS 0 AND SAYS THE OPPOSITE.
+    // That is the whole reason the prompt computes the n = 3 case out loud
+    // instead of only the one being graded: a learner shown only the shortfall
+    // would take "diagrams are not proofs" as a slogan, and the honest claim is
+    // narrower and more useful — the diagram they have seen is complete, and the
+    // method it belongs to has a last case.
+    reference: '2',
+    at: { n: '4', r: '14' },
   },
 ]
 

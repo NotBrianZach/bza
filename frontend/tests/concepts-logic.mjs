@@ -1209,6 +1209,98 @@ t('a negative square root throws', (() => { try { ev('4 neg sqrt'); return false
 t('precision above a double is flagged as advisory', precisionIsAdvisory({ precision: 30, angle: 'deg' }))
 t('…and a normal setting is not', !precisionIsAdvisory({ precision: 12, angle: 'deg' }))
 
+/*
+ * The stack survives between entries, and registers hold values by name.
+ *
+ * `dup`, `drop`, `swap` and `over` were already here and already tested, and
+ * they could not do the one thing they are for: the caller threw the stack
+ * away after every entry, so nothing could be left where the next entry would
+ * reach it. That makes a postfix expression evaluator rather than an RPN
+ * calculator. Emacs calc's stack is the model.
+ */
+t('a stack passed in is where the next entry starts', (() => {
+  const first = ev('3 4')
+  const second = evaluateRpn('+', DEFAULT_SETTINGS, { stack: first.stack })
+  return first.stack.length === 2 && second.display === '7'
+})())
+t('the caller\'s array is not mutated, so an error cannot corrupt it', (() => {
+  const first = ev('3 4')
+  try { evaluateRpn('+ + +', DEFAULT_SETTINGS, { stack: first.stack }) } catch { /* expected */ }
+  return first.stack.length === 2
+})())
+t('omitting the stack is unchanged behaviour', ev('3 4 +').display === '7')
+
+t('sto stores by name and LEAVES the value on the stack', (() => {
+  const regs = new Map()
+  const r = evaluateRpn('7 sto radius', DEFAULT_SETTINGS, { registers: regs })
+  return r.display === '7' && formatValue(regs.get('radius'), DEFAULT_SETTINGS) === '7'
+})())
+t('rcl pushes it back, and it composes', (() => {
+  const regs = new Map()
+  evaluateRpn('7 sto radius', DEFAULT_SETTINGS, { registers: regs })
+  return evaluateRpn('rcl radius 2 *', DEFAULT_SETTINGS, { registers: regs }).display === '14'
+})())
+/* Registers are mutated rather than returned, so stores that happened before
+   an error survive it — which is what Calc does and what makes a register
+   usable mid-calculation. */
+t('a store before an error is kept', (() => {
+  const regs = new Map()
+  try { evaluateRpn('7 sto radius +', DEFAULT_SETTINGS, { registers: regs }) } catch { /* expected */ }
+  return regs.has('radius')
+})())
+t('sto with no name, no value, or an unknown rcl each say which', (() => {
+  const msgs = []
+  for (const bad of ['sto', 'sto x', 'rcl nope']) {
+    try { evaluateRpn(bad, DEFAULT_SETTINGS, { registers: new Map() }); msgs.push('NO ERROR') }
+    catch (e) { msgs.push(e.message) }
+  }
+  return /register name/.test(msgs[0]) && /value on the stack/.test(msgs[1])
+    && /no register named nope/.test(msgs[2])
+})())
+/* A caller that passes no registers must be told, not silently do nothing —
+   `sto` appearing to work and storing nowhere is the worst of the options. */
+t('sto without registers is refused rather than ignored', (() => {
+  try { evaluateRpn('7 sto x'); return false } catch (e) { return /registers/.test(e.message) }
+})())
+
+/*
+ * Two properties of the calculator UI that would rot silently.
+ *
+ * Source assertions, because both are about where the component gets its
+ * information rather than about a value it computes.
+ */
+const CALC_SRC = readFileSync(
+  join(FRONTEND, 'components', 'concepts', 'RpnCalculator.tsx'), 'utf8')
+
+/* The function finder is built FROM the registries. Listed by hand it would
+   fall behind the engine the first time an operator was added, and a palette
+   that silently omits a function is worse than no palette — you conclude the
+   engine cannot do it. */
+t('the finder enumerates the engine rather than a hand-written list',
+  /Object\.keys\(OPERATORS\)/.test(CALC_SRC)
+  && /Object\.keys\(CONSTANT_WORDS\)/.test(CALC_SRC))
+
+/* The live preview must evaluate against a COPY of the registers.
+   `evaluateRpn` mutates them by design, so previewing `7 sto radius` against
+   the real map would store a register on every keystroke — leaving `r`,
+   `ra`, `rad` behind as you typed the name. */
+t('the preview cannot write registers while you type',
+  /registers: new Map\(registers\)/.test(CALC_SRC))
+
+/* And the committed entry gets the real one, or `sto` would never store. */
+t('committing an entry hands over the real register map',
+  /const next = new Map\(registers\)/.test(CALC_SRC)
+  && /setRegisters\(next\)/.test(CALC_SRC))
+
+/* The tab that held only this is gone; the calculator moved to Practice,
+   beside the problem and the scratchpad. A `?tab=tools` link naming a tab
+   that no longer exists must fall through to the default rather than render
+   an empty page. */
+t('the tools tab is gone and nothing still routes to it', (() => {
+  const page = readFileSync(join(FRONTEND, 'app', 'learn', 'page.tsx'), 'utf8')
+  return !/'tools'/.test(page) && /<RpnCalculator \/>/.test(page)
+})())
+
 group('rpn — the record is Calc\'s record')
 const record = calcRecord('3 4 +', ev('3 4 +'), DEFAULT_SETTINGS, 'abc123')
 t('it carries every Calc field', (() => {
@@ -2385,14 +2477,15 @@ group('a second subject the schema was not designed around')
  * is that this subject is registered at all, and a floor would pass with the
  * subject absent as long as somebody else had added two.
  *
- * The twelfth hit it as well, and the thirteenth, and the fourteenth, and the
- * prediction is now a record of SEVEN consecutive hits. Worth keeping exactly
- * as it is for that reason: every new subject has found this line within one
- * test run of adding itself, which is a cheap and reliable way to be told that
- * a subject count is asserted in a place nobody would look for it.
+ * The twelfth hit it as well, and the thirteenth, the fourteenth and the
+ * fifteenth, and the prediction is now a record of EIGHT consecutive hits. Worth
+ * keeping exactly as it is for that reason: every new subject has found this
+ * line within one test run of adding itself, which is a cheap and reliable way
+ * to be told that a subject count is asserted in a place nobody would look for
+ * it.
  */
-t('it is registered, and the registry now holds fourteen subjects',
-  ONTOLOGIES.length === 14 && getOntology('exponents-and-logarithms') === X2,
+t('it is registered, and the registry now holds fifteen subjects',
+  ONTOLOGIES.length === 15 && getOntology('exponents-and-logarithms') === X2,
   `${ONTOLOGIES.length} subjects: ${ONTOLOGIES.map(o => o.subject.id).join(', ')}`)
 t('it reports no structural problems', ontologyProblems(X2).length === 0, JSON.stringify(ontologyProblems(X2)))
 t('its fidelity claims match what its options can do', fidelityMismatches(X2).length === 0)
@@ -6802,15 +6895,23 @@ group('data-summaries, what a list of numbers says about itself')
  * registry still respects the prerequisite should read the `findIndex` pair
  * further down, not this line.
  *
- * Three breakages in three promotions is the argument for reading it that way
+ * FOUR breakages in four promotions is the argument for reading it that way
  * rather than a reason to delete the literal: the literal is what reports that
- * something moved, and three reports in three runs is the measurement saying
+ * something moved, and four reports in four runs is the measurement saying
  * that every promotion since the twelfth subject has inserted BELOW this one.
- * A future subject that files above index 11 will not touch it, and that is the
- * information the literal exists to deliver.
+ * A future subject that files above this index will not touch it, and that is
+ * the information the literal exists to deliver.
+ *
+ * The thirty-eighth promotion moved it to 12, inserting `sets-and-membership` at
+ * 8 behind the subject holding its prerequisite. That makes four consecutive
+ * runs that each paid one edit here, and ontology.ts's own header now states the
+ * conclusion as an instruction to future subjects: assert the relational fact
+ * and leave a literal only where a position is load-bearing, which it is for
+ * index 0 and nowhere else. This line stays anyway, for the reason two
+ * paragraphs up — it is the thing that REPORTS the move.
  */
-t('it is registered, and TWELFTH — directly behind the subject that owns sigma notation',
-  ONTOLOGIES[11] === DS && DS?.subject.id === 'data-summaries')
+t('it is registered, and THIRTEENTH IN ORDER — directly behind the subject that owns sigma notation',
+  ONTOLOGIES[12] === DS && DS?.subject.id === 'data-summaries')
 t('and it displaced none of the five positions anything reads by index',
   ONTOLOGIES[0] === ARITHMETIC_FOUNDATIONS
   && ONTOLOGIES[1] === EXPRESSIONS_AND_EQUATIONS
@@ -8257,6 +8358,473 @@ t('every subgoal names a move rather than a step number, and no two in one examp
     && new Set(p.workedExample.subgoals.map(s => s.label)).size
       === p.workedExample.subgoals.length),
   allKnowledgePoints(MP).flatMap(p => p.workedExample.subgoals)
+    .filter(s => s.label.length <= 20 || /^step\b/i.test(s.label)).map(s => s.label).join(' | '))
+
+// ---------------------------------------------------------------------------
+
+/**
+ * A fifteenth subject: an object fixed by what belongs to it.
+ *
+ * `sets` was a map node of `discrete-mathematics` and is now the single concept
+ * of `sets-and-membership` in lib/concepts/ontology-sets.ts. The structural half
+ * of the promotion — the fourth consecutive departure from one area, the fourth
+ * `links` entry, and the root set SPLITTING instead of turning over — is in
+ * tests/atlas.mjs. What is checkable HERE is that the material is real, that the
+ * subject rules with no worker at all, and that the decisions its header argues
+ * for hold.
+ *
+ * THE DECISION THIS BLOCK EXISTS FOR, ahead of all the others, is that the
+ * concept is not a third pass at De Morgan. `propositional-logic` PROVES the two
+ * identities by multiplying out polynomials in 0 and 1, and `quantifiers` proves
+ * the quantified version by the same route one layer up. A promotion that simply
+ * restated either would pass every count in this file. So the assertions below
+ * hold this one to its own argument: the identity is CITED and not re-derived,
+ * what is new is the step from a claim about truth values to a claim about SETS,
+ * and the one thing this concept does that neither of those can — double
+ * inclusion on an arbitrary member — is really the method of both its proofs.
+ *
+ * AND THE SECOND, WHICH IS UNUSUAL ENOUGH TO BE WORTH ITS OWN ASSERTIONS: the
+ * absence of a figure here is not a shortfall but the third point's SUBJECT. The
+ * material's claim is that a Venn diagram settles an identity only for as many
+ * sets as it can draw, and the arithmetic behind that is exact — so this is the
+ * first subject where "no `visualRef`" is checked alongside the numbers that
+ * justify refusing one.
+ */
+const SETS = getOntology('sets-and-membership')
+
+group('sets-and-membership, an object fixed by what belongs to it')
+/*
+ * NINTH in the registry, which is the earliest slot its prerequisite allows and
+ * the third position in that array a prerequisite decided on its own.
+ * `proof-techniques` is in `methods-of-proof` at index 7, so 8 is the floor, and
+ * 8 was free. Both halves are asserted: the literal, and the relational claim
+ * that actually matters, which is that it comes after the subject holding what it
+ * rests on. The second is the one that stays meaningful when a sixteenth subject
+ * moves the first — and the `data-summaries` block above is now the record of
+ * FOUR consecutive promotions doing exactly that.
+ */
+t('it is registered, and NINTH — the earliest slot its prerequisite allows',
+  ONTOLOGIES[8] === SETS && SETS?.subject.id === 'sets-and-membership')
+t('and its position is behind the subject owning its prerequisite, which is the real claim',
+  ONTOLOGIES.findIndex(o => o.subject.id === 'methods-of-proof')
+    < ONTOLOGIES.findIndex(o => o.subject.id === 'sets-and-membership')
+  && !!conceptById(getOntology('methods-of-proof'), 'proof-techniques'),
+  `proof at ${ONTOLOGIES.findIndex(o => o.subject.id === 'methods-of-proof')}, `
+  + `sets at ${ONTOLOGIES.findIndex(o => o.subject.id === 'sets-and-membership')}`)
+t('and it displaced none of the eight positions anything reads by index',
+  ONTOLOGIES[0] === ARITHMETIC_FOUNDATIONS
+  && ONTOLOGIES[1] === EXPRESSIONS_AND_EQUATIONS
+  && ONTOLOGIES[2] === getOntology('plane-geometry')
+  && ONTOLOGIES[3] === getOntology('triangle-trigonometry')
+  && ONTOLOGIES[4] === getOntology('solid-measure')
+  && ONTOLOGIES[5] === getOntology('statements-and-connectives')
+  && ONTOLOGIES[6] === getOntology('predicates-and-quantifiers')
+  && ONTOLOGIES[7] === getOntology('methods-of-proof'))
+t('it has no internal faults', ontologyProblems(SETS).length === 0, ontologyProblems(SETS).join('; '))
+t('its fidelity claim matches what its option can do', fidelityMismatches(SETS).length === 0)
+t('one concept, three knowledge points',
+  SETS.concepts.length === 1 && allKnowledgePoints(SETS).length === 3,
+  `${SETS.concepts.length} concepts, ${allKnowledgePoints(SETS).length} points`)
+t('the concept is teachable AND practisable — a syllabus, not a map entry',
+  isTeachable(SETS, 'sets') && isPractisable(SETS, 'sets'))
+t('its points number from 1, which is per concept and not per subject',
+  SETS.concepts.every(c => c.knowledgePoints.map(p => p.position).join(',') === '1,2,3'),
+  SETS.concepts.map(c => `${c.id}:${c.knowledgePoints.map(p => p.position).join('')}`).join(' '))
+t('every knowledge point has a task, so no chain is left unable to become evidence',
+  allKnowledgePoints(SETS).every(p => tasksForPoint(p.id).length > 0),
+  allKnowledgePoints(SETS).filter(p => tasksForPoint(p.id).length === 0).map(p => p.id).join(', '))
+/*
+ * THE ONE KIND THIS SUBJECT SHIPS, AND THE THREE IT REFUSES.
+ *
+ * `evaluate` alone, which puts it back with the four consecutive evaluate-only
+ * subjects the fourteenth broke — and the reason is an absence rather than a
+ * preference, which is why it is asserted rather than noted.
+ *
+ * `transform_to_form` is the interesting refusal. The forms tasks.ts ships are
+ * claims about an ALGEBRAIC shape, and there is no demand of shape in this
+ * material: `2^n` is asked because the question is how many subsets there are,
+ * not how to write the count, and the one place a shape really IS the answer is
+ * the membership condition, which is a sentence rather than an expression. A form
+ * invented for it would grade the shape of an encoding, which is what the two
+ * logic subjects refused. `justify` is the kind the concept is really about —
+ * "prove A \ (B ∩ C) = (A \ B) ∪ (A \ C)" — and `counterexample` is the natural
+ * "produce a member of A that is not in B"; neither can be ruled, so neither may
+ * be named in an objective.
+ */
+const SETS_KINDS = new Set(allKnowledgePoints(SETS).flatMap(p => tasksForPoint(p.id)).map(x => x.kind))
+t('every objective names a task kind, and every kind it names really ships a task here',
+  SETS.concepts.every(c => c.objectives.length > 0
+    && c.objectives.every(o => o.taskKinds.length > 0 && o.taskKinds.every(k => SETS_KINDS.has(k)))),
+  SETS.concepts.flatMap(c => c.objectives.map(o => `${o.id}:${o.taskKinds.join('+')}`)).join(' ')
+  + ` against ${[...SETS_KINDS].join('+')}`)
+t('and the set it ships is exactly {evaluate}, so none of the three refusals is named',
+  [...SETS_KINDS].slice().sort().join(',') === 'evaluate'
+  && SETS.concepts.every(c => c.objectives.every(o =>
+    !o.taskKinds.includes('justify') && !o.taskKinds.includes('counterexample')
+    && !o.taskKinds.includes('transform_to_form') && !o.taskKinds.includes('state'))),
+  [...SETS_KINDS].join(','))
+/*
+ * THE EMPTY EDGE LIST, containment again rather than a judgement. One concept, so
+ * no internal pair to join — and the one prerequisite is authored in ANOTHER
+ * subject, which fails the containment test exactly as an unwritten map node
+ * does. tests/atlas.mjs asserts where the edge does live.
+ *
+ * The second half is what records THIS promotion, and it is the SHARPEST version
+ * of it any of these four has had: the subject that could have taken this concept
+ * for nothing is the one holding its SOLE prerequisite, so the filing was not one
+ * cheap option among several — it was the only other option there was, and it was
+ * unavailable because that subject had written the concept out of its own
+ * `covers` by name.
+ */
+t('it declares no edges, and the single concept is therefore its own root',
+  SETS.edges.length === 0 && roots(SETS).length === 1 && roots(SETS)[0] === 'sets')
+t('the subject holding its SOLE prerequisite could have taken it, and declined in writing',
+  isTeachable(getOntology('methods-of-proof'), 'proof-techniques')
+  && !getOntology('methods-of-proof').concepts.some(c => c.id === 'sets')
+  && !getOntology('predicates-and-quantifiers').concepts.some(c => c.id === 'sets')
+  && !SETS.concepts.some(c => c.id === 'proof-techniques' || c.id === 'quantifiers'),
+  `sets@${ONTOLOGIES.find(o => o.concepts.some(c => c.id === 'sets'))?.subject.id}`)
+t('and both covers say so by naming the node they declined, so the boundary is findable',
+  /`sets`/.test(getOntology('methods-of-proof').subject.covers)
+  && /`sets`/.test(getOntology('predicates-and-quantifiers').subject.covers)
+  && /objects in their own right/i.test(getOntology('methods-of-proof').subject.covers)
+  && /objects in their own right/i.test(getOntology('predicates-and-quantifiers').subject.covers),
+  getOntology('methods-of-proof').subject.covers.slice(-220))
+/*
+ * NO FIGURE, AND HERE THE ABSENCE IS THE THIRD POINT'S SUBJECT RATHER THAN A
+ * SHORTFALL — which no previous subject has been able to say.
+ *
+ * The thirteenth had to admit its missing quantifier grid cost something and the
+ * fourteenth could say a drawing would have illustrated rather than decided. This
+ * one goes further: the figure a reader expects is a Venn diagram, and the
+ * material's claim is that such a diagram settles an identity only for as many
+ * sets as it can draw. So the absence is asserted together with the material
+ * making the argument for it, which is the only form in which "no figure" is a
+ * decision rather than a gap.
+ *
+ * The speed target is refused for the same shape of reason as the fourteenth's.
+ * Counting 2ⁿ would time beautifully, and the point is that each member is an
+ * independent choice; a speed reward trains the doubling, and a learner who has
+ * memorised the powers of two has not learned why they are the answer.
+ */
+t('no knowledge point claims a figure, and the third point argues for the absence',
+  allKnowledgePoints(SETS).every(p => p.visualRef === undefined)
+  && /venn diagram/i.test(allKnowledgePoints(SETS)[2].statement)
+  && /region/i.test(allKnowledgePoints(SETS)[2].statement),
+  allKnowledgePoints(SETS).filter(p => p.visualRef !== undefined).map(p => p.id).join(', '))
+t('and no point claims a speed target, since speed would reward memorising the doubling',
+  allKnowledgePoints(SETS).every(p => p.automaticityTarget === undefined),
+  allKnowledgePoints(SETS).filter(p => p.automaticityTarget !== undefined).map(p => p.id).join(', '))
+/*
+ * THE PATTERN IS CARRIED VERBATIM OFF THE MAP NODE, which every promotion since
+ * the fourth has done. Asserted against the literal, the node being GONE and
+ * there being nothing left to compare with.
+ *
+ * AND THE OVERCLAIM IS ASSERTED AS AN OVERCLAIM, which is new. Every previous
+ * promotion's version of this assertion checked titles the pattern FAILS to
+ * reach; this pattern also reaches titles above its own depth, because
+ * `\bset theory\b` matches "Axiomatic set theory" — a page this subject's
+ * `covers` writes out of itself by name. The file's header argues that `checked`
+ * survives it, on the ground that the match is right about the SUBJECT and wrong
+ * about the DEPTH, and that is categorically unlike "Cantor set", which would be
+ * a different field altogether. What is asserted here is that both facts are
+ * true, so that whoever next narrows the pattern finds the claim rather than
+ * discovering the behaviour.
+ */
+t('its pattern is the map node\'s unchanged, so recognition did not move with the material',
+  String(SETS.concepts[0].scope.match)
+    === String(/\bset (theory|operations)\b|^set \(mathematics\)/i)
+  && SETS.concepts[0].fidelity === 'checked',
+  String(SETS.concepts[0].scope.match))
+t('and the shortfall that pattern leaves is named rather than quietly widened',
+  !SETS.concepts[0].scope.match.test('Algebra of sets')
+  && !SETS.concepts[0].scope.match.test('Subset')
+  && !SETS.concepts[0].scope.match.test('Power set')
+  && !SETS.concepts[0].scope.match.test('Venn diagram')
+  && !SETS.concepts[0].scope.match.test('Cantor set')
+  && SETS.concepts[0].scope.match.test('Set theory')
+  && SETS.concepts[0].scope.match.test('Set operations')
+  && SETS.concepts[0].scope.match.test('Set (mathematics)'),
+  `algebra of sets: ${SETS.concepts[0].scope.match.test('Algebra of sets')}, `
+  + `cantor: ${SETS.concepts[0].scope.match.test('Cantor set')}`)
+t('and it really does overclaim upward, which the header states rather than hides',
+  SETS.concepts[0].scope.match.test('Axiomatic set theory')
+  && SETS.concepts[0].scope.match.test('Naive set theory')
+  && /`formal-logic-and-incompleteness`/.test(SETS.subject.covers)
+  && /unwritten/i.test(SETS.subject.covers),
+  `axiomatic: ${SETS.concepts[0].scope.match.test('Axiomatic set theory')}`)
+
+group('the fifteenth subject is new content, not a third pass at De Morgan')
+/*
+ * THE IDENTITY IS CITED AND NOT RE-DERIVED, which is the claim the whole
+ * promotion rests on and the one a careless version would have failed silently.
+ *
+ * `propositional-logic` proves De Morgan by multiplying out polynomials in 0 and
+ * 1. If this concept did that again it would be a second pass dressed as a new
+ * subject. So the third point must (a) say the fact is established elsewhere and
+ * (b) contain no polynomial in p and q anywhere in the subject's tasks — its
+ * arithmetic is in SIZES, over counts, not over truth values. Both halves are
+ * checked, and the second is the one with teeth: a rewrite that quietly
+ * reintroduced `1 - p*q` anywhere here would fail it.
+ */
+const SETS_POINTS = allKnowledgePoints(SETS)
+const SETS_TASKS = SETS_POINTS.flatMap(p => tasksForPoint(p.id))
+t('the third point cites De Morgan rather than proving it again',
+  /`propositional-logic`/.test(SETS_POINTS[2].statement)
+  && /proves|proved|established/i.test(SETS_POINTS[2].statement)
+  && !SETS_TASKS.some(x => /\bp\b/.test(x.given) && /\bq\b/.test(x.given))
+  && SETS_TASKS.every(x => x.variables.every(v => ['a', 'b', 'c', 'n', 'd', 'u', 'r']
+    .includes(v.name))),
+  SETS_TASKS.map(x => x.given).join(' | '))
+/*
+ * AND WHAT IS NEW IS THE STEP FROM TRUTH VALUES TO SETS, not the identity. "x is
+ * in B" is a statement whose truth depends on x, so an identity holding at every
+ * truth value holds at every x — and that sentence is the entire bridge between
+ * the two subjects. A worked example that applied De Morgan without saying why it
+ * applies would teach set algebra as a notation to be trusted.
+ */
+t('and its worked example says why a fact about two columns may be used on two sets',
+  SETS_POINTS[2].workedExample.subgoals.some(s =>
+    /truth value/i.test(s.detail) && /depends on x|for each x|every x/i.test(s.detail)),
+  SETS_POINTS[2].workedExample.subgoals.map(s => s.label).join(' | '))
+/*
+ * DOUBLE INCLUSION IS REALLY THE METHOD, IN BOTH PROOFS, which is the thing the
+ * map node's own `is` promised — "proved by double inclusion rather than by
+ * picture" — and the thing a version of this concept written around Venn
+ * diagrams would have quietly dropped.
+ *
+ * Asserted on BOTH examples that prove an equality, not just the identity one.
+ * The first point proves that the common divisors of 12 and 18 are the divisors
+ * of 6, and it is the easier place to get this wrong: two lists that both read
+ * 1, 2, 3, 6 look like a proof, and the example has to say in so many words that
+ * they are not one.
+ */
+t('both equality proofs run two inclusions, and the first refuses its own two lists',
+  SETS_POINTS[0].workedExample.subgoals.some(s =>
+    /two inclusions|two directions/i.test(s.label + s.detail))
+  && /never listed either set|two lists agreeing is a check|rather than observed/i
+    .test(SETS_POINTS[0].workedExample.subgoals.map(s => s.detail).join(' '))
+  && SETS_POINTS[2].workedExample.subgoals.filter(s =>
+    /inclusion/i.test(s.label + s.detail)).length >= 2,
+  SETS_POINTS[0].workedExample.subgoals.map(s => s.label).join(' | '))
+t('and the identity proof runs the chain in both directions rather than once',
+  /backwards|reversed|second inclusion/i
+    .test(SETS_POINTS[2].workedExample.subgoals.map(s => s.label).join(' '))
+  && /both hold|both inclusions/i.test(SETS_POINTS[2].workedExample.answer),
+  SETS_POINTS[2].workedExample.subgoals.map(s => s.label).join(' | '))
+/*
+ * THE TWO BOUNDARIES THE MATERIAL IMPORTS ARE NAMED WHERE THEY ARE USED, not
+ * only in the header, and the second is the one worth the assertion.
+ *
+ * `gcd-and-lcm` COMPUTES the gcd; this concept says what it IS — the member whose
+ * divisors are the whole list of common divisors. That is the division of labour
+ * that keeps the first point from being a second pass at the arithmetic.
+ *
+ * `cardinality` is the boundary a careless version would have crossed without
+ * noticing. The first point argues that a subset of the same FINITE size must be
+ * the whole set, and that argument is false for infinite sets — the evens are a
+ * proper subset of the whole numbers. So the material has to name the finiteness
+ * and say where the infinite case lives, which is a node three steps above this
+ * one and unwritten. A suite cannot detect the omission, so it is asserted.
+ */
+t('the gcd is named as something this concept explains rather than computes',
+  /`gcd-and-lcm`/.test(SETS_POINTS[0].workedExample.subgoals.map(s => s.detail).join(' '))
+  && /gcd\(12, 18\)/.test(SETS_POINTS[0].workedExample.answer)
+  && isTeachable(ARITHMETIC_FOUNDATIONS, 'gcd-and-lcm'),
+  SETS_POINTS[0].workedExample.answer.slice(-160))
+t('and the finite-size argument names its own limit, which is a concept above this one',
+  /`cardinality`/.test(SETS_TASKS.map(x => x.prompt).join(' '))
+  && /finite/i.test(SETS_TASKS.map(x => x.prompt).join(' '))
+  && /even/i.test(SETS_TASKS.map(x => x.prompt).join(' ')),
+  SETS_TASKS.find(x => /`cardinality`/.test(x.prompt))?.id ?? 'none names it')
+
+group('the fifteenth subject grades every task with no worker at all')
+/*
+ * NINE TASKS, THREE ON EACH POINT, and the SHAPE is asserted rather than the
+ * total — a ratio over a total would be satisfied by nine tasks distributed any
+ * way at all.
+ *
+ * All nine are `evaluate`, so the subject grades with no worker in full rather
+ * than in part, which is the first time since the thirteenth that is true of a
+ * new subject and is why it is asserted as an exact set rather than a majority.
+ */
+t('nine tasks, three on each of the three points',
+  SETS_TASKS.length === 9
+  && SETS_POINTS.map(p => tasksForPoint(p.id).length).join(',') === '3,3,3',
+  SETS_POINTS.map(p => `${p.position}:${tasksForPoint(p.id).length}`).join(' '))
+t('all nine are evaluate, so nothing here needs the worker even for equivalence',
+  SETS_TASKS.every(x => x.kind === 'evaluate')
+  && SETS_TASKS.every(x => x.form === undefined),
+  SETS_TASKS.map(x => `${x.kind}${x.form ? `:${x.form}` : ''}`).join(' '))
+t('every reference is exactly reproducible from the given — no worker consulted',
+  SETS_TASKS.every(x => {
+    const at = {}
+    for (const [name, raw] of Object.entries(x.at)) at[name] = parseExpression(raw, [])
+    const truth = exactValue(substitute(parseExpression(x.given, x.variables.map(v => v.name)), at))
+    const claimed = exactValue(parseExpression(x.reference, x.variables.map(v => v.name)))
+    return truth !== null && claimed !== null && showExact(truth) === showExact(claimed)
+  }),
+  SETS_TASKS.map(x => x.id).join(', '))
+const setsRulings = await Promise.all(SETS_TASKS.map(x => ruleEvaluate(x, x.reference, NO_WORKER)))
+t('a correct answer is ruled correct with no worker configured',
+  setsRulings.every(r => r.verdict.ruling === 'correct'),
+  setsRulings.map((r, i) => `${SETS_TASKS[i].id}:${r.verdict?.ruling ?? r.status}`).join(', '))
+/*
+ * ONE EXPRESSION ACROSS THREE POINTS, which is further than any previous subject
+ * has carried one — the fourteenth managed two and the thirteenth two.
+ *
+ * `a - c` is `|A| − |A ∩ B|`. At (6, 6) it is the second half of a double
+ * inclusion, at (6, 4) a difference of two divisor sets, at (6, 2) one side of
+ * the identity. The first is what the sharing is FOR: A ⊆ B is the case where the
+ * overlap IS the smaller set, so an inclusion is a difference that came out zero
+ * rather than a different kind of fact.
+ *
+ * Asserted as the `given`s being IDENTICAL, the references DIFFERENT, and the
+ * three points DISTINCT, because the whole content is that one expression carries
+ * all three.
+ */
+const SETS_DIFFS = SETS_TASKS.filter(x => x.given === 'a - c')
+t('one difference expression answers three different questions in three different points',
+  SETS_DIFFS.length === 3
+  && new Set(SETS_DIFFS.map(x => x.knowledgePointId)).size === 3
+  && SETS_DIFFS.map(x => x.reference).slice().sort().join(',') === '0,2,4',
+  SETS_DIFFS.map(x => `${x.reference}@${x.at.a}-${x.at.c}`).join(' | '))
+t('and the one that comes out zero is the inclusion, which is why it is the same expression',
+  SETS_DIFFS.some(x => x.reference === '0' && x.at.a === x.at.c
+    && /inclusion/i.test(x.prompt))
+  && SETS_DIFFS.find(x => x.reference === '0').knowledgePointId === SETS_POINTS[0].id,
+  SETS_DIFFS.find(x => x.reference === '0')?.id ?? 'none is zero')
+/*
+ * THE UNION CORRECTION IS ASKED TWICE AND THE SECOND ASKING REFUSES ITS OWN
+ * EVIDENCE — the assertion this block exists for, and this subject's version of
+ * the fourteenth's "a value that still mentions k settles nothing".
+ *
+ * `a + b - c` counts a union of two divisor sets at (6, 6, 4) and a union of two
+ * DIFFERENCES at (2, 3, 1). The second answer is 4 and so is the left-hand side
+ * of the identity, which looks like a proof and is strictly weaker than one:
+ * equal sizes do not make equal sets. So the prompt has to say so and has to hand
+ * over the refutation rather than leaving it, because a learner who could supply
+ * {1, 2} against {3, 4} would not have needed the warning.
+ *
+ * This is the assertion that would catch the most damaging possible rewrite of
+ * this concept — one that quietly let two agreeing counts stand as the proof.
+ */
+const SETS_UNIONS = SETS_TASKS.filter(x => x.given === 'a + b - c')
+t('the union correction is one move asked on two kinds of set',
+  SETS_UNIONS.length === 2
+  && new Set(SETS_UNIONS.map(x => x.knowledgePointId)).size === 2
+  && SETS_UNIONS.map(x => x.reference).slice().sort().join(',') === '4,8',
+  SETS_UNIONS.map(x => `${x.reference}@${x.at.a}+${x.at.b}-${x.at.c}`).join(' | '))
+t('and the one that matches the other side says plainly that agreement is not proof',
+  (() => {
+    const second = SETS_UNIONS.find(x => x.knowledgePointId === SETS_POINTS[2].id)
+    return !!second
+      && /check/i.test(second.prompt)
+      && /not a proof|and not a proof/i.test(second.prompt)
+      && /\{1, 2\}/.test(second.prompt) && /\{3, 4\}/.test(second.prompt)
+      && /double inclusion/i.test(second.prompt)
+  })(),
+  SETS_UNIONS.map(x => x.id).join(' | '))
+t('and both sides of that identity really do come out the same, on the stated sets',
+  SETS_UNIONS.find(x => x.knowledgePointId === SETS_POINTS[2].id)?.reference
+    === SETS_DIFFS.find(x => x.knowledgePointId === SETS_POINTS[2].id)?.reference,
+  `${SETS_DIFFS.find(x => x.knowledgePointId === SETS_POINTS[2].id)?.reference} vs `
+  + `${SETS_UNIONS.find(x => x.knowledgePointId === SETS_POINTS[2].id)?.reference}`)
+/*
+ * THE DIAGRAM TASK'S ARITHMETIC IS EXACT, AND IT IS RECOMPUTED HERE RATHER THAN
+ * TRUSTED — the one place in this subject where a wrong number would be a wrong
+ * claim about mathematics rather than a wrong count of tasks.
+ *
+ * The claim is that n sets have 2ⁿ membership cases, that n circles in general
+ * position cut the plane into at most n² − n + 2 regions, that those two agree at
+ * n = 1, 2 and 3, and that at n = 4 there are 16 cases and 14 regions. Both
+ * formulae are checked below at every n the claim mentions, because the whole
+ * argument of the third knowledge point rests on the agreement at 3 as much as on
+ * the shortfall at 4: a diagram that failed at three sets would make the lesson
+ * "pictures are unreliable", and the honest lesson is narrower and harder — the
+ * picture you were shown is complete, and the method has a last case.
+ *
+ * Asked at n = 4 and not at 3, which is asserted: at 3 the answer is 0 and says
+ * the opposite.
+ */
+const SETS_DIAGRAM = SETS_TASKS.find(x => x.given === '2^n - r')
+t('the diagram task asks the shortfall at four sets, where there is one',
+  !!SETS_DIAGRAM && SETS_DIAGRAM.at.n === '4' && SETS_DIAGRAM.at.r === '14'
+  && SETS_DIAGRAM.reference === '2'
+  && SETS_DIAGRAM.knowledgePointId === SETS_POINTS[2].id,
+  `${SETS_DIAGRAM?.given} at n=${SETS_DIAGRAM?.at.n}, r=${SETS_DIAGRAM?.at.r} -> ${SETS_DIAGRAM?.reference}`)
+t('and both of its formulae hold at every n the material claims them at',
+  [1, 2, 3].every(n => 2 ** n === n * n - n + 2)
+  && 2 ** 4 === 16 && 4 * 4 - 4 + 2 === 14
+  && 2 ** 4 - (4 * 4 - 4 + 2) === Number(SETS_DIAGRAM.reference),
+  [1, 2, 3, 4].map(n => `n=${n}: ${2 ** n} cases, ${n * n - n + 2} regions`).join('; '))
+t('and the prompt computes the three-set case too, so the lesson is not "pictures lie"',
+  /3² − 3 \+ 2 = 8/.test(SETS_DIAGRAM.prompt)
+  && /complete/i.test(SETS_DIAGRAM.prompt)
+  && /ellipse/i.test(SETS_DIAGRAM.prompt),
+  SETS_DIAGRAM.prompt.slice(-260))
+/*
+ * THE POWER-SET TASK AND THE DIAGRAM TASK BOTH EVALUATE A POWER OF TWO, AND THEY
+ * ARE DELIBERATELY NOT THE SAME TASK. In the first `n` counts the MEMBERS of one
+ * set; in the second it counts the SETS a claim is about. Two readings of one
+ * letter inside one concept, which is why they have separate variable lists in
+ * tasks.ts — and why the first is asked at 6 rather than at 4, since identical
+ * expression, substitution and answer would have read as one task duplicated.
+ */
+t('the two powers of two are asked at different n, being two readings of one letter',
+  (() => {
+    const powers = SETS_TASKS.filter(x => /2\^n/.test(x.given))
+    return powers.length === 2
+      && new Set(powers.map(x => x.at.n)).size === 2
+      && new Set(powers.map(x => x.reference)).size === 2
+      && new Set(powers.map(x => x.knowledgePointId)).size === 2
+  })(),
+  SETS_TASKS.filter(x => /2\^n/.test(x.given))
+    .map(x => `${x.given}@n=${x.at.n}=${x.reference}`).join(' | '))
+/*
+ * THE CEILING, ASSERTED AS THE SHAPE OF THE MATERIAL RATHER THAN AS A NUMBER, and
+ * it is a different ceiling from the fourteenth subject's.
+ *
+ * There the unrulable thing was the ARGUMENT. Here it is the ANSWER: the engine
+ * grades an expression, so no task can ask for a SET and every one asks for a
+ * count. The consequence is specific and is the reason the worked examples are
+ * long — a learner can be asked how big an intersection is and not which members
+ * are in it, so no task can catch somebody right by the wrong route. What a test
+ * can insist on is that the examples list the members the tasks cannot ask for,
+ * and that every subgoal is phrased as a question for the tutor to ask. The three
+ * examples hold 16 subgoals between them and every one is authored.
+ */
+t('no task asks for an argument or for a set, both kinds being unrulable here',
+  SETS_TASKS.every(x => x.kind !== 'justify' && x.kind !== 'state')
+  && !isVerifiableKind('justify')
+  && SETS_TASKS.every(x => /^[-+*^/()0-9a-z .]+$/.test(x.given)),
+  SETS_TASKS.map(x => x.kind).join(' '))
+t('and the worked examples write out the members no task can ask for',
+  SETS_POINTS.every(p => /\{1, 2, 3, 4, 6, 12\}/
+    .test(p.workedExample.subgoals.map(s => s.detail).join(' ')
+      + p.workedExample.problem + p.workedExample.answer)),
+  SETS_POINTS.map(p => `${p.position}:${/\{1, 2, 3, 4, 6, 12\}/
+    .test(p.workedExample.subgoals.map(s => s.detail).join(' ')
+      + p.workedExample.problem + p.workedExample.answer)}`).join(' '))
+t('so every subgoal of every example is authored as a question, since they carry the argument',
+  SETS_POINTS.flatMap(p => p.workedExample.subgoals).length === 16
+  && SETS_POINTS.every(p => p.workedExample.subgoals.every(s =>
+    typeof s.socratic === 'string' && s.socratic.trim().endsWith('?'))),
+  SETS_POINTS.flatMap(p => p.workedExample.subgoals)
+    .filter(s => typeof s.socratic !== 'string' || !s.socratic.trim().endsWith('?'))
+    .map(s => s.label).join(' | '))
+t('and no question is an imperative with a question mark, which contains its own answer',
+  SETS_POINTS.flatMap(p => p.workedExample.subgoals).every(s =>
+    !/^(should|do|does|can|is|are|will) you\b/i.test(s.socratic.trim())),
+  SETS_POINTS.flatMap(p => p.workedExample.subgoals)
+    .filter(s => /^(should|do|does|can|is|are|will) you\b/i.test(s.socratic.trim()))
+    .map(s => s.label).join(' | '))
+t('every subgoal names a move rather than a step number, and no two in one example repeat',
+  SETS_POINTS.every(p =>
+    p.workedExample.subgoals.every(s => s.label.length > 20 && !/^step\b/i.test(s.label))
+    && new Set(p.workedExample.subgoals.map(s => s.label)).size
+      === p.workedExample.subgoals.length),
+  SETS_POINTS.flatMap(p => p.workedExample.subgoals)
     .filter(s => s.label.length <= 20 || /^step\b/i.test(s.label)).map(s => s.label).join(' | '))
 
 // ---------------------------------------------------------------------------

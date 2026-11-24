@@ -125,9 +125,16 @@ else
   echo "   ⚠ scripts/edge-functions.mjs not found — edge functions NOT checked" >&2
 fi
 
-echo "→ Verifying live sha matches graph"
+echo "→ Verifying the live sha is what this deploy built ($SHA)"
 # Was `templedb reconcile deployment bza --url …`, which is not a subcommand —
 # reconcile only has machine/history/schedule, so every production deploy ended in
 # a red "Unknown command: deployment" *after* succeeding. verify-live-sha.sh is the
 # thing that actually performs this check.
-exec bash "$SCRIPT_DIR/verify-live-sha.sh" https://aireadalong.com/api/version
+#
+# $SHA, not graph head. This deploy stamped $SHA into the build and that is the
+# only thing it can be held to; head moves while `next build` runs, and on
+# 2026-11-24 it did — one commit landed mid-build and turned a correct deploy
+# into a red MISMATCH. Whether production is BEHIND head is a real question
+# and it belongs to the hourly verify timer, which calls this script with no
+# argument and still compares against head.
+exec bash "$SCRIPT_DIR/verify-live-sha.sh" https://aireadalong.com/api/version "$SHA"

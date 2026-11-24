@@ -61,7 +61,22 @@ WINDOW=200
 # buffer entire. So neither awk below may `exit` early; both read to EOF and
 # guard with a flag instead. It costs a pass over a string already in memory.
 log=$(templedb vcs log bza --all-sessions -n "$WINDOW" 2>/dev/null || true)
-expected=$(printf '%s\n' "$log" | awk '/^commit / && !seen {print $2; seen = 1}')
+# The expected sha: an explicit one if the caller has it, otherwise graph head.
+#
+# These are two different questions and conflating them made a successful
+# deploy report as a failure. A DEPLOY asks "did the thing I just built
+# arrive?", and the only right answer is its own BUILD_SHA. Graph head is a
+# moving target: on 2026-11-24 the loop landed a commit during the twenty
+# minutes of `next build`, so deploy.sh shipped 9B54B6FB, verified against a
+# head that had become E8C3B4F4, and exited 1 having done nothing wrong.
+#
+# Run standalone — which is how the hourly timer runs it — the question IS
+# "is production current", and head is the right comparison. So the default
+# is unchanged and only deploy.sh passes an argument.
+expected="${2:-}"
+if [ -z "$expected" ]; then
+  expected=$(printf '%s\n' "$log" | awk '/^commit / && !seen {print $2; seen = 1}')
+fi
 if [ -z "$expected" ]; then
   echo "ERROR: could not read last bza commit sha from templedb" >&2
   exit 2

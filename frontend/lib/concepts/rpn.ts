@@ -239,11 +239,46 @@ function parseNumber(token: string): Value | null {
  * Throws `RpnError` with a message naming the token, because the useful thing to
  * know about a stack underflow is which word wanted an operand that was not there.
  */
-export function evaluateRpn(input: string, settings: RpnSettings = DEFAULT_SETTINGS): RpnResult {
-  const stack: Value[] = []
+export function evaluateRpn(
+  input: string,
+  settings: RpnSettings = DEFAULT_SETTINGS,
+  /**
+   * The stack to start from, and the registers to read and write.
+   *
+   * Both default to empty, so every existing caller is unchanged — the
+   * previous behaviour is "start from nothing", which is what a one-shot
+   * evaluation of a whole expression wants.
+   *
+   * They exist because a calculator without a persistent stack is not an RPN
+   * calculator, it is an expression evaluator in postfix notation. The engine
+   * already had `dup`, `drop`, `swap` and `over` and threw the stack away
+   * after every entry, so the one thing those words are for — leaving a value
+   * where the next entry can reach it — could not actually be done. Emacs
+   * calc's stack is the model, and this is the smallest change that gets it:
+   * the caller holds the stack between entries.
+   *
+   * `registers` is MUTATED rather than returned separately. That is
+   * deliberate and the alternative is worse: `sto` and `rcl` appear in the
+   * middle of a token stream, so a copy-and-return would have to merge a
+   * half-written map back on error, and an entry that threw partway would
+   * lose stores that had already happened. Calc's registers survive a bad
+   * keystroke; these do too.
+   */
+  initial?: { stack?: Value[]; registers?: Map<string, Value> },
+): RpnResult {
+  const stack: Value[] = [...(initial?.stack ?? [])]
+  const registers = initial?.registers
   let exactSoFar = true
 
-  for (const token of input.trim().split(/\s+/).filter(Boolean)) {
+  /* Indexed rather than `for...of`, because `sto` and `rcl` take the next
+     token as a register name and so need to consume it. Nothing else in the
+     loop looks ahead. */
+  const tokens = input.trim().split(/\s+/).filter(Boolean)
+  let i = 0
+  const next = () => (i < tokens.length ? tokens[i++] : null)
+
+  while (i < tokens.length) {
+    const token = tokens[i++]
     const numeral = parseNumber(token)
     if (numeral) {
       if (numeral.kind === 'float') exactSoFar = false
@@ -269,6 +304,35 @@ export function evaluateRpn(input: string, settings: RpnSettings = DEFAULT_SETTI
         const b = stack.pop()!
         const a = stack.pop()!
         stack.push(b, a)
+      }
+      continue
+    }
+
+    /*
+     * Registers: `sto NAME` and `rcl NAME`, taking the name as the NEXT
+     * token rather than encoding it in the word.
+     *
+     * Calc spells these `s t 0` and `r 0` over single-character registers.
+     * Names here instead, because the thing people actually want to park is
+     * "the radius" rather than "register 3", and a calculator beside a
+     * mathematics problem is exactly where a name earns its keep.
+     *
+     * `sto` LEAVES the value on the stack. Calc does the same, and it is the
+     * behaviour that composes: storing is usually something you do on the way
+     * past, not instead of continuing.
+     */
+    if (lower === 'sto' || lower === 'rcl') {
+      if (!registers) throw new RpnError(`${token} needs registers, which this caller did not provide`)
+      const name = next()
+      if (!name) throw new RpnError(`${token} needs a register name after it`)
+      if (lower === 'sto') {
+        if (stack.length < 1) throw new RpnError('sto needs a value on the stack')
+        registers.set(name, stack[stack.length - 1])
+      } else {
+        const held = registers.get(name)
+        if (!held) throw new RpnError(`no register named ${name}`)
+        if (held.kind === 'float') exactSoFar = false
+        stack.push(held)
       }
       continue
     }

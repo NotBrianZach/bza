@@ -420,17 +420,34 @@ export const REGIONS: Region[] = [
     // graphs, and "what follows from what" is now the formal systems.
     //
     // The region claims the authored subjects of this area, which it did not
-    // before the thirty-fifth promotion and now does three times.
+    // before the thirty-fifth promotion and now does FOUR times.
     // `armatureProblems` checks that every shipped subject is claimed exactly
     // once, so a new one that nobody claims holds real material appearing
     // nowhere on the map — and the claim belongs to the region holding the
     // area the concept was promoted OUT of, which is this one. All three logic
-    // and proof subjects came out of `discrete-mathematics`, so all three are
-    // claimed here, and the consolidation ontology-proof.ts leaves open — one
-    // REASONING subject in place of several — would make this list shorter
-    // rather than moving an entry elsewhere.
+    // and proof subjects came out of `discrete-mathematics`, and so did
+    // `sets-and-membership`, which the thirty-eighth promotion added.
+    //
+    // THE FOURTH ENTRY IS THE FIRST THAT A CONSOLIDATION WOULD NOT ABSORB, and
+    // that is worth one line here because the sentence this comment used to end
+    // with is now only true of three quarters of the list. The consolidation
+    // ontology-proof.ts leaves open — one REASONING subject in place of several —
+    // would make this list shorter rather than moving an entry elsewhere, and it
+    // would shorten it to TWO rather than to one: ontology-sets.ts argues that
+    // its subject is about an OBJECT where the other four are about arguments,
+    // so a merge of the reasoning subjects leaves it standing. A merge wide
+    // enough to take it too would be a merge of everything in the build that
+    // mentions a proof.
+    //
+    // The slot count is unchanged by this promotion. `sets` was never an anchor
+    // — the three are `counting-principles`, `graphs` and
+    // `formal-logic-and-incompleteness` — so for the first time since the
+    // thirty-fifth, a departure from this area cost this region nothing but an
+    // `authored` entry. The refill chosen above was selected partly on being far
+    // from promotable, and that is still holding.
     authored: [
       'statements-and-connectives', 'predicates-and-quantifiers', 'methods-of-proof',
+      'sets-and-membership',
     ],
     anchors: ['counting-principles', 'graphs', 'formal-logic-and-incompleteness'],
     because: 'Eligibility for the Great Chamber requires tier-three professional commendation and a certificate of physical condition; the Migration and Visa Office decides who may enter at all. A mountain that runs on rules about who counts, who may sit with whom, and what follows from what.',

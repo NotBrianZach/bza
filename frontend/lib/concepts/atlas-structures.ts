@@ -640,100 +640,143 @@ const DISCRETE_MATHEMATICS: MapArea = {
   id: 'discrete-mathematics',
   name: 'Discrete mathematics',
   covers:
-    'Sets, counting, graphs and recurrences — the mathematics of finite and countable ' +
-    'structures. The three bottom layers of the logic now have problems written for them and ' +
-    'live outside this area. A letter standing for a whole statement, the connectives as ' +
-    'finite tables, and which rearrangements of an implication are the same claim are the ' +
-    'statements-and-connectives syllabus; a statement with a hole in it, the two words that ' +
-    'close the hole, and why the order of two different ones changes the claim are the ' +
-    'predicates-and-quantifiers syllabus; choosing which end of an implication to start from, ' +
-    'assuming a claim false to reach something impossible, and splitting into cases that leave ' +
-    'nothing out are the methods-of-proof syllabus. This area points at all three rather than ' +
-    'restating any, and keeps the layers above them: the sets and relations those arguments are ' +
-    'used on, the counting, the graphs, and the formal systems — where derivation inside a ' +
-    'stated calculus is a different subject from the arguments a person writes for another ' +
-    'person, and is the one still mapped only.',
+    'Counting, graphs and recurrences — the mathematics of finite and countable structures. ' +
+    'The three bottom layers of the logic have problems written for them and live outside this ' +
+    'area, and so now does the first layer the arguments are used ON. A letter standing for a ' +
+    'whole statement, the connectives as finite tables, and which rearrangements of an ' +
+    'implication are the same claim are the statements-and-connectives syllabus; a statement ' +
+    'with a hole in it, the two words that close the hole, and why the order of two different ' +
+    'ones changes the claim are the predicates-and-quantifiers syllabus; choosing which end of ' +
+    'an implication to start from, assuming a claim false to reach something impossible, and ' +
+    'splitting into cases that leave nothing out are the methods-of-proof syllabus; and ' +
+    'membership, the operations as conditions on it, the sizes they force and the double ' +
+    'inclusion an identity about them is proved by are the sets-and-membership syllabus. This ' +
+    'area points at all four rather than restating any, and keeps the layers above them: the ' +
+    'relations a set carries once it is a subset of a product, the counting — where the product ' +
+    'and sum rules and inclusion–exclusion over many sets live, the two-set correction having ' +
+    'gone with the sets that force it — the graphs, the comparison of infinite sets by ' +
+    'bijection, and the formal systems, where derivation inside a stated calculus is a ' +
+    'different subject from the arguments a person writes for another person and is the one ' +
+    'still mapped only.',
   /**
-   * THREE NODES HAVE LEFT THIS AREA, ON THREE CONSECUTIVE PROMOTIONS, UP ONE
+   * FOUR NODES HAVE LEFT THIS AREA, ON FOUR CONSECUTIVE PROMOTIONS, UP ONE
    * CHAIN, AND EACH WAS THE ROOT AT THE TIME.
    *
    * `propositional-logic` went first, to ontology-logic.ts as the single member
    * of a twelfth subject; `quantifiers` followed it, to ontology-quantifiers.ts
    * as the single member of a thirteenth; `proof-techniques` followed that, to
-   * ontology-proof.ts as the single member of a fourteenth. All three are real
-   * concepts now. `atlasProblems` rejects a map node whose id collides with an
-   * authored concept — the composed list would hold two entries for the id, and
-   * the shadowing copy has no knowledge points, so a fully authored concept
+   * ontology-proof.ts as the single member of a fourteenth; `sets` followed
+   * that, to ontology-sets.ts as the single member of a fifteenth. All four are
+   * real concepts now. `atlasProblems` rejects a map node whose id collides with
+   * an authored concept — the composed list would hold two entries for the id,
+   * and the shadowing copy has no knowledge points, so a fully authored concept
    * would read as unteachable. So promoting is a MOVE out of this array and not
    * a fill-in, and each node had to go.
    *
-   * THE AREA HAS LOST ITS ROOT THREE TIMES AND HAS NOT LOST ITS ENTRY POINT
+   * THE FOURTH DEPARTURE IS THE ONE THAT ENDS THE CHAIN AS A CHAIN, and it is
+   * the only thing about this run that the three paragraphs below did not
+   * already predict. Each of the first three nodes had exactly ONE dependent
+   * inside this area, so the root set turned its single member over and stayed at
+   * size one for three promotions running. `sets` has TWO in-area dependents —
+   * `relations` and `counting-principles` — and was the last in-area prerequisite
+   * of both, so the root set SPLITS: {`sets`} becomes {`relations`,
+   * `counting-principles`}. The practical consequence is for whoever comes next.
+   * Three promotions had no choice about which node to take, because there was
+   * one; the fifth departure from this area has two candidates and they go to
+   * different places — `relations` is the subset-of-a-product layer and
+   * `counting-principles` is the product and sum rules, and `counting-principles`
+   * also needs `binomial-theorem`, which is authored in `rational-expressions`,
+   * so it would strand two edges into two subjects where `relations` strands one.
+   * Stated rather than decided.
+   *
+   * THE AREA HAS LOST ITS ROOT FOUR TIMES AND HAS NOT LOST ITS ENTRY POINT
    * ONCE, which is the part worth explaining rather than counting. Every node
-   * here stood on those three eventually, in that order, and the root set in
-   * the composed graph has moved up the same chain one step per promotion:
-   * `propositional-logic`, then `quantifiers`, then `proof-techniques`, and now
-   * `sets` — which was three steps up when this comment was first written.
-   * Nothing is stranded and nothing became unreachable: the edge `sets`
-   * declares still resolves, because it resolves against the composed atlas,
-   * where the far end is now a concept with problems instead of a skeleton.
+   * here stood on those four eventually, in that order, and the root set in
+   * the composed graph moved up the same chain one step per promotion:
+   * `propositional-logic`, then `quantifiers`, then `proof-techniques`, then
+   * `sets` — and then stopped moving up a single chain, because `sets` was the
+   * last in-area prerequisite of two nodes rather than one, so the set is
+   * {`relations`, `counting-principles`} now. Nothing is stranded and nothing
+   * became unreachable: both edges those two declare still resolve, because they
+   * resolve against the composed atlas, where the far end is now a concept with
+   * problems instead of a skeleton.
    *
    * THE EDGES POINTING IN NEEDED NO ATTENTION ON THE DAY, every time, for the
    * reason the eighth promotion out of `euclidean-geometry` recorded: an edge is
-   * owned by the node that DECLARES it. `sets`, `graph-colouring-planarity` and
-   * `division-algorithm` all name `proof-techniques` in their own `needs`, they
-   * stayed, and `composeAtlas` resolves all three untouched.
+   * owned by the node that DECLARES it. `graph-colouring-planarity` and
+   * `division-algorithm` still name `proof-techniques` in their own `needs`,
+   * they stayed, and `composeAtlas` resolves both untouched. `sets` named it
+   * too and is the exception that proves the rule rather than a counterexample
+   * to it: that node did not stay, so its edge is the one that moved, which is
+   * the next paragraph.
    *
    * THE EDGE EACH NODE DECLARED ITSELF IS THE ONE THAT MOVED, which is why
-   * there are now THREE entries in `links` where there was one. That is the
+   * there are now FOUR entries in `links` where there was one. That is the
    * case the rule above does NOT cover: when the DECLARING end is promoted, its
    * `needs` have nowhere left to live, and the answer is the area the declarer
    * left rather than the area or subject holding the far end. Every far end is
    * an authored concept of another subject — `geometric-proof` in
    * `plane-geometry`, `propositional-logic` in `statements-and-connectives`,
-   * `quantifiers` in `predicates-and-quantifiers` — so no ontology may hold any
-   * of the three edges, because an authored ontology's edges may only name
-   * concepts it contains. An area's `links` is the only place in the build that
-   * can say "an authored concept rests on an authored concept of a third
-   * subject".
+   * `quantifiers` in `predicates-and-quantifiers`, `proof-techniques` in
+   * `methods-of-proof` — so no ontology may hold any of the four edges, because
+   * an authored ontology's edges may only name concepts it contains. An area's
+   * `links` is the only place in the build that can say "an authored concept
+   * rests on an authored concept of a third subject".
    *
-   * THE SECOND PROMOTION SHOWED THE CHAIN'S SHAPE AND THE THIRD CONFIRMED IT IS
-   * A RULE RATHER THAN AN ACCIDENT. This is worth stating as a rule because it
-   * looks like a mistake twice over. The thirty-fifth promotion's comment here
-   * said of `quantifiers` that "it stayed, and `composeAtlas` resolves it
-   * untouched", and asserted the ABSENCE of a `links` entry for it; the
-   * thirty-sixth said the same of `proof-techniques` while adding the entry for
-   * `quantifiers`. Each was right when written and each was undone one
-   * promotion later, because the moment a declaring end is authored the edge it
-   * owned is stranded and the absence becomes a missing entry.
+   * THE SECOND PROMOTION SHOWED THE CHAIN'S SHAPE, THE THIRD CONFIRMED IT IS A
+   * RULE RATHER THAN AN ACCIDENT, AND THE FOURTH HAS NOW PAID IT AGAIN. This is
+   * worth stating as a rule because it looks like a mistake every time. The
+   * thirty-fifth promotion's comment here said of `quantifiers` that "it stayed,
+   * and `composeAtlas` resolves it untouched", and asserted the ABSENCE of a
+   * `links` entry for it; the thirty-sixth said the same of `proof-techniques`
+   * while adding the entry for `quantifiers`; the thirty-seventh said the same of
+   * `sets` while adding the entry for `proof-techniques`. Each was right when
+   * written and each was undone one promotion later, because the moment a
+   * declaring end is authored the edge it owned is stranded and the absence
+   * becomes a missing entry.
    *
-   * THE RULE, STATED ONCE SO THE FOURTH PROMOTION UP THIS CHAIN DOES NOT HAVE
-   * TO REDISCOVER IT: walking up a chain strands exactly ONE edge per step —
-   * the one the node being promoted declares — and invalidates exactly the
-   * previous promotion's claim that no entry was needed for it. So when
-   * promoting, check not only the node's own `needs` but whether the previous
-   * promotion's assertions rest on this node staying put. Here that cost two
-   * rewrites in tests/atlas.mjs, both anticipated in the comments beside them.
-   * `sets` is the next one, and when it goes this `links` will hold four.
+   * THE RULE, AND IT HELD FOR A FOURTH STEP WITHOUT AMENDMENT: walking up a
+   * chain strands exactly ONE edge per step — the one the node being promoted
+   * declares — and invalidates exactly the previous promotion's claim that no
+   * entry was needed for it. So when promoting, check not only the node's own
+   * `needs` but whether the previous promotion's assertions rest on this node
+   * staying put. Each of the last three runs paid two rewrites in
+   * tests/atlas.mjs for it, every one anticipated in the comment beside it.
    *
-   * NO `confusedWith` WAS LOST ANY OF THE THREE TIMES, and it was checked
-   * rather than assumed. `expandEdges` in atlas.ts turns a node's
+   * WHAT THE FOURTH STEP ADDS IS THAT THE RULE'S PRECONDITION HAS NOW EXPIRED.
+   * "Walking up a chain" was true of this area four times because each departing
+   * node had one in-area dependent; `sets` had two, so there is no single next
+   * node and the fifth departure is a choice (see the split above). The stranding
+   * rule itself is unaffected — it is about the declaring end and not about the
+   * shape of what is above — but the sentence "the next one up" has no referent
+   * here any more, and a future run should not go looking for one.
+   *
+   * NO `confusedWith` WAS LOST ANY OF THE FOUR TIMES, and it was checked rather
+   * than assumed each time. `expandEdges` in atlas.ts turns a node's
    * `confusedWith` into an `interferes_with` edge, so deleting a node DELETES
    * that edge, and nothing goes red when it happens: interference constrains
    * SELECTION rather than gating, so every suite stays green while the
    * scheduler is freed to introduce the two most confusable concepts in a
-   * subject together. None of the three declared one, so there was nothing to
+   * subject together. None of the four declared one, so there was nothing to
    * re-home — but the check is the one a promotion forgets, and the candidates
    * are worth recording. ontology-functions.ts argues that
-   * `mathematical-induction` and `propositional-logic` genuinely interfere, and
-   * ontology-quantifiers.ts that `mathematical-induction` and `quantifiers` do;
-   * a third pair now joins them, since induction is a proof technique for one
-   * shape of domain and `proof-techniques` is the account of the other four, so
-   * a learner meeting them in either order will take one for the other. All
-   * three were unexpressible while both ends were nodes and are unexpressible
-   * still, every end now being an authored concept of a different subject.
-   * `links` hard-codes `prerequisite` and cannot carry an interference either.
+   * `mathematical-induction` and `propositional-logic` genuinely interfere,
+   * ontology-quantifiers.ts that `mathematical-induction` and `quantifiers` do,
+   * and ontology-proof.ts that `mathematical-induction` and `proof-techniques`
+   * do, since induction is a proof technique for one shape of domain and
+   * `proof-techniques` is the account of the other four.
+   *
+   * A FOURTH PAIR NOW JOINS THEM AND IT IS THE FIRST ONE THAT IS NOT ABOUT
+   * INDUCTION: `sets` and `propositional-logic`. The two De Morgan identities
+   * are written in the same shape and are about different objects — one swaps
+   * `and` for `or` between two columns of truth values, the other between two
+   * membership conditions — and a learner meeting them in either order will take
+   * the second for a restatement of the first, which is precisely the mistake
+   * the third knowledge point of ontology-sets.ts exists to prevent. Both ends
+   * are authored concepts of different subjects, `links` hard-codes
+   * `prerequisite`, and an ontology may not name a concept it does not contain.
    * A cross-subject `interferes_with` has no home in this build, which is the
-   * fifth time that has had to be written down and the third pair it costs.
+   * sixth time that has had to be written down and the fourth pair it costs.
    */
   links: [
     /*
@@ -846,16 +889,55 @@ const DISCRETE_MATHEMATICS: MapArea = {
         'is no largest prime" only becomes a finite list you can multiply because the earlier ' +
         'concept says what the negation of a universal is.',
     },
+    /*
+     * The edge the FOURTH departing node declared itself, restated — and the
+     * entry the thirty-seventh promotion asserted was absent, in the same words
+     * the thirty-sixth used about the entry above and the thirty-fifth used
+     * about the one above that. Three identical predictions, three identical
+     * outcomes; the rule is in the block at the top of this area.
+     *
+     * It gates immediately and for real, like all three of the others and unlike
+     * most `links` entries, which are written while the far end is still an
+     * unwritten node and constrain nothing until somebody authors it. Both ends
+     * have material, so `gatingPrerequisitesOf('sets')` returns exactly this one
+     * and a learner cannot be shown membership and the operations until the four
+     * shapes of argument are strong. That is the right order, and it is the one
+     * of the four where the prerequisite is a METHOD the material cannot proceed
+     * without rather than a fact it cites: every identity in ontology-sets.ts is
+     * established by double inclusion, which is two universal implications each
+     * proved from the end whose hypothesis is a form — the earlier concept's
+     * first lesson, run twice. A learner who arrived here first would meet the
+     * object and the only available means of saying anything general about it in
+     * the same sitting.
+     *
+     * If the logic and proof subjects were ever MERGED, or a single REASONING
+     * subject founded out of them, this edge would still live here: both of its
+     * ends would remain authored concepts of two different subjects, because
+     * ontology-sets.ts argues at length that the sets subject is not a candidate
+     * for that merge — it is about an object and the other four are about
+     * arguments. That is the one difference from the three entries above, each of
+     * which says it would have to be DELETED in that event, and it is the reason
+     * tests/atlas.mjs asserts the far end's subject here as well: the claim being
+     * made is that these two are permanently in different subjects, which is a
+     * stronger statement than "they happen to be today".
+     */
+    {
+      from: 'proof-techniques',
+      to: 'sets',
+      because:
+        'Two sets are equal when they have the same members, which is two universal implications ' +
+        'at once — and every identity in the sets material is proved that way, by taking an ' +
+        'arbitrary member of one side and rearranging its membership condition until it is the ' +
+        'other side. That is the earlier concept\'s first lesson applied twice: each inclusion is ' +
+        'proved from the end whose hypothesis is a FORM there is something to substitute into, ' +
+        'which for a set is "x is in the left-hand expression" unpacked. Taken in this order the ' +
+        'double inclusion is a technique the learner already owns, used on a new kind of object. ' +
+        'Taken in the other it is a ritual, and the alternative on offer is the Venn diagram — ' +
+        'which really does settle a three-set identity, really does fail from four sets up, and ' +
+        'gives a learner no way to tell those two situations apart.',
+    },
   ],
   nodes: [
-    {
-      id: 'sets',
-      match: /\bset (theory|operations)\b|^set \(mathematics\)/i,
-      name: 'Sets and set operations',
-      is: 'Membership, the operations, and the identities — proved by double inclusion rather than by picture.',
-      needs: ['proof-techniques'],
-      terms: 'set union intersection complement subset power set venn',
-    },
     {
       id: 'relations',
       match: /\b(binary relation|equivalence relation|partial order)\b/i,

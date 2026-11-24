@@ -48,7 +48,7 @@ export const dynamic = 'force-dynamic'
  * scratchpad is the surface feature with no CAS behind it.
  */
 
-type Tab = 'practice' | 'concepts' | 'world' | 'review' | 'tutor' | 'tools'
+type Tab = 'practice' | 'concepts' | 'world' | 'review' | 'tutor'
 /** Which question the Tutor tab asks. See the toggle for why both exist. */
 type TutorMode = 'walk' | 'probe'
 
@@ -625,7 +625,7 @@ export default function LearnPage() {
     const q = new URLSearchParams(window.location.search)
     const wanted = q.get('tab')
     if (wanted === 'practice' || wanted === 'concepts' || wanted === 'world'
-      || wanted === 'review' || wanted === 'tutor' || wanted === 'tools') {
+      || wanted === 'review' || wanted === 'tutor') {
       setTab(wanted)
     }
     const wantedScope = q.get('scope')
@@ -738,7 +738,6 @@ export default function LearnPage() {
             // road between them rather than at the end of the row.
             ['tutor', 'Tutor'],
             ['review', 'Review'],
-            ['tools', 'Scratchpad'],
           ] as [Tab, string][]).map(([id, label]) => (
             <button
               key={id}
@@ -1093,7 +1092,16 @@ export default function LearnPage() {
             {/* The scratchpad and the tutor sit WITH the problem rather than on
                 a separate tab. Working something out is part of answering, and
                 a scratchpad you have to navigate away to reach is a scratchpad
-                nobody uses — which is what the old `tools` tab was. */}
+                nobody uses — which is what the old `tools` tab was.
+
+                The calculator has now joined them, and the `tools` tab is
+                gone. It was labelled "Scratchpad" while holding only the RPN
+                calculator, which was two kinds of wrong at once: it was not
+                the scratchpad — that is right here — and a calculator you
+                have to leave the problem to reach is as useless as a
+                scratchpad you have to leave the problem to reach. A saved
+                `?tab=tools` link now names nothing and is ignored, which
+                lands on Practice, where the thing it wanted actually is. */}
             <div className='grid grid-cols-1 gap-3 xl:grid-cols-2'>
               <Scratchpad
                 // Keyed on the subject so switching subjects remounts rather
@@ -1120,6 +1128,11 @@ export default function LearnPage() {
                 subjectName={state.subject?.name}
               />
             </div>
+
+            {/* Full width under the pair rather than a third column: it holds
+                a stack, a register list and a function finder, and squeezed
+                into a third of an xl grid every one of those wraps. */}
+            <RpnCalculator />
 
             {/* Nothing is dropped silently. A short set has a reason, and the
                 reason is the most useful thing the scheduler knows. */}
@@ -1477,20 +1490,6 @@ export default function LearnPage() {
 
         {tab === 'review' && <ReviewQueue onResolved={load} />}
 
-        {tab === 'tools' && (
-          <>
-            <RpnCalculator />
-            {/* Reworded: this used to call ITSELF the scratchpad, which is no
-                longer true now that there is a real one beside the problem.
-                Leaving that would have sent somebody here looking for their
-                working. */}
-            <p className='text-xs text-gray-500'>
-              An RPN calculator, for arithmetic you want exact rather than typed into a
-              problem. Your working belongs in the scratchpad on the Practice tab — it is
-              saved, it renders LaTeX, and the tutor there can read it.
-            </p>
-          </>
-        )}
 
       </div>
     </main>

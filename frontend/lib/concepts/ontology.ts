@@ -41,6 +41,7 @@ import { DATA_SUMMARIES } from './ontology-statistics'
 import { STATEMENTS_AND_CONNECTIVES } from './ontology-logic'
 import { PREDICATES_AND_QUANTIFIERS } from './ontology-quantifiers'
 import { METHODS_OF_PROOF } from './ontology-proof'
+import { SETS_AND_MEMBERSHIP } from './ontology-sets'
 import type { ConceptEdge, ConceptOntology, Subject } from './types'
 import type { Concept } from './types'
 
@@ -80,6 +81,18 @@ export { PREDICATES_AND_QUANTIFIERS } from './ontology-quantifiers'
  * reachable positionally.
  */
 export { METHODS_OF_PROOF } from './ontology-proof'
+/*
+ * Re-exported by the thirty-eighth promotion, and the negative claim it needs is
+ * the same shape as the three above with one subject swapped: `methods-of-proof`
+ * holds `sets`' sole prerequisite, so it could have taken the concept for free,
+ * and `predicates-and-quantifiers` names the node two steps above itself. Both
+ * had already written it out of their own `covers` by name, so its group in
+ * tests/atlas.mjs asserts that neither contains it and that this one does.
+ *
+ * `METHODS_OF_PROOF` is named by that group as well, which is why the thirty-
+ * seventh promotion's re-export earns a second reader rather than only its own.
+ */
+export { SETS_AND_MEMBERSHIP } from './ontology-sets'
 
 const subject: Subject = {
   id: 'rational-expressions',
@@ -1665,16 +1678,50 @@ const CONCEPTS: Concept[] = [
         workedExample: {
           problem: 'Write 2x² + 8x + 5 as a completed square.',
           subgoals: [
-            { label: 'Take the 2 out of the x terms', detail: '2(x² + 4x) + 5.' },
+            {
+              label: 'Take the 2 out of the x terms',
+              detail: '2(x² + 4x) + 5.',
+              socratic:
+                'Every bracket you have chosen so far came out of expanding (x + p)², which ' +
+                'begins with a single x² — so the rule that reads p off the middle term was only ' +
+                'ever derived for a quadratic whose x² carries a coefficient of 1, and 2x² is ' +
+                'not that. The obvious repair is to divide the whole expression by 2, so test it ' +
+                'rather than trusting it: divide, then say what has happened to the value, and ' +
+                'what would have been different had you been handed an equation set equal to ' +
+                'zero instead of an expression to rewrite. The other repair takes the 2 out as a ' +
+                'factor, and out of the x terms only — the 5 may stay where it is, since by both ' +
+                'earlier points the constant is never what chooses the bracket. What does the ' +
+                'expression read as once you do that, and what is left inside the bracket for ' +
+                'the rule to run on?',
+            },
             {
               label: 'Complete the square inside',
               detail: 'x² + 4x = (x + 2)² − 4, so this is 2((x + 2)² − 4) + 5.',
+              socratic:
+                'Inside the bracket is x² + 4x — monic, so the rule from the first two points ' +
+                'applies to it unchanged and you need invent nothing new. One thing has changed, ' +
+                'though: in x² + 6x + 5 there were two constants to reconcile, the one the ' +
+                'bracket added and the one the problem supplied, whereas after the 4x inside ' +
+                'this bracket there is nothing at all. Complete the square on x² + 4x by itself, ' +
+                'then write the result back in with the outer 2 and the 5 both still showing and ' +
+                'both untouched. What does the inner expression become, why is the correction it ' +
+                'carries the only constant inside the bracket, and what is still standing ' +
+                'between that correction and the constant of the finished answer?',
             },
             {
               label: 'Multiply the correction out too',
               detail:
                 '2(x + 2)² − 8 + 5 = 2(x + 2)² − 3. Forgetting to multiply the −4 by 2 is the ' +
                 'usual error, and expanding the answer back catches it.',
+              socratic:
+                'The 2 now sits outside a bracket holding two terms rather than one, and only ' +
+                'the first of them is the squared bracket. Before settling what comes out, write ' +
+                'down the line someone gets by carrying the −4 through unchanged and combining ' +
+                'it with the 5, expand that line the whole way down to three terms, and set it ' +
+                'beside 2x² + 8x + 5. Then do the same for the line you get by letting the 2 ' +
+                'reach both terms inside. Which of the two expansions returns the original, what ' +
+                'does that settle about what the factor does to a correction computed inside the ' +
+                'bracket, and what is the finished constant?',
             },
           ],
           answer: '2(x + 2)² − 3',
@@ -2291,13 +2338,40 @@ export const RATIONAL_EXPRESSIONS: ConceptOntology = {
  * argument directly after the quantified claims they are arguments about and
  * before polynomial division — the weakest claim available, and true of any
  * course that teaches them at all.
+ *
+ * SETS_AND_MEMBERSHIP IS NINTH, BY THE SAME RULE ONE STEP FURTHER UP, AND IT IS
+ * THE FIRST OF THESE INSERTIONS TO COST NOTHING AT ALL.
+ *
+ * It rests on `proof-techniques`, a concept of `methods-of-proof` at index 7, so
+ * the earliest slot its prerequisite allows is 8 — and 8 is free in the sense
+ * that matters: index 7 is the furthest anything reads positionally after the
+ * paragraph above, so nothing asserted by index moves except `data-summaries`,
+ * which the previous promotion moved to 11 and which is now 12.
+ *
+ * THAT IS THE FOURTH PROMOTION RUNNING TO MOVE THAT ONE SUBJECT, and the fourth
+ * since it was written: 8, 9, 10, 11, now 12. The paragraph above drew the
+ * conclusion and this run is the evidence for it, so it is worth stating as an
+ * instruction rather than an observation: a new subject should assert the
+ * RELATIONAL fact — that it comes after the subject holding its prerequisite —
+ * and leave a literal index behind only where a position is genuinely
+ * load-bearing, which it is for index 0 and nowhere else. `ONTOLOGIES[0]` is what
+ * /api/learn/session and /learn open on; every other literal in the test files is
+ * a debt this insertion collects.
+ *
+ * What this position claims is only that a learner meets sets directly after the
+ * arguments that establish facts about them and before polynomial division — the
+ * weakest claim available, and true of any course that teaches them at all. It is
+ * also the one place the ordering is doing real work rather than being merely
+ * defensible: every identity below is proved by double inclusion, which is the
+ * subject at index 7's first lesson run twice, so a learner who arrived here
+ * first would meet the method and the object together.
  */
 export const ONTOLOGIES: ConceptOntology[] = [
   ARITHMETIC_FOUNDATIONS, EXPRESSIONS_AND_EQUATIONS, PLANE_GEOMETRY,
   TRIANGLE_TRIGONOMETRY, SOLID_MEASURE, STATEMENTS_AND_CONNECTIVES,
-  PREDICATES_AND_QUANTIFIERS, METHODS_OF_PROOF, RATIONAL_EXPRESSIONS,
-  EXPONENTS_AND_LOGARITHMS, FUNCTIONS_AND_INVERSES, DATA_SUMMARIES,
-  VECTORS_AND_INDEPENDENCE, MATRICES_AND_DETERMINANTS,
+  PREDICATES_AND_QUANTIFIERS, METHODS_OF_PROOF, SETS_AND_MEMBERSHIP,
+  RATIONAL_EXPRESSIONS, EXPONENTS_AND_LOGARITHMS, FUNCTIONS_AND_INVERSES,
+  DATA_SUMMARIES, VECTORS_AND_INDEPENDENCE, MATRICES_AND_DETERMINANTS,
 ]
 
 export function getOntology(subjectId: string): ConceptOntology | null {
