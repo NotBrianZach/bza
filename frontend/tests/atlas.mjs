@@ -8713,8 +8713,52 @@ t('an incorrect ruling does not hand over the answer',
     sheet: 'SHEET', region: WORK_REGION, log: [], action: '',
     ruled: { conceptName: 'Long division', ruling: 'incorrect' },
   }).user))
-t('a ruled turn may not ask for more work or another roll',
-  /Do not ask for more work and do not call for a roll in this reply/.test(RULED.user))
+/*
+ * A ruled turn may continue the errand but may not roll.
+ *
+ * This asserted the opposite until play showed why it was wrong: the game
+ * master gave an exercise, and once it was ruled the player had to prompt
+ * again to get another, because the ruling turn was forbidden from asking.
+ * Work and dice are not symmetric here — a roll in this reply is a second
+ * settlement narrated blind, where a WORK: is a request for the next
+ * exchange and settles nothing now.
+ *
+ * Both halves are asserted, because the useful failure is one of them
+ * drifting back: a reinstated work ban kills the flow again, and a lifted
+ * roll ban lets a turn narrate dice it asked for in the same breath.
+ */
+t('a ruled turn may continue the errand with new work',
+  /You MAY end this reply with WORK:/.test(RULED.user)
+  && /the scene genuinely needs another figure/.test(RULED.user))
+t('and is still forbidden from calling for a roll',
+  /Do not call for a roll in this reply/.test(RULED.user)
+  && !/Do not ask for more work/.test(RULED.user))
+/* The guard against the other failure mode: a scene that becomes a
+   worksheet because every answer is followed by another sum. */
+t('but is told not to ask merely because the last one was answered',
+  /Never ask\s+for work merely because the last one was answered/.test(RULED.user))
+/* And the route has to honour it, or the prompt change is cosmetic.
+   Reads the file here rather than using TABLE_ROUTE, which is declared
+   further down — a `const` is not hoisted, and referring to it from above
+   throws ReferenceError instead of failing an assertion. That is the second
+   time this file has caught me that way; self-contained is cheaper than
+   remembering the order. */
+t('the route picks work on a ruled turn, and still not on a dice turn',
+  (() => {
+    const src = readFileSync(
+      join(FRONTEND, 'app', 'api', 'learn', 'table', 'route.ts'), 'utf8')
+    return /asked\.wantsWork && !resolved\)/.test(src)
+      && !/asked\.wantsWork && !resolved && !ruled/.test(src)
+  })())
+/* And the client has to keep it, which is where the first version leaked. */
+t('the table keeps work returned with a ruling',
+  (() => {
+    const panel = readFileSync(
+      join(FRONTEND, 'components', 'concepts', 'TablePanel.tsx'), 'utf8')
+    const settle = panel.slice(panel.indexOf('const settleWork'))
+    return /work\?: NonNullable<TableTurn\['work'\]>/.test(settle)
+      && /work: data\.work/.test(settle)
+  })())
 t('help reaches the ruled scene as a circumstance, not a fault',
   /not a fault to remark on/.test(tablePrompt({
     sheet: 'SHEET', region: WORK_REGION, log: [], action: '',

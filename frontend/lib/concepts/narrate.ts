@@ -639,7 +639,31 @@ export function tablePrompt(args: {
     if (args.ruled.assisted) {
       lines.push('  The player used help. A circumstance of the scene, not a fault to remark on.')
     }
-    lines.push('Do not ask for more work and do not call for a roll in this reply.')
+    /*
+     * The roll ban stays; the work ban was wrong and is gone.
+     *
+     * Reported from play: the game master gave an exercise, and after it was
+     * ruled the player had to prompt again to get another. This line was why
+     * — the turn that narrates a ruling was forbidden from asking for more,
+     * so the thread could only continue if the player restarted it.
+     *
+     * The ban came from treating work and dice as symmetric. They are not,
+     * here. A roll in this reply WOULD be a second settlement narrated blind:
+     * the model would be asking for dice in the same breath it describes an
+     * outcome it has just been handed. A `WORK:` is a request for the NEXT
+     * exchange — nothing is settled by it in this turn — so the symmetry was
+     * mine rather than the mechanism's, and it cost the feature its flow.
+     *
+     * What stays is the thing that stops a scene becoming a worksheet: the
+     * GM is told to continue only when the fiction actually wants another
+     * figure. A tutor that asks for one more sum after every answer, forever,
+     * is the failure mode on this side.
+     */
+    lines.push('Do not call for a roll in this reply.')
+    lines.push('You MAY end this reply with WORK: if the scene genuinely needs another figure — '
+      + 'the same errand continuing, a second consignment, the next span. Do that when the work '
+      + 'follows from what just happened, and let the scene breathe when it does not. Never ask '
+      + 'for work merely because the last one was answered.')
   } else {
     lines.push(`PLAYER DOES: ${args.action}`)
   }

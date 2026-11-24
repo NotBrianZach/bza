@@ -201,8 +201,19 @@ export default function TablePanel({ region, held }: {
           ruled: { conceptName: work.conceptName, ruling, assisted },
         }),
       })
-      const data = await res.json() as { text?: string }
-      if (data.text) persist([...marked, { who: 'gm', text: data.text }], regionId)
+      /*
+       * `work` as well as `text`, or the fix above goes nowhere: the route
+       * may now attach the next piece of work to the turn that narrates a
+       * ruling, and a client reading only `text` would drop it on the floor
+       * — the errand would continue in the prose and not on the table.
+       */
+      const data = await res.json() as {
+        text?: string
+        work?: NonNullable<TableTurn['work']>
+      }
+      if (data.text || data.work) {
+        persist([...marked, { who: 'gm', text: data.text ?? '', work: data.work }], regionId)
+      }
     } catch {
       /* The ruling stands and is on the turn; only the telling of it is
          missing, same as everywhere else the narrator is optional. */

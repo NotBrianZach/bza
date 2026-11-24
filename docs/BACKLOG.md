@@ -199,46 +199,72 @@ builds failed, which is item 3 below. So when refreshing this item, check
 that measures the distance to head and writes down "nobody deployed" will
 be wrong in exactly the way that hides a broken build.
 
-## 3. Nothing type-checks until the deploy builds
+## 3. The release path has no type-check gate — one config value
 
-`next build` is the only thing in this project that runs `tsc`, and it runs it
-inside the deploy. The three concepts suites all execute the emitted
-JavaScript, where the types are gone, so a type error in `lib/concepts/`
-leaves concepts-logic, atlas and journeys green — 1383, 649 and 27 passing
-with nothing to say. The first thing that notices is the production build, and
-what it does about it is fail the deploy.
+A type error anywhere in `frontend/` fails `next build` and therefore the whole
+release, and until 2026-11-24 nothing anybody ran would notice. The three
+concepts suites execute the emitted JavaScript, where the types are gone, so
+they stay green with nothing to say — 1453, 681 and 27 passing throughout the
+28 hours that an unannotated `COLUMNS_AND_NULLITY` in
+`frontend/lib/concepts/tasks.ts`, from the rank-nullity promotion
+(C1D3ED875476CA71, 2026-11-23 01:05 UTC), held `deployment_history` rows 441
+and 442 at `Build failed (exit 1)`.
 
-Verified 2026-11-24 05:26 UTC, by reproducing it: a missing
-`: VariableDeclaration[]` on `COLUMNS_AND_NULLITY` in
-`frontend/lib/concepts/tasks.ts`, introduced by the rank-nullity promotion
-(C1D3ED875476CA71, 2026-11-23 01:05 UTC), broke `next build` for the
-following 28 hours. `deployment_history` rows 441 and 442 both read
-`Build failed (exit 1)`; nothing reached production between B5A0EC2C's deploy
-at 2026-11-22 17:37 UTC and the commit that added this item. Eight commits of
-authored mathematics were unshippable and all three suites were green for the
-whole of it. The reproduction was two `next build` runs on one tree differing
-only in that annotation: exit 0 with it, exit 1 and `Type error` without.
+**The commit-time half is done.** `frontend/tests/typecheck.mjs` runs
+`tsc --noEmit` over the real tsconfig and is first in the `npm test` chain as
+`npm run test:types`. It resolves its dependencies from the release tree's own
+install, so it works from a bare `templedb edit bza` workspace with no
+`npm install` — the missing `node_modules` is what made this impossible before
+and is the whole reason the check did not exist.
 
-The slot for the gate already exists and is empty.
-`projects.deployment_config` for bza has `app_deploy.pre_deploy_test: null`,
-and `app_deploy_service.py` runs that command in `working_dir` and aborts the
-deploy on a non-zero exit — so `npx tsc --noEmit` there converts this class of
-defect from a failed deploy into a refused one.
+Verified 2026-11-24 14:16 UTC by reintroducing the exact defect in a
+DB-current tree: annotation present → exit 0, annotation removed → exit 2
+naming `tasks.ts(8554,5)` TS2322 down to
+`Type 'undefined' is not assignable to type 'boolean'`. All three suites were
+green in both runs, which is the point.
 
-What is actually unsettled is where the check belongs, and the two answers
-differ in more than cost:
+**What is left is one config value.** `projects.deployment_config` for bza
+still has `app_deploy.pre_deploy_test: null`. `app_deploy_service.py` rsyncs
+`working_dir` from the materialized checkout and *then* runs that command with
+`shell=True, cwd=work_dir`, abandoning the run on a non-zero exit with
+`Pre-deploy tests failed`. Setting it to `npm run test:types` turns this class
+of defect from a failed build into a refused one. `work_dir` is
+`/home/zach/.local/share/templedb/fhs-deployments/bza/working/frontend`, the
+one tree that always has `node_modules` — that rsync passes
+`--exclude node_modules`, so there is nothing to provision there either.
 
-- `pre_deploy_test` catches it at deploy time. Cheap, one config value, and it
-  protects every future deploy — but it fires a day after the author left, and
-  it tells the deployer a build is broken rather than telling the author a
-  commit is.
-- Catching it at commit time is what would actually have helped here, and it
-  needs a typescript the authoring tasks do not have: the edit workspaces ship
-  without `node_modules`, which is why the suites are plain `node` scripts in
-  the first place.
+It is still open because the autonomous content tasks are denied every
+`deploy` verb, read-only ones included, and the command that writes this value
+is one of them. Someone with a wider policy has to type it.
 
-Neither is large. Doing neither is what cost 28 hours. Note that whoever wires
-the first option needs a policy permitting the `deploy` subcommands — the
-autonomous content tasks are denied every `deploy` verb, read-only ones
-included, which is why the run that found this could fix the type error but not
-the gap.
+Two things not to get wrong:
+
+- `project-config --set` takes the **whole** `app_deploy` object and replaces
+  it: `AppDeployConfig.from_dict` reads eleven keys and defaults every one you
+  omit. A partial `--set '{"pre_deploy_test": "…"}'` fails safe — KeyError on
+  `working_dir`, exit 1 — but one that supplies the three required keys and
+  omits the rest silently empties `static_env` and `worker_name`, which is how
+  you would lose every `NEXT_PUBLIC_*` and the wrangler target in the same
+  breath as adding a safety check. Print the current config, add the one key,
+  set that whole object back.
+- `--skip-tests` bypasses it. So this gates the ordinary path, not a determined
+  one, and a green release is not by itself proof the check ran.
+
+Verified 2026-11-24 14:16 UTC: `pre_deploy_test` is still null, and
+`graph who-uses pre_deploy_test` returns only `deploy_project.py`,
+`app_deploy_service.py` and this file — nothing else reads it. Expect this file
+in that result; naming the key here is what puts it there.
+
+One correction to the earlier version of this item, which claimed `next build`
+is the only thing in the project that runs `tsc`. `npm run type-check` has been
+in `frontend/package.json` all along. It needed a `node_modules` no authoring
+workspace had, and nothing ran it — so the gap was never a missing command, and
+looking for one is how it stayed open.
+
+A trap that cost this run an hour, now refused by the harness rather than
+written down: `tsconfig.json` excludes only `node_modules`, while its include
+is a recursive `.ts` glob. Any *other* directory under `frontend/` holding
+`.ts` files — a `node_modules.bak`, a half-renamed tree — is compiled as a
+project source, and TypeScript's own `lib` `.d.ts` files coming in that way
+produce a circular-inference error in an unrelated file that reads exactly like
+a regression you just introduced.

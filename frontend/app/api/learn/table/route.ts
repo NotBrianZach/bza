@@ -291,7 +291,11 @@ export async function POST(req: NextRequest) {
     const asked = splitWorkRequest(content)
     const { text, expression } = splitRollRequest(asked.text)
     let work: Awaited<ReturnType<typeof pickWork>> = null
-    if (asked.wantsWork && !resolved && !ruled) {
+    /* `!ruled` dropped: a ruling turn may now carry the next piece of work,
+       which is what lets an errand continue without the player restarting
+       the thread. `!resolved` stays — a turn narrating dice is mid-exchange
+       and stacking work onto it would make one turn settle two things. */
+    if (asked.wantsWork && !resolved) {
       work = await pickWork(userId, region)
     }
 

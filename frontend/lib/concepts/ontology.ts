@@ -1612,14 +1612,43 @@ const CONCEPTS: Concept[] = [
         workedExample: {
           problem: 'Write x² + 3x + 1 as a completed square.',
           subgoals: [
-            { label: 'Half of b', detail: 'b = 3, so half is 3/2. The bracket is (x + 3/2).' },
+            {
+              label: 'Half of b',
+              detail: 'b = 3, so half is 3/2. The bracket is (x + 3/2).',
+              socratic:
+                'The rule that fixed p last time read it off the middle term alone, and there it ' +
+                'happened to come out a whole number — which makes it easy to read a ' +
+                'whole-number requirement into a rule that never stated one. Run the same rule ' +
+                'on the 3x in front of you rather than assuming what kind of number it will ' +
+                'give. Then test the tidier alternative instead of trusting it: round your p to ' +
+                'the nearest whole number, expand that bracket, and look only at its middle ' +
+                'term. What coefficient of x does the rounded bracket give, what does the 3x ' +
+                'demand, and what does the gap between them settle?',
+            },
             {
               label: 'What did it add?',
               detail: '(x + 3/2)² = x² + 3x + 9/4, so 9/4 has to come off.',
+              socratic:
+                'You fixed p from the middle term, so the bracket will reproduce the x² and the ' +
+                '3x correctly — those are what chose it. The constant is again the part nothing ' +
+                'was matched against, except that p is a fraction this time, so the constant ' +
+                'arrives by squaring a fraction rather than squaring a whole number. Expand ' +
+                '(x + 3/2)² in full and read off the constant it brings. What is that constant, ' +
+                'how does its denominator compare with the denominator of p itself, and what has ' +
+                'to happen to it before the two sides can be equal?',
             },
             {
               label: 'Combine the constants',
               detail: '1 − 9/4 = 4/4 − 9/4 = −5/4.',
+              socratic:
+                'Taking 9/4 off (x + 3/2)² hands back x² + 3x and nothing else, while the ' +
+                'expression you started from also carries its 1 — so two constants are in play ' +
+                'from different places, exactly as in the whole-number case. What is new is that ' +
+                'they are not written over a common denominator, and the one from the problem ' +
+                'does not look like a fraction at all. Write the line out with both still showing ' +
+                'before you combine them. What must the 1 be rewritten as first, what do the two ' +
+                'come to together, and what one expansion would confirm the finished line rather ' +
+                'than just this step?',
             },
           ],
           answer: '(x + 3/2)² − 5/4',
