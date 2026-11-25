@@ -39,9 +39,17 @@ const LINEAR_ALGEBRA: MapArea = {
     'map reaches, but which directions it leaves alone. The definition of a space, the count of ' +
     'its directions, the rule that gives it angles and the measure of what a map hits and kills ' +
     'are all somewhere a learner arrives from the plane rather than from the top of this list. ' +
-    'What is still here and rests on the last two of those is the ORTHOGONALITY THAT IS A ' +
-    'THEOREM rather than a definition: a symmetric matrix having an orthonormal eigenbasis, and ' +
-    'the best answer to an unsolvable system being a projection onto a column space. ' +
+    'NOR IS THE BEST ANSWER TO AN UNSOLVABLE SYSTEM, which is the half of the next sentence this ' +
+    'area has now had to withdraw as well. It used to read "what is still here and rests on the ' +
+    'last two of those is the ORTHOGONALITY THAT IS A THEOREM rather than a definition: a ' +
+    'symmetric matrix having an orthonormal eigenbasis, and the best answer to an unsolvable ' +
+    'system being a projection onto a column space" — and `least-squares` is authored in ' +
+    '`vectors-and-independence` as of the forty-first promotion, because what it minimises is a ' +
+    'SUM OF SQUARED misses, which is an inner product, and the condition picking the minimiser ' +
+    'is the projection the subject that owns the inner product had already derived. So what is ' +
+    'still here is the FIRST half of that sentence alone: a symmetric matrix having an ' +
+    'orthonormal eigenbasis, which really does rest on the eigenvalue this area begins at and ' +
+    'cannot be reached from the inner product by itself. ' +
     'FIVE THINGS A SECOND COURSE COVERS WERE MISSING FROM THIS LIST AND HAVE BEEN ADDED: the ' +
     'canonical form a matrix takes when it has too few eigenvectors, the fact that a matrix ' +
     'satisfies its own characteristic polynomial and the least polynomial that it does, the ' +
@@ -50,7 +58,18 @@ const LINEAR_ALGEBRA: MapArea = {
     'differential equations into a formula. They were absent by content and not merely under ' +
     'other names, which is the check worth stating: `similarity` is a concept of ' +
     '`plane-geometry` about figures, so matrix similarity stays a search term of ' +
-    '`diagonalisation` rather than becoming a sixth node here.',
+    '`diagonalisation` rather than becoming a sixth node here. ' +
+    'AND THE FOURTH OF THOSE FIVE HAS ALREADY LEFT, which is the sentence this area has to ' +
+    'withdraw one addition after making it: `dual-spaces` is authored in ' +
+    '`vectors-and-independence` as of the forty-second promotion, because a functional is ' +
+    'decided by its values on a BASIS and the dual basis is built out of the coordinate ' +
+    'formulas that subject already owns — so the dual needs an address and a dimension count ' +
+    'and no eigenvalue at all, which is the same argument that moved the axioms, the dimension, ' +
+    'the inner product, the rank and the least squares. It was added here and promoted out of ' +
+    'here within three weeks, and both halves were right: the gap was real, and this was never ' +
+    'where the material belonged once somebody wrote it. What is still here of the five is the ' +
+    'canonical form, the characteristic polynomial, the quadratic forms and the matrix ' +
+    'exponential, and every one of those genuinely rests on the eigenvalue this area begins at.',
   nodes: [
     {
       id: 'eigenvalues',
@@ -75,14 +94,6 @@ const LINEAR_ALGEBRA: MapArea = {
       is: 'A symmetric matrix has an orthonormal eigenbasis and real eigenvalues — the cleanest theorem in the subject.',
       needs: ['diagonalisation', 'inner-product-spaces'],
       terms: 'spectral theorem symmetric matrix orthogonal diagonalisation orthonormal eigenbasis',
-    },
-    {
-      id: 'least-squares',
-      match: /\bleast squares\b/i,
-      name: 'Least squares',
-      is: 'The best answer to an unsolvable system, which is an orthogonal projection onto the column space.',
-      needs: ['inner-product-spaces', 'rank-nullity'],
-      terms: 'least squares normal equations projection residual regression',
     },
     {
       id: 'singular-value-decomposition',
@@ -134,6 +145,15 @@ const LINEAR_ALGEBRA: MapArea = {
      * prerequisite is authored) and the other four are not, which is the honest
      * distribution: they rest on the spectral chain this area has not written
      * yet. So this does not hand the next promotion four cheap candidates.
+     *
+     * AND THE ONE THAT WAS READY IS GONE, which is the sentence above coming
+     * true rather than going stale. The forty-second promotion took
+     * `dual-spaces`; the other four are still unready, so NONE of what remains
+     * of these five is a candidate until somebody writes the spectral chain.
+     * The next promotion out of this area is `eigenvalues`, which is ready, was
+     * ready before these five were added, and is the gateway to four of them —
+     * `cayley-hamilton` directly, and `jordan-normal-form`, `quadratic-forms`
+     * and `matrix-exponential` behind `diagonalisation`.
      */
     {
       id: 'cayley-hamilton',
@@ -177,20 +197,41 @@ const LINEAR_ALGEBRA: MapArea = {
       needs: ['spectral-theorem'],
       terms: 'quadratic form bilinear form signature definite congruence sylvester',
     },
-    {
-      id: 'dual-spaces',
-      match: /\bdual (space|basis)\b/i,
-      name: 'Dual spaces',
-      is: 'The linear maps from a space to its scalars, which form a space of the same dimension and are where a row vector actually lives.',
-      /*
-       * The one addition resting on written material rather than on this area's
-       * own chain, and so the one that is ready. That is not an accident of
-       * where it sits: the dual is a dimension count and a basis argument, both
-       * authored in `vectors-and-independence`, and it needs no eigenvalue.
-       */
-      needs: ['basis-and-dimension'],
-      terms: 'dual space dual basis linear functional annihilator transpose',
-    },
+    /*
+     * `dual-spaces` WAS THE FOURTH OF THE FIVE AND IS A CONCEPT NOW, WHICH
+     * MAKES IT THE FIRST NODE THIS BUILD ADDED AND THEN AUTHORED OUT.
+     *
+     * It is a concept of `vectors-and-independence`, in ontology-vectors.ts, as
+     * of the forty-second promotion — so a node of the same id here would
+     * collide with it and `atlasProblems` reports that as an error rather than
+     * merging the two: the authored copy would be shadowed by a node with no
+     * knowledge points, and a written subject would silently read as
+     * unteachable.
+     *
+     * THE PARAGRAPH ABOVE PREDICTED THIS AND WAS RIGHT FOR THE REASON IT GAVE.
+     * It said this was "the one addition resting on written material rather
+     * than on this area's own chain, and so the one that is ready", and that it
+     * does not hand the next promotion four cheap candidates. One of the five
+     * has now been taken and the other four are still unready, which is the
+     * distribution the note claimed. What it did NOT foresee is the shape of
+     * the cost: a node added because the map was thin and then promoted inside
+     * three weeks spent nothing of this area's territory either way, because
+     * the floor counts departures.
+     *
+     * WHAT IT STRANDED WAS ITS ONLY `needs`, AND NOTHING ELSE AT ALL. The node
+     * declared one, `basis-and-dimension`, which is authored in the SAME
+     * subject the concept went to — so it is an ordinary edge in that
+     * ontology's `EDGES` and there is no `links` entry here. No node and no
+     * concept in any file named `dual-spaces` in its own `needs` or
+     * `exercises`, so no edge pointed IN and none had to survive; it is the
+     * first promotion in this build with no dependents whatever. The node also
+     * declared no `confusedWith`, which is the stranding `expandEdges` performs
+     * silently and that no suite reports.
+     *
+     * TAKING IT COST AN ARMATURE ANCHOR, for the fifth time out of this area
+     * and the second running with no derivable refill. See armature.ts, where
+     * the judgement and its alternative are recorded.
+     */
     {
       id: 'matrix-exponential',
       match: /\bmatrix exponential\b/i,
@@ -210,19 +251,39 @@ const LINEAR_ALGEBRA: MapArea = {
     },
   ],
   /*
-   * NINE NODES HAVE BEEN AUTHORED OUT OF THIS AREA, and this is the list the
-   * stub floor reads so that nine departures count as territory covered rather
-   * than territory missing. See `MapArea.departed` in atlas.ts for why the
-   * floor needed it and why absence means zero.
+   * ELEVEN NODES HAVE BEEN AUTHORED OUT OF THIS AREA, which is more than any
+   * other area has given up, and this is the list the stub floor reads so that
+   * eleven departures count as territory covered rather than territory
+   * missing. See `MapArea.departed` in atlas.ts for why the floor needed it and
+   * why absence means zero.
    *
    * Four left together when ontology-matrices.ts was authored and are the four
-   * the `links` block below restates the incoming edges for. The other five are
-   * one promotion each — the fourteenth, twentieth, twenty-second,
-   * twenty-third and thirtieth — and every one of them is named in `covers`
-   * above, which is where the reasoning for each move lives. Nothing here is a
-   * node that merely points into this area: `three-dimensional-coordinates` was
-   * authored into the same subject as four of these and was a node of
-   * `euclidean-geometry`, so it is declared over there and not here.
+   * the `links` block below restates the incoming edges for. The other seven
+   * are one promotion each — the fourteenth, twentieth, twenty-second,
+   * twenty-third, thirtieth, forty-first and forty-second — and every one of
+   * them is named in `covers` above, which is where the reasoning for each move
+   * lives. Nothing here is a node that merely points into this area:
+   * `three-dimensional-coordinates` was authored into the same subject as six
+   * of these and was a node of `euclidean-geometry`, so it is declared over
+   * there and not here.
+   *
+   * SEVEN OF THE ELEVEN WENT TO ONE SUBJECT, which is worth noticing rather
+   * than only recording. `vector-spaces`, `basis-and-dimension`,
+   * `inner-product-spaces`, `rank-nullity`, `least-squares` and now
+   * `dual-spaces` are all concepts of `vectors-and-independence`, and
+   * `gaussian-elimination` went to the equations. The pattern is the one
+   * `covers` argues at length: what this area kept is what genuinely needs an
+   * eigenvalue, and almost everything that does not turns out to belong with
+   * the subject a learner arrives from the plane into.
+   *
+   * THE LAST ENTRY IS THE ONE THAT WAS NEVER ON THE ORIGINAL MAP, and it is
+   * worth separating from the other ten. `dual-spaces` was ADDED to this area
+   * on 2026-11-24, when the area was read against its own `covers` and five
+   * second-course topics were found missing, and it was authored out on
+   * 2026-11-25. Every other name here was a node from the beginning. So this
+   * list now records two different kinds of event — a node the map always had
+   * and gave up, and a node the map gained and then grew material for — and the
+   * second kind is what a thin area looks like when the fix works.
    */
   departed: [
     'matrices-and-maps',
@@ -234,6 +295,8 @@ const LINEAR_ALGEBRA: MapArea = {
     'basis-and-dimension',
     'inner-product-spaces',
     'rank-nullity',
+    'least-squares',
+    'dual-spaces',
   ],
   /**
    * THE FOUR EDGES THAT CAME IN TO THE AUTHORED NODES.
@@ -631,6 +694,146 @@ const LINEAR_ALGEBRA: MapArea = {
    * predicted this one, and the comment there says so. What is new is that the
    * rule had TWO candidates to choose between for the first time, and only one
    * of them became a root; see the note in armature.ts.
+   *
+   * ── AND A TENTH, WHICH IS THE ONE THE REFILL RULE COULD NOT ANSWER ──────
+   *
+   * `least-squares` LEFT THIS AREA WHEN IT WAS AUTHORED, AND HAD TO. It is a
+   * concept of `vectors-and-independence` now, in ontology-vectors.ts, so a
+   * node of the same id here would collide with it and `atlasProblems` reports
+   * that as an error rather than merging the two — the authored copy would be
+   * shadowed by a node with no knowledge points, and a written subject would
+   * silently read as unteachable.
+   *
+   * TEN NODES AFTER, against a stub floor of five, and the count no longer
+   * decides anything: the floor reads `departed` as covered territory, so this
+   * area stands at ten nodes plus ten departures against a threshold of five
+   * and the total is unchanged by the move. The figures live in the group named
+   * "the floor stopped binding" at the end of tests/atlas.mjs and nowhere else,
+   * which is the rule five groups' worth of red taught that file.
+   *
+   * WHAT IT STRANDED WAS BOTH OF ITS `needs` AND THERE IS NO `links` ENTRY FOR
+   * EITHER. The node declared `inner-product-spaces` and `rank-nullity`, and
+   * both are authored concepts of the subject it went to — so both edges are
+   * declared in that ontology's own `EDGES` and this area owes nothing. That is
+   * the cheapest shape a promotion can have, it is the fourth time out of this
+   * one area, and it is what chose this node over the five other unrefused
+   * candidates whose `needs` reach across two or three subjects.
+   *
+   * NOTHING WAS HANDED BACK. No `links` entry of this area — or of any area —
+   * named `least-squares` at either end, so there was no duplicate to delete.
+   * An absence, and one that has to be looked for: `links` never cared whether
+   * an end was a node or a concept, so a stale entry would go on resolving
+   * perfectly well and `composeAtlas` would produce the same edge twice, which
+   * is not a redundancy the loader notices and no suite checks for.
+   *
+   * THE ONE EDGE POINTING IN SURVIVED. `singular-value-decomposition` names
+   * this concept in its OWN `needs`, so that edge is declared on a node that
+   * remains and resolves untouched. Only a node's own `needs` is stranded by
+   * deleting it — and this area has now recorded that fact ten times, which is
+   * the number of times somebody could have got it backwards.
+   *
+   * THE AREA VIEW SHRANK WITHOUT SUBSTITUTING, which is the SEVENTH shape this
+   * area has produced and the second of this one. The departing node was a root
+   * of the area view, so it left the set; and nothing replaced it, because its
+   * only in-area dependent is `singular-value-decomposition`, which also names
+   * `spectral-theorem` — a node of this area — and so did not become rooted.
+   * {`dual-spaces`, `eigenvalues`, `least-squares`} became {`dual-spaces`,
+   * `eigenvalues`}: three to two, both survivors unchanged. A
+   * direction-of-change check would read this and the twenty-second promotion's
+   * shrink identically, and what distinguishes them is which members moved,
+   * which is why tests/atlas.mjs asserts the set by named membership and never
+   * by its length.
+   *
+   * `confusedWith` and `exercises` on the departing node: NEITHER, checked
+   * before deleting it. `expandEdges` handles all THREE edge-bearing node
+   * fields and `exercises` is the one no comment in this file named until the
+   * fortieth promotion found it — an `encompasses` edge whose ends land in two
+   * ontologies is expressible nowhere, so a node carrying one can only be filed
+   * in the subject holding the far end, and this node's two `needs` are both in
+   * one subject so it would not even have had that escape. Both absent, so the
+   * filing was argued on content.
+   *
+   * AN `encompasses` EDGE DOES POINT AT IT, AND IT IS DECLARED SOMEWHERE ELSE
+   * ENTIRELY. `linear-regression`, a node of `statistics` in
+   * atlas-uncertainty.ts, carries `exercises: ['least-squares']` alongside its
+   * `needs` — so the claim that fitting a regression line exercises this
+   * concept survives the departure like any far-end declaration, and begins
+   * doing work the day that node is written. The authored subject could not
+   * have declared it: an ontology may only name concepts it contains.
+   *
+   * IT WAS AN `armature.ts` ANCHOR, AND KRULL'S SLOT HAS NOW TURNED OVER FOUR
+   * TIMES — BUT THE DOCUMENTED REFILL RULE RETURNED NOBODY. The rule the eighth
+   * departure's note wrote down is "the refill is always the node that was
+   * next", and the thirtieth promotion sharpened it to the dependent that
+   * BECOMES A ROOT of the area view. No node did, for the reason the paragraph
+   * above gives. So the refill was a judgement for the first time, and
+   * `dual-spaces` took the slot on the surviving half of the rule — it is the
+   * area's other root, and this area's two ready nodes are exactly its two
+   * roots, the other being `eigenvalues`, which is an anchor already. So it was
+   * the only ready node available without shrinking the region to two. See the
+   * note in armature.ts for the whole argument, including why the alternative
+   * was tempting and lost, and for the claim this file got wrong first — that
+   * the dual was the ONLY ready node here, which it is not and which the suite
+   * caught.
+   *
+   * ── AND AN ELEVENTH, WHICH IS THE NODE THE PARAGRAPH ABOVE JUST REFILLED ──
+   *
+   * `dual-spaces` LEFT THIS AREA WHEN IT WAS AUTHORED, AND HAD TO, for the
+   * collision reason every entry above gives. It is a concept of
+   * `vectors-and-independence` now, which makes it the SEVENTH node of this
+   * area to land in that one subject.
+   *
+   * NINE NODES AFTER, against a stub floor of five, and the count still decides
+   * nothing: nine nodes plus eleven departures is the same twenty of territory
+   * that ten plus ten was. The figures live in the group named "the floor
+   * stopped binding" at the end of tests/atlas.mjs and nowhere else.
+   *
+   * IT STRANDED ONE EDGE AND THERE IS NO `links` ENTRY FOR IT. The node
+   * declared a single `need`, `basis-and-dimension`, and that is an authored
+   * concept of the subject it went to — so the edge is declared in that
+   * ontology's own `EDGES` and this area owes nothing. Fifth time out of this
+   * one area, and the third promotion running with that shape.
+   *
+   * NOTHING WAS HANDED BACK, checked the same way as above and for the same
+   * reason: no `links` entry of any area named `dual-spaces` at either end, so
+   * there was no duplicate to delete and no suite would have reported one.
+   *
+   * NOTHING POINTED IN AT ALL, which is new. Every departure above left at
+   * least one far-end edge behind — `singular-value-decomposition` naming the
+   * least squares, `numerical-linear-algebra` naming the elimination,
+   * `eigenvalues` naming the determinant. This node had NO dependents anywhere
+   * in the build: nothing names it in a `needs` and nothing names it in an
+   * `exercises`. So the "edges declared at the far end survive untouched" half
+   * of a departure was vacuous here, and that is precisely the third factor
+   * this node lost on and took anyway — it was the only unrefused candidate
+   * whose prerequisites sat in one subject, and the one with the fewest
+   * dependents of any candidate at all. The node that would have unlocked four
+   * is `eigenvalues`, which is still here and still ready.
+   *
+   * THE AREA VIEW SHRANK WITHOUT SUBSTITUTING AGAIN, which is the EIGHTH shape
+   * and the third shrink. {`dual-spaces`, `eigenvalues`} became
+   * {`eigenvalues`}: two to one, the survivor unchanged, and nothing could have
+   * replaced it since it had no dependents at all to promote into the set. So
+   * the root set of this area is a single node for the first time since the
+   * fourteenth promotion, and the one member is the node every unwritten part
+   * of this area stands on.
+   *
+   * `confusedWith` and `exercises` on the departing node: NEITHER, checked
+   * before deleting it rather than inferred from the suites staying green,
+   * which for `confusedWith` is the only way to know — `expandEdges` turns one
+   * into an `interferes_with`, and interference constrains SELECTION rather
+   * than gating, so losing one leaves every assertion in the build passing
+   * while the scheduler is quietly freed to introduce two confusable concepts
+   * together.
+   *
+   * IT WAS AN `armature.ts` ANCHOR, AND KRULL'S SLOT HAS NOW TURNED OVER FIVE
+   * TIMES — with the documented refill rule returning nobody for the second
+   * time running, and this time for a stronger reason than last. At the
+   * forty-first the rule failed because the departing node's only in-area
+   * dependent did not become a root; here it fails because the departing node
+   * has no dependents at all, so there is no candidate for the rule to reject.
+   * The refill is a judgement again and it is recorded in armature.ts, with its
+   * alternative named.
    */
   links: [
     /*

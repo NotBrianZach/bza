@@ -798,6 +798,148 @@ const COLUMNS_AND_NULLITY: VariableDeclaration[] = [
   { name: 'k', assumptions: { integer: true } },
 ]
 
+/**
+ * One column of a system and the target it cannot reach, for the forty-first
+ * promotion — and the pair of sets exists for the reason `VEC_UV_COEFF`'s note
+ * gives.
+ *
+ * `a` for the column and `b` for the target, which is the naming the material
+ * uses throughout (`x·a = b`) and the naming every textbook statement of
+ * `Ax = b` uses. Not `u`/`v`: those are two vectors of the same standing, and
+ * the whole content here is that one of the two is reachable territory and the
+ * other is the thing being reached FOR.
+ *
+ * The coefficient `x` is declared in the second set only. The first task asks
+ * for `x` itself and therefore must not be handed it — `at` is what a task
+ * substitutes, and substituting the answer would make the question free — so
+ * that task declares the set without it and the symbol is absent rather than
+ * declared-and-unused. Every other declaration list in this file may carry an
+ * unused entry harmlessly; these two are the exception, as the projection
+ * coefficient's pair was.
+ *
+ * `real` and not `integer` throughout, for the same reason the vector
+ * components above are real: a measurement is not a whole-number object, and
+ * these examples using whole ones is a choice about arithmetic load. `x` least
+ * of all — a least-squares coefficient is a quotient and is only whole here
+ * because the numbers were chosen to make it so.
+ */
+const LS_COLUMN_AND_TARGET = [
+  { name: 'a1', assumptions: { real: true } },
+  { name: 'a2', assumptions: { real: true } },
+  { name: 'a3', assumptions: { real: true } },
+  { name: 'b1', assumptions: { real: true } },
+  { name: 'b2', assumptions: { real: true } },
+  { name: 'b3', assumptions: { real: true } },
+]
+
+const LS_COLUMN_TARGET_AND_X = [
+  ...LS_COLUMN_AND_TARGET,
+  { name: 'x', assumptions: { real: true } },
+]
+
+/**
+ * Four readings, the four times they were taken at, and the column of ones —
+ * for the two-column fit.
+ *
+ * Four components rather than three, and that is the point of a separate set
+ * rather than a spread: a fit of two coefficients to three readings would be
+ * one reading away from exact, and the residual pattern the material reads off
+ * needs a fourth miss to be a pattern at all. `u` is the column of ones
+ * because the material calls it a column throughout and the first thing a
+ * learner has to see is that a constant term IS a column of a matrix; `t` for
+ * the times and `y` for the readings, which is the one place this file lets the
+ * story name the symbols, since "the times are measured from the middle of the
+ * run" is the fact that makes ⟨u, t⟩ = 0.
+ *
+ * `c` and `m` are in the second set only, for the reason the pair above gives:
+ * the task that asks for `m` must not be handed it.
+ */
+const LS_FOUR_POINT_FIT = [
+  { name: 'u1', assumptions: { real: true } },
+  { name: 'u2', assumptions: { real: true } },
+  { name: 'u3', assumptions: { real: true } },
+  { name: 'u4', assumptions: { real: true } },
+  { name: 't1', assumptions: { real: true } },
+  { name: 't2', assumptions: { real: true } },
+  { name: 't3', assumptions: { real: true } },
+  { name: 't4', assumptions: { real: true } },
+  { name: 'y1', assumptions: { real: true } },
+  { name: 'y2', assumptions: { real: true } },
+  { name: 'y3', assumptions: { real: true } },
+  { name: 'y4', assumptions: { real: true } },
+]
+
+const LS_FOUR_POINT_FIT_COEFFS = [
+  ...LS_FOUR_POINT_FIT,
+  { name: 'c', assumptions: { real: true } },
+  { name: 'm', assumptions: { real: true } },
+]
+
+/**
+ * A column count and a RANK, for the one task that counts the ways of naming
+ * one fit.
+ *
+ * `integer` and not `real`, which is the whole point of the pair exactly as it
+ * is for `COLUMNS_AND_NULLITY` above: both are COUNTS, and the content is that
+ * they and the dimension of the solution set cannot be chosen independently.
+ *
+ * A separate constant from that one, and NOT a reuse of it, though the `given`
+ * is the same subtraction. There `k` is the nullity and the answer is the rank;
+ * here the second input is the rank and the answer is the nullity — the same
+ * theorem read in the other direction, at a question that concept did not ask.
+ * One declaration list describing two different objects is the thing
+ * `COLUMNS_AND_NULLITY`'s own note refuses, and `p` rather than `k` is
+ * deliberate: the material calls the count of pivot columns the pivots, and
+ * naming it `r` would collide in a reader's head with the residual vector that
+ * every other task on this concept is about.
+ *
+ * Annotated with `VariableDeclaration[]` for the reason that note gives at
+ * length: the two entries carry different assumption keys, so an unannotated
+ * literal infers an element type whose `p` member reads `positive?: undefined`,
+ * `undefined` is not assignable to `Record<string, boolean>`, nothing under
+ * tests/ catches it because all three suites run the emitted JavaScript, and
+ * `next build` exits 1 and takes the production deploy with it.
+ */
+const LS_COLUMNS_AND_PIVOTS: VariableDeclaration[] = [
+  { name: 'n', assumptions: { integer: true, positive: true } },
+  { name: 'p', assumptions: { integer: true } },
+]
+
+/**
+ * Two weights and the two values a functional takes on a basis — for the dual.
+ *
+ * `fu` and `fv` rather than `f1` and `f2`, because the numbered names are the
+ * DUAL BASIS functionals in that concept's material and these are the values of
+ * one arbitrary functional on u and v. Naming them `f1`, `f2` would make the
+ * two tasks that share this set read as though they were about the dual basis,
+ * which is the next point and a different object.
+ *
+ * `real` and not `integer` for all four, like the vector components above: a
+ * functional's values are real numbers, and these tasks using whole ones is a
+ * choice about arithmetic load.
+ */
+const DUAL_WEIGHTS_AND_VALUES = [
+  { name: 'c1', assumptions: { real: true } },
+  { name: 'c2', assumptions: { real: true } },
+  { name: 'fu', assumptions: { real: true } },
+  { name: 'fv', assumptions: { real: true } },
+]
+
+/**
+ * The two components of a plane vector, as the ARGUMENT of a rule in x and y.
+ *
+ * Separate from `VEC_UVW` and from `PLANE_XYZ` deliberately. The dual basis
+ * functionals are written as rules on components — `(3x − y)/7` — so what the
+ * four tasks sharing this set substitute is a point being fed to a rule, not a
+ * vector being combined with others. Reusing `u1`/`u2` would have made the
+ * expression read as though it were about a specific named vector when the
+ * whole claim is that it is a rule applying to any.
+ */
+const DUAL_PLANE_XY = [
+  { name: 'x', assumptions: { real: true } },
+  { name: 'y', assumptions: { real: true } },
+]
+
 /** The three coordinates of a point, for substituting into a plane equation. */
 const PLANE_XYZ = [
   { name: 'x', assumptions: { real: true } },
@@ -8814,6 +8956,589 @@ export const TASKS: PracticeTask[] = [
     // rows do. Trivial arithmetic on purpose — the theorem IS this subtraction,
     // and what it buys is that nobody reduces a 40×5 grid to get the 3.
     reference: '3',
+  },
+
+  /*
+   * Least squares — ten tasks, three on each of the first two points and four
+   * on the third, the forty-first promotion. Every one `evaluate`, every one
+   * exact with no worker, which is this subject's standing contract.
+   *
+   * NOT TWO PER POINT, and the exception is the content rather than an
+   * accident. The third point makes two claims — the coefficients come out of
+   * separate equations WHEN the columns are perpendicular, and the answer is
+   * unique while the naming of it need not be — and the first of those needs
+   * the test for perpendicularity, the coefficient it uncouples, and the miss
+   * the fit leaves before it is a claim at all. So that point gets four and any
+   * three of them are part of it.
+   *
+   * ONE SYSTEM RUNS THROUGH THE FIRST SIX, and it is
+   *
+   *     x·a = b  with  a = (1, 1, 1)  and  b = (2, 3, 7)
+   *
+   * which is three measurements of one quantity, inconsistent because the three
+   * components of b are not equal. ⟨b, a⟩ = 12 and ⟨a, a⟩ = 3, so x̂ = 4, the
+   * residual is (−2, −1, 3) and the least sum of squared misses is 14. The
+   * column being all ones is chosen and not incidental: it makes the forced
+   * coefficient an AVERAGE, which is what lets the third task reach the same 4
+   * by a route that mentions no vector.
+   *
+   * THE COMPETITOR IS x = 5 AND IT IS THE SAME TWO EXPRESSIONS AT NEW INPUTS.
+   * `normal-equation-holds-1` and `normal-equation-rejects-and-points-1` share
+   * a `given` and return 0 and −3; `least-squares-miss-at-the-best-1` and
+   * `the-penalty-for-missing-it-1` share one and return 14 and 17. Both pairs
+   * are the point's content expressed as a task pair rather than as prose: a
+   * set of tasks that only ever showed the zero would teach that the test
+   * returns zero, and one that only ever showed 14 would leave "least" as a
+   * word. 17 − 14 = 3 is exactly ⟨a, a⟩, which is the split predicting the
+   * competitor's miss rather than the competitor being measured.
+   *
+   * THE LAST FOUR RUN ON ONE FIT, four readings y = (2, 2, 4, 8) at times
+   * t = (−3, −1, 1, 3). The times are measured from the MIDDLE of the run, so
+   * ⟨u, t⟩ = 0 and the two normal equations uncouple — which is a real
+   * technique rather than a convenience, and is what keeps this material inside
+   * what the node's two `needs` can carry: the uncentred case is a 2×2 system
+   * and belongs to `expressions-and-equations`. c = 16/4 = 4 and m = 20/20 = 1,
+   * the fit is (1, 3, 5, 7), the residual is (1, −1, −1, 1) and ⟨r, r⟩ = 4.
+   *
+   * THE RESIDUAL IS A PATTERN AND NOT A SCATTER, which was the hardest choice
+   * in the set. Four points, two coefficients, and a residual orthogonal to
+   * both columns with no zero component: the sign pattern is FORCED to be
+   * +, −, −, + or its negative or the alternating one, so an honest four-point
+   * line fit with every reading missed cannot look like noise. Rather than hide
+   * that by letting one reading be hit exactly, the material names it — the data
+   * bends, a line cannot — and says that reading such a pattern is
+   * `linear-regression` and not this concept.
+   *
+   * NOTHING HERE TAKES A ROOT AND NOTHING ASKS FOR AN ANGLE, which are the two
+   * boundaries this subject has held since the dot product. The first one cost
+   * something to keep for the first time and the cost was zero: the quantity
+   * minimised is the SUM of squared misses and its square root has the same
+   * minimiser, so the concept whose name is about squares never needs their
+   * root.
+   */
+  {
+    id: 'least-squares-coefficient-1',
+    knowledgePointId: 'an-unsolvable-system-still-has-a-least-miss',
+    kind: 'evaluate',
+    prompt:
+      'Three measurements of one quantity give the system x·a = b with a = (1, 1, 1) and ' +
+      'b = (2, 3, 7), which no x satisfies — a multiple of (1, 1, 1) has equal components and b ' +
+      'does not. The x leaving the least sum of squared misses is the projection coefficient ' +
+      '⟨b, a⟩/⟨a, a⟩, so evaluate (a1*b1 + a2*b2 + a3*b3) / (a1*a1 + a2*a2 + a3*a3). Both halves ' +
+      'are inner products you have computed before, and dividing by the bottom is legitimate ' +
+      'because ⟨a, a⟩ is positive for a non-zero a.',
+    given: '(a1*b1 + a2*b2 + a3*b3) / (a1*a1 + a2*a2 + a3*a3)',
+    variables: LS_COLUMN_AND_TARGET,
+    at: { a1: '1', a2: '1', a3: '1', b1: '2', b2: '3', b3: '7' },
+    // (2 + 3 + 7)/(1 + 1 + 1) = 12/3 = 4. `projection-coefficient-1`'s shape at
+    // three components rather than two, which is one of the five tasks the
+    // `encompasses` edge down to the inner product is claimed on.
+    //
+    // `x` is deliberately NOT in this task's declaration list: it is the answer,
+    // and `at` is what a task substitutes.
+    reference: '4',
+  },
+  {
+    id: 'least-squares-miss-at-the-best-1',
+    knowledgePointId: 'an-unsolvable-system-still-has-a-least-miss',
+    kind: 'evaluate',
+    prompt:
+      'Same a = (1, 1, 1) and b = (2, 3, 7), and the coefficient came out x̂ = 4, so the miss is ' +
+      'r = b − 4a. Evaluate the sum of its squares, ' +
+      '(b1 - x*a1)^2 + (b2 - x*a2)^2 + (b3 - x*a3)^2. That number is the LEAST this sum can be ' +
+      'made rather than a measure of a mistake — and it is the sum of the squares and not its ' +
+      'square root, which is why this concept is called least squares and why nothing in it ' +
+      'takes a root.',
+    given: '(b1 - x*a1)^2 + (b2 - x*a2)^2 + (b3 - x*a3)^2',
+    variables: LS_COLUMN_TARGET_AND_X,
+    at: { a1: '1', a2: '1', a3: '1', b1: '2', b2: '3', b3: '7', x: '4' },
+    // r = (−2, −1, 3) and 4 + 1 + 9 = 14. Paired with
+    // `the-penalty-for-missing-it-1`, which is this `given` at x = 5 and returns
+    // 17 — and 17 − 14 = 3 is ⟨a, a⟩ exactly, which is the second point's split.
+    reference: '14',
+  },
+  {
+    id: 'the-constant-fit-is-the-mean-1',
+    knowledgePointId: 'an-unsolvable-system-still-has-a-least-miss',
+    kind: 'evaluate',
+    prompt:
+      'The same three measurements by a route that mentions no vector: evaluate ' +
+      '(b1 + b2 + b3) / 3. With a = (1, 1, 1) the formula ⟨b, a⟩/⟨a, a⟩ IS this expression for ' +
+      'any b at all — add the components, divide by how many there are — so the least-squares ' +
+      'fit of a constant is the MEAN, and this task and the first one are a single number ' +
+      'reached two ways. The summaries subject says the signed deviations from a mean total ' +
+      'zero; that total is ⟨r, a⟩, and the zero is this concept\'s own condition.',
+    given: '(b1 + b2 + b3) / 3',
+    variables: LS_COLUMN_AND_TARGET,
+    at: { a1: '1', a2: '1', a3: '1', b1: '2', b2: '3', b3: '7' },
+    // (2 + 3 + 7)/3 = 4, the same answer as `least-squares-coefficient-1` from a
+    // different `given`. The cross-check is the task: two routes to one number
+    // is the shape the Euclidean algorithm's first point used, and here it is
+    // also the whole of the debt to `descriptive-statistics`.
+    //
+    // The 3 is written as a literal and not as a1 + a2 + a3, because the claim
+    // is that the formula DEGENERATES into an average — a version that kept the
+    // components would be the first task again with the arithmetic rearranged.
+    reference: '4',
+  },
+  {
+    id: 'normal-equation-holds-1',
+    knowledgePointId: 'the-normal-equation-is-what-makes-it-least',
+    kind: 'evaluate',
+    prompt:
+      'Same a = (1, 1, 1) and b = (2, 3, 7), at x = 4. The normal equation says the miss must ' +
+      'come out perpendicular to the column, so evaluate ' +
+      'a1*(b1 - x*a1) + a2*(b2 - x*a2) + a3*(b3 - x*a3). A zero is that condition holding — and ' +
+      'it confirms the arithmetic rather than proving 4 is best, since x̂ was solved for out of ' +
+      'this very equation. What shows it is best is the task after next.',
+    given: 'a1*(b1 - x*a1) + a2*(b2 - x*a2) + a3*(b3 - x*a3)',
+    variables: LS_COLUMN_TARGET_AND_X,
+    at: { a1: '1', a2: '1', a3: '1', b1: '2', b2: '3', b3: '7', x: '4' },
+    // −2 − 1 + 3 = 0. `orthogonal-remainder-1`'s shape at three components —
+    // the residual's inner product with the vector it was taken along — which is
+    // the second of the five tasks the `encompasses` edge is claimed on.
+    reference: '0',
+  },
+  {
+    id: 'normal-equation-rejects-and-points-1',
+    knowledgePointId: 'the-normal-equation-is-what-makes-it-least',
+    kind: 'evaluate',
+    prompt:
+      'The SAME expression at x = 5: evaluate ' +
+      'a1*(b1 - x*a1) + a2*(b2 - x*a2) + a3*(b3 - x*a3) again, with a and b unchanged. Written ' +
+      'out it is ⟨b, a⟩ − x⟨a, a⟩ = 12 − 3x, so it is positive below the best coefficient, zero ' +
+      'at it and negative above — a non-zero answer rejects 5, and the sign says that more of a ' +
+      'has been taken out than b had in it, so x must come down.',
+    given: 'a1*(b1 - x*a1) + a2*(b2 - x*a2) + a3*(b3 - x*a3)',
+    variables: LS_COLUMN_TARGET_AND_X,
+    at: { a1: '1', a2: '1', a3: '1', b1: '2', b2: '3', b3: '7', x: '5' },
+    // b − 5a = (−3, −2, 2) and −3 − 2 + 2 = −3. Same `given` as the task above
+    // at one changed input, which is the point's content as a task pair: one
+    // expression accepts the answer and rejects the competitor, and a set that
+    // only ever showed the zero would teach that the test returns zero.
+    reference: '-3',
+  },
+  {
+    id: 'the-penalty-for-missing-it-1',
+    knowledgePointId: 'the-normal-equation-is-what-makes-it-least',
+    kind: 'evaluate',
+    prompt:
+      'Same system, and x = 5 is x̂ − d with d = −1, so d² = 1. The split ' +
+      '⟨b − xa, b − xa⟩ = ⟨r, r⟩ + d²⟨a, a⟩ predicts 14 + 1·3 = 17 without squaring anything, so ' +
+      'check it directly: evaluate (b1 - x*a1)^2 + (b2 - x*a2)^2 + (b3 - x*a3)^2 at x = 5. The ' +
+      'two agree because the cross term 2d⟨r, a⟩ vanished, which is the normal equation used for ' +
+      'the thing that matters — a non-zero ⟨r, a⟩ would let that term go negative and some other ' +
+      'x would beat 4.',
+    given: '(b1 - x*a1)^2 + (b2 - x*a2)^2 + (b3 - x*a3)^2',
+    variables: LS_COLUMN_TARGET_AND_X,
+    at: { a1: '1', a2: '1', a3: '1', b1: '2', b2: '3', b3: '7', x: '5' },
+    // 9 + 4 + 4 = 17, which is `least-squares-miss-at-the-best-1`'s 14 plus
+    // ⟨a, a⟩ = 3. Same `given` at one changed input, and the pair is what makes
+    // "least" a checked claim: either task alone is a sum of three squares.
+    reference: '17',
+  },
+  {
+    id: 'the-two-columns-do-not-interact-1',
+    knowledgePointId: 'one-normal-equation-per-column-and-a-count-for-the-rest',
+    kind: 'evaluate',
+    prompt:
+      'Four readings are taken at times t = (−3, −1, 1, 3), measured from the middle of the run, ' +
+      'and fitted by y ≈ c + mt — a combination of the two columns u = (1, 1, 1, 1) and t. ' +
+      'Evaluate ⟨u, t⟩ = u1*t1 + u2*t2 + u3*t3 + u4*t4. A zero means the two normal equations ' +
+      'share no unknown, so each coefficient comes out of its own; anything else and the two are ' +
+      'a 2×2 system to be solved together.',
+    given: 'u1*t1 + u2*t2 + u3*t3 + u4*t4',
+    variables: LS_FOUR_POINT_FIT,
+    at: {
+      u1: '1', u2: '1', u3: '1', u4: '1',
+      t1: '-3', t2: '-1', t3: '1', t4: '3',
+      y1: '2', y2: '2', y3: '4', y4: '8',
+    },
+    // −3 − 1 + 1 + 3 = 0. The orthogonality test of
+    // `a-right-angle-belongs-to-a-pair-and-a-rule` at four components, which is
+    // the fifth task the `encompasses` edge is claimed on — and the zero is
+    // arranged by the times being measured from the middle rather than being
+    // lucky, which the prompt says so that the technique is visible.
+    //
+    // The readings are in `at` though the expression does not use them, which
+    // every multi-task set in this file does: `at` decides what is substituted,
+    // an unused declaration costs nothing, and a symbol missing from `at` fails
+    // an assertion.
+    reference: '0',
+  },
+  {
+    id: 'the-slope-from-its-own-column-1',
+    knowledgePointId: 'one-normal-equation-per-column-and-a-count-for-the-rest',
+    kind: 'evaluate',
+    prompt:
+      'Same four times, with readings y = (2, 2, 4, 8). The columns being perpendicular, the ' +
+      'second normal equation reads ⟨y, t⟩ = m⟨t, t⟩ with no c in it, so evaluate ' +
+      '(t1*y1 + t2*y2 + t3*y3 + t4*y4) / (t1*t1 + t2*t2 + t3*t3 + t4*t4). The intercept comes ' +
+      'out of the other equation as ⟨y, u⟩/⟨u, u⟩ = 16/4 = 4, which is the mean of the readings ' +
+      'exactly as a column of ones always gives.',
+    given: '(t1*y1 + t2*y2 + t3*y3 + t4*y4) / (t1*t1 + t2*t2 + t3*t3 + t4*t4)',
+    variables: LS_FOUR_POINT_FIT,
+    at: {
+      u1: '1', u2: '1', u3: '1', u4: '1',
+      t1: '-3', t2: '-1', t3: '1', t4: '3',
+      y1: '2', y2: '2', y3: '4', y4: '8',
+    },
+    // (−6 − 2 + 4 + 24)/(9 + 1 + 1 + 9) = 20/20 = 1. The quotient of two inner
+    // products again, at four components, which is the third task the
+    // `encompasses` edge is claimed on. The intercept is given in the prompt
+    // rather than asked for because it is the first point's arithmetic at new
+    // numbers, and the claim of THIS task is that the slope needed none of it.
+    //
+    // `c` and `m` are not in this declaration list: `m` is the answer.
+    reference: '1',
+  },
+  {
+    id: 'the-least-miss-of-any-line-1',
+    knowledgePointId: 'one-normal-equation-per-column-and-a-count-for-the-rest',
+    kind: 'evaluate',
+    prompt:
+      'The fit came out c = 4 and m = 1, so the fitted readings are c + m·t at the four times. ' +
+      'Evaluate the sum of squared misses, ' +
+      '(y1 - c - m*t1)^2 + (y2 - c - m*t2)^2 + (y3 - c - m*t3)^2 + (y4 - c - m*t4)^2. No line ' +
+      'through this data does better. The four misses are (1, −1, −1, 1), which the total hides: ' +
+      'they do not scatter, because the data bends and a line cannot — and whether a pattern ' +
+      'like that is signal is regression rather than this concept.',
+    given:
+      '(y1 - c - m*t1)^2 + (y2 - c - m*t2)^2 + (y3 - c - m*t3)^2 + (y4 - c - m*t4)^2',
+    variables: LS_FOUR_POINT_FIT_COEFFS,
+    at: {
+      u1: '1', u2: '1', u3: '1', u4: '1',
+      t1: '-3', t2: '-1', t3: '1', t4: '3',
+      y1: '2', y2: '2', y3: '4', y4: '8',
+      c: '4', m: '1',
+    },
+    // Fitted (1, 3, 5, 7), misses (1, −1, −1, 1), 1 + 1 + 1 + 1 = 4. Not counted
+    // toward the `encompasses` edge: the vector whose squares are summed is
+    // computed inside the expression and never written as a list, which is the
+    // shape the thirteenth promotion excluded from its own count and the
+    // twentieth refused an edge over.
+    reference: '4',
+  },
+  {
+    id: 'how-many-ways-to-name-the-same-fit-1',
+    knowledgePointId: 'one-normal-equation-per-column-and-a-count-for-the-rest',
+    kind: 'evaluate',
+    prompt:
+      'Write the column of ones down twice, so the fit has three columns — u, t and 2u — and ' +
+      'n = 3. The span has not grown, so the rank is still p = 2 and the fitted readings, the ' +
+      'misses and the 4 above are every one of them unchanged. Evaluate n − p for the dimension ' +
+      'of the set of coefficient triples producing that same fit: one free choice is a line of ' +
+      'solutions, and a zero would have meant the naming was unique.',
+    given: 'n - p',
+    variables: LS_COLUMNS_AND_PIVOTS,
+    at: { n: '3', p: '2' },
+    // 3 − 2 = 1. The same subtraction as `rank-from-the-nullity-1` read the
+    // other way round — there the nullity was given and the rank was wanted,
+    // here the rank is given and the count wanted is the dimension of the
+    // solution set. Trivial arithmetic on purpose, as that task is: what it buys
+    // is that "the answer is unique and the way of naming it is not" is settled
+    // by a count rather than by staring at (4, 1, 0) and (0, 1, 2).
+    //
+    // It is also the ONE task of the ten that touches `rank-nullity`, which is
+    // why no `encompasses` edge runs there: the rank is handed over in the
+    // prompt, so nothing here produces it.
+    reference: '1',
+  },
+
+  /*
+   * The dual — eleven tasks, three on the first point and four on each of the
+   * other two, the forty-second promotion. Every one `evaluate` and
+   * every one settled by exact integer arithmetic with no worker, which is this
+   * subject's standing contract across six promotions.
+   *
+   * THE FIGURES ARE THE PREREQUISITE'S OWN, AND NOT ONE OF THEM IS NEW. All
+   * three points run on `basis-and-dimension`'s two worked examples:
+   * u = (2, −1), v = (1, 3) and w = (3, −5) in the plane, and the plane
+   * 2x − y + 2z = 0 with a = (1, 2, 0), c = (2, −2, −3) and the normal
+   * n = (2, −1, 2) in space. That is deliberate and it is the reverse of the
+   * usual choice. Most promotions here re-use a pair of vectors and change the
+   * question; this one changes what kind of OBJECT is being asked about — the
+   * rule that reads a coordinate becomes a thing with a coordinate of its own —
+   * and keeping every number identical is what makes the change of object the
+   * only new thing on the page.
+   *
+   * THE ONE NUMBER THAT HAD TO BE CHOSEN is the second plane vector,
+   * w = (8, 3), for `the-address-a-functional-is-spent-on-1`. A coordinate in
+   * this basis is a seventh unless the numerator is a multiple of 7, which is
+   * the trap `basis-coordinate-1`'s own note records — so the weights were
+   * picked first and the vector computed from them: 3u + 2v = (8, 3), whose
+   * address is therefore (3, 2) and whose f-value is 3·3 + 2·(−2) = 5.
+   *
+   * FOUR OF THE ELEVEN ARE A `basis-and-dimension` TASK'S `given` SYMBOL FOR
+   * SYMBOL,
+   * which is the arithmetic the `encompasses` edge in ontology-vectors.ts is
+   * claimed on — and the note there says plainly that only ONE of the four is
+   * exclusive to that concept. `(v2*w1 - v1*w2)/(u1*v2 - u2*v1)` is
+   * `basis-coordinate-1`'s and nothing else's in the build;
+   * `n1*r1 + n2*r2 + n3*r3` is `third-vector-redundant-1`'s and also
+   * `plane-constant-1`'s and `cross-product-perpendicular-1`'s, so three of the
+   * four are evidence of a dot product rather than of a dimension count.
+   *
+   * THREE ANSWERS ARE 0 AND EACH ZERO MEANS SOMETHING DIFFERENT, which is the
+   * spread the twentieth promotion's note argues for: a task set whose every
+   * answer is 0 teaches the arithmetic and hides the decision. Here the first
+   * zero is a dual basis functional refusing the OTHER basis vector — half of
+   * its definition — and the second and third are a row killing a vector, once
+   * before and once after the row is doubled. The eleven answers are 8, 3, 5,
+   * 1, 0, 2, 8, 0, 3, 2 and 0 across eleven tasks, counting the two eights as
+   * the two routes they are.
+   *
+   * TWO TASKS SHARE AN ANSWER BY DESIGN AND DO NOT SHARE A `given`.
+   * `functional-from-its-values-on-a-basis-1` reaches 8 through the address and
+   * the two values; `the-dual-expansion-collapses-to-a-row-1` reaches it
+   * through 3f₁ − 2f₂ written over the common denominator 7, which simplifies
+   * to x − y with the sevenths cancelling. Two routes to one number is the
+   * shape the fortieth promotion's first point used and here it is the whole
+   * claim of the second point: the expansion in the dual basis IS the
+   * functional and not a second description of it.
+   *
+   * NOTHING HERE TAKES A ROOT AND NOTHING ASKS FOR AN ANGLE, which are the two
+   * boundaries this subject has held since the dot product. Neither cost
+   * anything this time — a functional returns a number and a dimension is a
+   * count, so there was no length to be tempted by.
+   */
+  {
+    id: 'functional-from-its-values-on-a-basis-1',
+    knowledgePointId: 'a-functional-is-fixed-by-its-values-on-a-basis',
+    kind: 'evaluate',
+    prompt:
+      'f is a linear functional on the plane — a linear rule returning a single number — with ' +
+      'f(u) = 3 and f(v) = −2, where u = (2, −1) and v = (1, 3). The address of w = (3, −5) in ' +
+      '{u, v} is (2, −1), so w = 2u − v. Linearity takes the weights out in front: evaluate ' +
+      'c1*fu + c2*fv at those weights and values. Nobody told f anything about w — two values on ' +
+      'a basis and an address are the whole of what this needs.',
+    given: 'c1*fu + c2*fv',
+    variables: DUAL_WEIGHTS_AND_VALUES,
+    at: { c1: '2', c2: '-1', fu: '3', fv: '-2' },
+    // 2·3 + (−1)·(−2) = 6 + 2 = 8. Both minus signs are live: the second weight
+    // is −1 and the second value is −2, so the term ADDS, which is the one place
+    // in the point where a sign slip gives 4 and looks plausible.
+    //
+    // Paired with `the-dual-expansion-collapses-to-a-row-1` two points down,
+    // which reaches the same 8 from a different `given` and never mentions u or
+    // an address — that pair is the second point's claim rather than a
+    // repetition.
+    reference: '8',
+  },
+  {
+    id: 'the-address-a-functional-is-spent-on-1',
+    knowledgePointId: 'a-functional-is-fixed-by-its-values-on-a-basis',
+    kind: 'evaluate',
+    prompt:
+      'A second plane vector, w = (8, 3), with the same basis u = (2, −1) and v = (1, 3). Before ' +
+      'f can be applied to it the address has to be found, which is the previous concept\'s own ' +
+      'quotient: evaluate (v2*w1 - v1*w2)/(u1*v2 - u2*v1). The denominator is the cross-check, ' +
+      'and a functional needs it non-zero for a sharper reason than a coordinate does — a ' +
+      'dependent pair would give this vector two addresses, and two addresses would give f two ' +
+      'values at one vector, which is not a function at all.',
+    given: '(v2*w1 - v1*w2)/(u1*v2 - u2*v1)',
+    variables: VEC_UVW,
+    at: { u1: '2', u2: '-1', v1: '1', v2: '3', w1: '8', w2: '3' },
+    // (3·8 − 1·3)/(2·3 − (−1)·1) = 21/7 = 3, and the second coordinate is 2.
+    // `basis-coordinate-1`'s `given` SYMBOL FOR SYMBOL at new inputs, which is
+    // the one task of the four claimed for the `encompasses` edge whose
+    // expression belongs to that concept alone — the coordinate formula with the
+    // cross-check as its divisor appears nowhere else in the build.
+    //
+    // The symbols are the generic basis-and-vector ones, so `w` here is the
+    // second vector rather than `basis-coordinate-1`'s; the prompt names the
+    // components and the `at` is what distinguishes the two tasks.
+    reference: '3',
+  },
+  {
+    id: 'the-same-functional-on-the-second-vector-1',
+    knowledgePointId: 'a-functional-is-fixed-by-its-values-on-a-basis',
+    kind: 'evaluate',
+    prompt:
+      'The address of w = (8, 3) in {u, v} came out as (3, 2) — that is, w = 3u + 2v. With the ' +
+      'same f as before, f(u) = 3 and f(v) = −2, evaluate c1*fu + c2*fv at the new weights. Two ' +
+      'values about f, a second vector, and nothing new had to be supplied: that is what "the ' +
+      'values on a basis decide the functional" means when you use it rather than state it.',
+    given: 'c1*fu + c2*fv',
+    variables: DUAL_WEIGHTS_AND_VALUES,
+    at: { c1: '3', c2: '2', fu: '3', fv: '-2' },
+    // 3·3 + 2·(−2) = 9 − 4 = 5. Same `given` as the first task at different
+    // inputs, which is the pairing this file's vector promotions use: one task
+    // is the arithmetic and the pair is the claim that f was never re-specified.
+    //
+    // Cross-checkable against the collapsed row x − y of the second point:
+    // 8 − 3 = 5. That agreement is not asserted by a task, because a third task
+    // computing it would be the same number a third time; the second point's
+    // last subgoal states it.
+    reference: '5',
+  },
+  {
+    id: 'the-dual-basis-functional-on-its-own-vector-1',
+    knowledgePointId: 'the-dual-basis-reads-coordinates-and-counts-the-same-dimension',
+    kind: 'evaluate',
+    prompt:
+      'f₁ is the first dual basis functional of {u, v}, with u = (2, −1) and v = (1, 3): it is ' +
+      'the rule (3x − y)/7, which is the previous concept\'s first-coordinate formula written as ' +
+      'a functional in its own right. Evaluate (3*x - y)/7 at u itself, x = 2 and y = −1. A 1 is ' +
+      'what f₁ was DEFINED to return there, so this is the definition being met rather than a ' +
+      'coincidence — and the 7 in the denominator is the cross-check of the pair.',
+    given: '(3*x - y)/7',
+    variables: DUAL_PLANE_XY,
+    at: { x: '2', y: '-1' },
+    // (6 + 1)/7 = 1. Paired with the next task, which is this `given` at v and
+    // returns 0: the two together are the δ that defines a dual basis, and
+    // either alone is a fraction that happens to cancel.
+    reference: '1',
+  },
+  {
+    id: 'and-zero-on-the-other-basis-vector-1',
+    knowledgePointId: 'the-dual-basis-reads-coordinates-and-counts-the-same-dimension',
+    kind: 'evaluate',
+    prompt:
+      'The same f₁(x, y) = (3x − y)/7, now at v = (1, 3). Evaluate (3*x - y)/7 there. A zero is ' +
+      'the other half of the definition: a dual basis functional returns 1 on its own basis ' +
+      'vector and 0 on every other one, which is what makes the pair of them READ coordinates ' +
+      'rather than merely produce numbers. This task and the one before it are one rule at two ' +
+      'inputs, and the pair is the claim.',
+    given: '(3*x - y)/7',
+    variables: DUAL_PLANE_XY,
+    at: { x: '1', y: '3' },
+    // (3 − 3)/7 = 0. The zero means "this functional ignores the other basis
+    // direction entirely", which is a different zero from the two in the third
+    // point, where a row kills a vector.
+    reference: '0',
+  },
+  {
+    id: 'the-dual-basis-reads-the-address-1',
+    knowledgePointId: 'the-dual-basis-reads-coordinates-and-counts-the-same-dimension',
+    kind: 'evaluate',
+    prompt:
+      'Still f₁(x, y) = (3x − y)/7, now at w = (3, −5). Evaluate (3*x - y)/7 there. Your answer ' +
+      'is the FIRST COORDINATE of w in {u, v}, which the previous concept found by eliminating ' +
+      'one component equation against the other — so "take the first coordinate" turns out to be ' +
+      'a functional, and a vector\'s address is the list of what the dual basis returns on it.',
+    given: '(3*x - y)/7',
+    variables: DUAL_PLANE_XY,
+    at: { x: '3', y: '-5' },
+    // (9 + 5)/7 = 2, which is `basis-coordinate-1`'s own answer by an expression
+    // in the components instead of one in the basis. Not counted toward the
+    // `encompasses` edge: the `given` is this concept's rule and not that
+    // concept's quotient, and the four counted there are the verbatim ones.
+    reference: '2',
+  },
+  {
+    id: 'the-dual-expansion-collapses-to-a-row-1',
+    knowledgePointId: 'the-dual-basis-reads-coordinates-and-counts-the-same-dimension',
+    kind: 'evaluate',
+    prompt:
+      'The f of the first point — f(u) = 3, f(v) = −2 — expands in the dual basis as 3f₁ − 2f₂, ' +
+      'with f₁(x, y) = (3x − y)/7 and f₂(x, y) = (x + 2y)/7. Evaluate ' +
+      '(3*(3*x - y) - 2*(x + 2*y))/7 at w = (3, −5). Two things are worth noticing. The answer ' +
+      'is the first point\'s value for f(w), reached without ever mentioning u, v or an address; ' +
+      'and the expression itself simplifies to x − y, the sevenths cancelling because both ' +
+      'functionals were built out of the same cross-check.',
+    given: '(3*(3*x - y) - 2*(x + 2*y))/7',
+    variables: DUAL_PLANE_XY,
+    at: { x: '3', y: '-5' },
+    // (3·14 − 2·(−7))/7 = (42 + 14)/7 = 56/7 = 8, which is
+    // `functional-from-its-values-on-a-basis-1`'s answer from a different
+    // `given`. The expression is x − y identically — (9x − 3y − 2x − 4y)/7 =
+    // (7x − 7y)/7 — so it checks out at u as 3 and at v as −2 as well, which is
+    // the agreement-on-a-basis argument the subgoal makes.
+    //
+    // Written over the common denominator rather than as x - y on purpose: the
+    // claim is that the expansion COLLAPSES, and a task given x - y would be
+    // asserting the result instead of producing it.
+    reference: '8',
+  },
+  {
+    id: 'the-row-returns-zero-on-its-kernel-1',
+    knowledgePointId: 'a-functional-is-a-row-and-its-kernel-costs-one-dimension',
+    kind: 'evaluate',
+    prompt:
+      'f(x, y, z) = 2x − y + 2z is a functional on space, and on components a functional is a ' +
+      'dot product with its coefficient ROW: f(r) = n·r with n = (2, −1, 2). Evaluate ' +
+      'n1*r1 + n2*r2 + n3*r3 at that row and r = (1, 2, 0). A zero puts r in the KERNEL of f — ' +
+      'and the previous concept knew this same vector as a point lying in the plane ' +
+      '2x − y + 2z = 0, which is the identical fact approached from the other side.',
+    given: 'n1*r1 + n2*r2 + n3*r3',
+    variables: PLANE_N_P,
+    at: { n1: '2', n2: '-1', n3: '2', r1: '1', r2: '2', r3: '0' },
+    // 2 − 2 + 0 = 0. `third-vector-redundant-1`'s `given` symbol for symbol at
+    // new inputs — one of the four the `encompasses` edge is claimed on, and one
+    // of the three of those four whose expression that concept shares with
+    // `plane-constant-1` and `cross-product-perpendicular-1` rather than owning.
+    //
+    // n is `cross-product-component-1`'s own answer, so the row a learner dots
+    // with is a cross product they computed two concepts ago — which is the
+    // first subgoal's claim that a plane's normal and its functional's row are
+    // one object.
+    reference: '0',
+  },
+  {
+    id: 'and-the-row-is-not-zero-outside-it-1',
+    knowledgePointId: 'a-functional-is-a-row-and-its-kernel-costs-one-dimension',
+    kind: 'evaluate',
+    prompt:
+      'Same row n = (2, −1, 2), now against p = (1, 1, 1). Evaluate n1*r1 + n2*r2 + n3*r3. A ' +
+      'non-zero answer says p is NOT in the kernel, and one such vector is the whole of what is ' +
+      'needed to know the kernel is smaller than the space — a functional returning zero ' +
+      'everywhere would be the zero functional. What the number is NOT is a distance to the ' +
+      'plane: it is by how much p fails the equation, and scaling the row would change it ' +
+      'without moving anything.',
+    given: 'n1*r1 + n2*r2 + n3*r3',
+    variables: PLANE_N_P,
+    at: { n1: '2', n2: '-1', n3: '2', r1: '1', r2: '1', r3: '1' },
+    // 2 − 1 + 2 = 3. Paired with the task above: same `given`, 0 inside the
+    // kernel and 3 outside it. A set that only ever showed the zero would teach
+    // that this expression returns zero, which is the failure the forty-first
+    // promotion's two pairs were built to avoid.
+    reference: '3',
+  },
+  {
+    id: 'the-freedom-the-one-equation-leaves-1',
+    knowledgePointId: 'a-functional-is-a-row-and-its-kernel-costs-one-dimension',
+    kind: 'evaluate',
+    prompt:
+      'Solving f = 0 — that is, 2x − y + 2z = 0 — for the coordinate whose coefficient is not ' +
+      'zero gives y = 2x + 2z: x and z may be chosen freely and y follows. Evaluate 2*x + 2*z at ' +
+      'the choice x = 1, z = 0. Your answer is the y that choice forces, so the kernel vector is ' +
+      '(1, 2, 0) — the previous concept\'s own basis vector, recovered from the functional rather ' +
+      'than handed over. Two free choices out of three coordinates is why this kernel has ' +
+      'dimension 2.',
+    given: '2*x + 2*z',
+    variables: PLANE_XYZ,
+    at: { x: '1', z: '0' },
+    // 2·1 + 2·0 = 2, so the vector is (1, 2, 0), which is `a` in
+    // `third-vector-redundant-1` and in the previous concept's third worked
+    // example. Choosing x = 0, z = 1 gives (0, 2, 1), which is its `b` — so the
+    // basis of the plane comes out of the functional both times.
+    //
+    // `y` is declared and not substituted, which `at` is what decides: the
+    // expression is what y EQUALS, so a stated input for it would be asking the
+    // learner to confirm a number already given.
+    reference: '2',
+  },
+  {
+    id: 'doubling-the-row-keeps-the-kernel-1',
+    knowledgePointId: 'a-functional-is-a-row-and-its-kernel-costs-one-dimension',
+    kind: 'evaluate',
+    prompt:
+      'The doubled functional 2f has row (4, −2, 4). Evaluate n1*r1 + n2*r2 + n3*r3 at that row ' +
+      'and c = (2, −2, −3), a vector f sends to zero. A zero again — and not because of anything ' +
+      'about c: doubling a number that is zero leaves it zero, so 2f kills exactly what f kills. ' +
+      'The two functionals differ at every vector outside the kernel and the kernel cannot tell ' +
+      'them apart, which is why a plane through the origin names its equation only up to a ' +
+      'multiple, and why 4x − 2y + 4z = 0 draws the same picture as 2x − y + 2z = 0.',
+    given: 'n1*r1 + n2*r2 + n3*r3',
+    variables: PLANE_N_P,
+    at: { n1: '4', n2: '-2', n3: '4', r1: '2', r2: '-2', r3: '-3' },
+    // 8 + 4 − 12 = 0. Third task on this `given` and the third distinct meaning
+    // for its answer: in the kernel, outside it, and still in it after the row
+    // moved. c is `third-vector-redundant-1`'s own third vector, whose zero
+    // there meant "adds no direction" — the same zero reading as membership of a
+    // kernel, which is this point's whole claim about what a row does.
+    reference: '0',
   },
 
   // ── solid-measure, twelfth promotion: solid-geometry ────────────────────

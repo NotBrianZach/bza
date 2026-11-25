@@ -122,6 +122,57 @@ export default function LibrarianDock() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const endRef = useRef<HTMLDivElement | null>(null)
+  /**
+   * Whether the closed button is tucked away because the reader is scrolling
+   * down. See the effect below for why this is computed on every viewport and
+   * only *expressed* on small ones.
+   */
+  const [tucked, setTucked] = useState(false)
+  const lastY = useRef(0)
+
+  /**
+   * ── THE DOCK GETS OUT OF THE WAY ON A PHONE ──────────────────────────────
+   *
+   * The closed button is 40px of fixed furniture in a corner of every page.
+   * That is cheap on a laptop and expensive on a phone, where the corner it
+   * sits in is also where the page's own content reaches the bottom of a 390px
+   * screen — so it overlapped controls on exactly the pages it was added to
+   * serve. Bottom-LEFT was already chosen to avoid the corner this app puts
+   * things in; the problem left is that on a phone there is no spare corner.
+   *
+   * So it tucks while you scroll down and comes back when you scroll up or
+   * reach the top. The rule is "is the reader moving away from where they
+   * were", which is the same signal a hiding app bar uses, and it means the
+   * button is present whenever somebody has stopped to look at something and
+   * absent while they are travelling past it.
+   *
+   * WHY THE STATE IS COMPUTED EVERYWHERE AND APPLIED ONLY UNDER `sm`: the
+   * alternative is `matchMedia` here and a second source of truth for the
+   * breakpoint, which then disagrees with Tailwind's `sm` the first time
+   * either moves. The classes carry `max-sm:`, so on a laptop this state
+   * changes and nothing reads it — desktop behaviour is unchanged by
+   * construction rather than by a condition somebody has to maintain.
+   *
+   * NEVER TUCKS WHILE OPEN. A panel that slid away mid-sentence because the
+   * message list scrolled would be a worse bug than the one this fixes.
+   */
+  useEffect(() => {
+    if (open) { setTucked(false); return }
+    lastY.current = window.scrollY
+    const onScroll = () => {
+      const y = window.scrollY
+      const dy = y - lastY.current
+      // A threshold rather than a sign test: without it, the one-pixel jitter
+      // that momentum scrolling produces at rest flickers the button.
+      if (Math.abs(dy) < 8) return
+      lastY.current = y
+      // Near the top it is always shown, so "scroll up to get it back" has a
+      // terminus that does not depend on catching a gesture.
+      setTucked(y > 96 && dy > 0)
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [open])
 
   useEffect(() => {
     let cancelled = false
@@ -238,7 +289,18 @@ export default function LibrarianDock() {
            12px when its child rendered nothing, so the floor is now stated
            instead of being a side effect of what happens to be inside. 40px is
            a tap target rather than a dot. */
-        className="fixed bottom-4 left-4 z-40 grid place-items-center min-w-[40px] min-h-[40px] rounded-full shadow-lg ring-1 ring-black/5 dark:ring-white/10 bg-white dark:bg-gray-800 p-1.5 hover:scale-105 transition-transform"
+        /* `transition-all` rather than `transition-transform`, because the tuck
+           animates opacity as well and a half-faded button that still moves
+           reads as a glitch.
+
+           `max-sm:pointer-events-none` and NOT a `tabIndex` flip: the hiding is
+           a breakpoint's business, and JS that tried to match it would be the
+           second source of truth this deliberately avoids. The cost is that a
+           tucked button is still keyboard-reachable on a phone, which is a far
+           smaller problem than a desktop regression. */
+        className={`fixed bottom-4 left-4 z-40 grid place-items-center min-w-[40px] min-h-[40px] rounded-full shadow-lg ring-1 ring-black/5 dark:ring-white/10 bg-white dark:bg-gray-800 p-1.5 hover:scale-105 transition-all duration-200 ${
+          tucked ? 'max-sm:translate-y-20 max-sm:opacity-0 max-sm:pointer-events-none' : ''
+        }`}
         style={{ marginBottom: 'env(safe-area-inset-bottom)' }}
       >
         <DockFace state="idle" size="md" />
@@ -247,10 +309,45 @@ export default function LibrarianDock() {
   }
 
   return (
+    <>
+      {/* ── A BACKDROP, UNDER sm ONLY ──────────────────────────────────────
+          The open panel is `min(22rem, 100vw-2rem)` wide by up to 70vh, which
+          on a 390px phone is most of the screen while still being painted and
+          positioned as a floating card. So it read as a thing stuck ON the page
+          rather than a thing in front of it: there was no obvious way out
+          except finding the small × , and a tap anywhere else went to whatever
+          control happened to be underneath.
+
+          Making it modal is the honest description of what it already was. The
+          backdrop gives it the dismissal gesture every sheet has, and the
+          `sm:hidden` keeps the laptop behaviour exactly as it was — where a
+          22rem card beside the page genuinely is non-modal and a backdrop
+          would be a regression. */}
+      <div
+        className="sm:hidden fixed inset-0 z-30 bg-black/30"
+        onClick={() => setOpen(false)}
+        aria-hidden="true"
+      />
     <div
-      className="fixed bottom-4 left-4 z-40 w-[min(22rem,calc(100vw-2rem))] rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-2xl flex flex-col"
-      style={{ marginBottom: 'env(safe-area-inset-bottom)', maxHeight: 'min(28rem, 70vh)' }}
+      /* Two layouts, one component. Under `sm` it is a bottom sheet: full
+         width, flush to the bottom edge, square at the bottom and rounded at
+         the top, which is the shape that says "drag me down" even before it
+         can be dragged. At `sm` and up every one of those is overridden back to
+         the floating card. */
+      className="fixed z-40 flex flex-col bg-white dark:bg-gray-800 shadow-2xl border border-gray-200 dark:border-gray-700
+                 inset-x-0 bottom-0 rounded-t-2xl rounded-b-none border-b-0
+                 sm:inset-x-auto sm:bottom-4 sm:left-4 sm:w-[min(22rem,calc(100vw-2rem))] sm:rounded-2xl sm:border-b"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom)', maxHeight: 'min(28rem, 70vh)' }}
+      role="dialog"
+      aria-modal="true"
     >
+      {/* The grab handle. Decorative — there is no drag-to-dismiss behind it —
+          so it is `aria-hidden` and the backdrop and × are the real exits. It
+          is here because the shape is what tells somebody a sheet can be got
+          rid of, and a sheet that looks permanent is the thing being fixed. */}
+      <div className="sm:hidden pt-2 pb-1 grid place-items-center" aria-hidden="true">
+        <div className="h-1 w-10 rounded-full bg-gray-300 dark:bg-gray-600" />
+      </div>
       <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-100 dark:border-gray-700">
         <DockFace state={state} size="sm" />
         <div className="min-w-0">
@@ -321,5 +418,6 @@ export default function LibrarianDock() {
         </button>
       </div>
     </div>
+    </>
   )
 }

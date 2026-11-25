@@ -315,7 +315,86 @@ export const REGIONS: Region[] = [
     // things that have to work, and least squares is the answer you give when
     // the system cannot be solved exactly — which is every real measurement a
     // fabricator takes.
-    anchors: ['least-squares', 'eigenvalues', 'diagonalisation'],
+    //
+    // AND A FOURTH TIME, into the same subject AGAIN, at the forty-first
+    // promotion — and this is the turnover where the documented rule returned
+    // NOBODY. Both halves failed together: the departing node's only in-area
+    // dependent is `singular-value-decomposition`, which did not become a root
+    // (`spectral-theorem` sits above it inside the area) and is not "the node
+    // directly above" either. So the area view SHRANK from three roots to two
+    // with no substitution, and for the first time in four turnovers the refill
+    // was a judgement rather than a derivation.
+    //
+    // `dual-spaces` took the slot, on the surviving half of the rule rather
+    // than on taste. It is the area's other root — the half the thirtieth
+    // promotion identified as the discriminating one — and the area has exactly
+    // two READY nodes, which are exactly its two roots: this one and
+    // `eigenvalues`. `eigenvalues` is an anchor already, so taking it would
+    // have shrunk the region to two, and this was the only ready node available
+    // to fill the slot. An anchor on a growing area is a claim about where a cut
+    // may fall, and pointing it at a node whose prerequisite is written is that
+    // claim made about territory somebody can reach.
+    //
+    // THE TEMPTING ALTERNATIVE WAS `numerical-linear-algebra` and it is worth
+    // recording why it lost, because on the `because` alone it wins: a guild
+    // that fabricates things which have to work is exactly conditioning and
+    // floating point. It sits at the far end of this area's unwritten spectral
+    // chain — it needs the SVD, which needs the spectral theorem, which needs
+    // diagonalisation — so anchoring on it would point the region at material
+    // no learner can reach from here for several promotions, which is the
+    // opposite of what the other three anchors do.
+    //
+    // AND A FIFTH TIME, AT THE FORTY-SECOND PROMOTION, which took the refill
+    // the paragraph above had just chosen. `dual-spaces` is a concept of
+    // `vectors-and-independence` now — the seventh node of this area to land in
+    // that one subject — so the slot emptied again one promotion later, and
+    // this region has now lost an anchor to the same subject five times out of
+    // five.
+    //
+    // THE RULE RETURNED NOBODY AGAIN, AND FOR A STRONGER REASON THAN LAST
+    // TIME, which is the part worth keeping. At the fourth turnover the rule
+    // failed because the departing node's only in-area dependent did not become
+    // a root. Here it fails because the departing node has NO DEPENDENTS AT ALL
+    // — nothing in the build names `dual-spaces` in a `needs` or an `exercises`
+    // — so there was no candidate for "the dependent that becomes a root" to
+    // reject. A rule that returns nobody because its candidate was disqualified
+    // and a rule that returns nobody because it had no candidate are different
+    // failures, and only the second one is permanent: no later authoring can
+    // make this node's dependents become roots, because it has none. So the
+    // rule is not merely exhausted for this slot, it is inapplicable to this
+    // KIND of departure, and the next run should expect a judgement rather than
+    // look for a derivation.
+    //
+    // `cayley-hamilton` TAKES THE SLOT, ON THE CRITERION THE FOURTH TURNOVER
+    // USED TO REJECT ITS ALTERNATIVE rather than on a fresh argument. That note
+    // rejected `numerical-linear-algebra` for sitting at the far end of the
+    // unwritten spectral chain, and the test it was applying is DISTANCE FROM
+    // WRITTEN MATERIAL: an anchor on a growing area is a claim about where a cut
+    // may fall, and pointing it at territory nobody can reach makes the claim
+    // about nothing. Measured that way the area's nodes sort cleanly.
+    // `eigenvalues` is ready now; `diagonalisation` and `cayley-hamilton` are
+    // one promotion behind it, both needing only `eigenvalues` and material
+    // that is already written; `spectral-theorem` is two behind, and the SVD,
+    // the quadratic forms, the Jordan form, the matrix exponential and the
+    // numerics are three or more. Two of the three shallowest are anchors
+    // already, so the third is the only one left at that depth — the choice is
+    // forced once the criterion is stated, which is the most a judgement can be.
+    //
+    // It also reads right against the `because`, which is the check an
+    // `armatureProblems` pass cannot make: the Runeforger guild makes things
+    // that have to work, and Cayley–Hamilton says a matrix satisfies a law
+    // written in its own terms — with the least such law deciding whether the
+    // thing comes apart into independent pieces or not. A forge cares which
+    // relation an object cannot escape.
+    //
+    // THE REGION'S READY-NODE COUNT IS NOT ASSERTED HERE AND DELIBERATELY. The
+    // fourth turnover's note leaned on "this area has exactly two ready nodes
+    // and they are its two roots", which was true when written and is the kind
+    // of sentence the forty-first promotion's own first draft got wrong by
+    // predicting rather than computing. The area has ONE ready node now
+    // (`eigenvalues`) and one root (the same), and that figure is asserted in
+    // tests/atlas.mjs by the group that moved it rather than restated here.
+    anchors: ['cayley-hamilton', 'eigenvalues', 'diagonalisation'],
     because: 'The Runeforger guild fabricates objects that conduct aether — shields, ignition surfaces, industrial equipment — which is arrays of conducting elements and what they do to what passes through them. A city named The Stalwart Machine keeps its mathematics in matrices.',
   },
   {

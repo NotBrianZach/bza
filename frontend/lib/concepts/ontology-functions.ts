@@ -867,10 +867,20 @@ const CONCEPTS: Concept[] = [
             {
               label: 'Work from the inside out',
               detail: 'g(2) = 2·2 − 3 = 1. That number is the input to f.',
+              socratic:
+                'You have fed f a number and then the expression x + 1, and both times the ' +
+                'placeholder held whatever was written in its brackets. Here the brackets after f ' +
+                'hold g(2) — a rule with its own input still waiting. Only one of the two rules ' +
+                'has a number it can work on yet; which one is it, and what does it hand back?',
             },
             {
               label: 'Feed it to the outer rule',
               detail: 'f(1) = 1² + 1 = 2.',
+              socratic:
+                'g has turned the 2 into a 1, and the 2 itself has no further part to play — it ' +
+                'was g\'s input, never f\'s. So the number standing in f\'s placeholder is 1. ' +
+                'What does f hand back, and what would you have got instead if the 2 had gone ' +
+                'into f directly?',
             },
             {
               label: 'The same thing as one expression',
@@ -878,6 +888,12 @@ const CONCEPTS: Concept[] = [
                 'Substituting g\'s rule into f gives f(g(x)) = (2x − 3)² + 1, and at x = 2 that ' +
                 'is (1)² + 1 = 2. Same answer, and the second form is the one you need when the ' +
                 'input is a letter rather than a number.',
+              socratic:
+                'You handled f(x + 1) by dropping the whole expression into the placeholder, and ' +
+                'g\'s rule, 2x − 3, is an expression like any other — so the substitution can be ' +
+                'made before any number arrives. What single rule for f(g(x)) does that produce, ' +
+                'what must it give at x = 2 if the inside-out working was right, and why is that ' +
+                'the form you cannot do without once the input is a letter?',
             },
           ],
           answer: '2',
@@ -897,16 +913,34 @@ const CONCEPTS: Concept[] = [
             {
               label: 'Inside first, but a different inside',
               detail: 'Now f is inner: f(2) = 4 + 1 = 5.',
+              socratic:
+                'Working f(g(2)) you started at g, because g was the rule the 2 had been handed ' +
+                'to and f was still waiting on a number. Written g(f(2)) the nesting is the other ' +
+                'way about, so the inside-out habit survives but it no longer starts in the same ' +
+                'place. Which of the two rules has the 2 this time, and what does it hand outward?',
             },
             {
               label: 'Then the outer rule',
               detail: 'g(5) = 2·5 − 3 = 7.',
+              socratic:
+                'The 5 is the only number g ever sees — the 2 belonged to f and has already been ' +
+                'spent. So g\'s placeholder is holding 5, and g\'s rule is the doubling-and-' +
+                'subtracting one. What does it hand back, and why is that number rather than the ' +
+                '5 the value of g(f(2))?',
             },
             {
               label: 'Compare with the other order',
               detail:
                 'f(g(2)) = 2 and g(f(2)) = 7. Not equal, and not close — the two compositions ' +
                 'are genuinely different rules: (2x − 3)² + 1 against 2(x² + 1) − 3.',
+              socratic:
+                'The same two rules and the same starting 2 have produced 2 one way round and 7 ' +
+                'the other. Substituting each rule into the other, the way you did at the first ' +
+                'point, gives (2x − 3)² + 1 against 2(x² + 1) − 3 — two different rules rather ' +
+                'than one rule worked out twice, so the disagreement sits in the rules and not in ' +
+                'the arithmetic. What does that leave you able to conclude about g(f(x)) once you ' +
+                'have f(g(x)) in hand, and what would have to be special about a pair of rules ' +
+                'for both orders to land in the same place?',
             },
           ],
           answer: '7, against 2 the other way round',

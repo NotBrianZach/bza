@@ -528,6 +528,305 @@
  * plainly that the rows say what is KILLED and the columns say what is REACHED,
  * which is the distinction a learner needs before the two counts coinciding is
  * interesting rather than confusing.
+ *
+ * ── AND THE ELEVENTH, WHICH IS WHAT TO DO WHEN THERE IS NO ANSWER ────────
+ *
+ * `least-squares` was a node of `linear-algebra` and is the last concept below.
+ * It is the forty-first promotion and the SIXTH out of that one area, which is
+ * more than any other area has given up.
+ *
+ * ── THE READY FIELD, MEASURED RATHER THAN QUOTED ─────────────────────────
+ *
+ * Recomputed from the tree before anything was written, because the brief that
+ * ships with this task carries a 2026-11-15 snapshot that is wrong in every
+ * figure. 214 map nodes, 85 authored concepts, 19 areas, 15 subjects.
+ * FOURTEEN NODES WERE READY — every `needs` already teachable — where the
+ * fortieth promotion found fifteen, and the change is exactly the one node it
+ * wrote. Nothing became newly ready: `euclidean-algorithm`'s only unwritten
+ * dependent is `modular-arithmetic`, which also names `relations`, and that is
+ * refused.
+ *
+ * NONE OF THE FOURTEEN IS FLOOR-BLOCKED, for the second promotion running. The
+ * floor counts an area's DEPARTURES as covered territory (`MapArea.departed`,
+ * atlas.ts), so headroom is not a reason any promotion is blocked and the
+ * tally this header carried for five runs stays retired.
+ *
+ * SEVEN OF THE FOURTEEN ARE UNDER REFUSALS THAT STILL BIND, and the list is
+ * unchanged from the fortieth promotion's header, which is where each one's
+ * argument lives: `graphs-of-functions` is a judgement about a drawing,
+ * `constructions` is a procedure with a straightedge, `non-euclidean-geometry`
+ * is a choice of axioms, `supremum-and-completeness` is a claim about a set
+ * whose bound is not attained, `linear-inequalities` names a MOVE rather than a
+ * shape, `complex-numbers` has no case in `exactValue`, and `relations` is a
+ * SET OF PAIRS whose three defining properties are judgements the engine
+ * cannot grade. That leaves SEVEN unrefused, one fewer than last time because
+ * this is one of them.
+ *
+ * THE SECOND FACTOR DECIDED IT AGAIN, AND THE FORTIETH PROMOTION'S HEADER HAD
+ * ALREADY SAID SO. Of the seven unrefused, only two have every `needs` inside
+ * ONE authored subject — this node and `dual-spaces`, both of them
+ * `vectors-and-independence` — so only those two cost zero `links` entries and
+ * no new subject. The other five each name concepts in two or three subjects:
+ * `counting-principles` and `sample-spaces` are still blocked from the cheap
+ * filing by `sets-and-membership` having written "it does not claim COUNTING as
+ * a subject" into its own file, and `eigenvalues`, `word-problems` and
+ * `nonlinear-systems` each reach across two or three. The third factor then
+ * separates the two survivors and not narrowly: two dependents to zero.
+ *
+ * THAT IS THE SAME ANSWER THE PREVIOUS PROMOTION PREDICTED, WHICH IS WORTH
+ * ONE LINE OF SUSPICION RATHER THAN NONE. Its header named this node "the one
+ * candidate that beats this on the third factor and ties on the second", and a
+ * prediction made by the pass that would fulfil it proves nothing — the
+ * paragraph above `real-number-line` in ontology-arithmetic.ts records exactly
+ * that trap. So the field was recomputed from the tree first and the ranking
+ * re-run from the three factors; the agreement is evidence the rule is stable
+ * across runs, not an argument for the pick.
+ *
+ * RULABILITY REJECTED NOBODY AMONG THE SEVEN, which is the usual outcome. What
+ * it confirms is this node, and it took the care `rank-nullity` took rather
+ * than none: "fit a line to this data" is not a number and the engine has no
+ * matrix type, so nothing can be handed a grid and asked to solve it. What a
+ * task can return is the coefficient the normal equation forces, the sum of
+ * squared misses it leaves, the value that same test returns at a WRONG
+ * coefficient, and the count that says how many ways there are to name one
+ * answer. Ten tasks ask for ten of those and every one is exact.
+ *
+ * ── WHY HERE, AND THE ONE SENTENCE THAT HAD TO BE RE-READ ────────────────
+ *
+ * `vectors-and-independence`, both of its `needs` being concepts of this file —
+ * `inner-product-spaces` directly above it and `rank-nullity` the one above
+ * that. Nothing is reached across a file boundary at all, which is the third
+ * promotion in a row with that shape and the reason the material can quote both
+ * prerequisites by their own numbers.
+ *
+ * THE SENTENCE TO RE-READ IS THIS SUBJECT'S OWN: "Not the NORM and not
+ * Gram–Schmidt past two vectors: the first is a square root of a product that
+ * is here." A concept about making a MISS as small as possible looks like it
+ * must measure that miss, and measuring it is a norm. It does not, and the
+ * reason is the concept's own name: what is minimised is the SUM OF THE
+ * SQUARED misses, ⟨r, r⟩, and its square root is minimised by the same
+ * coefficient because the root is increasing. So the boundary is not bent, it
+ * is spent — ⟨u, u⟩ was already here and is where positive-definiteness got
+ * used, and this is the concept that has a reason to minimise it. Not one task
+ * takes a root, which is this subject's standing contract and is asserted per
+ * promotion rather than assumed.
+ *
+ * ── THE DIVISION OF LABOUR, AND THREE DEBTS THIS PAYS ───────────────────
+ *
+ * `inner-product-spaces` supplies the whole of the first point. Its third
+ * knowledge point splits v as cu + r with ⟨r, u⟩ = 0 and shows the coefficient
+ * is FORCED rather than chosen: c = ⟨v, u⟩/⟨u, u⟩. That is the least-squares
+ * coefficient, and the only thing this concept adds to it is a reason to want
+ * it — over there the split was an identity, here it is the answer to a
+ * question that has no exact answer. Its worked example is u = (1, 2),
+ * v = (4, 3), c = 2; nothing here re-asks that pair, and the arithmetic moves
+ * to three and four components, which is where a projection stops being a
+ * reconstruction.
+ *
+ * `rank-nullity` supplies the last subgoal and the task beside it. Write a
+ * column down twice and the span does not grow, so the projection, the
+ * residual and the least sum of squares are all unchanged — while the
+ * coefficients stop being unique and become a line. The dimension of that line
+ * is three columns minus a rank of two, which is that concept's theorem spent
+ * in a direction it did not itself ask: not "how far does the map reach" but
+ * "how many ways are there to name one output".
+ *
+ * AND A THIRD DEBT, TO A SUBJECT IN ANOTHER FILE, WHICH IS WHY THE FIRST
+ * COLUMN IS ALL ONES. With a = (1, 1, 1) the forced coefficient
+ * ⟨b, a⟩/⟨a, a⟩ reads "add the components and divide by how many there are" for
+ * any b at all — so the least-squares fit of a constant IS the mean, and
+ * `descriptive-statistics` in ontology-statistics.ts already says of the mean
+ * that the signed deviations from it total zero. That total is ⟨r, a⟩ and the
+ * zero is the normal equation. Two authored subjects were asserting one fact
+ * from two sides without either naming the other; this concept names it, and
+ * the first point's last subgoal and `the-constant-fit-is-the-mean-1` are where.
+ *
+ * ── `evaluate` ONLY, AND THE TWO THINGS THAT ARE NOT HERE ────────────────
+ *
+ * Ten tasks, all `evaluate`, all settled by exact integer arithmetic with no
+ * worker. No `justify`, zero of that kind existing in the build, so an
+ * objective naming it would promise an observation nothing can make.
+ *
+ * THE GENERAL NORMAL EQUATIONS ARE NOT HERE, and that is the one real
+ * shortfall rather than a boundary. With two columns the condition is one
+ * equation per column, and unless the columns are orthogonal to each other the
+ * two equations share both unknowns and are a 2×2 system — which is
+ * `systems-of-linear-equations`, authored in `expressions-and-equations`, a
+ * subject this node does not name in its `needs`. So the worked example
+ * measures the times from the MIDDLE of the run, which makes ⟨u, t⟩ = 0 and
+ * uncouples the two equations into two one-column problems. That is a real
+ * technique and the reason statisticians centre data rather than a dodge, and
+ * the second subgoal says plainly what the uncentred case would cost. Adding
+ * the edge instead would have been a `links` entry and a gate, and it is a
+ * decision about the map rather than one to take while authoring.
+ *
+ * NOR IS THE VERDICT ON THE MODEL. The four misses in the worked example are
+ * (1, −1, −1, 1): they do not scatter, which is a line failing to bend with
+ * data that bends. Reading a residual pattern as signal or noise is
+ * `linear-regression`, a node of `statistics` that declares
+ * `exercises: ['least-squares']` — so the credit edge for this concept already
+ * exists at that end and will resolve when somebody writes it. The arithmetic
+ * of the fit is here; the judgement about whether the fit deserved to be a line
+ * is not, and the fourth subgoal says so to the learner rather than only here.
+ *
+ * ── AND THE TWELFTH, WHICH IS WHERE A ROW VECTOR LIVES ───────────────────
+ *
+ * `dual-spaces` was a node of `linear-algebra` and is the last concept below.
+ * It is the forty-second promotion and the SEVENTH out of that one area, which
+ * is still more than any other area has given up — and it is the first node
+ * this build ADDED to the map and then authored out of it, the five thin-spot
+ * additions of 2026-11-24 having been written three weeks after the area was
+ * first read against its own `covers`.
+ *
+ * ── THE READY FIELD, MEASURED RATHER THAN QUOTED ─────────────────────────
+ *
+ * Recomputed from the tree before anything was written, for the reason the
+ * eleventh section above gives and which has not stopped being true: the brief
+ * that ships with this task carries a 2026-11-15 snapshot wrong in every
+ * figure, including a candidate list of eight nodes of which six are authored.
+ * 213 map nodes, 86 authored concepts, 19 areas, 15 subjects. THIRTEEN NODES
+ * WERE READY — every `needs` already teachable — where the forty-first found
+ * fourteen, and the change is exactly the one node it wrote. Nothing became
+ * newly ready and nothing stopped being: `least-squares`'s two dependents
+ * (`singular-value-decomposition`, `linear-regression`) each name a second
+ * unwritten concept.
+ *
+ * NONE OF THE THIRTEEN IS FLOOR-BLOCKED, for the third promotion running, and
+ * the tally this header carried for five runs stays retired — the floor counts
+ * an area's DEPARTURES as covered territory (`MapArea.departed`, atlas.ts), so
+ * headroom is not a reason any promotion is blocked.
+ *
+ * SEVEN OF THE THIRTEEN ARE UNDER REFUSALS THAT STILL BIND, and the list is
+ * unchanged from the forty-first promotion's header, which is where each one's
+ * argument lives: `graphs-of-functions` is a judgement about a drawing,
+ * `constructions` is a procedure with a straightedge, `non-euclidean-geometry`
+ * is a choice of axioms, `supremum-and-completeness` is a claim about a set
+ * whose bound is not attained, `linear-inequalities` names a MOVE rather than a
+ * shape, `complex-numbers` has no case in `exactValue`, and `relations` is a
+ * SET OF PAIRS whose three defining properties are judgements the engine cannot
+ * grade. Nothing expired and nothing was added. That leaves SIX unrefused, one
+ * fewer than last time because this is one of them.
+ *
+ * THE SECOND FACTOR DECIDED IT AGAIN AND THE THIRD POINTED THE OTHER WAY FOR
+ * THE FIRST TIME, which is the one thing about this pick worth arguing rather
+ * than recording. Of the six unrefused, this is the ONLY node with every
+ * `needs` inside one authored subject — the other five reach across two or
+ * three, `counting-principles` and `sample-spaces` still foreclosed from the
+ * cheap filing by `sets-and-membership` having written "it does not claim
+ * COUNTING as a subject" into its own file, and `eigenvalues`, `word-problems`
+ * and `nonlinear-systems` each naming concepts in two or three. So it costs
+ * zero `links` entries and no new subject, where every alternative costs at
+ * least one. But it has ZERO dependents and `eigenvalues` has four, the most of
+ * anything unrefused, so for the first time since the rule was written down the
+ * cheap shape and the useful one are different nodes.
+ *
+ * THE RULE WAS FOLLOWED RATHER THAN RE-DECIDED, and the reason is worth one
+ * paragraph because the next run may face the same split. The documented order
+ * is rulability, then single-ontology prerequisites, then dependents "as a
+ * tie-break only" — and the second factor is not about convenience, it is about
+ * the one cost that is paid SILENTLY. A `links` entry gates nothing until the
+ * far node is written, so dropping one leaves every suite green and a concept
+ * resting on nothing; three promotions have nearly done it. A low dependent
+ * count costs nothing silently: it is visible in the map the day it is taken.
+ * So the order is right and the split does not overturn it. What the split DOES
+ * deserve is saying out loud that `eigenvalues` is now the strongest candidate
+ * on the third factor and the gateway to four of this area's five unwritten
+ * nodes, and that taking it means budgeting for two `links` entries across
+ * three subjects — which is a decision about how much to spend, not about
+ * whether the material is honest, and belongs to whoever runs next.
+ *
+ * RULABILITY REJECTED NOBODY AMONG THE SIX, which is the usual outcome, and
+ * what it confirms here took less care than `least-squares` needed. A functional
+ * is an abstraction and its answers are not: what f returns on a vector, what a
+ * coordinate-reading functional returns on a basis vector, what a coefficient
+ * row returns on a vector in its kernel, and how many freedoms one equation
+ * leaves are four exact integers. Eleven tasks ask for eleven of those.
+ *
+ * ── WHY HERE, AND THE BRANCH IT MAKES ───────────────────────────────────
+ *
+ * `vectors-and-independence`, its single `needs` being `basis-and-dimension`, a
+ * concept of this file — so nothing is reached across a file boundary, which is
+ * the fourth promotion in a row with that shape.
+ *
+ * IT IS A BRANCH AND NOT AN EXTENSION, which the position of the concept in the
+ * array below hides. It is written last, as every promotion into this file has
+ * been, and it rests on NEITHER of the two concepts above it: not on
+ * `least-squares`, not on `rank-nullity`, not on the inner product. It hangs
+ * off `basis-and-dimension`, four concepts back, which now has two dependents
+ * in this file where it had one: `rank-nullity` and this.
+ *
+ * The subject has forked before — `dot-product-geometry` reaches back to
+ * `plane-vectors` past two concepts, and `basis-and-dimension` already had
+ * `rank-nullity` hanging off it — so this is not a new SHAPE, and the reason to
+ * write it down anyway is the test it forbids. An assertion phrased as an
+ * ordered walk through the subject would accept this concept hung off the least
+ * squares by accident, and the two have nothing whatever to do with each other.
+ * What is asserted instead is the branch POINT, by name.
+ *
+ * ── THE DIVISION OF LABOUR, AND THE DEBT THIS PAYS BACKWARDS ────────────
+ *
+ * `basis-and-dimension` supplies the whole of the machinery and gets something
+ * back, which is the unusual half. It supplies the ADDRESS: every vector is
+ * exactly one combination of a basis, which is what makes "f is decided by its
+ * values on the basis" true rather than plausible, and its first worked example
+ * computed the address of w = (3, −5) in {(2, −1), (1, 3)} as (2, −1) with the
+ * cross-check 7 as the divisor. All three points here run on that one example,
+ * so nothing is re-derived and the arithmetic a learner meets is arithmetic
+ * they have already done.
+ *
+ * WHAT IT GETS BACK IS AN EXPLANATION OF ITS OWN DIVISOR. Over there the 7 is
+ * "the number every coordinate in this basis is built from", established and
+ * then used. Here the dual basis functionals come out as f₁(x, y) = (3x − y)/7
+ * and f₂(x, y) = (x + 2y)/7, so the cross-check is not merely a divisor that
+ * appears — it is the denominator of the two functionals that READ the
+ * coordinates, and the second point's expansion 3f₁ − 2f₂ cancels it exactly
+ * because both halves carry it. A learner who has met the 7 as a hurdle meets
+ * it again as the thing that makes the coordinate-reading rules linear.
+ *
+ * AND ITS THIRD WORKED EXAMPLE IS RE-READ FROM THE OTHER SIDE. The plane
+ * 2x − y + 2z = 0 was a set with two freedoms there, with a basis {(1, 2, 0),
+ * (0, 2, 1)} and a normal (2, −1, 2) that came out as a cross product. Here it
+ * is the KERNEL of the functional f(x, y, z) = 2x − y + 2z, whose coefficient
+ * row is that same normal — so a plane's normal vector and the row of the
+ * functional cutting the plane out are one object seen twice, and solving the
+ * equation for y recovers that concept's own basis vectors rather than
+ * asserting them. The dimension 2 is the same count both times, and "one
+ * equation spends one freedom" is what it means here.
+ *
+ * ── `evaluate` ONLY, AND THE THREE THINGS THAT ARE NOT HERE ─────────────
+ *
+ * Eleven tasks, all `evaluate`, all settled by exact integer arithmetic with
+ * no worker. No `justify`, zero of that kind existing in the build, so an
+ * objective naming it would promise an observation nothing can make.
+ *
+ * THE TRANSPOSE IS NOT HERE, and that is a boundary rather than a shortfall.
+ * The node's `terms` names it, and the content of "the transpose is the dual
+ * map" is that a matrix acting on a row from the right is the same arithmetic
+ * as its transpose acting on a column — which needs a matrix, and matrices are
+ * `matrices-and-determinants` in ontology-matrices.ts, a subject this node does
+ * not name in its `needs`. What CAN be said without one is said: a row is a
+ * functional and a column is a vector, and they are different objects rather
+ * than the same numbers written sideways.
+ *
+ * THE ANNIHILATOR OF A SUBSPACE IS NOT HERE EITHER, and this one is the real
+ * shortfall. The node's `terms` names it, and dim W° = dim V − dim W is the
+ * theorem that makes the dual worth the trouble. What is written instead is the
+ * kernel of ONE functional — the same subtraction with the roles swapped, the
+ * subspace being the kernel rather than the thing annihilated — and it is
+ * written as a count a learner can make rather than as a theorem. The general
+ * version needs a basis of a subspace extended to one of the whole space, which
+ * is the exchange argument `covers` already records this build as not reaching,
+ * so the third point counts the kernel of a single functional and names the
+ * general statement as `rank-nullity`'s subtraction rather than proving it.
+ *
+ * NOR IS THE INFINITE-DIMENSIONAL CASE, where the interesting fact is that the
+ * dual is BIGGER and a dual basis does not exist. `basis-and-dimension`'s third
+ * point already says a space of functions has no finite basis, so the question
+ * is reachable from here and the answer is not: it needs a cardinality argument
+ * and a topology to make the continuous dual the one anybody means, and
+ * `functional-analysis-intro` is a node of `real-analysis` for exactly that
+ * reason. The point's statement says "finite-dimensional" where the theorem
+ * needs it rather than leaving the quantifier off.
  */
 
 import type { Concept, ConceptEdge, ConceptOntology, Subject } from './types'
@@ -579,7 +878,51 @@ const subject: Subject = {
     'out. Not the ROW rank, whose equality with the column rank is the surprise of the subject ' +
     'and wants a second elimination on the transpose; and the theorem is demonstrated on a ' +
     'matrix already reduced rather than proved, the missing step being that the pivot columns ' +
-    'are a basis of the image, which is the same exchange argument the count above left out.',
+    'are a basis of the image, which is the same exchange argument the count above left out. ' +
+    'It ends by spending the projection and that count together on the case the rest of the ' +
+    'subject has no answer for: a system with more equations than unknowns usually has NO ' +
+    'solution, the target not being a combination of the columns — and the honest replacement ' +
+    'for solving it is to miss by as little as possible. What is minimised is the SUM OF THE ' +
+    'SQUARED misses and not its square root, which the two having the same minimiser makes a ' +
+    'free choice and is why the norm is still absent; for one column the best coefficient is ' +
+    'the projection coefficient already derived, and the condition that picks it is that the ' +
+    'miss comes out perpendicular to the column. That condition is also the PROOF, by the ' +
+    'Pythagorean relation the orthogonality point established: any other choice adds a ' +
+    'perpendicular piece whose square can only add. With more than one column there is one such ' +
+    'equation per column, and the fit of a constant turns out to be the MEAN — so the rule that ' +
+    'the signed deviations from a mean total zero is this normal equation, read in the ' +
+    'summaries subject. Not the general normal equations, which share both unknowns and are a ' +
+    '2×2 system belonging to the equations subject: the worked example measures its times from ' +
+    'the middle of the run so that the two columns are perpendicular and each coefficient comes ' +
+    'out of its own equation, and what the uncentred case would cost is stated rather than ' +
+    'hidden. Not the verdict on the model either — the misses can show a pattern rather than ' +
+    'scatter, and deciding what such a pattern means is regression and not arithmetic. The ' +
+    'nearest point is always unique and the WAY OF NAMING it need not be: repeat a column and ' +
+    'the fit does not move while the coefficients become a line, whose dimension is the number ' +
+    'of columns less the rank. ' +
+    'It ends by turning the address itself into an object: a linear functional is a rule sending ' +
+    'a vector to a single number, and because every vector is exactly one combination of a ' +
+    'basis, the values on that basis decide the rule everywhere — so a functional on the plane ' +
+    'IS a pair of numbers, and nothing constrains which pair. The functionals add pointwise and ' +
+    'pass the three checks, so they are a space of their own, the DUAL, and it has the same ' +
+    'dimension: the basis exhibiting that is the pair of functionals returning 1 on their own ' +
+    'basis vector and 0 on the other, which means "take the first coordinate" is a functional ' +
+    'and a vector\'s address is the list of what those functionals return on it. They are ' +
+    '(3x − y)/7 and (x + 2y)/7 for the basis this subject has used throughout, so the ' +
+    'cross-check turns out to be the denominator of the rules that read the coordinates rather ' +
+    'than only the divisor the elimination happened to produce. On components a functional is a ' +
+    'dot product with a fixed ROW, which is why a row and a column are different objects and ' +
+    'not the same numbers written sideways, and setting one to zero is a single linear equation ' +
+    'whose solutions are a space one dimension down — so the plane 2x − y + 2z = 0 is the kernel ' +
+    'of a functional whose row is the plane\'s own normal vector, and scaling the row leaves the ' +
+    'kernel exactly where it was. Not the TRANSPOSE, whose content is that a matrix acting on a ' +
+    'row is its transpose acting on a column, and which therefore needs the matrices; not the ' +
+    'ANNIHILATOR of a general subspace, whose count wants a basis of one extended to a basis of ' +
+    'the whole space — the same exchange argument this subject left out twice above — so what is ' +
+    'written is the kernel of a single functional and the general version is named as the rank ' +
+    'theorem\'s subtraction; and not the infinite-dimensional case, where the dual is strictly ' +
+    'bigger and has no dual basis at all, which is a cardinality argument and a topology and is ' +
+    'why the statement here says finite-dimensional where it needs to.',
   medium: 'theorem',
   facetName: 'Concept',
   facetDoes: 'Which concept the statement has to be about.',
@@ -3110,6 +3453,745 @@ const CONCEPTS: Concept[] = [
       },
     ],
   },
+
+  {
+    id: 'least-squares',
+    name: 'Least squares',
+    subjectId: subject.id,
+    scope: {
+      id: 'least-squares',
+      label: 'Least squares',
+      /*
+       * Carried VERBATIM from the map node, which is what four of the five
+       * promotions into this file did and is the right default: the pattern
+       * decides against an article title, so widening it in the same edit that
+       * makes the material appear leaves no way to say which change moved the
+       * title table.
+       *
+       * Checked for the `\b`-after-a-bracket fault first, since that trap is
+       * invisible otherwise — `fidelityMismatches` asks only whether a checked
+       * concept HAS a pattern, and the recognition figure counts patterns
+       * rather than testing them. There is no bracket and no alternation here,
+       * and "squares" ends in a word character, so the trailing `\b` is a real
+       * boundary. One alternative, live.
+       *
+       * WHAT IT REACHES AND WHAT OF THAT THIS MATERIAL IS. The pattern claims
+       * "Least squares", "Linear least squares" and "Ordinary least squares",
+       * which are this concept — and also "Total least squares" and "Partial
+       * least squares regression", which are different estimators: the first
+       * minimises perpendicular distance to the line rather than vertical
+       * distance, the second projects onto latent components first. Both are
+       * still least-squares fits in an inner product, so the pattern decides
+       * correctly that an article about them is about THIS, and the material is
+       * narrower than the pattern — which is the ordinary case for every
+       * concept here and the reason `fidelity` is about the pattern deciding
+       * membership rather than about the article being covered.
+       *
+       * AND IT OVERLAPS `linear-regression`, WHICH IS A NODE AND NOT A FAULT.
+       * That node's pattern is `/\b(linear regression|ordinary least
+       * squares)\b/i`, so "Ordinary least squares" is claimed by both. Nothing
+       * rejects two patterns matching one title — `atlasProblems` rejects a
+       * colliding ID, not a colliding match — and the overlap is honest: that
+       * article is the arithmetic here plus the inference there. Narrowing
+       * either would move the title table, which is deliberately not done in
+       * the same commit as material.
+       */
+      hint: 'least squares normal equations projection residual regression',
+      match: /\bleast squares\b/i,
+    },
+    fidelity: 'checked',
+    /*
+     * EVERY OBJECTIVE NAMES ONLY `evaluate`, as the four concepts above it do
+     * and for the reason stated there: the build ships no `justify` task
+     * anywhere, so an objective naming that kind names an observation that
+     * cannot be made.
+     *
+     * The statements are written to what `evaluate` can evidence, which took
+     * the same care it took one concept up. "Fit a line to this data" and "why
+     * is that the best fit" are the sentences the material is about and neither
+     * is a number. What a task can return is the coefficient the normal
+     * equation forces, the sum of squared misses it leaves, the value that same
+     * test returns at a WRONG coefficient, and the count of ways one fit can be
+     * named — so that is what the objectives claim, and the deciding is in the
+     * `socratic` phrasings, asked by a tutor and marked by nothing.
+     */
+    objectives: [
+      {
+        id: 'produce-the-coefficient-and-the-least-miss-it-leaves',
+        statement:
+          'Produce the coefficient that makes an unsolvable one-column system miss least, the ' +
+          'sum of squared misses it leaves, and that same coefficient by the averaging route — ' +
+          'the three numbers that say what "best" was taken to mean and that it was not invented ' +
+          'here.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'produce-the-test-that-accepts-and-the-one-that-rejects',
+        statement:
+          'Produce the value the normal equation returns at the best coefficient and at a wrong ' +
+          'one, and the larger sum of squared misses the wrong one leaves — which is what makes ' +
+          '"least" a claim that was checked rather than a name.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'produce-the-two-coefficients-and-the-count-of-ways-to-name-them',
+        statement:
+          'Produce the value that decides whether two columns\' normal equations interact, the ' +
+          'coefficient each one forces on its own, the sum of squared misses the resulting fit ' +
+          'leaves, and the dimension of the set of coefficients producing that same fit when a ' +
+          'column is repeated.',
+        taskKinds: ['evaluate'],
+      },
+    ],
+    knowledgePoints: [
+      {
+        id: 'an-unsolvable-system-still-has-a-least-miss',
+        conceptId: 'least-squares',
+        statement:
+          'Ax = b has no solution exactly when b is not a combination of the columns, which is ' +
+          'the usual case once there are more equations than unknowns — and three measurements ' +
+          'of one quantity is already that case. Least squares replaces "solve it" with "miss by ' +
+          'as little as possible", and the quantity made small is ⟨r, r⟩ for r = b − Ax: the SUM ' +
+          'of the squared misses, which is what the name says and is not its square root. The ' +
+          'two have the same minimiser, because the root is increasing, so taking it would ' +
+          'change the number and not the answer. For a single column a the minimiser is already ' +
+          'derived: it is the projection coefficient x̂ = ⟨b, a⟩/⟨a, a⟩, which the previous ' +
+          'concept forced out of the demand that the remainder be perpendicular.',
+        position: 1,
+        /*
+         * No `automaticityTarget` on any of the three points, which follows the
+         * four concepts above. The arithmetic is inner products and a quotient,
+         * both timed where they are taught, and what this concept adds is a
+         * choice of what to minimise, a proof that the choice is met, and a
+         * count. A timing target on "which average have you just taken"
+         * measures typing, which is the case types.ts names when it argues the
+         * field should usually be absent.
+         */
+        workedExample: {
+          problem:
+            'Three measurements of one quantity give x = 2, x = 3 and x = 7 — the system ' +
+            'x·a = b with a = (1, 1, 1) and b = (2, 3, 7). No x satisfies all three. Find the x ' +
+            'that leaves the least sum of squared misses, and that sum.',
+          subgoals: [
+            {
+              label: 'Settle that there is no solution before looking for a substitute',
+              detail:
+                'A solution would make b a multiple of a, and every multiple of (1, 1, 1) has ' +
+                'its three components equal. b = (2, 3, 7) does not, so no x works and the ' +
+                'question has to be replaced rather than pressed harder. What replaces it is a ' +
+                'CHOICE — x is to make the miss r = b − xa small — and "small" has to be pinned ' +
+                'down before it decides anything.',
+              socratic:
+                'What do the three components of any multiple of (1, 1, 1) have in common? ' +
+                'Compare that with b = (2, 3, 7) — and once you have, what question are you ' +
+                'going to answer instead of the one that has no answer?',
+            },
+            {
+              label: 'Pin "small" to the squared miss and watch the root disappear',
+              detail:
+                'Take the size of r to be ⟨r, r⟩ = r₁² + r₂² + r₃², which is the quantity this ' +
+                'concept is named for. The length of r is its square root, and the two rise and ' +
+                'fall together as x moves, so they are minimised by the same x: taking the root ' +
+                'would change the number reported and not the answer chosen. That is why this ' +
+                'concept sits inside a subject that has declined √⟨u, u⟩ since the dot product — ' +
+                'it never needed it, and the only reason to notice is that the name of the thing ' +
+                'is "least squares" rather than "least distance".',
+              socratic:
+                '⟨r, r⟩ and its square root rise and fall together as x moves. Which of the two ' +
+                'is worth minimising then, and what does working with that one save you from ' +
+                'having to write down?',
+            },
+            {
+              label: 'Force the coefficient instead of searching for it',
+              detail:
+                'The previous concept has already done this: splitting b as xa + r and demanding ' +
+                '⟨r, a⟩ = 0 gives ⟨b, a⟩ = x⟨a, a⟩, so x = ⟨b, a⟩/⟨a, a⟩ with nothing chosen on ' +
+                'the way. Here ⟨b, a⟩ = 2 + 3 + 7 = 12 and ⟨a, a⟩ = 1 + 1 + 1 = 3, so x̂ = 12/3 ' +
+                '= 4 and the projection is 4a = (4, 4, 4). What is new is not the formula but the ' +
+                'reason to want it: over there the split was an identity about any two vectors, ' +
+                'and here it is the answer to a question that has no exact one. Why ' +
+                '"perpendicular remainder" and "least sum of squares" are the same condition is ' +
+                'the next point and is not assumed here.',
+              socratic:
+                'The split of b into a multiple of a plus a perpendicular remainder has a forced ' +
+                'coefficient. What are ⟨b, a⟩ and ⟨a, a⟩ for these two vectors, and what does ' +
+                'their quotient make x̂?',
+            },
+            {
+              label: 'Add up the miss that is left, and name the average you have just taken',
+              detail:
+                'r = b − 4a = (2 − 4, 3 − 4, 7 − 4) = (−2, −1, 3), so ⟨r, r⟩ = 4 + 1 + 9 = 14. ' +
+                'That 14 is the least this sum can be made and not a measure of a mistake — ' +
+                'there is no x anywhere that does better, which the next point proves. Now look ' +
+                'at 12/3 again: with a = (1, 1, 1) the formula ⟨b, a⟩/⟨a, a⟩ reads "add the ' +
+                'components and divide by how many there are" for ANY b, so the least-squares ' +
+                'fit of a constant is the MEAN. So the mean being the number that minimises the ' +
+                'squared deviations is not a separate fact about lists — it is this projection ' +
+                'with a column of ones. And the authored summaries subject already says the ' +
+                'signed deviations from a mean total zero, which is ⟨r, a⟩ = −2 − 1 + 3 = 0: this ' +
+                'concept\'s own condition under another name. A column that is NOT all ones gives ' +
+                'a weighted answer instead — the slope in the third point is one of those, and it ' +
+                'is not an average of anything.',
+              socratic:
+                'Subtract 4a from b and add up the squares. Then look at 12/3 once more: with ' +
+                'a = (1, 1, 1), what does ⟨b, a⟩/⟨a, a⟩ do to any b at all — and what is that ' +
+                'operation usually called?',
+            },
+          ],
+          answer:
+            'x̂ = 4, leaving r = (−2, −1, 3) and ⟨r, r⟩ = 14 — and with a = (1, 1, 1) that ' +
+            'coefficient is the mean of the three measurements',
+        },
+      },
+      {
+        id: 'the-normal-equation-is-what-makes-it-least',
+        conceptId: 'least-squares',
+        statement:
+          'The condition ⟨b − x̂a, a⟩ = 0 — the normal equation — does not merely produce a ' +
+          'candidate, it is what makes the candidate least. Write any other choice as x = x̂ − d. ' +
+          'Then b − xa = r + da, and because ⟨r, a⟩ = 0 the Pythagorean relation of the ' +
+          'orthogonality point applies: ⟨b − xa, b − xa⟩ = ⟨r, r⟩ + d²⟨a, a⟩. The second term is ' +
+          'a square times a positive number, so it can only ADD — which says the minimum is at ' +
+          'd = 0, and that the price of being wrong by d is d²⟨a, a⟩. No calculus and no trying ' +
+          'of values; and if ⟨r, a⟩ were not zero the cross term 2d⟨r, a⟩ would survive, could be ' +
+          'made negative, and some other x would beat x̂.',
+        position: 2,
+        workedExample: {
+          problem:
+            'Same a = (1, 1, 1) and b = (2, 3, 7), with x̂ = 4 and ⟨r, r⟩ = 14. Check the normal ' +
+            'equation at x = 4, see what it returns at x = 5, and get the sum of squared misses ' +
+            'at x = 5 twice — once from the split and once by adding the squares.',
+          subgoals: [
+            {
+              label: 'Put the residual to the column and get back the zero it was solved for',
+              detail:
+                'r = (−2, −1, 3) and a = (1, 1, 1), so ⟨r, a⟩ = −2 − 1 + 3 = 0. That zero is the ' +
+                'normal equation holding — and it is worth being clear about how little it ' +
+                'proves on its own, because x̂ was solved for out of this very condition. It ' +
+                'confirms the arithmetic. That the condition picks the LEAST miss rather than ' +
+                'merely a tidy one is a separate claim, and the rest of this point is it.',
+              socratic:
+                'What does ⟨r, a⟩ come to for r = (−2, −1, 3)? Given that x̂ was solved for out ' +
+                'of exactly that equation, what has the zero told you that you did not already ' +
+                'put in?',
+            },
+            {
+              label: 'Break the condition on purpose and read the direction off the sign',
+              detail:
+                'At x = 5 the residual is b − 5a = (−3, −2, 2), and ⟨b − 5a, a⟩ = −3 − 2 + 2 = ' +
+                '−3, which is not zero — so the test rejects 5. The sign says which way to move, ' +
+                'and the clean way to see that is to write the test as ⟨b, a⟩ − x⟨a, a⟩ = 12 − ' +
+                '3x: positive below 4, zero at 4, negative above. So a negative value means more ' +
+                'of a has been taken out than b had in it and x must come down. One expression ' +
+                'both accepts the answer and points at the correction, which is what makes it a ' +
+                'test rather than a ritual.',
+              socratic:
+                'Recompute b − xa at x = 5 and take its inner product with a. Writing the test as ' +
+                '⟨b, a⟩ − x⟨a, a⟩, does a negative answer mean x is too big or too small?',
+            },
+            {
+              label: 'Spend the split instead of recomputing the miss',
+              detail:
+                'x = 5 is x̂ − d with d = −1, so the split gives ⟨b − 5a, b − 5a⟩ = 14 + ' +
+                '(−1)²·3 = 17 with nothing squared component by component: the 14 was already in ' +
+                'hand and the 3 is ⟨a, a⟩. Read as a formula it says the penalty for missing x̂ ' +
+                'by 1 is 3, by 2 is 12 and by 10 would be 300 — growing with the SQUARE of the ' +
+                'error and in proportion to the size of the column. The second factor is the ' +
+                'surprising one: the same error in x costs more when a is longer, because a ' +
+                'wrong coefficient is multiplied through every component.',
+              socratic:
+                'x = 5 misses the best coefficient by 1. What does ⟨r, r⟩ + d²⟨a, a⟩ give for the ' +
+                'sum of squared misses there, and how much of that did you have to get from the ' +
+                'components?',
+            },
+            {
+              label: 'Check the split against the direct sum, since a derivation never checked is a hope',
+              detail:
+                'Directly: b − 5a = (−3, −2, 2) and 9 + 4 + 4 = 17. The two routes agree, and ' +
+                'the reason they agree is the cross term 2d⟨r, a⟩ vanishing — the normal equation ' +
+                'used a second time, for the thing that matters rather than for the thing it was ' +
+                'solved for. That is the whole argument: "the remainder is perpendicular" and ' +
+                '"the sum of squares is least" are one condition and not two, and 17 against 14 ' +
+                'is that claim in numbers for one competitor. The claim covers all of them at ' +
+                'once because d was never given a value in the derivation.',
+              socratic:
+                'Add the squares of b − 5a straight out. Does it match the split — and which term ' +
+                'in the expansion of ⟨r + da, r + da⟩ had to vanish for the two to have agreed?',
+            },
+          ],
+          answer:
+            '⟨r, a⟩ = 0 at x = 4 and −3 at x = 5, where the sum of squared misses is ' +
+            '14 + 1·3 = 17 by the split and 9 + 4 + 4 = 17 directly — so 4 beats 5 by exactly ' +
+            '⟨a, a⟩',
+        },
+      },
+      {
+        id: 'one-normal-equation-per-column-and-a-count-for-the-rest',
+        conceptId: 'least-squares',
+        statement:
+          'With more than one column the condition is one normal equation per column: the ' +
+          'residual must be orthogonal to EVERY column, since each column is a direction the fit ' +
+          'could have moved along and a component of r along one of them is a miss that could ' +
+          'have been reduced. If the columns are orthogonal to each other the equations share no ' +
+          'unknown and each coefficient is its own one-column problem; otherwise they are a ' +
+          'system to be solved together, which is where this material stops. And the ' +
+          'coefficients need not be unique: a repeated column leaves the nearest point exactly ' +
+          'where it was while giving the weights a whole line to move along, whose dimension is ' +
+          'the columns less the rank — the previous concept\'s count, asked about the inputs that ' +
+          'produce one output rather than about the outputs.',
+        position: 3,
+        workedExample: {
+          problem:
+            'Four readings y = (2, 2, 4, 8) are taken at times t = (−3, −1, 1, 3), measured from ' +
+            'the middle of the run. Fit y ≈ c + mt by least squares: find c and m and the sum of ' +
+            'squared misses, then say what changes if the column of ones is written down twice.',
+          subgoals: [
+            {
+              label: 'Write the fit as a combination of columns, so the condition is the one already derived',
+              detail:
+                'c + mt means c·(1, 1, 1, 1) + m·(−3, −1, 1, 3), so the fitted vector is a ' +
+                'combination of two columns — u = (1, 1, 1, 1) and t — and as c and m range over ' +
+                'everything it ranges over their span. Fitting is therefore projecting y onto ' +
+                'that span, and the residual r = y − cu − mt has to be orthogonal to BOTH ' +
+                'columns: ⟨r, u⟩ = 0 and ⟨r, t⟩ = 0. One equation per column, for the same reason ' +
+                'as before — a component of r along a column could be removed by moving that ' +
+                'column\'s coefficient, so a residual that failed one of the two would not be ' +
+                'least.',
+              socratic:
+                'Write c + mt as a combination of two vectors. How many normal equations does the ' +
+                'residual have to satisfy now, and what could you still do to improve the fit if ' +
+                'it failed one of them?',
+            },
+            {
+              label: 'Ask whether the two equations interact before solving either',
+              detail:
+                '⟨u, t⟩ = −3 − 1 + 1 + 3 = 0, so the two columns are perpendicular — which is ' +
+                'what measuring the times from the middle of the run arranges, and is the reason ' +
+                'to do it. With that zero, ⟨r, u⟩ = 0 reads ⟨y, u⟩ = c⟨u, u⟩ with no m in it, and ' +
+                '⟨r, t⟩ = 0 reads ⟨y, t⟩ = m⟨t, t⟩ with no c: two separate one-column problems, ' +
+                'each the previous point verbatim. Times measured from the start instead would ' +
+                'leave ⟨u, t⟩ ≠ 0, both equations would carry both unknowns, and solving them is ' +
+                'a 2×2 system — `systems-of-linear-equations`, authored in another subject and ' +
+                'not something this concept rests on. So the centring is why this example can be ' +
+                'done with what is in hand, and the uncentred case is a real gap rather than a ' +
+                'harder version of the same thing.',
+              socratic:
+                'What does ⟨u, t⟩ come to for these two columns? If it is zero, what has happened ' +
+                'to the m term in the first normal equation and to the c term in the second?',
+            },
+            {
+              label: 'Take each coefficient out of its own column',
+              detail:
+                '⟨y, u⟩ = 2 + 2 + 4 + 8 = 16 and ⟨u, u⟩ = 4, so c = 16/4 = 4 — the mean of the ' +
+                'four readings, which is what a column of ones always gives and was the first ' +
+                'point\'s last subgoal. Then ⟨y, t⟩ = (−3)·2 + (−1)·2 + 1·4 + 3·8 = −6 − 2 + 4 + ' +
+                '24 = 20 and ⟨t, t⟩ = 9 + 1 + 1 + 9 = 20, so m = 20/20 = 1. The fit is y ≈ 4 + t, ' +
+                'which at the four times gives (1, 3, 5, 7).',
+              socratic:
+                'Compute ⟨y, u⟩/⟨u, u⟩ and then ⟨y, t⟩/⟨t, t⟩. What are c and m — and which of ' +
+                'the two came out as a plain average of the four readings rather than as a ' +
+                'weighted sum of them?',
+            },
+            {
+              label: 'Check both equations, then read the residual and not only its total',
+              detail:
+                'r = y − (1, 3, 5, 7) = (1, −1, −1, 1). Both conditions hold: ⟨r, u⟩ = 1 − 1 − 1 ' +
+                '+ 1 = 0 and ⟨r, t⟩ = −3 + 1 − 1 + 3 = 0, so ⟨r, r⟩ = 1 + 1 + 1 + 1 = 4 is the ' +
+                'least sum of squared misses available to ANY line through this data. What the ' +
+                'four numbers say beyond their total is the thing the total hides: the misses run ' +
+                '+, −, −, + rather than scattering, which is a line failing to bend with data ' +
+                'that bends. Whether a pattern like that is signal or noise is `linear-regression` ' +
+                'and is unwritten; that node already declares this concept as what it exercises, ' +
+                'so the arithmetic of the fit is here and the verdict on the model is honestly ' +
+                'somewhere else.',
+              socratic:
+                'Subtract the fitted values from y. What do ⟨r, u⟩ and ⟨r, t⟩ come to, what is ' +
+                '⟨r, r⟩ — and what do you notice about the ORDER of the four signs that their ' +
+                'total cannot show you?',
+            },
+            {
+              label: 'Write a column down twice and watch the answer stop being unique',
+              detail:
+                'Add a third column equal to 2u. The span does not grow — anything 2u reaches, u ' +
+                'already reached — so the nearest point (1, 3, 5, 7), the residual and the 4 are ' +
+                'all unchanged. What changes is the naming: the output is ' +
+                '(x₁ + 2x₃)u + x₂t, so any x₁ and x₃ with x₁ + 2x₃ = 4 produce the same fit, and ' +
+                '(4, 1, 0), (0, 1, 2) and (4 − 2k, 1, k) for every k are all least-squares ' +
+                'solutions. One free choice is a line of them, and its dimension is the previous ' +
+                'concept\'s count: three columns, rank 2, so 3 − 2 = 1. So least squares always ' +
+                'has a nearest point and need not have one way of writing it down — and which ' +
+                'case you are in is settled by a count rather than by a judgement.',
+              socratic:
+                'The third column is 2u, so what has it added to the set of vectors the fit can ' +
+                'reach? If the weights on u and on 2u only matter through x₁ + 2x₃, how many of ' +
+                'the three are you free to choose — and which count of the previous concept is ' +
+                'that number?',
+            },
+          ],
+          answer:
+            'c = 4 and m = 1, so y ≈ 4 + t with r = (1, −1, −1, 1) and ⟨r, r⟩ = 4; and repeating ' +
+            'the column of ones leaves every one of those unchanged while making the coefficients ' +
+            'a line of solutions of dimension 3 − 2 = 1',
+        },
+      },
+    ],
+  },
+
+  {
+    id: 'dual-spaces',
+    name: 'Dual spaces',
+    subjectId: subject.id,
+    scope: {
+      id: 'dual-spaces',
+      label: 'Dual spaces',
+      /*
+       * Carried VERBATIM from the map node, which is what five of the six
+       * promotions into this file did and is the right default: the pattern
+       * decides against an article title, so widening it in the same edit that
+       * makes the material appear leaves no way to say which change moved the
+       * title table.
+       *
+       * Checked for the `\b`-after-a-bracket fault first, since that trap is
+       * invisible otherwise and this file has found it twice —
+       * `fidelityMismatches` asks only whether a checked concept HAS a pattern,
+       * and the recognition figure counts patterns rather than testing them.
+       * There is no bracket here and the alternation is INSIDE the pattern
+       * rather than at its end, so the trailing `\b` sits after "space" or
+       * "basis", both of which end in a word character. Two alternatives, both
+       * live.
+       *
+       * WHAT IT REACHES AND WHAT OF THAT THIS MATERIAL IS. It claims "Dual
+       * space" and "Dual basis", which are this concept, and also "Dual space
+       * (functional analysis)" and the continuous-dual half of the first — which
+       * is a DIFFERENT object: the dual of an infinite-dimensional normed space,
+       * where the bounded functionals are the ones anybody means and no dual
+       * basis exists. The pattern decides correctly that such an article is
+       * about this, and the material is narrower than the pattern, which is the
+       * ordinary case for every concept here. The third point's statement says
+       * finite-dimensional where the theorem needs it, so the narrowing is
+       * visible to a learner and not only here.
+       *
+       * WHAT IT DOES NOT REACH IS "Dual norm" AND "Duality (mathematics)", and
+       * both absences are correct. The first is a norm, which this subject has
+       * declined since the dot product; the second is a survey of a word.
+       */
+      hint: 'dual space dual basis linear functional annihilator transpose',
+      match: /\bdual (space|basis)\b/i,
+    },
+    fidelity: 'checked',
+    /*
+     * EVERY OBJECTIVE NAMES ONLY `evaluate`, as the five concepts above it do
+     * and for the reason stated there: the build ships no `justify` task
+     * anywhere, so an objective naming that kind names an observation that
+     * cannot be made.
+     *
+     * The statements are written to what `evaluate` can evidence, and this
+     * concept is the one where that gap looked widest before it was measured.
+     * "What is a linear functional" and "why does the dual have the same
+     * dimension" are the sentences the material is about and neither is a
+     * number. What a task can return is the value a functional takes on a
+     * vector it was never given, the 1 and the 0 that DEFINE a dual basis
+     * element, the coordinate one of them reads off, the value a coefficient
+     * row returns inside and outside its kernel, and the coordinate that one
+     * equation leaves determined — so that is what the objectives claim, and
+     * the deciding is in the `socratic` phrasings, asked by a tutor and marked
+     * by nothing.
+     */
+    objectives: [
+      {
+        id: 'produce-the-value-a-functional-takes-on-a-vector-it-was-not-given',
+        statement:
+          'Produce the value a linear functional returns on a vector it was never told about, ' +
+          'from its values on a basis and that vector\'s address — and that address, which is ' +
+          'the quotient the previous concept\'s elimination produces and whose divisor is the ' +
+          'independence test.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'produce-what-the-coordinate-reading-functionals-return',
+        statement:
+          'Produce the 1 and the 0 that define a dual basis functional, the coordinate it reads ' +
+          'off a third vector, and the value the expansion of a functional in that basis returns ' +
+          '— the four numbers that make the dual a space of the same dimension rather than a ' +
+          'name for one.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'produce-what-a-coefficient-row-returns-inside-and-outside-its-kernel',
+        statement:
+          'Produce what a functional\'s coefficient row returns on a vector its equation kills ' +
+          'and on one it does not, the same value after the row is doubled, and the coordinate ' +
+          'the equation leaves determined — which is one equation spending one freedom, done as ' +
+          'arithmetic rather than asserted.',
+        taskKinds: ['evaluate'],
+      },
+    ],
+    knowledgePoints: [
+      {
+        id: 'a-functional-is-fixed-by-its-values-on-a-basis',
+        conceptId: 'dual-spaces',
+        statement:
+          'A linear functional on a space is a linear map from it to the numbers: f(a + b) = ' +
+          'f(a) + f(b) and f(ca) = c·f(a), with a single number coming out rather than a vector. ' +
+          'Linearity plus the previous concept\'s address makes such a rule very small to ' +
+          'describe. Every vector is exactly one combination of a basis, so f(c₁u + c₂v) = ' +
+          'c₁f(u) + c₂f(v), and the two values f(u) and f(v) decide f on every vector of the ' +
+          'plane. Nothing constrains those two values either: any pair of numbers handed to a ' +
+          'basis extends to exactly one functional. So a functional on the plane IS a pair of ' +
+          'numbers, which is the first sign that the functionals have a dimension of their own.',
+        position: 1,
+        /*
+         * No `automaticityTarget` on any of the three points, which follows the
+         * five concepts above. The arithmetic is an address and a dot product,
+         * both timed where they are taught — `the-cross-check` carries a target
+         * for the elimination this reuses — and what this concept adds is a
+         * change of object: the rule that reads a coordinate becomes a thing
+         * with a coordinate of its own. A timing target on "which of these two
+         * objects is the vector" measures typing, which is the case types.ts
+         * makes when it argues the field should usually be absent.
+         */
+        workedExample: {
+          problem:
+            'u = (2, −1) and v = (1, 3) are the basis of the previous concept, and f is linear ' +
+            'with f(u) = 3 and f(v) = −2. Find f(w) for w = (3, −5) — a vector f was told ' +
+            'nothing about.',
+          subgoals: [
+            {
+              label: 'Establish that two numbers are enough before asking for more',
+              detail:
+                'Linearity says f(c₁u + c₂v) = c₁f(u) + c₂f(v): the weights come out in front ' +
+                'and what is left is the two values f was given. So f is already pinned on every ' +
+                'vector with an address in {u, v}, which the previous concept showed is every ' +
+                'vector of the plane. Nothing further about f has to be supplied — what has to ' +
+                'be found is w\'s address.',
+              socratic:
+                'f is linear and w is some combination c₁u + c₂v. Write f(w) using only c₁, c₂, ' +
+                'f(u) and f(v) — and once you have, how many more numbers about f do you need to ' +
+                'be told?',
+            },
+            {
+              label: 'Fetch the address, which is the previous concept\'s own quotient',
+              detail:
+                'w = 2u − v, found there by eliminating one component equation against the other ' +
+                'and dividing by the cross-check 2·3 − (−1)·1 = 7. The division is legitimate ' +
+                'because that 7 is not zero, which is exactly the independence of {u, v} — and ' +
+                'this is where a functional needs a BASIS rather than any spanning set. A ' +
+                'dependent pair would give w two addresses, and two addresses would give f two ' +
+                'values at one vector, which is not a function.',
+              socratic:
+                'What is w\'s address in {u, v}, and which number did the elimination divide by ' +
+                'to produce it? If that number had come out zero, what would have gone wrong ' +
+                'with f rather than with the arithmetic?',
+            },
+            {
+              label: 'Spend the address on the two values',
+              detail:
+                'f(w) = 2·f(u) + (−1)·f(v) = 2·3 + (−1)·(−2) = 6 + 2 = 8. The two minus signs ' +
+                'are worth slowing down for: the second weight is −1 and the second value is −2, ' +
+                'so their product ADDS. And notice what was never needed — no formula for f in x ' +
+                'and y, no rule on components. Two numbers and an address.',
+              socratic:
+                'w = 2u − v, f(u) = 3 and f(v) = −2. What is f(w) — and what sign does the ' +
+                'product of the second weight with the second value carry?',
+            },
+            {
+              label: 'Check that the two values were free, which is what makes this a space',
+              detail:
+                'Nothing above used 3 and −2 being those particular numbers. Any pair would have ' +
+                'given a rule, and the rule would have been linear: define g on a vector by ' +
+                'finding its address and taking that same combination of the pair, and g adds ' +
+                'and scales because addresses do. Two different pairs give two different ' +
+                'functionals, since they already disagree at u or at v. So the functionals on ' +
+                'the plane correspond exactly to pairs of numbers — and a set that corresponds ' +
+                'exactly to pairs is one the next point can count a basis for.',
+              socratic:
+                'Nothing above depended on f(u) being 3. Hand a different pair of numbers to u ' +
+                'and v: do you still get a linear rule — and could two different pairs ever ' +
+                'produce the same rule?',
+            },
+          ],
+          answer:
+            '8 — and the only facts about f used anywhere were f(u) = 3, f(v) = −2 and the ' +
+            'address w = 2u − v',
+        },
+      },
+      {
+        id: 'the-dual-basis-reads-coordinates-and-counts-the-same-dimension',
+        conceptId: 'dual-spaces',
+        statement:
+          'Functionals add and scale pointwise — (f + g)(a) = f(a) + g(a) and (cf)(a) = c·f(a) ' +
+          '— and every axiom of the axioms concept holds for them, so they are a vector space in ' +
+          'their own right: the DUAL space. Any basis of the original gives it a basis. Let f_i ' +
+          'be the functional sending the i-th basis vector to 1 and the others to 0, which the ' +
+          'previous point makes a legitimate definition rather than a wish. Then f_i(w) is ' +
+          'exactly the i-th coordinate of w, so the dual basis is the coordinate-reading ' +
+          'functionals — and there are as many of them as there are basis vectors. That is the ' +
+          'theorem: a finite-dimensional space and its dual have the same dimension.',
+        position: 2,
+        workedExample: {
+          problem:
+            'With u = (2, −1) and v = (1, 3) again, write the two dual basis functionals f₁ and ' +
+            'f₂ as rules on the components (x, y), check them on u and v, and express the f of ' +
+            'the previous point — f(u) = 3, f(v) = −2 — in terms of them.',
+          subgoals: [
+            {
+              label: 'Settle that the functionals are a space before counting a basis for one',
+              detail:
+                'Add two functionals by adding what they return. The sum is linear: (f + g)(a + ' +
+                'b) = f(a + b) + g(a + b) = f(a) + f(b) + g(a) + g(b), which regroups into ' +
+                '(f + g)(a) + (f + g)(b) because numbers may be added in any order. Scaling is ' +
+                'the same argument, the zero functional sends every vector to 0, and −f is f ' +
+                'with its output negated — so the three-part test of the axioms concept passes ' +
+                'and a dimension is something this set HAS. Without that step, "the dual has the ' +
+                'same dimension" compares a number against nothing.',
+              socratic:
+                'Functionals are added by adding what they return. Before asking how many ' +
+                'directions that set has, which fact about it has to be settled first — and ' +
+                'which concept\'s three checks settle it?',
+            },
+            {
+              label: 'Define the two coordinate readers and solve for their rules',
+              detail:
+                'Let f₁(u) = 1, f₁(v) = 0 and f₂(u) = 0, f₂(v) = 1 — allowed by the previous ' +
+                'point, which established that the values on a basis may be any numbers at all. ' +
+                'To get f₁ as a rule in x and y, use the previous concept\'s coordinate formula: ' +
+                'the first coordinate of (x, y) is (3x − y)/7 and the second is (x + 2y)/7, so ' +
+                'f₁(x, y) = (3x − y)/7 and f₂(x, y) = (x + 2y)/7. Checking the first: f₁(u) = ' +
+                '(6 + 1)/7 = 1 and f₁(v) = (3 − 3)/7 = 0, which is what f₁ was asked for. The 7 ' +
+                'is the cross-check once more — every coordinate in this basis divides by it, so ' +
+                'every one of these functionals carries it in a denominator.',
+              socratic:
+                'The first coordinate of (x, y) in {u, v} is (3x − y)/7. What does that ' +
+                'expression give at u = (2, −1) and at v = (1, 3), and why are those two answers ' +
+                'exactly the ones f₁ was defined by?',
+            },
+            {
+              label: 'Read a coordinate as a value and recognise the pair',
+              detail:
+                'f₁(w) = (9 + 5)/7 = 2 and f₂(w) = (3 − 10)/7 = −1, which is w\'s address ' +
+                '(2, −1) from the previous point arriving as two evaluations. That is the content ' +
+                'of the dual basis rather than a consequence of it: "take the first coordinate" ' +
+                'is not bookkeeping alongside the mathematics, it is a functional, and a ' +
+                'vector\'s address is the list of what the dual basis returns on it.',
+              socratic:
+                'Evaluate f₁ and f₂ at w = (3, −5). Where in this concept have you already seen ' +
+                'the pair of numbers you get?',
+            },
+            {
+              label: 'Expand f in them, and watch the divisor cancel',
+              detail:
+                'Every functional equals f(u)·f₁ + f(v)·f₂, because the two sides agree at u and ' +
+                'at v and the previous point says agreeing on a basis is agreeing everywhere. So ' +
+                'f = 3f₁ − 2f₂. On components that is (3(3x − y) − 2(x + 2y))/7 = ' +
+                '(9x − 3y − 2x − 4y)/7 = (7x − 7y)/7 = x − y, the sevenths cancelling because ' +
+                'both halves were built from the same cross-check. Checking: f(u) = 2 − (−1) = 3 ' +
+                'and f(v) = 1 − 3 = −2, and f(w) = 3 − (−5) = 8, which is the previous point\'s ' +
+                'answer by a route that mentions neither u nor an address. The expansion also ' +
+                'finishes the count. The pair SPANS, every f being such a combination; and it is ' +
+                'INDEPENDENT, since af₁ + bf₂ = 0 evaluated at u gives a = 0 and at v gives ' +
+                'b = 0. Two functionals against two basis vectors, which is the theorem shown in ' +
+                'the plane.',
+              socratic:
+                'f and 3f₁ − 2f₂ agree at u and at v. What does the first point let you conclude ' +
+                'about every other vector — and when you write 3f₁ − 2f₂ out over the common ' +
+                'denominator 7, what becomes of the 7?',
+            },
+          ],
+          answer:
+            'f₁(x, y) = (3x − y)/7 and f₂(x, y) = (x + 2y)/7, with f₁(w) = 2 and f₂(w) = −1 ' +
+            'being w\'s address; f = 3f₁ − 2f₂, which collapses to x − y; and the dual basis has ' +
+            'two elements, like the basis it was built from',
+        },
+      },
+      {
+        id: 'a-functional-is-a-row-and-its-kernel-costs-one-dimension',
+        conceptId: 'dual-spaces',
+        statement:
+          'On components every functional is a dot product with a fixed list of coefficients: ' +
+          'f(x) = f(e₁)x₁ + … + f(eₙ)xₙ, since x is x₁e₁ + … + xₙeₙ and the points above take it ' +
+          'from there. That list is what a ROW is, and it is why a row and a column are ' +
+          'different objects rather than the same numbers written sideways — a column is a ' +
+          'vector and a row is a functional waiting for one. Setting a functional to zero is a ' +
+          'single linear EQUATION, and the vectors it kills are its kernel: a space, one ' +
+          'dimension below the whole, because the equation determines one coordinate and leaves ' +
+          'the rest free. Scaling the row does not move that kernel, so a kernel names a ' +
+          'functional only up to a multiple.',
+        position: 3,
+        workedExample: {
+          problem:
+            'f(x, y, z) = 2x − y + 2z, which is the equation of the plane W of the previous ' +
+            'concept. Evaluate f at a = (1, 2, 0), at c = (2, −2, −3) and at p = (1, 1, 1); say ' +
+            'which vector its coefficient row is; and find the dimension of its kernel.',
+          subgoals: [
+            {
+              label: 'Read the row off the values on the standard basis',
+              detail:
+                'f(e₁) = 2, f(e₂) = −1 and f(e₃) = 2, so the coefficient row is n = (2, −1, 2) ' +
+                'and f(r) = n·r — the dot product of three concepts ago, with the row supplying ' +
+                'one of its two arguments. That n is the plane\'s own normal vector, which the ' +
+                'previous concept computed as a × b for a = (1, 2, 0) and b = (0, 2, 1). So the ' +
+                'normal of a plane through the origin and the row of the functional cutting that ' +
+                'plane out are the same three numbers seen from two sides.',
+              socratic:
+                'What does f return on each of (1, 0, 0), (0, 1, 0) and (0, 0, 1) — and where in ' +
+                'the previous concept did those three answers appear together as one vector?',
+            },
+            {
+              label: 'Separate the vectors the row kills from the ones it does not',
+              detail:
+                'f(a) = 2 − 2 + 0 = 0 and f(c) = 4 + 2 − 6 = 0, so a and c are both in the ' +
+                'kernel — and in the previous concept those same two zeros meant "this point ' +
+                'lies in W" and "this third vector adds no direction". f(p) = 2 − 1 + 2 = 3, so ' +
+                'p is not: the equation fails at p, and the 3 is by how much it fails rather ' +
+                'than a distance to the plane. One non-zero value is the whole of what is needed ' +
+                'to know the kernel is smaller than the space, since a functional returning zero ' +
+                'everywhere would be the zero functional.',
+              socratic:
+                'Evaluate f at a = (1, 2, 0) and at p = (1, 1, 1). Which of the two answers ' +
+                'tells you the kernel is not the whole space, and what does the other one say ' +
+                'about where a sits?',
+            },
+            {
+              label: 'Count the freedom the one equation spends',
+              detail:
+                'Solve f = 0 for a coordinate whose coefficient is not zero: y = 2x + 2z. Now x ' +
+                'and z may be chosen freely and y follows, so the kernel has two free choices ' +
+                'and dimension 2 — three coordinates less the one the equation determines. ' +
+                'Choosing x = 1 and z = 0 gives y = 2 and the vector (1, 2, 0), which is a; ' +
+                'choosing x = 0 and z = 1 gives (0, 2, 1), which is b. The previous concept\'s ' +
+                'basis of W comes back OUT of the functional instead of being handed over. The ' +
+                'general statement — a non-zero functional\'s kernel is one dimension down — is ' +
+                'the rank theorem\'s subtraction with an image of dimension 1, and it is spent ' +
+                'here rather than proved: what this example establishes is the case a learner ' +
+                'can count.',
+              socratic:
+                'Solve 2x − y + 2z = 0 for y. How many of the three coordinates are still free ' +
+                'afterwards — and if you choose x = 1 and z = 0, which vector of the previous ' +
+                'concept comes back out?',
+            },
+            {
+              label: 'Double the row and find the kernel has not moved',
+              detail:
+                '2f has row (4, −2, 4), and 2f(c) = 8 + 4 − 12 = 0 — still zero, and not because ' +
+                'of anything about c: doubling a number that is zero leaves it zero, so 2f kills ' +
+                'exactly what f kills. The two functionals are different, agreeing at no vector ' +
+                'except the ones they both send to 0, and the kernel cannot tell them apart. So ' +
+                'a plane through the origin does not name one equation, it names a whole line of ' +
+                'them — which is why "the" equation of a plane is only ever determined up to a ' +
+                'multiple, and why 4x − 2y + 4z = 0 draws the same picture as 2x − y + 2z = 0.',
+              socratic:
+                'Evaluate the doubled row (4, −2, 4) against c = (2, −2, −3). Given your answer, ' +
+                'can a kernel ever tell you which multiple of the row it came from?',
+            },
+          ],
+          answer:
+            'f(a) = 0, f(c) = 0 and f(p) = 3; the row is n = (2, −1, 2), the plane\'s own ' +
+            'normal, so f(r) = n·r; and the kernel is W, of dimension 2 — three coordinates less ' +
+            'the one coordinate the single equation determines',
+        },
+      },
+    ],
+  },
 ]
 
 /**
@@ -3683,6 +4765,253 @@ const EDGES: ConceptEdge[] = [
       '`given`, and the two triple products that bound it from above and name a vector the image ' +
       'misses are `third-vector-redundant-1`\'s. So somebody who has pinned a rank has counted ' +
       'directions, and the count should not come due as though untouched.',
+  },
+
+  /*
+   * THE FORTY-FIRST PROMOTION'S THREE EDGES, AND A `links` COST OF ZERO.
+   *
+   * `least-squares` declared two `needs` and BOTH are concepts of this
+   * ontology — `inner-product-spaces` and `rank-nullity`, the two directly
+   * above it — so both stranded edges are entries below and no area owes
+   * anything. That is the cheapest shape a promotion has, it is the second time
+   * running it has been available, and it is what decided the pick: of the
+   * seven unrefused ready nodes, only this one and `dual-spaces` had it.
+   *
+   * NOTHING WAS HANDED BACK. No `links` entry of any area named this node at
+   * either end — checked against `AREAS.flatMap(a => a.links)` before the node
+   * was deleted, because a `links` entry whose far end lands in the receiving
+   * ontology becomes a duplicate of the edge declared here, and two identical
+   * edges in the composed graph is not a redundancy `composeAtlas` notices.
+   *
+   * THE TWO EDGES OUT SURVIVED UNTOUCHED, and they cross two map files.
+   * `singular-value-decomposition` is a node of `linear-algebra` and
+   * `linear-regression` is a node of `statistics`, in atlas-uncertainty.ts;
+   * both name this concept in their OWN `needs`, so both are declared at the
+   * far end and resolve in `composeAtlas` — the half of a departure that needs
+   * no action and whose failure mode is not an error but a node quietly rooted
+   * with nothing above it. Those two dependents are also the third factor that
+   * separated this node from `dual-spaces`, which ties it on the second and has
+   * none.
+   *
+   * AND THE NODE DECLARED NO `confusedWith` AND NO `exercises`, checked on it
+   * before deletion rather than inferred from the suites passing afterwards.
+   * `expandEdges` handles all THREE edge-bearing node fields and the third is
+   * the one no checklist named until the fortieth promotion found it:
+   * `confusedWith` becomes an `interferes_with`, which constrains SELECTION
+   * rather than gating, and `exercises` becomes an `encompasses`, which between
+   * two ontologies is expressible nowhere and would therefore have FORCED the
+   * filing. Both absent, so the filing was argued on content.
+   *
+   * WHAT IS NOT ABSENT IS AN `encompasses` EDGE POINTING THE OTHER WAY, AND IT
+   * ARRIVES FROM A MAP NODE RATHER THAN FROM HERE. `linear-regression`, a node
+   * of `statistics` in atlas-uncertainty.ts, declares both
+   * `needs: [..., 'least-squares']` and `exercises: ['least-squares']` — so the
+   * claim that fitting a regression line exercises this concept is already in
+   * the build, declared at the far end, and it starts doing work the day
+   * somebody writes that node. Nothing here had to create it and nothing here
+   * may: an authored ontology may only name concepts it contains.
+   *
+   * ── THE `encompasses` EDGE DOWN, TAKEN, AND THE ONE DECLINED ────────────
+   *
+   * Taken to `inner-product-spaces`, on the same test the refusals in this file
+   * were made with: the claim is about what PRACTISING exercises, measured
+   * against the tasks that exist rather than against the prose. FIVE of the ten
+   * tasks are an inner-product-spaces expression at more components —
+   * `least-squares-coefficient-1` and `the-slope-from-its-own-column-1` are
+   * `projection-coefficient-1`'s quotient of two inner products at three and
+   * four terms, `normal-equation-holds-1` and
+   * `normal-equation-rejects-and-points-1` are `orthogonal-remainder-1`'s
+   * remainder-against-the-column at three, and
+   * `the-two-columns-do-not-interact-1` is the orthogonality test at four.
+   *
+   * THE ARITY CHANGE IS WHY THE BAR IS WORTH RESTATING. This file's usual
+   * phrasing for a credit edge is "a task's `given` symbol for symbol", and not
+   * one of the five is that: all ten tasks here work in three or four
+   * components where every task of both prerequisites works in two or three.
+   * The precedent is `three-dimensional-coordinates=>dot-product-geometry`
+   * above, taken on "four of this concept's eight tasks evaluate a THREE-TERM
+   * dot product" against a concept whose own tasks are two-term — so an
+   * extension of the same formula to more components has already counted here,
+   * and the verbatim phrasing is the proxy rather than the rule. Five of ten is
+   * above every bar this file has taken an edge at (two of six twice, three of
+   * six, four of eight).
+   *
+   * DECLINED TO `rank-nullity`, and naming the failing count is the point.
+   * Exactly ONE task touches it — `how-many-ways-to-name-the-same-fit-1`,
+   * which is `n - p` — and that task spends the theorem rather than producing
+   * either count: nothing in it reduces anything, bounds a rank or tests a
+   * kernel vector, and the rank of 2 is handed to the learner in the prompt.
+   * One of ten is below every bar above, and the standard the fortieth
+   * promotion wrote down is sharper still: no task may be answerable without
+   * the other concept's work. A learner who has never met a rank can answer
+   * 3 − 2. So the prerequisite edge gates and the credit edge does not exist,
+   * which is the right pair — the count is needed to UNDERSTAND the answer and
+   * is not exercised by producing it.
+   *
+   * ONE EDGE AND NOT THREE. `inner-product-spaces` already claims credit down
+   * to `dot-product-geometry`, which claims it down to `plane-vectors`, and
+   * `encompassedClosure` is transitive — so this single edge credits three
+   * concepts at depths 1, 2 and 3 with nothing else declared. Asserted by DEPTH
+   * in tests/concepts-logic.mjs, so the transitivity is checked rather than
+   * assumed.
+   */
+  {
+    id: 'inner-product-spaces->least-squares',
+    from: 'inner-product-spaces',
+    to: 'least-squares',
+    kind: 'prerequisite',
+    promotedBy: 'author:vectors-and-independence',
+    rationale:
+      'The coefficient this concept calls the least-squares solution IS the projection ' +
+      'coefficient derived there, forced out of the demand that the remainder be perpendicular — ' +
+      'and the proof that it is least is that concept\'s Pythagorean relation with the cross ' +
+      'term killed by the same zero. A learner without the split reads ⟨b, a⟩/⟨a, a⟩ as a ' +
+      'formula to remember and the normal equation as a coincidence, rather than as one ' +
+      'condition met twice.',
+  },
+  {
+    id: 'rank-nullity->least-squares',
+    from: 'rank-nullity',
+    to: 'least-squares',
+    kind: 'prerequisite',
+    promotedBy: 'author:vectors-and-independence',
+    rationale:
+      'Whether the system has a solution at all is whether the target is in the image, which is ' +
+      'the span of the columns — so the rank is what says how much a fit can reach and the ' +
+      'shortfall is why there is nothing to solve. The sharper debt is uniqueness: a repeated ' +
+      'column leaves the nearest point alone and makes the coefficients a line, and the ' +
+      'dimension of that line is the columns less the rank. Without the count, "the answer is ' +
+      'unique but the way of naming it is not" is a puzzle rather than a subtraction.',
+  },
+  {
+    id: 'least-squares=>inner-product-spaces',
+    from: 'least-squares',
+    to: 'inner-product-spaces',
+    kind: 'encompasses',
+    promotedBy: 'author:vectors-and-independence',
+    rationale:
+      'Five of this concept\'s ten tasks are that concept\'s own arithmetic at three or four ' +
+      'components: two divide one inner product by another, which is the projection ' +
+      'coefficient\'s `given` extended; two take the residual\'s inner product with the column, ' +
+      'which is the orthogonal remainder\'s; and one is the orthogonality test on a pair of ' +
+      'columns. Nobody can produce a least-squares fit here without computing inner products ' +
+      'and dividing by a self-product, so that concept should not come due as though untouched.',
+  },
+
+  /*
+   * THE FORTY-SECOND PROMOTION'S TWO EDGES, A `links` COST OF ZERO, AND A
+   * BRANCH RATHER THAN A CONTINUATION.
+   *
+   * `dual-spaces` declared ONE `need` and it is a concept of this ontology —
+   * `basis-and-dimension`, four concepts above rather than the one directly
+   * above — so the single stranded edge is the entry below and no area owes
+   * anything. That is the cheapest shape a promotion has, it is the third time
+   * running it has been available, and it is what decided the pick: of the six
+   * unrefused ready nodes, only this one had it.
+   *
+   * THE EDGE DOES NOT COME FROM `least-squares` AND MUST NOT BE WRITTEN AS
+   * THOUGH IT DID. This concept is written last in the array and rests on
+   * neither of the two above it, so `basis-and-dimension` now has two
+   * dependents in this file where it had one. An assertion phrased as an
+   * ordered walk through the subject would accept this edge hung off the least
+   * squares by accident; `tests/concepts-logic.mjs` asserts the branch POINT
+   * instead, which is the same correction the twenty-third promotion made for
+   * the dot product.
+   *
+   * NOTHING WAS HANDED BACK. No `links` entry of any area named this node at
+   * either end — checked against `AREAS.flatMap(a => a.links)` before the node
+   * was deleted, because a `links` entry whose far end lands in the receiving
+   * ontology becomes a duplicate of the edge declared here, and two identical
+   * edges in the composed graph is not a redundancy `composeAtlas` notices.
+   *
+   * AND THERE WAS NO EDGE OUT AT ALL, which is the first time that has been
+   * true of a promotion from this build and is exactly the third factor this
+   * node lost on. `dependentsOf` returns nothing: no node and no concept in any
+   * file names `dual-spaces` in its `needs` or its `exercises`. So the half of
+   * a departure that usually needs no action needed none because there was
+   * none, and the usual failure mode — a far node quietly rooted with nothing
+   * above it — cannot occur here. What that costs is real and is recorded in
+   * the header: this promotion unlocks nobody, and the node that would have
+   * unlocked four is `eigenvalues`.
+   *
+   * AND THE NODE DECLARED NO `confusedWith` AND NO `exercises`, checked on it
+   * before deletion rather than inferred from the suites passing afterwards.
+   * `expandEdges` handles all THREE edge-bearing node fields and two of them
+   * strand SILENTLY: `confusedWith` becomes an `interferes_with`, which
+   * constrains SELECTION rather than gating, and `exercises` becomes an
+   * `encompasses`, which between two ontologies is expressible nowhere. Both
+   * absent, so the filing was argued on content.
+   *
+   * ── THE `encompasses` EDGE DOWN, TAKEN ON A VERBATIM `given` AT LAST ─────
+   *
+   * Taken to `basis-and-dimension`, on the same test every credit edge in this
+   * file was taken with: the claim is about what PRACTISING exercises, measured
+   * against the tasks that exist rather than against the prose. FOUR of the
+   * eleven tasks here compute a `basis-and-dimension` task's `given` SYMBOL FOR
+   * SYMBOL, which is this file's usual phrasing and which the forty-first
+   * promotion could not meet at all — `the-address-a-functional-is-spent-on-1`
+   * is `basis-coordinate-1`'s coordinate quotient at new inputs, and the three
+   * row tasks are `third-vector-redundant-1`'s triple product at new inputs.
+   *
+   * ONE OF THE FOUR IS WORTH MORE THAN THE OTHER THREE AND THE NOTE SAYS SO
+   * RATHER THAN COUNTING TO FOUR. `basis-coordinate-1`'s quotient
+   * `(v2*w1 - v1*w2)/(u1*v2 - u2*v1)` belongs to that concept and to nothing
+   * else in the build: it is the coordinate formula with the cross-check as its
+   * divisor. The triple product `n1*r1 + n2*r2 + n3*r3` is that concept's too,
+   * but it is ALSO `plane-constant-1`'s and `cross-product-perpendicular-1`'s —
+   * the file records the sharing at `third-vector-redundant-1` itself — so
+   * three of the four are evidence of a dot product rather than of a dimension
+   * count. One exclusive match and three shared is the honest reading, and it
+   * is still above the bars this file has taken an edge at (two of six twice,
+   * three of six, four of eight, five of ten), because the substantive claim
+   * does not rest on the arithmetic alone: all THREE knowledge points consume
+   * either an address or a dimension count, and neither is a thing this concept
+   * produces for itself.
+   *
+   * NO SECOND CREDIT EDGE, AND THE REASON IS TRANSITIVITY RATHER THAN A
+   * JUDGEMENT. `basis-and-dimension` already claims credit down to
+   * `linear-independence`, which claims it down to `vectors-and-spans`, and
+   * `encompassedClosure` is transitive — so this one edge credits three
+   * concepts at depths 1, 2 and 3 with nothing else declared. The tempting
+   * extra is an edge to `dot-product-geometry`, since the third point's whole
+   * content is that a functional IS a dot product with a row; it is declined
+   * because the credit already arrives there transitively through the
+   * dimension, and declaring it again would make the depth figures in
+   * tests/concepts-logic.mjs assert a shape the closure did not need.
+   */
+  {
+    id: 'basis-and-dimension->dual-spaces',
+    from: 'basis-and-dimension',
+    to: 'dual-spaces',
+    kind: 'prerequisite',
+    promotedBy: 'author:vectors-and-independence',
+    rationale:
+      'A functional is decided by its values on a basis, and that claim is false without the ' +
+      'previous concept\'s theorem: it holds because every vector has exactly ONE address, which ' +
+      'is independence, and because every vector has one at all, which is spanning. A learner ' +
+      'without the address reads "the values on a basis determine f" as a convention about how ' +
+      'functionals are written down rather than as a consequence, and has no way to compute ' +
+      'f(w) for a w nobody supplied a value for. The sharper debt is the dual basis itself — its ' +
+      'two functionals ARE that concept\'s coordinate formulas, cross-check divisor and all, so ' +
+      'without them the pair comes out of nowhere; and the dimension count the whole second ' +
+      'point exists to make is that concept\'s own number applied to a different space.',
+  },
+  {
+    id: 'dual-spaces=>basis-and-dimension',
+    from: 'dual-spaces',
+    to: 'basis-and-dimension',
+    kind: 'encompasses',
+    promotedBy: 'author:vectors-and-independence',
+    rationale:
+      'Four of this concept\'s eleven tasks are that concept\'s own `given` symbol for symbol ' +
+      'at new inputs: one is the coordinate quotient whose divisor is the cross-check, which no ' +
+      'other task in the build computes, and three are the triple product it shares with the ' +
+      'cross-product tasks of the concept below it. Beyond the arithmetic, every one of the ' +
+      'three knowledge points consumes an address or a dimension and none of them produces one ' +
+      '— the first spends a coordinate, the second builds the functionals that read coordinates ' +
+      'and counts them, and the third counts the dimension one equation leaves. Nobody can ' +
+      'practise the dual without counting directions, so that concept should not come due as ' +
+      'though untouched.',
   },
 ]
 

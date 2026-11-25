@@ -2142,7 +2142,7 @@ group('vectors gated matrices, which is what authoring underneath means')
 const VEC_IDS = new Set(
   MATHEMATICS.concepts.filter(c => c.subjectId === 'vectors-and-independence').map(c => c.id),
 )
-t('the subject contributes ten concepts', VEC_IDS.size === 10, `${VEC_IDS.size}`)
+t('the subject contributes twelve concepts', VEC_IDS.size === 12, `${VEC_IDS.size}`)
 t('matrices now gates on vectors, not through them',
   gatingPrerequisitesOf(MATHEMATICS, 'matrices-and-maps').includes('vectors-and-spans'),
   gatingPrerequisitesOf(MATHEMATICS, 'matrices-and-maps').join(', '))
@@ -2155,15 +2155,15 @@ t('and the gate it names is teachable, so it is somewhere to go',
  * `cartesian-plane` was a node of `coordinate-geometry` and is now the first
  * concept of this ontology. The count above is the assertion that catches the
  * collision half of that move — `atlasProblems` would reject the node if it had
- * been left behind, and an ELEVENTH concept here would mean somebody added one
+ * been left behind, and a TWELFTH concept here would mean somebody added one
  * without reading this group. It read `=== 4` until the dot product arrived as
  * the fifth, `=== 5` until the three dimensions arrived as the sixth, `=== 6`
  * until the axioms arrived as the seventh, `=== 7` until the dimension arrived
- * as the eighth, `=== 8` until the inner product arrived as the ninth and
- * `=== 9` until the rank arrived as the tenth; the number is edited
- * deliberately on each promotion rather than relaxed to a floor, because the
- * thing it guards against is a concept appearing with no account of where it
- * came from.
+ * as the eighth, `=== 8` until the inner product arrived as the ninth, `=== 9`
+ * until the rank arrived as the tenth and `=== 10` until least squares arrived
+ * as the eleventh; the number is edited deliberately on each promotion rather
+ * than relaxed to a floor, because the thing it guards against is a concept
+ * appearing with no account of where it came from.
  *
  * What is asserted below is the half a count cannot see. Before the promotion
  * `plane-vectors` gated on `roots-and-irrationals` and `decimal-representation`,
@@ -5815,14 +5815,38 @@ t('the gate tightened onto the row reduction in three places, in two files nobod
  * in the same change rest on this area's own spectral chain and did NOT become
  * roots, which is what makes the dual the only one here.
  */
-t('and then a node ARRIVED and rooted itself, which no departure could have done',
-  roots(areaOntology(LINALG)).slice().sort().join(' ') === 'dual-spaces eigenvalues least-squares'
-  && !LINALG.nodes.some(n => n.id === 'vector-spaces')
+/*
+ * AND THE LIVE SET HAS MOVED ON AGAIN — the SEVENTH shape, and the one this
+ * group may no longer assert. The forty-first promotion took `least-squares`
+ * and nothing replaced it, so the set is two again with both survivors
+ * unchanged; the membership is asserted in THAT promotion's own group, which is
+ * the rule the floor group at the end of this file had to be written to
+ * enforce. What stays here is the claim this group is about and which no later
+ * promotion can take away: four nodes left and the dual ARRIVED, and the
+ * arrival is still a member.
+ *
+ * EXCEPT THAT IT IS NOT, AND THE LAST SENTENCE ABOVE SURVIVED ONE PROMOTION.
+ * The forty-second took `dual-spaces` into the same subject as the other four,
+ * so the arrival became the fifth departure and the root it created is gone
+ * with it. The claim that is actually permanent is one step back from the one
+ * that was written: the node ARRIVED and then left, which no other name in
+ * `departed` did, and the arrival is recorded by `departed` rather than by
+ * `nodes` now. A node that was never here would be in neither list, so the
+ * membership test still separates the three cases — and the live root set,
+ * which is now a single node, is asserted in the forty-second promotion's own
+ * group.
+ */
+t('and then a node ARRIVED, rooted itself, and was authored out — in neither order',
+  !LINALG.nodes.some(n => n.id === 'vector-spaces')
   && !LINALG.nodes.some(n => n.id === 'basis-and-dimension')
   && !LINALG.nodes.some(n => n.id === 'inner-product-spaces')
   && !LINALG.nodes.some(n => n.id === 'rank-nullity')
-  && LINALG.nodes.some(n => n.id === 'dual-spaces'),
-  roots(areaOntology(LINALG)).join(' '))
+  && !LINALG.nodes.some(n => n.id === 'dual-spaces')
+  && LINALG.departed.includes('dual-spaces')
+  && ['vector-spaces', 'basis-and-dimension', 'inner-product-spaces', 'rank-nullity']
+    .every(id => LINALG.departed.includes(id)),
+  `${roots(areaOntology(LINALG)).join(' ')} rooted; `
+  + `dual-spaces departed=${LINALG.departed.includes('dual-spaces')}`)
 /*
  * The two stranding checks, as absences on the node that left — the pair that
  * no suite reports and that have to be looked for to be known.
@@ -6179,16 +6203,28 @@ t('and every gate it names is teachable, so each is somewhere to go',
  * rather than inherited from a map node. The `promotedBy` stamp is what
  * separates the two, and checking it is what stops this assertion from being
  * quietly deleted the next time a promotion adds a credit edge here.
+ *
+ * AND IT WAS OVERTAKEN A SECOND TIME, exactly as the paragraph above said it
+ * would be. The forty-second promotion authored `dual-spaces=>basis-and-
+ * dimension` on four of its ten tasks being this concept's `given` symbol for
+ * symbol, so "the ONE credit edge in" is now two and the count had to go. The
+ * narrowing is the same one twice: what this group may assert is that no credit
+ * edge into this concept was STRANDED, which is a claim about `promotedBy`
+ * across however many there are, and never how many there are. The live count
+ * belongs to the group of the promotion that last moved it, which is this
+ * file's standing rule and is why the first narrowing kept a count at all —
+ * one was the live figure then and is history now.
  */
-t('no interference was lost, and the one credit edge in was authored rather than stranded',
+t('no interference was lost, and every credit edge in was authored rather than stranded',
   !MATHEMATICS.edges.some(e => e.kind === 'interferes_with'
     && (e.from === 'basis-and-dimension' || e.to === 'basis-and-dimension'))
   && MATHEMATICS.edges.filter(e => e.kind === 'encompasses'
-    && e.to === 'basis-and-dimension').length === 1
-  && MATHEMATICS.edges.find(e => e.kind === 'encompasses'
-    && e.to === 'basis-and-dimension')?.from === 'rank-nullity'
-  && MATHEMATICS.edges.find(e => e.kind === 'encompasses'
-    && e.to === 'basis-and-dimension')?.promotedBy === 'author:vectors-and-independence',
+    && e.to === 'basis-and-dimension').length >= 1
+  && MATHEMATICS.edges.filter(e => e.kind === 'encompasses'
+    && e.to === 'basis-and-dimension')
+    .every(e => e.promotedBy === 'author:vectors-and-independence')
+  && MATHEMATICS.edges.some(e => e.kind === 'encompasses'
+    && e.to === 'basis-and-dimension' && e.from === 'rank-nullity'),
   MATHEMATICS.edges.filter(e =>
     (e.from === 'basis-and-dimension' || e.to === 'basis-and-dimension')
     && e.kind !== 'prerequisite')
@@ -6205,14 +6241,22 @@ t('no interference was lost, and the one credit edge in was authored rather than
  */
 const KRULL = regionBy('krull')
 /*
- * The refill this group names is `rank-nullity`, and the THIRTIETH PROMOTION
- * has since written that one too — so the anchor list asserted here is the one
- * that replaced it, `least-squares`. The claim is unchanged and is the one
- * worth keeping: the slot was refilled by a CHOSEN node rather than left to
- * whatever was next in the array, and the region still has three.
+ * The refill this group names is `rank-nullity`, and TWO LATER PROMOTIONS HAVE
+ * SINCE WRITTEN THE REFILL AND THE REFILL'S REFILL — the thirtieth took that
+ * one, and the forty-first took `least-squares` which replaced it. So the
+ * anchor LIST stops being asserted here, and the live membership lives in the
+ * forty-first promotion's own group: this one had the full string and the
+ * twenty-third's group had it too, which is a moving figure in two places and
+ * the thing the floor group at the end of this file exists to stop.
+ *
+ * What stays is this group's own claim, and it survives every future turnover:
+ * the slot was refilled by a CHOSEN node rather than left to whatever was next
+ * in the array, the region did not quietly drop to two anchors, and the node
+ * this promotion took is no longer among them.
  */
 t('the region that lost its anchor was refilled by name, and refilled again since',
-  KRULL?.anchors?.join(' ') === 'least-squares eigenvalues diagonalisation'
+  KRULL?.anchors?.length === 3
+  && !KRULL.anchors.includes('basis-and-dimension')
   && KRULL.anchors.every(id => LINALG.nodes.some(n => n.id === id))
   && KRULL.authored?.includes('vectors-and-independence'),
   `${KRULL?.anchors?.join(', ')} | authored ${KRULL?.authored?.join(', ')}`)
@@ -6283,14 +6327,26 @@ t('and no links entry of any area names it, so nothing was handed back or droppe
   AREAS.flatMap(a => (a.links ?? []).map(l => `${a.id}:${l.from}->${l.to}`))
     .filter(s => s.includes('inner-product-spaces')).join(' ') || 'none, as it should be')
 /*
- * The three edges out, with the area each is declared in named. Two are here
+ * The three edges out, with the area each is declared in named. Two were here
  * and the third is in another map file, which is the claim a check scoped to
  * `LINALG` would miss entirely — and `real-analysis` is further from linear
  * algebra than either of the previous departures reached.
+ *
+ * ONE OF THE THREE HAS CHANGED HANDS AND THE EDGE DID NOT MOVE, which is a
+ * shape this group had not seen and is worth more than leaving the stamp alone
+ * would have been. `least-squares` was a node of `linear-algebra` declaring
+ * this concept in its own `needs`, so the edge carried `atlas:linear-algebra`;
+ * the forty-first promotion authored that node into `vectors-and-independence`,
+ * the same subject, so the SAME edge is now declared in that ontology's own
+ * `EDGES` and reads `author:vectors-and-independence`. Still one edge, still
+ * the same two endpoints, and the `promotedBy` stamp is the only thing that
+ * moved — which is exactly what the stamp is for, and the reason it is asserted
+ * rather than ignored: a dropped node edge and a rehomed one are the same
+ * absence from `LINALG` and are told apart only here.
  */
-t('the three edges declared at the far ends survive, once each, across two map files',
+t('the three edges declared at the far ends survive, once each, one of them rehomed',
   [['spectral-theorem', 'atlas:linear-algebra'],
-    ['least-squares', 'atlas:linear-algebra'],
+    ['least-squares', 'author:vectors-and-independence'],
     ['functional-analysis-intro', 'atlas:real-analysis']].every(([id, stamp]) =>
     MATHEMATICS.edges.filter(e => e.kind === 'prerequisite'
       && e.from === 'inner-product-spaces' && e.to === id).length === 1
@@ -6347,16 +6403,34 @@ t('while its own gate is unchanged, both the concepts it rests on having been wr
  * SELECTION and gates nothing, so dropping one is invisible to every suite
  * here; an `exercises` becomes an `encompasses`, which between two ontologies
  * is expressible nowhere and would therefore have CHOSEN the filing.
+ *
+ * THE CREDIT HALF HAS BEEN OVERTAKEN BY A LATER PROMOTION, exactly as the
+ * twenty-second's was, and it is narrowed rather than relaxed for the same
+ * reason. It used to assert that NO `encompasses` edge pointed at this concept,
+ * which was the stranding claim: a credit edge into the departing node would
+ * have been stranded like any other and nothing reports a lost one. There was
+ * none to strand and that is still the fact. The forty-first promotion AUTHORED
+ * one — `least-squares` credits this concept, on five of its ten tasks being
+ * this concept's own arithmetic at more components — so the blanket negative
+ * stopped being true for a reason that has nothing to do with this departure.
+ * `promotedBy` is what separates the two, and checking it is what stops this
+ * assertion from being quietly deleted the next time a promotion adds a credit
+ * edge here.
  */
-t('no interference and no credit edge into it were lost, the node having declared neither',
+t('no interference was lost, and the one credit edge in was authored rather than stranded',
   !MATHEMATICS.edges.some(e => e.kind === 'interferes_with'
     && (e.from === 'inner-product-spaces' || e.to === 'inner-product-spaces'))
-  && !MATHEMATICS.edges.some(e => e.kind === 'encompasses'
-    && e.to === 'inner-product-spaces'),
+  && MATHEMATICS.edges.filter(e => e.kind === 'encompasses'
+    && e.to === 'inner-product-spaces').length === 1
+  && MATHEMATICS.edges.find(e => e.kind === 'encompasses'
+    && e.to === 'inner-product-spaces')?.from === 'least-squares'
+  && MATHEMATICS.edges.find(e => e.kind === 'encompasses'
+    && e.to === 'inner-product-spaces')?.promotedBy === 'author:vectors-and-independence',
   MATHEMATICS.edges.filter(e =>
     (e.from === 'inner-product-spaces' || e.to === 'inner-product-spaces')
     && e.kind !== 'prerequisite')
-    .map(e => `${e.from}~${e.kind}~${e.to}`).join(' ') || 'neither, as the node declared')
+    .map(e => `${e.from}~${e.kind}~${e.to}:${e.promotedBy}`).join(' ')
+    || 'neither, as the node declared')
 /*
  * THE ARMATURE ANCHOR THAT DID NOT TURN OVER, asserted because the previous two
  * promotions out of this area both did and the pattern they recorded —
@@ -6366,9 +6440,15 @@ t('no interference and no credit edge into it were lost, the node having declare
  * of the area view but never one of Krull's anchors, so there was no slot to
  * refill. Checking the absence is what distinguishes "nothing was owed" from
  * "somebody forgot", which `armatureProblems` cannot tell apart.
+ *
+ * The full anchor STRING is no longer asserted here either, for the reason the
+ * twenty-second promotion's group above now gives: two later promotions moved
+ * it, and a moving figure belongs only in the group of the change that last
+ * moved it. The count of three and this node's absence from the list are what
+ * this group is about and both are permanent.
  */
 t('the region kept all three anchors, this node never having been one of them',
-  KRULL?.anchors?.join(' ') === 'least-squares eigenvalues diagonalisation'
+  KRULL?.anchors?.length === 3
   && KRULL.anchors.every(id => LINALG.nodes.some(n => n.id === id))
   && !KRULL.anchors.includes('inner-product-spaces')
   && KRULL.authored?.includes('vectors-and-independence'),
@@ -6471,9 +6551,15 @@ t('and no pre-existing links entry named it, so nothing was handed back', (() =>
  * departure from this area has had, and the claim a check scoped to `LINALG`
  * would miss three-quarters of.
  */
-t('the four edges declared at the far ends survive, once each, across three map files',
+t('the four edges declared at the far ends survive, once each, one of them rehomed since',
   [['diagonalisation', 'atlas:linear-algebra'],
-    ['least-squares', 'atlas:linear-algebra'],
+    // Rehomed by the forty-first promotion, which authored this far end into
+    // the same subject this concept is in — so the edge is the same edge, now
+    // declared in that ontology rather than on a map node. The twenty-third
+    // promotion's group above says the same thing about the same node and the
+    // reasoning is spelled out there rather than referred to, since a reader
+    // arriving at either should not have to find the other.
+    ['least-squares', 'author:vectors-and-independence'],
     ['homology', 'atlas:topology'],
     ['multiple-regression', 'atlas:statistics']].every(([id, stamp]) =>
     MATHEMATICS.edges.filter(e => e.kind === 'prerequisite'
@@ -6558,6 +6644,518 @@ t('no interference and no credit edge into it were lost, the node having declare
     (e.from === 'rank-nullity' || e.to === 'rank-nullity')
     && e.kind !== 'prerequisite')
     .map(e => `${e.from}~${e.kind}~${e.to}`).join(' ') || 'neither, as the node declared')
+
+// ---------------------------------------------------------------------------
+
+/**
+ * THE FORTY-FIRST PROMOTION, AND THE SIXTH OUT OF THIS ONE AREA — which is more
+ * than any other area has given up.
+ *
+ * `least-squares` went into `vectors-and-independence`, which holds BOTH of the
+ * concepts it rested on, and the subject half is in tests/concepts-logic.mjs —
+ * including why it was taken, which was that of the seven unrefused ready nodes
+ * only this one and `dual-spaces` have every `needs` inside one authored
+ * subject, and the third factor then separates those two by two dependents to
+ * zero.
+ *
+ * What belongs here is the map half, and SEVEN things would have failed
+ * silently:
+ *
+ *  - NO `links` ENTRY, EITHER WAY. Both `needs` pointed into the receiving
+ *    ontology, so both stranded edges went there and this area owes nothing;
+ *    and no entry of any area named the node, so nothing was handed back. Both
+ *    are absences, and a duplicate edge in the composed graph is something
+ *    `composeAtlas` does not notice. Fourth promotion out of this area with a
+ *    `links` cost of zero.
+ *  - THE TWO EDGES OUT, which cross two map files. `singular-value-
+ *    decomposition` is a node of this area and `linear-regression` is a node of
+ *    `statistics` in atlas-uncertainty.ts; both declare the concept in their own
+ *    `needs`, so both survive — and the way this fails is not an error but a
+ *    node quietly rooted with nothing above it. The regression node is the one
+ *    a check scoped to `LINALG` would miss, and it is also the far end of the
+ *    credit edge below, so it is two claims about one node.
+ *  - THE ROOT SET SHRANK WITHOUT SUBSTITUTING, which is the SEVENTH shape this
+ *    area has produced and the second of this one. Three became two with both
+ *    survivors unchanged, because the departing node's only in-area dependent
+ *    has `spectral-theorem` above it and so did not become rooted. A
+ *    direction-of-change check cannot tell this from the twenty-second
+ *    promotion's shrink; named membership can.
+ *  - THE GATE DID NOT MOVE ANYWHERE, which is the first promotion out of this
+ *    area that can say so and is why it is asserted rather than omitted. Both
+ *    of this node's prerequisites were already written, so no walk was passing
+ *    THROUGH it to reach them and no list could shorten. A suite that only ever
+ *    checked tightenings would have no way to report a walk that broke.
+ *  - THE ARMATURE ANCHOR, FOR THE FOURTH TIME IN THIS AREA, AND THE FIRST TIME
+ *    THE DOCUMENTED REFILL RULE RETURNED NOBODY. No node became a root, so the
+ *    refill was a judgement; `dual-spaces` took it as the area's other root and
+ *    the only node here whose prerequisite is written. Asserted by name, and
+ *    the two earlier groups that used to assert the full anchor string have
+ *    been narrowed to their own permanent claims — a moving figure belongs only
+ *    in the group of the change that last moved it.
+ *  - THE FLOOR DID NOT MOVE EITHER, and the figures stay in the group that owns
+ *    them at the end of this file. Eleven nodes became ten and nine departures
+ *    became ten, so the territory is 20 on both sides of the edit.
+ *  - THE SCOPE PATTERN, CARRIED VERBATIM AND THEN TESTED. One alternative, no
+ *    bracket, so the `\b`-after-a-bracket fault two earlier promotions found
+ *    cannot be present — checked rather than reasoned about, since
+ *    `fidelityMismatches` asks only whether a checked concept HAS a pattern.
+ *    The title rows below are the check, and they include the overlap with
+ *    `linear-regression`, which claims "Ordinary least squares" too.
+ */
+group('the forty-first promotion, and the sixth out of linear algebra')
+t('least squares is a concept of the vectors subject, not a node of this area',
+  !LINALG.nodes.some(n => n.id === 'least-squares')
+  && areaOf(MATHEMATICS, 'least-squares') === 'vectors-and-independence'
+  && isTeachable(MATHEMATICS, 'least-squares')
+  && isPractisable(MATHEMATICS, 'least-squares'),
+  `${areaOf(MATHEMATICS, 'least-squares')}, `
+  + `node here: ${LINALG.nodes.some(n => n.id === 'least-squares')}`)
+t('both stranded needs are ontology edges, so this area owes no links entry for either',
+  ['inner-product-spaces', 'rank-nullity'].every(from =>
+    MATHEMATICS.edges.filter(e => e.kind === 'prerequisite'
+      && e.from === from && e.to === 'least-squares').length === 1
+    && MATHEMATICS.edges.find(e =>
+      e.from === from && e.to === 'least-squares')
+      ?.promotedBy === 'author:vectors-and-independence'
+    && areaOf(MATHEMATICS, from) === 'vectors-and-independence'),
+  MATHEMATICS.edges.filter(e => e.to === 'least-squares')
+    .map(e => `${e.from}@${areaOf(MATHEMATICS, e.from)}:${e.promotedBy}`).join(' '))
+t('and no links entry of any area names it, so nothing was handed back or dropped',
+  AREAS.flatMap(a => (a.links ?? []).map(l => `${a.id}:${l.from}->${l.to}`))
+    .filter(s => s.includes('least-squares')).length === 0,
+  AREAS.flatMap(a => (a.links ?? []).map(l => `${a.id}:${l.from}->${l.to}`))
+    .filter(s => s.includes('least-squares')).join(' ') || 'none, as it should be')
+/*
+ * The two edges out, with the area each is declared in named. One is here and
+ * the other is in atlas-uncertainty.ts, which is the claim a check scoped to
+ * `LINALG` would miss half of — and the pair is the whole of this node's
+ * dependents, which is the third factor that separated it from `dual-spaces`:
+ * two to none, the two having tied on the second.
+ */
+t('the two edges declared at the far ends survive, once each, across two map files',
+  [['singular-value-decomposition', 'atlas:linear-algebra'],
+    ['linear-regression', 'atlas:statistics']].every(([id, stamp]) =>
+    MATHEMATICS.edges.filter(e => e.kind === 'prerequisite'
+      && e.from === 'least-squares' && e.to === id).length === 1
+    && MATHEMATICS.edges.find(e =>
+      e.from === 'least-squares' && e.to === id)?.promotedBy === stamp)
+  && LINALG.nodes.some(n => n.id === 'singular-value-decomposition')
+  && areaOf(MATHEMATICS, 'linear-regression') === 'statistics',
+  MATHEMATICS.edges.filter(e =>
+    e.kind === 'prerequisite' && e.from === 'least-squares')
+    .map(e => `${e.to}:${e.promotedBy}`).join(' '))
+/*
+ * THE ROOT SET, BY NAMED MEMBERSHIP, AND THIS GROUP NO LONGER OWNS THE LIVE
+ * VALUE. The chain of six shapes is documented in the twenty-second promotion's
+ * group above and the seventh is here: a SHRINK with no substitution, three to
+ * two, both survivors unchanged. The negative is the half that distinguishes it
+ * from a substitution — `singular-value-decomposition` named the departing node
+ * and did NOT become rooted, `spectral-theorem` being a second node of this
+ * area above it, which is exactly what happened to `diagonalisation` at the
+ * thirtieth.
+ *
+ * The forty-second promotion took `dual-spaces` and shrank the set again, to a
+ * single node, so the membership this group asserted has moved to THAT group —
+ * the standing rule being that a figure a change SHRINKS belongs only to the
+ * change that last moved it. What stays here is the permanent half, which is
+ * the negative: this promotion's departing node did not substitute anything
+ * into the set, and the reason it did not is `singular-value-decomposition`
+ * having `spectral-theorem` above it. Both of those are still true and neither
+ * can be undone by a later promotion out of this area.
+ */
+t('the departure substituted nothing, which is what made it a shrink',
+  !roots(areaOntology(LINALG)).includes('singular-value-decomposition')
+  && LINALG.nodes.some(n => n.id === 'singular-value-decomposition')
+  && LINALG.nodes.find(n => n.id === 'singular-value-decomposition')
+    .needs.includes('spectral-theorem')
+  && LINALG.nodes.some(n => n.id === 'spectral-theorem')
+  && LINALG.departed.includes('least-squares'),
+  roots(areaOntology(LINALG)).join(' '))
+/*
+ * THE GATE THAT DID NOT MOVE, which is the control this file has not had for a
+ * promotion out of this area. Five of the six shortened some list somewhere;
+ * this one shortens nothing, and the reason is specific rather than lucky —
+ * both prerequisites were already written, so no walk was passing THROUGH the
+ * promoted node to reach them. Its own list is asserted too, because a walk that
+ * broke would most likely report an empty one.
+ */
+t('no gate anywhere moved, both its parents having been written already',
+  gatingPrerequisitesOf(MATHEMATICS, 'least-squares').slice().sort().join(' ')
+    === 'inner-product-spaces rank-nullity'
+  && ['singular-value-decomposition', 'linear-regression'].every(id =>
+    gatingPrerequisitesOf(MATHEMATICS, id).includes('least-squares'))
+  && gatingPrerequisitesOf(MATHEMATICS, 'least-squares')
+    .every(p => isTeachable(MATHEMATICS, p)),
+  `own: ${gatingPrerequisitesOf(MATHEMATICS, 'least-squares').join('/')} | svd: `
+  + `${gatingPrerequisitesOf(MATHEMATICS, 'singular-value-decomposition').join('/')}`)
+/*
+ * The three stranding absences — and THREE rather than two, which is the
+ * fortieth promotion's finding arriving in this file. `expandEdges` turns a
+ * node's `confusedWith` into an `interferes_with` and its `exercises` into an
+ * `encompasses`, and every checklist named only the first until a node declaring
+ * the second was promoted and the edge would have vanished with every suite
+ * green. Both absent here.
+ *
+ * WHAT IS NOT ABSENT IS AN `encompasses` POINTING IN FROM ANOTHER MAP FILE.
+ * `linear-regression`, a node of `statistics`, declares
+ * `exercises: ['least-squares']` — so that edge is a far-end declaration and
+ * survives like any other, and it is the one claim here the receiving ontology
+ * could not have made for itself. Asserted by `promotedBy`, which is what
+ * separates an edge that came from a map node from one an author wrote.
+ */
+t('no interference and no credit edge was lost, and the one pointing in is from a map node',
+  !MATHEMATICS.edges.some(e => e.kind === 'interferes_with'
+    && (e.from === 'least-squares' || e.to === 'least-squares'))
+  && MATHEMATICS.edges.filter(e => e.kind === 'encompasses'
+    && e.to === 'least-squares').length === 1
+  && MATHEMATICS.edges.find(e => e.kind === 'encompasses'
+    && e.to === 'least-squares')?.from === 'linear-regression'
+  && MATHEMATICS.edges.find(e => e.kind === 'encompasses'
+    && e.to === 'least-squares')?.promotedBy === 'atlas:statistics',
+  MATHEMATICS.edges.filter(e =>
+    (e.from === 'least-squares' || e.to === 'least-squares')
+    && e.kind !== 'prerequisite')
+    .map(e => `${e.from}~${e.kind}~${e.to}:${e.promotedBy}`).join(' '))
+/*
+ * THE ARMATURE ANCHOR, BY NAME, AND THIS GROUP NO LONGER OWNS THE LIVE LIST.
+ * Krull had lost an anchor four times when this was written —
+ * `vector-spaces`, `basis-and-dimension`, `rank-nullity`, `least-squares`, all
+ * four into the same subject — and it was the first time the documented refill
+ * rule returned nobody, no node having become a root.
+ *
+ * THE REFILL IT CHOSE WAS TAKEN BY THE VERY NEXT PROMOTION, which is the
+ * third group in this file to have an anchor string go red under it and is why
+ * the memory of that pattern is worth more than the string was. `dual-spaces`
+ * is a concept now, so the live list is in the forty-second promotion's group.
+ * What stays here is what this promotion did and what no later one can undo:
+ * the departing node left the anchor list, the region did not quietly drop to
+ * two anchors, and every anchor is still a node of this area — three claims
+ * that are about the EDIT rather than about which three names are current.
+ */
+t('the fourth turnover left three anchors, all of them still nodes of this area',
+  KRULL?.anchors?.length === 3
+  && KRULL.anchors.every(id => LINALG.nodes.some(n => n.id === id))
+  && !KRULL.anchors.includes('least-squares')
+  && LINALG.departed.includes('least-squares')
+  && KRULL.authored?.includes('vectors-and-independence'),
+  `${KRULL?.anchors?.join(', ')} | authored ${KRULL?.authored?.join(', ')}`)
+/*
+ * AND THE REFILL IS THE AREA'S OTHER ROOT, which is the half of the rule that
+ * survived — the thirtieth promotion identified "the dependent that becomes a
+ * root" as the discriminating clause, and with no such dependent the nearest
+ * thing is the node that is already one.
+ *
+ * THE FIRST DRAFT OF THIS ASSERTION CLAIMED `dual-spaces` WAS THE ONLY READY
+ * NODE HERE AND THE SUITE SAID OTHERWISE, which is worth keeping rather than
+ * quietly correcting: `eigenvalues` is ready too and has been since the
+ * thirtieth promotion wrote `basis-and-dimension`. The true claim is narrower
+ * and is the actual reason the slot could only go one way — the area has
+ * exactly TWO ready nodes, they are exactly its two roots, and `eigenvalues`
+ * was already an anchor, so `dual-spaces` was the only ready node available to
+ * take the slot without shrinking the region to two. That is the same
+ * correction atlas-structures.ts records about readiness being recomputed after
+ * an edit rather than predicted from before it.
+ *
+ * AND THE READY SET HAS SHRUNK TO ONE, so the pair this assertion named is no
+ * longer current and the half that can be held is the half about `eigenvalues`:
+ * it was ready when this promotion ran, it is ready still, and it was already
+ * an anchor — which together are the whole reason the slot could only go to the
+ * other ready node. That is this promotion's own claim. Which nodes are ready
+ * TODAY is the forty-second promotion's figure and is asserted there.
+ */
+t('the refill was forced by the other ready node already being an anchor',
+  KRULL.anchors.includes('eigenvalues')
+  && (LINALG.nodes.find(n => n.id === 'eigenvalues').needs ?? [])
+    .every(p => isTeachable(MATHEMATICS, p))
+  && roots(areaOntology(LINALG)).includes('eigenvalues')
+  && LINALG.departed.includes('dual-spaces'),
+  LINALG.nodes.filter(n => (n.needs ?? []).every(p => isTeachable(MATHEMATICS, p)))
+    .map(n => n.id).join(' '))
+/*
+ * THE SCOPE PATTERN, carried verbatim and then tested against real titles. One
+ * alternative and no bracket, so the fault two earlier promotions found cannot
+ * be present — but "cannot be present" is a reading of a regex and the rows
+ * below are a test of it.
+ *
+ * THE LAST TWO ROWS ARE THE HONEST PART. "Total least squares" and "Partial
+ * least squares regression" are different estimators and this pattern claims
+ * them, which is correct — they ARE least-squares fits, in a different inner
+ * product and after a change of variables — and the material is narrower than
+ * the pattern, which is the ordinary case for every concept here. And
+ * "Ordinary least squares" is claimed by `linear-regression`'s pattern as well:
+ * nothing rejects two patterns matching one title, and the overlap is honest,
+ * that article being the arithmetic here plus the inference there.
+ */
+t('its pattern claims the titles it should, including two it is narrower than',
+  ['Least squares', 'Linear least squares', 'Ordinary least squares',
+    'Total least squares', 'Partial least squares regression']
+    .every(title => conceptById(MATHEMATICS, 'least-squares').scope.match.test(title))
+  && !conceptById(MATHEMATICS, 'least-squares').scope.match.test('Normal equations')
+  && !conceptById(MATHEMATICS, 'least-squares').scope.match.test('Projection (linear algebra)')
+  && conceptById(MATHEMATICS, 'least-squares').fidelity === 'checked',
+  conceptById(MATHEMATICS, 'least-squares').scope.match.source)
+t('and one title is claimed by the regression node too, which is an overlap and not a fault',
+  AREAS.flatMap(a => a.nodes).find(n => n.id === 'linear-regression')
+    ?.match.test('Ordinary least squares') === true
+  && conceptById(MATHEMATICS, 'least-squares').scope.match.test('Ordinary least squares')
+  && !AREAS.flatMap(a => a.nodes).some(n => n.id === 'least-squares'),
+  AREAS.flatMap(a => a.nodes).find(n => n.id === 'linear-regression')?.match.source)
+
+// ---------------------------------------------------------------------------
+
+/**
+ * THE FORTY-SECOND PROMOTION, AND THE SEVENTH OUT OF LINEAR ALGEBRA.
+ *
+ * `dual-spaces` is a concept of `vectors-and-independence`, which makes it the
+ * sixth node of this area to land in that one subject. Five things here are not
+ * instances of anything a group above asserts, and they are why this is a group
+ * rather than three lines appended to the one before it.
+ *
+ *  - IT IS THE FIRST NODE THIS BUILD ADDED TO THE MAP AND THEN AUTHORED OUT.
+ *    Every other name in any `departed` list was a node from the beginning.
+ *    This one was added on 2026-11-24, when the area was read against its own
+ *    `covers` and five second-course gaps were found, and it was written on
+ *    2026-11-25. Asserted as both halves at once — it is in `departed` and in
+ *    the five thin spots — because either alone is an ordinary fact and the
+ *    pair is the new one.
+ *  - IT HAD NO DEPENDENTS ANYWHERE, which is new and is exactly the factor it
+ *    lost on. Every promotion in this build has left at least one far-end edge
+ *    behind; nothing in any file names this node in a `needs` or an
+ *    `exercises`. So the "edges declared at the far end survive untouched" half
+ *    of a departure was vacuous, and the assertion is an ABSENCE rather than a
+ *    survival, which is the only shape that can catch a node acquiring one
+ *    later and nobody noticing.
+ *  - THE ROOT SET IS A SINGLE NODE FOR THE FIRST TIME SINCE THE FOURTEENTH, by
+ *    named membership and never by length. Shape EIGHT: a shrink, two to one,
+ *    the survivor unchanged, and nothing could have substituted in because the
+ *    departing node had no dependents to promote into the set.
+ *  - THE ANCHOR SLOT EMPTIED A FIFTH TIME AND THE RULE FAILED DIFFERENTLY. At
+ *    the fourth turnover the rule returned nobody because its candidate did not
+ *    become a root; here there is no candidate at all. The refill is a
+ *    judgement on the criterion the fourth turnover used to REJECT its
+ *    alternative — distance from written material — and what a test can hold is
+ *    that the chosen node is at the shallowest available depth.
+ *  - THE READY FIELD IN THIS AREA IS DOWN TO ONE, and it is the node the whole
+ *    unwritten remainder stands on. That figure lives HERE, which is the rule
+ *    three narrowed assertions above exist to enforce.
+ */
+group('the forty-second promotion, and the seventh out of linear algebra')
+
+const DUAL_LINALG = AREAS.find(a => a.id === 'linear-algebra')
+
+t('the node is gone from the area and the concept carries its id',
+  !DUAL_LINALG.nodes.some(n => n.id === 'dual-spaces')
+  && DUAL_LINALG.departed.includes('dual-spaces')
+  && MATHEMATICS.concepts.some(c => c.id === 'dual-spaces'
+    && c.subjectId === 'vectors-and-independence')
+  // `shippedAtlasProblems` is what would name the node if it had been left
+  // behind — a collision is reported rather than merged, and the symptom would
+  // be the authored copy shadowed by a node with no knowledge points.
+  && !shippedAtlasProblems().some(p => p.includes('dual-spaces')),
+  shippedAtlasProblems().filter(p => p.includes('dual-spaces')).join('; ') || 'no faults')
+
+/*
+ * THE FIRST ADDED-THEN-AUTHORED NODE, asserted as the conjunction. A node that
+ * was always on the map and left would satisfy the `departed` half alone; one
+ * that was added and is still here would satisfy the thin-spot half alone. Only
+ * this node satisfies both, and the claim is that exactly one does — so a second
+ * thin spot being promoted goes red here and gets its own sentence rather than
+ * silently joining this one.
+ */
+const ADDED_THEN_AUTHORED = [
+  'cayley-hamilton', 'jordan-normal-form', 'quadratic-forms', 'dual-spaces', 'matrix-exponential',
+].filter(id => DUAL_LINALG.departed.includes(id))
+t('it is the one node this build added to the map and then wrote material for',
+  ADDED_THEN_AUTHORED.join(' ') === 'dual-spaces'
+  && isTeachable(MATHEMATICS, 'dual-spaces'),
+  ADDED_THEN_AUTHORED.join(' ') || 'none')
+
+/*
+ * ITS ONE `needs` BECAME AN ORDINARY EDGE AND NO AREA OWES ANYTHING, which is
+ * the cheapest shape and the third promotion running to have it. The
+ * `promotedBy` stamp is the half that matters: an edge carrying `atlas:` would
+ * mean the node is still declaring it somewhere, and an edge missing entirely
+ * would mean the concept is practisable by somebody who has never met a basis.
+ */
+t('its single stranded edge is an authored prerequisite in the receiving ontology',
+  MATHEMATICS.edges.filter(e => e.kind === 'prerequisite' && e.to === 'dual-spaces')
+    .length === 1
+  && MATHEMATICS.edges.find(e => e.kind === 'prerequisite' && e.to === 'dual-spaces')
+    ?.from === 'basis-and-dimension'
+  && MATHEMATICS.edges.find(e => e.kind === 'prerequisite' && e.to === 'dual-spaces')
+    ?.promotedBy === 'author:vectors-and-independence'
+  && areaOf(MATHEMATICS, 'basis-and-dimension') === 'vectors-and-independence',
+  MATHEMATICS.edges.filter(e => e.to === 'dual-spaces')
+    .map(e => `${e.from}~${e.kind}:${e.promotedBy}`).join(' '))
+t('and no links entry of any area names it, so nothing was handed back or dropped',
+  AREAS.flatMap(a => (a.links ?? []).map(l => `${a.id}:${l.from}->${l.to}`))
+    .filter(s => s.includes('dual-spaces')).length === 0,
+  AREAS.flatMap(a => (a.links ?? []).map(l => `${a.id}:${l.from}->${l.to}`))
+    .filter(s => s.includes('dual-spaces')).join(' ') || 'none, as it should be')
+
+/*
+ * NO EDGE OUT AT ALL — the assertion that is an absence, and the one this group
+ * exists for. Three separate ways a dependent could exist are checked, because
+ * they arrive through three different code paths: a node's `needs`, a node's
+ * `exercises` (which `expandEdges` turns into an `encompasses`), and the
+ * composed edge list. The third factor of the selection rule read zero here
+ * against four for `eigenvalues`, and this is that zero made checkable.
+ *
+ * SCOPED TO `prerequisite` ON THE EDGE HALF, and the scoping is the trap rather
+ * than a convenience. This concept DOES have an edge whose `from` is itself —
+ * the `encompasses` down to `basis-and-dimension`, which this promotion wrote —
+ * and an unscoped "no edge out" check would have gone red against the run's own
+ * credit edge and read as though a dependent existed. "Nothing depends on it"
+ * is a claim about gating, and credit points the other way by design.
+ */
+t('nothing anywhere depends on it, which is the factor this promotion lost on',
+  !AREAS.flatMap(a => a.nodes).some(n => (n.needs ?? []).includes('dual-spaces'))
+  && !AREAS.flatMap(a => a.nodes).some(n => (n.exercises ?? []).includes('dual-spaces'))
+  && !MATHEMATICS.edges.some(e => e.kind === 'prerequisite' && e.from === 'dual-spaces')
+  && dependentsOf(MATHEMATICS, 'dual-spaces').length === 0,
+  MATHEMATICS.edges.filter(e => e.from === 'dual-spaces')
+    .map(e => `${e.kind}->${e.to}`).join(' ') || 'nothing out at all')
+
+/*
+ * AND THE NODE THAT WOULD HAVE UNLOCKED FOUR IS STILL HERE AND STILL READY,
+ * which is the other side of the same decision and is worth a check rather than
+ * only a comment. If a later run takes `eigenvalues`, this goes red and that run
+ * has to say what it did — which is the behaviour wanted, since the two nodes
+ * were compared and one was deferred.
+ */
+t('eigenvalues is still mapped, still ready, and still has the dependents this one lacked',
+  DUAL_LINALG.nodes.some(n => n.id === 'eigenvalues')
+  && (DUAL_LINALG.nodes.find(n => n.id === 'eigenvalues').needs ?? [])
+    .every(p => isTeachable(MATHEMATICS, p))
+  && dependentsOf(MATHEMATICS, 'eigenvalues').length >= 4,
+  `${dependentsOf(MATHEMATICS, 'eigenvalues').join(' ')} depend on eigenvalues`)
+
+/*
+ * THE ROOT SET, BY NAMED MEMBERSHIP, AND THIS GROUP OWNS THE LIVE VALUE. Shape
+ * eight: two to one, the survivor unchanged. What distinguishes it from the
+ * seventh shape — also a shrink with both survivors unchanged — is that no
+ * substitution was POSSIBLE rather than merely absent, the departing node having
+ * had nothing behind it. A direction-of-change check cannot tell those apart and
+ * a length check reads both as "it got smaller".
+ */
+t('the root set shrank to one, and no substitution was even possible',
+  roots(areaOntology(DUAL_LINALG)).slice().sort().join(' ') === 'eigenvalues'
+  && dependentsOf(MATHEMATICS, 'dual-spaces').length === 0,
+  roots(areaOntology(DUAL_LINALG)).join(' '))
+
+/*
+ * THE READY FIELD IN THIS AREA, ALSO LIVE HERE. One node, and it is the root —
+ * the same coincidence the fourth anchor turnover noticed at size two, now at
+ * size one. Computed rather than restated, which is the correction the
+ * forty-first promotion's own first draft earned: it claimed the dual was the
+ * only ready node without measuring, and `eigenvalues` had been ready since the
+ * thirtieth.
+ */
+t('exactly one node of the area is ready, and it is the root',
+  DUAL_LINALG.nodes.filter(n => (n.needs ?? []).every(p => isTeachable(MATHEMATICS, p)))
+    .map(n => n.id).sort().join(' ') === 'eigenvalues'
+  && roots(areaOntology(DUAL_LINALG)).includes('eigenvalues'),
+  DUAL_LINALG.nodes.filter(n => (n.needs ?? []).every(p => isTeachable(MATHEMATICS, p)))
+    .map(n => n.id).join(' ') || 'none')
+
+/*
+ * THE GATE DID NOT MOVE, for the same reason it did not at the forty-first:
+ * `gatingPrerequisitesOf` names the nearest teachable ancestors, so a promotion
+ * tightens a gate only where a walk was passing THROUGH the promoted node to
+ * reach what lies behind it. Nothing was, there being nothing above this node at
+ * all — which is the gate-side consequence of having no dependents and is the
+ * second place in this group where that zero shows up. Its own list is asserted
+ * too, because a walk that broke would most likely report an empty one.
+ */
+t('no gate anywhere moved, since nothing was being walked through it',
+  gatingPrerequisitesOf(MATHEMATICS, 'dual-spaces').slice().sort().join(' ')
+    === 'basis-and-dimension'
+  && gatingPrerequisitesOf(MATHEMATICS, 'dual-spaces')
+    .every(p => isTeachable(MATHEMATICS, p)),
+  gatingPrerequisitesOf(MATHEMATICS, 'dual-spaces').join('/'))
+
+/*
+ * THE THREE STRANDING ABSENCES. `expandEdges` handles all three edge-bearing
+ * node fields and two of them strand silently — `confusedWith` becomes an
+ * `interferes_with`, which constrains SELECTION rather than gating, and
+ * `exercises` becomes an `encompasses`, which between two ontologies is
+ * expressible nowhere. Checked on the node before it was deleted rather than
+ * inferred from the suites staying green, since a lost interference edge leaves
+ * every assertion in this build passing.
+ *
+ * The one credit edge that DOES touch this concept points the other way and was
+ * written by the receiving ontology, which the `promotedBy` stamp is what says.
+ */
+t('no interference and no inherited credit edge, and the one credit edge out is authored',
+  !MATHEMATICS.edges.some(e => e.kind === 'interferes_with'
+    && (e.from === 'dual-spaces' || e.to === 'dual-spaces'))
+  && !MATHEMATICS.edges.some(e => e.kind === 'encompasses' && e.to === 'dual-spaces')
+  && MATHEMATICS.edges.filter(e => e.kind === 'encompasses' && e.from === 'dual-spaces')
+    .length === 1
+  && MATHEMATICS.edges.find(e => e.kind === 'encompasses' && e.from === 'dual-spaces')
+    ?.to === 'basis-and-dimension'
+  && MATHEMATICS.edges.find(e => e.kind === 'encompasses' && e.from === 'dual-spaces')
+    ?.promotedBy === 'author:vectors-and-independence',
+  MATHEMATICS.edges.filter(e =>
+    (e.from === 'dual-spaces' || e.to === 'dual-spaces') && e.kind !== 'prerequisite')
+    .map(e => `${e.from}~${e.kind}~${e.to}:${e.promotedBy}`).join(' ') || 'none either way')
+
+/*
+ * THE ARMATURE ANCHOR, BY NAME, AND THIS GROUP OWNS THE LIVE LIST. Krull has
+ * now lost an anchor five times, all five into the same subject, and the refill
+ * rule returned nobody for the second time running — with the failure being
+ * worse than last time rather than the same: there was no candidate at all, not
+ * a candidate that failed the test.
+ *
+ * WHAT A TEST CAN HOLD ABOUT A JUDGEMENT IS THE CRITERION IT CLAIMED. The
+ * refill was argued on distance from written material, which is the test the
+ * fourth turnover used to reject `numerical-linear-algebra`. So the assertion
+ * computes that distance: the chosen node must need nothing but written
+ * material and `eigenvalues`, which is what "one promotion behind the ready
+ * node" means, and the nodes NOT chosen at that depth must already be anchors.
+ * That is the claim "the choice was forced once the criterion was stated",
+ * mechanically.
+ */
+const KRULL_DEPTH_ONE = DUAL_LINALG.nodes
+  .filter(n => (n.needs ?? []).every(p =>
+    isTeachable(MATHEMATICS, p) || p === 'eigenvalues'))
+  .filter(n => (n.needs ?? []).includes('eigenvalues'))
+  .map(n => n.id)
+t('the anchor slot emptied a fifth time and the refill was forced by its own criterion',
+  KRULL?.anchors?.join(' ') === 'cayley-hamilton eigenvalues diagonalisation'
+  && KRULL.anchors.every(id => DUAL_LINALG.nodes.some(n => n.id === id))
+  && !KRULL.anchors.includes('dual-spaces')
+  && KRULL_DEPTH_ONE.slice().sort().join(' ') === 'cayley-hamilton diagonalisation'
+  && KRULL_DEPTH_ONE.every(id => KRULL.anchors.includes(id)),
+  `${KRULL?.anchors?.join(', ')} | at depth one: ${KRULL_DEPTH_ONE.join(' ')}`)
+
+/*
+ * THE SCOPE PATTERN, carried verbatim and then tested against real titles. Two
+ * alternatives this time, which is the case the `\b`-after-a-bracket fault two
+ * earlier promotions found does NOT arise in — the alternation is inside the
+ * group and the trailing `\b` sits after "space" or "basis", both word
+ * characters. "Cannot arise" is a reading of a regex and the rows below are a
+ * test of it.
+ *
+ * THE LAST ROW IS THE HONEST PART. "Dual space (functional analysis)" is a
+ * different object — the bounded functionals on an infinite-dimensional normed
+ * space, where no dual basis exists — and this pattern claims it, correctly: it
+ * IS a dual space. The material is narrower than the pattern, which is the
+ * ordinary case here, and the third knowledge point says "finite-dimensional"
+ * where the theorem needs it so the narrowing is visible to a learner too.
+ *
+ * AND THE TWO NEGATIVES MATTER. "Dual norm" is a norm, which this subject has
+ * declined since the dot product; "Duality (mathematics)" is a survey of a
+ * word. A pattern reaching either would claim an article this material cannot
+ * carry.
+ */
+t('the dual\'s pattern decides its own titles and refuses the two near misses',
+  ['Dual space', 'Dual basis', 'Dual space (functional analysis)']
+    .every(title => conceptById(MATHEMATICS, 'dual-spaces').scope.match.test(title))
+  && !conceptById(MATHEMATICS, 'dual-spaces').scope.match.test('Dual norm')
+  && !conceptById(MATHEMATICS, 'dual-spaces').scope.match.test('Duality (mathematics)')
+  && conceptById(MATHEMATICS, 'dual-spaces').fidelity === 'checked',
+  conceptById(MATHEMATICS, 'dual-spaces').scope.match.source)
 
 // ---------------------------------------------------------------------------
 
@@ -10268,10 +10866,28 @@ t('no area is a stub once departures count as covered territory',
  * leftovers would scatter across four areas if a destination were forced.
  *
  * `linear-algebra` was unbound twice over, and that redundancy is deliberate
- * rather than sloppy: the floor change covers it (nine departed), AND five nodes
+ * rather than sloppy: the floor change covers it (ten departed), AND five nodes
  * were added because the area genuinely lacked them. Either alone suffices. The
- * five are asserted by name below, because "eleven nodes" would be satisfied by
+ * five are asserted by name below, because "ten nodes" would be satisfied by
  * five of anything.
+ *
+ * ITS TWO FIGURES MOVED IN OPPOSITE DIRECTIONS AND THE TERRITORY DID NOT MOVE
+ * AT ALL, which is the clearest demonstration of what `departed` is for that
+ * the file is going to get. The forty-first promotion took `least-squares`:
+ * eleven nodes became ten and nine departures became ten, so
+ * `STUB_FLOOR_TERRITORY` is 20 either side of the edit. Before the floor change
+ * that promotion would have spent one of the area's six nodes of headroom; now
+ * it spends nothing, which is exactly the escape hatch the threshold's own
+ * comment pre-authorised.
+ *
+ * AND THEN TWICE, which is what makes the conservation an invariant rather than
+ * an anecdote. The forty-second took `dual-spaces`: ten nodes became nine and
+ * ten departures became eleven, and the territory is 20 for the third reading
+ * in a row. The node count is now FOUR clear of the threshold where it was six
+ * two promotions ago, so on node count alone this area would be two promotions
+ * from frozen; on territory it has not moved at all. Those are the two readings
+ * the `departed` change exists to separate, and this is the first area to have
+ * taken enough departures for them to disagree by four.
  */
 t('algebra-foundations is clear of the floor on its departures alone',
   FLOOR_ALGFOUND.nodes.length === 6
@@ -10281,38 +10897,77 @@ t('algebra-foundations is clear of the floor on its departures alone',
   `${FLOOR_ALGFOUND.nodes.length} nodes + ${FLOOR_ALGFOUND.departed.length} departed`)
 
 t('linear-algebra is clear of it twice over, by departures and by the five additions',
-  FLOOR_LINALG.nodes.length === 11
-  && FLOOR_LINALG.departed.length === 9
+  FLOOR_LINALG.nodes.length === 9
+  && FLOOR_LINALG.departed.length === 11
   && STUB_FLOOR_TERRITORY(FLOOR_LINALG) === 20
   // Either mechanism alone would have cleared it, which is the claim.
   && FLOOR_LINALG.nodes.length - 5 >= 1
   && 6 + FLOOR_LINALG.departed.length >= 5,
   `${FLOOR_LINALG.nodes.length} nodes + ${FLOOR_LINALG.departed.length} departed`)
+/*
+ * AND THE TERRITORY IS UNCHANGED ACROSS THE DEPARTURE THAT MOVED BOTH HALVES OF
+ * IT, which is the claim the pair of figures above cannot make on its own: they
+ * are a snapshot, and this is the invariant. A node leaving for an authored
+ * subject moves one name from `nodes` to `departed`, so the sum is conserved by
+ * construction — and the way that breaks is somebody deleting a node without
+ * adding it to `departed`, which drops the territory by one with every suite
+ * green until an area crosses the floor years later.
+ */
+t('and a departure conserves the territory, which is the whole mechanism',
+  STUB_FLOOR_TERRITORY(FLOOR_LINALG)
+    === FLOOR_LINALG.nodes.length + FLOOR_LINALG.departed.length
+  && !FLOOR_LINALG.nodes.some(n => n.id === 'least-squares')
+  && FLOOR_LINALG.departed.includes('least-squares'),
+  `${STUB_FLOOR_TERRITORY(FLOOR_LINALG)} territory from `
+  + `${FLOOR_LINALG.nodes.length} + ${FLOOR_LINALG.departed.length}`)
 
 /*
  * THE FIVE ADDITIONS BY NAME, not by count, for the reason every root-set check
  * in this file gives: a count is satisfied by five of anything, and what matters
  * is that these five are the gaps that were actually found.
+ *
+ * AND ONE OF THE FIVE IS A CONCEPT NOW, which is why the list is split rather
+ * than shortened. `dual-spaces` was added here on 2026-11-24 and authored into
+ * `vectors-and-independence` by the forty-second promotion on 2026-11-25 — the
+ * first node this build ever ADDED to the map and then wrote material for. The
+ * claim worth keeping is about all five, so it is asserted as all five: four are
+ * still nodes and the fifth is a departure, which is the only two states a
+ * found-gap can be in and is a stronger statement than "four nodes exist".
  */
-t('the five thin spots are mapped by name',
-  ['cayley-hamilton', 'jordan-normal-form', 'quadratic-forms', 'dual-spaces', 'matrix-exponential']
-    .every(id => FLOOR_LINALG.nodes.some(n => n.id === id)),
-  FLOOR_LINALG.nodes.map(n => n.id).join(' '))
+const THIN_SPOTS = [
+  'cayley-hamilton', 'jordan-normal-form', 'quadratic-forms', 'dual-spaces', 'matrix-exponential',
+]
+t('the five thin spots are each still mapped or else authored, with none simply gone',
+  THIN_SPOTS.every(id =>
+    FLOOR_LINALG.nodes.some(n => n.id === id) || FLOOR_LINALG.departed.includes(id))
+  && THIN_SPOTS.filter(id => FLOOR_LINALG.departed.includes(id)).join(' ') === 'dual-spaces'
+  && THIN_SPOTS.filter(id => FLOOR_LINALG.nodes.some(n => n.id === id)).length === 4,
+  `${THIN_SPOTS.filter(id => FLOOR_LINALG.nodes.some(n => n.id === id)).join(' ')} mapped, `
+  + `${THIN_SPOTS.filter(id => FLOOR_LINALG.departed.includes(id)).join(' ')} authored`)
 
 /*
- * ONE OF THE FIVE IS READY AND FOUR ARE NOT, which is the check that the
- * additions did not quietly hand the next promotion a pile of cheap candidates.
- * `dual-spaces` rests on authored material; the other four rest on this area's
- * own unwritten spectral chain. If a later change makes three of them ready at
- * once, that is worth noticing here rather than discovering as a suspiciously
- * easy promotion.
+ * NONE OF WHAT REMAINS OF THE FIVE IS READY, which is the check that the
+ * additions did not quietly hand the next promotion a pile of cheap candidates —
+ * and the direction it moved is the point. It read "exactly one of the five is
+ * ready, and it is the dual" from the day they were added until the dual was
+ * written; the other four rest on this area's own unwritten spectral chain and
+ * none of them has become ready, so taking the ready one left zero rather than
+ * uncovering another.
+ *
+ * Scoped to the ones still mapped, since readiness is a question about a node:
+ * `isTeachable` is true of the dual now and would make a check over all five
+ * read as though a thin spot had been filled in place, which is the opposite of
+ * what happened.
  */
-const ADDED_READY = ['cayley-hamilton', 'jordan-normal-form', 'quadratic-forms', 'dual-spaces', 'matrix-exponential']
+const ADDED_READY = THIN_SPOTS
+  .filter(id => FLOOR_LINALG.nodes.some(n => n.id === id))
   .filter(id => (FLOOR_LINALG.nodes.find(n => n.id === id).needs ?? [])
     .every(p => isTeachable(MATHEMATICS, p)))
-t('exactly one of the five is immediately ready, and it is the dual',
-  ADDED_READY.length === 1 && ADDED_READY[0] === 'dual-spaces',
-  ADDED_READY.join(' ') || 'none')
+t('none of the four still mapped is ready, the one that was having been written',
+  ADDED_READY.length === 0
+  && isTeachable(MATHEMATICS, 'dual-spaces')
+  && !FLOOR_LINALG.nodes.some(n => n.id === 'dual-spaces'),
+  ADDED_READY.join(' ') || 'none ready')
 
 /*
  * THE MATRIX EXPONENTIAL CROSSES AREAS AND IS DECLARED ON ITS OWN NODE, which is

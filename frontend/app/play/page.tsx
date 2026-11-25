@@ -10,7 +10,7 @@ import { track } from '@/lib/analytics'
 import { timeAgo } from '@/lib/timeAgo'
 import { fuzzySearch } from '@/lib/fuzzy'
 import { correlateQueries, fetchAvailableMedia } from '@/lib/queries/correlate'
-import { ACCENT_CLASSES, getGame, retiredGameName } from '@/lib/correlate/games'
+import { ACCENT_CLASSES, FEATURED_GAMES, GAME_LIST, getGame, retiredGameName } from '@/lib/correlate/games'
 import { MEDIUM_LIST, getMedium, mediaByProvider } from '@/lib/correlate/media'
 import { RELATION_LIST } from '@/lib/correlate/relations'
 import type { CorrelationSession, MediumId } from '@/lib/correlate/types'
@@ -293,6 +293,79 @@ function PlayPageInner() {
             every game card already says it, from `declaredRelation` and
             `enforcesConstraint` rather than from prose that could drift, which was
             the reason the old line only pointed at the cards. */}
+
+        {/* ── ONE TAP TO A GAME, ABOVE EVERYTHING ────────────────────────────
+            `GamePicker` is the last thing on this page, and it is correct that it
+            is: the comment on `VISIBLE_GAMES` works out why a returning player's
+            own games belong above it, and capping that list was the right fix for
+            the scroll it caused. What neither addressed is the FIRST visit from a
+            phone, where the picker sits below a header, a title, an example chain
+            and up to six game rows — so the cheapest possible action, "start the
+            default game", cost a scroll past everything on the page.
+
+            This is the cheap action hoisted, and nothing else moves. The picker
+            keeps every option it had; this row is the subset that needs no
+            options at all.
+
+            DRIVEN BY `FEATURED_GAMES`, NOT BY A LIST WRITTEN HERE. The registry
+            already names which games lead — `FEATURED_GAME_IDS` in
+            lib/correlate/games.ts — and `tag` is first in it. A literal 'tag'
+            here would be a second copy of that decision, going stale the day the
+            registry is reordered and silently promoting the wrong game.
+
+            WHY ONE TAP IS HONEST RATHER THAN A SHORTCUT THAT HIDES A CHOICE:
+            `startGame(id)` takes an id and nothing else. `turnLimit` is optional
+            and the media come from this page's `media` state, so there was never
+            a required decision between arriving and playing.
+
+            THIS ROW DELIBERATELY SAYS NOTHING ABOUT MEDIA, and the first draft
+            did — "with {media…}" under the heading, on the reasoning that a tap
+            whose consequences are invisible is worse than a tap that is slow.
+            Both halves of that were wrong and a phone-width screenshot is what
+            showed it. `media` is seeded `['music']` and then REPLACED by
+            `fetchAvailableMedia`, so by paint it is all eleven and the line
+            wrapped to two, crushing the heading beside it. Worse than ugly, it
+            was a false claim: that list is what the BUILD supports, not what the
+            game will use — every game is `media: 'all'` and it is `coreMedia`
+            plus the starting tuning that decide what is actually in play. A
+            correct version of the line would have to explain the tuning, which
+            is the game card's job and is one tap away below. */}
+        <div className="mb-6">
+          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+            Start playing
+          </h2>
+          <div className="flex flex-wrap gap-2">
+            {FEATURED_GAMES.map(g => {
+              const accent = ACCENT_CLASSES[g.accent] ?? ACCENT_CLASSES.indigo
+              return (
+                <button
+                  key={g.id}
+                  onClick={() => startGame(g.id)}
+                  disabled={!!starting || media.length === 0}
+                  title={g.tagline}
+                  /* `min-h-11` is a tap target and not a style preference: this
+                     row exists for phones, and the picker's own chips are sized
+                     for a pointer. */
+                  className={`min-h-11 px-4 inline-flex items-center gap-2 rounded-xl border text-sm font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed ${accent.ring} ${accent.bg} ${accent.text} hover:brightness-95 dark:hover:brightness-110`}
+                >
+                  {starting === g.id
+                    ? <Loader2 size={15} className="animate-spin" />
+                    : <Plus size={15} />}
+                  {g.name}
+                </button>
+              )
+            })}
+          </div>
+          {/* The way to everything this row leaves out. It points at the picker
+              that was always there rather than replacing it, so the full set of
+              games, lengths and variants is one tap away and not gone. */}
+          <a
+            href="#start-a-game"
+            className="inline-block mt-2 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+          >
+            All {GAME_LIST.length} games, lengths and variants ↓
+          </a>
+        </div>
 
         {/* The registries, one click away rather than unconditional. Both cards are
             unchanged; what changed is that a player meets them when they want them.
