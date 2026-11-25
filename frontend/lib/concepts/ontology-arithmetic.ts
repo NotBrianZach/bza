@@ -129,14 +129,31 @@
  * — so it may well be the first in this subject's vicinity that an `evaluate`
  * task fits rather than works around.
  *
+ * THAT PREDICTION WAS HALF RIGHT, AND THE HALF IT GOT WRONG IS THE USEFUL ONE.
+ * The fortieth promotion authored `euclidean-algorithm` into this file, so the
+ * "not in this file's territory at all" has expired by the ordinary route — a
+ * node's territory is decided by where its prerequisites are authored, and both
+ * of this one's are here. The `evaluate` prediction held: all nine of its tasks
+ * are `evaluate`, five of them evaluating `n - p*k` and four `a*x + b*y`, and
+ * none works around a missing form the way the three concepts above it do.
+ *
+ * What it did NOT foresee is that the second of those expressions is a form
+ * demand in disguise. "Write 12 as a combination of 360 and 84" asks for a PAIR
+ * of coefficients, which is the same wall this subject already hit on (q, r) and
+ * on (a, n) — so the concept escaped the factorisation gap and walked into the
+ * pair gap instead. Its own header says so in full. One `evaluate`-shaped
+ * obstacle being cleared is not the obstacles being cleared.
+ *
  * ── THE ELEVENTH CONCEPT IS NOT A WHOLE-NUMBER ONE, AND THAT IS THE POINT ──
  *
  * `real-number-line` was promoted into this file, and the paragraph above is
  * why it took a sentence of argument rather than none: the sentence says the
  * next thing to write here is a whole-number concept in somebody else's area,
  * and the eleventh concept is instead the one that says what this subject's
- * numbers are NOT enough of. Both can be true. `euclidean-algorithm` is still
- * the next whole-number concept and still mapped elsewhere; this one was
+ * numbers are NOT enough of. Both can be true. `euclidean-algorithm` was still
+ * the next whole-number concept and still mapped elsewhere at the time — the
+ * fortieth promotion has since taken it, so that clause has expired and the
+ * claim this paragraph makes is unaffected; this one was
  * available and better placed, and the reasons are structural rather than
  * editorial:
  *
@@ -390,7 +407,12 @@ const subject: Subject = {
   covers:
     'Whole-number arithmetic and the conventions for reading it: place value, the written ' +
     'algorithms and why they work, order of operations, signed numbers, divisibility, and the ' +
-    'primes a whole number comes apart into. Fractions are here too, resting on that ' +
+    'primes a whole number comes apart into. The general statement behind the written division ' +
+    'is here as well, one layer above the divisibility: that a quotient and a remainder always ' +
+    'exist and are the only pair available, because the remainder is pinned into 0 ≤ r < b — so ' +
+    'a negative number still leaves a non-negative remainder, and dividing by b sorts every ' +
+    'integer into exactly b forms, which is what makes a case split about all of them finite. ' +
+    'Fractions are here too, resting on that ' +
     'divisibility, and so are the gcd and the lcm the fractions are made of. Then the two ' +
     'things a factorisation decides about a ratio — which roots of it are rational, and which ' +
     'of its decimal expansions stop — then the real line, which is where the subject ' +
@@ -422,9 +444,24 @@ const subject: Subject = {
     'a rise and a fall of the same percentage do not cancel but lose, because the fall is taken ' +
     'of the bigger base. The word problems above it are mapped only. Nothing symbolic — the moment a letter ' +
     'stands for an unknown it is algebra. Every letter in this subject has a stated value and ' +
-    'is substituted, never solved for. What is left of whole-number arithmetic is what ' +
-    'rests on the gcd rather than on the primes: the Euclidean algorithm and the congruences, ' +
-    'which are mapped in the number-theory area and still unwritten.',
+    'is substituted, never solved for. That line is about SOLVING and not about generality: ' +
+    'the uniqueness of a prime factorisation and the uniqueness of a quotient and remainder are ' +
+    'both claims about every whole number, both are settled here by an argument, and neither has ' +
+    'anything to solve for. What a quantified claim may not do in this subject is become the ' +
+    'TOPIC — the four shapes an argument about an arbitrary member takes are `proof-techniques`, ' +
+    'in `methods-of-proof`, and this subject uses one of them without being about any of them. ' +
+    'What rests on the gcd rather than on the primes is here as well, which is where the ' +
+    'whole-number part of this subject ends: that replacing the larger of two numbers by its ' +
+    'remainder changes neither of their common divisors, so three divisions reach a gcd that no ' +
+    'factorisation was needed for, and that reading those same divisions backwards writes the ' +
+    'gcd as a whole-number multiple of one number plus a whole-number multiple of the other — ' +
+    'from which every common divisor divides the gcd, and ax + by = c can be met in whole ' +
+    'numbers exactly when the gcd divides c. What is left of whole-number arithmetic after that ' +
+    'is the congruences, which are mapped in the number-theory area and still unwritten: ' +
+    'arithmetic on remainders is a statement about classes rather than about numbers, and this ' +
+    'subject stops at the numbers. The division algorithm and the Euclidean algorithm were the ' +
+    'first two of the three and are here now instead, by the only two departures that area has ' +
+    'had.',
   medium: 'theorem',
   facetName: 'Concept',
   facetDoes: 'Which concept the statement has to be about.',
@@ -1329,6 +1366,490 @@ const CONCEPTS: Concept[] = [
   },
 
   /**
+   * The division algorithm: the theorem the concept above was already using.
+   *
+   * ── WHY THIS CONCEPT, OUT OF FOURTEEN THAT WERE READY ─────────────────────
+   *
+   * All ten shipped journeys have read zero unwritten steps on route since the
+   * fourteenth promotion, so route demand ranked nothing and the selection ran
+   * the way ontology-functions.ts's header describes: rulability first, then
+   * whether the stranded edges fit in one ontology, then dependents. FOURTEEN map
+   * nodes were ready — every `needs` already teachable — where the thirty-eighth
+   * promotion found twelve, and the three it added are all its own doing:
+   * `relations`, `counting-principles` and `sample-spaces` each name `sets` and
+   * nothing else unwritten.
+   *
+   * SIX OF THE FOURTEEN ARE FLOOR-BLOCKED and the figures have not moved for five
+   * promotions: `algebra-foundations` holds six nodes against a stub floor of five
+   * with four of them ready, `linear-algebra` six with two. FOUR MORE ARE UNDER
+   * REFUSALS THAT STILL BIND, all four named in ontology-quantifiers.ts and
+   * restated in ontology-proof.ts and ontology-sets.ts. That leaves four, and
+   * three of them are the three `sets` opened.
+   *
+   * THE FIRST FACTOR DECIDED IT, WHICH IT HAS NOT DONE BEFORE. Every previous
+   * promotion since the thirty-fourth recorded rulability as rejecting nobody and
+   * then separated its candidates on one of the other two. Here it rejects three:
+   *
+   *   `relations` carried the strongest case on the factors that did NOT decide —
+   *   five dependents against this node's one, and one stranded edge against this
+   *   node's one — and a relation is a SET OF PAIRS. Its three defining properties
+   *   are reflexivity, symmetry and transitivity, and each is a judgement about
+   *   such a set. The engine grades an expression: `sets` has just recorded in
+   *   full what that costs a concept whose content IS a number (its own tasks are
+   *   sizes, and no task of it can catch a right count reached by the wrong
+   *   route), and a relation's content is not a number at all. The counts that
+   *   could stand in — how many pairs are missing for symmetry, how many
+   *   equivalence classes a partition has — measure finding the gap rather than
+   *   deciding the property. That is the `graphs-of-functions` refusal in a second
+   *   costume: a judgement about a drawing and a judgement about a listed set of
+   *   pairs fail for one reason, and the reason is not the drawing.
+   *
+   *   `counting-principles` and `sample-spaces` are both cleanly rulable — a
+   *   number of arrangements and a probability are each a value `exactValue`
+   *   settles — and they lost on the SECOND factor rather than the first, which is
+   *   worth stating so the next run does not read them as refused. Each names two
+   *   concepts authored in two different subjects, and the subject holding the
+   *   nearer one has declined it: `counting-principles` names `sets` and
+   *   `binomial-theorem`, `sample-spaces` names `sets` and `fraction-arithmetic`,
+   *   and `sets-and-membership` has written "it does not claim COUNTING as a
+   *   subject" into its own file. So either costs a new subject plus TWO `links`
+   *   entries where this node costs one entry and no new subject. They are the
+   *   two strongest candidates for the fortieth promotion.
+   *
+   * EVERY OBJECT IN THIS CONCEPT IS A WHOLE NUMBER. The quotient is one, the
+   * remainder is one, the count of residue classes is one, and the gap an
+   * incomplete case split leaves is one. Nine tasks ask for nine of them and not
+   * one of them stands in for something else.
+   *
+   * ── WHY THIS SUBJECT, WHICH IS THE FIRST EXISTING ONE SINCE THE THIRTY-THIRD ──
+   *
+   * The five promotions before this founded five subjects, each because the cheap
+   * filing was unavailable: the subject holding the prerequisite had written the
+   * concept out of itself by name, and ontology-logic.ts's rule is that a subject
+   * may not be handed a concept its own file has declined. That rule does not
+   * reach this node. Neither subject holding a prerequisite has declined it, and
+   * one of them has very nearly asked for it.
+   *
+   * `arithmetic-foundations` — this one — ends its `covers` with "what is left of
+   * whole-number arithmetic is what rests on the gcd rather than on the primes:
+   * the Euclidean algorithm and the congruences, which are mapped in the
+   * number-theory area and still unwritten". That sentence claims the territory
+   * this node sits in as the subject's own unwritten remainder rather than as
+   * somebody else's. And the concept directly below, `divisibility`, opens with
+   * "b divides a when the remainder is zero — that is, when a = qb exactly, with
+   * nothing left over", and its first worked example divides 1274 by 7 watching
+   * the remainder. The general theorem has been sitting one layer above a concept
+   * this subject already owns, and the layer below has been quoting it.
+   *
+   * THE ONE SENTENCE THAT LOOKS LIKE A REFUSAL AND IS NOT. This subject's `covers`
+   * says "Nothing symbolic — the moment a letter stands for an unknown it is
+   * algebra. Every letter in this subject has a stated value and is substituted,
+   * never solved for." ontology-proof.ts cited that line as the boundary
+   * `proof-techniques` falls outside, and it was right to: a proof technique is an
+   * argument about an ARBITRARY member and there is nothing to substitute. This
+   * concept is on the other side of the same line. Nothing here is solved for —
+   * the quotient and the remainder are COMPUTED, every letter in all nine tasks
+   * has a stated value, and the subject already holds `prime-factorisation`, whose
+   * content is the uniqueness of a decomposition established by an argument.
+   * a = bq + r is that concept's exact sibling: existence and uniqueness of a
+   * decomposition, one layer more elementary. Filing it anywhere else would
+   * separate twins.
+   *
+   * SO NO SIXTEENTH SUBJECT, and the asymmetry ontology-proof.ts relied on is not
+   * being spent. That argument was that merging subjects later is easy and
+   * un-merging one whose `covers` has been rewritten to claim a neighbour is not,
+   * so when in doubt, found. There is no doubt to resolve here: the receiving
+   * subject's own boundary sentence points at this node's neighbourhood, so
+   * claiming it widens nothing that was not already claimed in writing.
+   *
+   * ── THE DIVISION OF LABOUR, AND ONE DEBT THIS PAYS ────────────────────────
+   *
+   * `divisibility`, below and in this subject, is the case r = 0 and is about a
+   * PAIR of numbers: does 7 divide 1274. This concept is about EVERY pair, and its
+   * content is that the leftover always exists, is unique, and is pinned into
+   * 0 ≤ r < b. The subject's first worked example on dividing already performs the
+   * move; what it does not say is that the answer it got was the only one
+   * available, which is the whole of the third subgoal below.
+   *
+   * `proof-techniques`, in `methods-of-proof`, is this node's other prerequisite
+   * and the reason it was unreachable until the thirty-seventh promotion. That
+   * file's header says, of its own third knowledge point: "Dividing by 3 leaves
+   * exactly one of three remainders. The general statement is `division-algorithm`,
+   * which is a node ABOVE this concept and names it as a prerequisite, so the
+   * general form may not be leaned on. What the third point uses is the single
+   * instance for 3." THIS CONCEPT IS THAT GENERAL STATEMENT ARRIVING, and the
+   * third knowledge point below is where the debt is paid: the count of cases is
+   * b, for every b, and 3 was never special. tests/atlas.mjs asserted the
+   * dependency ran the way that material claimed while this node was unwritten;
+   * that assertion is restated rather than deleted, because what it was protecting
+   * — that the concept below leans only on the instance — is still true and is now
+   * true of an authored concept instead of a skeleton.
+   *
+   * It also means the two tasks `proof-techniques` ships on `n - p*k` are the
+   * INSTANCES of the expression the nine tasks here are built from, and
+   * `DIVIDEND_DIVISOR_QUOTIENT` in tasks.ts is shared across all three concepts
+   * rather than copied. The third point below therefore may NOT re-ask
+   * (2027, 3, 675): that exact substitution is already a `proof-techniques` task,
+   * and two tasks with one expression, one substitution and one answer are one
+   * task written twice. It divides 2026 by 9 instead, which is also the point —
+   * a different divisor is what shows the count is b.
+   *
+   * ── WHERE IT SITS IN THE FILE, AND WHAT LEFT THE MAP ──────────────────────
+   *
+   * Immediately after `divisibility` rather than appended at the end, because this
+   * file is read as a syllabus top to bottom and this is divisibility's direct
+   * dependent and the generalisation of its first knowledge point. Nothing reads
+   * `CONCEPTS` by index; `teachingOrder` is computed from the edges.
+   *
+   * The node left `number-theory`, which is the FIRST departure that area has
+   * ever had — twelve nodes down to eleven, six clear of the stub floor — and
+   * atlas-structures.ts carries the arithmetic. Its own `needs` were
+   * `['divisibility', 'proof-techniques']` and they went two different ways: the
+   * first is an ordinary `prerequisite` edge in this file, because both ends are
+   * authored here; the second had nowhere to live, because an authored ontology's
+   * edges may only name concepts it contains, so it is the first `links` entry
+   * `number-theory` has ever held. The node declared no `confusedWith`, so nothing
+   * was stranded there — checked rather than assumed, since `expandEdges` deletes
+   * such an edge silently with the node.
+   *
+   * ── THE PATTERN IS CARRIED VERBATIM, WITH ONE TITLE WORTH NAMING ──────────
+   *
+   * `/\b(euclidean division|division algorithm|divisor)\b/i`, off the map node
+   * unchanged, for the reason every promotion since the fourth has kept: widening
+   * a pattern in the same edit that adds material moves the recognition figure in
+   * tests/atlas.mjs and the written-concept count together, and afterwards there
+   * is no way to say which half did it.
+   *
+   * THE ARTICLE WITH THIS CONCEPT'S OWN NAME IS ABOUT SOMETHING SLIGHTLY ELSE, and
+   * that is the honest thing to record rather than to fix by widening. "Euclidean
+   * division" is this theorem exactly. "Division algorithm" is titled for the
+   * PROCEDURES that compute a quotient — long division, Newton–Raphson division —
+   * which is the method rather than the existence claim. "Divisor" is shared with
+   * `divisibility`'s own pattern, which already matches `divisor\w*`, so that
+   * alternative decides between two concepts of this subject and not between this
+   * subject and the world. `fidelity` is still 'checked': the field means the
+   * pattern DECIDES membership against the provider's title, which it does, and
+   * not that it decides it with no overlap — `divisibility` ships 'checked' with
+   * `factor\w*`, which is looser than anything here.
+   *
+   * ── `evaluate` ONLY, AND THE THREE KINDS THAT ARE REFUSED ─────────────────
+   *
+   * Following `absolute-value`, `percent` and `scientific-notation`: zero
+   * `justify` tasks exist anywhere in this build, so an objective naming the kind
+   * promises an observation nothing can make, and `divisibility` above names it in
+   * an objective under the older convention this file has since dropped.
+   *
+   * No `transform_to_form`. The demand a reader expects is "write 2026 in the form
+   * 7q + r", and there is no `NamedForm` in forms.ts that can see it: the shipped
+   * forms are claims about an ALGEBRAIC shape, and `factored` is the near miss
+   * that would accept 7 · 289 while rejecting nothing about the 3. The pair (q, r)
+   * is also a PAIR, and no task kind carries one — the wall `scientific-notation`
+   * hit on (a, n) and `ontology-matrices.ts` hit on every matrix. So the choosing
+   * of q is performed in the worked examples and each task rules one of the two
+   * numbers it produces.
+   *
+   * No `counterexample`. The natural ask is "produce a pair (q, r) with
+   * a = bq + r that the theorem does not name", which needs a checker that can
+   * test a produced object against a claim; this build declares that kind
+   * verifiable and ships no such checker, which `sets` recorded one promotion ago.
+   * What replaces it is the second task of each of the first two points: the
+   * learner computes the leftover of a WRONG quotient and the answer — 10, which
+   * is too big, and −3, which is negative — is itself the refutation. A refutation
+   * that arrives as a number is gradable, and that is the whole trick this concept
+   * gets for free from the window being an inequality on a number.
+   */
+  {
+    id: 'division-algorithm',
+    name: 'The division algorithm',
+    subjectId: subject.id,
+    scope: {
+      id: 'division-algorithm',
+      label: 'The division algorithm',
+      hint: 'division algorithm quotient remainder well ordering',
+      match: /\b(euclidean division|division algorithm|divisor)\b/i,
+    },
+    fidelity: 'checked',
+    objectives: [
+      {
+        id: 'divide-and-name-the-pair-the-window-allows',
+        statement:
+          'Divide one whole number by another, name the quotient and the remainder, and show '
+          + 'that a quotient one step out gives a leftover the condition 0 ≤ r < b rejects.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'divide-a-negative-number-and-keep-the-remainder-non-negative',
+        statement:
+          'Divide a negative number and produce the non-negative remainder, rather than the '
+          + 'negated remainder of its positive twin, and compute the remainder of −a from the '
+          + 'remainder of a.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'count-the-residue-classes-and-what-a-split-leaves-out',
+        statement:
+          'Say how many forms division by b sorts the integers into, decide which form a given '
+          + 'number has, and count how many forms an incomplete case split has said nothing '
+          + 'about.',
+        taskKinds: ['evaluate'],
+      },
+    ],
+    knowledgePoints: [
+      {
+        id: 'the-window-on-the-remainder-is-what-makes-the-pair-unique',
+        conceptId: 'division-algorithm',
+        statement:
+          'For whole numbers a and b with b > 0 there is exactly one pair q, r with a = bq + r '
+          + 'AND 0 ≤ r < b. The equation on its own names nothing: 2026 = 7·289 + 3 and '
+          + '2026 = 7·288 + 10 and 2026 = 7·290 − 4 are all true, and there are infinitely many '
+          + 'more. What does the work is the second condition. The quotient is how many whole '
+          + 'b\'s fit inside a, and the remainder is what is left — which has to be smaller than '
+          + 'b, or another whole b would still fit, and cannot be negative, or one too many were '
+          + 'taken.',
+        position: 1,
+        /*
+         * No `automaticityTarget` on any of the three points, which is a
+         * departure from most of this file and has one reason that covers all
+         * three: the error each point exists to stop is a SKIPPED WINDOW CHECK.
+         * Timing an answer rewards reading off the division and stopping, which
+         * is precisely the move that produces 288 remainder 10 here, −289
+         * remainder −3 in the next point, and a two-case split in the third.
+         * `scientific-notation` omitted its targets on the same argument, and
+         * the arithmetic underneath — one multiplication and one subtraction —
+         * is already timed further up this file where it is the skill rather
+         * than the trap.
+         */
+        workedExample: {
+          problem:
+            'Divide 2026 by 7: name the quotient and the remainder, show what goes wrong with a '
+            + 'quotient of 288, and show that no second pair can satisfy both conditions.',
+          subgoals: [
+            {
+              label: 'Build the quotient by fitting whole b\'s, which is what q counts',
+              detail:
+                '7·200 = 1400, leaving 626. 7·80 = 560, leaving 66. 7·9 = 63, leaving 3. So '
+                + '200 + 80 + 9 = 289 whole 7s fit and 3 is left: 2026 = 7·289 + 3, and the '
+                + 'check is 2023 + 3 = 2026. The quotient was assembled rather than guessed, '
+                + 'and each stage took as many 7s as the place allowed.',
+              socratic:
+                '2026 is not a multiple of 7. What is the largest multiple of 7 that is not '
+                + 'bigger than it, and how do you build it up a place at a time instead of '
+                + 'testing multiples one by one?',
+            },
+            {
+              label: 'Check the leftover against the window, which is the step that can fail',
+              detail:
+                '0 ≤ 3 < 7, so the pair is admissible. This is not a formality: a leftover of 7 '
+                + 'or more means another whole 7 still fits and q was too small, and a negative '
+                + 'leftover means one 7 too many was taken. The window is exactly the statement '
+                + '"nothing further can be taken out, and nothing has to be put back".',
+              socratic:
+                'Your leftover is 3 and you divided by 7. What would a leftover of 9 have told '
+                + 'you about the 289 — and what would a leftover of −2 have told you?',
+            },
+            {
+              label: 'Run the wrong quotient and read the failure off as a number',
+              detail:
+                'Take q = 288 instead. 7·288 = 2016 and 2026 − 2016 = 10, so 2026 = 7·288 + 10 '
+                + 'is a TRUE equation. It is not the division, because 10 is not less than 7: '
+                + 'there is still a whole 7 inside the 10. Taking it out moves one 7 from the '
+                + 'leftover to the quotient and lands back on 289 and 3 — which is why 10 and 3 '
+                + 'differ by exactly 7 rather than by anything else.',
+              socratic:
+                '2026 = 7·288 + 10 is arithmetically correct. Which of the two conditions does '
+                + 'it fail, and what does the amount by which it fails tell you to do to the '
+                + '288?',
+            },
+            {
+              label: 'Close uniqueness by trapping the difference of two remainders',
+              detail:
+                'Suppose 2026 = 7q₁ + r₁ = 7q₂ + r₂ with both remainders in the window. '
+                + 'Subtracting, r₁ − r₂ = 7(q₂ − q₁), so the difference of the two remainders is '
+                + 'a multiple of 7. But both lie in 0 ≤ r < 7, so their difference lies strictly '
+                + 'between −7 and 7, and the only multiple of 7 in that stretch is 0. So '
+                + 'r₁ = r₂, and then 7q₁ = 7q₂ gives q₁ = q₂. The window did it: without it the '
+                + 'difference could have been any multiple of 7 at all, which is the infinitely '
+                + 'many pairs the statement began with.',
+              socratic:
+                'Two admissible pairs would make r₁ − r₂ a multiple of 7. If both remainders are '
+                + 'between 0 and 6, what range is their difference trapped in, and which '
+                + 'multiples of 7 survive that?',
+            },
+          ],
+          answer:
+            '2026 = 7·289 + 3, so q = 289 and r = 3, and 0 ≤ 3 < 7. q = 288 gives the true '
+            + 'equation 2026 = 7·288 + 10, which is not the division because 10 ≥ 7 — a whole 7 '
+            + 'is still inside the leftover, and moving it across returns 289 and 3. No second '
+            + 'admissible pair exists: two of them would make r₁ − r₂ a multiple of 7 lying '
+            + 'strictly between −7 and 7, so r₁ − r₂ = 0 and then q₁ = q₂.',
+        },
+      },
+      {
+        id: 'a-negative-dividend-still-leaves-a-non-negative-remainder',
+        conceptId: 'division-algorithm',
+        statement:
+          'The window 0 ≤ r < b is not something that merely happens to hold when a is positive. '
+          + 'Dividing −2026 by 7 does NOT give −289 remainder −3, even though 7·(−289) − 3 is '
+          + '−2026: a remainder is never negative, so the quotient has to step one further DOWN '
+          + '— away from zero, not towards it — until what is left over is non-negative again. '
+          + 'The two remainders are then tied together: if a positive a leaves r and r is not 0, '
+          + 'then −a leaves b − r.',
+        position: 2,
+        workedExample: {
+          problem:
+            'Divide −2026 by 7. Then say what the remainder of −a must be whenever a leaves '
+            + 'remainder 3 on division by 7, and what happens when a leaves 0.',
+          subgoals: [
+            {
+              label: 'Negate the previous answer and watch it fail the window',
+              detail:
+                'The point above gave 2026 = 7·289 + 3. Negating throws '
+                + '−2026 = 7·(−289) − 3, and the arithmetic is right: −2023 − 3 = −2026. But −3 '
+                + 'is not in 0 ≤ r < 7, so this is not the division the theorem names. The '
+                + 'previous point\'s lesson — a true equation is not an answer — arrives here '
+                + 'where it actually costs something, because this is the answer almost everyone '
+                + 'gives.',
+              socratic:
+                '−2026 = 7·(−289) − 3 is arithmetically correct. Which of the theorem\'s two '
+                + 'conditions does it fail, and is that condition optional?',
+            },
+            {
+              label: 'Step the quotient one further down, which means more negative',
+              detail:
+                'The quotient is the largest integer q with 7q ≤ a. Here 7·(−289) = −2023, and '
+                + '−2023 is GREATER than −2026, so −289 is already too big. −290 works: '
+                + '7·(−290) = −2030, which is below −2026, and no integer between them does. '
+                + 'This is where the sign misleads — "round towards zero" is the instinct and it '
+                + 'is wrong, because the window is one-sided.',
+              socratic:
+                'You need the biggest multiple of 7 that is not above −2026. Is −2023 above or '
+                + 'below −2026, and which way does that answer send the quotient?',
+            },
+            {
+              label: 'Read the remainder off the new multiple and check the window',
+              detail:
+                '−2026 − (−2030) = 4, and 0 ≤ 4 < 7, so −2026 = 7·(−290) + 4. Confirm it '
+                + 'forwards: −2030 + 4 = −2026. Both conditions hold, so by the uniqueness in '
+                + 'the point above this is the only admissible pair and the −289, −3 reading is '
+                + 'not a rival answer but a non-answer.',
+              socratic:
+                'Your multiple is −2030 and the number is −2026. What is left over, and does it '
+                + 'sit in the window?',
+            },
+            {
+              label: 'Tie the two remainders together, which makes this a rule and not a knack',
+              detail:
+                '3 and 4 add to 7, and that is forced. If a = bq + r with 0 < r < b then '
+                + '−a = −bq − r = b(−q − 1) + (b − r), and 0 < b − r < b, so b − r is a genuine '
+                + 'remainder and −q − 1 is the quotient. One extra b comes out and one extra b '
+                + 'goes back, which is the whole of the move. The case r = 0 is the exception and '
+                + 'needs no shift at all: 2023 = 7·289 + 0 and −2023 = 7·(−289) + 0, because '
+                + 'there is no leftover to repair.',
+              socratic:
+                '2026 left 3 and −2026 left 4. What do those two add to — and before computing '
+                + 'anything, what would −2023 leave, given that 2023 leaves 0?',
+            },
+          ],
+          answer:
+            '−2026 = 7·(−290) + 4, so q = −290 and r = 4. NOT q = −289, r = −3: that equation is '
+            + 'true and its leftover is outside 0 ≤ r < 7, so it is not the division. In general '
+            + 'a positive a leaving r with 0 < r < b forces −a to leave b − r, since '
+            + '−a = b(−q − 1) + (b − r) — which is why 3 and 4 add to 7 — and r = 0 is the one '
+            + 'case where the quotient simply negates.',
+        },
+      },
+      {
+        id: 'the-window-gives-exactly-b-forms-and-a-case-split-must-use-all-of-them',
+        conceptId: 'division-algorithm',
+        statement:
+          'Because the remainder is a whole number with 0 ≤ r < b, it has exactly b available '
+          + 'values: 0, 1, …, b − 1. So division by b sorts every integer into exactly b forms — '
+          + 'bk, bk + 1, …, bk + (b − 1) — with no integer left out, because a remainder always '
+          + 'exists, and none in two of them, because it is unique. This is what makes a proof '
+          + 'by cases about every integer a FINITE argument: there are b cases and they run out. '
+          + 'The count is b and nothing else; 3 is not special.',
+        position: 3,
+        workedExample: {
+          problem:
+            'How many forms does division by 9 give? Which one is 2026, and does the digit-sum '
+            + 'test agree? Then: a claim about every integer is split by remainder on division '
+            + 'by 12 and only the six even remainders are checked — how many forms has that said '
+            + 'nothing about?',
+          subgoals: [
+            {
+              label: 'Count the available remainders, which the window does for you',
+              detail:
+                '0 ≤ r < 9 with r a whole number leaves 0, 1, 2, 3, 4, 5, 6, 7, 8 — nine values. '
+                + 'The count is not something to be worked out; it is b itself, because the '
+                + 'window is "a whole number from 0 up to but not including b". For b = 12 it is '
+                + 'twelve, and for b = 2 it is the two cases "even" and "odd" that everybody '
+                + 'already uses without calling them residues.',
+              socratic:
+                'The remainder on division by 9 must satisfy 0 ≤ r < 9. How many whole numbers '
+                + 'is that, and how many would it be for a divisor of 12?',
+            },
+            {
+              label: 'Turn each remainder into a form, and name which half of the theorem does what',
+              detail:
+                'r = 0 gives 9k, r = 1 gives 9k + 1, and so on to 9k + 8: nine forms, one per '
+                + 'remainder. EXISTENCE is what says every integer is in one of them — there is '
+                + 'always a remainder to be had — and UNIQUENESS is what says no integer is in '
+                + 'two, since a number with two forms would have two remainders. Neither half is '
+                + 'free, and a case split uses both without usually saying so.',
+              socratic:
+                'Each remainder gives one form. Which half of the first point\'s theorem '
+                + 'guarantees every integer is in some form, and which half guarantees no '
+                + 'integer is in two?',
+            },
+            {
+              label: 'Place a number, which is one division and nothing more',
+              detail:
+                '9·225 = 2025 and 2026 − 2025 = 1, so 2026 = 9·225 + 1 and its form is 9k + 1 '
+                + 'with k = 225. Deciding which case a number belongs to is never a judgement; '
+                + 'it is the division performed in the first point.',
+              socratic:
+                'To say which of the nine forms 2026 has, what single calculation do you need?',
+            },
+            {
+              label: 'Cross-check against the digit-sum test, which is the same fact arriving twice',
+              detail:
+                '`divisibility`, below this concept, proves that a number and its digit sum '
+                + 'leave the same remainder on division by 9, because every power of ten is one '
+                + 'more than a multiple of 9. The digit sum of 2026 is 2 + 0 + 2 + 6 = 10, and '
+                + '10 = 9·1 + 1 leaves 1 — the same 1. The agreement is not a coincidence to be '
+                + 'noticed but a consequence to be expected, and the test is what makes the '
+                + 'remainder on 9 readable at a glance for any b = 9 case split.',
+              socratic:
+                'The digit sum of 2026 is 10, and 10 leaves 1 on division by 9. Why was it '
+                + 'guaranteed in advance that 2026 would leave 1 as well?',
+            },
+            {
+              label: 'Count what an incomplete split leaves out, which is why the count matters',
+              detail:
+                'Division by 12 gives twelve forms. Checking the six even remainders — 0, 2, 4, '
+                + '6, 8, 10 — covers six of them, so 12 − 6 = 6 forms are untouched: half of the '
+                + 'integers, and the claim has said nothing whatever about any of them. The '
+                + 'failure is hard to see because such an argument can still reach a TRUE '
+                + 'conclusion, which is the trap `proof-techniques` sets out with a two-case '
+                + 'split on division by 3. That split was short by one case out of three. This '
+                + 'one is short by six out of twelve, and neither is an argument.',
+              socratic:
+                'A split on division by 12 checks the six even remainders. How many of the '
+                + 'twelve forms is that, and can you name a number it says nothing about?',
+            },
+          ],
+          answer:
+            'Nine forms — 9k, 9k + 1, …, 9k + 8 — one for each whole number the window 0 ≤ r < 9 '
+            + 'allows, so the count is b. 2026 = 9·225 + 1, so it is a 9k + 1; its digit sum 10 '
+            + 'also leaves 1, which `divisibility` guarantees rather than merely permits. The '
+            + 'split on division by 12 that checks only the six even remainders has said nothing '
+            + 'about 12 − 6 = 6 of the twelve forms — for instance about 13, which is 12·1 + 1.',
+        },
+      },
+    ],
+  },
+
+  /**
    * Fractions, which were the hole under the whole algebra syllabus.
    *
    * ── Why this one, out of 257 mapped concepts ──────────────────────────────
@@ -2019,6 +2540,507 @@ const CONCEPTS: Concept[] = [
             },
           ],
           answer: '1/20 + 11/30 = 5/12',
+        },
+      },
+    ],
+  },
+
+  /**
+   * The Euclidean algorithm and Bézout — the gcd without the factorisation.
+   *
+   * ── WHY THIS CONCEPT, OUT OF FIFTEEN THAT WERE READY ──────────────────────
+   *
+   * All ten shipped journeys have read zero unwritten steps on route since the
+   * fourteenth promotion, so route demand ranked nothing and the selection ran
+   * the way ontology-functions.ts's header describes: rulability first, then
+   * whether the stranded edges fit in one ontology, then dependents. FIFTEEN map
+   * nodes were ready — every `needs` already teachable — where the thirty-ninth
+   * promotion found fourteen, and the change is not an arrival. One node
+   * (`division-algorithm`) left the ready set by being written, two became ready
+   * from that edit (`euclidean-algorithm`, this one, and nothing else), and the
+   * five `linear-algebra` additions plus the floor change moved six nodes out of
+   * floor-blocked and into plain ready.
+   *
+   * NONE OF THE FIFTEEN IS FLOOR-BLOCKED, which is the first time that has been
+   * true since the twenty-third promotion. The floor now counts an area's
+   * DEPARTURES as covered territory (`MapArea.departed`, atlas.ts), so
+   * `algebra-foundations` is clear on ten departures against six nodes and
+   * `linear-algebra` on nine against eleven. The threshold is still five and the
+   * change was the escape hatch that line's own comment pre-authorised. So
+   * headroom is no longer a reason any promotion is blocked, and the tally this
+   * header has carried for five runs — "six of the N are floor-blocked" — is
+   * retired rather than updated.
+   *
+   * SEVEN OF THE FIFTEEN ARE UNDER REFUSALS THAT STILL BIND. Four are named in
+   * ontology-quantifiers.ts and restated in ontology-proof.ts and
+   * ontology-sets.ts: `graphs-of-functions` is a judgement about a drawing,
+   * `constructions` is a procedure with a straightedge, `non-euclidean-geometry`
+   * is a choice of axioms, and `supremum-and-completeness` is a claim about a set
+   * whose bound is not attained. Two more come from the thirtieth promotion and
+   * are easy to miss because the sets header folded them into its floor-blocked
+   * tally instead of its refusal tally: `linear-inequalities` names a MOVE rather
+   * than a shape, and `complex-numbers` has no case in `exactValue`. The seventh
+   * is the thirty-ninth promotion's own: `relations` is a SET OF PAIRS, so
+   * reflexive, symmetric and transitive are judgements the engine cannot grade.
+   *
+   * THE SECOND FACTOR DECIDED IT, AND BY THE WIDEST MARGIN IN THE FILE'S
+   * HISTORY. Of the eight unrefused candidates, four strand their edges across
+   * two or three subjects and four across one. This node is the only one whose
+   * needs are BOTH authored in the receiving subject, so it costs zero `links`
+   * entries and no new subject — the cheapest shape atlas-foundations.ts
+   * describes, and the first time it has been available since the eleventh
+   * promotion.
+   *
+   *   `counting-principles` and `sample-spaces` were the thirty-ninth
+   *   promotion's named runners-up and have not improved: each names `sets`
+   *   alongside a concept in a second subject, and `sets-and-membership` has
+   *   written "it does not claim COUNTING as a subject" into its own file, so
+   *   neither can take the cheap filing. Either costs a new subject plus two
+   *   `links` entries against this node's zero and zero.
+   *
+   *   `least-squares` is the one candidate that beats this on the third factor —
+   *   two dependents to one — and ties on the second, both its needs being
+   *   `vectors-and-independence` concepts. It loses on the second anyway at a
+   *   finer grain: a `links` entry is not the only cost of a split, and
+   *   `least-squares` has none, so the two are separated by the third factor
+   *   pointing the other way and by the fact that this node's two prerequisites
+   *   are the two concepts directly below it in one file. Nothing is reached
+   *   across a file boundary at all, which is what makes the material able to
+   *   quote both prerequisites' worked examples by their own numbers — see the
+   *   division of labour below. `dual-spaces` ties on the second factor and has
+   *   zero dependents.
+   *
+   * RULABILITY REJECTED NOBODY AMONG THE EIGHT, which is the usual outcome and
+   * is worth stating so the next run does not read the eight as a shortlist of
+   * one. What it does confirm is this node: every object in the concept is a
+   * whole number. Each remainder is one, the gcd is one, each Bézout coefficient
+   * is one, and the test for whether ax + by = c can be met is a remainder.
+   *
+   * THE RECORD HAD ALREADY NAMED THIS NODE, TWICE, AND THAT IS NOT WHY IT WAS
+   * TAKEN. This subject's `covers` ends "what is left of whole-number arithmetic
+   * is what rests on the gcd rather than on the primes: the Euclidean algorithm
+   * and the congruences", `atlas-structures.ts`'s number-theory area says "what
+   * remains mapped begins one step up, at computing a gcd by repeated
+   * remainder", and the paragraph above `real-number-line` in this file calls it
+   * "the next whole-number concept worth authoring" and then, a promotion later,
+   * "still the next whole-number concept". Three files agreeing is pleasant and
+   * is not an argument — a prediction made by the same authoring pass that would
+   * fulfil it proves nothing. It is recorded because the agreement is evidence
+   * the three-factor rule is stable across runs, which a single run cannot show.
+   *
+   * ── WHY THIS SUBJECT, AND THE ONE RULE THAT HAD TO BE CHECKED ─────────────
+   *
+   * `arithmetic-foundations`, for the reason the thirty-ninth promotion's header
+   * sets out at length: a subject may not be handed a concept its own file has
+   * declined, and no subject has declined this one. The sentence quoted above
+   * does the opposite — it claims the territory as this subject's own unwritten
+   * remainder — and both prerequisites are concepts of this file.
+   *
+   * No sixteenth subject, and this is the second filing in a row into an
+   * existing one after five consecutive foundings. The pattern the five shared
+   * was that the cheap filing was unavailable; it is available twice running
+   * now, so that run of foundings was a property of where the map had been
+   * written out to rather than a drift in the rule.
+   *
+   * THE COVERS SENTENCE ABOUT NOTHING SYMBOLIC NEEDED NO NEW ARGUMENT, having
+   * been settled one promotion ago. "Every letter in this subject has a stated
+   * value and is substituted, never solved for" — and the x and y of a Bézout
+   * identity are COMPUTED by back-substitution, not solved for. The one place
+   * that could look otherwise is the third knowledge point, where ax + by = c is
+   * written down and asked about; what is decided there is whether an integer
+   * solution EXISTS, by a divisibility test, and the solution when it does is
+   * produced by scaling a combination already in hand. No equation is ever
+   * rearranged to isolate an unknown.
+   *
+   * ── THE DIVISION OF LABOUR, AND TWO DEBTS THIS PAYS ──────────────────────
+   *
+   * `gcd-and-lcm`, directly above in this file, finds the gcd by factoring both
+   * numbers and taking the smaller exponent of each prime. Its worked example is
+   * gcd(360, 84) = 12. THIS CONCEPT'S FIRST WORKED EXAMPLE IS THE SAME PAIR AND
+   * THE SAME ANSWER BY A ROUTE THAT NEVER FACTORS ANYTHING, which is the whole
+   * content of the first point: three divisions against two factorisations, and
+   * the two routes agree because they are computing the same number. That
+   * agreement is the cross-check, and it is the honest way to introduce an
+   * algorithm whose advantage only shows up at sizes a worked example cannot
+   * reach — so the advantage is named at a pair where the factorisation is
+   * easy, rather than demonstrated on a pair chosen to make factoring look hard.
+   *
+   * `division-algorithm`, five concepts up, supplies the step and the reason the
+   * algorithm terminates. Its first worked example divides 2026 by 7 and gets
+   * q = 289, r = 3. THE THIRD POINT HERE STARTS FROM EXACTLY THAT LINE and
+   * continues: 7 = 3·2 + 1, then 3 = 1·3 + 0, so gcd(2026, 7) = 1. The division
+   * the prerequisite performed is the first step of the algorithm, and a learner
+   * arriving here has already done it. Two debts in one: the window 0 ≤ r < b is
+   * what makes the remainders strictly decreasing and non-negative, which is why
+   * the process stops at all, and that is stated in the first point's third
+   * subgoal rather than assumed.
+   *
+   * ── `evaluate` ONLY, AND WHAT THAT COSTS HERE ────────────────────────────
+   *
+   * Nine tasks, three per point, all `evaluate`, all settled by exact integer
+   * arithmetic with no worker. No `justify` anywhere, zero of that kind existing
+   * in the build, so an objective naming it would promise an observation nothing
+   * can make.
+   *
+   * No `transform_to_form`. The demand a reader expects is "write 12 as a
+   * combination of 360 and 84", and no `NamedForm` in forms.ts can see it: the
+   * shipped forms are claims about an algebraic shape, and a Bézout identity is a
+   * claim about a PAIR of integer coefficients. That is the same wall
+   * `division-algorithm` hit on (q, r), `scientific-notation` on (a, n) and
+   * ontology-matrices.ts on every matrix. What replaces it is the honest
+   * decomposition: the coefficients are found in the worked example, and each
+   * task evaluates the combination they produce. A learner who gets 12 from
+   * `a*x + b*y` has confirmed a pair without having been able to be asked for one.
+   *
+   * No `counterexample`, this build shipping no checker that tests a produced
+   * object against a claim. The gap costs less here than it did one concept up,
+   * because the refutation this concept most wants is itself a number: the
+   * second task of the second point evaluates a combination with ONE SIGN WRONG
+   * and the answer is 2172, which is not 12 and is not close to it.
+   *
+   * No `automaticityTarget` on any of the three points. The error each point
+   * exists to stop is a stopping error — reading the last remainder instead of
+   * the last NON-ZERO one, dropping a sign while back-substituting, concluding
+   * "no solution" without doing the division that decides it — and a clock
+   * rewards the fast version of exactly those. `division-algorithm` and
+   * `gcd-and-lcm` omit theirs on the same argument.
+   */
+  {
+    id: 'euclidean-algorithm',
+    name: 'The Euclidean algorithm and Bézout',
+    subjectId: subject.id,
+    scope: {
+      id: 'euclidean-algorithm',
+      label: 'The Euclidean algorithm and Bézout',
+      hint: 'euclidean algorithm bezout identity extended gcd coprime',
+      /*
+       * Carried verbatim off the map node, as every promotion since the fourth
+       * has, so the recognition figure in tests/atlas.mjs and the
+       * written-concept count cannot move in one edit and leave no way to say
+       * which half did it.
+       *
+       * TWO BRANCHES, SO TWO ROWS IN THE TITLES TABLE, which is the lesson
+       * `basis-and-dimension` left there and `arithmetic-sequences` applied: a
+       * single row testing a two-branch alternation exercises one branch and
+       * says nothing about the other. "Euclidean algorithm" had a row already;
+       * "Bézout's identity" is added with this material.
+       *
+       * ONE OVER-REACH, RECORDED RATHER THAN NARROWED. "Bezout domain" is a
+       * real title about a ring in which every finitely generated ideal is
+       * principal, and `b(é|e)zout` claims it. That is an abstract-algebra
+       * object and this is an arithmetic concept, so the claim is wrong — but
+       * narrowing the pattern in the same edit that adds the material is the
+       * thing the verbatim rule exists to prevent, and the article is one an
+       * arithmetic learner will never be served because nothing in this
+       * subject's `hint` reaches it. Narrow it in its own change, with its own
+       * row in the over-broad table.
+       */
+      match: /\b(euclidean algorithm|b(é|e)zout)\b/i,
+    },
+    fidelity: 'checked',
+    objectives: [
+      {
+        id: 'run-the-algorithm-down-to-the-last-nonzero-remainder',
+        statement:
+          'Compute a gcd by repeated division — replacing the pair with the divisor and the '
+          + 'remainder at each step and reading the answer off the last non-zero remainder — '
+          + 'without factorising either number.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'unwind-the-divisions-into-an-integer-combination',
+        statement:
+          'Write the gcd as ax + by by rearranging each division to isolate its remainder and '
+          + 'substituting upward, and confirm the two coefficients by multiplying the '
+          + 'combination out.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'decide-solvability-by-the-gcd-and-scale-the-combination',
+        statement:
+          'Decide whether ax + by = c can be met in whole numbers by testing whether the gcd '
+          + 'divides c, and when it does, produce a solution by scaling the combination already '
+          + 'found.',
+        taskKinds: ['evaluate'],
+      },
+    ],
+    knowledgePoints: [
+      {
+        id: 'swapping-in-the-remainder-keeps-every-common-divisor',
+        conceptId: 'euclidean-algorithm',
+        statement:
+          'Divide a by b and keep the remainder: a = bq + r. Then the pair (a, b) and the pair '
+          + '(b, r) have exactly the SAME common divisors — not merely the same largest one — '
+          + 'because anything dividing b and r divides bq + r = a, and anything dividing a and b '
+          + 'divides a − bq = r. So replacing the bigger number by the remainder loses nothing, '
+          + 'and it can be done again. The remainders are non-negative and each is smaller than '
+          + 'the one before, so they run out; the last non-zero one is the gcd, because the step '
+          + 'that ends the process divides exactly and a number\'s gcd with 0 is itself.',
+        position: 1,
+        workedExample: {
+          problem:
+            'Find gcd(360, 84) by repeated remainder, and check the answer against the one '
+            + '`gcd-and-lcm` got from the factorisations.',
+          subgoals: [
+            {
+              label: 'Do one division and write down the pair it hands you',
+              detail:
+                '84·4 = 336 and 360 − 336 = 24, so 360 = 84·4 + 24. The algorithm now forgets '
+                + 'the 360 entirely and asks the same question of 84 and 24. Nothing has been '
+                + 'approximated and nothing has been searched for: one division turned a '
+                + 'question about a pair into the same question about a smaller pair.',
+              socratic:
+                'You have divided 360 by 84 and the remainder is 24. Which two numbers do you '
+                + 'now ask the question of, and which of the three numbers in front of you drops '
+                + 'out?',
+            },
+            {
+              label: 'Check that the swap kept every common divisor, in both directions',
+              detail:
+                'Take any d dividing both 84 and 24. Then d divides 84·4 + 24 = 360, so d '
+                + 'divides 360 too. Now take any d dividing both 360 and 84. Then d divides '
+                + '360 − 84·4 = 24. So the two pairs have the SAME set of common divisors, and '
+                + 'the greatest of one set is therefore the greatest of the other. Checking the '
+                + 'sets rather than the maxima is what makes this a step that can be repeated: '
+                + 'an argument about "the largest" alone would have to be re-made each time.',
+              socratic:
+                'Suppose some number divides both 84 and 24. Using 360 = 84·4 + 24, what else '
+                + 'does it have to divide — and does the argument still work if you start from '
+                + 'the 360 and the 84 instead?',
+            },
+            {
+              label: 'Repeat until a division comes out exact, which it has to',
+              detail:
+                '84 = 24·3 + 12, so the pair becomes (24, 12). Then 24 = 12·2 + 0. The '
+                + 'remainders were 24, then 12, then 0: each one is a remainder on division by '
+                + 'the one before it, so `division-algorithm`\'s window 0 ≤ r < b makes it '
+                + 'non-negative and strictly smaller. A strictly decreasing run of whole numbers '
+                + 'that can never go below 0 cannot continue, so a zero remainder is not luck — '
+                + 'it is the only way this can end.',
+              socratic:
+                'Each remainder is smaller than the one before and none of them is negative. '
+                + 'What does that tell you about how many steps there can be, before you do any '
+                + 'of them?',
+            },
+            {
+              label: 'Read off the last NON-ZERO remainder, which is the step most often got wrong',
+              detail:
+                'The last non-zero remainder is 12, so gcd(360, 84) = 12. Not 0, which is the '
+                + 'remainder the process actually finished on. The reason 12 is the answer is the '
+                + 'swap applied one last time: 24 = 12·2 + 0 means the pair (24, 12) has the same '
+                + 'common divisors as the pair (12, 0), and every number divides 0, so the common '
+                + 'divisors of (12, 0) are just the divisors of 12 and the greatest is 12 itself.',
+              socratic:
+                'Your last two remainders were 12 and 0. Which of them is the gcd, and what goes '
+                + 'wrong with the other one if you try to call it the answer?',
+            },
+            {
+              label: 'Check it against the other route, which computes the same number differently',
+              detail:
+                '`gcd-and-lcm`, directly above this concept, factors both: 360 = 2³ · 3² · 5 and '
+                + '84 = 2² · 3 · 7, takes the smaller exponent of each prime, and gets '
+                + '2² · 3 = 12. Same answer, and no step is shared — three divisions here, two '
+                + 'factorisations there. The agreement is the check. What it does not show is the '
+                + 'advantage, because these two numbers are easy to factor: the algorithm\'s point '
+                + 'is that three divisions is all it ever takes to get this far, whatever the '
+                + 'numbers are, while factoring gets harder as they grow.',
+              socratic:
+                'The factorisation route and this one both answer 12. Which steps do the two '
+                + 'methods have in common — and if the two numbers had forty digits each, which '
+                + 'of the two could you still finish?',
+            },
+          ],
+          answer:
+            '360 = 84·4 + 24, then 84 = 24·3 + 12, then 24 = 12·2 + 0. The last non-zero '
+            + 'remainder is 12, so gcd(360, 84) = 12 — the same answer `gcd-and-lcm` reaches by '
+            + 'taking the smaller exponent of each prime in 2³ · 3² · 5 and 2² · 3 · 7, reached '
+            + 'here without factorising either number.',
+        },
+      },
+      {
+        id: 'the-same-divisions-read-backwards-give-the-gcd-as-a-combination',
+        conceptId: 'euclidean-algorithm',
+        statement:
+          'Nothing more has to be computed to write the gcd as ax + by. Each division already '
+          + 'says what its remainder IS — r = a − bq — so starting at the line that produced the '
+          + 'gcd and substituting the line above it, then the one above that, eliminates the '
+          + 'intermediate remainders one at a time and leaves the gcd as a whole-number multiple '
+          + 'of a plus a whole-number multiple of b. The coefficients are not unique, and '
+          + 'whenever the gcd is smaller than both numbers one of them must be negative.',
+        position: 2,
+        workedExample: {
+          problem:
+            'Using the three divisions from the point above, write gcd(360, 84) = 12 in the form '
+            + '360x + 84y with x and y whole numbers, and check it.',
+          subgoals: [
+            {
+              label: 'Rearrange each division so its remainder is alone on the left',
+              detail:
+                'From 360 = 84·4 + 24 comes 24 = 360 − 84·4. From 84 = 24·3 + 12 comes '
+                + '12 = 84 − 24·3. The third line, 24 = 12·2 + 0, carries no remainder to '
+                + 'rearrange and is not used — its only job was to say the process had finished. '
+                + 'Two lines for three divisions, and it is always one fewer than the number of '
+                + 'divisions.',
+              socratic:
+                'You did three divisions. Rearranged to put each remainder on the left, how many '
+                + 'usable lines is that — and which division gives you nothing to work with?',
+            },
+            {
+              label: 'Start at the line that produced the gcd, and see what is wrong with it',
+              detail:
+                '12 = 84 − 24·3 is already the gcd written as a combination — but of 84 and 24, '
+                + 'and 24 is not one of the two numbers the question is about. It is an '
+                + 'intermediate remainder, so it has to go. That is the whole of the method: one '
+                + 'unwanted number is present, and the line above says what it is.',
+              socratic:
+                '12 = 84 − 24·3 expresses the gcd using 84 and 24. The question asked for 360 '
+                + 'and 84 — so which number has to be got rid of, and where have you already '
+                + 'written down what it equals?',
+            },
+            {
+              label: 'Substitute the line above to eliminate the intermediate remainder',
+              detail:
+                'Put 24 = 360 − 84·4 into 12 = 84 − 24·3: '
+                + '12 = 84 − (360 − 84·4)·3 = 84 − 3·360 + 12·84. Now collect the 360s and the '
+                + '84s and stop: 12 = (−3)·360 + 13·84. The 84s collected as 1 + 12 = 13. '
+                + 'Resisting the urge to multiply 3·360 out is the discipline here — the answer '
+                + 'wanted is the pair of coefficients, so the two original numbers have to stay '
+                + 'standing.',
+              socratic:
+                'Replace the 24 in 12 = 84 − 24·3 by what the line above says it is. After '
+                + 'expanding, how many 84s are there altogether, and how many 360s?',
+            },
+            {
+              label: 'Check by multiplying out, and notice that the signs are forced',
+              detail:
+                '13·84 = 1092 and 3·360 = 1080, and 1092 − 1080 = 12. The check is worth doing '
+                + 'because the commonest error is a dropped minus sign, and that error does not '
+                + 'produce a near miss: 3·360 + 13·84 = 2172. The signs are not an accident '
+                + 'either. 12 is smaller than both 360 and 84, so two non-negative coefficients '
+                + 'could not reach it — any whole multiple of 360 or of 84 that is not zero is '
+                + 'already at least 84. One coefficient has to be negative whenever the gcd is '
+                + 'smaller than both numbers, which is every case except one of them dividing '
+                + 'the other.',
+              socratic:
+                'What does (−3)·360 + 13·84 come to? And then: if both coefficients had to be '
+                + 'zero or more, what is the smallest total they could produce other than zero, '
+                + 'given that the smaller of the two numbers is 84?',
+            },
+            {
+              label: 'Find a second pair, which shows the coefficients were never "the" answer',
+              detail:
+                'Add 84/12 = 7 to x and subtract 360/12 = 30 from y: x = −3 + 7 = 4 and '
+                + 'y = 13 − 30 = −17. Then 4·360 − 17·84 = 1440 − 1428 = 12, the same gcd. What '
+                + 'was added and subtracted is the same quantity — 7·360 = 2520 and 30·84 = 2520 '
+                + '— so the total did not move. There are infinitely many pairs, got by repeating '
+                + 'the swap, which is why a task here asks for the VALUE of a combination rather '
+                + 'than for the coefficients.',
+              socratic:
+                'How much does adding 7 to the x add to the total, and how much does taking 30 '
+                + 'away from the y take off it?',
+            },
+          ],
+          answer:
+            '12 = (−3)·360 + 13·84, from 12 = 84 − 24·3 with 24 = 360 − 84·4 substituted in; the '
+            + 'check is 1092 − 1080 = 12. The pair is not unique — 12 = 4·360 + (−17)·84 as '
+            + 'well, since 7·360 and 30·84 are both 2520 — and one coefficient has to be '
+            + 'negative, because 12 is smaller than both numbers.',
+        },
+      },
+      {
+        id: 'the-combination-decides-which-equations-have-whole-number-solutions',
+        conceptId: 'euclidean-algorithm',
+        statement:
+          'The combination turns "greatest" from a comparison into a divisibility fact. Since '
+          + 'g = ax + by, anything dividing both a and b divides g — so the gcd is not merely '
+          + 'the biggest common divisor, it is the one every common divisor goes into. Read the '
+          + 'other way: g divides a and b, so every value ax + by can take is a multiple of g, '
+          + 'and g itself is reachable, so scaling the combination reaches every multiple of g '
+          + 'and nothing else. Therefore ax + by = c has a whole-number solution exactly when g '
+          + 'divides c. Coprime numbers, where g = 1, are the case in which every integer is '
+          + 'reachable.',
+        position: 3,
+        workedExample: {
+          problem:
+            'Continue the division `division-algorithm` already performed to show that 2026 and '
+            + '7 are coprime, and write 1 as a combination of them. Then decide which of '
+            + '360x + 84y = 30 and 360x + 84y = 60 can be solved in whole numbers, and solve the '
+            + 'one that can.',
+          subgoals: [
+            {
+              label: 'Pick up the algorithm from a division already done',
+              detail:
+                '`division-algorithm`\'s first worked example divides 2026 by 7 and gets '
+                + '2026 = 7·289 + 3. That is step one of this algorithm, so the pair is already '
+                + '(7, 3). Continue: 7 = 3·2 + 1, so the pair is (3, 1); then 3 = 1·3 + 0 and it '
+                + 'stops. The last non-zero remainder is 1, so gcd(2026, 7) = 1 and the two are '
+                + 'coprime. Two further divisions, and nothing was factorised — which matters '
+                + 'here, since 2026 = 2 · 1013 and 1013 is prime, so the factorisation route '
+                + 'needs you to know that about a four-digit number first.',
+              socratic:
+                'You already know 2026 = 7·289 + 3 from the concept below. What is the next pair '
+                + 'the algorithm asks about, and how many more divisions does it take to finish?',
+            },
+            {
+              label: 'Unwind the two new lines into a combination',
+              detail:
+                'Rearranged: 1 = 7 − 3·2, and 3 = 2026 − 7·289. Substituting, '
+                + '1 = 7 − (2026 − 7·289)·2 = 7 − 2·2026 + 578·7 = 579·7 − 2·2026. The check is '
+                + '579·7 = 4053 and 2·2026 = 4052, and 4053 − 4052 = 1. So '
+                + '1 = (−2)·2026 + 579·7 — one coefficient negative again, for the same reason as '
+                + 'in the point above.',
+              socratic:
+                'Rearrange 7 = 3·2 + 1 to put the 1 on the left, then replace the 3 by what '
+                + '2026 = 7·289 + 3 says it is. How many 7s do you end up with?',
+            },
+            {
+              label: 'Turn the combination into a statement about every common divisor',
+              detail:
+                'Suppose d divides both 2026 and 7. Then d divides (−2)·2026 + 579·7, which is 1 '
+                + '— so d is 1 or −1, and those are the only common divisors. The argument used '
+                + 'nothing about these two numbers: any d dividing a and b divides ax + by = g, '
+                + 'so EVERY common divisor divides the gcd. That is a stronger statement than '
+                + '"the gcd is the largest common divisor", and it is the statement the rest of '
+                + 'number theory uses.',
+              socratic:
+                'Some number d divides both 2026 and 7. What does that force d to divide in '
+                + '(−2)·2026 + 579·7 — and what does that leave d able to be?',
+            },
+            {
+              label: 'Settle the unsolvable equation with one division',
+              detail:
+                'Back to 360 and 84, where the gcd is 12 and 12 = (−3)·360 + 13·84. Every value '
+                + '360x + 84y can take is a multiple of 12, because 12 divides both 360 and 84 '
+                + 'and therefore divides any whole-number combination of them. So ask whether 30 '
+                + 'is a multiple of 12: 30 = 12·2 + 6, and the remainder is 6, not 0. It is not. '
+                + 'So 360x + 84y = 30 has no whole-number solution, and the reason is one '
+                + 'division rather than a search that fails to find anything.',
+              socratic:
+                'Every value of 360x + 84y is a multiple of 12. What single division decides '
+                + 'whether 30 is one, and what is the answer?',
+            },
+            {
+              label: 'Solve the solvable one by scaling, not by starting again',
+              detail:
+                '60 = 12·5, so 60 IS a multiple of 12 and a solution exists. Multiply the whole '
+                + 'combination by 5: 60 = (−15)·360 + 65·84. The check is −5400 + 5460 = 60. '
+                + 'Nothing was re-derived — the coefficients from the previous point were '
+                + 'multiplied by 5 — which is the practical payoff of having the combination at '
+                + 'all. The map puts the version of this that uses congruence notation at '
+                + '`linear-congruences`, two steps up the number-theory area, and that is the '
+                + 'same test in a different language.',
+              socratic:
+                '60 is 5 twelves. You already have 12 = (−3)·360 + 13·84. What do you do to that '
+                + 'identity to get 60 on the left, and what are the two coefficients then?',
+            },
+          ],
+          answer:
+            'gcd(2026, 7) = 1 from 2026 = 7·289 + 3, 7 = 3·2 + 1, 3 = 1·3 + 0, and '
+            + '1 = (−2)·2026 + 579·7 with 4053 − 4052 = 1 as the check — so the only common '
+            + 'divisors of 2026 and 7 are ±1. For 360 and 84 the gcd is 12, so 360x + 84y = 30 '
+            + 'has NO whole-number solution, 30 leaving remainder 6 on division by 12, while '
+            + '360x + 84y = 60 does: scaling 12 = (−3)·360 + 13·84 by 5 gives '
+            + '60 = (−15)·360 + 65·84, and −5400 + 5460 = 60.',
         },
       },
     ],
@@ -4129,6 +5151,63 @@ const EDGES: ConceptEdge[] = [
   },
 
   /**
+   * `divisibility → division-algorithm`, THE HALF OF THE PROMOTED NODE'S OWN
+   * `needs` THAT HAD SOMEWHERE TO GO.
+   *
+   * The thirty-ninth promotion took `division-algorithm` off `number-theory`,
+   * where it declared `needs: ['divisibility', 'proof-techniques']`. Those two
+   * went different ways and the split is the ordinary case rather than a
+   * complication: `divisibility` is authored HERE, so the edge is a plain
+   * `prerequisite` in this file; `proof-techniques` is authored in
+   * `methods-of-proof`, so that edge could not come here at all — an authored
+   * ontology's edges may only name concepts it contains — and it is now the first
+   * `links` entry `number-theory` has ever held.
+   *
+   * It is a real gate rather than bookkeeping, and the direction is the one worth
+   * checking. `divisibility` is the case r = 0 asked of one pair of numbers;
+   * `division-algorithm` is the claim that the leftover always exists, is unique,
+   * and lies in 0 ≤ r < b. A learner who cannot divide 1274 by 7 and read the
+   * remainder has nothing for the window to be a condition ON, so the general
+   * statement would be a sentence about a move they have not made.
+   *
+   * ── AND `division-algorithm => divisibility` IS DECLINED, WHICH MAKES FOUR ──
+   *
+   * This file has now refused four `encompasses` proposals and accepted one, on
+   * the rule `absolute-value => negative-numbers` was admitted under: a credit
+   * edge is a claim about what PRACTISING exercises, measured against the tasks
+   * actually shipped, not against what the concept is about. The claim here would
+   * be that answering this concept's problems exercises divisibility, and it is
+   * true of six of the nine and false of three:
+   *
+   *  - Six tasks evaluate `n - p*k`, which is a multiplication and a subtraction
+   *    performed to read a remainder — `divisibility`'s own first worked example,
+   *    "Divide and watch the remainder", almost verbatim.
+   *  - `division-reassembles-the-dividend-1` evaluates `p*k + r`. That is the
+   *    division run BACKWARDS, and a learner who answers it has multiplied and
+   *    added without asking any divisibility question at all.
+   *  - `the-negated-remainder-is-the-complement-1` evaluates `p - r` at 7 and 3.
+   *    There is no division in it.
+   *  - `an-incomplete-split-leaves-b-minus-c-forms-1` evaluates `p - c` at 12 and
+   *    6. Likewise none.
+   *
+   * Three out of nine is a wider miss than the three the file has already refused
+   * at one out of three, so the edge is not added. The practical cost is named
+   * rather than waved at: a learner who has just worked through this concept WILL
+   * have exercised divisibility on two thirds of what they did, and the scheduler
+   * will nonetheless bring it due as though untouched. Reshaping the three tasks
+   * to make the edge pass is the move this file does not make — the tasks are
+   * chosen for what they teach, and a credit edge bought by weakening them would
+   * be the measurement arranging its own result.
+   */
+  {
+    id: 'divisibility->division-algorithm',
+    from: 'divisibility',
+    to: 'division-algorithm',
+    kind: 'prerequisite',
+    promotedBy: 'author:arithmetic-foundations',
+  },
+
+  /**
    * THE TWO EDGES THAT CAME DOWN OFF THE MAP WITH `gcd-and-lcm`, FROM OPPOSITE
    * DIRECTIONS.
    *
@@ -4169,6 +5248,125 @@ const EDGES: ConceptEdge[] = [
       'A common denominator is a common multiple and a cancellation is a common factor, so '
       + 'both halves of fraction arithmetic are gcd and lcm wearing different hats.',
   },
+
+  /**
+   * BOTH EDGES THAT CAME DOWN OFF THE MAP WITH `euclidean-algorithm`, AND THE
+   * FIRST PROMOTION IN THIS FILE THAT STRANDED NOTHING AT ALL.
+   *
+   * The node declared `needs: ['division-algorithm', 'gcd-and-lcm']` and both of
+   * those are authored concepts of THIS subject, so both edges have an owner
+   * here and `number-theory` needed no new `links` entry in either direction.
+   * Every previous promotion into this file sent at least one edge somewhere
+   * else — `division-algorithm` one promotion ago sent `proof-techniques` to the
+   * area's `links`, which is the entry that area still holds. This one sent
+   * nothing anywhere.
+   *
+   * THAT IS WHAT MAKES THEM THE EDGES A CARELESS EDIT DELETES WITHOUT TRACE,
+   * which is the hazard `real-number-line`'s block two screens down names for
+   * the same shape: there is no `links` entry anywhere carrying either of these,
+   * so nothing outside this list mentions them except a comment. Both are
+   * asserted by name in tests/atlas.mjs rather than by a count of this list.
+   *
+   * AND THE EDGE THAT WAS DECLARED AT THE FAR END NEEDED NOTHING DOING TO IT.
+   * `modular-arithmetic` is still a node of `number-theory` and declares
+   * `needs: ['euclidean-algorithm', 'relations']` itself, so `composeAtlas`
+   * resolves it untouched — an edge is owned by the node that DECLARES it, and
+   * promoting the far end strands only the departing node's own `needs`. What
+   * DID change without anybody editing it is the gate: `gatingPrerequisitesOf`
+   * used to walk through this empty node down to `division-algorithm` and
+   * `gcd-and-lcm`, and now stops here. Three names became two, which is a
+   * genuine tightening and is asserted as a measured before-and-after rather
+   * than described.
+   */
+  {
+    id: 'division-algorithm->euclidean-algorithm',
+    from: 'division-algorithm',
+    to: 'euclidean-algorithm',
+    kind: 'prerequisite',
+    promotedBy: 'author:arithmetic-foundations',
+    rationale:
+      'Every step of the algorithm is one division with remainder, and the reason the steps run '
+      + 'out is that the window 0 ≤ r < b makes each remainder non-negative and strictly smaller '
+      + 'than the last. So the theorem below supplies both the move and the guarantee that the '
+      + 'move terminates.',
+  },
+  {
+    id: 'gcd-and-lcm->euclidean-algorithm',
+    from: 'gcd-and-lcm',
+    to: 'euclidean-algorithm',
+    kind: 'prerequisite',
+    promotedBy: 'author:arithmetic-foundations',
+    rationale:
+      'The algorithm computes a gcd, so the concept that says what a gcd IS has to come first — '
+      + 'and the first worked example checks its answer of 12 against the 12 the factorisation '
+      + 'route reaches for the same pair, which is unreadable to a learner who has not seen that '
+      + 'route.',
+  },
+
+  /*
+   * AND NO `euclidean-algorithm => gcd-and-lcm` EDGE, WHICH IS A DELETION, AND
+   * `exercises` IS A THIRD SILENT STRANDING THE CHECKLIST DOES NOT NAME.
+   *
+   * The map node declared `exercises: ['gcd-and-lcm']`, and `expandEdges` in
+   * atlas.ts turns that into exactly this `encompasses` edge. It left with the
+   * node and is not restated. Two things are worth separating here.
+   *
+   * THE MECHANISM FIRST. `confusedWith` is the well-documented stranding no
+   * suite catches, and this file and atlas-structures.ts both check it on every
+   * promotion. `exercises` is the same hazard and had not been written down:
+   * `expandEdges` handles all three of a node's edge-bearing fields, so
+   * promoting a node silently deletes its `encompasses` edges too, and nothing
+   * goes red because `encompasses` governs credit propagation rather than
+   * gating. Deleting one for a GOOD reason and losing one by accident look
+   * identical in every suite. There is precedent for the decision but not for
+   * the warning: `gcd-and-lcm` itself arrived carrying
+   * `exercises: ['prime-factorisation']` and that edge was declined on the same
+   * argument, which is in this list a few screens up.
+   *
+   * NOW THE DECISION. `MapNode.exercises` is "a claim about the mathematics
+   * rather than about the material", and as mathematics it is unarguable — the
+   * algorithm's output IS a gcd. An authored `encompasses` edge is the other
+   * thing: a claim about what PRACTISING exercises, measured against the tasks
+   * actually shipped. Measured that way it fails, and it fails for the reason
+   * this concept EXISTS:
+   *
+   *   `gcd-and-lcm`'s three points are the minimum and maximum exponent of each
+   *   prime, the identity gcd · lcm = a · b, and putting fractions over an lcm.
+   *   Not one of the nine tasks here takes a minimum of two exponents, uses the
+   *   product identity, or touches an lcm at all — and an lcm is a third of that
+   *   concept and the whole of its third point. The two routes to a gcd share
+   *   their ANSWER and share none of their work, which is what the first point's
+   *   last subgoal is about. So the edge is not a shortfall in the asks; it is
+   *   the concept's own thesis stated as an edge decision.
+   *
+   * An edge here would hand out credit for the factorisation route on evidence
+   * containing none of it, and the cost lands on the learner as a concept that
+   * stops coming due while still being weak.
+   *
+   * AND NO `euclidean-algorithm => division-algorithm` EITHER, which is the
+   * tempting one and was measured rather than assumed. Five of the nine tasks
+   * evaluate `n - p*k`, which is that concept's own formula, so the claim is
+   * much stronger than the one above. It still misses: the four tasks on the
+   * second point evaluate `a*x + b*y` and contain no division whatever. The
+   * standard this file set with `absolute-value => negative-numbers` is that
+   * there must be no way to answer ANY task without doing the other concept's
+   * work — four of nine is not that, and the four are named here rather than
+   * reshaped, which is the discipline `division-algorithm` recorded when it
+   * declined its own `encompasses` edge at three of nine.
+   *
+   * NO `interferes_with` EITHER, AND IT WAS CHECKED BEFORE THE NODE WAS
+   * DELETED. The node declared no `confusedWith`, so nothing was stranded. The
+   * plausible pair is `euclidean-algorithm ~ gcd-and-lcm` — a learner can
+   * certainly confuse the gcd with the route to it — and it is declined on the
+   * rule this file states beside `absolute-value ~ negative-numbers`: these two
+   * are in a PREREQUISITE relation, so the sensible session is often exactly the
+   * one an interference would forbid, and inventing a new editorial claim during
+   * a promotion is the thing a promotion should not do silently. The
+   * misconception is addressed where it belongs, in the first point's last
+   * subgoal, which puts the two routes side by side and says which steps they
+   * share. If somebody wants the edge it belongs in its own change with its own
+   * argument.
+   */
 
   /**
    * BOTH EDGES THAT CAME DOWN OFF THE MAP WITH `roots-and-irrationals`, AND
@@ -4856,6 +6054,52 @@ const EDGES: ConceptEdge[] = [
       '"does the minus belong to the base" is a precedence question wearing a sign question\'s ' +
       'clothes. Each concept supplies the other\'s most plausible wrong answer, so they must not ' +
       'be introduced in the same set.',
+  },
+
+  /**
+   * `division-algorithm ~ fraction-arithmetic`, AND IT IS AN INTERFERENCE THE MAP
+   * NEVER RECORDED.
+   *
+   * The thirty-ninth promotion checked `division-algorithm`'s `confusedWith`
+   * before deleting the node, which is the stranding no suite catches —
+   * `expandEdges` turns that field into an `interferes_with` edge, so deleting a
+   * node deletes it and nothing goes red, because interference constrains
+   * SELECTION rather than gating. The node declared none, so nothing was lost.
+   * What authoring it turned up is the opposite case and is worth naming as its
+   * own shape: a promotion can REVEAL an interference rather than lose one,
+   * because writing the material is what makes the collision concrete.
+   *
+   * The collision is over what the symbol ÷ returns. `fraction-arithmetic` says
+   * a ÷ b is ONE number, a/b, and that is the whole of why fractions exist — 2026
+   * ÷ 7 is 2026/7 and nothing is left over because nothing is required to be a
+   * whole number. This concept says a ÷ b is a PAIR, 289 and 3, pinned by
+   * 0 ≤ r < 7. Both are right and they are answers to different questions, and
+   * "what is 2026 divided by 7" does not say which question it is asking. A
+   * learner meeting both in one set has two incompatible readings of one notation
+   * and no way to tell which is wanted, so each supplies the other's most
+   * plausible wrong answer — the standard `negative-numbers ~ order-of-operations`
+   * is admitted under.
+   *
+   * They are genuinely introducible together, which is what makes the edge do
+   * work rather than restate a gate. Both are dependents of `divisibility` and
+   * neither gates the other, so once `divisibility`, `negative-numbers` and
+   * `gcd-and-lcm` are strong, `assemble` may open both in the same session. The
+   * gate ordering would not have prevented it and only this edge does.
+   *
+   * Stated once, from `division-algorithm`, and read both ways.
+   */
+  {
+    id: 'division-algorithm~fraction-arithmetic',
+    from: 'division-algorithm',
+    to: 'fraction-arithmetic',
+    kind: 'interferes_with',
+    promotedBy: 'author:arithmetic-foundations',
+    rationale:
+      'Both concepts answer "what is a divided by b" and they return different kinds of thing: '
+      + 'a single number a/b with nothing left over, or the pair (q, r) with the remainder pinned '
+      + 'into 0 ≤ r < b. Neither reading is wrong and the notation does not distinguish them, so '
+      + 'a learner introduced to both at once has two answers to one question and no way to tell '
+      + 'which was asked. They must not be introduced in the same set.',
   },
 ]
 

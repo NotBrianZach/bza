@@ -1734,6 +1734,39 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
         'that one is a fact about the squaring, and the quadratic is innocent of it.',
     },
   ],
+  /*
+   * TEN NODES HAVE BEEN AUTHORED OUT OF THIS AREA, and this is the list the
+   * stub floor reads. See `MapArea.departed` in atlas.ts for the mechanism.
+   *
+   * THIS IS THE AREA THE FIELD WAS ADDED FOR. It holds six nodes against a
+   * floor of five, and every one of the ten below left because its content got
+   * written — so the floor was reading a sixteen-node area that has covered
+   * ten of them as though it were a six-node sketch. The repair the floor's own
+   * comment prescribes for a DRAINED area is to fold the remnant into a
+   * neighbour, and that is the one thing this area cannot do: there is nothing
+   * above "Number and algebra" to fold into, since it IS the foundation, and
+   * its six leftovers would scatter across four different areas if one were
+   * forced. Hence the other repair the same comment names.
+   *
+   * Each id is already explained in prose at the point its node used to sit —
+   * "`X` was here and is now authored in ..." — and this list is derived from
+   * exactly those ten comments. They stay where they are: they carry the why,
+   * and this carries only the fact. Note that the two merged-in areas are not
+   * represented here, because `number-and-arithmetic`'s nodes arrived as nodes
+   * and departed, if at all, as the ids below.
+   */
+  departed: [
+    'absolute-value',
+    'prime-factorisation',
+    'gcd-and-lcm',
+    'fraction-arithmetic',
+    'decimal-representation',
+    'ratio-and-rate',
+    'percent',
+    'roots-and-irrationals',
+    'real-number-line',
+    'radical-equations',
+  ],
 }
 
 const FUNCTIONS: MapArea = {
@@ -3911,6 +3944,36 @@ const EUCLIDEAN_GEOMETRY: MapArea = {
         'is no swap to notice. The quadrants matter too, since three of the four need a ' +
         'coordinate to be allowed below zero and every image computed here lands in one.',
     },
+  ],
+  /*
+   * NINE NODES HAVE BEEN AUTHORED OUT OF THIS AREA, declared here although this
+   * area is NOT at the floor — it has seven nodes and two of headroom.
+   *
+   * The field's doc says it is declared where it is load-bearing, and this is
+   * the one place that is declared slightly early on purpose: at two of
+   * headroom and with five route concepts still to release, this is the next
+   * area that will arrive where `algebra-foundations` is, and the list is only
+   * recoverable by reading nine separate comments in this file. Doing that
+   * archaeology once and writing it down beats doing it again under pressure.
+   * It changes no behaviour today, since the floor only consults this when the
+   * node count alone would fail.
+   *
+   * `three-dimensional-coordinates` is in the list and is the one id not
+   * explained by a "`X` was here" comment in this area's own nodes — it is
+   * explained in atlas-structures.ts, in the `links` block that used to carry
+   * its edge, because the thirteenth promotion authored it into the same
+   * subject as the far end of that edge. It was a node of THIS area.
+   */
+  departed: [
+    'geometric-proof',
+    'pythagoras',
+    'quadrilaterals-and-polygons',
+    'area-and-perimeter',
+    'circles',
+    'circle-measure',
+    'solid-geometry',
+    'cartesian-plane',
+    'three-dimensional-coordinates',
   ],
 }
 

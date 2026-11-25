@@ -1786,13 +1786,36 @@ const CONCEPTS: Concept[] = [
         workedExample: {
           problem: 'How many real roots does x² + x + 1 have?',
           subgoals: [
-            { label: 'Name a, b, c', detail: 'a = 1, b = 1, c = 1.' },
-            { label: 'Compute b² − 4ac', detail: '1 − 4·1·1 = 1 − 4 = −3.' },
+            {
+              label: 'Name a, b, c',
+              detail: 'a = 1, b = 1, c = 1.',
+              socratic:
+                'The question asks how many real roots there are, not what they are — so the ' +
+                'answer has to come out of x² + x + 1 as it stands rather than out of solving ' +
+                'it. You have met b² − 4ac already, deciding whether this same quadratic had ' +
+                'real linear factors. What three numbers does it need from x² + x + 1, and ' +
+                'which part of the expression supplies each of them?',
+            },
+            {
+              label: 'Compute b² − 4ac',
+              detail: '1 − 4·1·1 = 1 − 4 = −3.',
+              socratic:
+                'All three of a, b and c came out as 1, which leaves b² − 4ac a contest between ' +
+                'just two quantities: b² on one side and 4ac on the other. Work out each of ' +
+                'them before you subtract anything. Which of the two is larger here, and what ' +
+                'will the sign of the difference therefore be recording about them?',
+            },
             {
               label: 'Read the sign',
               detail:
                 'Negative, so there is no real square root to take and the equation has no real ' +
                 'roots. The parabola never crosses the axis.',
+              socratic:
+                'The value is −3, and you have met x² + x + 1 before — as a quadratic with no ' +
+                'real linear factors. Solving it would mean taking √(b² − 4ac) at this point. ' +
+                'What is there to take when that asks for √(−3), how many real roots does it ' +
+                'leave x² + x + 1 with, and how does that verdict stand to the earlier one ' +
+                'about its factors?',
             },
           ],
           answer: 'None — the discriminant is −3.',
@@ -1809,24 +1832,70 @@ const CONCEPTS: Concept[] = [
         workedExample: {
           problem: 'Solve x² − 2x − 15 = 0.',
           subgoals: [
-            { label: 'Name a, b, c', detail: 'a = 1, b = −2, c = −15.' },
+            {
+              label: 'Name a, b, c',
+              detail: 'a = 1, b = −2, c = −15.',
+              socratic:
+                'You have read a, b and c off a quadratic twice already, but both times every ' +
+                'coefficient was 1 and no sign could go wrong. Here the expression is written ' +
+                'x² − 2x − 15, with the minus signs standing between the terms rather than in ' +
+                'front of the numbers. Rewrite it as a sum, so that whatever sign each term ' +
+                'carries ends up attached to its own number, and read the three coefficients ' +
+                'off that. What are a, b and c, and which of the three is nowhere written down ' +
+                'in x² − 2x − 15 at all?',
+            },
             {
               label: 'The discriminant first',
               detail: '(−2)² − 4·1·(−15) = 4 + 60 = 64. A perfect square, so expect rational roots.',
+              socratic:
+                'Two of the three numbers going into b² − 4ac are negative here, and each is a ' +
+                'place the arithmetic can quietly turn: b² squares a negative, and 4ac ' +
+                'multiplies a positive by a negative. Keep the brackets round −2 and −15, work ' +
+                'b² and 4ac out separately, and only then subtract one from the other. What does ' +
+                'b² − 4ac come to, why does subtracting 4ac leave it larger than b² rather than ' +
+                'smaller, and — since the previous point said a perfect square settles something ' +
+                'the sign alone does not — what does the value you get lead you to expect of the ' +
+                'two roots before you have found either of them?',
             },
             {
               label: 'Substitute',
               detail: 'x = (2 ± 8) / 2, since −b = 2 and √64 = 8.',
+              socratic:
+                'Now the formula itself, x = (−b ± √(b² − 4ac)) / 2a, with b = −2. The −b in ' +
+                'front is not an instruction to write a minus sign: it is the negative of ' +
+                'whatever b happens to be, and b is already negative here. Write the substituted ' +
+                'line out with the discriminant you just computed in place, then look at where ' +
+                'your division bar falls. What does −b come to, how much of the numerator is ' +
+                'sitting over 2a — the whole of −b ± √(b² − 4ac), or only the part after the ± — ' +
+                'and what would the two roots come out as instead if the bar reached only that ' +
+                'part?',
             },
             {
               label: 'Both branches',
               detail: 'x = 10/2 = 5, or x = −6/2 = −3.',
+              socratic:
+                '(2 ± 8)/2 is not one number with a decoration on it — it is shorthand for two ' +
+                'lines that have to be written out separately, and the second is where a sign ' +
+                'goes astray, since 2 − 8 and 8 − 2 are not the same thing. Take each branch the ' +
+                'whole way down, dividing by 2 at the end of each. What are the two values, ' +
+                'which of them is unreachable if you subtract in the more comfortable order, and ' +
+                'what would someone who stopped after the + branch be claiming about ' +
+                'x² − 2x − 15 that the discriminant you computed has already ruled out?',
             },
             {
               label: 'Check against factoring',
               detail:
                 'x² − 2x − 15 = (x + 3)(x − 5), whose roots are −3 and 5. The two methods agree, ' +
                 'which is the check available whenever the discriminant is a perfect square.',
+              socratic:
+                'You have factored this very quadratic already — x² − 2x − 15 = (x + 3)(x − 5) — ' +
+                'and you got there by hunting a pair of numbers, with no formula involved ' +
+                'anywhere. A product is zero only when one of the things multiplied is zero, so ' +
+                'those brackets hand over their own roots. Which values of x make ' +
+                '(x + 3)(x − 5) vanish, what does their agreeing with the pair you just computed ' +
+                'settle — this answer, or the formula that produced it — and what was it about ' +
+                'the discriminant here that made a factored form available to check against at ' +
+                'all?',
             },
           ],
           answer: 'x = 5 or x = −3',

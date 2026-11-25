@@ -245,15 +245,39 @@ Two things not to get wrong:
   `working_dir`, exit 1 — but one that supplies the three required keys and
   omits the rest silently empties `static_env` and `worker_name`, which is how
   you would lose every `NEXT_PUBLIC_*` and the wrangler target in the same
-  breath as adding a safety check. Print the current config, add the one key,
-  set that whole object back.
+  breath as adding a safety check. So do not retype the object — derive it from
+  what is already there:
+
+      templedb deploy project-config bza \
+        --set "$(templedb deploy project-config bza |
+                 jq -c '.pre_deploy_test = "npm run test:types"')"
+
+  That is safe by construction rather than by care: the no-`--set` form prints
+  exactly `to_dict()` and nothing else, which is the shape `from_dict` reads
+  back, and `set_config` replaces only the `app_deploy` subtree — `groups`,
+  `blue_green` and `health_check` are loaded and rewritten untouched. Checked
+  2026-11-25 against the live object: eleven keys in, eleven out, `worker_name`
+  and all six `static_env` keys byte-identical, `pre_deploy_test` the only
+  field that moves. (`jq` is on PATH on this host and `python3` is not, so the
+  obvious load-set-dump one-liner is not available.) Do not replace this
+  pipeline with the resulting JSON written out in full: that is a snapshot, and
+  pasting it after anyone adds a worker secret reverts that edit silently,
+  which is the same whole-object hazard the bullet opens with.
 - `--skip-tests` bypasses it. So this gates the ordinary path, not a determined
   one, and a green release is not by itself proof the check ran.
 
-Verified 2026-11-24 14:16 UTC: `pre_deploy_test` is still null, and
-`graph who-uses pre_deploy_test` returns only `deploy_project.py`,
-`app_deploy_service.py` and this file — nothing else reads it. Expect this file
-in that result; naming the key here is what puts it there.
+Verified 2026-11-25 01:19 UTC, re-running what the 14:16 pass ran:
+`pre_deploy_test` is still null, and `graph who-uses pre_deploy_test` still
+returns only `deploy_project.py`, `app_deploy_service.py` and this file —
+nothing else reads it. Expect this file in that result; naming the key here is
+what puts it there. Read the null out of `projects.deployment_config` with a
+SELECT, not with `deploy project-config bza`: the read-only print is itself a
+`deploy` verb and is denied to the tasks that drain this file, which is why
+every refresh of this item measures the value by SQL and still cannot set it.
+
+The commit-time half was re-confirmed in the same pass, so the item is now
+exactly one command wide: `frontend/tests/typecheck.mjs` is in the DB and
+`test:types` is first in the `npm test` chain in `frontend/package.json`.
 
 One correction to the earlier version of this item, which claimed `next build`
 is the only thing in the project that runs `tsc`. `npm run type-check` has been

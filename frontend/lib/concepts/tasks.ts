@@ -1048,11 +1048,151 @@ const NUMBER_UNDER_TEST: VariableDeclaration[] = [
  * All three `integer` and none `positive`: the move is defined for 0 and the
  * claims it serves do not exclude it, and nothing here divides by a symbol, so
  * `p != 0` is not a condition any ruling needs.
+ *
+ * ── AND NOW ONE LIST FOR THREE POINTS IN TWO SUBJECTS, WHICH IS WHY IT STAYS ──
+ *
+ * The thirty-ninth promotion authored `division-algorithm` — the concept the two
+ * uses above were IMPORTING their fact from, named as such in
+ * ontology-proof.ts's header — and it evaluates `n - p*k` six more times. So this
+ * list is now shared by eight tasks across three knowledge points of two
+ * subjects, and it should be read as the theorem's own formula rather than as a
+ * convenience: r = a − bq is what `division-algorithm` asserts has a unique
+ * solution, and every task in that concept is that formula evaluated somewhere.
+ *
+ * The `integer`-not-`positive` decision above turns out to be load-bearing
+ * rather than merely defensible, which was not foreseeable when it was made. The
+ * new concept's second knowledge point divides −2026 by 7, so `n` is NEGATIVE in
+ * two of the eight tasks, and `k` is negative in one. Declaring either positive
+ * would have made the whole point about negative dividends undeclarable in the
+ * one concept whose job is to explain it — the same trap
+ * `SET_SIZES_AND_OVERLAP`'s comment records about declaring an overlap positive
+ * and losing the disjoint case.
+ *
+ * ONE SUBSTITUTION IS RESERVED AND MUST NOT BE REUSED: (2027, 3, 675) → 2 is
+ * `which-case-a-number-is-in-decides-whether-a-split-covers-it-1`, in the
+ * `proof-techniques` block. Two tasks with one expression, one substitution and
+ * one answer are one task written twice, however far apart they sit, so the
+ * general concept divides 2026 by 9 for the same move — and a different divisor
+ * is the point there anyway, since what it has to show is that the case count is
+ * b and 3 was never special.
+ *
+ * ── AND NOW THIRTEEN TASKS ACROSS FOUR POINTS, WHICH IS THE LAST OF THE ──
+ * ── ARGUMENT THE PARAGRAPHS ABOVE WERE BUILDING ─────────────────────────
+ *
+ * The fortieth promotion authored `euclidean-algorithm`, which is the division
+ * algorithm ITERATED, and five of its nine tasks are this expression again:
+ * (360, 84, 4), (84, 24, 3), (24, 12, 2), (7, 3, 2) and (30, 12, 2). Three of
+ * those five are consecutive steps of one run, so a learner answering them in
+ * order has executed an algorithm by evaluating one expression three times. That
+ * is the strongest form of the claim this comment has been making — read the list
+ * as the theorem's formula and not as a convenience — because here the formula
+ * being reusable IS the content of the concept above it.
+ *
+ * A SECOND RESERVATION, IN THE OTHER DIRECTION. (2026, 7, 289) → 3 is
+ * `the-remainder-is-what-the-whole-bs-leave-1` in the `division-algorithm`
+ * block, and it is step ONE of gcd(2026, 7). The Euclidean algorithm's third
+ * knowledge point uses exactly that run, so it starts at step TWO with (7, 3, 2)
+ * and its worked example quotes the first step by name rather than re-deriving
+ * it. The first reservation above protects a general concept from re-asking an
+ * instance; this one protects a dependent from re-asking its prerequisite. Both
+ * are the same rule and the asymmetry is worth naming, because a run that only
+ * knows the first version will check the wrong direction.
+ *
+ * tests/concepts-logic.mjs now asserts the whole subject's `evaluate` tasks are
+ * distinct as (expression, substitution) pairs, so neither reservation depends on
+ * a reader finding this comment.
  */
 const DIVIDEND_DIVISOR_QUOTIENT: VariableDeclaration[] = [
   { name: 'n', assumptions: { integer: true } },
   { name: 'p', assumptions: { integer: true } },
   { name: 'k', assumptions: { integer: true } },
+]
+
+/**
+ * A divisor, a quotient and a remainder — the three symbols the dividend is
+ * reassembled from.
+ *
+ * The same three numbers as `DIVIDEND_DIVISOR_QUOTIENT` holds, with the dividend
+ * dropped and the remainder named, because the one task on it runs the division
+ * BACKWARDS: `p*k + r`, which is the left-hand side of a = bq + r being built
+ * rather than the remainder being read off. A separate list rather than a reuse
+ * for the reason `NUMBER_UNDER_TEST`'s comment gives about `WHOLE_NUMBER_INDEX`:
+ * the other list's comment is a claim about reading a remainder, and attaching it
+ * to the task that does the opposite would make the comment wrong about one of
+ * its users.
+ *
+ * `integer` throughout and nothing `positive`, since the quotient is negative in
+ * the concept's second point and a remainder of 0 is the exact case that point's
+ * last subgoal turns on.
+ */
+const DIVISOR_QUOTIENT_REMAINDER: VariableDeclaration[] = [
+  { name: 'p', assumptions: { integer: true } },
+  { name: 'k', assumptions: { integer: true } },
+  { name: 'r', assumptions: { integer: true } },
+]
+
+/**
+ * A divisor and a remainder, with no dividend and no quotient.
+ *
+ * For the one task that computes b − r: the remainder −a leaves, given the
+ * remainder a leaves. Two symbols rather than four because the claim genuinely
+ * does not mention the other two — whatever a and q were, a positive a leaving r
+ * forces −a to leave b − r — and declaring symbols a task cannot use would say
+ * the fact depends on them.
+ */
+const DIVISOR_AND_REMAINDER: VariableDeclaration[] = [
+  { name: 'p', assumptions: { integer: true } },
+  { name: 'r', assumptions: { integer: true } },
+]
+
+/**
+ * A divisor and a count of cases somebody checked.
+ *
+ * Separate from `DIVISOR_AND_REMAINDER` despite being two integers alongside the
+ * same `p`, and the distinction is the one `SET_SIZES_AND_OVERLAP` and
+ * `SET_SIZE_AND_OVERLAP` draw: `c` is not a remainder. It counts how many of the
+ * b residue classes an argument examined, so `p - c` is the number of forms the
+ * argument said nothing about. Calling it `r` would have made the expression read
+ * as a remainder subtraction and invited the reuse that silently changes what a
+ * task is about.
+ */
+const DIVISOR_AND_CASES_CHECKED: VariableDeclaration[] = [
+  { name: 'p', assumptions: { integer: true } },
+  { name: 'c', assumptions: { integer: true } },
+]
+
+/**
+ * A pair of numbers and the two coefficients that combine them — the four
+ * symbols a Bézout identity is checked from.
+ *
+ * `a*x + b*y` rather than four separate products, and the interleaved order is
+ * the author's statement of which coefficient belongs to which number:
+ * `primaryVariable` takes the FIRST declared symbol, so `a` leading is what
+ * makes a form check, if one ever applies here, be about the first of the pair.
+ *
+ * A separate list rather than a reuse of `REAL_ABCD`, which holds the same
+ * arity for `a*b + c*d`, and the distinction is the one `DIVISOR_AND_REMAINDER`
+ * and `DIVISOR_AND_CASES_CHECKED` draw: that list's comment is about areas of
+ * rectangles and its symbols are real, and these four are integers of which two
+ * are coefficients that must be allowed to be negative. Sharing it would have
+ * made one comment wrong about both users.
+ *
+ * `integer` throughout and NOTHING `positive`, which is the one assumption worth
+ * arguing about and is forced rather than cautious here. Whenever the gcd is
+ * smaller than both numbers — every case except one of them dividing the other
+ * — one of the two coefficients is necessarily negative, since any non-zero
+ * whole multiple of either number is already at least the smaller of them. So
+ * `positive` on `x` or `y` would make the concept's central identity
+ * undeclarable in the very concept that explains it, which is the trap
+ * `SET_SIZES_AND_OVERLAP` records about declaring an overlap positive and losing
+ * the disjoint case, and `DIVIDEND_DIVISOR_QUOTIENT` records about the negative
+ * dividend.
+ */
+const PAIR_AND_BEZOUT_COEFFICIENTS: VariableDeclaration[] = [
+  { name: 'a', assumptions: { integer: true } },
+  { name: 'x', assumptions: { integer: true } },
+  { name: 'b', assumptions: { integer: true } },
+  { name: 'y', assumptions: { integer: true } },
 ]
 
 /**
@@ -10687,6 +10827,560 @@ export const TASKS: PracticeTask[] = [
     // method it belongs to has a last case.
     reference: '2',
     at: { n: '4', r: '14' },
+  },
+
+  // ── arithmetic-foundations, thirty-ninth promotion: division-algorithm
+  //
+  // Nine tasks, three on each point, and all nine are `evaluate` settled by
+  // exact integer arithmetic with no worker — the same single-kind list `sets`
+  // shipped one promotion ago, and for once without the apology that went with
+  // it. That block had to record that a set cannot be asked for and that its
+  // numbers were sizes standing in for members. Nothing stands in for anything
+  // here. The theorem's own content IS two whole numbers.
+  //
+  // THE ENCODING IS THE THEOREM'S OWN FORMULA. a = bq + r rearranges to
+  // r = a - bq, which is `n - p*k`, and six of the nine tasks are that one
+  // expression at six substitutions:
+  //
+  //     ( 2026,  7,  289) ->  3   the remainder
+  //     ( 2026,  7,  288) -> 10   a quotient one too small: 10 is not < 7
+  //     (-2026,  7, -289) -> -3   the remainder the sign suggests: not >= 0
+  //     (-2026,  7, -290) ->  4   the remainder a negative dividend really has
+  //     ( 2026,  9,  225) ->  1   which of NINE forms 2026 has
+  //     (   10,  9,    1) ->  1   its digit sum's form, which must agree
+  //
+  // The other three are the moves that formula cannot make: `p*k + r` puts the
+  // dividend back together, `p - r` gets the remainder of -a from the remainder
+  // of a, and `p - c` counts the forms an incomplete case split missed.
+  //
+  // SIX USES OF ONE EXPRESSION IS FURTHER THAN ANY SUBJECT HAS CARRIED ONE —
+  // `sets` managed three — AND THE DEFENCE IS NOT "IT IS THE SAME MOVE". It is
+  // that the expression is the concept. Asking it six times is asking what the
+  // theorem claims six times, and each answer is a different fact about it: two
+  // are admissible remainders, two are leftovers that FAIL the window from
+  // opposite sides, and two are the same residue reached by two routes. A
+  // learner who answers all six has evaluated r = a - bq at a negative dividend,
+  // at a wrong quotient, at two divisors and at a digit sum.
+  //
+  // TWO TASKS EXIST TO PRODUCE A NUMBER THAT IS WRONG, which is this concept's
+  // one piece of luck and the reason it does not need `counterexample`. That
+  // kind would be the natural way to ask "show me a pair the theorem does not
+  // name", and it needs a checker that tests a produced object against a claim,
+  // which this build declares verifiable and ships nowhere. Here the refutation
+  // is itself a number: 10 is a true leftover that is too big, -3 is a true
+  // leftover that is negative, and both are `evaluate`-gradable. The prompts say
+  // plainly that a correct answer to the task is an inadmissible answer to the
+  // division, because a learner who is not told that will read a green tick as
+  // "so 288 was the quotient after all".
+  //
+  // THE RESERVED SUBSTITUTION IS NAMED IN DIVIDEND_DIVISOR_QUOTIENT'S COMMENT
+  // and is worth repeating at the call site: (2027, 3, 675) -> 2 already exists
+  // in the `proof-techniques` block, which imported this concept's fact as a
+  // single instance because the general form was unwritten. The general form is
+  // written now and may not re-ask the instance.
+  //
+  // NO `domainConditions` ON ANY OF THE NINE. Every expression is a sum, a
+  // difference or a product of integers; nothing divides by a symbol, so there
+  // is no value of a declared variable at which anything is undefined. The
+  // divisor appears only as a multiplicand.
+  {
+    id: 'the-remainder-is-what-the-whole-bs-leave-1',
+    knowledgePointId: 'the-window-on-the-remainder-is-what-makes-the-pair-unique',
+    kind: 'evaluate',
+    prompt:
+      '289 whole 7s fit inside 2026 and a 290th does not: 7·289 = 2023 and 7·290 = 2030, which '
+      + 'is already past 2026. The remainder is whatever the 289 sevens left behind, which is '
+      + 'a − bq. Evaluate n - p*k at n = 2026, p = 7, k = 289. Then check your answer against '
+      + 'the condition the theorem attaches: it has to be at least 0 and strictly less than 7, '
+      + 'and if it were not, the quotient would be the thing that was wrong.',
+    given: 'n - p*k',
+    variables: DIVIDEND_DIVISOR_QUOTIENT,
+    // 2026 − 2023 = 3, and 0 ≤ 3 < 7.
+    //
+    // THE DIVIDEND IS 2026 IN FIVE OF THE NINE TASKS, which is the discipline
+    // the `sets` block states: a learner meets one number across the whole
+    // concept rather than a fresh pair per question, so the three points are
+    // visibly about the same object seen three ways. It is divided by 7 here and
+    // in the next point, by 9 in the third, and negated in between.
+    reference: '3',
+    at: { n: '2026', p: '7', k: '289' },
+  },
+  {
+    id: 'a-quotient-one-too-small-leaves-too-much-1',
+    knowledgePointId: 'the-window-on-the-remainder-is-what-makes-the-pair-unique',
+    kind: 'evaluate',
+    prompt:
+      'Now take the quotient to be 288 instead of 289. The equation a = bq + r can still be '
+      + 'satisfied — some leftover will always make it true, which is exactly why the equation '
+      + 'alone names nothing. Evaluate n - p*k at n = 2026, p = 7, k = 288. Your answer is '
+      + 'CORRECT as an answer to this task and INADMISSIBLE as a remainder: it is not less than '
+      + '7, so a whole 7 is still sitting inside it and 288 was not the quotient. Taking that 7 '
+      + 'across moves the quotient up by one and the leftover down by seven, which is why your '
+      + 'answer and the previous task\'s differ by exactly 7 and not by anything else.',
+    given: 'n - p*k',
+    variables: DIVIDEND_DIVISOR_QUOTIENT,
+    // 2026 − 2016 = 10, and 10 ≥ 7, so the pair (288, 10) fails the window.
+    //
+    // 10 − 3 = 7 IS THE WHOLE LESSON AND IS WHY 288 WAS CHOSEN OVER 280. A
+    // quotient further out would make the leftover obviously absurd and teach
+    // nothing; one step out makes the two pairs look like alternatives, and the
+    // difference of exactly one divisor is what shows they are the same division
+    // with one 7 on the wrong side of the plus sign.
+    reference: '10',
+    at: { n: '2026', p: '7', k: '288' },
+  },
+  {
+    id: 'division-reassembles-the-dividend-1',
+    knowledgePointId: 'the-window-on-the-remainder-is-what-makes-the-pair-unique',
+    kind: 'evaluate',
+    prompt:
+      'A division is finished when the pair puts the original number back. You have q = 289 and '
+      + 'r = 3 for dividing by 7. Evaluate p*k + r at p = 7, k = 289, r = 3 and confirm you get '
+      + 'the number you started from. This is the check worth doing every time, and it catches '
+      + 'the commonest clerical error in long division without needing to re-do any of it: a '
+      + 'quotient and a remainder written the wrong way round give 7·3 + 289 = 310, which is not '
+      + '2026 and says so immediately.',
+    given: 'p*k + r',
+    variables: DIVISOR_QUOTIENT_REMAINDER,
+    // 7 · 289 + 3 = 2023 + 3 = 2026.
+    //
+    // THE ONE TASK IN THE CONCEPT THAT RUNS THE DIVISION BACKWARDS, and the
+    // reason `division-algorithm => divisibility` is declined in
+    // ontology-arithmetic.ts: answering this is a multiplication and an
+    // addition, and no divisibility question is asked anywhere in it. An
+    // `encompasses` edge that claimed otherwise would be measured against a task
+    // that refutes it.
+    reference: '2026',
+    at: { p: '7', k: '289', r: '3' },
+  },
+  {
+    id: 'the-negated-remainder-is-not-a-remainder-1',
+    knowledgePointId: 'a-negative-dividend-still-leaves-a-non-negative-remainder',
+    kind: 'evaluate',
+    prompt:
+      'Dividing 2026 by 7 gave 289 and 3. The instinct for −2026 is to negate both and answer '
+      + '−289 remainder −3, so test it: evaluate n - p*k at n = -2026, p = 7, k = -289. Your '
+      + 'answer is again correct as arithmetic — 7·(−289) = −2023 and −2023 plus your answer is '
+      + '−2026 — and again inadmissible as a remainder, this time for failing the OTHER side of '
+      + 'the window: a remainder is never negative. The condition is 0 ≤ r < 7, and both halves '
+      + 'of it are conditions.',
+    given: 'n - p*k',
+    variables: DIVIDEND_DIVISOR_QUOTIENT,
+    // −2026 − 7·(−289) = −2026 + 2023 = −3, which fails 0 ≤ r.
+    //
+    // THE SECOND OF THE TWO DELIBERATELY-WRONG ANSWERS, and the pair of them is
+    // what the window being two inequalities buys: the first point's 10 fails on
+    // the upper bound and this fails on the lower, so between them the two tasks
+    // demonstrate that neither half is decoration. Asking only one would leave a
+    // learner able to believe the window is "small enough".
+    reference: '-3',
+    at: { n: '-2026', p: '7', k: '-289' },
+  },
+  {
+    id: 'the-quotient-steps-down-not-towards-zero-1',
+    knowledgePointId: 'a-negative-dividend-still-leaves-a-non-negative-remainder',
+    kind: 'evaluate',
+    prompt:
+      'The quotient is the largest integer q with 7q ≤ a, and for a = −2026 that is not −289: '
+      + '7·(−289) = −2023, which is ABOVE −2026, so it is too big. The next one down is −290, '
+      + 'and 7·(−290) = −2030, which is below. Evaluate n - p*k at n = -2026, p = 7, k = -290. '
+      + 'Your answer is in 0 ≤ r < 7, so this is the division — and note the quotient moved away '
+      + 'from zero rather than towards it, which is where "rounding" as an instinct goes wrong.',
+    given: 'n - p*k',
+    variables: DIVIDEND_DIVISOR_QUOTIENT,
+    // −2026 − (−2030) = 4, and 0 ≤ 4 < 7.
+    reference: '4',
+    at: { n: '-2026', p: '7', k: '-290' },
+  },
+  {
+    id: 'the-negated-remainder-is-the-complement-1',
+    knowledgePointId: 'a-negative-dividend-still-leaves-a-non-negative-remainder',
+    kind: 'evaluate',
+    prompt:
+      'The two remainders you have found, 3 and 4, are not independent. Whenever a positive '
+      + 'number leaves r on division by b and r is not 0, its negative leaves b − r: one extra b '
+      + 'is taken out and one extra b goes back, which is the whole of the adjustment. Evaluate '
+      + 'p - r at p = 7, r = 3. You should get the remainder of −2026 without dividing anything. '
+      + 'The one case this does not cover is r = 0, where nothing has to be repaired — 2023 '
+      + 'leaves 0 and so does −2023.',
+    given: 'p - r',
+    variables: DIVISOR_AND_REMAINDER,
+    // 7 − 3 = 4, which is the remainder the task above computed by dividing.
+    //
+    // THE SAME ANSWER AS THE TASK ABOVE AND THAT IS THE POINT, which is the one
+    // place in this concept where two tasks agreeing is the content rather than
+    // a duplication. There it was reached by finding the right quotient; here by
+    // a subtraction that never mentions a quotient at all, because the fact does
+    // not depend on one — see `DIVISOR_AND_REMAINDER`, which declares two
+    // symbols for exactly that reason. Two routes to one number is a check a
+    // learner can run on any pair afterwards.
+    reference: '4',
+    at: { p: '7', r: '3' },
+  },
+  {
+    id: 'which-of-nine-forms-a-number-has-1',
+    knowledgePointId: 'the-window-gives-exactly-b-forms-and-a-case-split-must-use-all-of-them',
+    kind: 'evaluate',
+    prompt:
+      'Division by 9 sorts every integer into nine forms — 9k, 9k + 1, up to 9k + 8 — one for '
+      + 'each whole number the condition 0 ≤ r < 9 allows, so the number of forms is the divisor '
+      + 'itself. 9·225 = 2025. Evaluate n - p*k at n = 2026, p = 9, k = 225. Your answer says '
+      + 'which of the nine forms 2026 has, and k = 225 says which member of that form it is. '
+      + 'Deciding the case is a division and never a judgement.',
+    given: 'n - p*k',
+    variables: DIVIDEND_DIVISOR_QUOTIENT,
+    // 2026 − 2025 = 1, so 2026 = 9·225 + 1 and its form is 9k + 1.
+    //
+    // DIVISOR 9 AND NOT 3, for two reasons that point the same way. The
+    // (2027, 3, 675) substitution is reserved — it is a `proof-techniques` task
+    // — and a second divisor is what this point has to demonstrate anyway, since
+    // the claim is that the case count is b. Using 3 again would have let a
+    // reader carry away "there are three cases" from a concept whose content is
+    // that there are b of them. 9 also sets up the digit-sum cross-check below,
+    // which no other small divisor has.
+    reference: '1',
+    at: { n: '2026', p: '9', k: '225' },
+  },
+  {
+    id: 'the-digit-sum-reaches-the-same-form-1',
+    knowledgePointId: 'the-window-gives-exactly-b-forms-and-a-case-split-must-use-all-of-them',
+    kind: 'evaluate',
+    prompt:
+      '`divisibility`, the concept below this one, shows that a number and its digit sum leave '
+      + 'the SAME remainder on division by 9, because every power of ten is one more than a '
+      + 'multiple of 9. The digit sum of 2026 is 2 + 0 + 2 + 6 = 10, and 9·1 = 9. Evaluate '
+      + 'n - p*k at n = 10, p = 9, k = 1. Your answer should match the form you found for 2026 '
+      + 'itself, and the match is guaranteed in advance rather than a coincidence worth noticing '
+      + '— which is what makes the digit sum a way of reading a residue off at a glance.',
+    given: 'n - p*k',
+    variables: DIVIDEND_DIVISOR_QUOTIENT,
+    // 10 − 9 = 1, the same residue 2026 has.
+    //
+    // ONE EXPRESSION, TWO SUBSTITUTIONS, ONE ANSWER — AND IT IS A PROOF HERE
+    // RATHER THAN A CHECK, which is the one place this concept parts company
+    // with the `sets` block it otherwise follows. There, two counts agreeing was
+    // explicitly NOT a proof, because equal sizes do not make equal sets. Here
+    // the agreement is forced by a theorem one concept below: `divisibility`'s
+    // second knowledge point establishes it for every number, not for this one.
+    // So the prompt is entitled to say "guaranteed", and saying so is the
+    // difference between a learner who has a trick and one who has a reason.
+    reference: '1',
+    at: { n: '10', p: '9', k: '1' },
+  },
+  {
+    id: 'an-incomplete-split-leaves-b-minus-c-forms-1',
+    knowledgePointId: 'the-window-gives-exactly-b-forms-and-a-case-split-must-use-all-of-them',
+    kind: 'evaluate',
+    prompt:
+      'A claim about every integer is argued by splitting on the remainder on division by 12, '
+      + 'and the argument checks the six even remainders: 0, 2, 4, 6, 8, 10. Division by 12 '
+      + 'gives twelve forms, because 0 ≤ r < 12 allows twelve whole numbers. Evaluate p - c at '
+      + 'p = 12, c = 6. Your answer is how many forms the argument has said NOTHING about — half '
+      + 'the integers, 13 among them, since 13 = 12·1 + 1. The hard part is not the subtraction; '
+      + 'it is that such an argument can still reach a conclusion that happens to be TRUE, so '
+      + 'nothing about it looks wrong from the inside.',
+    given: 'p - c',
+    variables: DIVISOR_AND_CASES_CHECKED,
+    // 12 − 6 = 6: six of the twelve residue classes unexamined.
+    //
+    // DIVISOR 12 AND NOT 9, so the learner has to recount the window instead of
+    // reusing the nine from two tasks up — the count is b, and a task that let 9
+    // be carried over would be testing recall of a number rather than of the
+    // rule. 12 also makes the gap a half rather than a sliver, which is the
+    // honest size of what an even-remainders-only argument misses.
+    //
+    // THE GENERALISATION OF `proof-techniques`' OWN TRAP. That concept's third
+    // point splits on division by 3 and forgets 3k + 2: one case out of three.
+    // This is six out of twelve. Neither is an argument and the difference in
+    // scale is the reason to state the rule as "all b of them" rather than as
+    // "do not forget the last one".
+    reference: '6',
+    at: { p: '12', c: '6' },
+  },
+  // ── arithmetic-foundations, fortieth promotion: euclidean-algorithm
+  //
+  // Nine tasks, three on each point, all `evaluate` and all settled by exact
+  // integer arithmetic with no worker — the same shape `division-algorithm`
+  // shipped one promotion ago, which is the concept directly below this one.
+  //
+  // FIVE OF THE NINE ARE THE PREREQUISITE'S OWN EXPRESSION, AND THAT IS THE
+  // CONTENT RATHER THAN A REUSE. The Euclidean algorithm is the division
+  // algorithm iterated, so `n - p*k` — r = a - bq — is what one step of it IS.
+  // Five substitutions, in two separate runs of the algorithm:
+  //
+  //     ( 360, 84,  4) -> 24   step one of gcd(360, 84)
+  //     (  84, 24,  3) -> 12   step two: the gcd, though nothing says so yet
+  //     (  24, 12,  2) ->  0   step three: the signal to stop, not the answer
+  //     (   7,  3,  2) ->  1   step two of gcd(2026, 7), picked up mid-run
+  //     (  30, 12,  2) ->  6   not a step at all: the solvability test
+  //
+  // That takes `DIVIDEND_DIVISOR_QUOTIENT` to thirteen tasks across four
+  // knowledge points of two subjects. Its own comment already argues that it
+  // should be read as the theorem's formula rather than as a convenience, and
+  // this concept is the strongest case for that reading available: a learner who
+  // answers the first three has run an algorithm by evaluating one expression
+  // three times, which is what an algorithm is.
+  //
+  // THE `integer`-NOT-`positive` DECISION IS LOAD-BEARING A SECOND TIME. That
+  // list's comment records it being needed for `division-algorithm`'s negative
+  // dividend. Here nothing is negative in `n - p*k` — but the THIRD task's
+  // answer is 0, and the four `a*x + b*y` tasks need two negative coefficients
+  // and one negative answer term, so a `positive` declaration anywhere in this
+  // block would be undeclarable rather than merely tight.
+  //
+  // THE RESERVED SUBSTITUTION IS OBSERVED, AND THIS IS THE CONCEPT IT WAS
+  // RESERVED AGAINST. `DIVIDEND_DIVISOR_QUOTIENT`'s comment names (2027, 3, 675)
+  // as a `proof-techniques` task that may not be re-asked. A second one has to be
+  // named now for the same reason and in the other direction: (2026, 7, 289) -> 3
+  // is `the-remainder-is-what-the-whole-bs-leave-1`, in the `division-algorithm`
+  // block above, and it is step ONE of gcd(2026, 7). This concept's third point
+  // uses that run and must not re-ask its first step, so it picks the algorithm
+  // up at step two with (7, 3, 2) -> 1. The worked example quotes the first step
+  // by name and does not re-derive it, which is the point of continuing somebody
+  // else's division rather than starting a new one.
+  //
+  // THE OTHER FOUR EVALUATE `a*x + b*y`, WHICH IS A PAIR ANSWERED AS A VALUE.
+  // No `NamedForm` can demand a Bézout identity — the answer is two coefficients
+  // and forms.ts speaks about the shape of one expression — so the coefficients
+  // are produced in the worked example and the tasks evaluate what they build:
+  //
+  //     (360,  -3, 84,  13) ->   12   the identity, correct
+  //     (360,   3, 84,  13) -> 2172   one sign dropped: true arithmetic, not 12
+  //     (360,   4, 84, -17) ->   12   a different pair, the same gcd
+  //     (360, -15, 84,  65) ->   60   the same pair scaled by 5
+  //
+  // TWO OF THOSE FOUR REACH 12 AND THAT IS THE LESSON, not a duplication. The
+  // `division-algorithm` block makes the same defence for its two routes to 4,
+  // and the shape here is stronger: the point being taught is that the
+  // coefficients are NOT unique, so two tasks agreeing on the value while
+  // disagreeing on every input is the only way to ask it. A third, between them,
+  // has one sign wrong and lands on 2172 — the refutation arriving as a number,
+  // which is how this subject gets a `counterexample`-shaped ask out of a kind it
+  // ships no checker for.
+  //
+  // NO `domainConditions` ON ANY OF THE NINE. Every expression is a sum, a
+  // difference or a product of integers. Nothing divides by a symbol, so no
+  // declared value makes anything undefined; the divisor appears only as a
+  // multiplicand.
+  {
+    id: 'one-step-of-the-algorithm-is-one-division-1',
+    knowledgePointId: 'swapping-in-the-remainder-keeps-every-common-divisor',
+    kind: 'evaluate',
+    prompt:
+      'To find gcd(360, 84), start by dividing: 84·4 = 336 and a fifth 84 would be 420, which is '
+      + 'past 360, so the quotient is 4. The remainder is a − bq. Evaluate n - p*k at n = 360, '
+      + 'p = 84, k = 4. Your answer is the second number of the next pair the algorithm asks '
+      + 'about — it goes on to ask for the gcd of 84 and your answer, and the 360 is never '
+      + 'mentioned again.',
+    given: 'n - p*k',
+    variables: DIVIDEND_DIVISOR_QUOTIENT,
+    // 360 − 336 = 24, and 0 ≤ 24 < 84.
+    //
+    // THE PAIR IS THE ONE `gcd-and-lcm` FACTORISES, which is the discipline the
+    // two blocks above follow with 2026: a learner meets one object across a
+    // concept rather than a fresh pair per question. Here it is also a
+    // cross-concept check — that concept's worked example gets 12 from
+    // 2³·3²·5 and 2²·3·7, and the three tasks below reach the same 12 by
+    // division. Choosing a pair with an easy factorisation is deliberate: the
+    // claim being taught is that the two routes agree, and a pair chosen to make
+    // factoring look hard would be teaching the advantage instead, which a
+    // worked example at this size cannot honestly show.
+    reference: '24',
+    at: { n: '360', p: '84', k: '4' },
+  },
+  {
+    id: 'the-second-step-reaches-the-gcd-without-saying-so-1',
+    knowledgePointId: 'swapping-in-the-remainder-keeps-every-common-divisor',
+    kind: 'evaluate',
+    prompt:
+      'The pair is now 84 and 24. Divide again: 24·3 = 72, and a fourth 24 would be 96, which is '
+      + 'past 84. Evaluate n - p*k at n = 84, p = 24, k = 3. Your answer is gcd(360, 84) — but '
+      + 'nothing you have done so far entitles you to say that yet, because the rule is "the '
+      + 'last NON-ZERO remainder" and you cannot know this one is the last until the next '
+      + 'division comes out exact. That is the task below.',
+    given: 'n - p*k',
+    variables: DIVIDEND_DIVISOR_QUOTIENT,
+    // 84 − 72 = 12, and 0 ≤ 12 < 24. This is the gcd.
+    //
+    // THE PROMPT WITHHOLDS THE ENTITLEMENT RATHER THAN THE ANSWER, which is the
+    // opposite of the usual ordering and is deliberate. Telling the learner the
+    // answer is 12 and that they may not yet conclude it costs nothing — the
+    // arithmetic is the same — and it is the only way to ask about a stopping
+    // rule with one task. The alternative, asking for the gcd here, would mark a
+    // learner correct for stopping one step early, which is the error the point
+    // exists to prevent.
+    reference: '12',
+    at: { n: '84', p: '24', k: '3' },
+  },
+  {
+    id: 'the-zero-remainder-is-the-signal-not-the-answer-1',
+    knowledgePointId: 'swapping-in-the-remainder-keeps-every-common-divisor',
+    kind: 'evaluate',
+    prompt:
+      'The pair is now 24 and 12, and 12 goes into 24 exactly twice. Evaluate n - p*k at '
+      + 'n = 24, p = 12, k = 2. Your answer is what ENDS the algorithm and is not what the '
+      + 'algorithm returns: the gcd is 12, the last non-zero remainder, and your answer is the '
+      + 'remainder the process actually finished on. Reporting it as the gcd is the single '
+      + 'commonest way to get this wrong, and it is worth knowing why 12 is right — your answer '
+      + 'means the pair (24, 12) has the same common divisors as the pair (12, 0), and every '
+      + 'number divides 0, so those are just the divisors of 12.',
+    given: 'n - p*k',
+    variables: DIVIDEND_DIVISOR_QUOTIENT,
+    // 24 − 24 = 0.
+    //
+    // THE ONE TASK IN THIS BUILD WHOSE REFERENCE IS 0 BY DESIGN RATHER THAN BY
+    // ARITHMETIC. `percent`'s third task has a reference that is 0 at some
+    // inputs and that is its content; this one is 0 at the only inputs it has,
+    // and the content is that the 0 is a SIGNAL. The pairing with the task above
+    // is what makes it evidence: that one produces the answer without the
+    // entitlement to call it one, this one supplies the entitlement and produces
+    // a number that must not be reported. Either alone would be weak; a learner
+    // answering both has distinguished the two remainders that the stopping rule
+    // is about.
+    reference: '0',
+    at: { n: '24', p: '12', k: '2' },
+  },
+  {
+    id: 'the-unwound-combination-reaches-the-gcd-1',
+    knowledgePointId: 'the-same-divisions-read-backwards-give-the-gcd-as-a-combination',
+    kind: 'evaluate',
+    prompt:
+      'Reading the two useful divisions backwards gives 12 = 84 − 24·3 and 24 = 360 − 84·4, and '
+      + 'substituting the second into the first and collecting gives the coefficients −3 for the '
+      + '360 and 13 for the 84. Check them: evaluate a*x + b*y at a = 360, x = -3, b = 84, '
+      + 'y = 13. You should get the gcd the three divisions above produced. Multiplying out is '
+      + 'the only check available on a back-substitution, and it is worth running every time — '
+      + 'nothing about a wrong coefficient looks wrong on the page.',
+    given: 'a*x + b*y',
+    variables: PAIR_AND_BEZOUT_COEFFICIENTS,
+    // 360·(−3) + 84·13 = −1080 + 1092 = 12, which is gcd(360, 84).
+    reference: '12',
+    at: { a: '360', x: '-3', b: '84', y: '13' },
+  },
+  {
+    id: 'one-dropped-sign-is-not-a-near-miss-1',
+    knowledgePointId: 'the-same-divisions-read-backwards-give-the-gcd-as-a-combination',
+    kind: 'evaluate',
+    prompt:
+      'Now make the commonest mistake on purpose: keep the 13 and lose the minus on the 3. '
+      + 'Evaluate a*x + b*y at a = 360, x = 3, b = 84, y = 13. Your answer is CORRECT as an '
+      + 'answer to this task and is not the gcd of anything — it is larger than both 360 and 84, '
+      + 'where the gcd has to be no bigger than either. That is the general reason a sign has to '
+      + 'be negative here: 12 is smaller than both numbers, and any whole multiple of 360 or of '
+      + '84 that is not zero is already at least 84, so two coefficients that are both zero or '
+      + 'more can never add to 12.',
+    given: 'a*x + b*y',
+    variables: PAIR_AND_BEZOUT_COEFFICIENTS,
+    // 360·3 + 84·13 = 1080 + 1092 = 2172.
+    //
+    // THE DELIBERATELY-WRONG ANSWER, which is the trick `division-algorithm`
+    // records getting for free from its window being an inequality. The same
+    // trick is available here for a different reason: a Bézout identity is
+    // checkable by multiplying out, so a broken one produces a number that is
+    // gradable and visibly absurd. 2172 rather than a near miss is the whole
+    // choice — a sign error on a coefficient moves the answer by twice that
+    // term, so there is no version of this that lands close to 12 and could be
+    // read as rounding.
+    reference: '2172',
+    at: { a: '360', x: '3', b: '84', y: '13' },
+  },
+  {
+    id: 'a-second-pair-of-coefficients-reaches-the-same-gcd-1',
+    knowledgePointId: 'the-same-divisions-read-backwards-give-the-gcd-as-a-combination',
+    kind: 'evaluate',
+    prompt:
+      'The coefficients −3 and 13 are not the only pair. Add 84/12 = 7 to the first and subtract '
+      + '360/12 = 30 from the second: evaluate a*x + b*y at a = 360, x = 4, b = 84, y = -17. You '
+      + 'should get 12 again, because 7·360 and 30·84 are both 2520, so the two changes cancel '
+      + 'exactly. Agreeing with the earlier task is the content here rather than a repetition — '
+      + 'it is what shows the pair of coefficients was never "the" answer, and why a task can '
+      + 'ask for the VALUE of a combination but not for the combination.',
+    given: 'a*x + b*y',
+    variables: PAIR_AND_BEZOUT_COEFFICIENTS,
+    // 360·4 + 84·(−17) = 1440 − 1428 = 12, the same gcd by a different pair.
+    reference: '12',
+    at: { a: '360', x: '4', b: '84', y: '-17' },
+  },
+  {
+    id: 'picking-the-algorithm-up-at-its-second-step-1',
+    knowledgePointId: 'the-combination-decides-which-equations-have-whole-number-solutions',
+    kind: 'evaluate',
+    prompt:
+      '`division-algorithm`, the concept below this one, divides 2026 by 7 in its own first '
+      + 'worked example and gets 2026 = 7·289 + 3. That division is step one of this algorithm, '
+      + 'so the pair is already 7 and 3 and you need not redo it. Take the next step: 3·2 = 6, '
+      + 'and a third 3 would be 9, which is past 7. Evaluate n - p*k at n = 7, p = 3, k = 2. '
+      + 'One more division finishes it — 3 = 1·3 + 0 — so your answer is the last non-zero '
+      + 'remainder and therefore gcd(2026, 7). Two numbers whose gcd is that are called coprime.',
+    given: 'n - p*k',
+    variables: DIVIDEND_DIVISOR_QUOTIENT,
+    // 7 − 6 = 1, so gcd(2026, 7) = 1.
+    //
+    // STEP TWO AND NOT STEP ONE, WHICH IS A RESERVATION BEING HONOURED.
+    // (2026, 7, 289) -> 3 is already a task of the concept below — see the block
+    // comment at the top of this one — and two tasks with one expression, one
+    // substitution and one answer are one task written twice. Starting at step
+    // two is also the better ask: what this point needs is for the learner to
+    // CONTINUE somebody else's division, since the whole claim of the concept is
+    // that one step of the algorithm is a division with remainder and nothing
+    // else.
+    //
+    // 2026 = 2 · 1013 WITH 1013 PRIME, which the prompt does not say and the
+    // worked example does. It is the reason this pair is worth coprimality: the
+    // factorisation route needs that fact about a four-digit number first, and
+    // the two divisions here need nothing.
+    reference: '1',
+    at: { n: '7', p: '3', k: '2' },
+  },
+  {
+    id: 'the-solvability-test-is-one-division-1',
+    knowledgePointId: 'the-combination-decides-which-equations-have-whole-number-solutions',
+    kind: 'evaluate',
+    prompt:
+      'Can 360x + 84y = 30 be met with whole numbers x and y? Every value the left-hand side '
+      + 'can take is a multiple of 12, because 12 divides both 360 and 84 and so divides any '
+      + 'whole-number combination of them. So the question is whether 30 is a multiple of 12, '
+      + 'and 12·2 = 24. Evaluate n - p*k at n = 30, p = 12, k = 2. A non-zero answer means 30 is '
+      + 'NOT a multiple of 12 and no pair of whole numbers can work — which is settled by this '
+      + 'one division rather than by a search that keeps failing.',
+    given: 'n - p*k',
+    variables: DIVIDEND_DIVISOR_QUOTIENT,
+    // 30 − 24 = 6, which is not 0, so 12 does not divide 30.
+    //
+    // AN IMPOSSIBILITY ASKED AS A NUMBER, which is the only honest `evaluate`
+    // encoding of it. "Show there is no solution" needs a kind that tests a
+    // produced object against a claim, and this build ships no checker for one.
+    // What it has instead is that the TEST is arithmetic: the remainder decides,
+    // so the learner computes the thing the conclusion rests on and the prompt
+    // says which conclusion. That is the same move `division-algorithm` makes
+    // with its two inadmissible leftovers, run the other way round — there a
+    // correct answer was an inadmissible remainder, here a non-zero answer is a
+    // proof that nothing is admissible.
+    reference: '6',
+    at: { n: '30', p: '12', k: '2' },
+  },
+  {
+    id: 'scaling-the-combination-solves-the-solvable-one-1',
+    knowledgePointId: 'the-combination-decides-which-equations-have-whole-number-solutions',
+    kind: 'evaluate',
+    prompt:
+      'Change the 30 to 60 and the answer changes, because 60 = 12·5 IS a multiple of 12. No new '
+      + 'algorithm is needed: multiply the identity 12 = (−3)·360 + 13·84 through by 5, which '
+      + 'takes the coefficients to −15 and 65. Evaluate a*x + b*y at a = 360, x = -15, b = 84, '
+      + 'y = 65 and confirm you get 60. Scaling a combination you already have is the practical '
+      + 'payoff of having unwound the divisions at all — the alternative is solving the equation '
+      + 'from scratch for every right-hand side.',
+    given: 'a*x + b*y',
+    variables: PAIR_AND_BEZOUT_COEFFICIENTS,
+    // 360·(−15) + 84·65 = −5400 + 5460 = 60.
+    //
+    // THE PAIR OF TASKS IS THE POINT, which is why the two sit together and why
+    // the solvable case is the second of the two. The test above says "no" by
+    // producing 6; this says "yes" by producing the right-hand side itself. A
+    // learner who answers only the first has met a rule that rejects, and the
+    // rule is an equivalence.
+    reference: '60',
+    at: { a: '360', x: '-15', b: '84', y: '65' },
   },
 ]
 

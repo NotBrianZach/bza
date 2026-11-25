@@ -2974,8 +2974,8 @@ t('and it is the subject with a root that needs nothing',
   roots(ONTOLOGIES[0]).some(id => gatingPrerequisitesOf(ONTOLOGIES[0], id).length === 0))
 t('and resolves by id', getOntology('arithmetic-foundations') === A)
 t('it has no internal faults', ontologyProblems(A).length === 0, ontologyProblems(A).join('; '))
-t('fifteen concepts, forty-five knowledge points',
-  A.concepts.length === 15 && allKnowledgePoints(A).length === 45,
+t('seventeen concepts, fifty-one knowledge points',
+  A.concepts.length === 17 && allKnowledgePoints(A).length === 51,
   `${A.concepts.length} concepts, ${allKnowledgePoints(A).length} points`)
 t('every concept is teachable — this is a syllabus, not a map',
   A.concepts.every(c => isTeachable(A, c.id)))
@@ -3002,8 +3002,8 @@ const coldSet = assemble({ ontology: A, strengths: COLD, now: '2026-10-23T12:00:
 t('a cold account gets three tasks, all from place value',
   coldSet.tasks.length === 3 && coldSet.tasks.every(x => conceptOfPoint(A, x.knowledgePointId).id === 'place-value'),
   `${coldSet.tasks.length} tasks`)
-t('and the other fourteen concepts are reported blocked rather than silently absent',
-  coldSet.blocked.length === 14,
+t('and the other sixteen concepts are reported blocked rather than silently absent',
+  coldSet.blocked.length === 16,
   coldSet.blocked.map(b => b.conceptId).join(', '))
 t('each blocked concept names a TEACHABLE thing to go and do', coldSet.blocked.every(b =>
   b.missing.length > 0 && b.missing.every(m => isTeachable(A, m))))
@@ -3144,9 +3144,30 @@ const ARITH_TASKS = allKnowledgePoints(A).flatMap(p => tasksForPoint(p.id))
  * were written down — and it is asserted directly below, since the property
  * belongs to the ruler and a change there would take this concept's whole case
  * with it while leaving every reference still "correct".
+ *
+ * `euclidean-algorithm` added three points and NINE tasks, which is three
+ * apiece and the densest arrival this subject has had — matching
+ * `division-algorithm` directly below it, and for the same reason: an algorithm
+ * is one expression evaluated repeatedly, so three tasks on a point are three
+ * substitutions rather than three questions looking for one answer.
+ *
+ * It owes no proxy apology on its first and third points, every object in them
+ * being a whole number, and it DOES owe one on the second. What that point
+ * teaches is "write 12 as a combination of 360 and 84", whose answer is a PAIR
+ * of coefficients — the same wall `scientific-notation` hit on (a, n) and
+ * `division-algorithm` on (q, r), and no `NamedForm` can see it either. So the
+ * coefficients are derived in the worked example and the three tasks evaluate
+ * what they build. Its header names the form that would fix it.
+ *
+ * ONE OF THE NINE HAS A REFERENCE OF 0, which is a first here and is its
+ * content rather than a defect. `the-zero-remainder-is-the-signal-not-the-answer-1`
+ * asks for the remainder that ENDS the algorithm, and the whole point is that
+ * the answer must not be reported as the gcd. The group below asserts that the
+ * reference is 0 deliberately, because the "not 0 at its own inputs" property
+ * `percent` established above would otherwise read as a rule this task breaks.
  */
-t('forty-nine tasks, and every point has at least one',
-  ARITH_TASKS.length === 49 && allKnowledgePoints(A).every(p => tasksForPoint(p.id).length > 0),
+t('sixty-seven tasks, and every point has at least one',
+  ARITH_TASKS.length === 67 && allKnowledgePoints(A).every(p => tasksForPoint(p.id).length > 0),
   `${ARITH_TASKS.length}`)
 /*
  * NOT "all of them are evaluate" any more, and the change is the point rather
@@ -3165,7 +3186,7 @@ t('forty-nine tasks, and every point has at least one',
  * arriving here unnoticed is still visible.
  */
 t('two are transform_to_form and the rest evaluate — both graded locally',
-  ARITH_TASKS.filter(x => x.kind === 'evaluate').length === 47
+  ARITH_TASKS.filter(x => x.kind === 'evaluate').length === 65
   && ARITH_TASKS.filter(x => x.kind === 'transform_to_form').length === 2,
   ARITH_TASKS.reduce((acc, x) => ({ ...acc, [x.kind]: (acc[x.kind] ?? 0) + 1 }), {}),
 )
@@ -3475,6 +3496,232 @@ t('and it rests on the primes, which is the needs that came off the node',
 t('and taking a gcd claims no credit for the factorisation it is read off',
   !encompassedBy(A, 'gcd-and-lcm').includes('prime-factorisation'),
   encompassedBy(A, 'gcd-and-lcm').join(', '))
+
+/**
+ * `euclidean-algorithm` — EVERY DIVISION IN BOTH RUNS, RE-DERIVED.
+ *
+ * The fortieth promotion, and the group's job is the one the three above it
+ * have: a wrong worked example is the worst thing ontology-arithmetic.ts can
+ * contain, `ontologyProblems` reads structure and would not notice one, and the
+ * task references say nothing about the prose. So every number in the three
+ * examples is recomputed here and compared against WHAT THE EXAMPLE SAYS rather
+ * than against a number repeated in this file.
+ *
+ * This concept needs it more than most, for a reason specific to its shape: an
+ * algorithm's worked example is a CHAIN, so a single wrong quotient makes every
+ * line after it wrong while each line still looks locally plausible. The two
+ * runs are checked step by step rather than only at their answers.
+ */
+group('euclidean-algorithm — every division in both runs, re-derived')
+const EA = conceptById(A, 'euclidean-algorithm')
+const EA_SUBGOALS = EA.knowledgePoints.flatMap(p => p.workedExample.subgoals)
+const eaAnswer = i => EA.knowledgePoints[i].workedExample.answer
+const EA_TASKS = EA.knowledgePoints.flatMap(p => tasksForPoint(p.id))
+
+t('the three divisions of the first run are each right, and each quotient is the largest that fits',
+  exactly('360-84*4') === '24' && exactly('84*5') === '420'
+  && exactly('84-24*3') === '12' && exactly('24*4') === '96'
+  && exactly('24-12*2') === '0',
+  `${exactly('360-84*4')}, ${exactly('84-24*3')}, ${exactly('24-12*2')}`)
+/*
+ * The quotient being the LARGEST that fits is half of what makes the step a
+ * division rather than any old true equation, and it is the half a chain of
+ * subtractions would still satisfy. 84·5 = 420 is past 360 and 24·4 = 96 is past
+ * 84, which is what the example asserts and is checked rather than read.
+ */
+t('each remainder sits in the window the prerequisite demands, which is why the run terminates',
+  [[24, 84], [12, 24], [0, 12]].every(([r, b]) => r >= 0 && r < b))
+t('the answer is the last NON-ZERO remainder, and the example says so',
+  eaAnswer(0).includes('last non-zero')
+  && eaAnswer(0).includes('gcd(360, 84) = 12')
+  && !/gcd\(360, 84\) = 0/.test(eaAnswer(0)),
+  eaAnswer(0))
+/*
+ * AND IT AGREES WITH THE OTHER ROUTE, which is this point's own cross-check and
+ * the one claim in the concept that reaches outside it. `gcd-and-lcm`'s group
+ * above asserts the same 12 from the same pair by taking minima, so these two
+ * groups now check one number by two methods — which is exactly what the
+ * material claims and is worth asserting in both places rather than cross
+ * referencing one.
+ */
+t('the factorisations it cites are right and their minima give the same 12',
+  exactly('2^3*3^2*5') === '360' && exactly('2^2*3*7') === '84' && exactly('2^2*3') === '12'
+  && conceptById(A, 'gcd-and-lcm').knowledgePoints[0].workedExample.answer
+    .includes('gcd(360, 84) = 12'))
+
+t('the Bézout coefficients the second point derives really do give the gcd',
+  exactly('360*(-3)+84*13') === '12' && exactly('13*84') === '1092' && exactly('3*360') === '1080'
+  && eaAnswer(1).includes('12 = (−3)·360 + 13·84'),
+  eaAnswer(1))
+t('the substitution it performs collects the 84s as 1 + 3·4 = 13, which is what it says',
+  exactly('1+3*4') === '13'
+  && EA.knowledgePoints[1].workedExample.subgoals[2].detail.includes('1 + 12 = 13'))
+t('the second pair of coefficients it offers works too, and the two changes really cancel',
+  exactly('360*4+84*(-17)') === '12'
+  && exactly('84/12') === '7' && exactly('360/12') === '30'
+  && exactly('7*360') === '2520' && exactly('30*84') === '2520'
+  && eaAnswer(1).includes('12 = 4·360 + (−17)·84'),
+  eaAnswer(1))
+/*
+ * THE SIGN CLAIM IS AN INEQUALITY AND IS CHECKED AS ONE, because it is the only
+ * statement in the concept that is about every case rather than about these
+ * numbers. The example says one coefficient must be negative whenever the gcd is
+ * smaller than both numbers, and the reason given is that any non-zero whole
+ * multiple of either is already at least the smaller of them. Asserted over the
+ * small non-negative pairs rather than argued: nothing in 0..9 × 0..9 reaches 12.
+ */
+t('no pair of non-negative coefficients can reach 12, which is why a sign has to be negative',
+  (() => {
+    for (let x = 0; x <= 9; x += 1) {
+      for (let y = 0; y <= 9; y += 1) if (360 * x + 84 * y === 12) return false
+    }
+    return 12 < 84 && 12 < 360
+  })())
+
+t('the second run picks up from the division the prerequisite actually performs',
+  exactly('2026-7*289') === '3'
+  && conceptById(A, 'division-algorithm').knowledgePoints[0].workedExample.answer
+    .includes('2026 = 7·289 + 3')
+  && exactly('7-3*2') === '1' && exactly('3-1*3') === '0'
+  && eaAnswer(2).includes('gcd(2026, 7) = 1'),
+  eaAnswer(2))
+t('and the coprimality it concludes is true of those two numbers',
+  exactly('2*1013') === '2026'
+  // 1013 is prime, which the worked example asserts; checked rather than
+  // believed, since it is the one factual claim in the concept that is about a
+  // number rather than about an arithmetic step.
+  && (() => {
+    for (let d = 2; d * d <= 1013; d += 1) if (1013 % d === 0) return false
+    return true
+  })()
+  && 2026 % 7 !== 0)
+t('its Bézout identity for the coprime pair holds',
+  exactly('2026*(-2)+7*579') === '1' && exactly('579*7') === '4053' && exactly('2*2026') === '4052'
+  && eaAnswer(2).includes('1 = (−2)·2026 + 579·7'))
+t('the solvability test it runs really does reject 30 and accept 60',
+  exactly('30-12*2') === '6' && 30 % 12 !== 0 && 60 % 12 === 0 && exactly('60/12') === '5'
+  && exactly('360*(-15)+84*65') === '60'
+  && exactly('-15*360') === '-5400' && exactly('65*84') === '5460'
+  && eaAnswer(2).includes('60 = (−15)·360 + 65·84'),
+  eaAnswer(2))
+
+/*
+ * ONE TASK'S REFERENCE IS 0 AND THAT IS ITS CONTENT, which is the shape
+ * `percent`'s group had to establish a perturbation check for. The property
+ * asserted there is per concept and scoped to that concept's tasks, so nothing
+ * here breaks it — but a reader who met a 0 reference in this subject for the
+ * first time would reasonably go looking for a rule it violates, so the
+ * deliberateness is asserted rather than left to the comment in tasks.ts.
+ *
+ * The pairing is what makes it evidence: the task before it produces 12 and is
+ * told not to call it the gcd yet, and this one produces the 0 that entitles
+ * the conclusion. Both are asserted, because either alone would be the weak
+ * version.
+ */
+t('the one task with a reference of 0 is the stopping signal, and it is paired',
+  taskById('the-zero-remainder-is-the-signal-not-the-answer-1').reference === '0'
+  && taskById('the-second-step-reaches-the-gcd-without-saying-so-1').reference === '12'
+  && EA_TASKS.filter(x => x.reference === '0').length === 1,
+  EA_TASKS.filter(x => x.reference === '0').map(x => x.id).join(', '))
+/*
+ * AND THE RESERVED SUBSTITUTION IS NOT RE-ASKED. (2026, 7, 289) → 3 is a task of
+ * `division-algorithm`, and this concept uses that division in its own third
+ * worked example — quoting it rather than re-deriving it, which is precisely the
+ * situation in which a second task with the same expression, the same
+ * substitution and the same answer gets written by accident. Asserted as a
+ * property of the whole task list rather than of this concept's, since the
+ * duplicate could be written in either place.
+ */
+t('no two tasks in the subject share one expression at one substitution',
+  (() => {
+    const key = x => `${x.given}@${JSON.stringify(x.at ?? {})}`
+    const keys = ARITH_TASKS.filter(x => x.kind === 'evaluate').map(key)
+    return new Set(keys).size === keys.length
+  })(),
+  (() => {
+    const key = x => `${x.given}@${JSON.stringify(x.at ?? {})}`
+    const seen = new Set()
+    return ARITH_TASKS.filter(x => x.kind === 'evaluate')
+      .filter(x => (seen.has(key(x)) ? true : (seen.add(key(x)), false)))
+      .map(x => x.id).join(', ') || 'none repeated'
+  })())
+
+/*
+ * THE TWO EDGE DECISIONS, ASSERTED AS ABSENCES WITH THEIR REASONS CHECKABLE.
+ *
+ * The map node carried `exercises: ['gcd-and-lcm']`, which `expandEdges` would
+ * have made an `encompasses` edge, and it is declined: measured against the nine
+ * tasks, not one takes a minimum of two exponents, uses gcd · lcm = a · b, or
+ * touches an lcm. The second clause is that measurement rather than a restated
+ * opinion — if a later task here does mention an lcm, this goes red and the
+ * declination has to be re-read.
+ *
+ * `division-algorithm` is the stronger candidate and is also declined, at five
+ * of nine. That one is asserted WITH its count, because the standard this
+ * subject set (`absolute-value => negative-numbers`) is that there must be no
+ * way to answer ANY task without doing the other concept's work — so the number
+ * that matters is how many fail, and it is four.
+ */
+t('taking a gcd by division claims no credit for the factorisation route',
+  !encompassedBy(A, 'euclidean-algorithm').includes('gcd-and-lcm')
+  && !EA_TASKS.some(x => /lcm|minimum exponent|smaller exponent/i.test(x.prompt)),
+  encompassedBy(A, 'euclidean-algorithm').join(', ') || 'nothing')
+t('…nor for the division algorithm, four of its nine tasks doing no division at all',
+  !encompassedBy(A, 'euclidean-algorithm').includes('division-algorithm')
+  && EA_TASKS.length === 9
+  && EA_TASKS.filter(x => x.given === 'n - p*k').length === 5
+  && EA_TASKS.filter(x => x.given === 'a*x + b*y').length === 4,
+  EA_TASKS.map(x => x.given).join(' | '))
+t('and no interference was invented on a prerequisite pair',
+  interferesWith(A, 'euclidean-algorithm').length === 0,
+  interferesWith(A, 'euclidean-algorithm').join(', ') || 'none')
+
+/*
+ * EVERY SUBGOAL IS PHRASED AS A QUESTION, which is the thing the authored-
+ * question coverage figure counts and the one property of new material that the
+ * printed coverage line can move. Asserted here rather than trusted to that
+ * line, because a single unphrased subgoal lowers a fraction by a fiftieth and
+ * nothing names which one.
+ *
+ * `isInterrogative` is not used: it answers whether a LABEL reads as a question,
+ * which is a different measurement (see the socratic group below). What is
+ * required of a `socratic` field is that it be present, non-trivial and end in a
+ * question mark — the last of which is load-bearing, since `questionCoverage`
+ * scores a period-ended question at zero.
+ */
+t('all fifteen subgoals carry a written question, and every one ends in a question mark',
+  EA_SUBGOALS.length === 15
+  && EA_SUBGOALS.every(s => !!s.socratic && s.socratic.trim().endsWith('?')),
+  `${EA_SUBGOALS.filter(s => !s.socratic).length} unphrased, `
+  + `${EA_SUBGOALS.filter(s => s.socratic && !s.socratic.trim().endsWith('?')).length} not a question`)
+t('and no question contains its own answer in the form the design note names',
+  EA_SUBGOALS.every(s => !/^(Should|Do|Does|Is|Are|Can|Will) you /i.test(s.socratic.trim())),
+  EA_SUBGOALS.filter(s => /^(Should|Do|Does|Is|Are|Can|Will) you /i.test(s.socratic.trim()))
+    .map(s => s.label).join('; ') || 'none')
+/*
+ * AND EVERY SUBGOAL LABEL NAMES A MOVE, checked as the absence of the shape a
+ * flat list of steps takes. The design note's claim is that a labelled example
+ * teaches which move answers which question, and the failure mode is a label
+ * that restates the step ("Divide 360 by 84") instead of naming what the step
+ * is FOR. Not mechanically decidable in general; what is decidable is that no
+ * label is bare arithmetic, which is the version of it this file can hold.
+ */
+t('no subgoal label is bare arithmetic standing in for a move',
+  EA_SUBGOALS.every(s => s.label.length > 20 && !/^\d/.test(s.label)),
+  EA_SUBGOALS.filter(s => s.label.length <= 20).map(s => s.label).join('; ') || 'all name a move')
+
+/*
+ * NO `automaticityTarget` AND NO `visualRef` ON ANY OF THE THREE, which the
+ * header argues for and which is worth one assertion because both fields are
+ * the kind a later pass adds for tidiness. A clock here would reward the fast
+ * version of the three errors the three points exist to prevent, and no figure
+ * exists, so a `visualRef` would be a placeholder — the thing types.ts says is
+ * worse than an absence.
+ */
+t('neither a timing target nor a figure is claimed, both being absent on purpose',
+  EA.knowledgePoints.every(p => p.automaticityTarget === undefined && p.visualRef === undefined))
+t('and the positions restart at 1 for this concept',
+  EA.knowledgePoints.map(p => p.position).join(',') === '1,2,3')
 
 /**
  * `absolute-value` — THE CONCEPT THIS FILE'S HEADER USED TO SAY COULD NOT EXIST.
@@ -9227,6 +9474,15 @@ t('while the four older concepts here still name justify, of which the build shi
  * the suite's own "no question contains its own answer" assertion is scoped to
  * `FI_SUBGOALS`, which is `sequences` only. Arithmetic on this ratio is the
  * whole detector for the rest of the subject.
+ *
+ * 75 of 96 now, and the three that moved it are the FIRST writing to come out
+ * of that remainder rather than out of a promotion. Every paragraph above
+ * describes a concept arriving fully authored and diluting the untouched 24;
+ * this one is `domain-and-range`'s third point, authored in place, so the
+ * remainder is 21 and the denominator did not move. Which is why the ratio is
+ * asserted one-sided and the total is not: a pure authoring run raises the
+ * numerator alone, and that is the only shape that actually shrinks the
+ * remainder.
  */
 const FI_COV = questionCoverage(FI)
 t('all nine of its subgoals ship the question written, not just the label',
@@ -9242,7 +9498,7 @@ t('every subgoal says what its move establishes, so none of them is a bare step'
   FI_SUBGOALS.every(s => typeof s.detail === 'string' && s.detail.length > 0))
 t('the subject is at twenty-seven chains and still has none that cannot become evidence',
   FI_COV.chains === 27 && FI_COV.chainsWithNoRuling === 0
-  && FI_COV.authoredAsQuestions === 72 && FI_COV.questions === 96,
+  && FI_COV.authoredAsQuestions === 75 && FI_COV.questions === 96,
   `${FI_COV.chains} chains, ${FI_COV.chainsWithNoRuling} unrulable, `
   + `${FI_COV.authoredAsQuestions}/${FI_COV.questions} authored`)
 /*

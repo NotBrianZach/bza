@@ -244,17 +244,31 @@ if [ "$PROFILE_BEHAVIOR" = "production" ] && command -v supabase &> /dev/null &&
    { ! $ANY_ONLY || $ONLY_SECRETS; }; then
     header "Setting Supabase Edge Function Secrets"
     echo
-    info "Setting WORKER_URL, WORKER_SECRET, DEFAULT_OUTPUT_BUCKET, STRIPE_STORAGE_PRICE_ID..."
+    info "Setting WORKER_URL, WORKER_SECRET, DEFAULT_OUTPUT_BUCKET, STRIPE_STORAGE_PRICE_ID, OPENROUTER_API_KEY..."
     # Fallback: read WORKER_URL/WORKER_SECRET from TempleDB if not in env (they may not be in var export)
     WORKER_URL="${WORKER_URL:-$(templedb var get bza WORKER_URL 2>/dev/null || true)}"
     WORKER_SECRET="${WORKER_SECRET:-$(templedb secret export bza --format dotenv 2>/dev/null | grep ^WORKER_SECRET= | cut -d= -f2-)}"
     [ -z "$WORKER_URL" ] && { error "WORKER_URL is empty — cannot set Supabase secret"; exit 1; }
     [ -z "$WORKER_SECRET" ] && { error "WORKER_SECRET is empty — cannot set Supabase secret"; exit 1; }
+
+    # OPENROUTER_API_KEY belongs here because four edge functions read it --
+    # generate-picturebook, detect-concepts, library-ontology and cyoa -- but it
+    # was absent from this block, so the Supabase copy was only ever set by
+    # hand. A rotation that updated TempleDB and redeployed therefore left the
+    # old key live in those functions, and they kept 401ing against OpenRouter
+    # until someone set it manually. (_source_secrets already exported it.)
+    #
+    # Guarded, not defaulted: `supabase secrets set OPENROUTER_API_KEY=` is
+    # accepted and overwrites the stored key with an empty string, which breaks
+    # all four functions rather than leaving them on the previous value. The
+    # test is on emptiness alone -- never echo the variable to check it.
+    [ -z "$OPENROUTER_API_KEY" ] && { error "OPENROUTER_API_KEY is empty — refusing to overwrite the Supabase copy with a blank value"; exit 1; }
     supabase secrets set \
         WORKER_URL="${WORKER_URL}" \
         WORKER_SECRET="${WORKER_SECRET}" \
         DEFAULT_OUTPUT_BUCKET="${DEFAULT_OUTPUT_BUCKET:-documents}" \
-        STRIPE_STORAGE_PRICE_ID="${STRIPE_STORAGE_PRICE_ID:-}"
+        STRIPE_STORAGE_PRICE_ID="${STRIPE_STORAGE_PRICE_ID:-}" \
+        OPENROUTER_API_KEY="${OPENROUTER_API_KEY}"
     success "Supabase secrets set"
     echo
 fi

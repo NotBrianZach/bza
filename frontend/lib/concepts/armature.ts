@@ -173,7 +173,49 @@ export const REGIONS: Region[] = [
   {
     id: 'hasspab', name: 'Hasspab', epithet: 'The Aether Sepulcher',
     km: 1000, area: 'number-theory', xy: { x: 0.551, y: 0.449 },
-    anchors: ['division-algorithm', 'modular-arithmetic', 'prime-distribution'],
+    // `division-algorithm` was the first anchor until the thirty-ninth promotion
+    // wrote it into `arithmetic-foundations`. An anchor must be a node of `area`,
+    // so a promotion empties the slot rather than leaving it, and
+    // `armatureProblems` says so loudly — the one check this table has that the
+    // game's copy does not. This is the fifth refill and the first out of this
+    // region.
+    //
+    // IT IS ALSO THE FIRST REFILL WHERE THE REGION GAINED NOTHING IN EXCHANGE.
+    // Every previous one — Ringed Mountains', Druuvruke's twice, Paravgrad's —
+    // sent its node to a subject the SAME region claims in `authored`, so the
+    // slot emptied and the region's written count went up in the same edit.
+    // `arithmetic-foundations` is claimed by Ringed Mountains and has been since
+    // the `number-and-arithmetic` area was retired, so this region hands over a
+    // node and still reports nothing written. That is honest and not a bug:
+    // `regionCoverage` attributes material by SUBJECT, the subject is claimed
+    // once, and claiming it twice is precisely what `armatureProblems` rejects.
+    // Worth knowing before somebody reads Hasspab's zero as a stalled region.
+    //
+    // KRULL'S REFILL RULE NAMES `euclidean-algorithm` AND IS DECLINED, which is
+    // the first time that rule has been turned down rather than found
+    // inapplicable. The rule is "the node that was next" — the dependent that
+    // inherits the departing node's place — and there is exactly one here, so it
+    // applies cleanly. The trouble is structural rather than editorial: a
+    // dependent inherits the place because the promotion just wrote its last
+    // unwritten prerequisite, which makes it the node in the area MOST likely to
+    // be promoted next. `euclidean-algorithm` needs `division-algorithm` and
+    // `gcd-and-lcm`, both authored as of this edit, so it is READY now. Applying
+    // Krull's rule would hand the slot to the one node guaranteed to empty it
+    // again, and Druuvruke's third anchor has already turned over twice for want
+    // of that observation. So the rule is kept and its precondition is stated:
+    // take the node that was next UNLESS the promotion that freed the slot also
+    // made that node ready.
+    //
+    // `quadratic-reciprocity` replaces it, picked off the region's own `because`
+    // the way Paravgrad's fallback does. That sentence says number theory is "the
+    // mathematics that feels found rather than built, inscribed rather than
+    // invented", and quadratic reciprocity is the theorem that most answers to
+    // it: an unexpected symmetry between two primes that nobody designed. It is
+    // also seven unwritten layers up the area's chain, so the slot should hold.
+    // `fermat-euler` and `cryptographic-number-theory` were the other deep
+    // candidates and are the wrong flavour — both are the mathematics being USED,
+    // which is the built half of that sentence rather than the found half.
+    anchors: ['quadratic-reciprocity', 'modular-arithmetic', 'prime-distribution'],
     because: 'Mage-priests read divine law off a sepulcher of basalt and desert glass cut down into bedrock. Number theory is the mathematics that feels found rather than built, inscribed rather than invented — which is how Hasspab treats its law.',
   },
   {

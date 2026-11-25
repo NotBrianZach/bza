@@ -330,19 +330,63 @@ t('every interference states a reason', interference.every(e => !!e.rationale))
  * between this map and a scatter of one-node areas, and an area is the unit a
  * learner is shown a region of mathematics in.
  *
- * It has a known blind spot, which is worth recording HERE rather than only in
- * the group that had to work around it: this compares nodes remaining, so an
- * area that drained from fifteen to five by having its content authored reads
- * identically to five somebody sketched and abandoned. Two areas hit the floor
- * that way and were merged into their neighbours instead — see
- * atlas-foundations.ts, and the budget group further down, which asserts that
- * the merges actually bought the room they were for. Counting
- * nodes-plus-departures against the floor would tell the two cases apart and
- * is the alternative that was NOT taken; if a later drained area wants it, that
- * is a change to this line, not a reason to raise or drop the threshold.
+ * THE BLIND SPOT RECORDED HERE FOR THREE PROMOTIONS HAS NOW BEEN CLOSED, and
+ * the paragraph that recorded it is kept in substance because the reasoning is
+ * what licenses the change. Comparing nodes REMAINING meant an area that
+ * drained from sixteen to six by having its content authored read identically
+ * to six somebody sketched and abandoned — and the two want opposite repairs.
+ * The first two areas to hit the floor that way were merged into their
+ * neighbours instead, which was right for them and is asserted by the budget
+ * group further down. This line's own note said that counting
+ * nodes-plus-departures would tell the two cases apart, that it was the
+ * alternative NOT taken, and that "if a later drained area wants it, that is a
+ * change to this line, not a reason to raise or drop the threshold."
+ *
+ * `algebra-foundations` wanted it. It sat at six nodes with TEN authored out of
+ * it, and unlike the two precedents it has nowhere to merge TO: there is
+ * nothing above the foundation, and its six leftovers would scatter across four
+ * areas if a destination were forced. So the prescribed repair was unavailable
+ * and this is the sanctioned one. The threshold is untouched at five, which is
+ * the part the note was most insistent about.
+ *
+ * WHAT THE CHANGE DOES NOT DO is let an area pass by declaring departures it
+ * never had. `departed` is checked against the authored concepts immediately
+ * below, so an id that was never written anywhere fails loudly, and the field's
+ * doc in atlas.ts states the one real misuse — listing an id that was never a
+ * node of that area, which buys headroom that was never spent. No harness can
+ * catch that one; it is why the lists are derived from the per-node comments
+ * that were already in the atlas files rather than assembled by hand.
+ *
+ * Absence still means zero, so every area that has declared nothing is measured
+ * exactly as it was before.
  */
-const singletons = AREAS.filter(a => a.nodes.length < 5)
-t('no area is a stub', singletons.length === 0, singletons.map(a => a.id).join(', '))
+const STUB_FLOOR_TERRITORY = a => a.nodes.length + (a.departed?.length ?? 0)
+const singletons = AREAS.filter(a => STUB_FLOOR_TERRITORY(a) < 5)
+t('no area is a stub', singletons.length === 0,
+  singletons.map(a => `${a.id} (${a.nodes.length} nodes + ${a.departed?.length ?? 0} departed)`).join(', '))
+
+/*
+ * THE CHECK THAT KEEPS THE FLOOR HONEST, and the reason the line above is safe.
+ *
+ * A departure is a node whose content got WRITTEN, so every id in a `departed`
+ * list must be an authored concept somewhere. An id that is still a map node is
+ * the error this catches most usefully: it would mean an area counting a node
+ * twice, once as territory remaining and once as territory covered.
+ */
+const departedIds = AREAS.flatMap(a => (a.departed ?? []).map(id => ({ area: a.id, id })))
+const notAuthored = departedIds.filter(d => !authoredIds.has(d.id))
+t('every declared departure is an authored concept',
+  notAuthored.length === 0,
+  notAuthored.map(d => `${d.area}: ${d.id}`).join(', '))
+
+const stillMapped = departedIds.filter(d => AREAS.some(a => a.nodes.some(n => n.id === d.id)))
+t('no area counts a node as both remaining and departed',
+  stillMapped.length === 0,
+  stillMapped.map(d => `${d.area}: ${d.id}`).join(', '))
+
+t('a departure is claimed by exactly one area',
+  new Set(departedIds.map(d => d.id)).size === departedIds.length,
+  departedIds.map(d => d.id).filter((id, i, xs) => xs.indexOf(id) !== i).join(', '))
 
 // `promotedBy` is what distinguishes a real edge from a quarantined candidate.
 const mapEdges = MATHEMATICS.edges.filter(e => !authoredIds.has(e.from) || !authoredIds.has(e.to))
@@ -414,10 +458,44 @@ t('the authored arithmetic ids appear exactly once each in the composed concept 
   ['place-value', 'integer-arithmetic', 'order-of-operations', 'negative-numbers', 'divisibility',
     'fraction-arithmetic', 'prime-factorisation', 'gcd-and-lcm', 'roots-and-irrationals',
     'decimal-representation', 'real-number-line', 'ratio-and-rate', 'absolute-value', 'percent',
-    'scientific-notation']
+    'scientific-notation', 'division-algorithm', 'euclidean-algorithm']
     .every(id => MATHEMATICS.concepts.filter(c => c.id === id).length === 1))
 t('and they carry their own subject, not the area they left',
-  MATHEMATICS.concepts.filter(c => c.subjectId === 'arithmetic-foundations').length === 15)
+  MATHEMATICS.concepts.filter(c => c.subjectId === 'arithmetic-foundations').length === 17)
+/*
+ * THE SEVENTEENTH CAME OUT OF THE SAME AREA AS THE SIXTEENTH, one promotion and
+ * one step up the same chain. `euclidean-algorithm` declared
+ * `needs: ['division-algorithm', 'gcd-and-lcm']` and both were concepts of this
+ * subject by the time it was taken — the first of them having become one in the
+ * promotion immediately before — so this is the first arrival here whose edges
+ * ALL stayed inside the receiving subject and the only one that left its area
+ * owing no `links` entry in either direction. Asserted in the fortieth
+ * promotion's own group further down, which is where the before-and-after
+ * figures live.
+ *
+ * THE SIXTEENTH IS THE ONLY ONE THAT CAME FROM A DIFFERENT AREA ALTOGETHER, and
+ * the distinction the paragraph below draws about `absolute-value` is worth
+ * extending rather than restating. That one crossed a HALF boundary inside the
+ * area this subject grew out of. `division-algorithm` crossed an AREA boundary:
+ * it was a node of `number-theory`, which no previous arrival here ever was, and
+ * it came for the same reason `absolute-value` did — its prerequisites decided
+ * the destination, `divisibility` being a concept of this subject.
+ *
+ * So the rule stated below is now evidenced twice over and at two scales: which
+ * subject receives a promoted node is decided by where its own prerequisites
+ * live, and the map's grouping is a record of origin rather than a rule about
+ * destination. Asserted by NAME and by the area it left, because the count above
+ * cannot see the difference — a sixteenth arrival from anywhere would satisfy it.
+ */
+t('and the sixteenth crossed an area boundary, which no earlier arrival here did',
+  conceptById(MATHEMATICS, 'division-algorithm')?.subjectId === 'arithmetic-foundations'
+  && !AREAS.some(a => a.nodes.some(n => n.id === 'division-algorithm'))
+  && prerequisitesOf(MATHEMATICS, 'division-algorithm').includes('divisibility')
+  && areaOf(MATHEMATICS, 'divisibility') === 'arithmetic-foundations'
+  && (AREAS.find(a => a.id === 'number-theory').links ?? [])
+    .some(l => l.to === 'division-algorithm' && l.from === 'proof-techniques'),
+  `${areaOf(MATHEMATICS, 'division-algorithm')} via `
+  + prerequisitesOf(MATHEMATICS, 'division-algorithm').join('/'))
 /*
  * The thirteenth is the one that did not come from the number half of the area,
  * and it is worth one assertion of its own. `absolute-value` sat below
@@ -521,6 +599,66 @@ t('and the thirteenth came from the algebraic half of the area, not the number h
  * that does not exist. An `[]`-shaped exemplar would pass vacuously, which is
  * the trap a list that has run out sets for whoever maintains it next.
  *
+ * ── "FOR GOOD" WAS WRONG A SECOND TIME, AND BY A MECHANISM NEITHER EARLIER ──
+ * ── VERSION OF THIS NOTE HAD CONSIDERED ────────────────────────────────────
+ *
+ * The thirty-ninth promotion authored `division-algorithm` into
+ * `arithmetic-foundations`, and `euclidean-algorithm` — still a node, in
+ * `number-theory` — declares `needs: ['division-algorithm', 'gcd-and-lcm']`.
+ * Both are now authored concepts of this subject, so the two-edge form exists
+ * again and the assertion below is inverted rather than deleted.
+ *
+ * THE MECHANISM IS THE PART WORTH KEEPING. Both previous rounds of this note
+ * reasoned about which NODE might play the role, as though the population of
+ * two-edge instances could only change when map content changed. It can change
+ * when nothing on the map changes at all: a node's count of edges into a subject
+ * RISES when one of its prerequisites is promoted into that subject.
+ * `euclidean-algorithm` was a one-edge instance on the morning of the promotion
+ * and a two-edge instance by the evening, having been edited not at all. So "the
+ * form has no successor" is never safe while any map node names a mapped
+ * prerequisite alongside an authored one — which is most of the atlas — and the
+ * honest version of the claim is a measurement with its instances named, which
+ * is what the two assertions below now are.
+ *
+ * It also makes `euclidean-algorithm` the only map node in the build whose
+ * ENTIRE prerequisite set is one authored subject's, and that is asserted
+ * separately because it is the stronger and more useful fact: resting entirely
+ * on written material is what makes a node ready to write, so this is a
+ * statement about the fortieth promotion's shortlist and not only about edge
+ * resolution. Many nodes rest entirely on ONE authored subject — sixty-odd do —
+ * but this is the only one whose subject is the arithmetic, which is the claim
+ * the group is about.
+ *
+ * ── AND THE FORTIETH PROMOTION SPENT BOTH OF THOSE CLAIMS AT ONCE ─────────
+ *
+ * It took `euclidean-algorithm`. The paragraph above was right that the node was
+ * the shortlist, and a claim about what is next is consumed by the next run
+ * doing it — which is the hazard of writing a prediction as an assertion, and the
+ * reason both halves are now MEASUREMENTS with the measured value written down
+ * rather than examples.
+ *
+ * THE TWO-EDGE FORM IS EXTINCT FOR A THIRD TIME, and this note has been wrong
+ * about "for good" twice, so it is not said again. What IS said is the condition
+ * under which it comes back, which the previous round of this note established
+ * and which is worth more than the population: a node's count of edges into a
+ * subject rises when one of its prerequisites is promoted into that subject, so
+ * the form returns whenever some map node naming one authored arithmetic concept
+ * alongside a mapped prerequisite has that prerequisite written. Ten nodes are
+ * one promotion away from being two-edge instances. The assertion below checks
+ * that the population is zero AND that the one-edge population it would come
+ * from is not, since a zero on both sides would mean the subject had stopped
+ * being reached at all and that is a different fact.
+ *
+ * THE "RESTS ENTIRELY ON THIS SUBJECT" SET IS ALSO EMPTY, and that is the more
+ * useful of the two readings: this subject has no immediately-writable neighbour
+ * left anywhere on the map. The nearest is `modular-arithmetic`, which inherited
+ * the departing node's place in `number-theory` and names `euclidean-algorithm`
+ * — authored — alongside `relations`, which is a node of `discrete-mathematics`
+ * and is under a standing refusal (a relation is a set of pairs, so its defining
+ * properties are judgements the engine cannot grade). So the arithmetic's own
+ * frontier is blocked behind somebody else's refusal rather than behind its own
+ * unwritten material, which is a thing no count of ready nodes shows.
+ *
  * `percent`'s own dependent WAS the nearest thing to a successor and was never
  * one: `descriptive-statistics` named `percent` and `sigma-notation`, which is
  * one arithmetic concept and one from `functions-and-inverses`. It was asserted
@@ -553,34 +691,92 @@ t('the one node that used to need them still does, across the file boundary',
   && AREAS.find(a => a.id === 'algebra-foundations').nodes
     .some(n => n.id === 'linear-inequalities'),
   prerequisitesOf(MATHEMATICS, 'linear-inequalities').join('/'))
-t('the two-edge form has no instance left anywhere, which is measured and not assumed',
+t('the two-edge form is extinct again, and the set it would come back from is not',
   (() => {
     const arith = new Set(MATHEMATICS.concepts
       .filter(c => c.subjectId === 'arithmetic-foundations').map(c => c.id))
     const mapped = AREAS.flatMap(a => a.nodes)
-    // Non-vacuous: there ARE mapped nodes resting on this subject, just none on two.
     const onOne = mapped.filter(n => (n.needs ?? []).filter(id => arith.has(id)).length === 1)
     const onTwo = mapped.filter(n => (n.needs ?? []).filter(id => arith.has(id)).length >= 2)
-    return onOne.length > 0 && onTwo.length === 0
+    // Both halves, because zero on both would mean the subject had stopped being
+    // reached from the map at all, which is a different fact wearing this shape.
+    return onTwo.length === 0 && onOne.length > 0
+      // And the node that was the last instance is a CONCEPT now, with both of
+      // its edges resolved inside the subject rather than dropped on the way.
+      && !mapped.some(n => n.id === 'euclidean-algorithm')
+      && ['division-algorithm', 'gcd-and-lcm'].every(id =>
+        prerequisitesOf(MATHEMATICS, 'euclidean-algorithm').includes(id) && arith.has(id))
   })(),
   AREAS.flatMap(a => a.nodes)
     .map(n => [n.id, (n.needs ?? []).filter(id =>
       areaOf(MATHEMATICS, id) === 'arithmetic-foundations').length])
     .filter(([, k]) => k >= 2).map(([id, k]) => `${id}:${k}`).join(' ') || 'none on two')
+t('and no map node rests ENTIRELY on this subject now, the nearest being blocked elsewhere',
+  (() => {
+    const arith = new Set(MATHEMATICS.concepts
+      .filter(c => c.subjectId === 'arithmetic-foundations').map(c => c.id))
+    const wholly = AREAS.flatMap(a => a.nodes)
+      .filter(n => (n.needs ?? []).length > 0 && (n.needs ?? []).every(id => arith.has(id)))
+    // Zero asserted directly, and then the reason, so this cannot read as a
+    // quantifier over a drained list passing vacuously. `modular-arithmetic` is
+    // the nearest candidate and what stops it is `relations`, a node of another
+    // area — not anything this subject has left unwritten.
+    const nearest = AREAS.flatMap(a => a.nodes).find(n => n.id === 'modular-arithmetic')
+    return wholly.length === 0
+      && (nearest.needs ?? []).filter(id => arith.has(id)).length === 1
+      && (nearest.needs ?? []).includes('euclidean-algorithm')
+      && isTeachable(MATHEMATICS, 'euclidean-algorithm')
+      && (nearest.needs ?? []).includes('relations')
+      && !isTeachable(MATHEMATICS, 'relations')
+      && areaOf(MATHEMATICS, 'relations') === 'discrete-mathematics'
+  })(),
+  AREAS.flatMap(a => a.nodes)
+    .filter(n => (n.needs ?? []).length > 0 && (n.needs ?? []).every(id =>
+      areaOf(MATHEMATICS, id) === 'arithmetic-foundations'))
+    .map(n => n.id).join(' ') || 'none')
 /*
  * The cross-AREA one-edge form, measured over its instances rather than carried
  * by one example. Every example above sat in `algebra-foundations` and reached a
- * concept promoted out of that same area; these eight are in six other areas,
- * so each edge crosses an area boundary as well as a file one.
+ * concept promoted out of that same area; these six are in six other areas, so
+ * each edge crosses an area boundary as well as a file one.
  *
  * Three are named and the rest are counted. Naming is what stops this going
  * vacuous if the list drains — a bare count of "more than zero" would read as a
  * live claim while being satisfied by any one survivor — and counting is what
  * stops it rotting the way the single exemplar did twice.
+ *
+ * AND IT HAS LOST A NAMED MEMBER FOR THE FIRST TIME, which is the fourth
+ * exemplar this group has surrendered to a promotion and the first since the
+ * list shape replaced the single example. The thirty-ninth promotion authored
+ * `division-algorithm`, so the pair `['division-algorithm', 'divisibility']` no
+ * longer describes a map node reaching an authored concept — it describes two
+ * authored concepts of ONE subject, which is an ordinary edge in
+ * ontology-arithmetic.ts and is checked there. The population fell from eight to
+ * six, because `division-algorithm` left the form and `euclidean-algorithm`
+ * left it too in the other direction, having acquired a second arithmetic edge
+ * from the same promotion and moved up to the two-edge group above.
+ *
+ * AND THE POPULATION WENT BACK UP WITHOUT ANYTHING ENTERING THE MAP, which is
+ * the mechanism two notes above restated from the other side. The fortieth
+ * promotion authored `euclidean-algorithm`, so `modular-arithmetic` — a node of
+ * this area throughout, edited not at all — stopped naming a mapped
+ * prerequisite and started naming an authored arithmetic one. Six to seven. A
+ * promotion subtracts one instance (the node it takes) and can add one (each
+ * dependent of that node still on the map), so the count moves in both
+ * directions for one edit and a trend read off it would be noise.
+ *
+ * `unique-factorisation-domains` replaces it, and the choice is made on DISTANCE
+ * FROM PROMOTABLE rather than on similarity of shape. Every exemplar this group
+ * has lost was lost to authoring, three of them while being the nearest thing to
+ * ready, so a replacement picked for resembling its predecessor just restarts the
+ * clock. This one reaches `prime-factorisation` across the abstract-algebra
+ * boundary and its other prerequisite is `ideals-and-quotient-rings`, four
+ * unwritten layers up a fifteen-node area that has never had a departure. It
+ * will not be promoted soon, which is the whole qualification for the role.
  */
 const CROSS_AREA_ONE_EDGE = [
   ['sequence-convergence', 'real-number-line'],
-  ['division-algorithm', 'divisibility'],
+  ['unique-factorisation-domains', 'prime-factorisation'],
   ['sample-spaces', 'fraction-arithmetic'],
 ]
 t('the cross-area one-edge form has many instances, three of them named',
@@ -808,10 +1004,19 @@ t('so prime factorisation is teachable and gates what the map says it gates',
  * subject's own edge list, so the composed map must still show the gcd sitting
  * between the two of them, with the whole of it teachable.
  *
- * `euclidean-algorithm` is the node still on the map that needs the gcd, which
- * makes it the surviving example of a mapped node resting on authored material
- * across a file boundary — and the node is in atlas-structures.ts, which the
- * promotion did not touch.
+ * `euclidean-algorithm` WAS the node still on the map that needs the gcd, and
+ * the fortieth promotion authored it — so that example is retired the way three
+ * others in this file were, and the claim is restated rather than weakened.
+ *
+ * The edge did not move house: both ends are concepts of ONE subject now, so it
+ * is an ordinary `prerequisite` in ontology-arithmetic.ts with the gcd still on
+ * the gating path. What is asserted below is therefore the stronger end state —
+ * that the gcd gates an authored concept in its own file — plus the surviving
+ * instance of the shape the old half was about, which is `modular-arithmetic`:
+ * a node in atlas-structures.ts resting on authored material in
+ * ontology-arithmetic.ts, one step further up the same chain. Keeping a
+ * mapped-node example is worth the line, since that is the half a promotion
+ * retires and the half whose absence would go unnoticed.
  */
 t('the gcd was promoted and kept both its edges, in both directions',
   isTeachable(MATHEMATICS, 'gcd-and-lcm')
@@ -819,10 +1024,19 @@ t('the gcd was promoted and kept both its edges, in both directions',
   && prerequisitesOf(MATHEMATICS, 'fraction-arithmetic').includes('gcd-and-lcm'),
   `${prerequisitesOf(MATHEMATICS, 'gcd-and-lcm').join(', ')} → gcd-and-lcm → `
   + `${dependentsOf(MATHEMATICS, 'gcd-and-lcm').join(', ')}`)
-t('and the mapped node above it still reaches it across the file boundary',
+t('and the concept above it reaches it inside the subject, with the gcd still gating',
   prerequisitesOf(MATHEMATICS, 'euclidean-algorithm').includes('gcd-and-lcm')
-  && gatingPrerequisitesOf(MATHEMATICS, 'euclidean-algorithm').includes('gcd-and-lcm'),
+  && gatingPrerequisitesOf(MATHEMATICS, 'euclidean-algorithm').includes('gcd-and-lcm')
+  && areaOf(MATHEMATICS, 'euclidean-algorithm') === 'arithmetic-foundations'
+  && !AREAS.some(a => a.nodes.some(n => n.id === 'euclidean-algorithm')),
   gatingPrerequisitesOf(MATHEMATICS, 'euclidean-algorithm').join(', '))
+t('and the mapped-node version of that shape survives one step further up',
+  AREAS.some(a => a.id === 'number-theory'
+    && a.nodes.some(n => n.id === 'modular-arithmetic'))
+  && prerequisitesOf(MATHEMATICS, 'modular-arithmetic').includes('euclidean-algorithm')
+  && areaOf(MATHEMATICS, 'euclidean-algorithm') === 'arithmetic-foundations',
+  prerequisitesOf(MATHEMATICS, 'modular-arithmetic')
+    .map(id => `${id}@${areaOf(MATHEMATICS, id)}`).join(' '))
 
 /**
  * `real-number-line`, the eleventh promotion out of the number half, asserted
@@ -4161,27 +4375,44 @@ t('the area is seven nodes against a floor of five, so nothing here was floor-bo
  * candidates in the two floor-pressed areas were passed over on this ground
  * alone, `algebra-foundations` being at one of headroom too.
  */
-const LINALG_AREA = AREAS.find(a => a.id === 'linear-algebra')
-t('while linear-algebra is at ONE of headroom, so "nothing is floor-bound" is per-area and not global',
-  LINALG_AREA.nodes.length - 5 === 1 && EUCLID.nodes.length - 5 === 2,
-  `euclid ${EUCLID.nodes.length - 5}, linalg ${LINALG_AREA.nodes.length - 5}`)
 /*
- * And the third floor-pressed area, named because the pair above reads as
- * though `linear-algebra` were the only one and it is not.
+ * EVERYTHING ABOVE THIS LINE ABOUT A MERGE DECISION ONE PROMOTION AWAY HAS BEEN
+ * OVERTAKEN, and is kept rather than deleted because it is the record of why the
+ * floor changed. Three promotions passed over ready candidates on the ground
+ * stated above — that spending the last of an area's headroom lands it on the
+ * floor and the prescribed repair is a merge, which belongs to a person. A
+ * person was asked, and chose neither to merge nor to lower the threshold: the
+ * floor now counts an area's DEPARTURES as territory it has covered, so an area
+ * that drained by succeeding is no longer read as a sketch. See the floor near
+ * the top of this file, and the group at the end that owns the live figures.
  *
- * `algebra-foundations` is also at one of headroom, with FOUR ready candidates
- * rather than one — `complex-numbers`, `linear-inequalities`, `word-problems`
- * and `nonlinear-systems` — so spending one freezes the area and strands the
- * other three. That is a worse shape than `linear-algebra`'s, where headroom
- * and candidates are both one, and it is the reason a promotion run with eight
- * reachable candidates had only three areas it could actually draw from.
- * Asserted rather than described so that a later promotion out of either
- * floor-pressed area has to come past this line.
+ * So "nothing is floor-bound" is now true globally as well as per-area, and the
+ * pair of headrooms this assertion was built on no longer says anything about
+ * whether either area may be drawn from. What the group still needs is its own
+ * figure, which is Euclid's, and that is all it asserts.
+ */
+t('Euclid has two nodes of headroom by node count alone',
+  EUCLID.nodes.length - 5 === 2,
+  `euclid ${EUCLID.nodes.length - 5} of node headroom`)
+/*
+ * The third formerly floor-pressed area, kept because it is the one the change
+ * was made FOR and because its ready set is a figure worth guarding.
+ *
+ * `algebra-foundations` has four ready candidates — `complex-numbers`,
+ * `linear-inequalities`, `word-problems` and `nonlinear-systems` — and six nodes
+ * left. By node count alone that is one of headroom, and for three promotions it
+ * meant spending one froze the area and stranded the other three: the worst
+ * shape of the three pressed areas, since headroom was one and candidates were
+ * four. TEN nodes have been authored out of it, which is the fact the floor was
+ * not reading and now does.
+ *
+ * The ready COUNT is asserted and the node count is deliberately not, because
+ * the four are what a promotion run comes here to find and the six is a figure
+ * the end group owns.
  */
 const ALGFOUND_AREA = AREAS.find(a => a.id === 'algebra-foundations')
-t('and algebra-foundations is at one of headroom with four ready candidates, which is the worse shape',
-  ALGFOUND_AREA.nodes.length - 5 === 1
-  && ALGFOUND_AREA.nodes.filter(n =>
+t('and algebra-foundations has four ready candidates, which was the worse shape',
+  ALGFOUND_AREA.nodes.filter(n =>
     (n.needs ?? []).every(id => isTeachable(MATHEMATICS, id))).length === 4,
   `${ALGFOUND_AREA.nodes.length} nodes, ready: ${ALGFOUND_AREA.nodes
     .filter(n => (n.needs ?? []).every(id => isTeachable(MATHEMATICS, id)))
@@ -4381,8 +4612,16 @@ t('the two drained areas are gone from the map',
  * `arithmetic-foundations` as number-half nodes, `absolute-value` went there
  * from the algebraic half, and the row's own note tracked the distinction so
  * that zero would not be misread as "the algebra syllabus grew by eight". It
- * did not. The arithmetic syllabus did, and `arithmetic-foundations` is at
- * fifteen concepts because of it.
+ * did not. The arithmetic syllabus did, and six of its concepts arrived that
+ * way.
+ *
+ * That sentence used to read "`arithmetic-foundations` is at fifteen concepts
+ * because of it", and the thirty-ninth promotion made it sixteen and the clause
+ * false, which is the drift tests/concepts-logic.mjs's own notes warn about: a
+ * figure no assertion reads goes stale in silence. Six is the number the MERGE
+ * fixed and no later promotion can move, so it is the one that belongs in a note
+ * about the merge. The live total is `atlasCoverage`'s and is asserted where it
+ * is used.
  *
  * So the merge is paid for in full on BOTH rows — the geometry row's note
  * records the same conclusion for its five route concepts — and this table now
@@ -5464,9 +5703,29 @@ t('the row reduction is a concept of the equations subject, not a node of this a
  * own edit, and authoring `basis-and-dimension` is what made two of them ready.
  * No assertion reads a sentence, so a stale one survives every green run.
  */
-t('six nodes left, ONE clear of the floor, so the next departure here freezes the area',
-  LINALG.nodes.length === 6 && LINALG.nodes.length - 5 === 1,
-  `${LINALG.nodes.length} nodes, ${LINALG.nodes.length - 5} of headroom`)
+/*
+ * THE WHOLE PARAGRAPH ABOVE IS HISTORY NOW, and both things it predicted came
+ * true in a way it did not foresee. The merge question did arrive, it was taken
+ * to a person, and the person chose the third option the floor's own note had
+ * left open — count departures as covered territory — so the floor and
+ * readiness are separate questions again. Nine nodes have been authored out of
+ * this area and the floor now reads twenty of territory where it read six.
+ *
+ * In the SAME change, five nodes were added to this area because the map was
+ * genuinely thin there: the canonical form, Cayley–Hamilton, quadratic forms,
+ * the dual, and the matrix exponential. Order matters for reading the intent and
+ * is recorded in atlas-structures.ts: the floor was fixed FIRST, so the five are
+ * not topics invented to pass a check. Either change alone would have unbound
+ * the area.
+ *
+ * So the figure this group asserted — six nodes, one of headroom — is gone to
+ * the end group, and what is left here is the permanent form: no node of this
+ * area is written, which is structural, since every concept that got material
+ * left. That cannot go stale with a count.
+ */
+t('no node of this area is written — every concept that got material left it',
+  LINALG.nodes.every(n => !isTeachable(MATHEMATICS, n.id)),
+  LINALG.nodes.filter(n => isTeachable(MATHEMATICS, n.id)).map(n => n.id).join(' ') || 'none')
 t('the stranded half of its needs is a links entry here, filed with the area that lost the node',
   LINALG.links.some(l => l.from === 'matrices-and-maps' && l.to === 'gaussian-elimination'
     && !!l.because)
@@ -5542,12 +5801,27 @@ t('the gate tightened onto the row reduction in three places, in two files nobod
  * still two" and make no claim about WHICH two — and getting the set wrong is
  * how a node silently loses its only prerequisite.
  */
-t('and the area view substituted at constant size, which is the shape a length check cannot see',
-  roots(areaOntology(LINALG)).slice().sort().join(' ') === 'eigenvalues least-squares'
+/*
+ * A SIXTH SHAPE, AND THE FIRST NOT CAUSED BY A PROMOTION. The five above are
+ * each a node LEAVING; this one is a node ARRIVING. `dual-spaces` was added to
+ * the area and its only prerequisite, `basis-and-dimension`, is authored
+ * elsewhere — so inside the area view it has nothing behind it and the set grew
+ * to three without anything departing.
+ *
+ * That is worth having in the chain precisely because it is the inverse of
+ * everything before it, and it is the case that vindicates named membership
+ * twice over: a length check would read "two became three" and call it growth,
+ * which is the right direction and the wrong reason. The other four nodes added
+ * in the same change rest on this area's own spectral chain and did NOT become
+ * roots, which is what makes the dual the only one here.
+ */
+t('and then a node ARRIVED and rooted itself, which no departure could have done',
+  roots(areaOntology(LINALG)).slice().sort().join(' ') === 'dual-spaces eigenvalues least-squares'
   && !LINALG.nodes.some(n => n.id === 'vector-spaces')
   && !LINALG.nodes.some(n => n.id === 'basis-and-dimension')
   && !LINALG.nodes.some(n => n.id === 'inner-product-spaces')
-  && !LINALG.nodes.some(n => n.id === 'rank-nullity'),
+  && !LINALG.nodes.some(n => n.id === 'rank-nullity')
+  && LINALG.nodes.some(n => n.id === 'dual-spaces'),
   roots(areaOntology(LINALG)).join(' '))
 /*
  * The two stranding checks, as absences on the node that left — the pair that
@@ -6473,11 +6747,18 @@ t('no interference or credit edge was lost, and the file\'s two pairs are intact
  * referencing it here is a temporal-dead-zone `ReferenceError` that the
  * per-test try/catch would turn into an ordinary assertion failure.
  */
-t('fifteen nodes leaves ten of headroom here, where two other areas have one',
+/*
+ * THE CROSS-AREA CLAUSES HAVE GONE FROM THIS ASSERTION, which is the fifth site
+ * that carried them and the reason they are gone from all five. They read
+ * `linear-algebra` and `algebra-foundations` at one of headroom each — true when
+ * written, and false since the change that counts departures against the floor
+ * unbound both. A group asserts what is permanently true of its own run; the
+ * live floor figures are owned by the group named "the floor stopped binding"
+ * at the end of this file, which is the one that moved them.
+ */
+t('fifteen nodes leaves ten of headroom here',
   STATS_AREA.nodes.length === 15
-  && STATS_AREA.nodes.length - 5 === 10
-  && AREAS.find(a => a.id === 'linear-algebra').nodes.length - 5 === 1
-  && AREAS.find(a => a.id === 'algebra-foundations').nodes.length - 5 === 1,
+  && STATS_AREA.nodes.length - 5 === 10,
   `statistics ${STATS_AREA.nodes.length}, `
   + `linear-algebra ${AREAS.find(a => a.id === 'linear-algebra').nodes.length}, `
   + `algebra-foundations ${AREAS.find(a => a.id === 'algebra-foundations').nodes.length}`)
@@ -6762,12 +7043,18 @@ t('no interference or credit edge was lost, and the pair that should exist still
  * node of one of them instead of taking the merge decision to a person. Keeping
  * this area's own figure here added nothing to that and broke every time.
  */
-t('two other areas still have one node of headroom each, whatever this area spends',
-  AREAS.find(a => a.id === 'linear-algebra').nodes.length - 5 === 1
-  && AREAS.find(a => a.id === 'algebra-foundations').nodes.length - 5 === 1,
-  `discrete ${DISCRETE_AREA.nodes.length}, `
-  + `linear-algebra ${AREAS.find(a => a.id === 'linear-algebra').nodes.length}, `
-  + `algebra-foundations ${AREAS.find(a => a.id === 'algebra-foundations').nodes.length}`)
+/*
+ * WHAT THIS GROUP KEPT WAS THE WRONG HALF, which is worth recording because the
+ * comment above it had already worked out the right rule and then applied it
+ * backwards. It dropped this area's own figure and kept two other areas' — so
+ * every time either of those moved, a group about `discrete-mathematics` went
+ * red for a reason that had nothing to do with it. The rule reads the other way:
+ * a group owns its OWN area's figure and borrows nobody's. So the own figure is
+ * back and the borrowed pair is gone to the group that moved them.
+ */
+t('this area has headroom to spare, whatever it spends next',
+  DISCRETE_AREA.nodes.length === 13 && DISCRETE_AREA.nodes.length - 5 === 8,
+  `discrete ${DISCRETE_AREA.nodes.length}, ${DISCRETE_AREA.nodes.length - 5} of headroom`)
 /*
  * AND THE ARMATURE, WHICH IS THE HALF THIS PROMOTION PAID FOR.
  *
@@ -7081,13 +7368,17 @@ t('the new subject is claimed by the same region, which now holds more than one'
  * the floor CHECK — no area is a stub — stays here because it is not a figure at
  * all and must never be edited.
  */
-t('the two areas that cannot spend theirs still cannot, and the floor itself is untouched',
-  AREAS.find(a => a.id === 'linear-algebra').nodes.length - 5 === 1
-  && AREAS.find(a => a.id === 'algebra-foundations').nodes.length - 5 === 1
-  && AREAS.filter(a => a.nodes.length < 5).length === 0,
+/*
+ * The borrowed pair is gone from here too, for the reason given two groups up.
+ * What survives is the half this group was right to assert: that the floor CHECK
+ * holds. It is restated through the same helper the floor itself uses, so a
+ * change to what the floor measures cannot leave this asserting the old rule —
+ * which is exactly what the literal `a.nodes.length < 5` here did.
+ */
+t('the floor itself is untouched',
+  AREAS.filter(a => STUB_FLOOR_TERRITORY(a) < 5).length === 0,
   `discrete ${DISCRETE_AREA.nodes.length}, `
-  + `linear-algebra ${AREAS.find(a => a.id === 'linear-algebra').nodes.length}, `
-  + `algebra-foundations ${AREAS.find(a => a.id === 'algebra-foundations').nodes.length}`)
+  + `stubs ${AREAS.filter(a => STUB_FLOOR_TERRITORY(a) < 5).map(a => a.id).join('+') || 'none'}`)
 
 // ---------------------------------------------------------------------------
 
@@ -7289,12 +7580,37 @@ t('all three dependents kept their own edges, each resolving exactly once',
  * so in the subgoal, and tests/concepts-logic.mjs asserts that the subgoal says
  * it. What is asserted HERE is the half that needs the composed atlas: that the
  * dependency really runs the way the material claims.
+ *
+ * AND THE CLAUSE THAT MADE THIS CHEAP HAS EXPIRED, WHICH MAKES THE ASSERTION
+ * MATTER MORE RATHER THAN LESS. The thirty-ninth promotion authored
+ * `division-algorithm`, so "it is unwritten and nothing would fail" is no longer
+ * the reason the discipline was needed — it was the reason the discipline was
+ * UNENFORCED. The general statement now exists, with three knowledge points and
+ * nine tasks, sitting directly above a concept that is its prerequisite. Anybody
+ * tidying ontology-proof.ts could now replace the hand-checked instance with a
+ * citation of the general theorem, every suite would stay green, and the
+ * material would be resting on a concept the map puts after it. That is the
+ * circularity the comment above anticipated, arriving at the moment its
+ * precondition went away.
+ *
+ * So `!isTeachable` is replaced by its opposite plus the two claims it was
+ * standing in for: the edge still runs upward, and the concept below still does
+ * not have the general form in its `covers`. The third clause is kept for a
+ * second reason the promotion gave it. `methods-of-proof` has never named this
+ * concept in `covers` — neither claiming nor declining it — which is precisely
+ * why ontology-logic.ts's "a subject may not be handed a concept its own file has
+ * declined" rule did not block filing it in `arithmetic-foundations`, and why
+ * that promotion founded no sixteenth subject. If somebody later adds a sentence
+ * about the division algorithm to that subject's `covers`, this goes red and the
+ * filing argument in ontology-arithmetic.ts's header has to be re-read.
  */
 t('the fact it imports from above is imported from a concept that names this one',
   prerequisitesOf(MATHEMATICS, 'division-algorithm').includes('proof-techniques')
-  && !isTeachable(MATHEMATICS, 'division-algorithm')
+  && isTeachable(MATHEMATICS, 'division-algorithm')
+  && areaOf(MATHEMATICS, 'division-algorithm') === 'arithmetic-foundations'
   && /`division-algorithm`/.test(METHODS_OF_PROOF.subject.covers) === false,
-  prerequisitesOf(MATHEMATICS, 'division-algorithm').join(', '))
+  `${areaOf(MATHEMATICS, 'division-algorithm')} <- `
+  + prerequisitesOf(MATHEMATICS, 'division-algorithm').join(', '))
 /*
  * NO INTERFERENCE EDGE WAS LOST, the node having declared none — the stranding
  * no suite catches, so it is checked rather than remembered. `expandEdges` turns
@@ -7430,12 +7746,21 @@ t('the chain the four promotions walked is one path, and every node of it is wri
  * thirty-eighth promotion found by having to edit all four. Its own group owns
  * the figure now.
  */
-t('the floor itself is untouched, and the two bound areas are still bound',
-  AREAS.filter(a => a.nodes.length < 5).length === 0
-  && AREAS.find(a => a.id === 'linear-algebra').nodes.length - 5 === 1
-  && AREAS.find(a => a.id === 'algebra-foundations').nodes.length - 5 === 1,
+/*
+ * "The two bound areas are still bound" has gone, and this is the site where its
+ * going is most instructive. The thirty-eighth promotion's note directly above
+ * says "Its own group owns the figure now" — and then this line borrowed it
+ * again, two groups later, which is how a rule stated correctly still leaves the
+ * debt in place. The borrow is what made one change go red in five groups.
+ *
+ * What is left is the floor CHECK, which this group was right to guard and which
+ * is not a figure. It reads through the floor's own helper for the reason given
+ * in the previous group.
+ */
+t('the floor itself is untouched',
+  AREAS.filter(a => STUB_FLOOR_TERRITORY(a) < 5).length === 0,
   `discrete ${DISCRETE_AREA.nodes.length}, `
-  + `stubs ${AREAS.filter(a => a.nodes.length < 5).map(a => a.id).join('+') || 'none'}`)
+  + `stubs ${AREAS.filter(a => STUB_FLOOR_TERRITORY(a) < 5).map(a => a.id).join('+') || 'none'}`)
 
 // ---------------------------------------------------------------------------
 
@@ -7743,6 +8068,208 @@ t('eight of headroom left here, which is the only place this area is counted',
   && AREAS.filter(a => a.nodes.length < 5).length === 0,
   `discrete ${DISCRETE_AREA.nodes.length}, `
   + `stubs ${AREAS.filter(a => a.nodes.length < 5).map(a => a.id).join('+') || 'none'}`)
+
+// ---------------------------------------------------------------------------
+
+/**
+ * THE FORTIETH PROMOTION — THE CHEAP SHAPE IN ITS PUREST FORM.
+ *
+ * `euclidean-algorithm` out of `number-theory` and into `arithmetic-foundations`,
+ * one step up the chain the thirty-ninth promotion took. The four things worth
+ * asserting about it are the four a later edit could undo without any other
+ * group noticing.
+ *
+ * WHAT MAKES IT WORTH A GROUP RATHER THAN A LINE is that it is the only
+ * promotion in the build that stranded NOTHING. Both of the node's `needs` were
+ * authored concepts of the receiving subject, so both became ordinary
+ * `prerequisite` edges there and no `links` entry was added or deleted anywhere.
+ * Every previous promotion into this subject sent at least one edge to an area —
+ * the thirty-ninth sent `proof-techniques` to this very area's `links`, and that
+ * entry is still there and is asserted below as having been left alone.
+ *
+ * The availability was CREATED BY THE PREVIOUS PROMOTION rather than found:
+ * `division-algorithm` was a node of this area on the morning of the
+ * thirty-ninth promotion, so this node's "all my prerequisites are in one
+ * authored subject" was false then and true by the evening, with the node
+ * unedited. That is the same mechanism the two-edge note above records and it is
+ * why consecutive promotions up one chain get cheaper rather than dearer.
+ */
+group('the fortieth promotion, two steps up one chain and nothing stranded')
+
+const NT_AREA = AREAS.find(a => a.id === 'number-theory')
+const ARITH_ONTOLOGY = ONTOLOGIES.find(o => o.subject.id === 'arithmetic-foundations')
+
+t('the node is gone and the concept is in the subject its prerequisites were in',
+  !NT_AREA.nodes.some(n => n.id === 'euclidean-algorithm')
+  && conceptById(MATHEMATICS, 'euclidean-algorithm')?.subjectId === 'arithmetic-foundations'
+  && isTeachable(MATHEMATICS, 'euclidean-algorithm')
+  && isPractisable(MATHEMATICS, 'euclidean-algorithm'),
+  `${areaOf(MATHEMATICS, 'euclidean-algorithm')}, `
+  + `node here: ${NT_AREA.nodes.some(n => n.id === 'euclidean-algorithm')}`)
+
+/*
+ * BOTH EDGES BY NAME AND BY WHERE THEY LIVE, because this is the promotion whose
+ * edges nothing outside one `EDGES` list mentions. The counts are asserted as
+ * EXACTLY ONE each rather than as "present": the hazard with a cheap promotion is
+ * the duplicate, since somebody who believes a `links` entry was needed can add
+ * one and `composeAtlas` will emit the edge twice without complaint.
+ */
+t('both of the node\'s own edges resolved inside the receiving ontology, exactly once each',
+  ['division-algorithm', 'gcd-and-lcm'].every(from =>
+    MATHEMATICS.edges.filter(e =>
+      e.from === from && e.to === 'euclidean-algorithm' && e.kind === 'prerequisite').length === 1
+    && areaOf(MATHEMATICS, from) === 'arithmetic-foundations'
+    && ARITH_ONTOLOGY.edges.some(e => e.from === from && e.to === 'euclidean-algorithm')),
+  MATHEMATICS.edges.filter(e => e.to === 'euclidean-algorithm')
+    .map(e => `${e.from}:${e.promotedBy}`).join(' '))
+
+t('and no links entry anywhere mentions the promoted node, in either direction',
+  AREAS.every(a => (a.links ?? []).every(l =>
+    l.from !== 'euclidean-algorithm' && l.to !== 'euclidean-algorithm')),
+  AREAS.flatMap(a => (a.links ?? []).map(l => `${a.id}:${l.from}->${l.to}`))
+    .filter(s => /euclidean-algorithm/.test(s)).join(' ') || 'none')
+
+/*
+ * AND THE PREVIOUS PROMOTION'S ENTRY WAS LEFT ALONE, which is the half of
+ * "nothing stranded" that could be got wrong by tidying rather than by omission.
+ * `proof-techniques → division-algorithm` is this area's only `links` entry; it
+ * belongs to the thirty-ninth promotion and neither end of it moved, so a run
+ * that reconsidered the area's links while editing them would have had no reason
+ * to touch it and every opportunity.
+ */
+t('the thirty-ninth promotion\'s links entry is untouched and is still the only one',
+  (NT_AREA.links ?? []).length === 1
+  && NT_AREA.links[0].from === 'proof-techniques'
+  && NT_AREA.links[0].to === 'division-algorithm'
+  && !!NT_AREA.links[0].because,
+  (NT_AREA.links ?? []).map(l => `${l.from}->${l.to}`).join(' '))
+
+/*
+ * THE GATE TIGHTENED, MEASURED RATHER THAN DESCRIBED.
+ *
+ * `modular-arithmetic` stayed and declares the edge itself, so `composeAtlas`
+ * resolved it untouched and the promotion did not have to think about it. What
+ * changed anyway is where the gate STOPS: `gatingPrerequisitesOf` used to walk
+ * through an empty node to the two concepts beneath it and answered three names;
+ * it now stops at the written concept and answers two.
+ *
+ * Asserted as the exact set rather than as "includes the new concept", and as
+ * the exact set rather than as a length — both of the old names are asserted
+ * ABSENT, which is the half that distinguishes a tightening from an addition. A
+ * `length === 2` check would pass if some unrelated gate appeared and one of
+ * these persisted.
+ */
+t('the gate above it stops at the written concept instead of walking past it',
+  gatingPrerequisitesOf(MATHEMATICS, 'modular-arithmetic').slice().sort().join(' ')
+    === 'euclidean-algorithm sets'
+  && gatingPrerequisitesOf(MATHEMATICS, 'modular-arithmetic')
+    .every(p => isTeachable(MATHEMATICS, p)),
+  gatingPrerequisitesOf(MATHEMATICS, 'modular-arithmetic').join(', '))
+
+/*
+ * THE ROOT SET TURNED OVER WITHOUT CHANGING SIZE, which is the trap this file
+ * warns about in four other places and the reason none of these is a count. The
+ * departing node was `modular-arithmetic`'s only in-area prerequisite, so that
+ * node SUBSTITUTED into the root set rather than shrinking it: two before, two
+ * after, one member different. A `length === 2` check would have passed while
+ * naming the wrong node.
+ */
+t('the area root set substituted rather than shrank, and is asserted by name',
+  roots(areaOntology(NT_AREA)).slice().sort().join(' ')
+    === 'modular-arithmetic prime-distribution',
+  roots(areaOntology(NT_AREA)).join(' '))
+t('and the arrival is a root because the departed node was its last in-area prerequisite',
+  (NT_AREA.nodes.find(n => n.id === 'modular-arithmetic').needs ?? [])
+    .every(id => !NT_AREA.nodes.some(n => n.id === id)),
+  (NT_AREA.nodes.find(n => n.id === 'modular-arithmetic').needs ?? [])
+    .map(id => `${id}@${AREAS.find(a => a.nodes.some(n => n.id === id))?.id ?? 'authored'}`)
+    .join(' '))
+
+/*
+ * THE THIRD SILENT STRANDING, WHICH IS WHY THIS GROUP EXISTS AT ALL.
+ *
+ * The node declared `exercises: ['gcd-and-lcm']`, and `expandEdges` in atlas.ts
+ * turns that into an `encompasses` edge exactly as it turns `confusedWith` into
+ * an `interferes_with` one. So deleting the node deleted it, and nothing went
+ * red, because `encompasses` governs credit propagation rather than gating —
+ * the same reason the `confusedWith` case is invisible. `exercises` had not been
+ * written down as a hazard anywhere, which is the gap this asserts shut: three
+ * edge-bearing fields on a node, three strandings a promotion must check.
+ *
+ * The edge is DECLINED rather than lost and the argument is in
+ * ontology-arithmetic.ts: measured against the nine tasks shipped, not one takes
+ * a minimum of two exponents, uses gcd · lcm = a · b, or touches an lcm. What is
+ * asserted here is the absence in BOTH the composed graph and the receiving
+ * ontology's own edge list, since an edge restated in the ontology would be the
+ * decision having been reversed rather than the stranding having been checked.
+ */
+t('the exercises edge the node carried is absent from the composed graph',
+  MATHEMATICS.edges.filter(e =>
+    e.kind === 'encompasses'
+    && e.from === 'euclidean-algorithm' && e.to === 'gcd-and-lcm').length === 0
+  && !ARITH_ONTOLOGY.edges.some(e => e.kind === 'encompasses'
+    && e.from === 'euclidean-algorithm'),
+  MATHEMATICS.edges.filter(e => e.kind === 'encompasses' && e.from === 'euclidean-algorithm')
+    .map(e => e.id).join(' ') || 'none')
+/*
+ * AND THE MECHANISM IS LIVE, which is what makes the absence above a decision
+ * rather than a dead feature. Eighteen map nodes still declare `exercises`, and
+ * each one really does put an `encompasses` edge into the composed graph — so a
+ * promotion that forgets to look at the field loses a real edge, and this is
+ * asserted rather than described because the whole hazard is that losing one is
+ * invisible.
+ *
+ * The population is printed rather than bounded, and three DECLARING members are
+ * named instead. A floor would be a one-sided ratchet against a number every
+ * promotion out of those areas moves down; the names are what stop the
+ * quantifier going vacuous when it does.
+ */
+t('a node\'s exercises really do become encompasses edges, so the field is a live hazard',
+  (() => {
+    const withEx = AREAS.flatMap(a => a.nodes).filter(n => (n.exercises ?? []).length > 0)
+    const every = withEx.every(n => (n.exercises ?? []).every(sub =>
+      MATHEMATICS.edges.some(e =>
+        e.kind === 'encompasses' && e.from === n.id && e.to === sub)))
+    return withEx.length > 0 && every
+      // Three DECLARING nodes by name, so the floor above cannot be met by a
+      // set this check has never actually looked inside.
+      && ['markov-chains', 'taylor-series', 'integration-by-substitution'].every(id =>
+        withEx.some(n => n.id === id)
+        && MATHEMATICS.edges.some(e => e.kind === 'encompasses' && e.from === id))
+  })(),
+  `${AREAS.flatMap(a => a.nodes).filter(n => (n.exercises ?? []).length > 0).length} nodes`
+  + ` declare exercises; ${MATHEMATICS.edges.filter(e => e.kind === 'encompasses').length}`
+  + ' encompasses edges in all')
+
+/*
+ * AND NO INTERFERENCE WAS LOST OR INVENTED. The node declared no
+ * `confusedWith`, checked before the delete rather than assumed, so there was
+ * nothing to carry — and none was added either, the plausible pair
+ * (`euclidean-algorithm ~ gcd-and-lcm`) being a PREREQUISITE pair, which this
+ * file's own rule beside `absolute-value ~ negative-numbers` declines. Both
+ * halves asserted, since "no interference edge" alone would be satisfied by a
+ * promotion that silently dropped one.
+ */
+t('no interference edge touches the promoted concept, in either direction',
+  MATHEMATICS.edges.filter(e => e.kind === 'interferes_with'
+    && (e.from === 'euclidean-algorithm' || e.to === 'euclidean-algorithm')).length === 0,
+  MATHEMATICS.edges.filter(e => e.kind === 'interferes_with'
+    && /euclidean-algorithm/.test(e.id)).map(e => e.id).join(' ') || 'none')
+
+/*
+ * THE AREA'S DEPARTURE LIST GREW WITH THE PROMOTION, which is the discipline
+ * `MapArea.departed`'s doc asks for: record a departure when it happens rather
+ * than when the arithmetic starts to matter. Ten nodes against a floor of five
+ * is five of headroom on the nodes alone, so this changes no check's outcome and
+ * is asserted because the list is the thing that rots if it is written late.
+ */
+t('both departures are declared, and the area is clear of the floor either way',
+  (NT_AREA.departed ?? []).slice().sort().join(' ')
+    === 'division-algorithm euclidean-algorithm'
+  && NT_AREA.nodes.length === 10
+  && STUB_FLOOR_TERRITORY(NT_AREA) === 12
+  && NT_AREA.nodes.length >= 5,
+  `${NT_AREA.nodes.length} nodes + ${(NT_AREA.departed ?? []).length} departed`)
 
 // ---------------------------------------------------------------------------
 
@@ -8162,6 +8689,19 @@ const TITLES = [
   ['Singular value decomposition', 'singular-value-decomposition'],
   ['Gaussian elimination', 'gaussian-elimination'],
   ['Euclidean algorithm', 'euclidean-algorithm'],
+  /*
+   * The fortieth promotion's second row for a pattern it carried verbatim —
+   * `/\b(euclidean algorithm|b(é|e)zout)\b/i` has two branches and had one row,
+   * which is the dead-branch problem `basis-and-dimension` left here and
+   * `arithmetic-sequences` fixed with three rows. The row above exercises the
+   * first branch and says nothing about the second; narrowing the pattern to
+   * `/\beuclidean algorithm\b/i` would have stayed green without it.
+   *
+   * The accented form, because that is how an encyclopaedia titles it, and the
+   * `(é|e)` alternation is what makes the unaccented spelling reach the same
+   * concept. Both were measured landing here before the pattern came across.
+   */
+  ['Bézout\'s identity', 'euclidean-algorithm'],
   ['Modular arithmetic', 'modular-arithmetic'],
   ['Chinese remainder theorem', 'chinese-remainder'],
   ['Quadratic reciprocity', 'quadratic-reciprocity'],
@@ -9687,6 +10227,106 @@ t('no concept is in two places at once',
     return hits.length <= 1
   }))
 
+// ---------------------------------------------------------------------------
+
+group('the floor stopped binding')
+
+/*
+ * THE GROUP THAT OWNS THE LIVE FLOOR FIGURES, and the reason it exists at all.
+ *
+ * Five groups above this one each asserted that `linear-algebra` and
+ * `algebra-foundations` sat at one node of headroom. Every one of those claims
+ * was true when written and all five went red together on the change that
+ * unbound both areas — which reads like five problems and was one. The rule the
+ * thirty-eighth promotion wrote down is that an assertion about a set a change
+ * SHRINKS or GROWS belongs only in the group of the change that last moved it,
+ * and every other group asserts what is permanently true of its own run. That
+ * rule had been stated and then borrowed against twice more. This group is
+ * where the borrowing stops: the figures live here, and the five sites above now
+ * assert their own areas or nothing.
+ *
+ * So if a later change moves an area's headroom, THIS is the group that goes red
+ * and the only one. If you find yourself editing a figure in two places, the
+ * second one is the bug.
+ */
+
+const FLOOR_LINALG = AREAS.find(a => a.id === 'linear-algebra')
+const FLOOR_ALGFOUND = AREAS.find(a => a.id === 'algebra-foundations')
+
+t('no area is a stub once departures count as covered territory',
+  AREAS.every(a => STUB_FLOOR_TERRITORY(a) >= 5),
+  AREAS.filter(a => STUB_FLOOR_TERRITORY(a) < 5).map(a => a.id).join(', ') || 'none')
+
+/*
+ * THE TWO AREAS THE CHANGE WAS MADE FOR, asserted as the pair because the point
+ * is that they were unbound by DIFFERENT means and both had to work.
+ *
+ * `algebra-foundations` was unbound by the floor change alone: it still has six
+ * nodes, which by node count is one of headroom, and it is clear of the floor
+ * only because ten concepts have been authored out of it. That is the case with
+ * no alternative — nothing sits above the foundation to merge into, and its six
+ * leftovers would scatter across four areas if a destination were forced.
+ *
+ * `linear-algebra` was unbound twice over, and that redundancy is deliberate
+ * rather than sloppy: the floor change covers it (nine departed), AND five nodes
+ * were added because the area genuinely lacked them. Either alone suffices. The
+ * five are asserted by name below, because "eleven nodes" would be satisfied by
+ * five of anything.
+ */
+t('algebra-foundations is clear of the floor on its departures alone',
+  FLOOR_ALGFOUND.nodes.length === 6
+  && FLOOR_ALGFOUND.departed.length === 10
+  && FLOOR_ALGFOUND.nodes.length - 5 === 1
+  && STUB_FLOOR_TERRITORY(FLOOR_ALGFOUND) === 16,
+  `${FLOOR_ALGFOUND.nodes.length} nodes + ${FLOOR_ALGFOUND.departed.length} departed`)
+
+t('linear-algebra is clear of it twice over, by departures and by the five additions',
+  FLOOR_LINALG.nodes.length === 11
+  && FLOOR_LINALG.departed.length === 9
+  && STUB_FLOOR_TERRITORY(FLOOR_LINALG) === 20
+  // Either mechanism alone would have cleared it, which is the claim.
+  && FLOOR_LINALG.nodes.length - 5 >= 1
+  && 6 + FLOOR_LINALG.departed.length >= 5,
+  `${FLOOR_LINALG.nodes.length} nodes + ${FLOOR_LINALG.departed.length} departed`)
+
+/*
+ * THE FIVE ADDITIONS BY NAME, not by count, for the reason every root-set check
+ * in this file gives: a count is satisfied by five of anything, and what matters
+ * is that these five are the gaps that were actually found.
+ */
+t('the five thin spots are mapped by name',
+  ['cayley-hamilton', 'jordan-normal-form', 'quadratic-forms', 'dual-spaces', 'matrix-exponential']
+    .every(id => FLOOR_LINALG.nodes.some(n => n.id === id)),
+  FLOOR_LINALG.nodes.map(n => n.id).join(' '))
+
+/*
+ * ONE OF THE FIVE IS READY AND FOUR ARE NOT, which is the check that the
+ * additions did not quietly hand the next promotion a pile of cheap candidates.
+ * `dual-spaces` rests on authored material; the other four rest on this area's
+ * own unwritten spectral chain. If a later change makes three of them ready at
+ * once, that is worth noticing here rather than discovering as a suspiciously
+ * easy promotion.
+ */
+const ADDED_READY = ['cayley-hamilton', 'jordan-normal-form', 'quadratic-forms', 'dual-spaces', 'matrix-exponential']
+  .filter(id => (FLOOR_LINALG.nodes.find(n => n.id === id).needs ?? [])
+    .every(p => isTeachable(MATHEMATICS, p)))
+t('exactly one of the five is immediately ready, and it is the dual',
+  ADDED_READY.length === 1 && ADDED_READY[0] === 'dual-spaces',
+  ADDED_READY.join(' ') || 'none')
+
+/*
+ * THE MATRIX EXPONENTIAL CROSSES AREAS AND IS DECLARED ON ITS OWN NODE, which is
+ * the `links` boundary restated as a check. `power-series` is a node of
+ * `sequences-and-series`, so this edge leaves the area — but it ARRIVES at a
+ * node this area owns, and `links` is only for edges with neither end here. The
+ * distinction is easy to get backwards and the symptom would be a duplicate
+ * edge rather than a missing one.
+ */
+t('the cross-area prerequisite is on the node, not in links',
+  FLOOR_LINALG.nodes.find(n => n.id === 'matrix-exponential').needs.includes('power-series')
+  && !(FLOOR_LINALG.links ?? []).some(l => l.to === 'matrix-exponential')
+  && areaOf(MATHEMATICS, 'power-series') === 'sequences-and-series',
+  `${areaOf(MATHEMATICS, 'power-series')}`)
 
 console.log('\nrecognition coverage')
 console.log(`  ${checkedNodes.length} of ${MATHEMATICS.concepts.length} concepts can be recognised from a title`)

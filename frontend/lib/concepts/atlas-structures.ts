@@ -41,7 +41,16 @@ const LINEAR_ALGEBRA: MapArea = {
     'are all somewhere a learner arrives from the plane rather than from the top of this list. ' +
     'What is still here and rests on the last two of those is the ORTHOGONALITY THAT IS A ' +
     'THEOREM rather than a definition: a symmetric matrix having an orthonormal eigenbasis, and ' +
-    'the best answer to an unsolvable system being a projection onto a column space.',
+    'the best answer to an unsolvable system being a projection onto a column space. ' +
+    'FIVE THINGS A SECOND COURSE COVERS WERE MISSING FROM THIS LIST AND HAVE BEEN ADDED: the ' +
+    'canonical form a matrix takes when it has too few eigenvectors, the fact that a matrix ' +
+    'satisfies its own characteristic polynomial and the least polynomial that it does, the ' +
+    'classification of quadratic and bilinear forms by the signs of their eigenvalues, the dual ' +
+    'space a row vector lives in, and the power series that turns a linear system of ' +
+    'differential equations into a formula. They were absent by content and not merely under ' +
+    'other names, which is the check worth stating: `similarity` is a concept of ' +
+    '`plane-geometry` about figures, so matrix similarity stays a search term of ' +
+    '`diagonalisation` rather than becoming a sixth node here.',
   nodes: [
     {
       id: 'eigenvalues',
@@ -57,7 +66,7 @@ const LINEAR_ALGEBRA: MapArea = {
       name: 'Diagonalisation',
       is: 'Choosing a basis of eigenvectors so the matrix becomes diagonal — and the obstruction when there are not enough.',
       needs: ['eigenvalues', 'rank-nullity'],
-      terms: 'diagonalisation similar matrices jordan form multiplicity',
+      terms: 'diagonalisation similar matrices multiplicity eigenbasis',
     },
     {
       id: 'spectral-theorem',
@@ -65,7 +74,7 @@ const LINEAR_ALGEBRA: MapArea = {
       name: 'The spectral theorem',
       is: 'A symmetric matrix has an orthonormal eigenbasis and real eigenvalues — the cleanest theorem in the subject.',
       needs: ['diagonalisation', 'inner-product-spaces'],
-      terms: 'spectral theorem symmetric matrix orthogonal diagonalisation quadratic form',
+      terms: 'spectral theorem symmetric matrix orthogonal diagonalisation orthonormal eigenbasis',
     },
     {
       id: 'least-squares',
@@ -91,6 +100,140 @@ const LINEAR_ALGEBRA: MapArea = {
       needs: ['singular-value-decomposition', 'gaussian-elimination'],
       terms: 'condition number lu decomposition qr iterative method stability',
     },
+    /*
+     * ── THE FIVE BELOW WERE ADDED BECAUSE THE MAP WAS THIN, NOT TO BUY ROOM ──
+     *
+     * Worth separating, because the two readings suggest opposite standards.
+     * This area had six nodes against a floor of five when these were written,
+     * so adding them does raise the headroom — but the floor was fixed in the
+     * same change, by `departed` below, and it was fixed FIRST for exactly this
+     * reason. Nodes added to satisfy a check are topics invented to order, and
+     * that is the failure the floor exists to prevent rather than a way of
+     * passing it. These five are here on their own merits and would be correct
+     * additions with no floor at all.
+     *
+     * The merit is that the area's `covers` claims the subject "from dimension
+     * and rank through to the spectral theorem and the singular value
+     * decomposition", and a linear algebra course that stopped where this one
+     * did would have skipped the canonical form, the theorem that a matrix
+     * satisfies its own characteristic polynomial, the classification of
+     * quadratic forms, the dual, and the one construction that makes a linear
+     * system of differential equations a formula. Those are not advanced
+     * footnotes; four of the five are in every standard second course. The
+     * atlas says of itself that it is "not a complete map of mathematics and
+     * should not be described as one", and this is a case where the gap was
+     * findable by reading the area against the subject it names.
+     *
+     * CHECKED FOR BY CONTENT AND NOT BY ID BEFORE BEING ADDED. `similarity` is
+     * already a concept — of `plane-geometry`, about figures with equal angles —
+     * so matrix similarity is deliberately NOT a node here and lives in
+     * `diagonalisation`'s terms, where it was already. Two phrases moved out of
+     * existing nodes' `terms` for the same reason, noted at each.
+     *
+     * ONE OF THE FIVE IS IMMEDIATELY READY (`dual-spaces`, whose only
+     * prerequisite is authored) and the other four are not, which is the honest
+     * distribution: they rest on the spectral chain this area has not written
+     * yet. So this does not hand the next promotion four cheap candidates.
+     */
+    {
+      id: 'cayley-hamilton',
+      match: /\bcayley[–-]hamilton\b|\bminimal polynomial\b/i,
+      name: 'Cayley–Hamilton and the minimal polynomial',
+      is: 'A matrix satisfies its own characteristic polynomial, and the least polynomial it satisfies is what decides whether it diagonalises.',
+      needs: ['eigenvalues'],
+      terms: 'cayley hamilton theorem minimal polynomial characteristic polynomial annihilating',
+    },
+    {
+      id: 'jordan-normal-form',
+      match: /\bjordan (normal|canonical) form\b/i,
+      name: 'Jordan normal form',
+      is: 'The canonical form when there are not enough eigenvectors: diagonal blocks with ones above the diagonal, one block per invariant factor.',
+      /*
+       * `diagonalisation` names "the obstruction when there are not enough" and
+       * this is what the obstruction turns out to be, so the edge is the whole
+       * reason the sentence over there could be written. The minimal polynomial
+       * is the second prerequisite rather than a nicety: it is what decides the
+       * block SIZES, and without it the form can be stated but not found.
+       *
+       * "jordan form" was in `diagonalisation`'s `terms` and has been removed
+       * from it, since a search for the phrase should land on the node that is
+       * about it rather than on the node that mentions it.
+       */
+      needs: ['diagonalisation', 'cayley-hamilton'],
+      terms: 'jordan normal form canonical form jordan block invariant factors nilpotent',
+    },
+    {
+      id: 'quadratic-forms',
+      match: /\bquadratic form\b|\bbilinear form\b/i,
+      name: 'Quadratic and bilinear forms',
+      is: 'A homogeneous degree-two expression in several variables, classified by the signs of the eigenvalues of its symmetric matrix.',
+      /*
+       * `spectral-theorem` and not `eigenvalues`: the classification IS the
+       * orthogonal diagonalisation, so a node resting on the eigenvalues alone
+       * would be able to state the forms and not to sort them. "quadratic form"
+       * was in that node's `terms` and has been removed from it, for the reason
+       * given on the Jordan form above.
+       */
+      needs: ['spectral-theorem'],
+      terms: 'quadratic form bilinear form signature definite congruence sylvester',
+    },
+    {
+      id: 'dual-spaces',
+      match: /\bdual (space|basis)\b/i,
+      name: 'Dual spaces',
+      is: 'The linear maps from a space to its scalars, which form a space of the same dimension and are where a row vector actually lives.',
+      /*
+       * The one addition resting on written material rather than on this area's
+       * own chain, and so the one that is ready. That is not an accident of
+       * where it sits: the dual is a dimension count and a basis argument, both
+       * authored in `vectors-and-independence`, and it needs no eigenvalue.
+       */
+      needs: ['basis-and-dimension'],
+      terms: 'dual space dual basis linear functional annihilator transpose',
+    },
+    {
+      id: 'matrix-exponential',
+      match: /\bmatrix exponential\b/i,
+      name: 'The matrix exponential',
+      is: 'Summing a power series of a matrix, which turns a linear system of differential equations into a single closed formula.',
+      /*
+       * Two prerequisites in two areas, and both are load-bearing: the series
+       * is what the object IS, and the diagonalisation is the only way to sum
+       * it by hand. `power-series` is a node of `sequences-and-series` and
+       * unwritten, so this edge crosses from map to map and resolves in
+       * `composeAtlas` — declared here rather than in `links` because this end
+       * is a node of this area, which is the condition `links` exists for the
+       * absence of.
+       */
+      needs: ['diagonalisation', 'power-series'],
+      terms: 'matrix exponential one parameter group linear system fundamental matrix',
+    },
+  ],
+  /*
+   * NINE NODES HAVE BEEN AUTHORED OUT OF THIS AREA, and this is the list the
+   * stub floor reads so that nine departures count as territory covered rather
+   * than territory missing. See `MapArea.departed` in atlas.ts for why the
+   * floor needed it and why absence means zero.
+   *
+   * Four left together when ontology-matrices.ts was authored and are the four
+   * the `links` block below restates the incoming edges for. The other five are
+   * one promotion each — the fourteenth, twentieth, twenty-second,
+   * twenty-third and thirtieth — and every one of them is named in `covers`
+   * above, which is where the reasoning for each move lives. Nothing here is a
+   * node that merely points into this area: `three-dimensional-coordinates` was
+   * authored into the same subject as four of these and was a node of
+   * `euclidean-geometry`, so it is declared over there and not here.
+   */
+  departed: [
+    'matrices-and-maps',
+    'matrix-multiplication',
+    'determinant',
+    'matrix-inverse',
+    'gaussian-elimination',
+    'vector-spaces',
+    'basis-and-dimension',
+    'inner-product-spaces',
+    'rank-nullity',
   ],
   /**
    * THE FOUR EDGES THAT CAME IN TO THE AUTHORED NODES.
@@ -704,11 +847,23 @@ const DISCRETE_MATHEMATICS: MapArea = {
    * THE EDGES POINTING IN NEEDED NO ATTENTION ON THE DAY, every time, for the
    * reason the eighth promotion out of `euclidean-geometry` recorded: an edge is
    * owned by the node that DECLARES it. `graph-colouring-planarity` and
-   * `division-algorithm` still name `proof-techniques` in their own `needs`,
-   * they stayed, and `composeAtlas` resolves both untouched. `sets` named it
+   * `division-algorithm` still named `proof-techniques` in their own `needs`,
+   * they stayed, and `composeAtlas` resolved both untouched. `sets` named it
    * too and is the exception that proves the rule rather than a counterexample
    * to it: that node did not stay, so its edge is the one that moved, which is
    * the next paragraph.
+   *
+   * AND ONE OF THE TWO HAS SINCE STOPPED BEING A NODE, exactly the way the rule
+   * two paragraphs down predicts and in the same shape it has been undone four
+   * times here. The thirty-ninth promotion authored `division-algorithm` into
+   * `arithmetic-foundations`, so the sentence above is kept in the past tense and
+   * `graph-colouring-planarity` is the only node still carrying its own edge to
+   * `proof-techniques`. The difference from the four departures out of THIS area
+   * is where the stranded edge landed: `number-theory` owned the declarer, so the
+   * entry is in that area's `links` and not in this one's, which is why this
+   * area's four did not become five. `proof-techniques` is now a `from` in two
+   * areas' `links` at once, and NUMBER_THEORY's own block explains why filing by
+   * the `from` instead of by the declarer would be wrong.
    *
    * THE EDGE EACH NODE DECLARED ITSELF IS THE ONE THAT MOVED, which is why
    * there are now FOUR entries in `links` where there was one. That is the
@@ -1045,30 +1200,207 @@ const DISCRETE_MATHEMATICS: MapArea = {
   ],
 }
 
+/**
+ * TWO NODES LEFT THIS AREA WHEN THEY WERE AUTHORED, AND HAD TO.
+ *
+ * The thirty-ninth promotion wrote `division-algorithm` into
+ * `arithmetic-foundations` and the fortieth wrote `euclidean-algorithm` into the
+ * same subject, and both nodes are DELETED from the list below rather
+ * than annotated. That is not a style choice and it is the thing most likely to
+ * trip whoever promotes the next one here, so it is stated at the top of the
+ * area instead of beside the gap: `atlasProblems` REJECTS a map node whose id
+ * collides with an authored concept. The two are siblings in the composed graph
+ * — `composeAtlas` concatenates the areas and the authored ontologies — so a
+ * surviving skeleton would put two different objects behind one string, and
+ * `areaOf` would answer with an area id for one and a subject id for the other.
+ * Promoting a concept is therefore a MOVE and never a fill-in. The same
+ * paragraph is at the top of NUMBER_AND_ARITHMETIC's successor in
+ * atlas-foundations.ts, where five nodes left at once.
+ *
+ * THE FIRST TWO DEPARTURES THIS AREA HAS EVER HAD, in consecutive promotions and
+ * up one chain — the second node is the direct dependent of the first, and it
+ * became ready in the edit that wrote the first. Twelve nodes down to ten, five
+ * clear of the stub floor of five by nodes alone and seven once the two
+ * departures count as covered territory, so nothing here is near frozen and the
+ * next run has room.
+ *
+ * ── WHAT THE FORTIETH PROMOTION COST, WHICH WAS LESS THAN ANY BEFORE IT ───
+ *
+ * `euclidean-algorithm` declared `needs: ['division-algorithm', 'gcd-and-lcm']`
+ * and both are authored concepts of `arithmetic-foundations`, so BOTH edges are
+ * ordinary `prerequisite` entries in ontology-arithmetic.ts and this area needed
+ * no new `links` entry in either direction. That is the cheap shape in its purest
+ * form: zero entries, no new subject, nothing stranded anywhere. It was available
+ * because the previous promotion created it — `division-algorithm` was a node of
+ * this area on the morning of the thirty-ninth promotion, and a node's
+ * prerequisites all being authored in one subject is a property that can arrive
+ * without the node being edited at all.
+ *
+ * `modular-arithmetic` STAYED and declares `needs: ['euclidean-algorithm',
+ * 'relations']` itself. By the rule stated below — an edge is owned by the node
+ * that DECLARES it — that edge resolves in `composeAtlas` untouched and needs no
+ * `links` entry, which is the case most often got wrong in the opposite
+ * direction: a promotion is tempted to add an entry for something that stayed
+ * and depended on what left, and a spurious entry is a duplicate edge no suite
+ * reports. What did change with no edit at all is the GATE.
+ * `gatingPrerequisitesOf('modular-arithmetic')` used to walk through this empty
+ * node to the two concepts below it and answered `division-algorithm,
+ * gcd-and-lcm, sets`; it now stops here and answers `euclidean-algorithm, sets`.
+ * Three names to two, measured before and after rather than predicted.
+ *
+ * THE ROOT SET TURNED OVER WITHOUT CHANGING SIZE, which is the trap a count
+ * would miss. This area's roots were `euclidean-algorithm` and
+ * `prime-distribution`; they are now `modular-arithmetic` and
+ * `prime-distribution`, because the departing node was `modular-arithmetic`'s
+ * only in-area prerequisite — `relations` is a node of `discrete-mathematics`.
+ * Two before, two after, one member different. tests/atlas.mjs asserts the
+ * membership by name for exactly this reason.
+ *
+ * NO `confusedWith` WAS LOST — the node declared none, checked before the delete
+ * rather than assumed. But it DID declare `exercises: ['gcd-and-lcm']`, and that
+ * is a stranding of the same kind which nothing in this codebase had written
+ * down: `expandEdges` turns `exercises` into an `encompasses` edge just as it
+ * turns `confusedWith` into an `interferes_with` one, so deleting a node deletes
+ * those too and no suite goes red, because `encompasses` governs credit
+ * propagation rather than gating. That edge is declined rather than lost, and the
+ * argument is in ontology-arithmetic.ts's `EDGES` beside the pair it concerns.
+ * Three edge-bearing fields, three silent strandings; a promotion has to check
+ * all three.
+ *
+ * ── WHERE THE THIRTY-NINTH PROMOTION'S TWO EDGES WENT ────────────────────
+ *
+ * WHY THEY WENT TO DIFFERENT PLACES.
+ * The node declared `needs: ['divisibility', 'proof-techniques']`, and the rule
+ * the discrete-mathematics block above states in full applies: an edge is owned
+ * by the node that DECLARES it, so promoting a node strands only its own `needs`
+ * and edges declared at the far end resolve untouched. Both of these were the
+ * node's own, and they still parted company:
+ *
+ *   `divisibility` is authored in `arithmetic-foundations`, which is the subject
+ *   the node was promoted INTO. Both ends are concepts of one ontology, so that
+ *   edge is an ordinary `prerequisite` in ontology-arithmetic.ts and needs
+ *   nothing here.
+ *
+ *   `proof-techniques` is authored in `methods-of-proof`. An authored ontology's
+ *   edges may only name concepts it contains, so that edge may live in NEITHER
+ *   subject — not in the arithmetic, which does not contain `proof-techniques`,
+ *   and not in the proof subject, which does not contain `division-algorithm`.
+ *   An area's `links` is the only place in the build that can say "an authored
+ *   concept rests on an authored concept of a third subject", and the area it
+ *   belongs to is the one the DECLARER left. Hence the first entry below.
+ *
+ * So the general cost of a promotion into an EXISTING subject is one `links`
+ * entry per `need` that points outside it, and this node had one of each kind.
+ * The five promotions before this founded new subjects, where every `need`
+ * points outside by construction and every edge strands.
+ *
+ * `proof-techniques` IS NOW A `from` IN TWO AREAS' `links` AT ONCE —
+ * `discrete-mathematics` holds the entry for `sets` and this area holds the one
+ * for `division-algorithm` — and that is correct rather than a duplication to be
+ * tidied. The entries are two different edges to two different `to`s, and the
+ * area is chosen by which node declared the edge, not by where the `from` lives.
+ * A reader who files by the `from` instead would collect every edge out of one
+ * concept into one area and break the rule the moment a third dependent is
+ * authored.
+ *
+ * NO `confusedWith` WAS LOST, and it was checked rather than assumed, because
+ * this is the stranding no suite catches: `expandEdges` in atlas.ts turns a
+ * node's `confusedWith` into an `interferes_with` edge, so deleting a node
+ * DELETES that edge and nothing goes red — interference constrains SELECTION
+ * rather than gating, so every suite stays green while the scheduler is freed to
+ * introduce the two most confusable concepts in a subject together. This node
+ * declared none, so there was nothing to carry.
+ *
+ * What is worth recording is that authoring it found one the map had never
+ * noticed, which is the opposite shape and the first instance of it:
+ * `division-algorithm ~ fraction-arithmetic` is declared in
+ * ontology-arithmetic.ts, because writing out what the concept actually says
+ * about a ÷ b made the collision with the fraction concrete in a way a skeleton
+ * one-liner could not. A promotion can ADD an interference as well as drop one.
+ *
+ * AND HASSPAB LOST AN ANCHOR WITHOUT GAINING ANY COVERAGE, which is a
+ * consequence of this departure that no other area's has had. armature.ts places
+ * this area in Hasspab and `authored` subjects are claimed per region, but
+ * `arithmetic-foundations` is claimed by Ringed Mountains and has been since the
+ * `number-and-arithmetic` area was retired. So the material this area gave up
+ * appears on the game's map in a different region, Hasspab still reports nothing
+ * written, and its anchor slot had to be refilled. That file carries the refill
+ * and the argument for it.
+ */
 const NUMBER_THEORY: MapArea = {
   id: 'number-theory',
   name: 'Number theory',
   covers:
     'The integers taken seriously: divisibility, congruence, the multiplicative structure of the ' +
-    'residues, and the distribution of primes.',
+    'residues, and the distribution of primes. The one general fact underneath all of it — that ' +
+    'a quotient and a remainder always exist, are unique, and put the remainder in 0 ≤ r < b — ' +
+    'is no longer here: it is `division-algorithm`, authored in `arithmetic-foundations` ' +
+    'alongside the divisibility it generalises. Nor is the step above it — computing a gcd by ' +
+    'repeated remainder, and the identity that writes that gcd as a whole-number combination of ' +
+    'the pair — which is `euclidean-algorithm`, authored in the same subject because both of ' +
+    'its prerequisites are. What remains mapped begins where the subject matter stops being ' +
+    'about numbers: arithmetic on the remainders themselves, which is a claim about classes of ' +
+    'integers rather than about integers, and everything that rests on it.',
+  links: [
+    /*
+     * The one edge the departing node declared that had nowhere else to go.
+     *
+     * It GATES immediately and for real, which most `links` entries do not:
+     * they are usually written while the far end is still an unwritten node and
+     * constrain nothing until somebody authors it. Both ends have material, so
+     * `gatingPrerequisitesOf('division-algorithm')` on the composed atlas
+     * returns this alongside `divisibility`, and a learner cannot be shown the
+     * uniqueness argument until the four shapes of proof are strong.
+     *
+     * The direction is worth checking against the material rather than taken on
+     * trust, because `proof-techniques` leans the other way in its own prose.
+     * That concept's third knowledge point uses "dividing by 3 leaves exactly
+     * one of three remainders", which is an INSTANCE of what this edge's `to`
+     * establishes in general — and ontology-proof.ts says so explicitly, uses
+     * the instance only, and refuses the general form precisely because the map
+     * puts it above. So the gate runs upward and the prose runs downward, and
+     * both are right: the general theorem rests on knowing how to argue, and one
+     * instance of it can be checked by hand before the theorem exists.
+     * tests/atlas.mjs asserts that pairing by hand, since a circularity between
+     * a gate and a citation is not a shape any walk detects.
+     */
+    {
+      from: 'proof-techniques',
+      to: 'division-algorithm',
+      because:
+        'Existence needs the least leftover to be reachable and uniqueness is a direct argument '
+        + 'about the difference of two candidate remainders, so the claim cannot be stated — '
+        + 'never mind believed — by somebody who has not met an argument about an arbitrary '
+        + 'member. The concept below supplies one instance of the conclusion and this supplies '
+        + 'the method the general statement needs.',
+    },
+  ],
+  /*
+   * TWO NODES HAVE BEEN AUTHORED OUT OF THIS AREA. See `MapArea.departed` in
+   * atlas.ts for the mechanism, which landed between the thirty-ninth
+   * promotion's first edit and its last and is the reason this list exists at
+   * all.
+   *
+   * DECLARED ALTHOUGH THIS AREA IS NOWHERE NEAR THE FLOOR — ten nodes against
+   * five, so `STUB_FLOOR_TERRITORY` would pass on the nodes alone and this
+   * changes no check's outcome today. It follows the precedent of the area that
+   * declared nine with two of headroom, and for the same reason: the field's job
+   * is to stop a DRAINED area reading as an abandoned one, and the moment to
+   * record a departure is when it happens rather than when the arithmetic starts
+   * to matter. A list written at the floor has to be reconstructed from prose by
+   * somebody under pressure.
+   *
+   * The why is in the block at the top of this area; this carries only the fact.
+   */
+  departed: ['division-algorithm', 'euclidean-algorithm'],
   nodes: [
-    {
-      id: 'division-algorithm',
-      match: /\b(euclidean division|division algorithm|divisor)\b/i,
-      name: 'The division algorithm',
-      is: 'Quotient and remainder exist and are unique — the fact every argument about divisibility unwinds to.',
-      needs: ['divisibility', 'proof-techniques'],
-      terms: 'division algorithm quotient remainder well ordering',
-    },
-    {
-      id: 'euclidean-algorithm',
-      match: /\b(euclidean algorithm|b(é|e)zout)\b/i,
-      name: 'The Euclidean algorithm and Bézout',
-      is: 'Computing a gcd by repeated remainder, and the identity that writes it as an integer combination.',
-      needs: ['division-algorithm', 'gcd-and-lcm'],
-      exercises: ['gcd-and-lcm'],
-      terms: 'euclidean algorithm bezout identity extended gcd coprime',
-    },
+    /*
+     * `euclidean-algorithm` was here and is now authored in
+     * `arithmetic-foundations`, by the fortieth promotion. It is the node
+     * `modular-arithmetic` below still names, so the gate the area declares is
+     * unchanged — what changed is that the gate now stops at written material
+     * one step down instead of walking through an empty node to two.
+     */
     {
       id: 'modular-arithmetic',
       match: /\bmodular arithmetic\b/i,

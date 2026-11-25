@@ -141,6 +141,35 @@ export interface MapArea {
    * whoever maintains the subject on the other end.
    */
   links?: { from: string; to: string; because?: string }[]
+  /**
+   * Ids that were nodes of this area and have since been authored elsewhere.
+   *
+   * This is the field the stub floor in tests/atlas.mjs was missing. That check
+   * counts nodes REMAINING, so an area that drained from sixteen to six by
+   * having its content written reads identically to six somebody sketched and
+   * abandoned — and the two want opposite repairs. The successful one wants its
+   * remnant folded into a neighbour, or nothing at all; the abandoned one wants
+   * filling in. The floor's own comment names counting nodes-plus-departures as
+   * the alternative it did not take, and says that if a later drained area
+   * wants it, that is a change to the line rather than to the threshold. Two
+   * areas now want it, so this is that change.
+   *
+   * DECLARED WHERE IT IS LOAD-BEARING, NOT EVERYWHERE, and the floor treats
+   * absence as zero. So an area that has never declared one behaves exactly as
+   * it did before this field existed, and no area is weakened by its omission.
+   * What that costs is that `departed.length` is a floor on real departures
+   * rather than a count of them — fine for the only thing reading it, and the
+   * reason this is not presented as a history of the map. Three areas record
+   * them in prose already (`X` was here and is now authored in ...); those
+   * comments stay, because they carry the WHY and this carries only the fact.
+   *
+   * If you drain an area past the floor, declare its departures here. If you
+   * add an id that was never a node of this area, you have inflated the area's
+   * territory and bought headroom that was never spent — which is the one way
+   * to misuse this field, and the reason every id below is checked against the
+   * authored concepts in tests/atlas.mjs.
+   */
+  departed?: string[]
 }
 
 /**

@@ -791,12 +791,23 @@ const CONCEPTS: Concept[] = [
             {
               label: 'Evaluate where it is defined',
               detail: '(25 − 4)/(5 − 2) = 21/3 = 7. Note x + 2 at x = 5 is also 7.',
+              socratic:
+                'The denominator at x = 5 is 5 − 2, which is not zero, so the exclusion hunt you ' +
+                'did on 1/(x − 3) has nothing to find here — this input is one the rule accepts. ' +
+                'What does the fraction hand back at x = 5, and what does x + 2 hand back at the ' +
+                'very same input?',
             },
             {
               label: 'Now look at the excluded point',
               detail:
                 'At x = 2 the denominator is 0, so the original is undefined — even though the ' +
                 'numerator is 0 too and the cancelled form gives 4.',
+              socratic:
+                'At x = 2 the two forms part company: x + 2 returns 4, while the fraction has ' +
+                '0 underneath. Its numerator has gone to 0 as well, which is the detail that ' +
+                'tempts people into calling the fraction fine after all. What does division ' +
+                'demand of the number underneath, and what does a 0 on top change about that ' +
+                'demand?',
             },
             {
               label: 'Say what the cancellation did',
@@ -805,6 +816,13 @@ const CONCEPTS: Concept[] = [
                 'x ≠ 2 — the step quietly assumes the thing it is dividing by is not zero. The ' +
                 'result is a function with a hole at x = 2, and writing "= x + 2" without that ' +
                 'condition has thrown the hole away.',
+              socratic:
+                'Factored, the fraction reads (x − 2)(x + 2)/(x − 2), and striking out the ' +
+                '(x − 2) is the whole of what turns it into x + 2. But striking out a factor is ' +
+                'dividing above and below by it, and you have just watched one input send that ' +
+                'factor to 0. What was the cancelling step silently taking for granted — and ' +
+                'since the two forms disagree at exactly the input where that fails, what is the ' +
+                'honest relationship between (x² − 4)/(x − 2) and x + 2?',
             },
           ],
           answer: '7 at x = 5; undefined at x = 2, which is a hole rather than a value',
