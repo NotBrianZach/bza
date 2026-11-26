@@ -2483,9 +2483,17 @@ group('a second subject the schema was not designed around')
  * line within one test run of adding itself, which is a cheap and reliable way
  * to be told that a subject count is asserted in a place nobody would look for
  * it.
+ *
+ * The sixteenth and seventeenth each hit it too, which is TEN consecutive — and
+ * the seventeenth is worth one extra line, because it is the first to arrive
+ * while a memory note about this build already said to expect it. Being told in
+ * advance did not make the line findable: the number lives in an
+ * exponents-and-logarithms group, forty-four hundred lines from the registry it
+ * counts, and the only reliable way to locate it is still to add a subject and
+ * read the red. That is the behaviour this literal is kept for.
  */
-t('it is registered, and the registry now holds fifteen subjects',
-  ONTOLOGIES.length === 15 && getOntology('exponents-and-logarithms') === X2,
+t('it is registered, and the registry now holds seventeen subjects',
+  ONTOLOGIES.length === 17 && getOntology('exponents-and-logarithms') === X2,
   `${ONTOLOGIES.length} subjects: ${ONTOLOGIES.map(o => o.subject.id).join(', ')}`)
 t('it reports no structural problems', ontologyProblems(X2).length === 0, JSON.stringify(ontologyProblems(X2)))
 t('its fidelity claims match what its options can do', fidelityMismatches(X2).length === 0)
@@ -7261,9 +7269,33 @@ group('data-summaries, what a list of numbers says about itself')
  * and leave a literal only where a position is load-bearing, which it is for
  * index 0 and nowhere else. This line stays anyway, for the reason two
  * paragraphs up — it is the thing that REPORTS the move.
+ *
+ * THE FORTY-FOURTH MOVED IT TO 13, inserting `counting-and-arrangements` at 10,
+ * and that is FIVE consecutive runs. The literal has now reported five moves and
+ * the relational assertion below has needed no edits across all five, which is
+ * the comparison the paragraph above predicted and the reason this line is kept
+ * as a REPORT rather than promoted to the claim. One thing is new and narrows
+ * what the literal measures: the four previous insertions each went in at 8,
+ * behind the subject holding a single prerequisite, so "every promotion since the
+ * twelfth subject has inserted BELOW this one" was a statement about a chain of
+ * logic subjects. This one went in at 10 because it has TWO prerequisites in two
+ * subjects and had to clear the later of them — `binomial-theorem` in
+ * `rational-expressions` at 9 — so it is below this index for a different reason
+ * than its four predecessors were. The count of five is still a count of moves;
+ * it is no longer a count of one pattern recurring.
+ *
+ * THE FORTY-FIFTH MOVED IT TO 14, inserting `chance-and-events` at 11, and that
+ * is SIX consecutive runs. What is new in this one is the opposite of the
+ * previous note's narrowing: that insertion did NOT go in at the earliest slot
+ * its prerequisites allowed. Its later prerequisite sits at 8, so 9 was
+ * available, and it went to 11 because 9 and 10 are indices other groups read by
+ * name. So the six moves are not even a count of insertions finding their floor —
+ * they are a count of insertions landing ABOVE this subject for whatever local
+ * reason, and this literal reports the landing without claiming to explain it.
+ * The relational assertion below has still needed no edits across all six.
  */
-t('it is registered, and THIRTEENTH IN ORDER — directly behind the subject that owns sigma notation',
-  ONTOLOGIES[12] === DS && DS?.subject.id === 'data-summaries')
+t('it is registered, and FIFTEENTH IN ORDER — directly behind the subject that owns sigma notation',
+  ONTOLOGIES[14] === DS && DS?.subject.id === 'data-summaries')
 t('and it displaced none of the five positions anything reads by index',
   ONTOLOGIES[0] === ARITHMETIC_FOUNDATIONS
   && ONTOLOGIES[1] === EXPRESSIONS_AND_EQUATIONS
@@ -9182,6 +9214,1493 @@ t('every subgoal names a move rather than a step number, and no two in one examp
 // ---------------------------------------------------------------------------
 
 /**
+ * The SIXTEENTH subject, from the forty-fourth promotion: counting.
+ *
+ * `counting-principles` was a node of `discrete-mathematics` and is the whole of
+ * `counting-and-arrangements`. The structural half of the promotion is asserted
+ * in tests/atlas.mjs — the node being gone, the two `links` entries carrying its
+ * stranded edges, the armature slot refilled. What is asserted here is the
+ * MATERIAL, and three things about it that no count would catch.
+ *
+ * FIRST, THAT IT IS NOT A SECOND PASS AT THE BINOMIAL THEOREM. C(9, 3) and the
+ * fourth entry of row 9 are the same number, so a careless version of this
+ * concept could have been Pascal's triangle retold — and it would have passed
+ * every count in this file. The second point has to reach 84 by a route the other
+ * concept does not have (a descending product over the orderings of one
+ * selection) and then use the row as a CHECK, not as the derivation. Both halves
+ * are asserted.
+ *
+ * SECOND, THAT THE TWO ONE-LINE RULES ARE PRESENTED WITH THEIR HYPOTHESES. The
+ * product rule needs the option count to hold still and the division by r! needs
+ * the overcount to be uniform, and both are conditions a learner can be taught to
+ * skip. The first point's example is built to BREAK the product rule and say
+ * where; the second's says the uniform overcount is why one division works. A
+ * version that stated either rule without its condition is the likeliest wrong
+ * version of this concept, so each condition is checked in the material.
+ *
+ * THIRD, THAT THE THREE-SET CORRECTION IS DERIVED AND NOT RECALLED. The
+ * alternating signs are the thing people memorise wrongly, and the material's
+ * claim is that they come out of auditing one element at a time. All three kinds
+ * of element — in one set, in two, in all three — have to be audited, and the
+ * arithmetic of each is recomputed here rather than trusted.
+ */
+const CA = getOntology('counting-and-arrangements')
+
+group('counting-and-arrangements, a count built from the structure of a choice')
+/*
+ * ELEVENTH in the registry, and the first position in that array fixed by a
+ * SECOND prerequisite rather than by what a test reads.
+ *
+ * The four insertions before this each went in at 8, behind the one subject
+ * holding their one prerequisite. This subject has two, in two subjects, and had
+ * to clear the LATER of them — `binomial-theorem` in `rational-expressions` at 9
+ * — so index 10 is the floor its prerequisites allow and nothing had to be
+ * weighed. Both halves are asserted, and the relational pair is the one that
+ * stays meaningful when a seventeenth subject moves the literal: ontology.ts's
+ * header says to prefer it, and the `data-summaries` block above is now the
+ * record of FIVE consecutive promotions moving a literal index.
+ */
+t('it is registered, and ELEVENTH — the earliest slot its LATER prerequisite allows',
+  ONTOLOGIES[10] === CA && CA?.subject.id === 'counting-and-arrangements')
+t('and it is behind BOTH subjects owning its prerequisites, which is the real claim',
+  ONTOLOGIES.findIndex(o => o.subject.id === 'sets-and-membership')
+    < ONTOLOGIES.findIndex(o => o.subject.id === 'counting-and-arrangements')
+  && ONTOLOGIES.findIndex(o => o.subject.id === 'rational-expressions')
+    < ONTOLOGIES.findIndex(o => o.subject.id === 'counting-and-arrangements')
+  && !!conceptById(getOntology('sets-and-membership'), 'sets')
+  && !!conceptById(getOntology('rational-expressions'), 'binomial-theorem'),
+  `sets at ${ONTOLOGIES.findIndex(o => o.subject.id === 'sets-and-membership')}, `
+  + `rational at ${ONTOLOGIES.findIndex(o => o.subject.id === 'rational-expressions')}, `
+  + `counting at ${ONTOLOGIES.findIndex(o => o.subject.id === 'counting-and-arrangements')}`)
+/*
+ * AND THE LATER PREREQUISITE IS WHAT BINDS, asserted as an inequality rather than
+ * described. `sets-and-membership` at 8 would have allowed index 9; the floor is
+ * 10 because `rational-expressions` sits at 9. A future reordering that moved the
+ * binomial theorem above the sets would leave this subject's position correct for
+ * a different reason, and this line is what would report that the binding
+ * constraint had changed hands.
+ */
+t('and it is the LATER of the two that binds, which is why the slot is 10 and not 9',
+  ONTOLOGIES.findIndex(o => o.subject.id === 'rational-expressions')
+    > ONTOLOGIES.findIndex(o => o.subject.id === 'sets-and-membership')
+  && ONTOLOGIES.findIndex(o => o.subject.id === 'counting-and-arrangements')
+    === ONTOLOGIES.findIndex(o => o.subject.id === 'rational-expressions') + 1,
+  `rational at ${ONTOLOGIES.findIndex(o => o.subject.id === 'rational-expressions')}, `
+  + `counting at ${ONTOLOGIES.findIndex(o => o.subject.id === 'counting-and-arrangements')}`)
+t('and it displaced none of the ten positions anything reads by index',
+  ONTOLOGIES[0] === ARITHMETIC_FOUNDATIONS
+  && ONTOLOGIES[1] === EXPRESSIONS_AND_EQUATIONS
+  && ONTOLOGIES[2] === getOntology('plane-geometry')
+  && ONTOLOGIES[3] === getOntology('triangle-trigonometry')
+  && ONTOLOGIES[4] === getOntology('solid-measure')
+  && ONTOLOGIES[5] === getOntology('statements-and-connectives')
+  && ONTOLOGIES[6] === getOntology('predicates-and-quantifiers')
+  && ONTOLOGIES[7] === getOntology('methods-of-proof')
+  && ONTOLOGIES[8] === getOntology('sets-and-membership')
+  && ONTOLOGIES[9] === getOntology('rational-expressions'))
+t('it has no internal faults', ontologyProblems(CA).length === 0, ontologyProblems(CA).join('; '))
+t('its fidelity claim matches what its option can do', fidelityMismatches(CA).length === 0)
+t('one concept, three knowledge points',
+  CA.concepts.length === 1 && allKnowledgePoints(CA).length === 3,
+  `${CA.concepts.length} concepts, ${allKnowledgePoints(CA).length} points`)
+t('the concept is teachable AND practisable — a syllabus, not a map entry',
+  isTeachable(CA, 'counting-principles') && isPractisable(CA, 'counting-principles'))
+t('its points number from 1, which is per concept and not per subject',
+  CA.concepts.every(c => c.knowledgePoints.map(p => p.position).join(',') === '1,2,3'),
+  CA.concepts.map(c => `${c.id}:${c.knowledgePoints.map(p => p.position).join('')}`).join(' '))
+t('every knowledge point has a task, so no chain is left unable to become evidence',
+  allKnowledgePoints(CA).every(p => tasksForPoint(p.id).length > 0),
+  allKnowledgePoints(CA).filter(p => tasksForPoint(p.id).length === 0).map(p => p.id).join(', '))
+const CA_KINDS = new Set(allKnowledgePoints(CA).flatMap(p => tasksForPoint(p.id)).map(x => x.kind))
+t('every objective names a task kind, and every kind it names really ships a task here',
+  CA.concepts.every(c => c.objectives.length > 0
+    && c.objectives.every(o => o.taskKinds.length > 0 && o.taskKinds.every(k => CA_KINDS.has(k)))),
+  CA.concepts.flatMap(c => c.objectives.map(o => `${o.id}:${o.taskKinds.join('+')}`)).join(' ')
+  + ` against ${[...CA_KINDS].join('+')}`)
+t('and the set it ships is exactly {evaluate}, so none of the four refusals is named',
+  [...CA_KINDS].slice().sort().join(',') === 'evaluate'
+  && CA.concepts.every(c => c.objectives.every(o =>
+    !o.taskKinds.includes('justify') && !o.taskKinds.includes('counterexample')
+    && !o.taskKinds.includes('transform_to_form') && !o.taskKinds.includes('state'))),
+  [...CA_KINDS].join(','))
+/*
+ * THE EMPTY EDGE LIST, and this time containment bites TWICE. One concept, so no
+ * internal pair — and BOTH of its prerequisites are authored in other subjects,
+ * where every previous one-concept subject had at most one such edge to strand.
+ * tests/atlas.mjs asserts where the two edges live.
+ *
+ * THE TWO CANDIDATE HOSTS DECLINED FOR DIFFERENT REASONS, which is what makes
+ * this promotion's filing a judgement rather than a default, and the difference
+ * is asserted. `sets-and-membership` declined IN WRITING, in its own `covers`,
+ * which is printed verbatim to a reader — so filing there would have made a
+ * shipped sentence false. `rational-expressions` never mentioned counting as a
+ * boundary of itself, so that refusal is this promotion's own and rests on the
+ * subject being about the algebra of quotients. Only the first can be checked
+ * against a string; the second is checked as the absence of the concept plus the
+ * presence of the prerequisite, which is the strongest a test can do about a
+ * judgement.
+ */
+t('it declares no edges, and the single concept is therefore its own root',
+  CA.edges.length === 0 && roots(CA).length === 1 && roots(CA)[0] === 'counting-principles')
+t('BOTH prerequisites are authored elsewhere, so both edges had to leave the ontology',
+  isTeachable(getOntology('sets-and-membership'), 'sets')
+  && isTeachable(getOntology('rational-expressions'), 'binomial-theorem')
+  && !CA.concepts.some(c => c.id === 'sets' || c.id === 'binomial-theorem'),
+  `sets@${ONTOLOGIES.find(o => o.concepts.some(c => c.id === 'sets'))?.subject.id}, `
+  + `binomial@${ONTOLOGIES.find(o => o.concepts.some(c => c.id === 'binomial-theorem'))?.subject.id}`)
+/*
+ * ASSERTED AGAINST `covers` AND NOT AGAINST THE PHRASE EVERY HEADER QUOTES, which
+ * is a correction this promotion had to make rather than a choice it made.
+ *
+ * Four files cite `sets-and-membership` as having "written 'it does not claim
+ * COUNTING as a subject' into its own file", and that sentence really is in
+ * ontology-sets.ts — at the TOP, in a comment. It is not in `covers`, so it is a
+ * maintainer's note and not shipped prose, and an assertion written against it
+ * would be testing a comment. What `covers` says to a learner is the deferral by
+ * name, which is the user-visible half and the half that would be falsified by
+ * filing the concept there. That is what is checked.
+ */
+t('the subject holding its NEARER prerequisite defers this node by name, in shipped prose',
+  /`counting-principles`/.test(getOntology('sets-and-membership').subject.covers)
+  && /also directly above/.test(getOntology('sets-and-membership').subject.covers)
+  && /permutations and combinations/.test(getOntology('sets-and-membership').subject.covers)
+  && !getOntology('sets-and-membership').concepts.some(c => c.id === 'counting-principles'),
+  getOntology('sets-and-membership').subject.covers.slice(-400))
+t('and the other candidate host points here too, so the debt was named on both sides',
+  /`counting-principles`/.test(getOntology('rational-expressions').subject.covers)
+  || CA.subject.covers.includes('binomial-theorem'),
+  `${/`counting-principles`/.test(getOntology('rational-expressions').subject.covers)}`)
+/*
+ * NO FIGURE AND NO SPEED TARGET, both refused rather than omitted.
+ *
+ * A figure would genuinely help here — a tree of choices for the product rule, a
+ * three-circle diagram for the correction — and neither exists, so claiming one
+ * would be the placeholder types.ts warns about. That is a weaker position than
+ * the sets subject's, where the absence of a Venn diagram WAS the lesson, and it
+ * is recorded as the weaker thing it is.
+ *
+ * The speed target is refused for the shape of reason the fourteenth and
+ * fifteenth subjects each gave. Multiplying three small numbers would time
+ * beautifully; the skill is deciding WHICH rule applies and noticing when the
+ * product rule has lost its hypothesis, and a speed reward trains the
+ * multiplication a learner can already do.
+ */
+t('no knowledge point claims a figure, since none exists to claim',
+  allKnowledgePoints(CA).every(p => p.visualRef === undefined),
+  allKnowledgePoints(CA).filter(p => p.visualRef !== undefined).map(p => p.id).join(', '))
+t('and no point claims a speed target, since speed would reward the multiplication',
+  allKnowledgePoints(CA).every(p => p.automaticityTarget === undefined),
+  allKnowledgePoints(CA).filter(p => p.automaticityTarget !== undefined).map(p => p.id).join(', '))
+/*
+ * THE PATTERN IS CARRIED VERBATIM OFF THE MAP NODE, which every promotion since
+ * the fourth has done. Asserted against the literal, the node being GONE and
+ * there being nothing left to compare with.
+ *
+ * AND BOTH OVERCLAIMS ARE ASSERTED AS OVERCLAIMS. This pattern's shortfalls are
+ * PRECISION rather than recall, which is the worse direction: "Linear
+ * combination" is a vectors page and matches because the alternation has no left
+ * boundary, and "Pigeonhole principle" matches a page whose content this concept
+ * deliberately does not teach. The file's header argues `checked` survives both —
+ * the node already declared it, so recognition is unmoved — and the ordering that
+ * rescues the first is an accident of character count rather than of meaning,
+ * which is exactly why it is pinned here. Whoever next narrows the pattern should
+ * find the claim rather than discover the behaviour.
+ */
+t('its pattern is the map node\'s unchanged, so recognition did not move with the material',
+  String(CA.concepts[0].scope.match)
+    === String(/\b(combination|permutation|pigeonhole principle|combinatoric)/i)
+  && CA.concepts[0].fidelity === 'checked',
+  String(CA.concepts[0].scope.match))
+t('it really does reach the four pages it is for',
+  CA.concepts[0].scope.match.test('Permutation')
+  && CA.concepts[0].scope.match.test('Combination')
+  && CA.concepts[0].scope.match.test('Combinatorics')
+  && CA.concepts[0].scope.match.test('Pigeonhole principle'),
+  `permutation: ${CA.concepts[0].scope.match.test('Permutation')}`)
+t('and it overclaims into vectors, which the header names and a longer pattern outranks',
+  CA.concepts[0].scope.match.test('Linear combination')
+  && getOntology('vectors-and-independence').concepts
+    .some(c => c.scope.match?.test('Linear combination')
+      && c.scope.match.source.length > CA.concepts[0].scope.match.source.length),
+  `counting source ${CA.concepts[0].scope.match.source.length}, vectors `
+  + `${getOntology('vectors-and-independence').concepts
+    .find(c => c.scope.match?.test('Linear combination'))?.scope.match.source.length}`)
+t('and it claims the pigeonhole page while the material declines the principle',
+  CA.concepts[0].scope.match.test('Pigeonhole principle')
+  && /PIGEONHOLE/.test(CA.subject.covers)
+  && /EXISTS|existence/i.test(CA.subject.covers)
+  && !allKnowledgePoints(CA).some(p => /pigeonhole/i.test(p.statement)),
+  allKnowledgePoints(CA).map(p => /pigeonhole/i.test(p.statement)).join(','))
+
+group('the sixteenth subject states each one-line rule with its hypothesis')
+/*
+ * THE PRODUCT RULE IS BROKEN ON PURPOSE AND THE BREAK IS LOCATED, which is the
+ * assertion this group exists for.
+ *
+ * The condition is that the NUMBER of options for a later choice is the same
+ * whichever earlier option was taken — not that the choices are unrelated, which
+ * is the plausible wrong statement. So the first point's example has to (a) show
+ * the condition holding while the option SETS differ, and (b) show it failing,
+ * with the failure traced to a specific choice whose count moved. A version that
+ * taught "multiply the options" and moved on would pass every count in this file
+ * and fail both halves below.
+ */
+const CA_POINTS = allKnowledgePoints(CA)
+const CA_TASKS = CA_POINTS.flatMap(p => tasksForPoint(p.id))
+t('the first example shows the option SETS differing while the counts agree',
+  CA_POINTS[0].workedExample.subgoals.some(s =>
+    /different sets of the same size|two different sets/i.test(s.detail)
+    && /\{0,1,2,3,4,5,6,8,9\}/.test(s.detail)),
+  CA_POINTS[0].workedExample.subgoals.map(s => s.label).join(' | '))
+t('and it breaks the rule and names the choice whose count moved',
+  /\bmoved\b/i.test(CA_POINTS[0].workedExample.subgoals.map(s => s.label + s.detail).join(' '))
+  && /from 8 to 9/i.test(CA_POINTS[0].workedExample.subgoals.map(s => s.detail).join(' '))
+  && /does not apply/i.test(CA_POINTS[0].workedExample.subgoals.map(s => s.detail).join(' ')
+    + CA_POINTS[0].workedExample.answer),
+  CA_POINTS[0].workedExample.subgoals.map(s => s.label).join(' | '))
+/*
+ * AND THE STATEMENT SAYS "INAPPLICABLE" RATHER THAN "INACCURATE", asserted
+ * separately because it is a claim about the RULE and the worked example's is a
+ * claim about one problem. A learner who reads the failure as an approximation
+ * will reach for a correction term; the honest reading is that the rule has no
+ * hypothesis here and the repair is a case split, which is what the example then
+ * does.
+ */
+t('and the statement says the rule is inapplicable rather than merely inaccurate',
+  /inapplicable/i.test(CA_POINTS[0].statement)
+  && /not merely inaccurate/i.test(CA_POINTS[0].statement),
+  CA_POINTS[0].statement.slice(-300))
+t('and the wrong answer is produced rather than warned about, then accounted for exactly',
+  /320/.test(CA_POINTS[0].workedExample.subgoals.map(s => s.detail).join(' '))
+  && /320/.test(CA_POINTS[0].workedExample.answer)
+  && 328 - 320 === 8 && 9 * 8 - 8 * 8 === 8,
+  CA_POINTS[0].workedExample.answer.slice(-200))
+/*
+ * AND THE DIVISION BY r! IS GIVEN ITS HYPOTHESIS TOO, which is the same shape of
+ * claim one layer up: the overcount has to be the SAME for every selection, or
+ * there is no single number to divide by and the repair would have to be a case
+ * split — exactly what the first point's problem needed when its rule lost its
+ * hypothesis. The two points carry one lesson about one kind of condition, and
+ * the material has to say so rather than leaving the parallel to be noticed.
+ */
+t('the second example checks the overcount is uniform before dividing by it',
+  CA_POINTS[1].workedExample.subgoals.some(s =>
+    /same for every|same for EVERY/i.test(s.detail))
+  && /case split|every selection/i
+    .test(CA_POINTS[1].workedExample.subgoals.map(s => s.detail).join(' ')),
+  CA_POINTS[1].workedExample.subgoals.map(s => s.label).join(' | '))
+/*
+ * IT IS NOT A SECOND PASS AT THE BINOMIAL THEOREM, which is the claim the whole
+ * promotion rests on and the one a careless version would have failed silently.
+ *
+ * `binomial-theorem` builds a row by adding adjacent entries of the row above.
+ * If this concept did that again it would be Pascal's triangle retold under a new
+ * subject id. So the second point must derive 84 by a route that other concept
+ * does not have — a descending product over the orderings of one selection — and
+ * use the row as a CHECK. Both halves are asserted, and the second has teeth: no
+ * task here may ask for an expansion or name a coefficient as its answer.
+ */
+t('the second point derives its answer by a route the binomial theorem does not have',
+  /descending product|shrinking|9 × 8 × 7/i.test(CA_POINTS[1].statement)
+  && CA_TASKS.some(x => x.given === '(a*b*c)/d' && x.reference === '84')
+  && !CA_TASKS.some(x => x.form !== undefined),
+  CA_TASKS.map(x => x.given).join(' | '))
+t('and it uses the Pascal row as a check rather than as the derivation',
+  CA_POINTS[1].workedExample.subgoals.some(s =>
+    /check/i.test(s.label) && /1, 9, 36, 84, 126, 126, 84, 36, 9, 1/.test(s.detail))
+  && CA_POINTS[1].workedExample.subgoals.findIndex(s =>
+    /1, 9, 36, 84, 126, 126, 84, 36, 9, 1/.test(s.detail))
+    > CA_POINTS[1].workedExample.subgoals.findIndex(s => /divide/i.test(s.label)),
+  CA_POINTS[1].workedExample.subgoals.map(s => s.label).join(' | '))
+t('and that row really is row 9, and really does sum to the subset count',
+  (() => {
+    const row = [1, 9, 36, 84, 126, 126, 84, 36, 9, 1]
+    const choose = (n, r) => {
+      let v = 1
+      for (let i = 0; i < r; i += 1) v = (v * (n - i)) / (i + 1)
+      return v
+    }
+    return row.every((v, r) => choose(9, r) === v)
+      && row.reduce((a, b) => a + b, 0) === 2 ** 9
+      && row[3] === 84 && row[6] === 84
+  })(),
+  `row 9 sums to ${[1, 9, 36, 84, 126, 126, 84, 36, 9, 1].reduce((a, b) => a + b, 0)}, 2^9 = ${2 ** 9}`)
+t('and the subset total it checks against is the one the sets subject computes',
+  /512|2⁹/.test(CA_POINTS[1].workedExample.subgoals.map(s => s.detail).join(' '))
+  && /`sets`/.test(CA_POINTS[1].workedExample.subgoals.map(s => s.detail).join(' '))
+  && isTeachable(getOntology('sets-and-membership'), 'sets'),
+  CA_POINTS[1].workedExample.answer.slice(-200))
+/*
+ * THE THREE-SET CORRECTION IS AUDITED, NOT RECALLED, and all three kinds of
+ * element are checked — because the argument is only complete if the case split
+ * is. The arithmetic is recomputed here rather than trusted: this is the one
+ * place in the subject where a wrong number would be a wrong claim about
+ * mathematics rather than a wrong count of tasks.
+ */
+t('the third example audits all three kinds of element, each netting one',
+  (() => {
+    const text = CA_POINTS[2].workedExample.subgoals.map(s => s.detail).join(' ')
+    return /3 − 3 \+ 1 = 1|3 - 3 \+ 1 = 1/.test(text + CA_POINTS[2].workedExample.answer)
+      && /2 − 1 = 1|2 - 1 = 1/.test(text + CA_POINTS[2].workedExample.answer)
+      && /net 1|nets 1/i.test(text + CA_POINTS[2].workedExample.answer)
+  })(),
+  CA_POINTS[2].workedExample.answer.slice(-280))
+t('and the inclusion-exclusion arithmetic it states is correct, recomputed here',
+  (() => {
+    const n = 60
+    const mult = d => n / d
+    const union = mult(2) + mult(3) + mult(5) - mult(6) - mult(10) - mult(15) + mult(30)
+    const coprime = [1, 7, 11, 13, 17, 19, 23, 29]
+    return union === 44
+      && [2, 3, 5, 6, 10, 15, 30].every(d => n % d === 0)
+      && n - union === coprime.length * 2
+      && coprime.every(k => k % 2 !== 0 && k % 3 !== 0 && k % 5 !== 0)
+  })(),
+  'union 44, complement 16')
+t('and the multiplicity task answers the question a justify would have asked',
+  (() => {
+    const m = CA_TASKS.find(x => x.given === 'a - b + c')
+    return !!m && m.at.a === '3' && m.at.b === '3' && m.at.c === '1'
+      && m.reference === '1' && !isVerifiableKind('justify')
+      && m.knowledgePointId === CA_POINTS[2].id
+      && 3 - 3 + 1 === Number(m.reference)
+  })(),
+  CA_TASKS.find(x => x.given === 'a - b + c')?.id ?? 'none')
+
+group('the sixteenth subject grades every task with no worker at all')
+/*
+ * NINE TASKS, THREE ON EACH POINT, and the SHAPE is asserted rather than the
+ * total — a ratio over a total would be satisfied by nine tasks distributed any
+ * way at all.
+ *
+ * Every reference is a whole number and not merely a rational, which is stronger
+ * than the subjects either side hold and is also the check: every one of these
+ * counts something, so a fractional answer would be a wrong answer rather than an
+ * unusual one.
+ */
+t('nine tasks, three on each of the three points',
+  CA_TASKS.length === 9
+  && CA_POINTS.map(p => tasksForPoint(p.id).length).join(',') === '3,3,3',
+  CA_POINTS.map(p => `${p.position}:${tasksForPoint(p.id).length}`).join(' '))
+t('all nine are evaluate, so nothing here needs the worker even for equivalence',
+  CA_TASKS.every(x => x.kind === 'evaluate')
+  && CA_TASKS.every(x => x.form === undefined)
+  && CA_TASKS.every(x => x.domainConditions === undefined),
+  CA_TASKS.map(x => `${x.kind}${x.form ? `:${x.form}` : ''}`).join(' '))
+t('every reference is exactly reproducible from the given — no worker consulted',
+  CA_TASKS.every(x => {
+    const at = {}
+    for (const [name, raw] of Object.entries(x.at)) at[name] = parseExpression(raw, [])
+    const truth = exactValue(substitute(parseExpression(x.given, x.variables.map(v => v.name)), at))
+    const claimed = exactValue(parseExpression(x.reference, x.variables.map(v => v.name)))
+    return truth !== null && claimed !== null && showExact(truth) === showExact(claimed)
+  }),
+  CA_TASKS.map(x => x.id).join(', '))
+t('and every one of them is a whole number, since every one of them counts something',
+  CA_TASKS.every(x => /^\d+$/.test(x.reference)),
+  CA_TASKS.map(x => x.reference).join(' '))
+const caRulings = await Promise.all(CA_TASKS.map(x => ruleEvaluate(x, x.reference, NO_WORKER)))
+t('a correct answer is ruled correct with no worker configured',
+  caRulings.every(r => r.verdict.ruling === 'correct'),
+  caRulings.map((r, i) => `${CA_TASKS[i].id}:${r.verdict?.ruling ?? r.status}`).join(', '))
+/*
+ * NO FACTORIAL ANYWHERE IN THE NINE, which is the constraint that chose the
+ * encoding and is asserted so a later convenience cannot quietly undo it.
+ *
+ * `expr.ts` DOES list `factorial` in `ALLOWED_FUNCTIONS`, so a task writing
+ * `factorial(9)/factorial(6)` would parse — and `exactValue` has no case for a
+ * function call, so it would return null and drop the task to a worker this
+ * subject must not need. The first clause below is the one with teeth: it checks
+ * the givens contain no function call at all, which is what keeps the property
+ * rather than checking that nobody wrote the word.
+ */
+t('no given calls a function, so none of the nine can fall through to a worker',
+  CA_TASKS.every(x => /^[-+*/^()0-9a-z .]+$/.test(x.given))
+  && CA_TASKS.every(x => !/[a-z]{2,}\s*\(/.test(x.given))
+  && !CA_TASKS.some(x => /factorial/.test(x.given)),
+  CA_TASKS.map(x => x.given).join(' | '))
+/*
+ * ONE EXPRESSION ACROSS TWO POINTS AT TWO SUBSTITUTIONS, which is the device the
+ * fifteenth subject used and the reason the shared variable list has one name.
+ *
+ * `a*b*c` is the product rule. At (9, 9, 8) the pool holds still at nine, because
+ * only the first digit was barred from being zero; at (9, 8, 7) it shrinks,
+ * because a person cannot hold two offices. Same rule, two pools, two answers, so
+ * the pair cannot read as one task duplicated — and whether the pool shrinks is
+ * read off the problem rather than assumed from the words "all different".
+ */
+const CA_PRODUCTS = CA_TASKS.filter(x => x.given === 'a*b*c')
+t('one product expression answers two different questions in two different points',
+  CA_PRODUCTS.length === 2
+  && new Set(CA_PRODUCTS.map(x => x.knowledgePointId)).size === 2
+  && CA_PRODUCTS.map(x => x.reference).slice().sort().join(',') === '504,648',
+  CA_PRODUCTS.map(x => `${x.reference}@${x.at.a}*${x.at.b}*${x.at.c}`).join(' | '))
+t('and the one whose pool holds still is the digits, which is why the middle factor is 9',
+  (() => {
+    const digits = CA_PRODUCTS.find(x => x.reference === '648')
+    const offices = CA_PRODUCTS.find(x => x.reference === '504')
+    return !!digits && !!offices
+      && digits.at.a === '9' && digits.at.b === '9' && digits.at.c === '8'
+      && offices.at.a === '9' && offices.at.b === '8' && offices.at.c === '7'
+      && digits.knowledgePointId === CA_POINTS[0].id
+      && offices.knowledgePointId === CA_POINTS[1].id
+      && 9 * 9 * 8 === 648 && 9 * 8 * 7 === 504
+  })(),
+  CA_PRODUCTS.map(x => `${x.at.a}${x.at.b}${x.at.c}=${x.reference}`).join(' | '))
+/*
+ * TWO TASKS WITH ONE REFERENCE, WHICH IS NORMALLY A DUPLICATE AND HERE IS THE
+ * POINT — the assertion this block exists for.
+ *
+ * 84 twice: once down a three-factor product over 3! and once down a six-factor
+ * product over 6!, because choosing the 3 who are in and the 6 who are out are
+ * one act. The agreement IS the content, so it has to be produced rather than
+ * asserted, and the two arities have to differ or there would be no saving to
+ * notice. Asserted as same reference, different givens, different point-free
+ * lengths — and the arithmetic of both recomputed.
+ */
+t('the symmetry is two tasks reaching one answer down products of different lengths',
+  (() => {
+    const three = CA_TASKS.find(x => x.given === '(a*b*c)/d')
+    const six = CA_TASKS.find(x => x.given === '(a*b*c*d*e*f)/g')
+    return !!three && !!six
+      && three.reference === '84' && six.reference === '84'
+      && three.given.length < six.given.length
+      && three.knowledgePointId === six.knowledgePointId
+      && (9 * 8 * 7) / 6 === 84
+      && (9 * 8 * 7 * 6 * 5 * 4) / 720 === 84
+  })(),
+  `${CA_TASKS.find(x => x.given === '(a*b*c)/d')?.reference} and `
+  + `${CA_TASKS.find(x => x.given === '(a*b*c*d*e*f)/g')?.reference}`)
+t('and the prompts say why one answer twice is the lesson rather than a repeat',
+  (() => {
+    const six = CA_TASKS.find(x => x.given === '(a*b*c*d*e*f)/g')
+    return !!six && /left OUT|left out/.test(six.prompt)
+      && /symmetry/i.test(six.prompt)
+      && /C\(9, 3\) = C\(9, 6\)/.test(six.prompt)
+  })(),
+  CA_TASKS.find(x => x.given === '(a*b*c*d*e*f)/g')?.prompt.slice(-220))
+/*
+ * THE lcm CAVEAT IS IN A PROMPT BECAUSE THE INSTANCE CANNOT TEACH IT, which is a
+ * shape worth asserting rather than noting: every pair among 2, 3 and 5 is
+ * coprime, so lcm and product agree on all three pairwise terms and a learner
+ * could leave with "multiply the two divisors" intact. The rule that actually
+ * holds costs one clause, and 4 and 6 — product 24, lcm 12 — is where the wrong
+ * reading breaks.
+ */
+t('the overlap task names the lcm rule its own numbers cannot distinguish',
+  (() => {
+    const m = CA_TASKS.find(x => x.given === 'n/d')
+    return !!m && /least common multiple|lcm/i.test(m.prompt)
+      && /coprime/i.test(m.prompt)
+      && m.at.n === '60' && m.at.d === '6' && m.reference === '10'
+      && [[2, 3], [2, 5], [3, 5]].every(([p, q]) => p * q === (p * q) / 1)
+  })(),
+  CA_TASKS.find(x => x.given === 'n/d')?.prompt.slice(-200))
+/*
+ * THE CEILING, ASSERTED AS THE SHAPE OF THE MATERIAL RATHER THAN AS A NUMBER.
+ *
+ * The engine grades an expression, so no task can ask for a LIST of arrangements
+ * and every one asks for a count. The consequence is the same one the fifteenth
+ * subject named about sets and is the reason the worked examples are long: a
+ * learner can be asked how many committees there are and not which, so no task
+ * can catch somebody right by the wrong route. What a test can insist on is that
+ * the examples write out what the tasks cannot ask for, and that every subgoal is
+ * phrased as a question. The three examples hold 17 subgoals and every one is
+ * authored.
+ */
+t('no task asks for an argument or for a list, both kinds being unrulable here',
+  CA_TASKS.every(x => x.kind !== 'justify' && x.kind !== 'state')
+  && !isVerifiableKind('justify'),
+  CA_TASKS.map(x => x.kind).join(' '))
+t('and the worked examples name the objects no task can ask for',
+  CA_POINTS[1].workedExample.subgoals.some(s => /Ann, Bob and Cleo/.test(s.detail))
+  && /\{0,1,2,3,4,5,6,8,9\}/
+    .test(CA_POINTS[0].workedExample.subgoals.map(s => s.detail).join(' '))
+  && /1, 7, 11, 13, 17, 19, 23, 29/
+    .test(CA_POINTS[2].workedExample.subgoals.map(s => s.detail).join(' ')
+      + CA_POINTS[2].workedExample.answer),
+  CA_POINTS.map(p => p.position).join(' '))
+t('so every subgoal of every example is authored as a question, since they carry the argument',
+  CA_POINTS.flatMap(p => p.workedExample.subgoals).length === 17
+  && CA_POINTS.every(p => p.workedExample.subgoals.every(s =>
+    typeof s.socratic === 'string' && s.socratic.trim().endsWith('?'))),
+  CA_POINTS.flatMap(p => p.workedExample.subgoals)
+    .filter(s => typeof s.socratic !== 'string' || !s.socratic.trim().endsWith('?'))
+    .map(s => s.label).join(' | '))
+t('and no question is an imperative with a question mark, which contains its own answer',
+  CA_POINTS.flatMap(p => p.workedExample.subgoals).every(s =>
+    !/^(should|do|does|can|is|are|will) you\b/i.test(s.socratic.trim())),
+  CA_POINTS.flatMap(p => p.workedExample.subgoals)
+    .filter(s => /^(should|do|does|can|is|are|will) you\b/i.test(s.socratic.trim()))
+    .map(s => s.label).join(' | '))
+t('every subgoal names a move rather than a step number, and no two in one example repeat',
+  CA_POINTS.every(p =>
+    p.workedExample.subgoals.every(s => s.label.length > 20 && !/^step\b/i.test(s.label))
+    && new Set(p.workedExample.subgoals.map(s => s.label)).size
+      === p.workedExample.subgoals.length),
+  CA_POINTS.flatMap(p => p.workedExample.subgoals)
+    .filter(s => s.label.length <= 20 || /^step\b/i.test(s.label)).map(s => s.label).join(' | '))
+
+// ---------------------------------------------------------------------------
+
+/**
+ * The SEVENTEENTH subject, from the forty-fifth promotion: chance.
+ *
+ * `sample-spaces` was a node of `probability` and is the whole of
+ * `chance-and-events`. The structural half of the promotion is asserted in
+ * tests/atlas.mjs — the node being gone, the two `links` entries carrying its
+ * stranded edges, the two dependents it made ready, the armature claim. What is
+ * asserted here is the MATERIAL, and four things about it that no count would
+ * catch.
+ *
+ * FIRST, THAT IT IS NOT A SECOND PASS AT COUNTING. This is the failure mode
+ * specific to this concept, in the way "a second pass at the binomial theorem"
+ * was specific to the one above it. A probability over equally likely outcomes IS
+ * a ratio of counts, so a careless version of this would be `counting-principles`
+ * with a denominator — and it would pass every count in this file. The defence is
+ * structural rather than editorial and so is assertable: the space has EIGHT
+ * outcomes and they are WRITTEN OUT, every event is read off that list, and there
+ * is exactly ONE multiplication in the whole subject. Both halves are checked.
+ *
+ * SECOND, THAT THE DIVISION IS PRESENTED WITH ITS HYPOTHESIS. P(E) = |E| / |S|
+ * needs the outcomes to be equally likely, which is a property of the SPACE, and
+ * it is the condition a learner can be taught to skip because the formula does not
+ * show it. The material's defence is to carry a second, coarser sample space for
+ * the same experiment all the way through — legal, and with outcomes that are not
+ * equally likely — and to have the same division give a different answer in it.
+ * The version of this concept that stated the formula without the hypothesis is
+ * the likeliest wrong one, so the disagreement is checked in the material and the
+ * two numbers are recomputed here rather than trusted.
+ *
+ * THIRD, THAT THE OVERLAP CORRECTION IS DERIVED AND NOT RECALLED. The same claim
+ * the subject above makes about inclusion–exclusion, one set fewer and one layer
+ * up: the repair comes out of following a single outcome through three terms and
+ * counting how many times it ends up counted. The arithmetic of that audit is
+ * recomputed here.
+ *
+ * FOURTH, THAT THE UNCORRECTED SUM REFUTES ITSELF. The two events in the third
+ * point were chosen so that adding their probabilities gives exactly 1 while three
+ * of the eight outcomes are in neither — a fault that contradicts the list rather
+ * than merely disagreeing with it by a little. That is an editorial choice about
+ * which instance to use, it is the difference between a lesson and an erratum, and
+ * it is arithmetic, so it is asserted.
+ */
+const CE = getOntology('chance-and-events')
+
+group('chance-and-events, a likelihood read off a list of everything that could happen')
+/*
+ * TWELFTH in the registry, and the first position in that array NOT fixed by what
+ * its prerequisites allow.
+ *
+ * Every insertion before this took the earliest slot after the subject holding
+ * its latest prerequisite, and the only judgement was which index a test reads by
+ * name. Here the two diverge. The later prerequisite is `sets` in
+ * `sets-and-membership` at 8, so index 9 was allowed — and 9 and 10 are read by
+ * name by the two groups above, so this subject sits at 11 instead. Every slot
+ * from 9 up makes the same curriculum claim, so nothing was given up.
+ *
+ * ASSERTED AS THE CONJUNCTION OF THE FLOOR AND THE GAP, which is the only form
+ * that says what happened. A literal alone would report the position; the floor
+ * alone would be satisfied at 9. Together they record that the floor was 9, that
+ * this is above it, and that the two indices in between are the ones other groups
+ * pin — so a future reordering that frees index 9 would leave this line correct
+ * for a reason it no longer gives, and the clause naming those two occupants is
+ * what would then go red.
+ */
+t('it is registered, and TWELFTH — above the floor its prerequisites set, not at it',
+  ONTOLOGIES[11] === CE && CE?.subject.id === 'chance-and-events'
+  && ONTOLOGIES.findIndex(o => o.subject.id === 'sets-and-membership') === 8
+  && ONTOLOGIES[9] === getOntology('rational-expressions')
+  && ONTOLOGIES[10] === getOntology('counting-and-arrangements'),
+  `chance at ${ONTOLOGIES.findIndex(o => o.subject.id === 'chance-and-events')}, `
+  + `floor ${ONTOLOGIES.findIndex(o => o.subject.id === 'sets-and-membership') + 1}`)
+t('and it is behind BOTH subjects owning its prerequisites, which is the real claim',
+  ONTOLOGIES.findIndex(o => o.subject.id === 'sets-and-membership')
+    < ONTOLOGIES.findIndex(o => o.subject.id === 'chance-and-events')
+  && ONTOLOGIES.findIndex(o => o.subject.id === 'arithmetic-foundations')
+    < ONTOLOGIES.findIndex(o => o.subject.id === 'chance-and-events')
+  && !!conceptById(getOntology('sets-and-membership'), 'sets')
+  && !!conceptById(getOntology('arithmetic-foundations'), 'fraction-arithmetic'),
+  `sets at ${ONTOLOGIES.findIndex(o => o.subject.id === 'sets-and-membership')}, `
+  + `arithmetic at ${ONTOLOGIES.findIndex(o => o.subject.id === 'arithmetic-foundations')}, `
+  + `chance at ${ONTOLOGIES.findIndex(o => o.subject.id === 'chance-and-events')}`)
+t('and it displaced none of the eleven positions anything reads by index',
+  ONTOLOGIES[0] === ARITHMETIC_FOUNDATIONS
+  && ONTOLOGIES[1] === EXPRESSIONS_AND_EQUATIONS
+  && ONTOLOGIES[2] === getOntology('plane-geometry')
+  && ONTOLOGIES[3] === getOntology('triangle-trigonometry')
+  && ONTOLOGIES[4] === getOntology('solid-measure')
+  && ONTOLOGIES[5] === getOntology('statements-and-connectives')
+  && ONTOLOGIES[6] === getOntology('predicates-and-quantifiers')
+  && ONTOLOGIES[7] === getOntology('methods-of-proof')
+  && ONTOLOGIES[8] === getOntology('sets-and-membership')
+  && ONTOLOGIES[9] === getOntology('rational-expressions')
+  && ONTOLOGIES[10] === getOntology('counting-and-arrangements'))
+t('it has no internal faults', ontologyProblems(CE).length === 0, ontologyProblems(CE).join('; '))
+t('its fidelity claim matches what its option can do', fidelityMismatches(CE).length === 0)
+/*
+ * THE SUBJECT TOTALS MOVED TO THE FORTY-SIXTH PROMOTION'S GROUP, which added the
+ * second concept; what is asserted here is this promotion's own concept, whose
+ * three points have not moved and cannot. A `CE.concepts.length === 1` would have
+ * gone red on a correct addition, which is the shape this file dissects
+ * elsewhere, and the first thing the subject ever did was predict its own second
+ * concept by name.
+ */
+t('its concept has three knowledge points, numbered within itself',
+  conceptById(CE, 'sample-spaces')?.knowledgePoints.length === 3,
+  `${conceptById(CE, 'sample-spaces')?.knowledgePoints.length} points`)
+t('the concept is teachable AND practisable — a syllabus, not a map entry',
+  isTeachable(CE, 'sample-spaces') && isPractisable(CE, 'sample-spaces'))
+t('its points number from 1, which is per concept and not per subject',
+  CE.concepts.every(c => c.knowledgePoints.map(p => p.position).join(',') === '1,2,3'),
+  CE.concepts.map(c => `${c.id}:${c.knowledgePoints.map(p => p.position).join('')}`).join(' '))
+t('every knowledge point has a task, so no chain is left unable to become evidence',
+  allKnowledgePoints(CE).every(p => tasksForPoint(p.id).length > 0),
+  allKnowledgePoints(CE).filter(p => tasksForPoint(p.id).length === 0).map(p => p.id).join(', '))
+const CE_KINDS = new Set(allKnowledgePoints(CE).flatMap(p => tasksForPoint(p.id)).map(x => x.kind))
+t('every objective names a task kind, and every kind it names really ships a task here',
+  CE.concepts.every(c => c.objectives.length > 0
+    && c.objectives.every(o => o.taskKinds.length > 0 && o.taskKinds.every(k => CE_KINDS.has(k)))),
+  CE.concepts.flatMap(c => c.objectives.map(o => `${o.id}:${o.taskKinds.join('+')}`)).join(' ')
+  + ` against ${[...CE_KINDS].join('+')}`)
+t('and the set it ships is exactly {evaluate}, so none of the four refusals is named',
+  [...CE_KINDS].slice().sort().join(',') === 'evaluate'
+  && CE.concepts.every(c => c.objectives.every(o =>
+    !o.taskKinds.includes('justify') && !o.taskKinds.includes('counterexample')
+    && !o.taskKinds.includes('transform_to_form') && !o.taskKinds.includes('state'))),
+  [...CE_KINDS].join(','))
+/*
+ * THE EMPTY EDGE LIST, and containment bites twice again — the second promotion
+ * running for which it does. One concept, so no internal pair, and BOTH
+ * prerequisites are authored in other subjects.
+ *
+ * THE TWO CANDIDATE HOSTS DECLINED FOR DIFFERENT REASONS, and the difference is
+ * sharper here than it was for the subject above. `sets-and-membership` holds the
+ * nearer prerequisite and could have taken this concept for less than a new
+ * subject costs — and unlike counting and relations, which it declines by NAME in
+ * its own `covers`, it says nothing whatever about probability. So there is no
+ * string to assert against and the refusal is this promotion's own, resting on a
+ * probability being a function from subsets to numbers rather than a fact about
+ * membership. `arithmetic-foundations` holds `fraction-arithmetic` and never
+ * mentioned chance either.
+ *
+ * What a test can do about two judgements with no shipped sentence behind them is
+ * assert the SHAPE each would have had: the prerequisite is there, the concept is
+ * not, and the concept is somewhere else. That is weaker than the assertion the
+ * sixteenth subject's group could make, and it is weaker for a reason worth
+ * recording rather than papering over — those hosts had written their boundary
+ * down in advance and these two had not.
+ */
+/*
+ * IT DECLARED NO EDGES AND NOW DECLARES TWO, so what is asserted here is the half
+ * that was never about the count: NEITHER of this concept's own prerequisites can
+ * be named in this ontology, so neither of its edges is in that array however
+ * long the array gets. The forty-sixth promotion's group below owns the length.
+ *
+ * `sample-spaces` is still the subject's root, and that is asserted for a reason
+ * the empty-array version could not give: it is rooted because the ontology holds
+ * nothing it depends on, which stays true as concepts are added above it and goes
+ * red only if something it needs is ever filed here.
+ */
+t('neither of its own edges is in the ontology, and it is still the subject root',
+  !CE.edges.some(e => [e.from, e.to].includes('sets')
+    || [e.from, e.to].includes('fraction-arithmetic'))
+  && !CE.edges.some(e => e.kind === 'prerequisite' && e.to === 'sample-spaces')
+  && roots(CE).length === 1 && roots(CE)[0] === 'sample-spaces',
+  `${CE.edges.length} edges, roots {${roots(CE).join(', ')}}`)
+t('BOTH prerequisites are authored elsewhere, so both edges had to leave the ontology',
+  isTeachable(getOntology('sets-and-membership'), 'sets')
+  && isTeachable(getOntology('arithmetic-foundations'), 'fraction-arithmetic')
+  && !CE.concepts.some(c => c.id === 'sets' || c.id === 'fraction-arithmetic'),
+  `sets@${ONTOLOGIES.find(o => o.concepts.some(c => c.id === 'sets'))?.subject.id}, `
+  + `fractions@${ONTOLOGIES.find(o => o.concepts.some(c => c.id === 'fraction-arithmetic'))
+    ?.subject.id}`)
+t('and neither host took it, though the nearer one had written no boundary to stop it',
+  !getOntology('sets-and-membership').concepts.some(c => c.id === 'sample-spaces')
+  && !getOntology('arithmetic-foundations').concepts.some(c => c.id === 'sample-spaces')
+  && !/probabilit/i.test(getOntology('sets-and-membership').subject.covers)
+  && !/probabilit/i.test(getOntology('arithmetic-foundations').subject.covers)
+  && conceptById(CE, 'sample-spaces')?.subjectId === 'chance-and-events',
+  `sets mentions probability: ${/probabilit/i.test(getOntology('sets-and-membership')
+    .subject.covers)}`)
+/*
+ * NO FIGURE AND NO SPEED TARGET, both refused rather than omitted.
+ *
+ * A figure would genuinely help — a tree of the three tosses branching to eight
+ * leaves is the single most useful picture in elementary probability — and none
+ * exists, so claiming one would be the placeholder types.ts warns about. That is
+ * the same weaker position the subject above recorded, and it is recorded again
+ * rather than cited because the figure this one wants is more obvious: a reader
+ * who notices the absence should find the refusal, not conclude nobody thought of
+ * it.
+ *
+ * The speed target is refused for the shape of reason the fourteenth subject
+ * onward have each given. Dividing 3 by 8 would time beautifully; the skill is
+ * deciding whether the division is licensed at all, and a speed reward trains the
+ * arithmetic a learner already has.
+ */
+t('no knowledge point claims a figure, since none exists to claim',
+  allKnowledgePoints(CE).every(p => p.visualRef === undefined),
+  allKnowledgePoints(CE).filter(p => p.visualRef !== undefined).map(p => p.id).join(', '))
+t('and no point claims a speed target, since speed would reward the division',
+  allKnowledgePoints(CE).every(p => p.automaticityTarget === undefined),
+  allKnowledgePoints(CE).filter(p => p.automaticityTarget !== undefined).map(p => p.id).join(', '))
+/*
+ * THE PATTERN IS CARRIED VERBATIM OFF THE MAP NODE, which every promotion since
+ * the fourth has done. Asserted against the literal, the node being GONE and
+ * there being nothing left to compare with.
+ *
+ * AND THE SHORTFALL IS ASSERTED AS RECALL RATHER THAN PRECISION, which is the
+ * opposite of the subject above and is the better direction. Every title that
+ * matches is this concept, so nothing is overclaimed. What is MISSED is asserted
+ * by name — "Outcome (probability)", "Complementary event" and the bare
+ * "Probability" page are all at least partly this material and none of them
+ * matches — because a recall gap is invisible by construction: nothing goes red
+ * when a page finds no concept. The negative clause is also what would catch the
+ * obvious wrong widening, since `/\bprobability\b/` would take all three of those
+ * and fifteen unwritten nodes with them.
+ *
+ * ONE OF THE THREE TITLES THE PATTERN SPELLS IS UNREACHABLE, found by testing it
+ * rather than reading it, and asserted as dead so that repairing it reports
+ * itself. The alternation is wrapped in `\b(...)\b` and the third alternative ends
+ * in a literal `)`; a `\b` after a non-word character needs a word character next,
+ * and "Event (probability theory)" has nothing next. So the author's third target
+ * is the one title in this group that does NOT match.
+ *
+ * It is the same trap the `hypothesis-testing` node carries a comment about one
+ * file away — "no trailing \b after 'test'" — reached from the other side, and the
+ * reason it is asserted here rather than repaired is the verbatim rule: the
+ * pattern moves in its own commit, not in the one that adds material. This
+ * assertion is what tells that commit it has landed.
+ */
+t('its pattern is the map node\'s unchanged, so recognition did not move with the material',
+  String(CE.concepts[0].scope.match)
+    === String(/\b(sample space|probability axioms|event \(probability theory\))\b/i)
+  && CE.concepts[0].fidelity === 'checked',
+  String(CE.concepts[0].scope.match))
+t('it reaches two of the three titles it spells, and both really are this concept',
+  CE.concepts[0].scope.match.test('Sample space')
+  && CE.concepts[0].scope.match.test('Probability axioms'),
+  `sample space: ${CE.concepts[0].scope.match.test('Sample space')}, `
+  + `axioms: ${CE.concepts[0].scope.match.test('Probability axioms')}`)
+t('and the third is DEAD, the trailing \\b after a close bracket never matching',
+  !CE.concepts[0].scope.match.test('Event (probability theory)')
+  && /\\b\(/.test(CE.concepts[0].scope.match.source)
+  && /\\\)\)\\b/.test(CE.concepts[0].scope.match.source)
+  && CE.concepts[0].scope.match.source.includes('event \\(probability theory\\)'),
+  `matches: ${CE.concepts[0].scope.match.test('Event (probability theory)')}, `
+  + `source tail: ${CE.concepts[0].scope.match.source.slice(-28)}`)
+t('and it underclaims rather than overclaiming, which is the direction to prefer',
+  !CE.concepts[0].scope.match.test('Outcome (probability)')
+  && !CE.concepts[0].scope.match.test('Complementary event')
+  && !CE.concepts[0].scope.match.test('Probability')
+  && !CE.concepts[0].scope.match.test('Conditional probability'),
+  ['Outcome (probability)', 'Complementary event', 'Probability', 'Conditional probability']
+    .filter(s => CE.concepts[0].scope.match.test(s)).join(', ') || 'none claimed')
+
+group('the seventeenth subject carries a second sample space to show the hypothesis')
+/*
+ * SCOPED TO THE CONCEPT AND NOT TO THE SUBJECT, which it was until the
+ * forty-sixth promotion, and the reason is worth a paragraph because every
+ * assertion below depended on the two being the same thing.
+ *
+ * While `chance-and-events` held one concept, "every task in this subject" and
+ * "every task in this concept" picked out the same nine rows, so the subject-wide
+ * filter was a proxy for a concept-wide claim and nothing distinguished them. The
+ * claims themselves were always about the concept: eight outcomes written out, a
+ * second coarser space, exactly ONE multiplication. That last one is the sharp
+ * case — it is this concept's boundary against `counting-probability`, the node it
+ * named as where combinatorics meets chance, and the forty-sixth promotion filed
+ * that very node into this subject. Four of its nine tasks multiply. So a
+ * subject-wide reading would have the boundary claim contradicted by the concept
+ * it was drawn against, while the fact it defends is untouched: this concept still
+ * multiplies once.
+ *
+ * The lesson is narrower than "scope everything to the concept". It is that a
+ * filter which happens to be equivalent to the claim should be written as the
+ * CLAIM — a one-concept subject makes the two indistinguishable, and the subject
+ * growing is the event that tells them apart.
+ */
+const CE_POINTS = conceptById(CE, 'sample-spaces').knowledgePoints
+const CE_TASKS = CE_POINTS.flatMap(p => tasksForPoint(p.id))
+/*
+ * THE SPACE IS WRITTEN OUT, WHICH IS WHAT KEEPS THIS OUT OF COUNTING'S TERRITORY.
+ *
+ * All eight sequences appear in the first point's worked example and in the first
+ * task's prompt, so every event in all three points is READ off a list rather
+ * than counted. That is a boundary, not an economy: `counting-probability`
+ * directly above is where combinatorics meets chance, and this concept must not
+ * become it. The one multiplication in THIS CONCEPT is asserted as exactly one —
+ * it used to be asserted over the subject, which was the same set of tasks until
+ * the forty-sixth promotion filed that very concept here and brought four
+ * multiplying tasks with it. See the scope note at the top of this group.
+ */
+t('all eight outcomes of the space are written out, not described',
+  ['HHH', 'HHT', 'HTH', 'HTT', 'THH', 'THT', 'TTH', 'TTT'].every(s =>
+    CE_POINTS[0].workedExample.subgoals.some(g => g.detail.includes(s))
+    || CE_POINTS[0].workedExample.answer.includes(s)),
+  ['HHH', 'HHT', 'HTH', 'HTT', 'THH', 'THT', 'TTH', 'TTT'].filter(s =>
+    !CE_POINTS[0].workedExample.subgoals.some(g => g.detail.includes(s))
+    && !CE_POINTS[0].workedExample.answer.includes(s)).join(' ') || 'all present')
+t('and exactly one task of THIS concept multiplies, so the counting stays outside it',
+  CE_TASKS.filter(x => x.given.includes('*')).length === 1
+  && CE_TASKS.find(x => x.given.includes('*')).given === 'a*b*c'
+  && CE_TASKS.find(x => x.given.includes('*')).reference === '8'
+  // And the node this boundary was drawn against is now a concept of the same
+  // subject, four of whose tasks multiply — which is what makes the scope of the
+  // filter above load-bearing rather than incidental.
+  && !!conceptById(CE, 'counting-probability'),
+  CE_TASKS.filter(x => x.given.includes('*')).map(x => x.given).join(' '))
+/*
+ * THE SECOND SAMPLE SPACE IS THE CONCEPT'S CENTRAL DEVICE AND IS CHECKED IN ALL
+ * THREE OF ITS PARTS: that it is presented as LEGAL, that the same division gives
+ * a DIFFERENT answer in it, and that the material says which answer is wrong and
+ * why. A version carrying only the first would be a curiosity; one carrying only
+ * the second and third would be a warning with no object.
+ *
+ * The two numbers are recomputed here rather than matched as strings. 3/8 against
+ * 1/4 is the whole argument, and the thing that makes them incomparable at a
+ * glance is that they are over different denominators — so the test does the
+ * comparison the material asks the learner to do.
+ */
+t('the coarser space is presented as a LEGAL sample space before it is criticised',
+  /legal sample space|IS a sample space/i.test(
+    CE_POINTS[0].workedExample.subgoals.map(g => `${g.label} ${g.detail}`).join(' '))
+  && /\{0, 1, 2, 3\}/.test(CE_POINTS[0].workedExample.answer),
+  CE_POINTS[0].workedExample.subgoals.map(g => g.label).join(' | '))
+t('and the same division really does give a different answer there, computed not quoted',
+  3 / 8 !== 1 / 4 && 1 * 8 !== 4 * 3
+  && /1\/4/.test(CE_POINTS[1].workedExample.answer)
+  && /3\/8/.test(CE_POINTS[1].workedExample.answer),
+  CE_POINTS[1].workedExample.answer.slice(-220))
+t('and the material settles WHICH is wrong, rather than leaving two numbers standing',
+  /1\/4 is wrong|wrong.*1\/4/i.test(CE_POINTS[1].workedExample.answer)
+  && /equally likely/i.test(CE_POINTS[1].workedExample.answer)
+  && /1, 3, 3 and 1/.test(CE_POINTS[1].workedExample.answer),
+  CE_POINTS[1].workedExample.answer.slice(-320))
+/*
+ * THE PARTITION AUDIT, AND WHY TWO TASKS SHARING AN ANSWER IS THE CONTENT.
+ *
+ * 1 + 3 + 3 + 1 = 8 is the same space counted a second way, so the second task's
+ * answer is the first task's answer or the four groups were never a partition.
+ * Two tasks with one reference would normally be a duplicate; here the agreement
+ * is the claim, which is the device ontology-sets.ts introduced and
+ * ontology-counting.ts repeated with 84.
+ *
+ * AND THE INEQUALITY OF THE ADDENDS IS ASSERTED SEPARATELY, because it is what
+ * the second point's argument runs on and it is not implied by the sum. Four
+ * equal groups would also add to 8.
+ */
+t('two tasks reach 8, one sizing the space and one auditing the partition against it',
+  (() => {
+    const prod = CE_TASKS.find(x => x.given === 'a*b*c')
+    const part = CE_TASKS.find(x => x.given === 'p + q + r + s')
+    return !!prod && !!part && prod.reference === part.reference
+      && prod.knowledgePointId === part.knowledgePointId
+      && 2 * 2 * 2 === Number(prod.reference)
+      && Number(part.at.p) + Number(part.at.q) + Number(part.at.r) + Number(part.at.s)
+        === Number(part.reference)
+  })(),
+  CE_TASKS.filter(x => x.reference === '8').map(x => x.given).join(' | '))
+t('and the four group sizes are NOT equal, which is what the second point needs',
+  (() => {
+    const part = CE_TASKS.find(x => x.given === 'p + q + r + s')
+    const sizes = ['p', 'q', 'r', 's'].map(k => Number(part.at[k]))
+    return new Set(sizes).size > 1 && sizes.join(',') === '1,3,3,1'
+  })(),
+  ['p', 'q', 'r', 's'].map(k => CE_TASKS.find(x => x.given === 'p + q + r + s').at[k]).join(','))
+/*
+ * THE UNCORRECTED SUM REFUTES ITSELF, which is an editorial choice of instance
+ * and is arithmetic, so it is asserted rather than described.
+ *
+ * A = "first toss is heads" and B = "at least two heads" each hold four of the
+ * eight outcomes, so adding gives exactly 1 — a claim of certainty — while THT,
+ * TTH and TTT are in neither. Any pair of events would have shown the correction
+ * working; this pair shows the fault contradicting the list, which is the
+ * difference between a lesson and an erratum.
+ */
+t('adding the two probabilities alone comes to exactly 1, which the list refutes',
+  (() => {
+    const u = CE_TASKS.find(x => x.given === 'a/n + b/n - c/n')
+    const a = Number(u.at.a); const b = Number(u.at.b)
+    const c = Number(u.at.c); const n = Number(u.at.n)
+    return a / n + b / n === 1 && a + b - c === 5 && n - 5 === 3
+  })(),
+  (() => {
+    const u = CE_TASKS.find(x => x.given === 'a/n + b/n - c/n')
+    return `${u.at.a}/${u.at.n} + ${u.at.b}/${u.at.n} = ${Number(u.at.a) / Number(u.at.n)
+      + Number(u.at.b) / Number(u.at.n)}`
+  })())
+t('and the three outcomes in neither event are named in the material',
+  ['THT', 'TTH', 'TTT'].every(s =>
+    CE_POINTS[2].workedExample.subgoals.some(g => g.detail.includes(s))),
+  ['THT', 'TTH', 'TTT'].filter(s =>
+    !CE_POINTS[2].workedExample.subgoals.some(g => g.detail.includes(s))).join(' ') || 'all named')
+/*
+ * THE MULTIPLICITY TASK ANSWERS THE QUESTION A `justify` WOULD HAVE ASKED, which
+ * is the role the three-set multiplicity plays in the subject above and the
+ * nearest thing this build has to an unrulable kind being covered.
+ *
+ * Asked at (1, 1, 1) — an outcome in both events — and the answer 1 is the reason
+ * one subtraction is the whole repair. The arithmetic is recomputed, and so is the
+ * fact that `justify` is unrulable, because the task only stands in for something
+ * if that something really cannot be asked.
+ */
+t('and the multiplicity task answers the question a justify would have asked',
+  (() => {
+    const m = CE_TASKS.find(x => x.given === 'p + q - r')
+    return !!m && m.at.p === '1' && m.at.q === '1' && m.at.r === '1'
+      && m.reference === '1' && !isVerifiableKind('justify')
+      && m.knowledgePointId === CE_POINTS[2].id
+      && 1 + 1 - 1 === Number(m.reference)
+  })(),
+  CE_TASKS.find(x => x.given === 'p + q - r')?.id ?? 'none')
+
+group('the seventeenth subject grades every task with no worker at all')
+/*
+ * NINE TASKS, THREE ON EACH POINT, and the SHAPE is asserted rather than the
+ * total — a ratio over a total would be satisfied by nine tasks distributed any
+ * way at all.
+ *
+ * THE REFERENCE CHECK IS DIFFERENT FROM THE SUBJECT ABOVE'S AND TIGHTER. That one
+ * could assert every reference is a whole number, because every one of them counts
+ * something. FIVE of these are probabilities and so are rational — but a
+ * probability lies in [0, 1], which the integer check cannot express and which a
+ * wrong expression is very likely to break. So both are asserted: every answer is
+ * exactly reproducible with no worker, and every probability is in range while the
+ * FOUR that are not probabilities are exactly the size of the space, a subset
+ * size, the partition total and the multiplicity.
+ */
+t('nine tasks, three on each of the three points',
+  CE_TASKS.length === 9
+  && CE_POINTS.map(p => tasksForPoint(p.id).length).join(',') === '3,3,3',
+  CE_POINTS.map(p => `${p.position}:${tasksForPoint(p.id).length}`).join(' '))
+t('all nine are evaluate, so nothing here needs the worker even for equivalence',
+  CE_TASKS.every(x => x.kind === 'evaluate')
+  && CE_TASKS.every(x => x.form === undefined)
+  && CE_TASKS.every(x => x.domainConditions === undefined)
+  && CE_TASKS.every(x => x.acceptsUnevaluated === undefined),
+  CE_TASKS.map(x => `${x.kind}${x.form ? `:${x.form}` : ''}`).join(' '))
+t('every reference is exactly reproducible from the given — no worker consulted',
+  CE_TASKS.every(x => {
+    const at = {}
+    for (const [name, raw] of Object.entries(x.at)) at[name] = parseExpression(raw, [])
+    const truth = exactValue(substitute(parseExpression(x.given, x.variables.map(v => v.name)), at))
+    const claimed = exactValue(parseExpression(x.reference, x.variables.map(v => v.name)))
+    return truth !== null && claimed !== null && showExact(truth) === showExact(claimed)
+  }),
+  CE_TASKS.map(x => x.id).join(', '))
+t('no given calls a function, so none of the nine can fall through to a worker',
+  CE_TASKS.every(x => !/[a-z]+\s*\(/i.test(x.given)),
+  CE_TASKS.filter(x => /[a-z]+\s*\(/i.test(x.given)).map(x => x.given).join(' '))
+t('every reference that is a probability lies in [0, 1], which an integer check could not say',
+  (() => {
+    const probs = CE_TASKS.filter(x => x.reference.includes('/'))
+    const counts = CE_TASKS.filter(x => !x.reference.includes('/'))
+    // In [0, 1] AND a count of outcomes over the size of the space, which is the
+    // stronger claim: 1/2 is written reduced and is 4/8, so the test converts
+    // rather than matching the denominator as a string.
+    const inRange = probs.every(x => {
+      const [num, den] = x.reference.split('/').map(Number)
+      const outcomes = (num * 8) / den
+      return num >= 0 && num <= den && Number.isInteger(outcomes) && outcomes <= 8
+    })
+    return probs.length === 5 && counts.length === 4 && inRange
+      && counts.map(x => x.reference).slice().sort().join(',') === '1,4,8,8'
+  })(),
+  CE_TASKS.map(x => x.reference).join(' '))
+const ceRulings = await Promise.all(CE_TASKS.map(x => ruleEvaluate(x, x.reference, NO_WORKER)))
+t('a correct answer is ruled correct with no worker configured',
+  ceRulings.every(r => r.status === 'ruled' && r.verdict.ruling === 'correct'),
+  ceRulings.map((r, i) => `${CE_TASKS[i].id}:${r.verdict?.ruling ?? r.status}`).join(' '))
+/*
+ * ONE EXPRESSION AT TWO SUBSTITUTIONS INSIDE ONE POINT, which is the device the
+ * two subjects above used across a point boundary and which is used here within
+ * one because the two substitutions ARE the derivation: a one-outcome event, then
+ * a three-outcome one. The pair cannot read as a duplicate because the references
+ * differ, and both halves are asserted.
+ */
+const CE_RATIOS = CE_TASKS.filter(x => x.given === 'e/n')
+t('one ratio expression answers two questions in one point, and they differ',
+  CE_RATIOS.length === 2
+  && new Set(CE_RATIOS.map(x => x.knowledgePointId)).size === 1
+  && CE_RATIOS[0].reference !== CE_RATIOS[1].reference
+  && CE_RATIOS.map(x => x.reference).slice().sort().join(',') === '1/8,3/8'
+  && CE_RATIOS.every(x => x.at.n === '8'),
+  CE_RATIOS.map(x => `${x.id}:${x.reference}`).join(' '))
+/*
+ * NO TASK ASKS FOR AN ARGUMENT, AND THE WORKED EXAMPLES CARRY WHAT NO TASK CAN
+ * ASK — so every subgoal is authored as a question, which is where the
+ * unrulable half of this concept lives.
+ *
+ * The three refusals are asserted as absences and the questions as presences.
+ * `isInterrogative` is the same check `questionCoverage` uses, so a label ending
+ * in a period would score zero there and go red here.
+ */
+t('no task asks for an argument or for a list, both kinds being unrulable here',
+  !CE_TASKS.some(x => x.kind === 'justify' || x.kind === 'state'
+    || x.kind === 'counterexample' || x.kind === 'transform_to_form'),
+  CE_TASKS.map(x => x.kind).join(' '))
+/*
+ * DELIBERATELY SUBJECT-WIDE, unlike everything else in this group, and that is
+ * the one place the forty-sixth promotion did NOT narrow a scope. "Every subgoal
+ * of every worked example in this subject is written as a question" is a stronger
+ * claim than the per-concept version and is the one worth holding, because a
+ * second concept arriving with unwritten questions is exactly the regression it
+ * should catch. `allKnowledgePoints` rather than `CE_POINTS` for that reason.
+ */
+t('so every subgoal of every example is authored as a question, since they carry the argument',
+  allKnowledgePoints(CE).every(p => p.workedExample.subgoals.every(s =>
+    typeof s.socratic === 'string' && s.socratic.trim().endsWith('?')
+    && isInterrogative(s.socratic))),
+  allKnowledgePoints(CE).flatMap(p => p.workedExample.subgoals)
+    .filter(s => typeof s.socratic !== 'string' || !s.socratic.trim().endsWith('?'))
+    .map(s => s.label).join(' | '))
+t('and no question is an imperative with a question mark, which contains its own answer',
+  CE_POINTS.flatMap(p => p.workedExample.subgoals).every(s =>
+    !/^(should|do|does|can|is|are|will) you\b/i.test(s.socratic.trim())),
+  CE_POINTS.flatMap(p => p.workedExample.subgoals)
+    .filter(s => /^(should|do|does|can|is|are|will) you\b/i.test(s.socratic.trim()))
+    .map(s => s.label).join(' | '))
+t('every subgoal names a move rather than a step number, and no two in one example repeat',
+  CE_POINTS.every(p =>
+    p.workedExample.subgoals.every(s => s.label.length > 20 && !/^step\b/i.test(s.label))
+    && new Set(p.workedExample.subgoals.map(s => s.label)).size
+      === p.workedExample.subgoals.length),
+  CE_POINTS.flatMap(p => p.workedExample.subgoals)
+    .filter(s => s.label.length <= 20 || /^step\b/i.test(s.label)).map(s => s.label).join(' | '))
+
+// ---------------------------------------------------------------------------
+
+/**
+ * The forty-sixth promotion: a counted probability, into the subject that
+ * predicted it.
+ *
+ * `counting-probability` was a node of `probability` and is the SECOND concept of
+ * `chance-and-events` — the first growth either of the two one-concept subjects
+ * created by the forty-fourth and forty-fifth promotions has seen, and the first
+ * time an ontology's own `EDGES` note has named the concept that would fill it
+ * and then been taken up on it. tests/atlas.mjs owns the structural half: the
+ * node being gone, the third `links` entry, the credit edge this promotion
+ * destroyed, the root set, the anchor it made ready. What is asserted here is the
+ * MATERIAL, and five things about it that no count would catch.
+ *
+ * FIRST, THAT THE SPACE IS NOT WRITTEN OUT — which is the exact inverse of its
+ * own prerequisite's defence and is what makes the two concepts different rather
+ * than nested. `sample-spaces` asserts that all eight of its outcomes appear in
+ * the material, because an event READ off a list is that concept's whole method.
+ * This concept's 220 committees cannot be listed, so its defence has to be that
+ * no attempt is made to: the space is sized by one expression, nothing enumerates
+ * it, and every event below is counted. Both claims are checked, and the pair of
+ * them is the boundary.
+ *
+ * SECOND, THAT THE CONVENTION CLAIM IS PRODUCED AND NOT ASSERTED. The first
+ * knowledge point says the ordered and unordered routes give the same
+ * probability. A version that said so and showed one route would be a claim; the
+ * material computes both and the two tasks agree, so the arithmetic is recomputed
+ * here rather than trusted — 60/1320 against 10/220, which are incomparable at a
+ * glance and are the same number.
+ *
+ * THIRD, THAT THE MIXED CONVENTION IS SHOWN FAILING TWICE, once producing an
+ * ordinary-looking probability and once producing one greater than 1. That is an
+ * editorial choice of instance and it is the whole reason the second point's
+ * numbers were chosen as they were: the first point's 3/11 does not announce
+ * itself, and 63/22 does. A version carrying only the self-refuting case would
+ * teach that the error is detectable.
+ *
+ * FOURTH, THAT THE PARTITION AUDIT CLOSES. 35 + 105 + 70 + 10 = 220 is the only
+ * check available on a favourable count that cannot be listed, and it is
+ * arithmetic, so it is asserted rather than described.
+ *
+ * FIFTH, THAT THE FIDELITY IS `guided` WITH A REASON, not `checked` with an
+ * invented pattern. The map node carried no `match`, so there was nothing to
+ * carry across verbatim, and the words a pattern would have to use are the ones
+ * atlas.ts names as the failure mode. The absence of a pattern and the presence
+ * of a caveat are both asserted, and so is the recognition figure not having
+ * moved.
+ */
+const CP = conceptById(CE, 'counting-probability')
+const CP_POINTS = CP.knowledgePoints
+const CP_TASKS = CP_POINTS.flatMap(p => tasksForPoint(p.id))
+
+group('counting-probability, where the sample space stops being a list')
+/*
+ * THE SUBJECT TOTALS, WHICH THIS PROMOTION MOVED and which the forty-fifth
+ * promotion's group above no longer counts. Two concepts, six points, and the
+ * positions restarting at 1 in each — which is `position` being per concept
+ * rather than per subject, and this is the first subject in the uncertainty half
+ * with two concepts to demonstrate it on.
+ */
+t('two concepts and six knowledge points, the figure having moved to this group',
+  CE.concepts.length === 2 && allKnowledgePoints(CE).length === 6
+  && CE.concepts.map(c => c.id).join(',') === 'sample-spaces,counting-probability',
+  `${CE.concepts.length} concepts, ${allKnowledgePoints(CE).length} points: `
+  + CE.concepts.map(c => c.id).join(','))
+t('and both number their points from 1, which is per concept and not per subject',
+  CE.concepts.every(c => c.knowledgePoints.map(p => p.position).join(',') === '1,2,3'),
+  CE.concepts.map(c => `${c.id}:${c.knowledgePoints.map(p => p.position).join('')}`).join(' '))
+t('the concept is teachable AND practisable, and the subject has no internal faults',
+  isTeachable(CE, 'counting-probability') && isPractisable(CE, 'counting-probability')
+  && ontologyProblems(CE).length === 0 && fidelityMismatches(CE).length === 0,
+  ontologyProblems(CE).join('; '))
+/*
+ * THE TWO EDGES THE SUBJECT NOW DECLARES, which is the length the group above
+ * stopped asserting. The prerequisite is the one the file's `EDGES` note
+ * predicted; the `encompasses` is the credit claim that replaced NOTHING, since
+ * the one this promotion lost pointed at `counting-principles` and is
+ * inexpressible — tests/atlas.mjs asserts that loss.
+ *
+ * Asserted as the conjunction of both kinds and the containment rule, because an
+ * ontology may only name concepts it holds and that is the whole reason the first
+ * concept's own two edges are `links` entries instead.
+ */
+t('the ontology declares two edges now, one of each kind, both ends held here',
+  CE.edges.length === 2
+  && CE.edges.map(e => `${e.from}:${e.kind}:${e.to}`).join(' ')
+    === 'sample-spaces:prerequisite:counting-probability '
+    + 'counting-probability:encompasses:sample-spaces'
+  && CE.edges.every(e => CE.concepts.some(c => c.id === e.from)
+    && CE.concepts.some(c => c.id === e.to))
+  && CE.edges.every(e => !!e.promotedBy),
+  CE.edges.map(e => `${e.from}:${e.kind}:${e.to}`).join(' '))
+t('and the credit edge is pointed DOWN the subject, which is the direction that pays',
+  (() => {
+    const credit = CE.edges.find(e => e.kind === 'encompasses')
+    // `from` exercises `to`, so the advanced concept must be the `from` — a
+    // reversed edge would credit the counted probability every time somebody
+    // listed eight coin tosses, which is the opposite of what was argued.
+    return credit.from === 'counting-probability' && credit.to === 'sample-spaces'
+      && !!credit.rationale
+      && CE.edges.some(e => e.kind === 'prerequisite'
+        && e.from === credit.to && e.to === credit.from)
+  })(),
+  CE.edges.filter(e => e.kind === 'encompasses')
+    .map(e => `${e.from}=>${e.to}`).join(' '))
+/*
+ * FIDELITY IS `guided` AND THE PATTERN IS ABSENT ON PURPOSE, which is the
+ * assertion that distinguishes this from an oversight.
+ *
+ * Two of the three clauses are the structural requirement — `fidelityMismatches`
+ * fails a guided concept with no caveat and a checked one with no pattern — and
+ * the third is the editorial claim: the caveat NAMES what is unchecked rather
+ * than apologising, which is the difference types.ts draws between an honest
+ * absence and a placeholder. The only other promotion to author a patternless
+ * node, `nonlinear-systems`, has the same shape and its group makes the same
+ * check.
+ *
+ * AND RECOGNITION DID NOT MOVE, asserted because it is the figure a new pattern
+ * would have shifted in the same edit as the material: the composed list holds
+ * one entry for this id either way — a node before, a concept now — so the
+ * denominator is untouched, and with no pattern at either end the numerator is
+ * too.
+ */
+t('it is guided, with no pattern and a caveat that says what is unchecked',
+  CP.fidelity === 'guided'
+  && CP.scope.match === undefined
+  && typeof CP.caveat === 'string'
+  && /no pattern/i.test(CP.caveat)
+  && /RECOGNITION that is unchecked/i.test(CP.caveat),
+  `${CP.fidelity}, match ${CP.scope.match}, caveat ${CP.caveat.length} chars`)
+t('and what the node DID carry came across verbatim, which is the half there was to carry',
+  CP.scope.id === CP.id
+  && CP.scope.label === CP.name
+  && CP.scope.hint === 'equally likely favourable outcomes combinatorial probability'
+  && CE.concepts.filter(c => c.id === 'counting-probability').length === 1,
+  `${CP.scope.id} / ${CP.scope.label} / ${CP.scope.hint}`)
+/*
+ * THE SPACE IS NOT WRITTEN OUT, WHICH IS THE INVERSE OF THE CONCEPT BELOW'S
+ * DEFENCE AND IS WHAT SEPARATES THE TWO.
+ *
+ * `sample-spaces` asserts that all eight of its outcomes appear in its material,
+ * because reading an event off a printed list is its method. 220 committees
+ * cannot be printed, so the claim here has to be that nothing tries: the space is
+ * produced by ONE expression, and no worked example enumerates outcomes. The
+ * negative is checked by looking for the shape an enumeration would take — a
+ * braced set of members — and the positive by the single sizing task.
+ *
+ * The one concrete membership the material does name is {Ann, Bob, Cleo}, and it
+ * is there to say what ONE outcome is rather than to list the space. That is
+ * asserted as present, so the negative clause cannot be satisfied by a version
+ * that never says what an outcome is at all.
+ */
+t('the space is sized by one expression and nowhere enumerated',
+  CP_TASKS.filter(x => x.reference === '220' && x.given === '(a*b*c)/d').length === 1
+  && CP_POINTS[0].workedExample.subgoals.some(s => /\{Ann, Bob, Cleo\}/.test(s.detail))
+  && !CP_POINTS.some(p => /\{[^}]*,[^}]*,[^}]*,[^}]*\}/.test(
+    p.workedExample.subgoals.map(s => s.detail).join(' ') + p.workedExample.answer)),
+  CP_TASKS.filter(x => x.reference === '220').map(x => x.given).join(' | '))
+/*
+ * THE CONVENTION CLAIM IS PRODUCED, NOT ASSERTED — two tasks, two routes, one
+ * answer, and the arithmetic recomputed here rather than matched as a string.
+ *
+ * 10/220 and 60/1320 are incomparable at a glance, which is the point: the test
+ * does the cross-multiplication the material asks the learner to see, and then
+ * checks that the second route's six factors really are the first route's four
+ * with the divisor removed from both sides.
+ */
+t('both routes to the first probability are asked, and they really are the same number',
+  (() => {
+    const unordered = CP_TASKS.find(x => x.given === 'e/n' && x.at.e === '10')
+    const ordered = CP_TASKS.find(x => x.given === '(a*b*c)/(d*e*f)')
+    if (!unordered || !ordered) return false
+    const u = [Number(unordered.at.e), Number(unordered.at.n)]
+    const o = [Number(ordered.at.a) * Number(ordered.at.b) * Number(ordered.at.c),
+      Number(ordered.at.d) * Number(ordered.at.e) * Number(ordered.at.f)]
+    return u[0] * o[1] === u[1] * o[0]
+      && o[0] === u[0] * 6 && o[1] === u[1] * 6
+      && unordered.reference === ordered.reference
+      && unordered.knowledgePointId === ordered.knowledgePointId
+  })(),
+  CP_TASKS.filter(x => x.reference === '1/22')
+    .map(x => `${x.given}=${x.reference}`).join(' | '))
+t('and the factor that cancels is 3! for the reason the material gives, not by luck',
+  (() => {
+    const space = CP_TASKS.find(x => x.given === '(a*b*c)/d')
+    // The divisor is the orderings of ONE selection, so it must be 3! for a
+    // committee of three — and the same divisor appears in the event's count in
+    // the worked example, which is what makes it cancel rather than merely
+    // divide.
+    return Number(space.at.d) === 3 * 2 * 1
+      && /3! = 6/.test(CP_POINTS[0].workedExample.subgoals
+        .map(s => s.detail).join(' ') + CP_POINTS[0].workedExample.answer)
+  })(),
+  `divisor ${CP_TASKS.find(x => x.given === '(a*b*c)/d').at.d}`)
+/*
+ * THE MIXED CONVENTION FAILS TWICE AND THE TWO FAILURES ARE DIFFERENT IN KIND,
+ * which is the editorial choice this material turns on and is arithmetic, so it
+ * is asserted.
+ *
+ * In the first point the mixed answer is 60/220 = 3/11, which is a perfectly
+ * ordinary probability — nothing in it says two spaces were crossed. In the
+ * second it is 630/220 = 63/22, which exceeds 1 and so refutes itself. Both are
+ * recomputed here, and both are checked to be exactly 3! times the right answer,
+ * because "wrong by the factor that failed to cancel" is the claim and "wrong"
+ * is not.
+ *
+ * A version with only the self-refuting case would teach that the error announces
+ * itself, which is the opposite of true and is the more dangerous lesson of the
+ * two — so the ordinary-looking one is asserted first.
+ */
+t('the mixed convention is shown failing twice, once undetectably and once past 1',
+  (() => {
+    const first = CP_POINTS[0].workedExample
+    const second = CP_POINTS[1].workedExample
+    const shown = `${first.subgoals.map(s => s.detail).join(' ')} ${first.answer} `
+      + `${second.subgoals.map(s => s.detail).join(' ')} ${second.answer}`
+    // 60/220 is 6 × 1/22 and lies in [0, 1]; 630/220 is 6 × 21/44 and does not.
+    return 60 * 22 === 220 * 6 * 1 && 60 / 220 <= 1
+      && 630 * 44 === 220 * 6 * 21 && 630 / 220 > 1
+      && /3\/11/.test(shown) && /63\/22/.test(shown)
+  })(),
+  `3/11 = ${60 / 220}, 63/22 = ${(630 / 220).toFixed(3)}`)
+/*
+ * THE PARTITION AUDIT CLOSES, and it is the only check available on a favourable
+ * count that cannot be listed — so the four case counts are added here rather
+ * than taken on trust, and their total is checked against the SPACE task's
+ * reference rather than against the literal 220.
+ *
+ * Two tasks sharing a reference would normally be a duplicate; here one is the
+ * size of the space and the other is the same space counted by how many new
+ * members a committee holds, so the agreement is the claim. What stops the pair
+ * reading as one task twice is the SHAPE of the two expressions rather than their
+ * arity, which both drafts of this line got wrong: `(a*b*c)/d` and
+ * `a + b + c + d` have four letters each, and the difference is that one divides
+ * a product by the orderings of a selection and the other only adds.
+ */
+t('the four case counts add back to the size of the space, computed not quoted',
+  (() => {
+    const space = CP_TASKS.find(x => x.given === '(a*b*c)/d')
+    const audit = CP_TASKS.find(x => x.given === 'a + b + c + d')
+    const cases = ['a', 'b', 'c', 'd'].map(k => Number(audit.at[k]))
+    return cases.reduce((s, x) => s + x, 0) === Number(space.reference)
+      && audit.reference === space.reference
+      && cases.join(',') === '35,105,70,10'
+      && space.given.includes('/') && !audit.given.includes('/')
+      && space.given !== audit.given
+  })(),
+  CP_TASKS.filter(x => x.reference === '220').map(x => x.given).join(' | '))
+t('and the favourable count the audit checks is one of those four cases',
+  (() => {
+    const product = CP_TASKS.find(x => x.given === 'a*((b*c)/d)')
+    const audit = CP_TASKS.find(x => x.given === 'a + b + c + d')
+    // 5 × 21 = 105 is the `b` of the audit, so a wrong factor in the product
+    // breaks the total — which is the whole reason the audit is worth asking.
+    return Number(product.reference) === Number(audit.at.b)
+      && Number(product.at.a) * (Number(product.at.b) * Number(product.at.c)
+        / Number(product.at.d)) === Number(product.reference)
+  })(),
+  `product ${CP_TASKS.find(x => x.given === 'a*((b*c)/d)').reference}, `
+  + `case b ${CP_TASKS.find(x => x.given === 'a + b + c + d').at.b}`)
+/*
+ * THE UNION IS REACHED TWICE AND THE SECOND ROUTE HANDLES NO OVERLAP, which is
+ * what makes it a check rather than a rearrangement of the same three terms.
+ *
+ * Both are recomputed. The inclusion–exclusion route is 55 + 55 − 10 over 220;
+ * the complement route is 220 − 120 over 220. They agree at 5/11, and the second
+ * never adds two counts and never subtracts an overlap, so a wrong overlap could
+ * not have survived into it.
+ *
+ * AND THE UNCORRECTED SUM IS ASSERTED TO BE WRONG BUT NOT ABSURD, which is the
+ * contrast with `sample-spaces` worth pinning: there the uncorrected sum is
+ * exactly 1 and the list refutes it, and here 110/220 = 1/2 is an ordinary
+ * number. So this concept cannot borrow that lesson and does not try to — its
+ * self-refuting instance is the mixed convention in the second point instead.
+ */
+t('the union is reached by two routes and they agree, the second handling no overlap',
+  (() => {
+    const repair = CP_TASKS.find(x => x.given === '(a + b - c)/n')
+    const complement = CP_TASKS.find(x => x.given === '(n - c)/n')
+    const a = Number(repair.at.a); const b = Number(repair.at.b)
+    const c = Number(repair.at.c); const n = Number(repair.at.n)
+    return a + b - c === n - Number(complement.at.c)
+      && repair.reference === complement.reference
+      && repair.knowledgePointId === complement.knowledgePointId
+      && Number(complement.at.n) === n
+  })(),
+  CP_TASKS.filter(x => x.reference === '5/11').map(x => x.given).join(' | '))
+t('and the uncorrected sum here is merely wrong, where the concept below\'s was impossible',
+  (() => {
+    const repair = CP_TASKS.find(x => x.given === '(a + b - c)/n')
+    const uncorrected = (Number(repair.at.a) + Number(repair.at.b)) / Number(repair.at.n)
+    // 110/220 = 1/2: wrong, in range, and nothing about it announces the fault.
+    // `sample-spaces`' corresponding sum is exactly 1, which the list refutes.
+    return uncorrected === 0.5 && uncorrected <= 1
+      && Number(repair.at.a) / Number(repair.at.n) === 0.25
+  })(),
+  `uncorrected ${(Number(CP_TASKS.find(x => x.given === '(a + b - c)/n').at.a)
+    + Number(CP_TASKS.find(x => x.given === '(a + b - c)/n').at.b))}/220`)
+/*
+ * THE COMPLEMENT IS TAKEN ON BOTH SIDES OF THE DIVISION, which is a fact about
+ * the rule and not two presentations of one task — so the pair is asserted as a
+ * pair, with the references DIFFERING because the two complements are different
+ * events.
+ *
+ * `1 - c/n` is also `sample-spaces`' expression, re-asked at a different
+ * substitution, and that is asserted across the two concepts: the rule really is
+ * unchanged and the only thing that moved is that `c` had to be counted. A test
+ * that let the two be different expressions would have missed the point of
+ * re-asking it.
+ */
+t('the complement is taken both after dividing and before, by two different events',
+  (() => {
+    const after = CP_TASKS.find(x => x.given === '1 - c/n')
+    const before = CP_TASKS.find(x => x.given === '(n - c)/n')
+    return after.reference !== before.reference
+      && after.at.n === '220' && before.at.n === '220'
+      && Number(after.at.c) !== Number(before.at.c)
+      && after.knowledgePointId === before.knowledgePointId
+  })(),
+  `after ${CP_TASKS.find(x => x.given === '1 - c/n').reference}, `
+  + `before ${CP_TASKS.find(x => x.given === '(n - c)/n').reference}`)
+t('and that expression is the concept below\'s, re-asked rather than re-invented',
+  (() => {
+    const mine = CP_TASKS.find(x => x.given === '1 - c/n')
+    const theirs = CE_TASKS.find(x => x.given === '1 - c/n')
+    return !!mine && !!theirs && mine.id !== theirs.id
+      && mine.given === theirs.given
+      && theirs.at.n === '8' && mine.at.n === '220'
+      && theirs.at.c === '1' && mine.at.c === '35'
+  })(),
+  `${CE_TASKS.find(x => x.given === '1 - c/n')?.at.c}/`
+  + `${CE_TASKS.find(x => x.given === '1 - c/n')?.at.n} then `
+  + `${CP_TASKS.find(x => x.given === '1 - c/n')?.at.c}/`
+  + `${CP_TASKS.find(x => x.given === '1 - c/n')?.at.n}`)
+/*
+ * NINE TASKS, THREE ON EACH POINT, and the SHAPE asserted rather than the total —
+ * a ratio over a total would be satisfied by nine tasks distributed any way.
+ *
+ * THE REFERENCE CHECK IS THE CONCEPT BELOW'S WITH A DIFFERENT DENOMINATOR. There
+ * five of nine are k/8 with k whole; here SIX of nine are probabilities and every
+ * one is k/220 with k whole and in [0, 220], because every probability is a count
+ * of favourable committees over the committees there are. The THREE that are not
+ * probabilities are the size of the space, one favourable count and the partition
+ * total — which is also this concept's boundary against the counting subject, so
+ * a fourth count-only task would mean a count was being asked for its own sake.
+ */
+t('nine tasks, three on each of the three points',
+  CP_TASKS.length === 9
+  && CP_POINTS.map(p => tasksForPoint(p.id).length).join(',') === '3,3,3',
+  CP_POINTS.map(p => `${p.position}:${tasksForPoint(p.id).length}`).join(' '))
+t('all nine are evaluate, so nothing here needs the worker even for equivalence',
+  CP_TASKS.every(x => x.kind === 'evaluate')
+  && CP_TASKS.every(x => x.form === undefined)
+  && CP_TASKS.every(x => x.domainConditions === undefined)
+  && CP_TASKS.every(x => x.acceptsUnevaluated === undefined),
+  CP_TASKS.map(x => `${x.kind}${x.form ? `:${x.form}` : ''}`).join(' '))
+t('no given calls a function, so none of the nine can fall through to a worker',
+  CP_TASKS.every(x => !/[a-z]+\s*\(/i.test(x.given)),
+  CP_TASKS.filter(x => /[a-z]+\s*\(/i.test(x.given)).map(x => x.given).join(' '))
+t('every reference is exactly reproducible from the given — no worker consulted',
+  CP_TASKS.every(x => {
+    const at = {}
+    for (const [name, raw] of Object.entries(x.at)) at[name] = parseExpression(raw, [])
+    const truth = exactValue(substitute(parseExpression(x.given, x.variables.map(v => v.name)), at))
+    const claimed = exactValue(parseExpression(x.reference, x.variables.map(v => v.name)))
+    return truth !== null && claimed !== null && showExact(truth) === showExact(claimed)
+  }),
+  CP_TASKS.map(x => x.id).join(', '))
+t('six references are probabilities, every one of them a count over the 220 committees',
+  (() => {
+    const probs = CP_TASKS.filter(x => x.reference.includes('/'))
+    const counts = CP_TASKS.filter(x => !x.reference.includes('/'))
+    // In [0, 1] AND a count of committees over the size of the space, which is
+    // the stronger claim: every reference ships reduced, so the test converts
+    // rather than matching 220 as a string.
+    const inRange = probs.every(x => {
+      const [num, den] = x.reference.split('/').map(Number)
+      const favourable = (num * 220) / den
+      return num >= 0 && num <= den && Number.isInteger(favourable) && favourable <= 220
+    })
+    return probs.length === 6 && counts.length === 3 && inRange
+      && counts.map(x => x.reference).slice().sort().join(',') === '105,220,220'
+  })(),
+  CP_TASKS.map(x => x.reference).join(' '))
+const cpRulings = await Promise.all(CP_TASKS.map(x => ruleEvaluate(x, x.reference, NO_WORKER)))
+t('a correct answer is ruled correct with no worker configured',
+  cpRulings.every(r => r.status === 'ruled' && r.verdict.ruling === 'correct'),
+  cpRulings.map((r, i) => `${CP_TASKS[i].id}:${r.verdict?.ruling ?? r.status}`).join(' '))
+/*
+ * ONE EXPRESSION AT TWO SUBSTITUTIONS ACROSS A POINT BOUNDARY, which is the
+ * device the counting subject uses for `a*b*c`. `e/n` is asked at (10, 220) in
+ * the first point and (105, 220) in the second: the numerator is one selection
+ * count there and a product of two here, and `n` is identical because the space
+ * is the same space counted once. The references differ, so the pair cannot read
+ * as one task twice.
+ */
+const CP_RATIOS = CP_TASKS.filter(x => x.given === 'e/n')
+t('one ratio expression answers two questions across a point boundary, and they differ',
+  CP_RATIOS.length === 2
+  && new Set(CP_RATIOS.map(x => x.knowledgePointId)).size === 2
+  && CP_RATIOS[0].reference !== CP_RATIOS[1].reference
+  && CP_RATIOS.map(x => x.reference).slice().sort().join(',') === '1/22,21/44'
+  && CP_RATIOS.every(x => x.at.n === '220'),
+  CP_RATIOS.map(x => `${x.id}:${x.reference}`).join(' '))
+/*
+ * NO TASK ASKS FOR AN ARGUMENT, so every subgoal carries one and every subgoal is
+ * authored as a question. The subject-wide version of that assertion is in the
+ * group above and covers this concept too; what is asserted here is the half
+ * specific to it — that the objectives name `evaluate` and nothing else, so none
+ * of the four refusals is promised.
+ */
+t('every objective names evaluate and nothing else, so no refused kind is promised',
+  CP.objectives.length === 3
+  && CP.objectives.every(o => o.taskKinds.join(',') === 'evaluate'),
+  CP.objectives.map(o => `${o.id}:${o.taskKinds.join('+')}`).join(' '))
+t('no figure and no speed target is claimed, neither of them existing to claim',
+  CP_POINTS.every(p => p.visualRef === undefined && p.automaticityTarget === undefined),
+  CP_POINTS.filter(p => p.visualRef !== undefined
+    || p.automaticityTarget !== undefined).map(p => p.id).join(', '))
+t('every subgoal names a move rather than a step number, and no two in one example repeat',
+  CP_POINTS.every(p =>
+    p.workedExample.subgoals.every(s => s.label.length > 20 && !/^step\b/i.test(s.label))
+    && new Set(p.workedExample.subgoals.map(s => s.label)).size
+      === p.workedExample.subgoals.length),
+  CP_POINTS.flatMap(p => p.workedExample.subgoals)
+    .filter(s => s.label.length <= 20 || /^step\b/i.test(s.label)).map(s => s.label).join(' | '))
+
+// ---------------------------------------------------------------------------
+
+/**
  * The dot product, promoted into an EXISTING subject — which is the first thing
  * about it worth asserting.
  *
@@ -9610,7 +11129,23 @@ t('while the four older concepts here still name justify, of which the build shi
  * direction; at that point it is the authored-FIELD count per concept, not
  * this coverage figure, that still distinguishes written from generated.
  *
- * 81 of 96 now, the third pure authoring run and the first one the paragraph
+ * 85 of 96 now, the fourth pure authoring run: it took
+ * `the-composite-domain-can-shrink`, the last unauthored point in
+ * `function-composition`, which closes that concept at 10 of 10. Both measures
+ * moved by four again, all four labels having been imperative.
+ *
+ * So the remainder is 11 and it is now a SINGLE concept: `inverse-functions`,
+ * 0 of 11 across its three points, with the subject's other eight concepts at
+ * 100%. That returns this subject to the state the paragraph above describes —
+ * the "prefer a concept with some authored points" heuristic is unsatisfiable
+ * here again, and whoever comes next has to pay the opening cost a second
+ * time. It is the same shape as the run that opened `function-composition`,
+ * and the three cheap runs that followed are what it bought. Note also that
+ * the subject is no longer the lowest by authored count: at 85 of 96 it sits
+ * above `rational-expressions` at 82 of 92, so an ascending rank sends the
+ * next authoring run there rather than here.
+ *
+ * 81 of 96 then, the third pure authoring run and the first one the paragraph
  * above actually predicted correctly: it went to `function-composition`, took
  * `the-order-matters` — the earliest of that concept's two unauthored points —
  * and the remainder is 15. The "prefer a concept with some authored points"
@@ -9641,7 +11176,7 @@ t('every subgoal says what its move establishes, so none of them is a bare step'
   FI_SUBGOALS.every(s => typeof s.detail === 'string' && s.detail.length > 0))
 t('the subject is at twenty-seven chains and still has none that cannot become evidence',
   FI_COV.chains === 27 && FI_COV.chainsWithNoRuling === 0
-  && FI_COV.authoredAsQuestions === 81 && FI_COV.questions === 96,
+  && FI_COV.authoredAsQuestions === 85 && FI_COV.questions === 96,
   `${FI_COV.chains} chains, ${FI_COV.chainsWithNoRuling} unrulable, `
   + `${FI_COV.authoredAsQuestions}/${FI_COV.questions} authored`)
 /*

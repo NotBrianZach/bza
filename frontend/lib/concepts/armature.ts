@@ -437,6 +437,45 @@ export const REGIONS: Region[] = [
   {
     id: 'rubneb', name: 'Rubneb', epithet: 'The Veiled Swamp',
     km: 2000, area: 'probability', xy: { x: 0.550, y: 0.572 },
+    // The SECOND authored subject in the uncertainty half of the atlas, claimed
+    // here because `chance-and-events`' one concept was promoted out of this
+    // region's own area by the forty-fifth promotion. `armatureProblems`
+    // requires every authored subject to be claimed exactly once, so a new
+    // ontology appearing nowhere in this table fails loudly — which is the one
+    // check this table has that the game's copy does not.
+    //
+    // NO ANCHOR SLOT EMPTIED, and the reason is the same shape as Gal-garad's
+    // three entries down rather than Burdervruke's forty. An anchor must be a
+    // node of `area`, so a promotion normally vacates one; none of the three
+    // below is `sample-spaces`, and all three are still nodes here. The region
+    // anchors on the arithmetic of a random quantity — expectation, conditioning,
+    // the variable itself — and the concept that left is the one about the
+    // outcomes rather than about a number attached to them, so the `because`
+    // below still reads correctly: somebody pricing a sentence or a raid is
+    // computing an expected value, and listing what could happen is the step
+    // before that computation has an object.
+    //
+    // AND THE SLOT IS NO LONGER SAFE, WHICH THIS NOTE GOT WRONG BY ONE
+    // PROMOTION. It used to say the slot was "safe for longer than usual": all
+    // three anchors sit behind `counting-probability` and
+    // `conditional-probability`, `random-variables` additionally behind
+    // `function-concept`, so the promotion that would empty it looked three or
+    // four deep in this area. The forty-sixth promotion authored
+    // `counting-probability` — which was one of the two nodes the forty-fifth
+    // made ready, so the sentence was out of date the moment it was written —
+    // and `conditional-probability` declares that concept and nothing else, so
+    // it is READY now and it is the first of the three below. The next promotion
+    // out of this area empties this slot.
+    //
+    // No refill is proposed here, because a refill chosen before the promotion
+    // that needs it is a guess about which of the three goes. What the run that
+    // pays it should know is the shape: the `because` below is one clause about
+    // pricing and one about a raid whose return nobody can promise, and the
+    // three anchors are the arithmetic of a random quantity — expectation,
+    // conditioning, the variable itself. A replacement has to keep that reading,
+    // which rules out the distributions and the limit theorems however ready
+    // they look.
+    authored: ['chance-and-events'],
     anchors: ['expectation', 'conditional-probability', 'random-variables'],
     because: 'Order courts price every sentence in money owed to the offended party and the state, and the Scales run a seasonal raid whose return nobody can promise. Both are expected value, and the swamp is where somebody is always computing one.',
   },
@@ -541,36 +580,74 @@ export const REGIONS: Region[] = [
     // graphs, and "what follows from what" is now the formal systems.
     //
     // The region claims the authored subjects of this area, which it did not
-    // before the thirty-fifth promotion and now does FOUR times.
+    // before the thirty-fifth promotion and now does FIVE times.
     // `armatureProblems` checks that every shipped subject is claimed exactly
     // once, so a new one that nobody claims holds real material appearing
     // nowhere on the map — and the claim belongs to the region holding the
     // area the concept was promoted OUT of, which is this one. All three logic
     // and proof subjects came out of `discrete-mathematics`, and so did
-    // `sets-and-membership`, which the thirty-eighth promotion added.
+    // `sets-and-membership`, which the thirty-eighth promotion added, and
+    // `counting-and-arrangements`, which the forty-fourth added.
     //
-    // THE FOURTH ENTRY IS THE FIRST THAT A CONSOLIDATION WOULD NOT ABSORB, and
-    // that is worth one line here because the sentence this comment used to end
-    // with is now only true of three quarters of the list. The consolidation
-    // ontology-proof.ts leaves open — one REASONING subject in place of several —
-    // would make this list shorter rather than moving an entry elsewhere, and it
-    // would shorten it to TWO rather than to one: ontology-sets.ts argues that
-    // its subject is about an OBJECT where the other four are about arguments,
-    // so a merge of the reasoning subjects leaves it standing. A merge wide
-    // enough to take it too would be a merge of everything in the build that
-    // mentions a proof.
+    // THE FOURTH AND FIFTH ENTRIES ARE THE ONES A CONSOLIDATION WOULD NOT
+    // ABSORB, and that is worth one line here because the sentence this comment
+    // used to end with is now only true of three fifths of the list. The
+    // consolidation ontology-proof.ts leaves open — one REASONING subject in
+    // place of several — would make this list shorter rather than moving an
+    // entry elsewhere, and it would shorten it to THREE rather than to one:
+    // ontology-sets.ts argues that its subject is about an OBJECT where the
+    // first three are about arguments, and the counting subject is about a
+    // NUMBER reached from the structure of a choice, which is a third kind of
+    // claim again. A merge wide enough to take either would be a merge of
+    // everything in the build that mentions a proof.
     //
-    // The slot count is unchanged by this promotion. `sets` was never an anchor
-    // — the three are `counting-principles`, `graphs` and
+    // The slot count was unchanged by the thirty-eighth promotion. `sets` was
+    // never an anchor — the three were `counting-principles`, `graphs` and
     // `formal-logic-and-incompleteness` — so for the first time since the
     // thirty-fifth, a departure from this area cost this region nothing but an
-    // `authored` entry. The refill chosen above was selected partly on being far
-    // from promotable, and that is still holding.
+    // `authored` entry.
+    //
+    // THE FORTY-FOURTH PROMOTION ENDED THAT, AND IT COST BOTH AT ONCE: a fifth
+    // `authored` entry AND a refill, which is the first departure from this area
+    // to need the two together. `counting-principles` was authored into
+    // `counting-and-arrangements`, so it is no longer a node of
+    // `discrete-mathematics` — and `armatureProblems` builds its anchor check
+    // from `conceptIdsByArea`, so leaving it named here would report "anchors on
+    // counting-principles, which is not in discrete-mathematics" rather than
+    // failing silently. That is the one check this table has that says so
+    // loudly, and it is the reason an emptied slot is a visible cost rather than
+    // a quiet one.
+    //
+    // THE REFILL IS `generating-functions`, AND IT WAS CHOSEN ON THE REGION'S
+    // MEANING FIRST AND PROMOTABILITY SECOND. The `because` below names three
+    // things — who counts, who may sit with whom, what follows from what — and
+    // the three anchors are one each, so the emptied slot is the COUNTING slot
+    // specifically and a graph or logic node would not refill it. Of the
+    // counting nodes left, `combinatorial-identities` is the wrong choice for
+    // exactly the reason the thirty-eighth promotion gave: this promotion makes
+    // it READY — it needs `counting-principles`, now authored, and
+    // `mathematical-induction`, authored in `functions-and-inverses` — so
+    // anchoring on it would empty this slot a seventh time at the next
+    // promotion. `recurrence-relations` still waits on `geometric-sequences`,
+    // which is one unwritten node, and `generating-functions` waits on
+    // `recurrence-relations` and `power-series`, which is two layers of
+    // unwritten in two different areas. The furthest-from-promotable counting
+    // node is the one that keeps the slot still, and it is also honestly a
+    // landmark: encoding a sequence as coefficients so that counting becomes
+    // algebra is the deepest thing this area's counting layer does.
+    //
+    // A FACTOR THAT ONLY EVER ADDS WORK TO ONE SIDE OF A CHOICE, which
+    // ontology-sets.ts said belongs after the real ones and which this promotion
+    // consulted in that order and then paid. `sample-spaces`, the other
+    // unrefused candidate, is not an anchor anywhere, so it would have cost this
+    // file nothing. It lost on dependents, four to two, and the anchor cost was
+    // not allowed to overturn that — recorded here so the next run does not read
+    // the refill as evidence that the pick was wrong.
     authored: [
       'statements-and-connectives', 'predicates-and-quantifiers', 'methods-of-proof',
-      'sets-and-membership',
+      'sets-and-membership', 'counting-and-arrangements',
     ],
-    anchors: ['counting-principles', 'graphs', 'formal-logic-and-incompleteness'],
+    anchors: ['generating-functions', 'graphs', 'formal-logic-and-incompleteness'],
     because: 'Eligibility for the Great Chamber requires tier-three professional commendation and a certificate of physical condition; the Migration and Visa Office decides who may enter at all. A mountain that runs on rules about who counts, who may sit with whom, and what follows from what.',
   },
   {

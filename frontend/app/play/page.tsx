@@ -271,8 +271,35 @@ function PlayPageInner() {
           <Shuffle size={28} className="text-fuchsia-500 flex-shrink-0 mt-0.5" />
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">AI Play Along</h1>
+            {/* An EXAMPLE, not a definition. The line this replaced — "where a
+                turn proposes a connection and makes it perceptible" — is the
+                most accurate sentence about this page and it taught nobody
+                anything, for the same reason the sixty lines below it were
+                deleted: "turn", "connection" and "perceptible" are all terms of
+                art, and a definition that introduces three of them at once is
+                read as decoration. One concrete turn does the work instead.
+
+                THE SECOND SENTENCE IS WHERE THE CARE IS, and it is the comment
+                on the Start playing row restated: naming media here is a claim
+                about what will ARRIVE, and `startingTuning` is what decides
+                that — `STARTING_SHARES` is {music: 90, artwork: 5, passage: 5}
+                and 0 is a prohibition, so nine of the twelve are MUTED in every
+                game that does not declare them as `coreMedia`. So "name a song
+                and get a related one" is the 90% case and safe to lead with; a
+                painting and a passage are the 5s; and a stretch is muted at the
+                default and arrives only once the tuning panel asks for it.
+
+                Hence "can answer too, once you ask for them" rather than a flat
+                list of what is possible. A flat list is the exact false claim
+                the Start playing row had to drop — what the BUILD supports read
+                as what the GAME will do. Any edit here that adds a medium has
+                to check `STARTING_SHARES` first, or it promises a reply the
+                default will not produce and nothing will report it: a muted
+                medium does not fail, it answers with a perfectly good track. */}
             <p className="text-gray-500 dark:text-gray-400 mt-1">
-              Correlation games — where a turn proposes a connection and makes it perceptible.
+              Correlation games — for example, name a song and the AI answers with a
+              related one. A painting, a passage, even a stretch can answer too, once
+              you ask for them.
             </p>
           </div>
         </div>

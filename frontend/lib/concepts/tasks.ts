@@ -1513,6 +1513,470 @@ const CASES_AND_REGIONS: VariableDeclaration[] = [
   { name: 'r', assumptions: { integer: true } },
 ]
 
+/**
+ * The option counts of a sequence of choices, one letter per choice.
+ *
+ * `a*b*c` IS the product rule, which is why the list is three plain integers and
+ * not a declaration of n and r. The closed form would need a factorial and
+ * `exactValue` in numerals.ts has no case for a function call — see the header of
+ * ontology-counting.ts, which also corrects ontology.ts's reason for the same
+ * absence — so a descending product is the only encoding available. It is also
+ * the better one: a learner who writes 9 × 8 × 7 has performed the rule, where
+ * one who writes a quotient of factorials has substituted into a formula.
+ *
+ * `integer` and NOT `positive`, which looks like the tighter and therefore better
+ * declaration and would foreclose the lesson. An option count of 0 is the case
+ * where a choice cannot be made at all, and the first knowledge point's whole
+ * subject is that these counts are the thing to check rather than assume. A list
+ * that could not express a zero would be asserting the hypothesis it is there to
+ * test.
+ *
+ * Shared across a point boundary deliberately, and the substitutions differ. In
+ * the first point `a*b*c` counts three-digit numbers with distinct digits at
+ * (9, 9, 8); in the second it counts three distinct offices filled from nine
+ * members at (9, 8, 7). Two differently-named lists would have implied those were
+ * two rules, and they are one rule applied to a pool that holds still and a pool
+ * that shrinks — which is the distinction the two points are built to separate.
+ */
+const OPTION_COUNTS: VariableDeclaration[] = [
+  { name: 'a', assumptions: { integer: true } },
+  { name: 'b', assumptions: { integer: true } },
+  { name: 'c', assumptions: { integer: true } },
+]
+
+/**
+ * A case's option counts and the option count of the case that came first.
+ *
+ * `p + q*r*s` is the sum rule closing over the product rule: `p` is a case
+ * already counted and `q*r*s` is the other case counted the same way. Four
+ * letters rather than reusing `OPTION_COUNTS` twice because the shapes differ —
+ * one case of this split needs two factors and the other needs three, which is
+ * the asymmetry that forced the split in the first place and would be hidden by a
+ * symmetric declaration.
+ */
+const TWO_CASES_OF_A_SPLIT: VariableDeclaration[] = [
+  { name: 'p', assumptions: { integer: true } },
+  { name: 'q', assumptions: { integer: true } },
+  { name: 'r', assumptions: { integer: true } },
+  { name: 's', assumptions: { integer: true } },
+]
+
+/**
+ * A descending product and the orderings of one selection it counted.
+ *
+ * `(a*b*c)/d` is the unordered selection count: the ordered product over the
+ * number of ways to arrange the objects one selection chose. `d` is `r!` and is
+ * written as a number by the asker for the reason above — there is no factorial
+ * to call — which is why it is a declared variable and not a literal: the task
+ * that asks for C(9, 6) substitutes 720 into the same letter that takes 6 for
+ * C(9, 3), and one list makes those the same question at two sizes.
+ *
+ * The division is exact at every substitution these tasks use, and that is a
+ * property of the mathematics rather than of the numbers chosen: a descending
+ * product of r factors from n is always divisible by r!, because the quotient
+ * counts something. No `domainConditions` is needed and none would help — `d` is
+ * never zero, since 0! = 1.
+ */
+const ORDERED_PRODUCT_AND_ORDERINGS: VariableDeclaration[] = [
+  { name: 'a', assumptions: { integer: true } },
+  { name: 'b', assumptions: { integer: true } },
+  { name: 'c', assumptions: { integer: true } },
+  { name: 'd', assumptions: { integer: true } },
+]
+
+/**
+ * A longer descending product and the orderings of one selection.
+ *
+ * Six factors and a divisor, for the symmetry task: choosing which 6 of 9 members
+ * are left OUT is the same act as choosing which 3 are in, so C(9, 6) must equal
+ * C(9, 3). Separate from `ORDERED_PRODUCT_AND_ORDERINGS` because the arity is
+ * genuinely different and an expression cannot be written over a list shorter
+ * than itself — and the pair of tasks is the point: the two reach 84 down
+ * products of different lengths, which is what makes the symmetry a saving rather
+ * than a curiosity.
+ */
+const SIX_FACTOR_PRODUCT_AND_ORDERINGS: VariableDeclaration[] = [
+  { name: 'a', assumptions: { integer: true } },
+  { name: 'b', assumptions: { integer: true } },
+  { name: 'c', assumptions: { integer: true } },
+  { name: 'd', assumptions: { integer: true } },
+  { name: 'e', assumptions: { integer: true } },
+  { name: 'f', assumptions: { integer: true } },
+  { name: 'g', assumptions: { integer: true } },
+]
+
+/**
+ * A range and a divisor, for counting multiples.
+ *
+ * `n/d` counts the multiples of `d` up to `n`, and it is exact ONLY because every
+ * substitution here uses an `n` that `d` divides — 60 against 2, 3, 5, 6, 10, 15
+ * and 30. That is a choice about the worked example rather than a limit of the
+ * encoding: a general count is a floor, `exactValue` has no floor, and a range
+ * chosen to make the divisions exact keeps the whole concept worker-free. The
+ * prompts say which range and why, so a learner is never shown a division that
+ * silently rounded.
+ */
+const RANGE_AND_DIVISOR: VariableDeclaration[] = [
+  { name: 'n', assumptions: { integer: true } },
+  { name: 'd', assumptions: { integer: true } },
+]
+
+/**
+ * How many times one element is counted by each tier of inclusion–exclusion.
+ *
+ * `a - b + c` is a MULTIPLICITY and not a size, which is the one thing about this
+ * list to get right: the three letters are how many of the singles, the pairwise
+ * terms and the triple term include one particular element, and the answer is how
+ * many times that element ends up counted. The union is counted by the other list
+ * below. Keeping them separate is the same discipline `CASES_AND_REGIONS`
+ * applies against `MEMBER_COUNT` — one letter standing for two readings inside
+ * one concept is worth two lists.
+ */
+const TIER_MULTIPLICITIES: VariableDeclaration[] = [
+  { name: 'a', assumptions: { integer: true } },
+  { name: 'b', assumptions: { integer: true } },
+  { name: 'c', assumptions: { integer: true } },
+]
+
+/**
+ * Three set sizes, three pairwise overlaps and one triple overlap.
+ *
+ * `a+b+c-d-e-f+g` is three-set inclusion–exclusion written out, and the seven
+ * letters are deliberate where a shorter list would have been possible: the
+ * alternating signs are the content, so the expression has to SHOW three
+ * additions, three subtractions and one addition rather than hide any of them
+ * behind a collected term. A learner who sees `a+b+c-(d+e+f)+g` has been told the
+ * pairs come off together, which is true, and not told that each one comes off
+ * because of a different pair of conditions.
+ *
+ * `integer` and not `positive` for the reason the sets lists give: a disjoint
+ * triple has `g = 0` and is the degenerate case the general expression has to
+ * keep expressible.
+ */
+const THREE_SETS_AND_THEIR_OVERLAPS: VariableDeclaration[] = [
+  { name: 'a', assumptions: { integer: true } },
+  { name: 'b', assumptions: { integer: true } },
+  { name: 'c', assumptions: { integer: true } },
+  { name: 'd', assumptions: { integer: true } },
+  { name: 'e', assumptions: { integer: true } },
+  { name: 'f', assumptions: { integer: true } },
+  { name: 'g', assumptions: { integer: true } },
+]
+
+/**
+ * How many results each step of an experiment can have.
+ *
+ * `a*b*c` at (2, 2, 2) is the size of the sample space for three coin tosses
+ * recorded in order, and this is the ONLY multiplication in
+ * `chance-and-events` — which is a boundary rather than a coincidence. The
+ * moment an event has to be COUNTED rather than read off a written list, the
+ * question has become `counting-probability`'s, and the counting itself is
+ * `counting-principles`. So this list exists to size a space small enough to
+ * write out in full, and the eight sequences are written out in the point's
+ * worked example.
+ *
+ * Separate from `OPTION_COUNTS`, which holds the same three integer symbols for
+ * the product rule itself. The readings differ in what the answer is FOR: there
+ * the number is the answer to "how many ways", here it is the length of a list
+ * that is then enumerated and subsetted. One letter standing for two readings
+ * across two subjects is worth two lists, which is the discipline
+ * `CASES_AND_REGIONS` applies against `MEMBER_COUNT`.
+ */
+const RESULTS_PER_TRIAL: VariableDeclaration[] = [
+  { name: 'a', assumptions: { integer: true } },
+  { name: 'b', assumptions: { integer: true } },
+  { name: 'c', assumptions: { integer: true } },
+]
+
+/**
+ * How many outcomes of a finer sample space each outcome of a coarser one stands
+ * for.
+ *
+ * The four letters are the groups of three-toss sequences sharing a number of
+ * heads, in order: `p` is 0 heads, `q` is 1, `r` is 2, `s` is 3. Shared by two
+ * tasks across no point boundary — both are in the first point — and the reason
+ * is that the two questions are one audit:
+ *
+ *   `r + s`           at (3, 1)        "at least two heads", two cases added
+ *   `p + q + r + s`   at (1, 3, 3, 1)  the whole partition, which must come
+ *                                      back to the size of the finer space
+ *
+ * `integer` rather than `positive` because a partition of a space by a recorded
+ * quantity may have an empty class — a record nothing produces is still a legal
+ * outcome of the coarser space — and the general expression has to keep that
+ * expressible even though this instance has none.
+ *
+ * THE INEQUALITY OF THE FOUR VALUES IS THE CONTENT, not an incidental fact about
+ * this experiment. 1, 3, 3 and 1 are what make the coarser space's outcomes
+ * unequally likely, which is the whole of the second knowledge point's argument.
+ */
+const OUTCOMES_BY_CASE: VariableDeclaration[] = [
+  { name: 'p', assumptions: { integer: true } },
+  { name: 'q', assumptions: { integer: true } },
+  { name: 'r', assumptions: { integer: true } },
+  { name: 's', assumptions: { integer: true } },
+]
+
+/**
+ * How many outcomes an event holds, and how many the whole space holds.
+ *
+ * `e/n` is P(E) when the outcomes are equally likely, and `n` is in the
+ * denominator rather than being a plain divisor for a reason this subject is
+ * built on: the division is licensed by a property of the SPACE, so the size of
+ * the space is the thing being divided by and not a convenient number. `f` is a
+ * second event with no outcome in common with the first, so `e/n + f/n` is
+ * additivity on disjoint events written out rather than collected into
+ * `(e + f)/n` — the sum of two probabilities is what the condition is about, and
+ * a single fraction would have hidden it.
+ *
+ * Three tasks share this list, all in the second point, and `f` is unused by two
+ * of them. That is deliberate and it is what the derivation looks like: the first
+ * task is one outcome, the second is three, and only the third has a second event
+ * to add.
+ */
+const EVENT_SIZES_AND_THE_SPACE: VariableDeclaration[] = [
+  { name: 'e', assumptions: { integer: true } },
+  { name: 'f', assumptions: { integer: true } },
+  { name: 'n', assumptions: { integer: true } },
+]
+
+/**
+ * Two event sizes, the size of their overlap, and the size of the space.
+ *
+ * `a/n + b/n - c/n` is the addition rule for two events that are NOT disjoint,
+ * and the three fractions are written separately for the reason
+ * `THREE_SETS_AND_THEIR_OVERLAPS` gives about its seven letters: the correction
+ * is the content, so the expression has to SHOW a probability being subtracted
+ * rather than hide it inside a collected numerator. A learner who sees
+ * `(a + b - c)/n` has been told the repair happens to the count; what the
+ * condition on additivity actually says is that the two probabilities could not
+ * be added in the first place.
+ *
+ * Separate from `EVENT_SIZES_AND_THE_SPACE` even though both are event sizes over
+ * a space, because `f` there is disjoint from `e` by hypothesis and `b` here
+ * overlaps `a` by construction. The same three-symbol shape carrying opposite
+ * hypotheses is exactly the case where one list would mislead.
+ */
+const TWO_EVENTS_THEIR_OVERLAP_AND_THE_SPACE: VariableDeclaration[] = [
+  { name: 'a', assumptions: { integer: true } },
+  { name: 'b', assumptions: { integer: true } },
+  { name: 'c', assumptions: { integer: true } },
+  { name: 'n', assumptions: { integer: true } },
+]
+
+/**
+ * How many times each term of the addition rule counts one particular outcome.
+ *
+ * `p + q - r` is a MULTIPLICITY and not a probability, which is the one thing
+ * about this list to get right — the same warning `TIER_MULTIPLICITIES` carries
+ * about `a - b + c`, and it matters more here because every other expression in
+ * this subject evaluates to a probability. The three letters are whether P(A)
+ * counts the outcome, whether P(B) does, and whether subtracting P(A and B)
+ * removes it; the answer is how many times it ends up counted, and it has to be
+ * 1 for every outcome of the union.
+ *
+ * Asked at (1, 1, 1) — an outcome in BOTH events — because that is the case the
+ * repair exists for, and because the answer 1 is the justification for
+ * subtracting exactly once rather than merely consistent with it. The other two
+ * cases are in the worked example and are not asked: (1, 0, 0) and (0, 0, 0)
+ * come out at 1 and 0 and would be grading nothing.
+ */
+const HOW_MANY_TIMES_AN_OUTCOME_IS_COUNTED: VariableDeclaration[] = [
+  { name: 'p', assumptions: { integer: true } },
+  { name: 'q', assumptions: { integer: true } },
+  { name: 'r', assumptions: { integer: true } },
+]
+
+/**
+ * How many outcomes an event's COMPLEMENT holds, and how many the space holds.
+ *
+ * `1 - c/n` is P(not E) and the literal 1 is in the expression rather than being
+ * a substituted symbol, which is the point of a list of its own: the 1 is
+ * P(of the whole space) and is a condition rather than a quantity of this
+ * problem. A symbol there would have implied it could be something else.
+ *
+ * `c` is the complement's size and not the event's, which is the saving: the
+ * expression is worth using precisely when `c` is small and `n - c` is not, so
+ * asking for the complement's size is asking for the cheap half.
+ */
+const THE_COMPLEMENT_AND_THE_SPACE: VariableDeclaration[] = [
+  { name: 'c', assumptions: { integer: true } },
+  { name: 'n', assumptions: { integer: true } },
+]
+
+/**
+ * A descending product and the orderings of one selection, used for the size of
+ * a SAMPLE SPACE and for the size of an EVENT alike.
+ *
+ * `(a*b*c)/d` at (12, 11, 10, 6) is the 220 committees of three from twelve
+ * members, and at (5, 4, 3, 6) it is the 10 made only of new members. One list
+ * for both, which is the opposite of the discipline `RESULTS_PER_TRIAL` applies
+ * against `OPTION_COUNTS` — and deliberately, because here the sameness is the
+ * concept's content. `counting-probability`'s first claim is that one convention
+ * has to serve both counts, so a space counted one way and an event counted
+ * another would be two readings of this list and exactly the error the point
+ * exists to drill. Giving them separate lists would have said they were
+ * different kinds of number.
+ *
+ * Separate from `ORDERED_PRODUCT_AND_ORDERINGS`, which holds the same four
+ * integer symbols for `counting-and-arrangements`. There the quotient is the
+ * ANSWER to "how many ways"; here it is one side of a ratio and nothing is
+ * finished until it has been divided by the other. One letter standing for two
+ * readings across two subjects is worth two lists.
+ */
+const SELECTION_COUNT_FACTORS: VariableDeclaration[] = [
+  { name: 'a', assumptions: { integer: true } },
+  { name: 'b', assumptions: { integer: true } },
+  { name: 'c', assumptions: { integer: true } },
+  { name: 'd', assumptions: { integer: true } },
+]
+
+/**
+ * A favourable count and the size of the space, both of them COUNTED.
+ *
+ * `e/n` is P(E) over equally likely outcomes, the same expression and the same
+ * reading `EVENT_SIZES_AND_THE_SPACE` carries for `sample-spaces` — and a
+ * separate list because of what the learner has in hand when the task is asked.
+ * There both numbers are printed in the prompt, read off a list of eight; here
+ * `e` and `n` are numbers the two previous tasks produced, so the ratio is the
+ * last step of a counting argument rather than the only step of anything. That
+ * list also declares an `f` for a second disjoint event, which this concept never
+ * adds: every union below is repaired before it is divided.
+ *
+ * Two tasks share this list, across a point boundary, at (10, 220) and
+ * (105, 220) — the device `OPTION_COUNTS` uses for `a*b*c`. `n` is 220 in both
+ * and in every probability in the concept, because the space is counted once.
+ */
+const A_COUNTED_EVENT_AND_A_COUNTED_SPACE: VariableDeclaration[] = [
+  { name: 'e', assumptions: { integer: true } },
+  { name: 'n', assumptions: { integer: true } },
+]
+
+/**
+ * Two ordered counts, the event's and the space's, as six separate factors.
+ *
+ * `(a*b*c)/(d*e*f)` at (5, 4, 3, 12, 11, 10) is 60/1320, which is the same 1/22
+ * as the unordered 10/220 — and that agreement is the first knowledge point's
+ * whole claim. Six letters rather than two, because the content is that the
+ * orderings divide out: a learner handed `p/q` at (60, 1320) would be dividing
+ * two numbers somebody else produced, where this expression shows both products
+ * descending from their own pools and lets the common factor of 3! be found
+ * rather than asserted.
+ *
+ * No divisor for the orderings anywhere in it, which is the point: this is the
+ * ratio with the division by 6 omitted from BOTH counts, and the answer being
+ * unchanged is what says it was free to omit.
+ */
+const ORDERED_EVENT_AND_ORDERED_SPACE: VariableDeclaration[] = [
+  { name: 'a', assumptions: { integer: true } },
+  { name: 'b', assumptions: { integer: true } },
+  { name: 'c', assumptions: { integer: true } },
+  { name: 'd', assumptions: { integer: true } },
+  { name: 'e', assumptions: { integer: true } },
+  { name: 'f', assumptions: { integer: true } },
+]
+
+/**
+ * One selection count per type, multiplied — the first a bare pool, the second a
+ * descending product over its orderings.
+ *
+ * `a*((b*c)/d)` at (5, 7, 6, 2) is 5 × 21 = 105, the committees holding exactly
+ * one of five new members and two of seven older ones. The nesting is the
+ * structure and is worth the brackets: `a` is C(5, 1), which is just the pool
+ * because a descending product of one factor has 1! to divide by, and
+ * `(b*c)/d` is C(7, 2) with its own orderings divided out. Written flat as
+ * `a*b*c/d` the two factors would have read as one four-factor product, which is
+ * what a learner who has not separated the types would write.
+ *
+ * Both factors are UNORDERED counts, matching the convention the space was
+ * counted in. That is the previous point's rule applying to every factor and not
+ * just to the total, and it is why this list is separate from
+ * `ORDERED_EVENT_AND_ORDERED_SPACE` above rather than a longer version of it.
+ */
+const ONE_SELECTION_COUNT_PER_TYPE: VariableDeclaration[] = [
+  { name: 'a', assumptions: { integer: true } },
+  { name: 'b', assumptions: { integer: true } },
+  { name: 'c', assumptions: { integer: true } },
+  { name: 'd', assumptions: { integer: true } },
+]
+
+/**
+ * How many selections fall in each case of a partition of the space.
+ *
+ * `a + b + c + d` at (35, 105, 70, 10) is the committees holding 0, 1, 2 and 3
+ * new members, and the four letters are those cases in that order. The answer
+ * must come back to the size of the space or the cases were not a partition,
+ * which is the only check available when the event is too large to list — a
+ * single wrong factor in any one case shows up in the total immediately.
+ *
+ * Separate from `OUTCOMES_BY_CASE`, which holds four integer symbols for the
+ * same shape of audit in `sample-spaces`. There each letter is how many outcomes
+ * of a FINER space one outcome of a coarser one stands for, and the inequality of
+ * the four values is the content because it is what makes the coarser space's
+ * outcomes unequally likely. Here all four are counts in ONE space and their
+ * inequality means nothing at all: 35, 105, 70 and 10 are four cases of a
+ * partition and the 220 equally likely committees underneath them are untouched.
+ * Two readings, two lists.
+ *
+ * `integer` rather than `positive` because a case of such a partition can be
+ * empty — with fewer than three older members "0 new" would count nothing — and
+ * the general expression has to keep that expressible even though this instance
+ * has no empty case.
+ */
+const CASE_COUNTS_OF_A_PARTITION: VariableDeclaration[] = [
+  { name: 'a', assumptions: { integer: true } },
+  { name: 'b', assumptions: { integer: true } },
+  { name: 'c', assumptions: { integer: true } },
+  { name: 'd', assumptions: { integer: true } },
+]
+
+/**
+ * The size of a COUNTED complement and the size of the space, with the
+ * complement taken on either side of the division.
+ *
+ * Two tasks share this list and the pair is the content: `1 - c/n` at (35, 220)
+ * takes the complement AFTER dividing, and `(n - c)/n` at (120, 220) takes it
+ * BEFORE. Those are the same number by construction, which is what says the
+ * saving was entirely in the counting — so the two expressions together are a
+ * fact about the rule rather than two presentations of one task, and their
+ * references differ because the two complements are different events.
+ *
+ * Separate from `THE_COMPLEMENT_AND_THE_SPACE`, which holds the same two integer
+ * symbols for `1 - c/n` in `sample-spaces`. The reading there is identical and
+ * the difference is where `c` comes from: 1, read off a printed list of eight
+ * outcomes, against C(7, 3) = 35 and C(10, 3) = 120, which have to be counted.
+ * That list also exists to say the literal 1 is P(of the whole space) rather than
+ * a quantity of its problem, and that is true here too — but only one of the two
+ * expressions below contains it, which is itself the thing being taught.
+ */
+const A_COMPLEMENT_COUNT_AND_THE_SPACE: VariableDeclaration[] = [
+  { name: 'c', assumptions: { integer: true } },
+  { name: 'n', assumptions: { integer: true } },
+]
+
+/**
+ * Two selection counts, the size of their overlap, and the size of the space.
+ *
+ * `(a + b - c)/n` is inclusion–exclusion repaired on the COUNTS and then divided
+ * once, at (55, 55, 10, 220).
+ *
+ * COLLECTED OVER ONE DENOMINATOR, AND `TWO_EVENTS_THEIR_OVERLAP_AND_THE_SPACE`
+ * REFUSES EXACTLY THAT for the same four quantities — its `a/n + b/n - c/n`
+ * writes three separate probabilities because `sample-spaces`' lesson is that the
+ * two probabilities could not be ADDED in the first place, and a collected
+ * numerator would have hidden it. Here the lesson is the opposite one. The repair
+ * belongs to `counting-principles` and happens before any probability exists, so
+ * the expression has to show one division at the end and not three. The two
+ * expressions are the boundary between the two concepts written in a
+ * denominator, which is why they are two lists rather than one.
+ */
+const OVERLAPPING_COUNTS_AND_THE_SPACE: VariableDeclaration[] = [
+  { name: 'a', assumptions: { integer: true } },
+  { name: 'b', assumptions: { integer: true } },
+  { name: 'c', assumptions: { integer: true } },
+  { name: 'n', assumptions: { integer: true } },
+]
+
 export const TASKS: PracticeTask[] = [
   /*
    * ── fraction-arithmetic ─────────────────────────────────────────────────
@@ -12346,6 +12810,959 @@ export const TASKS: PracticeTask[] = [
     // rule is an equivalence.
     reference: '60',
     at: { a: '360', x: '-15', b: '84', y: '65' },
+  },
+  // ── counting-and-arrangements, forty-fourth promotion: counting-principles
+  //
+  // Nine tasks, three on each point, all nine `evaluate` and every one settled
+  // by exact INTEGER arithmetic with no worker. Not merely rational: every
+  // reference below is a whole number, because every one of them counts
+  // something, and a count that came out as a fraction would be a wrong answer
+  // rather than an unusual one. That is a stronger property than the subjects
+  // either side of it hold and it is worth stating, because it is also the
+  // check: if an expression here produced 83.5, the expression is wrong.
+  //
+  // THE ENCODING IS THE DESCENDING PRODUCT, AND NOT BECAUSE A FACTORIAL WOULD
+  // HAVE BEEN NICER. `exactValue` in numerals.ts switches on integer, rational,
+  // decimal, negate, add, multiply, subtract, divide, power, sqrt and abs, with
+  // no case for a function call, so `factorial(9)/factorial(6)` parses — expr.ts
+  // does list `factorial` in `ALLOWED_FUNCTIONS` — and then returns null, which
+  // drops the task to a worker this subject must not need. ontology.ts says the
+  // same conclusion with a reason that has since stopped being true, and
+  // ontology-counting.ts's header carries the correction:
+  //
+  //     a*b*c             an ordered count, the pool shrinking per factor
+  //     p + q*r*s         two cases of a split, added
+  //     (a*b*c)/d         an unordered count: the ordered one over its orderings
+  //     n/d               the multiples of d up to n
+  //     a-b+c             a net MULTIPLICITY, not a size
+  //     a+b+c-d-e-f+g     a union of three, written with every sign showing
+  //
+  // ONE EXPRESSION IS ASKED AT TWO SUBSTITUTIONS ACROSS A POINT BOUNDARY, which
+  // is the device ontology-sets.ts used and the reason the shared list has one
+  // name. `a*b*c` is asked at (9, 9, 8) in the first point, where the pool holds
+  // still at nine because the first digit was the only one barred from being
+  // zero, and at (9, 8, 7) in the second, where the pool shrinks because a
+  // person cannot hold two offices. Same rule, two pools, two answers — 648 and
+  // 504 — so the pair cannot read as one task duplicated.
+  //
+  // THE SECOND POINT'S THIRD TASK REACHES THE SAME ANSWER AS ITS SECOND, AND
+  // THAT IS THE TASK. 84 twice, once down a three-factor product over 3! and
+  // once down a six-factor product over 6!, because choosing the 3 who are in
+  // and the 6 who are out are one act. Two tasks with the same reference would
+  // normally be a duplicate; here the agreement is the content, which is why the
+  // prompts name each other and why the arities are different lists.
+  //
+  // THE MULTIPLICITY TASK IS THE ONE CARRYING THE CONCEPT'S HARDEST CLAIM, and
+  // it is the substitute for a `justify` this build cannot rule. Asked at
+  // (3, 3, 1): an element of all three sets is counted by three singles,
+  // removed by three pairwise terms, restored by one triple term, and the answer
+  // 1 IS the argument for why the last sign is positive. Asked that way rather
+  // than as `a - b` at (3, 3) — which answers 0 and is the symptom — because the
+  // task should produce the repair and not the fault.
+  //
+  // NO `transform_to_form`, NO `counterexample`, NO `justify`, and no
+  // `domainConditions` on any of the nine. The reasons are in
+  // ontology-counting.ts's header; the one worth repeating here is that the
+  // division in `(a*b*c)/d` needs no stated condition because a descending
+  // product of r factors is always divisible by r!, the quotient being a count
+  // of something, and `d` is never zero since 0! = 1.
+  {
+    id: 'multiply-the-option-counts-when-they-hold-still-1',
+    knowledgePointId: 'multiply-choices-that-and-together-and-add-cases-that-do-not-overlap',
+    kind: 'evaluate',
+    prompt:
+      'Count the three-digit numbers from 100 to 999 whose three digits are all different. Take '
+      + 'the choices left to right: the first digit cannot be 0, so it has 9 options; the second '
+      + 'may be any digit except the first, so 9; the third any except the two used, so 8. The '
+      + 'product rule applies because the NUMBER of options at each step is the same whichever '
+      + 'digits came earlier — after a first digit of 7 the second may be any of '
+      + '{0,1,2,3,4,5,6,8,9}, and after a 3 any of {0,1,2,4,5,6,7,8,9}: different sets, both of '
+      + 'size 9. That is the condition, and it is weaker than "the choices are unrelated". '
+      + 'Evaluate a*b*c at a = 9, b = 9, c = 8.',
+    given: 'a*b*c',
+    variables: OPTION_COUNTS,
+    // 9 × 9 × 8 = 648.
+    //
+    // THE MIDDLE FACTOR IS 9 AND NOT 8, which is the whole reason this instance
+    // was chosen. A learner who reads "all different" as "subtract one each
+    // time" writes 9 × 8 × 7 and gets 504 — the second point's answer, by
+    // coincidence of the same three digits — and the error is that the first
+    // digit's restriction was being barred from 0, not being used up. Ten digits
+    // less one used is nine, and the pool only starts shrinking below nine at
+    // the third choice.
+    reference: '648',
+    at: { a: '9', b: '9', c: '8' },
+  },
+  {
+    id: 'count-one-case-in-which-the-product-rule-holds-1',
+    knowledgePointId: 'multiply-choices-that-and-together-and-add-cases-that-do-not-overlap',
+    kind: 'evaluate',
+    prompt:
+      'Now count only the EVEN ones. The product rule does not apply to this as posed: if the '
+      + 'last digit is 2 the first digit must avoid 0 and 2 and has 8 options, but if the last '
+      + 'digit is 0 the first must avoid 0 and 0 — the same digit twice — and has 9. The option '
+      + 'count moved, so there is no single number to multiply by and the rule is inapplicable '
+      + 'rather than inaccurate. Split on exactly the thing that moved and take the first case: '
+      + 'last digit 0, first digit any of 1 to 9, middle digit anything except the first and 0. '
+      + 'Evaluate a*b at a = 9, b = 8.',
+    given: 'a*b',
+    variables: OPTION_COUNTS,
+    // 9 × 8 = 72, the last-digit-zero case.
+    //
+    // `a*b` OVER `OPTION_COUNTS`, WHICH DECLARES THREE LETTERS AND USES TWO.
+    // That is deliberate and it is what the split looks like: this case has two
+    // free choices because the third was pinned to 0 by the case itself, and the
+    // other case has three. An expression naming all three letters would have
+    // had to invent a factor of 1 for a choice that was never made.
+    reference: '72',
+    at: { a: '9', b: '8' },
+  },
+  {
+    id: 'add-the-cases-once-nothing-is-in-two-of-them-1',
+    knowledgePointId: 'multiply-choices-that-and-together-and-add-cases-that-do-not-overlap',
+    kind: 'evaluate',
+    prompt:
+      'Finish the even count. The first case gave 72. The second is last digit one of 2, 4, 6, '
+      + '8 — 4 options — with the first digit avoiding 0 and the last digit, which are two '
+      + 'different digits, so 8 options, and the middle avoiding those two, so 8. Add the cases: '
+      + 'a number\'s last digit is either 0 or one of 2, 4, 6, 8 and never both, so nothing was '
+      + 'counted twice, and every even three-digit number with distinct digits ends in one of '
+      + 'those five, so nothing was left out. Evaluate p + q*r*s at p = 72, q = 4, r = 8, s = 8. '
+      + 'Compare your answer with the 5 × 8 × 8 = 320 the product rule offered: the gap is the '
+      + 'one case where 9 options had been counted as 8.',
+    given: 'p + q*r*s',
+    variables: TWO_CASES_OF_A_SPLIT,
+    // 72 + 4 × 8 × 8 = 72 + 256 = 328.
+    //
+    // THE COMPARISON IN THE PROMPT IS EXACT AND IS WHY THIS TASK ASKS FOR THE
+    // TOTAL RATHER THAN FOR THE SECOND CASE. 328 − 320 = 8, and the whole of
+    // that 8 is Case A: it really has 9 × 8 = 72 where the product rule had
+    // allowed it 8 × 8 = 64. A learner who has produced both numbers can locate
+    // the entire discrepancy in one case, which is a stronger lesson than "the
+    // product rule was wrong" — the error was one option in one case, and that
+    // is the size of mistake that does not announce itself.
+    reference: '328',
+    at: { p: '72', q: '4', r: '8', s: '8' },
+  },
+  {
+    id: 'count-an-ordered-selection-as-a-descending-product-1',
+    knowledgePointId:
+      'ordered-selections-are-a-descending-product-and-unordered-ones-divide-by-the-orderings',
+    kind: 'evaluate',
+    prompt:
+      'A club of 9 members fills three distinct offices — president, secretary, treasurer — with '
+      + 'three different people. Order is information here, and that is a fact about the problem '
+      + 'rather than about the arithmetic: Ann as president with Bob as secretary is a different '
+      + 'outcome from Bob as president with Ann as secretary, because the two hold different '
+      + 'jobs. Three choices with the pool shrinking by one each time, and the option count holds '
+      + 'still at each step whoever was picked before — after any president there are exactly 8 '
+      + 'people left. Evaluate a*b*c at a = 9, b = 8, c = 7.',
+    given: 'a*b*c',
+    variables: OPTION_COUNTS,
+    // 9 × 8 × 7 = 504.
+    //
+    // THE SAME EXPRESSION AS THE FIRST POINT'S FIRST TASK, AT A DIFFERENT
+    // SUBSTITUTION, and the contrast is the reason both exist. There the pool
+    // held still at nine because only the first digit was barred from being
+    // zero; here it shrinks because a person cannot hold two offices. One rule,
+    // and whether the pool shrinks is read off the problem rather than assumed
+    // from the words "all different".
+    reference: '504',
+    at: { a: '9', b: '8', c: '7' },
+  },
+  {
+    id: 'divide-by-the-orderings-of-one-selection-1',
+    knowledgePointId:
+      'ordered-selections-are-a-descending-product-and-unordered-ones-divide-by-the-orderings',
+    kind: 'evaluate',
+    prompt:
+      'The same club now chooses a committee of 3 with no offices. Order is NOT information: the '
+      + 'committee of Ann, Bob and Cleo is the same committee however it was written or in '
+      + 'whatever sequence they were picked. So the 504 above is an answer to a different '
+      + 'question. Ask how many of those 504 office-fillings used exactly Ann, Bob and Cleo — it '
+      + 'is the number of ways to put three particular people in three particular offices, '
+      + '3 × 2 × 1 = 6 — and then notice that this 6 is the same for EVERY committee of three, '
+      + 'since the count never mentioned which three. Evaluate (a*b*c)/d at a = 9, b = 8, c = 7, '
+      + 'd = 6.',
+    given: '(a*b*c)/d',
+    variables: ORDERED_PRODUCT_AND_ORDERINGS,
+    // 504 ÷ 6 = 84.
+    //
+    // THE UNIFORMITY OF THE OVERCOUNT IS THE HYPOTHESIS AND THE PROMPT STATES IT
+    // RATHER THAN USING IT. If different committees had been reached different
+    // numbers of times there would be no single divisor and the repair would
+    // have to be a case split, which is exactly what the first point's problem
+    // needed when ITS one-line rule lost its hypothesis. The two points carry
+    // the same lesson about the same kind of condition, and this is the sentence
+    // that joins them.
+    reference: '84',
+    at: { a: '9', b: '8', c: '7', d: '6' },
+  },
+  {
+    id: 'count-the-ones-left-out-and-get-the-same-answer-1',
+    knowledgePointId:
+      'ordered-selections-are-a-descending-product-and-unordered-ones-divide-by-the-orderings',
+    kind: 'evaluate',
+    prompt:
+      'Count the same committees a second way, by choosing which 6 members are left OUT instead '
+      + 'of which 3 are in. Each choice determines the other, so the two counts must agree. '
+      + 'Ordered, that is 9 × 8 × 7 × 6 × 5 × 4 = 60480 selections of six in order, and every '
+      + 'group of six was reached once per ordering of those six, which is 6! = 720. Evaluate '
+      + '(a*b*c*d*e*f)/g at a = 9, b = 8, c = 7, d = 6, e = 5, f = 4, g = 720. Your answer is '
+      + 'the symmetry C(9, 3) = C(9, 6), which is why row 9 of Pascal\'s triangle reads the same '
+      + 'forwards and backwards — and it is six factors where the previous task needed three, so '
+      + 'the symmetry is worth using in whichever direction is shorter.',
+    given: '(a*b*c*d*e*f)/g',
+    variables: SIX_FACTOR_PRODUCT_AND_ORDERINGS,
+    // 60480 ÷ 720 = 84, the same answer as the task above.
+    //
+    // TWO TASKS WITH ONE REFERENCE, WHICH IS NORMALLY A DUPLICATE AND HERE IS
+    // THE POINT. The pair is the argument that naming who is in names who is
+    // out, so the agreement has to be produced rather than asserted — a learner
+    // told that C(9, 3) = C(9, 6) has been handed an identity, and one who
+    // computes 84 down a three-factor product and again down a six-factor one
+    // has watched two descriptions of a single decision land on one number.
+    // Asked at 9 and not at a smaller n so that the two arities differ visibly:
+    // at n = 4, r = 2 the two products would be the same length and the saving
+    // would not exist.
+    reference: '84',
+    at: { a: '9', b: '8', c: '7', d: '6', e: '5', f: '4', g: '720' },
+  },
+  {
+    id: 'a-pairwise-overlap-is-a-divisibility-too-1',
+    knowledgePointId:
+      'three-overlapping-sets-need-the-triple-added-back-after-the-pairs-remove-it-entirely',
+    kind: 'evaluate',
+    prompt:
+      'Among the whole numbers 1 to 60, count those divisible by both 2 and 3. A number divisible '
+      + 'by both is divisible by their least common multiple, which is 6 — the lcm and not the '
+      + 'product in general, though 2 and 3 are coprime so the two agree here. So the overlap of '
+      + 'two divisibility conditions is itself one divisibility condition, which is what the '
+      + 'pairwise terms of the correction are counting. Evaluate n/d at n = 60, d = 6. The '
+      + 'division is exact because 60 is a multiple of 6; the range was chosen so that every '
+      + 'count in this point comes out whole.',
+    given: 'n/d',
+    variables: RANGE_AND_DIVISOR,
+    // 60 ÷ 6 = 10.
+    //
+    // THE lcm CAVEAT IS IN THE PROMPT BECAUSE THIS INSTANCE CANNOT TEACH IT.
+    // Every pair among 2, 3 and 5 is coprime, so lcm and product agree on all
+    // three pairwise terms and a learner could leave with "multiply the two
+    // divisors" intact. Naming the rule that actually holds costs one clause and
+    // is the difference between an instance that happens to work and one a
+    // learner can carry to 4 and 6, where the product is 24 and the lcm is 12.
+    reference: '10',
+    at: { n: '60', d: '6' },
+  },
+  {
+    id: 'the-net-multiplicity-of-an-element-in-all-three-1',
+    knowledgePointId:
+      'three-overlapping-sets-need-the-triple-added-back-after-the-pairs-remove-it-entirely',
+    kind: 'evaluate',
+    prompt:
+      'Follow the number 30 through the correction. It is divisible by 2, by 3 and by 5, so all '
+      + 'three single counts included it: 3. It is also divisible by 6, by 10 AND by 15, so all '
+      + 'three pairwise subtractions removed it: 3. After those two tiers it is counted zero '
+      + 'times, and it is certainly in the union. It is divisible by 30, so the triple term '
+      + 'restores it once: 1. Evaluate a - b + c at a = 3, b = 3, c = 1. Your answer is how many '
+      + 'times 30 ends up counted, and since it must be counted once, that answer IS the reason '
+      + 'the last sign is a plus — not evidence consistent with it.',
+    given: 'a - b + c',
+    variables: TIER_MULTIPLICITIES,
+    // 3 − 3 + 1 = 1.
+    //
+    // THE ANSWER IS AN ARGUMENT, WHICH IS THIS BUILD'S NEAREST AVAILABLE THING
+    // TO A `justify`. The ask "say why the triple overlap is added back exactly
+    // once" has no kind that can rule it, so the question is rephrased until its
+    // ANSWER is the justification: a multiplicity of 1 is what the union
+    // requires, and an element reaching 1 only because of the final term is the
+    // whole case for that term existing.
+    //
+    // ASKED AT (3, 3, 1) RATHER THAN `a - b` AT (3, 3). The second answers 0,
+    // which is the fault rather than the repair, and a task whose reference is
+    // the broken intermediate teaches the shape of the error with nothing
+    // attached to fix it. The audit of the other two kinds — net 1 for an element
+    // in one set, net 2 − 1 = 1 for an element in two — is in the worked example,
+    // where all three kinds sit together and the completeness of the case split
+    // is visible.
+    reference: '1',
+    at: { a: '3', b: '3', c: '1' },
+  },
+  {
+    id: 'inclusion-exclusion-over-three-sets-1',
+    knowledgePointId:
+      'three-overlapping-sets-need-the-triple-added-back-after-the-pairs-remove-it-entirely',
+    kind: 'evaluate',
+    prompt:
+      'Count the whole numbers from 1 to 60 divisible by at least one of 2, 3, 5. The singles are '
+      + '60/2 = 30, 60/3 = 20, 60/5 = 12, which add to 62 — impossible among 60 numbers, so the '
+      + 'cases overlap and the sum rule does not apply. The pairs are the multiples of 6, 10 and '
+      + '15: 10, 6 and 4. The triple is the multiples of 30: 2, namely 30 and 60. Evaluate '
+      + 'a+b+c-d-e-f+g at a = 30, b = 20, c = 12, d = 10, e = 6, f = 4, g = 2. Check it the other '
+      + 'way round: your answer taken from 60 should be the count divisible by NONE of the three, '
+      + 'and the numbers coprime to 30 in each block of thirty are 1, 7, 11, 13, 17, 19, 23, 29 '
+      + '— eight of them, so sixteen across two blocks.',
+    given: 'a+b+c-d-e-f+g',
+    variables: THREE_SETS_AND_THEIR_OVERLAPS,
+    // 30 + 20 + 12 − 10 − 6 − 4 + 2 = 62 − 20 + 2 = 44.
+    //
+    // THE SECOND CHECK IN THE PROMPT IS A GENUINELY INDEPENDENT COMPUTATION,
+    // which is why it is given rather than left to the worked example. 60 − 44 =
+    // 16, and counting the numbers coprime to 30 directly gives 8 per block of
+    // thirty and 16 across two. That route never adds or subtracts an overlap,
+    // so an error in the alternating expression could not have survived into it
+    // — unlike a check that rearranges the same seven terms, which would confirm
+    // arithmetic and nothing else.
+    //
+    // THE RANGE IS 60 BECAUSE IT IS THE lcm OF 2, 3 AND 5 DOUBLED, so all seven
+    // divisions are exact and `exactValue` needs no floor it does not have. Two
+    // blocks rather than one so that the triple overlap has 2 members instead of
+    // 1: a triple term of 1 would be true and would read as a special case, and
+    // the term has to look like a count.
+    reference: '44',
+    at: { a: '30', b: '20', c: '12', d: '10', e: '6', f: '4', g: '2' },
+  },
+  // ── chance-and-events, forty-fifth promotion: sample-spaces
+  //
+  // Nine tasks, three on each point, all nine `evaluate` and every one settled
+  // by exact arithmetic with no worker. The subject above holds the same
+  // property and says why: a subject whose prerequisites are a set and a
+  // fraction sits low enough that a worker outage must not wall it off.
+  //
+  // THE DIFFERENCE FROM THE SUBJECT ABOVE IS THAT THESE ARE NOT ALL INTEGERS,
+  // and the check that replaces its "every reference is a whole number" is
+  // tighter rather than looser. FIVE of the nine are probabilities and so are
+  // rational — 1/8, 3/8, 1/2, 5/8, 7/8 — and every one of them lies in [0, 1]
+  // AND is a count of outcomes over the size of the space: each is k/8 with k a
+  // whole number, and 1/2 is 4/8 with the fraction reduced. A reference outside
+  // [0, 1], or one that is not k/8, is an authoring fault in the same way 83.5
+  // would have been one there. The four integers are the size of the space, a
+  // subset size, the partition total and the multiplicity — exactly the set of
+  // answers that are NOT probabilities.
+  //
+  //     a*b*c             two results per toss, three tosses — the space's size
+  //     r + s             two cases of a partition, added
+  //     p + q + r + s     the whole partition, which must return the space's size
+  //     e/n               a count of outcomes over the size of the space
+  //     e/n + f/n         two DISJOINT events, their probabilities added
+  //     a/n + b/n - c/n   two OVERLAPPING events, the overlap taken off once
+  //     p + q - r         how many times one outcome is counted — a MULTIPLICITY
+  //     1 - c/n           a complement, from the whole space having probability 1
+  //
+  // TWO TASKS SHARE THE REFERENCE 8 AND THE AGREEMENT IS THE CONTENT, which is
+  // the device ontology-sets.ts used and ontology-counting.ts repeated. 2 × 2 ×
+  // 2 is the size of the space; 1 + 3 + 3 + 1 is the same space counted by how
+  // many heads came up. A partition that did not add back to the whole would not
+  // be a partition, so the second answer is the first answer or the audit has
+  // failed. The two expressions are different lists with different arities, so
+  // the pair cannot read as one task duplicated.
+  //
+  // ONE EXPRESSION IS ASKED AT TWO SUBSTITUTIONS INSIDE ONE POINT. `e/n` is
+  // asked at (1, 8) and at (3, 8) — a one-outcome event and a three-outcome one
+  // — because the derivation runs through the first to reach the second: eight
+  // equal probabilities adding to 1 give 1/8, and the event is three of those
+  // added. Two tasks rather than one so that the learner produces the 1/8 the
+  // formula is built out of.
+  //
+  // THE MULTIPLICITY TASK CARRIES THE CONCEPT'S HARDEST CLAIM and is the
+  // substitute for a `justify` this build cannot rule, the same role the
+  // three-set multiplicity plays in the subject above. Asked at (1, 1, 1): an
+  // outcome in both events is counted once by P(A), once by P(B) and removed
+  // once by subtracting P(A and B), and the answer 1 IS the argument for why one
+  // subtraction is the whole repair. Its reference is an integer sitting in a
+  // run of probabilities, and the prompt says so, because `1` is also the value
+  // of the uncorrected sum in this very worked example — the near-collision is
+  // numerical only and the two are a count of times and a probability.
+  //
+  // NO `transform_to_form`, NO `counterexample`, NO `justify`, and no
+  // `domainConditions` on any of the nine. The reasons are in
+  // ontology-chance.ts's header; the one worth repeating is that every
+  // denominator is the size of the sample space, which is 8 in every task and
+  // never a declared variable that could be zero. And no task asks for lowest
+  // terms: `maxDenominatorDegree` bounds a DEGREE rather than a denominator, so
+  // `4/8` cannot be refused in favour of `1/2`, and `exactValue` rules both
+  // correct — which is the right ruling for an `evaluate`.
+  {
+    id: 'size-the-space-by-what-each-step-can-do-1',
+    knowledgePointId:
+      'an-outcome-is-a-complete-result-and-an-event-is-a-subset-of-the-listed-space',
+    kind: 'evaluate',
+    prompt:
+      'A coin is tossed three times and the result of each toss is written down in order, so one '
+      + 'outcome is a sequence of three letters and HHT, HTH and THH are three different '
+      + 'outcomes. The sample space is {HHH, HHT, HTH, HTT, THH, THT, TTH, TTT}. How many '
+      + 'outcomes is that? Each toss contributes one letter with two possible values, and the '
+      + 'three contributions are independent of each other, so the number of three-letter '
+      + 'sequences is the product. Evaluate a*b*c at a = 2, b = 2, c = 2.',
+    given: 'a*b*c',
+    variables: RESULTS_PER_TRIAL,
+    // 2 × 2 × 2 = 8.
+    //
+    // THE ONLY MULTIPLICATION IN THIS CONCEPT, and the boundary is the reason.
+    // Counting is `counting-principles`, an authored subject; combinatorics
+    // meeting chance is `counting-probability`, directly above this concept and
+    // authored into this same subject by the forty-sixth promotion. So the space
+    // is sized once, here, and it is small enough that the prompt can print all
+    // eight of its outcomes — every event in all three points is then READ off
+    // that list rather than counted.
+    //
+    // "IN THE SUBJECT" IS WHAT THIS COMMENT USED TO SAY, and the two readings
+    // were the same nine tasks until that promotion arrived with four that
+    // multiply. The claim was always about the concept; the subject-wide wording
+    // was a filter that happened to agree with it, and tests/concepts-logic.mjs
+    // had to be narrowed for the same reason.
+    reference: '8',
+    at: { a: '2', b: '2', c: '2' },
+  },
+  {
+    id: 'count-an-event-by-adding-the-cases-it-covers-1',
+    knowledgePointId:
+      'an-outcome-is-a-complete-result-and-an-event-is-a-subset-of-the-listed-space',
+    kind: 'evaluate',
+    prompt:
+      'Group the eight sequences by how many heads they show: 0 heads is TTT alone, 1 head is '
+      + 'HTT, THT and TTH, 2 heads is HHT, HTH and THH, and 3 heads is HHH alone — so the four '
+      + 'groups hold 1, 3, 3 and 1 of the sequences. The event "at least two heads" is a subset '
+      + 'of the eight, and it is exactly the sequences in the last two groups. No sequence is in '
+      + 'both of those groups, since a sequence has one number of heads, so the sizes add. '
+      + 'Evaluate r + s at r = 3, s = 1.',
+    given: 'r + s',
+    variables: OUTCOMES_BY_CASE,
+    // 3 + 1 = 4: {HHT, HTH, THH} together with {HHH}.
+    //
+    // `r + s` OVER A LIST OF FOUR LETTERS, TWO OF THEM UNUSED, and that is what
+    // a subset of a partition looks like. The four letters are the four groups
+    // in order of how many heads, so `r` and `s` are "two heads" and "three
+    // heads" in both tasks that use this list — an expression naming only two
+    // letters would have lost which two groups they were.
+    //
+    // ADDING AND NOT COUNTING, which is the point rather than an economy. The
+    // four sequences could be read straight off the printed list; adding the two
+    // group sizes is the sum rule applied to parts of a partition, and it is the
+    // move the next task audits over all four groups.
+    reference: '4',
+    at: { r: '3', s: '1' },
+  },
+  {
+    id: 'audit-a-coarser-space-against-the-finer-one-1',
+    knowledgePointId:
+      'an-outcome-is-a-complete-result-and-an-event-is-a-subset-of-the-listed-space',
+    kind: 'evaluate',
+    prompt:
+      'Recording only how many heads came up gives a DIFFERENT sample space for the same '
+      + 'experiment: {0, 1, 2, 3}. It is a legal one — a run has exactly one number of heads, so '
+      + 'no two records can both happen and one of them must — with four outcomes where the other '
+      + 'had eight. Audit it against the finer space by adding up how many sequences each record '
+      + 'stands for: 1 for the record 0, 3 for 1, 3 for 2, and 1 for 3. Evaluate p + q + r + s at '
+      + 'p = 1, q = 3, r = 3, s = 1. Your answer has to come back to the size of the finer space, '
+      + 'or the four groups were not a partition of it — and notice that the four numbers you '
+      + 'added are not equal.',
+    given: 'p + q + r + s',
+    variables: OUTCOMES_BY_CASE,
+    // 1 + 3 + 3 + 1 = 8, which is the first task's answer.
+    //
+    // THE SHARED REFERENCE IS THE CONTENT. Two tasks in one point answering 8 is
+    // normally a duplicate; here the first answer is the size of the space and
+    // the second is the same space counted a second way, so the agreement is
+    // what makes the four groups a partition rather than a list of guesses.
+    //
+    // AND THE INEQUALITY OF THE ADDENDS IS WHAT THE NEXT POINT NEEDS. 1, 3, 3
+    // and 1 are why the coarser space's four outcomes are not equally likely,
+    // which is the entire reason dividing by 4 there gives a wrong answer. A
+    // learner who has produced this 8 has produced the evidence before the
+    // claim.
+    reference: '8',
+    at: { p: '1', q: '3', r: '3', s: '1' },
+  },
+  {
+    id: 'pin-one-outcomes-probability-from-the-whole-space-1',
+    knowledgePointId:
+      'equal-likelihood-is-a-property-of-the-space-and-is-what-licenses-dividing',
+    kind: 'evaluate',
+    prompt:
+      'The coin is fair, which says no toss favours heads over tails and the tosses do not '
+      + 'influence one another — so no one of the eight sequences is favoured over another, and '
+      + 'the eight one-outcome events all have the same probability. Two conditions pin that '
+      + 'number. The whole sample space has probability 1, and events with no outcome in common '
+      + 'have probabilities that ADD. The eight one-outcome events are pairwise disjoint and '
+      + 'together they are the whole space, so eight equal numbers add to 1. The probability of '
+      + 'one sequence is therefore a one-outcome event over the size of the space: evaluate e/n '
+      + 'at e = 1, n = 8.',
+    given: 'e/n',
+    variables: EVENT_SIZES_AND_THE_SPACE,
+    // 1/8.
+    //
+    // THE DERIVATION IS THE CONTENT AND THE ARITHMETIC IS ALMOST NOTHING, which
+    // is deliberate and is why this task exists separately from the next one. A
+    // learner who produces 1/8 having read the prompt has followed 8p = 1 to its
+    // conclusion; the value of `n` is where the 8 came from, and `exactValue`
+    // will accept 1/8 as the substituted form because the rendering and the
+    // value coincide — the same situation `complete-odd-b-h-1` is in with `b/2`
+    // at b = 3, and for the same honest reason: there is no further step.
+    reference: '1/8',
+    at: { e: '1', n: '8' },
+  },
+  {
+    id: 'add-the-outcomes-of-one-event-in-a-single-division-1',
+    knowledgePointId:
+      'equal-likelihood-is-a-property-of-the-space-and-is-what-licenses-dividing',
+    kind: 'evaluate',
+    prompt:
+      'The event "exactly two heads" is the subset {HHT, HTH, THH} of the eight sequences. Those '
+      + 'are three one-outcome events with no outcome in common, so their probabilities add: 1/8 '
+      + '+ 1/8 + 1/8. Doing that addition in one step is dividing the count of outcomes in the '
+      + 'event by the count in the space, which is all the formula P(E) = |E| / |S| is. Evaluate '
+      + 'e/n at e = 3, n = 8. Keep in mind what licensed it: the eight outcomes being equally '
+      + 'likely is a fact about the SPACE, and the same division in the four-record space of the '
+      + 'previous point would give 1/4 for this same event.',
+    given: 'e/n',
+    variables: EVENT_SIZES_AND_THE_SPACE,
+    // 3/8.
+    //
+    // THE SAME EXPRESSION AS THE PREVIOUS TASK AT A DIFFERENT SUBSTITUTION, and
+    // the pair is the derivation rather than a repetition: one outcome, then
+    // three of them added. 3/8 is also the number the next point's wrong answer
+    // of 1/4 is measured against — over a common denominator 2/8 against 3/8 —
+    // so this is the task whose answer the concept's central argument turns on.
+    reference: '3/8',
+    at: { e: '3', n: '8' },
+  },
+  {
+    id: 'add-two-events-with-no-outcome-in-common-1',
+    knowledgePointId:
+      'equal-likelihood-is-a-property-of-the-space-and-is-what-licenses-dividing',
+    kind: 'evaluate',
+    prompt:
+      '"At least two heads" is "exactly two heads" or "exactly three heads", and no sequence is '
+      + 'both — {HHT, HTH, THH} and {HHH} share no outcome. So the second condition applies '
+      + 'directly and the two probabilities add, with no correction of any kind. Evaluate e/n + '
+      + 'f/n at e = 3, f = 1, n = 8. Write the answer as a single number rather than leaving the '
+      + 'sum unadded, and check it against counting the union directly: the union holds four of '
+      + 'the eight sequences.',
+    given: 'e/n + f/n',
+    variables: EVENT_SIZES_AND_THE_SPACE,
+    // 3/8 + 1/8 = 4/8 = 1/2.
+    //
+    // WRITTEN AS TWO FRACTIONS RATHER THAN `(e + f)/n`, because the sum of two
+    // PROBABILITIES is what the condition on additivity is about. Collecting the
+    // numerator would have shown a count being added, which is true and is the
+    // previous point's move, and would have hidden the one being learned here.
+    //
+    // THE EVENT IS THE ONE THE THIRD POINT CALLS B, so this answer of 1/2 is
+    // P(B) there. That is the only quantity shared across the two points and it
+    // is shared on purpose: the third point's whole difficulty is that its two
+    // events overlap, and it opens with one whose probability was computed here
+    // by the rule that no longer applies.
+    reference: '1/2',
+    at: { e: '3', f: '1', n: '8' },
+  },
+  {
+    id: 'repair-a-union-whose-events-overlap-1',
+    knowledgePointId:
+      'a-complement-subtracts-from-one-and-an-overlap-is-subtracted-exactly-once',
+    kind: 'evaluate',
+    prompt:
+      'Let A be "the first toss is heads" — {HHH, HHT, HTH, HTT}, four outcomes — and B be "at '
+      + 'least two heads" — {HHH, HHT, HTH, THH}, also four. They OVERLAP in {HHH, HHT, HTH}, '
+      + 'three outcomes, so adding P(A) and P(B) is not licensed: that gives 1/2 + 1/2 = 1, which '
+      + 'claims the union is certain when THT, TTH and TTT are in neither event. Each of the '
+      + 'three shared outcomes was counted twice, so one copy of the overlap comes off. Evaluate '
+      + 'a/n + b/n - c/n at a = 4, b = 4, c = 3, n = 8, and compare it with listing the union: '
+      + '{HHH, HHT, HTH, HTT, THH} is five of the eight.',
+    given: 'a/n + b/n - c/n',
+    variables: TWO_EVENTS_THEIR_OVERLAP_AND_THE_SPACE,
+    // 4/8 + 4/8 − 3/8 = 5/8, which is the listed union's 5 outcomes over 8.
+    //
+    // THE UNCORRECTED SUM IS EXACTLY 1 AND THAT IS WHY THIS PAIR OF EVENTS WAS
+    // CHOSEN. A sum that is merely too large invites "the rule gives a slightly
+    // different number"; a sum of 1 claims certainty, and three of the eight
+    // sequences are visibly outside the union. The fault refutes itself against
+    // the list, which is a stronger lesson than the correction agreeing with it.
+    //
+    // THE CHECK IN THE PROMPT IS INDEPENDENT. Listing the union and counting five
+    // never adds or subtracts an overlap, so an error in the alternating
+    // expression could not survive into it — unlike a check that rearranges the
+    // same three terms, which would confirm arithmetic and nothing else.
+    reference: '5/8',
+    at: { a: '4', b: '4', c: '3', n: '8' },
+  },
+  {
+    id: 'count-how-many-times-a-shared-outcome-is-counted-1',
+    knowledgePointId:
+      'a-complement-subtracts-from-one-and-an-overlap-is-subtracted-exactly-once',
+    kind: 'evaluate',
+    prompt:
+      'Why exactly one subtraction, rather than a number to be remembered? Follow a single '
+      + 'outcome through the three terms. HHH is in A, so P(A) counts it once. It is in B, so '
+      + 'P(B) counts it once as well. It is in the overlap, so subtracting P(A and B) removes it '
+      + 'once. Evaluate p + q - r at p = 1, q = 1, r = 1. Your answer is a NUMBER OF TIMES and '
+      + 'not a probability, and it is the reason the rule is right: the union needs each of its '
+      + 'outcomes counted once, and a second subtraction would take this one to zero.',
+    given: 'p + q - r',
+    variables: HOW_MANY_TIMES_AN_OUTCOME_IS_COUNTED,
+    // 1 + 1 − 1 = 1, the net multiplicity of an outcome lying in both events.
+    //
+    // THE ANSWER IS THE JUSTIFICATION AND NOT MERELY CONSISTENT WITH IT, which is
+    // the role `tier-multiplicity` plays in the subject above and the nearest
+    // thing this build has to a `justify`. Asked at (1, 1, 1) because that is the
+    // case the repair exists for; (1, 0, 0) and (0, 0, 0) are in the worked
+    // example and would grade nothing.
+    //
+    // AN INTEGER REFERENCE IN A RUN OF PROBABILITIES, AND IT COLLIDES
+    // NUMERICALLY WITH THE FAULT IN THE PREVIOUS TASK'S PROMPT — the uncorrected
+    // sum there is also 1. The collision is numerical only: that 1 is a
+    // probability claiming certainty and this one is a count of times, and the
+    // prompt names the difference rather than relying on the reader to see it.
+    reference: '1',
+    at: { p: '1', q: '1', r: '1' },
+  },
+  {
+    id: 'take-a-complement-when-the-event-is-nearly-everything-1',
+    knowledgePointId:
+      'a-complement-subtracts-from-one-and-an-overlap-is-subtracted-exactly-once',
+    kind: 'evaluate',
+    prompt:
+      '"At least one head" holds for every one of the eight sequences except TTT, so listing its '
+      + 'seven outcomes is work for nothing. Its complement — "no heads at all" — is the single '
+      + 'outcome {TTT}. The two events have no outcome in common and together they are the whole '
+      + 'space, so their probabilities add to 1, which is the same two conditions as the previous '
+      + 'point used in the direction that saves effort. Evaluate 1 - c/n at c = 1, n = 8, where c '
+      + 'is the size of the COMPLEMENT.',
+    given: '1 - c/n',
+    variables: THE_COMPLEMENT_AND_THE_SPACE,
+    // 1 − 1/8 = 7/8.
+    //
+    // THE LITERAL 1 IS P(OF THE WHOLE SPACE) AND IS NOT A SUBSTITUTED SYMBOL,
+    // which is what `THE_COMPLEMENT_AND_THE_SPACE` exists to say: it is a
+    // condition rather than a quantity of this problem, and a symbol there would
+    // have implied it could be something else.
+    //
+    // `c` IS THE COMPLEMENT'S SIZE RATHER THAN THE EVENT'S, which is the saving
+    // itself. The expression is worth reaching for precisely when `c` is small
+    // and `n - c` is not, so the task asks for the cheap half — and the saving
+    // grows with the space, where an event of 99 outcomes out of 100 is one
+    // subtraction away from an event of one.
+    reference: '7/8',
+    at: { c: '1', n: '8' },
+  },
+  // ── chance-and-events, forty-sixth promotion: counting-probability
+  //
+  // Nine tasks, three on each point, all nine `evaluate` and every one settled
+  // by exact arithmetic with no worker. Both neighbouring subjects hold that
+  // property and the reason is the same: a subject whose prerequisites are a
+  // list and a count sits low enough that a worker outage must not wall it off.
+  //
+  // THE REFERENCE CHECK IS THE CONCEPT ABOVE'S WITH A DIFFERENT DENOMINATOR, and
+  // it is tighter than the integer check `counting-and-arrangements` could use.
+  // SIX of the nine are probabilities and every one is k/220 in lowest terms with
+  // k a whole number between 0 and 220 — 1/22 is 10/220, 21/44 is 105/220, 37/44
+  // is 185/220, 5/11 is 100/220 — because every probability here is a count of
+  // favourable committees over the 220 committees that exist. The THREE that are
+  // not probabilities are the size of the space, one favourable count and the
+  // partition total, which is exactly the set of answers that count something,
+  // and it is the assertable form of this concept's boundary against the counting
+  // subject: a fourth count-only task would mean a count was being asked for its
+  // own sake.
+  //
+  //     (a*b*c)/d           an unordered count: the ordered one over its orderings
+  //     e/n                 a favourable count over the size of the space
+  //     (a*b*c)/(d*e*f)     the same probability with BOTH counts left ordered
+  //     a*((b*c)/d)         one selection count per type, multiplied
+  //     a + b + c + d       four cases of a partition, which must return the space
+  //     1 - c/n             a complement taken AFTER dividing
+  //     (a + b - c)/n       an overlap repaired on the COUNTS, divided once
+  //     (n - c)/n           the same union by its complement, repaired BEFORE dividing
+  //
+  // THREE PAIRS AGREE ON PURPOSE, which is three more than usual and is why each
+  // is commented where it sits rather than once here. A reference appearing twice
+  // is normally a duplicate; each of these is the content of its point, and no
+  // pair is two tasks of the same shape — 1/22 by an unordered route and an
+  // ordered one, 220 as a space size and as a partition total, 5/11 by
+  // inclusion–exclusion and by a complement that handles no overlap at all.
+  //
+  // NO `transform_to_form`, NO `counterexample`, NO `justify`, and no
+  // `domainConditions` on any of the nine. The reasons are in ontology-chance.ts;
+  // the one worth repeating is that no denominator is ever a declared variable
+  // that could be zero — it is the 220 of the space, or 2 or 6 orderings. And no
+  // task asks for lowest terms: `maxDenominatorDegree` bounds a DEGREE rather
+  // than a denominator, so `105/220` cannot be refused in favour of `21/44`, and
+  // `exactValue` rules both correct, which is the right ruling for an `evaluate`.
+  {
+    id: 'size-the-space-of-committees-by-one-selection-count-1',
+    knowledgePointId: 'one-convention-has-to-serve-both-counts-because-the-orderings-cancel',
+    kind: 'evaluate',
+    prompt:
+      'A club has 12 members and three of them are drawn by lot to form a committee — all three '
+      + 'at once, so nobody is drawn twice and the order they come out in is not recorded. One '
+      + 'outcome is therefore a SET of three members: {Ann, Bob, Cleo} is one outcome and not '
+      + 'six. How many outcomes are there? This is `counting-principles` and not new work: in '
+      + 'order there are 12 × 11 × 10 ways to draw three members, every committee was reached '
+      + 'once for each of its 3! = 6 orderings, and that 6 is the same for every committee. '
+      + 'Evaluate (a*b*c)/d at a = 12, b = 11, c = 10, d = 6.',
+    given: '(a*b*c)/d',
+    variables: SELECTION_COUNT_FACTORS,
+    // (12 × 11 × 10)/6 = 1320/6 = 220.
+    //
+    // THE SPACE IS COUNTED ONCE AND EVERY PROBABILITY IN THE CONCEPT DIVIDES BY
+    // THIS NUMBER, which is the opposite of the concept above, where the space was
+    // small enough to print and the first task's job was to confirm the length of a
+    // list the prompt had already shown. Here the list cannot be shown, and that is
+    // the whole reason this concept exists — 220 is cheap to compute and would take
+    // a page to write out.
+    //
+    // 220 IS ALSO THE PARTITION TOTAL IN THE SECOND POINT, where `a + b + c + d`
+    // at (35, 105, 70, 10) must come back to it. The agreement is that audit's
+    // content. What keeps the pair from reading as one task duplicated is the
+    // SHAPE and not the arity — both expressions take four letters, and one
+    // divides a product by the orderings of a selection where the other only
+    // adds.
+    reference: '220',
+    at: { a: '12', b: '11', c: '10', d: '6' },
+  },
+  {
+    id: 'divide-a-counted-event-by-a-counted-space-1',
+    knowledgePointId: 'one-convention-has-to-serve-both-counts-because-the-orderings-cancel',
+    kind: 'evaluate',
+    prompt:
+      'Five of the 12 members joined this year. The event "all three drawn are new members" '
+      + 'holds exactly the committees made up from those 5, and it is counted the SAME way the '
+      + 'space was: 5 × 4 × 3 = 60 in order, each such committee reached 6 times, so 60/6 = 10 '
+      + 'of them. Drawing by lot makes the 220 committees equally likely, which is a claim about '
+      + 'the space and is what licenses dividing at all. Evaluate e/n at e = 10, n = 220.',
+    given: 'e/n',
+    variables: A_COUNTED_EVENT_AND_A_COUNTED_SPACE,
+    // 10/220 = 1/22.
+    //
+    // P(E) = |E| / |S| UNCHANGED, WITH BOTH INPUTS PRODUCED RATHER THAN READ.
+    // That is the only thing this point adds to the concept above, and it is why
+    // the prompt restates the equal-likelihood hypothesis rather than citing it:
+    // the formula still carries a condition that nothing in its notation shows,
+    // and a bigger space does not make the condition weaker.
+    //
+    // THE ANSWER IS THE NEXT TASK'S ANSWER, by a different route, and that pair is
+    // the point's claim rather than a repetition.
+    reference: '1/22',
+    at: { e: '10', n: '220' },
+  },
+  {
+    id: 'reach-the-same-probability-with-both-counts-ordered-1',
+    knowledgePointId: 'one-convention-has-to-serve-both-counts-because-the-orderings-cancel',
+    kind: 'evaluate',
+    prompt:
+      'Now do the same probability without ever dividing out an ordering. The space is the '
+      + '12 × 11 × 10 ordered draws and the event is the 5 × 4 × 3 ordered draws of three new '
+      + 'members, so the probability is one of those over the other. Evaluate (a*b*c)/(d*e*f) at '
+      + 'a = 5, b = 4, c = 3, d = 12, e = 11, f = 10. You should get the previous task\'s '
+      + 'answer — and before simplifying, look for the factor the numerator and the denominator '
+      + 'have in common and say where it came from.',
+    given: '(a*b*c)/(d*e*f)',
+    variables: ORDERED_EVENT_AND_ORDERED_SPACE,
+    // 60/1320 = 1/22, the same as 10/220.
+    //
+    // TWO TASKS WITH ONE REFERENCE, WHICH IS NORMALLY A DUPLICATE AND HERE IS THE
+    // POINT'S WHOLE CLAIM. The 3! = 6 orderings of one committee divide BOTH
+    // counts — the same 6 in each, because every committee of three has exactly
+    // six orderings — and a common factor in a ratio cancels. So the convention is
+    // free, and a learner who has computed 1/22 twice has watched it be free
+    // rather than been told.
+    //
+    // SIX FACTORS AND NO DIVISOR, which is what makes the cancellation findable.
+    // Asked as `p/q` at (60, 1320) it would be one division of two numbers
+    // somebody else produced, and the shared factor would be a fact about 60 and
+    // 1320 rather than about orderings.
+    //
+    // THIS IS ALSO THE SUBSTITUTE FOR A `justify` THAT CANNOT BE RULED. The ask is
+    // "say why the orderings divide out", and the answer to that is an argument;
+    // what is rulable is the pair of numbers it predicts, so the agreement is set
+    // as the task and the argument is in the worked example.
+    reference: '1/22',
+    at: { a: '5', b: '4', c: '3', d: '12', e: '11', f: '10' },
+  },
+  {
+    id: 'multiply-one-selection-count-per-type-1',
+    knowledgePointId: 'the-favourable-count-is-a-product-of-one-selection-count-per-type',
+    kind: 'evaluate',
+    prompt:
+      'Same club: 12 members, 5 new and 7 who joined earlier, three drawn by lot. Count the '
+      + 'committees holding exactly ONE new member. The phrase describes the whole committee — '
+      + 'one of the 5 new AND two of the 7 older, since there are three places — so the count is '
+      + 'a product of one selection count per type: 5 ways to pick the new member, and (7 × 6)/2 '
+      + '= 21 ways to pick two older ones. The product rule is licensed because the 21 is the '
+      + 'same whichever new member was picked; the two types are drawn from different people, so '
+      + 'the second choice never sees the first. Evaluate a*((b*c)/d) at a = 5, b = 7, c = 6, '
+      + 'd = 2.',
+    given: 'a*((b*c)/d)',
+    variables: ONE_SELECTION_COUNT_PER_TYPE,
+    // 5 × ((7 × 6)/2) = 5 × 21 = 105.
+    //
+    // THE BRACKETS ARE THE STRUCTURE. `a` is C(5, 1), which is the bare pool
+    // because a descending product of one factor has 1! to divide by, and
+    // `(b*c)/d` is C(7, 2) with its own orderings taken out. Written flat as
+    // `a*b*c/d` the same value arrives as one four-factor product, which is what a
+    // learner who has not separated the types writes — and the separation is the
+    // knowledge point.
+    //
+    // THE CONDITION IS IN THE PROMPT RATHER THAN USED SILENTLY, because this is
+    // the instance where it holds for a reason stronger than the rule needs: the
+    // SET of older members never changes either, where the rule would be satisfied
+    // by the count holding still while the set moved. That distinction is
+    // `counting-principles`' first point and the prompt names it so this task
+    // cannot read as a formula being filled in.
+    reference: '105',
+    at: { a: '5', b: '7', c: '6', d: '2' },
+  },
+  {
+    id: 'divide-the-two-type-count-by-the-space-1',
+    knowledgePointId: 'the-favourable-count-is-a-product-of-one-selection-count-per-type',
+    kind: 'evaluate',
+    prompt:
+      '105 of the committees hold exactly one new member, and there are 220 committees '
+      + 'altogether. Both counts are unordered and the draw is by lot, so the division is '
+      + 'licensed by the same hypothesis as before. Evaluate e/n at e = 105, n = 220. Notice '
+      + 'what this point did and did not touch: the 220 was counted once, in the point above, '
+      + 'and every probability in this concept divides by it.',
+    given: 'e/n',
+    variables: A_COUNTED_EVENT_AND_A_COUNTED_SPACE,
+    // 105/220 = 21/44, a little under a half.
+    //
+    // THE SAME EXPRESSION AS THE FIRST POINT'S SECOND TASK AT A DIFFERENT
+    // SUBSTITUTION, which is the device `OPTION_COUNTS` uses across a point
+    // boundary in the counting subject. There the pair contrasts a pool that holds
+    // still with one that shrinks; here it contrasts a numerator read off one
+    // selection count with one built from two, and the denominator is identical
+    // because the space is the same space. The references differ, so the pair
+    // cannot read as one task twice.
+    //
+    // THIS IS ONE VALUE OF A HYPERGEOMETRIC PROBABILITY AND IS NOT CALLED ONE. A
+    // distribution is a function of how many new members you ask for;
+    // `discrete-distributions` is five nodes up this area and needs
+    // `random-variables` first, because what it is about is the function rather
+    // than any of its values.
+    reference: '21/44',
+    at: { e: '105', n: '220' },
+  },
+  {
+    id: 'audit-the-four-cases-against-the-size-of-the-space-1',
+    knowledgePointId: 'the-favourable-count-is-a-product-of-one-selection-count-per-type',
+    kind: 'evaluate',
+    prompt:
+      'A committee holds 0, 1, 2 or 3 new members and exactly one of those, so the four cases '
+      + 'are a partition of the 220. Count each the same way: no new members is (7 × 6 × 5)/6 = '
+      + '35; one is the 105 above; two is (5 × 4)/2 = 10 pairs of new members times 7 older, so '
+      + '70; three is (5 × 4 × 3)/6 = 10. Evaluate a + b + c + d at a = 35, b = 105, c = 70, '
+      + 'd = 10. Your answer has to come back to the size of the space, or the four cases were '
+      + 'not a partition of it — and this is the only check available when an event is too large '
+      + 'to list.',
+    given: 'a + b + c + d',
+    variables: CASE_COUNTS_OF_A_PARTITION,
+    // 35 + 105 + 70 + 10 = 220, which is the first point's first answer.
+    //
+    // THE SHARED REFERENCE IS THE CONTENT, the device ontology-sets.ts introduced
+    // and both neighbouring subjects reused with 8 and with 84. The first answer
+    // is the size of the space and this one is the same space counted by how many
+    // new members a committee holds, so the agreement is what makes the four
+    // numbers a partition rather than four separately plausible counts. A single
+    // wrong factor in any one case breaks the total and nothing else would have
+    // caught it.
+    //
+    // THE INEQUALITY OF THE FOUR ADDENDS MEANS NOTHING HERE, which is worth saying
+    // because in `sample-spaces` the corresponding 1, 3, 3, 1 was the whole
+    // argument: there the four numbers were the sizes of the OUTCOMES of a coarser
+    // space, so their inequality made that space unequally likely. These four are
+    // counts of equally likely committees in one space, and 35 ≠ 105 says only
+    // that one case is commoner than another.
+    reference: '220',
+    at: { a: '35', b: '105', c: '70', d: '10' },
+  },
+  {
+    id: 'take-the-complement-of-a-counted-event-after-dividing-1',
+    knowledgePointId: 'a-complement-or-an-overlap-is-repaired-on-the-counts-then-divided-once',
+    kind: 'evaluate',
+    prompt:
+      'Find the probability that the committee includes at least one new member. Counting that '
+      + 'directly means adding three of the four cases; its complement is "no new members at '
+      + 'all", which is one count — a committee drawn from the 7 older members alone, '
+      + '(7 × 6 × 5)/6 = 35, the same 35 the audit above produced. The event and its complement '
+      + 'share no outcome and together are the whole space, so their probabilities add to 1. '
+      + 'Evaluate 1 - c/n at c = 35, n = 220, where c is the size of the COMPLEMENT.',
+    given: '1 - c/n',
+    variables: A_COMPLEMENT_COUNT_AND_THE_SPACE,
+    // 1 − 35/220 = 1 − 7/44 = 37/44.
+    //
+    // THE CONCEPT ABOVE'S EXPRESSION RE-ASKED, DELIBERATELY. `1 - c/n` is also
+    // `take-a-complement-when-the-event-is-nearly-everything-1`, at (1, 8) there
+    // and (35, 220) here, and re-asking it is the honest move rather than a lazy
+    // one: the rule really is unchanged and the only thing that moved is where the
+    // complement's size came from. There it was the single outcome TTT, read off a
+    // printed list of eight. Here it is C(7, 3) and had to be counted, which is
+    // this whole concept in one substitution.
+    //
+    // THE SAVING IS IN THE COUNTING AND NOT IN THE DIVISION, which the next task
+    // but one makes explicit by taking the same kind of complement BEFORE
+    // dividing. One count instead of three is the whole of it.
+    reference: '37/44',
+    at: { c: '35', n: '220' },
+  },
+  {
+    id: 'repair-an-overlapping-count-then-divide-once-1',
+    knowledgePointId: 'a-complement-or-an-overlap-is-repaired-on-the-counts-then-divided-once',
+    kind: 'evaluate',
+    prompt:
+      'Let A be "Ann is on the committee" and B be "Bob is on the committee", for two particular '
+      + 'members. Fixing Ann in one place and choosing the other two from the remaining 11 gives '
+      + '|A| = (11 × 10)/2 = 55, and |B| = 55 the same way. They OVERLAP: fixing both and '
+      + 'choosing one more from the other 10 gives 10 committees holding each of them. Adding '
+      + '55 + 55 would count those 10 twice, once as a committee with Ann and once as a '
+      + 'committee with Bob, so one copy of the overlap comes off — and then there is exactly '
+      + 'one division, at the end. Evaluate (a + b - c)/n at a = 55, b = 55, c = 10, n = 220.',
+    given: '(a + b - c)/n',
+    variables: OVERLAPPING_COUNTS_AND_THE_SPACE,
+    // (55 + 55 − 10)/220 = 100/220 = 5/11.
+    //
+    // COLLECTED OVER ONE DENOMINATOR, AND THE CONCEPT ABOVE REFUSES EXACTLY THAT.
+    // Its `a/n + b/n - c/n` shows three separate probabilities because its lesson
+    // is that the two probabilities could not be ADDED in the first place. Here the
+    // lesson is the opposite: inclusion–exclusion is `counting-principles`' repair
+    // to the COUNTS and it is finished before any probability exists, so the
+    // expression has to show one division rather than three. The two forms are the
+    // two concepts' boundary written in a denominator.
+    //
+    // 55/220 = 1/4 IS A CHECK THE PROMPT LEAVES AVAILABLE. Three seats among twelve
+    // members is exactly a quarter, so a learner who miscounts |A| has a cheap way
+    // to notice. Not asked as its own task, because the answer would be the
+    // division the first point already drilled.
+    reference: '5/11',
+    at: { a: '55', b: '55', c: '10', n: '220' },
+  },
+  {
+    id: 'reach-the-same-union-by-the-count-that-handles-no-overlap-1',
+    knowledgePointId: 'a-complement-or-an-overlap-is-repaired-on-the-counts-then-divided-once',
+    kind: 'evaluate',
+    prompt:
+      'Check that answer by a route that never handles an overlap. A committee is in neither A '
+      + 'nor B exactly when it excludes both Ann and Bob, so it is drawn from the other 10 '
+      + 'members: (10 × 9 × 8)/6 = 120 of them. Take that from the space and divide. Evaluate '
+      + '(n - c)/n at c = 120, n = 220. You should get the previous task\'s answer — and notice '
+      + 'that this time the complement was subtracted BEFORE the division rather than after, '
+      + 'which is the same thing because dividing is the last step either way.',
+    given: '(n - c)/n',
+    variables: A_COMPLEMENT_COUNT_AND_THE_SPACE,
+    // (220 − 120)/220 = 100/220 = 5/11, the same as the task above.
+    //
+    // A GENUINELY INDEPENDENT CHECK, which is why it is a task rather than a line
+    // in the prompt above. It adds nothing and subtracts no overlap, so a wrong
+    // overlap in the alternating expression could not have survived into it —
+    // unlike a check that rearranges the same three terms, which would confirm
+    // arithmetic and nothing else. The concept above makes the same point about
+    // listing a union, with the check inside a prompt because its space was small
+    // enough to list; here the check is a second counting argument and so is worth
+    // doing.
+    //
+    // IT ALSO PAIRS WITH `1 - c/n` TWO TASKS BACK, same list and same quantities,
+    // complement taken on the other side of the division. Together they say that
+    // may be done either way, which is a fact rather than a presentation choice.
+    reference: '5/11',
+    at: { c: '120', n: '220' },
   },
 ]
 

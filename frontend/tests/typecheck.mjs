@@ -37,10 +37,26 @@ import { fileURLToPath } from 'node:url'
 const FRONTEND = resolve(fileURLToPath(new URL('.', import.meta.url)), '..')
 
 /**
- * The deploy's install tree on this host. It is the only node_modules on the
- * machine built from this repo's package-lock, because `npm install` runs there
- * as the frontend group's pre-deploy step. Using it means this check sees the
- * same package versions the build will.
+ * The deploy's install tree on this host, and the reason to prefer it is not
+ * that it is well kept — it is that the deploy builds *in that directory*.
+ * `app_deploy_service.deploy()` runs `build_cmd` with `cwd=work_dir`, so
+ * whatever tsc resolves here is literally what `next build` will resolve.
+ *
+ * NOTHING MAINTAINS IT, and this comment used to claim otherwise — that
+ * `npm install` runs there as the frontend group's pre-deploy step. That hook
+ * exists but installs into /tmp/bza/frontend, and it belongs to the group
+ * orchestrator, which has never deployed this project: no row of
+ * deployment_history carries groups_deployed, in 366 rows. The path that does
+ * run has no install step at all and rsyncs with `--exclude node_modules`, so
+ * this tree holds whatever was last installed by hand — dated 2026-10-15 when
+ * measured on 2026-11-26, against a package-lock last observed 2026-10-16.
+ *
+ * Every declared dependency still resolves there, so the check is honest
+ * today. What it cannot survive is a commit that ADDS one: tsc would fail on
+ * an unresolvable import and, once this is wired to pre_deploy_test, refuse a
+ * deploy with nothing wrong with it. So if this ever fails on a missing module
+ * rather than a type error, run `npm install` in that tree instead of
+ * debugging the types.
  *
  * It is a host path and deliberately a default rather than a lookup: the
  * authority for it is projects.deployment_config.app_deploy.working_dir in

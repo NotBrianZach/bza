@@ -229,9 +229,35 @@ still has `app_deploy.pre_deploy_test: null`. `app_deploy_service.py` rsyncs
 `shell=True, cwd=work_dir`, abandoning the run on a non-zero exit with
 `Pre-deploy tests failed`. Setting it to `npm run test:types` turns this class
 of defect from a failed build into a refused one. `work_dir` is
-`/home/zach/.local/share/templedb/fhs-deployments/bza/working/frontend`, the
-one tree that always has `node_modules` — that rsync passes
-`--exclude node_modules`, so there is nothing to provision there either.
+`/home/zach/.local/share/templedb/fhs-deployments/bza/working/frontend`, which
+is where `build_cmd` runs too, so the gate reads the same packages the build
+will.
+
+Nothing needs provisioning there today, and that was checked by running the
+gate in that tree rather than by reasoning about it: `cd <work_dir> && node
+tests/typecheck.mjs` exits 0 against the rsynced sources, resolving every
+dependency from the tree's own `node_modules` with no symlinking
+(2026-11-26 04:20 UTC). But the earlier version of this paragraph explained
+*why* with a mechanism that does not exist — "the one tree that always has
+`node_modules`" — and the difference matters to whoever types the command.
+Nothing in the pipeline installs there. `app_deploy_service.deploy()` has no
+install step and its rsync passes `--exclude node_modules`, so the directory
+is whatever was last built by hand: dated 2026-10-15, against a
+`package-lock.json` last observed 2026-10-16. The `npm install
+--prefer-offline` the old claim rested on is the **frontend group's**
+`pre_deploy` hook, it names `/tmp/bza/frontend` rather than `work_dir`, and it
+belongs to the group orchestrator — which has never deployed this project. No
+row of `deployment_history` for bza carries `groups_deployed`, in 366 rows,
+and the `Build failed (exit 1)` on rows 441–442 is `app_deploy_service.py`'s
+own wording, so the path this item gates is the path that runs.
+
+So the value is still right to set and safe to set today. What it is not is
+self-maintaining: the first commit that **adds** a dependency makes `tsc` fail
+on an unresolvable import and refuse a deploy with nothing wrong with it,
+which is a false red on the one check whose value is being trusted. The fix
+then is `npm install` in `work_dir`, or `BZA_TYPECHECK_NODE_MODULES` pointed at
+a maintained tree — not debugging the types. `frontend/tests/typecheck.mjs`
+carries this where it is needed as of the same commit as this paragraph.
 
 It is still open because the autonomous content tasks are denied every
 `deploy` verb, read-only ones included, and the command that writes this value
@@ -267,9 +293,11 @@ Two things not to get wrong:
   one, and a green release is not by itself proof the check ran.
 
 Verified 2026-11-25 01:19 UTC, re-running what the 14:16 pass ran:
-`pre_deploy_test` is still null, and `graph who-uses pre_deploy_test` still
-returns only `deploy_project.py`, `app_deploy_service.py` and this file —
-nothing else reads it. Expect this file in that result; naming the key here is
+`pre_deploy_test` is still null, and `graph who-uses pre_deploy_test` returned
+`deploy_project.py`, `app_deploy_service.py` and this file — nothing else reads
+it. That enumeration has since gone out of date and the count is now four; the
+2026-11-26 paragraph below has the current list and why it grew. Expect this
+file in the result either way; naming the key here is
 what puts it there. Read the null out of `projects.deployment_config` with a
 SELECT, not with `deploy project-config bza`: the read-only print is itself a
 `deploy` verb and is denied to the tasks that drain this file, which is why
@@ -278,6 +306,44 @@ every refresh of this item measures the value by SQL and still cannot set it.
 The commit-time half was re-confirmed in the same pass, so the item is now
 exactly one command wide: `frontend/tests/typecheck.mjs` is in the DB and
 `test:types` is first in the `npm test` chain in `frontend/package.json`.
+
+Re-verified 2026-11-26 04:20 UTC: `pre_deploy_test` still null, the
+commit-time half still in place, and `app_deploy.pre_deploy_test` still read
+by nothing but `deploy_project.py` and `app_deploy_service.py`. The one figure
+worth re-reading is the eleven keys the `--set` bullet above depends on — the
+live `app_deploy` object still has exactly eleven, countable from the SELECT
+without running a `deploy` verb.
+
+Re-verified 2026-11-26 10:33 UTC, every claim above checked against the tree
+rather than quoted: `pre_deploy_test` still null, `app_deploy` still exactly
+eleven keys matching `from_dict`'s eleven, `test:types` still first in the
+`npm test` chain, `tests/typecheck.mjs` still 176 lines in the DB,
+`deployment_history` still 366 rows for bza with zero carrying
+`groups_deployed`, rows 441–442 still `Build failed (exit 1)`, and the gate
+still exits 0 run directly in `work_dir`. The value is still right to set and
+still denied to the tasks that drain this file.
+
+The one figure that moved is `graph who-uses pre_deploy_test`, which now
+returns **four** files, not three: the fourth is `frontend/tests/typecheck.mjs`,
+and the 04:20 commit that added that mention is the same commit that re-asserted
+three. So the line above was wrong the moment it was committed — the same way
+item 1's "two non-script hits" was. Both halves of the claim are worth keeping
+apart, because only one of them rotted. *Read by* is still two files,
+`deploy_project.py` and `app_deploy_service.py`, and that is the half that
+decides whether setting the value is safe. *Mentioned in* is now four and will
+keep rising, because `who-uses` is a plain substring search over file contents
+and every run that explains the key in prose adds itself to the result —
+including, now, the gate's own source. Count readers by what consumes the
+value, not by the size of the search result.
+
+One thing an `ls -l` in `work_dir` will mislead you about, given the false-red
+warning above. That tree's `package-lock.json` is dated 2026-11-25 21:42 while
+its `node_modules` is dated 2026-10-15, which reads as a lock that moved past
+its install — exactly the state that would make the gate fail on an
+unresolvable import. It has not moved: the rsync copies the lock on every
+deploy and only its mtime changes, and the content hash in `source_snapshots`
+is unchanged since 2026-10-16 at 666475 bytes. Compare the hash, not the
+timestamp, before concluding the tree needs an install.
 
 One correction to the earlier version of this item, which claimed `next build`
 is the only thing in the project that runs `tsc`. `npm run type-check` has been

@@ -960,10 +960,23 @@ const CONCEPTS: Concept[] = [
             {
               label: 'Evaluate it',
               detail: 'g(3) = 2, and f(2) = 1/2. So f(g(3)) = 1/2.',
+              socratic:
+                'Both composites you have worked so far were built out of rules that never refuse ' +
+                'an input. This outer rule divides, so it is the first one that can turn a number ' +
+                'away — but the inside-out habit is unchanged, and only one of the two rules has ' +
+                'the 3 to work on. Which rule is that, what does it hand outward, and what does f ' +
+                'make of the number it receives?',
             },
             {
               label: 'Write the composite',
               detail: 'f(g(x)) = 1/(x − 1).',
+              socratic:
+                'At the first point you found that g\'s rule could be dropped into f\'s ' +
+                'placeholder before any number arrived, and that this is the form you need once ' +
+                'the input is a letter. The question now on the table is where the composite ' +
+                'fails, which is a question about every input at once rather than about the 3. ' +
+                'What rule does putting x − 1 where f\'s variable stood give you, and why will ' +
+                'one number\'s worth of working not answer what is being asked?',
             },
             {
               label: 'Find where it breaks, and notice where it does not',
@@ -971,6 +984,13 @@ const CONCEPTS: Concept[] = [
                 'It fails at x = 1. But g is defined at 1 — g(1) = 0, perfectly fine — and f is ' +
                 'defined at every input except 0. Neither function is broken at x = 1; the ' +
                 'composite is, because g sends 1 to exactly the one place f cannot take.',
+              socratic:
+                'Hunting the exclusion in 1/(x − 1) is the same move you made on 1/(x − 3): set ' +
+                'the thing underneath to 0 and solve it. But run the two rules separately at that ' +
+                'input and neither one refuses you — g hands back 0 there, which subtracting is ' +
+                'perfectly entitled to produce, and f turns away exactly one number in the whole ' +
+                'line. Which input does the composite fail at, and since both rules are working ' +
+                'at that input, where did the failure actually come from?',
             },
             {
               label: 'The rule this gives you',
@@ -978,6 +998,13 @@ const CONCEPTS: Concept[] = [
                 'Checking the two domains separately is not enough. You have to ask what the ' +
                 'inner function\'s outputs are, and whether any of them land where the outer ' +
                 'one is undefined.',
+              socratic:
+                'You now have an input that both rules accept and that the composite refuses all ' +
+                'the same, so a check that reads g\'s domain, then f\'s domain, and stops there ' +
+                'would have let x = 1 through. The one thing such a check never looks at is the ' +
+                'number g hands on. What second condition does that force onto an input before ' +
+                'f(g(x)) can be called defined, and why does testing it take the two rules ' +
+                'together rather than either on its own?',
             },
           ],
           answer: '1/2, and the composite is undefined at x = 1',

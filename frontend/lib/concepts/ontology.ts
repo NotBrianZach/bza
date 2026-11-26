@@ -42,6 +42,8 @@ import { STATEMENTS_AND_CONNECTIVES } from './ontology-logic'
 import { PREDICATES_AND_QUANTIFIERS } from './ontology-quantifiers'
 import { METHODS_OF_PROOF } from './ontology-proof'
 import { SETS_AND_MEMBERSHIP } from './ontology-sets'
+import { COUNTING_AND_ARRANGEMENTS } from './ontology-counting'
+import { CHANCE_AND_EVENTS } from './ontology-chance'
 import type { ConceptEdge, ConceptOntology, Subject } from './types'
 import type { Concept } from './types'
 
@@ -93,6 +95,27 @@ export { METHODS_OF_PROOF } from './ontology-proof'
  * seventh promotion's re-export earns a second reader rather than only its own.
  */
 export { SETS_AND_MEMBERSHIP } from './ontology-sets'
+/*
+ * `COUNTING_AND_ARRANGEMENTS` is re-exported for the same reason as the five
+ * above it: tests/atlas.mjs imports the subject by NAME rather than reaching it
+ * through `ONTOLOGIES` by index, because its group asserts facts about THIS
+ * ontology's own concept list and edge list. A positional reference keeps reading
+ * correctly until the registry is reordered and then asserts the wrong subject in
+ * silence, which is the mistake the expressions-and-equations block records.
+ */
+export { COUNTING_AND_ARRANGEMENTS } from './ontology-counting'
+/*
+ * `CHANCE_AND_EVENTS` is re-exported by the forty-fifth promotion, and the
+ * negative claim its group needs is the same shape as the six above with one
+ * difference worth naming. The other refused hosts had each written the concept
+ * out of their own `covers` already, so a test could assert a string. This one's
+ * nearer candidate, `sets-and-membership`, declines counting and relations by
+ * name and says NOTHING about probability — the refusal is this promotion's own
+ * and rests on the merits. So the assertable form is that that subject holds
+ * `sets` and does not hold `sample-spaces`, which needs both subjects by name
+ * and cannot be reached positionally.
+ */
+export { CHANCE_AND_EVENTS } from './ontology-chance'
 
 const subject: Subject = {
   id: 'rational-expressions',
@@ -2040,13 +2063,50 @@ const CONCEPTS: Concept[] = [
         workedExample: {
           problem: 'What is the remainder when x³ − 2x² + 4 is divided by x − 3?',
           subgoals: [
-            { label: 'Which a?', detail: 'Dividing by x − 3 means a = 3. Note the sign: x − a, so a is +3.' },
-            { label: 'Substitute', detail: 'p(3) = 27 − 2·9 + 4 = 27 − 18 + 4 = 13.' },
+            {
+              label: 'Which a?',
+              detail: 'Dividing by x − 3 means a = 3. Note the sign: x − a, so a is +3.',
+              socratic:
+                'The theorem is stated for a divisor written x − a, and the divisor you have been ' +
+                'handed is written x − 3 — so the two only line up once you say what a would have ' +
+                'to be for those to be the same expression. This is not the reading-off you did ' +
+                'when naming a, b and c from a quadratic: there each sign belonged to a ' +
+                'coefficient and travelled with it, whereas here the minus is already part of the ' +
+                'form, so carrying it along with the 3 gets you a different number from the one ' +
+                'the theorem wants. Set x − a against x − 3 and solve for a if it helps. What is ' +
+                'a, and what would the divisor have had to look like for a to come out negative ' +
+                'instead?',
+            },
+            {
+              label: 'Substitute',
+              detail: 'p(3) = 27 − 2·9 + 4 = 27 − 18 + 4 = 13.',
+              socratic:
+                'What the theorem asks for is p at the number you have just named, so the whole of ' +
+                'the work is putting 3 into x³ − 2x² + 4 — and the term to slow down over is ' +
+                '−2x². The square sits on the x alone and not on the −2, so 3 is squared first ' +
+                'and the doubling and the sign happen to what comes out of that, which is nowhere ' +
+                'near what squaring −2·3 would give. Nothing in this step asks you to divide ' +
+                'anything. Work the cube and the square out separately, then combine the three ' +
+                'terms. What does p(3) come to, and why does x³ − 2x² + 4 having no x term at all ' +
+                'cost you nothing here, when setting the same division out long-hand would have ' +
+                'obliged you to write that term in as 0x?',
+            },
             {
               label: 'That is the remainder',
               detail:
                 'No division needed. Doing it long-hand gives quotient x² + x + 3 and remainder 13, ' +
                 'which is the check rather than the method.',
+              socratic:
+                'You are holding one number, 13, and the question asked for a remainder, so what ' +
+                'is left is to say why those are the same thing — and the identity you wrote at ' +
+                'the end of the long division is where that lives. Dividing by x − 3 always lets ' +
+                'the dividend be written x³ − 2x² + 4 = (x − 3)·(some quotient) + r, with r a bare ' +
+                'number because the division stops as soon as what is left drops below degree 1. ' +
+                'Put x = 3 into that line and watch what becomes of the first product. What is the ' +
+                'remainder, what does x = 3 do to the factor (x − 3) that makes the quotient — ' +
+                'which you never worked out — drop out of the equation entirely, and since ' +
+                'grinding the division through would have handed you x² + x + 3 as well, what has ' +
+                'substituting bought you and what has it not?',
             },
           ],
           answer: '13',
@@ -2063,13 +2123,41 @@ const CONCEPTS: Concept[] = [
         workedExample: {
           problem: 'Show that x − 1 is a factor of x³ − 7x + 6, and that x − 3 is not.',
           subgoals: [
-            { label: 'Test a = 1', detail: 'p(1) = 1 − 7 + 6 = 0. Zero, so x − 1 is a factor.' },
-            { label: 'Test a = 3', detail: 'p(3) = 27 − 21 + 6 = 12. Not zero, so x − 3 is not a factor.' },
+            {
+              label: 'Test a = 1',
+              detail: 'p(1) = 1 − 7 + 6 = 0. Zero, so x − 1 is a factor.',
+              socratic:
+                'What is being asked about x − 1 is whether it divides exactly, and the point before ' +
+                'this one gave you a way of finding out what a division by x − a leaves behind ' +
+                'without carrying the division out. So read x − 1 the way you read x − 3 a moment ' +
+                'ago, minding the sign the same way, and substitute. x³ − 7x + 6 has no x² term, so ' +
+                'there are only three numbers to combine and no long division to set out. What is ' +
+                'p(1), and what does the remainder theorem let you say about dividing x³ − 7x + 6 by ' +
+                'x − 1 once you are holding that number?',
+            },
+            {
+              label: 'Test a = 3',
+              detail: 'p(3) = 27 − 21 + 6 = 12. Not zero, so x − 3 is not a factor.',
+              socratic:
+                'The first substitution settled the first half of the claim. The second half runs the ' +
+                'other way — it says x − 3 is not a factor — and the test you have is the same test, ' +
+                'so the only new thing is what its answer looks like when a divisor fails. Put 3 ' +
+                'through x³ − 7x + 6, where the middle term now takes away 21 rather than 7. What is ' +
+                'p(3), and what would it take to have shown that x − 3 is not a factor, rather than ' +
+                'merely to have failed to show that it is?',
+            },
             {
               label: 'What the non-zero value tells you',
               detail:
                 'It is not wasted: 12 is the remainder on division by x − 3. A failed factor test is ' +
                 'still a completed remainder calculation.',
+              socratic:
+                'Both halves of the question are answered, and the 12 has so far been used only ' +
+                'negatively — as the reason x − 3 fails. But it arrived as p(3), and p at a number ' +
+                'already had a meaning of its own in the point before this one, one that said nothing ' +
+                'about factors either way. Hold the 12 up against that meaning. What else does it ' +
+                'tell you about x³ − 7x + 6 divided by x − 3, and what does that make of the idea ' +
+                'that testing a divisor which turns out not to divide is work thrown away?',
             },
           ],
           answer: 'x − 1 is a factor; x − 3 leaves remainder 12.',
@@ -2484,13 +2572,72 @@ export const RATIONAL_EXPRESSIONS: ConceptOntology = {
  * defensible: every identity below is proved by double inclusion, which is the
  * subject at index 7's first lesson run twice, so a learner who arrived here
  * first would meet the method and the object together.
+ *
+ * COUNTING_AND_ARRANGEMENTS IS ELEVENTH, AND IT IS THE FIRST OF THESE INSERTIONS
+ * WHOSE SLOT IS FIXED BY A SECOND PREREQUISITE RATHER THAN BY WHAT A TEST READS.
+ *
+ * Every paragraph above picked between slots that one prerequisite allowed, and
+ * the choice was about which index a test reads by name. This subject has TWO
+ * prerequisites in two different subjects: `sets`, a concept of
+ * `sets-and-membership` at index 8, and `binomial-theorem`, a concept of
+ * `rational-expressions` at index 9. The earliest slot that comes after BOTH is
+ * 10, and there was nothing to weigh — the later prerequisite decided it on its
+ * own, and index 10 is beyond the furthest anything reads positionally.
+ *
+ * What the position claims is only that a learner meets counting after the sets
+ * whose sizes it computes and after the triangle whose entries it explains, and
+ * before the exponent rules. That is the weakest claim available and it is true
+ * of any course teaching the three. It is also the one place among these
+ * insertions where the ordering is load-bearing in BOTH directions rather than
+ * merely defensible: the second knowledge point reads C(9, 3) off row 9 and sums
+ * that row to 2⁹, so a learner arriving here before either prerequisite would
+ * meet the check before the things being checked.
+ *
+ * THIS IS THE FIFTH PROMOTION RUNNING TO MOVE `data-summaries`, and the fifth
+ * since it was written: 8, 9, 10, 11, 12, now 13. The paragraph above drew the
+ * instruction and this run is one more piece of evidence for it, so it is
+ * repeated rather than cited: assert the RELATIONAL fact — that a subject comes
+ * after the subject holding its prerequisite — and leave a literal index behind
+ * only where a position is genuinely load-bearing, which it is for index 0 and
+ * nowhere else. `ONTOLOGIES[0]` is what /api/learn/session and /learn open on;
+ * every other literal in the test files is a debt an insertion below it collects,
+ * and this insertion collected exactly one.
+ *
+ * CHANCE_AND_EVENTS IS TWELFTH, AND IT IS THE FIRST OF THESE INSERTIONS NOT TO
+ * TAKE THE EARLIEST SLOT ITS PREREQUISITES ALLOW.
+ *
+ * Its two prerequisites are `sets`, a concept of `sets-and-membership` at index
+ * 8, and `fraction-arithmetic`, a concept of `arithmetic-foundations` at index 0.
+ * The later of those is the binding one, so the earliest slot that comes after
+ * both is 9 — and 9 and 10 are the two indices the previous two promotions'
+ * groups read by name: `RATIONAL_EXPRESSIONS` at 9 and `COUNTING_AND_ARRANGEMENTS`
+ * at 10. Inserting at 9 would have moved both and broken three assertions in
+ * tests/concepts-logic.mjs to say nothing extra, because every slot from 9 onward
+ * makes exactly the same curriculum claim. So this one sits at 11, the first free
+ * index, and the choice is the one every paragraph above describes making:
+ * prerequisites set a FLOOR, and which of the allowed slots to take is decided by
+ * what a test reads positionally.
+ *
+ * It is also the better neighbour on the merits, which is luck rather than
+ * design and is worth recording as such. Directly above `sample-spaces` sits
+ * `counting-probability` — probability as a ratio of counts — so a learner who
+ * meets chance immediately after counting meets the two halves of that concept
+ * in the order it will want them. It was a map node when that was written and the
+ * forty-sixth promotion authored it into `chance-and-events`, which makes the
+ * adjacency load-bearing rather than merely tidy: that concept's stranded
+ * prerequisite is `counting-principles`, so the subject at index 10 is now a real
+ * gate on the subject at index 11. Nothing below is asserted on that reading.
+ *
+ * AND IT IS THE SIXTH PROMOTION RUNNING TO MOVE `data-summaries`: 8, 9, 10, 11,
+ * 12, 13, now 14. One literal collected, the same as the insertion above.
  */
 export const ONTOLOGIES: ConceptOntology[] = [
   ARITHMETIC_FOUNDATIONS, EXPRESSIONS_AND_EQUATIONS, PLANE_GEOMETRY,
   TRIANGLE_TRIGONOMETRY, SOLID_MEASURE, STATEMENTS_AND_CONNECTIVES,
   PREDICATES_AND_QUANTIFIERS, METHODS_OF_PROOF, SETS_AND_MEMBERSHIP,
-  RATIONAL_EXPRESSIONS, EXPONENTS_AND_LOGARITHMS, FUNCTIONS_AND_INVERSES,
-  DATA_SUMMARIES, VECTORS_AND_INDEPENDENCE, MATRICES_AND_DETERMINANTS,
+  RATIONAL_EXPRESSIONS, COUNTING_AND_ARRANGEMENTS, CHANCE_AND_EVENTS,
+  EXPONENTS_AND_LOGARITHMS, FUNCTIONS_AND_INVERSES, DATA_SUMMARIES,
+  VECTORS_AND_INDEPENDENCE, MATRICES_AND_DETERMINANTS,
 ]
 
 export function getOntology(subjectId: string): ConceptOntology | null {

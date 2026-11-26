@@ -11,42 +11,230 @@
  * `statistics` therefore rests on `probability` throughout and never the
  * reverse.
  *
- * ONE NODE HAS LEFT THIS FILE, AND IT IS THE ONE THE SENTENCE ABOVE WAS NEVER
- * TRUE OF. `descriptive-statistics` is authored now — the `data-summaries`
- * subject in ontology-statistics.ts, the first written concept anywhere in
- * either of these two areas. It rested on `percent` and `sigma-notation` and on
- * nothing in `probability` at all, because describing a list you have is not
- * reasoning in either direction: there is no mechanism in it and no inference
- * out of it. So the split this file is organised around has three sides rather
- * than two, and the third one is the smallest and the only one written. The
- * departure block above `STATISTICS` records what happened to its edges.
+ * THREE NODES HAVE LEFT THIS FILE — ONE FROM `statistics` AND TWO FROM
+ * `probability` — AND THE ORDER THE FIRST TWO WENT IN IS THE OPPOSITE OF THE
+ * DEPENDENCE ABOVE.
+ *
+ * `descriptive-statistics` went first — the `data-summaries` subject in
+ * ontology-statistics.ts, the first written concept anywhere in either of these
+ * two areas — and it is the one the sentence above was never true of. It rested
+ * on `percent` and `sigma-notation` and on nothing in `probability` at all,
+ * because describing a list you have is not reasoning in either direction: there
+ * is no mechanism in it and no inference out of it. So the split this file is
+ * organised around has three sides rather than two, and the third one is the
+ * smallest.
+ *
+ * `sample-spaces` went second, in the forty-fifth promotion, into the
+ * `chance-and-events` subject in ontology-chance.ts — and this one IS on the
+ * dependence above. It is `probability`'s root, so it is the first written
+ * material in the direction of reasoning this file is organised around, and
+ * everything the statistics half rests on now rests on something written.
+ *
+ * `counting-probability` went third, in the forty-sixth, into that same subject.
+ * It is the first node either area has released that was NOT the first thing
+ * written in its half, and the reason it was available is mechanical rather than
+ * lucky: promoting an area's root hands the root position to whatever sat
+ * directly above it, so the same shape is there to be taken again. This file's
+ * two areas have now given up a chain of two and a chain of one, and the
+ * departure blocks above each area record what happened to every edge.
  */
 
 import type { MapArea } from './atlas'
 
+/**
+ * TWO NODES HAVE LEFT THIS AREA WHEN THEY WERE AUTHORED, AND THEY HAD TO.
+ *
+ * `atlasProblems` rejects a map node whose id collides with an authored concept
+ * — see atlas.ts, which argues it at length: the point of naming a concept in
+ * `needs` is to POINT at it, and a node of the same id would shadow the authored
+ * copy in the composed concept list with a copy that has no knowledge points, so
+ * a subject that was fully written would read as unteachable. Promoting a node is
+ * therefore a MOVE and not a fill-in, and the node has to be deleted from here on
+ * the way out.
+ *
+ * Both went into the `chance-and-events` subject in ontology-chance.ts, and in
+ * prerequisite order, which no pair of promotions out of one area has managed
+ * before. `sample-spaces` went first, in the forty-fifth, and was the
+ * seventeenth authored ontology and the first written concept in this area:
+ * sixteen nodes down to fifteen. `counting-probability` went second, in the
+ * forty-sixth, as that subject's second concept: fifteen down to FOURTEEN.
+ *
+ * THE FLOOR DECIDED NOTHING AND IS NOT CLOSE, which is worth stating because it
+ * decides where most promotions may happen. tests/atlas.mjs asserts that no area
+ * sits below five nodes once departures count as covered territory, and this area
+ * is at fourteen nodes — NINE of headroom on the nodes alone, before any
+ * departure is claimed. No `departed` array is declared here and that is still
+ * correct rather than an omission: the floor reads absence as zero, the field is
+ * for areas drained NEAR the floor, and declaring the two departures would buy
+ * two more of headroom that nothing needs. If this area is ever drained past
+ * five, that is when to declare it.
+ *
+ * ── WHY THE ROOT WAS THE NODE WORTH TAKING, TWICE ─────────────────────────
+ *
+ * This was the largest wholly unwritten area in the atlas and `sample-spaces`
+ * was the only node in it whose `needs` pointed entirely OUTSIDE it — which is
+ * what made it the one promotable node here. Until then the uncertainty half of
+ * the atlas had exactly one written concept and it was the one node in either
+ * area that rested on no probability at all. So every node of this area, and
+ * every node of `statistics` above it, stood behind an unwritten root.
+ *
+ * `counting-probability` then inherited that position exactly, which is why the
+ * second promotion was available at all: it was the area's sole root the moment
+ * the first one left, for the same reason — one of its `needs` had become an
+ * authored concept and the other was never in this area. The pattern is worth
+ * naming because it is the cheapest shape a run can find: promoting an area's
+ * root hands the position to whatever sat directly above it, so a chain into an
+ * unwritten area can be walked one node per run with no node ever gaining an
+ * in-area prerequisite. `conditional-probability` is the root now.
+ *
+ * ── WHAT HAPPENED TO THE DEPARTING NODES' EDGES ───────────────────────────
+ *
+ * An edge belongs to the node that DECLARES it, which is what makes this
+ * bookkeeping rather than a judgement.
+ *
+ *  1. THE STRANDED PREREQUISITES ARE THE `links` ENTRIES BELOW, three of them
+ *     now. `sample-spaces` declared `sets` and `fraction-arithmetic`, authored in
+ *     `sets-and-membership` and `arithmetic-foundations`, and neither could go in
+ *     `chance-and-events` because an authored ontology may only name concepts it
+ *     contains. `counting-probability` declared `sample-spaces` and
+ *     `counting-principles`: the first is now IN that subject, so it is an
+ *     ordinary edge in `CHANCE_AND_EVENTS.edges` and the subject's first internal
+ *     one, and only `counting-principles` stranded. The durable form of the rule
+ *     is that a promotion strands as many edges as the node declares `needs`
+ *     outside its new subject, read off the node — two, then one.
+ *  2. THE INBOUND EDGES NEEDED NOTHING DONE TO THEM, AND THEY ARE EACH
+ *     PROMOTION'S YIELD. `counting-probability` here and `sampling-and-bias` in
+ *     `statistics` each named `sample-spaces` in their own `needs`;
+ *     `conditional-probability` names `counting-probability` in its own. All
+ *     three are declared by nodes that stayed, `expandEdges` still emits them,
+ *     and both endpoints of each exist in the composed graph. A `links` entry for
+ *     any of them would be a second copy of an edge that already exists, and
+ *     `composeAtlas` does not report duplicates.
+ *
+ *     EACH YIELD IS ONE NODE CHEAPER THAN THE LAST. The forty-fifth made TWO
+ *     nodes ready, which no promotion had done; the forty-sixth made one, because
+ *     `conditional-probability` declares `counting-probability` and nothing else
+ *     and so was ready the instant it shipped. That one is a Rubneb ANCHOR, so
+ *     the next promotion out of this area empties an anchor slot — the cost the
+ *     forty-fifth passed to the forty-sixth in the other area, arriving here.
+ *  3. ONE `exercises` CLAIM WAS LOST AND IT IS THE FIRST TIME. `sample-spaces`
+ *     declared no `confusedWith` and no `exercises`, which was checked rather
+ *     than remembered. `counting-probability` declared
+ *     `exercises: ['counting-principles']`, and `expandEdges` was turning that
+ *     into an `encompasses` edge — so authoring the node DELETED a credit edge
+ *     and nothing went red, because neither `encompasses` nor `interferes_with`
+ *     gates. ontology-chance.ts argues why the subject boundary was worth it and
+ *     records that the claim is inexpressible rather than refused: `encompasses`
+ *     may only be declared in an ontology holding both ends, and a `links` entry
+ *     carries `from`, `to` and `because` and no KIND.
+ *
+ *     That is the stranding this comment block has warned about four times while
+ *     having nothing to lose. It bit on the fifth, which is the argument for
+ *     checking rather than remembering: the two interference pairs in this file
+ *     are `bayes-theorem` ~ `conditional-probability` and `hypothesis-testing` ~
+ *     `bayes-theorem`, all four of those nodes are still here, and the reason
+ *     anybody knows the credit edge went is that the check was run again.
+ */
 const PROBABILITY: MapArea = {
   id: 'probability',
   name: 'Probability',
   covers:
-    'From a known mechanism to the behaviour of outcomes: sample spaces, conditioning, random ' +
-    'variables, the standard distributions, and the limit theorems.',
+    'From a known mechanism to the behaviour of outcomes: conditioning, random variables, the ' +
+    'standard distributions, and the limit theorems. NEITHER THE SAMPLE SPACE NOR COUNTING A ' +
+    'PROBABILITY OFF ONE IS PART OF THIS AREA ANY MORE, and that is the one thing worth reading ' +
+    'before looking for either: what an outcome is, an event as a subset of the outcomes, ' +
+    'equally likely outcomes as the hypothesis that licenses dividing, the complement and ' +
+    'addition rules, and then P(E) = |E| / |S| with both sides COUNTED once the space is too big ' +
+    'to write down, are all written — as `sample-spaces` and `counting-probability` in the ' +
+    '`chance-and-events` subject. Those were this area\'s two lowest nodes, taken in order, so ' +
+    'everything left here stands behind written material and the combinatorics this subject ' +
+    'rests on is written too. The first node above them is `conditional-probability`, which is ' +
+    'where the sample space stops being fixed and starts being replaced by what is known — the ' +
+    'move nothing below it makes.',
+  links: [
+    /*
+     * THREE STRANDED PREREQUISITES, FROM TWO PROMOTIONS: the first two entries
+     * are `sample-spaces`' and the third is `counting-probability`'s. In every
+     * case the far end is an authored concept of another subject, so the edge
+     * cannot live in `chance-and-events` — `ontologyProblems` reports an unknown
+     * endpoint for an edge naming a concept its ontology does not contain — and
+     * an area's `links` is the only place in the build that can express "an
+     * authored concept rests on an authored concept of a third subject".
+     *
+     * Filed HERE, in the area that owned the departing node, rather than in
+     * `discrete-mathematics` or `algebra-foundations` where the far ends were
+     * promoted from. That is the established rule and the reason is ownership:
+     * this area is where somebody looking for what became of these nodes will
+     * come, and the far subjects have no record that the edges exist.
+     *
+     * ALL THREE GATE, immediately and for real, which is unusual for a `links`
+     * entry: most are written while the far node is still unwritten and constrain
+     * nothing until it is authored. Here every end has material, so
+     * `gatingPrerequisitesOf` on each written concept returns exactly its own
+     * entries, and a learner cannot be shown a sample space until sets and
+     * fractions are strong or a counted probability until the counting is.
+     *
+     * AND THE FORTY-SIXTH PROMOTION SHOWED WHAT THIS BLOCK SAYS CAN HAPPEN. The
+     * note here used to warn that if a far concept ever MOVED into
+     * `chance-and-events` its entry would have to be DELETED, since two identical
+     * edges in the composed graph is not a duplicate `composeAtlas` notices and
+     * no test reports one. That is exactly what `counting-probability` did with
+     * its OWN `sample-spaces` prerequisite — which never became an entry here,
+     * because the node was authored into the subject already holding the far end,
+     * so the edge went straight into `CHANCE_AND_EVENTS.edges` as that subject's
+     * first internal one. The warning still stands for the three below;
+     * tests/atlas.mjs asserts the subject of each far end for exactly that
+     * reason, and now also asserts that `sample-spaces` appears on no entry here.
+     */
+    {
+      from: 'sets',
+      to: 'sample-spaces',
+      because:
+        'An event IS a subset of the sample space, not a sentence about it, and the third ' +
+        'knowledge point unions, intersects and complements events as sets — so union, ' +
+        'intersection, complement and the subset relation are the vocabulary the concept is ' +
+        'written in rather than a later convenience. The two-set correction is the sharpest ' +
+        'case: |A ∪ B| = |A| + |B| − |A ∩ B| is proved there for sizes, and the addition rule ' +
+        'for probabilities is that identity divided through by the size of the space.',
+    },
+    {
+      from: 'fraction-arithmetic',
+      to: 'sample-spaces',
+      because:
+        'Every probability in the concept is a count of outcomes over the size of the space, so ' +
+        'the answers are eighths, and the third point adds and subtracts them: 4/8 + 4/8 − 3/8 ' +
+        'and 1 − 1/8. Comparing 1/4 with 3/8 over a common denominator is also the step the ' +
+        'second point\'s whole argument turns on — the two spaces disagree, and seeing that they ' +
+        'disagree is a fraction comparison before it is anything about probability.',
+    },
+    /*
+     * THE FORTY-SIXTH PROMOTION'S ONE STRANDED EDGE, and the only one it had:
+     * `counting-probability` declared `['sample-spaces', 'counting-principles']`
+     * and the first of those is in the subject it joined.
+     *
+     * This entry is also where the credit edge WOULD have gone if anything could
+     * carry it. The departing node declared `exercises: ['counting-principles']`
+     * as well, which `expandEdges` was turning into an `encompasses`, and
+     * authoring the node deleted it: `links` hard-codes `prerequisite`, so the
+     * two claims — "the counting must be strong first" and "doing this counts as
+     * having done the counting" — collapse into the one below. Only the gate
+     * survives. ontology-chance.ts argues the trade.
+     */
+    {
+      from: 'counting-principles',
+      to: 'counting-probability',
+      because:
+        'The concept is a ratio of two counts and it does not derive either of them. Its space ' +
+        'is (12 × 11 × 10)/6 = 220 committees — a descending product over the orderings of one ' +
+        'selection, which is that concept\'s second knowledge point exactly — and its second ' +
+        'point multiplies two such counts, 5 × 21, having first checked the product rule\'s ' +
+        'condition the way that concept\'s first point insists on. Its third point is ' +
+        'inclusion–exclusion over two sets with one division at the end. So every number above ' +
+        'the division line is that subject\'s work, and a learner who cannot produce them has ' +
+        'nothing to divide.',
+    },
+  ],
   nodes: [
-    {
-      id: 'sample-spaces',
-      match: /\b(sample space|probability axioms|event \(probability theory\))\b/i,
-      name: 'Sample spaces and events',
-      is: 'Listing what could happen and taking an event to be a set of those — probability as a measure on that set.',
-      needs: ['sets', 'fraction-arithmetic'],
-      terms: 'sample space event outcome probability axioms',
-    },
-    {
-      id: 'counting-probability',
-      name: 'Equally likely outcomes',
-      is: 'Probability as a ratio of counts, which is why combinatorics is the first real technique in the subject.',
-      needs: ['sample-spaces', 'counting-principles'],
-      exercises: ['counting-principles'],
-      terms: 'equally likely favourable outcomes combinatorial probability',
-    },
     {
       id: 'conditional-probability',
       match: /\b(conditional probability|independence \(probability\))\b/i,

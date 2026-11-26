@@ -996,28 +996,80 @@ const DISCRETE_MATHEMATICS: MapArea = {
     'an implication to start from, assuming a claim false to reach something impossible, and ' +
     'splitting into cases that leave nothing out are the methods-of-proof syllabus; and ' +
     'membership, the operations as conditions on it, the sizes they force and the double ' +
-    'inclusion an identity about them is proved by are the sets-and-membership syllabus. This ' +
-    'area points at all four rather than restating any, and keeps the layers above them: the ' +
-    'relations a set carries once it is a subset of a product, the counting — where the product ' +
-    'and sum rules and inclusion–exclusion over many sets live, the two-set correction having ' +
-    'gone with the sets that force it — the graphs, the comparison of infinite sets by ' +
-    'bijection, and the formal systems, where derivation inside a stated calculus is a ' +
-    'different subject from the arguments a person writes for another person and is the one ' +
-    'still mapped only.',
+    'inclusion an identity about them is proved by are the sets-and-membership syllabus; and ' +
+    'the two rules a count is built from, the ordered and unordered selection counts that ' +
+    'differ by a division, and the repair three overlapping conditions need are the ' +
+    'counting-and-arrangements syllabus. This area points at all five rather than restating ' +
+    'any, and keeps the layers above them: the relations a set carries once it is a subset of a ' +
+    'product, the counting identities proved by counting one set two ways and inclusion–' +
+    'exclusion over n sets — the two-set correction having gone with the sets that force it and ' +
+    'the three-set one with the counting that derives it — the sequences defined by their own ' +
+    'predecessors, the graphs, the comparison of infinite sets by bijection, and the formal ' +
+    'systems, where derivation inside a stated calculus is a different subject from the ' +
+    'arguments a person writes for another person and is the one still mapped only.',
   /**
-   * FOUR NODES HAVE LEFT THIS AREA, ON FOUR CONSECUTIVE PROMOTIONS, UP ONE
-   * CHAIN, AND EACH WAS THE ROOT AT THE TIME.
+   * FIVE NODES HAVE LEFT THIS AREA. THE FIRST FOUR WENT ON FOUR CONSECUTIVE
+   * PROMOTIONS, UP ONE CHAIN, EACH THE ROOT AT THE TIME. THE FIFTH IS NONE OF
+   * THOSE THINGS.
    *
    * `propositional-logic` went first, to ontology-logic.ts as the single member
    * of a twelfth subject; `quantifiers` followed it, to ontology-quantifiers.ts
    * as the single member of a thirteenth; `proof-techniques` followed that, to
    * ontology-proof.ts as the single member of a fourteenth; `sets` followed
-   * that, to ontology-sets.ts as the single member of a fifteenth. All four are
+   * that, to ontology-sets.ts as the single member of a fifteenth. Then
+   * `counting-principles` went to ontology-counting.ts as the single member of a
+   * SIXTEENTH, five promotions later rather than one — the forty-fourth, where
+   * the four before it were the thirty-fifth through thirty-eighth. All five are
    * real concepts now. `atlasProblems` rejects a map node whose id collides with
    * an authored concept — the composed list would hold two entries for the id,
    * and the shadowing copy has no knowledge points, so a fully authored concept
    * would read as unteachable. So promoting is a MOVE out of this array and not
    * a fill-in, and each node had to go.
+   *
+   * THE FIFTH DEPARTURE IS WHERE EVERY GENERALISATION IN THIS BLOCK STOPS, and
+   * it stops them in three different places rather than one, so they are worth
+   * separating:
+   *
+   *  - IT WAS NOT UP THE CHAIN, because there was no chain left. `sets` was the
+   *    last in-area prerequisite of TWO nodes, so the paragraphs below that say
+   *    "the node directly above" had no referent after it. The choice was
+   *    between `relations` and this node, and it went on content: `relations` is
+   *    a SET OF PAIRS whose three defining properties — reflexive, symmetric,
+   *    transitive — are judgements no task kind in this build can grade, which
+   *    is a refusal the thirty-ninth promotion recorded and which still binds.
+   *  - IT STRANDED TWO EDGES, NOT ONE, which is the first time any promotion
+   *    anywhere has. The rule below — walking up a chain strands exactly one
+   *    edge per step — is not contradicted; its PRECONDITION expired. One edge
+   *    per step was a fact about a chain, where each node's `needs` pointed at
+   *    the single subject below it. This node named `sets` in
+   *    `sets-and-membership` and `binomial-theorem` in `rational-expressions`,
+   *    neither of which would take it, so `links` went from four entries to SIX.
+   *  - IT MADE THE ROOT SET BIGGER, which no previous departure from any area
+   *    has done. Two in-area dependents, and it was the last in-area
+   *    prerequisite of both, so both became rooted while it left: two in, one
+   *    out. {`relations`, `counting-principles`} becomes {`relations`,
+   *    `combinatorial-identities`, `recurrence-relations`}.
+   *
+   * WHY THERE IS STILL NO `departed` ARRAY ON THIS AREA, which a reader counting
+   * five departures will reasonably go looking for. `MapArea.departed` exists for
+   * the stub floor and its own comment says to declare it "WHERE IT IS
+   * LOAD-BEARING, NOT EVERYWHERE" — the floor reads absence as zero. Twelve nodes
+   * against a floor of five is seven of headroom, so nothing here needs the
+   * field, and adding it would buy territory this area has no use for. The four
+   * areas that declare one are the ones that have been drained near the floor.
+   * This is an omission on purpose, and the five departures are recorded in prose
+   * because prose is what carries the WHY.
+   *
+   * THE ARMATURE COST BOTH HALVES THIS TIME, which no previous departure from
+   * here did. `counting-principles` was one of Burdervruke's three anchors, so
+   * the slot had to be refilled — `armatureProblems` builds its anchor check from
+   * `conceptIdsByArea` and reports an anchor that is no longer a node of its area
+   * — AND the sixteenth subject had to be claimed, taking that region's
+   * `authored` list to five. The thirty-eighth paid only the second. The refill is
+   * `generating-functions`, and the obvious candidate was refused for a reason
+   * this promotion created: `combinatorial-identities` needs this node and
+   * `mathematical-induction`, both authored now, so it is READY and would have
+   * emptied the slot again immediately.
    *
    * THE FOURTH DEPARTURE IS THE ONE THAT ENDS THE CHAIN AS A CHAIN, and it is
    * the only thing about this run that the three paragraphs below did not
@@ -1035,17 +1087,37 @@ const DISCRETE_MATHEMATICS: MapArea = {
    * so it would strand two edges into two subjects where `relations` strands one.
    * Stated rather than decided.
    *
+   * IT WAS DECIDED, AND THE PARAGRAPH ABOVE GOT IT RIGHT, which is rare enough
+   * here to be worth the sentence. The forty-fourth promotion took
+   * `counting-principles` and paid exactly the two edges this predicted, so the
+   * cost asymmetry was real and not a theory. `relations` stayed, and not because
+   * it was the dearer option: it is refused on rulability, three defining
+   * properties of a set of pairs being judgements nothing in this build can
+   * grade. The prediction that held was about COST; what settled the choice was
+   * content, which is the order those two factors are supposed to come in.
+   *
    * THE AREA HAS LOST ITS ROOT FOUR TIMES AND HAS NOT LOST ITS ENTRY POINT
    * ONCE, which is the part worth explaining rather than counting. Every node
    * here stood on those four eventually, in that order, and the root set in
    * the composed graph moved up the same chain one step per promotion:
    * `propositional-logic`, then `quantifiers`, then `proof-techniques`, then
    * `sets` — and then stopped moving up a single chain, because `sets` was the
-   * last in-area prerequisite of two nodes rather than one, so the set is
-   * {`relations`, `counting-principles`} now. Nothing is stranded and nothing
-   * became unreachable: both edges those two declare still resolve, because they
-   * resolve against the composed atlas, where the far end is now a concept with
-   * problems instead of a skeleton.
+   * last in-area prerequisite of two nodes rather than one, so the set became
+   * {`relations`, `counting-principles`}. Nothing was stranded and nothing
+   * became unreachable: both edges those two declared still resolved, because
+   * they resolve against the composed atlas, where the far end is now a concept
+   * with problems instead of a skeleton.
+   *
+   * THE FIFTH DEPARTURE MADE THAT SET BIGGER RATHER THAN MOVING IT, so the live
+   * one is {`relations`, `combinatorial-identities`, `recurrence-relations`} and
+   * the sequence of sizes across six promotions is 1, 1, 1, 1, 2, 3. The
+   * direction is not a property of the departing node on its own: it is how many
+   * of that node's dependents are in the AREA, and whether it was the last
+   * in-area prerequisite of each. `counting-principles` had two and was the last
+   * for both, so two arrived as one left. tests/atlas.mjs asserts the live set by
+   * named membership in the forty-fourth promotion's group, which is the only
+   * place it is named — a `length` check of any kind would have passed through
+   * four of these six states while saying nothing about which members.
    *
    * THE EDGES POINTING IN NEEDED NO ATTENTION ON THE DAY, every time, for the
    * reason the eighth promotion out of `euclidean-geometry` recorded: an edge is
@@ -1069,14 +1141,17 @@ const DISCRETE_MATHEMATICS: MapArea = {
    * the `from` instead of by the declarer would be wrong.
    *
    * THE EDGE EACH NODE DECLARED ITSELF IS THE ONE THAT MOVED, which is why
-   * there are now FOUR entries in `links` where there was one. That is the
-   * case the rule above does NOT cover: when the DECLARING end is promoted, its
+   * there are now SIX entries in `links` where there was one — four of them one
+   * per promotion, and two from the fifth departure alone. That is the case the
+   * rule above does NOT cover: when the DECLARING end is promoted, its
    * `needs` have nowhere left to live, and the answer is the area the declarer
    * left rather than the area or subject holding the far end. Every far end is
    * an authored concept of another subject — `geometric-proof` in
    * `plane-geometry`, `propositional-logic` in `statements-and-connectives`,
    * `quantifiers` in `predicates-and-quantifiers`, `proof-techniques` in
-   * `methods-of-proof` — so no ontology may hold any of the four edges, because
+   * `methods-of-proof`, and then `sets` in `sets-and-membership` and
+   * `binomial-theorem` in `rational-expressions` — so no ontology may hold any
+   * of the six edges, because
    * an authored ontology's edges may only name concepts it contains. An area's
    * `links` is the only place in the build that can say "an authored concept
    * rests on an authored concept of a third subject".
@@ -1109,13 +1184,25 @@ const DISCRETE_MATHEMATICS: MapArea = {
    * shape of what is above — but the sentence "the next one up" has no referent
    * here any more, and a future run should not go looking for one.
    *
-   * NO `confusedWith` WAS LOST ANY OF THE FOUR TIMES, and it was checked rather
+   * AND THE FIFTH STEP SHOWS WHAT THE PER-STEP COUNT WAS REALLY COUNTING. "One
+   * edge per step" survived four steps and then read wrong at the fifth, which
+   * added two — not because the stranding rule changed but because the count was
+   * never about promotions. It was about CHAINS: one edge per step holds exactly
+   * when the departing node's `needs` all point into the one subject below it,
+   * which is what a chain means. `counting-principles` named two subjects and
+   * neither would host it, so two edges had nowhere to go. The durable statement
+   * is the one the rule already contains — an edge is owned by the node that
+   * DECLARES it, so a promotion strands exactly as many edges as the node
+   * declares `needs` outside its new subject. The number is read off the node,
+   * and it is one only by coincidence of shape.
+   *
+   * NO `confusedWith` WAS LOST ANY OF THE FIVE TIMES, and it was checked rather
    * than assumed each time. `expandEdges` in atlas.ts turns a node's
    * `confusedWith` into an `interferes_with` edge, so deleting a node DELETES
    * that edge, and nothing goes red when it happens: interference constrains
    * SELECTION rather than gating, so every suite stays green while the
    * scheduler is freed to introduce the two most confusable concepts in a
-   * subject together. None of the four declared one, so there was nothing to
+   * subject together. None of the five declared one, so there was nothing to
    * re-home — but the check is the one a promotion forgets, and the candidates
    * are worth recording. ontology-functions.ts argues that
    * `mathematical-induction` and `propositional-logic` genuinely interfere,
@@ -1294,6 +1381,88 @@ const DISCRETE_MATHEMATICS: MapArea = {
         'which really does settle a three-set identity, really does fail from four sets up, and ' +
         'gives a learner no way to tell those two situations apart.',
     },
+    /*
+     * The FIRST of the two edges the fifth departing node declared, and the
+     * first time one promotion has added two entries here.
+     *
+     * The four above are one chain, each stranded by promoting its declaring
+     * end one step up. This is not a fifth link of that chain: `sets` was the
+     * last in-area prerequisite of two nodes, and the node that left declared
+     * `needs` on TWO authored subjects rather than one. So the per-step count
+     * of one, which the block above states as a rule, described a chain and not
+     * a promotion — and there was no chain left to walk.
+     *
+     * It gates immediately and for real, like all four above and unlike most
+     * `links` entries, which are written while the far end is still an
+     * unwritten node and constrain nothing until somebody authors it. Both ends
+     * have material, so `gatingPrerequisitesOf('counting-principles')` returns
+     * this one and the entry below it, and a learner cannot be shown the
+     * counting rules until membership and the sizes the operations force are
+     * strong.
+     *
+     * If `sets` and the counting subject were ever MERGED — which
+     * ontology-sets.ts forecloses in its own `covers`, in the sentence that
+     * forced a sixteenth subject in the first place, so this is the least
+     * likely of the five to move — this edge would become an ordinary `needs`
+     * there and this entry would have to be DELETED. Two identical edges in the
+     * composed graph is not a duplicate `composeAtlas` notices and no test
+     * reports one, so tests/atlas.mjs asserts the far end's subject by name for
+     * exactly that reason.
+     */
+    {
+      from: 'sets',
+      to: 'counting-principles',
+      because:
+        'Every count below is the size of a set that is never written out, so the learner has to ' +
+        'already believe that a set is fixed by what belongs to it and not by how it was listed ' +
+        '— otherwise "how many committees" is a question about arrangements of names rather ' +
+        'than about objects, and the division by 3! that collapses six orderings into one ' +
+        'committee is a trick instead of a consequence. The sizes carry over too: the earlier ' +
+        'concept counts the subsets of a 9-member set as 2⁹ by making each member an ' +
+        'independent in-or-out choice, and the row of binomial coefficients here sums to that ' +
+        'same 512 by choosing a size first. Taken in the other order, inclusion–exclusion over ' +
+        'three conditions arrives before the two-set correction it overshoots, so the one new ' +
+        'idea — that the first repair can remove an element entirely — has nothing to be new ' +
+        'against.',
+    },
+    /*
+     * The SECOND edge that node declared, and the reason this promotion cost two
+     * entries where the four before it cost one each.
+     *
+     * Filed here rather than in `rational-expressions` for the rule the block
+     * above states and the fourteenth promotion's entry spells out: the area
+     * that owned the DECLARER owns the stranded edge, not the area or subject
+     * holding the far end. `binomial-theorem` is a concept of
+     * `rational-expressions`, which is three files away from anything that
+     * mentions counting.
+     *
+     * THIS IS THE ENTRY WHOSE KIND IS WRONG AND CANNOT BE RIGHT, which is worth
+     * saying here because the symptom is silence. `links` carries `from`, `to`
+     * and `because` and hard-codes `prerequisite`. The edge that the second
+     * knowledge point actually argues for is a prerequisite in this direction
+     * AND an argument that C(9, 3) is why the Pascal entry counts subsets —
+     * which, if it were a credit claim, would be an `encompasses` pointing back.
+     * ontology-counting.ts declines that claim on the merits, because nothing in
+     * the counting material expands a binomial. Had it held, no field in this
+     * build could have recorded it without re-filing the concept into
+     * `rational-expressions`, and that boundary was refused for separate
+     * reasons. The merits and the structure agreed here; they are not obliged
+     * to.
+     */
+    {
+      from: 'binomial-theorem',
+      to: 'counting-principles',
+      because:
+        'The triangle gives a learner the numbers before the reason for them. `binomial-theorem` ' +
+        'builds row 9 by adding adjacent entries of row 8, which is how the triangle is made and ' +
+        'is also the account that explains why the row is symmetric — but it says nothing about ' +
+        'why the fourth entry counts the 3-member subsets of a 9-member set, and its own file ' +
+        'records that absence as this concept\'s job. So the order is: have the 84 as an entry ' +
+        'you built, then derive it as 9 × 8 × 7 ÷ 3! and watch the two meet. Taken the other way ' +
+        'round the check in the second knowledge point has nothing to check against, and the ' +
+        'symmetry C(9, 3) = C(9, 6) arrives as an identity to verify rather than as the row a ' +
+        'learner has already seen read the same both ways.',
+    },
   ],
   nodes: [
     {
@@ -1319,14 +1488,6 @@ const DISCRETE_MATHEMATICS: MapArea = {
       is: 'Comparing infinite sets by bijection: the rationals are countable, the reals are not, and the diagonal argument shows it.',
       needs: ['functions-formally', 'real-number-line'],
       terms: 'cardinality countable uncountable diagonal argument bijection aleph',
-    },
-    {
-      id: 'counting-principles',
-      match: /\b(combination|permutation|pigeonhole principle|combinatoric)/i,
-      name: 'Counting',
-      is: 'Product and sum rules, permutations and combinations, with inclusion–exclusion for when the cases overlap.',
-      needs: ['sets', 'binomial-theorem'],
-      terms: 'permutation combination factorial inclusion exclusion pigeonhole',
     },
     {
       id: 'combinatorial-identities',
