@@ -784,13 +784,38 @@ export async function ruleEvaluate(
     }
   }
   if (result.verdict === 'counterexample_found') {
+    /*
+     * Name the value when it is known, which on this path it usually is.
+     *
+     * This branch used to say only "the answer differs from the value of the
+     * expression at the stated inputs" — true, and the one incorrect ruling in
+     * this file that tells a learner they are wrong without telling them what
+     * is right. Every other `incorrect` names a number or a step.
+     *
+     * It is reachable with the value perfectly well known, because step 2 is
+     * guarded on `answered && expected` and `answered` is what tends to be
+     * null: `sqrt(5)` has no exact rational value here, so an answer written
+     * that way goes to the worker even though the TARGET is an ordinary
+     * number. Withholding it in that case was an accident of which side failed
+     * to evaluate, not a judgement that it should be withheld.
+     *
+     * `expected` is still null when the target is genuinely non-rational, and
+     * then the old sentence is all there is to say, so it stays as the
+     * fallback rather than being replaced.
+     */
+    const where = names.map(n => `${n} = ${at[n]}`).join(', ')
     return {
       status: 'ruled',
       asRead,
       verdict: {
         ruling: 'incorrect',
         method: result.method ?? 'substitution at sampled points',
-        brokeAt: { step: 2, detail: 'the answer differs from the value of the expression at the stated inputs' },
+        brokeAt: {
+          step: 2,
+          detail: expected
+            ? `the value at ${where} is ${showExact(expected)}, and this answer is not equal to it`
+            : `the answer differs from ${renderExpr(target)}, the expression at ${where}`,
+        },
         conditions,
         evidence: evidenceOf(reply),
       },

@@ -1462,6 +1462,57 @@ t('and is told it asked for a value', /asks for a value, and this still mentions
 t('a step-1 failure never reaches the worker', stillSymbolic.verdict.ruling === 'incorrect')
 
 /*
+ * ── EVERY `incorrect` SAYS WHY ────────────────────────────────────────────
+ *
+ * Reported from play: an evaluate task answered 18 instead of 54, and the
+ * table said "Ruled incorrect" and stopped. The verifier was not at fault —
+ * it had built "the value at p = 2, a = 1, q = 3, b = 3 is 54, and this is
+ * 18" and the RPG card discarded it. But chasing that down turned up one
+ * ruling in verify.ts that genuinely had nothing to discard: the worker's
+ * counterexample branch said only "the answer differs from the value of the
+ * expression at the stated inputs", naming no value, on a path reachable
+ * with the value perfectly well known.
+ *
+ * So the rule is asserted rather than left as a habit. Being told you are
+ * wrong and not what is right is the one outcome this engine should never
+ * produce, and it is the kind of gap that is invisible from the outside: the
+ * RULING is correct, so nothing fails, and the only symptom is a learner who
+ * cannot act on it.
+ *
+ * Read from source rather than driven through `rule()`, because the claim is
+ * about every branch including the ones only a live worker reaches, and a
+ * test that could only check the branches it can execute would pass while
+ * the unreachable ones rotted. The `found` floor is what stops it going
+ * vacuous if the literal is ever written differently.
+ */
+const VERIFY_SRC = readFileSync(join(FRONTEND, 'lib', 'concepts', 'verify.ts'), 'utf8')
+const incorrectBranches = [...VERIFY_SRC.matchAll(/ruling: 'incorrect'/g)].map(m => ({
+  line: VERIFY_SRC.slice(0, m.index).split('\n').length,
+  // The verdict object this literal opens, to its closing brace. Generous
+  // rather than exact: a window too long can only make the check WEAKER by
+  // finding someone else's brokeAt, and the floor below catches that.
+  window: VERIFY_SRC.slice(m.index, m.index + 700),
+}))
+t('verify.ts still returns incorrect rulings at all', incorrectBranches.length >= 8,
+  `found ${incorrectBranches.length}`)
+const mute = incorrectBranches.filter(b => !/brokeAt:/.test(b.window))
+t('every incorrect ruling carries a brokeAt explaining it',
+  mute.length === 0, `silent at line(s) ${mute.map(b => b.line).join(', ')}`)
+
+/*
+ * And the counterexample branch names the number, now that it can.
+ *
+ * Matched on its OWN tail rather than on "the value at ${where} is
+ * ${showExact(expected)}", which is what the first draft of this line used
+ * and which passes whether or not this branch exists: the step-2 exact
+ * comparison opens with the same words. Deleting the whole counterexample
+ * detail left that assertion green, so it was checking the branch it was not
+ * named after.
+ */
+t('the counterexample branch names the expected value when it knows it',
+  /and this answer is not equal to it/.test(VERIFY_SRC))
+
+/*
  * The logarithm tasks, ruled with no worker — which is the whole claim
  * `exactLog` was added to support.
  *
