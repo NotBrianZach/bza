@@ -452,36 +452,39 @@ export const REGIONS: Region[] = [
     // That is the loud failure this table has instead of a silent one, and it is
     // the reason the refill is part of the same edit as the promotion.
     //
-    // THE REFILL IS `bayes-theorem`, CHOSEN ON THE READING THE NOTE BELOW NAMED
-    // RATHER THAN ON WHAT WOULD HOLD THE SLOT LONGEST. The three anchors are the
-    // arithmetic of a random quantity — expectation, conditioning, the variable
-    // itself — and the previous note said a replacement has to keep that reading,
-    // which rules out the distributions and the limit theorems however ready they
-    // look. `bayes-theorem` is the conditioning clause one layer up: it is
-    // reversing a conditional, it is the node that sat directly above the one
-    // that left, and for an Order court it is the better reading rather than
-    // merely an acceptable one — mistaking P(evidence given guilt) for
-    // P(guilt given evidence) is the prosecutor's fallacy, which is what the
-    // `because` below is already about when it says these courts price every
-    // sentence.
+    // THE SLOT THEN EMPTIED A SECOND TIME, EXACTLY AS THE NOTE SAID IT WOULD,
+    // AND THE FORTY-EIGHTH PROMOTION PAID IT WITH THE FALLBACK THE NOTE NAMED.
+    // The forty-seventh refilled with `bayes-theorem` and recorded in the same
+    // breath that the slot was immediately unsafe, because that node declared
+    // `conditional-probability` and nothing else and so was ready the moment it
+    // shipped. It was taken one promotion later. The refill is `markov-chains`,
+    // which is what the previous note already identified as the
+    // reading-preserving fallback and the only one left in this area — so this
+    // turnover cost no judgement at all, which is the argument for naming a
+    // fallback at the time rather than leaving the next run to re-derive one.
     //
-    // AND THE SLOT IS IMMEDIATELY UNSAFE AGAIN, WHICH IS NAMED HERE RATHER THAN
-    // LEFT TO BE FOUND. `bayes-theorem` declares `conditional-probability` and
-    // nothing else, so it is READY the moment this ships and the next promotion
-    // out of this area may well empty this slot a second time. Durability was
-    // considered and deliberately not allowed to decide: `markov-chains` would
-    // have held the slot for much longer, since it needs `eigenvalues` and
-    // ontology-matrices.ts declines that by name, but a factor that only adds
-    // work to one side of a choice must not decide anything — the rule
-    // ontology-chance.ts applied to an anchor cost in the other direction. The
-    // run that pays this slot again should know that `markov-chains` is the
-    // reading-preserving fallback and the only one left in this area, because
-    // the three remaining nodes that are not a distribution or a limit theorem
-    // are `markov-chains`, `stochastic-processes` and
-    // `measure-theoretic-probability`, and the last two are the machinery rather
-    // than the arithmetic.
+    // THE READING IS UNCHANGED AND IS WHAT RULED EVERYTHING ELSE OUT. The three
+    // anchors are the arithmetic of a random quantity — expectation, the
+    // variable itself, and conditioning — and `markov-chains` is conditioning
+    // along TIME: the next state depends on this one and on nothing earlier,
+    // which is a conditional probability used as a mechanism rather than as an
+    // answer. The distributions and the limit theorems stay ruled out however
+    // ready they look, and `stochastic-processes` and
+    // `measure-theoretic-probability` are the machinery rather than the
+    // arithmetic, which leaves nothing else in the area that fits.
+    //
+    // AND THIS SLOT IS NOW SAFE FOR THE FIRST TIME IN FOUR PROMOTIONS, which is
+    // worth saying because the previous two notes had to say the opposite.
+    // `markov-chains` needs `eigenvalues`, and ontology-matrices.ts declines
+    // that by name in two places, so the node cannot become ready until that
+    // refusal is overturned. Durability did not CHOOSE it — there was no
+    // competing candidate once the reading was applied — and the distinction
+    // matters, because the forty-seventh deliberately refused to let durability
+    // decide between two live options and this run had only one. The next time
+    // this slot empties there is no fallback left to name, and that is the fact
+    // for whoever gets there.
     authored: ['chance-and-events'],
-    anchors: ['expectation', 'bayes-theorem', 'random-variables'],
+    anchors: ['expectation', 'markov-chains', 'random-variables'],
     because: 'Order courts price every sentence in money owed to the offended party and the state, and the Scales run a seasonal raid whose return nobody can promise. Both are expected value, and the swamp is where somebody is always computing one.',
   },
   {

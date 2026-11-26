@@ -48,7 +48,7 @@
 import type { MapArea } from './atlas'
 
 /**
- * THREE NODES HAVE LEFT THIS AREA WHEN THEY WERE AUTHORED, AND THEY HAD TO.
+ * FOUR NODES HAVE LEFT THIS AREA WHEN THEY WERE AUTHORED, AND THEY HAD TO.
  *
  * `atlasProblems` rejects a map node whose id collides with an authored concept
  * — see atlas.ts, which argues it at length: the point of naming a concept in
@@ -58,25 +58,26 @@ import type { MapArea } from './atlas'
  * therefore a MOVE and not a fill-in, and the node has to be deleted from here on
  * the way out.
  *
- * All three went into the `chance-and-events` subject in ontology-chance.ts, and
+ * All four went into the `chance-and-events` subject in ontology-chance.ts, and
  * in prerequisite order, which no run of promotions out of one area has matched.
  * `sample-spaces` went first, in the forty-fifth, and was the seventeenth
  * authored ontology and the first written concept in this area: sixteen nodes
  * down to fifteen. `counting-probability` went second, in the forty-sixth, as
  * that subject's second concept: fifteen down to fourteen.
  * `conditional-probability` went third, in the forty-seventh: fourteen down to
- * THIRTEEN. tests/atlas.mjs holds the node count in the forty-seventh
- * promotion's group, which is the third group to own it.
+ * thirteen. `bayes-theorem` went fourth, in the forty-eighth: thirteen down to
+ * TWELVE. tests/atlas.mjs holds the node count in the forty-eighth promotion's
+ * group, which is the fourth group to own it.
  *
  * THE FLOOR DECIDED NOTHING AND IS NOT CLOSE, which is worth stating because it
  * decides where most promotions may happen. tests/atlas.mjs asserts that no area
  * sits below five nodes once departures count as covered territory, and this area
- * is at thirteen nodes — EIGHT of headroom on the nodes alone, before any
- * departure is claimed. No `departed` array is declared here and that is still
- * correct rather than an omission: the floor reads absence as zero, the field is
- * for areas drained NEAR the floor, and declaring the three departures would buy
- * three more of headroom that nothing needs. If this area is ever drained past
- * five, that is when to declare it.
+ * is at twelve nodes — SEVEN of headroom on the nodes alone, before any departure
+ * is claimed. No `departed` array is declared here and that is still correct
+ * rather than an omission: the floor reads absence as zero, the field is for
+ * areas drained NEAR the floor, and declaring the four departures would buy four
+ * more of headroom that nothing needs. If this area is ever drained past five,
+ * that is when to declare it.
  *
  * ── THE ROOT WAS THE NODE WORTH TAKING THREE TIMES, AND THEN THE SHAPE RAN OUT ──
  *
@@ -106,9 +107,38 @@ import type { MapArea } from './atlas'
  * the first time it has grown here, and the next run picks among three rather
  * than inheriting one. So the cheap shape was never a property of this area; it
  * was a property of the part of the chain that happened to be a chain, and it
- * ends at the first branch point. The three roots are not equally available
- * either: `bayes-theorem` and `random-variables` are READY, and `markov-chains`
+ * ends at the first branch point. The three roots were not equally available
+ * either: `bayes-theorem` and `random-variables` were READY, and `markov-chains`
  * names `eigenvalues`, which ontology-matrices.ts declines by name.
+ *
+ * ── THE FORTY-EIGHTH PICKED FROM THAT SET, AND THE SET SHRANK ─────────────
+ *
+ * `bayes-theorem` was the first promotion out of this area that was CHOSEN
+ * rather than inherited — three roots, two of them ready, and the order
+ * "stranded edges before dependents" settled it. Everything the three
+ * promotions before it learned about a chain still held: the node's one `need`
+ * had been authored into `chance-and-events` by the run before, so it stranded
+ * NOTHING, which is the second consecutive zero-cost departure and the thing a
+ * chain taken in order keeps buying after it stops producing a single heir.
+ *
+ * WHAT IS NEW IS A SEVENTH ROOT-SET OUTCOME: the set went from three to TWO.
+ * Every earlier departure here turned the set over at constant size or grew it,
+ * and both of those happen because the departing node had in-area dependents to
+ * hand its position to. This one had NONE. `bayes-theorem`'s only dependent
+ * anywhere is `bayesian-inference`, and that node is in `statistics`, not here —
+ * so nothing inside this area was waiting on it and nothing inherited its place.
+ * A root with no in-area dependent simply leaves, and the durable statement is
+ * that the root set grows, holds or shrinks according to how many in-area nodes
+ * named the departing one: three, one and zero have each now happened.
+ *
+ * AND THE YIELD WAS ZERO READY NODES, THE FIRST TIME IN THIS AREA. The same fact
+ * says it: `bayesian-inference` names `maximum-likelihood` as well, which is
+ * unwritten and sits above it in `statistics`, so the one dependent this
+ * promotion fed is not ready and will not be for some time. The forty-fifth made
+ * two, the forty-sixth one, the forty-seventh two, this one none — so a promotion
+ * can be the cheapest available and still feed nothing, and "what does this
+ * unlock" is a question with the answer zero often enough to be asked rather
+ * than assumed.
  *
  * ── WHAT HAPPENED TO THE DEPARTING NODES' EDGES ───────────────────────────
  *
@@ -116,7 +146,11 @@ import type { MapArea } from './atlas'
  * bookkeeping rather than a judgement.
  *
  *  1. THE STRANDED PREREQUISITES ARE THE `links` ENTRIES BELOW, still THREE of
- *     them, because the forty-seventh promotion added none. `sample-spaces`
+ *     them, because neither the forty-seventh nor the forty-eighth promotion
+ *     added one — `bayes-theorem` declared `conditional-probability` and nothing
+ *     else, and that concept had been authored into the subject it was joining
+ *     one promotion earlier, so there was again no far end in a third subject
+ *     and nothing to file. `sample-spaces`
  *     declared `sets` and `fraction-arithmetic`, authored in `sets-and-membership`
  *     and `arithmetic-foundations`, and neither could go in `chance-and-events`
  *     because an authored ontology may only name concepts it contains.
@@ -129,7 +163,7 @@ import type { MapArea } from './atlas'
  *     `CHANCE_AND_EVENTS.edges` and the cost to this file was zero. The durable
  *     form of the rule is that a promotion strands as many edges as the node
  *     declares `needs` outside its new subject, read off the node — two, then
- *     one, then NONE.
+ *     one, then NONE, then none again.
  *
  *     A ZERO-COST PROMOTION IS WHAT A CHAIN WALKED IN ORDER EVENTUALLY BUYS, and
  *     that is the one sense in which the shape kept paying after it stopped
@@ -147,15 +181,23 @@ import type { MapArea } from './atlas'
  *     `links` entry for any of them would be a second copy of an edge that
  *     already exists, and `composeAtlas` does not report duplicates.
  *
- *     THE YIELD STOPPED SHRINKING AND THEN GREW. The forty-fifth made TWO nodes
- *     ready, which no promotion had done; the forty-sixth made one, because
- *     `conditional-probability` declared `counting-probability` and nothing else;
- *     the forty-seventh made TWO again — `bayes-theorem`, which names the new
- *     concept and nothing else, and `random-variables`, which names it and
- *     `function-concept`, already written. `markov-chains` and `causal-inference`
- *     also name it and are NOT ready, because `eigenvalues` and
- *     `anova-and-design` are unwritten. Four inbound edges, two ready nodes: the
- *     count of dependents is an upper bound on the yield and not the yield.
+ *     THE YIELD STOPPED SHRINKING, GREW, AND THEN WENT TO ZERO. The forty-fifth
+ *     made TWO nodes ready, which no promotion had done; the forty-sixth made
+ *     one, because `conditional-probability` declared `counting-probability` and
+ *     nothing else; the forty-seventh made TWO again — `bayes-theorem`, which
+ *     named the new concept and nothing else, and `random-variables`, which
+ *     names it and `function-concept`, already written. `markov-chains` and
+ *     `causal-inference` also name it and are NOT ready, because `eigenvalues`
+ *     and `anova-and-design` are unwritten. Four inbound edges, two ready nodes:
+ *     the count of dependents is an upper bound on the yield and not the yield.
+ *
+ *     THE FORTY-EIGHTH MADE NONE, which is that upper bound reaching its floor
+ *     and is the sharpest case the rule has had. `bayes-theorem` had exactly ONE
+ *     dependent anywhere — `bayesian-inference`, over in `statistics` — and that
+ *     node also names `maximum-likelihood`, which is unwritten. So one inbound
+ *     edge, zero ready nodes. A promotion that strands nothing and unlocks
+ *     nothing is not a contradiction: the two measure different things, and the
+ *     cheapest departure available can sit at the end of a branch.
  *  3. ONE `exercises` CLAIM WAS LOST AND IT IS THE FIRST TIME. `sample-spaces`
  *     declared no `confusedWith` and no `exercises`, which was checked rather
  *     than remembered. `counting-probability` declared
@@ -178,14 +220,37 @@ import type { MapArea } from './atlas'
  *     `bayes-theorem` ~ `conditional-probability` and `hypothesis-testing` ~
  *     `bayes-theorem`, and the FIRST of those is declared by `bayes-theorem`, not
  *     by the node that left — an edge belongs to the node that DECLARES it, so
- *     promoting the far end could not touch it and `expandEdges` emits it still,
- *     now pointing at an authored concept rather than at a node. What that means
- *     for the next run is the thing to carry: `bayes-theorem` is now the readiest
- *     node here AND it owns that edge, so the promotion which takes it is the one
- *     that has to re-declare the interference — in `CHANCE_AND_EVENTS.edges`,
- *     where both ends would then live, with a `rationale`, which tests/atlas.mjs
- *     requires. That is the most consequential confusion in the subject by its
- *     own `because`, and it is the one every suite would stay green without.
+ *     promoting the far end could not touch it and `expandEdges` emitted it
+ *     still, pointing at an authored concept rather than at a node. What that
+ *     meant for the next run was written down here as a warning: `bayes-theorem`
+ *     was then the readiest node here AND it owned that edge, so whoever took it
+ *     had to re-declare the interference, and nothing would have gone red if
+ *     they had not.
+ *
+ *     THE FORTY-EIGHTH TOOK IT AND PAID THE WARNING, which is the first time in
+ *     this build that a `confusedWith` has survived its declaring node being
+ *     promoted. The edge is now an ordinary `interferes_with` entry in
+ *     `CHANCE_AND_EVENTS.edges` with the node's own `because` carried verbatim as
+ *     its `rationale`. It was cheap for one reason only and the reason is worth
+ *     keeping, because it will not usually hold: the far end had ALREADY been
+ *     authored into the subject the node was going to, so both ends landed in
+ *     one ontology. `ontologyProblems` refuses an edge naming a concept its
+ *     ontology does not contain, and an area's `links` hard-codes `prerequisite`
+ *     and carries no kind — so had `conditional-probability` been authored
+ *     anywhere else, this edge would have been INEXPRESSIBLE rather than merely
+ *     unwritten, which is what happened to `counting-probability`'s `exercises`
+ *     claim at the forty-sixth. Taking the two ends of an interference pair in
+ *     order, lower end first, is therefore the only sequence that preserves one,
+ *     and that is a scheduling fact about promotions rather than about this edge.
+ *
+ *     THE SECOND PAIR NEEDED NOTHING AND IS NOW THE ASYMMETRIC CASE.
+ *     `hypothesis-testing` declares its `confusedWith` against `bayes-theorem`,
+ *     that node is in `statistics` and stayed, so `expandEdges` emits the edge
+ *     from a node to an authored concept and the check was run rather than
+ *     assumed. It is also the pair still exposed: promoting `hypothesis-testing`
+ *     would strand it, and `bayes-theorem` is in `chance-and-events` while that
+ *     node would go to a statistics subject, so the cheap repair is NOT available
+ *     there. Whoever promotes it should expect to lose the edge and say so.
  */
 const PROBABILITY: MapArea = {
   id: 'probability',
@@ -203,11 +268,15 @@ const PROBABILITY: MapArea = {
     '`sample-spaces`, `counting-probability` and `conditional-probability` in the ' +
     '`chance-and-events` subject. Those were this area\'s three lowest nodes, taken in order up ' +
     'one chain, so everything left here stands behind written material and the combinatorics ' +
-    'the subject rests on is written too. THE THREE NODES ABOVE THEM ARE WHERE THIS AREA NOW ' +
-    'STARTS, and it starts in three places rather than one: `bayes-theorem` reverses a ' +
-    'conditional when the overlap is not in hand, `random-variables` attaches a NUMBER to each ' +
-    'outcome where everything written is about the outcomes themselves, and `markov-chains` ' +
-    'conditions along time and waits on `eigenvalues`.',
+    'the subject rests on is written too. NOR IS REVERSING A CONDITIONAL, which left next: ' +
+    'getting P(A given B) out of P(B given A) and a base rate, the law of total probability ' +
+    'that builds its denominator, and the odds form in which the update is one multiplication ' +
+    'by a likelihood ratio are all written as `bayes-theorem` in that same subject — so the ' +
+    'four lowest nodes of this area have gone up one chain in order, and the prosecutor\'s ' +
+    'fallacy and the screening-test error are taught rather than listed. THE TWO NODES ABOVE ' +
+    'THEM ARE WHERE THIS AREA NOW STARTS, and it starts in two places rather than one: ' +
+    '`random-variables` attaches a NUMBER to each outcome where everything written is about the ' +
+    'outcomes themselves, and `markov-chains` conditions along time and waits on `eigenvalues`.',
   links: [
     /*
      * THREE STRANDED PREREQUISITES, FROM TWO PROMOTIONS: the first two entries
@@ -243,13 +312,16 @@ const PROBABILITY: MapArea = {
      * tests/atlas.mjs asserts the subject of each far end for exactly that
      * reason, and now also asserts that `sample-spaces` appears on no entry here.
      *
-     * AND THE FORTY-SEVENTH PROMOTION ADDED NOTHING TO THIS LIST, which is the
-     * limiting case of the same mechanism and is asserted as an absence in its
-     * group. `conditional-probability` declared one `need`,
-     * `counting-probability`, and the forty-sixth promotion had already authored
-     * that concept into `chance-and-events` — so there was no far end in a third
-     * subject and nothing to file. A chain taken in order eventually costs an
-     * area nothing: the run before has always already moved the far end.
+     * AND NEITHER THE FORTY-SEVENTH NOR THE FORTY-EIGHTH PROMOTION ADDED
+     * ANYTHING TO THIS LIST, which is the limiting case of the same mechanism
+     * and is asserted as an absence in each of their groups.
+     * `conditional-probability` declared one `need`, `counting-probability`, and
+     * the forty-sixth promotion had already authored that concept into
+     * `chance-and-events`; `bayes-theorem` declared one `need`,
+     * `conditional-probability`, and the forty-seventh had just authored THAT
+     * into the same subject. Each time there was no far end in a third subject
+     * and nothing to file. A chain taken in order eventually costs an area
+     * nothing: the run before has always already moved the far end.
      */
     {
       from: 'sets',
@@ -300,21 +372,6 @@ const PROBABILITY: MapArea = {
     },
   ],
   nodes: [
-    {
-      id: 'bayes-theorem',
-      match: /\bbayes('|’)?[- ]?(theorem|rule|law)\b/i,
-      name: "Bayes' theorem",
-      is: 'Reversing the direction of a conditional — the base rate is the term that gets dropped and the reason the answers feel wrong.',
-      needs: ['conditional-probability'],
-      confusedWith: [{
-        id: 'conditional-probability',
-        because:
-          'P(A|B) and P(B|A) are read as the same quantity, which is the single most consequential ' +
-          'confusion in the subject: it is the prosecutor\'s fallacy and the medical-test error, ' +
-          'and it is produced by the notation looking symmetric.',
-      }],
-      terms: 'bayes theorem prior posterior base rate false positive',
-    },
     {
       id: 'random-variables',
       match: /\brandom variable\b/i,
@@ -467,7 +524,14 @@ const PROBABILITY: MapArea = {
  *     freed to introduce the two most confusable concepts in the subject
  *     together. The two interference pairs in this file are `bayes-theorem` ~
  *     `conditional-probability` and `hypothesis-testing` ~ `bayes-theorem`, and
- *     all four of those nodes are still here.
+ *     BOTH ARE NOW PART-AUTHORED rather than node-to-node: the forty-seventh
+ *     promotion took `conditional-probability` and the forty-eighth took
+ *     `bayes-theorem`, so the first pair is two concepts of
+ *     `chance-and-events` and lives in that ontology's `edges`, while the
+ *     second runs from a node still here to a concept there and `expandEdges`
+ *     emits it unchanged. Only `hypothesis-testing` is still a node of this
+ *     area, and it is the only one of the four whose departure would now
+ *     strand anything.
  */
 const STATISTICS: MapArea = {
   id: 'statistics',

@@ -10780,26 +10780,45 @@ const asRational = ref => {
 
 group('conditional-probability, where the sample space stops being fixed')
 /*
- * THE SUBJECT TOTALS, WHICH THIS PROMOTION MOVED and which the forty-sixth
- * promotion's group above no longer counts — the third group to hold them, for
- * the third consecutive promotion into this subject. Three concepts, nine
- * points, and the array in prerequisite order with the new one appended rather
- * than inserted.
+ * THE SUBJECT TOTALS HAVE MOVED ON TO THE FORTY-EIGHTH PROMOTION'S GROUP, which
+ * is the fourth group to hold them and the fourth consecutive promotion into
+ * this subject. What is left here is the half that was never a count: this
+ * concept sits THIRD and was APPENDED rather than inserted, which is a claim
+ * about the array's order that stays true as concepts are added above it.
+ *
+ * The totals had to go because they were a count, and a count in the group of
+ * the promotion that last moved it goes red on the next correct promotion — the
+ * shape this file dissects elsewhere and which the forty-seventh had to repair
+ * in four earlier groups. Asserted as an INDEX plus the two ids below it rather
+ * than as a length: `concepts[2]` being this concept says it is third, and
+ * naming the two beneath it says the array is still in prerequisite order,
+ * which a bare index would not.
  */
-t('three concepts and nine knowledge points, the figure having moved to this group',
-  CE.concepts.length === 3 && allKnowledgePoints(CE).length === 9
-  && CE.concepts.map(c => c.id).join(',')
-    === 'sample-spaces,counting-probability,conditional-probability',
-  `${CE.concepts.length} concepts, ${allKnowledgePoints(CE).length} points: `
-  + CE.concepts.map(c => c.id).join(','))
+t('it is the THIRD concept and was appended, which is the claim a total was hiding',
+  CE.concepts[2]?.id === 'conditional-probability'
+  && CE.concepts.slice(0, 3).map(c => c.id).join(',')
+    === 'sample-spaces,counting-probability,conditional-probability'
+  && CO_POINTS.length === 3,
+  `${CE.concepts.map(c => c.id).join(',')} | ${CO_POINTS.length} points`)
 t('the concept is teachable AND practisable, and the subject has no internal faults',
   isTeachable(CE, 'conditional-probability') && isPractisable(CE, 'conditional-probability')
   && ontologyProblems(CE).length === 0 && fidelityMismatches(CE).length === 0,
   ontologyProblems(CE).join('; '))
 /*
- * THREE EDGES NOW, AND THE THIRD IS THE WHOLE STRUCTURAL COST OF THIS
- * PROMOTION — asserted together with the absence of a FOURTH, which is the half
- * that was a decision.
+ * ONE EDGE WAS THE WHOLE STRUCTURAL COST OF THIS PROMOTION — asserted together
+ * with the absence of a credit edge, which is the half that was a decision.
+ *
+ * THE EDGE COUNT USED TO BE HERE AND WAS WRONG TO BE. This line asserted
+ * `CE.edges.length === 3` and an exact string of all three, and the
+ * forty-eighth promotion took the array to six by correctly declaring three
+ * edges at once — so a group that had nothing to do with that change went red.
+ * That is the third time in this file a length has done it, after the
+ * forty-sixth's two-edge check and the forty-fifth's root-set size, and the
+ * repair is the same one every time: assert the edge this promotion OWNS by
+ * membership, and assert the containment rule over whatever the array holds.
+ * The "only one prerequisite points at this concept" clause is what a bare
+ * membership test would miss, since a second one appearing would mean somebody
+ * had given this concept a prerequisite it never declared.
  *
  * The node declared one `need` and that concept was already in this subject, so
  * the edge is an ordinary internal one and nothing stranded into
@@ -10815,12 +10834,11 @@ t('the concept is teachable AND practisable, and the subject has no internal fau
  * sayability, because the absence alone would read as an oversight and the file
  * header's argument is that it is not one.
  */
-t('the ontology declares three edges, the new one an ordinary prerequisite',
-  CE.edges.length === 3
-  && CE.edges.map(e => `${e.from}:${e.kind}:${e.to}`).join(' ')
-    === 'sample-spaces:prerequisite:counting-probability '
-    + 'counting-probability:encompasses:sample-spaces '
-    + 'counting-probability:prerequisite:conditional-probability'
+t('its one edge is an ordinary prerequisite, asserted by membership and not by a length',
+  CE.edges.some(e => e.from === 'counting-probability'
+    && e.to === 'conditional-probability' && e.kind === 'prerequisite' && !!e.promotedBy)
+  && CE.edges.filter(e => e.to === 'conditional-probability'
+    && e.kind === 'prerequisite').length === 1
   && CE.edges.every(e => CE.concepts.some(c => c.id === e.from)
     && CE.concepts.some(c => c.id === e.to))
   && CE.edges.every(e => !!e.promotedBy),
@@ -10829,7 +10847,11 @@ t('and the credit edge it COULD have declared is absent by decision, not by cont
   !CE.edges.some(e => e.kind === 'encompasses' && e.from === 'conditional-probability')
   && CE.concepts.some(c => c.id === 'counting-probability')
   && CE.concepts.some(c => c.id === 'conditional-probability')
-  && CE.edges.filter(e => e.kind === 'encompasses').length === 1,
+  // Not vacuous: this subject DOES declare credit edges, and every one of them
+  // carries a rationale. A bare "none from this id" would also be satisfied by
+  // an ontology that had given up on `encompasses` altogether.
+  && CE.edges.some(e => e.kind === 'encompasses')
+  && CE.edges.filter(e => e.kind === 'encompasses').every(e => !!e.rationale),
   CE.edges.filter(e => e.kind === 'encompasses')
     .map(e => `${e.from}=>${e.to}`).join(' '))
 /*
@@ -11266,6 +11288,691 @@ t('and the disjoint pair really is disjoint, its two counts being cases of one p
       && 22 * 44 === 968
   })(),
   `${CO_TASKS.find(x => x.given === '(a/n)*(b/n)' && x.at.a === '10')?.reference}`)
+
+// ---------------------------------------------------------------------------
+
+/**
+ * The forty-eighth promotion: reversing a conditional, into the subject that has
+ * now taken FOUR consecutive nodes off one chain.
+ *
+ * `bayes-theorem` was a node of `probability` and is the FOURTH concept of
+ * `chance-and-events`. tests/atlas.mjs owns the structural half — the node being
+ * gone, the `links` list not growing for a second promotion running, the root
+ * set SHRINKING, the anchor slot that emptied a second time, and the
+ * `interferes_with` edge this promotion had to rescue. What is asserted here is
+ * the MATERIAL, and six things about it that no count would catch.
+ *
+ * FIRST, THAT THE RUNNING EXAMPLE IS GONE AND ITS ABSENCE IS THE BOUNDARY.
+ * Twenty-seven tasks across the three concepts below are all twelve club
+ * members and 220 committees, so that each new idea arrives on a space the
+ * learner already holds. Not one of these nine mentions it. That is not a
+ * change of taste: every committee question has a countable overlap, and a
+ * reversal is only NEEDED when the overlap cannot be counted — so a Bayes task
+ * set on the club would be a division the learner could do by counting
+ * instead, which teaches that the theorem is optional. Asserted in both halves,
+ * since the absence alone would read as an oversight.
+ *
+ * SECOND, THAT THE FIGURE WHICH SEPARATED THE TWO CONCEPTS BELOW HAS REACHED ITS
+ * FLOOR. `220 x reference` was whole nine times of nine for `counting-
+ * probability` and four of nine for `conditional-probability`, and that split
+ * carried the claim "conditioning replaces the space". Here it is whole for
+ * exactly ONE of the nine, and that one is the integer 18 — whole because it is
+ * an integer, not because it is a count of committees. So the measure stops
+ * discriminating, which is asserted rather than quietly dropped: a reader who
+ * recomputes it should find the reason in a test and not have to guess.
+ *
+ * THIRD, THAT ONE REFERENCE LEAVES [0, 1] AND EXACTLY ONE. Every reference in
+ * these three subjects has been a probability. 18 is an odds ratio, and odds
+ * ratios are not probabilities. The count is pinned at one so the exception
+ * cannot spread to a task that has no business outside the interval, which is
+ * the same discipline the concept below applied to its three bare counts.
+ *
+ * FOURTH, THAT THREE DIFFERENT SHAPES AGREE ON 2/13, which is the most any
+ * concept in these subjects has agreed and is the inverse of the concept below.
+ * There three same-shape pairs DISAGREED and exactly one cross-shape pair
+ * agreed. Here the definition with its denominator supplied, the definition with
+ * its denominator built, and the odds form all give 2/13 — because they are
+ * three forms of ONE statement, which is what distinguishes a theorem from a
+ * method. Nine distinct references would have been this concept's fault.
+ *
+ * FIFTH, THAT THE BASE RATE IS SHOWN DECIDING THE ANSWER BY ITSELF. One
+ * expression is asked at two substitutions that differ only in `a` and `n`, with
+ * both test figures byte-identical, and the answers are 2/13 and 18/19 — the
+ * widest SAME-EXPRESSION pair in the subject, which is a superlative with its
+ * comparison class named because it is false without one: unrelated pairs of
+ * references sit further apart than this. The assertion recomputes that the test
+ * figures really are unchanged, because the claim "a test has no accuracy on its
+ * own" is false if anything else moved, and it recomputes the ranking against
+ * every other repeated expression rather than asserting the word "widest".
+ *
+ * SIXTH, THAT THE FIDELITY IS `checked` WITH THE PATTERN CARRIED VERBATIM — and
+ * that this is the FIRST of this file's four patterns with neither a dead
+ * alternative nor an overclaim. The sweep that found the other two was run
+ * again rather than assumed, and what this one misses is asserted by name,
+ * because a recall gap is invisible by construction.
+ */
+const BA = conceptById(CE, 'bayes-theorem')
+const BA_POINTS = BA.knowledgePoints
+const BA_TASKS = BA_POINTS.flatMap(p => tasksForPoint(p.id))
+const BA_SHOWN = BA_POINTS.map(p =>
+  `${p.workedExample.problem} ${p.workedExample.subgoals.map(s => s.detail).join(' ')} `
+  + `${p.workedExample.answer}`).join(' ')
+
+group('bayes-theorem, where the overlap stops being countable')
+/*
+ * THE SUBJECT TOTALS, WHICH THIS PROMOTION MOVED and which the forty-seventh
+ * promotion's group above no longer counts — the fourth group to hold them, for
+ * the fourth consecutive promotion into this subject. Four concepts, twelve
+ * points, and the array in prerequisite order with the new one appended.
+ */
+t('four concepts and twelve knowledge points, the figure having moved to this group',
+  CE.concepts.length === 4 && allKnowledgePoints(CE).length === 12
+  && CE.concepts.map(c => c.id).join(',')
+    === 'sample-spaces,counting-probability,conditional-probability,bayes-theorem',
+  `${CE.concepts.length} concepts, ${allKnowledgePoints(CE).length} points: `
+  + CE.concepts.map(c => c.id).join(','))
+t('the concept is teachable AND practisable, and the subject has no internal faults',
+  isTeachable(CE, 'bayes-theorem') && isPractisable(CE, 'bayes-theorem')
+  && ontologyProblems(CE).length === 0 && fidelityMismatches(CE).length === 0,
+  ontologyProblems(CE).join('; '))
+/*
+ * SIX EDGES NOW, AND THREE OF THEM ARE THIS PROMOTION'S — the most any promotion
+ * into this file has declared, and the reason `bayes-theorem` was the candidate
+ * to take rather than merely the cheapest.
+ *
+ * THE PREREQUISITE IS THE WHOLE OF WHAT IT COST. The node declared one `need`
+ * and that concept was already here, so nothing stranded into
+ * `PROBABILITY.links` for a second promotion running; tests/atlas.mjs asserts
+ * that absence on the area.
+ *
+ * THE CREDIT EDGE IS DECLARED, WHICH IS THE OPPOSITE OF WHAT THE PROMOTION
+ * BEFORE DID, and the pair of decisions is why both are asserted with their
+ * reasons rather than as bare presences. The forty-seventh could have said
+ * `conditional-probability => counting-probability` and refused, because that
+ * concept supplies every count it uses and never chooses a counting convention.
+ * This one says `bayes-theorem => conditional-probability` because every task
+ * here BUILDS an overlap as a rate times a base rate — the lower concept's
+ * second point, used — and then divides by the probability of the condition,
+ * which is its first point in the form that point insists on writing. Two of
+ * three points exercised, which is the standard
+ * `counting-probability => sample-spaces` was held to.
+ *
+ * AND THE INTERFERENCE EDGE IS THE ONE THIS PROMOTION HAD TO RESCUE. The node
+ * declared `confusedWith: conditional-probability`, `expandEdges` was turning
+ * that into an `interferes_with`, and deleting the node deleted it with nothing
+ * going red — interference constrains SELECTION rather than gating. It is
+ * re-declared here with the node's own `because` as its `rationale`. Asserted
+ * together with the containment that made the rescue possible: both ends are
+ * concepts of THIS ontology, and had the far end been authored anywhere else the
+ * edge would have been inexpressible rather than merely unwritten, since `links`
+ * hard-codes `prerequisite` and carries no kind.
+ */
+t('it declares three edges, one of each kind the build has, and all six ends are held here',
+  CE.edges.length === 6
+  && CE.edges.filter(e => [e.from, e.to].includes('bayes-theorem'))
+    .map(e => `${e.from}:${e.kind}:${e.to}`).join(' ')
+    === 'conditional-probability:prerequisite:bayes-theorem '
+    + 'bayes-theorem:encompasses:conditional-probability '
+    + 'bayes-theorem:interferes_with:conditional-probability'
+  && CE.edges.every(e => CE.concepts.some(c => c.id === e.from)
+    && CE.concepts.some(c => c.id === e.to))
+  && CE.edges.every(e => !!e.promotedBy),
+  CE.edges.map(e => `${e.from}:${e.kind}:${e.to}`).join(' '))
+t('the credit edge is DECLARED where the promotion before refused one, and both are reasoned',
+  (() => {
+    const mine = CE.edges.find(e => e.kind === 'encompasses' && e.from === 'bayes-theorem')
+    if (!mine || !mine.rationale) return false
+    return mine.to === 'conditional-probability'
+      // The refusal one promotion down is still a refusal, so the contrast is
+      // asserted rather than described — and both ends of the edge it declined
+      // are still here, which is what made it a decision.
+      && !CE.edges.some(e => e.kind === 'encompasses' && e.from === 'conditional-probability')
+      && CE.concepts.some(c => c.id === 'counting-probability')
+      && CE.edges.filter(e => e.kind === 'encompasses').every(e => !!e.rationale)
+      // It credits two of the lower concept's three points and the rationale
+      // names the one it does not. Checked from the other side too: no task in
+      // this concept ever multiplies two unconditional probabilities to compare
+      // with an overlap, which is what exercising independence would look like.
+      && /independence/i.test(mine.rationale)
+      && BA_TASKS.every(x => !/independen/i.test(x.prompt))
+  })(),
+  CE.edges.filter(e => e.kind === 'encompasses')
+    .map(e => `${e.from}=>${e.to}`).join(' '))
+t('and the interference edge is rescued, with a rationale and both ends in this ontology',
+  (() => {
+    const edge = CE.edges.find(e => e.kind === 'interferes_with')
+    if (!edge) return false
+    return edge.from === 'bayes-theorem' && edge.to === 'conditional-probability'
+      && !!edge.rationale
+      && /prosecutor/i.test(edge.rationale)
+      && CE.concepts.some(c => c.id === edge.from)
+      && CE.concepts.some(c => c.id === edge.to)
+      && CE.edges.filter(e => e.kind === 'interferes_with').length === 1
+      // The two concepts it separates are also prerequisite-ordered, which is
+      // not a contradiction: meet conditioning, master it, and only then meet
+      // the thing most easily mistaken for it.
+      && CE.edges.some(e => e.kind === 'prerequisite'
+        && e.from === 'conditional-probability' && e.to === 'bayes-theorem')
+      && interferesWith(CE, 'bayes-theorem').includes('conditional-probability')
+      && interferesWith(CE, 'conditional-probability').includes('bayes-theorem')
+  })(),
+  CE.edges.filter(e => e.kind === 'interferes_with')
+    .map(e => `${e.from}~${e.to}`).join(' ') || 'NONE — the edge was lost')
+/*
+ * THE PATTERN IS CARRIED VERBATIM OFF THE MAP NODE, which every promotion since
+ * the fourth has done, and the node already declared `checked` — `expandNode`
+ * sets fidelity from the presence of a `match` — so recognition did not move
+ * with the material. Asserted against the literal, the node being GONE and
+ * there being nothing left to compare with.
+ */
+t('its pattern is the map node\'s unchanged, so recognition did not move with the material',
+  String(BA.scope.match) === String(/\bbayes('|’)?[- ]?(theorem|rule|law)\b/i)
+  && BA.fidelity === 'checked'
+  && BA.caveat === undefined
+  && BA.scope.id === BA.id
+  && BA.scope.label === BA.name
+  && BA.scope.hint === 'bayes theorem prior posterior base rate false positive',
+  `${BA.fidelity}, ${String(BA.scope.match)}`)
+/*
+ * THE FIRST OF THIS FILE'S FOUR PATTERNS WITH NO DEAD ALTERNATIVE, and the sweep
+ * was run rather than the absence assumed.
+ *
+ * `sample-spaces` has `event \(probability theory\)` and `conditional-
+ * probability` has `independence \(probability\)`, and both are unreachable for
+ * the same reason: the alternation is wrapped in `\b(...)\b` and an alternative
+ * ending in a literal `)` cannot be followed by a word boundary. Finding two in
+ * three patterns up one chain is what turned it from a mistake into a shape
+ * worth sweeping for, so this pattern is swept: no alternative ends in a
+ * non-word character, and every branch is shown reaching a real title.
+ *
+ * Asserted as the conjunction of the structural check and the three live
+ * branches, because the structural clause alone would be satisfied by a pattern
+ * with one branch and the branch clauses alone would not say that a fourth
+ * branch could not be dead.
+ */
+t('no alternative in this pattern is dead, which is swept rather than assumed',
+  (() => {
+    const src = BA.scope.match.source
+    // The dead-alternative shape is specific: a group whose alternatives end in
+    // punctuation, sitting immediately before the trailing `\b`. So the sweep
+    // reads the group the `\b` actually follows and requires every one of its
+    // alternatives to end in a word character — which is the condition the two
+    // dead ones in this file fail and the only condition that matters.
+    const tail = src.match(/\(([^()]*)\)\\b$/)
+    if (!tail) return false
+    const branches = tail[1].split('|')
+    return branches.join(',') === 'theorem,rule,law'
+      && branches.every(b => /\w$/.test(b))
+      && branches.every(b => BA.scope.match.test(`Bayes' ${b}`))
+      // And the shape itself is absent: no escaped close-bracket ends a group
+      // before the boundary, which is what `event \(probability theory\)` and
+      // `independence \(probability\)` both do.
+      && !/\\\)\)\\b/.test(src)
+  })(),
+  ['Bayes\' theorem', 'Bayes\' rule', 'Bayes\' law']
+    .map(s => `${s}:${BA.scope.match.test(s)}`).join(' '))
+t('and it reaches the curly apostrophe an encyclopaedia actually uses',
+  BA.scope.match.test('Bayes’ theorem')
+  && BA.scope.match.test('Bayes\' theorem')
+  && BA.scope.match.test('Bayes theorem')
+  && BA.scope.match.source.includes('’'),
+  ['Bayes’ theorem', 'Bayes\' theorem', 'Bayes theorem']
+    .map(s => `${s}:${BA.scope.match.test(s)}`).join(' '))
+/*
+ * AND THE SHORTFALL IS RECALL ONLY, which is the direction `sample-spaces` calls
+ * the one to prefer and which the concept below could not manage — its pattern
+ * overclaims "Conditional probability distribution". This one claims nothing it
+ * does not teach: the four near-miss titles that would be the obvious overclaims
+ * are checked as misses, including two that are machine learning rather than
+ * probability.
+ *
+ * WHAT IT MISSES IS ASSERTED BY NAME, since a recall gap is invisible by
+ * construction — nothing goes red when a page finds no concept. "Bayes factor"
+ * is the sharpest, because it is the likelihood ratio and so is this concept's
+ * THIRD knowledge point by another name. The negative clauses are also what
+ * would catch the obvious wrong widening: `/\bbayes/i` alone would claim the
+ * naive Bayes classifier and Bayesian networks, which are a different subject.
+ */
+t('it claims nothing it does not teach, the four obvious overclaims all missing',
+  !BA.scope.match.test('Bayesian inference')
+  && !BA.scope.match.test('Bayesian network')
+  && !BA.scope.match.test('Naive Bayes classifier')
+  && !BA.scope.match.test('Bayes estimator'),
+  ['Bayesian inference', 'Bayesian network', 'Naive Bayes classifier', 'Bayes estimator']
+    .filter(s => BA.scope.match.test(s)).join(', ') || 'none claimed')
+t('and it misses four titles that are partly this material, the likelihood ratio among them',
+  !BA.scope.match.test('Bayes factor')
+  && !BA.scope.match.test('Prior probability')
+  && !BA.scope.match.test('Base rate fallacy')
+  && !BA.scope.match.test('Law of total probability')
+  // The first of those is this concept's third knowledge point under another
+  // name, and the last is its second.
+  && /likelihood ratio/i.test(BA_POINTS[2].statement)
+  && /law of total probability/i.test(BA_POINTS[1].statement),
+  ['Bayes factor', 'Prior probability', 'Base rate fallacy', 'Law of total probability']
+    .filter(s => BA.scope.match.test(s)).join(', ') || 'none reached')
+/*
+ * NINE TASKS, THREE ON EACH POINT, and the SHAPE asserted rather than the total.
+ */
+t('nine tasks, three on each of the three points',
+  BA_TASKS.length === 9
+  && BA_POINTS.map(p => tasksForPoint(p.id).length).join(',') === '3,3,3',
+  BA_POINTS.map(p => `${p.position}:${tasksForPoint(p.id).length}`).join(' '))
+t('all nine are evaluate, so nothing here needs the worker even for equivalence',
+  BA_TASKS.every(x => x.kind === 'evaluate')
+  && BA_TASKS.every(x => x.form === undefined)
+  && BA_TASKS.every(x => x.domainConditions === undefined)
+  && BA_TASKS.every(x => x.acceptsUnevaluated === undefined),
+  BA_TASKS.map(x => `${x.kind}${x.form ? `:${x.form}` : ''}`).join(' '))
+t('no given calls a function, so none of the nine can fall through to a worker',
+  BA_TASKS.every(x => !/[a-z]+\s*\(/i.test(x.given)),
+  BA_TASKS.filter(x => /[a-z]+\s*\(/i.test(x.given)).map(x => x.given).join(' '))
+t('every reference is exactly reproducible from the given — no worker consulted',
+  BA_TASKS.every(x => {
+    const at = {}
+    for (const [name, raw] of Object.entries(x.at)) at[name] = parseExpression(raw, [])
+    const truth = exactValue(substitute(parseExpression(x.given, x.variables.map(v => v.name)), at))
+    const claimed = exactValue(parseExpression(x.reference, x.variables.map(v => v.name)))
+    return truth !== null && claimed !== null && showExact(truth) === showExact(claimed)
+  }),
+  BA_TASKS.map(x => x.id).join(', '))
+const baRulings = await Promise.all(BA_TASKS.map(x => ruleEvaluate(x, x.reference, NO_WORKER)))
+t('a correct answer is ruled correct with no worker configured',
+  baRulings.every(r => r.status === 'ruled' && r.verdict.ruling === 'correct'),
+  baRulings.map((r, i) => `${BA_TASKS[i].id}:${r.verdict?.ruling ?? r.status}`).join(' '))
+/*
+ * THE SUBTRACTION IS THE FIRST ONE INSIDE A DENOMINATOR IN THESE SUBJECTS, so
+ * the check that it cannot vanish is made per task rather than argued once.
+ *
+ * `(n-a)` is the complement of the base rate, written in terms of it rather than
+ * handed over as its own pair of letters — which is what stops a substitution
+ * describing two groups that fail to make up the population. It appears inside a
+ * denominator in two expressions, and `a < n` at every substitution used, so
+ * nothing is ever divided by zero. A base rate of exactly 1 WOULD make the
+ * second term of the sum vanish, legitimately and with the answer 1, which is
+ * why the check is `a < n` on the tasks rather than a domain condition on the
+ * expression.
+ */
+t('no substitution can make a denominator vanish, which is checked per task',
+  BA_TASKS.filter(x => x.given.includes('n-a')).every(x =>
+    Number(x.at.a) < Number(x.at.n) && Number(x.at.a) > 0)
+  && BA_TASKS.filter(x => x.given.includes('n-a')).length === 5
+  && BA_TASKS.every(x => x.domainConditions === undefined),
+  BA_TASKS.filter(x => x.given.includes('n-a'))
+    .map(x => `a=${x.at.a}<n=${x.at.n}`).join(' '))
+/*
+ * THE CLUB IS GONE AND THAT IS THE BOUNDARY, asserted in both halves because the
+ * absence alone would read as an oversight.
+ *
+ * The three concepts below set every one of their twenty-seven tasks on twelve
+ * members and 220 committees. Not one of these nine mentions either number, and
+ * the reason is that a committee question always has a countable overlap while a
+ * reversal is only needed when the overlap cannot be counted. The positive half
+ * names what replaced it: two rates and a base rate, which is the data a
+ * screening test actually supplies.
+ */
+t('not one of the nine is set on the club, where all eighteen below it are',
+  (() => {
+    const mine = BA_TASKS.map(x => `${x.prompt} ${x.given}`).join(' ')
+    const club = CE.concepts.slice(1, 3)
+      .flatMap(c => c.knowledgePoints).flatMap(p => tasksForPoint(p.id))
+    const coin = CE.concepts[0].knowledgePoints.flatMap(p => tasksForPoint(p.id))
+    return club.length === 18
+      && club.every(x => /\b(member|committee)/i.test(x.prompt))
+      // A THIRD setting, not a reversion to the first: the subject's own first
+      // concept is a coin tossed three times, and these nine are neither.
+      && coin.filter(x => /\b(coin|heads|tails|toss)/i.test(x.prompt)).length === 8
+      && !/\b(member|committee)/i.test(mine)
+      && !/\b(coin|heads|tails|toss)/i.test(mine)
+      // What replaced them: two rates and a base rate, which is the data a
+      // screening test actually supplies.
+      && /1 in 100|1 person in 100/.test(mine)
+      && /9 in 10/.test(mine)
+      && /1 in 20/.test(mine)
+  })(),
+  `${BA_TASKS.filter(x => /member|committee|coin/i.test(x.prompt)).length} of nine `
+  + 'mention the club or the coin')
+/*
+ * THE `220 x reference` MEASURE HAS REACHED ITS FLOOR, which is said here rather
+ * than quietly dropped.
+ *
+ * Nine of nine for `counting-probability`, four of nine for
+ * `conditional-probability`, and ONE of nine here — and that one is the integer
+ * 18, whole because it is an integer rather than because it is a count of
+ * committees over the 220 there are. Both earlier figures are recomputed in the
+ * same line so the series cannot drift, and the surviving one is identified by
+ * its denominator being 1 so that nobody reads it as a committee probability.
+ */
+t('the committee measure is whole for one of nine, and that one is an integer not a count',
+  (() => {
+    const whole = tasks => tasks.filter(x => {
+      const r = asRational(x.reference)
+      return (220 * r.n) % r.d === 0
+    })
+    const mine = whole(BA_TASKS)
+    const below = CE.concepts.slice(0, 3)
+      .flatMap(c => c.knowledgePoints).flatMap(p => tasksForPoint(p.id))
+    return mine.length === 1
+      && asRational(mine[0].reference).d === 1
+      && whole(CO_TASKS).length === 4
+      && whole(CP_TASKS).length === 9
+      && below.length === 27
+  })(),
+  BA_TASKS.map(x => {
+    const r = asRational(x.reference)
+    return `${x.reference}:${(220 * r.n) % r.d === 0 ? 'whole' : 'not'}`
+  }).join(' '))
+/*
+ * EXACTLY ONE REFERENCE LEAVES [0, 1], AND IT IS THE ODDS RATIO.
+ *
+ * Every reference in these three subjects is a probability or a count, and the
+ * concept below asserted that all nine of its own lie in the interval. 18 is an
+ * odds ratio and does not: odds are not probabilities, which is the fact the
+ * third point is partly about. The count is pinned at ONE so the exception
+ * cannot spread to a task with no business outside the interval, and the other
+ * eight are asserted inside it in the same line. Zero bare counts, which is the
+ * one property this concept shares with the concept below.
+ */
+t('eight of nine are probabilities and the ninth is an odds ratio, which is not one',
+  (() => {
+    const rs = BA_TASKS.map(x => asRational(x.reference))
+    const outside = rs.filter(r => r.n > r.d)
+    const counts = rs.filter(r => r.d === 1 && r.n <= r.d)
+    return rs.length === 9
+      && outside.length === 1
+      && outside[0].n === 18 && outside[0].d === 1
+      && rs.filter(r => r.n >= 0 && r.n <= r.d).length === 8
+      && counts.length === 0
+      && BA_TASKS.find(x => x.reference === '18').given === '(s/t)/(f/g)'
+  })(),
+  BA_TASKS.map(x => x.reference).join(' '))
+/*
+ * THREE DIFFERENT SHAPES AGREE ON 2/13, which is the most any concept in these
+ * subjects has agreed and is the inverse of the concept below's device.
+ *
+ * There three same-shape pairs DISAGREED on purpose, and exactly one cross-shape
+ * pair agreed, asserted as the single exception. Here three expressions of
+ * entirely different shapes — the definition with its denominator supplied, the
+ * definition with its denominator built, and prior odds times a likelihood
+ * ratio — all give 2/13. That is not a repetition: it is the claim that a
+ * theorem has forms where a method has steps, and nine distinct references would
+ * have been this concept's fault more sharply than it was that one's.
+ *
+ * Asserted as the conjunction of the shared reference and the three DISTINCT
+ * givens, since either alone would be satisfied by the wrong thing: three equal
+ * references could be one task written out three times, and three distinct
+ * givens could be any three tasks.
+ */
+t('three different shapes give 2/13, which is a theorem having forms rather than steps',
+  (() => {
+    const agreeing = BA_TASKS.filter(x => x.reference === '2/13')
+    return agreeing.length === 3
+      && new Set(agreeing.map(x => x.given)).size === 3
+      && new Set(agreeing.map(x => x.knowledgePointId)).size === 3
+      // One per knowledge point, so the agreement spans the concept rather than
+      // sitting inside one point as a restatement.
+      && agreeing.some(x => x.given === '((s/t)*(a/n))/(p/q)')
+      && agreeing.some(x =>
+        x.given === '((s/t)*(a/n))/((s/t)*(a/n) + (f/g)*((n-a)/n))')
+      && agreeing.some(x => x.given === '(w*a)/(w*a + (n-a))')
+      && new Set(BA_TASKS.map(x => x.reference)).size === 7
+  })(),
+  BA_TASKS.map(x => `${x.given}=${x.reference}`).join(' | '))
+/*
+ * THE BASE RATE DECIDES THE ANSWER BY ITSELF, asserted by recomputing that
+ * nothing else moved.
+ *
+ * One expression at two substitutions: 2/13 at a base rate of 1/100 and 18/19 at
+ * 1/2, the widest pair in these three subjects. The claim "a test has no
+ * accuracy on its own" is FALSE if any test figure differs between the two, so
+ * the four test letters are compared for equality rather than the two `at` maps
+ * being eyeballed — which is the correction the concept below's asymmetry
+ * assertion had to make for the same reason.
+ */
+t('one expression, two base rates, and every test figure byte-identical between them',
+  (() => {
+    const pair = BA_TASKS.filter(x =>
+      x.given === '((s/t)*(a/n))/((s/t)*(a/n) + (f/g)*((n-a)/n))')
+    if (pair.length !== 2) return false
+    const [low, high] = pair[0].at.n === '100' ? pair : [pair[1], pair[0]]
+    const l = asRational(low.reference); const h = asRational(high.reference)
+    return ['s', 't', 'f', 'g'].every(k => low.at[k] === high.at[k])
+      && low.at.n !== high.at.n
+      && l.n * 13 === l.d * 2 && h.n * 19 === h.d * 18
+      && l.n / l.d < 0.2 && h.n / h.d > 0.9
+      && low.knowledgePointId === high.knowledgePointId
+  })(),
+  BA_TASKS.filter(x => x.given.startsWith('((s/t)*(a/n))/((s/t)'))
+    .map(x => `a/n=${x.at.a}/${x.at.n}:${x.reference}`).join(' | '))
+/*
+ * AND IT IS THE WIDEST SAME-EXPRESSION PAIR IN THE SUBJECT, with the comparison
+ * class computed rather than claimed.
+ *
+ * The superlative is false without its class — unrelated references in this
+ * subject sit as much as 0.99 apart — so what is asserted is the ranking over
+ * every expression asked at more than one substitution across all four
+ * concepts. There are six such expressions; this one spans about 0.79 and the
+ * runner-up, `k/m` at 6/55 against 3/5, spans about 0.49. Recomputed rather
+ * than restated, so that a fifth concept adding a wider pair goes red here and
+ * sends somebody to the sentence in tasks.ts that says the same thing.
+ */
+t('it is the widest same-expression pair in the subject, the ranking being recomputed',
+  (() => {
+    const byGiven = {}
+    for (const c of CE.concepts) {
+      for (const p of c.knowledgePoints) {
+        for (const x of tasksForPoint(p.id)) {
+          (byGiven[x.given] = byGiven[x.given] ?? []).push(x.reference)
+        }
+      }
+    }
+    const spanOf = refs => {
+      const vs = refs.map(r => {
+        const q = asRational(r); return q.n / q.d
+      })
+      return Math.max(...vs) - Math.min(...vs)
+    }
+    const repeated = Object.entries(byGiven).filter(([, refs]) => refs.length > 1)
+    const mine = repeated.find(([g]) =>
+      g === '((s/t)*(a/n))/((s/t)*(a/n) + (f/g)*((n-a)/n))')
+    if (!mine) return false
+    const others = repeated.filter(([g]) => g !== mine[0])
+    return repeated.length === 6
+      && others.length === 5
+      && others.every(([, refs]) => spanOf(refs) < spanOf(mine[1]))
+      && spanOf(mine[1]) > 0.79 && spanOf(mine[1]) < 0.8
+      // The runner-up is the asymmetry of conditioning, one concept down.
+      && others.sort((a, b) => spanOf(b[1]) - spanOf(a[1]))[0][0] === 'k/m'
+  })(),
+  Object.entries((() => {
+    const b = {}
+    for (const c of CE.concepts) {
+      for (const p of c.knowledgePoints) {
+        for (const x of tasksForPoint(p.id)) (b[x.given] = b[x.given] ?? []).push(x.reference)
+      }
+    }
+    return b
+  })()).filter(([, r]) => r.length > 1).map(([g, r]) => `${g}:${r.join('/')}`).join(' | '))
+/*
+ * THE TWO OVERLAPS ARE ASKED SEPARATELY AND THE SMALLER RATE WINS, which is this
+ * concept's answer and is arithmetic, so it is recomputed.
+ *
+ * 9/1000 is 18/2000 and the other overlap is 99/2000, so the false positives
+ * outnumber the true ones by more than five to one even though 1 in 20 is a far
+ * smaller rate than 9 in 10 — because 99 times as many people sit behind the
+ * smaller rate. Asked as two tasks rather than folded into the division,
+ * because a learner who only meets 9/1000 inside a fraction never makes the
+ * comparison. The two also SUM to the denominator the second point builds, which
+ * is recomputed here so the three tasks are tied together by arithmetic rather
+ * than by their prose.
+ */
+t('the two overlaps are both asked, the smaller rate wins, and they sum to the denominator',
+  (() => {
+    const want = BA_TASKS.find(x => x.given === '(s/t)*(a/n)')
+    const other = BA_TASKS.find(x => x.given === '(f/g)*((n-a)/n)')
+    const total = BA_TASKS.find(x => x.given === '(s/t)*(a/n) + (f/g)*((n-a)/n)')
+    if (!want || !other || !total) return false
+    const w = asRational(want.reference); const o = asRational(other.reference)
+    const s = asRational(total.reference)
+    // 99/2000 > 18/2000, by more than a factor of five.
+    return o.n * w.d > 5 * (w.n * o.d)
+      // and the two really are the terms of the sum: 9/1000 + 99/2000 = 117/2000
+      && (w.n * o.d + o.n * w.d) * s.d === s.n * (w.d * o.d)
+      // the rate that wins is the SMALLER one, which is the point
+      && Number(other.at.f) * Number(want.at.t) < Number(want.at.s) * Number(other.at.g)
+      && want.knowledgePointId === other.knowledgePointId
+  })(),
+  `${BA_TASKS.find(x => x.given === '(s/t)*(a/n)')?.reference} vs `
+  + `${BA_TASKS.find(x => x.given === '(f/g)*((n-a)/n)')?.reference} sum `
+  + `${BA_TASKS.find(x => x.given.startsWith('(s/t)*(a/n) +'))?.reference}`)
+/*
+ * THE NATURAL-FREQUENCY CHECK IN THE MATERIAL IS RIGHT, and it is checked
+ * against what the TEXT says rather than against the tasks — the discipline the
+ * arithmetic subject's group introduced.
+ *
+ * 10,000 people: 100 have the condition and 90 of those test positive; 9,900 do
+ * not and 495 test positive; so 90 of 585 positives have it, and 90/585 = 2/13.
+ * That is the first point's answer by a route with no conditional probability in
+ * it, it is the form in which the result stops being surprising, and every one
+ * of those five counts is recomputed here because a worked example that gets its
+ * own check wrong is worse than one with no check.
+ */
+t('the population check in the text is arithmetic and the arithmetic is right',
+  (() => {
+    const n = 10000; const have = n / 100; const not = n - have
+    const truePos = have * 9 / 10; const falsePos = not / 20
+    const positives = truePos + falsePos
+    return have === 100 && not === 9900 && truePos === 90 && falsePos === 495
+      && positives === 585 && truePos * 13 === positives * 2
+      && [/10,000/, /\b100\b/, /9,900/, /\b90\b/, /\b495\b/, /\b585\b/, /90\/585/]
+        .every(re => re.test(BA_SHOWN))
+  })(),
+  `90/585 = ${(90 / 585).toFixed(4)}, 2/13 = ${(2 / 13).toFixed(4)}; `
+  + `all counts present: ${[/10,000/, /9,900/, /\b495\b/, /\b585\b/, /90\/585/]
+    .every(re => re.test(BA_SHOWN))}`)
+/*
+ * THE PARTITION CHECK IN THE SECOND POINT IS RIGHT, which is the one check in
+ * this concept that would catch a badly chosen split.
+ *
+ * A sum over cases that do not partition looks exactly like one over cases that
+ * do — both are sums of plausible products — so the material runs the same split
+ * on the NEGATIVE result and requires 1883/2000, which is 1 − 117/2000. Both
+ * terms are recomputed: (1/10)(1/100) = 2/2000 and (19/20)(99/100) = 1881/2000.
+ */
+t('the negative result splits the same way and comes to the complement, recomputed',
+  (() => {
+    // Over 2000ths throughout: the two positive terms are 18 and 99.
+    const negWith = 2 // (1/10)(1/100) = 1/1000 = 2/2000
+    const negWithout = 19 * 99 // (19/20)(99/100) = 1881/2000
+    return negWith + negWithout === 1883
+      && 2000 - (18 + 99) === 1883
+      && /1883\/2000/.test(BA_SHOWN)
+      && /1881\/2000/.test(BA_SHOWN)
+  })(),
+  `2/2000 + 1881/2000 = ${2 + 1881}/2000, and 2000 - 117 = ${2000 - 117}`)
+/*
+ * THE ODDS ROUTE REPRODUCES THE FIRST POINT'S ANSWER, and it is recomputed from
+ * the likelihood ratio rather than matched as a string.
+ *
+ * The ratio is (9/10)/(1/20) = 18 and the prior odds are 1:99, so the posterior
+ * odds are 18:99 and 18/(18+99) = 2/13. The two tasks are tied together here by
+ * arithmetic: the `w` in the odds task IS the reference of the ratio task, which
+ * is the one place in this concept where one task's answer is another task's
+ * input and so is worth asserting rather than trusting.
+ */
+t('the likelihood ratio is the odds task\'s own input, and the two reach 2/13 together',
+  (() => {
+    const ratio = BA_TASKS.find(x => x.given === '(s/t)/(f/g)')
+    const odds = BA_TASKS.find(x => x.given === '(w*a)/(w*a + (n-a))')
+    if (!ratio || !odds) return false
+    const r = asRational(odds.reference)
+    return odds.at.w === ratio.reference
+      && Number(odds.at.w) * Number(odds.at.a) === 18
+      && Number(odds.at.n) - Number(odds.at.a) === 99
+      && r.n * 13 === r.d * 2
+      // 18 against 99 is still under 1:5, which is the point's claim that a big
+      // factor on long odds is still long odds.
+      && 18 * 5 < 99
+  })(),
+  `w=${BA_TASKS.find(x => x.given === '(w*a)/(w*a + (n-a))')?.at.w} from ratio `
+  + `${BA_TASKS.find(x => x.given === '(s/t)/(f/g)')?.reference}`)
+/*
+ * THE PROSECUTOR'S FALLACY IS PRODUCED AS TWO NUMBERS, not warned about — which
+ * is the shape the concept below used for the asymmetry of conditioning, at the
+ * largest scale these subjects can reach.
+ *
+ * P(match | innocence) = 1/10,000 and P(innocence | match) = 2/3 come out of the
+ * same data and differ by more than six thousandfold. The second is the only
+ * task in the concept answering about the COMPLEMENT of the case in question,
+ * which is deliberate: the number a verdict turns on is the probability of
+ * innocence, and it is the one that gets replaced by the other.
+ *
+ * Asserted with the counting check the material gives, since the odds
+ * arithmetic alone would be unfalsifiable prose: one guilty person matches and
+ * about 20,000/10,000 = 2 innocents do, so a match picks out three people of
+ * whom one is guilty, and 2/3 is the answer by a route with no odds in it.
+ */
+t('the fallacy is two computed numbers six thousandfold apart, with the count route checked',
+  (() => {
+    const task = BA_TASKS.find(x => x.given === 'm/(r+m)')
+    if (!task) return false
+    const r = asRational(task.reference)
+    const matchRate = { n: 1, d: 10000 }
+    // 2/3 against 1/10,000.
+    return r.n * 3 === r.d * 2
+      && (r.n * matchRate.d) / (r.d * matchRate.n) > 6000
+      // The odds: a likelihood ratio of 10,000 on prior odds of 1:20,000.
+      && Number(task.at.r) === 10000 && Number(task.at.m) === 20000
+      // The count route: 1 guilty match and 20000/10000 = 2 innocent ones.
+      && 20000 / 10000 === 2 && 2 * 3 === (1 + 2) * 2
+      && /20,001/.test(BA_SHOWN) && /10,000/.test(BA_SHOWN)
+      && task.knowledgePointId === BA_POINTS[2].id
+  })(),
+  `${BA_TASKS.find(x => x.given === 'm/(r+m)')?.reference} against 1/10000`)
+/*
+ * THE MATERIAL CARRIES WHAT NO TASK CAN ASK, so the refusals are asserted as
+ * absences and every subgoal is checked for the two things types.ts requires of
+ * one.
+ */
+t('every objective names evaluate and nothing else, so no refused kind is promised',
+  BA.objectives.length === 3
+  && BA.objectives.every(o => o.taskKinds.join(',') === 'evaluate'),
+  BA.objectives.map(o => `${o.id}:${o.taskKinds.join('+')}`).join(' '))
+t('no figure and no speed target is claimed, neither of them existing to claim',
+  BA_POINTS.every(p => p.visualRef === undefined && p.automaticityTarget === undefined),
+  BA_POINTS.filter(p => p.visualRef !== undefined
+    || p.automaticityTarget !== undefined).map(p => p.id).join(', '))
+t('every subgoal names a move rather than a step number, and no two in one example repeat',
+  BA_POINTS.every(p =>
+    p.workedExample.subgoals.every(s => s.label.length > 20 && !/^step\b/i.test(s.label))
+    && new Set(p.workedExample.subgoals.map(s => s.label)).size
+      === p.workedExample.subgoals.length),
+  BA_POINTS.flatMap(p => p.workedExample.subgoals)
+    .filter(s => s.label.length <= 20 || /^step\b/i.test(s.label)).map(s => s.label).join(' | '))
+/*
+ * EIGHTEEN SUBGOALS AND EIGHTEEN QUESTIONS, which is the thing this promotion
+ * contributes to the figure that moves.
+ *
+ * The question map takes its STRUCTURE from every subgoal and its PHRASING from
+ * `socratic` when it exists, so an unwritten one is answered by the tutor at ask
+ * time. Every subgoal here has one, and the subject-wide assertion that each
+ * ends in a question mark is what catches the failure this file names — an
+ * imperative with a question mark, or a question written as an instruction with
+ * a full stop. Six per point, which is this concept's shape and the concept
+ * below's.
+ */
+t('all eighteen subgoals ship an authored question, six to a point',
+  BA_POINTS.every(p => p.workedExample.subgoals.every(s => typeof s.socratic === 'string'
+    && s.socratic.length > 0))
+  && BA_POINTS.flatMap(p => p.workedExample.subgoals).length === 18
+  && BA_POINTS.map(p => p.workedExample.subgoals.length).join(',') === '6,6,6',
+  BA_POINTS.map(p => `${p.position}:${p.workedExample.subgoals
+    .filter(s => s.socratic).length}/${p.workedExample.subgoals.length}`).join(' '))
+t('and every one is interrogative rather than an imperative with a question mark',
+  BA_POINTS.flatMap(p => p.workedExample.subgoals)
+    .every(s => isInterrogative(s.socratic)),
+  BA_POINTS.flatMap(p => p.workedExample.subgoals)
+    .filter(s => !isInterrogative(s.socratic)).map(s => s.label).join(' | '))
 
 // ---------------------------------------------------------------------------
 

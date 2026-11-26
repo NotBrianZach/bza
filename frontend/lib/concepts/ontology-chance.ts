@@ -1,26 +1,35 @@
 /**
- * Chance and events — the seventeenth subject, and three concepts.
+ * Chance and events — the seventeenth subject, and FOUR concepts.
  *
  * `sample-spaces` was a node of `probability` and was the whole of this subject
- * until the forty-sixth promotion added `counting-probability` above it and the
- * forty-seventh added `conditional-probability` above that. The sections about
- * the first run to the `EDGES` note; the second concept's argument begins at
- * `── THE SECOND CONCEPT`, and the third concept's argument together with this
- * file's live measurement of the ready field begins at `── THE THIRD CONCEPT`.
- * Read the LAST of those three for the field, never the first.
+ * until the forty-sixth promotion added `counting-probability` above it, the
+ * forty-seventh added `conditional-probability` above that, and the forty-eighth
+ * added `bayes-theorem` above that. The sections about the first run to the
+ * `EDGES` note; the second concept's argument begins at `── THE SECOND
+ * CONCEPT`, the third at `── THE THIRD CONCEPT`, and the FOURTH concept's
+ * argument together with this file's live measurement of the ready field begins
+ * at `── THE FOURTH CONCEPT`.
  *
- * All three were nodes of `probability`, and each had to be DELETED from that
+ * READ THE LAST OF THOSE FOUR FOR THE FIELD, NEVER AN EARLIER ONE. Four sections
+ * with near-identical titles now sit in this header in promotion order, and a
+ * later one can CONTRADICT an earlier one — the third section recommends two
+ * candidates and the fourth has spent one of them. Counting is the only way to
+ * pick the live one; `templedb vcs log bza` names the promotion that wrote it.
+ *
+ * All four were nodes of `probability`, and each had to be DELETED from that
  * array on the way in. `atlasProblems` rejects a map node whose id collides with
  * an authored concept — the composed list would hold two entries for the id and
  * the shadowing copy has no knowledge points, so a fully authored concept would
  * read as unteachable — so promoting is a MOVE out of that array rather than a
  * fill-in.
  *
- * THIS SUBJECT HAS NOW TAKEN THREE CONSECUTIVE NODES OFF ONE CHAIN, which is the
- * cheapest shape the promotion run has found and is the reason to read the third
- * section rather than this paragraph: the forty-seventh promotion is where that
- * shape STOPS, because the node it took was a branch point and handed the area
- * three roots instead of one.
+ * THIS SUBJECT HAS NOW TAKEN FOUR CONSECUTIVE NODES OFF ONE CHAIN, which is the
+ * cheapest shape the promotion run has found, and the fourth section is the one
+ * to read about what is left of it: the forty-seventh is where the chain-WALK
+ * stopped, because the node it took was a branch point and handed the area three
+ * roots instead of one, and the forty-eighth is where the chain stopped paying
+ * anything but cheapness — it strands nothing, as a chain taken in order always
+ * eventually does, and it unlocked nothing at all.
  *
  * ── WHY THIS CONCEPT, AND WHY THE FIELD CAME DOWN TO TWO ──────────────────
  *
@@ -870,6 +879,108 @@
  * variable that could be zero. Worth one sentence rather than none, because this
  * is the first concept in the subject whose denominators are not all the same
  * number, so the check had to be made per task instead of once.
+ *
+ * ── THE FOURTH CONCEPT, AND THE READY FIELD MEASURED RATHER THAN QUOTED ───
+ *
+ * `bayes-theorem`, the forty-eighth promotion, and the fourth consecutive node
+ * off this one chain. Read THIS section for the field, not the three above it.
+ *
+ * The field was recomputed from the tree, which every promotion from the fortieth
+ * on has had to repeat because the brief's list is a 2026-11-15 snapshot and is
+ * wrong. BEFORE: 207 map nodes, 92 authored, 19 areas, 17 subjects, THIRTEEN
+ * ready — a ready node being one whose every `needs` is `isTeachable` — and 0
+ * floor-blocked, the thinnest area holding a ready node being `algebra-
+ * foundations` at five nodes with eleven departures declared. ELEVEN of the
+ * thirteen were refused, which the section above enumerates and which this
+ * promotion adds none to, so the field came down to TWO: this node and
+ * `random-variables`.
+ *
+ * WHY THIS ONE OF THE TWO, AND THE THIRD FACTOR POINTED THE OTHER WAY. The
+ * established order is stranded edges, then dependents. `bayes-theorem` declared
+ * `conditional-probability` and nothing else and so stranded ZERO — the run
+ * before had authored that concept into this very subject — where
+ * `random-variables` also names `function-concept`, written in
+ * `functions-and-inverses`, and would strand one into `PROBABILITY.links`. On
+ * dependents it loses: one against two. Both are Rubneb anchors, so that factor
+ * adds the same work to both sides and decides nothing, which is recorded rather
+ * than argued.
+ *
+ * AND THERE WAS A FOURTH REASON, WHICH IS THE ONE THAT ACTUALLY MATTERED. This
+ * node DECLARED the `confusedWith` against `conditional-probability` — the
+ * prosecutor's fallacy and the medical-test error, called the most consequential
+ * confusion in the subject by its own `because`. `expandEdges` turns that into an
+ * `interferes_with`, so deleting the node DELETES the edge and nothing goes red,
+ * because interference constrains selection rather than gating. Promoting it
+ * therefore either destroys that edge or makes it MORE expressible, and here it
+ * is the latter: both ends land in this ontology, so the edge is an ordinary
+ * `EDGES` entry. No other candidate on the map offered that, it is the first
+ * `confusedWith` in the build to survive its declaring node's promotion, and it
+ * survived only because the chain was taken in ORDER, lower end first. Had
+ * `conditional-probability` been authored into any other subject, the edge would
+ * have been inexpressible rather than unwritten — the fate
+ * `counting-probability`'s `exercises` claim met at the forty-sixth. That is a
+ * scheduling fact about promotions and is the durable part.
+ *
+ * ── WHAT THIS PROMOTION COST AND YIELDED, WHICH ARE NOT THE SAME NUMBER ───
+ *
+ * AFTER: 206 map nodes, 93 authored, 19 areas, 17 subjects, TWELVE ready, 0
+ * floor-blocked. It spent one and made NONE, which is the first zero yield in
+ * this area and the sharpest case the "dependents are an upper bound" rule has
+ * had: this node had exactly ONE dependent anywhere, `bayesian-inference`, that
+ * node is in `statistics` rather than here, and it also names
+ * `maximum-likelihood`, unwritten. One inbound edge, zero ready nodes.
+ *
+ * SO A PROMOTION CAN STRAND NOTHING AND UNLOCK NOTHING AT ONCE, and the two
+ * measures are independent rather than correlated. Three promotions in this area
+ * had cheapness and yield move together and it was a coincidence of a chain.
+ *
+ * THE ROOT SET SHRANK, three to TWO, which atlas-uncertainty.ts records as the
+ * seventh root-set outcome in that file and the first shrink. Same fact from the
+ * other side: nothing in `probability` named the departing node, so nothing
+ * inherited its place. The durable rule is that the set changes size by the
+ * number of in-area dependents minus one, and three, one and zero have now all
+ * happened.
+ *
+ * ── THE FIELD THE NEXT RUN INHERITS, WHICH IS A SINGLE CANDIDATE ──────────
+ *
+ * TWELVE ready, 0 floor-blocked, ELEVEN still refused and the list above
+ * unchanged. Unrefused and available: ONE.
+ *
+ *  - `random-variables` (`probability`) — needs `conditional-probability`, now
+ *    the third concept here, and `function-concept`, authored in
+ *    `functions-and-inverses`. Filed here it is an ordinary `needs` for the
+ *    first and strands the second into `PROBABILITY.links`, which would be that
+ *    list's fourth entry and the first it has gained since the forty-sixth. TWO
+ *    dependents, `expectation` and `continuous-distributions`, and it is the
+ *    other root of this area. It is NOT a Rubneb anchor hazard in the way the
+ *    last two were: it is already an anchor, so taking it empties that slot a
+ *    THIRD time in three promotions, and armature.ts says plainly that there is
+ *    no fallback left once `markov-chains` is spent — whoever takes it has to
+ *    choose on the region's `because` with nothing in the area that preserves
+ *    the reading. That is the real cost and it is larger than an edge.
+ *
+ * RULABILITY IS THE QUESTION TO SETTLE BEFORE ASSUMING IT, and the forty-seventh
+ * header raised it without answering it. A random variable IS a function from
+ * outcomes to numbers, so "write down the random variable" is a `state` task and
+ * this build has no verifiable kind for one. What CAN be asked is a VALUE: the
+ * probability that X takes a particular value, an expectation once that concept
+ * exists, a distribution evaluated at a point. The fourth idea of this subject
+ * is the hypergeometric distribution's formula in all but name, which this
+ * file's own boundary section defers to that node precisely because a
+ * distribution is the FUNCTION rather than any of its values. So the material is
+ * there and the risk is the opposite of `combinatorial-identities`' — not that
+ * nothing can be asked, but that what can be asked is indistinguishable from the
+ * concept below it. Somebody should decide that deliberately rather than
+ * discover it after authoring nine tasks.
+ *
+ * AND IF IT IS REFUSED, THE FIELD IS EMPTY. Twelve ready, eleven refused, one
+ * candidate: a refusal here leaves no unrefused ready node anywhere on the map
+ * for the first time since the promotion run began, and the next run's job
+ * becomes overturning a recorded refusal rather than authoring. `eigenvalues` is
+ * the one to look at first — four dependents, refused by its own host in
+ * ontology-matrices.ts rather than on rulability — and the SHAPE-vs-MOVE test is
+ * how the earlier refusals were overturned. That is a measurement and not a
+ * recommendation.
  */
 
 import type { Concept, ConceptEdge, ConceptOntology, Subject } from './types'
@@ -880,7 +991,8 @@ const subject: Subject = {
   covers:
     'How likely something is, worked out from everything that could have happened — first by '
     + 'writing that list down, then by COUNTING it once it is too long to write, and then by '
-    + 'REPLACING it with what you have been told. Three concepts and nine ideas. The first '
+    + 'REPLACING it with what you have been told, and finally by REVERSING what you were told '
+    + 'into what you wanted to know. Four concepts and twelve ideas. The first '
     + 'three are one experiment small enough to print in full. First, '
     + 'THE SAMPLE SPACE IS A SET YOU CHOOSE, AND THE '
     + 'CHOICE IS PART OF THE MODEL. An OUTCOME is one complete result, the sample space is the '
@@ -958,10 +1070,37 @@ const subject: Subject = {
     + 'mechanism and one sentence of the description decides it. And two events that cannot both '
     + 'happen are never independent: P(A and B) = 0 while P(A) x P(B) = (1/22) x (7/44) = 7/968, '
     + 'so mutually exclusive is close to the opposite of independent rather than a version of '
-    + 'it. What is NOT here is a boundary rather than a backlog. REVERSING A CONDITIONAL WITHOUT '
-    + 'THE OVERLAP IN HAND is `bayes-theorem` directly above: the third concept computes P(A|B) '
-    + 'and P(B|A) from the same two counts and shows they differ, where that node is about '
-    + 'getting one from the other through the base rate. THE COUNTING ITSELF is '
+    + 'it. The last three ideas keep the conditional and take the OVERLAP away. Tenth, '
+    + 'REVERSING A CONDITIONAL MEANS BUILDING THE OVERLAP FROM THE DIRECTION YOU WERE GIVEN, AND '
+    + 'THE BASE RATE IS WHAT TURNS ONE INTO THE OTHER. P(A given B) and P(B given A) share the '
+    + 'one number P(A and B), so P(A given B) = P(B given A) x P(A) / P(B) is the definition '
+    + 'written twice and divided, not a new rule. Screen a population where 1 in 100 has a '
+    + 'condition with a test that is positive for 9 in 10 who have it and 1 in 20 who do not: '
+    + 'the overlap you want is (9/10) x (1/100) = 9/1000, the OTHER overlap is '
+    + '(1/20) x (99/100) = 99/2000, and since 9/1000 is 18/2000 the false positives outnumber '
+    + 'the true ones by more than five to one — because 99 times as many people sit behind the '
+    + 'small rate. So a positive result gives 18/117 = 2/13, about 15%, and the 9/10 somebody '
+    + 'reports instead is the answer to the question nobody asked. Eleventh, THE DENOMINATOR IS '
+    + 'A SUM OVER THE CASES, WHICH IS WHERE THE BASE RATE ENTERS TWICE MORE. A positive arrives '
+    + 'by exactly two routes and they are disjoint, so the sixth idea\'s addition applies: '
+    + 'P(B) = P(B|A)P(A) + P(B|not A)P(not A) = 18/2000 + 99/2000 = 117/2000, checked against '
+    + 'the negatives, which must come to 1883/2000 and do. The base rate is therefore in the '
+    + 'numerator once and in the denominator twice, so it does not scale the answer — it decides '
+    + 'the balance between the two terms, and moving it alone is enough: the SAME test on a '
+    + 'group where 1 in 2 has the condition gives (9/20)/(19/40) = 18/19. Two answers nearly '
+    + 'four fifths apart from one pair of test figures is why "how accurate is the test" has no '
+    + 'answer on its own. Twelfth, IN ODDS FORM THE UPDATE IS ONE MULTIPLICATION, SO THE PRIOR '
+    + 'IS A FACTOR RATHER THAN A CORRECTION. Write the theorem for A and for not-A and divide: '
+    + 'P(B) is in both and cancels, leaving posterior odds = prior odds x P(B|A)/P(B|not A). '
+    + 'The evidence contributes only that ratio — here (9/10)/(1/20) = 18 — so 1:99 becomes '
+    + '18:99 and 18/(18+99) is the same 2/13, with no total probability computed anywhere. A '
+    + 'large factor on a small prior is still small, and that is the arithmetic of the '
+    + 'prosecutor\'s fallacy: if a trace matches whoever left it and 1 in 10,000 others by '
+    + 'chance, and exactly one of 20,001 equally suspected people left it, then the likelihood '
+    + 'ratio is 10,000, the prior odds are 1:20,000, the posterior odds are 1:2, and the '
+    + 'probability of INNOCENCE given a match is 2/3 — not the 1/10,000 that gets quoted, which '
+    + 'is P(match given innocence) wearing the answer\'s clothes. What is NOT here is a boundary '
+    + 'rather than a backlog. THE COUNTING ITSELF is '
     + '`counting-principles`, an '
     + 'authored subject of its own — every count above is set up, named as its work, and then '
     + 'divided, and none of it is re-derived here. THE HYPERGEOMETRIC DISTRIBUTION is the fifth '
@@ -970,9 +1109,9 @@ const subject: Subject = {
     + 'VARIABLES, EXPECTATION and the DISTRIBUTIONS attach a NUMBER to each outcome, where '
     + 'everything here is about the outcomes themselves. And INFINITE OR CONTINUOUS spaces are '
     + 'not a harder version of this: equally likely outcomes stop existing there, so the one '
-    + 'formula all three concepts rest on has no analogue rather than a subtler one — though '
-    + 'P(A and B) / P(B) does survive, which is why the seventh idea is written in that form as '
-    + 'well as in counts.',
+    + 'formula the first three concepts rest on has no analogue rather than a subtler one — '
+    + 'though P(A and B) / P(B) does survive, which is why the seventh idea is written in that '
+    + 'form as well as in counts, and why the fourth concept never counts anything at all.',
   medium: 'theorem',
   facetName: 'Concept',
   facetDoes: 'Which concept the statement has to be about.',
@@ -2266,10 +2405,499 @@ const CONCEPTS: Concept[] = [
       },
     ],
   },
+  {
+    id: 'bayes-theorem',
+    name: "Bayes' theorem",
+    subjectId: subject.id,
+    scope: {
+      id: 'bayes-theorem',
+      label: "Bayes' theorem",
+      hint: 'bayes theorem prior posterior base rate false positive',
+      /*
+       * The map node's pattern and its `terms` as the hint, carried across
+       * unchanged, as every promotion since the fourth has done. This is the
+       * FIRST of this file's four patterns with no dead alternative and no
+       * overclaim — the header sets out what that cost in recall, and the sweep
+       * that found the other two was run again rather than assumed.
+       */
+      match: /\bbayes('|’)?[- ]?(theorem|rule|law)\b/i,
+    },
+    fidelity: 'checked',
+    objectives: [
+      {
+        id: 'reverse-a-conditional-by-building-the-overlap-from-the-other-direction',
+        statement:
+          'Produce the probability of a condition given a positive result from the rate of '
+          + 'positives under that condition and the rate at which the condition occurs, and so '
+          + 'establish that the two conditionals are joined by the one overlap they share rather '
+          + 'than by a new formula. Produce the overlap belonging to the case you were NOT asked '
+          + 'about, and so establish that the answer is decided by which of the two overlaps is '
+          + 'the larger. Produce the same number by counting a population instead of dividing '
+          + 'probabilities, and so establish that nothing in the reversal needs a conditional '
+          + 'probability to be written down at all.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'build-the-denominator-as-a-sum-over-the-cases-and-move-the-base-rate-alone',
+        statement:
+          'Produce the probability of the evidence by adding one term per case, and so decide '
+          + 'from the cases being disjoint and exhaustive that the sum is the whole of it. '
+          + 'Produce the answer again with the base rate changed and every test figure held, '
+          + 'and so establish that a test has no accuracy on its own and that the base rate '
+          + 'decides the balance between the two terms rather than scaling the result. Produce '
+          + 'the probability of the opposite result by the same split, and so check the '
+          + 'denominator against the whole space instead of trusting it.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'update-in-odds-form-so-that-the-prior-is-visibly-a-factor',
+        statement:
+          'Produce the ratio of the two rates at which the evidence arrives, and so isolate '
+          + 'everything the evidence itself contributes. Produce the posterior probability as '
+          + 'prior odds times that ratio converted back, and so establish that the update is '
+          + 'ONE multiplication and that the total probability never had to be computed. '
+          + 'Produce the probability of the innocent case given a match in a pool where the '
+          + 'prior odds are long, and so establish that a very large likelihood ratio on a very '
+          + 'small prior is still small — which is the arithmetic the prosecutor\'s fallacy gets '
+          + 'backwards.',
+        taskKinds: ['evaluate'],
+      },
+    ],
+    knowledgePoints: [
+      {
+        id: 'reversing-a-conditional-is-the-definition-written-twice-and-divided',
+        conceptId: 'bayes-theorem',
+        statement:
+          'The concept below computes P(A given B) and P(B given A) from the same two counts and '
+          + 'shows they differ. This one is what to do when the OVERLAP is not something you '
+          + 'can count — when what you have is the conditional the other way round, and the '
+          + 'rate at which the condition occurs at all. The two conditionals share exactly one '
+          + 'number, P(A and B), because P(A given B) x P(B) and P(B given A) x P(A) are both '
+          + 'equal to it. So one can be built from the other: P(A given B) = '
+          + 'P(B given A) x P(A) / P(B). That is the definition written twice and divided, not '
+          + 'a rule to remember, and the term that does the work is P(A) — the BASE RATE, the '
+          + 'probability of the condition before any evidence arrived. Dropping it is the error '
+          + 'this concept exists for, and dropping it does not make the answer slightly wrong: '
+          + 'it answers the other conditional, which can differ from the right one by any '
+          + 'amount at all. The reason is visible in the two overlaps. P(A and B) is one of '
+          + 'them, P(not A and B) is the other, and a positive result comes from whichever of '
+          + 'those two is the larger — so a small rate acting on a large group beats a large '
+          + 'rate acting on a small one.',
+        position: 1,
+        /*
+         * No `automaticityTarget`, for the reason all three concepts below give
+         * about their own arithmetic: multiplying 9/10 by 1/100 would time
+         * beautifully, and the skill is deciding WHICH conditional you were
+         * handed. A speed reward trains the multiplication a learner already
+         * has, and would reward the learner who answers 9/10 fastest.
+         */
+        workedExample: {
+          problem:
+            'A condition occurs in 1 person in 100. A screening test is positive for 9 in 10 '
+            + 'of the people who have it, and positive for 1 in 20 of the people who do not. '
+            + 'Somebody tests positive. Find the probability that they have the condition. '
+            + 'Then reach the same number by counting a population of 10,000 instead, and say '
+            + 'what the answer 9/10 would have been the answer to.',
+          subgoals: [
+            {
+              label: 'Separate the conditional you were handed from the one you were asked for',
+              detail:
+                'The test\'s figures are about people whose status is already known: among '
+                + 'those who HAVE the condition, 9 in 10 test positive, which is '
+                + 'P(positive given condition) = 9/10. The question is about somebody whose '
+                + 'status is not known and whose result is: P(condition given positive). The '
+                + 'concept below established that those are different quantities by computing '
+                + 'both from one pair of counts. Here there is no overlap to count — nobody has '
+                + 'been counted at all — so the reversal has to be built, and the first move is '
+                + 'to notice that it needs building.',
+              socratic:
+                'The test\'s 9-in-10 figure describes people already known to have the '
+                + 'condition, and the question describes somebody known only to have tested '
+                + 'positive. Which of those two groups is the one you were asked about, and '
+                + 'what would you need in order to say anything about it?',
+            },
+            {
+              label: 'Build the overlap you want from the direction you were given',
+              detail:
+                'P(condition and positive) = P(condition) x P(positive given condition), which '
+                + 'is the concept below\'s multiplication rule with nothing added — the '
+                + 'definition of a conditional probability multiplied through by its condition. '
+                + 'So the overlap is (1/100) x (9/10) = 9/1000. This is the whole trick of the '
+                + 'reversal: the overlap is the one quantity both conditionals contain, and it '
+                + 'can be reached from EITHER direction, so being given the wrong direction '
+                + 'costs nothing provided the base rate is in hand.',
+              socratic:
+                '1 in 100 has the condition, and 9 in 10 of those test positive. Which rule '
+                + 'from the concept below combines those two figures into the probability of '
+                + 'both at once, and what number does it give?',
+            },
+            {
+              label: 'Build the OTHER overlap, which is where the answer actually comes from',
+              detail:
+                '99 of every 100 people do not have the condition, and 1 in 20 of them tests '
+                + 'positive anyway, so P(no condition and positive) = (99/100) x (1/20) = '
+                + '99/2000. Put the two side by side over the same denominator: 9/1000 is '
+                + '18/2000 against 99/2000. The false positives outnumber the true positives '
+                + 'by more than five to one, and not because the test is bad — 1 in 20 is a '
+                + 'much smaller rate than 9 in 10. It is because 99 times as many people sit '
+                + 'behind the small rate. That comparison is the content of this concept, and a '
+                + 'learner who has made it will never again report the 9/10.',
+              socratic:
+                '99 of every 100 people do not have the condition and 1 in 20 of them still '
+                + 'tests positive. What is the probability of that combination, and once you '
+                + 'put it over the same denominator as the 9/1000, which of the two groups '
+                + 'supplies most of the positive results?',
+            },
+            {
+              label: 'Divide the overlap you want by every way the result you saw can arrive',
+              detail:
+                'A positive result happens in exactly two ways and they cannot both happen, so '
+                + 'P(positive) = 18/2000 + 99/2000 = 117/2000. Now the definition applies '
+                + 'directly: P(condition given positive) = P(condition and positive) / '
+                + 'P(positive) = (9/1000)/(117/2000) = 18/117 = 2/13, about 0.154. Written out, '
+                + 'that is P(positive given condition) x P(condition) / P(positive) — the '
+                + 'theorem, assembled rather than quoted. Notice that the numerator is one of '
+                + 'the two terms in the denominator, which is why the answer can never exceed '
+                + '1 and why it is near 1 only when the other term is small.',
+              socratic:
+                'A positive result arrives by exactly two routes and you have the probability '
+                + 'of each. What is the probability of a positive result at all, and which of '
+                + 'your two overlaps belongs on top when the question is about the people who '
+                + 'have the condition?',
+            },
+            {
+              label: 'Check it by counting a population, with no conditional probability in sight',
+              detail:
+                'Take 10,000 people. 100 have the condition and 9,900 do not. Of the 100, '
+                + '9 in 10 test positive: 90. Of the 9,900, 1 in 20 test positive: 495. So '
+                + '585 people test positive and 90 of them have the condition, giving 90/585 = '
+                + '2/13 — the same answer, by a route that divides one count by another exactly '
+                + 'as `counting-probability` does and never writes a conditional probability at '
+                + 'all. This is worth doing rather than noting: it is a check on the 117/2000, '
+                + 'and it is also the form in which the result stops being surprising, because '
+                + '495 against 90 is a fact about two groups of people rather than about a '
+                + 'formula.',
+              socratic:
+                'Take 10,000 people. How many have the condition, how many of those test '
+                + 'positive, how many of the rest test positive anyway, and so what fraction of '
+                + 'everybody who tested positive actually has it?',
+            },
+            {
+              label: 'Say what the discarded answer was the answer to, since that names the error',
+              detail:
+                'Somebody who reports 9/10 has reported P(positive given condition) — a true '
+                + 'statement about a question nobody asked. Against 2/13 that is not an '
+                + 'approximation of the right answer; it is a different number about a '
+                + 'different group. What IS true is that the positive result moved the '
+                + 'probability from 1/100 to 2/13, which is a rise of more than fifteenfold, so '
+                + 'the test is informative and the result is still far from a diagnosis. Both '
+                + 'halves of that have to be said together: the base rate is the reason the '
+                + 'answer is small, and the likelihood ratio is the reason it moved at all.',
+              socratic:
+                'A positive result moves the probability from 1 in 100 to 2/13. Is that a large '
+                + 'change or a small one — and which group of people was somebody describing if '
+                + 'they answered 9/10 instead?',
+            },
+          ],
+          answer:
+            'P(condition given positive) = 2/13, about 0.154. The overlap asked about is '
+            + '(1/100) x (9/10) = 9/1000 = 18/2000, built from the conditional given rather '
+            + 'than counted; the other overlap is (99/100) x (1/20) = 99/2000, and it is more '
+            + 'than five times larger because 99 times as many people sit behind the smaller '
+            + 'rate. A positive arrives only those two ways, so P(positive) = 117/2000 and the '
+            + 'answer is (9/1000)/(117/2000) = 18/117 = 2/13. Counting 10,000 people gives the '
+            + 'same thing with no conditional probability written down: 90 true positives and '
+            + '495 false ones, so 90/585 = 2/13. The 9/10 is P(positive given condition) and is '
+            + 'the answer to the other question entirely; what the result did do is raise the '
+            + 'probability from 1/100 to 2/13, more than fifteenfold.',
+        },
+      },
+      {
+        id: 'the-denominator-is-a-sum-over-the-cases-so-the-base-rate-enters-three-times',
+        conceptId: 'bayes-theorem',
+        statement:
+          'The denominator of the reversal is the probability of the evidence, and that is '
+          + 'almost never given — it has to be built by splitting the evidence across the cases '
+          + 'it can arrive by. Those cases must have nothing in common and must cover '
+          + 'everything, and then `sample-spaces`\' addition applies term by term: '
+          + 'P(B) = P(B|A)P(A) + P(B|not A)P(not A). That is the law of total probability, and '
+          + 'it is the addition rule and the multiplication rule used once each. The '
+          + 'consequence worth holding is a count: the base rate P(A) appears in the numerator '
+          + 'once and in the denominator TWICE, once as itself and once as 1 - P(A). So it does '
+          + 'not scale the answer and cannot be treated as a correction applied at the end — it '
+          + 'decides the balance between the two terms, which is the whole quantity. Moving it '
+          + 'and nothing else is therefore enough to change the answer completely, and that is '
+          + 'why a test has no accuracy on its own: the same two test figures give 2/13 on a '
+          + 'population where 1 in 100 has the condition and 18/19 on a group where half do.',
+        position: 2,
+        workedExample: {
+          problem:
+            'The same test: positive for 9 in 10 who have the condition and 1 in 20 who do '
+            + 'not. Build P(positive) as a sum over the two cases when 1 person in 100 has the '
+            + 'condition, and check your denominator by splitting the NEGATIVE result the same '
+            + 'way. Then run the same test on a group in which 1 in 2 has the condition, '
+            + 'changing nothing else.',
+          subgoals: [
+            {
+              label: 'Split the evidence across cases that are disjoint and leave nothing out',
+              detail:
+                'Everybody either has the condition or does not: the two cases have no '
+                + 'overlap and together they are the whole population, which is exactly the '
+                + 'hypothesis `sample-spaces` requires before probabilities may be added. So a '
+                + 'positive result is the union of two disjoint events — positive-with and '
+                + 'positive-without — and P(positive) is the sum of their probabilities with no '
+                + 'correction term, because there is no outcome in both to subtract. Each term '
+                + 'is then a multiplication: a rate times the size of the group it applies to.',
+              socratic:
+                'A positive result can come from somebody who has the condition or from '
+                + 'somebody who does not. What has to be true of those two cases before you '
+                + 'are allowed to add their probabilities, and which of the two rules from the '
+                + 'concept below does each term need?',
+            },
+            {
+              label: 'Add the two terms, which are the two overlaps from the point above',
+              detail:
+                'P(positive) = (9/10) x (1/100) + (1/20) x (99/100) = 9/1000 + 99/2000 = '
+                + '18/2000 + 99/2000 = 117/2000, which is 0.0585. These are the two numbers the '
+                + 'point above already produced, and the only new thing is that they are being '
+                + 'added rather than compared. Worth seeing that the denominator is bigger than '
+                + 'the numerator of the reversal by exactly the amount of the second term, so '
+                + 'the second term IS the gap between 9/10 and 2/13.',
+              socratic:
+                'You already have 18/2000 and 99/2000 from the point above. What is the '
+                + 'probability of a positive result at all, and what does the second of those '
+                + 'two terms account for in the final answer?',
+            },
+            {
+              label: 'Check the split against the whole space rather than trusting it',
+              detail:
+                'If the cases really partition, the same split applied to the NEGATIVE result '
+                + 'must give 1 - 117/2000 = 1883/2000. Run it: a negative comes from somebody '
+                + 'with the condition at (1/10) x (1/100) = 1/1000 = 2/2000, and from somebody '
+                + 'without at (19/20) x (99/100) = 1881/2000. That is 1883/2000, and it agrees. '
+                + 'The check is worth running because a sum over cases that have been chosen '
+                + 'badly looks exactly like one that has not: it is still a sum of plausible '
+                + 'products, and only its disagreement with the complement exposes it.',
+              socratic:
+                'If your two cases really cover everybody, what must the probabilities of a '
+                + 'negative result add up to? Work them out and compare — and what sort of '
+                + 'mistake would this check have caught that reading the two terms again would '
+                + 'not?',
+            },
+            {
+              label: 'Count where the base rate appears, which is three places and not one',
+              detail:
+                'Written out, the answer is (9/10)(1/100) / [ (9/10)(1/100) + (1/20)(99/100) ]. '
+                + 'The base rate 1/100 is in the numerator, in the first term of the '
+                + 'denominator, and — as the 99/100 — in the second. Three occurrences, and the '
+                + 'third is the one that gets forgotten because it is wearing a complement. '
+                + 'That is why the base rate cannot be applied as a correction at the end: a '
+                + 'quantity appearing above and below a division line does not scale what the '
+                + 'division gives. It sets how the two terms below compare, and the answer is '
+                + 'nothing but that comparison.',
+              socratic:
+                'Write the whole answer out as one fraction. In how many places does the 1 in '
+                + '100 appear, counting the 99/100 as one of them — and what does appearing '
+                + 'both above and below the line stop it from doing to the answer?',
+            },
+            {
+              label: 'Move the base rate alone and watch the answer leave the room',
+              detail:
+                'Same test, different group: 1 in 2 has the condition. P(positive) = '
+                + '(9/10)(1/2) + (1/20)(1/2) = 9/20 + 1/40 = 18/40 + 1/40 = 19/40, and '
+                + 'P(condition given positive) = (9/20)/(19/40) = 18/19, about 0.947. Nothing '
+                + 'about the test changed — 9 in 10 and 1 in 20 are the same two figures — and '
+                + 'the answer went from about 0.154 to about 0.947. So "how accurate is this '
+                + 'test" is not a question with an answer: the test has two rates, and the '
+                + 'probability a positive result carries depends on who was tested. Screening '
+                + 'everybody and testing people who already have symptoms are two different '
+                + 'experiments with one piece of equipment.',
+              socratic:
+                'Keep the 9-in-10 and the 1-in-20 exactly as they are and test a group in '
+                + 'which half the people have the condition. What is the answer now, and since '
+                + 'nothing about the test moved, what does that say about describing a test as '
+                + 'being a certain percentage accurate?',
+            },
+            {
+              label: 'Push the base rate to each end, where the expression answers by itself',
+              detail:
+                'Set the base rate to 0 and the numerator is 0, so the answer is 0 — nobody '
+                + 'has the condition, so a positive cannot indicate it however the test '
+                + 'behaves. Set it to 1 and the second term of the denominator vanishes, so the '
+                + 'answer is 1. Both come out of the same expression with no special case '
+                + 'written for them, which is the sign that the denominator was built correctly '
+                + 'rather than fitted: a sum over cases that has been assembled from the '
+                + 'partition degenerates properly when the partition does.',
+              socratic:
+                'What happens to the numerator if nobody at all has the condition, and to the '
+                + 'second term of the denominator if everybody does? What answers does the '
+                + 'expression then give, and why is it reassuring that you did not have to '
+                + 'write either of those cases down separately?',
+            },
+          ],
+          answer:
+            'P(positive) = (9/10)(1/100) + (1/20)(99/100) = 18/2000 + 99/2000 = 117/2000, the '
+            + 'two cases being disjoint and exhaustive so that the addition rule applies with '
+            + 'no overlap to subtract. The split checks out against the complement: the '
+            + 'negatives give (1/10)(1/100) + (19/20)(99/100) = 2/2000 + 1881/2000 = 1883/2000, '
+            + 'which is 1 - 117/2000. The base rate appears three times in the full fraction — '
+            + 'numerator, first denominator term, and as 99/100 in the second — so it fixes the '
+            + 'balance between the two terms rather than scaling the result. Moving it alone to '
+            + '1 in 2 gives P(positive) = 19/40 and P(condition given positive) = '
+            + '(9/20)/(19/40) = 18/19, about 0.947, against the earlier 2/13, about 0.154, with '
+            + 'both test figures unchanged. At a base rate of 0 the expression gives 0 and at 1 '
+            + 'it gives 1, with no case written for either.',
+        },
+      },
+      {
+        id: 'in-odds-form-the-update-is-one-multiplication-by-the-likelihood-ratio',
+        conceptId: 'bayes-theorem',
+        statement:
+          'Write the theorem for A and again for not-A and divide one by the other. P(B) is the '
+          + 'denominator of both, so it cancels, and what is left is '
+          + 'P(A|B)/P(not A|B) = [ P(B|A)/P(B|not A) ] x [ P(A)/P(not A) ]: posterior ODDS are '
+          + 'prior odds times the ratio of the two rates at which the evidence arrives. Three '
+          + 'things follow and each is worth having separately. The total probability never has '
+          + 'to be computed, which is why this is the form to use when the cases are many. The '
+          + 'evidence contributes exactly one number, the likelihood ratio, and that number is '
+          + 'the honest measure of how much a piece of evidence is worth. And the prior is a '
+          + 'FACTOR, which is the form in which it is hardest to drop by accident: a large '
+          + 'ratio applied to long odds is still long odds, because multiplying is not adding. '
+          + 'That last point is the arithmetic of the prosecutor\'s fallacy, where a match '
+          + 'probability of one in ten thousand is reported as the probability of innocence '
+          + 'while the prior odds against any particular person being the one are twenty '
+          + 'thousand to one.',
+        position: 3,
+        workedExample: {
+          problem:
+            'Redo the screening answer in odds form: prior odds 1:99, and a test positive for '
+            + '9 in 10 with the condition and 1 in 20 without. Then take a trace that matches '
+            + 'whoever left it and also matches 1 person in 10,000 by chance, where exactly one '
+            + 'of 20,001 equally suspected people left it, and find the probability that a '
+            + 'matching person is innocent.',
+          subgoals: [
+            {
+              label: 'Divide the theorem by itself to make the awkward denominator cancel',
+              detail:
+                'P(A|B) = P(B|A)P(A)/P(B) and P(not A|B) = P(B|not A)P(not A)/P(B). Divide the '
+                + 'first by the second and the P(B) — the one quantity in the point above that '
+                + 'took real work to build — is in both and cancels. What is left has no sum '
+                + 'over cases in it at all: posterior odds = prior odds x '
+                + 'P(B|A)/P(B|not A). Nothing has been assumed to get there; it is the same '
+                + 'theorem stated about two complementary cases and the ratio taken.',
+              socratic:
+                'Write the theorem once for the condition and once for its complement. Which '
+                + 'quantity is the denominator of both, and what happens to it if you divide '
+                + 'one statement by the other?',
+            },
+            {
+              label: 'Compute the likelihood ratio, which is all the evidence contributes',
+              detail:
+                'P(positive given condition) / P(positive given no condition) = '
+                + '(9/10)/(1/20) = (9/10) x 20 = 18. A positive result is 18 times as likely '
+                + 'to come from somebody with the condition as from somebody without. That '
+                + 'single number is the whole evidential content of the test — neither rate '
+                + 'matters on its own, only their ratio — and it is worth noticing that it is '
+                + 'bigger than 1, which no probability in this subject has been. An odds '
+                + 'ratio is not a probability and does not live in [0, 1].',
+              socratic:
+                'The test is positive for 9 in 10 who have the condition and 1 in 20 who do '
+                + 'not. How many times more likely is a positive result from the first group '
+                + 'than from the second, and what does it tell you about this quantity that '
+                + 'the answer came out bigger than 1?',
+            },
+            {
+              label: 'Multiply the prior odds by it, then convert the odds back to a probability',
+              detail:
+                'A base rate of 1 in 100 is prior odds of 1:99. Multiply the first term by 18: '
+                + 'posterior odds are 18:99. Odds of a:b mean a probability of a/(a+b), so the '
+                + 'answer is 18/(18+99) = 18/117 = 2/13 — the same number the first point '
+                + 'reached, by a route that never computed P(positive). The agreement is a '
+                + 'check rather than a repetition: if it had failed, the likelihood ratio or '
+                + 'the prior odds would be wrong, and both are easier to get wrong than the '
+                + 'division they replace.',
+              socratic:
+                'A base rate of 1 in 100 is odds of 1 to 99. What are the odds after '
+                + 'multiplying by 18, what probability do those odds correspond to, and where '
+                + 'in this route did the probability of a positive result go?',
+            },
+            {
+              label: 'Read off why a big factor on long odds is still long odds',
+              detail:
+                '18 is a large multiplier and the answer is still about 0.154, because 1:99 is '
+                + 'a long way from even and multiplying one side by 18 does not get it there. '
+                + 'Written in odds, the reason is arithmetic rather than rhetorical: 18 against '
+                + '99 is still less than 1:5. This is the form in which the base rate is '
+                + 'hardest to drop, because it is a factor sitting in plain sight rather than '
+                + 'a term buried in a denominator — which is the practical argument for using '
+                + 'this form when the answer is going to be reported to somebody.',
+              socratic:
+                'Eighteen is a big multiplier and the answer is still about 0.154. Looking at '
+                + 'the odds 18:99 rather than at the probability, what is it about the starting '
+                + 'odds that the multiplication could not overcome?',
+            },
+            {
+              label: 'Run the case where the prior odds ARE the argument',
+              detail:
+                'A trace matches whoever left it, and matches 1 person in 10,000 by chance, so '
+                + 'the likelihood ratio is 1 / (1/10,000) = 10,000. Exactly one of 20,001 '
+                + 'equally suspected people left it, so before the match the odds that any '
+                + 'particular one of them is that person are 1:20,000. Posterior odds are '
+                + '10,000:20,000, which is 1:2 — so P(guilty given a match) = 1/3 and '
+                + 'P(innocent given a match) = 2/3. The same thing by counting: the one guilty '
+                + 'person matches, and about 20,000 x 1/10,000 = 2 of the innocents match, so a '
+                + 'match picks out about three people of whom one is guilty.',
+              socratic:
+                'The trace matches whoever left it and 1 person in 10,000 otherwise, and one '
+                + 'of 20,001 equally suspected people left it. What is the likelihood ratio, '
+                + 'what are the prior odds, and so what are the odds that a person who matches '
+                + 'is the one who left it?',
+            },
+            {
+              label: 'Name the two numbers that get swapped, and how far apart they are',
+              detail:
+                'P(match given innocence) = 1/10,000 and P(innocence given a match) = 2/3. '
+                + 'Both come out of the same data, they differ by a factor of more than six '
+                + 'thousand, and the second is the one a verdict turns on while the first is '
+                + 'the one that gets quoted. That is the confusion `conditional-probability` '
+                + 'declares against this concept as the most consequential in the subject, and '
+                + 'it is the same swap the first point made with 9/10 against 2/13 — a '
+                + 'screening test and a courtroom running one error. Nothing here says the '
+                + 'match is uninformative: a likelihood ratio of 10,000 is enormous, and it is '
+                + 'the prior odds of 1:20,000 that leave the answer where it is.',
+              socratic:
+                'You have 1/10,000 for one conditional and 2/3 for the other, from the same '
+                + 'data. Which of the two is the probability of innocence, roughly how far '
+                + 'apart are they, and does the gap mean the match told you nothing?',
+            },
+          ],
+          answer:
+            'In odds form, posterior odds = prior odds x P(B|A)/P(B|not A), the P(B) having '
+            + 'cancelled between the theorem for A and the theorem for not-A. The likelihood '
+            + 'ratio is (9/10)/(1/20) = 18, the prior odds are 1:99, so the posterior odds are '
+            + '18:99 and the probability is 18/(18+99) = 18/117 = 2/13 — the first point\'s '
+            + 'answer with no total probability computed. The multiplier is large and the '
+            + 'answer small because 18 against 99 is still under 1:5. For the trace: the '
+            + 'likelihood ratio is 10,000, the prior odds 1:20,000, so the posterior odds are '
+            + '10,000:20,000 = 1:2, P(guilty given a match) = 1/3 and P(innocent given a '
+            + 'match) = 2/3 — checked by counting, since one guilty person and about two '
+            + 'matching innocents make three. P(match given innocence) = 1/10,000 and '
+            + 'P(innocence given a match) = 2/3 are the two numbers the fallacy exchanges, and '
+            + 'they differ by more than six thousandfold.',
+        },
+      },
+    ],
+  },
 ]
 
 /**
- * Three edges, and the forty-seventh promotion added the simplest one in the file.
+ * Six edges. The forty-seventh promotion added the simplest one in the file and
+ * the forty-eighth added three at once, which is the most any promotion here has
+ * declared and is the whole of why `bayes-theorem` was the candidate to take: an
+ * ordinary prerequisite, a credit edge argued on the merits, and an
+ * `interferes_with` that this file is the only place in the build that could
+ * hold. The fourth section of the file header argues the selection; the comments
+ * on the last three entries argue each edge.
  *
  * THIS ARRAY WAS EMPTY AND THE NOTE EXPLAINING WHY NAMED ITS OWN REPAIR. One
  * concept meant no internal pair, and both of `sample-spaces`' prerequisites are
@@ -2404,6 +3032,115 @@ const EDGES: ConceptEdge[] = [
      * provenance moves with the edge when the edge moves into an ontology.
      */
     promotedBy: 'author:chance-and-events',
+  },
+  {
+    id: 'conditional-probability->bayes-theorem',
+    from: 'conditional-probability',
+    to: 'bayes-theorem',
+    kind: 'prerequisite',
+    /*
+     * THE SUBJECT'S THIRD INTERNAL PREREQUISITE, AND THE SECOND ZERO-STRANDED
+     * PROMOTION RUNNING. `bayes-theorem` declared
+     * `needs: ['conditional-probability']` and nothing else, and that concept
+     * was already here — so this entry is the whole of the prerequisite
+     * bookkeeping and `PROBABILITY.links` did not grow for a second consecutive
+     * promotion. Read off the node, which is the durable rule.
+     *
+     * The claim is load-bearing in all three of the new concept's points. The
+     * first builds an overlap with the multiplication rule and then divides by
+     * the probability of the condition, which is the third concept's first point
+     * in its second form; the second adds two such products over a partition;
+     * the third divides two statements of the definition by each other. A
+     * learner who met the reversal first would be rearranging a formula whose
+     * terms are all conditional probabilities, with no account of what any of
+     * them means.
+     *
+     * `author:` rather than `atlas:probability`, as with the two prerequisites
+     * above: `expandEdges` stamped the area on this edge while it was the node's
+     * own `needs`, and the provenance moves with the edge.
+     */
+    promotedBy: 'author:chance-and-events',
+  },
+  {
+    id: 'bayes-theorem=>conditional-probability',
+    from: 'bayes-theorem',
+    to: 'conditional-probability',
+    kind: 'encompasses',
+    /*
+     * THE SUBJECT'S SECOND CREDIT EDGE, AND THE FORTY-SEVENTH PROMOTION'S
+     * REFUSAL IS WHY IT NEEDS AN ARGUMENT RATHER THAN A NOD. That promotion
+     * could have declared `conditional-probability => counting-probability` and
+     * declined it: the third concept supplies every count it uses and never
+     * chooses a counting convention, so the concept below's first point was
+     * untouched by doing it. The test that refusal implies is whether the
+     * higher concept USES the lower one's points or merely rests on them, and
+     * this one passes it on two of three.
+     *
+     * Two of three is also the standard the `counting-probability =>
+     * sample-spaces` edge above was held to, and the third point is named here
+     * for the same reason it was named there: INDEPENDENCE is not exercised at
+     * all. Every situation in this concept is one where conditioning moves the
+     * answer — that is what makes a reversal worth doing — so nothing here ever
+     * computes P(A) x P(B) and compares it with an overlap. A learner who has
+     * done all nine of these tasks has demonstrated the multiplication rule and
+     * the definition, and has demonstrated nothing whatever about the product
+     * test.
+     */
+    promotedBy: 'author:chance-and-events',
+    rationale:
+      'Every task in the fourth concept builds an overlap as a rate times a base rate, which is '
+      + 'the third concept\'s SECOND point — the definition multiplied through by its condition '
+      + '— used rather than mentioned, and then divides by the probability of the condition, '
+      + 'which is its FIRST point in the P(A and B) / P(B) form that point insists on writing. '
+      + 'So a learner who has just produced 18/117 from 9/1000 over 117/2000 has exercised both, '
+      + 'and neither must come due as though untouched. It does NOT credit the third point: '
+      + 'independence is a case where conditioning changes nothing, and nothing in a reversal '
+      + 'ever computes P(A) x P(B) to compare with an overlap.',
+  },
+  {
+    id: 'bayes-theorem~conditional-probability',
+    from: 'bayes-theorem',
+    to: 'conditional-probability',
+    kind: 'interferes_with',
+    /*
+     * THE EDGE THIS PROMOTION WOULD HAVE DESTROYED IN SILENCE, RE-DECLARED.
+     *
+     * `expandEdges` turns a node's `confusedWith` into an `interferes_with`
+     * edge, so deleting the `bayes-theorem` node from atlas-uncertainty.ts
+     * deleted this one — and nothing goes red, because interference constrains
+     * SELECTION rather than gating, so every suite stays green while the
+     * scheduler is freed to introduce the two most confusable concepts in the
+     * subject together. atlas.ts warns about exactly this, the forty-sixth
+     * promotion lost an `exercises` claim to the same mechanism through
+     * `exercises`, and the forty-seventh promotion's own group in tests/atlas.mjs
+     * wrote the warning down with this edge named in it.
+     *
+     * THE REPAIR WAS CHEAP ONLY BECAUSE OF WHERE THE FAR END SITS. Both ends are
+     * now concepts of this ontology, so the edge is an ordinary entry here;
+     * `ontologyProblems` would have reported an unknown endpoint if
+     * `conditional-probability` had been authored anywhere else, and `links`
+     * hard-codes `prerequisite` and so could not have carried it either. That
+     * is the sense in which promoting this node made an existing edge MORE
+     * expressible rather than less, which no other candidate on the map offered.
+     *
+     * `rationale` is the node's own `because`, carried verbatim, because
+     * tests/atlas.mjs requires one on every `interferes_with` and the sentence
+     * the node shipped is the argument. Direction is `from` the higher concept,
+     * matching what `expandEdges` emitted, though the kind is symmetric and
+     * stored once.
+     *
+     * AND THE EDGE DOES NOT CONTRADICT THE PREREQUISITE ABOVE IT. A prerequisite
+     * says the lower concept must be strong before the higher is introduced; the
+     * interference says the two must not be introduced TOGETHER. Both held while
+     * one end was a node and both hold now, and the pair is exactly the right
+     * description: meet conditioning, master it, and only then meet the thing
+     * most easily mistaken for it.
+     */
+    promotedBy: 'author:chance-and-events',
+    rationale:
+      'P(A|B) and P(B|A) are read as the same quantity, which is the single most consequential '
+      + 'confusion in the subject: it is the prosecutor\'s fallacy and the medical-test error, '
+      + 'and it is produced by the notation looking symmetric.',
   },
 ]
 

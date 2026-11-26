@@ -119,23 +119,42 @@ function useResolvedWorks(): Record<string, Offering> {
 
   useEffect(() => {
     let cancelled = false
-    const wanted = new Map<string, { medium: string; expect: string }>()
+    const wanted = new Map<string, { medium: string; expect: string; expectBy: string }>()
     for (const turn of EXAMPLE_CHAIN) {
       for (const move of [turn.move, turn.reply]) {
         if (move.resolve) {
-          wanted.set(move.resolve.q, { medium: move.medium, expect: move.resolve.expect })
+          wanted.set(move.resolve.q, { medium: move.medium, ...move.resolve })
         }
       }
     }
 
-    Promise.all([...wanted].map(async ([q, { medium, expect }]) => {
+    Promise.all([...wanted].map(async ([q, { medium, expect, expectBy }]) => {
       try {
+        /**
+         * Twelve, not five, and the number is load-bearing.
+         *
+         * Both fields have to match, and a classical search is full of rows
+         * that satisfy one — compilations carrying the piece's name under
+         * whichever composer the album was filed under. At five, the first
+         * correctly-attributed Clair de Lune was out of range and the example
+         * fell back to the written card for a track that is definitely in the
+         * catalogue. A window this small costs nothing and is read once per
+         * page load.
+         */
         const res = await authedFetch(
-          `/api/offerings/search?medium=${medium}&q=${encodeURIComponent(q)}&limit=5`)
+          `/api/offerings/search?medium=${medium}&q=${encodeURIComponent(q)}&limit=12`)
         if (!res.ok) return null
         const data = await res.json()
-        const hit = (data.offerings as Offering[] | undefined)
-          ?.find(o => o.title.toLowerCase().includes(expect))
+        /**
+         * Title AND attribution. Checking the title alone shipped Clair de
+         * Lune under FRÉDÉRIC CHOPIN, because that is what Deezer's top row
+         * claims — see the `resolve` note in exampleTurn.ts. A result that
+         * matches one field and not the other is not a near miss, it is a
+         * confidently wrong credit, and the written card is better than that.
+         */
+        const hit = (data.offerings as Offering[] | undefined)?.find(o =>
+          o.title.toLowerCase().includes(expect)
+          && (o.attribution ?? '').toLowerCase().includes(expectBy))
         return hit ? ([q, hit] as const) : null
       } catch {
         // Swallowed deliberately — see the note above.

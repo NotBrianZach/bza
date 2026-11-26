@@ -60,6 +60,20 @@
  * whose title does not contain `expect` is discarded and the written card
  * stands.
  *
+ * `expectBy` CHECKS THE ATTRIBUTION, and it exists because matching the title
+ * alone was not enough and shipped wrong. Deezer's first hit for "Clair de Lune
+ * Debussy" is a compilation whose artist field reads **Frédéric Chopin** — the
+ * title guard passed it, and /play spent a deploy telling visitors that Chopin
+ * wrote Clair de Lune. That is precisely the "small lie" this file's own note
+ * says the section is designed against, arriving through the mechanism added to
+ * avoid it.
+ *
+ * The lesson generalises past this one track: a catalogue's metadata is a claim
+ * by a third party, and the half of it you did not check is the half that will
+ * be wrong. Both fields are authored here, so both are verified. Searching with
+ * the composer's name in `q` is NOT a substitute — that is what ranked the
+ * Chopin row first.
+ *
  * The recording will not be the same one twice and that is fine: `title` and
  * `attribution` below are what the example CLAIMS, and any real performance of
  * the piece satisfies the claim. `framing` is different — it names the part in
@@ -90,12 +104,13 @@ export interface ExampleMove {
    * How to find the real work, for the catalogued media. Absent for composed
    * ones — a gesture has no catalogue and nothing to fetch.
    *
-   * `q` is handed to /api/offerings/search as typed. `expect` is matched
-   * case-insensitively against the returned title, and a result that fails it
-   * is dropped rather than shown. See the `resolve` section in the file
-   * header for why this is a query and not an id.
+   * `q` is handed to /api/offerings/search as typed. `expect` and `expectBy`
+   * are matched case-insensitively against the returned title and attribution,
+   * and a result failing either is dropped rather than shown. See the
+   * `resolve` section in the file header for why this is a query and not an
+   * id, and for the wrong-composer bug that `expectBy` exists to stop.
    */
-  resolve?: { q: string; expect: string }
+  resolve?: { q: string; expect: string; expectBy: string }
 }
 
 export interface ExampleTurn {
@@ -125,7 +140,7 @@ export const EXAMPLE_CHAIN: ExampleTurn[] = [
       title: 'Clair de Lune',
       attribution: 'Claude Debussy',
       framing: 'The opening, before the left hand arrives — about twenty seconds.',
-      resolve: { q: 'Clair de Lune Debussy', expect: 'clair de lune' },
+      resolve: { q: 'Clair de Lune Debussy', expect: 'clair de lune', expectBy: 'debussy' },
     },
     reading:
       'Held, unhurried, and deliberately unresolved: the phrase keeps declining to land on ' +
@@ -136,7 +151,7 @@ export const EXAMPLE_CHAIN: ExampleTurn[] = [
       title: 'Water Lilies (Agapanthus)',
       attribution: 'Claude Monet',
       framing: 'The surface at the centre, where the reflections stop being readable as sky.',
-      resolve: { q: 'Water Lilies Agapanthus Monet', expect: 'water lilies' },
+      resolve: { q: 'Water Lilies Agapanthus Monet', expect: 'water lilies', expectBy: 'monet' },
     },
     carried:
       'The suspension. Neither one resolves — the eye finds no edge to settle on, the way ' +
@@ -155,7 +170,7 @@ export const EXAMPLE_CHAIN: ExampleTurn[] = [
          point of showing two turns. Same `resolve`, so it is the same fetch and
          the same picture — `ExampleChain` caches by `q`. */
       framing: 'The same centre — now as the thing being answered rather than the answer.',
-      resolve: { q: 'Water Lilies Agapanthus Monet', expect: 'water lilies' },
+      resolve: { q: 'Water Lilies Agapanthus Monet', expect: 'water lilies', expectBy: 'monet' },
     },
     reading:
       'A surface with no fixed footing. Read as an instruction rather than an image, it asks ' +

@@ -2153,6 +2153,205 @@ const TWO_EVENT_COUNTS_AND_THE_SPACE: VariableDeclaration[] = [
   { name: 'n', assumptions: { integer: true } },
 ]
 
+/**
+ * A RATE UNDER A CONDITION AND THE RATE AT WHICH THE CONDITION OCCURS — the two
+ * figures a reversal is built from, and the first list in these subjects whose
+ * letters are RATES rather than counts.
+ *
+ * `(s/t)*(a/n)` at (9, 10, 1, 100) is P(condition and positive) = 9/1000: 1 in
+ * 100 has the condition, 9 in 10 of those test positive, so the overlap is the
+ * product. The concept below's `A_POOL_AND_A_DRAW_PER_STEP` is the same
+ * multiplication rule with a pool shrinking behind it; here nothing is drawn
+ * from anything, which is why the letters are a rate `s/t` and a base rate
+ * `a/n` rather than a count over a pool.
+ *
+ * THE OVERLAP IS THE WHOLE REASON THIS EXPRESSION EXISTS AS A TASK OF ITS OWN.
+ * `bayes-theorem` cannot count an overlap — that is its boundary against the
+ * concept below, which counts every one of its six — so the overlap has to be
+ * BUILT from the conditional that was given, and a learner who cannot produce
+ * 9/1000 has nothing to put on top of the division. Asking for it separately is
+ * also what makes the next task's comparison legible: 9/1000 is 18/2000, and
+ * the other overlap is 99/2000.
+ */
+const A_RATE_UNDER_THE_CONDITION_AND_A_BASE_RATE: VariableDeclaration[] = [
+  { name: 's', assumptions: { integer: true } },
+  { name: 't', assumptions: { integer: true } },
+  { name: 'a', assumptions: { integer: true } },
+  { name: 'n', assumptions: { integer: true } },
+]
+
+/**
+ * A RATE UNDER THE COMPLEMENT AND THE SAME BASE RATE, with the complement
+ * written as `(n-a)/n` rather than handed over as a second fraction.
+ *
+ * `(f/g)*((n-a)/n)` at (1, 20, 100, 1) is P(no condition and positive) =
+ * (1/20) x (99/100) = 99/2000, the overlap belonging to the case the question
+ * was NOT about and the one the answer actually turns on.
+ *
+ * SEPARATE FROM THE LIST ABOVE THOUGH THE SHAPE IS NEARLY THE SAME, and the
+ * difference is `(n-a)/n`. Handing over 99 and 100 as their own letters would
+ * have let the two groups look like two independent pieces of data; writing the
+ * complement in terms of the base rate says that there is ONE base rate and the
+ * second group is whatever is left, which is the fact the next point's
+ * partition check rests on. `f` and `g` are a different pair of letters from
+ * `s` and `t` for the reason `AN_OVERLAP_AND_A_CONDITION` is a different list
+ * from `A_COUNTED_EVENT_AND_A_COUNTED_SPACE`: a false-positive rate and a
+ * sensitivity are not the same kind of number, and reusing the letters would
+ * say they were.
+ */
+const A_RATE_UNDER_THE_COMPLEMENT_AND_THE_BASE_RATE: VariableDeclaration[] = [
+  { name: 'f', assumptions: { integer: true } },
+  { name: 'g', assumptions: { integer: true } },
+  { name: 'n', assumptions: { integer: true } },
+  { name: 'a', assumptions: { integer: true } },
+]
+
+/**
+ * The same two figures with the probability of the EVIDENCE supplied, so that
+ * the reversal can be asked before the denominator has been built.
+ *
+ * `((s/t)*(a/n))/(p/q)` at (9, 10, 1, 100, 117, 2000) is
+ * (9/1000)/(117/2000) = 2/13 — the theorem with its hard part given away.
+ *
+ * THE DENOMINATOR IS A GIFT HERE AND IS EARNED IN THE SECOND POINT, which is
+ * the same division of labour `AN_OVERLAP_A_CONDITION_AND_THE_OLD_SPACE` makes
+ * in the concept below: ask the division first with the counts supplied, then
+ * ask where the counts came from. A learner who met the full
+ * numerator-inside-the-denominator expression first would be rearranging
+ * something with four products in it before having once reversed a conditional.
+ *
+ * `p/q` rather than a single letter, because 117/2000 is a probability and
+ * every probability in these subjects is written as a ratio of two declared
+ * integers — a lone `p` at 117/2000 would need a non-integer substitution, and
+ * `at` carries exact numerals.
+ */
+const THE_REVERSAL_WITH_ITS_TOTAL_SUPPLIED: VariableDeclaration[] = [
+  { name: 's', assumptions: { integer: true } },
+  { name: 't', assumptions: { integer: true } },
+  { name: 'a', assumptions: { integer: true } },
+  { name: 'n', assumptions: { integer: true } },
+  { name: 'p', assumptions: { integer: true } },
+  { name: 'q', assumptions: { integer: true } },
+]
+
+/**
+ * BOTH BRANCHES OF THE SPLIT IN ONE LIST — two rates and one base rate, which is
+ * everything the law of total probability needs and everything the theorem needs.
+ *
+ * Two expressions share it, which is deliberate and is the point of the list.
+ * `(s/t)*(a/n) + (f/g)*((n-a)/n)` at (9, 10, 1, 20, 1, 100) is P(positive) =
+ * 117/2000, the denominator built; and
+ * `((s/t)*(a/n))/((s/t)*(a/n) + (f/g)*((n-a)/n))` at the same six numbers is
+ * 2/13, the whole theorem. The second expression CONTAINS the first, so a
+ * learner who has produced 117/2000 has produced the denominator of the next
+ * task — and the six substitutions being identical is what says so.
+ *
+ * THE SAME EXPRESSION IS THEN ASKED AT A DIFFERENT BASE RATE AND NOWHERE ELSE,
+ * at (9, 10, 1, 20, 1, 2), giving 18/19 instead of 2/13. Every test figure is
+ * held and only `a` and `n` move, so the pair is "a test has no accuracy on its
+ * own" written as a substitution. That is this concept's version of the device
+ * the concept below used on `k/m`: one expression, two substitutions, two
+ * answers, and the difference between them is the claim.
+ *
+ * SIX LETTERS AND NOT EIGHT. The complement is `(n-a)/n` rather than its own
+ * pair, so the expression cannot be substituted into a state where the two
+ * groups fail to make up the population — which is the hypothesis the addition
+ * rule needs and the one thing a reader has to take on trust in every other
+ * presentation of this formula.
+ */
+const BOTH_BRANCHES_OF_THE_SPLIT: VariableDeclaration[] = [
+  { name: 's', assumptions: { integer: true } },
+  { name: 't', assumptions: { integer: true } },
+  { name: 'f', assumptions: { integer: true } },
+  { name: 'g', assumptions: { integer: true } },
+  { name: 'a', assumptions: { integer: true } },
+  { name: 'n', assumptions: { integer: true } },
+]
+
+/**
+ * TWO RATES AND NO BASE RATE AT ALL — the likelihood ratio, which is the only
+ * expression in these three subjects that deliberately omits the population.
+ *
+ * `(s/t)/(f/g)` at (9, 10, 1, 20) is (9/10)/(1/20) = 18: a positive result is
+ * 18 times as likely from somebody with the condition as from somebody without.
+ *
+ * THE ABSENT LETTERS ARE THE CONTENT. `a` and `n` are in every other list in
+ * this concept and are not here, because the whole claim of the odds form is
+ * that the evidence contributes one number and the population contributes
+ * another and the two are multiplied rather than mixed. A list carrying the
+ * base rate would have let the ratio look like a step in a longer calculation
+ * instead of a quantity in its own right.
+ *
+ * AND ITS ANSWER IS NOT A PROBABILITY, which is the first time in this subject.
+ * 18 is greater than 1 and is meant to be; an odds ratio does not live in
+ * [0, 1], and `tests/concepts-logic.mjs` asserts that exactly one of this
+ * concept's nine references lies outside that interval so that the exception
+ * cannot spread quietly.
+ */
+const TWO_RATES_TO_COMPARE: VariableDeclaration[] = [
+  { name: 's', assumptions: { integer: true } },
+  { name: 't', assumptions: { integer: true } },
+  { name: 'f', assumptions: { integer: true } },
+  { name: 'g', assumptions: { integer: true } },
+]
+
+/**
+ * A LIKELIHOOD RATIO AND A BASE RATE, with the odds-to-probability conversion
+ * folded into the expression.
+ *
+ * `(w*a)/(w*a + (n-a))` at (18, 1, 100) is 18/(18 + 99) = 18/117 = 2/13 — the
+ * screening answer reached a THIRD way, with no total probability computed
+ * anywhere. Prior odds of `a` to `n-a`, the first term multiplied by the ratio
+ * `w`, and `x/(x+y)` turning odds back into a probability.
+ *
+ * THE MULTIPLICATION IS VISIBLE AND THAT IS WHY THE CONVERSION IS INSIDE THE
+ * EXPRESSION RATHER THAN IN THE PROMPT. The claim of the point is that the
+ * prior is a FACTOR: `w*a` against `n-a` is 18 against 99, and a reader can see
+ * that an eighteenfold multiplier has not got 1:99 anywhere near even. Asking
+ * for the odds and then separately for the probability would have hidden that
+ * behind two small answers.
+ *
+ * THE SAME REFERENCE AS TWO EARLIER TASKS, 2/13, AND THE AGREEMENT IS THE
+ * CONTENT — the one place this concept reuses the concept below's device of two
+ * routes to one number. Three expressions of entirely different shapes give
+ * 2/13: the definition with the denominator supplied, the definition with the
+ * denominator built, and the odds form. Three forms of one statement, which is
+ * what the theorem is.
+ */
+const A_LIKELIHOOD_RATIO_AND_PRIOR_ODDS: VariableDeclaration[] = [
+  { name: 'w', assumptions: { integer: true } },
+  { name: 'a', assumptions: { integer: true } },
+  { name: 'n', assumptions: { integer: true } },
+]
+
+/**
+ * POSTERIOR ODDS AS TWO BARE NUMBERS, converted to the probability of the
+ * SECOND of them.
+ *
+ * `m/(r+m)` at (10000, 20000) is 20000/30000 = 2/3: with a likelihood ratio of
+ * 10,000 against prior odds of 1:20,000, the posterior odds are 10,000:20,000
+ * and the probability of INNOCENCE given a match is 2/3.
+ *
+ * THE ANSWER IS THE COMPLEMENTARY CASE AND THAT IS THE WHOLE TASK. Every other
+ * task in this concept answers about the condition; this one answers about its
+ * complement, because the number the prosecutor's fallacy misreports is the
+ * probability of innocence. 2/3 against the 1/10,000 quoted in the prompt is a
+ * factor of more than six thousand, and both numbers are conditionals on the
+ * same data with the arguments swapped — the confusion
+ * `conditional-probability` declares against this concept, at the largest scale
+ * the subject can produce.
+ *
+ * TWO LETTERS AND NO RATES, because at this point the two multiplications have
+ * been done. The task is deliberately the LAST of the nine: it is the only one
+ * whose numbers were produced by reasoning carried out in the prompt, and that
+ * is defensible only once the reader has done the odds-form arithmetic
+ * themselves in the task before it.
+ */
+const POSTERIOR_ODDS_OF_THE_TWO_CASES: VariableDeclaration[] = [
+  { name: 'r', assumptions: { integer: true } },
+  { name: 'm', assumptions: { integer: true } },
+]
+
 export const TASKS: PracticeTask[] = [
   /*
    * ── fraction-arithmetic ─────────────────────────────────────────────────
@@ -14291,6 +14490,361 @@ export const TASKS: PracticeTask[] = [
     // property that makes this test fail.
     reference: '7/968',
     at: { a: '10', b: '35', n: '220' },
+  },
+
+  // ── chance-and-events, forty-eighth promotion: bayes-theorem
+  //
+  // Nine tasks, three on each point, all nine `evaluate` and every one settled
+  // by exact arithmetic with no worker — the property all three concepts below
+  // hold, for the reason they give: a subject sitting this low must not be
+  // walled off by a worker outage.
+  //
+  // THE CLUB IS GONE, AND IT IS THE FIRST CONCEPT IN THE SUBJECT TO DROP IT.
+  // Twenty-seven tasks across the three concepts below are all about twelve
+  // members and 220 committees, deliberately, so that each new idea arrives on
+  // a space the learner already knows. This concept cannot use it and the
+  // reason is its boundary rather than a preference: every committee question
+  // has a countable overlap, and a reversal is only needed when the overlap
+  // CANNOT be counted. A Bayes task set on the club would be a division a
+  // learner could do by counting instead, which teaches that the theorem is
+  // optional. So the setting is a screening test, where the only data are two
+  // rates and a base rate and nothing has been counted at all.
+  //
+  // THE REFERENCE CHECK IS THEREFORE THE CONCEPT BELOW'S WITH THE SPACE GONE
+  // RATHER THAN MOVED. There `220 x reference` was whole four times of nine and
+  // that split carried the claim "conditioning replaces the space". Here it is
+  // whole for exactly ONE of the nine, and the one is the likelihood ratio 18,
+  // which is whole because it is an integer and not because it is a count of
+  // anything. So the figure that separated the two concepts below has gone to
+  // its floor and stops discriminating, which is said here rather than left for
+  // somebody to re-measure: this concept's answers are 2000ths and 13ths, and
+  // the committee draw is not in any of them.
+  //
+  //  - EIGHT of the nine lie in [0, 1] and ONE does not. 18 is an odds ratio
+  //    and odds ratios are not probabilities. That is the first reference in
+  //    these three subjects outside the interval, it is deliberate, and
+  //    tests/concepts-logic.mjs asserts the count is exactly one so that the
+  //    exception cannot spread quietly to a task that has no business being
+  //    outside it.
+  //  - NOT ONE of the nine is a count, which is the one property this concept
+  //    shares with the concept below. Every count in the material — 100, 9,900,
+  //    90, 495, 585 — is in a worked example as a CHECK on an answer the tasks
+  //    reach by dividing probabilities, so no task asks for one.
+  //
+  //     (s/t)*(a/n)                      an overlap built from a rate and a base rate
+  //     (f/g)*((n-a)/n)                  the other overlap, which decides the answer
+  //     ((s/t)*(a/n))/(p/q)              the reversal with its denominator supplied
+  //     (s/t)*(a/n) + (f/g)*((n-a)/n)    the denominator built: one term per case
+  //     ((s/t)*(a/n))/(same sum)         the whole theorem, numerator inside denominator
+  //     (s/t)/(f/g)                      the likelihood ratio, with no population in it
+  //     (w*a)/(w*a + (n-a))              prior odds times the ratio, converted back
+  //     m/(r+m)                          posterior odds read as the COMPLEMENTARY case
+  //
+  // ONE EXPRESSION IS ASKED TWICE AND THE TWO ANSWERS DIFFER, where the concept
+  // below had three such pairs. The whole theorem at a base rate of 1/100 gives
+  // 2/13 and at 1/2 gives 18/19, with both test figures held — "a test has no
+  // accuracy on its own" as a substitution. One pair rather than three because
+  // this concept has one quantity to move and the concept below had three.
+  //
+  // AND THREE DIFFERENT EXPRESSIONS AGREE ON 2/13, WHICH IS THE MOST ANY
+  // CONCEPT IN THESE SUBJECTS HAS AGREED. The concept below had exactly one
+  // agreeing pair across two shapes and asserted it as the single exception.
+  // Here the definition with the denominator given, the definition with the
+  // denominator built, and the odds form all produce 2/13 — because they are
+  // three forms of ONE statement, which is what a theorem is as opposed to a
+  // method. Nine distinct references would have been this concept's fault, more
+  // sharply than it was that one's.
+  //
+  // NO `transform_to_form`, NO `counterexample`, NO `justify`, and no
+  // `domainConditions` on any of the nine, for the reasons ontology-chance.ts
+  // gives three times already. The one addition this concept makes: `(n-a)` is
+  // the first SUBTRACTION inside a denominator in these subjects, and it cannot
+  // be zero at any substitution used, because `a < n` in all of them — checked
+  // per task rather than argued, since a base rate of 1 would make the second
+  // term vanish legitimately but would make nothing undefined.
+  {
+    id: 'build-the-overlap-from-the-conditional-you-were-given-1',
+    knowledgePointId: 'reversing-a-conditional-is-the-definition-written-twice-and-divided',
+    kind: 'evaluate',
+    prompt:
+      'A condition occurs in 1 person in 100. A screening test is positive for 9 in 10 of the '
+      + 'people who have it. Nobody has been counted and there is no overlap to look up, so the '
+      + 'probability of having the condition AND testing positive has to be built from those two '
+      + 'figures — which is the multiplication rule from the concept below, the definition of a '
+      + 'conditional probability multiplied through by its condition. Evaluate (s/t)*(a/n) at '
+      + 's = 9, t = 10, a = 1, n = 100, where s/t is the rate among people who have it and a/n '
+      + 'is the rate at which they occur.',
+    given: '(s/t)*(a/n)',
+    variables: A_RATE_UNDER_THE_CONDITION_AND_A_BASE_RATE,
+    // (9/10) × (1/100) = 9/1000.
+    //
+    // THE FIRST TASK IN THE SUBJECT WITH NO COUNT ANYWHERE IN IT, which is this
+    // concept's boundary in its opening line. The three concepts below all begin
+    // from a space somebody could in principle write out; this one begins from
+    // two rates and a base rate, and that is exactly the situation in which a
+    // reversal is the only route.
+    //
+    // 9/1000 IS 18/2000 AND THE NEXT TASK IS 99/2000, which is why the overlap
+    // is asked for on its own rather than folded into the division. The answer
+    // to the concept is that comparison, and a learner who only ever sees
+    // 9/1000 inside a fraction never makes it.
+    reference: '9/1000',
+    at: { s: '9', t: '10', a: '1', n: '100' },
+  },
+  {
+    id: 'build-the-overlap-of-the-case-you-were-not-asked-about-1',
+    knowledgePointId: 'reversing-a-conditional-is-the-definition-written-twice-and-divided',
+    kind: 'evaluate',
+    prompt:
+      'The same test is positive for 1 in 20 of the people who do NOT have the condition. Since '
+      + '1 person in 100 has it, 99 in 100 do not — so the probability of not having the '
+      + 'condition and testing positive anyway is that rate times that group. Evaluate '
+      + '(f/g)*((n-a)/n) at f = 1, g = 20, n = 100, a = 1. Then put your answer beside the '
+      + '9/1000 from the task before over a common denominator, and say which group supplies '
+      + 'most of the positive results.',
+    given: '(f/g)*((n-a)/n)',
+    variables: A_RATE_UNDER_THE_COMPLEMENT_AND_THE_BASE_RATE,
+    // (1/20) × (99/100) = 99/2000, against the previous task's 9/1000 = 18/2000.
+    //
+    // THIS IS THE TASK THAT ANSWERS THE CONCEPT, and the prompt asks for the
+    // comparison because the arithmetic alone does not force anybody to make
+    // it. 99/2000 against 18/2000: the false positives outnumber the true ones
+    // by more than five to one, even though 1 in 20 is a far smaller rate than
+    // 9 in 10, because 99 times as many people sit behind the smaller rate.
+    // A learner who has made that comparison will not report 9/10 again.
+    //
+    // `(n-a)/n` RATHER THAN A SECOND PAIR OF LETTERS, so that the substitution
+    // cannot describe two groups that fail to make up the population. The
+    // partition is the hypothesis the next point's addition needs, and building
+    // it into the expression is cheaper than asserting it in prose.
+    reference: '99/2000',
+    at: { f: '1', g: '20', n: '100', a: '1' },
+  },
+  {
+    id: 'reverse-the-conditional-with-the-denominator-supplied-1',
+    knowledgePointId: 'reversing-a-conditional-is-the-definition-written-twice-and-divided',
+    kind: 'evaluate',
+    prompt:
+      'A positive result arrives by exactly two routes, and you have both: 18/2000 from people '
+      + 'with the condition and 99/2000 from people without, so the probability of a positive '
+      + 'result at all is 117/2000. Now reverse the conditional — somebody has tested positive, '
+      + 'how likely is it they have the condition? Evaluate ((s/t)*(a/n))/(p/q) at s = 9, '
+      + 't = 10, a = 1, n = 100, p = 117, q = 2000, and compare the answer with the 9/10 the '
+      + 'test\'s own figure would have offered.',
+    given: '((s/t)*(a/n))/(p/q)',
+    variables: THE_REVERSAL_WITH_ITS_TOTAL_SUPPLIED,
+    // (9/1000)/(117/2000) = 18/117 = 2/13 ≈ 0.154.
+    //
+    // THE DENOMINATOR IS GIVEN AWAY HERE ON PURPOSE and is earned in the second
+    // point, which is the division of labour the concept below used for
+    // `(k/n)/(m/n)`: perform the reversal first, then ask where the total came
+    // from. The full expression with the numerator repeated inside the
+    // denominator is four products long, and meeting it before ever having
+    // reversed a conditional would make this a rearrangement exercise.
+    //
+    // 2/13 AGAINST 9/10 IS THE ERROR THE CONCEPT EXISTS FOR, and the prompt asks
+    // for the comparison rather than the material asserting it. 9/10 is a true
+    // statement about a question nobody asked; what the positive result did do
+    // is raise the probability from 1/100 to 2/13, more than fifteenfold, so the
+    // test is informative and the result is still far from a diagnosis.
+    //
+    // THE SAME 2/13 IS REACHED BY TWO OTHER EXPRESSIONS IN THIS CONCEPT and the
+    // agreement is the content — see the block above. It is also checked in the
+    // worked example by counting 10,000 people, where 90 true positives against
+    // 495 false ones give 90/585 = 2/13 with no conditional probability written
+    // down anywhere.
+    reference: '2/13',
+    at: { s: '9', t: '10', a: '1', n: '100', p: '117', q: '2000' },
+  },
+  {
+    id: 'build-the-denominator-as-a-sum-over-the-cases-1',
+    knowledgePointId: 'the-denominator-is-a-sum-over-the-cases-so-the-base-rate-enters-three-times',
+    kind: 'evaluate',
+    prompt:
+      'The previous point was handed 117/2000. Earn it. Everybody either has the condition or '
+      + 'does not, the two cases have no overlap and together they are everybody, so '
+      + '`sample-spaces`\' addition rule applies with no correction term and each case '
+      + 'contributes a rate times the size of its group. Evaluate '
+      + '(s/t)*(a/n) + (f/g)*((n-a)/n) at s = 9, t = 10, f = 1, g = 20, a = 1, n = 100.',
+    given: '(s/t)*(a/n) + (f/g)*((n-a)/n)',
+    variables: BOTH_BRANCHES_OF_THE_SPLIT,
+    // (9/10)(1/100) + (1/20)(99/100) = 18/2000 + 99/2000 = 117/2000 = 0.0585.
+    //
+    // THE LAW OF TOTAL PROBABILITY, AND IT IS THE ADDITION RULE AND THE
+    // MULTIPLICATION RULE USED ONCE EACH. Both are concepts below — the first in
+    // `sample-spaces`' third point and the second in `conditional-probability`'s
+    // second — so nothing here is new except the combination, which is why the
+    // prompt names the partition hypothesis instead of assuming it.
+    //
+    // IT IS THE SUM OF THE FIRST POINT'S TWO TASKS, which is the only reason
+    // this task is worth asking after those two: the learner has both terms
+    // already and the new content is that they are ADDED rather than compared.
+    // The worked example checks the split against the complement — the negatives
+    // must come to 1883/2000 and do — because a sum over badly chosen cases
+    // looks exactly like a sum over good ones.
+    reference: '117/2000',
+    at: { s: '9', t: '10', f: '1', g: '20', a: '1', n: '100' },
+  },
+  {
+    id: 'assemble-the-whole-theorem-in-one-expression-1',
+    knowledgePointId: 'the-denominator-is-a-sum-over-the-cases-so-the-base-rate-enters-three-times',
+    kind: 'evaluate',
+    prompt:
+      'Now the whole thing at once, with nothing supplied: the overlap you want on top, and '
+      + 'underneath it the sum of that same overlap and the other one. Evaluate '
+      + '((s/t)*(a/n))/((s/t)*(a/n) + (f/g)*((n-a)/n)) at s = 9, t = 10, f = 1, g = 20, a = 1, '
+      + 'n = 100. Before you simplify, count the places the base rate 1/100 appears — counting '
+      + 'the 99/100 as one of them.',
+    given: '((s/t)*(a/n))/((s/t)*(a/n) + (f/g)*((n-a)/n))',
+    variables: BOTH_BRANCHES_OF_THE_SPLIT,
+    // 18/117 = 2/13, the same answer as the third task by a route that builds
+    // its own denominator.
+    //
+    // THE NUMERATOR IS ONE OF THE TWO TERMS IN THE DENOMINATOR, which is the
+    // structural fact the expression is for and which the prompt's counting
+    // question is about. The base rate appears three times — numerator, first
+    // denominator term, and as the complement in the second — so it cannot be a
+    // correction applied at the end. A quantity above and below a division line
+    // does not scale what the division gives; it sets how the two terms below
+    // compare, and the answer is nothing but that comparison.
+    //
+    // ALSO WHY THE ANSWER CANNOT EXCEED 1 AND IS NEAR 1 ONLY WHEN THE OTHER TERM
+    // IS SMALL, which the next task demonstrates by making it small.
+    reference: '2/13',
+    at: { s: '9', t: '10', f: '1', g: '20', a: '1', n: '100' },
+  },
+  {
+    id: 'move-the-base-rate-alone-and-keep-every-test-figure-1',
+    knowledgePointId: 'the-denominator-is-a-sum-over-the-cases-so-the-base-rate-enters-three-times',
+    kind: 'evaluate',
+    prompt:
+      'The same test — still positive for 9 in 10 who have the condition and 1 in 20 who do '
+      + 'not — is now used on a group in which 1 person in 2 has it. Change nothing but the '
+      + 'base rate. Evaluate ((s/t)*(a/n))/((s/t)*(a/n) + (f/g)*((n-a)/n)) at s = 9, t = 10, '
+      + 'f = 1, g = 20, a = 1, n = 2. Then say what the two answers together mean for the '
+      + 'sentence "this test is 90% accurate".',
+    given: '((s/t)*(a/n))/((s/t)*(a/n) + (f/g)*((n-a)/n))',
+    variables: BOTH_BRANCHES_OF_THE_SPLIT,
+    // (9/20)/((9/20) + (1/40)) = (9/20)/(19/40) = 18/19 ≈ 0.947, against 2/13 ≈
+    // 0.154 at a base rate of 1/100.
+    //
+    // ONE EXPRESSION, TWO SUBSTITUTIONS, AND ONLY `a` AND `n` MOVED — which is
+    // the concept below's device for `k/m` applied to the one quantity this
+    // concept has to move. Both test figures are identical in the two `at`
+    // maps, so the difference cannot be attributed to the test, and the pair is
+    // the assertion rather than the prose: a test has two rates and no accuracy,
+    // and the probability a positive result carries depends on who was tested.
+    // Screening everybody and testing people who already have symptoms are two
+    // different experiments with one piece of equipment.
+    //
+    // 2/13 AND 18/19 ARE THE WIDEST SAME-EXPRESSION PAIR IN THIS SUBJECT, and
+    // the comparison class is named because the superlative is false without
+    // it: plenty of unrelated pairs of references sit further apart. Of the six
+    // expressions asked at more than one substitution across the four
+    // concepts, this one spans 0.79 and the runner-up is `k/m` at 0.49 — the
+    // asymmetry of conditioning, one layer down. Wider here because a base
+    // rate can be moved freely where an overlap cannot, and
+    // tests/concepts-logic.mjs recomputes the ranking rather than restating it.
+    reference: '18/19',
+    at: { s: '9', t: '10', f: '1', g: '20', a: '1', n: '2' },
+  },
+  {
+    id: 'compute-the-likelihood-ratio-on-its-own-1',
+    knowledgePointId: 'in-odds-form-the-update-is-one-multiplication-by-the-likelihood-ratio',
+    kind: 'evaluate',
+    prompt:
+      'Write the theorem for the condition and again for its complement, and divide one by the '
+      + 'other: the probability of a positive result is the denominator of both, so it cancels '
+      + 'and no sum over cases is left. What survives from the evidence is a single ratio — how '
+      + 'much likelier a positive is under the condition than without it. Evaluate (s/t)/(f/g) '
+      + 'at s = 9, t = 10, f = 1, g = 20, and say what it means that this answer is bigger '
+      + 'than 1.',
+    given: '(s/t)/(f/g)',
+    variables: TWO_RATES_TO_COMPARE,
+    // (9/10)/(1/20) = (9/10) × 20 = 18.
+    //
+    // THE ONLY REFERENCE IN THESE THREE SUBJECTS OUTSIDE [0, 1], and it is
+    // deliberate rather than tolerated: an odds ratio is not a probability. The
+    // prompt asks about it so that a learner reading 18 does not take it for a
+    // mistake, and tests/concepts-logic.mjs asserts that exactly one of the nine
+    // is outside the interval so the exception cannot spread.
+    //
+    // NO BASE RATE IN THE EXPRESSION, which is the claim of the whole point. The
+    // evidence contributes one number and the population contributes another and
+    // the two are MULTIPLIED, so neither rate means anything on its own —
+    // 9 in 10 and 1 in 20 could both be different and give the same 18.
+    reference: '18',
+    at: { s: '9', t: '10', f: '1', g: '20' },
+  },
+  {
+    id: 'multiply-prior-odds-by-the-ratio-and-convert-back-1',
+    knowledgePointId: 'in-odds-form-the-update-is-one-multiplication-by-the-likelihood-ratio',
+    kind: 'evaluate',
+    prompt:
+      'A base rate of 1 in 100 is prior odds of 1 to 99. Multiply the first of those by the '
+      + 'likelihood ratio 18 and you have the posterior odds; odds of x to y mean a probability '
+      + 'of x/(x+y). Evaluate (w*a)/(w*a + (n-a)) at w = 18, a = 1, n = 100 — and notice that '
+      + 'the probability of a positive result, which the second point had to build, is nowhere '
+      + 'in this calculation.',
+    given: '(w*a)/(w*a + (n-a))',
+    variables: A_LIKELIHOOD_RATIO_AND_PRIOR_ODDS,
+    // 18/(18 + 99) = 18/117 = 2/13, the same answer as the third and fifth
+    // tasks, by a route with no total probability in it at all.
+    //
+    // THE THIRD SHAPE TO GIVE 2/13, and the agreement is the content rather than
+    // a duplicate: the definition with its denominator supplied, the definition
+    // with its denominator built, and the odds form are three forms of ONE
+    // statement. That is what distinguishes a theorem from a method, and it is
+    // the concept below's two-routes-one-number device at the largest scale the
+    // subject has used it.
+    //
+    // THE MULTIPLICATION IS LEFT VISIBLE, which is why the conversion is inside
+    // the expression. `w*a` against `n-a` is 18 against 99: a large multiplier
+    // on long odds is still long odds, because multiplying is not adding. Asking
+    // for the odds and then the probability separately would have hidden the one
+    // comparison the point is about — and it is the form in which the prior is
+    // hardest to drop by accident, since it sits in plain sight as a factor
+    // rather than buried in a denominator.
+    reference: '2/13',
+    at: { w: '18', a: '1', n: '100' },
+  },
+  {
+    id: 'read-the-posterior-odds-as-the-probability-of-innocence-1',
+    knowledgePointId: 'in-odds-form-the-update-is-one-multiplication-by-the-likelihood-ratio',
+    kind: 'evaluate',
+    prompt:
+      'A trace matches whoever left it, and matches 1 person in 10,000 by chance, so the '
+      + 'likelihood ratio is 10,000. Exactly one of 20,001 equally suspected people left it, so '
+      + 'the prior odds against any particular one of them are 1 to 20,000 — and multiplying '
+      + 'the first term by the ratio gives posterior odds of 10,000 to 20,000. Somebody '
+      + 'matches. Evaluate m/(r+m) at r = 10000, m = 20000 to find the probability that they '
+      + 'are INNOCENT, and compare it with the 1 in 10,000 that gets quoted.',
+    given: 'm/(r+m)',
+    variables: POSTERIOR_ODDS_OF_THE_TWO_CASES,
+    // 20000/30000 = 2/3. Checked by counting: the one guilty person matches, and
+    // about 20000 × 1/10000 = 2 of the innocents match, so a match picks out
+    // about three people of whom one is guilty.
+    //
+    // THE ONLY TASK IN THE CONCEPT ANSWERING ABOUT THE COMPLEMENT, because the
+    // number the prosecutor's fallacy misreports is the probability of
+    // INNOCENCE. P(match given innocence) = 1/10,000 and P(innocence given a
+    // match) = 2/3 come out of the same data, differ by more than six
+    // thousandfold, and the second is what a verdict turns on while the first is
+    // what gets quoted. That is the confusion `conditional-probability` declares
+    // against this concept as the most consequential in the subject, at the
+    // largest scale these subjects can produce — the first point made the same
+    // swap with 9/10 against 2/13.
+    //
+    // AND IT DOES NOT SAY THE MATCH IS WORTHLESS. A likelihood ratio of 10,000
+    // is enormous; it is the prior odds of 1:20,000 that leave the answer where
+    // it is, which is the point's claim about multiplication arriving as a
+    // number rather than as a warning.
+    //
+    // LAST OF THE NINE DELIBERATELY. Its two numbers were produced by reasoning
+    // carried out in the prompt, which is only defensible once the reader has
+    // done the odds-form arithmetic themselves in the task before it.
+    reference: '2/3',
+    at: { r: '10000', m: '20000' },
   },
 ]
 
