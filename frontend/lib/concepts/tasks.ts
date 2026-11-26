@@ -281,6 +281,43 @@ const REAL_ABCDE = [
 ]
 
 /**
+ * A line's slope and intercept, plus a circle's radius — for the nonlinear
+ * systems.
+ *
+ * Three more declarations rather than reusing a set above with letters renamed,
+ * for the reason every set here gives: every declared symbol must have a stated
+ * input, and an unused one is an authoring fault the suite reports. The names
+ * are the mathematics' own rather than a, b, c, which is a departure from the
+ * rest of this file and deliberate. `m` is a slope, `k` an intercept, `r` and
+ * `s` radii and `d` the distance between two centres, and these expressions are
+ * long enough — a quadratic formula at substituted coefficients — that a reader
+ * checking one against the prose needs the letters to say what they are. The
+ * four concepts above name coefficients positionally because their expressions
+ * are short and the system is written ax + by = c in every prompt.
+ *
+ * Real rather than integer, matching the rest of this subject: nothing about
+ * intersecting a line with a circle needs whole numbers, and the whole numbers
+ * in the prompts are a choice about the arithmetic a learner meets rather than
+ * a condition on the method. ontology-algebra.ts's header argues that choice.
+ */
+const REAL_KMR = [
+  { name: 'k', assumptions: { real: true } },
+  { name: 'm', assumptions: { real: true } },
+  { name: 'r', assumptions: { real: true } },
+]
+
+const REAL_KM = [
+  { name: 'k', assumptions: { real: true } },
+  { name: 'm', assumptions: { real: true } },
+]
+
+const REAL_DRS = [
+  { name: 'd', assumptions: { real: true } },
+  { name: 'r', assumptions: { real: true } },
+  { name: 's', assumptions: { real: true } },
+]
+
+/**
  * The arithmetic tasks declare `integer`, not `real`.
  *
  * It is a stronger assumption than the algebra tasks make and it is the honest
@@ -4819,6 +4856,209 @@ export const TASKS: PracticeTask[] = [
     // all three: 17/2 − 3 + 1/2 = 6, 17/2 − 6 − 1/2 = 2, and 17 − 9 = 8.
     reference: '17/2',
     at: { a: '6', b: '2', c: '1/2' },
+  },
+
+  // ── expressions-and-equations: nonlinear-systems ───────────────────────
+  //
+  // EIGHT MORE `evaluate` TASKS, AND THE THREE SHAPES ARE THE THREE THE
+  // PREVIOUS TWO CONCEPTS ESTABLISHED, WITH ONE OF THEM DOING A NEW JOB.
+  //
+  // Every `given` is still the method carried out ON THE LETTERS, and here it
+  // is the quadratic formula at the coefficients a substitution produces.
+  // Putting y = mx + k into x² + y² = r² gives (1 + m²)x² + 2mkx + (k² − r²)
+  // = 0, so the roots are (−mk ± √(m²k² − (1 + m²)(k² − r²)))/(1 + m²), and
+  // that is the learner's own substitution and solve written down once in
+  // general. The prompts carry the systems in numbers and nothing in the task
+  // data carries the formula to them.
+  //
+  // A POINT COSTS TWO TASKS, which is the shape `solve-system-eliminate-for-*`
+  // established and the reason the first two here are a pair rather than
+  // repetition. `nonlinear-line-meets-circle-x-1` and
+  // `nonlinear-line-meets-circle-y-1` are the 3 and the 4 of ONE intersection,
+  // and the y task's expression is the x task's fed through the line — which is
+  // the knowledge point's fourth subgoal as a ruling, because a learner who
+  // pairs x = 3 with the other root's y has produced two numbers that satisfy
+  // neither equation. `nonlinear-line-meets-circle-second-x-1` is the third in
+  // that group and is the minus branch of the same expression: two tasks say
+  // what a point is and the third says there are two of them, which a pair
+  // alone cannot.
+  //
+  // THE SECOND SHAPE IS A PAIR DIFFERING IN ONE INPUT, lifted straight from
+  // `inconsistent-system-leftover-1` against `dependent-system-leftover-1`.
+  // `nonlinear-discriminant-touches-1` and `nonlinear-discriminant-misses-1`
+  // share the expression `m^2 + 4*k` and the input m = 2, and differ in k:
+  // 4 + 4(−1) = 0 against 4 + 4(−2) = −4. Both are the discriminant of
+  // x² − mx − k = 0, which is what substituting y = mx + k into y = x² leaves.
+  // Neither task asks HOW MANY points there are — that is a classification and
+  // no verifiable kind returns one. Each asks for the number that decides it.
+  // `nonlinear-tangent-x-1` is the third and is what a discriminant of 0 is
+  // WORTH: the repeated root is the single point of contact, and reaching it
+  // means having computed the 0 first rather than reporting it.
+  //
+  // THE THIRD SHAPE IS THE PAIR AGAIN AND THE NEW JOB IS IN THE SECOND HALF.
+  // `nonlinear-two-circles-x-1` and `nonlinear-two-circles-y-1` are the x and
+  // the y of (3, 4), so they are a point costing two tasks for the second time
+  // in this concept — but the y task is a back-substitution INTO A SQUARE
+  // rather than into a line, so its expression carries a `sqrt` and its answer
+  // has a twin. The prompt says which of the two to submit and says the other
+  // is equally a solution, because an answer key that silently preferred the
+  // positive root would be teaching that a square root has one value.
+  //
+  // ALL EIGHT ARE EXACT INTEGERS, which took choosing rather than luck and is
+  // argued in ontology-algebra.ts's header: the quadratic a substitution leaves
+  // has irrational roots for almost every line anybody writes down, and
+  // `quadratic-formula` already owns the surd. The circle is given radius 5 and
+  // the chord is put at x = 3, so both `sqrt` calls land on whole numbers off
+  // the same 3–4–5 triangle. So this subject still rules with no worker
+  // configured, which is the contract the four concepts above hold and which
+  // matters most at the bottom of the entry route.
+  {
+    id: 'nonlinear-line-meets-circle-x-1',
+    knowledgePointId: 'substitution-is-the-only-move-left',
+    kind: 'evaluate',
+    prompt:
+      'Solve y = x + 1 and x² + y² = 25, and submit the LARGER of the two x-coordinates. '
+      + 'Combining the equations cancels nothing — no multiple of y will kill a y² — so put '
+      + 'x + 1 in for y, brackets included, and solve the quadratic that is left. The y is '
+      + 'asked for separately, because a solution here is a point and each coordinate is its '
+      + 'own answer.',
+    given: '(-m*k + sqrt(m^2*k^2 - (1 + m^2)*(k^2 - r^2)))/(1 + m^2)',
+    variables: REAL_KMR,
+    // The line is y = mx + k and the circle x² + y² = r², so substituting
+    // leaves (1 + m²)x² + 2mkx + (k² − r²) = 0 and the roots are as written.
+    // At m=1, k=1, r=5: m²k² = 1 and (1 + m²)(k² − r²) = 2(1 − 25) = −48, so
+    // the root is (−1 + √49)/2 = 6/2 = 3. Against the equations themselves:
+    // y = 3 + 1 = 4, and 3² + 4² = 9 + 16 = 25.
+    reference: '3',
+    at: { m: '1', k: '1', r: '5' },
+  },
+  {
+    id: 'nonlinear-line-meets-circle-y-1',
+    knowledgePointId: 'substitution-is-the-only-move-left',
+    kind: 'evaluate',
+    prompt:
+      'The other coordinate of that same intersection point of y = x + 1 and x² + y² = 25. '
+      + 'Submit the y that goes with the larger x. It comes from the line rather than from the '
+      + 'circle, which is also why the finished pair has to be checked in the circle: the line '
+      + 'is where the y was computed and cannot catch a slip.',
+    given: 'm*((-m*k + sqrt(m^2*k^2 - (1 + m^2)*(k^2 - r^2)))/(1 + m^2)) + k',
+    variables: REAL_KMR,
+    // The x task's expression fed through the line y = mx + k, which is what
+    // the back-substitution is. At the same inputs, 1·3 + 1 = 4. Paired with
+    // the task above: the two together are the point (3, 4), and pairing this
+    // 4 with the OTHER root −4 gives (−4, 4), which satisfies neither equation.
+    reference: '4',
+    at: { m: '1', k: '1', r: '5' },
+  },
+  {
+    id: 'nonlinear-line-meets-circle-second-x-1',
+    knowledgePointId: 'substitution-is-the-only-move-left',
+    kind: 'evaluate',
+    prompt:
+      'The same system, y = x + 1 with x² + y² = 25, has a second intersection point. Submit '
+      + 'the SMALLER x-coordinate. The quadratic has two roots and both are real here, so the '
+      + 'line crosses the circle rather than touching it — one root would have been the whole '
+      + 'answer only if the two had collapsed together.',
+    given: '(-m*k - sqrt(m^2*k^2 - (1 + m^2)*(k^2 - r^2)))/(1 + m^2)',
+    variables: REAL_KMR,
+    // The minus branch of the first task's expression, at the same inputs:
+    // (−1 − 7)/2 = −4, whose partner on the line is −3. Checking (−4, −3) in
+    // the circle: 16 + 9 = 25. Two tasks say what a point is; this one says
+    // there are two of them, which the pair above cannot.
+    reference: '-4',
+    at: { m: '1', k: '1', r: '5' },
+  },
+  {
+    id: 'nonlinear-discriminant-touches-1',
+    knowledgePointId: 'the-discriminant-counts-the-intersections',
+    kind: 'evaluate',
+    prompt:
+      'The parabola y = x² meets the line y = 2x − 1. Substitute to get one equation in x, and '
+      + 'submit the DISCRIMINANT of it — the part of the quadratic formula under the root sign. '
+      + 'Do not find the roots: the discriminant is what says how many there are, and it is '
+      + 'reachable without them.',
+    given: 'm^2 + 4*k',
+    variables: REAL_KM,
+    // Substituting y = mx + k into y = x² leaves x² − mx − k = 0, whose
+    // discriminant is (−m)² − 4(1)(−k) = m² + 4k. At m=2, k=−1 that is
+    // 4 − 4 = 0, so the two roots have collapsed: x² − 2x + 1 = (x − 1)² and
+    // the line touches the parabola at (1, 1), which is the next task.
+    reference: '0',
+    at: { m: '2', k: '-1' },
+  },
+  {
+    id: 'nonlinear-discriminant-misses-1',
+    knowledgePointId: 'the-discriminant-counts-the-intersections',
+    kind: 'evaluate',
+    prompt:
+      'The same parabola y = x² against y = 2x − 2 — one number changed. Submit the '
+      + 'discriminant again. A negative value means the quadratic has no real root at all, so '
+      + 'the line and the parabola never meet; nothing about the two equations contradicts, '
+      + 'which is what makes this different from a pair of parallel lines.',
+    given: 'm^2 + 4*k',
+    variables: REAL_KM,
+    // Same expression and same m as the task above, one input different:
+    // 4 + 4(−2) = −4. x² − 2x + 2 = 0 has no real root, and the line passes
+    // above the parabola everywhere. The pair of tasks is two of the three
+    // outcomes side by side, which is as close as `evaluate` gets to a count.
+    reference: '-4',
+    at: { m: '2', k: '-2' },
+  },
+  {
+    id: 'nonlinear-tangent-x-1',
+    knowledgePointId: 'the-discriminant-counts-the-intersections',
+    kind: 'evaluate',
+    prompt:
+      'A discriminant of 0 says y = x² and y = 2x − 1 meet at exactly one point. Submit the '
+      + 'x-coordinate of it. The formula still applies — the two roots have come together, so '
+      + 'reaching this number means having the discriminant first rather than being told it is '
+      + 'zero.',
+    given: '(m + sqrt(m^2 + 4*k))/2',
+    variables: REAL_KM,
+    // The quadratic formula on x² − mx − k = 0, whose roots are
+    // (m ± √(m² + 4k))/2. At m=2, k=−1 the root under the sign is 0, so both
+    // branches give (2 + 0)/2 = 1, and y = 1² = 1 — the line y = 2x − 1 passes
+    // through (1, 1) and touches there. Evidences "one point" where the pair
+    // above only evidences "not two".
+    reference: '1',
+    at: { m: '2', k: '-1' },
+  },
+  {
+    id: 'nonlinear-two-circles-x-1',
+    knowledgePointId: 'two-conics-lose-both-squares-at-once',
+    kind: 'evaluate',
+    prompt:
+      'Solve x² + y² = 25 and (x − 6)² + y² = 25. Neither equation names a letter, so there is '
+      + 'nothing to substitute — expand the second, subtract the first, and both squared terms '
+      + 'go at once. Solve the linear equation that is left and submit the x. Both intersection '
+      + 'points share it, which is why one linear equation is enough.',
+    given: '(d^2 + r^2 - s^2)/(2*d)',
+    variables: REAL_DRS,
+    // The circles are x² + y² = r² and (x − d)² + y² = s². Expanding the
+    // second gives x² − 2dx + d² + y² = s², and subtracting the first leaves
+    // −2dx + d² = s² − r², so x = (d² + r² − s²)/(2d). At d=6, r=5, s=5 that
+    // is (36 + 25 − 25)/12 = 3. The line x = 3 is also the perpendicular
+    // bisector of the two centres here, the radii being equal.
+    reference: '3',
+    at: { d: '6', r: '5', s: '5' },
+  },
+  {
+    id: 'nonlinear-two-circles-y-1',
+    knowledgePointId: 'two-conics-lose-both-squares-at-once',
+    kind: 'evaluate',
+    prompt:
+      'Put that x back into x² + y² = 25 and submit the POSITIVE y. There are two values and '
+      + 'both are intersection points — the thing being undone is a square, not a line, so one '
+      + 'x carries two partners here where the line-and-circle system gave each root exactly '
+      + 'one.',
+    given: 'sqrt(r^2 - ((d^2 + r^2 - s^2)/(2*d))^2)',
+    variables: REAL_DRS,
+    // The x the task above produces, substituted into the first circle: at
+    // d=6, r=5, s=5 that is √(25 − 9) = 4, and −4 is equally a solution. The
+    // two points are (3, 4) and (3, −4); checking the first in the circle the
+    // coordinate did NOT come from, (3 − 6)² + 4² = 9 + 16 = 25.
+    reference: '4',
+    at: { d: '6', r: '5', s: '5' },
   },
 
   // ── plane-geometry ──────────────────────────────────────────────────────

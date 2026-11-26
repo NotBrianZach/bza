@@ -1912,17 +1912,67 @@ const CONCEPTS: Concept[] = [
         workedExample: {
           problem: 'Solve x² + 2x − 1 = 0 exactly.',
           subgoals: [
-            { label: 'Name a, b, c', detail: 'a = 1, b = 2, c = −1.' },
-            { label: 'The discriminant', detail: '4 − 4·1·(−1) = 4 + 4 = 8. Positive, not a square.' },
+            {
+              label: 'Name a, b, c',
+              detail: 'a = 1, b = 2, c = −1.',
+              socratic:
+                'Twice already in this concept you have read a, b and c off a quadratic, and the ' +
+                'hard part the second time was that the minus signs stood between the terms ' +
+                'rather than in front of the numbers. x² + 2x − 1 has one minus sign only, and ' +
+                'it sits in front of a 1 — the smallest of the three numbers and the one whose ' +
+                'sign will count for most once 4ac is formed. Rewrite the expression as a sum, ' +
+                'so each coefficient ends up carrying its own sign, and read the three off that. ' +
+                'What are a, b and c, and what would be different about the quadratic if you ' +
+                'recorded c as 1 rather than as whatever it turns out to be?',
+            },
+            {
+              label: 'The discriminant',
+              detail: '4 − 4·1·(−1) = 4 + 4 = 8. Positive, not a square.',
+              socratic:
+                'Only one of the three coefficients is negative this time, and it is c — so the ' +
+                'same thing happens to 4ac as happened in x² − 2x − 15, and subtracting it will ' +
+                'again leave you above b² rather than below it. Work b² and 4ac out separately ' +
+                'and only then subtract. Now the reading, which has two parts to it: the first ' +
+                'point in this concept said the sign of b² − 4ac settles how many real roots ' +
+                'there are, and that a perfect square settles the further question of what kind ' +
+                'of numbers they are — and the 64 of the last example answered both of those the ' +
+                'same comfortable way. What does b² − 4ac come to here, which of the two readings ' +
+                'does that value satisfy and which does it fail, and so what should you be ' +
+                'expecting of the two roots before you have found either?',
+            },
             {
               label: 'Substitute and simplify the surd',
               detail: 'x = (−2 ± √8)/2. √8 = 2√2, so x = (−2 ± 2√2)/2 = −1 ± √2.',
+              socratic:
+                'Substituting the discriminant into x = (−b ± √(b² − 4ac)) / 2a gives a numerator ' +
+                'with √8 standing in it, and now something happens that did not happen in either ' +
+                'earlier point: √8 is not a whole number, so the arithmetic stops short of a ' +
+                'number — and the word "exactly" in the problem is what forbids you to finish it ' +
+                'with a decimal. Two separate moves are left. One is inside the radical: 8 is not ' +
+                'a square, but it is not free of squares either, so ask which square number ' +
+                'divides it and what that lets you carry outside. The other is the 2 underneath, ' +
+                'and this subject has already told you that cancelling needs a factor of the ' +
+                'whole numerator rather than of one term standing in it. What does √8 simplify ' +
+                'to, what does the numerator read as once that is in, and why may the 2 ' +
+                'underneath divide both terms of it when striking an x out of x + 3 was not ' +
+                'allowed?',
             },
             {
               label: 'Why factoring could not have done this',
               detail:
                 'There is no pair of rationals multiplying to −1 and adding to 2. That is the ' +
                 'same fact as the discriminant not being a perfect square.',
+              socratic:
+                'Run the pair-hunt on x² + 2x − 1 before you answer — two numbers multiplying to ' +
+                '−1 and adding to 2 — and it comes up empty, which is exactly where you stood on ' +
+                'x² + x + 1. There you were told that an empty search settles nothing by itself, ' +
+                'since it cannot tell factors that are absent from factors you failed to find. ' +
+                'The two cases cannot be the same case, though, because x² + x + 1 has no real ' +
+                'roots at all and you have just written down two of them for this quadratic. So ' +
+                'b² − 4ac is telling apart more than two situations. How does the 8 stand to the ' +
+                '−3 you got there — in what respect do the two verdicts agree about factoring, ' +
+                'and in what respect do they differ about roots — and what kind of number was ' +
+                'the pair-hunt restricted to all along that −1 ± √2 is not?',
             },
           ],
           answer: 'x = −1 + √2 or x = −1 − √2',

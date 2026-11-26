@@ -464,37 +464,36 @@ function PlayPageInner() {
 
             {sessions.length > 0 && (
               <section className="mb-10">
-                <div className="flex items-baseline gap-2 mb-3">
-                  <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200">
-                    Your games
-                    {/* The count, so a collapsed list says what it is holding
-                        back rather than looking like the whole of it. */}
-                    {sessions.length > VISIBLE_GAMES && (
-                      <span className="ml-1.5 font-normal text-gray-400 dark:text-gray-500">
-                        {sessions.length}
-                      </span>
-                    )}
-                  </h2>
-                  {/* A way down to the picker that does not depend on how long
-                      this list is. Capping the list bounds the scroll; this
-                      removes it, which is the other half of the complaint — the
-                      picker was always below your games, and with any number of
-                      them that is still a scroll.
+                {/* THERE IS NO "New game" BUTTON IN THIS HEADER ANY MORE, and
+                    the reason is worth keeping because the button was right
+                    when it was written. It scrolled to `#start-a-game`, and it
+                    existed because the picker sat below an unbounded list of
+                    your games — with any number of them, reaching it was a
+                    scroll that this header could remove.
 
-                      A scroll rather than a jump, and rather than moving the
-                      picker up here: the picker is where it belongs on the page,
-                      and landing on it with the list still above means a player
-                      can see where they came from. `scrollIntoView` and not an
-                      `#anchor` href, because the href would put a fragment in
-                      the URL that survives a reload and a share. */}
-                  <button
-                    onClick={() => document.getElementById('start-a-game')
-                      ?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-                    className="ml-auto flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
-                  >
-                    <Plus size={13} /> New game
-                  </button>
-                </div>
+                    Hoisting "Start playing" to the top of the page is what made
+                    it redundant, and in both of its jobs at once. One tap on a
+                    featured game now starts one from above everything, so the
+                    cheap action no longer goes through the picker at all; and
+                    that row carries its own link to `#start-a-game` — "All N
+                    games, lengths and variants ↓" — which is the same
+                    destination named better, since it says what is down there.
+
+                    So this was the third route to one anchor and the weakest of
+                    the three: a `+` that promised to create a game and only
+                    scrolled. The two it duplicated sit two rows above it for a
+                    returning player, because `showExample` defaults false once
+                    you have games. Removing it costs no reachability. */}
+                <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                  Your games
+                  {/* The count, so a collapsed list says what it is holding
+                      back rather than looking like the whole of it. */}
+                  {sessions.length > VISIBLE_GAMES && (
+                    <span className="ml-1.5 font-normal text-gray-400 dark:text-gray-500">
+                      {sessions.length}
+                    </span>
+                  )}
+                </h2>
 
                 {/* The search field appears only once there is enough to search,
                     the same furniture rule the preset picker follows: below that
@@ -659,9 +658,12 @@ function PlayPageInner() {
             )}
 
             {error && <p className="mb-3 text-xs text-red-500 dark:text-red-400">{error}</p>}
-            {/* The scroll target for "New game" above. On the wrapper rather
-                than inside GamePicker, so the picker stays a component that
-                knows nothing about the page it sits on. */}
+            {/* The scroll target for the "All {GAME_LIST.length} games" link
+                under the Start playing row — the only thing pointing here now
+                that "Your games" no longer carries a New game button of its
+                own. On the wrapper rather than inside GamePicker, so the picker
+                stays a component that knows nothing about the page it sits
+                on. */}
             <div id="start-a-game" className="scroll-mt-4">
               <GamePicker available={media} onStart={startGame} starting={starting} />
             </div>

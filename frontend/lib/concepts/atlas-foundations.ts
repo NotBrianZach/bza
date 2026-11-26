@@ -116,7 +116,19 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
     'forces the check, an even power sending two numbers to one where an odd power sends each ' +
     'to its own. What stays behind of that one is the inequality — asking which numbers satisfy ' +
     'a condition with a root in it is answered by an interval, and it is named here and not ' +
-    'written for the same reason the other two are not. So the old line between ' +
+    'written for the same reason the other two are not. The nonlinear systems have gone as a ' +
+    'forty-third, taking the whole of what solving one is: that combining the equations cancels ' +
+    'nothing once a letter meets its own square, so substitution is the only way in; that what ' +
+    'substitution leaves is a QUADRATIC, which is why there are two intersection points and ' +
+    'why each root has to be paired with the partner its own line gives it; that the COUNT of ' +
+    'solutions is the discriminant of that quadratic, read off before any root is found, and ' +
+    'that missing entirely is an ordinary thing for a line to do rather than the contradiction ' +
+    'it was in the linear case; and that two conics carrying the same squared terms lose both ' +
+    'of them to one subtraction, which leaves the line the intersection points lie on. What ' +
+    'stays behind of that one is nothing, because what would have stayed behind is the SHAPES — ' +
+    'why one of those equations draws a circle and where a parabola sits — and the map already ' +
+    'files those as `circles-analytic` and `conic-sections` in Euclidean geometry, where they ' +
+    'depend on the coordinate plane rather than on the solving. So the old line between ' +
     'number and algebra ' +
     '— nothing ' +
     'symbolic on one side, a letter standing for an unknown on the other — still holds of the ' +
@@ -144,7 +156,7 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
    * region, it is a leftover, and a map that lets every successful branch
    * decay into one has no editorial standard left. The remnant's own note said
    * exactly this before the merge existed, and said what to do instead: merge
-   * into a neighbour. That note is reproduced below, where the ten departures
+   * into a neighbour. That note is reproduced below, where the eleven departures
    * are counted.
    *
    * ONE HONEST WEAKNESS IN THE CHECK — RECOMMENDED, NOT APPLIED. The floor
@@ -190,7 +202,7 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
    * original.
    * `number-and-arithmetic` arrived with `links` EMPTY — it had handed its
    * last entry back to `arithmetic-foundations` when `gcd-and-lcm` was
-   * promoted — and not one of the nine entries below has both ends inside
+   * promoted — and not one of the eleven entries below has both ends inside
    * this area, so nothing had to go and nothing had to move. Nor did either
    * area carry a `confusedWith` on a node that moved: the single interference
    * in the merged area is `linear-inequalities ~ linear-equations`, and both
@@ -222,29 +234,44 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
    * THE FIGURE IN THIS PARAGRAPH IS THE KIND THAT ROTS, so it is stated as a
    * count that can be checked rather than left as prose. It read "ten nodes,
    * five promotions of room" when the four route nodes had just been taken;
-   * `absolute-value`, `percent`, `scientific-notation` and `radical-equations`
-   * have gone since, none of them for a route, and it is SIX nodes and ONE
-   * promotion of room. Whoever takes the next one should correct this sentence
-   * rather than adding another beside it — a paragraph accumulating revisions
-   * of one number is harder to trust than a wrong number, because a reader
-   * cannot tell which revision is current.
+   * `absolute-value`, `percent`, `scientific-notation`, `radical-equations` and
+   * `nonlinear-systems` have gone since, none of them for a route, and it is
+   * FIVE nodes and NO promotions of room by node count at all. Whoever takes
+   * the next one should correct this sentence rather than adding another beside
+   * it — a paragraph accumulating revisions of one number is harder to trust
+   * than a wrong number, because a reader cannot tell which revision is
+   * current.
    *
-   * ONE PROMOTION OF ROOM IS THE SHAPE `linear-algebra` IS ALREADY IN, and
-   * saying so is the useful part of the figure. That area holds six nodes
-   * against the same floor with one ready candidate, and its own note records
-   * that the merge question arrives next however you count it. This area is one
-   * promotion behind it on the same path. Nothing here is urgent and nothing
-   * here should be fixed by touching the threshold — what a drained area wants
-   * is a neighbour, which is the argument the block above makes and a decision
-   * about the learner-facing map rather than an authoring call.
+   * NO ROOM BY NODE COUNT IS NOT THE SAME AS NO ROOM, and the distinction is
+   * the whole reason `MapArea.departed` exists — so this paragraph has to state
+   * which number it is quoting or it misleads in the opposite direction from
+   * the one it used to. Five nodes plus eleven departures is sixteen of
+   * territory against a floor of five, and `STUB_FLOOR_TERRITORY` has read
+   * sixteen since the merge however the nodes were distributed. What has
+   * changed is only that the two readings now DISAGREE here for the first time:
+   * node count says spent, territory says eleven clear. tests/atlas.mjs
+   * asserts both.
    *
-   * WHAT THE LAST ONE IS SPENT ON IS NOT A FREE CHOICE, which is the part a
-   * budget framed in nodes hides. Of the six, `complex-numbers` and
+   * WHICH READING IS LIVE IS A DECISION ALREADY MADE AND WORTH NOT
+   * RE-LITIGATING. The floor was changed to count departures precisely so an
+   * area that drained by succeeding would stop being read as a sketch, and a
+   * person was asked and declined both to merge this area and to lower the
+   * threshold. So a promotion out of here is not blocked. What it should not do
+   * is touch either check: the node-count assertion is what stands between this
+   * map and a scatter of one-node areas, and if this area ever genuinely needs
+   * to fall below five the answer the block above prescribes is a neighbour to
+   * fold into, which is a decision about the learner-facing map.
+   *
+   * WHAT THE REMAINING NODES COULD BE SPENT ON IS NOT A FREE CHOICE, which is
+   * the part a budget framed in nodes hides. Of the five, `complex-numbers` and
    * `linear-inequalities` each carry a live refusal, and `inequality-proofs`,
    * `absolute-value-equations` and `word-problems` are the ones whose answers
-   * are sets, intervals and arguments rather than values. So the floor is no
-   * longer what binds here and has not been for some time: the verifier is.
-   * One promotion of room against four candidates is not a shortage of room.
+   * are sets, intervals and arguments rather than values. So the floor is not
+   * what binds here and has not been for some time: the verifier is. Every node
+   * left in this area is under one obstacle or the other, which is a sharper
+   * statement than the "four candidates" this sentence used to count — the
+   * candidate that was neither refused nor set-answered is the one just
+   * authored.
    *
    * THAT LIST HAD A FIFTH ENTRY AND IT WAS WRONG, which is the most useful
    * correction this paragraph has had to make. `radical-equations` stood beside
@@ -588,7 +615,7 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
    * entry would be a duplicate edge waiting to happen.
    *
    * The condition is the one `links` is documented with: an entry is needed
-   * when NEITHER end of the edge is a node of this area. All nine entries
+   * when NEITHER end of the edge is a node of this area. All eleven entries
    * below satisfy that, and the two cases a promotion actually produces are a
    * departing node whose own prerequisite lives outside the ontology it is
    * joining — which costs an entry — and the hand-BACK, when the far end of an
@@ -1489,13 +1516,91 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
      * where the in-area dependent existed and was gated from inside — the two
      * produce identical shrinkage and only the computed set tells them apart.
      */
-    {
-      id: 'nonlinear-systems',
-      name: 'Nonlinear systems',
-      is: 'A line meeting a conic, or two conics, where the count of solutions is geometry rather than algebra.',
-      needs: ['systems-of-linear-equations', 'quadratic-formula'],
-      terms: 'nonlinear system intersection simultaneous quadratic',
-    },
+    /**
+     * `nonlinear-systems` LEFT THIS AREA WHEN IT WAS AUTHORED, AND HAD TO.
+     *
+     * It is a real concept now — three knowledge points, worked examples with a
+     * hand-written question on every subgoal, and eight tasks — in
+     * ontology-algebra.ts, joining the four concepts of
+     * `expressions-and-equations`. `atlasProblems` rejects a map node whose id
+     * collides with an authored concept, and not as tidiness: the composed
+     * concept list would hold two entries for the id, and the shadowing copy
+     * has no knowledge points, so a fully authored concept would silently read
+     * as unteachable.
+     *
+     * THIS IS THE ELEVENTH DEPARTURE AND THE NODE COUNT NOW SITS EXACTLY ON THE
+     * FLOOR, which is the fact a reader of this area most needs and the reason
+     * this block leads with it. Six nodes become five against a stub floor of
+     * five, and eleven departures take `STUB_FLOOR_TERRITORY` to sixteen — the
+     * same sixteen it read before the promotion, because the floor counts an
+     * area's departures as territory it has covered and a node moving from one
+     * column to the other conserves the sum. So nothing here is frozen by this,
+     * and the two readings have come as far apart as they can: on node count
+     * alone this area is ON the threshold and may give up nothing further,
+     * while on territory it has not moved at all since the merge. Whoever
+     * promotes out of here next should know which of those two numbers they are
+     * reading, and that the live check in tests/atlas.mjs is the territory one
+     * — `AREAS.every(a => a.nodes.length >= STUB_FLOOR)` is still asserted
+     * beside it and 5 >= 5 is the last value that satisfies it.
+     *
+     * ONE OF ITS TWO `needs` HAD NOWHERE LOCAL TO GO, which makes this the
+     * second promotion in a row to cost `links` an entry where the first three
+     * out of this subject cost it nothing. `systems-of-linear-equations` is a
+     * concept of the subject this node joined, so that edge is an ordinary
+     * prerequisite there. `quadratic-formula` is a concept of
+     * `rational-expressions`, and an authored ontology may only name concepts
+     * it contains — so that one is the `links` entry below, filed with the area
+     * that OWNED the departing node rather than with the subject holding the
+     * far end. Both of its ends are authored and teachable, so unlike the
+     * `complex-numbers` entry beside it this one gates immediately.
+     *
+     * NOTHING WAS HANDED BACK AND NOTHING WAS STRANDED, both checked rather
+     * than assumed, and the second check is one this area has had to learn to
+     * run three separate ways:
+     *
+     *  - No `links` entry on any area named this node, so there was no entry to
+     *    delete. The hand-back hazard is real and `cartesian-plane` found it —
+     *    an entry whose far end moves into the promoted concept's own subject
+     *    becomes a duplicate edge that `composeAtlas` does not notice.
+     *  - The node declared NO `confusedWith`. That is the stranding no suite
+     *    catches: `expandEdges` turns one into an `interferes_with`,
+     *    interference constrains selection rather than gating, so losing one
+     *    leaves every test green while freeing the scheduler to introduce the
+     *    two most confusable concepts in the subject together.
+     *  - And NO `exercises`, which is the same hazard by a second route and the
+     *    one `euclidean-algorithm` added to this list: `expandEdges` turns an
+     *    `exercises` into an `encompasses` edge, so a credit claim vanishes
+     *    with the node exactly as silently. The fourth promotion out of this
+     *    subject DID carry one and had to restate it; this one had none.
+     *
+     * All three absences are asserted rather than described, because an absence
+     * has to be looked for to be known.
+     *
+     * THE ROOT SET OF THIS AREA SHRANK, four to three, and it is the
+     * `binomial-theorem` cause for the fourth time — which keeps that the
+     * commonest of the four causes this area has shown. This node had no
+     * in-area dependent at all: its only dependent anywhere is
+     * `parametric-and-implicit`, which is a node of `functions`. So nothing
+     * inside this area could have been freed and nothing was. Worth reading
+     * against the `systems-of-linear-equations` departure directly above, which
+     * had the same count of dependents and SUBSTITUTED into this set rather
+     * than shrinking it, because its one in-area dependent was this node. Two
+     * promotions, one dependent each, opposite effects — and only the computed
+     * set says which.
+     *
+     * AND IT MADE ITS ONE DEPENDENT'S GATE SHORTER, in another area and with no
+     * edit to it. `gatingPrerequisitesOf` names the NEAREST teachable ancestors
+     * and looks through the unteachable ones, so while this node had no material
+     * the walk passed through it and reported what IT rested on:
+     * `parametric-and-implicit` was gated by `domain-and-range`,
+     * `cartesian-plane`, `systems-of-linear-equations` and `quadratic-formula`,
+     * four entries. The walk stops at this concept now, so the last two
+     * collapse into it and the gate is three. A tighter gate is a SHORTER list,
+     * which reads backwards until the definition is in front of you, and which
+     * way the count moves depends on how many prerequisites the promoted node
+     * had — so it is computed on both sides rather than predicted.
+     * tests/atlas.mjs holds the figures.
+     */
     // `binomial-theorem` stood here and is now AUTHORED in ontology.ts, beside
     // `polynomial-arithmetic`, which is its prerequisite and the concept it
     // generalises. It had to leave: `atlasProblems` refuses a map node whose id
@@ -1733,27 +1838,76 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
         'ordering is about where the candidates come from and not about the extraneous root: ' +
         'that one is a fact about the squaring, and the quadratic is innocent of it.',
     },
+    {
+      /**
+       * THE EDGE THAT WOULD HAVE BEEN LOST WHEN `nonlinear-systems` WAS
+       * AUTHORED, AND THE SECOND ENTRY THIS AREA OWES THE QUADRATIC FORMULA.
+       *
+       * The node declared `needs: ['systems-of-linear-equations',
+       * 'quadratic-formula']`. The first is an authored concept of
+       * `expressions-and-equations`, which is the subject this one joined, so
+       * that edge is an ordinary prerequisite in ontology-algebra.ts's own
+       * `EDGES`. This one crosses into `rational-expressions` and can be
+       * declared by neither ontology — an authored ontology's edges may only
+       * name concepts it contains — so `links` is its only home.
+       *
+       * It gates from the day it is written, unlike the `complex-numbers` entry
+       * above, and the difference is which end is a node: both ends of this one
+       * are authored concepts. The entry two above it, `quadratic-formula ->
+       * radical-equations`, is the same `from` with a different `to` and
+       * arrived three promotions earlier — so the formula now has two
+       * dependents reached through this field, and the note on that entry about
+       * gating looking AT a prerequisite rather than through it applies to this
+       * one from the start rather than retrospectively.
+       */
+      from: 'quadratic-formula',
+      to: 'nonlinear-systems',
+      because:
+        'Substituting the line into the conic leaves ONE equation in one unknown and it is a ' +
+        'quadratic — x² + (x + 1)² = 25 collects to x² + x − 12 = 0 — so everything the ' +
+        'concept does after the substitution is the quadratic being solved. The count of ' +
+        'intersections needs more of it than that: the number deciding whether a line cuts a ' +
+        'curve twice, touches it once or misses it is the DISCRIMINANT, which is a part of the ' +
+        'formula rather than a separate idea, and a learner who has not met it has no way to ' +
+        'answer the question without finding the roots first and sometimes failing to. The ' +
+        'ordering is not about the surd: the systems here are chosen so the roots come out ' +
+        'whole, and the dependency is on where the roots come from and on what their number is ' +
+        'read off.',
+    },
   ],
   /*
-   * TEN NODES HAVE BEEN AUTHORED OUT OF THIS AREA, and this is the list the
+   * ELEVEN NODES HAVE BEEN AUTHORED OUT OF THIS AREA, and this is the list the
    * stub floor reads. See `MapArea.departed` in atlas.ts for the mechanism.
    *
-   * THIS IS THE AREA THE FIELD WAS ADDED FOR. It holds six nodes against a
-   * floor of five, and every one of the ten below left because its content got
-   * written — so the floor was reading a sixteen-node area that has covered
-   * ten of them as though it were a six-node sketch. The repair the floor's own
-   * comment prescribes for a DRAINED area is to fold the remnant into a
-   * neighbour, and that is the one thing this area cannot do: there is nothing
-   * above "Number and algebra" to fold into, since it IS the foundation, and
-   * its six leftovers would scatter across four different areas if one were
-   * forced. Hence the other repair the same comment names.
+   * THIS IS THE AREA THE FIELD WAS ADDED FOR. It holds five nodes against a
+   * floor of five, and every one of the eleven below left because its content
+   * got written — so the floor would be reading a sixteen-node area that has
+   * covered eleven of them as though it were a five-node sketch. The repair the
+   * floor's own comment prescribes for a DRAINED area is to fold the remnant
+   * into a neighbour, and that is the one thing this area cannot do: there is
+   * nothing above "Number and algebra" to fold into, since it IS the
+   * foundation, and its leftovers would scatter across four different areas if
+   * one were forced. Hence the other repair the same comment names.
+   *
+   * THE TWO FIGURES HAVE NOW COME AS FAR APART AS THEY CAN. Six nodes and ten
+   * departures became five and eleven, so the territory is sixteen on both
+   * sides of the edit — a node moving from one column to the other conserves
+   * the sum, which is the invariant rather than the snapshot. What has changed
+   * is that the NODE count is now on the threshold rather than one above it, so
+   * the next promotion out of here is the first that the two readings would
+   * answer differently: `AREAS.every(a => a.nodes.length >= STUB_FLOOR)` is
+   * still asserted in tests/atlas.mjs alongside the territory check, and 5 is
+   * the last value satisfying it. That is not a reason to lower either check.
+   * It is the state the merge note above predicted this area would reach, and
+   * the question it raises — merge, or read the territory only — is the same
+   * one that note says belongs to a person.
    *
    * Each id is already explained in prose at the point its node used to sit —
    * "`X` was here and is now authored in ..." — and this list is derived from
-   * exactly those ten comments. They stay where they are: they carry the why,
-   * and this carries only the fact. Note that the two merged-in areas are not
-   * represented here, because `number-and-arithmetic`'s nodes arrived as nodes
-   * and departed, if at all, as the ids below.
+   * exactly those eleven comments. They stay where they are: they carry the
+   * why, and this carries only the fact. Note that the two merged-in areas are
+   * not represented here, because `number-and-arithmetic`'s nodes arrived as
+   * nodes and departed, if at all, as the ids below.
    */
   departed: [
     'absolute-value',
@@ -1766,6 +1920,7 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
     'roots-and-irrationals',
     'real-number-line',
     'radical-equations',
+    'nonlinear-systems',
   ],
 }
 

@@ -4305,8 +4305,8 @@ t('and it did not displace arithmetic from index 0, which the cold account depen
   ONTOLOGIES[0] === ARITHMETIC_FOUNDATIONS)
 t('it has no internal faults', ontologyProblems(VE).length === 0, ontologyProblems(VE).join('; '))
 t('its fidelity claim matches what its option can do', fidelityMismatches(VE).length === 0)
-t('four concepts, twelve knowledge points',
-  VE.concepts.length === 4 && allKnowledgePoints(VE).length === 12,
+t('five concepts, fifteen knowledge points',
+  VE.concepts.length === 5 && allKnowledgePoints(VE).length === 15,
   `${VE.concepts.length} concepts, ${allKnowledgePoints(VE).length} points`)
 t('the concept is teachable AND practisable — a syllabus, not a map entry',
   isTeachable(VE, 'variables-and-expressions') && isPractisable(VE, 'variables-and-expressions'))
@@ -4318,6 +4318,36 @@ t('and so is the system, which three files had argued could not be authored at a
 t('and so is the row reduction, which two more files had argued the same about',
   isTeachable(VE, 'gaussian-elimination')
   && isPractisable(VE, 'gaussian-elimination'))
+t('and so is the nonlinear system, the first concept here no file had argued against',
+  isTeachable(VE, 'nonlinear-systems')
+  && isPractisable(VE, 'nonlinear-systems'))
+/*
+ * THE FIFTH CONCEPT IS `guided`, WHICH IS THE FIRST TIME THIS SUBJECT HAS
+ * SHIPPED ONE, AND THE CAVEAT IS WHAT MAKES THAT HONEST.
+ *
+ * The four concepts above each carried a `match` verbatim from the map node
+ * they were promoted out of. This node never had one, and the right answer is
+ * `guided` with a caveat rather than a pattern written during an authoring pass
+ * — `fidelityMismatches` already refuses the other combination, so what is
+ * asserted here is the half it cannot see: that the caveat exists and is a
+ * sentence rather than a placeholder, since types.ts says it is printed
+ * VERBATIM to the learner.
+ *
+ * The specific reason is worth asserting too, because it is the one a later
+ * reader would be most tempted to "fix": "Nonlinear system" IS an article
+ * title and it is about nonlinear DYNAMICS, so a pattern on the name would
+ * claim the wrong page confidently. A test cannot check what an encyclopaedia
+ * contains; what it can check is that the concept makes no `checked` claim
+ * while having no pattern to back one with.
+ */
+t('the fifth concept claims only guided recognition, and says in a caveat why',
+  (() => {
+    const c = VE.concepts.find(x => x.id === 'nonlinear-systems')
+    return c.fidelity === 'guided' && c.scope.match === undefined
+      && typeof c.caveat === 'string' && c.caveat.length > 120
+      && VE.concepts.filter(x => x.fidelity === 'guided').length === 1
+  })(),
+  VE.concepts.map(c => `${c.id}:${c.fidelity}${c.scope.match ? '+match' : ''}`).join(' '))
 t('every knowledge point has a task, so no chain is left unable to become evidence',
   allKnowledgePoints(VE).every(p => tasksForPoint(p.id).length > 0),
   allKnowledgePoints(VE).filter(p => tasksForPoint(p.id).length === 0).map(p => p.id).join(', '))
@@ -4385,15 +4415,16 @@ t('every objective names a task kind',
  * alone would no longer say what it used to.
  */
 const edgeFromTo = (o, from, to) => o.edges.find(e => e.from === from && e.to === to)
-t('it declares four edges, three of them prerequisites, and the reading is still the root',
-  VE.edges.length === 4
-  && VE.edges.filter(e => e.kind === 'prerequisite').length === 3
+t('it declares five edges, four of them prerequisites, and the reading is still the root',
+  VE.edges.length === 5
+  && VE.edges.filter(e => e.kind === 'prerequisite').length === 4
   && roots(VE).length === 1 && roots(VE)[0] === 'variables-and-expressions',
   `${VE.edges.length} edge(s), roots: ${roots(VE).join(', ')}`)
-t('and all three are edges the promoted nodes arrived carrying, each pointing the way it was written',
+t('and all four are edges the promoted nodes arrived carrying, each pointing the way it was written',
   [['variables-and-expressions', 'linear-equations'],
     ['linear-equations', 'systems-of-linear-equations'],
-    ['systems-of-linear-equations', 'gaussian-elimination']].every(([from, to]) => {
+    ['systems-of-linear-equations', 'gaussian-elimination'],
+    ['systems-of-linear-equations', 'nonlinear-systems']].every(([from, to]) => {
     const e = edgeFromTo(VE, from, to)
     return !!e && e.kind === 'prerequisite' && !!e.promotedBy
   }),
@@ -4429,21 +4460,50 @@ t('the edge is earned — the forward pass is ruled by the two-equation eliminat
     !== JSON.stringify(taskById('solve-system-eliminate-for-y-1').at),
   `${taskById('gaussian-forward-pass-for-z-1').given} at reduced vs original coefficients`)
 /*
- * And the chain in order, as a walk rather than as a string. `teachingOrder`
- * is what the scheduler reads, so this asserts the claim the subject's own
- * `covers` paragraph makes about itself — and it fails loudly if an edge is
- * reversed, which the two checks above cannot, since a backwards edge is still
- * an edge between the right pair.
+ * And the order, as a walk rather than as a string — WHICH IS NO LONGER THE
+ * SAME CLAIM, because the subject has stopped being a chain.
+ *
+ * This read `teachingOrder(VE).join(' ') === 'variables-and-expressions
+ * linear-equations systems-of-linear-equations gaussian-elimination'`, and that
+ * was a correct statement about four concepts in a line. The forty-third
+ * promotion forked it: `nonlinear-systems` hangs off
+ * `systems-of-linear-equations` alongside `gaussian-elimination` rather than
+ * behind it, so there are TWO valid teaching orders and `teachingOrder`
+ * returning one of them says nothing about which parent the new concept is
+ * under. An ordered string would have accepted this concept hung off the row
+ * reduction by accident, and three unknowns have nothing to do with a line
+ * meeting a circle.
+ *
+ * So the claim is split into the two halves that are still decidable:
+ *
+ *  - THE SPINE, as a relative order rather than a sequence. Each of the three
+ *    chain links comes before what it feeds, whatever order the fork is walked
+ *    in. That is the part the `covers` paragraph claims about itself and the
+ *    part that fails loudly if an edge is reversed — which the edge checks
+ *    above cannot catch, a backwards edge still being an edge between the
+ *    right pair.
+ *  - THE BRANCH POINT, by name. `nonlinear-systems` comes after the system and
+ *    is NOT downstream of the row reduction, asserted in both directions
+ *    because "after the system" alone is satisfied by hanging it off the row
+ *    reduction too.
  */
-t('and the four sit in the order the subject claims to teach them',
-  teachingOrder(VE).join(' ')
-    === 'variables-and-expressions linear-equations systems-of-linear-equations '
-      + 'gaussian-elimination',
+const veOrderOf = id => teachingOrder(VE).indexOf(id)
+t('the spine is still in the order the subject claims to teach it, however the fork is walked',
+  veOrderOf('variables-and-expressions') < veOrderOf('linear-equations')
+  && veOrderOf('linear-equations') < veOrderOf('systems-of-linear-equations')
+  && veOrderOf('systems-of-linear-equations') < veOrderOf('gaussian-elimination')
+  && teachingOrder(VE).length === 5,
   teachingOrder(VE).join(' '))
+t('and the fifth concept branches off the SYSTEM specifically, not off the row reduction',
+  veOrderOf('systems-of-linear-equations') < veOrderOf('nonlinear-systems')
+  && prerequisitesOf(VE, 'nonlinear-systems').join(' ') === 'systems-of-linear-equations'
+  && !prerequisitesOf(VE, 'nonlinear-systems').includes('gaussian-elimination')
+  && !prerequisitesOf(VE, 'gaussian-elimination').includes('nonlinear-systems'),
+  `${prerequisitesOf(VE, 'nonlinear-systems').join(', ') || 'nothing'} -> nonlinear-systems`)
 
 group('the seventh subject is gradable with no worker')
 const VE_TASKS = allKnowledgePoints(VE).flatMap(p => tasksForPoint(p.id))
-t('twenty-five tasks across the twelve points', VE_TASKS.length === 25, `${VE_TASKS.length}`)
+t('thirty-three tasks across the fifteen points', VE_TASKS.length === 33, `${VE_TASKS.length}`)
 t('all of them are evaluate — no form can express "collected" and no kind can express "solve"',
   VE_TASKS.every(x => x.kind === 'evaluate' && x.form === undefined))
 t('every reference is exactly reproducible from the given — no worker consulted',
@@ -4497,7 +4557,7 @@ t('and the sign trap is settled, not left inconclusive',
  * already carry the fraction.
  */
 const VE_QUESTIONS = allQuestions(VE)
-t('forty-six questions, one per subgoal', VE_QUESTIONS.length === 46, `${VE_QUESTIONS.length}`)
+t('fifty-eight questions, one per subgoal', VE_QUESTIONS.length === 58, `${VE_QUESTIONS.length}`)
 t('every subgoal carries an authored socratic phrasing',
   allKnowledgePoints(VE).every(p => p.workedExample.subgoals.every(s => !!s.socratic)),
   allKnowledgePoints(VE).flatMap(p => p.workedExample.subgoals)
@@ -5062,18 +5122,63 @@ t('the two procedural points are timed at the subject\'s longest and the judgeme
  * order. 20 → 20 → 25 → 30 satisfies it, and so would a fifth concept at 30;
  * a concept timed FASTER than its own prerequisite would not, and that is the
  * thing actually worth catching.
+ *
+ * AND IT WENT RED A SECOND TIME, ON THE SAME KIND OF SUCCESS AND FOR A DEEPER
+ * REASON THAN THE FIRST. "Walked in teaching order" was a stand-in for "walked
+ * up the prerequisite chain" and the two are the same walk only while the
+ * subject IS a chain. The forty-third promotion forked it: `nonlinear-systems`
+ * rests on `systems-of-linear-equations` and not on `gaussian-elimination`, so
+ * `teachingOrder` puts it after the row reduction while the mathematics puts it
+ * beside it, and comparing its 25 to the row reduction's 30 compares two
+ * concepts that are not above and below each other at all.
+ *
+ * So the comparison now follows the PREREQUISITE, which is what the reason this
+ * assertion gives always described: each concept's timed minimum is at least
+ * the timed maximum of the concept or concepts it actually rests on inside this
+ * subject. That holds across a fork by construction — both branches are
+ * measured against their shared parent and never against each other — and it
+ * still catches the thing worth catching, a concept timed faster than its own
+ * prerequisite. The spine satisfies it at 20 → 20 → 25, and both branches off
+ * the system satisfy it at 25: the row reduction's 25 and the nonlinear
+ * systems' 25 are each no faster than the system's own 25.
+ *
+ * A one-sided ratchet went red twice, and the pattern in both failures is the
+ * same: the assertion was implemented against a SHAPE the subject happened to
+ * have rather than against the reason the claim was true. The fix each time was
+ * to say the reason.
  */
-t('timing never drops as the chain goes up — each concept starts no faster than the last one ended',
+t('timing never drops along a prerequisite — no concept is timed faster than what it rests on',
   (() => {
-    const timed = teachingOrder(VE)
-      .map(id => VE.concepts.find(c => c.id === id).knowledgePoints
-        .map(p => p.automaticityTarget).filter(v => v !== undefined))
-      .filter(xs => xs.length > 0)
-    return timed.every((xs, i) =>
-      i === 0 || Math.min(...xs) >= Math.max(...timed[i - 1]))
+    const timedOf = id => VE.concepts.find(c => c.id === id).knowledgePoints
+      .map(p => p.automaticityTarget).filter(v => v !== undefined)
+    return VE.concepts.every(c => {
+      const mine = timedOf(c.id)
+      if (mine.length === 0) return true
+      return prerequisitesOf(VE, c.id).every(p => {
+        const theirs = timedOf(p)
+        return theirs.length === 0 || Math.min(...mine) >= Math.max(...theirs)
+      })
+    })
   })(),
-  teachingOrder(VE).map(id => `${id}:${VE.concepts.find(c => c.id === id).knowledgePoints
+  VE.concepts.map(c => `${c.id}:${c.knowledgePoints
     .map(p => p.automaticityTarget ?? '-').join('/')}`).join(' '))
+/*
+ * And the fork measured rather than described, because the paragraph above
+ * rests on it: the two branches are timed against their shared parent, so the
+ * assertion above would pass even if they disagreed with each other — and here
+ * they do not disagree, which is worth pinning so that a later edit to one
+ * branch's figure is visible as a choice rather than as drift.
+ */
+t('and the two branches off the system are timed against it rather than against each other',
+  Math.min(...VE.concepts.find(c => c.id === 'gaussian-elimination').knowledgePoints
+    .map(p => p.automaticityTarget).filter(v => v !== undefined)) === 25_000
+  && Math.min(...VE.concepts.find(c => c.id === 'nonlinear-systems').knowledgePoints
+    .map(p => p.automaticityTarget).filter(v => v !== undefined)) === 25_000
+  && Math.max(...SYSTEM_CONCEPT.knowledgePoints
+    .map(p => p.automaticityTarget).filter(v => v !== undefined)) === 25_000,
+  VE.concepts.filter(c => prerequisitesOf(VE, c.id).includes('systems-of-linear-equations'))
+    .map(c => `${c.id}:${c.knowledgePoints.map(p => p.automaticityTarget ?? '-').join('/')}`)
+    .join(' '))
 t('and its positions restart at 1 too, which is only observable once a subject has three concepts',
   SYSTEM_CONCEPT.knowledgePoints.map(p => p.position).join(',') === '1,2,3'
   && VE.concepts.every(c => c.knowledgePoints.map(p => p.position).join(',') === '1,2,3'),

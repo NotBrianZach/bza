@@ -189,6 +189,84 @@
  * answer's shape can almost always be swapped for a deciding number, and a
  * claim about the relation symbol has no number behind it to swap to.
  *
+ * ── THE FIFTH CONCEPT, AND THE FIRST ONE NO REFUSAL STOOD IN FRONT OF ─────
+ *
+ * `nonlinear-systems` was a node of `algebra-foundations` and is the last
+ * concept below. Four files had argued against the four concepts above it and
+ * not one of them mentions this node, which is worth a sentence because it is
+ * the first time that has been true in this subject: the three expired refusals
+ * were all the same inference from the same task-kind limit, and this node never
+ * attracted one because its answer was never the problem. A line meeting a
+ * conic has two intersection points, each of them a pair of numbers, and a pair
+ * costs two tasks — which is the price `systems-of-linear-equations` already
+ * paid two concepts up.
+ *
+ * IT IS A FORK AND NOT THE FIFTH LINK OF THE CHAIN, which is the one structural
+ * thing about this promotion that a reader must not get wrong. The four
+ * concepts above are a chain — reading, then one equation, then two, then three
+ * with the order fixed — and every assertion written about this subject so far
+ * could have been phrased as an ordered walk and still have been correct. This
+ * concept rests on `systems-of-linear-equations`, four back from the end of the
+ * array and NOT on `gaussian-elimination` directly above it. Three unknowns are
+ * nothing to do with it; what it borrows is the two-equation idea that a
+ * solution is a PAIR and that one equation can be spent to remove one letter.
+ * So `systems-of-linear-equations` now has two dependents in this file where it
+ * had one, and an assertion phrased as "the subject is a chain in array order"
+ * would accept this concept hung off the row reduction by accident. What
+ * tests/concepts-logic.mjs asserts instead is the branch POINT, by name.
+ *
+ * ── THE OTHER PREREQUISITE IS THE QUADRATIC, AND IT COULD NOT COME HERE ───
+ *
+ * The node declared two `needs`. `systems-of-linear-equations` is a concept of
+ * this subject, so that edge is an ordinary prerequisite below.
+ * `quadratic-formula` is a concept of `rational-expressions`, and an authored
+ * ontology may only name concepts it contains — so that edge has nowhere to
+ * live but `ALGEBRA_FOUNDATIONS.links`, filed with the area that owned the
+ * departing node rather than with the subject holding the far end. Both of its
+ * ends are authored, so unlike a `links` entry pointing at an unwritten node it
+ * gates from the moment it exists.
+ *
+ * That makes two promotions in a row costing `links` an entry, where the first
+ * three cost it nothing. The cause is the same one the paragraph on the fourth
+ * promotion names and it is not an accident of this area: a branch authored
+ * from the bottom up keeps finding a local owner for its stranded edges, and
+ * stops the moment a node's `needs` reach sideways into a subject somebody else
+ * wrote. This one reaches into the quadratics, which were authored long before
+ * this file existed.
+ *
+ * `confusedWith` on the departing node: NONE, checked before deleting it, as on
+ * the four promotions above. `exercises`: none either, which the fourth
+ * promotion had and which is why it is now checked separately — a map node's
+ * `exercises` becomes an `encompasses` edge in `expandEdges` and vanishes with
+ * the node just as silently as a `confusedWith` does. Both absences are
+ * asserted rather than described, because an absence has to be looked for to be
+ * known.
+ *
+ * ── AND NO CREDIT EDGE, WHICH IS A JUDGEMENT RATHER THAN AN OVERSIGHT ─────
+ *
+ * `gaussian-elimination => systems-of-linear-equations` is in the list below
+ * because the last step of the forward pass IS a two-equation elimination, and
+ * the two tasks are ruled by the SAME expression at different coefficients.
+ * The obvious move is to claim the same thing here, on the grounds that the
+ * first knowledge point substitutes one equation into another and the second
+ * concept's second point is called `substitution-reduces-the-system-to-one-
+ * equation`.
+ *
+ * Measured against the tasks rather than against the names, it does not hold.
+ * What a learner performs here is the quadratic formula at coefficients the
+ * substitution produced — `nonlinear-line-meets-circle-x-1`'s expression is the
+ * formula, not the linear substitution's `(e - d*b)/(c + d*a)` — and the move
+ * the two-equation concept drills, multiplying one whole equation through so
+ * that a letter's coefficients cancel and then adding, is performed NOWHERE in
+ * this concept. The third point's subtraction comes closest and is still not
+ * it: the two squared terms are already identical, so nothing is multiplied
+ * through and one subtraction does the work. So the credit claim would be about
+ * the word "substitute" and not about the arithmetic, and a review deferred on
+ * that evidence would be deferred on work the learner did not do. Declining it
+ * costs a learner one review they may not need; granting it wrongly costs them
+ * a prerequisite they never demonstrated, and the second is the error this edge
+ * kind exists to avoid rather than to commit.
+ *
  * ── What is STILL deliberately not here ───────────────────────────────────
  *
  * The degenerate cases OF A SINGLE EQUATION. When the x-terms cancel in one
@@ -215,6 +293,24 @@
  * the relation symbol, which no `NamedForm` and no `evaluate` target mentions
  * at all. That is a different obstacle from "a set is not a value" and should
  * not be read as the same one waiting to expire.
+ *
+ * THE CONICS THEMSELVES, which the fifth concept uses and does not teach. It
+ * solves systems in which one equation is a circle or a parabola, and it says
+ * nothing about why x² + y² = r² is a circle, where a parabola's vertex is, or
+ * what the other two conics look like. That is deliberate and it is a boundary
+ * rather than a backlog: every equation in the material is handed over in
+ * coordinates and every question asked of it is answered by algebra, so a
+ * learner who has never heard the word "conic" can do all of it. The figures
+ * are what makes the second knowledge point intelligible rather than what makes
+ * it rulable — a line can cut a curve twice, touch it once or miss it, and
+ * those three pictures are named in the prose where the discriminant's three
+ * signs are produced. `circles-analytic` and `conic-sections` are nodes of
+ * `euclidean-geometry` and are where the shapes belong; this concept names
+ * neither in its `needs` and neither in its material, because nothing here
+ * depends on either. The map node agreed — it declared `systems-of-linear-
+ * equations` and `quadratic-formula` and nothing geometric — which is the
+ * check that this boundary was the map's reading and not an authoring
+ * convenience.
  *
  * ── THIS TIGHTENS THE GATE, AS AUTHORING ALWAYS DOES ──────────────────────
  *
@@ -318,6 +414,19 @@
  * coordinate of one solution when a letter is left free. Every reference is an
  * exact rational on whole numbers, two of them deliberately not integers.
  *
+ * The nonlinear half is `evaluate`-only for the same reason and holds the
+ * property too, which took one choice rather than none. Every reference is an
+ * exact INTEGER here, and that is not laziness about the arithmetic: the
+ * quadratic a substitution leaves has irrational roots for almost every line
+ * anybody writes down, and `quadratic-formula` already owns the surd — two of
+ * its tasks exist precisely to refuse a decimal. What this concept is about is
+ * which pairs come out and how many there are, so the systems are chosen so
+ * that the roots do not fight the point being made. The two `sqrt` calls in its
+ * eight tasks are the formula and a back-substitution into a square, and both
+ * land on whole numbers because the circle was given radius 5 and the chord was
+ * put at x = 3 — the same 3–4–5 triangle twice, which is also why a learner can
+ * check either answer against a figure they already know.
+ *
  * ── Objectives name `evaluate` and nothing else, which is a change of habit ─
  *
  * `variables-and-expressions` names `['evaluate', 'justify']` on two of its
@@ -354,6 +463,17 @@
  * objective names what can be observed, the value the bottom row is left
  * holding. Its third objective is the generalisation of the one above and keeps
  * the same shape: the leftover is produced, the classification is not claimed.
+ *
+ * `nonlinear-systems` holds the rule and its second objective is where the rule
+ * did the most work of any in this file. The natural phrasing is "say whether
+ * the line cuts the curve twice, touches it once, or misses it", and that
+ * objective names a classification — which is the shape the concept above
+ * caught and refused, one subject earlier than this one existed. So it asks for
+ * the DISCRIMINANT, which is a value, and says in the statement what the three
+ * signs of it mean. The same distinction twice over in one file is the argument
+ * for writing it down: the leftover and the discriminant are different numbers
+ * doing identical work, each the one thing `evaluate` can be given when the
+ * answer a learner should carry away is a count.
  */
 
 import type { Concept, ConceptEdge, ConceptOntology, Subject } from './types'
@@ -377,11 +497,27 @@ const subject: Subject = {
     'holds one letter — then come back up it, each row having exactly one letter in it you do ' +
     'not yet know. And the case where a row empties of every letter at once, which is the ' +
     'two-unknown leftover with one more letter in play. ' +
+    'And then one equation of a pair stops being linear, which is a branch off the two-unknown ' +
+    'case rather than a step past the three-unknown one: combining the equations no longer ' +
+    'cancels anything, because a letter and its square are not multiples of each other, so what ' +
+    'is left is substitution — and what substitution leaves is a QUADRATIC, which is why the ' +
+    'count of solutions stops being one number and becomes the discriminant. Two intersection ' +
+    'points where the linear case had one, a repeated root where a line touches a curve instead ' +
+    'of crossing it, and no real root at all where it misses — and missing is the ordinary case ' +
+    'here, not a degeneracy of contradictory equations. Each root has to be paired with its OWN ' +
+    'partner coordinate, since a solution is a point and the four numbers two points are made ' +
+    'of can be combined wrongly. When neither equation names a letter the linear move comes ' +
+    'back one level up: if two conics carry the same squared terms, one subtraction removes both ' +
+    'at once and leaves a line, which is where the intersection points are and nothing else is. ' +
     'What is not here is the inequality, whose answer is an interval and whose one interesting ' +
     'step is a claim about the relation symbol rather than about a number, so no form and no ' +
     'evaluate target can ask for it; it is still mapped only. Nor is the matrix: the engine has ' +
     'no type for a grid, so the row reduction here is written as equations throughout and ' +
-    'nothing asks for a matrix in a normal form.',
+    'nothing asks for a matrix in a normal form. Nor are the SHAPES: the nonlinear systems are ' +
+    'solved in coordinates and nothing here says why one of the equations draws a circle or ' +
+    'where a parabola\'s vertex is, which is `circles-analytic` and `conic-sections` on the ' +
+    'map. The three pictures are named where the three signs of a discriminant are produced, ' +
+    'and that is the whole of the geometry this subject claims.',
   medium: 'theorem',
   facetName: 'Concept',
   facetDoes: 'Which concept the statement has to be about.',
@@ -1453,6 +1589,366 @@ const CONCEPTS: Concept[] = [
       },
     ],
   },
+  {
+    id: 'nonlinear-systems',
+    name: 'Nonlinear systems',
+    subjectId: subject.id,
+    scope: {
+      id: 'nonlinear-systems',
+      label: 'Nonlinear systems',
+      // The map node's own `terms`, verbatim. There was no `match` to carry:
+      // see `fidelity` below.
+      hint: 'nonlinear system intersection simultaneous quadratic',
+      /*
+       * No `match`, and inventing one during an authoring pass is the change
+       * the four concepts above each decline to make — widening or adding a
+       * pattern while writing material moves the recognition figure in
+       * tests/atlas.mjs and the written-concept count at once, with no way
+       * afterwards to say which edit moved which. `expandNode` has been
+       * reporting this absence correctly all along.
+       *
+       * It is also the right answer on the merits, which is the half worth
+       * writing down. "Nonlinear system" IS an article title and it is about
+       * the wrong thing: nonlinear DYNAMICS — chaos, attractors, differential
+       * equations that do not superpose — not two simultaneous equations one of
+       * which is a quadratic. A pattern on it would claim that page
+       * confidently, which is worse than claiming nothing, and it is exactly
+       * the failure `MapNode.match` warns about with `/probability/i`. The
+       * pages that really cover this are filed under the shapes
+       * (`circles-analytic`, `conic-sections`) or under solving in general, and
+       * neither is wrong. `radical-equations` in ontology-exponentials.ts is
+       * the closest sibling and the diagnosis there is the same one: a provider
+       * that files by object has no title for a method.
+       */
+    },
+    fidelity: 'guided',
+    caveat:
+      'Nothing here checks that a statement is really about solving a nonlinear system. The ' +
+      'one article with this concept\'s name is about nonlinear DYNAMICS — chaos and ' +
+      'differential equations — rather than about two simultaneous equations one of which is a ' +
+      'quadratic, so a pattern matching the name would claim the wrong page rather than select ' +
+      'the right one. What genuinely covers this is filed under the circle and the conics, or ' +
+      'under solving equations in general. So this concept steers the search and filters ' +
+      'nothing. The material below is written and practisable — it is the RECOGNITION that is ' +
+      'unchecked, not the teaching.',
+    objectives: [
+      {
+        id: 'substitute-into-the-conic-and-produce-both-coordinates',
+        statement:
+          'Solve a system of a line and a conic by substituting the line\'s expression for one ' +
+          'letter into the other equation, solving the quadratic that is left, and producing ' +
+          'each coordinate of an intersection point — each root paired with the partner the ' +
+          'line gives it rather than with the other root\'s.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'produce-the-discriminant-that-counts-the-intersections',
+        /*
+         * The DISCRIMINANT and not the count, for the reason the header's
+         * objectives section gives at length. "Say whether it cuts, touches or
+         * misses" names a classification, and no verifiable kind returns one;
+         * the number behind the classification is a value, and the statement
+         * says what each of its three signs means so nothing is lost by asking
+         * for the number instead.
+         */
+        statement:
+          'Produce the discriminant of the quadratic a substitution leaves — the one number ' +
+          'that decides, before any root is found, whether the line cuts the curve at two ' +
+          'points, touches it at one, or misses it entirely.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'subtract-two-conics-and-produce-the-coordinates',
+        statement:
+          'Given two conics written in the same squared terms, subtract one equation from the ' +
+          'other to remove both squares at once, solve the linear equation that is left, and ' +
+          'produce a coordinate of an intersection point by putting that value back into one ' +
+          'of the conics.',
+        taskKinds: ['evaluate'],
+      },
+    ],
+    knowledgePoints: [
+      {
+        id: 'substitution-is-the-only-move-left',
+        conceptId: 'nonlinear-systems',
+        statement:
+          'Combining two equations to cancel a letter stops working the moment one of them is ' +
+          'not linear: no multiple of y will cancel a y², because a letter and its square are ' +
+          'not multiples of each other. What still works is substitution — one equation names a ' +
+          'letter, put it in the other — and what is left is one equation in one unknown. It is ' +
+          'a QUADRATIC rather than linear, so it has two roots, and two roots mean two ' +
+          'intersection points rather than one.',
+        position: 1,
+        /*
+         * Timed, at 30 seconds. That is the figure `gaussian-elimination`
+         * carries rather than the 25 the two-equation points do, and the reason
+         * is the work and not the position: a substitution, a square expanded,
+         * a quadratic solved, and then TWO back-substitutions, where the
+         * two-equation case has one of each. Fluency matters for the reason
+         * types.ts names — this is the procedure every later intersection
+         * problem performs as a step.
+         */
+        automaticityTarget: 30_000,
+        workedExample: {
+          problem: 'Solve y = x + 1 and x² + y² = 25.',
+          subgoals: [
+            {
+              label: 'Try to eliminate a letter, and find there is nothing to cancel',
+              detail:
+                'Elimination needs the two equations to carry the same letter to the same power, ' +
+                'so that multiplying one through makes a pair of terms destroy each other. ' +
+                'Multiply y = x + 1 by anything and what you have is a multiple of y; the other ' +
+                'equation holds y², and no multiple of y is a multiple of y². So the move the ' +
+                'two-equation concept is built on has nothing to take hold of here, and that is ' +
+                'a fact about the shapes rather than about these numbers.',
+              socratic:
+                'The two-equation method works by multiplying one equation through so that one ' +
+                'letter\'s terms cancel when you add. Try to arrange that for the y here — the ' +
+                'first equation has a y and the second has a y². What would you have to ' +
+                'multiply the first equation by, and what goes wrong when you look for it?',
+            },
+            {
+              label: 'Substitute, because one equation already names a letter',
+              detail:
+                'y = x + 1 says that wherever the line holds, y and x + 1 are two names for one ' +
+                'number — so putting x + 1 in for y changes no pair\'s status. The brackets are ' +
+                'not optional: y² is the square of the whole of x + 1, so it is (x + 1)² and ' +
+                'not x + 1². That is the hidden-bracket rule from ' +
+                '`variables-and-expressions`, meeting a power instead of a coefficient. The ' +
+                'system becomes x² + (x + 1)² = 25.',
+              socratic:
+                'The first equation hands you something to use somewhere else. You are about to ' +
+                'put x + 1 where the y² is — what has to be written down that was not needed ' +
+                'while it was still a single letter, and what would x + 1² mean instead?',
+            },
+            {
+              label: 'Count the unknowns, and solve the quadratic that is left',
+              detail:
+                'Only x occurs now. Expanding, x² + x² + 2x + 1 = 25, so 2x² + 2x − 24 = 0, and ' +
+                'dividing through by 2 gives x² + x − 12 = 0. That factors as ' +
+                '(x + 4)(x − 3) = 0, so x = −4 or x = 3. This is `factoring-quadratics` and ' +
+                '`quadratic-formula` as written — the problem already solved — and the only new ' +
+                'thing is that it has TWO answers where the linear case had one.',
+              socratic:
+                'How many different letters are in x² + (x + 1)² = 25, and what is the highest ' +
+                'power of the one that is left? Expand it and collect it — which problem have ' +
+                'you turned the system into, how many answers does a problem of that kind ' +
+                'have, and how many did the two-equation case have?',
+            },
+            {
+              label: 'Pair each root with its OWN partner, then check where the working cannot have put it',
+              detail:
+                'A solution is a point, so each x needs the y that goes with it, and the line is ' +
+                'what supplies it: at x = 3, y = 3 + 1 = 4; at x = −4, y = −4 + 1 = −3. The ' +
+                'pairing is the part to get right — (3, −3) and (−4, 4) are made of the same ' +
+                'four numbers and satisfy neither equation. The check goes into the circle, ' +
+                'which is the equation the y did NOT come out of: 3² + 4² = 9 + 16 = 25, and ' +
+                '(−4)² + (−3)² = 16 + 9 = 25. Substituting back into the line cannot fail, ' +
+                'because the line is where each y was computed.',
+              socratic:
+                'You have two values of x and the line to get a y from. Work out both points — ' +
+                'and then try deliberately pairing the wrong way round, x = 3 with the other ' +
+                'root\'s y, and see what the circle says about that pair. Which of your two ' +
+                'equations should the finished points be tested in if the test is to be capable ' +
+                'of catching an arithmetic slip, and why can it not be the other one?',
+            },
+          ],
+          answer:
+            'Two points: (3, 4) and (−4, −3). The substitution leaves x² + x − 12 = 0, whose ' +
+            'roots 3 and −4 are the x-coordinates, and y = x + 1 gives each one its own y.',
+        },
+      },
+      {
+        id: 'the-discriminant-counts-the-intersections',
+        conceptId: 'nonlinear-systems',
+        statement:
+          'How many points two curves meet in is settled before any root is found, by the ' +
+          'discriminant of the quadratic the substitution leaves. Positive and there are two ' +
+          'intersections; nought and the two roots have collapsed into one, which is a line ' +
+          'touching a curve rather than crossing it; negative and there is no real root at all, ' +
+          'so the line misses. The linear case had one deciding number too — but there, no ' +
+          'solutions meant the equations contradicted each other, and here a line is simply ' +
+          'allowed to pass a curve by.',
+        position: 2,
+        /*
+         * No `automaticityTarget`, and the contrast with the points either side
+         * is the argument for the field existing — the same contrast the three
+         * concepts above draw at their own third points, which is where the
+         * meaning point usually sits. Here it is the SECOND, because the two
+         * conics are a procedure and belong after it; the timing follows what
+         * is being asked rather than the position in the array. This point asks
+         * what the sign of a number says about a picture, and a timing target
+         * on that measures typing.
+         */
+        workedExample: {
+          problem:
+            'The parabola y = x² meets the line y = 2x + k. Find how many intersection points ' +
+            'there are for k = 0, for k = −1 and for k = −2.',
+          subgoals: [
+            {
+              label: 'Substitute once, keeping k as a number not yet chosen',
+              detail:
+                'Both equations already name y, so either may go into the other: x² = 2x + k, ' +
+                'which rearranges to x² − 2x − k = 0. One quadratic covers all three lines, ' +
+                'with k riding along as a letter standing for a number that has not been ' +
+                'picked. Doing the substitution once instead of three times is the whole reason ' +
+                'the comparison below is possible.',
+              socratic:
+                'Three lines are being asked about and they differ in one number. Substitute ' +
+                'before choosing it: what is the one equation in x that you are left with, and ' +
+                'what is k doing in it?',
+            },
+            {
+              label: 'Compute the discriminant, which is not the roots',
+              detail:
+                'For ax² + bx + c = 0 the discriminant is b² − 4ac. Here a = 1, b = −2 and ' +
+                'c = −k, so it is (−2)² − 4(1)(−k) = 4 + 4k. Note what has NOT been done: no ' +
+                'root has been found, and none is needed. The discriminant is the part of the ' +
+                'formula under the root sign, and it is a number about the quadratic rather ' +
+                'than a solution of it.',
+              socratic:
+                'The quadratic formula has a square root in it, and the thing under that root ' +
+                'is what decides how the formula behaves. Write it out for x² − 2x − k = 0, ' +
+                'taking care over the sign of c. What have you computed — and, just as ' +
+                'importantly, what have you not?',
+            },
+            {
+              label: 'Read the three cases off the sign',
+              detail:
+                'At k = 0 the discriminant is 4, which is positive: two roots, x² − 2x = 0 ' +
+                'giving x = 0 and x = 2, so the points are (0, 0) and (2, 4). At k = −1 it is ' +
+                '0: the two roots have collapsed, x² − 2x + 1 = (x − 1)² giving x = 1 alone, so ' +
+                'the only point is (1, 1) and the line touches the parabola there. At k = −2 it ' +
+                'is −4: a negative number has no real square root, so there is no real x at all ' +
+                'and the line and the parabola never meet.',
+              socratic:
+                '4 + 4k at your three values of k gives three numbers, and only their signs ' +
+                'matter. Take them one at a time: what does the formula do when the thing under ' +
+                'the root is positive, what does it do when that thing is nought, and what goes ' +
+                'wrong when it is negative?',
+            },
+            {
+              label: 'Compare the deciding number with the linear case\'s, and say what is different',
+              detail:
+                'The two-equation concept also had one number deciding between three outcomes — ' +
+                'ae − bd, zero exactly when both letters cancel together. But there, "no ' +
+                'solutions" only happened when the two equations contradicted each other: two ' +
+                'lines that do not meet are parallel, which is a coincidence of the ' +
+                'coefficients. Here missing is ordinary. A line that passes above a parabola is ' +
+                'not a contradiction and nothing is degenerate about it — so the negative ' +
+                'discriminant is reporting a fact about two shapes, which is why the count is ' +
+                'geometry rather than algebra.',
+              socratic:
+                'In the two-equation case, no solution meant the two equations were ' +
+                'inconsistent — doubling one and subtracting the other left 0 = 3, something ' +
+                'that could never be true. Your k = −2 line also has no solution. Draw the ' +
+                'parabola and that line, or just ask where y = 2x − 2 sits relative to y = x²: ' +
+                'is anything about that pair of equations contradictory, and if not, what is ' +
+                'the negative discriminant telling you about instead?',
+            },
+          ],
+          answer:
+            'Two points for k = 0, one for k = −1, none for k = −2. The substitution leaves ' +
+            'x² − 2x − k = 0 with discriminant 4 + 4k, which is 4, 0 and −4 at those three ' +
+            'values of k.',
+        },
+      },
+      {
+        id: 'two-conics-lose-both-squares-at-once',
+        conceptId: 'nonlinear-systems',
+        statement:
+          'When neither equation names a letter there is nothing to substitute, and the linear ' +
+          'move comes back one level up. If both equations carry the same squared terms, ' +
+          'subtracting one from the other removes BOTH squares in a single stroke and what is ' +
+          'left is linear. That line is not either curve: it is the line the intersection ' +
+          'points lie on, and solving it then putting the answer back into a curve finishes the ' +
+          'job — with two partners this time, because the thing being put back into is a square.',
+        position: 3,
+        /*
+         * Timed at 25 seconds rather than the 30 the first point carries, and
+         * the difference is the arithmetic. There is no quadratic to solve here:
+         * the subtraction is free because the squared terms are already
+         * identical, and what is left is a one-sided linear solve. What it adds
+         * back is the root at the end, which the first point does not have.
+         */
+        automaticityTarget: 25_000,
+        workedExample: {
+          problem: 'Solve x² + y² = 25 and (x − 6)² + y² = 25.',
+          subgoals: [
+            {
+              label: 'Look for a letter to substitute, and find neither equation names one',
+              detail:
+                'The first point\'s move needed an equation already in the form "y = something". ' +
+                'Neither of these is: both carry x and y to the second power, and rearranging ' +
+                'either for y produces a square root, which puts a root into the other equation ' +
+                'instead of removing a letter from it. So the way in is not substitution, and ' +
+                'the first step is to write both equations in the same terms: expanding the ' +
+                'second gives x² − 12x + 36 + y² = 25.',
+              socratic:
+                'The move from the first point needs one equation that already names a letter ' +
+                'outright. Try to get one here by rearranging either equation for y — what ' +
+                'appears, and what would happen if you substituted that into the other ' +
+                'equation?',
+            },
+            {
+              label: 'Subtract, and both squares go together',
+              detail:
+                'Both equations now hold exactly x² and exactly y². Taking the first from the ' +
+                'second removes both at once: (x² − 12x + 36 + y²) − (x² + y²) = 25 − 25 leaves ' +
+                '−12x + 36 = 0. The licence is the two-equation concept\'s own — a combination ' +
+                'of two equations that hold is a condition every pair satisfying both must ' +
+                'satisfy, and the subtraction is invertible, so no pair is gained or lost. ' +
+                'Nothing was multiplied through, because the terms to be killed were already ' +
+                'identical.',
+              socratic:
+                'You have x² + y² = 25 and x² − 12x + 36 + y² = 25. Compare them term by term ' +
+                'and find what the two have in common. Subtract one from the other — how many ' +
+                'of the squared terms survive it, and what is the highest power left in what ' +
+                'you are holding?',
+            },
+            {
+              label: 'Solve the line, then go back to a circle for the other coordinate',
+              detail:
+                '−12x + 36 = 0 is one equation in one unknown, so x = 3. The line decides x ' +
+                'alone and says nothing about y, which is the half still to find: putting x = 3 ' +
+                'into x² + y² = 25 gives 9 + y² = 25, so y² = 16 and y = 4 or y = −4. TWO ' +
+                'values, and both are solutions — the first point\'s back-substitution gave one ' +
+                'y per x because the line handed it over directly, and here it is a square ' +
+                'being undone.',
+              socratic:
+                'The equation you are left with has one letter in it, so finish it. Then you ' +
+                'have an x and no y — put it back into whichever of the two circles you prefer ' +
+                'and solve for y. How many values come out, and why is that different from what ' +
+                'happened at the end of the first point?',
+            },
+            {
+              label: 'Say what the line you solved actually was',
+              detail:
+                'x = 3 is neither circle. Everything the two circles have in common is on it, ' +
+                'and the subtraction threw away everything else — so it is the line through ' +
+                'both intersection points, which is why one linear equation was enough to pin ' +
+                'the x of both. Here it is also the perpendicular bisector of the two centres, ' +
+                '(0, 0) and (6, 0), and that is no accident: the two radii are equal, so ' +
+                'anything on both circles is the same distance from each centre. Checking in ' +
+                'the second circle, which is where neither coordinate was computed: ' +
+                '(3 − 6)² + 4² = 9 + 16 = 25, and (3 − 6)² + (−4)² = 25 as well.',
+              socratic:
+                'You solved x = 3 and got two points out of it. That equation is not one of the ' +
+                'two circles — so what is it? Plot the two points you found: what do they both ' +
+                'satisfy that the subtraction kept, and what was it that got thrown away? Then ' +
+                'look at where the two centres sit and at the two radii — did x = 3 landing ' +
+                'exactly halfway between them have to happen, or is it a coincidence of these ' +
+                'numbers?',
+            },
+          ],
+          answer:
+            'Two points: (3, 4) and (3, −4). Subtracting the equations removes both squares and ' +
+            'leaves −12x + 36 = 0, so x = 3 for both; putting that into x² + y² = 25 gives ' +
+            'y² = 16, and both roots are solutions.',
+        },
+      },
+    ],
+  },
 ]
 
 /**
@@ -1577,6 +2073,41 @@ const CONCEPTS: Concept[] = [
  *
  * Four edges now, and `roots` is still just the reading. The chain is four
  * long: reading, then one equation, then two, then three with the order fixed.
+ *
+ * ── THE FIFTH PROMOTION ENDED THE CHAIN, WHICH IS A SENTENCE ABOUT THIS LIST ─
+ *
+ * Five edges, and the paragraph directly above is now wrong about the shape in
+ * a way worth correcting in place rather than deleting. The subject is NOT a
+ * chain five long. `nonlinear-systems` declared `needs:
+ * ['systems-of-linear-equations', 'quadratic-formula']`, and the first of those
+ * is the THIRD concept in this file, not the fourth — so the new edge hangs off
+ * the two-equation case alongside `gaussian-elimination` rather than behind it.
+ * `systems-of-linear-equations` has two dependents here where it had one, and
+ * `roots` is still just the reading, which is the one thing about the shape
+ * that has not changed.
+ *
+ * tests/concepts-logic.mjs already asserted the edges by NAME rather than as an
+ * ordered pair, and the comment giving the reason — "a positional check reads
+ * correctly today and would pass an edge accidentally hung off the wrong parent
+ * later" — was written two promotions before the fork it was guarding against
+ * arrived. That is the whole return on the habit: nothing had to be rewritten
+ * to stay true, only added to. An ordered-walk assertion would have passed this
+ * concept hung off the row reduction, and three unknowns have nothing whatever
+ * to do with a line meeting a circle.
+ *
+ * THE SECOND `needs` IS NOT HERE AND CANNOT BE. `quadratic-formula` is a
+ * concept of `rational-expressions`, and an authored ontology's edges may only
+ * name concepts it contains, so that edge is an entry in
+ * `ALGEBRA_FOUNDATIONS.links` — filed with the area that owned the departing
+ * node, which is the rule the fourth promotion's entry follows into
+ * `LINEAR_ALGEBRA.links`. Both of its ends are authored, so it gates from the
+ * moment it exists rather than waiting on a node somebody has yet to write.
+ *
+ * AND NO `encompasses`, which the header argues at length and which is the one
+ * thing in this list a reader might expect to find and should not. The short
+ * form: the credit claim would rest on the word "substitute" rather than on
+ * arithmetic the learner performs, because the linear substitution's expression
+ * appears in none of the eight new tasks.
  */
 const EDGES: ConceptEdge[] = [
   {
@@ -1597,6 +2128,18 @@ const EDGES: ConceptEdge[] = [
     id: 'systems-of-linear-equations->gaussian-elimination',
     from: 'systems-of-linear-equations',
     to: 'gaussian-elimination',
+    kind: 'prerequisite',
+    promotedBy: 'author:expressions-and-equations',
+  },
+  /*
+   * The fork. Same `from` as the edge directly above and a different `to`, so
+   * the two are siblings rather than a chain — see the header's note on why
+   * that had to be said out loud.
+   */
+  {
+    id: 'systems-of-linear-equations->nonlinear-systems',
+    from: 'systems-of-linear-equations',
+    to: 'nonlinear-systems',
     kind: 'prerequisite',
     promotedBy: 'author:expressions-and-equations',
   },

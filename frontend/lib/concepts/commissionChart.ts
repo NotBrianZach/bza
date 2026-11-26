@@ -226,10 +226,12 @@ export const TRANSITIONS: ChartTransition[] = [
     note: 'Given up on. Already a ruling the verifier can produce.',
   },
   {
-    region: 'errand', from: 'ruled', event: 'try-again', to: 'working.awaiting',
+    region: 'errand', from: 'ruled', event: 'try-again', to: 'working.pending',
     note: 'From the superstate: another problem on the same concept, whichever of the four '
       + 'rulings came back. This is the edge that makes `inconclusive` liveable — the '
-      + 'question stays open and there is something to do about it.',
+      + 'question stays open and there is something to do about it. Targets `pending` and '
+      + 'NOT `awaiting`, because continuing releases the task and the next one has to be '
+      + 'fetched: `awaiting` means a task is on screen, which at this instant is false.',
   },
   {
     region: 'errand', from: 'working', event: 'put-down', to: 'none',

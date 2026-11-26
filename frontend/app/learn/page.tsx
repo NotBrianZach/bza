@@ -101,6 +101,28 @@ const PRACTISABLE = practisableConcepts(MATHEMATICS).length
  */
 const DEFAULT_SUBJECT = ONTOLOGIES[0]
 
+/**
+ * How many problems one commission is for.
+ *
+ * The errand used to be a single problem, which meant the game master was
+ * asked for prose twice per question — once to frame it and once to narrate
+ * the ruling — and the learner had to click for the next one. Over a set that
+ * is the dominant cost of playing, in latency and in tokens both.
+ *
+ * Five, and the number is a judgement rather than a measurement. It wants to
+ * be long enough that the framing-to-scene round trip is worth its wait and
+ * short enough that putting the errand down is never far away. The session
+ * serves eight tasks across whatever is introducible and not all of them are
+ * for this concept, so a longer run would routinely ask for problems that are
+ * not there — `no-task` mid-run is handled, but a run that reliably ends in it
+ * would be a worse promise than a shorter one that finishes.
+ *
+ * Not configurable on purpose. A setting here would be a second thing to
+ * explain in a surface whose §4 argument is that the refusal already tells the
+ * player what to do next.
+ */
+const COMMISSION_RUN = 5
+
 interface Named { conceptId: string; conceptName: string }
 
 interface SessionResponse {
@@ -284,6 +306,27 @@ export default function LearnPage() {
     ruling: string | null
     /** Whether help was used, for the scene. A circumstance, not a fault. */
     assisted?: boolean
+    /**
+     * ── THE ERRAND IS A SET OF PROBLEMS, NOT ONE ───────────────────────────
+     *
+     * A commission used to be a single task: ruled, narrated, and then a
+     * button to ask for another. Across a problem set that is a model call and
+     * a paragraph of fiction between every question, which is the thing
+     * somebody working through ten problems least wants.
+     *
+     * So the errand carries a run. Problems are served and ruled as before and
+     * the chart still moves per problem — that part was already right, and the
+     * per-problem ruling is what the strength table is fed. What changed is
+     * that the GM is no longer asked anything until the run is finished, and
+     * `try-again` is fired by the code rather than by the learner.
+     *
+     * `tally` and not a score. The counts go to the route as counts; nothing
+     * in this file reduces them, and the prompt is forbidden from doing it
+     * either. See `RunContext` in lib/concepts/narrate.ts.
+     */
+    tally: { correct: number; incorrect: number; inconclusive: number; abandoned: number }
+    /** How many problems this errand is for. See `COMMISSION_RUN`. */
+    runSize: number
   })>(null)
 
   /**
@@ -335,6 +378,8 @@ export default function LearnPage() {
       subjectId: offer.subjectId,
       errand,
       taskId: null, framing: null, source: null, note: null, ruling: null,
+      tally: { correct: 0, incorrect: 0, inconclusive: 0, abandoned: 0 },
+      runSize: COMMISSION_RUN,
     })
     setFocusTaskId(null)
     setTab('practice')
@@ -507,6 +552,25 @@ export default function LearnPage() {
         { strength: 0, floor: 1, standingThere: false }),
     }))
 
+    /*
+     * THE GAME MASTER FRAMES THE RUN, NOT EACH PROBLEM IN IT.
+     *
+     * This effect runs once per problem, because every problem passes through
+     * `working.pending` — that is what makes the auto-advance work. The
+     * framing request must NOT follow it round, or the change that stopped a
+     * scene per ruling would be undone by a hand-over per task, which is the
+     * same cost wearing the other hat.
+     *
+     * An empty tally is the test for "this is the first problem of the run",
+     * and it is the honest one: it is the same counter the end-of-run scene is
+     * built from, so the two cannot disagree about whether the run has begun.
+     * A `framing !== null` check would have been wrong — the framing is
+     * deliberately cleared on every ruling.
+     */
+    const started = commission.tally.correct + commission.tally.incorrect
+      + commission.tally.inconclusive + commission.tally.abandoned
+    if (started > 0) return
+
     /* No cleanup flag. The worst a late response can do is set a framing for a
        commission the learner has moved on from, and the setter is guarded on
        the task id still matching — which is cheaper than an abort and says the
@@ -562,11 +626,40 @@ export default function LearnPage() {
          chart has no state for is one this code has never seen, and inventing
          a scene for it is how an unknown ruling becomes a confident one. */
       if (next === c.errand) return c
+
+      /* The count this ruling adds. Four named buckets and no fifth: a word
+         the chart moved on but this does not know is a bug, and silently
+         dropping it would make the tally disagree with the chart about how
+         many problems were done. */
+      const key = verdict.ruling as keyof typeof c.tally
+      const tally = key in c.tally ? { ...c.tally, [key]: c.tally[key] + 1 } : c.tally
+      const done = tally.correct + tally.incorrect + tally.inconclusive + tally.abandoned
+      const finished = done >= c.runSize
+
       return {
         ...c,
-        errand: next,
+        /*
+         * MID-RUN THE CHART GOES STRAIGHT BACK TO `working.pending`, through
+         * the same `try-again` edge the button used to fire. The learner is
+         * not asked and the GM is not asked; the next problem is fetched by
+         * the resolve effect, which is what `pending` means.
+         *
+         * The ruling still happened and still moved the strength table — this
+         * only decides who is told about it in prose.
+         */
+        errand: finished
+          ? next
+          : transition('errand', next, 'try-again',
+            { strength: 0, floor: 1, standingThere: false }),
+        tally,
+        /* Held only for the run's own bookkeeping. The end-of-run scene is
+           asked for from `tally`, never from this, so a set is never narrated
+           as though it were its last problem. */
         ruling: verdict.ruling,
-        assisted,
+        assisted: c.assisted === true || assisted,
+        /* Released mid-run so the resolve effect rebinds to the next problem;
+           this is the half the old `try-again` button got right. */
+        taskId: finished ? c.taskId : null,
         /* The framing is cleared so the ruling effect below has something to
            fill. The hand-over has done its job by this point — the work is
            done — and keeping both would put two paragraphs of game master in
@@ -589,13 +682,26 @@ export default function LearnPage() {
     if (!commission.errand.startsWith('ruled.')) return
     if (!commission.regionId || !commission.taskId) return
     const forTask = commission.taskId
+    /*
+     * THE TALLY, NOT THE LAST RULING.
+     *
+     * This effect now fires once per RUN rather than once per problem, so what
+     * it describes is a set. Sending `ruling` here would send the last
+     * problem's word and get back a scene about acceptance for a run that was
+     * mostly wrong — true about one problem, false as the resolution of five,
+     * and exactly the "scene about the wrong problem" this file's `onRuled`
+     * note refuses one level up.
+     *
+     * `taskId` still goes because the route derives the concept and the region
+     * from it; it is the run's last problem and it is used for nothing else.
+     */
     authedFetch('/api/learn/commission', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         regionId: commission.regionId,
         taskId: forTask,
-        ruling: commission.ruling,
+        tally: commission.tally,
         assisted: commission.assisted === true,
       }),
     })
@@ -935,22 +1041,61 @@ export default function LearnPage() {
                     not only in the prompt and the chart: the engine declining
                     to settle something is the one ruling a learner will read as
                     a failure unless told otherwise, and §6 says it is not one. */}
-                {commission.errand === 'ruled.inconclusive' && (
+                {/* Keyed on the TALLY and not on the chart state, which is the
+                    correction the run forced. `errand` holds the LAST
+                    problem's ruling, so a set with three inconclusive answers
+                    that happened to end on a correct one would have said
+                    nothing — and a set that merely ended on one would have
+                    reported it as though it were the set. The count is the
+                    only thing here that is true of the run. */}
+                {commission.errand.startsWith('ruled.') && commission.tally.inconclusive > 0 && (
                   <p className='mt-1.5 text-[11px] leading-relaxed text-amber-300/70'>
-                    The engine could not settle this one. That is a statement about the engine, not
-                    about you — it is not counted as wrong, and it has gone for review.
+                    The engine could not settle {commission.tally.inconclusive === 1
+                      ? 'one of these'
+                      : `${commission.tally.inconclusive} of these`}. That is a statement about the
+                    engine, not about you — {commission.tally.inconclusive === 1 ? 'it is' : 'they are'} not
+                    counted as wrong, and {commission.tally.inconclusive === 1 ? 'it has' : 'they have'} gone
+                    for review.
                   </p>
                 )}
-                {/* Another problem on the same concept, from any ruling. The
+                {/* Where the set is up to, while it is being worked.
+                    The run advances by itself now, so without this the card
+                    would sit unchanged through five problems and the only
+                    evidence the errand was still running would be that the
+                    problems kept coming. A player who cannot see a set ending
+                    cannot decide to finish it. */}
+                {commission.errand.startsWith('working.') && (
+                  <p className='mt-1.5 text-[11px] text-amber-300/60'>
+                    Problem {Math.min(
+                      commission.tally.correct + commission.tally.incorrect
+                      + commission.tally.inconclusive + commission.tally.abandoned + 1,
+                      commission.runSize,
+                    )} of {commission.runSize} on {commission.conceptName}.
+                  </p>
+                )}
+                {/* Another SET on the same concept, from any ruling. The
                     chart's `try-again` edge hangs off the `ruled` superstate
                     for exactly this: it is the same offer whichever of the four
-                    came back, and it is what makes an inconclusive liveable. */}
+                    came back, and it is what makes an inconclusive liveable.
+
+                    The tally is reset here and that is load-bearing rather than
+                    tidy: a new set with the old counts still on it is finished
+                    the instant its first problem is ruled, and the run would be
+                    one problem long for the rest of the errand. */}
                 {commission.errand.startsWith('ruled.') && (
                   <button
-                    onClick={() => { fire('try-again'); setCommission(c => c && ({ ...c, taskId: null, ruling: null, framing: null })) }}
+                    onClick={() => {
+                      fire('try-again')
+                      setCommission(c => c && ({
+                        ...c,
+                        taskId: null, ruling: null, framing: null,
+                        tally: { correct: 0, incorrect: 0, inconclusive: 0, abandoned: 0 },
+                        assisted: false,
+                      }))
+                    }}
                     className='mt-1.5 rounded-full border border-amber-700/60 px-2 py-0.5 text-[11px] text-amber-100 hover:bg-amber-900/40'
                   >
-                    another problem on {commission.conceptName}
+                    another {commission.runSize} on {commission.conceptName}
                   </button>
                 )}
                 {commission.note && (

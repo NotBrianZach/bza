@@ -4,8 +4,8 @@ import { regionBy } from '@/lib/concepts/armature'
 import { composeAtlas } from '@/lib/concepts/atlas'
 import { offerFor } from '@/lib/concepts/commission'
 import {
-  commissionPrompt, rulingPrompt, unframedCommission, unnarratedRuling,
-  type CommissionContext, type RulingContext,
+  commissionPrompt, rulingPrompt, runPrompt, unframedCommission, unnarratedRuling, unnarratedRun,
+  type CommissionContext, type RulingContext, type RunContext,
 } from '@/lib/concepts/narrate'
 import { ONTOLOGIES } from '@/lib/concepts/ontology'
 import { conceptById } from '@/lib/concepts/registry'
@@ -19,6 +19,15 @@ import { taskById } from '@/lib/concepts/tasks'
  *   → 200 { framing, conceptName, kind, source: 'gm' | 'unframed', note? }
  * POST { regionId, taskId, ruling, assisted? }
  *   → 200 { framing, conceptName, kind, source: 'gm' | 'unframed', note? }
+ * POST { regionId, taskId, tally: { correct, incorrect, inconclusive, abandoned }, assisted? }
+ *   → 200 { framing, conceptName, kind, source: 'gm' | 'unframed', note? }
+ *
+ * The third form is a finished SET and takes precedence over `ruling` when
+ * both are present and the tally is non-empty. It exists so the game master
+ * speaks once per problem set instead of once per problem — see the header
+ * above `RunContext` in lib/concepts/narrate.ts for why it is given counts
+ * rather than a verdict, and why the last ruling would have been the wrong
+ * thing to reuse.
  *
  * docs/RPG_AND_THE_GRAPH.md §3, both hand-offs. The engine picks the concept
  * and the task and the verifier rules it; the GM writes the ask in the world's
@@ -130,19 +139,51 @@ export async function POST(req: NextRequest) {
   }
   const ruling = asked as typeof RULINGS[number] | null
 
-  const ctx: CommissionContext | RulingContext = ruling
+  /*
+   * A finished SET, which is the third shape this route serves.
+   *
+   * Validated exactly as hard as `ruling` is, and for the same reason: these
+   * numbers are read straight into a prompt. A non-integer, a negative or a
+   * NaN would reach `tallyLines` and come out as "NaN pieces of work was
+   * right", which is a sentence a model will cheerfully build a scene around.
+   * Anything malformed is dropped to zero rather than rejected, because a
+   * miscounted tally must not cost the player the scene at the end of real
+   * work — but an EMPTY tally is not narratable and falls through to the
+   * single-ruling path below.
+   */
+  const count = (v: unknown) =>
+    (typeof v === 'number' && Number.isInteger(v) && v >= 0 && v <= 999 ? v : 0)
+  const rawTally = body?.tally as Record<string, unknown> | undefined
+  const tally = rawTally ? {
+    correct: count(rawTally.correct),
+    incorrect: count(rawTally.incorrect),
+    inconclusive: count(rawTally.inconclusive),
+    abandoned: count(rawTally.abandoned),
+  } : null
+  const ranTally = tally && (tally.correct + tally.incorrect + tally.inconclusive + tally.abandoned) > 0
+    ? tally
+    : null
+
+  const ctx: CommissionContext | RulingContext | RunContext = ranTally
     ? {
       region,
       conceptName: offer.conceptName,
-      ruling,
+      tally: ranTally,
       assisted: body?.assisted === true,
     }
-    : {
-      region,
-      conceptName: offer.conceptName,
-      kind: task.kind,
-      blockedRoad: road || null,
-    }
+    : ruling
+      ? {
+        region,
+        conceptName: offer.conceptName,
+        ruling,
+        assisted: body?.assisted === true,
+      }
+      : {
+        region,
+        conceptName: offer.conceptName,
+        kind: task.kind,
+        blockedRoad: road || null,
+      }
 
   const payload = (extra: Record<string, unknown>) => NextResponse.json({
     conceptName: offer.conceptName,
@@ -153,9 +194,11 @@ export async function POST(req: NextRequest) {
   })
   /* Both bare forms are real prose from the module, not a placeholder — the
      work and the ruling both stand whether or not anybody narrated them. */
-  const bare = () => (ruling
-    ? unnarratedRuling(ctx as RulingContext)
-    : unframedCommission(ctx as CommissionContext))
+  const bare = () => (ranTally
+    ? unnarratedRun(ctx as RunContext)
+    : ruling
+      ? unnarratedRuling(ctx as RulingContext)
+      : unframedCommission(ctx as CommissionContext))
   const fallback = (note?: string) => payload({ framing: bare(), source: 'unframed', note })
 
   const apiKey = process.env.OPENROUTER_API_KEY || process.env.OPENAI_API_KEY
@@ -172,9 +215,11 @@ export async function POST(req: NextRequest) {
     ? 'https://openrouter.ai/api/v1/chat/completions'
     : 'https://api.openai.com/v1/chat/completions'
   const model = useOpenRouter ? MODEL : 'gpt-4o-mini'
-  const prompt = ruling
-    ? rulingPrompt(ctx as RulingContext)
-    : commissionPrompt(ctx as CommissionContext)
+  const prompt = ranTally
+    ? runPrompt(ctx as RunContext)
+    : ruling
+      ? rulingPrompt(ctx as RulingContext)
+      : commissionPrompt(ctx as CommissionContext)
 
   try {
     const res = await fetch(url, {

@@ -463,6 +463,162 @@ export function unnarratedRuling(ctx: RulingContext): string {
   }
 }
 
+/**
+ * ── THE GAME MASTER SPEAKS ONCE PER SET, NOT ONCE PER PROBLEM ─────────────
+ *
+ * A commission used to be one problem: frame it, rule it, narrate the ruling,
+ * and the player clicks for another. Across a problem set that is a model call
+ * and a paragraph of fiction between every question — the thing somebody
+ * working through ten problems least wants, and expensive besides.
+ *
+ * So the errand now spans a RUN and the ruling scene comes once, at the end.
+ * Which raises the only hard question in this change: what is the GM told?
+ *
+ * ── WHY A TALLY AND NOT A VERDICT ─────────────────────────────────────────
+ *
+ * The tempting shape is to collapse the run — "mostly right", "passed" — and
+ * hand that over as if it were a ruling. It is not one. The verifier produces
+ * four words about ONE piece of work; there is no engine anywhere in this
+ * system that rules on a set, and inventing a fifth word here would be this
+ * module doing exactly what its own header forbids: forming a judgement and
+ * then narrating it as though something else had made it.
+ *
+ * `rulingPrompt` could have been reused by passing the LAST ruling, which is
+ * worse and quieter. It is a true statement about one problem presented as the
+ * resolution of five, so a player who got four wrong and the last one right
+ * reads a scene about acceptance. That is the "scene about the wrong problem"
+ * failure the page's own `onRuled` note names, one level up.
+ *
+ * So the GM is given COUNTS and is forbidden from scoring them. It may say the
+ * room received a sheaf of work of which some was right and some was not; it
+ * may not say the player did well, nor compute a proportion, nor call the set
+ * passed or failed. The counts are facts the engine produced. Anything derived
+ * from them is not.
+ *
+ * `inconclusive` keeps the property it has everywhere else: it is counted
+ * separately and folded into neither side. A run of five that came back three
+ * correct and two inconclusive is NOT "three out of five" — two of them were
+ * never settled, and presenting them as misses would be the engine's refusal
+ * rounded into a judgement against the player. §6, for the fourth time.
+ */
+export interface RunContext {
+  region: PlacedRegion
+  conceptName: string
+  /**
+   * How many of each word the verifier produced across the set.
+   *
+   * Counts, never a verdict. See the header above for why this is not reduced
+   * to one of the four rulings before it reaches the prompt.
+   */
+  tally: { correct: number; incorrect: number; inconclusive: number; abandoned: number }
+  /** True when help was used on ANY problem in the run. A circumstance, as in `RulingContext`. */
+  assisted?: boolean
+}
+
+export const RUN_SYSTEM = [
+  SYSTEM,
+  '',
+  'NARRATING A SET OF WORK:',
+  'The player took on a piece of work in this place and has now finished a SET of problems on it.',
+  'The engine ruled on each one separately. You are told how many of each ruling came back, as',
+  'settled fact. Describe what the room does about the finished work — one short paragraph, three',
+  'sentences at most.',
+  '',
+  'YOU ARE TOLD COUNTS. YOU MAY NOT TURN THEM INTO A SCORE:',
+  '- Do NOT compute or state a proportion, percentage, fraction or ratio, and do not say "most",',
+  '  "mostly", "nearly all" or "half". You were given numbers; converting them into a judgement is',
+  '  the one thing you are not allowed to do with them.',
+  '- Do NOT call the set passed, failed, good, poor, strong or weak. No engine in this system rules',
+  '  on a set. There is no such ruling for you to report.',
+  '- Do NOT say the player has learned, mastered, improved or understood anything. You have seen a',
+  '  count of outcomes and nothing about what anybody knows.',
+  '',
+  'WHAT THE COUNTS MEAN:',
+  '- CORRECT work was right. The room accepts those pieces and uses them.',
+  '- INCORRECT work was wrong. Something is inconvenient because of those. Do not say what the',
+  '  right answers were — you were not told them — and do not have anybody work them out.',
+  '- INCONCLUSIVE work was work the engine could not settle. It is NOT wrong and it is NOT',
+  '  accepted. Those pieces are set aside for somebody else to look at. Never fold them in with',
+  '  the incorrect ones, and never imply they count against the player.',
+  '- ABANDONED work was put down unfinished. Set aside, no reproach.',
+  '',
+  'If every piece came back the same way, say so plainly. If they were mixed, the honest scene is a',
+  'room sorting through work that is not all of one kind — that is a situation, not a grade.',
+  '',
+  'YOU MUST NOT, IN ADDITION TO EVERYTHING ABOVE:',
+  '- State any problem, any answer, or what an answer should have been. You have not been told any',
+  '  of them.',
+  '- Congratulate, or say anything is now unlocked, open, or within reach. Whether a road opens is',
+  '  decided elsewhere by a number, and you are not told it.',
+].join('\n')
+
+/**
+ * The counts, stated as fact.
+ *
+ * Number-agreeing throughout, which is not fussiness. These lines are the
+ * entire factual content of the prompt, and "3 pieces of work was right" is a
+ * seam a model reads as carelessness — the repair it reaches for is to rewrite
+ * the sentence, and rewriting a count is the one thing this prompt spends
+ * thirty lines forbidding. A line that reads correctly is a line there is no
+ * reason to improve.
+ */
+function tallyLines(tally: RunContext['tally']): string[] {
+  const piece = (n: number) => (n === 1 ? '1 piece' : `${n} pieces`)
+  const was = (n: number) => (n === 1 ? 'was' : 'were')
+  const out: string[] = []
+  if (tally.correct > 0) {
+    out.push(`CORRECT: ${piece(tally.correct)} of work ${was(tally.correct)} right.`)
+  }
+  if (tally.incorrect > 0) {
+    out.push(`INCORRECT: ${piece(tally.incorrect)} of work ${was(tally.incorrect)} wrong.`)
+  }
+  if (tally.inconclusive > 0) {
+    out.push(`INCONCLUSIVE: ${piece(tally.inconclusive)} of work the engine could not settle. `
+      + 'Not wrong, not accepted.')
+  }
+  if (tally.abandoned > 0) {
+    out.push(`ABANDONED: ${piece(tally.abandoned)} of work ${was(tally.abandoned)} `
+      + 'put down unfinished.')
+  }
+  return out
+}
+
+export function runPrompt(ctx: RunContext): { system: string; user: string } {
+  const lines: string[] = []
+  lines.push(`PLACE: ${ctx.region.name}, "${ctx.region.epithet}".`)
+  lines.push(`WHAT THIS PLACE IS: ${settingOf(ctx.region.because)}`)
+  lines.push('')
+  lines.push(`THE WORK WAS ABOUT: ${ctx.conceptName}. You were never told the problems themselves.`)
+  if (ctx.assisted) {
+    lines.push('THE PLAYER USED HELP ON AT LEAST ONE. That is a circumstance of the scene, not a '
+      + 'fault to remark on.')
+  }
+  lines.push('')
+  lines.push(...tallyLines(ctx.tally))
+  lines.push('')
+  lines.push('Write what the room does with the finished work. Do not score it.')
+  return { system: RUN_SYSTEM, user: lines.join('\n') }
+}
+
+/**
+ * A finished set with no model behind it.
+ *
+ * Deliberately a list of counts and not a sentence that reads them. The
+ * fallback is the one place where "mostly right" would be easiest to write and
+ * it is held to the same rule as the prompt: these are the numbers, and nothing
+ * here turns them into how it went.
+ */
+export function unnarratedRun(ctx: RunContext): string {
+  const t = ctx.tally
+  const parts: string[] = []
+  if (t.correct > 0) parts.push(`${t.correct} right`)
+  if (t.incorrect > 0) parts.push(`${t.incorrect} wrong`)
+  if (t.inconclusive > 0) parts.push(`${t.inconclusive} the engine could not settle`)
+  if (t.abandoned > 0) parts.push(`${t.abandoned} set aside`)
+  const body = parts.length ? parts.join(', ') : 'nothing settled'
+  return `${ctx.region.name} has the work on ${ctx.conceptName}: ${body}.`
+}
+
 /** The line that states the outcome as fact, which the GM narrates around. */
 function outcomeLine(ctx: SceneContext): string {
   const here = ctx.region.name

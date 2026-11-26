@@ -170,10 +170,10 @@ const {
   regions: armatureRegions,
 } = req(join(outDir, 'concepts', 'armature.js'))
 const {
-  COMMISSION_SYSTEM, RULING_SYSTEM, SYSTEM: GM_SYSTEM, TABLE_SYSTEM, commissionPrompt,
+  COMMISSION_SYSTEM, RULING_SYSTEM, RUN_SYSTEM, SYSTEM: GM_SYSTEM, TABLE_SYSTEM, commissionPrompt,
   parseRollExpression, rulingPrompt, scenePrompt, settingOf, splitRollRequest, splitWorkRequest,
   tablePrompt,
-  unframedCommission, unnarratedRuling, unnarratedScene,
+  runPrompt, unframedCommission, unnarratedRuling, unnarratedRun, unnarratedScene,
 } = req(join(outDir, 'concepts', 'narrate.js'))
 const {
   anyWorkable, offerFor, offersFor, ontologyOwning,
@@ -4398,22 +4398,34 @@ t('Euclid has two nodes of headroom by node count alone',
  * The third formerly floor-pressed area, kept because it is the one the change
  * was made FOR and because its ready set is a figure worth guarding.
  *
- * `algebra-foundations` has four ready candidates — `complex-numbers`,
+ * `algebra-foundations` had four ready candidates — `complex-numbers`,
  * `linear-inequalities`, `word-problems` and `nonlinear-systems` — and six nodes
- * left. By node count alone that is one of headroom, and for three promotions it
+ * left. By node count alone that was one of headroom, and for three promotions it
  * meant spending one froze the area and stranded the other three: the worst
  * shape of the three pressed areas, since headroom was one and candidates were
- * four. TEN nodes have been authored out of it, which is the fact the floor was
+ * four. TEN nodes had been authored out of it, which is the fact the floor was
  * not reading and now does.
  *
+ * THREE READY AFTER THE FORTY-THIRD, WHICH SPENT THAT LAST NODE OF HEADROOM ON
+ * THE ONE CANDIDATE THE OTHER THREE WERE NOT. `nonlinear-systems` is a concept
+ * of `expressions-and-equations` now, so five nodes are left and the node count
+ * sits exactly on the floor — which is the state this note was describing in
+ * advance, arrived at rather than avoided. It is not a freeze: the floor counts
+ * departures, eleven of them now, and the end group owns that figure. What is
+ * worth reading off the remaining three is that EVERY one of them is under an
+ * obstacle the floor has nothing to do with — two live refusals and one answer
+ * that is a set — so the node that got spent was the only one here that the
+ * verifier could have taken, and the headroom and the candidate list ran out
+ * together rather than one binding the other.
+ *
  * The ready COUNT is asserted and the node count is deliberately not, because
- * the four are what a promotion run comes here to find and the six is a figure
- * the end group owns.
+ * the three are what a promotion run comes here to find and the five is a
+ * figure the end group owns.
  */
 const ALGFOUND_AREA = AREAS.find(a => a.id === 'algebra-foundations')
-t('and algebra-foundations has four ready candidates, which was the worse shape',
+t('and algebra-foundations has three ready candidates, the fourth having been written',
   ALGFOUND_AREA.nodes.filter(n =>
-    (n.needs ?? []).every(id => isTeachable(MATHEMATICS, id))).length === 4,
+    (n.needs ?? []).every(id => isTeachable(MATHEMATICS, id))).length === 3,
   `${ALGFOUND_AREA.nodes.length} nodes, ready: ${ALGFOUND_AREA.nodes
     .filter(n => (n.needs ?? []).every(id => isTeachable(MATHEMATICS, id)))
     .map(n => n.id).join(' ')}`)
@@ -5062,10 +5074,43 @@ t('and the merged geometry area declares none, which is why that merge stranded 
  * members. Checked below as an absence across EVERY area's nodes rather than as
  * "not a root here".
  */
-t('the merged algebra area has exactly these four roots, the radical equations having left too',
+/*
+ * THREE SINCE THE FORTY-THIRD, AND IT IS THE BINOMIAL'S CAUSE FOR THE FOURTH
+ * TIME — which keeps that the commonest of the four causes this area has shown.
+ *
+ * `nonlinear-systems` was a root here and is a concept of
+ * `expressions-and-equations` now. Four to three, the other three untouched.
+ *
+ * Nothing substituted in, and the reason is the `binomial-theorem`/`percent`/
+ * `radical-equations` one: the node had no in-area dependent at all. Its only
+ * dependent anywhere is `parametric-and-implicit`, in `functions`. So this is
+ * not the `absolute-value` cause, where an in-area dependent existed and was
+ * still gated from inside.
+ *
+ * WHAT MAKES THIS INSTANCE WORTH ITS OWN PARAGRAPH is the departure directly
+ * above it in the file rather than anything new about the cause.
+ * `systems-of-linear-equations` had exactly one dependent too — this node — and
+ * it SUBSTITUTED into this set rather than shrinking it, because that one
+ * dependent was inside the area. One dependent each, opposite effects on this
+ * set, and nothing about either node's definition says which it will be. That
+ * is the argument for naming members put more sharply than the four causes put
+ * it: the cause is not a property of the departing node, it is a property of
+ * where its dependents happen to live.
+ */
+t('the merged algebra area has exactly these three roots, the nonlinear systems having left too',
   roots(areaOntology(ALGEBRA)).slice().sort().join(' ')
-    === 'complex-numbers linear-inequalities nonlinear-systems word-problems',
+    === 'complex-numbers linear-inequalities word-problems',
   roots(areaOntology(ALGEBRA)).slice().sort().join(' '))
+t('and nothing substituted in behind them, their only dependent being in another area',
+  !roots(areaOntology(ALGEBRA)).includes('nonlinear-systems')
+  && isTeachable(MATHEMATICS, 'nonlinear-systems')
+  && !AREAS.some(a => a.nodes.some(n => n.id === 'nonlinear-systems'))
+  && dependentsOf(MATHEMATICS, 'nonlinear-systems').join(' ') === 'parametric-and-implicit'
+  && AREAS.filter(a => a.nodes.some(n => (n.needs ?? []).includes('nonlinear-systems')))
+    .map(a => a.id).join(' ') === 'functions',
+  `dependents: ${dependentsOf(MATHEMATICS, 'nonlinear-systems').join(' ') || 'none'}, named by: `
+  + `${AREAS.filter(a => a.nodes.some(n => (n.needs ?? []).includes('nonlinear-systems')))
+    .map(a => a.id).join(' ') || 'no area'}`)
 t('and nothing substituted in behind the radical equations, which had no in-area dependent to free',
   !roots(areaOntology(ALGEBRA)).includes('radical-equations')
   && isTeachable(MATHEMATICS, 'radical-equations')
@@ -5078,16 +5123,29 @@ t('and nothing substituted in behind the radical equations, which had no in-area
     .map(a => a.id).join(' ') || 'no area names it')
 /*
  * And the floor, stated here because this is where a reader counting roots will
- * be. Six nodes against a floor of five is ONE promotion of room, and
- * `linear-algebra` is already in exactly that position with one ready
- * candidate — so two areas now approach the same wall, and the answer
- * atlas-foundations.ts names for a drained area is a merge into a neighbour and
- * not a lower threshold. Asserted as the headroom rather than as the node list,
- * because the node list is what a promotion changes and the headroom is the
- * claim.
+ * be. It read "six nodes against a floor of five is ONE promotion of room" and
+ * named `linear-algebra` as already being in that position; the forty-third
+ * promotion spent that room, so the figure is FIVE and the headroom is nought.
+ *
+ * Renumbered rather than restated two-sidedly, which the timing assertion in
+ * tests/concepts-logic.mjs was not — and the difference is worth one line,
+ * because that one went red twice for being a ratchet. This is not a ratchet.
+ * It is the live node count of one named area beside the live floor, and both
+ * halves of it are things a promotion is SUPPOSED to move. There is no reason
+ * behind it that could be said instead of the number.
+ *
+ * What does not change with the number is the second half of the sentence. Five
+ * is the lowest value `AREAS.every(a => a.nodes.length >= STUB_FLOOR)` accepts,
+ * so the next promotion out of here is the first one those two readings answer
+ * differently: node count says spent, territory says eleven departures clear.
+ * The answer atlas-foundations.ts names for a drained area is a merge into a
+ * neighbour and NOT a lower threshold, and that remains a decision about the
+ * learner-facing map rather than an authoring call. Whoever arrives here next
+ * should correct the figure and leave the threshold alone.
  */
-t('which leaves the area one promotion from the stub floor, and the floor is not to be moved',
-  ALGEBRA.nodes.length === 6 && singletons.length === 0,
+t('which leaves the area ON the stub floor by node count, and the floor is not to be moved',
+  ALGEBRA.nodes.length === 5 && singletons.length === 0
+  && AREAS.every(a => a.nodes.length >= 5),
   `${ALGEBRA.nodes.length} nodes: ${ALGEBRA.nodes.map(n => n.id).join(' ')}`)
 t('and nothing substituted in behind it, because it had no dependent anywhere to free',
   !roots(areaOntology(ALGEBRA)).includes('scientific-notation')
@@ -8872,6 +8930,109 @@ t('both departures are declared, and the area is clear of the floor either way',
 // ---------------------------------------------------------------------------
 
 /**
+ * THE FORTY-THIRD PROMOTION — THE ELEVENTH OUT OF `algebra-foundations`, AND
+ * THE ONE THAT FORKED A SUBJECT THAT HAD ONLY EVER BEEN A CHAIN.
+ *
+ * `nonlinear-systems` is a concept of `expressions-and-equations` now and no
+ * longer a node of that area. Five things it did are checked below and they
+ * fail differently:
+ *
+ *  - THE DEPARTURE. Six nodes before, five after, against a floor of five, with
+ *    eleven departures. The floor group at the end of this file owns those two
+ *    figures and the roots group owns the headroom sentence; what is asserted
+ *    here is only that the node is gone and the concept is real.
+ *  - THE FORK. Its one in-subject prerequisite is `systems-of-linear-equations`
+ *    and NOT `gaussian-elimination`, which is the fourth concept of that
+ *    subject and sits directly above it in the array. Asserted in both
+ *    directions, because "it comes after the system" is satisfied by hanging it
+ *    off the row reduction as well. tests/concepts-logic.mjs owns the order
+ *    half of this; what belongs here is the composed-graph half, since
+ *    `composeAtlas` is where an accidental extra parent would show up.
+ *  - THE STRANDED HALF. The node declared two `needs`; one pointed into the
+ *    subject it joined and is an ordinary edge there, the other pointed at
+ *    `quadratic-formula` in `rational-expressions` and could be declared by
+ *    neither ontology. That is the new `links` entry on `algebra-foundations`,
+ *    and it is the entry this suite exists to catch the absence of — a dropped
+ *    prerequisite is silent.
+ *  - THE THREE ABSENCES, which is where this group is longer than the
+ *    fourteenth promotion's. No `links` entry was handed back, no
+ *    `confusedWith` was deleted, and no `exercises` was either. The last of the
+ *    three is the one `euclidean-algorithm` added to the checklist, and all
+ *    three are asserted positively because "we checked and it was fine" is
+ *    otherwise a claim in a comment.
+ *  - THE GATE ON ITS ONE DEPENDENT, which got SHORTER in another area with no
+ *    edit to it. While this node had no material `gatingPrerequisitesOf` looked
+ *    through it and reported what IT rested on, so `parametric-and-implicit` in
+ *    `functions` was gated by four concepts; the walk stops here now and two of
+ *    the four collapse into one, leaving three. A tighter gate is a shorter
+ *    list, so what is asserted is membership and the length is in the message.
+ */
+group('the forty-third promotion, the eleventh out of the algebra foundations')
+const P43_ALG = AREAS.find(a => a.id === 'algebra-foundations')
+t('the nonlinear systems are a concept of the equations subject, not a node of that area',
+  !P43_ALG.nodes.some(n => n.id === 'nonlinear-systems')
+  && areaOf(MATHEMATICS, 'nonlinear-systems') === 'expressions-and-equations'
+  && isTeachable(MATHEMATICS, 'nonlinear-systems')
+  && conceptById(MATHEMATICS, 'nonlinear-systems')?.subjectId === 'expressions-and-equations'
+  && MATHEMATICS.concepts.filter(c => c.subjectId === 'expressions-and-equations').length === 5,
+  `${areaOf(MATHEMATICS, 'nonlinear-systems')}, subject holds `
+  + `${MATHEMATICS.concepts.filter(c => c.subjectId === 'expressions-and-equations').length}`)
+t('it branches off the two-equation system in the composed graph, not off the row reduction',
+  prerequisitesOf(MATHEMATICS, 'nonlinear-systems').slice().sort().join(' ')
+    === 'quadratic-formula systems-of-linear-equations'
+  && !prerequisitesOf(MATHEMATICS, 'nonlinear-systems').includes('gaussian-elimination')
+  && !prerequisitesOf(MATHEMATICS, 'gaussian-elimination').includes('nonlinear-systems'),
+  prerequisitesOf(MATHEMATICS, 'nonlinear-systems').join(', ') || 'nothing')
+/*
+ * The links entry, by name and with its `because` required. An entry with no
+ * reason attached cannot be reviewed, and this is the second entry the
+ * quadratic formula owes this area — so the `from` alone would not identify it.
+ */
+t('the edge that could not come with it is a links entry on the area it left',
+  P43_ALG.links.some(l => l.from === 'quadratic-formula' && l.to === 'nonlinear-systems'
+    && typeof l.because === 'string' && l.because.length > 80)
+  && MATHEMATICS.edges.some(e => e.kind === 'prerequisite'
+    && e.from === 'quadratic-formula' && e.to === 'nonlinear-systems')
+  && areaOf(MATHEMATICS, 'quadratic-formula') === 'rational-expressions',
+  P43_ALG.links.filter(l => l.to === 'nonlinear-systems')
+    .map(l => `${l.from}->${l.to}`).join(' ') || 'no entry')
+t('and it GATES, both of its ends being authored rather than one being a node',
+  gatingPrerequisitesOf(MATHEMATICS, 'nonlinear-systems').includes('quadratic-formula')
+  && gatingPrerequisitesOf(MATHEMATICS, 'nonlinear-systems')
+    .includes('systems-of-linear-equations'),
+  gatingPrerequisitesOf(MATHEMATICS, 'nonlinear-systems').join(', '))
+t('no links entry was handed back, no area having named the node',
+  !AREAS.some(a => (a.links ?? []).some(l =>
+    l.from === 'nonlinear-systems' || (l.to === 'nonlinear-systems' && l.from !== 'quadratic-formula'))),
+  AREAS.flatMap(a => (a.links ?? [])
+    .filter(l => l.from === 'nonlinear-systems')
+    .map(l => `${a.id}:${l.from}->${l.to}`)).join(' ') || 'none')
+t('no interference was lost, the promoted node having declared none to lose',
+  !MATHEMATICS.edges.some(e => e.kind === 'interferes_with'
+    && (e.from === 'nonlinear-systems' || e.to === 'nonlinear-systems')),
+  MATHEMATICS.edges.filter(e => e.kind === 'interferes_with'
+    && (e.from === 'nonlinear-systems' || e.to === 'nonlinear-systems'))
+    .map(e => `${e.from}~${e.to}`).join(' '))
+t('and no credit edge was lost either, which is the second silent stranding',
+  !MATHEMATICS.edges.some(e => e.kind === 'encompasses'
+    && (e.from === 'nonlinear-systems' || e.to === 'nonlinear-systems')),
+  MATHEMATICS.edges.filter(e => e.kind === 'encompasses'
+    && (e.from === 'nonlinear-systems' || e.to === 'nonlinear-systems'))
+    .map(e => `${e.from}=>${e.to}`).join(' '))
+t('its one dependent\'s gate got SHORTER, in another area and with no edit to it',
+  gatingPrerequisitesOf(MATHEMATICS, 'parametric-and-implicit').slice().sort().join(' ')
+    === 'cartesian-plane domain-and-range nonlinear-systems'
+  && !gatingPrerequisitesOf(MATHEMATICS, 'parametric-and-implicit')
+    .includes('systems-of-linear-equations')
+  && !gatingPrerequisitesOf(MATHEMATICS, 'parametric-and-implicit')
+    .includes('quadratic-formula')
+  && areaOf(MATHEMATICS, 'parametric-and-implicit') === 'functions',
+  `${gatingPrerequisitesOf(MATHEMATICS, 'parametric-and-implicit').length} entries: `
+  + gatingPrerequisitesOf(MATHEMATICS, 'parametric-and-implicit').join(', '))
+
+// ---------------------------------------------------------------------------
+
+/**
  * THE DEADLOCK THE MERGES EXISTED TO BREAK, ASSERTED AS A BUDGET.
  *
  * "No area is a stub" above is the check, it is unchanged, and it must stay
@@ -10597,8 +10758,24 @@ t('put-down leaves the errand from every substate of working and ruled',
     .every(s => chartStep('errand', s, 'put-down', NO_GUARD_CTX) === 'none'),
   ['working.pending', 'working.awaiting', 'working.submitted', ...RULING_STATES]
     .filter(s => chartStep('errand', s, 'put-down', NO_GUARD_CTX) !== 'none').join(', '))
-t('try-again returns every ruling to a fresh problem on the same concept',
-  RULING_STATES.every(s => chartStep('errand', s, 'try-again', NO_GUARD_CTX) === 'working.awaiting'))
+/*
+ * `pending` AND NOT `awaiting`, which is the correction this assertion exists
+ * to pin. It read `working.awaiting` and that was a real bug rather than a
+ * naming quibble: continuing an errand RELEASES the task, and `awaiting` is
+ * the chart's word for one being on screen. The resolve effect in
+ * app/learn/page.tsx runs out of `working.pending` alone, so landing in
+ * `awaiting` with no task meant nothing refetched, `taskId` stayed null, and
+ * `onRuled`'s `c.taskId !== taskId` guard never matched again — the errand
+ * went silent after one continuation while practice carried on, which is the
+ * exact state §3 says was fixed.
+ *
+ * The old assertion was green throughout, because it asserted the behaviour
+ * rather than the requirement. Stated as the requirement now: after
+ * continuing there is no task, and the only state that means that is pending.
+ */
+t('try-again returns every ruling to the state that means "no task yet", so the next one is fetched',
+  RULING_STATES.every(s => chartStep('errand', s, 'try-again', NO_GUARD_CTX) === 'working.pending'),
+  RULING_STATES.map(s => `${s}→${chartStep('errand', s, 'try-again', NO_GUARD_CTX)}`).join(' '))
 
 /* Determinism. Two edges on the same (state, event) with no guard between
    them means the order of the array decides the behaviour, which is the bug
@@ -10690,6 +10867,80 @@ t('every ruling has a bare form that names the concept',
 t('the commission route accepts only the four rulings the verifier produces',
   /unknown ruling/.test(COMMISSION_ROUTE)
   && /RULINGS\s*=\s*\['correct', 'incorrect', 'inconclusive', 'abandoned'\]/.test(COMMISSION_ROUTE))
+
+// ---------------------------------------------------------------------------
+
+group('the game master speaks once per set, and may not score it')
+
+/*
+ * The errand spans a run of problems now, so the GM is asked for one scene at
+ * the end instead of one per ruling. The whole risk of that change lives in
+ * what it is told: counts, which it must not reduce.
+ *
+ * Reusing `rulingPrompt` with the LAST ruling was the available shortcut and
+ * would have been a quiet lie — a scene about acceptance for a set that was
+ * mostly wrong. These assertions are what stop somebody reaching for it later.
+ */
+t('the run prompt carries the whole of the GM system prompt',
+  RUN_SYSTEM.startsWith(GM_SYSTEM))
+
+t('it is forbidden from turning counts into a proportion',
+  /Do NOT compute or state a proportion, percentage, fraction or ratio/.test(RUN_SYSTEM)
+  && /"most",/.test(RUN_SYSTEM))
+t('and from calling the set passed or failed',
+  /Do NOT call the set passed, failed/.test(RUN_SYSTEM)
+  && /No engine in this system rules\s+on a set/.test(RUN_SYSTEM))
+t('and from saying the player learned anything',
+  /Do NOT say the player has learned, mastered, improved or understood/.test(RUN_SYSTEM))
+
+/* §6 for the fourth place it has to hold. A run is where inconclusive is
+   likeliest to get quietly swept in with the misses, because a tally invites
+   arithmetic and two buckets look like one. */
+t('inconclusive is never folded in with the incorrect ones',
+  /Never fold them in with\s+the incorrect ones/.test(RUN_SYSTEM)
+  && /It is NOT wrong and it is NOT\s+accepted/.test(RUN_SYSTEM))
+
+const MIXED = runPrompt({
+  region: FRAME_REGION,
+  conceptName: 'Long division',
+  tally: { correct: 3, incorrect: 1, inconclusive: 1, abandoned: 0 },
+})
+t('a mixed run states each count as a fact and asks for no score',
+  /CORRECT: 3 pieces/.test(MIXED.user) && /INCORRECT: 1 piece/.test(MIXED.user)
+  && /INCONCLUSIVE: 1 piece/.test(MIXED.user) && /Do not score it/.test(MIXED.user))
+/* Number agreement on both sides of the count, which this assertion caught
+   wrong on its first run: the line read "3 pieces of work WAS right". Worth a
+   test rather than a careful read, because the prompt's whole factual content
+   is these lines, and a sentence a model finds clumsy is one it rewrites —
+   where rewriting a count is exactly what thirty lines above forbid. */
+t('it counts in pieces and agrees in number, both ways',
+  /INCORRECT: 1 piece of work was wrong/.test(MIXED.user)
+  && /CORRECT: 3 pieces of work were right/.test(MIXED.user))
+t('a bucket with nothing in it is not mentioned at all',
+  !/ABANDONED/.test(MIXED.user))
+t('no run prompt is given the problem or the answer',
+  TASKS.filter(k => (k.prompt ?? '').length >= 20).every(k => !MIXED.user.includes(k.prompt))
+  && /You were never told the problems themselves/.test(MIXED.user))
+
+/* The fallback is where "mostly right" is easiest to write, so it is held to
+   the same rule as the prompt rather than trusted to be short. */
+const BARE_RUN = unnarratedRun({
+  region: FRAME_REGION,
+  conceptName: 'Long division',
+  tally: { correct: 3, incorrect: 1, inconclusive: 1, abandoned: 0 },
+})
+t('the unnarrated run lists counts and reads none of them',
+  BARE_RUN.includes('3 right') && BARE_RUN.includes('1 wrong')
+  && BARE_RUN.includes('could not settle')
+  && !/most|well|good|passed|failed/i.test(BARE_RUN))
+
+/* A tally reaches the prompt as numbers, so the route has to treat it as
+   hostile input in the way it already treats `ruling`. */
+t('the route refuses to put a non-integer count into a prompt',
+  /Number\.isInteger/.test(COMMISSION_ROUTE) && /v >= 0 && v <= 999/.test(COMMISSION_ROUTE))
+t('and an empty tally does not become a run',
+  /ranTally/.test(COMMISSION_ROUTE)
+  && /\) > 0/.test(COMMISSION_ROUTE))
 
 /* The sheet is flavour plus earned tags, and it says which is which. A
    background that read as an advantage would be a way to buy a better roll
@@ -10889,10 +11140,27 @@ t('no area is a stub once departures count as covered territory',
  * the `departed` change exists to separate, and this is the first area to have
  * taken enough departures for them to disagree by four.
  */
+/*
+ * AND THE THIRD READING IS THE ONE THIS GROUP WAS BUILT FOR, arrived at by the
+ * forty-third promotion. `algebra-foundations` went six nodes and ten
+ * departures to five and eleven, so its territory is sixteen either side of the
+ * edit exactly as `linear-algebra`'s was twenty either side of the last two —
+ * but this is the first area whose NODE count has reached the threshold, so it
+ * is the first place the two readings do not merely differ in size, they differ
+ * in verdict. On node count this area is spent. On territory it is eleven
+ * clear and has not moved since the merge.
+ *
+ * That is the change this field was added to make, so the assertion now says
+ * "on its departures alone" with the node count carrying nought of headroom
+ * rather than one — which is a stronger reading of the same sentence and not a
+ * weakening of it. It is also the last promotion out of here that the strict
+ * node-count check accepts, which the roots group above states beside the
+ * figure a reader counting roots will be looking at.
+ */
 t('algebra-foundations is clear of the floor on its departures alone',
-  FLOOR_ALGFOUND.nodes.length === 6
-  && FLOOR_ALGFOUND.departed.length === 10
-  && FLOOR_ALGFOUND.nodes.length - 5 === 1
+  FLOOR_ALGFOUND.nodes.length === 5
+  && FLOOR_ALGFOUND.departed.length === 11
+  && FLOOR_ALGFOUND.nodes.length - 5 === 0
   && STUB_FLOOR_TERRITORY(FLOOR_ALGFOUND) === 16,
   `${FLOOR_ALGFOUND.nodes.length} nodes + ${FLOOR_ALGFOUND.departed.length} departed`)
 
