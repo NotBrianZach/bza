@@ -247,9 +247,9 @@ is whatever was last built by hand: dated 2026-10-15, against a
 --prefer-offline` the old claim rested on is the **frontend group's**
 `pre_deploy` hook, it names `/tmp/bza/frontend` rather than `work_dir`, and it
 belongs to the group orchestrator — which has never deployed this project. No
-row of `deployment_history` for bza carries `groups_deployed`, in 366 rows,
-and the `Build failed (exit 1)` on rows 441–442 is `app_deploy_service.py`'s
-own wording, so the path this item gates is the path that runs.
+row of `deployment_history` for bza carries `groups_deployed`, and the
+`Build failed (exit 1)` on rows 441–442 is `app_deploy_service.py`'s own
+wording, so the path this item gates is the path that runs.
 
 So the value is still right to set and safe to set today. What it is not is
 self-maintaining: the first commit that **adds** a dependency makes `tsc` fail
@@ -292,58 +292,47 @@ Two things not to get wrong:
 - `--skip-tests` bypasses it. So this gates the ordinary path, not a determined
   one, and a green release is not by itself proof the check ran.
 
-Verified 2026-11-25 01:19 UTC, re-running what the 14:16 pass ran:
-`pre_deploy_test` is still null, and `graph who-uses pre_deploy_test` returned
-`deploy_project.py`, `app_deploy_service.py` and this file — nothing else reads
-it. That enumeration has since gone out of date and the count is now four; the
-2026-11-26 paragraph below has the current list and why it grew. Expect this
-file in the result either way; naming the key here is
-what puts it there. Read the null out of `projects.deployment_config` with a
-SELECT, not with `deploy project-config bza`: the read-only print is itself a
-`deploy` verb and is denied to the tasks that drain this file, which is why
-every refresh of this item measures the value by SQL and still cannot set it.
+Re-verified on every parked run between 2026-11-24 14:16 and 2026-11-26 16:46
+UTC, latest at 16:46, each pass re-running the checks rather than quoting the
+pass before it. All of it still holds: `pre_deploy_test` null, `app_deploy`
+exactly the eleven keys `from_dict` reads, `test:types` first in the `npm test`
+chain, `tests/typecheck.mjs` 176 lines in the DB, rows 441–442
+`Build failed (exit 1)`, and the gate exiting 0 run directly in `work_dir`.
+Nothing about the fix has moved in two days. The item is one command wide and
+stays open only because that command is denied.
 
-The commit-time half was re-confirmed in the same pass, so the item is now
-exactly one command wide: `frontend/tests/typecheck.mjs` is in the DB and
-`test:types` is first in the `npm test` chain in `frontend/package.json`.
+Read the null out of `projects.deployment_config` with a SELECT, not with
+`deploy project-config bza`: the read-only print is itself a `deploy` verb and
+is denied to the tasks that drain this file, which is why every refresh
+measures the value by SQL and still cannot set it. The eleven keys count out of
+the same SELECT.
 
-Re-verified 2026-11-26 04:20 UTC: `pre_deploy_test` still null, the
-commit-time half still in place, and `app_deploy.pre_deploy_test` still read
-by nothing but `deploy_project.py` and `app_deploy_service.py`. The one figure
-worth re-reading is the eleven keys the `--set` bullet above depends on — the
-live `app_deploy` object still has exactly eleven, countable from the SELECT
-without running a `deploy` verb.
+Three figures in this item do move, and movement in none of them is this item
+getting closer. Each has a load-bearing half that holds still, and that is the
+half to read:
 
-Re-verified 2026-11-26 10:33 UTC, every claim above checked against the tree
-rather than quoted: `pre_deploy_test` still null, `app_deploy` still exactly
-eleven keys matching `from_dict`'s eleven, `test:types` still first in the
-`npm test` chain, `tests/typecheck.mjs` still 176 lines in the DB,
-`deployment_history` still 366 rows for bza with zero carrying
-`groups_deployed`, rows 441–442 still `Build failed (exit 1)`, and the gate
-still exits 0 run directly in `work_dir`. The value is still right to set and
-still denied to the tasks that drain this file.
-
-The one figure that moved is `graph who-uses pre_deploy_test`, which now
-returns **four** files, not three: the fourth is `frontend/tests/typecheck.mjs`,
-and the 04:20 commit that added that mention is the same commit that re-asserted
-three. So the line above was wrong the moment it was committed — the same way
-item 1's "two non-script hits" was. Both halves of the claim are worth keeping
-apart, because only one of them rotted. *Read by* is still two files,
-`deploy_project.py` and `app_deploy_service.py`, and that is the half that
-decides whether setting the value is safe. *Mentioned in* is now four and will
-keep rising, because `who-uses` is a plain substring search over file contents
-and every run that explains the key in prose adds itself to the result —
-including, now, the gate's own source. Count readers by what consumes the
-value, not by the size of the search result.
-
-One thing an `ls -l` in `work_dir` will mislead you about, given the false-red
-warning above. That tree's `package-lock.json` is dated 2026-11-25 21:42 while
-its `node_modules` is dated 2026-10-15, which reads as a lock that moved past
-its install — exactly the state that would make the gate fail on an
-unresolvable import. It has not moved: the rsync copies the lock on every
-deploy and only its mtime changes, and the content hash in `source_snapshots`
-is unchanged since 2026-10-16 at 666475 bytes. Compare the hash, not the
-timestamp, before concluding the tree needs an install.
+- `graph who-uses pre_deploy_test` was three files on 2026-11-25 and is four
+  now. It grows because `who-uses` is a plain substring search over file
+  contents, so every run that explains the key in prose becomes a hit — the
+  fourth is `frontend/tests/typecheck.mjs`, added by the same 04:20 commit that
+  re-asserted three, so that line was false the moment it landed, exactly as
+  item 1's "two non-script hits" was. The half that decides whether setting the
+  value is safe is *read by*, and that is still two files, `deploy_project.py`
+  and `app_deploy_service.py`. Count readers by what consumes the value.
+- `deployment_history` for bza was 366 rows and is 367, the new one being row
+  448, a successful manual deploy at 2026-11-26 14:59 UTC. The claim that
+  matters is the zero and not the total: no row at any of those counts carries
+  `groups_deployed`, so the group orchestrator has still never deployed this
+  project and the path this item gates is the path that runs.
+- `work_dir`'s `package-lock.json` mtime advances on every deploy — 2026-11-25
+  21:42 yesterday, 2026-11-26 14:59 after row 448 — while its `node_modules`
+  stays 2026-10-15. So an `ls -l` there shows a lock that appears to have moved
+  past its install, which is exactly the false-red state the warning above
+  describes, and it will show that again after every deploy. The content has
+  not moved: the rsync recopies the file each time and only the mtime changes,
+  and `source_snapshots` has had the same hash at 666475 bytes since
+  2026-10-16. Compare the hash, not the timestamp, before concluding the tree
+  needs an install.
 
 One correction to the earlier version of this item, which claimed `next build`
 is the only thing in the project that runs `tsc`. `npm run type-check` has been

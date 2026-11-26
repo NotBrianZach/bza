@@ -12,7 +12,11 @@
  * disclosure on /play holds them), but what greets a new player is two turns of
  * a real-shaped game with the relation named where it was actually used.
  *
- * ── Why this is hard-coded, and must stay hard-coded ──────────────────────
+ * ── Why the WRITING is hard-coded, and must stay hard-coded ───────────────
+ *
+ * The reading, the relation, the carried and the lost are authored here and
+ * must never come from a session. The works they are about are fetched; see
+ * the `resolve` section below for where that line falls and why.
  *
  * It would be tempting to seed a real session and show that instead. Three
  * reasons not to:
@@ -31,7 +35,36 @@
  *
  * The works named are real and uncontroversially so, because a fabricated
  * painting in a teaching example is the kind of small lie that this section's
- * whole design is against. Nothing fetches them: they are here to be read.
+ * whole design is against.
+ *
+ * ── `resolve`: the works are FETCHED now, and reason 2 is why it is a search ──
+ *
+ * This file used to end "Nothing fetches them: they are here to be read", and
+ * an example of a game about making a connection PERCEPTIBLE was the one place
+ * on the page where nothing could be perceived. You read that Clair de Lune is
+ * unresolved and that Monet's surface stops being readable as sky, and saw
+ * neither. So the two catalogued works now carry a `resolve` and `ExampleChain`
+ * renders them through `OfferingCard` — the same component the board uses.
+ *
+ * Reason 2 above is not waived by that, it is what dictates the mechanism. A
+ * hard-coded Deezer id is exactly the dead player it warns about, so there is
+ * no id here: `q` is a SEARCH, run at render against the same
+ * /api/offerings/search the picker uses, and a miss falls back to the written
+ * card this file already supported. The staleness mode that worried reason 2
+ * therefore degrades to the previous behaviour instead of breaking.
+ *
+ * `expect` is the guard that makes the search safe to trust. A catalogue search
+ * always returns SOMETHING, so without it a re-indexed provider would hand the
+ * tutorial a confident, beautifully rendered, completely unrelated track — a
+ * worse failure than the dead player, because it looks like it worked. A result
+ * whose title does not contain `expect` is discarded and the written card
+ * stands.
+ *
+ * The recording will not be the same one twice and that is fine: `title` and
+ * `attribution` below are what the example CLAIMS, and any real performance of
+ * the piece satisfies the claim. `framing` is different — it names the part in
+ * play ("before the left hand arrives"), it is what the reading is about, and
+ * the catalogue has no opinion on it. ExampleChain keeps the authored one.
  *
  * ── Why the types come from the registries ────────────────────────────────
  *
@@ -53,6 +86,16 @@ export interface ExampleMove {
   framing: string
   /** Composed media only: what the player would actually be asked to do. */
   steps?: string[]
+  /**
+   * How to find the real work, for the catalogued media. Absent for composed
+   * ones — a gesture has no catalogue and nothing to fetch.
+   *
+   * `q` is handed to /api/offerings/search as typed. `expect` is matched
+   * case-insensitively against the returned title, and a result that fails it
+   * is dropped rather than shown. See the `resolve` section in the file
+   * header for why this is a query and not an id.
+   */
+  resolve?: { q: string; expect: string }
 }
 
 export interface ExampleTurn {
@@ -82,6 +125,7 @@ export const EXAMPLE_CHAIN: ExampleTurn[] = [
       title: 'Clair de Lune',
       attribution: 'Claude Debussy',
       framing: 'The opening, before the left hand arrives — about twenty seconds.',
+      resolve: { q: 'Clair de Lune Debussy', expect: 'clair de lune' },
     },
     reading:
       'Held, unhurried, and deliberately unresolved: the phrase keeps declining to land on ' +
@@ -92,6 +136,7 @@ export const EXAMPLE_CHAIN: ExampleTurn[] = [
       title: 'Water Lilies (Agapanthus)',
       attribution: 'Claude Monet',
       framing: 'The surface at the centre, where the reflections stop being readable as sky.',
+      resolve: { q: 'Water Lilies Agapanthus Monet', expect: 'water lilies' },
     },
     carried:
       'The suspension. Neither one resolves — the eye finds no edge to settle on, the way ' +
@@ -105,7 +150,12 @@ export const EXAMPLE_CHAIN: ExampleTurn[] = [
       medium: 'artwork',
       title: 'Water Lilies (Agapanthus)',
       attribution: 'Claude Monet',
+      /* The same work, deliberately with a different framing: it is the answer
+         in turn 1 and the thing being answered in turn 2, which is the whole
+         point of showing two turns. Same `resolve`, so it is the same fetch and
+         the same picture — `ExampleChain` caches by `q`. */
       framing: 'The same centre — now as the thing being answered rather than the answer.',
+      resolve: { q: 'Water Lilies Agapanthus Monet', expect: 'water lilies' },
     },
     reading:
       'A surface with no fixed footing. Read as an instruction rather than an image, it asks ' +

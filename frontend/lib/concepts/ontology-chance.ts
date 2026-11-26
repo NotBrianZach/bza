@@ -1,18 +1,26 @@
 /**
- * Chance and events — the seventeenth subject, and two concepts.
+ * Chance and events — the seventeenth subject, and three concepts.
  *
  * `sample-spaces` was a node of `probability` and was the whole of this subject
- * until the forty-sixth promotion added `counting-probability` above it. The
- * sections about the first run to the `EDGES` note; the second concept's own
- * argument, and this file's live measurement of the ready field, begin at
- * `── THE SECOND CONCEPT` below.
+ * until the forty-sixth promotion added `counting-probability` above it and the
+ * forty-seventh added `conditional-probability` above that. The sections about
+ * the first run to the `EDGES` note; the second concept's argument begins at
+ * `── THE SECOND CONCEPT`, and the third concept's argument together with this
+ * file's live measurement of the ready field begins at `── THE THIRD CONCEPT`.
+ * Read the LAST of those three for the field, never the first.
  *
- * Both were nodes of `probability`, and both had to be DELETED from that array on
- * the way in. `atlasProblems` rejects a map node whose id collides with an
- * authored concept — the composed list would hold two entries for the id and the
- * shadowing copy has no knowledge points, so a fully authored concept would read
- * as unteachable — so promoting is a MOVE out of that array rather than a
+ * All three were nodes of `probability`, and each had to be DELETED from that
+ * array on the way in. `atlasProblems` rejects a map node whose id collides with
+ * an authored concept — the composed list would hold two entries for the id and
+ * the shadowing copy has no knowledge points, so a fully authored concept would
+ * read as unteachable — so promoting is a MOVE out of that array rather than a
  * fill-in.
+ *
+ * THIS SUBJECT HAS NOW TAKEN THREE CONSECUTIVE NODES OFF ONE CHAIN, which is the
+ * cheapest shape the promotion run has found and is the reason to read the third
+ * section rather than this paragraph: the forty-seventh promotion is where that
+ * shape STOPS, because the node it took was a branch point and handed the area
+ * three roots instead of one.
  *
  * ── WHY THIS CONCEPT, AND WHY THE FIELD CAME DOWN TO TWO ──────────────────
  *
@@ -613,6 +621,255 @@
  * and pays a refill. armature.ts said the slot was safe "three or four deep" on
  * the strength of this concept being unwritten; that sentence had to be corrected
  * there, and the correction is this promotion's.
+ *
+ * ── THE THIRD CONCEPT, AND THE READY FIELD MEASURED RATHER THAN QUOTED ────
+ *
+ * `conditional-probability`, the forty-seventh promotion, and the THIRD node this
+ * subject has taken in a row from directly above its own material.
+ *
+ * The field was recomputed from the tree rather than read out of the section
+ * above, which every promotion from the fortieth on has had to repeat. 208 map
+ * nodes before, 207 after; 91 authored concepts before, 92 after; 19 areas, 17
+ * subjects, TWELVE ready before and THIRTEEN after — a ready node being one whose
+ * every `needs` is `isTeachable` — and NONE floor-blocked, the thinnest area
+ * holding a ready node being `functions` at ten against a floor of five. All ten
+ * journeys read zero unwritten steps on route, as they have since 2026-11-18, so
+ * route demand ranked nothing.
+ *
+ * ELEVEN OF THE TWELVE WERE UNDER A REFUSAL, each checked against the file that
+ * records it rather than counted off the section above: the standing seven
+ * (`graphs-of-functions`, `relations`, `linear-inequalities`, `complex-numbers`,
+ * `supremum-and-completeness`, `constructions`, `non-euclidean-geometry`),
+ * `word-problems` (the forty-third, on rulability), `eigenvalues` (refused by its
+ * own host, ontology-matrices.ts, in two places), `combinatorial-identities` (the
+ * forty-fifth, on rulability) and `sampling-and-bias` (the forty-sixth, on
+ * rulability, the `word-problems` shape one layer up). So the choice was FORCED
+ * for the third promotion running: exactly one unrefused node, and it was the one
+ * the section above predicted it was leaving.
+ *
+ * THE OTHER TWO FACTORS AGREED, WHICH IS WORTH RECORDING BECAUSE THEY HAVE NOT
+ * HAD THE CHANCE TO SINCE THE FORTY-SECOND. This node strands ZERO edges — it
+ * declared `needs: ['counting-probability']` and nothing else, and the run before
+ * had already authored that concept into this subject — and it had four
+ * dependents, the most of anything unrefused. A forced choice that the ranking
+ * would also have made is the one case where the ranking can be checked.
+ *
+ * ── THE CHAIN-WALK RAN OUT, AND THAT IS THIS PROMOTION'S REAL FINDING ─────
+ *
+ * atlas-uncertainty.ts has been recording a mechanism since the forty-fifth:
+ * promoting an area's root hands the root position to whatever sat directly above
+ * it, so a chain into an unwritten area can be walked one node per run, and each
+ * run's yield is the next run's candidate. Three promotions did exactly that.
+ *
+ * It stops here, and the reason is that the rule was stated too widely. "Whatever
+ * sat directly above it" is a chain-walk only while EXACTLY ONE node sits
+ * directly above. `sample-spaces` and `counting-probability` each had one in-area
+ * dependent; `conditional-probability` had THREE — `bayes-theorem`,
+ * `random-variables` and `markov-chains` all name it and nothing else inside
+ * `probability` — so its departure handed the root position to all three at once
+ * and the root set GREW from one to three, the first growth that area has seen.
+ * The cheap shape was never a property of the area. It was a property of the part
+ * of the chain that happened to be a chain, and it ends at the first fork.
+ *
+ * WHAT DID KEEP PAYING IS THE OTHER HALF: a chain taken in order eventually costs
+ * the area NOTHING, because the run before has always already moved the far end
+ * of the only edge there was. Two stranded, then one, then none.
+ *
+ * AND FOUR DEPENDENTS BOUGHT TWO READY NODES, NOT FOUR, which is the first time
+ * in this area those two numbers have differed. `bayes-theorem` names this
+ * concept and nothing else. `random-variables` names it and `function-concept`,
+ * written. `markov-chains` names it and `eigenvalues`, refused by its host; and
+ * `causal-inference`, over in `statistics`, names it and `anova-and-design`,
+ * unwritten and nine nodes deep. So the count of dependents is an UPPER BOUND on
+ * the yield and every earlier promotion here got away with treating them as the
+ * same number.
+ *
+ * ── THE FIELD THE NEXT RUN INHERITS, WHICH HAS TWO CANDIDATES AND A TRAP ──
+ *
+ * THIRTEEN ready, 0 floor-blocked, ELEVEN still refused — the list above is
+ * unchanged, this promotion adding no refusal. Unrefused and available: TWO, and
+ * both are this promotion's own yield.
+ *
+ *  - `bayes-theorem` (`probability`) — needs `conditional-probability` and
+ *    NOTHING else, so filed here it strands ZERO edges, which is what this
+ *    promotion also managed and nothing before the forty-second had. ONE
+ *    dependent, `bayesian-inference`. Rulable: reversing a conditional from a
+ *    base rate is a number, and the medical-test instance is the standard one.
+ *  - `random-variables` (`probability`) — needs `conditional-probability` and
+ *    `function-concept`, the latter authored in `functions-and-inverses`, so
+ *    filed here it strands ONE edge into `PROBABILITY.links`. TWO dependents,
+ *    `expectation` and `continuous-distributions`. Worth thinking about before
+ *    assuming it is rulable: a random variable IS a function, and what can be
+ *    asked for is a value of its distribution rather than the object itself.
+ *
+ * So the second factor says `bayes-theorem` and the third says
+ * `random-variables`, which is the shape the forty-first promotion's header
+ * described and the established order resolves — stranded edges before
+ * dependents. BOTH are Rubneb ANCHORS, so either empties that slot; a factor
+ * that adds the same work to both sides decides nothing and is recorded here
+ * rather than argued.
+ *
+ * AND THE TRAP IS AN EDGE, WHICH IS WHY THIS SECTION ENDS ON IT.
+ * `bayes-theorem` DECLARES `confusedWith: ['conditional-probability']`, with a
+ * `because` calling it "the single most consequential confusion in the subject —
+ * the prosecutor's fallacy and the medical-test error". An edge belongs to the
+ * node that declares it, so this promotion could not touch that one and did not;
+ * `expandEdges` still emits it, now from a node to an authored concept. But the
+ * run that promotes `bayes-theorem` DELETES it, and nothing goes red, because
+ * `interferes_with` constrains SELECTION rather than gating — the exact stranding
+ * atlas.ts warns about and the forty-sixth promotion lost an `exercises` claim
+ * to. The repair is available and cheap for once: both ends would be in THIS
+ * ontology, so the edge becomes an ordinary entry in `EDGES` with a `rationale`,
+ * which tests/atlas.mjs requires. That makes `bayes-theorem` the first candidate
+ * on this map whose promotion would make an existing edge MORE expressible
+ * instead of less, and it is a reason to prefer it beyond the second factor.
+ *
+ * ── FIDELITY IS `checked`, AND THE SHORTFALL RUNS BOTH WAYS FOR THE FIRST TIME ──
+ *
+ * The map node's pattern is carried verbatim, as every promotion since the fourth
+ * has carried its own, and the node already declared `checked` — `expandNode`
+ * sets fidelity from the presence of a `match` — so recognition is unmoved at 271
+ * of 299. Widening or narrowing a pattern in the same change that adds material
+ * moves the recognition figure and the written-concept count at once, with no way
+ * afterwards to say which edit moved which.
+ *
+ * THE FIRST CONCEPT'S SHORTFALL IS RECALL AND THIS ONE'S IS BOTH, which is worth
+ * saying plainly because that file calls underclaiming "the failure mode to
+ * prefer" and this pattern does not have the luxury. `/\bconditional
+ * probability\b/` reaches "Conditional probability", which is exactly this
+ * concept, and ALSO "Conditional probability distribution" and "Conditional
+ * probability table" — pages about a FUNCTION of a random variable and about
+ * Bayesian networks. `random-variables` is a node of `probability` and unwritten,
+ * so a learner on either page is offered this concept, which is its prerequisite
+ * rather than its subject. That is an overclaim, it is the first in this file, and
+ * it is defensible only in the weak sense that the concept offered is the one the
+ * page rests on.
+ *
+ * WHAT IT MISSES IS A LIST, and each entry is at least partly this material:
+ * "Independence (probability theory)", "Conditional independence", "Law of total
+ * probability", "Chain rule (probability)". The obvious widenings are both wrong
+ * and worse than the gap — `/\bindependence\b/` claims the linear-algebra and
+ * set-theory senses of the word, and `/\bconditional\b/` claims conditional
+ * expectation, conditional convergence and conditional statements in logic, which
+ * are three authored subjects away from here.
+ *
+ * AND THE SECOND ALTERNATIVE IS DEAD, WHICH IS THE SECOND TIME IN THIS FILE'S
+ * THREE PATTERNS. `independence \(probability\)` can never match: the alternation
+ * is wrapped in `\b(...)\b` and the alternative ends in a literal `)`, and a `\b`
+ * after a non-word character needs a word character next. That is identical to
+ * `sample-spaces`' `event \(probability theory\)`, one concept down, found the
+ * same way — by testing the pattern rather than reading it. Finding the same hole
+ * in the next node up the same chain is what turns one mistake into a shape worth
+ * sweeping the atlas for, and the sweep is still a separate change.
+ *
+ * THIS ONE IS DEAD TWICE OVER, which the first instance was not, and the
+ * difference matters to whoever repairs them. There the author had a real title
+ * and one `\b` defeated it, so dropping the `\b` revives it. Here the article is
+ * "Independence (probability theory)", so the alternative is wrong about the
+ * TITLE as well as unreachable and repairing the bracket would leave it dead.
+ * tests/concepts-logic.mjs asserts both facts, so the commit that fixes patterns
+ * is told which of the two cases each one is.
+ *
+ * ── WHAT IS NOT HERE, WHICH IS A BOUNDARY RATHER THAN A BACKLOG ───────────
+ *
+ * REVERSING A CONDITIONAL WITHOUT THE OVERLAP IN HAND. That is `bayes-theorem`,
+ * the node directly above, and the boundary is sharper than "harder cases of the
+ * same thing": the material below computes P(A|B) = 6/55 and P(B|A) = 3/5 from
+ * the SAME overlap of 6, which is the asymmetry demonstrated rather than
+ * asserted. What it never does is get one from the other, because that needs the
+ * base rate and a partition of the space — and the reason to hold the line there
+ * is that the error Bayes exists to prevent is produced by believing the two
+ * conditionals are one quantity, so the fact has to be met before the formula
+ * that exploits it. The interference edge the node above declares says the same
+ * thing in the graph.
+ *
+ * THE LAW OF TOTAL PROBABILITY. One line from the multiplication rule and a
+ * partition, and genuinely useful — it is also exactly what `bayes-theorem`
+ * needs, so it belongs with it rather than here. The second point adds across
+ * TWO paths of one tree, which is the special case where the partition is a
+ * single draw's outcomes, and it is named there as what it is rather than as the
+ * general law.
+ *
+ * CONDITIONAL EXPECTATION AND CONDITIONAL DISTRIBUTIONS. Both attach a NUMBER to
+ * each outcome first, so both wait on `random-variables`, exactly as the
+ * hypergeometric distribution did for the concept below. The pattern overclaims
+ * one of their article titles, which is recorded above and is not repaired here.
+ *
+ * INFINITE AND CONTINUOUS SPACES. Equally likely outcomes stop existing there, so
+ * `|A and B| / |B|` has no analogue — but `P(A and B) / P(B)` does, which is why
+ * the first point derives the second form from the first instead of mentioning
+ * it. That is the one place this concept reaches past the subject's own floor,
+ * and it reaches with a definition rather than with an example.
+ *
+ * ── WHY EVERY TASK IS `evaluate`, AND WHAT THE NINE ARE MADE OF ───────────
+ *
+ * Nine tasks, three on each point, all nine `evaluate` and every one settled by
+ * exact arithmetic with no worker — the property both concepts below hold, for
+ * the reason both give: a subject whose prerequisites are a list and a count sits
+ * low enough that a worker outage must not wall it off.
+ *
+ * THE REFERENCE CHECK IS THE CONCEPT BELOW'S WITH THE DENOMINATOR TAKEN AWAY.
+ * There every one of the nine answers was a count of committees or such a count
+ * over the 220 there are, so `220 x reference` was a whole number nine times out
+ * of nine. Here it is whole FOUR times and not whole five, and neither number is
+ * arbitrary:
+ *
+ *  - NOT ONE of the nine answers with a count, where that concept had exactly
+ *    three. All nine lie in [0, 1]. Every count this concept uses is supplied in
+ *    a prompt as the concept below's work, and the only move it owns is choosing
+ *    a denominator — so a tenth task answering with a count would mean a count
+ *    was being asked for its own sake.
+ *  - THE FOUR with `220 x reference` whole are the questions still asked inside
+ *    the committee space: 6/55 twice, 3/5, and the 1/22 the chain reproduces. The
+ *    FIVE that are not are asked in a space that is not the committee draw at
+ *    all — an ordered run of three (1320), a pair (66), a draw WITH replacement
+ *    (144), and two products of probabilities which are not event counts over
+ *    anything (16, 968). That is "conditioning replaces the space" as a property
+ *    of the answers rather than of the prose.
+ *
+ *     k/m                        the overlap over the CONDITION, not the space
+ *     (k/n)/(m/n)                the same conditional from two probabilities
+ *     (a/p)*(b/q)*(c/r)          one conditional factor per draw
+ *     (a/p)*(b/q) + (c/p)*(d/q)  two paths: multiply along, add across
+ *     (a/n)*(b/n)                the independence test's right-hand side
+ *     (a/p)*(a/p)                the same factor twice, which is independence
+ *
+ * THREE EXPRESSIONS ARE EACH ASKED TWICE AND IN EVERY CASE THE TWO ANSWERS
+ * DIFFER, which inverts the device the concept below used three times. There
+ * three pairs of the same shape AGREED and the agreement was the content; here
+ * the content is that moving one number changes the answer. `k/m` goes 6/55 then
+ * 3/5, which is the asymmetry of conditioning with the numerator held fixed; the
+ * chain goes 1/22 then 7/66, which is the conditioning tracking WHICH type left
+ * rather than merely that one did; the product test goes 1/16 then 7/968, which
+ * is the test failing narrowly and then structurally.
+ *
+ * AND EXACTLY ONE PAIR DOES AGREE, ACROSS TWO DIFFERENT SHAPES, which is where
+ * the older device still applies: `k/m` at (6, 55) and `(k/n)/(m/n)` at
+ * (6, 55, 220) are both 6/55, because |A and B| / |B| and P(A and B) / P(B) are
+ * ONE definition with the old space divided out. Two shapes one answer, where
+ * every same-shape pair gives two answers — so both the agreement and the
+ * disagreements carry a claim, and nine distinct references would have been the
+ * fault rather than the target.
+ *
+ * NO `transform_to_form`. There is no demand of algebraic shape here; 6/55 is
+ * asked because it is how likely the committee is, not because of how the number
+ * should be written. The gap the concept below records is unchanged —
+ * `maxDenominatorDegree` bounds a DEGREE rather than a denominator, so a
+ * probability cannot be required in lowest terms — and `exactValue` ruling both
+ * forms correct is the right ruling for an `evaluate`.
+ *
+ * NO `counterexample` AND NO `justify`, the second being the live loss again. The
+ * `justify` asks here are the three the worked examples carry and no task can:
+ * why the restricted outcomes are still equally likely, why the paths may be
+ * added, and why disjointness is not independence. What stands in for the last of
+ * those is the one task whose ANSWER is the argument — 7/968 is worth computing
+ * only because it is not zero.
+ *
+ * NO `domainConditions` ON ANY OF THE NINE. Every denominator is a pool size, an
+ * event count given in the prompt, or the size of the space; none is a declared
+ * variable that could be zero. Worth one sentence rather than none, because this
+ * is the first concept in the subject whose denominators are not all the same
+ * number, so the check had to be made per task instead of once.
  */
 
 import type { Concept, ConceptEdge, ConceptOntology, Subject } from './types'
@@ -622,8 +879,9 @@ const subject: Subject = {
   name: 'Chance and events',
   covers:
     'How likely something is, worked out from everything that could have happened — first by '
-    + 'writing that list down, then by COUNTING it once it is too long to write. Two concepts '
-    + 'and six ideas. The first three are one experiment small enough to print in full. First, '
+    + 'writing that list down, then by COUNTING it once it is too long to write, and then by '
+    + 'REPLACING it with what you have been told. Three concepts and nine ideas. The first '
+    + 'three are one experiment small enough to print in full. First, '
     + 'THE SAMPLE SPACE IS A SET YOU CHOOSE, AND THE '
     + 'CHOICE IS PART OF THE MODEL. An OUTCOME is one complete result, the sample space is the '
     + 'set of all of them, and the only two conditions are that no two outcomes can both happen '
@@ -669,11 +927,42 @@ const subject: Subject = {
     + 'inclusion-exclusion and then one division: the committees holding a particular member '
     + 'number 55, two such events share the 10 holding both, so 55 + 55 - 10 = 100 and the answer '
     + 'is 100/220 = 5/11 — checked against the 120 committees holding neither, since 220 - 120 is '
-    + 'the same 100 by a route that never handles an overlap at all. What is NOT here is a '
-    + 'boundary rather than a backlog. CONDITIONING and INDEPENDENCE replace the sample space '
-    + 'rather than measure a new event, and are `conditional-probability` directly above: nothing '
-    + 'here multiplies two probabilities, which is why every draw in both concepts happens at '
-    + 'once rather than one after another. THE COUNTING ITSELF is `counting-principles`, an '
+    + 'the same 100 by a route that never handles an overlap at all. The last three ideas stop '
+    + 'treating the space as fixed. Seventh, BEING TOLD SOMETHING DOES NOT CHANGE THE FORMULA, IT '
+    + 'CHANGES THE SET THE FORMULA COUNTS. The outcomes ruled out are gone and the ones left kept '
+    + 'their chances relative to one another, so they are still equally likely among themselves '
+    + 'and dividing is licensed for the same reason as before: P(A given B) = |A and B| / |B|, '
+    + 'the OVERLAP over the CONDITION. Told that Ann is on the committee, the space is the 55 '
+    + 'committees holding her and 6 of those are all-new, so the probability all three are new '
+    + 'rises from 1/22 = 5/110 to 6/55 = 12/110. Dividing both counts by 220 turns the same '
+    + 'statement into P(A and B) / P(B), which is not a second definition but the first with the '
+    + 'old space cancelled — and is the form that still says something when nothing can be '
+    + 'counted. The numerator of P(A given B) and of P(B given A) is the SAME number and only '
+    + 'the denominator moves, so P(Ann on it given all three new) is 6/10 = 3/5, nothing like '
+    + '6/55. Eighth, A SEQUENCE OF DRAWS MULTIPLIES ONE CONDITIONAL FACTOR PER STEP. Multiplying '
+    + 'the definition through by P(B) gives P(A and B) = P(B) x P(A given B), so drawing three '
+    + 'members one at a time gives (5/12) x (4/11) x (3/10) = 1/22 — each denominator counting '
+    + 'what is LEFT — and that is the same 1/22 the simultaneous draw gave, which is a check and '
+    + 'not a coincidence. This is the first thing in the subject that multiplies two '
+    + 'probabilities. When an event can happen along several paths the paths are disjoint, so '
+    + 'they ADD while each path multiplies: exactly one of the first two drawn being new is '
+    + '(5/12) x (7/11) + (7/12) x (5/11) = 35/66. Reusing the first factor unchanged is not bad '
+    + 'arithmetic, it is the right answer to the experiment where each member is put back. Ninth, '
+    + 'INDEPENDENCE IS A TEST YOU COMPUTE, NOT A STORY ABOUT INFLUENCE. A and B are independent '
+    + 'when P(A and B) = P(A) x P(B), equivalently when conditioning leaves A alone. "Ann is on '
+    + 'the committee" and "Bob is on the committee" FAIL it — 1/22 against (1/4) x (1/4) = 1/16 — '
+    + 'because three places are being competed for, and the conditional says which way: '
+    + 'P(Ann given Bob) = 10/55 = 2/11, which is two places among eleven people. Two draws from '
+    + 'the same twelve people PASS it if the first is put back, since then the second factor is '
+    + '5/12 rather than 4/11 and P(both new) = 25/144. So independence is a fact about the '
+    + 'mechanism and one sentence of the description decides it. And two events that cannot both '
+    + 'happen are never independent: P(A and B) = 0 while P(A) x P(B) = (1/22) x (7/44) = 7/968, '
+    + 'so mutually exclusive is close to the opposite of independent rather than a version of '
+    + 'it. What is NOT here is a boundary rather than a backlog. REVERSING A CONDITIONAL WITHOUT '
+    + 'THE OVERLAP IN HAND is `bayes-theorem` directly above: the third concept computes P(A|B) '
+    + 'and P(B|A) from the same two counts and shows they differ, where that node is about '
+    + 'getting one from the other through the base rate. THE COUNTING ITSELF is '
+    + '`counting-principles`, an '
     + 'authored subject of its own — every count above is set up, named as its work, and then '
     + 'divided, and none of it is re-derived here. THE HYPERGEOMETRIC DISTRIBUTION is the fifth '
     + 'idea\'s formula as a function of how many new members you ask for, and a distribution is '
@@ -681,7 +970,9 @@ const subject: Subject = {
     + 'VARIABLES, EXPECTATION and the DISTRIBUTIONS attach a NUMBER to each outcome, where '
     + 'everything here is about the outcomes themselves. And INFINITE OR CONTINUOUS spaces are '
     + 'not a harder version of this: equally likely outcomes stop existing there, so the one '
-    + 'formula both concepts rest on has no analogue rather than a subtler one.',
+    + 'formula all three concepts rest on has no analogue rather than a subtler one — though '
+    + 'P(A and B) / P(B) does survive, which is why the seventh idea is written in that form as '
+    + 'well as in counts.',
   medium: 'theorem',
   facetName: 'Concept',
   facetDoes: 'Which concept the statement has to be about.',
@@ -1507,10 +1798,478 @@ const CONCEPTS: Concept[] = [
       },
     ],
   },
+  {
+    id: 'conditional-probability',
+    name: 'Conditional probability',
+    subjectId: subject.id,
+    scope: {
+      id: 'conditional-probability',
+      label: 'Conditional probability',
+      hint: 'conditional probability independence multiplication rule',
+      /*
+       * The map node's pattern and its `terms` as the hint, both carried across
+       * unchanged, which every promotion since the fourth has done. The
+       * shortfall is in BOTH directions for the first time in this file and is
+       * set out in the header, along with the second dead alternative this
+       * file's three patterns have now produced.
+       */
+      match: /\b(conditional probability|independence \(probability\))\b/i,
+    },
+    fidelity: 'checked',
+    objectives: [
+      {
+        id: 'divide-by-the-condition-rather-than-by-the-whole-space',
+        statement:
+          'Produce the probability of one event given another by dividing the count of the '
+          + 'OVERLAP by the count of the CONDITION, and so treat conditioning as a change of '
+          + 'sample space rather than as a new formula. Produce the same number as a ratio of '
+          + 'two ordinary probabilities, and so establish that the size of the original space '
+          + 'divides out of it — which is why the two ways of writing the definition are one. '
+          + 'Produce the conditional with the two events swapped, and so establish that P(A|B) '
+          + 'and P(B|A) are different numbers reached by moving the same numerator over a '
+          + 'different denominator.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'multiply-one-conditional-factor-per-draw-along-a-sequence',
+        statement:
+          'Produce the probability of a run of draws made one at a time by multiplying one '
+          + 'factor per draw, and so decide each factor\'s denominator from what the draws '
+          + 'before it removed. Produce the probability of an event that can happen along more '
+          + 'than one path by multiplying along each path and adding across them, and so '
+          + 'distinguish the rule that multiplies from the rule that adds. Produce the same '
+          + 'probability the simultaneous draw gave, and so establish that the two experiments '
+          + 'agree where this concept says they must.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'settle-independence-by-the-product-test-rather-than-by-how-it-sounds',
+        statement:
+          'Produce P(A) x P(B) for two events whose counts are known and compare it with the '
+          + 'probability of their overlap, and so settle independence by a numerical identity '
+          + 'rather than by whether the events sound related. Produce the probability of two '
+          + 'draws made WITH replacement, and so establish that the conditional factor equals '
+          + 'the unconditional one exactly when the mechanism restores the space. Produce '
+          + 'P(A) x P(B) for two events that cannot both happen, and so establish that '
+          + 'mutually exclusive is not a kind of independent.',
+        taskKinds: ['evaluate'],
+      },
+    ],
+    knowledgePoints: [
+      {
+        id: 'conditioning-replaces-the-space-so-the-denominator-is-the-condition',
+        conceptId: 'conditional-probability',
+        statement:
+          'Being told that something happened does not change the formula; it changes the SET '
+          + 'the formula counts. The outcomes the information rules out are gone, the ones it '
+          + 'leaves kept their chances relative to one another, so they are still equally '
+          + 'likely among themselves and dividing is licensed in the new space for exactly the '
+          + 'reason it was in the old one. That gives P(A given B) = |A and B| / |B|: the '
+          + 'numerator is the overlap, because only outcomes in the restricted space can count '
+          + 'towards A, and the denominator is the CONDITION and not the whole space. Dividing '
+          + 'both counts by the size of the original space turns the same statement into '
+          + 'P(A given B) = P(A and B) / P(B), which is not a second definition but the first '
+          + 'one with |S| cancelled — and is the form that survives when the outcomes are not '
+          + 'equally likely and there are no counts to use. One consequence is worth meeting '
+          + 'immediately: the numerator of P(A given B) and of P(B given A) is the same number '
+          + 'and only the denominator moves, so the two are different quantities and reading '
+          + 'one for the other is the most consequential error in the subject.',
+        position: 1,
+        /*
+         * No `automaticityTarget`. Dividing 6 by 55 would time beautifully,
+         * which is the trap both concepts below name about their own
+         * arithmetic: the skill is deciding WHICH SET the denominator counts,
+         * and a speed reward trains the division a learner already has.
+         */
+        workedExample: {
+          problem:
+            'The same club: 12 members, 5 of whom joined this year, and three drawn by lot so '
+            + 'that the 220 possible committees are equally likely. Ann is one of the 5 new '
+            + 'members. You are told that Ann is on the committee. Find the probability that '
+            + 'all three members are new. Then reach the same number as a ratio of two '
+            + 'ordinary probabilities. Then find the probability that Ann is on the committee '
+            + 'given that all three are new, and compare the two answers.',
+          subgoals: [
+            {
+              label: 'Replace the space with the outcomes the information leaves standing',
+              detail:
+                'Being told Ann is on the committee rules out every committee without her and '
+                + 'says nothing to separate the ones that remain, so those keep their chances '
+                + 'relative to one another and are still equally likely among themselves. '
+                + 'There are (11 x 10)/2 = 55 of them — fix Ann in one place and choose the '
+                + 'other two from the remaining 11, which is `counting-principles` and is the '
+                + 'same 55 the concept below counted for this event. So the experiment to '
+                + 'work in has 55 outcomes rather than 220, and that substitution is the whole '
+                + 'of what conditioning does.',
+              socratic:
+                'You are told Ann is on the committee. Which of the 220 committees are still '
+                + 'possible, how many of those are there, and what has being told this done to '
+                + 'their chances relative to one another?',
+            },
+            {
+              label: 'Count the event inside the new space rather than the old one',
+              detail:
+                '"All three are new" has to be counted among the 55, not among the 220. Every '
+                + 'committee in the restricted space already holds Ann, who is new, so it is '
+                + 'all-new exactly when its other two members are both new — two chosen from '
+                + 'the other 4 new members, (4 x 3)/2 = 6. Those 6 are precisely the '
+                + 'committees lying in BOTH events, which is why the general form has the '
+                + 'OVERLAP on top: an outcome outside the condition cannot count towards the '
+                + 'event any more, because it is no longer an outcome.',
+              socratic:
+                'Among the 55 committees that contain Ann, which ones have all three members '
+                + 'new — and once Ann\'s place is taken, how many new members are left to '
+                + 'choose the other two from?',
+            },
+            {
+              label: 'Divide, and measure what the information actually moved',
+              detail:
+                'P(all three new given Ann is on it) = 6/55. Without the information it was '
+                + '10/220 = 1/22. Compare them over a common denominator rather than by eye: '
+                + '6/55 is 12/110 and 1/22 is 5/110, so being told about Ann has more than '
+                + 'doubled the probability, which is the sense in which it was information. '
+                + 'Notice what did NOT happen — the formula P(E) = |E| / |S| was not amended, '
+                + 'extended or replaced. Only the set that |S| counts moved, and that is the '
+                + 'entire content of this concept.',
+              socratic:
+                'You have 6 favourable committees out of the 55 that are still possible. What '
+                + 'is the probability, and how does it compare with the 1/22 you had before '
+                + 'you were told anything — over a common denominator rather than by eye?',
+            },
+            {
+              label: 'Reach it again from two ordinary probabilities, and watch the 220 cancel',
+              detail:
+                'Work in the original space instead. P(all new AND Ann on it) = 6/220 = 3/110 '
+                + 'and P(Ann on it) = 55/220 = 1/4. Divide the first by the second: '
+                + '(6/220)/(55/220) = 6/55, because the 220 is in both and a common factor in '
+                + 'a ratio cancels. So |A and B| / |B| and P(A and B) / P(B) are ONE '
+                + 'definition with the size of the original space divided out, not two rules '
+                + 'to remember. The second form is the one that matters later: it never '
+                + 'mentions counting, so it still says something when the outcomes are not '
+                + 'equally likely and there is nothing to count.',
+              socratic:
+                'P(all new and Ann on it) is 6/220 and P(Ann on it) is 55/220. Divide the '
+                + 'first by the second — which number disappears when you do, and what does '
+                + 'that tell you about the two ways the definition gets written?',
+            },
+            {
+              label: 'Swap the condition, and find it is a different question entirely',
+              detail:
+                'Now condition the other way: given that all three are new, how likely is it '
+                + 'that Ann is one of them? The overlap is the same 6 committees, but the '
+                + 'space is now the 10 all-new ones, so the answer is 6/10 = 3/5. Check it '
+                + 'without the formula — if all three are new then three of the 5 new members '
+                + 'are on the committee, so a particular new member is on it with probability '
+                + '3/5, which agrees. Against 6/55 that is not a small discrepancy, and the '
+                + 'reason is visible in the arithmetic: the numerator was the same both times '
+                + 'and only the denominator moved. Reversing a conditional when the overlap is '
+                + 'NOT in hand is `bayes-theorem`, a node above this concept.',
+              socratic:
+                'Keep the same 6 committees on top and put the 10 all-new ones underneath '
+                + 'instead. What have you computed, why is it nothing like 6/55, and which of '
+                + 'the two numbers did the swap actually change?',
+            },
+          ],
+          answer:
+            'P(all three new given Ann is on the committee) = 6/55. The information leaves the '
+            + '(11 x 10)/2 = 55 committees containing Ann, still equally likely among '
+            + 'themselves, and 6 of those have her two colleagues drawn from the other 4 new '
+            + 'members, since (4 x 3)/2 = 6. The same number comes from (6/220)/(55/220) = '
+            + '6/55 with the 220 cancelling, which is why |A and B| / |B| and P(A and B) / '
+            + 'P(B) are one definition. Against the unconditional 1/22 = 5/110, the '
+            + 'conditional 6/55 = 12/110 is more than double. Swapping the condition gives '
+            + 'P(Ann on it given all three new) = 6/10 = 3/5 — the same 6 over a different '
+            + 'denominator, and nothing like the same number.',
+        },
+      },
+      {
+        id: 'a-sequence-of-draws-multiplies-one-conditional-factor-per-step',
+        conceptId: 'conditional-probability',
+        statement:
+          'Multiplying both sides of the definition by the condition\'s probability gives '
+          + 'P(A and B) = P(B) x P(A given B), and that rearrangement is what makes a sequence '
+          + 'of draws computable. Draw one at a time and each draw has its own space: the '
+          + 'first factor is unconditional, and every factor after it is conditioned on what '
+          + 'the earlier draws removed, so its denominator counts what is LEFT rather than '
+          + 'what there was. Chain it and the probability of a whole run is a product of one '
+          + 'factor per step. This is the first thing in the subject that multiplies two '
+          + 'probabilities — the two concepts below draw everything simultaneously precisely so '
+          + 'that they never have to. When an event can happen along more than one path, the '
+          + 'paths are outcomes with nothing in common, so they ADD while each path '
+          + 'multiplies: that is the addition rule and this rule doing different jobs in one '
+          + 'calculation. And the error this point exists to prevent is reusing the first '
+          + 'factor unchanged, which is not bad arithmetic but the right answer to a different '
+          + 'experiment.',
+        position: 2,
+        workedExample: {
+          problem:
+            'The same twelve members, 5 of them new, but now the three are drawn one at a '
+            + 'time and kept out once drawn. Find the probability that all three drawn are '
+            + 'new, as a product of one factor per draw, and check it against the 1/22 the '
+            + 'simultaneous draw gave. Then find the probability that exactly one of the first '
+            + 'TWO drawn is new. Then say what question (5/12) x (5/12) x (5/12) answers.',
+          subgoals: [
+            {
+              label: 'Write the first factor, which is the only unconditioned one',
+              detail:
+                'Nothing has happened yet, so the first draw is an ordinary probability in the '
+                + 'full space: 5 of the 12 members are new, so P(first is new) = 5/12. Worth '
+                + 'naming that this is the only factor in the whole product that needs no '
+                + 'condition, because it is the only one with nothing before it — which is '
+                + 'also why a chain has to be written in an order and the first position is '
+                + 'not interchangeable with the others.',
+              socratic:
+                'Before any member has been drawn, how likely is it that the first one out is '
+                + 'new — and what makes this factor different from every other factor you are '
+                + 'about to write?',
+            },
+            {
+              label: 'Condition the second factor on what the first draw took away',
+              detail:
+                'Suppose the first member drawn was new and is kept out. Eleven members are '
+                + 'left and 4 of them are new, so P(second is new given the first was) = 4/11. '
+                + 'This is the point above with the restricted space being the remaining pool: '
+                + 'the denominator counts what is left, not what there was. Writing 5/12 a '
+                + 'second time would not be a slip — it would be a claim that the first member '
+                + 'went back, which is a different experiment.',
+              socratic:
+                'The first member drawn was new and is not going back. How many members are '
+                + 'left, how many of those are new, and so what is the probability the second '
+                + 'is new as well?',
+            },
+            {
+              label: 'Multiply along the sequence, which is the definition rearranged',
+              detail:
+                'P(A and B) = P(A) x P(B given A) is P(B given A) = P(A and B)/P(A) with both '
+                + 'sides multiplied by P(A), so the product rule for probabilities is the '
+                + 'point above with nothing added. Chain it for three draws: after two new '
+                + 'members are out, 10 remain and 3 are new, so the third factor is 3/10 and '
+                + 'P(all three new) = (5/12) x (4/11) x (3/10) = 60/1320 = 1/22. Each '
+                + 'denominator drops by one because each draw removes somebody, and each '
+                + 'numerator drops by one because each draw removed a NEW somebody — that is '
+                + 'what the conditioning is keeping track of, and the two halves of it are '
+                + 'worth separating. Ask instead for new, then new, then NOT new, in that '
+                + 'order: the denominators are the same 12, 11, 10, because the pool shrinks '
+                + 'whatever type came out, but the third numerator is now the 7 members who '
+                + 'are not new, giving (5/12) x (4/11) x (7/10) = 140/1320 = 7/66. A learner '
+                + 'who has learned "the numbers go down by one each time" gets the first of '
+                + 'those right and the second wrong.',
+              socratic:
+                'You have 5/12 and 4/11, and after two new members are out there are 10 left '
+                + 'of whom 3 are new. What is the third factor, and which rule from the point '
+                + 'above is it that lets you multiply the three together rather than combine '
+                + 'them some other way?',
+            },
+            {
+              label: 'Check it against the draw that happened all at once',
+              detail:
+                'The concept below drew three members simultaneously, counted 10 all-new '
+                + 'committees out of 220, and got 1/22 without multiplying anything. This '
+                + 'route multiplies three conditional factors and gets 1/22 as well. The two '
+                + 'experiments record different things — one knows who came out first — and '
+                + 'agree on this probability because the 3! orderings divide both of that '
+                + 'concept\'s counts, which is its own first knowledge point arriving here as '
+                + 'a check. A disagreement would mean one of the conditional factors was '
+                + 'wrong, so this is worth doing rather than noting.',
+              socratic:
+                'Drawing the three at once gave 10 favourable committees out of 220. You have '
+                + 'just multiplied three fractions and got 1/22. Must those two agree, and what '
+                + 'would it have meant if they had not?',
+            },
+            {
+              label: 'Add across the paths when the event can happen more than one way',
+              detail:
+                '"Exactly one of the first two is new" happens as new-then-older or as '
+                + 'older-then-new, and no draw can be both, so the two paths are disjoint '
+                + 'events. Multiply along each: (5/12) x (7/11) = 35/132 and (7/12) x (5/11) = '
+                + '35/132. They are equal because each is 5 x 7 over 12 x 11 with the factors '
+                + 'taken in the other order, not by coincidence of these numbers. Being '
+                + 'disjoint they add: 70/132 = 35/66. Multiplying runs ALONG a path and adding '
+                + 'runs ACROSS paths, which is this rule and `sample-spaces`\' addition rule '
+                + 'doing different jobs in one calculation. Checked the simultaneous way: '
+                + '5 x 7 = 35 of the (12 x 11)/2 = 66 pairs hold one of each.',
+              socratic:
+                'There are two ways for exactly one of the first two draws to be new. What is '
+                + 'each of them as a product, and what is it about the two of them that lets '
+                + 'the results be added rather than multiplied?',
+            },
+            {
+              label: 'Say what the unconditioned product would have been the answer to',
+              detail:
+                '(5/12) x (5/12) x (5/12) = 125/1728, about 0.072, where the right answer is '
+                + '1/22, about 0.045. That is not an arithmetic fault: it is the correct answer '
+                + 'to the experiment in which each member drawn is put back before the next '
+                + 'draw, so the pool is restored and the factors really are all 5/12. The tell '
+                + 'is in the denominators — a second factor still over 12 is a claim that '
+                + 'nothing was removed. Which experiment you are in is settled by one sentence '
+                + 'in the description, and the next point is about exactly that.',
+              socratic:
+                '5/12 multiplied by itself three times is 125/1728, where the right answer is '
+                + '1/22. Rather than calling it wrong, what experiment would it be the right '
+                + 'answer to — and which part of those three fractions tells you which '
+                + 'experiment you are in?',
+            },
+          ],
+          answer:
+            'P(all three new) = (5/12) x (4/11) x (3/10) = 60/1320 = 1/22. Each factor after '
+            + 'the first is conditioned on what the earlier draws removed — 11 left with 4 new, '
+            + 'then 10 left with 3 new — and the product is the multiplication rule chained, '
+            + 'where asking for new, new, then NOT new keeps the same three denominators and '
+            + 'changes only the last numerator: (5/12) x (4/11) x (7/10) = 7/66. The product is '
+            + 'which is the definition of a conditional probability multiplied through by the '
+            + 'condition. It agrees with the 10/220 = 1/22 the simultaneous draw gave, by a '
+            + 'route that multiplies nothing. For exactly one of the first two: the paths are '
+            + '(5/12) x (7/11) and (7/12) x (5/11), both 35/132 because the same two factors '
+            + 'are multiplied in the other order, and they are disjoint so they add to 70/132 '
+            + '= 35/66 — the same as the 5 x 7 = 35 mixed pairs among the (12 x 11)/2 = 66 '
+            + 'pairs there are. And (5/12) x (5/12) x (5/12) = 125/1728 is not a mistake about '
+            + 'this experiment but the right answer to the one where each member is put back.',
+        },
+      },
+      {
+        id: 'independence-is-a-product-test-that-has-to-be-computed',
+        conceptId: 'conditional-probability',
+        statement:
+          'Independence is the case where conditioning changes nothing: P(A given B) = P(A), '
+          + 'or equivalently and without a denominator, P(A and B) = P(A) x P(B). That is the '
+          + 'DEFINITION rather than a consequence of one, which matters because it means '
+          + 'independence is settled by computing two numbers and comparing them, and never by '
+          + 'how related the two events sound. Two events about different people can fail the '
+          + 'test, because they compete for the same places; two draws from the same twelve '
+          + 'people can pass it, if the mechanism puts the first one back. When the test fails, '
+          + 'the conditional says which way and by how much, and the product test on its own '
+          + 'does not. And the word most often mistaken for this one means close to the '
+          + 'opposite: two events that cannot both happen have P(A and B) = 0 while P(A) x '
+          + 'P(B) is positive, so mutually exclusive events are never independent — knowing one '
+          + 'has happened tells you the other is impossible, which is the most that one event '
+          + 'can say about another.',
+        position: 3,
+        workedExample: {
+          problem:
+            'Three questions about the same club, each settled by the same test. Are "Ann is '
+            + 'on the committee" and "Bob is on the committee" independent? Two members are '
+            + 'drawn one at a time with the first put back before the second is drawn — are '
+            + 'those two draws independent? And are "all three are new" and "no member is new" '
+            + 'independent?',
+          subgoals: [
+            {
+              label: 'State the test as an identity between two numbers you can compute',
+              detail:
+                'A and B are independent when P(A and B) = P(A) x P(B). Where P(B) is not '
+                + 'zero that is the same as saying P(A given B) = P(A) — conditioning on B '
+                + 'leaves A exactly where it was — and the product form is usually easier '
+                + 'because it needs no restricted space and is symmetric in the two events. '
+                + 'Either way it is an equation between numbers. Nothing about whether the '
+                + 'events are about the same people, or sound connected, enters into it.',
+              socratic:
+                'Independence is meant to say that knowing B tells you nothing about A. '
+                + 'Written as an equation between probabilities, what has to hold exactly — '
+                + 'and which quantity is the one required not to move?',
+            },
+            {
+              label: 'Test the two members, using counts the concept below already produced',
+              detail:
+                'P(Ann on it) = 55/220 = 1/4 and P(Bob on it) = 1/4 the same way, so the '
+                + 'product is 1/16 = 0.0625. The overlap is the 10 committees holding both of '
+                + 'them, so P(both on it) = 10/220 = 1/22, about 0.0455. Those are not equal, '
+                + 'so the two events are NOT independent. The three counts — 55, 55 and 10 — '
+                + 'are exactly the ones the concept below produced for the union of these same '
+                + 'two events, which is worth noticing: the same counts answer a question '
+                + 'about adding and a question about multiplying, and the two questions are '
+                + 'unrelated.',
+              socratic:
+                '55 of the 220 committees hold Ann, 55 hold Bob, and 10 hold both. Which two '
+                + 'numbers does the test ask you to compare, what are they, and what does the '
+                + 'comparison settle?',
+            },
+            {
+              label: 'Read the direction and the mechanism off the conditional',
+              detail:
+                'The product test says the events are dependent but not which way. Condition: '
+                + 'P(Ann on it given Bob is) = 10/55 = 2/11, about 0.18, against an '
+                + 'unconditional 1/4. So knowing Bob is on the committee makes Ann LESS likely, '
+                + 'and there is a plain mechanism — the committee has three places, Bob is '
+                + 'occupying one, so Ann is competing for two places among the other eleven '
+                + 'members, which is 2/11 directly. That agreement is a check on the 10 and '
+                + 'the 55, and it is the reason the dependence is negative rather than '
+                + 'positive: the two events are rivals for a fixed number of seats.',
+              socratic:
+                'Given that Bob is on the committee, how many places remain and how many '
+                + 'people are competing for them? What does that make P(Ann given Bob), and '
+                + 'which way has the information pushed Ann\'s chances compared with the 1/4 '
+                + 'she started with?',
+            },
+            {
+              label: 'Put the member back, and watch the conditional factor become the plain one',
+              detail:
+                'Now the second experiment. The first member drawn is returned before the '
+                + 'second draw, so when the second draw happens the pool is the same 12 '
+                + 'members with the same 5 new: P(second is new given the first was) = 5/12, '
+                + 'which is exactly P(second is new). The test passes, so P(both new) = (5/12) '
+                + 'x (5/12) = 25/144. The independence is a fact about the MECHANISM — '
+                + 'replacement restores the space the point above kept shrinking — and not '
+                + 'about the members, who are the same twelve people as before.',
+              socratic:
+                'With the first member put back, what is the pool when the second draw '
+                + 'happens? What does that make P(second is new given the first was), how does '
+                + 'it compare with P(second is new), and what has the comparison settled?',
+            },
+            {
+              label: 'Run the same two draws without replacement and watch the test fail',
+              detail:
+                'Take the member out instead and the second factor is 4/11, where the '
+                + 'unconditional probability is 5/12. Over a common denominator 4/11 = 48/132 '
+                + 'and 5/12 = 55/132, so they differ and the second draw is slightly less '
+                + 'likely to be new. Two descriptions of the same twelve people, differing by '
+                + 'one sentence about whether the first is returned, and one experiment is '
+                + 'independent while the other is not. So independence cannot be read off the '
+                + 'objects in the problem; it has to be computed from the mechanism, which is '
+                + 'why this is a test and not an observation.',
+              socratic:
+                'Without replacement the second factor is 4/11 and the unconditional '
+                + 'probability is 5/12. Compare them over a common denominator — and given '
+                + 'that the twelve people have not changed, what is it that made one version '
+                + 'of this experiment independent and the other not?',
+            },
+            {
+              label: 'Test two events that cannot both happen, where the answer surprises',
+              detail:
+                '"All three are new" holds 10 committees and "no member is new" holds 35, and '
+                + 'no committee is in both, so P(A and B) = 0. But P(A) x P(B) = (10/220) x '
+                + '(35/220) = (1/22) x (7/44) = 7/968, which is not zero. The test fails, so '
+                + 'mutually exclusive events with positive probabilities are never '
+                + 'independent — and the two ideas point close to opposite ways. Being told '
+                + 'one has happened tells you the other is IMPOSSIBLE, which is the most '
+                + 'information one event can carry about another. The concept below used '
+                + 'disjointness as the condition for ADDING probabilities; the test here is '
+                + 'about MULTIPLYING them, and treating the one word as answering both '
+                + 'questions is the standard error.',
+              socratic:
+                'No committee can have all three members new and also no new members. What '
+                + 'does that make P(A and B), what is P(A) x P(B), and what do those two '
+                + 'numbers together say about whether disjoint events are independent?',
+            },
+          ],
+          answer:
+            'The two members are not independent: P(Ann) x P(Bob) = (1/4) x (1/4) = 1/16 while '
+            + 'P(both) = 10/220 = 1/22. The conditional says which way — P(Ann given Bob) = '
+            + '10/55 = 2/11, below 1/4, because Bob occupies one of the three places and Ann '
+            + 'is competing for two among the other eleven members. The two draws WITH '
+            + 'replacement ARE independent: the pool is restored, so P(second new given first '
+            + 'new) = 5/12 = P(second new), and P(both new) = (5/12) x (5/12) = 25/144. The '
+            + 'same two draws without replacement are not: 4/11 = 48/132 against 5/12 = '
+            + '55/132. And "all three new" and "no member new" are not independent either, '
+            + 'though they cannot both happen: P(A and B) = 0 while P(A) x P(B) = (1/22) x '
+            + '(7/44) = 7/968, so disjointness is the opposite of independence rather than a '
+            + 'version of it.',
+        },
+      },
+    ],
+  },
 ]
 
 /**
- * Two edges, and the forty-sixth promotion is what makes either sayable.
+ * Three edges, and the forty-seventh promotion added the simplest one in the file.
  *
  * THIS ARRAY WAS EMPTY AND THE NOTE EXPLAINING WHY NAMED ITS OWN REPAIR. One
  * concept meant no internal pair, and both of `sample-spaces`' prerequisites are
@@ -1539,8 +2298,23 @@ const CONCEPTS: Concept[] = [
  * concept's second and third points being used rather than mentioned. It credits
  * the probability and not the counting, which is exactly the half that went.
  *
- * Both ends of both edges are in `CONCEPTS` above, which is the containment rule
- * `ontologyProblems` enforces and the whole reason the array could not hold
+ * THE THIRD EDGE IS THE FORTY-SEVENTH PROMOTION'S AND IT IS THE WHOLE OF WHAT
+ * THAT PROMOTION COST. `conditional-probability` declared ONE `need`,
+ * `counting-probability`, and that concept is already here — so the edge is an
+ * ordinary internal one, NOTHING stranded into `PROBABILITY.links`, and no area
+ * had to record anything. No promotion since the forty-second has managed that.
+ *
+ * AND THAT PROMOTION DECLARED NO CREDIT EDGE, WHICH IS A DECISION AND NOT AN
+ * OMISSION. One was available and would have been sayable — both ends are in this
+ * ontology — and it is declined on the merits, argued in the file header: the
+ * third concept supplies every count it uses and never chooses a counting
+ * convention, so `counting-probability`'s first knowledge point is untouched by
+ * doing it. The `encompasses` below is a credit for the DIVISION and the third
+ * concept earns no such credit for the COUNTING, which is the same distinction
+ * that edge was written to make.
+ *
+ * Both ends of all three edges are in `CONCEPTS` above, which is the containment
+ * rule `ontologyProblems` enforces and the whole reason the array could not hold
  * either of the first concept's own edges.
  */
 const EDGES: ConceptEdge[] = [
@@ -1598,6 +2372,38 @@ const EDGES: ConceptEdge[] = [
       + 'demonstrated the addition rule, and the first concept must not come due as though '
       + 'untouched. It does NOT credit the counting: that claim is the edge this promotion '
       + 'destroyed, and nothing in this build can express it.',
+  },
+  {
+    id: 'counting-probability->conditional-probability',
+    from: 'counting-probability',
+    to: 'conditional-probability',
+    kind: 'prerequisite',
+    /*
+     * THE SUBJECT'S SECOND INTERNAL PREREQUISITE, AND THE FORTY-SEVENTH
+     * PROMOTION'S ONLY STRUCTURAL COST. The node declared
+     * `needs: ['counting-probability']` and nothing else, and that concept was
+     * already here — so this entry is the whole of the bookkeeping and the
+     * area's `links` list did not grow. Read off the node, which is the durable
+     * rule: a promotion strands as many edges as the node declares `needs`
+     * outside its new subject, and that number was ZERO.
+     *
+     * The claim is load-bearing in all three of the new concept's points and
+     * not just the first, which is the test the edge above this one had to pass
+     * as well. Every count the third concept divides — 220, 55, 10, 35, 6, 66 —
+     * is produced by the second concept's method, and its first point's
+     * comparison of 6/55 against 1/22 is only legible to somebody who knows
+     * where the 1/22 came from. Its second point's check, that three
+     * conditional factors multiply to the same 1/22 the simultaneous draw gave,
+     * is literally the second concept's answer used as an audit. A learner who
+     * met conditioning first would be dividing by a restricted space without
+     * knowing why dividing by the whole one was licensed, which is the error
+     * `sample-spaces` was written to prevent, arriving one layer up.
+     *
+     * `author:` rather than `atlas:probability`, as above: `expandEdges` stamped
+     * the area on this edge while it was the node's own `needs`, and the
+     * provenance moves with the edge when the edge moves into an ontology.
+     */
+    promotedBy: 'author:chance-and-events',
   },
 ]
 

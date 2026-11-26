@@ -1977,6 +1977,182 @@ const OVERLAPPING_COUNTS_AND_THE_SPACE: VariableDeclaration[] = [
   { name: 'n', assumptions: { integer: true } },
 ]
 
+/**
+ * The size of an OVERLAP and the size of a CONDITION — the two counts a
+ * conditional probability divides, neither of which is the whole space.
+ *
+ * `k/m` at (6, 55) is P(all three new given Ann is on the committee): 6 of the
+ * 55 committees containing Ann hold three new members.
+ *
+ * THE LETTERS ARE DIFFERENT FROM `A_COUNTED_EVENT_AND_A_COUNTED_SPACE`'s AND
+ * THAT IS THE WHOLE REASON THIS LIST EXISTS. There `n` is the size of the sample
+ * space and is 220 in every task of the concept; here `m` is the size of the
+ * CONDITION and is never 220 in any of them. Reusing `e/n` would have said the
+ * denominator was the same kind of number, which is exactly the claim
+ * `conditional-probability` exists to deny — the formula P(E) = |E| / |S| is
+ * unchanged and the set S counts has moved. One expression, two readings, two
+ * lists, as `sample-spaces` and `counting-probability` already needed for `e/n`
+ * itself.
+ *
+ * Two tasks share this list, at (6, 55) and (6, 10), and the pair is the
+ * asymmetry of conditioning written as a substitution: P(A given B) and
+ * P(B given A), the same expression, the SAME NUMERATOR, and nothing like the
+ * same answer. Two expressions would have let the difference look like a
+ * difference of method. One expression with the denominator moved says what
+ * actually happens, and the references differ so the pair cannot read as a
+ * duplicate.
+ */
+const AN_OVERLAP_AND_A_CONDITION: VariableDeclaration[] = [
+  { name: 'k', assumptions: { integer: true } },
+  { name: 'm', assumptions: { integer: true } },
+]
+
+/**
+ * The same two counts with the size of the ORIGINAL space as well, so that the
+ * conditional can be asked as a ratio of two ordinary probabilities.
+ *
+ * `(k/n)/(m/n)` at (6, 55, 220) is (6/220)/(55/220) = 6/55 — the same answer as
+ * `k/m` at (6, 55), and the agreement is the point. P(A given B) =
+ * |A and B| / |B| and P(A given B) = P(A and B) / P(B) are ONE definition with
+ * `n` cancelled, not two rules, and a learner who computes both has watched the
+ * cancellation rather than been told about it.
+ *
+ * The nested division is deliberate and `p/q` at (3/110, 1/4) would not do: the
+ * content is that the SAME `n` appears in both halves, and two pre-divided
+ * fractions would hide where it went. This is the device
+ * `ORDERED_EVENT_AND_ORDERED_SPACE` uses for the orderings that cancel in the
+ * concept below, with the common factor being a space rather than a factorial.
+ */
+const AN_OVERLAP_A_CONDITION_AND_THE_OLD_SPACE: VariableDeclaration[] = [
+  { name: 'k', assumptions: { integer: true } },
+  { name: 'm', assumptions: { integer: true } },
+  { name: 'n', assumptions: { integer: true } },
+]
+
+/**
+ * A pool and a count drawn from it, repeated once per draw — the factors of a
+ * chain of conditional probabilities.
+ *
+ * `(a/p)*(b/q)*(c/r)` at (5, 12, 4, 11, 3, 10) is P(all three drawn are new)
+ * when the three are drawn one at a time and kept out, and it is 1/22 — the same
+ * answer the concept below got by counting 10 committees out of 220 with no
+ * multiplication at all.
+ *
+ * ONE PAIR OF LETTERS PER DRAW, WHICH IS THE KNOWLEDGE POINT. Each factor has
+ * its OWN denominator because each draw leaves a smaller pool, and the error
+ * this point exists to prevent is reusing the first factor — so the expression
+ * has to make the denominators separately substitutable. `(a*b*c)/(d*e*f)` at
+ * the same six numbers has the same value and would teach the opposite thing:
+ * it is one ratio of two products, which is how the concept below counts an
+ * ORDERED space, where this is three probabilities multiplied. Same six
+ * integers, two different claims, and the brackets are where the difference
+ * lives. That pair of expressions is this concept's boundary against the one
+ * below it written in a bracket, the way `(a + b - c)/n` against
+ * `a/n + b/n - c/n` was the boundary one layer down.
+ *
+ * Two tasks share this list, both in the second point, at (5, 12, 4, 11, 3, 10)
+ * and (5, 12, 4, 11, 7, 10). The first two factors are IDENTICAL and only the
+ * third moves, from 3/10 to 7/10 — a run of three new members against new, new,
+ * older. That is the pair that says the conditioning tracks WHICH type was
+ * removed and not merely that something was: both numerators and both
+ * denominators fall by one in the first case, while in the second the
+ * denominator falls and the numerator is a count of the other type entirely. The
+ * references differ, 1/22 against 7/66.
+ */
+const A_POOL_AND_A_DRAW_PER_STEP: VariableDeclaration[] = [
+  { name: 'a', assumptions: { integer: true } },
+  { name: 'p', assumptions: { integer: true } },
+  { name: 'b', assumptions: { integer: true } },
+  { name: 'q', assumptions: { integer: true } },
+  { name: 'c', assumptions: { integer: true } },
+  { name: 'r', assumptions: { integer: true } },
+]
+
+/**
+ * Two pools and TWO draws from each, because the event happens along either of
+ * two paths through the same two draws.
+ *
+ * `(a/p)*(b/q) + (c/p)*(d/q)` at (5, 12, 7, 11, 7, 5) is P(exactly one of the
+ * first two drawn is new) = (5/12) x (7/11) + (7/12) x (5/11) = 35/66. The two
+ * products share their denominators `p` and `q` — the pool sizes do not depend
+ * on which type came out first — and swap their numerators, which is the whole
+ * shape of a two-path tree.
+ *
+ * SEPARATE FROM `A_POOL_AND_A_DRAW_PER_STEP` BECAUSE THE PLUS IS THE CONTENT.
+ * That list is one factor per draw and nothing but multiplication; this one
+ * multiplies ALONG each path and adds ACROSS the two, which is this concept's
+ * rule and `sample-spaces`' addition rule doing different jobs in one
+ * expression. A learner who cannot say which operation goes where has the one
+ * misunderstanding this task exists to catch, and a shared list would have
+ * suggested the two expressions were lengths of the same thing.
+ *
+ * The two paths are equal here — both 35/132 — and that is a FACT about this
+ * shape rather than a coincidence of these numbers: each path is 5 x 7 over
+ * 12 x 11 with the factors taken in the other order. The substitution puts
+ * (c, d) = (7, 5) against (a, b) = (5, 7) so the swap is visible in the `at`
+ * rather than hidden in equal values.
+ */
+const TWO_PATHS_THROUGH_TWO_DRAWS: VariableDeclaration[] = [
+  { name: 'a', assumptions: { integer: true } },
+  { name: 'p', assumptions: { integer: true } },
+  { name: 'b', assumptions: { integer: true } },
+  { name: 'q', assumptions: { integer: true } },
+  { name: 'c', assumptions: { integer: true } },
+  { name: 'd', assumptions: { integer: true } },
+]
+
+/**
+ * One pool and one count, drawn from twice — the only list in these three
+ * subjects whose expression uses a letter TWICE, and the repetition is the
+ * claim.
+ *
+ * `(a/p)*(a/p)` at (5, 12) is P(both drawn are new) when the first is put back
+ * before the second is drawn: 25/144. Independence is the case where the
+ * conditional factor equals the unconditional one, so the second factor is a
+ * COPY of the first — and writing it as a copy is the difference from
+ * `A_POOL_AND_A_DRAW_PER_STEP`, where a fresh pair of letters per draw says the
+ * space moved. Two letters against six, for two draws either way, and the count
+ * of letters is the thing being taught.
+ *
+ * `a` and `p` are not reused with a second meaning anywhere in the expression,
+ * so this is one substitution and not two: `at` carries a single value for each.
+ * That is also why the list is two entries rather than four with equal values —
+ * four would have asserted that there were two draws to describe, when the
+ * mechanism's whole claim is that there is only one description.
+ */
+const ONE_POOL_DRAWN_TWICE: VariableDeclaration[] = [
+  { name: 'a', assumptions: { integer: true } },
+  { name: 'p', assumptions: { integer: true } },
+]
+
+/**
+ * Two event counts and the size of the space, multiplied as two probabilities —
+ * the right-hand side of the independence test.
+ *
+ * `(a/n)*(b/n)` at (55, 55, 220) is P(Ann on it) x P(Bob on it) = 1/16, which is
+ * to be compared with the 10/220 = 1/22 those two events actually share: not
+ * equal, so not independent. At (10, 35, 220) it is P(all three new) x P(no
+ * member new) = 7/968, to be compared with ZERO, because no committee is in both
+ * — which is how two events that cannot happen together fail this test rather
+ * than passing it trivially.
+ *
+ * SEPARATE FROM `OVERLAPPING_COUNTS_AND_THE_SPACE`, which holds the same shape
+ * of quantities for `(a + b - c)/n` in the concept below, and the difference is
+ * the operation rather than the numbers: 55, 55 and 10 are the counts of two
+ * events and their overlap in both lists, and there they are repaired and
+ * divided once to give a union while here two of them are divided and
+ * multiplied to test independence. The same three counts answer a question about
+ * ADDING and a question about MULTIPLYING, and the two questions have nothing to
+ * do with each other — which is the confusion the third point's last subgoal is
+ * about, so the lists are kept apart to stop the expressions reading as
+ * variants.
+ */
+const TWO_EVENT_COUNTS_AND_THE_SPACE: VariableDeclaration[] = [
+  { name: 'a', assumptions: { integer: true } },
+  { name: 'b', assumptions: { integer: true } },
+  { name: 'n', assumptions: { integer: true } },
+]
+
 export const TASKS: PracticeTask[] = [
   /*
    * ── fraction-arithmetic ─────────────────────────────────────────────────
@@ -13763,6 +13939,358 @@ export const TASKS: PracticeTask[] = [
     // may be done either way, which is a fact rather than a presentation choice.
     reference: '5/11',
     at: { c: '120', n: '220' },
+  },
+
+  // ── chance-and-events, forty-seventh promotion: conditional-probability
+  //
+  // Nine tasks, three on each point, all nine `evaluate` and every one settled
+  // by exact arithmetic with no worker — the property both concepts below hold
+  // and for the same reason, which is that a subject sitting this low must not
+  // be walled off by a worker outage.
+  //
+  // THE REFERENCE CHECK IS THE CONCEPT BELOW'S WITH THE DENOMINATOR TAKEN AWAY,
+  // AND THAT IS THIS CONCEPT'S BOUNDARY MADE ARITHMETIC. There every one of the
+  // nine answers was a count of committees or a count of committees over the
+  // 220 there are, so `220 x reference` was a whole number for all six
+  // probabilities and the other three were counts. Here:
+  //
+  //  - NOT ONE of the nine is a count. All nine references lie in [0, 1], where
+  //    the concept below had exactly three outside it. Nothing in this concept
+  //    asks how many of something there are, because every count it uses is
+  //    supplied in the prompt as the concept below's work. A tenth task
+  //    answering with a count would mean a count was being asked for its own
+  //    sake, in a concept whose only move is choosing a denominator.
+  //  - FOUR of the nine have `220 x reference` whole and FIVE do not, and the
+  //    split is not arbitrary: the four are the ones still asked inside the
+  //    220-committee space — 6/55, 6/55, 3/5 and the 1/22 the chain reproduces —
+  //    and the five are asked in a space that is not the committee draw at all:
+  //    an ordered run of three (1320), a pair (66), a draw WITH replacement
+  //    (144), and two products of probabilities which are not event counts over
+  //    anything (16, 968). That is "conditioning replaces the space" as a
+  //    property of the answers.
+  //
+  //     k/m                 the overlap over the CONDITION, not over the space
+  //     (k/n)/(m/n)         the same conditional as a ratio of two probabilities
+  //     (a/p)*(b/q)*(c/r)   one conditional factor per draw, each over what is left
+  //     (a/p)*(b/q) + (c/p)*(d/q)   two paths: multiply along, add across
+  //     (a/n)*(b/n)         the independence test's right-hand side
+  //     (a/p)*(a/p)         the same factor twice, which is what independence looks like
+  //
+  // THREE PAIRS SHARE AN EXPRESSION AT TWO SUBSTITUTIONS and no pair shares a
+  // reference, which is the opposite of the concept below — there three pairs
+  // AGREED on purpose and the agreement was the content. Here the content is
+  // that moving one number changes the answer: `k/m` at (6, 55) and (6, 10) is
+  // the asymmetry of conditioning, `(a/p)*(b/q)*(c/r)` at a third factor of
+  // 3/10 and 7/10 is the conditioning tracking WHICH type left, and `(a/n)*(b/n)`
+  // at (55, 55) and (10, 35) is the independence test failing in two different
+  // ways. Each is commented where it sits.
+  //
+  // NO `transform_to_form`, NO `counterexample`, NO `justify`, and no
+  // `domainConditions` on any of the nine, for the reasons ontology-chance.ts
+  // gives twice already. The one worth repeating here is that no denominator is
+  // a declared variable that could be zero: every one is a pool size, an event
+  // count given in the prompt, or the size of the space.
+  {
+    id: 'divide-the-overlap-by-the-condition-1',
+    knowledgePointId: 'conditioning-replaces-the-space-so-the-denominator-is-the-condition',
+    kind: 'evaluate',
+    prompt:
+      'The club again: 12 members, 5 of them new, three drawn by lot, so the 220 possible '
+      + 'committees are equally likely. Ann is one of the 5 new members, and you are TOLD that '
+      + 'she is on the committee. That rules out every committee without her and says nothing '
+      + 'to separate the ones left, so the space to work in is the (11 × 10)/2 = 55 committees '
+      + 'containing Ann, still equally likely among themselves. Of those, the all-new ones are '
+      + 'the ones whose other two members come from the remaining 4 new members: (4 × 3)/2 = 6. '
+      + 'Evaluate k/m at k = 6, m = 55, where k is the OVERLAP and m is the CONDITION.',
+    given: 'k/m',
+    variables: AN_OVERLAP_AND_A_CONDITION,
+    // 6/55.
+    //
+    // THE DENOMINATOR IS NOT 220 AND THAT IS THE WHOLE TASK. `e/n` in the concept
+    // below divides by the size of the space in every single one of its
+    // probabilities; the first thing this concept does is divide by something
+    // else. The letters were changed for that reason — see
+    // `AN_OVERLAP_AND_A_CONDITION` — because reusing `e/n` would have said the
+    // two denominators were the same kind of number.
+    //
+    // 6/55 AGAINST THE UNCONDITIONAL 1/22 is the comparison the prompt sets up
+    // and the worked example makes: 12/110 against 5/110, so the information
+    // more than doubled the probability. Not asked as its own task, because the
+    // unconditional 1/22 is the concept below's second task already.
+    reference: '6/55',
+    at: { k: '6', m: '55' },
+  },
+  {
+    id: 'reach-the-conditional-as-a-ratio-of-two-probabilities-1',
+    knowledgePointId: 'conditioning-replaces-the-space-so-the-denominator-is-the-condition',
+    kind: 'evaluate',
+    prompt:
+      'Now get that same conditional probability without ever restricting the space. Stay in '
+      + 'the 220 committees: the probability of "all three new AND Ann on it" is 6/220, and the '
+      + 'probability of "Ann on it" is 55/220. The definition says to divide the first by the '
+      + 'second. Evaluate (k/n)/(m/n) at k = 6, m = 55, n = 220 — and before simplifying, say '
+      + 'which number appears in both halves and what becomes of it.',
+    given: '(k/n)/(m/n)',
+    variables: AN_OVERLAP_A_CONDITION_AND_THE_OLD_SPACE,
+    // (6/220)/(55/220) = 6/55, the previous task's answer.
+    //
+    // TWO TASKS, ONE ANSWER, AND HERE THAT IS NOT AN AGREEMENT BETWEEN TWO
+    // METHODS BUT A DEMONSTRATION THAT THERE IS ONLY ONE. |A and B| / |B| and
+    // P(A and B) / P(B) differ by dividing both counts by `n`, and a common
+    // factor in a ratio cancels — so the two ways the definition gets written
+    // are one statement, and a learner who has computed both has watched the old
+    // space leave rather than been told it does.
+    //
+    // THE NESTED DIVISION IS THE POINT AND `p/q` AT (3/110, 1/4) WOULD NOT DO.
+    // The content is that the SAME `n` is in both halves; two pre-divided
+    // fractions would hide where it went. Same device as
+    // `(a*b*c)/(d*e*f)` in the concept below, where what cancels is a factorial
+    // instead of a space.
+    //
+    // AND THIS IS THE FORM THAT OUTLIVES THE SUBJECT. It never mentions
+    // counting, so it still says something when the outcomes are not equally
+    // likely and there is nothing to count — which is why the material gives it
+    // rather than only the counts.
+    reference: '6/55',
+    at: { k: '6', m: '55', n: '220' },
+  },
+  {
+    id: 'swap-the-condition-and-get-a-different-number-1',
+    knowledgePointId: 'conditioning-replaces-the-space-so-the-denominator-is-the-condition',
+    kind: 'evaluate',
+    prompt:
+      'Same club, same 6 committees that are both all-new and contain Ann, but ask the question '
+      + 'the other way round: given that all three members are NEW, how likely is it that Ann '
+      + 'is one of them? The condition is now "all three new", which holds (5 × 4 × 3)/6 = 10 '
+      + 'committees. Evaluate k/m at k = 6, m = 10. Check it against the committee rather than '
+      + 'the formula: if all three are new then three of the 5 new members are on it.',
+    given: 'k/m',
+    variables: AN_OVERLAP_AND_A_CONDITION,
+    // 6/10 = 3/5, and 3 of the 5 new members being on the committee gives 3/5
+    // directly, which is the check the prompt asks for.
+    //
+    // THE SAME EXPRESSION AND THE SAME NUMERATOR AS THE FIRST TASK, WITH ONLY
+    // THE DENOMINATOR MOVED, which is the asymmetry of conditioning made
+    // arithmetic. 3/5 against 6/55 is not a small discrepancy and the two are
+    // not approximations of each other — and the reason is visible in the `at`:
+    // `k` did not change.
+    //
+    // Reading P(A|B) for P(B|A) is the single most consequential confusion in
+    // the subject, and `bayes-theorem` declares an `interferes_with` edge
+    // against this concept saying so. That node is about getting one from the
+    // other through the base rate when the overlap is NOT in hand; this task is
+    // about the two being different numbers when it is, which is the fact the
+    // formula is for.
+    reference: '3/5',
+    at: { k: '6', m: '10' },
+  },
+  {
+    id: 'multiply-one-conditional-factor-per-draw-1',
+    knowledgePointId: 'a-sequence-of-draws-multiplies-one-conditional-factor-per-step',
+    kind: 'evaluate',
+    prompt:
+      'The same twelve members, 5 of them new, but now drawn ONE AT A TIME and kept out once '
+      + 'drawn. Find the probability that all three drawn are new, as a product of one factor '
+      + 'per draw. The first factor is unconditional: 5 of 12. After a new member is out, 11 '
+      + 'remain and 4 of them are new; after two are out, 10 remain and 3 are new. Evaluate '
+      + '(a/p)*(b/q)*(c/r) at a = 5, p = 12, b = 4, q = 11, c = 3, r = 10. You should get the '
+      + 'answer the simultaneous draw gave.',
+    given: '(a/p)*(b/q)*(c/r)',
+    variables: A_POOL_AND_A_DRAW_PER_STEP,
+    // (5/12) × (4/11) × (3/10) = 60/1320 = 1/22.
+    //
+    // THE FIRST TASK IN THE SUBJECT THAT MULTIPLIES TWO PROBABILITIES, and the
+    // two concepts below draw everything simultaneously precisely so that they
+    // never have to. Their every draw is "three members at once, by lot" for
+    // this reason, which is stated in both files as a boundary rather than a
+    // presentation choice.
+    //
+    // 1/22 IS THE CONCEPT BELOW'S ANSWER REACHED WITHOUT COUNTING ANYTHING, and
+    // the agreement is a check rather than a repetition — it is the only task in
+    // this concept whose reference is a count of committees over 220, and it got
+    // there by a route with no committees in it. A disagreement would mean one of
+    // the conditional factors was wrong. The two experiments record different
+    // things, and they agree on this probability because the 3! orderings divide
+    // both of that concept's counts, which is its own first knowledge point
+    // arriving here as an audit.
+    //
+    // SIX LETTERS IN THREE PAIRS RATHER THAN `(a*b*c)/(d*e*f)` AT THE SAME SIX
+    // NUMBERS. That expression has the same value and is in the concept below,
+    // where it is ONE ratio of two ordered counts; this is THREE probabilities
+    // multiplied. Same integers, two different claims, and the brackets carry
+    // the difference — which is the boundary device `(a + b - c)/n` against
+    // `a/n + b/n - c/n` already used one layer down.
+    reference: '1/22',
+    at: { a: '5', p: '12', b: '4', q: '11', c: '3', r: '10' },
+  },
+  {
+    id: 'condition-on-which-type-left-not-just-that-one-did-1',
+    knowledgePointId: 'a-sequence-of-draws-multiplies-one-conditional-factor-per-step',
+    kind: 'evaluate',
+    prompt:
+      'Same three draws, one at a time, kept out. Now find the probability that the first two '
+      + 'drawn are new and the third is NOT — in that order. The first two factors are exactly '
+      + 'the ones you just used, 5/12 and 4/11. For the third, two new members are out, so 10 '
+      + 'remain of whom 3 are new and 7 are not. Evaluate (a/p)*(b/q)*(c/r) at a = 5, p = 12, '
+      + 'b = 4, q = 11, c = 7, r = 10, and notice which of the six numbers you had to change.',
+    given: '(a/p)*(b/q)*(c/r)',
+    variables: A_POOL_AND_A_DRAW_PER_STEP,
+    // (5/12) × (4/11) × (7/10) = 140/1320 = 7/66.
+    //
+    // THE SAME EXPRESSION AT A SUBSTITUTION THAT MOVES EXACTLY ONE NUMBER, which
+    // is what makes it worth asking next to the task above rather than instead
+    // of it. Both denominators fall 12, 11, 10 either way, because the pool
+    // shrinks whatever type came out; the NUMERATOR is where the conditioning
+    // lives, and here it is a count of the other type entirely. A learner who
+    // has learned "the numbers go down by one each time" gets the first task
+    // right and this one wrong.
+    //
+    // NOT A COMMITTEE PROBABILITY, UNLIKE THE TASK ABOVE. This event is about
+    // the ORDER the members came out in, so it is not an event of the
+    // 220-committee space at all and 220 × 7/66 is not a whole number. That is
+    // the concept's boundary showing up in an answer: the chain can ask
+    // questions the simultaneous draw cannot express, and this is one of them.
+    reference: '7/66',
+    at: { a: '5', p: '12', b: '4', q: '11', c: '7', r: '10' },
+  },
+  {
+    id: 'multiply-along-two-paths-and-add-across-them-1',
+    knowledgePointId: 'a-sequence-of-draws-multiplies-one-conditional-factor-per-step',
+    kind: 'evaluate',
+    prompt:
+      'Two members are now drawn one at a time and kept out. Find the probability that exactly '
+      + 'one of the two is new. That happens two ways and no draw can be both: new then older, '
+      + 'which is (5/12) × (7/11), or older then new, which is (7/12) × (5/11). The two paths '
+      + 'are disjoint events, so their probabilities ADD while each path multiplies. Evaluate '
+      + '(a/p)*(b/q) + (c/p)*(d/q) at a = 5, p = 12, b = 7, q = 11, c = 7, d = 5.',
+    given: '(a/p)*(b/q) + (c/p)*(d/q)',
+    variables: TWO_PATHS_THROUGH_TWO_DRAWS,
+    // 35/132 + 35/132 = 70/132 = 35/66.
+    //
+    // THE PLUS IS THIS CONCEPT'S RULE AND `sample-spaces`' RULE IN ONE
+    // EXPRESSION, which is why it is a task and not a line in a prompt.
+    // Multiplication runs ALONG a path and addition runs ACROSS paths, and a
+    // learner who cannot say which goes where has the one misunderstanding this
+    // point exists to catch. The addition is licensed by the paths being
+    // disjoint, which is additivity from two concepts down and not a new rule.
+    //
+    // THE TWO PATHS ARE EQUAL AS A FACT ABOUT THE SHAPE, not a coincidence of
+    // these numbers: each is 5 × 7 over 12 × 11 with the factors taken in the
+    // other order. The substitution puts (c, d) = (7, 5) against (a, b) = (5, 7)
+    // so the swap is visible in the `at` rather than hidden inside two equal
+    // values — and it is why the same event can be counted as 2 × 5 × 7 = 70
+    // ordered draws out of 12 × 11 = 132.
+    //
+    // CHECKED THE SIMULTANEOUS WAY TOO: 5 × 7 = 35 of the (12 × 11)/2 = 66 pairs
+    // hold one of each. Not asked as its own task, since that division is the
+    // concept below's `e/n` and belongs to it.
+    reference: '35/66',
+    at: { a: '5', p: '12', b: '7', q: '11', c: '7', d: '5' },
+  },
+  {
+    id: 'run-the-independence-test-on-two-events-that-fail-it-1',
+    knowledgePointId: 'independence-is-a-product-test-that-has-to-be-computed',
+    kind: 'evaluate',
+    prompt:
+      'Back to the 220 committees drawn by lot. Let A be "Ann is on the committee" and B be '
+      + '"Bob is on the committee", and recall the counts: 55 committees hold Ann, 55 hold Bob, '
+      + 'and 10 hold both. A and B are independent exactly when P(A and B) = P(A) × P(B), so '
+      + 'work out the right-hand side. Evaluate (a/n)*(b/n) at a = 55, b = 55, n = 220. Then '
+      + 'compare it with P(A and B) = 10/220 = 1/22 and say what the comparison settles.',
+    given: '(a/n)*(b/n)',
+    variables: TWO_EVENT_COUNTS_AND_THE_SPACE,
+    // (55/220) × (55/220) = (1/4) × (1/4) = 1/16 = 0.0625, against
+    // P(A and B) = 1/22 ≈ 0.0455. Not equal, so not independent.
+    //
+    // THE TEST IS THE TASK AND THE VERDICT IS IN THE PROMPT, which is the honest
+    // shape here: "are these independent" is a claim and `evaluate` cannot rule
+    // a claim, while P(A) × P(B) is a number. So the rulable half is asked and
+    // the comparison is set up for the learner to make — the same move the
+    // concept below uses for its partition audit, where the total is the task
+    // and "so they partition the space" is the prompt's.
+    //
+    // 55, 55 AND 10 ARE THE CONCEPT BELOW'S UNION COUNTS, REUSED FOR A QUESTION
+    // THAT HAS NOTHING TO DO WITH UNIONS. There they were repaired and divided
+    // once to give 5/11; here two of them are divided and multiplied to give
+    // 1/16. The same three counts answer a question about ADDING and a question
+    // about MULTIPLYING, which is why the variable lists are kept apart.
+    //
+    // THE DEPENDENCE IS NEGATIVE AND THE MECHANISM IS PLAIN: the committee has
+    // three places and Bob occupies one, so P(A given B) = 10/55 = 2/11, which
+    // is two places among the other eleven members. That conditional is in the
+    // worked example rather than in a task, because `k/m` at (10, 55) would have
+    // been a third substitution of an expression already asked twice and the
+    // direction of a dependence is not what this point is for.
+    reference: '1/16',
+    at: { a: '55', b: '55', n: '220' },
+  },
+  {
+    id: 'put-the-member-back-and-watch-the-factors-become-equal-1',
+    knowledgePointId: 'independence-is-a-product-test-that-has-to-be-computed',
+    kind: 'evaluate',
+    prompt:
+      'A different mechanism on the same twelve members, 5 of them new. Two are drawn one at a '
+      + 'time, but the first is PUT BACK before the second is drawn. So when the second draw '
+      + 'happens the pool is the same 12 with the same 5 new, whatever the first draw was: '
+      + 'P(second is new given the first was) = 5/12, which is exactly P(second is new). The '
+      + 'test passes, so the probability that both are new is one factor times a copy of '
+      + 'itself. Evaluate (a/p)*(a/p) at a = 5, p = 12.',
+    given: '(a/p)*(a/p)',
+    variables: ONE_POOL_DRAWN_TWICE,
+    // (5/12) × (5/12) = 25/144.
+    //
+    // THE REPEATED LETTER IS THE KNOWLEDGE POINT. Two draws, and the expression
+    // uses TWO letters where the chain two tasks back needed six — because
+    // independence is exactly the case where the second factor is a copy of the
+    // first, and a fresh pair of letters per draw is what says the space moved.
+    // The count of symbols carries the claim, which is why this has its own
+    // variable list rather than a substitution of `A_POOL_AND_A_DRAW_PER_STEP`.
+    //
+    // AND IT IS THE SAME TWELVE PEOPLE AS THE DEPENDENT CASE. 4/11 = 48/132
+    // against 5/12 = 55/132 is the without-replacement version failing the test,
+    // and it is in the worked example because the rulable content here is the
+    // product that the passing test licenses. One sentence of the description —
+    // whether the member goes back — decides which experiment this is, so
+    // independence is a fact about the MECHANISM and never about the objects.
+    reference: '25/144',
+    at: { a: '5', p: '12' },
+  },
+  {
+    id: 'test-two-events-that-cannot-both-happen-1',
+    knowledgePointId: 'independence-is-a-product-test-that-has-to-be-computed',
+    kind: 'evaluate',
+    prompt:
+      'The 220 committees again. Let A be "all three members are new", which holds 10 of them, '
+      + 'and B be "no member is new", which holds 35. No committee is in both, so P(A and B) is '
+      + '0. Work out the other side of the test: evaluate (a/n)*(b/n) at a = 10, b = 35, '
+      + 'n = 220. Then say whether two events that cannot both happen are independent, and what '
+      + 'knowing that one of them happened tells you about the other.',
+    given: '(a/n)*(b/n)',
+    variables: TWO_EVENT_COUNTS_AND_THE_SPACE,
+    // (10/220) × (35/220) = (1/22) × (7/44) = 7/968 ≈ 0.0072, against
+    // P(A and B) = 0. Not equal, so disjoint events are NOT independent.
+    //
+    // THE ANSWER MATTERS BECAUSE IT IS NOT ZERO, which is the only reason a
+    // number this ungainly is worth asking for. Mutually exclusive and
+    // independent are routinely treated as the same idea and they point close to
+    // opposite ways: being told A happened tells you B is IMPOSSIBLE, which is
+    // the most information one event can carry about another. So the test fails
+    // as hard as it can, and it fails for every pair of disjoint events with
+    // positive probabilities rather than for these two in particular.
+    //
+    // THE SAME EXPRESSION AS THE TASK TWO BACK, AT A SUBSTITUTION THAT FAILS THE
+    // TEST DIFFERENTLY. There P(A and B) = 1/22 against a product of 1/16 —
+    // close, and wrong. Here it is 0 against 7/968 — not close, and wrong for a
+    // structural reason. One expression, two ways of failing, which is what
+    // stops the pair reading as one task twice.
+    //
+    // THE CONCEPT BELOW USED DISJOINTNESS AS THE CONDITION FOR ADDING, and this
+    // task is about multiplying. Its 10 and its 35 are two of the four case
+    // counts from its own partition audit, so a learner meets them here having
+    // already added them up to 220 — and adding them was licensed by exactly the
+    // property that makes this test fail.
+    reference: '7/968',
+    at: { a: '10', b: '35', n: '220' },
   },
 ]
 

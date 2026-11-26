@@ -444,39 +444,44 @@ export const REGIONS: Region[] = [
     // ontology appearing nowhere in this table fails loudly — which is the one
     // check this table has that the game's copy does not.
     //
-    // NO ANCHOR SLOT EMPTIED, and the reason is the same shape as Gal-garad's
-    // three entries down rather than Burdervruke's forty. An anchor must be a
-    // node of `area`, so a promotion normally vacates one; none of the three
-    // below is `sample-spaces`, and all three are still nodes here. The region
-    // anchors on the arithmetic of a random quantity — expectation, conditioning,
-    // the variable itself — and the concept that left is the one about the
-    // outcomes rather than about a number attached to them, so the `because`
-    // below still reads correctly: somebody pricing a sentence or a raid is
-    // computing an expected value, and listing what could happen is the step
-    // before that computation has an object.
+    // THE SLOT THE NOTE SAID WOULD EMPTY HAS EMPTIED, AND THE FORTY-SEVENTH
+    // PROMOTION PAID IT. An anchor must be a node of `area`, and
+    // `conditional-probability` is now a concept of `chance-and-events`, so
+    // leaving it here would make `armatureProblems` report
+    // "Rubneb anchors on conditional-probability, which is not in probability".
+    // That is the loud failure this table has instead of a silent one, and it is
+    // the reason the refill is part of the same edit as the promotion.
     //
-    // AND THE SLOT IS NO LONGER SAFE, WHICH THIS NOTE GOT WRONG BY ONE
-    // PROMOTION. It used to say the slot was "safe for longer than usual": all
-    // three anchors sit behind `counting-probability` and
-    // `conditional-probability`, `random-variables` additionally behind
-    // `function-concept`, so the promotion that would empty it looked three or
-    // four deep in this area. The forty-sixth promotion authored
-    // `counting-probability` — which was one of the two nodes the forty-fifth
-    // made ready, so the sentence was out of date the moment it was written —
-    // and `conditional-probability` declares that concept and nothing else, so
-    // it is READY now and it is the first of the three below. The next promotion
-    // out of this area empties this slot.
+    // THE REFILL IS `bayes-theorem`, CHOSEN ON THE READING THE NOTE BELOW NAMED
+    // RATHER THAN ON WHAT WOULD HOLD THE SLOT LONGEST. The three anchors are the
+    // arithmetic of a random quantity — expectation, conditioning, the variable
+    // itself — and the previous note said a replacement has to keep that reading,
+    // which rules out the distributions and the limit theorems however ready they
+    // look. `bayes-theorem` is the conditioning clause one layer up: it is
+    // reversing a conditional, it is the node that sat directly above the one
+    // that left, and for an Order court it is the better reading rather than
+    // merely an acceptable one — mistaking P(evidence given guilt) for
+    // P(guilt given evidence) is the prosecutor's fallacy, which is what the
+    // `because` below is already about when it says these courts price every
+    // sentence.
     //
-    // No refill is proposed here, because a refill chosen before the promotion
-    // that needs it is a guess about which of the three goes. What the run that
-    // pays it should know is the shape: the `because` below is one clause about
-    // pricing and one about a raid whose return nobody can promise, and the
-    // three anchors are the arithmetic of a random quantity — expectation,
-    // conditioning, the variable itself. A replacement has to keep that reading,
-    // which rules out the distributions and the limit theorems however ready
-    // they look.
+    // AND THE SLOT IS IMMEDIATELY UNSAFE AGAIN, WHICH IS NAMED HERE RATHER THAN
+    // LEFT TO BE FOUND. `bayes-theorem` declares `conditional-probability` and
+    // nothing else, so it is READY the moment this ships and the next promotion
+    // out of this area may well empty this slot a second time. Durability was
+    // considered and deliberately not allowed to decide: `markov-chains` would
+    // have held the slot for much longer, since it needs `eigenvalues` and
+    // ontology-matrices.ts declines that by name, but a factor that only adds
+    // work to one side of a choice must not decide anything — the rule
+    // ontology-chance.ts applied to an anchor cost in the other direction. The
+    // run that pays this slot again should know that `markov-chains` is the
+    // reading-preserving fallback and the only one left in this area, because
+    // the three remaining nodes that are not a distribution or a limit theorem
+    // are `markov-chains`, `stochastic-processes` and
+    // `measure-theoretic-probability`, and the last two are the machinery rather
+    // than the arithmetic.
     authored: ['chance-and-events'],
-    anchors: ['expectation', 'conditional-probability', 'random-variables'],
+    anchors: ['expectation', 'bayes-theorem', 'random-variables'],
     because: 'Order courts price every sentence in money owed to the offended party and the state, and the Scales run a seasonal raid whose return nobody can promise. Both are expected value, and the swamp is where somebody is always computing one.',
   },
   {

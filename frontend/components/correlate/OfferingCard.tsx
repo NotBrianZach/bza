@@ -46,11 +46,28 @@ export default function OfferingCard({
   player,
   label,
   compact,
+  allowFullLength = true,
 }: {
   offering: Offering
   player?: OfferingPlayer
   label?: string
   compact?: boolean
+  /**
+   * Whether to offer the full version. Defaults to true, so every board call
+   * site is unchanged.
+   *
+   * It exists because the full-length control is NOT gated on `player`, and a
+   * caller that deliberately omits the player to avoid the quota still gets
+   * the button. `useOfferingPlayer`'s `resolveFull` is the queue's path to a
+   * full version; `loadFull` below is this card's own, and it hits
+   * /api/music/youtube directly — so leaving the player's resolver out looks
+   * like opting out of the quota and is not.
+   *
+   * The caller that found this is /play's ExampleChain: the tutorial renders
+   * on every first visit, so a button there spends a shared daily allowance
+   * on somebody who is reading rather than playing.
+   */
+  allowFullLength?: boolean
 }) {
   const [full, setFull] = useState<FullState>({ kind: 'idle' })
 
@@ -151,7 +168,7 @@ export default function OfferingCard({
               {isPlaying ? <Pause size={13} /> : <Play size={13} />}
             </button>
           )}
-          {offering.medium === 'music' && full.kind === 'idle' && (
+          {allowFullLength && offering.medium === 'music' && full.kind === 'idle' && (
             <button
               onClick={loadFull}
               title="Play the full version on YouTube"

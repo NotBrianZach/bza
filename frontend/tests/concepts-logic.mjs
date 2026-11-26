@@ -10325,18 +10325,25 @@ const CP_TASKS = CP_POINTS.flatMap(p => tasksForPoint(p.id))
 
 group('counting-probability, where the sample space stops being a list')
 /*
- * THE SUBJECT TOTALS, WHICH THIS PROMOTION MOVED and which the forty-fifth
- * promotion's group above no longer counts. Two concepts, six points, and the
- * positions restarting at 1 in each — which is `position` being per concept
- * rather than per subject, and this is the first subject in the uncertainty half
- * with two concepts to demonstrate it on.
+ * THE SUBJECT TOTALS HAVE MOVED ON AGAIN, to the forty-seventh promotion's
+ * group, which is the third group to hold them. This group took them from the
+ * forty-fifth's and had them for exactly one promotion, which is the rule
+ * working rather than churn: a count belongs to whoever last moved it, and the
+ * subject has grown in three consecutive runs.
+ *
+ * What stays here is this promotion's own concept and the ORDER it arrived in.
+ * `counting-probability` is second in the array, behind its own prerequisite,
+ * and that is asserted positively rather than as a length — the concepts are in
+ * prerequisite order, which `teachingOrder` does not require but which makes the
+ * file readable, and a third concept inserted between them would go red here
+ * while a third appended does not.
  */
-t('two concepts and six knowledge points, the figure having moved to this group',
-  CE.concepts.length === 2 && allKnowledgePoints(CE).length === 6
-  && CE.concepts.map(c => c.id).join(',') === 'sample-spaces,counting-probability',
-  `${CE.concepts.length} concepts, ${allKnowledgePoints(CE).length} points: `
-  + CE.concepts.map(c => c.id).join(','))
-t('and both number their points from 1, which is per concept and not per subject',
+t('its concept is second in the array, behind the prerequisite it declared',
+  CE.concepts.findIndex(c => c.id === 'counting-probability') === 1
+  && CE.concepts.findIndex(c => c.id === 'sample-spaces') === 0
+  && conceptById(CE, 'counting-probability')?.knowledgePoints.length === 3,
+  CE.concepts.map(c => c.id).join(','))
+t('and every concept numbers its points from 1, which is per concept and not per subject',
   CE.concepts.every(c => c.knowledgePoints.map(p => p.position).join(',') === '1,2,3'),
   CE.concepts.map(c => `${c.id}:${c.knowledgePoints.map(p => p.position).join('')}`).join(' '))
 t('the concept is teachable AND practisable, and the subject has no internal faults',
@@ -10344,21 +10351,28 @@ t('the concept is teachable AND practisable, and the subject has no internal fau
   && ontologyProblems(CE).length === 0 && fidelityMismatches(CE).length === 0,
   ontologyProblems(CE).join('; '))
 /*
- * THE TWO EDGES THE SUBJECT NOW DECLARES, which is the length the group above
- * stopped asserting. The prerequisite is the one the file's `EDGES` note
- * predicted; the `encompasses` is the credit claim that replaced NOTHING, since
- * the one this promotion lost pointed at `counting-principles` and is
- * inexpressible — tests/atlas.mjs asserts that loss.
+ * THE TWO EDGES THIS PROMOTION DECLARED, asserted by MEMBERSHIP rather than as
+ * the array's length — which is the correction the forty-seventh promotion
+ * forced, since it added a third and the length clause went red on a correct
+ * addition. The length now lives in that promotion's group.
+ *
+ * The prerequisite is the one the file's `EDGES` note predicted; the
+ * `encompasses` is the credit claim that replaced NOTHING, since the one this
+ * promotion lost pointed at `counting-principles` and is inexpressible —
+ * tests/atlas.mjs asserts that loss.
  *
  * Asserted as the conjunction of both kinds and the containment rule, because an
  * ontology may only name concepts it holds and that is the whole reason the first
- * concept's own two edges are `links` entries instead.
+ * concept's own two edges are `links` entries instead. The containment clause is
+ * over EVERY edge in the array deliberately: it is an invariant of the ontology
+ * rather than a fact about these two, so it should go red for an edge any later
+ * promotion adds badly.
  */
-t('the ontology declares two edges now, one of each kind, both ends held here',
-  CE.edges.length === 2
-  && CE.edges.map(e => `${e.from}:${e.kind}:${e.to}`).join(' ')
-    === 'sample-spaces:prerequisite:counting-probability '
-    + 'counting-probability:encompasses:sample-spaces'
+t('the two edges it declared are both there, one of each kind, both ends held here',
+  CE.edges.some(e => e.from === 'sample-spaces' && e.kind === 'prerequisite'
+    && e.to === 'counting-probability')
+  && CE.edges.some(e => e.from === 'counting-probability' && e.kind === 'encompasses'
+    && e.to === 'sample-spaces')
   && CE.edges.every(e => CE.concepts.some(c => c.id === e.from)
     && CE.concepts.some(c => c.id === e.to))
   && CE.edges.every(e => !!e.promotedBy),
@@ -10697,6 +10711,561 @@ t('every subgoal names a move rather than a step number, and no two in one examp
       === p.workedExample.subgoals.length),
   CP_POINTS.flatMap(p => p.workedExample.subgoals)
     .filter(s => s.label.length <= 20 || /^step\b/i.test(s.label)).map(s => s.label).join(' | '))
+
+// ---------------------------------------------------------------------------
+
+/**
+ * The forty-seventh promotion: conditioning, into the subject that has now taken
+ * three consecutive nodes off one chain.
+ *
+ * `conditional-probability` was a node of `probability` and is the THIRD concept
+ * of `chance-and-events`. tests/atlas.mjs owns the structural half — the node
+ * being gone, the `links` list NOT growing, the root set tripling, the anchor
+ * slot that emptied and was refilled. What is asserted here is the MATERIAL, and
+ * six things about it that no count would catch.
+ *
+ * FIRST, THAT NOT ONE OF THE NINE TASKS ANSWERS WITH A COUNT, which is the
+ * assertable form of this concept's boundary and is the exact inverse of the
+ * concept below it. There SIX of nine references were counts of committees over
+ * the 220 there are and THREE were bare counts. Here all nine lie in [0, 1] and
+ * none is a count at all, because every count this concept uses is supplied in
+ * the prompt as the concept below's work: the only move it owns is choosing a
+ * denominator. A tenth task answering with a count would mean a count was being
+ * asked for its own sake.
+ *
+ * SECOND, THAT THE DENOMINATOR STOPPED BEING THE SPACE, asserted as the split
+ * four-against-five on whether `220 x reference` is a whole number. The four
+ * that are whole are the questions still asked inside the committee space; the
+ * five that are not are asked in a space that is not the committee draw at all —
+ * an ordered run of three, a pair, a draw with replacement, and two products of
+ * probabilities that are not event counts over anything. In the concept below
+ * that figure was nine out of nine. One number says "conditioning replaces the
+ * space" about the answers rather than about the prose.
+ *
+ * THIRD, THAT THE ASYMMETRY IS PRODUCED RATHER THAN WARNED ABOUT. P(A|B) and
+ * P(B|A) are asked as the SAME expression with the SAME numerator and only the
+ * denominator moved — 6/55 and 6/10 — so a learner computes the difference
+ * instead of being told the notation is misleading. Both are recomputed here,
+ * and so is the independent route to 3/5, which is three of the five new members
+ * being on an all-new committee.
+ *
+ * FOURTH, THAT THE CHAIN AGREES WITH THE SIMULTANEOUS DRAW, and the agreement is
+ * recomputed rather than matched as a string. (5/12) x (4/11) x (3/10) against
+ * 10/220 are incomparable at a glance and are the same number, which is the one
+ * task in this concept whose answer is a count of committees over the space and
+ * which got there with no committees in it.
+ *
+ * FIFTH, THAT THE INDEPENDENCE TEST IS SHOWN FAILING TWICE AND THE TWO FAILURES
+ * DIFFER IN KIND. 1/22 against a product of 1/16 is close and wrong; 0 against a
+ * product of 7/968 is wrong for a structural reason that holds for every pair of
+ * disjoint events. That is the same editorial shape the concept below used for
+ * the mixed convention, and a version with only the disjoint case would teach
+ * that a failed test is always obvious.
+ *
+ * SIXTH, THAT THE FIDELITY IS `checked` WITH THE PATTERN CARRIED VERBATIM — and
+ * that the pattern is worse than the concept below's in BOTH directions, which
+ * is a first for this file and is asserted rather than described. Its second
+ * alternative is DEAD for the same bracket reason as `sample-spaces`' third, and
+ * what it does reach includes a title this concept does not teach.
+ */
+const CO = conceptById(CE, 'conditional-probability')
+const CO_POINTS = CO.knowledgePoints
+const CO_TASKS = CO_POINTS.flatMap(p => tasksForPoint(p.id))
+const CO_SHOWN = CO_POINTS.map(p =>
+  `${p.workedExample.subgoals.map(s => s.detail).join(' ')} ${p.workedExample.answer}`).join(' ')
+const asRational = ref => {
+  const [num, den] = ref.split('/')
+  return { n: Number(num), d: den === undefined ? 1 : Number(den) }
+}
+
+group('conditional-probability, where the sample space stops being fixed')
+/*
+ * THE SUBJECT TOTALS, WHICH THIS PROMOTION MOVED and which the forty-sixth
+ * promotion's group above no longer counts — the third group to hold them, for
+ * the third consecutive promotion into this subject. Three concepts, nine
+ * points, and the array in prerequisite order with the new one appended rather
+ * than inserted.
+ */
+t('three concepts and nine knowledge points, the figure having moved to this group',
+  CE.concepts.length === 3 && allKnowledgePoints(CE).length === 9
+  && CE.concepts.map(c => c.id).join(',')
+    === 'sample-spaces,counting-probability,conditional-probability',
+  `${CE.concepts.length} concepts, ${allKnowledgePoints(CE).length} points: `
+  + CE.concepts.map(c => c.id).join(','))
+t('the concept is teachable AND practisable, and the subject has no internal faults',
+  isTeachable(CE, 'conditional-probability') && isPractisable(CE, 'conditional-probability')
+  && ontologyProblems(CE).length === 0 && fidelityMismatches(CE).length === 0,
+  ontologyProblems(CE).join('; '))
+/*
+ * THREE EDGES NOW, AND THE THIRD IS THE WHOLE STRUCTURAL COST OF THIS
+ * PROMOTION — asserted together with the absence of a FOURTH, which is the half
+ * that was a decision.
+ *
+ * The node declared one `need` and that concept was already in this subject, so
+ * the edge is an ordinary internal one and nothing stranded into
+ * `PROBABILITY.links`; tests/atlas.mjs asserts that absence on the area.
+ *
+ * A credit edge WAS available and is declined on the merits, which no promotion
+ * in this file has done before — the forty-sixth lost one it wanted, and this
+ * one refuses one it could have had. `conditional-probability => counting-
+ * probability` would have been sayable, both ends being here, and the reason it
+ * is not said is that this concept supplies every count it uses and never
+ * chooses a counting convention, so the concept below's FIRST knowledge point is
+ * untouched by doing it. Asserted as the conjunction of the absence and the
+ * sayability, because the absence alone would read as an oversight and the file
+ * header's argument is that it is not one.
+ */
+t('the ontology declares three edges, the new one an ordinary prerequisite',
+  CE.edges.length === 3
+  && CE.edges.map(e => `${e.from}:${e.kind}:${e.to}`).join(' ')
+    === 'sample-spaces:prerequisite:counting-probability '
+    + 'counting-probability:encompasses:sample-spaces '
+    + 'counting-probability:prerequisite:conditional-probability'
+  && CE.edges.every(e => CE.concepts.some(c => c.id === e.from)
+    && CE.concepts.some(c => c.id === e.to))
+  && CE.edges.every(e => !!e.promotedBy),
+  CE.edges.map(e => `${e.from}:${e.kind}:${e.to}`).join(' '))
+t('and the credit edge it COULD have declared is absent by decision, not by containment',
+  !CE.edges.some(e => e.kind === 'encompasses' && e.from === 'conditional-probability')
+  && CE.concepts.some(c => c.id === 'counting-probability')
+  && CE.concepts.some(c => c.id === 'conditional-probability')
+  && CE.edges.filter(e => e.kind === 'encompasses').length === 1,
+  CE.edges.filter(e => e.kind === 'encompasses')
+    .map(e => `${e.from}=>${e.to}`).join(' '))
+/*
+ * THE PATTERN IS CARRIED VERBATIM OFF THE MAP NODE, which every promotion since
+ * the fourth has done, and the node already declared `checked` — `expandNode`
+ * sets fidelity from the presence of a `match` — so recognition did not move
+ * with the material. Asserted against the literal, the node being GONE and there
+ * being nothing left to compare with.
+ */
+t('its pattern is the map node\'s unchanged, so recognition did not move with the material',
+  String(CO.scope.match)
+    === String(/\b(conditional probability|independence \(probability\))\b/i)
+  && CO.fidelity === 'checked'
+  && CO.caveat === undefined
+  && CO.scope.id === CO.id
+  && CO.scope.label === CO.name
+  && CO.scope.hint === 'conditional probability independence multiplication rule',
+  `${CO.fidelity}, ${String(CO.scope.match)}`)
+/*
+ * THE SECOND DEAD ALTERNATIVE IN THIS FILE'S THREE PATTERNS, found the same way
+ * as the first — by testing the pattern rather than reading it.
+ *
+ * `independence \(probability\)` can never match, because the alternation is
+ * wrapped in `\b(...)\b` and the alternative ends in a literal `)`: a `\b` after
+ * a non-word character needs a word character next, and there is nothing next.
+ * That is exactly the hole `sample-spaces`' `event \(probability theory\)` has,
+ * one concept down in the same file, and finding a second one in the next node up
+ * the same chain is what turns "a mistake" into "a shape worth sweeping for".
+ *
+ * IT WOULD HAVE MISSED EVEN WITHOUT THE BRACKET BUG, which is the extra fact
+ * this instance adds and is asserted: the article is "Independence (probability
+ * theory)", so the alternative is wrong about the title as well as unreachable.
+ * The first instance was a working pattern for a real title defeated by one `\b`;
+ * this one is defeated twice over, so repairing the `\b` alone would not revive
+ * it — which the assertion says, so that the commit that repairs patterns is told
+ * which of the two cases it is looking at.
+ *
+ * NOT FIXED HERE, and for the reason the concept below gives rather than
+ * timidity: the pattern moves in its own commit, so that its effect on the
+ * recognition figure can be read on its own.
+ */
+t('the second alternative is DEAD, the trailing \\b after a close bracket never matching',
+  !CO.scope.match.test('Independence (probability)')
+  && /\\b\(/.test(CO.scope.match.source)
+  && /\\\)\)\\b/.test(CO.scope.match.source)
+  && CO.scope.match.source.includes('independence \\(probability\\)'),
+  `matches: ${CO.scope.match.test('Independence (probability)')}, `
+  + `source tail: ${CO.scope.match.source.slice(-30)}`)
+t('and it is dead twice over, since the real article is titled differently again',
+  !CO.scope.match.test('Independence (probability theory)')
+  && !/probability theory/.test(CO.scope.match.source)
+  && /\bindependence \(probability\)\b/i.test('Independence (probability)') === false,
+  `theory title: ${CO.scope.match.test('Independence (probability theory)')}`)
+/*
+ * AND THE SHORTFALL IS IN BOTH DIRECTIONS, WHICH IS A FIRST FOR THIS FILE.
+ *
+ * `sample-spaces` records that its pattern UNDERCLAIMS — every title it reaches
+ * is that concept — and calls that the direction to prefer. This one reaches
+ * "Conditional probability", which is exactly right, and also "Conditional
+ * probability distribution", which is a page about a FUNCTION of a random
+ * variable: `random-variables` is a node of `probability` and unwritten, so a
+ * learner on that page is offered this concept, which is its prerequisite rather
+ * than its subject. That is an overclaim and it is asserted as one, because the
+ * alternative — narrowing the pattern — would move the recognition figure in the
+ * same edit as the material.
+ *
+ * What it MISSES is asserted by name too, since a recall gap is invisible by
+ * construction: "Independence (probability theory)", "Conditional independence"
+ * and "Law of total probability" are all at least partly this material and none
+ * matches. The negative clauses are also what would catch the obvious wrong
+ * widening, since `/\bindependence\b/` would claim the algebra and set-theory
+ * senses of the word and `/\bconditional\b/` would claim conditional
+ * expectation, conditional convergence and conditional statements in logic —
+ * three authored subjects away.
+ */
+t('it reaches the title it is for, and overclaims one this concept does not teach',
+  CO.scope.match.test('Conditional probability')
+  && CO.scope.match.test('Conditional probability distribution')
+  // `random-variables` is still a map node — no authored ontology holds it — so
+  // the page the pattern overclaims leads to a concept that is its prerequisite
+  // rather than to the one it is about.
+  && !ONTOLOGIES.some(o => o.concepts.some(c => c.id === 'random-variables')),
+  ['Conditional probability', 'Conditional probability distribution']
+    .map(s => `${s}:${CO.scope.match.test(s)}`).join(' '))
+t('and it misses three titles that are partly this material, which is the invisible half',
+  !CO.scope.match.test('Independence (probability theory)')
+  && !CO.scope.match.test('Conditional independence')
+  && !CO.scope.match.test('Law of total probability')
+  && !CO.scope.match.test('Conditional expectation')
+  && !CO.scope.match.test('Bayes\' theorem'),
+  ['Independence (probability theory)', 'Conditional independence',
+    'Law of total probability', 'Conditional expectation', 'Bayes\' theorem']
+    .filter(s => CO.scope.match.test(s)).join(', ') || 'none claimed')
+/*
+ * NINE TASKS, THREE ON EACH POINT, and the SHAPE asserted rather than the total.
+ */
+t('nine tasks, three on each of the three points',
+  CO_TASKS.length === 9
+  && CO_POINTS.map(p => tasksForPoint(p.id).length).join(',') === '3,3,3',
+  CO_POINTS.map(p => `${p.position}:${tasksForPoint(p.id).length}`).join(' '))
+t('all nine are evaluate, so nothing here needs the worker even for equivalence',
+  CO_TASKS.every(x => x.kind === 'evaluate')
+  && CO_TASKS.every(x => x.form === undefined)
+  && CO_TASKS.every(x => x.domainConditions === undefined)
+  && CO_TASKS.every(x => x.acceptsUnevaluated === undefined),
+  CO_TASKS.map(x => `${x.kind}${x.form ? `:${x.form}` : ''}`).join(' '))
+t('no given calls a function, so none of the nine can fall through to a worker',
+  CO_TASKS.every(x => !/[a-z]+\s*\(/i.test(x.given)),
+  CO_TASKS.filter(x => /[a-z]+\s*\(/i.test(x.given)).map(x => x.given).join(' '))
+t('every reference is exactly reproducible from the given — no worker consulted',
+  CO_TASKS.every(x => {
+    const at = {}
+    for (const [name, raw] of Object.entries(x.at)) at[name] = parseExpression(raw, [])
+    const truth = exactValue(substitute(parseExpression(x.given, x.variables.map(v => v.name)), at))
+    const claimed = exactValue(parseExpression(x.reference, x.variables.map(v => v.name)))
+    return truth !== null && claimed !== null && showExact(truth) === showExact(claimed)
+  }),
+  CO_TASKS.map(x => x.id).join(', '))
+/*
+ * NOT ONE OF THE NINE ANSWERS WITH A COUNT, which is the inverse of the concept
+ * below and is this concept's boundary against it made arithmetic.
+ *
+ * There exactly three references were bare counts — the size of the space, a
+ * favourable count and a partition total — and that was asserted as the boundary
+ * against the COUNTING subject. Here the boundary is against the concept
+ * immediately below: every count is supplied in a prompt as its work, and the
+ * only move this concept owns is choosing a denominator. So the claim is that
+ * all nine are probabilities, asserted in BOTH halves — nine in [0, 1] and zero
+ * outside it — and the concept below's three are counted in the same line so the
+ * contrast is the assertion rather than a remark.
+ */
+t('not one of the nine answers with a count, where the concept below has exactly three',
+  (() => {
+    const mine = CO_TASKS.map(x => asRational(x.reference))
+    const theirs = CP_TASKS.map(x => asRational(x.reference))
+    return mine.length === 9
+      && mine.every(r => r.n >= 0 && r.n <= r.d)
+      && mine.filter(r => r.d === 1).length === 0
+      && theirs.filter(r => r.d === 1).length === 3
+  })(),
+  `mine ${CO_TASKS.map(x => x.reference).join(' ')} | theirs `
+  + `${CP_TASKS.filter(x => !x.reference.includes('/')).map(x => x.reference).join(' ')}`)
+/*
+ * AND THE DENOMINATOR STOPPED BEING THE SPACE, which is the sharper half and is
+ * one number rather than a description.
+ *
+ * In the concept below every one of the nine answers was a count of committees or
+ * such a count over the 220 there are, so `220 x reference` was a whole number
+ * NINE times out of nine. Here it is whole FOUR times and not whole five, and
+ * the split is the content: the four are the questions still asked inside the
+ * committee space — the two conditionals at 6/55, the reversed one at 3/5, and
+ * the 1/22 the chain reproduces — and the five are asked in a space that is not
+ * the committee draw at all. Both counts are asserted, and the concept below's
+ * nine-of-nine is recomputed in the same line so that the comparison cannot
+ * drift.
+ */
+t('four of the nine are still committee probabilities and five are not, where below it was nine',
+  (() => {
+    const whole = refs => refs.filter(x => {
+      const r = asRational(x.reference)
+      return (220 * r.n) % r.d === 0
+    }).length
+    return whole(CO_TASKS) === 4 && CO_TASKS.length - whole(CO_TASKS) === 5
+      && whole(CP_TASKS) === 9
+  })(),
+  CO_TASKS.map(x => {
+    const r = asRational(x.reference)
+    return `${x.reference}:${(220 * r.n) % r.d === 0 ? 'committee' : 'elsewhere'}`
+  }).join(' '))
+const coRulings = await Promise.all(CO_TASKS.map(x => ruleEvaluate(x, x.reference, NO_WORKER)))
+t('a correct answer is ruled correct with no worker configured',
+  coRulings.every(r => r.status === 'ruled' && r.verdict.ruling === 'correct'),
+  coRulings.map((r, i) => `${CO_TASKS[i].id}:${r.verdict?.ruling ?? r.status}`).join(' '))
+/*
+ * THREE EXPRESSIONS EACH ASKED AT TWO SUBSTITUTIONS, AND IN EVERY CASE THE TWO
+ * ANSWERS DIFFER — which inverts the device the concept below used three times.
+ *
+ * There three PAIRS OF THE SAME SHAPE agreed on purpose and the agreement was
+ * the content: two routes, one number, and the number was the lesson. Here the
+ * lesson is that moving one number changes the answer, so a shared reference
+ * between two substitutions of one expression would be the error rather than the
+ * point. `k/m` goes 6/55 then 3/5, the chain goes 1/22 then 7/66, and the
+ * product test goes 1/16 then 7/968.
+ *
+ * AND EXACTLY ONE PAIR IN THE CONCEPT DOES AGREE, BETWEEN TWO DIFFERENT
+ * EXPRESSIONS, which is the one place the concept below's device still applies
+ * and is asserted as the single exception rather than left to chance. `k/m` at
+ * (6, 55) and `(k/n)/(m/n)` at (6, 55, 220) are 6/55 both times, because
+ * |A and B| / |B| and P(A and B) / P(B) are ONE definition with the old space
+ * divided out. Two shapes, one answer, where every same-shape pair gives two —
+ * so the agreements and the disagreements both carry a claim, and the line above
+ * would have been satisfied by nine distinct references which is exactly what
+ * this concept must NOT have.
+ */
+t('each expression asked twice gives two answers, and the only agreement is across shapes',
+  (() => {
+    const byGiven = {}
+    for (const task of CO_TASKS) {
+      byGiven[task.given] = (byGiven[task.given] ?? []).concat(task.reference)
+    }
+    const twice = Object.entries(byGiven).filter(([, refs]) => refs.length === 2)
+    const agreeing = CO_TASKS.filter(x =>
+      CO_TASKS.some(y => y.id !== x.id && y.reference === x.reference))
+    return twice.length === 3
+      && twice.every(([, refs]) => refs[0] !== refs[1])
+      && twice.map(([g]) => g).slice().sort().join(' | ')
+        === '(a/n)*(b/n) | (a/p)*(b/q)*(c/r) | k/m'
+      && agreeing.length === 2
+      && new Set(agreeing.map(x => x.given)).size === 2
+      && new Set(agreeing.map(x => x.reference)).size === 1
+      && new Set(CO_TASKS.map(x => x.reference)).size === 8
+  })(),
+  CO_TASKS.map(x => `${x.given}=${x.reference}`).join(' | '))
+/*
+ * THE ASYMMETRY OF CONDITIONING IS PRODUCED, NOT WARNED ABOUT — the same
+ * expression, the SAME NUMERATOR, and only the denominator moved.
+ *
+ * Asserted as the conjunction, because each clause alone would be satisfied by
+ * the wrong thing: two tasks with different references could be any two tasks,
+ * and the same numerator with the same denominator would be a duplicate. The
+ * reversed answer is also checked by the route the material gives instead of the
+ * formula — three of the five new members are on an all-new committee, so 3/5 —
+ * which is a check on the 6 and the 10 rather than a restatement of them.
+ */
+t('P(A|B) and P(B|A) are one expression with the numerator held and the denominator moved',
+  (() => {
+    const pair = CO_TASKS.filter(x => x.given === 'k/m')
+    if (pair.length !== 2) return false
+    const [forward, reversed] = pair[0].at.m === '55' ? pair : [pair[1], pair[0]]
+    const f = asRational(forward.reference); const r = asRational(reversed.reference)
+    return forward.at.k === reversed.at.k
+      && forward.at.m !== reversed.at.m
+      && forward.reference !== reversed.reference
+      && f.n * 55 === f.d * 6 && r.n * 10 === r.d * 6
+      // 3 of the 5 new members sit on an all-new committee of three, which is
+      // the reversed conditional reached without the formula.
+      && r.n * 5 === r.d * 3
+      && forward.knowledgePointId === reversed.knowledgePointId
+  })(),
+  CO_TASKS.filter(x => x.given === 'k/m')
+    .map(x => `${x.at.k}/${x.at.m}=${x.reference}`).join(' | '))
+t('and the ratio-of-probabilities route gives the same conditional, the old space cancelling',
+  (() => {
+    const counts = CO_TASKS.find(x => x.given === 'k/m' && x.at.m === '55')
+    const ratio = CO_TASKS.find(x => x.given === '(k/n)/(m/n)')
+    if (!counts || !ratio) return false
+    return ratio.reference === counts.reference
+      && ratio.at.k === counts.at.k && ratio.at.m === counts.at.m
+      && ratio.at.n === '220'
+      // The only pair in this concept that SHOULD agree, and it agrees because
+      // the two forms of the definition are one statement rather than two rules.
+      && ratio.knowledgePointId === counts.knowledgePointId
+      && ratio.id !== counts.id
+  })(),
+  `${CO_TASKS.find(x => x.given === '(k/n)/(m/n)')?.reference} vs `
+  + `${CO_TASKS.find(x => x.given === 'k/m' && x.at.m === '55')?.reference}`)
+/*
+ * THE CHAIN AGREES WITH THE SIMULTANEOUS DRAW, recomputed rather than quoted,
+ * and it is the ONE task in this concept whose answer is a count of committees
+ * over the space — reached with no committees in it.
+ *
+ * The second clause is what makes the first worth asserting: the two tasks are
+ * in different concepts, the chain multiplies three conditional probabilities
+ * and the other divides one count by another, and a disagreement would mean a
+ * conditional factor was wrong. Also checked: the chain's factors really do
+ * descend 12, 11, 10 and 5, 4, 3, so the agreement is not an accident of some
+ * other six numbers.
+ */
+t('the chain of three conditionals reproduces the concept below\'s 1/22, computed not quoted',
+  (() => {
+    const chain = CO_TASKS.find(x => x.given === '(a/p)*(b/q)*(c/r)' && x.at.c === '3')
+    const simultaneous = CP_TASKS.find(x => x.given === 'e/n' && x.at.e === '10')
+    if (!chain || !simultaneous) return false
+    const num = Number(chain.at.a) * Number(chain.at.b) * Number(chain.at.c)
+    const den = Number(chain.at.p) * Number(chain.at.q) * Number(chain.at.r)
+    const s = asRational(simultaneous.reference)
+    return num * s.d === den * s.n
+      && chain.reference === simultaneous.reference
+      && [chain.at.p, chain.at.q, chain.at.r].join(',') === '12,11,10'
+      && [chain.at.a, chain.at.b, chain.at.c].join(',') === '5,4,3'
+  })(),
+  `${CO_TASKS.find(x => x.given === '(a/p)*(b/q)*(c/r)' && x.at.c === '3')?.reference} vs `
+  + `${CP_TASKS.find(x => x.given === 'e/n' && x.at.e === '10')?.reference}`)
+t('and the second chain moves one number, the numerator, which is what conditioning tracks',
+  (() => {
+    const pair = CO_TASKS.filter(x => x.given === '(a/p)*(b/q)*(c/r)')
+    if (pair.length !== 2) return false
+    const [allNew, mixed] = pair[0].at.c === '3' ? pair : [pair[1], pair[0]]
+    return ['a', 'p', 'b', 'q', 'r'].every(k => allNew.at[k] === mixed.at[k])
+      && allNew.at.c !== mixed.at.c
+      && allNew.reference !== mixed.reference
+      // 3 new left of 10 against 7 not-new of the same 10: the pool is the same
+      // and the type counted is not, which is the whole distinction.
+      && Number(allNew.at.c) + Number(mixed.at.c) === Number(allNew.at.r)
+  })(),
+  CO_TASKS.filter(x => x.given === '(a/p)*(b/q)*(c/r)')
+    .map(x => `c=${x.at.c}:${x.reference}`).join(' | '))
+/*
+ * THE TWO PATHS OF THE TREE ARE EQUAL AS A FACT ABOUT THE SHAPE, not a
+ * coincidence of these numbers, and that is recomputed — each path is the same
+ * two factors multiplied in the other order, which is visible in the `at` rather
+ * than hidden inside two equal values.
+ *
+ * Also asserted: the tree's answer agrees with the SIMULTANEOUS count of the
+ * same event, 5 x 7 = 35 mixed pairs out of (12 x 11)/2 = 66. That check is in
+ * the material and is arithmetic, so it is checked here rather than trusted — and
+ * it is the second time in this concept that a chain of conditionals lands on an
+ * answer the counting route would have given.
+ */
+t('the tree\'s two paths are the same product in the other order, and it adds across them',
+  (() => {
+    const tree = CO_TASKS.find(x => x.given.includes('+'))
+    if (!tree) return false
+    const a = Number(tree.at.a); const b = Number(tree.at.b)
+    const c = Number(tree.at.c); const d = Number(tree.at.d)
+    const p = Number(tree.at.p); const q = Number(tree.at.q)
+    const r = asRational(tree.reference)
+    return a * b === c * d && a === d && b === c
+      && (a * b + c * d) * r.d === p * q * r.n
+      // The same event counted simultaneously: 5 × 7 mixed pairs out of C(12, 2).
+      && 5 * 7 * r.d === ((12 * 11) / 2) * r.n
+  })(),
+  `${CO_TASKS.find(x => x.given.includes('+'))?.reference}`)
+/*
+ * THE INDEPENDENCE TEST FAILS TWICE AND THE TWO FAILURES DIFFER IN KIND, which
+ * is the editorial choice this point turns on and is arithmetic, so it is
+ * asserted.
+ *
+ * At (55, 55) the product is 1/16 and the overlap is 1/22 — close, and wrong, so
+ * nothing about the numbers announces the dependence. At (10, 35) the overlap is
+ * exactly ZERO and the product is not, which fails for a reason that holds of
+ * every pair of disjoint events with positive probabilities rather than of these
+ * two. A version with only the second would teach that a failed test is obvious,
+ * which is the more dangerous lesson — the same shape as the concept below's
+ * mixed convention, where one instance looks ordinary and the other exceeds 1.
+ */
+t('the independence test is shown failing twice, once narrowly and once structurally',
+  (() => {
+    const pair = CO_TASKS.filter(x => x.given === '(a/n)*(b/n)')
+    if (pair.length !== 2) return false
+    const [near, disjoint] = pair[0].at.a === '55' ? pair : [pair[1], pair[0]]
+    const nearProduct = asRational(near.reference)
+    const disjointProduct = asRational(disjoint.reference)
+    // The near miss: 10/220 = 1/22 against 1/16, both ordinary probabilities.
+    const overlap = { n: 10, d: 220 }
+    return nearProduct.n * 16 === nearProduct.d
+      && overlap.n * nearProduct.d !== overlap.d * nearProduct.n
+      && nearProduct.n / nearProduct.d < 0.07 && overlap.n / overlap.d < 0.07
+      // The structural one: the overlap is 0 and the product is not.
+      && disjointProduct.n > 0
+      && Number(disjoint.at.a) + Number(disjoint.at.b) < 220
+      && disjoint.knowledgePointId === near.knowledgePointId
+  })(),
+  CO_TASKS.filter(x => x.given === '(a/n)*(b/n)')
+    .map(x => `(${x.at.a},${x.at.b})=${x.reference}`).join(' | '))
+t('and the direction of the near failure is derived in the material, not just asserted',
+  // P(Ann | Bob) = 10/55 = 2/11, and independently: Bob takes one of the three
+  // places, so Ann competes for 2 among the other 11. Both routes in the text.
+  10 * 11 === 55 * 2 && (3 - 1) * 11 === (12 - 1) * 2
+  && /2\/11/.test(CO_SHOWN) && /10\/55/.test(CO_SHOWN),
+  `2/11 present: ${/2\/11/.test(CO_SHOWN)}, 10/55 present: ${/10\/55/.test(CO_SHOWN)}`)
+/*
+ * INDEPENDENCE IS WRITTEN AS A REPEATED SYMBOL AND DEPENDENCE AS A FRESH PAIR
+ * PER DRAW, which is the one place in these three subjects where the COUNT of
+ * declared symbols carries the claim.
+ *
+ * Two draws either way. The with-replacement task declares two symbols and uses
+ * one of them twice; the chain declares six and uses each once. So "the second
+ * factor is a copy of the first" and "the space moved" are the two expressions
+ * rather than two sentences about them, and a version that wrote `(a/p)*(b/q)`
+ * at (5, 12, 5, 12) would have lost it entirely while giving the same answer.
+ */
+t('independence is a repeated symbol where the dependent chain needed a fresh pair per draw',
+  (() => {
+    const replaced = CO_TASKS.find(x => x.given === '(a/p)*(a/p)')
+    const chain = CO_TASKS.find(x => x.given === '(a/p)*(b/q)*(c/r)')
+    if (!replaced || !chain) return false
+    return replaced.variables.length === 2
+      && Object.keys(replaced.at).length === 2
+      && chain.variables.length === 6
+      && replaced.at.a === chain.at.a && replaced.at.p === chain.at.p
+      && asRational(replaced.reference).d === 144
+  })(),
+  `${CO_TASKS.find(x => x.given === '(a/p)*(a/p)')?.reference} from `
+  + `${CO_TASKS.find(x => x.given === '(a/p)*(a/p)')?.variables.length} symbols`)
+/*
+ * THE MATERIAL CARRIES WHAT NO TASK CAN ASK, so the three refusals are asserted
+ * as absences and the arithmetic of the worked examples is recomputed against
+ * WHAT THE TEXT SAYS rather than against the tasks, which is the discipline the
+ * arithmetic subject's group introduced.
+ */
+t('every objective names evaluate and nothing else, so no refused kind is promised',
+  CO.objectives.length === 3
+  && CO.objectives.every(o => o.taskKinds.join(',') === 'evaluate'),
+  CO.objectives.map(o => `${o.id}:${o.taskKinds.join('+')}`).join(' '))
+t('no figure and no speed target is claimed, neither of them existing to claim',
+  CO_POINTS.every(p => p.visualRef === undefined && p.automaticityTarget === undefined),
+  CO_POINTS.filter(p => p.visualRef !== undefined
+    || p.automaticityTarget !== undefined).map(p => p.id).join(', '))
+t('every subgoal names a move rather than a step number, and no two in one example repeat',
+  CO_POINTS.every(p =>
+    p.workedExample.subgoals.every(s => s.label.length > 20 && !/^step\b/i.test(s.label))
+    && new Set(p.workedExample.subgoals.map(s => s.label)).size
+      === p.workedExample.subgoals.length),
+  CO_POINTS.flatMap(p => p.workedExample.subgoals)
+    .filter(s => s.label.length <= 20 || /^step\b/i.test(s.label)).map(s => s.label).join(' | '))
+t('the conditional comparison in the text is right, 6/55 being more than double 1/22',
+  // 6/55 = 12/110 against 1/22 = 5/110, which is the comparison the material
+  // makes over a common denominator rather than by eye.
+  6 * 110 === 55 * 12 && 1 * 110 === 22 * 5 && 12 > 2 * 5
+  && /12\/110/.test(CO_SHOWN) && /5\/110/.test(CO_SHOWN),
+  `12/110 present: ${/12\/110/.test(CO_SHOWN)}, 5/110 present: ${/5\/110/.test(CO_SHOWN)}`)
+t('and the unconditioned product named in the text is the with-replacement answer, not a slip',
+  // (5/12)^3 = 125/1728 is what the second point says a learner who reuses the
+  // first factor computes, and the third point's 25/144 is (5/12)^2 — the same
+  // mechanism at two draws. Both are recomputed and both appear in the text.
+  5 ** 3 === 125 && 12 ** 3 === 1728 && 5 ** 2 === 25 && 12 ** 2 === 144
+  && 125 / 1728 > 1 / 22
+  && /125\/1728/.test(CO_SHOWN) && /25\/144/.test(CO_SHOWN),
+  `125/1728 ≈ ${(125 / 1728).toFixed(4)} against 1/22 ≈ ${(1 / 22).toFixed(4)}`)
+t('and the disjoint pair really is disjoint, its two counts being cases of one partition',
+  // 10 all-new and 35 with none new are two of the four case counts the concept
+  // below audits to 220, so they cannot overlap — which is why P(A and B) = 0
+  // there and the product 7/968 is not.
+  (() => {
+    const audit = CP_TASKS.find(x => x.given === 'a + b + c + d')
+    const disjoint = CO_TASKS.find(x => x.given === '(a/n)*(b/n)' && x.at.a === '10')
+    if (!audit || !disjoint) return false
+    const cases = ['a', 'b', 'c', 'd'].map(k => audit.at[k])
+    return cases.includes(disjoint.at.a) && cases.includes(disjoint.at.b)
+      && disjoint.at.a !== disjoint.at.b
+      && asRational(disjoint.reference).n === 7
+      && asRational(disjoint.reference).d === 968
+      && 22 * 44 === 968
+  })(),
+  `${CO_TASKS.find(x => x.given === '(a/n)*(b/n)' && x.at.a === '10')?.reference}`)
 
 // ---------------------------------------------------------------------------
 
@@ -11161,6 +11730,24 @@ t('while the four older concepts here still name justify, of which the build shi
  * ends in `?` is counted by `authoredAsQuestions` before anybody writes the
  * question, so the two measures only track each other while the labels stay
  * imperative — which the assertion above this one is what keeps them doing.
+ *
+ * 89 of 96 now, the fifth pure authoring run, and it PAID the opening cost the
+ * paragraph four above said was waiting: it took
+ * `an-inverse-undoes-the-rule`, the first of `inverse-functions`' three points,
+ * so the concept is 4 of 11 rather than 0 of 11 and the remainder is 7 in two
+ * points of one concept. Both measures moved by four, all four labels having
+ * been imperative.
+ *
+ * Note the paragraphs above are NOT in run order — the 85 one was inserted
+ * above the 81 one rather than after it — so read the figure at the head of
+ * each rather than the position. Ascending authored-field order sent this run
+ * here and not to `rational-expressions`: the prediction four paragraphs above
+ * was that 85 of 96 sat above `rational-expressions` at 82 of 92 and the next
+ * run would go there, and it did — `rational-expressions` is 88 of 92 now,
+ * which put this subject back at the bottom. So the heuristic that run quoted
+ * was correct and short-lived, and the "prefer a concept with some authored
+ * points" one was unsatisfiable here for the second time, exactly as predicted.
+ * The next run in this subject is the cheap kind.
  */
 const FI_COV = questionCoverage(FI)
 t('all nine of its subgoals ship the question written, not just the label',
@@ -11176,7 +11763,7 @@ t('every subgoal says what its move establishes, so none of them is a bare step'
   FI_SUBGOALS.every(s => typeof s.detail === 'string' && s.detail.length > 0))
 t('the subject is at twenty-seven chains and still has none that cannot become evidence',
   FI_COV.chains === 27 && FI_COV.chainsWithNoRuling === 0
-  && FI_COV.authoredAsQuestions === 85 && FI_COV.questions === 96,
+  && FI_COV.authoredAsQuestions === 89 && FI_COV.questions === 96,
   `${FI_COV.chains} chains, ${FI_COV.chainsWithNoRuling} unrulable, `
   + `${FI_COV.authoredAsQuestions}/${FI_COV.questions} authored`)
 /*

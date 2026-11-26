@@ -307,6 +307,95 @@ const stripComments = (src) =>
     // reported line number still points at the real file.
     .replace(/\/\*[\s\S]*?\*\//g, c => c.replace(/[^\n]/g, ''))
     .replace(/^[ \t]*\/\/.*$/gm, '')
+
+/**
+ * Which indices sit inside the CONTENTS of a string or template literal.
+ *
+ * Stripping comments was only half of "do not read prose as code". The other
+ * half is PROSE INSIDE A STRING, which no comment-stripper can reach, and it
+ * produced a false positive that reddened this suite on main:
+ *
+ *   lib/concepts/tasks.ts, a task's own prompt text —
+ *     '…its sign is the ruling: '
+ *     + 'evaluate (p/q)^2 - n at p = 17, …'
+ *
+ * `literalAssignment` read `ruling` from the prose, took the string's CLOSING
+ * quote as its value's opening quote, ran `[^'"]*` across the concatenation
+ * break, and closed on the next line's OPENING quote. So it reported
+ * `ruling: '\n + '` as "a literal the database would reject" — a value that
+ * does not exist, in a file that never writes to `concept_observations`.
+ *
+ * That is worse than noise. `npm test` is an `&&` chain, so this one phantom
+ * stopped test:discharge, test:suggest and test:librarian from running at all,
+ * and three suites that silently never execute look exactly like three suites
+ * that pass.
+ *
+ * ── Why a mask and not a tighter regex ────────────────────────────────────
+ *
+ * The tempting fixes are both wrong. Forbidding a newline in the value
+ * (`[^'"\n]*`) kills this instance and not the class: the same prose written
+ * on one line still matches, with ` + ` as the value. Requiring the key to
+ * follow `{`, `,` or a line start is a guess about formatting, and guessing
+ * wrong here costs a SILENT PASS — the failure this file's other notes keep
+ * choosing against.
+ *
+ * Being inside a string is the real distinction, and it is decidable rather
+ * than guessable, so it is decided once here. A key in prose is masked; a key
+ * in `{ ruling: 'correct' }` is not, and its value still reads normally
+ * because only the KEY's position is tested.
+ *
+ * Quotes themselves stay unmasked — they are delimiters, not contents.
+ *
+ * ── WHY THIS RESETS AT EVERY NEWLINE, which looks wrong and is the point ──
+ *
+ * The first version of this scanned the whole file in one pass, the way
+ * `sliceCall` does. It worked on the bug above and quietly broke the guard,
+ * and the only reason that was caught is that `literalOk` fell from 45 to 36
+ * — so the six it stopped reading were counted, listed, and four of them
+ * turned out to be REAL assignments:
+ *
+ *   lib/queries/books.ts:447   content_type: 'chat_book'
+ *   lib/queries/books.ts:448   article_type: 'chat_book'
+ *   lib/queries/books.ts:491   content_type: 'manga'
+ *   lib/queries/books.ts:492   article_type: 'manga'
+ *
+ * The cause is 240 lines above them, in `lib/queries/books.ts:205`:
+ *
+ *   finalMarkdown.replace(/[#*_~`>|$\\{}[\]]/g, '')
+ *
+ * That character class contains a BACKTICK. A whole-file scanner has no way
+ * to know it is inside a regex literal, so it opened a template literal there
+ * and never closed it — and every constrained literal in the rest of the file
+ * read as prose. One stray quote in one regex, and the guard goes blind from
+ * that line to the end of the file while its output still says "0 failed".
+ *
+ * Lexing JS properly — regex-vs-division, `${}` holes, nested templates — is
+ * not what a schema test should contain. Resetting per line is, because the
+ * failure it CANNOT have is the one that matters: nothing on another line can
+ * throw this out of phase, so a missed mask costs one noisy report and never
+ * silent coverage. Prose inside a multi-line template is the hole left, and
+ * it is left deliberately — it fails toward reporting, which is the direction
+ * every other note in this file chooses.
+ */
+function stringContentMask(src) {
+  const mask = new Uint8Array(src.length)
+  for (let lineStart = 0; lineStart <= src.length; ) {
+    let nl = src.indexOf('\n', lineStart)
+    if (nl === -1) nl = src.length
+    let quote = null
+    for (let i = lineStart; i < nl; i++) {
+      const c = src[i]
+      if (quote) {
+        if (c === quote && src[i - 1] !== '\\') { quote = null; continue }
+        mask[i] = 1
+        continue
+      }
+      if (c === '"' || c === "'" || c === '`') quote = c
+    }
+    lineStart = nl + 1
+  }
+  return mask
+}
 const SETUP_DIR = join(ROOT, '..', 'supabase', 'setup')
 const BASELINE = join(SETUP_DIR, '00_baseline_bza_public.sql')
 
@@ -499,6 +588,9 @@ if (CONSTRAINTS.size === 0 || !unscoped.has('content_type')) {
     // Newlines are preserved by the stripper, so reported line numbers still
     // point at the real file.
     const src = stripComments(readFileSync(file, 'utf8'))
+    // Computed once per file, and on the comment-stripped text so a quote
+    // inside a deleted comment cannot throw the scanner out of phase.
+    const inString = stringContentMask(src)
     const lineOf = (i) => src.slice(0, i).split('\n').length
     const report = (col, value, index, why) => literalFailures.push({
       file: `${relative(ROOT, file)}:${lineOf(index)}`,
@@ -518,6 +610,8 @@ if (CONSTRAINTS.size === 0 || !unscoped.has('content_type')) {
       const re = literalAssignment(col)
       let m
       while ((m = re.exec(src)) !== null) {
+        // The key is prose, not a key. See `stringContentMask`.
+        if (inString[m.index]) continue
         if (values.has(m[1])) { literalOk++; continue }
         report(col, m[1], m.index, `not in ${source} (${[...values].join(', ')})`)
       }
@@ -555,6 +649,11 @@ if (CONSTRAINTS.size === 0 || !unscoped.has('content_type')) {
         const re = literalAssignment(col)
         let m
         while ((m = re.exec(payload)) !== null) {
+          // Same guard as pass 1, rebased — `payload` is a slice of `src`, so
+          // the mask is indexed by the position the report already computes.
+          // A write payload is a less likely place for prose than a task
+          // prompt is, but "less likely" is how the first one got through.
+          if (inString[base + m.index]) continue
           if (values.has(m[1])) { literalOk++; continue }
           report(col, m[1], base + m.index,
             `not in ${f[1]}.${col} (${[...values].join(', ')})`)

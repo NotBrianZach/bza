@@ -1052,6 +1052,13 @@ const CONCEPTS: Concept[] = [
               detail:
                 'f⁻¹(10) is the input whose output is 10 — the x with 3x − 2 = 10, not the ' +
                 'value of some new formula applied to 10.',
+              socratic:
+                'f⁻¹ is the rule that takes an output back to the input it came from, and every ' +
+                'bracket you have filled until now has held an input: a number goes in, the rule ' +
+                'runs forwards, an output comes back. This bracket holds a 10 and is written in ' +
+                'exactly that position. Given what the ⁻¹ is doing there, is the 10 a number f ' +
+                'was handed or a number f produced, and what sentence about the unknown does ' +
+                'asking for f⁻¹(10) therefore amount to?',
             },
             {
               label: 'Undo the steps in reverse order',
@@ -1059,10 +1066,23 @@ const CONCEPTS: Concept[] = [
                 'f multiplies by 3 then subtracts 2. Undoing means add 2 then divide by 3: ' +
                 '(10 + 2)/3 = 4. Reverse order matters — dividing first would undo a rule that ' +
                 'subtracted first.',
+              socratic:
+                'So you are after the x with 3x − 2 = 10, and f reaches that 10 from x in two ' +
+                'steps that have an order to them: multiply by 3, and then subtract 2. Composing ' +
+                'two rules in opposite orders gave you 2 one way round and 7 the other, so an ' +
+                'order is not something you can settle afterwards. Which of "add 2" and "divide ' +
+                'by 3" has to be done first, what does that leave you with, and what rule would ' +
+                'taking them the other way round have undone instead?',
             },
             {
               label: 'Check against the original',
               detail: 'f(4) = 3·4 − 2 = 10, which is where we started.',
+              socratic:
+                'Undoing the rule gave you 4, and the undoing is the one move here you had not ' +
+                'made before — but running f forwards is the move you have been making since ' +
+                'this subject\'s first point, and nothing stops you making it on the number you ' +
+                'have just produced. If the reversal was right, what must f(4) come to, and what ' +
+                'would a different value tell you about the working rather than about f?',
             },
             {
               label: 'And check it is not the reciprocal',
@@ -1070,6 +1090,14 @@ const CONCEPTS: Concept[] = [
                 '1/f(10) = 1/28, nothing like 4. The superscript −1 means "inverse function" on ' +
                 'a function and "reciprocal" on a number, and the only defence is to read which ' +
                 'object it is attached to.',
+              socratic:
+                'The −1 in f⁻¹ is the same superscript that means "one over" on a number, and ' +
+                'here it is attached to an f rather than to a number. Read it the other way and ' +
+                'the request stops being an undoing and becomes a piece of arithmetic — one over ' +
+                'f at this input — which is perfectly computable, and that is what makes it a ' +
+                'trap rather than a slip. What number does that reading give at 10, how near is ' +
+                'it to the 4 you found, and what is it about the object the −1 is sitting on ' +
+                'that decides which of the two readings is meant?',
             },
           ],
           answer: '4',
