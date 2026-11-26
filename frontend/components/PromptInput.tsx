@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Loader2, Send } from 'lucide-react'
 
 /**
@@ -54,6 +54,8 @@ export function PromptInput({
   maxRows = 10,
   autoFocus = false,
   sendLabel,
+  compactWhenIdle = false,
+  onFocusChange,
 }: {
   value: string
   onChange: (v: string) => void
@@ -65,8 +67,25 @@ export function PromptInput({
   autoFocus?: boolean
   /** Text instead of an icon, where the surrounding UI uses words. */
   sendLabel?: string
+  /**
+   * Shrink to the smallest honest one-line box while empty and unfocused.
+   *
+   * Opt-in, and off for the surfaces where composing IS the page. On the
+   * chat-book reader it is not: the composer sits over the prose, and at
+   * 390px the bar was 61px of a ~660px viewport — about a tenth of the page
+   * permanently spent on a control you are not using while you read.
+   *
+   * Idle means empty AND unfocused, not just empty. Shrinking a focused box
+   * because the last character was deleted would move the caret out from
+   * under someone mid-edit.
+   */
+  compactWhenIdle?: boolean
+  /** Fires on focus and blur, so the surrounding bar can shrink with the box. */
+  onFocusChange?: (focused: boolean) => void
 }) {
   const ref = useRef<HTMLTextAreaElement>(null)
+  const [focused, setFocused] = useState(false)
+  const idle = compactWhenIdle && !focused && !value
 
   /**
    * Resize to fit, bounded.
@@ -80,13 +99,29 @@ export function PromptInput({
     const el = ref.current
     if (!el) return
     el.style.height = 'auto'
-    const line = parseFloat(getComputedStyle(el).lineHeight) || 20
+    const cs = getComputedStyle(el)
+    const line = parseFloat(cs.lineHeight) || 20
+    /*
+     * The border, added back, and it is a real bug rather than a rounding
+     * nicety. Tailwind's preflight sets `box-sizing: border-box`, so an
+     * assigned `height` has to COVER the border — but `scrollHeight` excludes
+     * it. Assigning scrollHeight straight across therefore left the content
+     * box two pixels short of what it was measured to need, at every size,
+     * including empty: a 390px probe reported `scrollHeight > clientHeight`
+     * on a box with nothing in it. One line of text sat clipped in all three
+     * chat surfaces, which reads as a slightly wrong font rather than as a
+     * bug, which is why it survived.
+     */
+    const border = (parseFloat(cs.borderTopWidth) || 0) + (parseFloat(cs.borderBottomWidth) || 0)
     const max = line * maxRows
-    el.style.height = `${Math.min(el.scrollHeight, max)}px`
+    el.style.height = `${Math.min(el.scrollHeight, max) + border}px`
     el.style.overflowY = el.scrollHeight > max ? 'auto' : 'hidden'
   }, [maxRows])
 
-  useEffect(resize, [value, resize])
+  // `idle` is a dependency because it changes the padding, and padding is in
+  // `scrollHeight` — without it the box keeps its composing height after a
+  // blur and the shrink silently does nothing.
+  useEffect(resize, [value, idle, resize])
 
   const submit = () => {
     if (sending || disabled || !value.trim()) return
@@ -110,18 +145,23 @@ export function PromptInput({
             submit()
           }
         }}
+        onFocus={() => { setFocused(true); onFocusChange?.(true) }}
+        onBlur={() => { setFocused(false); onFocusChange?.(false) }}
         rows={1}
         disabled={disabled}
         autoFocus={autoFocus}
         placeholder={placeholder}
         aria-label={placeholder}
-        className="flex-1 resize-none text-sm border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-60"
+        className={`flex-1 resize-none text-sm border border-gray-200 dark:border-gray-600 rounded-lg px-3 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-60 ${idle ? 'py-1' : 'py-2'}`}
       />
       <button
         type="submit"
         disabled={sending || disabled || !value.trim()}
         title="Enter to send · Shift+Enter for a new line"
-        className="flex-shrink-0 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-40 text-sm flex items-center gap-1"
+        /* The button shrinks with the box or the row grows to the button's
+           height and the whole point is lost. `items-end` on the form keeps
+           them aligned on the baseline that matters while composing. */
+        className={`flex-shrink-0 px-4 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-40 text-sm flex items-center gap-1 ${idle ? 'py-1' : 'py-2'}`}
       >
         {sending
           ? <Loader2 size={14} className="animate-spin" />
