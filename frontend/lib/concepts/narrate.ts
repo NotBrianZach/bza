@@ -704,6 +704,31 @@ export interface TableTurn {
     domainConditions?: string[]
     /** The verifier's word, once the player has answered. */
     ruling?: 'correct' | 'incorrect' | 'inconclusive' | 'abandoned'
+    /**
+     * WHY the verifier ruled that way, in its own words — `Verdict.brokeAt.detail`.
+     *
+     * The table used to keep the word and throw this away. /api/learn/verify
+     * has always returned it, and for an `evaluate` task it is the whole of
+     * what a learner needs: "the value at p = 2, a = 1, q = 3, b = 3 is 54,
+     * and this is 18" names the right answer and the mistake in one line. The
+     * Practice tab renders it. The table showed "Ruled incorrect" and nothing
+     * else, so the same wrong answer taught you something in one tab and
+     * nothing in the other.
+     *
+     * On the turn rather than in component state for the reason `work` itself
+     * is: a transcript that forgets why you were marked wrong is worse than
+     * one that forgets the problem, because you cannot reconstruct it by
+     * re-reading the prompt.
+     *
+     * NOT SENT TO THE GAME MASTER, and that is deliberate. `tablePrompt`'s
+     * `ruled` carries the conceptName and one of four validated words,
+     * because it reaches a model prompt — see the route's note on why the
+     * ruling is validated against exactly those words. This is verifier prose
+     * arriving from the client, so putting it in the prompt would be the
+     * free-text slot that validation exists to prevent. It is for the player
+     * to read, not for the narrator to retell.
+     */
+    verdictDetail?: string
   }
 }
 

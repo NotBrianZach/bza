@@ -181,10 +181,16 @@ export default function TablePanel({ region, held }: {
     turnIndex: number,
     ruling: NonNullable<TableTurn['work']>['ruling'],
     assisted: boolean,
+    /**
+     * The verifier's reason. Stored on the turn and NOT forwarded in `ruled`
+     * below — see `work.verdictDetail` for why the prompt gets the word and
+     * the player gets the sentence.
+     */
+    verdictDetail?: string,
   ) => {
     const regionId = region.id
     const marked = log.map((t, i) => (
-      i === turnIndex && t.work ? { ...t, work: { ...t.work, ruling } } : t))
+      i === turnIndex && t.work ? { ...t, work: { ...t.work, ruling, verdictDetail } } : t))
     persist(marked, regionId)
     const work = log[turnIndex]?.work
     if (!work || !ruling) return
@@ -288,7 +294,7 @@ export default function TablePanel({ region, held }: {
               <WorkCard
                 work={turn.work}
                 busy={busy}
-                onRuled={(ruling, assisted) => settleWork(i, ruling, assisted)}
+                onRuled={(ruling, assisted, detail) => settleWork(i, ruling, assisted, detail)}
               />
             )}
           </div>
@@ -507,7 +513,12 @@ function CharacterSheet({ character, onChange, held, creating, onDone }: {
 function WorkCard({ work, busy, onRuled }: {
   work: NonNullable<TableTurn['work']>
   busy: boolean
-  onRuled: (ruling: NonNullable<TableTurn['work']>['ruling'], assisted: boolean) => void
+  onRuled: (
+    ruling: NonNullable<TableTurn['work']>['ruling'],
+    assisted: boolean,
+    /** The verifier's reason, when it gave one. See `work.verdictDetail`. */
+    detail?: string,
+  ) => void
 }) {
   const [answer, setAnswer] = useState('')
   const [sending, setSending] = useState(false)
@@ -530,9 +541,17 @@ function WorkCard({ work, busy, onRuled }: {
           assistance: assisted ? 'worked' : 'none',
         }),
       })
+      /*
+       * `brokeAt` as well as `ruling`. This type used to be `{ ruling?: string }`
+       * and that narrowness WAS the bug: /api/learn/verify has always returned
+       * the reason, and reading only the word discarded it at the door. For an
+       * evaluate task `brokeAt.detail` reads "the value at p = 2, a = 1, q = 3,
+       * b = 3 is 54, and this is 18" — the right answer and the mistake, which
+       * is exactly what "Ruled incorrect" on its own refuses to say.
+       */
       const data = await res.json() as {
         status?: string
-        verdict?: { ruling?: string }
+        verdict?: { ruling?: string; brokeAt?: { step?: number; detail?: string } }
         message?: string
         error?: string
       }
@@ -544,7 +563,11 @@ function WorkCard({ work, busy, onRuled }: {
         setNote(data.message || data.error || 'That could not be read as an answer.')
         return
       }
-      onRuled(data.verdict.ruling as NonNullable<TableTurn['work']>['ruling'], assisted)
+      onRuled(
+        data.verdict.ruling as NonNullable<TableTurn['work']>['ruling'],
+        assisted,
+        data.verdict.brokeAt?.detail,
+      )
     } catch {
       setNote('The verifier could not be reached, so nothing was ruled.')
     } finally {
@@ -578,14 +601,29 @@ function WorkCard({ work, busy, onRuled }: {
       )}
 
       {settled ? (
-        <p className='mt-1.5 text-[11px] text-sky-300/80'>
-          Ruled <strong>{work.ruling}</strong>
-          {work.ruling === 'inconclusive' && (
-            <span className='text-sky-400/70'>
-              {' '}— the engine could not settle it. Not counted against you; it has gone for review.
-            </span>
+        <>
+          <p className='mt-1.5 text-[11px] text-sky-300/80'>
+            Ruled <strong>{work.ruling}</strong>
+            {work.ruling === 'inconclusive' && (
+              <span className='text-sky-400/70'>
+                {' '}— the engine could not settle it. Not counted against you; it has gone for review.
+              </span>
+            )}
+          </p>
+          {/* The reason, which this card used to drop. Rendered for every
+              ruling that carries one rather than only for `incorrect`: the
+              verifier also explains a correct answer it reached an unexpected
+              way, and a card that only elaborates on bad news trains you to
+              read its presence as a verdict before you have read the words.
+
+              Not styled as a warning for the same reason. It is the engine's
+              own sentence about what it compared, and on an evaluate task it
+              is the only place the right answer appears anywhere at the
+              table. */}
+          {work.verdictDetail && (
+            <p className='mt-1 text-[11px] leading-relaxed text-sky-200/70'>{work.verdictDetail}</p>
           )}
-        </p>
+        </>
       ) : (
         <div className='mt-1.5 flex flex-wrap items-center gap-1.5'>
           <input
