@@ -2179,15 +2179,62 @@ const CONCEPTS: Concept[] = [
               detail:
                 'Constant 6 gives p ∈ {±1, ±2, ±3, ±6}; leading coefficient 2 gives q ∈ {±1, ±2}. ' +
                 'So the candidates are ±1, ±2, ±3, ±6, ±1/2, ±3/2.',
+              socratic:
+                'The factor theorem gave you a test and no supply: p(a) = 0 decides whether x − a ' +
+                'is a factor, but nothing in it says which a to try, and the numbers you could try ' +
+                'do not run out. This point closes that gap by reading a finite list off two of the ' +
+                'coefficients of 2x³ − 3x² − 11x + 6, and the two it reads sit at the ends rather ' +
+                'than in the middle. Notice as well that both cubics you tested before this one ' +
+                'opened with a bare x³, which forced the denominator of every candidate to be 1 and ' +
+                'made every candidate whole; this one opens with 2x³. Which divisors go on top of a ' +
+                'candidate p/q and which go underneath, and what does that leading 2 admit to the ' +
+                'list that a leading coefficient of 1 would have kept off it?',
             },
-            { label: 'Test until one lands', detail: 'p(1) = −6. p(−1) = 12. p(2) = −12. p(3) = 54 − 27 − 33 + 6 = 0.' },
+            {
+              label: 'Test until one lands',
+              detail: 'p(1) = −6. p(−1) = 12. p(2) = −12. p(3) = 54 − 27 − 33 + 6 = 0.',
+              socratic:
+                'Every entry on that list is a candidate and not a root: the theorem promises that ' +
+                'a rational root, if there is one, is somewhere on the list — not that anything on ' +
+                'the list is one. So the test in this step is the factor theorem\'s test run more ' +
+                'than once, and there is nothing new in the test itself. What is new is that the ' +
+                'order and the stopping are yours to choose: whole numbers cost less to substitute ' +
+                'than halves, and small ones less than 6. Work through them, and keep each value ' +
+                'rather than only whether it came to zero. Which candidate makes ' +
+                '2x³ − 3x² − 11x + 6 vanish, what does the point before this one let you write ' +
+                'down the instant it does, and why does finding one root entitle you to stop ' +
+                'testing rather than oblige you to clear the rest of the list?',
+            },
             {
               label: 'Divide out the factor you found',
               detail: '2x³ − 3x² − 11x + 6 ÷ (x − 3) = 2x² + 3x − 2.',
+              socratic:
+                'You are holding one factor of a cubic, and one factor is not a factorisation — ' +
+                'what was asked for is the thing factored completely. Dividing the factor out is ' +
+                'how you find what stands beside it, and the division is the one you set out ' +
+                'long-hand in the point on polynomial division, with x − 3 as the divisor. Two ' +
+                'things are settled before you take a single step of it: the degrees fix the shape ' +
+                'of the quotient, since removing a degree-1 factor from a degree-3 polynomial ' +
+                'cannot leave anything else, and the factor theorem has already promised what will ' +
+                'be left over. What is the quotient, what does its leading term have to be given ' +
+                'that the dividend opens with 2x³, and if the division had come out with something ' +
+                'left over, what would that have told you, bearing in mind that p(3) was already ' +
+                'zero?',
             },
             {
               label: 'The rest is a quadratic, which you already know',
               detail: '2x² + 3x − 2 = (2x − 1)(x + 2), so the whole thing is (x − 3)(2x − 1)(x + 2).',
+              socratic:
+                'The cubic now reads (x − 3) times 2x² + 3x − 2, and that second bracket is a ' +
+                'quadratic whose leading coefficient is not 1 — a thing you were factoring before ' +
+                'this concept existed. Nothing of what is left belongs to the rational-root search ' +
+                'at all, so reach back for the method that worked once a quadratic stopped being ' +
+                'monic, where the pair you want multiplies to a·c rather than to the constant on ' +
+                'its own. Factor it, write the cubic as three brackets, and then read the roots of ' +
+                'the two new factors back against the candidate list you built at the start. What ' +
+                'is the complete factorisation, which of its roots were candidates you never ' +
+                'actually substituted, and what does their turning up here anyway say about your ' +
+                'having stopped the search at the first value that worked?',
             },
           ],
           answer: '(x − 3)(2x − 1)(x + 2)',
