@@ -2352,6 +2352,413 @@ const POSTERIOR_ODDS_OF_THE_TWO_CASES: VariableDeclaration[] = [
   { name: 'm', assumptions: { integer: true } },
 ]
 
+/**
+ * A PREIMAGE SIZE OVER THE SPACE WRITTEN AS THE THREE TOSSES — the fifth
+ * concept of `chance-and-events`, and the first list in these subjects whose
+ * whole job is to make a DENOMINATOR unmistakable.
+ *
+ * `c/(u*v*w)` at (3, 2, 2, 2) is P(X = 2) = 3/8, where X is the number of heads
+ * in three tosses: three sequences in the preimage of 2, over the eight
+ * sequences the equal-likelihood hypothesis is about.
+ *
+ * `u*v*w` RATHER THAN A LETTER AT 8, AND THAT IS THE POINT OF THE LIST. The
+ * error this concept exists to prevent is dividing by 4 — the number of VALUES
+ * X takes — instead of by 8, and `sample-spaces` reports both answers without
+ * settling which is right. A lone `n = 8` would be a number the learner has to
+ * trust; the product says which space produced it, one factor per toss. It is
+ * the first concept's `a*b*c` at (2, 2, 2) with different letters, and the
+ * repetition is deliberate: the space has not changed between the two concepts,
+ * only what is being asked about it.
+ *
+ * Different letters all the same, for the reason `A_RATE_UNDER_THE_COMPLEMENT`
+ * uses `f` and `g`: `a`, `b` and `c` are three choices being multiplied into a
+ * count over there, and here the product is a space being divided BY, so
+ * reusing them would say the two were the same kind of number.
+ */
+const A_PREIMAGE_OVER_THE_SPACE_AS_THREE_TOSSES: VariableDeclaration[] = [
+  { name: 'c', assumptions: { integer: true } },
+  { name: 'u', assumptions: { integer: true } },
+  { name: 'v', assumptions: { integer: true } },
+  { name: 'w', assumptions: { integer: true } },
+]
+
+/**
+ * THE SAME PREIMAGE AGAINST THE WRONG SPACE, so that the disagreement
+ * `sample-spaces` left open is a number rather than a remark.
+ *
+ * `c/(u*v*w) - 1/m` at (3, 2, 2, 2, 4) is 3/8 - 1/4 = 1/8: the answer reached
+ * in the space of sequences minus the answer reached by treating the four
+ * VALUES as equally likely.
+ *
+ * `1/m` WITH `m` AT 4 IS THE WRONG ANSWER AND IT IS WRITTEN AS SUCH ON PURPOSE.
+ * No task in these subjects has a wrong answer for its reference and this one
+ * does not either — what is asked for is the GAP, which is a true fact about
+ * two spaces, and the prompt says which of the two is licensed before asking
+ * for it. Asking "which is right" is not a kind the build can rule; asking how
+ * far apart they are is, and a learner who produces 1/8 has had to compute
+ * both.
+ *
+ * `m` RATHER THAN A SECOND PRODUCT, because the four is not a product of
+ * anything. It is the number of values of a rule, which is exactly why dividing
+ * by it is unlicensed — there is no "one factor per toss" story to tell about
+ * it, and writing it as a bare letter is the honest shape.
+ */
+const THE_TWO_SPACES_SIDE_BY_SIDE: VariableDeclaration[] = [
+  { name: 'c', assumptions: { integer: true } },
+  { name: 'u', assumptions: { integer: true } },
+  { name: 'v', assumptions: { integer: true } },
+  { name: 'w', assumptions: { integer: true } },
+  { name: 'm', assumptions: { integer: true } },
+]
+
+/**
+ * A PREIMAGE THAT IS ITSELF A PRODUCT, for a SECOND rule on the same eight
+ * sequences.
+ *
+ * `(v*w)/(u*v*w)` at (2, 2, 2) is 4/8 = 1/2 — P(T = 1), where T is the toss the
+ * first head appeared on: fixing the first toss to heads leaves the other two
+ * free, so the preimage is 2 x 2 of the 2 x 2 x 2.
+ *
+ * THE NUMERATOR SHARES ITS LETTERS WITH THE DENOMINATOR AND THAT IS THE
+ * TEACHING. Every other task in this concept has a preimage SIZE on top, counted
+ * by collecting sequences. Here the preimage is "whatever the last two tosses
+ * do", so its size is literally two of the three factors of the space, and the
+ * expression cancels to 1/2 by itself. A learner who sees `(v*w)/(u*v*w)` has
+ * the reason the answer is a half in front of them rather than in the prose:
+ * one toss was pinned and two were not.
+ *
+ * THREE LETTERS, NOT FOUR, so the substitution cannot describe a numerator that
+ * is not a sub-product of the space. Handing the 4 over as its own letter would
+ * allow `at` to claim a preimage bigger than the space it sits in.
+ */
+const A_SUB_PRODUCT_OF_THE_SAME_SPACE: VariableDeclaration[] = [
+  { name: 'u', assumptions: { integer: true } },
+  { name: 'v', assumptions: { integer: true } },
+  { name: 'w', assumptions: { integer: true } },
+]
+
+/**
+ * THE FOUR PREIMAGE SIZES AND THE SPACE — the whole table in one substitution,
+ * which is what makes the total assertable rather than describable.
+ *
+ * `(p + q + r + s)/n` at (1, 3, 3, 1, 8) is 8/8 = 1: the four preimages of the
+ * heads-count, added and divided once.
+ *
+ * THE SUM IS INSIDE THE DIVISION AND NOT OUTSIDE IT, which is the one decision
+ * in this list. `sample-spaces` asks `p + q + r + s` at the same four numbers
+ * and gets 8, a COUNT, and that task is the partition checked on the sequences.
+ * This one is the partition checked as a PROBABILITY, and the difference is the
+ * whole of what the fifth concept adds: four counts adding to the size of the
+ * space is bookkeeping, and four probabilities adding to exactly 1 is the
+ * statement that the values of a function partition its domain. Same five
+ * numbers, two different claims, and the division is where they part.
+ *
+ * SO THE REFERENCE IS 1 AND IT IS A PROBABILITY. It is the first reference in
+ * these subjects to be exactly 1 for a reason rather than by arithmetic
+ * accident, and tests/concepts-logic.mjs asserts that it is this expression
+ * that produces it — a 1 arriving from anywhere else here would be a
+ * probability of certainty, which nothing in this concept is about.
+ */
+const THE_FOUR_PREIMAGES_AND_THE_SPACE: VariableDeclaration[] = [
+  { name: 'p', assumptions: { integer: true } },
+  { name: 'q', assumptions: { integer: true } },
+  { name: 'r', assumptions: { integer: true } },
+  { name: 's', assumptions: { integer: true } },
+  { name: 'n', assumptions: { integer: true } },
+]
+
+/**
+ * TWO PREIMAGE SIZES AND THE SPACE, added before the division.
+ *
+ * `(q + r)/n` at (3, 3, 8) is 6/8 = 3/4 — P(X = 1 or X = 2), two entries of the
+ * table taken together.
+ *
+ * NO CORRECTION TERM, AND ITS ABSENCE IS THE CLAIM. `sample-spaces` asks
+ * `a/n + b/n - c/n` because two events in general share outcomes, and this
+ * expression has no third term at all: two values of one rule cannot share a
+ * sequence, since the rule gives each sequence one number. So the subtraction is
+ * not computed and found to be zero — there is nothing to subtract, and the
+ * shape of the expression says so before any arithmetic is done.
+ *
+ * TWO LETTERS FOR THE TWO ENTRIES RATHER THAN ONE DOUBLED, because the two
+ * preimages are both of size 3 by coincidence and a single `2*q` would make the
+ * coincidence look structural. The table is 1, 3, 3, 1 and the symmetry is a
+ * fact about a fair coin, not about merging.
+ */
+const TWO_ENTRIES_TAKEN_TOGETHER: VariableDeclaration[] = [
+  { name: 'q', assumptions: { integer: true } },
+  { name: 'r', assumptions: { integer: true } },
+  { name: 'n', assumptions: { integer: true } },
+]
+
+/**
+ * THE LARGEST ENTRY OVER THE SMALLEST, which is a ratio of two probabilities
+ * and so is not a probability.
+ *
+ * `(r/n)/(p/n)` at (3, 1, 8) is (3/8)/(1/8) = 3: a middle value of the
+ * heads-count is three times as likely as an end one.
+ *
+ * THE SPACE APPEARS TWICE AND CANCELS, AND THAT IS WHY IT IS WRITTEN TWICE.
+ * `r/p` would give the same 3 and would be a ratio of two COUNTS; what is
+ * wanted is the ratio of two PROBABILITIES, which is the thing the four-outcome
+ * space got wrong. Writing both denominators and letting them cancel is the
+ * demonstration that the comparison does not depend on the size of the space —
+ * the same shape `conditional-probability` uses in `(k/n)/(m/n)` and for the
+ * same reason, that a quotient of probabilities is a different object from the
+ * quotient of the counts behind them.
+ *
+ * ITS REFERENCE LEAVES [0, 1] AND IT IS THE ONLY ONE HERE THAT DOES. 3 is the
+ * second such reference in these subjects, after `bayes-theorem`'s odds ratio
+ * 18, and it is the same category: a ratio of probabilities. The count is pinned
+ * at one in tests/concepts-logic.mjs so the exception cannot spread to a task
+ * that has no business outside the interval.
+ */
+const THE_LARGEST_ENTRY_OVER_THE_SMALLEST: VariableDeclaration[] = [
+  { name: 'r', assumptions: { integer: true } },
+  { name: 'p', assumptions: { integer: true } },
+  { name: 'n', assumptions: { integer: true } },
+]
+
+/**
+ * TWO TABLE ENTRIES ADDED AS PROBABILITIES — the merge, with the division done
+ * twice and the sum taken after.
+ *
+ * `q/n + r/n` at (3, 3, 8) is 3/8 + 3/8 = 3/4 — P(Y = 1), where Y is the margin
+ * |heads - tails|: X = 1 and X = 2 are both sent to 1, so their entries add.
+ *
+ * IT GIVES THE SAME ANSWER AS `(q + r)/n` IN THE POINT ABOVE AND THE AGREEMENT
+ * IS THE TEACHING. Those two are the same event under two descriptions — "X is
+ * 1 or 2" and "Y is 1" — which is what it MEANS for Y to merge two values of X,
+ * so the two expressions must agree or the merge was not a merge. They are kept
+ * as two shapes rather than one asked twice because the ROUTES differ: this one
+ * adds probabilities already in hand, which is the only arithmetic the third
+ * point does, and the one above adds counts and divides once.
+ *
+ * SO THIS EXPRESSION DELIBERATELY NEVER TOUCHES THE EIGHT SEQUENCES. That is
+ * what building the table bought, and it is why the third point can be done on
+ * the table alone — a learner who goes back to the sequences here has not got
+ * the point, and would arrive at 3/4 anyway, which is why the agreement is
+ * asserted rather than hoped for.
+ */
+const TWO_ENTRIES_MERGED_AS_PROBABILITIES: VariableDeclaration[] = [
+  { name: 'q', assumptions: { integer: true } },
+  { name: 'r', assumptions: { integer: true } },
+  { name: 'n', assumptions: { integer: true } },
+]
+
+/**
+ * THE TWO END ENTRIES MERGED ON THEIR COUNTS, with one division at the end.
+ *
+ * `(p + s)/n` at (1, 1, 8) is 2/8 = 1/4 — P(Y = 3), the other value of the
+ * margin: X = 0 and X = 3 are both sent to 3, and TTT and HHH are the two
+ * sequences behind it.
+ *
+ * THE OTHER ROUTE, ON PURPOSE, so that the third point shows both and says they
+ * must agree. `q/n + r/n` divides twice and adds; this adds and divides once.
+ * They agree because dividing a sum by 8 and summing the quotients are the same
+ * operation, which is the one piece of `fraction-arithmetic` the merge needs and
+ * the reason no learner has to be told that merging is safe.
+ *
+ * SAME SHAPE AS `TWO_ENTRIES_TAKEN_TOGETHER` AND A DIFFERENT PAIR OF LETTERS,
+ * which is not redundancy. `q` and `r` are the two MIDDLE entries and `p` and
+ * `s` the two ENDS, and the tasks that use them answer about different values
+ * of Y — so a shared list would let a substitution claim that the ends and the
+ * middles were the same two numbers, which is the one thing the table says they
+ * are not.
+ */
+const THE_TWO_END_ENTRIES_MERGED_ON_COUNTS: VariableDeclaration[] = [
+  { name: 'p', assumptions: { integer: true } },
+  { name: 's', assumptions: { integer: true } },
+  { name: 'n', assumptions: { integer: true } },
+]
+
+/**
+ * ONE ENTRY OVER A COMPLEMENT — conditioning, which is the other way a table
+ * gets rebuilt and the only one that needs a division.
+ *
+ * `(r/n)/(1 - p/n)` at (3, 1, 8) is (3/8)/(7/8) = 3/7 —
+ * P(X = 2 given X is at least 1), once TTT has been ruled out.
+ *
+ * THE DENOMINATOR IS A COMPLEMENT RATHER THAN A SUPPLIED TOTAL, and that is the
+ * whole reason this expression is shaped as it is. `1 - c/n` is
+ * `sample-spaces`' third point, asked there at the same two numbers and
+ * answering 7/8 on its own; here it sits UNDERNEATH an entry, which is the first
+ * time in these subjects a complement has been divided by. A learner who
+ * produces 3/7 has used the complement rule as a step rather than as an answer,
+ * and has seen that the three surviving entries — 3/7, 3/7, 1/7 — add to 1 only
+ * because of that division, their numerators adding to 7/8.
+ *
+ * IT CANNOT VANISH, WHICH IS CHECKED ON THE TASK AND NOT DECLARED AS A DOMAIN
+ * CONDITION. `1 - p/n` is zero exactly when p = n, and at the one substitution
+ * used p = 1 and n = 8. The expression itself is fine and only a substitution
+ * could break it, and what it would break is not arithmetic: conditioning on an
+ * event of probability 0 is undefined rather than merely awkward, because there
+ * is no space left to replace the old one with.
+ */
+const AN_ENTRY_OVER_A_COMPLEMENT: VariableDeclaration[] = [
+  { name: 'r', assumptions: { integer: true } },
+  { name: 'p', assumptions: { integer: true } },
+  { name: 'n', assumptions: { integer: true } },
+]
+
+/**
+ * FOUR PREIMAGE SIZES AND THE SPACE — the same five numbers the table-total
+ * expression takes, and the list five of this concept's nine tasks share.
+ *
+ * SHARED DELIBERATELY ACROSS FIVE TASKS, which is the opposite decision from
+ * `TWO_ENTRIES_TAKEN_TOGETHER` and `TWO_ENTRIES_MERGED_AS_PROBABILITIES` above,
+ * and the reason is that the letters mean ONE thing here and two things there.
+ * `q` and `r` are the middle entries and `p` and `s` the ends, so a shared list
+ * would have let a substitution claim the ends and the middles were the same two
+ * numbers. In this concept every use of p, q, r, s, n is "the four preimage
+ * sizes of some rule, in value order, over the size of the space" — for X, for
+ * T, for the relabelled W and for the sum S — and what differs between the five
+ * tasks is which RULE the sizes belong to and which VALUES weight them. Both of
+ * those live in the expression, where they can be read, rather than in a
+ * declaration, where they could not.
+ *
+ * SO THE DECLARATION IS WHAT MAKES THE CONCEPT'S CLAIM ASSERTABLE. The first two
+ * tasks are the same expression at two substitutions, which no other pair in
+ * these subjects is for this reason: the values 0, 1, 2, 3 are written into the
+ * expression as literals, so two tasks differing ONLY in `at` prove that the
+ * answer is not a function of the value list. Had the values been letters too,
+ * the two substitutions would have differed in nine places and the
+ * demonstration would have been invisible.
+ */
+const A_TABLE_AND_THE_SPACE_IT_CAME_FROM: VariableDeclaration[] = [
+  { name: 'p', assumptions: { integer: true } },
+  { name: 'q', assumptions: { integer: true } },
+  { name: 'r', assumptions: { integer: true } },
+  { name: 's', assumptions: { integer: true } },
+  { name: 'n', assumptions: { integer: true } },
+]
+
+/**
+ * THE WEIGHTED TOTAL WITH THE UNWEIGHTED ONE SUBTRACTED, so that "the weights
+ * are doing work" is a number rather than a remark.
+ *
+ * `(0 + 1 + 2 + 3)/m - (0*p + 1*q + 2*r + 3*s)/n` at (1, 4, 2, 1, 8, 4) is
+ * 12/8 - 11/8 = 1/8: how far the plain average of T's four values overshoots
+ * E[T].
+ *
+ * THE SAME SHAPE AS `THE_TWO_SPACES_SIDE_BY_SIDE` AND THE SAME JUSTIFICATION.
+ * `1/m` with `m` at 4 is a wrong answer there and the plain average is a wrong
+ * route here, and in neither case is the reference the wrong number: what is
+ * asked for is the GAP, which is a true fact about two computations, and the
+ * prompt settles which of the two is licensed before asking for it. "Which
+ * method is right" is a `state` task and unrulable; "how far apart are they" is
+ * an `evaluate` that cannot be answered without doing both.
+ *
+ * IT IS ASKED ON T AND NOT ON X, WHICH IS THE WHOLE REASON THE TASK EXISTS. On
+ * X the two routes agree at 3/2, because that table is symmetric, so the same
+ * expression at X's substitution would have reference 0 — a true statement that
+ * teaches the opposite of the point. The numerator `0 + 1 + 2 + 3` is left
+ * unevaluated rather than written as 6 so that the two halves can be seen to be
+ * reading the same four values.
+ */
+const A_PLAIN_AVERAGE_AGAINST_THE_WEIGHTED_ONE: VariableDeclaration[] = [
+  { name: 'p', assumptions: { integer: true } },
+  { name: 'q', assumptions: { integer: true } },
+  { name: 'r', assumptions: { integer: true } },
+  { name: 's', assumptions: { integer: true } },
+  { name: 'n', assumptions: { integer: true } },
+  { name: 'm', assumptions: { integer: true } },
+]
+
+/**
+ * A LINEAR RULE WRAPPED AROUND A WHOLE TABLE — the push-through, with the table
+ * appearing exactly once and the rule acting on it from outside.
+ *
+ * `a*((0*p + 1*q + 2*r + 3*s)/n) + b` at (2, 1, 1, 3, 3, 1, 8) is
+ * 2(12/8) + 1 = 4.
+ *
+ * THE NESTING IS THE CLAIM AND IT IS WHY THIS IS NOT WRITTEN AS `a*e + b`. An
+ * expression taking E[X] as a single letter would have been shorter and would
+ * have asserted nothing: the content of the rule is that a and b reach the
+ * answer WITHOUT reaching the four probabilities, and only a shape with the
+ * table inside the brackets and the rule outside them says so. A learner looking
+ * at `a*e + b` cannot see what was skipped.
+ *
+ * `a` AND `b` ARE SEPARATE LETTERS RATHER THAN THE LITERALS 2 AND 1, which is
+ * the reverse of the decision about the values. The values are fixed by the
+ * experiment — X counts heads, so 0, 1, 2, 3 are not parameters — while a and b
+ * are what makes the rule LINEAR, and they are the two things the theorem is
+ * quantified over. Writing them as letters is the difference between asking for
+ * one number and asking for an instance of a rule.
+ */
+const A_LINEAR_RULE_OUTSIDE_A_WHOLE_TABLE: VariableDeclaration[] = [
+  { name: 'a', assumptions: { integer: true } },
+  { name: 'b', assumptions: { integer: true } },
+  { name: 'p', assumptions: { integer: true } },
+  { name: 'q', assumptions: { integer: true } },
+  { name: 'r', assumptions: { integer: true } },
+  { name: 's', assumptions: { integer: true } },
+  { name: 'n', assumptions: { integer: true } },
+]
+
+/**
+ * TWO TOTALS OVER ONE SPACE, ADDED, WITH ONE DIVISION AT THE END — additivity in
+ * the form that shows WHY it holds.
+ *
+ * `(g + h)/n` at (12, 11, 8) is 23/8: g is the total of X across the eight
+ * sequences and h is the total of T across the same eight, and E[X + T] is their
+ * sum over the space.
+ *
+ * THE TOTALS ARRIVE AS COUNTS AND THAT IS THE POINT, not a simplification.
+ * Writing the two weighted sums out would have given the same 23/8 by a route
+ * that hides the argument: the reason the two expectations add is that summing
+ * X + T over the eight sequences adds the same numbers in a different order, so
+ * 23 = 12 + 11 before any division happens. `(g + h)/n` is that sentence, and
+ * the single `n` underneath both is the step `fraction-arithmetic` supplies —
+ * dividing one total by 8 is the same as dividing two and adding.
+ *
+ * IT IS ALSO WHY NO INDEPENDENCE TEST APPEARS ANYWHERE IN THE EXPRESSION. There
+ * is nothing in `(g + h)/n` that could carry one, which is the honest shape for
+ * a fact that does not need one — and the task that DOES run the product test
+ * is in the concept below, where independence is a product of probabilities
+ * rather than a condition on this sum.
+ */
+const TWO_TOTALS_OVER_ONE_SPACE: VariableDeclaration[] = [
+  { name: 'g', assumptions: { integer: true } },
+  { name: 'h', assumptions: { integer: true } },
+  { name: 'n', assumptions: { integer: true } },
+]
+
+/**
+ * THE TOTAL OF A PRODUCT AGAINST THE PRODUCT OF TWO TOTALS — the near miss, and
+ * the one place this concept's arithmetic is a subtraction rather than a total.
+ *
+ * `k/n - (g/n)*(h/n)` at (17, 12, 11, 8) is 17/8 - (12/8)(11/8) = 34/16 - 33/16
+ * = 1/16.
+ *
+ * THE SAME THREE LETTERS AS `TWO_TOTALS_OVER_ONE_SPACE` PLUS ONE, DELIBERATELY,
+ * because g and h mean exactly what they mean there — the totals of X and of T
+ * over the eight sequences — and the pair of tasks is the comparison. Additivity
+ * is `(g + h)/n` and is exact; the multiplicative version is this, and is not.
+ * A different letter set would have made two unrelated-looking tasks out of one
+ * fact.
+ *
+ * THE REFERENCE IS 1/16 AND IT IS A GAP, like the two above and for the third
+ * distinct reason in this subject. The first gap is between two SPACES, the
+ * second between two METHODS on one table, and this is between two sides of an
+ * identity that does not hold. What makes it worth asking is its SIZE: 34/16
+ * against 33/16 would pass any rounded comparison, so a learner who has computed
+ * 1/16 knows the identity is false in a way that eyeballing two decimals cannot
+ * establish.
+ *
+ * AND IT IS A COVARIANCE, WHICH IS NAMED HERE AND NOWHERE IN THE MATERIAL. This
+ * expression is E[XY] - E[X]E[Y] exactly, so the task computes the quantity
+ * `variance-and-covariance` is about — a node of `probability` still unwritten.
+ * The material does not name it, because naming it would promise an account of
+ * what the number MEANS, and this subject has independence only as a test.
+ */
+const A_PRODUCT_TOTAL_AGAINST_A_PRODUCT_OF_TOTALS: VariableDeclaration[] = [
+  { name: 'k', assumptions: { integer: true } },
+  { name: 'g', assumptions: { integer: true } },
+  { name: 'h', assumptions: { integer: true } },
+  { name: 'n', assumptions: { integer: true } },
+]
+
 export const TASKS: PracticeTask[] = [
   /*
    * ── fraction-arithmetic ─────────────────────────────────────────────────
@@ -14845,6 +15252,832 @@ export const TASKS: PracticeTask[] = [
     // done the odds-form arithmetic themselves in the task before it.
     reference: '2/3',
     at: { r: '10000', m: '20000' },
+  },
+
+  // ── chance-and-events, forty-ninth promotion: random-variables
+  //
+  // Nine tasks, three on each point, all nine `evaluate` and every one settled
+  // by exact arithmetic with no worker — the property all four concepts below
+  // hold, for the reason they give: a subject sitting this low must not be
+  // walled off by a worker outage.
+  //
+  // THE COIN IS BACK, AND IT IS THE FIRST TIME A CONCEPT IN THIS SUBJECT HAS
+  // REUSED AN EARLIER ONE'S SETTING. Nine tasks on three coin tosses below,
+  // eighteen on twelve club members and 220 committees above those, nine on a
+  // screening test above those, and these nine return to the eight sequences.
+  // That is not nostalgia and it is not a shortage of settings:
+  //
+  //  - THE ARGUMENT THIS CONCEPT FINISHES WAS OPENED ON THAT SPACE.
+  //    `sample-spaces` computes 3/8 for "exactly two heads" among the eight
+  //    sequences and 1/4 in the space that records only the heads count, says
+  //    the two cannot both be right, and declines to say which. Settling it
+  //    needs the four preimage sizes 1, 3, 3, 1, which is this concept's table.
+  //    Settling it anywhere else would be settling a different question.
+  //  - THE CLUB WOULD HAVE MADE THE CONTENT INVISIBLE. On twelve members every
+  //    preimage is a binomial coefficient and every task a count over 220, so
+  //    the work would be `counting-probability`'s with a letter X in front of
+  //    it — which is exactly the objection raised against promoting this node at
+  //    all. Eight sequences printed in full means the preimage can be collected
+  //    by eye, so the only thing a learner can be doing is the move this concept
+  //    is about. The fourth concept dropped the club because its overlaps are
+  //    countable; this one declines it because its preimages are.
+  //
+  // THE `220 x reference` MEASURE IS NOT REVIVED HERE. It ran nine of nine, four
+  // of nine and then one of nine down the three concepts below and the fourth's
+  // note declared it at its floor; these answers are eighths, quarters and
+  // sevenths and the 220 has nothing to do with any of them. Said rather than
+  // left out, so nobody recomputes it and reads the number as meaning something.
+  //
+  //  - EIGHT of the nine lie in [0, 1] and ONE does not. 3 is the ratio of the
+  //    largest table entry to the smallest, and a ratio of probabilities is not
+  //    a probability — the same category as the fourth concept's odds ratio 18,
+  //    and the second such reference in these subjects.
+  //    tests/concepts-logic.mjs asserts the count is exactly one.
+  //  - NOT ONE of the nine is a count, which the two concepts above also manage.
+  //    Every count in the material — the preimage sizes, the four sequences
+  //    behind T = 1, the seven behind X at least 1 — is in a worked example, and
+  //    every task divides.
+  //  - ONE reference is exactly 1 and it is a PROBABILITY. It is the total of
+  //    the table, which is the second point's whole content and the first time a
+  //    reference in these subjects is 1 for a reason rather than by accident.
+  //  - NO GIVEN IS REPEATED, within these nine or against the thirty-six below.
+  //    The subject has six expressions asked at more than one substitution; this
+  //    promotion adds none, deliberately, because the fourth concept's group
+  //    asserts a span ranking over exactly those six and a seventh would have
+  //    made that assertion this promotion's business for no teaching gain.
+  //
+  //     c/(u*v*w)              a preimage over the space, written as the three tosses
+  //     c/(u*v*w) - 1/m        the gap between the licensed space and the unlicensed one
+  //     (v*w)/(u*v*w)          a second rule, whose preimage is a sub-product of the space
+  //     (p + q + r + s)/n      the whole table, totalled and divided once
+  //     (q + r)/n              two entries together, with no correction term to subtract
+  //     (r/n)/(p/n)            the largest entry over the smallest, which is not a probability
+  //     q/n + r/n              the merge, adding probabilities already in hand
+  //     (p + s)/n              the same merge on counts, dividing once
+  //     (r/n)/(1 - p/n)        conditioning, where the rebuild needs a division
+  //
+  // TWO DIFFERENT SHAPES AGREE ON 3/4 AND THE AGREEMENT IS THE TEACHING RATHER
+  // THAN A REPETITION. `(q + r)/n` in the second point and `q/n + r/n` in the
+  // third are the same event under two descriptions — "X is 1 or 2" and "Y is
+  // 1" — which is what it MEANS for Y to merge two values of X. The fourth
+  // concept had three shapes agree because a theorem has forms; this is two
+  // agreeing because a set has two names, and if they disagreed the merge would
+  // not be a merge.
+  //
+  // NO `state` TASK, WHICH IS THE ONE REFUSAL IN THIS SET. "Write down the
+  // random variable" is the natural first question about this concept and
+  // `TaskKind` declares `state` unverifiable, so asking it would produce a chain
+  // that cannot become evidence and would raise `chainsWithNoRuling`. The object
+  // is taught in the worked examples, where telling is honest, and only its
+  // values are graded.
+  //
+  // NO `transform_to_form`, NO `counterexample`, NO `justify`, and no
+  // `domainConditions` on any of the nine, for the reasons ontology-chance.ts
+  // gives four times already. The one addition: `1 - p/n` sits inside a
+  // DENOMINATOR in the ninth task, the first complement to be divided by in
+  // these subjects, and it is zero exactly when p = n — which is false at the
+  // one substitution used and would be conditioning on an impossible event
+  // rather than a division by zero in the ordinary sense.
+  {
+    id: 'read-a-probability-off-a-preimage-1',
+    knowledgePointId:
+      'a-value-of-the-variable-names-a-set-of-outcomes-so-its-probability-is-that-set-over-the-space',
+    kind: 'evaluate',
+    prompt:
+      'A fair coin is tossed three times, so the sample space is the eight equally likely '
+      + 'sequences HHH, HHT, HTH, HTT, THH, THT, TTH, TTT. Let X be the number of heads. The '
+      + 'three characters "X = 2" are not a statement about a number: they name the SET of '
+      + 'sequences that X sends to 2, which is HHT, HTH and THH — three of them. A probability '
+      + 'belongs to that set, and it is divided by the space whose outcomes you were told are '
+      + 'equally likely. Evaluate c/(u*v*w) at c = 3, u = 2, v = 2, w = 2, where c is the size '
+      + 'of the set and the product is one factor per toss.',
+    given: 'c/(u*v*w)',
+    variables: A_PREIMAGE_OVER_THE_SPACE_AS_THREE_TOSSES,
+    // 3/(2 × 2 × 2) = 3/8.
+    //
+    // THE FIRST TASK OF THE CONCEPT AND THE DENOMINATOR IS THE WHOLE OF ITS
+    // CONTENT. There are two numbers a learner might divide by here — 8
+    // sequences and 4 values of X — and `sample-spaces` reports both answers
+    // without settling which is licensed. Writing the denominator as 2 × 2 × 2
+    // puts the choice in the expression instead of in the prose: a product with
+    // one factor per toss can only be the space of sequences.
+    //
+    // THE PROMPT NAMES THE THREE SEQUENCES AND THAT IS DELIBERATE. It gives
+    // away the preimage, which is the move the concept is about, and the reason
+    // to give it away in the FIRST task is that an `evaluate` cannot observe
+    // collecting anyway — the collecting is taught in the worked example, where
+    // telling is honest. What the task observes is whether a learner divides by
+    // the space the set came from. The next two tasks stop naming the set.
+    reference: '3/8',
+    at: { c: '3', u: '2', v: '2', w: '2' },
+  },
+  {
+    id: 'measure-the-gap-between-the-two-spaces-1',
+    knowledgePointId:
+      'a-value-of-the-variable-names-a-set-of-outcomes-so-its-probability-is-that-set-over-the-space',
+    kind: 'evaluate',
+    prompt:
+      '`sample-spaces` records that "exactly two heads" comes out at 3/8 in the eight-sequence '
+      + 'space and at 1/4 in the space whose four outcomes are the heads counts 0, 1, 2, 3 — and '
+      + 'says the wrong answer is the one whose outcomes were never equally likely. It is the '
+      + 'second: the four counts have 1, 3, 3 and 1 sequences behind them, and four groups of '
+      + 'unequal size cannot be four equally likely outcomes, so dividing by 4 was never '
+      + 'licensed. Find how far apart the two answers are. Evaluate c/(u*v*w) - 1/m at c = 3, '
+      + 'u = 2, v = 2, w = 2, m = 4.',
+    given: 'c/(u*v*w) - 1/m',
+    variables: THE_TWO_SPACES_SIDE_BY_SIDE,
+    // 3/8 − 1/4 = 3/8 − 2/8 = 1/8.
+    //
+    // THE REFERENCE IS A GAP AND NOT A WRONG ANSWER, which is the distinction
+    // that makes this task askable. No reference in these subjects is a wrong
+    // answer and this one is not either: how far apart two computed numbers are
+    // is a true fact, and the prompt settles which of the two is licensed before
+    // asking for it. "Which is right" would be a `state` task and unrulable;
+    // "how far apart" is an `evaluate` that cannot be answered without having
+    // computed both.
+    //
+    // 1/8 IS ALSO P(X = 0) AND THAT IS A COINCIDENCE. Three tosses of a fair
+    // coin put the gap and the end entry at the same number, and nothing in the
+    // material claims a connection — said here because the next point's table
+    // makes 1/8 familiar and the resemblance is the kind of thing a reader
+    // supplies a reason for.
+    reference: '1/8',
+    at: { c: '3', u: '2', v: '2', w: '2', m: '4' },
+  },
+  {
+    id: 'a-second-rule-on-the-same-eight-sequences-1',
+    knowledgePointId:
+      'a-value-of-the-variable-names-a-set-of-outcomes-so-its-probability-is-that-set-over-the-space',
+    kind: 'evaluate',
+    prompt:
+      'Keep the same eight sequences and record something else about them: let T be the number '
+      + 'of the toss on which the first head appears, with T = 0 at TTT, since a rule has to '
+      + 'give a value to every outcome or it is not a function on this space at all. T = 1 is '
+      + 'the sequences that begin with H — the first toss is pinned and the other two are free, '
+      + 'so the set is 2 x 2 sequences out of 2 x 2 x 2. Evaluate (v*w)/(u*v*w) at u = 2, '
+      + 'v = 2, w = 2, and say what has changed from the task before and what has not.',
+    given: '(v*w)/(u*v*w)',
+    variables: A_SUB_PRODUCT_OF_THE_SAME_SPACE,
+    // (2 × 2)/(2 × 2 × 2) = 4/8 = 1/2.
+    //
+    // ONE SPACE, TWO RULES, AND THE TASK IS THE SECOND HALF OF THAT CLAIM. The
+    // two tasks above are about X and this one is about T, with not one outcome
+    // different between them. So a random variable is a CHOICE made on top of
+    // the space in the way the space was a choice made about the experiment, and
+    // `sample-spaces`' four-outcome space was never a rival space so much as the
+    // table of one particular rule.
+    //
+    // THE NUMERATOR IS A SUB-PRODUCT OF THE DENOMINATOR AND THE EXPRESSION
+    // CANCELS BY ITSELF, which is why this shape was chosen over `c/(u*v*w)` at
+    // c = 4. The answer is a half because one toss was pinned and two were not,
+    // and `(v*w)/(u*v*w)` says that where a bare 4 would have hidden it.
+    //
+    // T'S VALUE AT TTT IS IN THE PROMPT AND IS NOT NEEDED FOR THE ARITHMETIC,
+    // deliberately. It is where `function-concept` earns the `links` entry this
+    // promotion filed: a function is defined everywhere on its domain, TTT has
+    // no head, and the convention has to be chosen before T is a rule — which a
+    // learner should meet while it costs nothing rather than later when a table
+    // fails to total 1.
+    reference: '1/2',
+    at: { u: '2', v: '2', w: '2' },
+  },
+  {
+    id: 'total-the-whole-table-and-check-it-against-one-1',
+    knowledgePointId:
+      'the-values-partition-the-space-so-the-table-adds-to-one-and-they-are-not-equally-likely',
+    kind: 'evaluate',
+    prompt:
+      'Take the preimage of every value of X, the number of heads in three tosses: 0 comes from '
+      + 'TTT alone, 1 from HTT, THT and TTH, 2 from HHT, HTH and THH, and 3 from HHH alone — '
+      + 'sizes 1, 3, 3 and 1. Those four probabilities together are the DISTRIBUTION of X, and '
+      + 'the first thing to do with a distribution is total it. Evaluate (p + q + r + s)/n at '
+      + 'p = 1, q = 3, r = 3, s = 1, n = 8, and say what a total of 9/8 would have told you '
+      + 'about your four preimages.',
+    given: '(p + q + r + s)/n',
+    variables: THE_FOUR_PREIMAGES_AND_THE_SPACE,
+    // (1 + 3 + 3 + 1)/8 = 8/8 = 1.
+    //
+    // THE SUM IS INSIDE THE DIVISION, WHICH IS WHAT SEPARATES THIS FROM
+    // `sample-spaces`' `p + q + r + s` AT THE SAME FOUR NUMBERS. There the
+    // answer is 8 and the claim is that the four counts make up the space; here
+    // the answer is 1 and the claim is that four PROBABILITIES do. The second
+    // does not follow from the first by arithmetic — it follows from X being a
+    // function, which sends each sequence to exactly one value, so the preimages
+    // have nothing in common and leave nothing out.
+    //
+    // AND THAT IS WHY THE PROMPT ASKS WHAT 9/8 WOULD HAVE MEANT. The total is
+    // not a sanity check with a vague failure mode: it is 1 or the four
+    // preimages are not a partition, and the two ways to miss are putting a
+    // sequence in two of them (too much) or in none (too little). A learner who
+    // can say that has understood why the check is worth making every time.
+    //
+    // THE ONLY REFERENCE IN THE CONCEPT THAT IS AN INTEGER, and it is a
+    // probability rather than a count — the probability of the whole space.
+    // tests/concepts-logic.mjs pins it to this expression so that a 1 arriving
+    // from anywhere else here goes red.
+    reference: '1',
+    at: { p: '1', q: '3', r: '3', s: '1', n: '8' },
+  },
+  {
+    id: 'add-two-entries-with-nothing-to-subtract-1',
+    knowledgePointId:
+      'the-values-partition-the-space-so-the-table-adds-to-one-and-they-are-not-equally-likely',
+    kind: 'evaluate',
+    prompt:
+      'Find the probability that the three tosses give exactly one head or exactly two. '
+      + '`sample-spaces` warns that two events in general need P(A) + P(B) - P(A and B), and the '
+      + 'correction is forced rather than conventional. Decide first what "exactly one head AND '
+      + 'exactly two heads" is as a set of sequences, and then evaluate (q + r)/n at q = 3, '
+      + 'r = 3, n = 8 — an expression with no third term, because there is nothing to subtract '
+      + 'rather than something that happens to come out at zero.',
+    given: '(q + r)/n',
+    variables: TWO_ENTRIES_TAKEN_TOGETHER,
+    // (3 + 3)/8 = 6/8 = 3/4.
+    //
+    // THE ABSENT TERM IS THE CONTENT AND THE SHAPE OF THE EXPRESSION CARRIES IT.
+    // X gives each sequence exactly one number, so no sequence has both one head
+    // and two: the overlap event is EMPTY, which is a stronger statement than a
+    // probability of zero and is the reason the third term does not appear at
+    // all. The prompt asks for the set before the arithmetic for that reason —
+    // a learner who answers "no sequences" has the claim, and one who answers
+    // "probability 0" has only the arithmetic.
+    //
+    // THE SAME 3/4 IS REACHED BY `q/n + r/n` IN THE THIRD POINT AND THE TWO
+    // TASKS ARE NOT DUPLICATES. "X is 1 or 2" and "Y is 1" are one subset of the
+    // eight sequences under two descriptions, so the agreement is forced; what
+    // differs is the route, counts-then-divide here and probabilities-then-add
+    // there. tests/concepts-logic.mjs asserts the agreement and the distinctness
+    // of the two givens together, because either alone would be satisfied by the
+    // wrong thing.
+    //
+    // TWO LETTERS RATHER THAN `2*q`, because the two entries are both 3 by the
+    // coin's symmetry and not by anything structural about merging.
+    reference: '3/4',
+    at: { q: '3', r: '3', n: '8' },
+  },
+  {
+    id: 'the-largest-entry-over-the-smallest-1',
+    knowledgePointId:
+      'the-values-partition-the-space-so-the-table-adds-to-one-and-they-are-not-equally-likely',
+    kind: 'evaluate',
+    prompt:
+      'The table of X is 1/8, 3/8, 3/8, 1/8 at 0, 1, 2 and 3 heads. Measure how far from '
+      + 'equally likely those four values are by comparing the largest entry with the smallest. '
+      + 'Evaluate (r/n)/(p/n) at r = 3, p = 1, n = 8. Then say two things about your answer: '
+      + 'what it would have to be for the four values to be equally likely, and why it is not '
+      + 'itself a probability.',
+    given: '(r/n)/(p/n)',
+    variables: THE_LARGEST_ENTRY_OVER_THE_SMALLEST,
+    // (3/8)/(1/8) = 3.
+    //
+    // THE SPACE IS WRITTEN TWICE AND CANCELS, WHICH IS THE POINT OF THE SHAPE.
+    // `r/p` gives the same 3 and is a ratio of two COUNTS; this is a ratio of
+    // two PROBABILITIES, and letting the two 8s cancel is the demonstration that
+    // the comparison does not depend on the size of the space. Same device as
+    // `conditional-probability`'s `(k/n)/(m/n)` and for the same reason.
+    //
+    // 3 IS THE ONE REFERENCE IN THIS CONCEPT OUTSIDE [0, 1], and the prompt
+    // makes the learner say why rather than leaving it as a curiosity: a
+    // quotient of probabilities can exceed 1 where no entry in a table ever can,
+    // so the answer is a comparison and not an answer to "how likely". It is the
+    // second such reference in these subjects after the fourth concept's odds
+    // ratio 18, it belongs to the same category, and the count is pinned at one
+    // in tests/concepts-logic.mjs.
+    //
+    // AND IT IS THE EXACT SIZE OF THE ERROR THE SMALL SPACE WAS MAKING. Equally
+    // likely would put this ratio at 1 and the table at 1/4 four times; it is 3,
+    // and 1/8, 3/8, 3/8, 1/8 is what the eight sequences actually say. The
+    // second task of the point below measures the same disagreement as a
+    // difference; this measures it as a ratio.
+    reference: '3',
+    at: { r: '3', p: '1', n: '8' },
+  },
+  {
+    id: 'merge-two-entries-by-adding-their-probabilities-1',
+    knowledgePointId:
+      'a-new-rule-over-the-same-outcomes-merges-values-and-the-probabilities-of-what-it-merges-add',
+    kind: 'evaluate',
+    prompt:
+      'Let Y be the margin by which one side beat the other, |heads - tails|. Tails is 3 - X, '
+      + 'so Y = |2X - 3|, which is 3, 1, 1, 3 as X runs 0, 1, 2, 3 — a function of a random '
+      + 'variable is a random variable, and this one is not one-to-one. X = 1 and X = 2 are both '
+      + 'sent to 1, so the sequences behind "Y = 1" are the union of two preimages that share '
+      + 'nothing, and their probabilities add. Work from the table 1/8, 3/8, 3/8, 1/8 and not '
+      + 'from the sequences: evaluate q/n + r/n at q = 3, r = 3, n = 8.',
+    given: 'q/n + r/n',
+    variables: TWO_ENTRIES_MERGED_AS_PROBABILITIES,
+    // 3/8 + 3/8 = 6/8 = 3/4.
+    //
+    // THE ARITHMETIC IS ON PROBABILITIES ALREADY IN HAND AND THAT IS WHAT IS
+    // NEW. Nothing is counted, no sequence is looked at, and the eight sequences
+    // are never revisited — which is what building the table bought. No question
+    // in the three concepts below can ask for this, because below there is no
+    // table to merge entries of.
+    //
+    // THE PROMPT SAYS "NOT FROM THE SEQUENCES" BECAUSE THE WRONG ROUTE GETS THE
+    // RIGHT ANSWER. Y = 1 is six of the eight sequences and 6/8 is 3/4, so a
+    // learner who goes back and counts arrives at the same number having done
+    // the concept below's work. The instruction is the only thing that
+    // distinguishes them, which is a limit of what an `evaluate` can observe and
+    // is said here rather than hidden.
+    //
+    // IT AGREES WITH `(q + r)/n` IN THE POINT ABOVE, NECESSARILY, since "X is 1
+    // or 2" and "Y is 1" are one event under two descriptions. If the two ever
+    // disagreed the merge would not be a merge, so the agreement is asserted.
+    reference: '3/4',
+    at: { q: '3', r: '3', n: '8' },
+  },
+  {
+    id: 'merge-the-other-pair-on-their-counts-1',
+    knowledgePointId:
+      'a-new-rule-over-the-same-outcomes-merges-values-and-the-probabilities-of-what-it-merges-add',
+    kind: 'evaluate',
+    prompt:
+      'The margin Y takes only two values, and the other one is 3: X = 0 and X = 3 are both sent '
+      + 'to it, which is TTT and HHH — two of the eight sequences of three coin tosses. Get '
+      + 'P(Y = 3) the other way round from the task before — '
+      + 'add the two preimage SIZES and divide once, rather than dividing twice and adding. '
+      + 'Evaluate (p + s)/n at p = 1, s = 1, n = 8. Then check the table of Y against 1, and say '
+      + 'whether merging values could ever have broken that total.',
+    given: '(p + s)/n',
+    variables: THE_TWO_END_ENTRIES_MERGED_ON_COUNTS,
+    // (1 + 1)/8 = 2/8 = 1/4, and 3/4 + 1/4 = 1.
+    //
+    // THE OTHER ROUTE, ON PURPOSE, so that the point shows both and says they
+    // must agree. Dividing a sum by 8 and summing the quotients are the same
+    // operation — one line of `fraction-arithmetic` — which is why no learner
+    // has to be told that merging is safe and why the two tasks of this point
+    // are not a repetition.
+    //
+    // THE TOTAL QUESTION IN THE PROMPT HAS A STRUCTURAL ANSWER AND NOT AN
+    // ARITHMETIC ONE. 3/4 + 1/4 = 1, and it could not have come out otherwise:
+    // every sequence still goes to exactly one value of Y, so the preimages of Y
+    // are a COARSER partition of the same eight sequences, and a coarser
+    // partition is still a partition. That is the contrast the ninth task is
+    // for — merging keeps every outcome, conditioning does not.
+    //
+    // DIFFERENT LETTERS FROM THE TASK ABOVE, `p` and `s` for the two ENDS of the
+    // table against `q` and `r` for the two MIDDLES. A shared list would let a
+    // substitution claim the ends and the middles were the same two numbers,
+    // which is the one thing the table says they are not.
+    reference: '1/4',
+    at: { p: '1', s: '1', n: '8' },
+  },
+  {
+    id: 'rebuild-the-table-by-ruling-an-outcome-out-1',
+    knowledgePointId:
+      'a-new-rule-over-the-same-outcomes-merges-values-and-the-probabilities-of-what-it-merges-add',
+    kind: 'evaluate',
+    prompt:
+      'Now rebuild the table the other way, by ruling an outcome out instead of merging values. '
+      + 'Given that at least one head came up, TTT is gone and seven sequences remain, so the '
+      + 'condition has probability 1 - 1/8 = 7/8 and `conditional-probability` replaces the '
+      + 'space with it. Evaluate (r/n)/(1 - p/n) at r = 3, p = 1, n = 8 to get '
+      + 'P(X = 2 given at least one head). Then note that the three surviving entries are 3/7, '
+      + '3/7 and 1/7 while their numerators 3/8, 3/8 and 1/8 add to 7/8, and say what the '
+      + 'division was for and why the merging in the two tasks before needed nothing like it.',
+    given: '(r/n)/(1 - p/n)',
+    variables: AN_ENTRY_OVER_A_COMPLEMENT,
+    // (3/8)/(1 − 1/8) = (3/8)/(7/8) = 3/7.
+    //
+    // THE LAST TASK OF THE CONCEPT AND THE ONLY ONE THAT CONDITIONS ANYTHING,
+    // which is also why `random-variables` declares no credit edge to
+    // `conditional-probability`: one of nine tasks is not two of three points.
+    // What the gate does buy is this contrast, and the contrast is the point's
+    // answer rather than an extension of it.
+    //
+    // THE DENOMINATOR IS A COMPLEMENT RATHER THAN A SUPPLIED TOTAL, and it is
+    // the first complement in these subjects to be divided BY. `sample-spaces`
+    // asks `1 - c/n` at the same two numbers and answers 7/8 on its own; here
+    // that 7/8 sits underneath an entry, so the complement rule is used as a
+    // step. Giving the total away as `p/q` — the shape `bayes-theorem` uses —
+    // would have removed the only part a learner has to construct.
+    //
+    // THE PROMPT ASKS WHAT THE DIVISION WAS FOR BECAUSE THAT IS THE WHOLE
+    // DISTINCTION. 3/7 + 3/7 + 1/7 = 1 only because of it; the numerators add
+    // to 7/8, not to 1. Merging keeps the total for free because nothing left
+    // the space, and conditioning discards TTT and has to renormalise by the
+    // probability of what it kept. Both rebuild a distribution and that single
+    // fact decides which needs a division.
+    //
+    // IT CANNOT VANISH, CHECKED ON THE TASK. `1 - p/n` is zero exactly when
+    // p = n, and here p = 1 and n = 8. No `domainConditions`, because the
+    // expression is fine and only a substitution could break it — and what it
+    // would break is not arithmetic: conditioning on an event of probability 0
+    // is undefined because there is no space left to replace the old one with.
+    reference: '3/7',
+    at: { r: '3', p: '1', n: '8' },
+  },
+  //
+  // ── expectation ─────────────────────────────────────────────────────────
+  //
+  // Nine `evaluate` tasks, three per point, on the same eight sequences the
+  // concept below is set on. The shapes:
+  //
+  //     (0*p + 1*q + 2*r + 3*s)/n      the weighted total, for X
+  //     (0*p + 1*q + 2*r + 3*s)/n      the same expression, for T
+  //     (0 + 1 + 2 + 3)/m - …          the plain average's overshoot on T
+  //     a*((0*p + 1*q + 2*r + 3*s)/n) + b   the linear rule pushed through
+  //     (1*p + 3*q + 5*r + 7*s)/n      the same rule the long way, rebuilt
+  //     (1*(q + r) + 3*(p + s))/n      a merged table, where the push-through fails
+  //     (g + h)/n                      two totals over one space, added
+  //     (0*p + 2*q + 3*r + 4*s)/n      the sum rule's own table
+  //     k/n - (g/n)*(h/n)              the product, which is NOT free
+  //
+  // THE FIRST TWO ARE ONE EXPRESSION AT TWO SUBSTITUTIONS AND THAT IS THE
+  // CONCEPT'S CENTRAL CLAIM, not a repetition. The values 0, 1, 2, 3 are
+  // LITERALS in the expression, so the two tasks differ in nothing a learner can
+  // see except the four preimage sizes — and they answer 3/2 and 11/8. X and T
+  // take the same four values on the same eight sequences, so any method reading
+  // only the value list must give them the same answer, and these two tasks are
+  // the proof that no such method is right. The shared-expression pattern exists
+  // in `plane-geometry` as "the same expression at two inputs, where agreeing is
+  // what makes them a pair"; this is the first place where DISAGREEING is.
+  //
+  // SEVEN OF THE NINE REFERENCES LEAVE [0, 1], WHICH IS A NEW CATEGORY RATHER
+  // THAN A DRIFT. Every reference in the five concepts below is a probability
+  // except two — `bayes-theorem`'s odds ratio 18 and `random-variables`' ratio 3
+  // — and each is pinned at exactly one so the exception cannot spread. Here the
+  // interval is simply not the right one: an expectation is in the UNITS OF THE
+  // VARIABLE, and a count of heads has no reason to be at most 1. The two that
+  // stay inside are the two gaps, 1/8 and 1/16, which are differences of
+  // quantities rather than quantities. So the assertion in
+  // tests/concepts-logic.mjs is inverted for this concept — seven outside and
+  // two in, named — which is the honest form of a rule that was never about [0,
+  // 1] but about not claiming to be a probability.
+  //
+  // NO `state` TASK, and the refusal is sharper here than in the concept below.
+  // "Say why the shortcut fails on the modulus" is the most valuable question
+  // this concept raises and `TaskKind` declares `state` unverifiable, so asking
+  // it would produce a chain that cannot become evidence. The argument is
+  // carried in the worked examples and in the prompts, where telling is honest,
+  // and what gets graded is the two numbers the argument is about: E[Y] = 3/2
+  // against the 0 the prompt hands over.
+  //
+  // NO `counterexample` EITHER, WHICH IS THE ONE WORTH EXPLAINING. `TaskKind`
+  // calls it "machine-rulable when the claim is an identity", and
+  // E[g(X)] = g(E[X]) IS an identity, so "produce a g breaking it" looks
+  // askable. It is not askable HERE: ruling it needs a distribution and a
+  // function as inputs, and `PracticeTask` carries one expression, one
+  // substitution and one reference. The kind would have to take a table. Said
+  // out loud because this is the first concept in these subjects where the
+  // refusal is about the task SCHEMA rather than about the kind being
+  // unverifiable, and the two look identical from the coverage line.
+  //
+  // NO `transform_to_form`, NO `justify`, and no `domainConditions` on any of
+  // the nine, for the reasons ontology-chance.ts gives five times already. The
+  // one thing to check was the product task's denominators: `(g/n)*(h/n)` is
+  // zero-divided only if n is, and n is the size of a sample space.
+  {
+    id: 'total-the-table-weighted-by-its-own-values-1',
+    knowledgePointId:
+      'the-expectation-weights-each-value-by-its-probability-so-two-rules-sharing-a-value-list-differ',
+    kind: 'evaluate',
+    prompt:
+      'A fair coin is tossed three times, so the sample space is the eight equally likely '
+      + 'sequences, and X is the number of heads. `random-variables` built its table by '
+      + 'collecting preimages of sizes 1, 3, 3 and 1 at the values 0, 1, 2, 3. Collapse that '
+      + 'table to one number: multiply each value by its own probability and total the lot. '
+      + 'Evaluate (0*p + 1*q + 2*r + 3*s)/n at p = 1, q = 3, r = 3, s = 1, n = 8, where the '
+      + 'literals 0, 1, 2, 3 are the values X takes and p, q, r, s are the preimage sizes behind '
+      + 'them.',
+    given: '(0*p + 1*q + 2*r + 3*s)/n',
+    variables: A_TABLE_AND_THE_SPACE_IT_CAME_FROM,
+    // (0 × 1 + 1 × 3 + 2 × 3 + 3 × 1)/8 = (0 + 3 + 6 + 3)/8 = 12/8 = 3/2.
+    //
+    // THE SAME FIVE NUMBERS AS `(p + q + r + s)/n` IN THE CONCEPT BELOW, AND THE
+    // WEIGHTS ARE THE WHOLE DIFFERENCE. That task answers 1 and is the statement
+    // that the values of a function partition the space; this one answers 3/2
+    // and is the statement that the table has a centre. One division in each,
+    // five identical inputs, and the only change is a coefficient per term — so
+    // a reader can see that expectation adds nothing to the table except an
+    // arithmetic on it.
+    //
+    // THE ZERO TERM IS WRITTEN OUT AND IT MATTERS. `(q + 2*r + 3*s)/n` gives the
+    // same 12/8 and would be the shorter expression, and it would also lose the
+    // thing `sigma-notation`'s first point is for: there are FOUR values and
+    // therefore four terms, upper minus lower plus one, and X = 0 is a value X
+    // takes rather than a row that is not there. Dropping it is the commonest
+    // arithmetic slip available on this table, and an expression that drops it
+    // teaches the slip.
+    //
+    // THE REFERENCE IS OUTSIDE [0, 1] AND IS NOT A RATIO OF PROBABILITIES,
+    // which is the first of its kind in these subjects. 18 and 3 are both
+    // quotients of two probabilities and so are dimensionless; 3/2 is in HEADS.
+    // That is the whole reason the concept opens by saying what kind of number
+    // came out.
+    reference: '3/2',
+    at: { p: '1', q: '3', r: '3', s: '1', n: '8' },
+  },
+  {
+    id: 'total-the-same-shape-for-a-second-rule-1',
+    knowledgePointId:
+      'the-expectation-weights-each-value-by-its-probability-so-two-rules-sharing-a-value-list-differ',
+    kind: 'evaluate',
+    prompt:
+      'Keep the same eight sequences and take the other rule `random-variables` put on them: T '
+      + 'is the toss on which the first head appears, with T = 0 at TTT, since a rule has to '
+      + 'give every outcome a value or it is not a function on this space. Its preimages are TTT '
+      + 'alone; the four sequences beginning with H; THH and THT; and TTH alone — so its table is '
+      + '1, 4, 2, 1 over 8 at the values 0, 1, 2, 3. T takes the SAME four values as X. Evaluate '
+      + 'the SAME expression (0*p + 1*q + 2*r + 3*s)/n at p = 1, q = 4, r = 2, s = 1, n = 8, and '
+      + 'compare your answer with the task before.',
+    given: '(0*p + 1*q + 2*r + 3*s)/n',
+    variables: A_TABLE_AND_THE_SPACE_IT_CAME_FROM,
+    // (0 × 1 + 1 × 4 + 2 × 2 + 3 × 1)/8 = (0 + 4 + 4 + 3)/8 = 11/8.
+    //
+    // ONE EXPRESSION, TWO SUBSTITUTIONS, TWO ANSWERS — AND THE DISAGREEMENT IS
+    // THE TEACHING. Every other shared-expression pair in these subjects is a
+    // pair because the two AGREE: the rhombus area twice, the two routes to
+    // P(Y = 1), the three forms of one theorem. This is the first pair that
+    // exists because the answers differ, and what the difference establishes is
+    // a negative — the expectation is not a function of the value list, because
+    // here is one list with two expectations.
+    //
+    // THE VALUES BEING LITERALS IS WHAT MAKES THAT READABLE. 0, 1, 2 and 3 are
+    // in the expression and not in `at`, so the two tasks are character-for-
+    // character the same question and differ only in four preimage sizes. Had
+    // the values been letters, the two substitutions would have differed in nine
+    // places and a reader would have no reason to think the value lists were
+    // the same at all.
+    //
+    // AND IT IS A REAL SECOND VARIABLE RATHER THAN A FUNCTION OF THE FIRST,
+    // which the third point needs and which nothing in the concept below
+    // supplies. Y there is |2X - 3| and so carries no information X does not;
+    // T is chosen on the space independently, and the ninth task multiplies the
+    // two together.
+    reference: '11/8',
+    at: { p: '1', q: '4', r: '2', s: '1', n: '8' },
+  },
+  {
+    id: 'measure-what-ignoring-the-weights-costs-1',
+    knowledgePointId:
+      'the-expectation-weights-each-value-by-its-probability-so-two-rules-sharing-a-value-list-differ',
+    kind: 'evaluate',
+    prompt:
+      'A learner who ignores the table and averages the four values gets (0 + 1 + 2 + 3)/4 = '
+      + '3/2, which is the right answer for X — by a route that is wrong, since X\'s table is '
+      + 'symmetric and the pull towards the middle cancels. On T it is simply wrong: T has the '
+      + 'same four values and the table 1, 4, 2, 1 over 8, so the weighted answer is 11/8. Find '
+      + 'how far the plain average overshoots. Evaluate '
+      + '(0 + 1 + 2 + 3)/m - (0*p + 1*q + 2*r + 3*s)/n at m = 4, p = 1, q = 4, r = 2, s = 1, '
+      + 'n = 8.',
+    given: '(0 + 1 + 2 + 3)/m - (0*p + 1*q + 2*r + 3*s)/n',
+    variables: A_PLAIN_AVERAGE_AGAINST_THE_WEIGHTED_ONE,
+    // 6/4 − 11/8 = 12/8 − 11/8 = 1/8.
+    //
+    // THE REFERENCE IS A GAP AND NOT A WRONG ANSWER, which is the same shape and
+    // the same defence as `c/(u*v*w) - 1/m` in the concept below: how far apart
+    // two computations are is a true fact, the prompt settles which one is
+    // licensed before asking, and a learner who produces 1/8 has had to do both.
+    // "Which route is right" would be a `state` task and unrulable.
+    //
+    // ASKED ON T BECAUSE ON X IT WOULD BE ZERO, which is the one decision in
+    // this task. The same expression at X's substitution is a true statement
+    // with reference 0, and it would teach that the weights do not matter — the
+    // exact error the point exists to close. The table that makes the two routes
+    // agree is the one the concept is introduced on, so the gap has to be asked
+    // somewhere else or not at all.
+    //
+    // 1/8 IS ALSO THE GAP IN THE CONCEPT BELOW AND THAT IS A COINCIDENCE. There
+    // it is 3/8 − 1/4, the distance between two SPACES; here it is the distance
+    // between two METHODS on one table. Said because three tosses of a fair coin
+    // put a great many of these quantities at an eighth, and the resemblance is
+    // the kind of thing a reader supplies a reason for.
+    reference: '1/8',
+    at: { m: '4', p: '1', q: '4', r: '2', s: '1', n: '8' },
+  },
+  {
+    id: 'push-a-linear-rule-through-the-expectation-1',
+    knowledgePointId:
+      'a-linear-rule-can-be-pushed-through-the-expectation-and-the-total-of-one-is-what-licenses-it',
+    kind: 'evaluate',
+    prompt:
+      'Same three tosses, same X with preimages 1, 3, 3, 1 over 8 at the values 0, 1, 2, 3. Let '
+      + 'W = 2X + 1. The rule E[aX + b] = aE[X] + b says you can reach E[W] without rebuilding '
+      + 'W\'s table at all: total X\'s table once, then multiply by a and add b. Evaluate '
+      + 'a*((0*p + 1*q + 2*r + 3*s)/n) + b at a = 2, b = 1, p = 1, q = 3, r = 3, s = 1, n = 8, '
+      + 'and note how many of W\'s own probabilities you used.',
+    given: 'a*((0*p + 1*q + 2*r + 3*s)/n) + b',
+    variables: A_LINEAR_RULE_OUTSIDE_A_WHOLE_TABLE,
+    // 2 × (12/8) + 1 = 3 + 1 = 4.
+    //
+    // THE TABLE IS INSIDE THE BRACKETS AND THE RULE IS OUTSIDE THEM, which is
+    // the whole content of the expression. `a*e + b` at e = 3/2 gives the same 4
+    // and asserts nothing: what the theorem says is that a and b reach the
+    // answer without reaching the four probabilities, and only a shape with the
+    // table nested inside shows what was skipped. The nesting is also why this
+    // task and the one after it have different expressions for the same number.
+    //
+    // `a` AND `b` ARE LETTERS WHERE THE VALUES ARE LITERALS, which is the
+    // reverse of the first three tasks and is deliberate. 0, 1, 2, 3 are fixed
+    // by the experiment — X counts heads — while a and b are what makes a rule
+    // LINEAR and are the two things the theorem is quantified over. A learner
+    // substituting them is instantiating a rule rather than evaluating a
+    // number.
+    //
+    // THE REFERENCE IS A WHOLE NUMBER AND THAT IS WORTH ONE LINE. 4 is the only
+    // integer reference in this concept, and it is an expectation rather than a
+    // count — W takes 1, 3, 5, 7 and averages to exactly 4, which is again not a
+    // value W takes. An integer here is not the bare count the three concepts
+    // below each assert they have none of.
+    reference: '4',
+    at: { a: '2', b: '1', p: '1', q: '3', r: '3', s: '1', n: '8' },
+  },
+  {
+    id: 'rebuild-the-relabelled-table-and-total-it-1',
+    knowledgePointId:
+      'a-linear-rule-can-be-pushed-through-the-expectation-and-the-total-of-one-is-what-licenses-it',
+    kind: 'evaluate',
+    prompt:
+      'Now do the same thing the long way, so that the shortcut is checked rather than trusted. '
+      + 'W = 2X + 1 is one-to-one, so nothing merges: W takes 1, 3, 5, 7 where X took 0, 1, 2, 3 '
+      + 'and carries the same preimages 1, 3, 3, 1 over 8 — the relabelling case '
+      + '`random-variables` said has no arithmetic in it. Total W\'s own table: evaluate '
+      + '(1*p + 3*q + 5*r + 7*s)/n at p = 1, q = 3, r = 3, s = 1, n = 8.',
+    given: '(1*p + 3*q + 5*r + 7*s)/n',
+    variables: A_TABLE_AND_THE_SPACE_IT_CAME_FROM,
+    // (1 × 1 + 3 × 3 + 5 × 3 + 7 × 1)/8 = (1 + 9 + 15 + 7)/8 = 32/8 = 4.
+    //
+    // IT AGREES WITH THE TASK BEFORE AND THE AGREEMENT IS WHAT MAKES THE RULE A
+    // THEOREM. Two expressions, one answer: a*(table) + b and the relabelled
+    // table totalled in full. This is the subject's established
+    // two-routes-agreeing shape — `(q + r)/n` against `q/n + r/n` in the concept
+    // below — used here on a claim rather than on a set, and if they disagreed
+    // the shortcut would be false rather than the merge not being a merge.
+    //
+    // THE SAME FOUR PREIMAGE SIZES AS X, UNCHANGED, which is the structural fact
+    // the one-to-one case contributes. The substitution is identical to the
+    // first task's and only the four literal values have moved, 0, 1, 2, 3 to 1,
+    // 3, 5, 7 — so a reader can see that a linear rule relocates the values and
+    // leaves the probabilities exactly where they were. That is also why this
+    // task cannot stand in for a merge: nothing was added.
+    //
+    // 32/8 RATHER THAN 4 IS WHAT A LEARNER WILL WRITE, and either is correct.
+    // The reference is 4 and `ruleEvaluate` settles equivalence, so the eighths
+    // are not required — worth noting because the denominator 8 surviving in the
+    // intermediate arithmetic is the sign the table was totalled rather than the
+    // shortcut re-run.
+    reference: '4',
+    at: { p: '1', q: '3', r: '3', s: '1', n: '8' },
+  },
+  {
+    id: 'total-a-merged-table-where-the-shortcut-fails-1',
+    knowledgePointId:
+      'a-linear-rule-can-be-pushed-through-the-expectation-and-the-total-of-one-is-what-licenses-it',
+    kind: 'evaluate',
+    prompt:
+      'Now a rule that is NOT of the form aX + b. Let Y = |2X - 3| be the margin between heads '
+      + 'and tails, which is 3, 1, 1, 3 as X runs 0 to 3 — so Y takes 1 and 3 only, and merges '
+      + 'the two middle preimages under 1 and the two end ones under 3. Pushing the expectation '
+      + 'through anyway gives |2(3/2) - 3| = 0, which is not even a value Y takes. Do it '
+      + 'honestly: evaluate (1*(q + r) + 3*(p + s))/n at p = 1, q = 3, r = 3, s = 1, n = 8, '
+      + 'where the bracketed sums are the merged preimages and 1 and 3 are the values of Y.',
+    given: '(1*(q + r) + 3*(p + s))/n',
+    variables: A_TABLE_AND_THE_SPACE_IT_CAME_FROM,
+    // (1 × (3 + 3) + 3 × (1 + 1))/8 = (6 + 6)/8 = 12/8 = 3/2.
+    //
+    // THE MERGE IS IN THE BRACKETS, WHICH IS WHAT DISTINGUISHES THIS FROM THE
+    // TASK ABOVE. There a one-to-one rule moved four values and left four
+    // probabilities; here a two-to-one rule leaves two, and the expression
+    // groups `q + r` and `p + s` to say which preimages were unioned — exactly
+    // the pairing `random-variables`' third point computes as 3/4 and 1/4.
+    // Writing Y's table as two bare letters would have hidden the fact that
+    // these are X's four numbers rearranged.
+    //
+    // THE REFERENCE EQUALS THE FIRST TASK'S AND THAT IS A COINCIDENCE WORTH
+    // NAMING, because it is the one place in this concept where a repeated
+    // answer is not an agreement. E[X] = 3/2 and E[Y] = 3/2, on a fair coin,
+    // for no reason the material uses — X and Y are different rules with
+    // different tables and different units of nothing in common. The prompt
+    // deliberately quotes the shortcut's 0 rather than E[X]'s 3/2 so that a
+    // learner is not invited to read the equality as the point.
+    //
+    // THE ILLEGAL ANSWER IS IN THE PROMPT AND IS NOT THE REFERENCE, for the
+    // reason the gap task gives: a wrong number is never a reference here. What
+    // makes handing it over safe is that it refutes itself — Y is 1 or 3 on
+    // every sequence, so 0 is outside the range of the quantity being averaged,
+    // and a learner can see the shortcut has failed before computing 3/2.
+    reference: '3/2',
+    at: { p: '1', q: '3', r: '3', s: '1', n: '8' },
+  },
+  {
+    id: 'add-two-totals-over-one-space-1',
+    knowledgePointId:
+      'expectation-adds-across-two-rules-on-one-space-whether-or-not-they-are-independent',
+    kind: 'evaluate',
+    prompt:
+      'Put the two rules side by side on the same eight sequences: X the heads-count and T the '
+      + 'toss the first head falls on. Across the eight sequences X totals 12 and T totals 11 — '
+      + 'which is where E[X] = 12/8 and E[T] = 11/8 came from. Now S = X + T, and totalling '
+      + 'X + T over the eight sequences adds the same numbers in a different order, so its total '
+      + 'is 12 + 11 before anything is divided. Evaluate (g + h)/n at g = 12, h = 11, n = 8, and '
+      + 'note that this predicts E[S] without S having been worked out on a single sequence.',
+    given: '(g + h)/n',
+    variables: TWO_TOTALS_OVER_ONE_SPACE,
+    // (12 + 11)/8 = 23/8.
+    //
+    // THE TOTALS ARRIVE AS COUNTS AND THE DIVISION HAPPENS ONCE, which is the
+    // argument rather than a tidier arrangement of it. Two nested weighted sums
+    // would give the same 23/8 and would hide the reason: expectations add
+    // because a sum over the eight sequences can be reordered, so 23 = 12 + 11
+    // holds before any probability is involved, and dividing one total by 8 is
+    // the same as dividing two and adding.
+    //
+    // NOTHING IN THE EXPRESSION COULD CARRY AN INDEPENDENCE CONDITION, and that
+    // is the honest shape for a fact that does not need one. X and T are
+    // dependent — the next point's prompt runs the product test and gets 0
+    // against 1/16 — and `(g + h)/n` is indifferent to it. A shape with the two
+    // tables in it would at least have had somewhere for a condition to go.
+    //
+    // IT IS THE FIRST TASK IN THESE SUBJECTS WITH TWO VARIABLES SIDE BY SIDE
+    // rather than one rule or a function of one. `random-variables` has Y built
+    // FROM X, which carries no information X does not; here T is a second choice
+    // on the space, which is why no table above could have stated this and why
+    // the concept needed a second rule at all.
+    reference: '23/8',
+    at: { g: '12', h: '11', n: '8' },
+  },
+  {
+    id: 'total-the-sum-rules-own-table-1',
+    knowledgePointId:
+      'expectation-adds-across-two-rules-on-one-space-whether-or-not-they-are-independent',
+    kind: 'evaluate',
+    prompt:
+      'Check that prediction against S\'s own table. Working X + T out sequence by sequence gives '
+      + '4, 3, 3, 2, 4, 3, 4, 0 across HHH, HHT, HTH, HTT, THH, THT, TTH, TTT — so S takes 0 '
+      + 'once, 2 once, 3 three times and 4 three times, and never takes 1 at all. Total it: '
+      + 'evaluate (0*p + 2*q + 3*r + 4*s)/n at p = 1, q = 1, r = 3, s = 3, n = 8, where the '
+      + 'literals are the values S takes and p, q, r, s are the preimages behind them.',
+    given: '(0*p + 2*q + 3*r + 4*s)/n',
+    variables: A_TABLE_AND_THE_SPACE_IT_CAME_FROM,
+    // (0 × 1 + 2 × 1 + 3 × 3 + 4 × 3)/8 = (0 + 2 + 9 + 12)/8 = 23/8.
+    //
+    // IT MEETS THE TASK BEFORE, WHICH IS THE WHOLE OF WHY BOTH ARE ASKED. The
+    // prediction came from two totals and three letters; this comes from four
+    // preimages collected off the eight sequences. Two routes, one answer, and
+    // the agreement is what turns additivity from an assertion into something a
+    // learner has checked — the same discipline as the two routes to P(Y = 1) in
+    // the concept below.
+    //
+    // THE VALUE LITERALS ARE 0, 2, 3, 4 AND THE GAP IS VISIBLE IN THE
+    // EXPRESSION. S skips 1 entirely, which the shape says without a word of
+    // prose: a weighted total over four values that are not consecutive. S = 1
+    // would need no heads with a first head on toss one, or one head with no
+    // head anywhere, and both are empty. Worth having in the expression because
+    // every other table in these subjects runs over consecutive values and a
+    // reader would otherwise assume it is forced.
+    //
+    // THE FOUR PREIMAGES ARE 1, 1, 3, 3 AND NOT A PERMUTATION OF X'S 1, 3, 3, 1,
+    // which is checked rather than eyeballed: they add to 8 as any partition of
+    // this space must, but the sum rule's table is genuinely its own and is not
+    // X's reordered. tests/concepts-logic.mjs derives it from the eight
+    // sequences rather than reading it off this comment.
+    reference: '23/8',
+    at: { p: '1', q: '1', r: '3', s: '3', n: '8' },
+  },
+  {
+    id: 'compare-the-product-total-with-the-product-of-totals-1',
+    knowledgePointId:
+      'expectation-adds-across-two-rules-on-one-space-whether-or-not-they-are-independent',
+    kind: 'evaluate',
+    prompt:
+      'Adding turned out to be free, so ask whether multiplying is. Across the eight sequences '
+      + 'XT is 3, 2, 2, 1, 4, 2, 3, 0, which totals 17, so E[XT] = 17/8. Against that, '
+      + 'E[X]E[T] = (12/8)(11/8). Find the difference, and remember that X and T are NOT '
+      + 'independent: P(X = 0) = 1/8 and P(T = 1) = 1/2 multiply to 1/16 while '
+      + 'P(X = 0 and T = 1) = 0, since a sequence with no heads cannot have its first head on '
+      + 'toss one. Evaluate k/n - (g/n)*(h/n) at k = 17, g = 12, h = 11, n = 8.',
+    given: 'k/n - (g/n)*(h/n)',
+    variables: A_PRODUCT_TOTAL_AGAINST_A_PRODUCT_OF_TOTALS,
+    // 17/8 − (12/8)(11/8) = 17/8 − 132/64 = 34/16 − 33/16 = 1/16.
+    //
+    // `g`, `h` AND `n` MEAN WHAT THEY MEAN IN THE TASK TWO ABOVE, deliberately,
+    // because the pair of tasks IS the comparison. Additivity is `(g + h)/n` and
+    // comes out exactly; the multiplicative version is this and does not. Giving
+    // this task its own letters would have made two unrelated-looking questions
+    // out of one fact, and the fact is the asymmetry.
+    //
+    // THE SIZE OF THE MISS IS WHY THE TASK IS WORTH SETTING. 34/16 against
+    // 33/16: an eyeballed or rounded comparison of 2.125 and 2.0625 passes, so a
+    // learner who has computed 1/16 knows the identity is false in a way that
+    // looking at two decimals cannot establish. A blow-up would have taught
+    // less.
+    //
+    // IT IS A COVARIANCE AND THE MATERIAL DOES NOT SAY SO. E[XY] − E[X]E[Y] is
+    // exactly the quantity `variance-and-covariance` is about — still a node of
+    // `probability`, and now that area's only ready one. Naming it here would
+    // promise an account of what the number MEANS, and this subject has
+    // independence as a product test and nothing more; ontology-chance.ts's
+    // `covers` records the boundary in those terms.
+    //
+    // THE DEPENDENCE IS IN THE PROMPT AND IS NOT COMPUTED BY THE TASK, which is
+    // the same decision as the illegal shortcut two tasks up. The product test
+    // is `conditional-probability`'s and is asked there; what this task observes
+    // is the consequence — that the identity needing independence fails on a
+    // pair that lacks it, while the one needing nothing held.
+    reference: '1/16',
+    at: { k: '17', g: '12', h: '11', n: '8' },
   },
 ]
 

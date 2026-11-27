@@ -483,8 +483,84 @@ export const REGIONS: Region[] = [
     // decide between two live options and this run had only one. The next time
     // this slot empties there is no fallback left to name, and that is the fact
     // for whoever gets there.
+    //
+    // THE SLOT EMPTIED A THIRD TIME IN THREE PROMOTIONS AND THE "NO FALLBACK
+    // LEFT" ABOVE WAS WRONG, WHICH IS WORTH MORE THAN THE REFILL. The
+    // forty-ninth promoted `random-variables`, so that anchor had to go — an
+    // anchor must be a node of `area` and it is now a concept of
+    // `chance-and-events`. The refill is `variance-and-covariance`.
+    //
+    // WHY THE NOTE ABOVE WAS WRONG IS A SHAPE AND NOT A SLIP. It ruled things
+    // out by CATEGORY — "the distributions and the limit theorems stay ruled out
+    // however ready they look", and `stochastic-processes` and
+    // `measure-theoretic-probability` as "the machinery rather than the
+    // arithmetic" — and then concluded "nothing else in the area fits". Those
+    // categories cover `discrete-distributions`, `continuous-distributions`,
+    // `joint-distributions`, `law-of-large-numbers`, `central-limit-theorem`,
+    // `stochastic-processes` and `measure-theoretic-probability`: seven of the
+    // nine non-anchor nodes. `variance-and-covariance` and
+    // `transformations-of-variables` belong to no category it named, so the
+    // sweep never reached them and the conclusion did not follow. An
+    // exhaustive-sounding enumeration over CATEGORIES has to be checked against
+    // the node LIST, because what it misses is exactly what it had no word for.
+    //
+    // AND THE READING PICKS IT CLEANLY RATHER THAN ADMITTING IT GRUDGINGLY. The
+    // three anchors are the arithmetic of a random quantity, and variance IS an
+    // expected value — E of the squared deviation from the mean — so the
+    // region's own `because`, "both are expected value, and the swamp is where
+    // somebody is always computing one", applies to it more directly than it did
+    // to the variable itself, which is the OBJECT rather than arithmetic on it.
+    //
+    // THIS SLOT IS SAFE AND THE OTHER ONE IS NOT, which is the reverse of the
+    // position after the forty-eighth. `variance-and-covariance` needs
+    // `expectation`, which is unwritten, so it cannot become ready until that is
+    // authored. But `expectation` is itself an anchor here and the forty-ninth
+    // made it READY — it needs `random-variables`, now written, and
+    // `sigma-notation`, written long since — so it is the single unrefused ready
+    // node on the map and the next promotion will almost certainly take it. When
+    // it does, the slot it empties can be refilled with `variance-and-covariance`
+    // again only if THIS slot has not already taken it, which it has. So the
+    // fallback after that is `transformations-of-variables`, the second node the
+    // category sweep missed: a function of a random variable is arithmetic on a
+    // random quantity, and the fifth concept of `chance-and-events` now teaches
+    // the discrete case of exactly that. Named here deliberately, because the
+    // forty-eighth's note proved that naming a fallback at the time is what
+    // stops the next run re-deriving one.
+    //
+    // THE SLOT EMPTIED A FOURTH TIME IN FOUR PROMOTIONS, EXACTLY AS THE
+    // PARAGRAPH ABOVE PREDICTED, AND THE NAMED FALLBACK IS WHAT PAID IT. The
+    // fiftieth promoted `expectation`, which that paragraph called "the single
+    // unrefused ready node on the map" and expected to go next; so the refill is
+    // `transformations-of-variables`, the second node the category sweep missed
+    // and the one named here in advance for precisely this turnover. Naming it
+    // at the time cost the fiftieth no judgement at all, which is now the third
+    // consecutive refill a predecessor's note has decided — and the argument for
+    // the practice rather than for any one of the names.
+    //
+    // THE READING PICKS IT AS WELL AS THE LIST DID, which is worth checking
+    // rather than assuming when a fallback is inherited. The three anchors are
+    // the arithmetic of a random quantity. A transformed variable's
+    // distribution is arithmetic ON a random quantity — the node's own `is`
+    // puts a Jacobian in it — and `chance-and-events`' sixth concept now
+    // teaches the discrete one-variable case of exactly that: W = 2X + 1 moves
+    // four entries, Y = |2X − 3| merges them, and the expectation of each is
+    // computed. So the region's authored subject reaches the new anchor rather
+    // than merely sitting beside it.
+    //
+    // AND THIS SLOT IS UNSAFE AGAIN, FOR THE SAME REASON AS LAST TIME AND IN A
+    // DIFFERENT SLOT. `transformations-of-variables` needs
+    // `joint-distributions` and `change-of-variables`, neither written, so IT
+    // cannot become ready. But `variance-and-covariance` needed only
+    // `expectation`, which the fiftieth wrote, so that anchor is now READY —
+    // and it is the only unrefused ready node this area has. The fifth turnover
+    // is therefore one promotion away, and this time there is genuinely nothing
+    // left to name: of the area's eight non-anchor nodes, the forty-ninth's
+    // category sweep covered seven and the eighth is `expectation`, now a
+    // concept. So whoever empties this slot next has to either widen the
+    // reading or argue that the region does not need three anchors — which is a
+    // decision about the game's map and not a bookkeeping one.
     authored: ['chance-and-events'],
-    anchors: ['expectation', 'markov-chains', 'random-variables'],
+    anchors: ['markov-chains', 'transformations-of-variables', 'variance-and-covariance'],
     because: 'Order courts price every sentence in money owed to the offended party and the state, and the Scales run a seasonal raid whose return nobody can promise. Both are expected value, and the swamp is where somebody is always computing one.',
   },
   {

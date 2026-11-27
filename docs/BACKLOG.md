@@ -50,7 +50,7 @@ Two things not to get wrong when wiring it:
   wrapper must surface `UNREPORTED` somewhere a human sees it, or the one
   failure mode that loses money becomes invisible.
 
-Verified 2026-11-22 13:15 CST (all four checks re-run): nothing schedules
+Verified 2026-11-26 23:30 UTC (all four checks re-run): nothing schedules
 it by any available route. `systemctl --user list-timers --all` shows
 **seven** timers and no overage timer; `select count(*) from pg_extension
 where extname='pg_cron'` is 0, so no pg_cron job can exist whatever anyone
@@ -62,9 +62,10 @@ getting closer: the seventh is `templedb-deploy-verify-bza.timer`,
 installed 2026-11-22 11:31 CST, which health-checks production hourly and
 has nothing to do with billing. The other six are unchanged
 (poincare-sync, templedb-{ingest,backup,reconcile,agent-tick},
-systemd-tmpfiles-clean). Read a rising timer count as somebody scheduling
-something *else* until you have read the unit, because this list is the
-natural place to expect the fix to show up.
+systemd-tmpfiles-clean), and the count has held at those seven through
+2026-11-26. Read a rising timer count as somebody scheduling something
+*else* until you have read the unit, because this list is the natural place
+to expect the fix to show up.
 
 The pg_cron check is worth keeping first in that list because it is
 structural rather than a snapshot: the installed extensions are plpgsql,
@@ -86,34 +87,32 @@ billing path: every applied migration 50–69 is filed there, and the
 functions are live in `bza_public`.
 
 Sized 2026-11-20 and re-measured on each parked run since, latest
-2026-11-22 13:15 CST, because the paragraphs above read more urgent than
+2026-11-26 23:30 UTC, because the paragraphs above read more urgent than
 the numbers support. Every figure below is a fresh query, not a quotation
 — the recorded peak was once 13× low because it was copied forward
 instead of re-run. The allowance is
 `app_config['billing.included_cents']` =
 500, so $5 per customer-month, and the largest single user-month ever
 recorded is 14.80¢, in 2026-08 — 3% of one allowance. Lifetime
-`charged_cost` across all customers is 39.98¢ over 1568 rows, the current
-month's heaviest user is at 1.26¢, and all three `billing_customers` rows
+`charged_cost` across all customers is 40.26¢ over 1610 rows, the current
+month's heaviest user is at 1.53¢, and all three `billing_customers` rows
 sit at `overage_reported_cents` = 0. So `reconcile_all_overages()` would
 return zero rows today and the UNREPORTED path that can lose money has
 never fired. The gap is real and worth closing before usage grows, but it
 has never cost anything — decide this as a cadence question, not as a leak.
 
-The row count had been the only figure that moved between
-re-measurements: 1565 on the morning of 2026-11-21, 1568 that evening,
-with the lifetime total still 39.98¢ at both. Usage is arriving and
-costing a rounding error, so a risen row count is not evidence the sizing
-has changed — re-run the sum, not just the count.
-
-On 2026-11-22 even the count held: all six figures above came back
-byte-identical to the previous evening's, 1568 rows included. Fourteen
-hours of a weekend added no metered usage at all. That is the sizing
-argument's strongest form so far — this is not a leak that is slowly
-filling, it is a path that is barely used — and it is also the reason not
-to treat a quiet re-measurement as a reason to stop measuring. The figure
-that would change the verdict is a user-month approaching 500¢, and
-nothing here is within two orders of magnitude of it.
+Through 2026-11-22 the row count was the only figure that moved: 1565 on
+the morning of 2026-11-21, 1568 that evening, with the lifetime total still
+39.98¢ at both, and on 2026-11-22 even the count came back byte-identical
+across fourteen hours of a weekend. That was the sizing argument's
+strongest form — not a leak slowly filling but a path barely used — and it
+is also the reason not to treat a quiet re-measurement as a reason to stop
+measuring, because on 2026-11-26 the sum moved for the first time. Four
+days took it to 1610 rows and 40.26¢, with the current month's heaviest
+user going 1.26¢ → 1.53¢: a quarter of a cent of use. So re-run the sum and
+not just the count, and then read a moved sum the way you read a moved
+count. The figure that would change the verdict is a user-month approaching
+500¢, and nothing here is within two orders of magnitude of it.
 
 When re-checking those numbers: `api_usage`'s time column is `timestamp`,
 not `created_at`, so a month filter on `created_at` errors rather than
@@ -132,11 +131,12 @@ What needs deciding is who reviews authored material and how often — not
 whether the restriction stays. Do not resolve it by giving an autonomous task
 publish rights.
 
-Verified 2026-11-22 13:15 CST: still no deploy timer, and
-`deployment_history` rows 422–440 are every one `triggered_by=manual`,
-`deployed_by=zach` — 19 deploys, nine of them inside a single day, all
+Verified 2026-11-26 23:30 UTC: still no deploy timer, and
+`deployment_history` rows 422–454 are every one `triggered_by=manual`,
+`deployed_by=zach` — 33 deploys, nine of them inside a single day, all
 `success` except row 431, which reads `in_progress` because that status is
-written and never cleared, not because a deploy is stuck.
+written and never cleared rather than because a deploy is stuck, and rows
+441, 442 and 450, which failed to build.
 
 Row 440 is head and landed 2026-11-22 11:37 CST, 16 hours after 439, which
 itself landed 28 hours after 438. The run before last recorded 438 as head
@@ -191,13 +191,23 @@ rebuild. It was always independent of this decision, and closing it did
 not move this one.
 
 The "production is serving the graph head" line above lasted about eight
-hours and should not be re-read as the current state. As of 2026-11-24
-05:26 UTC production is eight commits behind, and for once that is NOT a
-cadence observation: the human deployed twice on 2026-11-23 and both
-builds failed, which is item 3 below. So when refreshing this item, check
-`deployment_history.status` before reading a gap as inattention — a run
-that measures the distance to head and writes down "nobody deployed" will
-be wrong in exactly the way that hides a broken build.
+hours and should not be re-read as the current state. Measure it yourself;
+it moves within hours either way. On 2026-11-24 05:26 UTC production was
+eight commits behind, and for once that was NOT a cadence observation: the
+human deployed twice on 2026-11-23 and both builds failed, which is item 3
+below. So when refreshing this item, check `deployment_history.status`
+before reading a gap as inattention — a run that measures the distance to
+head and writes down "nobody deployed" will be wrong in exactly the way
+that hides a broken build.
+
+As of 2026-11-26 23:30 UTC the gap is one commit: `/api/version` answers
+`DE70D482314717DF` built at 20:20 UTC, and head is `3A89C3EEC9CD2CAD`, the
+random-variables promotion from 22:28. Six deploys landed between 19:23 and
+20:20 that evening alone. Neither the width of the gap nor its narrowness
+is the thing being decided here — a one-commit gap at 23:30 and an
+eight-commit gap two days earlier are the same arrangement sampled twice,
+which is precisely why the cadence is what needs writing down and the
+distance does not.
 
 ## 3. The release path has no type-check gate — one config value
 
@@ -292,14 +302,13 @@ Two things not to get wrong:
 - `--skip-tests` bypasses it. So this gates the ordinary path, not a determined
   one, and a green release is not by itself proof the check ran.
 
-Re-verified on every parked run between 2026-11-24 14:16 and 2026-11-26 16:46
-UTC, latest at 16:46, each pass re-running the checks rather than quoting the
+Re-verified on every parked run between 2026-11-24 14:16 and 2026-11-26 23:30
+UTC, latest at 23:30, each pass re-running the checks rather than quoting the
 pass before it. All of it still holds: `pre_deploy_test` null, `app_deploy`
 exactly the eleven keys `from_dict` reads, `test:types` first in the `npm test`
-chain, `tests/typecheck.mjs` 176 lines in the DB, rows 441–442
-`Build failed (exit 1)`, and the gate exiting 0 run directly in `work_dir`.
-Nothing about the fix has moved in two days. The item is one command wide and
-stays open only because that command is denied.
+chain, `tests/typecheck.mjs` 176 lines in the DB, and the gate exiting 0 run
+directly in `work_dir`. Nothing about the fix has moved in three days. The item
+is one command wide and stays open only because that command is denied.
 
 Read the null out of `projects.deployment_config` with a SELECT, not with
 `deploy project-config bza`: the read-only print is itself a `deploy` verb and
@@ -307,7 +316,7 @@ is denied to the tasks that drain this file, which is why every refresh
 measures the value by SQL and still cannot set it. The eleven keys count out of
 the same SELECT.
 
-Three figures in this item do move, and movement in none of them is this item
+Four figures in this item do move, and movement in none of them is this item
 getting closer. Each has a load-bearing half that holds still, and that is the
 half to read:
 
@@ -319,20 +328,49 @@ half to read:
   item 1's "two non-script hits" was. The half that decides whether setting the
   value is safe is *read by*, and that is still two files, `deploy_project.py`
   and `app_deploy_service.py`. Count readers by what consumes the value.
-- `deployment_history` for bza was 366 rows and is 367, the new one being row
-  448, a successful manual deploy at 2026-11-26 14:59 UTC. The claim that
-  matters is the zero and not the total: no row at any of those counts carries
-  `groups_deployed`, so the group orchestrator has still never deployed this
-  project and the path this item gates is the path that runs.
+- `deployment_history` for bza was 366 rows, then 367, and is 373 — six more
+  deploys landed between 19:23 and 20:20 UTC on 2026-11-26, head now row 454.
+  The claim that matters is the zero and not the total: no row at any of those
+  counts carries `groups_deployed`, so the group orchestrator has still never
+  deployed this project and the path this item gates is the path that runs.
+- **Which rows carry `Build failed (exit 1)` moves too, and the new one is not
+  this item's defect.** It was rows 441 and 442; it is now 441, 442 and 450.
+  Row 450 started 2026-11-26 19:56:04 UTC and row 451 started 35 seconds later
+  on identical content — the last commit before either was 19:55:56 and the
+  next was 20:02:50 — and 451 built and shipped. So the same sources that
+  failed one deploy succeeded in the next, and `tsc` over them exits 0 today:
+  a `pre_deploy_test` gate would have passed row 450, not refused it. The two
+  runs overlapped (450 completed 19:56:53, after 451 began) and
+  `app_deploy_service.py` takes no lock, so the mechanism is at hand:
+  `_sync_from_checkout` rsyncs `-a --delete` into `work_dir` and the build runs
+  with `cwd=work_dir`, so a second deploy starting mid-build deletes and
+  rewrites the tree underneath the first. Read a new `Build failed` row as that
+  until you have a log, not as the type error coming back. The load-bearing
+  half is about wording rather than count and is unchanged: the string is
+  `app_deploy_service.py`'s own, lines 443 and 449, which is what proves the
+  gated path is the path that runs.
+
+  Two cautions if you measure this yourself. `started_at`/`completed_at` and
+  `duration_ms` disagree — row 450 spans 49s between the columns and records
+  87866ms — so do not compute elapsed from the pair; the overlap holds under
+  either reading. And if concurrency is what broke 450, the gate inherits it:
+  `pre_deploy_test` runs in that same `work_dir` immediately before the build,
+  so it can go red for the same reason, which is a second route to a false red
+  on the one check being trusted alongside the dependency-addition one above.
 - `work_dir`'s `package-lock.json` mtime advances on every deploy — 2026-11-25
-  21:42 yesterday, 2026-11-26 14:59 after row 448 — while its `node_modules`
-  stays 2026-10-15. So an `ls -l` there shows a lock that appears to have moved
-  past its install, which is exactly the false-red state the warning above
-  describes, and it will show that again after every deploy. The content has
-  not moved: the rsync recopies the file each time and only the mtime changes,
-  and `source_snapshots` has had the same hash at 666475 bytes since
-  2026-10-16. Compare the hash, not the timestamp, before concluding the tree
-  needs an install.
+  21:42 and 2026-11-26 14:19 as `ls` prints them, which is local time (CST,
+  UTC−6) and so 03:42 and 20:19 UTC, each a minute before the `started_at` of
+  the row that rewrote the file (447 and 454) — while its `node_modules` stays
+  2026-10-15. A previous refresh recorded one of these as `14:59`, which is
+  the UTC `started_at` of row 448 and not anything `ls` printed; the two
+  clocks are six hours apart and this is the second place in this file where
+  that has bitten, the other being item 2. So an `ls -l` there shows a lock that
+  appears to have moved past its install, which is exactly the false-red state
+  the warning above describes, and it will show that again after every deploy.
+  The content has not moved: the rsync recopies the file each time and only the
+  mtime changes, and the file is still 666475 bytes at the hash
+  `source_snapshots` has carried since 2026-10-16. Compare the hash, not the
+  timestamp, before concluding the tree needs an install.
 
 One correction to the earlier version of this item, which claimed `next build`
 is the only thing in the project that runs `tsc`. `npm run type-check` has been

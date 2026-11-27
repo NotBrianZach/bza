@@ -9967,10 +9967,19 @@ t('and nothing left in either uncertainty area is written, which is what makes t
  * entry for it would have been a second copy of an edge that already exists,
  * which `composeAtlas` does not report. Both halves are asserted, the second
  * negatively, because the duplicate is the error nothing else would catch.
+ *
+ * THE LENGTH OF THE LIST IS NO LONGER ASSERTED HERE AND THE FORTY-NINTH
+ * PROMOTION IS WHY. This group said `length === 3`, and so did the forty-seventh
+ * and forty-eighth groups, each to claim that ITS promotion added nothing —
+ * three groups asserting one moving figure, which the forty-eighth's own note
+ * said would make three go red together if a fourth entry ever appeared. It did.
+ * What this group owns is that its OWN entry is present, third, and gating, so
+ * that is what it checks now; the list's length belongs to whichever promotion
+ * last moved it and lives in that group.
  */
 t('its one stranded edge is the area\'s third links entry, and it gates',
-  P46_LINKS.length === 3
-  && P46_LINKS.map(l => `${l.from}->${l.to}`).join(' ')
+  P46_LINKS.length >= 3
+  && P46_LINKS.slice(0, 3).map(l => `${l.from}->${l.to}`).join(' ')
     === 'sets->sample-spaces fraction-arithmetic->sample-spaces '
     + 'counting-principles->counting-probability'
   && P46_LINKS.every(l => !!l.because)
@@ -10236,15 +10245,23 @@ t('and both uncertainty areas are still wholly unwritten as nodes, whatever thei
  * is already internal to an ontology would be a SECOND COPY in the composed
  * graph, and `composeAtlas` does not report duplicates — the hazard the block of
  * prose above these entries has warned about since the forty-fifth promotion.
- * Three entries is also the figure the forty-sixth's group asserts, so both
- * groups would go red if a fourth appeared, which is correct: one of them would
- * be wrong about what it cost.
+ *
+ * AND THE "THREE ENTRIES" CLAUSE IS GONE, WHICH THE FORTY-NINTH PROMOTION
+ * FORCED AND THIS NOTE PREDICTED. It used to say that three entries is also the
+ * figure the forty-sixth's group asserts, so both would go red if a fourth
+ * appeared — "which is correct: one of them would be wrong about what it cost".
+ * A fourth appeared, and the prediction was wrong in an instructive way: NEITHER
+ * group was wrong about its own cost. `random-variables` stranded the fourth
+ * entry and both of these promotions really did strand nothing. So three groups
+ * went red for a figure none of them owned, and the repair is the rule the
+ * arithmetic subject's groups already follow — a moving figure belongs to the
+ * promotion that MOVED it, and every other group asserts only what its own
+ * promotion did. Here that is: no entry of this list names this concept.
  */
-t('it stranded nothing, the area\'s links list being unchanged and naming it nowhere',
-  P47_LINKS.length === 3
-  && P47_LINKS.every(l => l.from !== 'conditional-probability'
+t('it stranded nothing, the area\'s links list naming it nowhere',
+  P47_LINKS.every(l => l.from !== 'conditional-probability'
     && l.to !== 'conditional-probability')
-  && P47_LINKS.map(l => `${l.from}->${l.to}`).join(' ')
+  && P47_LINKS.slice(0, 3).map(l => `${l.from}->${l.to}`).join(' ')
     === 'sets->sample-spaces fraction-arithmetic->sample-spaces '
     + 'counting-principles->counting-probability',
   P47_LINKS.map(l => `${l.from}->${l.to}`).join(' '))
@@ -10342,48 +10359,79 @@ const P47_ROOTS = roots(areaOntology(P47_PROB))
  * promoted one of the three it named.
  *
  * So the assertion is reduced to the MECHANISM, which is what the group's prose
- * was always arguing and which no promotion can falsify: every root of this
- * area's view is a node that named the departing concept, and none of them has
- * a prerequisite inside this area. That is the definition of being rooted here,
- * stated over whatever the set currently holds. The forty-eighth promotion's
- * group owns the current membership and the current size.
+ * was always arguing. The forty-eighth promotion's group owns the current
+ * membership and the current size.
+ *
+ * AND THE QUANTIFIER HAD TO BE TURNED ROUND BY THE FORTY-NINTH, which is the
+ * third rewrite of this line and the last one it should need. It said EVERY ROOT
+ * named the departing concept — true the moment the forty-seventh landed, and
+ * false as soon as any OTHER node became a root, which is what happened when
+ * `random-variables` left and `expectation` and `continuous-distributions`
+ * inherited its position. They are roots and they name `random-variables`, not
+ * this promotion's concept.
+ *
+ * The durable form runs the other way: every node that named the departing
+ * concept and has no in-area prerequisite IS a root. That is the definition of
+ * being rooted here applied to this promotion's own dependents, so no later
+ * departure can falsify it — a new root arriving from somewhere else is simply
+ * outside what this group claims. The general shape is worth keeping: an
+ * assertion of the form "every member of a moving set has property P" is
+ * fragile, and "every thing with property P is a member" usually is not.
  *
  * The statistics root stays named, because a promotion out of THIS area can
- * move that set and neither of these two did — `causal-inference` names the new
- * concept too and is not a root there, since `anova-and-design` is in its own
- * area and unwritten.
+ * move that set and none of the three since has — `causal-inference` names the
+ * new concept too and is not a root there, since `anova-and-design` is in its
+ * own area and unwritten.
  */
-t('every root of the area named the departing concept and has no in-area prerequisite',
-  P47_ROOTS.length > 0
-  && P47_ROOTS.every(id => P47_PROB.nodes.some(n => n.id === id))
-  && P47_ROOTS.every(id => (P47_PROB.nodes.find(n => n.id === id)?.needs ?? [])
-    .includes('conditional-probability'))
-  && P47_ROOTS.every(id => (P47_PROB.nodes.find(n => n.id === id)?.needs ?? [])
-    .every(need => !P47_PROB.nodes.some(n => n.id === need)))
-  && roots(areaOntology(P47_STATS)).join(',') === 'sampling-and-bias',
+t('every node that named the departing concept with no in-area prerequisite is a root',
+  (() => {
+    const mine = P47_PROB.nodes.filter(n => (n.needs ?? []).includes('conditional-probability')
+      && (n.needs ?? []).every(need => !P47_PROB.nodes.some(x => x.id === need)))
+    return mine.length > 0
+      && mine.every(n => P47_ROOTS.includes(n.id))
+      && P47_ROOTS.every(id => P47_PROB.nodes.some(n => n.id === id))
+      && roots(areaOntology(P47_STATS)).join(',') === 'sampling-and-bias'
+  })(),
   `probability {${P47_ROOTS.join(', ')}}, statistics `
   + `{${roots(areaOntology(P47_STATS)).join(', ')}}`)
 t('and the chain-walk ran out BECAUSE the node was a branch point, not by bad luck',
   (() => {
-    // The two departures before this each had exactly one in-area dependent, so
-    // the root position passed on intact. This one had more than one, which is
-    // the whole difference between a chain and a fork.
+    // The two departures before this each had exactly one dependent in this
+    // area's lineage, so the root position passed on intact. This one had more
+    // than one, which is the whole difference between a chain and a fork.
     //
     // ASSERTED AS "MORE THAN ONE" RATHER THAN AS THREE, because the forty-eighth
-    // promotion took one of the three and the count fell to two while the fork
-    // claim held exactly as stated. A fork is a fork at two, and the number of
-    // nodes still standing above a departed one is not a fact about the
-    // departure that created the fork. The forty-eighth's group counts what is
-    // there now; what is asserted here is the contrast with the two below, whose
-    // zeroes are a permanent fact about a chain fully walked.
-    const naming = id => P47_PROB.nodes.filter(n => (n.needs ?? []).includes(id)).map(n => n.id)
-    return naming('conditional-probability').length > 1
-      && naming('counting-probability').length === 0
-      && naming('sample-spaces').length === 0
-      && P47_ROOTS.length === naming('conditional-probability').length
+    // promotion took one of the three and the count of NODES fell to two while
+    // the fork claim held exactly as stated. A fork is a fork at two, and the
+    // number of nodes still standing above a departed one is not a fact about
+    // the departure that created the fork.
+    //
+    // AND THE COUNT READS BOTH ARRAYS, WHICH THE FORTY-NINTH FORCED FOR THE
+    // SECOND TIME IN THIS GROUP. Counting only nodes, the figure for this
+    // concept went three, then two, then ONE — because each dependent that gets
+    // authored stops being a node and becomes a `prerequisite` edge, so a
+    // correct promotion drives the number toward zero and the fork claim goes
+    // red having stayed true. A dependent that gets written is still a
+    // dependent, so the count takes nodes of this area plus authored concepts of
+    // the subject they went to, and then it holds at three however many of the
+    // three are written. The same correction was already made to the
+    // dependent-count assertion below; this is the same mistake in a different
+    // line, which is the argument for sweeping a group rather than patching the
+    // one clause that failed.
+    const dependents = id => [
+      ...P47_PROB.nodes.filter(n => (n.needs ?? []).includes(id)).map(n => n.id),
+      ...CHANCE_AND_EVENTS.edges.filter(e => e.kind === 'prerequisite' && e.from === id)
+        .map(e => e.to),
+    ]
+    return dependents('conditional-probability').length > 1
+      && dependents('counting-probability').length === 1
+      && dependents('sample-spaces').length === 1
   })(),
-  `${P47_PROB.nodes.filter(n => (n.needs ?? []).includes('conditional-probability'))
-    .map(n => n.id).join(' ')}`)
+  ['sample-spaces', 'counting-probability', 'conditional-probability'].map(id => `${id}:${[
+    ...P47_PROB.nodes.filter(n => (n.needs ?? []).includes(id)).map(n => n.id),
+    ...CHANCE_AND_EVENTS.edges.filter(e => e.kind === 'prerequisite' && e.from === id)
+      .map(e => e.to),
+  ].length}`).join(' '))
 /*
  * FOUR THINGS DEPEND ON THE CONCEPT AND FEWER THAN FOUR WERE EVER READY, which
  * is the first time in this area that the dependent count and the yield
@@ -10582,21 +10630,21 @@ t('the node is gone and the concept is real, which is the collision rule',
   `${MATHEMATICS.concepts.filter(c => c.id === 'bayes-theorem').length} entries, `
   + `subject ${conceptById(MATHEMATICS, 'bayes-theorem')?.subjectId}`)
 /*
- * THE TWO FIGURES THIS GROUP INHERITED, counted here and nowhere else — the
- * fifth group to hold them, after the fourteenth promotion's, the forty-fifth's,
- * the forty-sixth's and the forty-seventh's. Twelve nodes against a floor of
- * five is seven of headroom, and the four departures are still not declared, so
- * the floor measures the smaller number and the area is clear of it by seven.
+ * THE TWO FIGURES THIS GROUP INHERITED HAVE MOVED ON TO THE FORTY-NINTH'S, which
+ * is the fifth handover of them and the mechanism working as intended: they were
+ * counted here, the next promotion out of this area moved both, and they now
+ * live in that group. What stays here is the part that is about THIS promotion
+ * and cannot move — the floor was never in question and the area holds only
+ * unwritten nodes.
  */
-t('twelve nodes and seven of headroom, the figure having moved to this group',
-  P48_PROB.nodes.length === 12
-  && P48_PROB.nodes.length - 5 === 7
-  && P48_PROB.departed === undefined
+t('the floor decided nothing here either, and no area anywhere is a stub',
+  P48_PROB.departed === undefined
+  && P48_PROB.nodes.length - 5 >= 5
   && AREAS.filter(a => a.nodes.length + (a.departed ?? []).length < 5).length === 0,
   `probability ${P48_PROB.nodes.length}, headroom ${P48_PROB.nodes.length - 5}`)
-t('and the uncertainty half holds twenty-seven nodes, which is the fifth group to count it',
-  P48_PROB.nodes.length + P48_STATS.nodes.length === 27
-  && [...P48_PROB.nodes, ...P48_STATS.nodes].every(n => !isTeachable(MATHEMATICS, n.id)),
+t('and both uncertainty areas are still wholly unwritten as nodes, whatever their size',
+  [...P48_PROB.nodes, ...P48_STATS.nodes].every(n => !isTeachable(MATHEMATICS, n.id))
+  && P48_PROB.nodes.length > 0 && P48_STATS.nodes.length > 0,
   `${P48_PROB.nodes.length} + ${P48_STATS.nodes.length} nodes`)
 /*
  * NOTHING STRANDED, FOR THE SECOND PROMOTION RUNNING, and asserted on the area
@@ -10605,15 +10653,22 @@ t('and the uncertainty half holds twenty-seven nodes, which is the fifth group t
  *
  * The negative half matters more than it looks. A `links` entry for an edge that
  * is already internal to an ontology would be a SECOND COPY in the composed
- * graph, and `composeAtlas` does not report duplicates. Three entries is the
- * figure the forty-sixth's and forty-seventh's groups also assert, so three
- * groups would go red if a fourth appeared — which is correct, since one of them
- * would be wrong about what it cost.
+ * graph, and `composeAtlas` does not report duplicates.
+ *
+ * THE "THREE ENTRIES" CLAUSE IS GONE AND IT TOOK THREE GROUPS WITH IT. This line
+ * said the list was unchanged at three, as the forty-sixth's and forty-seventh's
+ * groups also did, and noted that a fourth entry would turn all three red
+ * "which is correct, since one of them would be wrong about what it cost". The
+ * forty-ninth added a fourth and the prediction was wrong in a useful way: none
+ * of the three was wrong about its own cost. `random-variables` stranded that
+ * entry, and these three promotions really did strand nothing between them. One
+ * moving figure asserted in three places goes red in three places when it
+ * moves, however correct each claim is — so each group now asserts only the
+ * absence that is its own, and the length lives with whoever last moved it.
  */
-t('it stranded nothing either, the links list unchanged at three and naming it nowhere',
-  P48_LINKS.length === 3
-  && P48_LINKS.every(l => l.from !== 'bayes-theorem' && l.to !== 'bayes-theorem')
-  && P48_LINKS.map(l => `${l.from}->${l.to}`).join(' ')
+t('it stranded nothing either, the links list naming it nowhere',
+  P48_LINKS.every(l => l.from !== 'bayes-theorem' && l.to !== 'bayes-theorem')
+  && P48_LINKS.slice(0, 3).map(l => `${l.from}->${l.to}`).join(' ')
     === 'sets->sample-spaces fraction-arithmetic->sample-spaces '
     + 'counting-principles->counting-probability',
   P48_LINKS.map(l => `${l.from}->${l.to}`).join(' '))
@@ -10711,13 +10766,24 @@ t('and the credit edge it declared is a real encompasses with a rationale',
  * also `maximum-likelihood`, which is a node of `statistics`, so it was never a
  * root there and still is not.
  */
-t('the root set SHRANK to two, because the departing node had no in-area dependent',
-  P48_ROOTS.slice().sort().join(',') === 'markov-chains,random-variables'
-  && P48_ROOTS.length === 2
+/*
+ * THE MEMBER LIST AND THE SIZE WENT TO THE FORTY-NINTH'S GROUP, which is this
+ * file's FOURTH rewrite of a root-set claim by a later promotion and the reason
+ * the rule is "assert membership, never length" plus "and the membership belongs
+ * to whoever last moved it". `=== 'markov-chains,random-variables'` named a node
+ * the next promotion took, exactly as the forty-fifth's and forty-seventh's
+ * lines each named one before it.
+ *
+ * WHAT STAYS IS THE MECHANISM, WHICH NO LATER DEPARTURE CAN FALSIFY: nothing in
+ * this area named the departing node, so nothing here inherited its position.
+ * That is a permanent fact about `bayes-theorem` — its one dependent is in
+ * `statistics` — and it is the whole of what this promotion did to the set.
+ */
+t('nothing in the area named the departing node, which is why nothing inherited its place',
+  P48_PROB.nodes.filter(n => (n.needs ?? []).includes('bayes-theorem')).length === 0
+  && !P48_ROOTS.includes('bayes-theorem')
+  && P48_ROOTS.length > 0
   && P48_ROOTS.every(id => P48_PROB.nodes.some(n => n.id === id))
-  // Nothing in THIS area named the departing node, which is why nothing
-  // inherited its place — the computed form of the whole claim.
-  && P48_PROB.nodes.filter(n => (n.needs ?? []).includes('bayes-theorem')).length === 0
   && roots(areaOntology(P48_STATS)).join(',') === 'sampling-and-bias',
   `probability {${P48_ROOTS.join(', ')}}, statistics `
   + `{${roots(areaOntology(P48_STATS)).join(', ')}}`)
@@ -10750,15 +10816,32 @@ t('and its one dependent is in the OTHER area, which is where the shrink comes f
  * one, the forty-seventh two, this one none: a promotion can be the cheapest
  * available and still feed nothing.
  */
+/*
+ * THE COMPARISON IS NOW MADE WITHOUT NAMING THE OTHER NODE, which the
+ * forty-ninth promotion forced by authoring it. This line read
+ * `ready.length === 1 && ready[0].id === 'random-variables'` — the comparison
+ * class was a specific node, and the next run took it.
+ *
+ * The claim itself never depended on which node that was: it is that this area
+ * still HAS a ready node, so "nothing became ready" is a statement about this
+ * promotion and not about an exhausted area, and that NONE of whatever is ready
+ * was made ready here. Both halves survive stated over the current set, and the
+ * second is the one with teeth — it is checked from the dependent's side, since
+ * the only thing that named `bayes-theorem` is still not ready.
+ */
 t('nothing became ready, though the area still holds a ready node — which is the comparison',
   (() => {
     const ready = P48_PROB.nodes.filter(n =>
       (n.needs ?? []).every(id => isTeachable(MATHEMATICS, id)))
-    return ready.length === 1
-      && ready[0].id === 'random-variables'
-      // It was made ready by the promotion BEFORE this one, not by this one.
-      && (ready[0].needs ?? []).includes('conditional-probability')
-      && !(ready[0].needs ?? []).includes('bayes-theorem')
+    return ready.length > 0
+      // Not one of them names the concept this promotion authored, so none of
+      // them can have been unblocked by it.
+      && ready.every(n => !(n.needs ?? []).includes('bayes-theorem'))
+      // And the one node that does name it is still not ready, which is the
+      // zero yield read off the only edge that could have carried one.
+      && AREAS.flatMap(a => a.nodes)
+        .filter(n => (n.needs ?? []).includes('bayes-theorem'))
+        .every(n => !(n.needs ?? []).every(id => isTeachable(MATHEMATICS, id)))
   })(),
   P48_PROB.nodes.filter(n => (n.needs ?? []).every(id => isTeachable(MATHEMATICS, id)))
     .map(n => n.id).join(' ') || 'none')
@@ -10775,15 +10858,31 @@ t('nothing became ready, though the area still holds a ready node — which is t
  * promotions this slot has not been one promotion from emptying, and it is also
  * the last fallback the area's reading admits, which armature.ts records.
  */
+/*
+ * THE ANCHOR LIST MOVED TO THE FORTY-NINTH'S GROUP, for the third promotion
+ * running, because this slot has emptied on every one of the last three. What
+ * stays here is this promotion's own half: the id it vacated appears on no
+ * region's list, and the refill it chose is still an anchor — a claim about
+ * `markov-chains` rather than about the whole array.
+ */
 t('the anchor slot emptied a second time and was refilled with the named fallback',
   !armatureRegions().some(r => (r.anchors ?? []).includes('bayes-theorem'))
-  && (regionBy('rubneb').anchors ?? []).join(',')
-    === 'expectation,markov-chains,random-variables'
+  && (regionBy('rubneb').anchors ?? []).includes('markov-chains')
   && (regionBy('rubneb').anchors ?? []).every(id => P48_PROB.nodes.some(n => n.id === id))
   && (regionBy('rubneb').authored ?? []).join(',') === 'chance-and-events'
   && armatureRegions().filter(r =>
     (r.authored ?? []).includes('chance-and-events')).length === 1,
   (regionBy('rubneb').anchors ?? []).join(' '))
+/*
+ * AND "SAFE FOR THE FIRST TIME IN FOUR PROMOTIONS" IS NOW A CLAIM ABOUT THIS
+ * SLOT ONLY, which is what it always should have been. The line used to add that
+ * the OTHER anchor still a node was the ready one, naming `random-variables`;
+ * the forty-ninth authored it, so that clause could not survive and the group
+ * below it owns the area's readiness. The durable half is about
+ * `markov-chains`: it cannot become ready until a refusal recorded in
+ * ontology-matrices.ts is overturned, which is a fact about `eigenvalues` and
+ * not about any promotion.
+ */
 t('and this refill is NOT ready, so the slot is safe for the first time in four promotions',
   (() => {
     const refill = P48_PROB.nodes.find(n => n.id === 'markov-chains')
@@ -10792,10 +10891,6 @@ t('and this refill is NOT ready, so the slot is safe for the first time in four 
       && !(refill.needs ?? []).every(id => isTeachable(MATHEMATICS, id))
       && (refill.needs ?? []).includes('eigenvalues')
       && !isTeachable(MATHEMATICS, 'eigenvalues')
-      // The other anchor that is still a node is the ready one, so "safe" is a
-      // claim about this slot's occupant and not about the area.
-      && (P48_PROB.nodes.find(n => n.id === 'random-variables')?.needs ?? [])
-        .every(id => isTeachable(MATHEMATICS, id))
   })(),
   `markov-chains needs ${(P48_PROB.nodes.find(n => n.id === 'markov-chains')?.needs ?? [])
     .map(id => `${id}:${isTeachable(MATHEMATICS, id) ? 'written' : 'not'}`).join(' ')}`)
@@ -10817,6 +10912,763 @@ t('the gate tightened on its one dependent, which now stops at this concept',
   `bayesian-inference: ${gatingPrerequisitesOf(MATHEMATICS, 'bayesian-inference')
     .includes('bayes-theorem')}; bayes-theorem gated by `
   + `{${gatingPrerequisitesOf(MATHEMATICS, 'bayes-theorem').join(', ')}}`)
+t('and the composed graph has no structural problems after all of it',
+  shippedAtlasProblems().length === 0,
+  shippedAtlasProblems().join('; '))
+
+// ---------------------------------------------------------------------------
+
+/**
+ * `random-variables` is the FIFTH concept of `chance-and-events` and the fifth
+ * departure from `probability`. tests/concepts-logic.mjs owns the material. What
+ * is asserted here is the structure, and five of the six things are things no
+ * earlier promotion out of this area produced:
+ *
+ *  - ELEVEN NODES AND SIX OF HEADROOM, the sixth group to count a figure that
+ *    belongs to whichever promotion last moved it.
+ *  - IT STRANDED ONE EDGE, ending a run of two zeroes, and `PROBABILITY.links`
+ *    is FOUR for the first time since the forty-sixth. The reason is the thing
+ *    worth carrying rather than the number: the four departures before this one
+ *    went up a single chain, and a chain is cheap because each step's ONE
+ *    prerequisite is the step below it. This node is `bayes-theorem`'s SIBLING
+ *    off the third concept and declared TWO `needs`, one of them in
+ *    `functions-and-inverses` — authored long before any of this by a run that
+ *    knew nothing about probability, so no amount of order would have made the
+ *    departure free.
+ *  - THE ROOT SET GREW FROM TWO TO THREE, an eighth root-set outcome for this
+ *    file and the second growth. The rule the forty-eighth wrote down predicts
+ *    it exactly: the set changes size by (in-area dependents) minus one, this
+ *    node had two, and both inherited its position.
+ *  - THE READY COUNT HELD AT TWELVE WHILE ITS MEMBERSHIP TURNED OVER, which has
+ *    not happened before here and is the sharpest reason this file asserts
+ *    membership rather than length. It spent one and made one. A run measuring
+ *    only the number would conclude the promotion changed nothing about what is
+ *    authorable.
+ *  - AND THE TWO DEPENDENTS SPLIT, which is the cleanest statement of the
+ *    upper-bound rule so far because both are in THIS area. `expectation` names
+ *    `sigma-notation` as well, written, so it is ready; `continuous-distributions`
+ *    names `definite-integral`, a node of `integration`, so it is a ROOT without
+ *    being ready. Being rooted and being authorable are independent, and that is
+ *    only visible when one promotion produces both at once.
+ *  - THE ANCHOR SLOT EMPTIED A THIRD TIME IN THREE PROMOTIONS, and armature.ts's
+ *    "no fallback left to name" was WRONG — it ruled out seven of the nine
+ *    non-anchor nodes by category and never reached the other two.
+ */
+const P49_PROB = AREAS.find(a => a.id === 'probability')
+const P49_STATS = AREAS.find(a => a.id === 'statistics')
+const P49_LINKS = P49_PROB.links ?? []
+const P49_ROOTS = roots(areaOntology(P49_PROB))
+const P49_READY = AREAS.flatMap(a => a.nodes)
+  .filter(n => (n.needs ?? []).every(id => isTeachable(MATHEMATICS, id)))
+
+group('the forty-ninth promotion: a number attached to each outcome leaves probability')
+t('the node is gone and the concept is real, which is the collision rule',
+  !P49_PROB.nodes.some(n => n.id === 'random-variables')
+  && !AREAS.some(a => a.nodes.some(n => n.id === 'random-variables'))
+  && isTeachable(MATHEMATICS, 'random-variables')
+  && conceptById(MATHEMATICS, 'random-variables')?.subjectId === 'chance-and-events'
+  && MATHEMATICS.concepts.filter(c => c.id === 'random-variables').length === 1,
+  `${MATHEMATICS.concepts.filter(c => c.id === 'random-variables').length} entries, `
+  + `subject ${conceptById(MATHEMATICS, 'random-variables')?.subjectId}`)
+/*
+ * THE TWO FIGURES THIS GROUP HELD HAVE MOVED ON TO THE FIFTIETH'S, which is the
+ * seventh handover in seven consecutive promotions and the mechanism rather than
+ * churn. What stays here is this promotion's OWN cost, in the form no later
+ * promotion out of this area can falsify: it took one node out, so the area is
+ * one smaller than it was and the departure is this concept.
+ */
+t('it is the fifth departure, and what it cost the area is exactly one node',
+  !P49_PROB.nodes.some(n => n.id === 'random-variables')
+  && isTeachable(MATHEMATICS, 'random-variables')
+  // The floor is measured over every area, which is the invariant rather than
+  // the figure, and no departure may breach it.
+  && AREAS.filter(a => a.nodes.length + (a.departed ?? []).length < 5).length === 0
+  && P49_PROB.departed === undefined,
+  `probability ${P49_PROB.nodes.length}, headroom ${P49_PROB.nodes.length - 5}`)
+t('and both uncertainty areas still hold nothing authored, which departures do not change',
+  [...P49_PROB.nodes, ...P49_STATS.nodes].every(n => !isTeachable(MATHEMATICS, n.id)),
+  `${P49_PROB.nodes.length} + ${P49_STATS.nodes.length} nodes`)
+/*
+ * IT STRANDED ONE EDGE, WHICH ENDS A RUN OF TWO ZEROES, and the figure for the
+ * list length now lives here — the other three groups that asserted "three"
+ * have been reduced to asserting their own absences, which is the repair for one
+ * moving figure claimed in four places.
+ *
+ * THE ENTRY GATES IMMEDIATELY, which is unusual for a `links` entry and true of
+ * all four here: both ends have material, so `gatingPrerequisitesOf` on the new
+ * concept returns `conditional-probability` from the ontology and
+ * `function-concept` from this list, and a learner cannot be shown a random
+ * variable until both are strong. Asserted as the SET rather than as a length,
+ * since a tighter gate is often a shorter list.
+ */
+t('its one stranded edge is in the links list with a reason, and it gates',
+  /*
+   * THE LIST'S LENGTH AND FULL CONTENTS HAVE MOVED ON TO THE FIFTIETH'S GROUP,
+   * which added a fifth entry. What is asserted here is this promotion's OWN
+   * entry by name — present, reasoned, and gating — which is a claim about what
+   * the forty-ninth cost and stays true however long the list grows.
+   */
+  P49_LINKS.some(l => l.from === 'function-concept' && l.to === 'random-variables'
+    && !!l.because)
+  && P49_LINKS.filter(l => l.to === 'random-variables').length === 1
+  && P49_LINKS.every(l => !!l.because)
+  && isTeachable(MATHEMATICS, 'function-concept')
+  && gatingPrerequisitesOf(MATHEMATICS, 'random-variables').slice().sort().join(',')
+    === 'conditional-probability,function-concept',
+  P49_LINKS.map(l => `${l.from}->${l.to}`).join(' '))
+t('and the cost is the SIBLING shape, not disorder — the far end predates the subject',
+  (() => {
+    // A chain is cheap because each step's one prerequisite is the step below
+    // it. This node declared TWO, and the one that stranded points at a subject
+    // authored long before `chance-and-events` existed — so there was no run
+    // before that could have moved it.
+    const gate = CHANCE_AND_EVENTS.edges.find(e => e.kind === 'prerequisite'
+      && e.to === 'random-variables')
+    const sibling = CHANCE_AND_EVENTS.edges.find(e => e.kind === 'prerequisite'
+      && e.to === 'bayes-theorem')
+    return !!gate && !!sibling
+      && gate.from === sibling.from
+      && gate.from === 'conditional-probability'
+      // The stranded far end is in a different subject, which is the whole
+      // reason it could not be an ontology edge.
+      && conceptById(MATHEMATICS, 'function-concept')?.subjectId === 'functions-and-inverses'
+      && !CHANCE_AND_EVENTS.concepts.some(c => c.id === 'function-concept')
+      // And the composed graph has both prerequisites exactly once each, so the
+      // `links` entry is not a second copy of an ontology edge.
+      && MATHEMATICS.edges.filter(e => e.kind === 'prerequisite'
+        && e.to === 'random-variables').length === 2
+      && CHANCE_AND_EVENTS.edges.every(e =>
+        CHANCE_AND_EVENTS.concepts.some(c => c.id === e.from)
+        && CHANCE_AND_EVENTS.concepts.some(c => c.id === e.to))
+  })(),
+  MATHEMATICS.edges.filter(e => e.to === 'random-variables')
+    .map(e => `${e.from}:${e.kind}`).join(' '))
+/*
+ * NOTHING WAS LOST IN SILENCE, AND ALL THREE FIELDS WERE CHECKED RATHER THAN
+ * REMEMBERED — the seventh time this check has run in this file, and the one
+ * time out of seven it mattered was the forty-sixth.
+ *
+ * The node declared no `confusedWith` (so no `interferes_with` for `expandEdges`
+ * to be emitting), no `exercises` and no `encompasses` (so no credit edge to
+ * lose). Asserted as absences against the composed graph, which is the only
+ * place they would have shown, plus the positive fact that the two interference
+ * pairs in this area are unchanged — because "no interference edge mentions this
+ * concept" is also true of an atlas that lost all of them.
+ */
+t('no credit or interference edge was lost, the node having declared none of the three',
+  !MATHEMATICS.edges.some(e => e.kind === 'interferes_with'
+    && [e.from, e.to].includes('random-variables'))
+  /*
+   * ASSERTED BY PROVENANCE RATHER THAN BY ABSENCE, which the fiftieth promotion
+   * forced and which is the durable form. This read
+   * `!some(e.kind === 'encompasses' && e.to === 'random-variables')` — "nothing
+   * credits this concept" — and that was only ever true while nothing ABOVE it
+   * was authored. The fiftieth authored `expectation => random-variables` and
+   * turned a true claim false without anything having been lost, which is the
+   * one-sided-ratchet shape in its purest form: the assertion was measuring
+   * whether a successor existed, not whether an edge had been dropped.
+   *
+   * What the claim MEANS is that no credit edge here came off the departing
+   * node. A node's `exercises` arrives through `expandEdges`, which stamps
+   * `atlas:<area>`; every credit edge touching this concept is `author:`-
+   * promoted, so none of them did. No later promotion can falsify that, because
+   * a promotion can only ever add an authored one.
+   */
+  && MATHEMATICS.edges.filter(e => e.kind === 'encompasses'
+    && [e.from, e.to].includes('random-variables'))
+    .every(e => (e.promotedBy ?? '').startsWith('author:'))
+  // The two pairs this area does declare are both still there, so the absence
+  // above is about this concept and not about an atlas that lost them all.
+  && MATHEMATICS.edges.some(e => e.kind === 'interferes_with'
+    && e.from === 'bayes-theorem' && e.to === 'conditional-probability')
+  && MATHEMATICS.edges.some(e => e.kind === 'interferes_with'
+    && e.from === 'hypothesis-testing' && e.to === 'bayes-theorem')
+  && MATHEMATICS.edges.filter(e => e.kind === 'interferes_with'
+    && e.rationale === undefined).length === 0,
+  MATHEMATICS.edges.filter(e => e.kind === 'interferes_with')
+    .map(e => `${e.from}~${e.to}`).join(' '))
+t('and the credit edge it DOES declare skips its own gate, which no edge here has done',
+  (() => {
+    const mine = MATHEMATICS.edges.find(e => e.kind === 'encompasses'
+      && e.from === 'random-variables')
+    if (!mine || !mine.rationale || !mine.promotedBy) return false
+    return mine.to === 'sample-spaces'
+      /*
+       * It is the only credit edge this concept DECLARES, and it points DOWN.
+       * Scoped to `e.from` by the fiftieth promotion: the undirected
+       * `[e.from, e.to].includes(...)` counted edges this concept RECEIVES too,
+       * so authoring anything above it broke a claim about what it declares.
+       * An "it declares exactly one" assertion has to read the direction it is
+       * about.
+       */
+      && MATHEMATICS.edges.filter(e => e.kind === 'encompasses'
+        && e.from === 'random-variables').length === 1
+      // Past the concept that gates it, which is the first in the build.
+      && !MATHEMATICS.edges.some(e => e.kind === 'encompasses'
+        && e.from === 'random-variables' && e.to === 'conditional-probability')
+      && MATHEMATICS.edges.some(e => e.kind === 'prerequisite'
+        && e.from === 'conditional-probability' && e.to === 'random-variables')
+      /*
+       * Every other `encompasses` in this subject points at its own gate, which
+       * is what makes this one a decision rather than the house style. Asserted
+       * as NAMED MEMBERSHIP rather than as a count, which the fiftieth promotion
+       * forced: it authored a third gate-crediting edge, so `length === 2` went
+       * red while the claim it was making stayed true. The durable form is "this
+       * edge is the one that is NOT in the set" — which no later promotion can
+       * falsify, since adding an ordinary credit edge only grows the set it is
+       * excluded from.
+       */
+      && (() => {
+        const creditsItsGate = CHANCE_AND_EVENTS.edges
+          .filter(e => e.kind === 'encompasses')
+          .filter(e => CHANCE_AND_EVENTS.edges.some(p => p.kind === 'prerequisite'
+            && p.from === e.to && p.to === e.from))
+          .map(e => e.id)
+        return creditsItsGate.length >= 2
+          && !creditsItsGate.includes('random-variables=>sample-spaces')
+          && creditsItsGate.includes('counting-probability=>sample-spaces')
+          && creditsItsGate.includes('bayes-theorem=>conditional-probability')
+      })()
+  })(),
+  MATHEMATICS.edges.filter(e => [e.from, e.to].includes('random-variables'))
+    .map(e => `${e.from}:${e.kind}:${e.to}`).join(' '))
+/*
+ * THE ROOT SET GREW FROM TWO TO THREE, WHICH IS THE EIGHTH ROOT-SET OUTCOME THIS
+ * FILE RECORDS AND THE SECOND GROWTH.
+ *
+ * Asserted by NAMED MEMBERSHIP with the REASON attached, which is the form every
+ * root-set claim in this file has had to be rewritten into — four of them so far,
+ * each by a later promotion taking a node the previous claim named. A
+ * `length === 3` would be satisfied by any three nodes.
+ *
+ * THE MECHANISM IS THE CLAIM AND IT IS COMPUTED: the set grew because the
+ * departing node had TWO in-area dependents and both inherited its position, so
+ * the rule the forty-eighth wrote down — the set changes size by (in-area
+ * dependents) minus one — predicted this exactly, and +1, 0, +2 and -1 have now
+ * all happened here.
+ *
+ * The statistics root is asserted unchanged in the same line, as it has been
+ * since the forty-fifth, because a promotion out of one area can move another's
+ * root set and this one did not.
+ */
+t('the root set GREW by one, because the departing node had two in-area dependents',
+  /*
+   * THE SET'S MEMBERSHIP HAS MOVED ON TO THE FIFTIETH'S GROUP, which took one of
+   * the two nodes this promotion rooted. What survives here is the MECHANISM,
+   * which is what the group was always really claiming: every node that named
+   * the departing one became a root, there were two of them in this area, and
+   * `markov-chains` was a root before and after.
+   *
+   * NOTE THE QUANTIFIER DIRECTION, which is the forty-ninth's own lesson applied
+   * to itself. "Every root named the departing concept" would be false now —
+   * `variance-and-covariance` is a root and names `expectation`. "Every node
+   * that named the departing concept IS a root" is the form no later departure
+   * can falsify, and it is the one asserted.
+   */
+  P49_PROB.nodes.filter(n => (n.needs ?? []).includes('random-variables'))
+    .every(n => P49_ROOTS.includes(n.id))
+  && P49_PROB.nodes.filter(n => (n.needs ?? []).includes('random-variables'))
+    .map(n => n.id).slice().sort().join(',') === 'continuous-distributions'
+  && P49_ROOTS.includes('markov-chains')
+  && roots(areaOntology(P49_STATS)).join(',') === 'sampling-and-bias',
+  `probability {${P49_ROOTS.join(', ')}}, statistics `
+  + `{${roots(areaOntology(P49_STATS)).join(', ')}}`)
+/*
+ * THE READY COUNT HELD AT TWELVE WHILE ITS MEMBERSHIP TURNED OVER, which is this
+ * promotion's real finding and is asserted as a pair of named facts rather than
+ * as a number.
+ *
+ * It spent `random-variables` and made `expectation`. Twelve before, twelve
+ * after. A bare `length === 12` would pass and say nothing — the whole point is
+ * that the number is a bad instrument here, so what is checked is that the node
+ * this promotion authored is NOT in the set, that the node it unblocked IS, and
+ * that the unblocking is real: `expectation`'s other prerequisite was already
+ * written, which is the only reason it moved.
+ */
+t('it spent one ready node and made one, and both of them are concepts now',
+  /*
+   * THE READY COUNT HAS MOVED ON TO THE FIFTIETH'S GROUP, which held it at
+   * twelve a SECOND time. This promotion's own claim is what it spent and what
+   * it yielded, and the yield is now assertable in a stronger form than it was
+   * when written: `expectation` was ready because of this promotion, and the
+   * proof is that the next one could author it.
+   */
+  !P49_READY.some(n => n.id === 'random-variables')
+  && isTeachable(MATHEMATICS, 'random-variables')
+  // The node it unblocked, whose own prerequisites were this concept and one
+  // written long before — which is the whole of why it became authorable.
+  && isTeachable(MATHEMATICS, 'expectation')
+  && isTeachable(MATHEMATICS, 'sigma-notation')
+  && MATHEMATICS.edges.some(e => e.kind === 'prerequisite'
+    && e.from === 'random-variables' && e.to === 'expectation'),
+  `${P49_READY.length} ready: ${P49_READY.map(n => n.id).join(' ')}`)
+t('and its two dependents SPLIT, which is the dependent-count bound at its sharpest',
+  (() => {
+    /*
+     * ONE OF THE TWO IS NO LONGER A NODE, so the split is asserted across the
+     * node list AND the authored concepts rather than over the nodes alone —
+     * the third sighting of a dependent count that falls as its dependents get
+     * written. `expectation` was the ready half and is now a concept;
+     * `continuous-distributions` was the unready half and still is, for the
+     * same reason it was then.
+     */
+    const naming = [
+      ...AREAS.flatMap(a => a.nodes),
+      ...MATHEMATICS.concepts.filter(c => c.id === 'expectation'),
+    ].filter(n => (n.needs ?? []).includes('random-variables')
+      || n.id === 'expectation')
+    const cont = AREAS.flatMap(a => a.nodes).find(n => n.id === 'continuous-distributions')
+    if (!cont) return false
+    return naming.length === 2
+      && naming.some(n => n.id === 'expectation')
+      && isTeachable(MATHEMATICS, 'expectation')
+      && !(cont.needs ?? []).every(id => isTeachable(MATHEMATICS, id))
+      // What separated them is the OTHER prerequisite, a property of the
+      // dependent rather than of the promotion.
+      && (cont.needs ?? []).includes('definite-integral')
+      && !isTeachable(MATHEMATICS, 'definite-integral')
+      // So the unready half is a root WITHOUT being ready, which is the two
+      // measures coming apart in one promotion.
+      && P49_ROOTS.includes('continuous-distributions')
+      && !P49_READY.some(n => n.id === 'continuous-distributions')
+  })(),
+  AREAS.flatMap(a => a.nodes)
+    .filter(n => (n.needs ?? []).includes('random-variables'))
+    .map(n => `${n.id}:${(n.needs ?? []).every(id => isTeachable(MATHEMATICS, id))
+      ? 'ready' : 'not'}`).join(' '))
+/*
+ * THE ANCHOR SLOT EMPTIED A THIRD TIME IN THREE PROMOTIONS, AND THE NOTE SAYING
+ * THERE WAS NO FALLBACK LEFT WAS WRONG.
+ *
+ * `armatureProblems` reports an anchor that is not a node of its area, so this is
+ * one of the few promotion costs that fails LOUDLY — which is why the refill is
+ * part of the same edit. The refill is `variance-and-covariance`.
+ *
+ * THE NOTE'S ERROR IS A SHAPE WORTH ASSERTING RATHER THAN JUST FIXING. It ruled
+ * out the distributions and the limit theorems by category and
+ * `stochastic-processes` and `measure-theoretic-probability` as machinery, then
+ * concluded nothing else fitted. That is seven of the nine non-anchor nodes, and
+ * `variance-and-covariance` and `transformations-of-variables` belong to no
+ * category it named. So the assertion counts the nodes the enumeration reached
+ * against the nodes there are: an exhaustive-sounding sweep over CATEGORIES has
+ * to be checked against the LIST, because what it misses is exactly what it had
+ * no word for.
+ */
+t('the anchor slot emptied a third time, and its refill outlived the promotion after',
+  /*
+   * THE ANCHOR LIST ITSELF HAS MOVED ON TO THE FIFTIETH'S GROUP, which emptied
+   * this slot a fourth time. What this group keeps is its own two facts: the
+   * departing node is not an anchor anywhere, which is the cost that fails
+   * LOUDLY through `armatureProblems`, and the refill it chose —
+   * `variance-and-covariance` — is still in the list one promotion later.
+   *
+   * THE SECOND HALF IS WORTH ASSERTING RATHER THAN ASSUMED, because the
+   * fiftieth took `expectation`, which is the very concept
+   * `variance-and-covariance` names, so the refill became READY without
+   * becoming unavailable. A refill that is ready is a refill that is about to
+   * be spent, and the distinction between "still an anchor" and "still a safe
+   * anchor" is exactly what the next group has to say.
+   */
+  !armatureRegions().some(r => (r.anchors ?? []).includes('random-variables'))
+  && (regionBy('rubneb').anchors ?? []).includes('variance-and-covariance')
+  && (regionBy('rubneb').anchors ?? []).every(id => P49_PROB.nodes.some(n => n.id === id))
+  && (regionBy('rubneb').authored ?? []).join(',') === 'chance-and-events'
+  && armatureRegions().filter(r =>
+    (r.authored ?? []).includes('chance-and-events')).length === 1,
+  (regionBy('rubneb').anchors ?? []).join(' '))
+t('and the category sweep that said "no fallback left" had missed two nodes, both named',
+  (() => {
+    /*
+     * THE ARITHMETIC OF THE SWEEP HAS MOVED ON — the fiftieth promoted the
+     * eighth node and the two that were missed are both anchors now, so the
+     * leftover set is empty and `missed.join(',')` no longer names anything.
+     * What is durable is the CLAIM the group was making: the note ruled out
+     * seven nodes by category and concluded nothing else fitted, and the two
+     * nodes it never reached are the two that have since filled this slot.
+     * That is a fact about the note, not about the current list, so it is
+     * asserted against both names directly.
+     */
+    const anchors = regionBy('rubneb').anchors ?? []
+    const ruledOut = [
+      'discrete-distributions', 'continuous-distributions', 'joint-distributions',
+      'law-of-large-numbers', 'central-limit-theorem',
+      'stochastic-processes', 'measure-theoretic-probability',
+    ]
+    // Neither of the two the sweep missed was ever in a category it named, and
+    // both are anchors now — the forty-ninth's refill and the fiftieth's.
+    return !ruledOut.includes('variance-and-covariance')
+      && !ruledOut.includes('transformations-of-variables')
+      && anchors.includes('variance-and-covariance')
+      && anchors.includes('transformations-of-variables')
+      // And every node the sweep DID rule out is still a node, so none of them
+      // was quietly promoted into the gap instead.
+      && ruledOut.every(id => P49_PROB.nodes.some(n => n.id === id))
+  })(),
+  `non-anchor nodes: ${(P49_PROB.nodes
+    .filter(n => !(regionBy('rubneb').anchors ?? []).includes(n.id))).map(n => n.id).join(' ')}`)
+t('its refill was NOT ready when chosen, and what made it ready was the promotion after',
+  (() => {
+    const refill = P49_PROB.nodes.find(n => n.id === 'variance-and-covariance')
+    if (!refill) return false
+    return (regionBy('rubneb').anchors ?? []).includes('variance-and-covariance')
+      // It names `expectation` and nothing else, so it was unready exactly
+      // while that was unwritten and is ready exactly because it now is. The
+      // forty-ninth's group recorded the first half; this is the second, and
+      // the two together are why the slot it chose was safe for one promotion.
+      && (refill.needs ?? []).join(',') === 'expectation'
+      && isTeachable(MATHEMATICS, 'expectation')
+      && (refill.needs ?? []).every(id => isTeachable(MATHEMATICS, id))
+      // And the anchor this promotion left ready has been spent, which is the
+      // warning it wrote down coming true.
+      && !(regionBy('rubneb').anchors ?? []).includes('expectation')
+  })(),
+  (regionBy('rubneb').anchors ?? []).map(id => `${id}:${(P49_PROB.nodes
+    .find(n => n.id === id)?.needs ?? []).every(x => isTeachable(MATHEMATICS, x))
+    ? 'ready' : 'not'}`).join(' '))
+/*
+ * AND AUTHORING TIGHTENED THE GATE ON BOTH DEPENDENTS, which is this promotion's
+ * whole effect on the walk.
+ *
+ * `gatingPrerequisitesOf` names the NEAREST teachable ancestors and looks THROUGH
+ * the unteachable ones, so while `random-variables` was mapped-only the walk
+ * passed through it and reported `conditional-probability` and `function-concept`
+ * instead. Now it stops at the concept. Asserted by membership rather than by
+ * length, since a tighter gate is often a SHORTER list.
+ */
+t('the gate tightened on both dependents, which now stop at this concept',
+  gatingPrerequisitesOf(MATHEMATICS, 'expectation').includes('random-variables')
+  && gatingPrerequisitesOf(MATHEMATICS, 'continuous-distributions')
+    .includes('random-variables')
+  // And neither now reaches past it to what gated it before.
+  && !gatingPrerequisitesOf(MATHEMATICS, 'expectation').includes('conditional-probability')
+  && !gatingPrerequisitesOf(MATHEMATICS, 'expectation').includes('function-concept')
+  // The concept's own gate is the two prerequisites it declared, nothing more.
+  && gatingPrerequisitesOf(MATHEMATICS, 'random-variables').slice().sort().join(',')
+    === 'conditional-probability,function-concept',
+  `expectation gated by {${gatingPrerequisitesOf(MATHEMATICS, 'expectation').join(', ')}}; `
+  + `random-variables gated by `
+  + `{${gatingPrerequisitesOf(MATHEMATICS, 'random-variables').join(', ')}}`)
+t('and the composed graph has no structural problems after all of it',
+  shippedAtlasProblems().length === 0,
+  shippedAtlasProblems().join('; '))
+
+// ---------------------------------------------------------------------------
+
+/**
+ * `expectation` is the SIXTH concept of `chance-and-events` and the sixth
+ * departure from `probability`. tests/concepts-logic.mjs owns the material. What
+ * is asserted here is the structure, and four of the six things are new:
+ *
+ *  - TEN NODES AND FIVE OF HEADROOM, the seventh group to count a figure that
+ *    belongs to whichever promotion last moved it.
+ *  - IT STRANDED ONE EDGE AND THIS BREAKS THE PREVIOUS GROUP'S EXPLANATION,
+ *    which is the finding rather than the fifth `links` entry. The forty-ninth
+ *    cost an entry and blamed having stepped SIDEWAYS off the chain; this one
+ *    stepped straight back ON to the chain — `expectation` sits directly above
+ *    `random-variables` — and cost one anyway, because the node declared TWO
+ *    `needs` and one points outside the subject. So the cost is a property of
+ *    the NODE and the orderliness of the promotions never mattered.
+ *  - THE ROOT SET HELD AT THREE WHILE ITS MEMBERSHIP TURNED OVER, which is a
+ *    ninth root-set outcome for this file and the FIRST time the size has been
+ *    unchanged with different members. The forty-eighth's rule predicts it
+ *    exactly: the set changes size by (in-area dependents) minus one, and this
+ *    node had ONE. A `length === 3` check would have passed across this
+ *    promotion while every node it named had changed — which is the sharpest
+ *    case yet for asserting roots by name.
+ *  - AND THE READY COUNT HELD AT TWELVE A SECOND CONSECUTIVE TIME, for a
+ *    different reason from the first. The forty-ninth spent a node and made one
+ *    of TWO dependents ready; this one spent a node and made its ONLY dependent
+ *    ready. Two promotions running where the number says nothing.
+ *  - THE ANCHOR SLOT EMPTIED A FOURTH TIME IN FOUR, paid with the fallback the
+ *    forty-ninth named in advance — the third consecutive refill decided by a
+ *    predecessor's note.
+ *  - AND THE CATEGORY SWEEP IS NOW EXACTLY COMPLETE, which is the one figure
+ *    here that got BETTER by being spent: the forty-ninth found the sweep had
+ *    missed two nodes, and both are anchors now, so the seven categories it
+ *    named cover every non-anchor node there is.
+ */
+const P50_PROB = AREAS.find(a => a.id === 'probability')
+const P50_STATS = AREAS.find(a => a.id === 'statistics')
+const P50_LINKS = P50_PROB.links ?? []
+const P50_ROOTS = roots(areaOntology(P50_PROB))
+const P50_READY = AREAS.flatMap(a => a.nodes)
+  .filter(n => (n.needs ?? []).every(id => isTeachable(MATHEMATICS, id)))
+
+group('the fiftieth promotion: collapsing the table to one number leaves probability')
+t('the node is gone and the concept is real, which is the collision rule',
+  !P50_PROB.nodes.some(n => n.id === 'expectation')
+  && !AREAS.some(a => a.nodes.some(n => n.id === 'expectation'))
+  && isTeachable(MATHEMATICS, 'expectation')
+  && conceptById(MATHEMATICS, 'expectation')?.subjectId === 'chance-and-events'
+  && MATHEMATICS.concepts.filter(c => c.id === 'expectation').length === 1,
+  `${MATHEMATICS.concepts.filter(c => c.id === 'expectation').length} entries, `
+  + `subject ${conceptById(MATHEMATICS, 'expectation')?.subjectId}`)
+/*
+ * THE TWO FIGURES THIS GROUP INHERITED, counted here and nowhere else — the
+ * seventh group to hold them. Ten nodes against a floor of five is five of
+ * headroom, and the six departures are still not declared, so the floor measures
+ * the smaller number and the area is clear of it by five.
+ *
+ * WORTH ONE LINE BECAUSE THE HEADROOM IS NOW EQUAL TO THE FLOOR ITSELF. Six
+ * departures from one area and the next five promotions out of it would land it
+ * on the threshold. The `departed` field exists for exactly this and is still
+ * absent here, which is correct — it is for areas drained NEAR the floor, and
+ * declaring it early would buy headroom nothing has asked for yet.
+ */
+t('ten nodes and five of headroom, the figure having moved to this group',
+  P50_PROB.nodes.length === 10
+  && P50_PROB.nodes.length - 5 === 5
+  && P50_PROB.departed === undefined
+  && AREAS.filter(a => a.nodes.length + (a.departed ?? []).length < 5).length === 0,
+  `probability ${P50_PROB.nodes.length}, headroom ${P50_PROB.nodes.length - 5}`)
+t('and the uncertainty half holds twenty-five nodes, which is the seventh group to count it',
+  P50_PROB.nodes.length + P50_STATS.nodes.length === 25
+  && [...P50_PROB.nodes, ...P50_STATS.nodes].every(n => !isTeachable(MATHEMATICS, n.id)),
+  `${P50_PROB.nodes.length} + ${P50_STATS.nodes.length} nodes`)
+/*
+ * IT STRANDED ONE EDGE AND THE LIST GOES TO FIVE — and the finding is that this
+ * FALSIFIES the forty-ninth group's account of its own cost.
+ *
+ * That group says "a chain is cheap because each step's ONE prerequisite is the
+ * step below it" and attributes its entry to having stepped sideways off the
+ * chain. This promotion stepped straight back on to it and still paid. Both
+ * halves are asserted: the gate really is the concept directly below, so this
+ * was a chain step, and the entry really is here.
+ *
+ * SO THE DURABLE RULE IS THE ONE THAT GROUP ENDED ON RATHER THAN THE ONE IT
+ * OPENED WITH: the cost is a property of the NODE's `needs`. Asserted by
+ * computing it — every entry in this list was stranded by a node that declared
+ * two or more `needs`, and every free departure declared one.
+ */
+t('its one stranded edge is the links list\'s fifth entry, and it gates',
+  P50_LINKS.length === 5
+  && P50_LINKS.map(l => `${l.from}->${l.to}`).join(' ')
+    === 'sets->sample-spaces fraction-arithmetic->sample-spaces '
+    + 'counting-principles->counting-probability function-concept->random-variables '
+    + 'sigma-notation->expectation'
+  && P50_LINKS.every(l => !!l.because)
+  && isTeachable(MATHEMATICS, 'sigma-notation')
+  && gatingPrerequisitesOf(MATHEMATICS, 'expectation').slice().sort().join(',')
+    === 'random-variables,sigma-notation',
+  P50_LINKS.map(l => `${l.from}->${l.to}`).join(' '))
+t('and it was a CHAIN step that cost an entry, which the previous group said could not happen',
+  (() => {
+    // A chain step: the gate inside the subject is the concept directly below,
+    // not a sibling off something lower.
+    const gate = CHANCE_AND_EVENTS.edges.find(e => e.kind === 'prerequisite'
+      && e.to === 'expectation')
+    if (!gate || gate.from !== 'random-variables') return false
+    // Which is the concept the promotion before authored, so this really is the
+    // next step up the same line.
+    const below = CHANCE_AND_EVENTS.edges.find(e => e.kind === 'prerequisite'
+      && e.to === 'random-variables')
+    return !!below && below.from === 'conditional-probability'
+      // And it cost an entry anyway, because the node declared two `needs` and
+      // the far end is in a third subject.
+      && conceptById(MATHEMATICS, 'sigma-notation')?.subjectId === 'functions-and-inverses'
+      && !CHANCE_AND_EVENTS.concepts.some(c => c.id === 'sigma-notation')
+      && P50_LINKS.some(l => l.from === 'sigma-notation' && l.to === 'expectation')
+      // The composed graph holds both prerequisites exactly once each, so the
+      // `links` entry is not a second copy of an ontology edge.
+      && MATHEMATICS.edges.filter(e => e.kind === 'prerequisite'
+        && e.to === 'expectation').length === 2
+      && CHANCE_AND_EVENTS.edges.every(e =>
+        CHANCE_AND_EVENTS.concepts.some(c => c.id === e.from)
+        && CHANCE_AND_EVENTS.concepts.some(c => c.id === e.to))
+  })(),
+  MATHEMATICS.edges.filter(e => e.to === 'expectation')
+    .map(e => `${e.from}:${e.kind}`).join(' '))
+/*
+ * NOTHING WAS LOST IN SILENCE, AND ALL FOUR FIELDS WERE CHECKED RATHER THAN
+ * REMEMBERED — the eighth time this check has run in this file, and still only
+ * the forty-sixth has ever had anything at risk.
+ *
+ * The node declared no `confusedWith`, no `exercises` and no `encompasses`.
+ * Asserted by PROVENANCE as well as by absence, which is the repair the previous
+ * group needed: an `atlas:` stamp on a credit edge touching this concept would
+ * mean one came off the node, and an absence of edges in one direction only
+ * stays true until somebody authors the concept above.
+ */
+t('no credit or interference edge was lost, the node having declared none of the three',
+  !MATHEMATICS.edges.some(e => e.kind === 'interferes_with'
+    && [e.from, e.to].includes('expectation'))
+  && MATHEMATICS.edges.filter(e => e.kind === 'encompasses'
+    && [e.from, e.to].includes('expectation'))
+    .every(e => (e.promotedBy ?? '').startsWith('author:'))
+  // The two interference pairs this area declares are both still there, so the
+  // absence above is about this concept and not about an atlas that lost them.
+  && MATHEMATICS.edges.some(e => e.kind === 'interferes_with'
+    && e.from === 'bayes-theorem' && e.to === 'conditional-probability')
+  && MATHEMATICS.edges.some(e => e.kind === 'interferes_with'
+    && e.from === 'hypothesis-testing' && e.to === 'bayes-theorem')
+  && MATHEMATICS.edges.filter(e => e.kind === 'interferes_with'
+    && e.rationale === undefined).length === 0,
+  MATHEMATICS.edges.filter(e => e.kind === 'interferes_with')
+    .map(e => `${e.from}~${e.to}`).join(' '))
+t('and the credit edge it declares goes back to crediting its own gate',
+  (() => {
+    const mine = MATHEMATICS.edges.find(e => e.kind === 'encompasses'
+      && e.from === 'expectation')
+    if (!mine || !mine.rationale || !mine.promotedBy) return false
+    return mine.to === 'random-variables'
+      // Exactly one, and it points DOWN at the concept that gates it — which is
+      // the ordinary shape, and is worth asserting because the edge the group
+      // above declares is the exception that skipped its gate.
+      && MATHEMATICS.edges.filter(e => e.kind === 'encompasses'
+        && e.from === 'expectation').length === 1
+      && MATHEMATICS.edges.some(e => e.kind === 'prerequisite'
+        && e.from === 'random-variables' && e.to === 'expectation')
+      // And it does NOT reach two concepts down as that one did, so the
+      // forty-ninth's skip stays the single case rather than becoming a habit.
+      && !MATHEMATICS.edges.some(e => e.kind === 'encompasses'
+        && e.from === 'expectation' && e.to === 'sample-spaces')
+  })(),
+  MATHEMATICS.edges.filter(e => [e.from, e.to].includes('expectation'))
+    .map(e => `${e.from}:${e.kind}:${e.to}`).join(' '))
+/*
+ * THE ROOT SET HELD AT THREE WHILE ITS MEMBERSHIP TURNED OVER — a ninth
+ * root-set outcome for this file, and the FIRST where the size did not move.
+ *
+ * This is the case the "assert by name, never by length" rule exists for, and it
+ * is sharper than the forty-ninth's ready-count version because it is the same
+ * measure on the same object: `length === 3` was true before this promotion and
+ * is true after, and not one of the three nodes it named is the same.
+ * `expectation` left the set by being authored and `variance-and-covariance`
+ * entered it by inheriting the position, with `markov-chains` and
+ * `continuous-distributions` unmoved.
+ *
+ * AND THE FORTY-EIGHTH'S RULE STILL PREDICTS IT: the set changes size by
+ * (in-area dependents) minus one, this node had exactly ONE, so the change is
+ * zero. +1, 0, +2, -1 and now 0-with-turnover have all happened here, and the
+ * mechanism is computed rather than quoted.
+ */
+t('the root set HELD at three while every member changed, which no count sees',
+  P50_ROOTS.slice().sort().join(',')
+    === 'continuous-distributions,markov-chains,variance-and-covariance'
+  && P50_ROOTS.length === 3
+  && P50_ROOTS.every(id => P50_PROB.nodes.some(n => n.id === id))
+  // Gone from the set, because it is a concept now.
+  && !P50_ROOTS.includes('expectation')
+  // The one that inherited is exactly the one that named the departing node,
+  // and it is the only such node in the area — which is why the size held.
+  && P50_PROB.nodes.filter(n => (n.needs ?? []).includes('expectation'))
+    .map(n => n.id).join(',') === 'variance-and-covariance'
+  && P50_ROOTS.includes('variance-and-covariance')
+  && roots(areaOntology(P50_STATS)).join(',') === 'sampling-and-bias',
+  `probability {${P50_ROOTS.join(', ')}}, statistics `
+  + `{${roots(areaOntology(P50_STATS)).join(', ')}}`)
+/*
+ * AND THE READY COUNT HELD AT TWELVE A SECOND CONSECUTIVE TIME, by a different
+ * mechanism from the first — which is what makes the pair worth asserting rather
+ * than just the number.
+ *
+ * The forty-ninth had TWO dependents and one of them was ready, so it spent one
+ * and made one by luck of the split. This node has ONE dependent and it is
+ * ready, so it spent one and made one necessarily. Same figure, two different
+ * reasons, and a run reading only "twelve again" would conclude the field had
+ * stopped moving when in fact it has turned over twice.
+ */
+t('the ready count held at twelve again, and this time the yield was forced rather than split',
+  P50_READY.length === 12
+  && !P50_READY.some(n => n.id === 'expectation')
+  && P50_READY.some(n => n.id === 'variance-and-covariance')
+  // One dependent, not two, and its only prerequisite was this concept — so
+  // there was no split to come out either way.
+  && AREAS.flatMap(a => a.nodes)
+    .filter(n => (n.needs ?? []).includes('expectation'))
+    .map(n => n.id).join(',') === 'variance-and-covariance'
+  && (P50_PROB.nodes.find(n => n.id === 'variance-and-covariance')?.needs ?? [])
+    .join(',') === 'expectation',
+  `${P50_READY.length} ready: ${P50_READY.map(n => n.id).join(' ')}`)
+/*
+ * THE ANCHOR SLOT EMPTIED A FOURTH TIME IN FOUR PROMOTIONS, and the refill is
+ * the one the forty-ninth NAMED IN ADVANCE for exactly this turnover.
+ *
+ * `armatureProblems` reports an anchor that is not a node of its area, so this
+ * cost fails LOUDLY — which is why the refill is part of the same edit. That is
+ * now the third consecutive refill decided by a predecessor's note rather than
+ * re-derived, and the practice is what is being asserted: the note's named
+ * fallback is the anchor that appears.
+ *
+ * AND THE SLOT IS UNSAFE AGAIN IN THE OTHER DIRECTION. The new anchor cannot
+ * become ready — `transformations-of-variables` needs two unwritten nodes — but
+ * `variance-and-covariance`, which has been an anchor since the forty-ninth, is
+ * ready BECAUSE of this promotion. So the fifth turnover is one promotion away,
+ * and this time there is nothing left to name: the sweep's seven plus the two
+ * missed accounts for every node this area has.
+ */
+t('the anchor slot emptied a fourth time and the refill is the one named in advance',
+  !armatureRegions().some(r => (r.anchors ?? []).includes('expectation'))
+  && (regionBy('rubneb').anchors ?? []).join(',')
+    === 'markov-chains,transformations-of-variables,variance-and-covariance'
+  && (regionBy('rubneb').anchors ?? []).every(id => P50_PROB.nodes.some(n => n.id === id))
+  && (regionBy('rubneb').authored ?? []).join(',') === 'chance-and-events'
+  && armatureRegions().filter(r =>
+    (r.authored ?? []).includes('chance-and-events')).length === 1,
+  (regionBy('rubneb').anchors ?? []).join(' '))
+t('and the category sweep is now EXACTLY complete, both the nodes it missed being anchors',
+  (() => {
+    const anchors = regionBy('rubneb').anchors ?? []
+    const nonAnchor = P50_PROB.nodes.filter(n => !anchors.includes(n.id)).map(n => n.id)
+    // The categories the forty-ninth's note ruled out, by name.
+    const ruledOut = [
+      'discrete-distributions', 'continuous-distributions', 'joint-distributions',
+      'law-of-large-numbers', 'central-limit-theorem',
+      'stochastic-processes', 'measure-theoretic-probability',
+    ]
+    return nonAnchor.length === 7
+      // Every non-anchor node is covered, and nothing is left over — so the
+      // enumeration that was INCOMPLETE when written is complete now, not
+      // because it was corrected but because the two nodes outside it were
+      // spent on this slot.
+      && nonAnchor.slice().sort().join(',') === ruledOut.slice().sort().join(',')
+      && nonAnchor.filter(id => !ruledOut.includes(id)).length === 0
+      // Which is why there is no fallback left to name: every remaining node is
+      // one the reading has already declined.
+      && anchors.includes('transformations-of-variables')
+      && anchors.includes('variance-and-covariance')
+  })(),
+  `non-anchor nodes: ${(P50_PROB.nodes
+    .filter(n => !(regionBy('rubneb').anchors ?? []).includes(n.id))).map(n => n.id).join(' ')}`)
+t('this refill is NOT ready, but the anchor beside it now is — so the slot is unsafe again',
+  (() => {
+    const refill = P50_PROB.nodes.find(n => n.id === 'transformations-of-variables')
+    const beside = P50_PROB.nodes.find(n => n.id === 'variance-and-covariance')
+    if (!refill || !beside) return false
+    return !(refill.needs ?? []).every(id => isTeachable(MATHEMATICS, id))
+      && (refill.needs ?? []).slice().sort().join(',')
+        === 'change-of-variables,joint-distributions'
+      && (refill.needs ?? []).every(id => !isTeachable(MATHEMATICS, id))
+      // And the other node-anchor is ready, which is this promotion's own doing.
+      && (beside.needs ?? []).every(id => isTeachable(MATHEMATICS, id))
+      && P50_READY.some(n => n.id === 'variance-and-covariance')
+  })(),
+  (regionBy('rubneb').anchors ?? []).map(id => `${id}:${(P50_PROB.nodes
+    .find(n => n.id === id)?.needs ?? []).every(x => isTeachable(MATHEMATICS, x))
+    ? 'ready' : 'not'}`).join(' '))
+/*
+ * AND AUTHORING TIGHTENED THE GATE ON ITS ONE DEPENDENT, which is this
+ * promotion's whole effect on the walk.
+ *
+ * `gatingPrerequisitesOf` names the NEAREST teachable ancestors and looks THROUGH
+ * the unteachable ones, so while `expectation` was mapped-only the walk passed
+ * through it and reported `random-variables` and `sigma-notation` instead. Now it
+ * stops at the concept. Asserted by membership rather than by length, since a
+ * tighter gate is often a SHORTER list.
+ */
+t('the gate tightened on its one dependent, which now stops at this concept',
+  gatingPrerequisitesOf(MATHEMATICS, 'variance-and-covariance').includes('expectation')
+  // And no longer reaches past it to what gated it before.
+  && !gatingPrerequisitesOf(MATHEMATICS, 'variance-and-covariance')
+    .includes('random-variables')
+  && !gatingPrerequisitesOf(MATHEMATICS, 'variance-and-covariance')
+    .includes('sigma-notation')
+  // The concept's own gate is the two prerequisites it declared, nothing more.
+  && gatingPrerequisitesOf(MATHEMATICS, 'expectation').slice().sort().join(',')
+    === 'random-variables,sigma-notation',
+  `variance-and-covariance gated by `
+  + `{${gatingPrerequisitesOf(MATHEMATICS, 'variance-and-covariance').join(', ')}}; `
+  + `expectation gated by {${gatingPrerequisitesOf(MATHEMATICS, 'expectation').join(', ')}}`)
 t('and the composed graph has no structural problems after all of it',
   shippedAtlasProblems().length === 0,
   shippedAtlasProblems().join('; '))

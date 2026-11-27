@@ -10963,11 +10963,25 @@ t('and it is dead twice over, since the real article is titled differently again
  * is that concept — and calls that the direction to prefer. This one reaches
  * "Conditional probability", which is exactly right, and also "Conditional
  * probability distribution", which is a page about a FUNCTION of a random
- * variable: `random-variables` is a node of `probability` and unwritten, so a
- * learner on that page is offered this concept, which is its prerequisite rather
- * than its subject. That is an overclaim and it is asserted as one, because the
- * alternative — narrowing the pattern — would move the recognition figure in the
- * same edit as the material.
+ * variable, and this concept is not about distributions. That is an overclaim and
+ * it is asserted as one, because the alternative — narrowing the pattern — would
+ * move the recognition figure in the same edit as the material.
+ *
+ * THE REASON FOR THE OVERCLAIM CHANGED AT THE FORTY-NINTH PROMOTION AND THE
+ * ASSERTION HAD TO SAY SO. It read `!ONTOLOGIES.some(... 'random-variables')` —
+ * the overclaim was defended on the ground that the page had NO better concept
+ * to reach, since the one it is really about was an unwritten map node, so
+ * offering this one at least offered its prerequisite. That ceased to be true the
+ * moment `random-variables` was authored, and the clause went red on exactly the
+ * event that makes the overclaim worth repairing. It is now a plain overclaim
+ * with a plain repair available, and the clause asserts the two halves of that:
+ * the concept the page should reach EXISTS, and this pattern still takes the page
+ * anyway because the other pattern does not reach it.
+ *
+ * THE REPAIR IS DELIBERATELY NOT MADE HERE and the reason is the one above: it is
+ * a negative lookahead on this pattern plus a widening of the fifth concept's,
+ * which moves recognition twice in a change that also adds fifteen knowledge
+ * points. ontology-chance.ts records it as a commit that should move no material.
  *
  * What it MISSES is asserted by name too, since a recall gap is invisible by
  * construction: "Independence (probability theory)", "Conditional independence"
@@ -10981,10 +10995,14 @@ t('and it is dead twice over, since the real article is titled differently again
 t('it reaches the title it is for, and overclaims one this concept does not teach',
   CO.scope.match.test('Conditional probability')
   && CO.scope.match.test('Conditional probability distribution')
-  // `random-variables` is still a map node — no authored ontology holds it — so
-  // the page the pattern overclaims leads to a concept that is its prerequisite
-  // rather than to the one it is about.
-  && !ONTOLOGIES.some(o => o.concepts.some(c => c.id === 'random-variables')),
+  // The concept that page is really about is now AUTHORED, so the overclaim is
+  // no longer "the only concept available" — it is a pattern taking a page that
+  // belongs to its neighbour.
+  && ONTOLOGIES.some(o => o.concepts.some(c => c.id === 'random-variables'))
+  // And the neighbour does not reach it, which is why the repair needs edits to
+  // BOTH patterns and is not done in a change that adds material.
+  && !conceptById(CE, 'random-variables').scope.match
+    .test('Conditional probability distribution'),
   ['Conditional probability', 'Conditional probability distribution']
     .map(s => `${s}:${CO.scope.match.test(s)}`).join(' '))
 t('and it misses three titles that are partly this material, which is the invisible half',
@@ -11411,15 +11429,17 @@ const BA_SHOWN = BA_POINTS.map(p =>
 
 group('bayes-theorem, where the overlap stops being countable')
 /*
- * THE SUBJECT TOTALS, WHICH THIS PROMOTION MOVED and which the forty-seventh
- * promotion's group above no longer counts — the fourth group to hold them, for
- * the fourth consecutive promotion into this subject. Four concepts, twelve
- * points, and the array in prerequisite order with the new one appended.
+ * THE SUBJECT TOTALS HAVE MOVED ON TO THE FORTY-NINTH'S GROUP, which is the
+ * fifth handover in five consecutive promotions into this subject and is the
+ * mechanism rather than churn. What stays here is this concept's own POSITION in
+ * the array, which no later promotion can move: it is the fourth, appended after
+ * the three it came up the chain behind, and that is a fact about the order the
+ * subject was written in.
  */
-t('four concepts and twelve knowledge points, the figure having moved to this group',
-  CE.concepts.length === 4 && allKnowledgePoints(CE).length === 12
-  && CE.concepts.map(c => c.id).join(',')
-    === 'sample-spaces,counting-probability,conditional-probability,bayes-theorem',
+t('it is the fourth concept, appended after the three it came up the chain behind',
+  CE.concepts.map(c => c.id).slice(0, 4).join(',')
+    === 'sample-spaces,counting-probability,conditional-probability,bayes-theorem'
+  && CE.concepts[3].knowledgePoints.length === 3,
   `${CE.concepts.length} concepts, ${allKnowledgePoints(CE).length} points: `
   + CE.concepts.map(c => c.id).join(','))
 t('the concept is teachable AND practisable, and the subject has no internal faults',
@@ -11458,8 +11478,16 @@ t('the concept is teachable AND practisable, and the subject has no internal fau
  * edge would have been inexpressible rather than merely unwritten, since `links`
  * hard-codes `prerequisite` and carries no kind.
  */
+/*
+ * THE ARRAY LENGTH WENT TO THE FORTY-NINTH'S GROUP, which is the FOURTH time a
+ * `length` in this file has had to be rewritten by a later promotion. `CE.edges
+ * .length === 6` was this promotion's claim about an array two promotions have
+ * now appended to, and the claim it was really making — "this promotion declared
+ * three, one of each kind" — is stated below over the edges that name this
+ * concept and is promotion-proof.
+ */
 t('it declares three edges, one of each kind the build has, and all six ends are held here',
-  CE.edges.length === 6
+  CE.edges.filter(e => [e.from, e.to].includes('bayes-theorem')).length === 3
   && CE.edges.filter(e => [e.from, e.to].includes('bayes-theorem'))
     .map(e => `${e.from}:${e.kind}:${e.to}`).join(' ')
     === 'conditional-probability:prerequisite:bayes-theorem '
@@ -11801,11 +11829,20 @@ t('one expression, two base rates, and every test figure byte-identical between 
  *
  * The superlative is false without its class — unrelated references in this
  * subject sit as much as 0.99 apart — so what is asserted is the ranking over
- * every expression asked at more than one substitution across all four
- * concepts. There are six such expressions; this one spans about 0.79 and the
- * runner-up, `k/m` at 6/55 against 3/5, spans about 0.49. Recomputed rather
- * than restated, so that a fifth concept adding a wider pair goes red here and
- * sends somebody to the sentence in tasks.ts that says the same thing.
+ * every expression asked at more than one substitution. This one spans about
+ * 0.79 and the runner-up, `k/m` at 6/55 against 3/5, spans about 0.49.
+ * Recomputed rather than restated, so that a later concept adding a wider pair
+ * goes red here and sends somebody to the sentence in tasks.ts that says the
+ * same thing.
+ *
+ * THE SIZE OF THE COMPARISON CLASS HAS MOVED TO THE FIFTIETH PROMOTION'S GROUP,
+ * and the reason is worth a line because it is not the reason the paragraph
+ * above gives. This said "there are six such expressions" and asserted it, so
+ * the check went red at the sixth concept — on a pair spanning 0.125, which is
+ * NARROWER than this one and leaves the superlative untouched. The comment
+ * described the trigger it wanted (a wider pair) and the code carried a second,
+ * broader one (any new pair at all). The superlative is this group's claim and
+ * stays; the population count belongs to whichever promotion last changed it.
  */
 t('it is the widest same-expression pair in the subject, the ranking being recomputed',
   (() => {
@@ -11828,8 +11865,8 @@ t('it is the widest same-expression pair in the subject, the ranking being recom
       g === '((s/t)*(a/n))/((s/t)*(a/n) + (f/g)*((n-a)/n))')
     if (!mine) return false
     const others = repeated.filter(([g]) => g !== mine[0])
-    return repeated.length === 6
-      && others.length === 5
+    return repeated.length >= 6
+      && others.length === repeated.length - 1
       && others.every(([, refs]) => spanOf(refs) < spanOf(mine[1]))
       && spanOf(mine[1]) > 0.79 && spanOf(mine[1]) < 0.8
       // The runner-up is the asymmetry of conditioning, one concept down.
@@ -12024,6 +12061,1226 @@ t('and every one is interrogative rather than an imperative with a question mark
     .every(s => isInterrogative(s.socratic)),
   BA_POINTS.flatMap(p => p.workedExample.subgoals)
     .filter(s => !isInterrogative(s.socratic)).map(s => s.label).join(' | '))
+
+// ---------------------------------------------------------------------------
+
+/**
+ * `random-variables`, the forty-ninth promotion and the FIFTH concept of
+ * `chance-and-events`. tests/atlas.mjs owns the structural half — the node being
+ * gone, the `links` list growing to four, the root set growing to three, the
+ * anchor slot emptying a third time, and the ready field. What is asserted here
+ * is the MATERIAL, and six things about it that no count would catch.
+ *
+ * FIRST, THAT THE MATHEMATICS IS RIGHT, DERIVED AND NOT MATCHED. Every number in
+ * this concept comes off one space of eight sequences, so the eight sequences are
+ * ENUMERATED in this file and X, Y and the conditional table are computed from
+ * them — then the material's text is required to contain what came out. That is
+ * stronger than the arithmetic checks the four concepts below use, and it is
+ * available here only because the space is small enough to print, which is also
+ * the reason the concept is set on it.
+ *
+ * SECOND, THAT THE CONCEPT FINISHES AN ARGUMENT THE FIRST ONE OPENED. That
+ * concept computes 3/8 and 1/4 for the same event in two spaces and says the
+ * wrong one is whichever space was not equally likely, without saying which.
+ * This one says which, and the reason is the preimage sizes 1, 3, 3, 1. Asserted
+ * as a conjunction over BOTH concepts' text, because the claim is about a
+ * relationship between them and either half alone is unremarkable.
+ *
+ * THIRD, THAT THE CREDIT EDGE SKIPS THE PREREQUISITE. A first in the build:
+ * `random-variables => sample-spaces` reaches two concepts down, and no
+ * `encompasses` to `conditional-probability` is declared although that is what
+ * gates it. The reason is countable — one of nine tasks conditions anything — so
+ * it is counted rather than described, from both sides.
+ *
+ * FOURTH, THAT NO GIVEN IS REPEATED AND THE SUBJECT'S SIX REPEATS ARE UNTOUCHED.
+ * The forty-eighth promotion's group asserts a span ranking over exactly six
+ * expressions asked at more than one substitution. Nine new tasks could silently
+ * make it seven; none does, and that is asserted here rather than left to the
+ * other group to discover.
+ *
+ * FIFTH, THAT TWO SHAPES AGREE ON 3/4 BECAUSE THEY ARE THE SAME EVENT. The
+ * fourth concept had three shapes agree because a theorem has forms; this is two
+ * agreeing because "X is 1 or 2" and "Y is 1" are one subset of the eight
+ * sequences under two names, which is what it MEANS for Y to merge two values of
+ * X. If they ever disagreed the merge would not be a merge, so it is asserted
+ * with the two givens required DISTINCT — the agreement alone would be satisfied
+ * by one task written twice.
+ *
+ * SIXTH, THAT THE FIDELITY IS `checked` WITH THE PATTERN CARRIED VERBATIM, AND
+ * THAT ITS SHORTFALL IS A NEW SHAPE FOR THIS FILE. The two patterns below carry
+ * DEAD alternatives — a `\b` after a literal `)` — and this one carries the same
+ * `\b` construction alive: it reaches the singular title and cannot reach any
+ * plural. So the file now holds both failure modes of one regex habit, which
+ * matters because the repairs differ, and the plural misses are asserted by name
+ * since a recall gap is invisible by construction.
+ */
+const RV = conceptById(CE, 'random-variables')
+const RV_POINTS = RV.knowledgePoints
+const RV_TASKS = RV_POINTS.flatMap(p => tasksForPoint(p.id))
+const RV_SHOWN = RV_POINTS.map(p =>
+  `${p.workedExample.problem} ${p.workedExample.subgoals.map(s => s.detail).join(' ')} `
+  + `${p.workedExample.answer}`).join(' ')
+/*
+ * THE SPACE, ENUMERATED ONCE AND USED BY EVERY ARITHMETIC ASSERTION BELOW.
+ *
+ * Three tosses in order, so eight sequences, which is the same space
+ * `sample-spaces` is written on. Deriving the tables from this rather than
+ * restating them is the whole point: a worked example that gets its own
+ * arithmetic wrong is the worst thing this file can ship, and a string match
+ * against "3/8" would pass whatever the 3 and the 8 were counting.
+ */
+const RV_SEQS = ['HHH', 'HHT', 'HTH', 'HTT', 'THH', 'THT', 'TTH', 'TTT']
+const RV_X = s => [...s].filter(ch => ch === 'H').length
+const RV_Y = s => Math.abs(RV_X(s) - (s.length - RV_X(s)))
+const RV_PREIMAGE = (f, v) => RV_SEQS.filter(s => f(s) === v)
+
+group('random-variables, where a number is attached to each outcome')
+/*
+ * THE SUBJECT TOTALS HAVE MOVED ON TO THE FIFTIETH'S GROUP, which is the sixth
+ * handover in six consecutive promotions into this subject. What stays here is
+ * this concept's own POSITION in the array, which no later promotion can move:
+ * it is the fifth, appended after the four written before it.
+ *
+ * AND THE FACT THAT THE ARRAY STOPPED BEING THE PREREQUISITE CHAIN HERE, which
+ * is this promotion's structural claim and is permanent. The four below run
+ * `sample-spaces` -> `counting-probability` -> `conditional-probability` ->
+ * `bayes-theorem`, each gated by the one before. This one is gated by
+ * `conditional-probability`, the THIRD, so it is `bayes-theorem`'s sibling.
+ * Asserted because "the array is in prerequisite order" was true for four
+ * promotions and a reader would carry on assuming it — and because the FIFTIETH
+ * went back to appending a genuine chain step, so the array is now a writing
+ * order that happens to agree with the chain at both ends and not in the middle.
+ */
+t('it is the fifth concept, appended where the array stopped being the chain',
+  CE.concepts.map(c => c.id).slice(0, 5).join(',')
+    === 'sample-spaces,counting-probability,conditional-probability,bayes-theorem,'
+    + 'random-variables'
+  && CE.concepts[4].knowledgePoints.length === 3
+  && RV_POINTS.map(p => p.position).join(',') === '1,2,3',
+  `${CE.concepts.length} concepts, ${allKnowledgePoints(CE).length} points: `
+  + CE.concepts.map(c => c.id).join(','))
+t('and the array is no longer the prerequisite chain, this concept being the fourth\'s sibling',
+  (() => {
+    const gate = CE.edges.find(e => e.kind === 'prerequisite' && e.to === 'random-variables')
+    const sibling = CE.edges.find(e => e.kind === 'prerequisite' && e.to === 'bayes-theorem')
+    return !!gate && !!sibling
+      // Both come off the THIRD concept, so neither is above the other.
+      && gate.from === 'conditional-probability'
+      && sibling.from === 'conditional-probability'
+      // And nothing gates this one off the concept that precedes it in the array.
+      && !CE.edges.some(e => e.kind === 'prerequisite'
+        && e.from === 'bayes-theorem' && e.to === 'random-variables')
+      && CE.concepts[3].id === 'bayes-theorem' && CE.concepts[4].id === 'random-variables'
+  })(),
+  CE.edges.filter(e => e.kind === 'prerequisite').map(e => `${e.from}->${e.to}`).join(' '))
+t('the concept is teachable AND practisable, and the subject has no internal faults',
+  isTeachable(CE, 'random-variables') && isPractisable(CE, 'random-variables')
+  && ontologyProblems(CE).length === 0 && fidelityMismatches(CE).length === 0,
+  ontologyProblems(CE).join('; '))
+/*
+ * EIGHT EDGES NOW, AND TWO OF THEM ARE THIS PROMOTION'S — the figure having moved
+ * here from the forty-eighth's group, which is the fourth time a `length` in this
+ * file has been handed on.
+ *
+ * THE PREREQUISITE IS HALF OF WHAT IT COST. The node declared TWO `needs` and
+ * only `conditional-probability` could live here; `function-concept` is
+ * `functions-and-inverses`, so it became `PROBABILITY.links`' fourth entry and
+ * tests/atlas.mjs asserts it there. That ends a run of two zero-cost promotions,
+ * and the reason is the sibling shape rather than carelessness — a chain is cheap
+ * because each step's ONE prerequisite is the step below it.
+ *
+ * THE CREDIT EDGE IS THE INTERESTING ONE AND IT IS ASSERTED FROM BOTH SIDES.
+ * `random-variables => sample-spaces` skips the concept that gates it, which no
+ * edge in this build has done, so both the presence of the one and the ABSENCE of
+ * the other are checked — and the absence is justified by counting the tasks that
+ * condition anything, since an unexplained missing edge and a deliberately
+ * refused one look identical in the data.
+ *
+ * AND NO INTERFERENCE WAS RESCUED BECAUSE NONE WAS AT RISK, which is worth a
+ * clause rather than a silence: the node declared no `confusedWith`, so unlike
+ * the forty-eighth this promotion had nothing to lose, and the count of
+ * interference edges in the subject is unchanged at one.
+ */
+t('it declares two edges, and the containment rule holds over all of them',
+  /*
+   * THE SUBJECT'S EDGE COUNT HAS MOVED ON TO THE FIFTIETH'S GROUP, which added
+   * two more. What is asserted here is the two edges THIS promotion declared,
+   * scoped to `e.from` for the credit edge so that a successor crediting this
+   * concept does not falsify a claim about what it declares — the same
+   * directional repair tests/atlas.mjs needed in the same place.
+   */
+  CE.edges.filter(e => e.to === 'random-variables' && e.kind === 'prerequisite')
+    .map(e => `${e.from}:${e.kind}:${e.to}`).join(' ')
+    === 'conditional-probability:prerequisite:random-variables'
+  /*
+   * Scoped to the KIND as well as the direction. `e.from === 'random-variables'`
+   * alone was still wrong: the fiftieth promotion's prerequisite edge also
+   * leaves this concept, so a claim about the credit edge it declares has to say
+   * `encompasses`. Direction was necessary and not sufficient.
+   */
+  && CE.edges.filter(e => e.from === 'random-variables' && e.kind === 'encompasses')
+    .map(e => `${e.from}:${e.kind}:${e.to}`).join(' ')
+    === 'random-variables:encompasses:sample-spaces'
+  && CE.edges.every(e => CE.concepts.some(c => c.id === e.from)
+    && CE.concepts.some(c => c.id === e.to))
+  && CE.edges.every(e => !!e.promotedBy),
+  CE.edges.map(e => `${e.from}:${e.kind}:${e.to}`).join(' '))
+t('the credit edge SKIPS the concept that gates it, which is a first and is counted',
+  (() => {
+    const mine = CE.edges.find(e => e.kind === 'encompasses' && e.from === 'random-variables')
+    if (!mine || !mine.rationale) return false
+    const gate = CE.edges.find(e => e.kind === 'prerequisite' && e.to === 'random-variables')
+    // It credits two concepts DOWN, past its own gate.
+    const skipped = gate.from
+    const conditioning = RV_TASKS.filter(x => /\bgiven\b|conditional/i.test(x.prompt))
+    return mine.to === 'sample-spaces'
+      && skipped === 'conditional-probability'
+      && !CE.edges.some(e => e.kind === 'encompasses'
+        && e.from === 'random-variables' && e.to === skipped)
+      // The reason, counted: one task of nine conditions anything at all, where
+      // the standard the two credit edges below were held to is two points of
+      // three. Checked from the other side too — nothing here multiplies two
+      // probabilities along a sequence of draws or runs a product test, which is
+      // what exercising that concept's other two points would look like.
+      && conditioning.length === 1
+      && RV_TASKS.every(x => !/independen/i.test(x.prompt))
+      && RV_TASKS.every(x => !/\bdraw/i.test(x.prompt))
+      // And the rationale says which half of `sample-spaces`' third point it
+      // does NOT credit, so "all three" cannot be read into it.
+      && /inclusion/i.test(mine.rationale)
+      && CE.edges.filter(e => e.kind === 'encompasses').every(e => !!e.rationale)
+  })(),
+  CE.edges.filter(e => e.kind === 'encompasses')
+    .map(e => `${e.from}=>${e.to}`).join(' '))
+t('so the first concept now has TWO creditors, which composeAtlas does not mind',
+  (() => {
+    const creditors = CE.edges.filter(e => e.kind === 'encompasses' && e.to === 'sample-spaces')
+      .map(e => e.from).slice().sort()
+    return creditors.join(',') === 'counting-probability,random-variables'
+      // Two distinct edges, not one listed twice — the check `composeAtlas` does
+      // not do for duplicates.
+      && new Set(CE.edges.map(e => e.id)).size === CE.edges.length
+  })(),
+  CE.edges.filter(e => e.kind === 'encompasses' && e.to === 'sample-spaces')
+    .map(e => e.from).join(' '))
+t('and no interference was at risk, the node having declared none',
+  !CE.edges.some(e => e.kind === 'interferes_with'
+    && [e.from, e.to].includes('random-variables'))
+  && CE.edges.filter(e => e.kind === 'interferes_with').length === 1
+  && interferesWith(CE, 'random-variables').length === 0,
+  interferesWith(CE, 'random-variables').join(' ') || 'none, as the node declared')
+/*
+ * THE PATTERN IS CARRIED VERBATIM OFF THE MAP NODE, which every promotion since
+ * the fourth has done, and the node already declared `checked` — `expandNode`
+ * sets fidelity from the presence of a `match` — so recognition did not move with
+ * the material. Asserted against the literal, the node being GONE and there being
+ * nothing left to compare with.
+ */
+t('its pattern is the map node\'s unchanged, so recognition did not move with the material',
+  String(RV.scope.match) === String(/\brandom variable\b/i)
+  && RV.fidelity === 'checked'
+  && RV.caveat === undefined
+  && RV.scope.id === RV.id
+  && RV.scope.label === RV.name
+  && RV.scope.hint === 'random variable discrete continuous distribution pmf pdf',
+  `${RV.fidelity}, ${String(RV.scope.match)}`)
+/*
+ * THE SAME `\b` CONSTRUCTION AS THE TWO DEAD ALTERNATIVES BELOW, ALIVE — which is
+ * the third sighting in this file's five patterns and the first that is not dead.
+ *
+ * `sample-spaces` carries `event \(probability theory\)` and
+ * `conditional-probability` carries `independence \(probability\)`, and both can
+ * never match: an alternative ending in a literal `)` cannot be followed by a
+ * word boundary. Here the trailing `\b` sits between `variable` and any `s`, so
+ * it does not kill the pattern — the one title that matters is singular — it only
+ * costs every plural title in the area.
+ *
+ * ASSERTED AS THE CONJUNCTION OF THE HIT AND THE MISSES, since the hit alone
+ * would be satisfied by any pattern that works and the misses alone would be
+ * satisfied by a pattern that matches nothing. The plural list is named because a
+ * recall gap is invisible by construction: nothing goes red when a page finds no
+ * concept, so the only way to record one is to assert it.
+ */
+t('it reaches the singular title and no plural one, which is the `\\b` alive rather than dead',
+  RV.scope.match.test('Random variable')
+  && RV.scope.match.test('Discrete random variable')
+  && !RV.scope.match.test('Random variables')
+  && !RV.scope.match.test('Algebra of random variables')
+  && !RV.scope.match.test('Convergence of random variables')
+  && !RV.scope.match.test('Sum of normally distributed random variables')
+  // The construction itself, so the repair is named rather than guessed: the
+  // pattern ends in `\b` directly after a word, which is what excludes the
+  // plural, and `s?\b` would be the fix. Distinct from the dead shape below,
+  // where the `\b` follows an escaped bracket.
+  && /\w\\b$/.test(RV.scope.match.source)
+  && !/\\\)\\b$/.test(RV.scope.match.source),
+  ['Random variable', 'Random variables', 'Algebra of random variables']
+    .map(s => `${s}:${RV.scope.match.test(s)}`).join(' '))
+t('and the two patterns below really are dead in the other way, which is swept not assumed',
+  (() => {
+    const ss = conceptById(CE, 'sample-spaces').scope.match
+    const cp = conceptById(CE, 'conditional-probability').scope.match
+    return ss.source.includes('event \\(probability theory\\)')
+      && cp.source.includes('independence \\(probability\\)')
+      && !ss.test('Event (probability theory)')
+      && !cp.test('Independence (probability)')
+      // The difference from this concept's shape: there the `\b` follows a
+      // literal `)`, which no word character can follow, so nothing can match.
+      // Here it follows a letter, so the singular matches and only the plural is
+      // lost. Two failure modes of one habit, and the repairs are not the same.
+      && /\\\)\)?\\b/.test(ss.source) && /\\\)\)?\\b/.test(cp.source)
+  })(),
+  'dead-by-bracket: sample-spaces, conditional-probability; '
+  + 'alive-but-singular: random-variables')
+/*
+ * AND THE OVERCLAIM IS ONE TITLE, SAID OUT LOUD. "Continuous random variable"
+ * matches and this concept is discrete throughout — eight outcomes, a table of
+ * four entries, no density anywhere — so a learner on that page is offered
+ * `continuous-distributions`' prerequisite rather than its subject. Same shape as
+ * the third concept's "Conditional probability distribution", defensible only in
+ * the same weak sense, and asserted because an overclaim is invisible from
+ * inside. The four obvious wrong widenings are checked as misses in the same
+ * line.
+ */
+t('it overclaims the continuous title, which this concept does not teach',
+  RV.scope.match.test('Continuous random variable')
+  && !/density|continuous/i.test(RV_SHOWN)
+  && RV_TASKS.every(x => !/density|integral/i.test(x.prompt))
+  // The widenings that would be worse than the gap.
+  && !RV.scope.match.test('Probability distribution')
+  && !RV.scope.match.test('Probability mass function')
+  && !RV.scope.match.test('Random variate')
+  && !RV.scope.match.test('Expected value'),
+  ['Continuous random variable', 'Probability distribution', 'Probability mass function',
+    'Random variate', 'Expected value'].map(s => `${s}:${RV.scope.match.test(s)}`).join(' '))
+/*
+ * NINE TASKS, THREE ON EACH POINT, and the SHAPE asserted rather than the total.
+ */
+t('nine tasks, three on each of the three points',
+  RV_TASKS.length === 9
+  && RV_POINTS.map(p => tasksForPoint(p.id).length).join(',') === '3,3,3',
+  RV_POINTS.map(p => `${p.position}:${tasksForPoint(p.id).length}`).join(' '))
+t('all nine are evaluate, so nothing here needs the worker even for equivalence',
+  RV_TASKS.every(x => x.kind === 'evaluate')
+  && RV_TASKS.every(x => x.form === undefined)
+  && RV_TASKS.every(x => x.domainConditions === undefined)
+  && RV_TASKS.every(x => x.acceptsUnevaluated === undefined),
+  RV_TASKS.map(x => `${x.kind}${x.form ? `:${x.form}` : ''}`).join(' '))
+t('no given calls a function, so none of the nine can fall through to a worker',
+  RV_TASKS.every(x => !/[a-z]+\s*\(/i.test(x.given)),
+  RV_TASKS.filter(x => /[a-z]+\s*\(/i.test(x.given)).map(x => x.given).join(' '))
+t('every reference is exactly reproducible from the given — no worker consulted',
+  RV_TASKS.every(x => {
+    const at = {}
+    for (const [name, raw] of Object.entries(x.at)) at[name] = parseExpression(raw, [])
+    const truth = exactValue(substitute(parseExpression(x.given, x.variables.map(v => v.name)), at))
+    const claimed = exactValue(parseExpression(x.reference, x.variables.map(v => v.name)))
+    return truth !== null && claimed !== null && showExact(truth) === showExact(claimed)
+  }),
+  RV_TASKS.map(x => x.id).join(', '))
+const rvRulings = await Promise.all(RV_TASKS.map(x => ruleEvaluate(x, x.reference, NO_WORKER)))
+t('a correct answer is ruled correct with no worker configured',
+  rvRulings.every(r => r.status === 'ruled' && r.verdict.ruling === 'correct'),
+  rvRulings.map((r, i) => `${RV_TASKS[i].id}:${r.verdict?.ruling ?? r.status}`).join(' '))
+/*
+ * THE COMPLEMENT IS DIVIDED BY FOR THE FIRST TIME IN THESE SUBJECTS, so the check
+ * that it cannot vanish is made on the task rather than argued once.
+ *
+ * `1 - p/n` is zero exactly when p = n, and the one task using it has p = 1 and
+ * n = 8. No `domainConditions`, because the expression is fine and only a
+ * substitution could break it — and what it would break is not arithmetic:
+ * conditioning on an event of probability 0 is undefined, since there is no space
+ * left to replace the old one with.
+ */
+t('the one complement in a denominator cannot vanish, which is checked per task',
+  (() => {
+    const using = RV_TASKS.filter(x => x.given.includes('1 - p/n'))
+    return using.length === 1
+      && using.every(x => Number(x.at.p) > 0 && Number(x.at.p) < Number(x.at.n))
+      && RV_TASKS.every(x => x.domainConditions === undefined)
+      // And it is the only division by anything that is not a bare product or
+      // letter, which is what makes it worth one assertion rather than a sweep.
+      && RV_TASKS.filter(x => /\/\(1 -/.test(x.given)).length === 1
+  })(),
+  RV_TASKS.filter(x => x.given.includes('1 - p/n'))
+    .map(x => `p=${x.at.p}<n=${x.at.n}`).join(' '))
+/*
+ * THE MATHEMATICS, DERIVED FROM THE EIGHT SEQUENCES RATHER THAN RESTATED.
+ *
+ * Three assertions, one per point, and each computes the table from `RV_SEQS`
+ * before looking at the text. A worked example that gets its own arithmetic
+ * wrong is the worst thing this file can ship, and a string match on "3/8" would
+ * pass whatever the 3 and the 8 were counting.
+ */
+t('the preimages of X are 1, 3, 3, 1 and the first point\'s 3/8 is three of eight',
+  (() => {
+    const sizes = [0, 1, 2, 3].map(v => RV_PREIMAGE(RV_X, v).length)
+    const two = RV_PREIMAGE(RV_X, 2)
+    return RV_SEQS.length === 8
+      && new Set(RV_SEQS).size === 8
+      && sizes.join(',') === '1,3,3,1'
+      && two.slice().sort().join(',') === 'HHT,HTH,THH'
+      // The three sequences are named in the text, which is what makes "X = 2 is
+      // a SET" concrete rather than asserted.
+      && two.every(s => RV_SHOWN.includes(s))
+      && /3\/8/.test(RV_SHOWN)
+      // And the first task divides by the space written as the three tosses, not
+      // by the four values.
+      && RV_TASKS[0].given === 'c/(u*v*w)'
+      && RV_TASKS[0].reference === '3/8'
+      && Number(RV_TASKS[0].at.c) === two.length
+  })(),
+  `sizes ${[0, 1, 2, 3].map(v => RV_PREIMAGE(RV_X, v).length).join(',')}, `
+  + `preimage of 2 = {${RV_PREIMAGE(RV_X, 2).join(', ')}}`)
+t('the table totals exactly 1, and the four entries are the preimage sizes over eight',
+  (() => {
+    const sizes = [0, 1, 2, 3].map(v => RV_PREIMAGE(RV_X, v).length)
+    const total = RV_TASKS.find(x => x.given === '(p + q + r + s)/n')
+    if (!total) return false
+    // The four preimages partition the space — nothing in two, nothing in none —
+    // which is why the total is 1 and is the second point's whole argument.
+    const assigned = RV_SEQS.filter(s => [0, 1, 2, 3].filter(v => RV_X(s) === v).length === 1)
+    return sizes.reduce((a, b) => a + b, 0) === RV_SEQS.length
+      && assigned.length === RV_SEQS.length
+      && total.reference === '1'
+      && [total.at.p, total.at.q, total.at.r, total.at.s].map(Number).join(',')
+        === sizes.join(',')
+      && Number(total.at.n) === RV_SEQS.length
+      && /1\/8/.test(RV_SHOWN) && /3\/8/.test(RV_SHOWN)
+      // And the ratio of the largest entry to the smallest really is 3.
+      && Math.max(...sizes) === 3 * Math.min(...sizes)
+      && RV_TASKS.find(x => x.given === '(r/n)/(p/n)')?.reference === '3'
+  })(),
+  `total ${[0, 1, 2, 3].map(v => RV_PREIMAGE(RV_X, v).length).reduce((a, b) => a + b, 0)}`
+  + `/${RV_SEQS.length}`)
+t('Y merges the values as |2X - 3| and its two entries are 3/4 and 1/4, derived',
+  (() => {
+    // Y = |heads − tails| over three tosses, so tails = 3 − X and Y = |2X − 3|.
+    const viaX = RV_SEQS.every(s => RV_Y(s) === Math.abs(2 * RV_X(s) - 3))
+    const one = RV_PREIMAGE(RV_Y, 1)
+    const three = RV_PREIMAGE(RV_Y, 3)
+    const merged = v => [0, 1, 2, 3].filter(k => Math.abs(2 * k - 3) === v)
+    return viaX
+      // Two values, not four, and each has TWO values of X behind it — which is
+      // the whole of what makes the arithmetic new.
+      && new Set(RV_SEQS.map(RV_Y)).size === 2
+      && merged(1).join(',') === '1,2' && merged(3).join(',') === '0,3'
+      && one.length === 6 && three.length === 2
+      && three.slice().sort().join(',') === 'HHH,TTT'
+      && one.length + three.length === RV_SEQS.length
+      && RV_TASKS.find(x => x.given === 'q/n + r/n')?.reference === '3/4'
+      && RV_TASKS.find(x => x.given === '(p + s)/n')?.reference === '1/4'
+      && /\|2X - 3\|/.test(RV_SHOWN)
+  })(),
+  `Y = 1 on ${RV_PREIMAGE(RV_Y, 1).length}, Y = 3 on ${RV_PREIMAGE(RV_Y, 3).length}`)
+t('and the conditional table is 3/7, 3/7, 1/7, which totals 1 only after the division',
+  (() => {
+    const kept = RV_SEQS.filter(s => RV_X(s) >= 1)
+    const entries = [1, 2, 3].map(v => ({
+      n: RV_PREIMAGE(RV_X, v).length, d: RV_SEQS.length,
+    }))
+    // Numerators over 8: 3, 3, 1 — which add to 7 and not to 8, so the division
+    // by 7/8 is what puts the total back to 1.
+    const numeratorSum = entries.reduce((a, e) => a + e.n, 0)
+    const conditioned = entries.map(e => ({ n: e.n, d: kept.length }))
+    return kept.length === 7
+      && !kept.includes('TTT')
+      && numeratorSum === 7
+      && numeratorSum !== RV_SEQS.length
+      && conditioned.map(c => `${c.n}/${c.d}`).join(',') === '3/7,3/7,1/7'
+      && conditioned.reduce((a, c) => a + c.n, 0) === kept.length
+      && RV_TASKS.find(x => x.given === '(r/n)/(1 - p/n)')?.reference === '3/7'
+      // X = 0 is GONE from the table rather than set to 0, which the text says.
+      && /rather than set to 0/.test(RV_SHOWN)
+      && /7\/8/.test(RV_SHOWN)
+  })(),
+  `kept ${RV_SEQS.filter(s => RV_X(s) >= 1).length} of ${RV_SEQS.length}, `
+  + `numerators sum to ${[1, 2, 3].map(v => RV_PREIMAGE(RV_X, v).length)
+    .reduce((a, b) => a + b, 0)}/8`)
+/*
+ * THE CONCEPT FINISHES AN ARGUMENT THE FIRST ONE OPENED, which is the thing that
+ * made this node worth promoting and is asserted over BOTH concepts' text.
+ *
+ * `sample-spaces` computes 3/8 in the eight-sequence space and 1/4 in the
+ * four-value space, says the two cannot both be right, and says the wrong one is
+ * whichever space was not equally likely — WITHOUT saying which. It cannot: it
+ * would need the four preimage sizes, and four probabilities over the values of a
+ * rule is a distribution. This concept names the four sizes and says 1/4 was
+ * never licensed.
+ *
+ * Asserted as a conjunction across the two, because either half alone is
+ * unremarkable — the first concept raising a question is only interesting if the
+ * fifth answers it, and the fifth's answer is only interesting if the question
+ * was left open somewhere.
+ */
+t('it settles the two-space disagreement the first concept raised and left open',
+  (() => {
+    const ss = conceptById(CE, 'sample-spaces')
+    const ssText = ss.knowledgePoints.map(p =>
+      `${p.statement} ${p.workedExample.problem} `
+      + `${p.workedExample.subgoals.map(s => s.detail).join(' ')} ${p.workedExample.answer}`)
+      .join(' ')
+    // The first concept states both answers and declines to choose.
+    const raises = /3\/8/.test(ssText) && /1\/4/.test(ssText)
+      && /equally likely/i.test(ssText)
+    // This one names the preimage sizes and says which was unlicensed.
+    const settles = /1, 3, 3 and 1/.test(RV_SHOWN)
+      && /never licensed/.test(RV_SHOWN)
+      && /unequal size/.test(RV_SHOWN)
+    // And the gap is a task, so the disagreement is a number a learner produces.
+    const gap = RV_TASKS.find(x => x.given === 'c/(u*v*w) - 1/m')
+    return raises && settles && !!gap && gap.reference === '1/8'
+      && Number(gap.at.m) === 4
+      // 3/8 − 1/4 = 1/8, recomputed rather than trusted.
+      && 3 * 4 - 1 * 8 === 1 * 4
+  })(),
+  `gap task ${RV_TASKS.find(x => x.given === 'c/(u*v*w) - 1/m')?.reference}`)
+/*
+ * THE SETTING IS THE FIRST CONCEPT'S COIN AND IT IS THE FIRST REUSE IN THE
+ * SUBJECT, asserted in both halves because the absence of the club alone would
+ * read as an oversight.
+ *
+ * Eighteen tasks across the second and third concepts are twelve members and 220
+ * committees; nine in the fourth are a screening test; these nine are back on the
+ * eight sequences. Two reasons, and the second is load-bearing: the argument this
+ * concept finishes was opened on that space, and on the club every preimage would
+ * be a binomial coefficient and every task a count over 220 — which is exactly
+ * the objection raised against promoting this node at all.
+ */
+t('all nine are on the coin, none on the club or the test, which is the first reuse',
+  (() => {
+    const mine = RV_TASKS.map(x => `${x.prompt} ${x.given}`).join(' ')
+    const club = CE.concepts.slice(1, 3).flatMap(c => c.knowledgePoints)
+      .flatMap(p => tasksForPoint(p.id))
+    const test = CE.concepts[3].knowledgePoints.flatMap(p => tasksForPoint(p.id))
+    const coin = CE.concepts[0].knowledgePoints.flatMap(p => tasksForPoint(p.id))
+    return club.length === 18 && club.every(x => /\b(member|committee)/i.test(x.prompt))
+      && test.length === 9 && test.every(x => !/\b(coin|heads|tails|toss)/i.test(x.prompt))
+      // The first concept's own nine are on the coin, and so are these — the
+      // reuse, which no earlier concept in the subject managed.
+      //
+      // THE PATTERN IS WIDER HERE THAN IN THE FOURTH CONCEPT'S GROUP AND HAD TO
+      // BE, which is worth a note because the narrow one gives a WRONG answer
+      // about this concept. That group tests `/\b(coin|heads|tails|toss)/i` to
+      // assert an ABSENCE, and a pattern good enough for an absence is not good
+      // enough for a presence: two of these nine prompts say "one head" and "the
+      // eight sequences" and reach neither the plural "heads" nor "toss", so the
+      // narrow pattern reported seven of nine. That is a fact about the regex.
+      // One prompt genuinely did not name its space and was amended rather than
+      // matched around; the other eight needed the pattern widening.
+      //
+      // The first concept's own figure is left on the NARROW pattern at eight of
+      // nine, which is what the other groups measure, and the one task it misses
+      // names only the sequence HHH — the same gap from the other side, and the
+      // reason "mentions the coin" is a weaker test than it sounds.
+      && coin.filter(x => /\b(coin|heads|tails|toss)/i.test(x.prompt)).length === 8
+      && RV_TASKS.filter(x => /\b(coin|heads?|tails?|toss|sequence)/i.test(x.prompt)).length === 9
+      && !/\b(member|committee)/i.test(mine)
+      && !/screening|base rate|positive/i.test(mine)
+      // And the space really is the same eight sequences, written out.
+      && RV_SEQS.every(s => RV_SHOWN.includes(s))
+  })(),
+  `${RV_TASKS.filter(x => /\b(coin|heads?|tails?|toss|sequence)/i.test(x.prompt)).length} `
+  + 'of nine are on the coin')
+/*
+ * NO GIVEN OF THIS CONCEPT IS REPEATED, EITHER WITHIN IT OR AGAINST THE THIRTY-SIX
+ * BELOW — which is this promotion's own contribution to the span ranking and is
+ * permanent.
+ *
+ * THE SUBJECT-WIDE COUNT HAS MOVED ON TO THE FIFTIETH'S GROUP, and the handover is
+ * the finding. This group asserted "the subject still has exactly six repeated
+ * expressions" and said it was doing so HERE, in the group whose promotion could
+ * have caused a seventh, "rather than left for the other group to discover as a
+ * failure". That was right about the mechanism and wrong about the group: the
+ * SIXTH concept added the seventh repeat, so a figure placed here to protect
+ * against its own promotion went red on somebody else's. A guard written where
+ * the damage could come from only works while that is the newest code — which is
+ * the third place this one figure has now been asserted, after the forty-eighth's
+ * group and this one.
+ *
+ * What stays is the part no later promotion can touch: these nine expressions
+ * are nine distinct strings and none of them collides with the thirty-six below.
+ */
+t('no given of this concept is repeated, within it or against the thirty-six below',
+  (() => {
+    const below = CE.concepts.slice(0, 4).flatMap(c => c.knowledgePoints)
+      .flatMap(p => tasksForPoint(p.id))
+    const mineGivens = RV_TASKS.map(x => x.given)
+    const belowGivens = new Set(below.map(x => x.given))
+    const byGiven = {}
+    for (const c of CE.concepts) {
+      for (const p of c.knowledgePoints) {
+        for (const x of tasksForPoint(p.id)) (byGiven[x.given] = byGiven[x.given] ?? []).push(x)
+      }
+    }
+    const repeated = Object.entries(byGiven).filter(([, xs]) => xs.length > 1)
+    return below.length === 36
+      && new Set(mineGivens).size === 9
+      && mineGivens.every(g => !belowGivens.has(g))
+      // And not one of the subject's repeats is this concept's, which is the
+      // claim that the ranking two groups down is untouched BY THIS PROMOTION —
+      // stated that way rather than as a length, since the population moves.
+      && repeated.every(([, xs]) => xs.every(x => !RV_TASKS.includes(x)))
+  })(),
+  `${new Set(RV_TASKS.map(x => x.given)).size} distinct of nine; subject repeats `
+  + `${Object.entries(RV_TASKS.concat(CE.concepts.flatMap(c => c.knowledgePoints)
+    .flatMap(p => tasksForPoint(p.id))).reduce((b, x) => {
+    (b[x.given] = b[x.given] ?? []).push(x); return b
+  }, {})).filter(([, xs]) => xs.length > 2).length}`)
+/*
+ * TWO SHAPES AGREE ON 3/4 AND THE AGREEMENT IS THE TEACHING.
+ *
+ * `(q + r)/n` in the second point and `q/n + r/n` in the third are the same event
+ * under two descriptions — "X is 1 or 2" and "Y is 1" — which is what it MEANS
+ * for Y to merge two values of X. The fourth concept had three shapes agree
+ * because a theorem has forms; this is two agreeing because a set has two names,
+ * and if they ever disagreed the merge would not be a merge.
+ *
+ * ASSERTED WITH THE GIVENS REQUIRED DISTINCT AND IN DIFFERENT POINTS, because the
+ * agreement alone would be satisfied by one task written twice, and the
+ * distinctness alone by any two tasks. The identity of the two EVENTS is
+ * recomputed from the sequences, which is the part that makes it a claim about
+ * mathematics rather than about two strings.
+ */
+t('two shapes give 3/4 because they are one event under two names, recomputed',
+  (() => {
+    const agreeing = RV_TASKS.filter(x => x.reference === '3/4')
+    if (agreeing.length !== 2) return false
+    // The two events, derived: "X is 1 or 2" and "Y is 1" are the same six
+    // sequences. That is why the two expressions must agree.
+    const byX = RV_SEQS.filter(s => RV_X(s) === 1 || RV_X(s) === 2).slice().sort()
+    const byY = RV_PREIMAGE(RV_Y, 1).slice().sort()
+    return byX.join(',') === byY.join(',')
+      && byX.length === 6
+      && new Set(agreeing.map(x => x.given)).size === 2
+      && new Set(agreeing.map(x => x.knowledgePointId)).size === 2
+      && agreeing.some(x => x.given === '(q + r)/n')
+      && agreeing.some(x => x.given === 'q/n + r/n')
+      // Eight distinct references of nine, the 3/4 being the only pair.
+      && new Set(RV_TASKS.map(x => x.reference)).size === 8
+  })(),
+  RV_TASKS.map(x => `${x.given}=${x.reference}`).join(' | '))
+/*
+ * EIGHT OF NINE ARE PROBABILITIES, THE NINTH IS A RATIO OF TWO OF THEM, AND
+ * EXACTLY ONE REFERENCE IS 1.
+ *
+ * 3 is the largest table entry over the smallest, and a ratio of probabilities is
+ * not a probability — the same category as the fourth concept's odds ratio 18 and
+ * the second such reference in these subjects. The count is pinned at one so the
+ * exception cannot spread to a task with no business outside the interval.
+ *
+ * The 1 is pinned to its expression for a different reason: it is the TOTAL of
+ * the table, which is the second point's whole content, and a 1 arriving from any
+ * other task here would be a probability of certainty that nothing in this
+ * concept is about. Zero bare counts, which is the property the two concepts
+ * above also hold.
+ */
+t('eight of nine are probabilities, the ninth is a ratio of two, and the 1 is a total',
+  (() => {
+    const rs = RV_TASKS.map(x => ({ task: x, r: asRational(x.reference) }))
+    const outside = rs.filter(({ r }) => r.n > r.d)
+    const ones = rs.filter(({ r }) => r.n === r.d)
+    return rs.length === 9
+      && outside.length === 1
+      && outside[0].r.n === 3 && outside[0].r.d === 1
+      && outside[0].task.given === '(r/n)/(p/n)'
+      && rs.filter(({ r }) => r.n >= 0 && r.n <= r.d).length === 8
+      // Exactly one reference is 1 and it is the table's total, not a count.
+      && ones.length === 1
+      && ones[0].task.given === '(p + q + r + s)/n'
+      // And nothing here is a bare count: every other reference has a
+      // denominator bigger than its numerator.
+      && rs.filter(({ r }) => r.d === 1).length === 2
+      && rs.filter(({ r }) => r.d === 1).every(({ r }) => r.n === 1 || r.n === 3)
+  })(),
+  RV_TASKS.map(x => x.reference).join(' '))
+/*
+ * THE MATERIAL CARRIES WHAT NO TASK CAN ASK, so the one refusal is asserted as an
+ * absence and every subgoal is checked for the two things types.ts requires.
+ *
+ * "Write down the random variable" is the natural first question about this
+ * concept and `state` is declared unverifiable, so asking it would produce a
+ * chain that cannot become evidence. The object is taught in the worked examples,
+ * where telling is honest, and only its values are graded — which is the answer
+ * to the rulability question the forty-eighth promotion deferred, asserted rather
+ * than argued.
+ */
+t('every objective names evaluate and nothing else, so no refused kind is promised',
+  RV.objectives.length === 3
+  && RV.objectives.every(o => o.taskKinds.join(',') === 'evaluate')
+  && RV.objectives.every(o => o.taskKinds.length > 0)
+  // And no task is a `state`, which is the kind this concept most obviously
+  // invites and the one the build cannot rule.
+  && RV_TASKS.every(x => x.kind !== 'state'),
+  RV.objectives.map(o => `${o.id}:${o.taskKinds.join('+')}`).join(' '))
+t('no figure and no speed target is claimed, neither of them existing to claim',
+  RV_POINTS.every(p => p.visualRef === undefined && p.automaticityTarget === undefined),
+  RV_POINTS.filter(p => p.visualRef !== undefined
+    || p.automaticityTarget !== undefined).map(p => p.id).join(', '))
+t('every subgoal names a move rather than a step number, and no two in one example repeat',
+  RV_POINTS.every(p =>
+    p.workedExample.subgoals.every(s => s.label.length > 20 && !/^step\b/i.test(s.label))
+    && new Set(p.workedExample.subgoals.map(s => s.label)).size
+      === p.workedExample.subgoals.length),
+  RV_POINTS.flatMap(p => p.workedExample.subgoals)
+    .filter(s => s.label.length <= 20 || /^step\b/i.test(s.label)).map(s => s.label).join(' | '))
+/*
+ * EIGHTEEN SUBGOALS AND EIGHTEEN QUESTIONS, which is what this promotion
+ * contributes to the figure that moves. Six per point, the same shape as the two
+ * concepts below.
+ */
+t('all eighteen subgoals ship an authored question, six to a point',
+  RV_POINTS.every(p => p.workedExample.subgoals.every(s => typeof s.socratic === 'string'
+    && s.socratic.length > 0))
+  && RV_POINTS.flatMap(p => p.workedExample.subgoals).length === 18
+  && RV_POINTS.map(p => p.workedExample.subgoals.length).join(',') === '6,6,6',
+  RV_POINTS.map(p => `${p.position}:${p.workedExample.subgoals
+    .filter(s => s.socratic).length}/${p.workedExample.subgoals.length}`).join(' '))
+t('and every one is interrogative rather than an imperative with a question mark',
+  RV_POINTS.flatMap(p => p.workedExample.subgoals)
+    .every(s => isInterrogative(s.socratic)),
+  RV_POINTS.flatMap(p => p.workedExample.subgoals)
+    .filter(s => !isInterrogative(s.socratic)).map(s => s.label).join(' | '))
+t('and every knowledge point has a task, so nothing here raises chainsWithNoRuling',
+  RV_POINTS.every(p => tasksForPoint(p.id).length > 0),
+  RV_POINTS.filter(p => tasksForPoint(p.id).length === 0).map(p => p.id).join(', '))
+
+// ---------------------------------------------------------------------------
+
+/*
+ * `expectation` — the SIXTH concept of `chance-and-events`, promoted fiftieth
+ * out of `probability`. tests/atlas.mjs owns the structure. What is asserted
+ * here is the material, and six things are worth the lines:
+ *
+ * FIRST, THAT THE ARITHMETIC IS DERIVED FROM THE EIGHT SEQUENCES AND NOT
+ * MATCHED. Every table, every expectation and both counterexamples are computed
+ * below from the same enumeration the concept below uses, before any text is
+ * read. A string match on "11/8" would pass whatever the 11 and the 8 were
+ * counting, and this concept has FOUR different eighths in it.
+ *
+ * SECOND, THAT THE TWO RULES SHARE A VALUE LIST, which is the concept's central
+ * claim and is a property of the mathematics rather than of the prose. X and T
+ * both take exactly {0, 1, 2, 3} on the eight sequences and their expectations
+ * are 12/8 and 11/8. Asserted as a conjunction, because either half alone is
+ * unremarkable.
+ *
+ * THIRD, THAT THE FIRST TWO TASKS ARE ONE EXPRESSION AT TWO SUBSTITUTIONS AND
+ * THAT THEY DISAGREE. Every other shared-expression pair in these subjects is a
+ * pair because the two AGREE — the rhombus area, the two routes to P(Y = 1), the
+ * three forms of one theorem. This is the first where disagreeing is the point,
+ * so what is checked is that the expression is byte-identical, that only the
+ * four preimage sizes differ, and that the references are different numbers.
+ *
+ * FOURTH, THAT THE LINEARITY COUNTEREXAMPLE IS OUTSIDE THE RANGE OF WHAT IT
+ * AVERAGES. |2E[X] − 3| = 0 while Y ∈ {1, 3} on every sequence, so the illegal
+ * answer is not merely wrong but impossible. Computed, since that is the
+ * sharpest thing the concept says and a prose claim about it would be unchecked.
+ *
+ * FIFTH, THAT ADDITIVITY HOLDS ON A DEPENDENT PAIR AND MULTIPLICATIVITY DOES
+ * NOT. Both sides of both identities are computed from the enumeration, and the
+ * product test is run rather than quoted.
+ *
+ * SIXTH, THAT SEVEN OF THE NINE REFERENCES LEAVE [0, 1] — which inverts the rule
+ * the five concepts below hold, and does so because an expectation is in the
+ * units of the variable rather than in chance. The two that stay inside are the
+ * two gaps. Asserted in both directions so that neither the exception nor the
+ * rule can spread by accident.
+ */
+const EX = conceptById(CE, 'expectation')
+const EX_POINTS = EX.knowledgePoints
+const EX_TASKS = EX_POINTS.flatMap(p => tasksForPoint(p.id))
+const EX_SHOWN = EX_POINTS.map(p =>
+  `${p.workedExample.problem} ${p.workedExample.subgoals.map(s => s.detail).join(' ')} `
+  + `${p.workedExample.answer}`).join(' ')
+/*
+ * THE SPACE AND THE FOUR RULES, ENUMERATED ONCE AND USED BY EVERY ARITHMETIC
+ * ASSERTION BELOW — the same construction the concept below uses, extended with
+ * the three rules this concept needs.
+ *
+ * `EX_T` is the toss the first head falls on with 0 at TTT, which is the
+ * convention `function-concept` forces and the concept below fixes. `EX_E` is
+ * the expectation as an exact pair over the size of the space, kept as a
+ * numerator so that the comparisons are integer arithmetic and no floating point
+ * decides whether two expectations are equal.
+ */
+const EX_SEQS = ['HHH', 'HHT', 'HTH', 'HTT', 'THH', 'THT', 'TTH', 'TTT']
+const EX_X = s => [...s].filter(ch => ch === 'H').length
+const EX_T = s => (s.indexOf('H') === -1 ? 0 : s.indexOf('H') + 1)
+const EX_Y = s => Math.abs(2 * EX_X(s) - 3)
+const EX_W = s => 2 * EX_X(s) + 1
+// Total over the space; the expectation is this over EX_SEQS.length.
+const EX_TOTAL = f => EX_SEQS.reduce((a, s) => a + f(s), 0)
+const EX_VALUES = f => [...new Set(EX_SEQS.map(f))].sort((a, b) => a - b)
+const EX_PREIMAGE = (f, v) => EX_SEQS.filter(s => f(s) === v)
+
+group('expectation, where the table collapses to one number')
+/*
+ * THE SUBJECT TOTALS, WHICH THIS PROMOTION MOVED and which the forty-ninth
+ * promotion's group above no longer counts — the sixth group to hold them, for
+ * the sixth consecutive promotion into this subject. Six concepts, eighteen
+ * points, and the array with the new one appended.
+ *
+ * THE ARRAY IS A CHAIN STEP AGAIN, which is the counterpart to the claim the
+ * group above makes. That promotion broke the prerequisite ordering by being a
+ * sibling; this one is gated by the concept immediately before it in the array,
+ * so the order agrees with the chain at both ends and disagrees only across the
+ * fourth-to-fifth join. Asserted, because "the array is not the chain" is now as
+ * misleading a summary as "the array is the chain" was.
+ */
+t('six concepts and eighteen knowledge points, the figure having moved to this group',
+  CE.concepts.length === 6 && allKnowledgePoints(CE).length === 18
+  && CE.concepts.map(c => c.id).join(',')
+    === 'sample-spaces,counting-probability,conditional-probability,bayes-theorem,'
+    + 'random-variables,expectation'
+  && EX_POINTS.map(p => p.position).join(',') === '1,2,3',
+  `${CE.concepts.length} concepts, ${allKnowledgePoints(CE).length} points: `
+  + CE.concepts.map(c => c.id).join(','))
+t('and this one IS gated by the concept before it, unlike the one before it',
+  (() => {
+    const gate = CE.edges.find(e => e.kind === 'prerequisite' && e.to === 'expectation')
+    return !!gate && gate.from === 'random-variables'
+      && CE.concepts[4].id === 'random-variables'
+      && CE.concepts[5].id === 'expectation'
+      // While the fourth-to-fifth join still is not a chain step, which is what
+      // makes "the array is the writing order" the only true summary.
+      && !CE.edges.some(e => e.kind === 'prerequisite'
+        && e.from === 'bayes-theorem' && e.to === 'random-variables')
+  })(),
+  CE.edges.filter(e => e.kind === 'prerequisite').map(e => `${e.from}->${e.to}`).join(' '))
+t('the concept is teachable AND practisable, and the subject has no internal faults',
+  isTeachable(CE, 'expectation') && isPractisable(CE, 'expectation')
+  && ontologyProblems(CE).length === 0 && fidelityMismatches(CE).length === 0,
+  ontologyProblems(CE).join('; '))
+/*
+ * TEN EDGES NOW, AND TWO OF THEM ARE THIS PROMOTION'S: an ordinary prerequisite
+ * up the chain and a credit edge pointing at its own gate.
+ *
+ * THE CREDIT EDGE GOES BACK TO THE ORDINARY SHAPE, which is why it is asserted
+ * here rather than merely added. The forty-ninth's reaches TWO concepts down and
+ * declines the one that gates it; this one credits the concept directly below,
+ * because that concept's three points are what every task here does first. So
+ * the skip stays a single reasoned exception rather than becoming the subject's
+ * habit — asserted as a contrast, since "this edge credits its gate" alone would
+ * say nothing.
+ */
+t('its two edges are a chain prerequisite and a credit edge that does NOT skip its gate',
+  (() => {
+    const gate = CE.edges.find(e => e.id === 'random-variables->expectation')
+    const credit = CE.edges.find(e => e.id === 'expectation=>random-variables')
+    const skipper = CE.edges.find(e => e.id === 'random-variables=>sample-spaces')
+    if (!gate || !credit || !skipper) return false
+    return CE.edges.length === 10
+      && gate.kind === 'prerequisite' && gate.promotedBy === 'author:chance-and-events'
+      && credit.kind === 'encompasses' && !!credit.rationale
+      && credit.from === 'expectation' && credit.to === 'random-variables'
+      // The credit edge's target is exactly what gates it, which the edge one
+      // concept down deliberately is not.
+      && credit.to === gate.from
+      && skipper.to !== 'random-variables'
+      && skipper.to === 'sample-spaces'
+      // And this concept claims no credit two concepts down, so the exception
+      // did not propagate.
+      && !CE.edges.some(e => e.kind === 'encompasses'
+        && e.from === 'expectation' && e.to === 'sample-spaces')
+  })(),
+  CE.edges.map(e => `${e.id}:${e.kind}`).join(' '))
+/*
+ * THE RATIONALE NAMES WHAT IT DOES NOT CREDIT, which is the discipline the two
+ * credit edges below established and the reason this one is believable. It
+ * credits the TABLE and refuses the SPACE: nothing in these nine tasks collects
+ * an event off a listed space, takes a complement or repairs an overlap, so
+ * `sample-spaces` must still come due as though untouched even though every
+ * division here is by eight.
+ */
+t('and its rationale names the half it refuses, so the claim is bounded',
+  (() => {
+    const credit = CE.edges.find(e => e.id === 'expectation=>random-variables')
+    const r = credit?.rationale ?? ''
+    return /partition/.test(r)
+      && /7\/8/.test(r)
+      && /come due as though untouched/.test(r)
+      && /sample-spaces/.test(r)
+      // And the refusal is true of the tasks rather than merely written: no
+      // prompt here asks for a complement or an overlap repair.
+      && !EX_TASKS.some(x => /complement|overlap|inclusion/i.test(x.prompt))
+  })(),
+  (CE.edges.find(e => e.id === 'expectation=>random-variables')?.rationale ?? '').slice(0, 80))
+/*
+ * THE TWO RULES SHARE A VALUE LIST AND HAVE DIFFERENT EXPECTATIONS, which is the
+ * concept's central claim, derived from the eight sequences.
+ *
+ * Both halves matter and neither is interesting alone. That two rules differ in
+ * expectation is unremarkable; that they differ while taking the SAME four
+ * values is what rules out computing an expectation from the value list, and it
+ * is the whole reason the first point introduces a second variable at all.
+ */
+t('X and T take the same four values on the same space and have different expectations',
+  EX_VALUES(EX_X).join(',') === '0,1,2,3'
+  && EX_VALUES(EX_T).join(',') === '0,1,2,3'
+  && EX_TOTAL(EX_X) === 12
+  && EX_TOTAL(EX_T) === 11
+  && EX_TOTAL(EX_X) !== EX_TOTAL(EX_T)
+  // And the plain average of that shared list is 6/4 = 12/8, so it agrees with
+  // X by coincidence and is wrong about T by 1/8 — the gap the third task asks
+  // for, computed rather than quoted.
+  && EX_VALUES(EX_X).reduce((a, b) => a + b, 0) * 2 === 12
+  && EX_VALUES(EX_X).reduce((a, b) => a + b, 0) * 2 - EX_TOTAL(EX_T) === 1,
+  `X values ${EX_VALUES(EX_X).join('')} total ${EX_TOTAL(EX_X)}; `
+  + `T values ${EX_VALUES(EX_T).join('')} total ${EX_TOTAL(EX_T)}`)
+t('and T\'s four preimages are the ones the material names, which is where its table comes from',
+  EX_PREIMAGE(EX_T, 0).join(',') === 'TTT'
+  && EX_PREIMAGE(EX_T, 1).join(',') === 'HHH,HHT,HTH,HTT'
+  && EX_PREIMAGE(EX_T, 2).join(',') === 'THH,THT'
+  && EX_PREIMAGE(EX_T, 3).join(',') === 'TTH'
+  // Which partition the space, so the table totals 1 — the concept below's
+  // theorem, used here rather than restated.
+  && [0, 1, 2, 3].reduce((a, v) => a + EX_PREIMAGE(EX_T, v).length, 0) === 8
+  && EX_SHOWN.includes('1/8, 1/2, 1/4, 1/8'),
+  [0, 1, 2, 3].map(v => `${v}:${EX_PREIMAGE(EX_T, v).length}`).join(' '))
+/*
+ * THE FIRST TWO TASKS ARE ONE EXPRESSION AT TWO SUBSTITUTIONS AND THEY DISAGREE
+ * — the first such pair in these subjects, every other one being a pair because
+ * the two AGREE.
+ *
+ * What makes the demonstration readable is that the VALUES are literals in the
+ * expression and only the preimage sizes are in `at`. So the two tasks are
+ * character-for-character the same question over the same four values, and the
+ * answers differ. Asserted that way round — identical `given`, differing `at`,
+ * differing reference — because any one of the three alone is satisfied by
+ * accident.
+ */
+t('its first two tasks are one expression at two substitutions, and they DISAGREE',
+  (() => {
+    const pair = EX_TASKS.filter(x => x.given === '(0*p + 1*q + 2*r + 3*s)/n')
+    if (pair.length !== 2) return false
+    const [a, b] = pair
+    return a.given === b.given
+      && a.knowledgePointId === b.knowledgePointId
+      // Only the four preimage sizes move; the space does not.
+      && a.at.n === b.at.n
+      && ['p', 'q', 'r', 's'].some(k => a.at[k] !== b.at[k])
+      // And the references are different numbers, which is the point.
+      && a.reference !== b.reference
+      && [a.reference, b.reference].slice().sort().join(',') === '11/8,3/2'
+      // The four literals in the expression are the shared value list, so
+      // nothing in the question distinguishes the two rules.
+      && /0\*p \+ 1\*q \+ 2\*r \+ 3\*s/.test(a.given)
+  })(),
+  EX_TASKS.filter(x => x.given === '(0*p + 1*q + 2*r + 3*s)/n')
+    .map(x => `${JSON.stringify(x.at)}=${x.reference}`).join(' | '))
+t('and the zero term is written out, which is what makes the term count four',
+  /0\*p/.test(EX_TASKS[0].given)
+  && EX_TASKS[0].given.split('+').length === 4
+  // `sigma-notation`'s first point is why: both limits are included, so four
+  // values give four terms. The material says so and the expression shows it.
+  && /sigma-notation/.test(EX_SHOWN)
+  && /FOUR terms|four terms/.test(EX_SHOWN),
+  EX_TASKS[0].given)
+/*
+ * THE LINEARITY SHORTCUT AGREES WITH THE LONG WAY, AND FAILS OUTSIDE THE RANGE
+ * ON THE RULE THAT HAS NOT EARNED IT. Both halves computed from the enumeration.
+ *
+ * The second half is the sharpest thing this concept says: |2E[X] − 3| = 0 and Y
+ * is 1 or 3 on every single sequence, so the illegal answer is not merely the
+ * wrong number but outside the range of the quantity it claims to average — a
+ * fault catchable without computing E[Y] at all. A prose claim about that would
+ * be unchecked, and it is exactly the kind of thing that reads true and is not.
+ */
+t('the shortcut agrees with the rebuilt table on the linear rule, both computed',
+  // E[2X + 1] the long way: total W over the space, which must be 32 = 2(12) + 8.
+  EX_TOTAL(EX_W) === 32
+  && EX_TOTAL(EX_W) === 2 * EX_TOTAL(EX_X) + EX_SEQS.length
+  // So E[W] = 32/8 = 4 exactly, and the shortcut 2(12/8) + 1 gives the same.
+  && EX_TOTAL(EX_W) / EX_SEQS.length === 4
+  && 2 * (EX_TOTAL(EX_X) / EX_SEQS.length) + 1 === 4
+  // W is one-to-one, so it relabels the four values and merges nothing — which
+  // is why its preimages are X's unchanged.
+  && EX_VALUES(EX_W).join(',') === '1,3,5,7'
+  && EX_VALUES(EX_W).every((v, i) => EX_PREIMAGE(EX_W, v).length
+    === EX_PREIMAGE(EX_X, EX_VALUES(EX_X)[i]).length),
+  `W total ${EX_TOTAL(EX_W)}, values ${EX_VALUES(EX_W).join(',')}`)
+t('and on the modulus it returns a number OUTSIDE the range of what it averages',
+  (() => {
+    const eX = EX_TOTAL(EX_X) / EX_SEQS.length          // 12/8
+    const pushed = Math.abs(2 * eX - 3)                 // the illegal route
+    const honest = EX_TOTAL(EX_Y) / EX_SEQS.length      // 12/8 again, by luck
+    const range = EX_VALUES(EX_Y)                       // every value Y takes
+    return pushed === 0
+      && honest === 1.5
+      && pushed !== honest
+      // Y is 1 or 3 and nothing else, so 0 is below everything Y can be.
+      && range.join(',') === '1,3'
+      && pushed < Math.min(...range)
+      && honest > Math.min(...range) && honest < Math.max(...range)
+      // And the material says so rather than leaving it to be noticed.
+      && /outside the range/.test(EX_SHOWN)
+  })(),
+  `pushed ${Math.abs(2 * (EX_TOTAL(EX_X) / EX_SEQS.length) - 3)}, `
+  + `honest ${EX_TOTAL(EX_Y)}/${EX_SEQS.length}, Y in {${EX_VALUES(EX_Y).join(',')}}`)
+t('and E[X] equalling E[Y] at 3/2 is flagged as a coincidence rather than used',
+  // Both are 12/8 on a fair coin and the material claims no connection. Asserted
+  // because a reader meeting two 3/2s in one concept will supply a reason.
+  EX_TOTAL(EX_X) === EX_TOTAL(EX_Y)
+  && /coincidence/.test(EX_SHOWN + EX_TASKS.map(x => x.prompt).join(' ')
+    + (tasksForPoint(EX_POINTS[1].id).map(x => x.id).join(' '))),
+  `X total ${EX_TOTAL(EX_X)}, Y total ${EX_TOTAL(EX_Y)}`)
+/*
+ * ADDITIVITY HOLDS ON A DEPENDENT PAIR AND MULTIPLICATIVITY DOES NOT, which is
+ * the third point and the one no table of a single variable can state.
+ *
+ * The product test is RUN rather than quoted — P(X = 0 and T = 1) is computed
+ * from the enumeration and found empty — because "they are dependent" is the
+ * premise the whole point rests on, and a prose assertion of it would be the one
+ * unchecked link in the argument.
+ */
+t('expectation adds across the two rules, with both sides computed over the space',
+  EX_TOTAL(s => EX_X(s) + EX_T(s)) === 23
+  && EX_TOTAL(s => EX_X(s) + EX_T(s)) === EX_TOTAL(EX_X) + EX_TOTAL(EX_T)
+  // S's own table, from preimages rather than from the sum rule.
+  && EX_VALUES(s => EX_X(s) + EX_T(s)).join(',') === '0,2,3,4'
+  && EX_VALUES(s => EX_X(s) + EX_T(s))
+    .map(v => EX_PREIMAGE(s => EX_X(s) + EX_T(s), v).length).join(',') === '1,1,3,3'
+  // And it skips 1, which the material names and which the value literals in
+  // the eighth task's expression show.
+  && !EX_SEQS.some(s => EX_X(s) + EX_T(s) === 1)
+  && /never takes 1|missing the value 1|misses the value 1/.test(
+    EX_SHOWN + EX_TASKS.map(x => x.prompt).join(' ')),
+  `S total ${EX_TOTAL(s => EX_X(s) + EX_T(s))} = ${EX_TOTAL(EX_X)} + ${EX_TOTAL(EX_T)}, `
+  + `values ${EX_VALUES(s => EX_X(s) + EX_T(s)).join(',')}`)
+t('while X and T are DEPENDENT, which is computed from the space and not asserted',
+  (() => {
+    const n = EX_SEQS.length
+    const pX0 = EX_PREIMAGE(EX_X, 0).length                               // 1/8
+    const pT1 = EX_PREIMAGE(EX_T, 1).length                               // 4/8
+    const both = EX_SEQS.filter(s => EX_X(s) === 0 && EX_T(s) === 1).length
+    // The product test, over a common denominator so no float decides it:
+    // P(both) · n² against P(X=0) · P(T=1) — 0 against 4.
+    return both === 0
+      && pX0 * pT1 !== both * n
+      && pX0 === 1 && pT1 === 4
+      // A sequence with no heads cannot have its first head on toss one, so the
+      // overlap is EMPTY rather than small — the same distinction the concept
+      // below draws about an absent correction term.
+      && EX_PREIMAGE(EX_X, 0).join(',') === 'TTT'
+      && !EX_PREIMAGE(EX_T, 1).includes('TTT')
+  })(),
+  `P(X=0)·8 = ${EX_PREIMAGE(EX_X, 0).length}, P(T=1)·8 = ${EX_PREIMAGE(EX_T, 1).length}, `
+  + `both = ${EX_SEQS.filter(s => EX_X(s) === 0 && EX_T(s) === 1).length}`)
+t('and the multiplicative version is false by exactly 1/16, which is the near miss',
+  (() => {
+    const n = EX_SEQS.length
+    const prodTotal = EX_TOTAL(s => EX_X(s) * EX_T(s))      // 17
+    // E[XT] − E[X]E[T] over a common denominator of n² = 64, as integers.
+    const lhs = prodTotal * n                               // 17 · 8 = 136
+    const rhs = EX_TOTAL(EX_X) * EX_TOTAL(EX_T)             // 12 · 11 = 132
+    return prodTotal === 17
+      && lhs - rhs === 4                                    // 4/64 = 1/16
+      && lhs !== rhs
+      // Which is a near miss rather than a blow-up: the two sides are 2.125 and
+      // 2.0625, so a rounded comparison passes and the task is what settles it.
+      && Math.abs(lhs / (n * n) - rhs / (n * n)) === 1 / 16
+      && Math.round((lhs / (n * n)) * 10) === Math.round((rhs / (n * n)) * 10)
+  })(),
+  `E[XT]·64 = ${EX_TOTAL(s => EX_X(s) * EX_T(s)) * EX_SEQS.length}, `
+  + `E[X]E[T]·64 = ${EX_TOTAL(EX_X) * EX_TOTAL(EX_T)}`)
+/*
+ * SEVEN OF THE NINE REFERENCES LEAVE [0, 1], WHICH INVERTS THE RULE THE FIVE
+ * CONCEPTS BELOW HOLD — and the inversion is the honest form rather than a
+ * weakening.
+ *
+ * Those concepts assert that every reference is a probability, with exactly one
+ * exception each in the last two — an odds ratio and a ratio of two table
+ * entries, both dimensionless quotients. Here the interval is simply the wrong
+ * one: an expectation is in the UNITS OF THE VARIABLE, and a count of heads has
+ * no reason to be at most 1. So the rule is restated for this concept rather
+ * than exempted from: seven outside, two inside, and the two inside are the two
+ * GAPS — differences of quantities rather than quantities.
+ *
+ * ASSERTED IN BOTH DIRECTIONS so neither can spread. If a later task here were a
+ * probability it would have to join the two gaps and the count would move; if a
+ * gap drifted outside the interval the second half would catch it.
+ */
+t('seven of the nine references leave [0, 1], and the two that do not are the gaps',
+  (() => {
+    const rs = EX_TASKS.map(x => ({ task: x, r: asRational(x.reference) }))
+    const outside = rs.filter(({ r }) => r.n > r.d)
+    const inside = rs.filter(({ r }) => r.n >= 0 && r.n <= r.d)
+    return rs.length === 9
+      && outside.length === 7
+      && inside.length === 2
+      // The two inside are the two subtractions, which is what a gap looks like
+      // in the expression — nothing else here subtracts anything.
+      && inside.every(({ task }) => task.given.includes(' - '))
+      && outside.every(({ task }) => !task.given.includes(' - '))
+      && inside.map(({ task }) => task.reference).slice().sort().join(',') === '1/16,1/8'
+      // And none of the seven is a bare count: every one is a quotient by the
+      // size of the space or a rule applied to one.
+      && outside.every(({ task }) => /\/n|\(n\)/.test(task.given))
+  })(),
+  EX_TASKS.map(x => `${x.given}=${x.reference}`).join(' | '))
+t('and that is a NEW category of reference rather than the subjects\' two exceptions',
+  (() => {
+    // The two standing exceptions are dimensionless quotients of probabilities.
+    const odds = tasksForPoint('in-odds-form-the-update-is-one-multiplication-by-the-likelihood-ratio')
+      .find(x => x.reference === '18')
+    const ratio = tasksForPoint(
+      'the-values-partition-the-space-so-the-table-adds-to-one-and-they-are-not-equally-likely')
+      .find(x => x.given === '(r/n)/(p/n)')
+    if (!odds || !ratio) return false
+    // Both of those are a probability over a probability, so the space cancels.
+    return /\)\/\(/.test(ratio.given)
+      // This concept's are not: `(0*p + 1*q + 2*r + 3*s)/n` is a weighted total
+      // over the space and is measured in the variable's own units, which is
+      // the first time in these subjects a reference has had units at all.
+      && EX_TASKS[0].given === '(0*p + 1*q + 2*r + 3*s)/n'
+      && asRational(EX_TASKS[0].reference).n > asRational(EX_TASKS[0].reference).d
+      && /units of the VARIABLE|in heads rather than in chance/.test(EX_SHOWN)
+  })(),
+  `${EX_TASKS[0].given}=${EX_TASKS[0].reference}`)
+/*
+ * NINE TASKS, THREE PER POINT, ALL `evaluate` — and the two refusals are
+ * asserted as absences with the reason that distinguishes them.
+ *
+ * `state` is refused because `TaskKind` declares it unverifiable, which is the
+ * five concepts below's reason. `counterexample` is refused for a DIFFERENT
+ * reason and this is the first concept in these subjects where that is true:
+ * the kind IS rulable on an identity, and E[g(X)] = g(E[X]) is an identity, but
+ * ruling "produce a g that breaks it" needs a distribution and a function as
+ * inputs and `PracticeTask` carries one expression, one substitution and one
+ * reference. The refusal is about the task SCHEMA rather than about the kind,
+ * and the two are indistinguishable from the coverage line — which is why the
+ * difference is written down here as well as in tasks.ts.
+ */
+t('nine tasks, three to a point, every one an evaluate',
+  EX_TASKS.length === 9
+  && EX_POINTS.map(p => tasksForPoint(p.id).length).join(',') === '3,3,3'
+  && EX_TASKS.every(x => x.kind === 'evaluate')
+  && EX_TASKS.every(x => x.domainConditions === undefined)
+  && EX_TASKS.every(x => x.form === undefined),
+  EX_POINTS.map(p => `${p.position}:${tasksForPoint(p.id).length}`).join(' '))
+t('and neither refusal is named in an objective, the second being a schema limit',
+  EX.objectives.every(o => o.taskKinds.join(',') === 'evaluate')
+  && EX.objectives.length === 3
+  && !EX_TASKS.some(x => x.kind === 'state' || x.kind === 'counterexample')
+  // The schema limit, checked rather than described: a counterexample task here
+  // would need a table, and the shape a task carries has no room for one.
+  && EX_TASKS.every(x => typeof x.given === 'string' && typeof x.reference === 'string'),
+  EX.objectives.map(o => `${o.id}:${o.taskKinds.join('+')}`).join(' '))
+/*
+ * EIGHTEEN SUBGOALS AND EIGHTEEN QUESTIONS, which is what this promotion
+ * contributes to the figure that moves. Six per point, the same shape as the
+ * three concepts below.
+ */
+t('all eighteen subgoals ship an authored question, six to a point',
+  EX_POINTS.every(p => p.workedExample.subgoals.every(s => typeof s.socratic === 'string'
+    && s.socratic.length > 0))
+  && EX_POINTS.flatMap(p => p.workedExample.subgoals).length === 18
+  && EX_POINTS.map(p => p.workedExample.subgoals.length).join(',') === '6,6,6',
+  EX_POINTS.map(p => `${p.position}:${p.workedExample.subgoals
+    .filter(s => s.socratic).length}/${p.workedExample.subgoals.length}`).join(' '))
+t('and every one is interrogative rather than an imperative with a question mark',
+  EX_POINTS.flatMap(p => p.workedExample.subgoals)
+    .every(s => isInterrogative(s.socratic)),
+  EX_POINTS.flatMap(p => p.workedExample.subgoals)
+    .filter(s => !isInterrogative(s.socratic)).map(s => s.label).join(' | '))
+t('every subgoal names a move rather than a step number, and no two in one example repeat',
+  EX_POINTS.every(p =>
+    p.workedExample.subgoals.every(s => s.label.length > 20 && !/^step\b/i.test(s.label))
+    && new Set(p.workedExample.subgoals.map(s => s.label)).size
+      === p.workedExample.subgoals.length),
+  EX_POINTS.flatMap(p => p.workedExample.subgoals)
+    .filter(s => s.label.length <= 20 || /^step\b/i.test(s.label)).map(s => s.label).join(' | '))
+t('no point claims a figure or a timing target, both absent for stated reasons',
+  EX_POINTS.every(p => p.visualRef === undefined)
+  && EX_POINTS.every(p => p.automaticityTarget === undefined),
+  EX_POINTS.filter(p => p.visualRef !== undefined || p.automaticityTarget !== undefined)
+    .map(p => p.id).join(', '))
+t('and every knowledge point has a task, so nothing here raises chainsWithNoRuling',
+  EX_POINTS.every(p => tasksForPoint(p.id).length > 0),
+  EX_POINTS.filter(p => tasksForPoint(p.id).length === 0).map(p => p.id).join(', '))
+/*
+ * THE COMPARISON CLASS FOR THE SPAN RANKING, which this promotion moved from the
+ * forty-eighth's group — seven expressions in the subject are now asked at more
+ * than one substitution.
+ *
+ * The figure moved for a reason that is itself the finding. That group asserted
+ * "there are six such expressions" and its comment said the check existed so a
+ * later concept adding a WIDER pair would go red. What actually happened is that
+ * this concept added a NARROWER one — span 1/8 against that pair's 0.79 — and the
+ * count went red while the superlative it was protecting stayed true. So the
+ * comment described one trigger and the code carried a broader one, and the
+ * repair was to leave the superlative there and bring the population here.
+ *
+ * WHAT IS DISTINCTIVE ABOUT THIS PAIR IS NOT ITS SPAN. It is the only repeated
+ * expression in the subject whose BOTH references leave [0, 1], which follows
+ * from the same fact as the group above: an expectation is not a probability.
+ */
+t('seven expressions in the subject are now asked twice, and this pair is the only one outside [0, 1]',
+  (() => {
+    const byGiven = {}
+    for (const c of CE.concepts) {
+      for (const p of c.knowledgePoints) {
+        for (const x of tasksForPoint(p.id)) {
+          (byGiven[x.given] = byGiven[x.given] ?? []).push(x.reference)
+        }
+      }
+    }
+    const repeated = Object.entries(byGiven).filter(([, refs]) => refs.length > 1)
+    const mine = repeated.find(([g]) => g === '(0*p + 1*q + 2*r + 3*s)/n')
+    if (!mine) return false
+    const outside = refs => refs.every(r => {
+      const q = asRational(r); return q.n > q.d
+    })
+    return repeated.length === 7
+      && outside(mine[1])
+      // And no other repeated pair is, so this is a property of the concept
+      // rather than of the subject.
+      && repeated.filter(([, refs]) => outside(refs)).length === 1
+      // Its span is narrow, which is why the superlative one concept down is
+      // untouched — asserted so that the two claims cannot drift apart.
+      && Math.abs(asRational(mine[1][0]).n / asRational(mine[1][0]).d
+        - asRational(mine[1][1]).n / asRational(mine[1][1]).d) === 0.125
+  })(),
+  (() => {
+    const b = {}
+    for (const c of CE.concepts) {
+      for (const p of c.knowledgePoints) {
+        for (const x of tasksForPoint(p.id)) (b[x.given] = b[x.given] ?? []).push(x.reference)
+      }
+    }
+    return Object.entries(b).filter(([, r]) => r.length > 1)
+      .map(([g, r]) => `${g}:${r.join('/')}`).join(' | ')
+  })())
+/*
+ * FIDELITY IS `checked` WITH THE PATTERN CARRIED VERBATIM, AND THE SHORTFALL IS
+ * A THIRD SHAPE FOR THIS FILE.
+ *
+ * The concept below carries a `\b` that reaches a singular title and no plural;
+ * the two below that carry DEAD `\b`-after-`)` alternatives. This one has
+ * neither fault: `\bexpected value\b` is the encyclopaedia's own title for the
+ * concept, so it takes that article and nothing else. What it cannot reach is
+ * every title saying EXPECTATION instead, which is most of the family. Asserted
+ * by name, because a recall gap is invisible by construction — nothing fails
+ * when an article is never offered.
+ */
+t('its pattern is carried verbatim off the node and decides the article it is filed under',
+  String(EX.scope.match) === '/\\bexpected value\\b/i'
+  && EX.fidelity === 'checked'
+  && EX.scope.match.test('Expected value')
+  && EX.scope.match.test('Expected value of a random variable'),
+  String(EX.scope.match))
+t('and the titles it cannot reach are the ones saying expectation, named rather than discovered',
+  !EX.scope.match.test('Expectation (mathematics)')
+  && !EX.scope.match.test('Conditional expectation')
+  && !EX.scope.match.test('Law of total expectation')
+  // It also refuses the neighbours, which is the half that makes `checked`
+  // honest rather than merely narrow.
+  && !EX.scope.match.test('Variance')
+  && !EX.scope.match.test('Random variable')
+  && !EX.scope.match.test('Mean'),
+  ['Expectation (mathematics)', 'Conditional expectation', 'Law of total expectation',
+    'Variance', 'Random variable', 'Mean']
+    .filter(s => EX.scope.match.test(s)).join(', ') || 'none claimed')
 
 // ---------------------------------------------------------------------------
 
@@ -12506,6 +13763,30 @@ t('while the four older concepts here still name justify, of which the build shi
  * was correct and short-lived, and the "prefer a concept with some authored
  * points" one was unsatisfiable here for the second time, exactly as predicted.
  * The next run in this subject is the cheap kind.
+ *
+ * 92 of 96 now, the sixth pure authoring run, and it IS the cheap kind the
+ * paragraph above promised: `the-pair-composes-to-the-identity`, the second of
+ * `inverse-functions`' three points, three subgoals, all three labels
+ * imperative so both measures moved by three. The concept is 7 of 11 and the
+ * remainder is 4 — the whole of `it-has-to-be-one-to-one`, one point, which is
+ * the last unauthored point in the subject.
+ *
+ * Two things worth carrying. First, "prefer a concept with some authored
+ * points" was satisfiable here for the first time in this subject since
+ * `function-composition` closed, and it was satisfiable BECAUSE the previous
+ * run paid the opening cost on `inverse-functions` — the same argument the 81
+ * paragraph makes, now observed twice in two different concepts. Second, the
+ * remainder is a SINGLE point, so the run that takes it closes the subject at
+ * 96 of 96 and the one-sided ratio assertion below becomes unfailable in both
+ * directions, which the 78 paragraph predicted would happen exactly here. At
+ * that point this subject is DONE and the authored-field count per concept is
+ * the only thing left that tells written from generated.
+ *
+ * Measured across the whole build this run: 962 of 1053 authored-field and 963
+ * of 1053 by the coverage line before, 965 and 966 after. The one-subgoal gap
+ * between the two measures is in `arithmetic-foundations` and is an
+ * interrogative LABEL, not an authored question — it is the live reminder that
+ * these two numbers are not the same number.
  */
 const FI_COV = questionCoverage(FI)
 t('all nine of its subgoals ship the question written, not just the label',
@@ -12521,7 +13802,7 @@ t('every subgoal says what its move establishes, so none of them is a bare step'
   FI_SUBGOALS.every(s => typeof s.detail === 'string' && s.detail.length > 0))
 t('the subject is at twenty-seven chains and still has none that cannot become evidence',
   FI_COV.chains === 27 && FI_COV.chainsWithNoRuling === 0
-  && FI_COV.authoredAsQuestions === 89 && FI_COV.questions === 96,
+  && FI_COV.authoredAsQuestions === 92 && FI_COV.questions === 96,
   `${FI_COV.chains} chains, ${FI_COV.chainsWithNoRuling} unrulable, `
   + `${FI_COV.authoredAsQuestions}/${FI_COV.questions} authored`)
 /*

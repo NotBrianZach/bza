@@ -140,14 +140,50 @@ import type { MapArea } from './atlas'
  * unlock" is a question with the answer zero often enough to be asked rather
  * than assumed.
  *
+ * ── THE FORTY-NINTH STEPPED OFF THE CHAIN, AND THE SET GREW BACK ──────────
+ *
+ * `random-variables` was the only unrefused ready node on the whole map, so this
+ * one was neither inherited nor chosen — the field had come down to one. It is
+ * the fifth departure from this area and the FIRST that is not the next link in
+ * the chain: it and `bayes-theorem` both declared `conditional-probability` and
+ * nothing else of that subject, so they are SIBLINGS off the third concept
+ * rather than a fourth and fifth step up one line.
+ *
+ * AN EIGHTH ROOT-SET OUTCOME, AND IT IS A SECOND GROWTH: two to THREE. The rule
+ * the forty-eighth wrote down holds unchanged and this is the case it predicts —
+ * the departing node had TWO in-area dependents, `expectation` and
+ * `continuous-distributions`, and both inherited its position beside
+ * `markov-chains`. So the set changes size by (in-area dependents) minus one,
+ * and +1, 0, +2 and -1 have now all happened in this file.
+ *
+ * THE YIELD WAS ONE READY NODE AND THE READY COUNT ACROSS THE MAP DID NOT MOVE,
+ * which has not happened before here and is the thing worth carrying. Twelve
+ * ready before, twelve after: it spent one and made one, so a run that measured
+ * only the number would conclude the promotion changed nothing about what is
+ * authorable, while in fact the MEMBERSHIP turned over. `expectation` needs
+ * `random-variables` and `sigma-notation`, both now written, and is ready.
+ * `continuous-distributions` needs `random-variables` and `definite-integral`,
+ * and the latter is a node of `integration` — so it became a ROOT of this area
+ * without becoming ready, which is the sharpest available statement that those
+ * two measures are independent. A dependent whose other prerequisite is
+ * unwritten is not yield, and a dependent count cannot see the difference.
+ *
+ * AND THE DEPARTURE COST THIS FILE AN ENTRY, WHICH ENDS A RUN OF TWO ZEROES.
+ * `links` goes to FOUR. The reason is the sibling shape rather than any
+ * carelessness: a chain taken in order is cheap because each step's one
+ * prerequisite is the step below it, and this node had TWO prerequisites with
+ * one of them pointing at `functions-and-inverses`. The note on `links` below
+ * works that out in full, because "a chain eventually costs nothing" was the
+ * sentence this promotion found the limit of.
+ *
  * ── WHAT HAPPENED TO THE DEPARTING NODES' EDGES ───────────────────────────
  *
  * An edge belongs to the node that DECLARES it, which is what makes this
  * bookkeeping rather than a judgement.
  *
- *  1. THE STRANDED PREREQUISITES ARE THE `links` ENTRIES BELOW, still THREE of
- *     them, because neither the forty-seventh nor the forty-eighth promotion
- *     added one — `bayes-theorem` declared `conditional-probability` and nothing
+ *  1. THE STRANDED PREREQUISITES ARE THE `links` ENTRIES BELOW, now FOUR of
+ *     them. Neither the forty-seventh nor the forty-eighth promotion
+ *     added one and the forty-ninth did — `bayes-theorem` declared `conditional-probability` and nothing
  *     else, and that concept had been authored into the subject it was joining
  *     one promotion earlier, so there was again no far end in a third subject
  *     and nothing to file. `sample-spaces`
@@ -161,22 +197,36 @@ import type { MapArea } from './atlas'
  *     `counting-probability` and NOTHING ELSE, and that concept was already in
  *     the subject it joined — so its one edge went straight into
  *     `CHANCE_AND_EVENTS.edges` and the cost to this file was zero. The durable
+ *     declared TWO, `conditional-probability` and `function-concept`, and only
+ *     the first was in the subject it joined — so `function-concept` stranded
+ *     and is the fourth entry. The durable
  *     form of the rule is that a promotion strands as many edges as the node
  *     declares `needs` outside its new subject, read off the node — two, then
- *     one, then NONE, then none again.
+ *     one, then NONE, then none again, then one.
  *
  *     A ZERO-COST PROMOTION IS WHAT A CHAIN WALKED IN ORDER EVENTUALLY BUYS, and
  *     that is the one sense in which the shape kept paying after it stopped
  *     producing a single heir: each node's prerequisite had been authored into
  *     the same subject by the run before, so the third departure had nowhere to
  *     strand anything TO.
+ *
+ *     AND THE FORTY-NINTH FOUND THE LIMIT OF THAT SENTENCE, which is the thing
+ *     to carry out of this paragraph. A chain is cheap because each step's ONE
+ *     prerequisite is the step below it, not because the promotions were
+ *     orderly. `random-variables` is a sibling off the third concept with two
+ *     prerequisites, one of them in `functions-and-inverses` and authored years
+ *     of promotions earlier by somebody who knew nothing about probability — so
+ *     there was no run before that could have moved it, and no amount of order
+ *     would have made the departure free.
  *  2. THE INBOUND EDGES NEEDED NOTHING DONE TO THEM, AND THEY ARE EACH
  *     PROMOTION'S YIELD. `counting-probability` here and `sampling-and-bias` in
  *     `statistics` each named `sample-spaces` in their own `needs`;
- *     `conditional-probability` named `counting-probability` in its own; and
+ *     `conditional-probability` named `counting-probability` in its own;
  *     `bayes-theorem`, `random-variables`, `markov-chains` here and
- *     `causal-inference` in `statistics` each name `conditional-probability` in
- *     theirs. Every one is declared by a node that stayed, `expandEdges` still
+ *     `causal-inference` in `statistics` each named `conditional-probability` in
+ *     theirs; and `expectation` and `continuous-distributions` here each name
+ *     `random-variables` in theirs. Every one is declared by a node that stayed,
+ *     `expandEdges` still
  *     emits them, and both endpoints of each exist in the composed graph. A
  *     `links` entry for any of them would be a second copy of an edge that
  *     already exists, and `composeAtlas` does not report duplicates.
@@ -198,6 +248,17 @@ import type { MapArea } from './atlas'
  *     edge, zero ready nodes. A promotion that strands nothing and unlocks
  *     nothing is not a contradiction: the two measure different things, and the
  *     cheapest departure available can sit at the end of a branch.
+ *
+ *     THE FORTY-NINTH MADE ONE OF TWO, AND IT IS THE CLEANEST STATEMENT OF THE
+ *     UPPER-BOUND RULE SO FAR because both dependents are in this area and they
+ *     split. `expectation` names `random-variables` and `sigma-notation`, both
+ *     written, so it is ready. `continuous-distributions` names
+ *     `random-variables` and `definite-integral`, and the latter is a node of
+ *     `integration` — so it is not ready and will not be until calculus is
+ *     authored. Two inbound edges, one ready node, and the two dependents are
+ *     indistinguishable from each other in any count: what separated them is the
+ *     OTHER prerequisite, which is a property of the dependent and not of the
+ *     promotion.
  *  3. ONE `exercises` CLAIM WAS LOST AND IT IS THE FIRST TIME. `sample-spaces`
  *     declared no `confusedWith` and no `exercises`, which was checked rather
  *     than remembered. `counting-probability` declared
@@ -251,6 +312,14 @@ import type { MapArea } from './atlas'
  *     would strand it, and `bayes-theorem` is in `chance-and-events` while that
  *     node would go to a statistics subject, so the cheap repair is NOT available
  *     there. Whoever promotes it should expect to lose the edge and say so.
+ *
+ *     THE FORTY-NINTH HAD NOTHING AT RISK AND THAT WAS CHECKED, NOT REMEMBERED.
+ *     `random-variables` declared no `confusedWith`, no `exercises` and no
+ *     `encompasses` — all three read off the node before it was deleted, since
+ *     all three strand in silence. So no credit or interference edge was lost,
+ *     and the two pairs above are unchanged. The check is worth running on every
+ *     promotion precisely because the answer is usually "nothing": the one time
+ *     it was not, at the forty-sixth, nothing went red.
  */
 const PROBABILITY: MapArea = {
   id: 'probability',
@@ -273,10 +342,24 @@ const PROBABILITY: MapArea = {
     'that builds its denominator, and the odds form in which the update is one multiplication ' +
     'by a likelihood ratio are all written as `bayes-theorem` in that same subject — so the ' +
     'four lowest nodes of this area have gone up one chain in order, and the prosecutor\'s ' +
-    'fallacy and the screening-test error are taught rather than listed. THE TWO NODES ABOVE ' +
-    'THEM ARE WHERE THIS AREA NOW STARTS, and it starts in two places rather than one: ' +
-    '`random-variables` attaches a NUMBER to each outcome where everything written is about the ' +
-    'outcomes themselves, and `markov-chains` conditions along time and waits on `eigenvalues`.',
+    'fallacy and the screening-test error are taught rather than listed. NOR IS ATTACHING A ' +
+    'NUMBER TO EACH OUTCOME, which left next and is the first departure that was not next in ' +
+    'that chain: a random variable as a RULE over the outcomes so that a value of it names a ' +
+    'preimage, the whole distribution as a table forced to total 1 by the rule being a ' +
+    'function, and a function of a random variable merging values so that their probabilities ' +
+    'add — all written as `random-variables` in the same subject. NOR IS COLLAPSING THAT TABLE ' +
+    'TO ONE NUMBER, which left next and is the sixth departure: the weighted total of value ' +
+    'times probability, which is in the units of the variable and need not be a value the ' +
+    'variable takes; the push-through rule E[aX + b] = aE[X] + b, standing on the table ' +
+    'totalling exactly 1 and refusing any rule that is not linear; and the addition of ' +
+    'expectations across two variables on one space WHETHER OR NOT they are independent, with ' +
+    'the multiplicative version failing on the same pair — all written as `expectation` in ' +
+    'that subject, which now holds six ' +
+    'concepts and eighteen ideas. THE THREE NODES ABOVE THEM ARE WHERE THIS AREA NOW STARTS, ' +
+    'and it starts in three places rather than one: `variance-and-covariance` is an expectation ' +
+    'of a squared deviation and is the one of the three with everything it needs already ' +
+    'written, `continuous-distributions` replaces the table with a density and waits on ' +
+    '`definite-integral`, and `markov-chains` conditions along time and waits on `eigenvalues`.',
   links: [
     /*
      * THREE STRANDED PREREQUISITES, FROM TWO PROMOTIONS: the first two entries
@@ -322,6 +405,22 @@ const PROBABILITY: MapArea = {
      * into the same subject. Each time there was no far end in a third subject
      * and nothing to file. A chain taken in order eventually costs an area
      * nothing: the run before has always already moved the far end.
+     *
+     * THE FORTY-NINTH ENDED THAT RUN OF TWO ZEROES, AND THE FOURTH ENTRY BELOW
+     * IS WHY — WHICH NAMES THE LIMIT OF THE SENTENCE ABOVE. "A chain taken in
+     * order eventually costs an area nothing" is true while you stay ON the
+     * chain. `random-variables` declared TWO `needs`, `conditional-probability`
+     * and `function-concept`, and it is `bayes-theorem`'s SIBLING off the first
+     * of them rather than the next step up the line — so the run before had
+     * moved one far end and had no reason to have moved the other.
+     * `function-concept` is in `functions-and-inverses` and was authored long
+     * before any of this, by a promotion that knew nothing about probability.
+     *
+     * SO THE SHAPE TO CARRY IS NOT "A CHAIN IS CHEAP" BUT "A CHAIN IS CHEAP
+     * BECAUSE EACH STEP'S ONE PREREQUISITE IS THE STEP BELOW IT". A node with
+     * two prerequisites costs an entry here the moment one of them points
+     * outside the subject it is joining, and that is a property of the NODE's
+     * `needs` rather than of how orderly the promotions have been.
      */
     {
       from: 'sets',
@@ -370,24 +469,130 @@ const PROBABILITY: MapArea = {
         'the division line is that subject\'s work, and a learner who cannot produce them has ' +
         'nothing to divide.',
     },
+    /*
+     * THE FORTY-NINTH PROMOTION'S ONE STRANDED EDGE, and the first entry this
+     * list has gained since the forty-sixth. `random-variables` declared
+     * `['conditional-probability', 'function-concept']`; the first is in the
+     * subject it joined and became an ordinary `EDGES` entry there, and this is
+     * the other half.
+     *
+     * IT GATES IMMEDIATELY, like the three above and unlike most `links`
+     * entries: both ends have material, so `gatingPrerequisitesOf` on
+     * `random-variables` returns `conditional-probability` from the ontology and
+     * `function-concept` from here, and a learner cannot be shown a random
+     * variable until both are strong.
+     *
+     * NO CREDIT EDGE IS LOST HERE, which is worth one line because the entry
+     * above it did lose one. The departing node declared no `exercises` and no
+     * `encompasses`, so there was nothing for `links` to be unable to carry —
+     * `links` hard-codes `prerequisite` and has no kind, which is what collapsed
+     * `counting-probability`'s two claims into one. The credit this concept DOES
+     * claim runs to `sample-spaces`, inside `chance-and-events`, so it needed
+     * nothing from this file.
+     */
+    {
+      from: 'function-concept',
+      to: 'random-variables',
+      because:
+        'A random variable IS a function — one number attached to each outcome — and the ' +
+        'concept leans on that twice over rather than borrowing the word. Its second knowledge ' +
+        'point proves the table must total 1 FROM the function property: a function sends each ' +
+        'outcome to exactly one value, so the preimages of the values have nothing in common ' +
+        'and leave nothing out, and a partition of the space has probability 1. Without that ' +
+        'the total is a coincidence to be checked rather than a fact to be relied on. And the ' +
+        'first point needs a function to be defined EVERYWHERE on its domain: the second ' +
+        'variable there records which toss the first head fell on, TTT has no head, and the ' +
+        'point is that a value has to be chosen at TTT or the rule is not a function on this ' +
+        'space at all.',
+    },
+    /*
+     * THE FIFTIETH PROMOTION'S ONE STRANDED EDGE, and the second consecutive
+     * entry this list has gained. `expectation` declared
+     * `['random-variables', 'sigma-notation']`; the first is in the subject it
+     * joined and became an ordinary `EDGES` entry there, and this is the other
+     * half.
+     *
+     * IT IS THE SAME SHAPE AS THE ENTRY ABOVE AND IT FALSIFIES THAT ENTRY'S
+     * EXPLANATION, which is the thing worth recording. The forty-ninth's note
+     * says a chain is cheap because each step's one prerequisite is the step
+     * below it, and attributes its own cost to having stepped SIDEWAYS off the
+     * chain. This promotion stepped straight back onto it — `expectation` sits
+     * directly above `random-variables` — and still cost an entry, because it
+     * declared two `needs` and one of them points outside the subject. So the
+     * sentence to keep is the one that note ENDED on rather than the one it
+     * opened with: the cost is a property of the NODE's `needs`, and the
+     * orderliness of the promotions has nothing to do with it. Four of this
+     * area's six departures were free, and both of the costly ones declared two
+     * prerequisites.
+     *
+     * IT GATES IMMEDIATELY, like the four above: both ends have material, so
+     * `gatingPrerequisitesOf` on `expectation` returns `random-variables` from
+     * the ontology and `sigma-notation` from here, and a learner cannot be shown
+     * an expectation until both are strong. That is now true of every entry in
+     * this list, which is unusual — most `links` entries are written while the
+     * far node is unwritten and constrain nothing until it is authored.
+     *
+     * NO CREDIT EDGE IS LOST HERE. The departing node declared no `exercises`
+     * and no `encompasses`, so there was nothing for `links` to be unable to
+     * carry; the credit this concept DOES claim runs to `random-variables`,
+     * inside `chance-and-events`, so it needed nothing from this file. Read off
+     * the node before deletion rather than assumed, as the block above the node
+     * list insists.
+     */
+    {
+      from: 'sigma-notation',
+      to: 'expectation',
+      because:
+        'The expectation IS a sum over the values, so the notation is not a convenience here ' +
+        'but the form the definition is written in, and all three of that concept\'s points do ' +
+        'work. Its first — both limits are included, so the term count is upper − lower + 1 — ' +
+        'is why the heads-count total has FOUR terms and not three, which is the commonest ' +
+        'arithmetic slip available on this table. Its third is load-bearing twice over: a ' +
+        'constant factor coming outside a sum and a sum of two terms splitting into two sums ' +
+        'are between them the whole proof that E[aX + b] = aE[X] + b, and the same split with ' +
+        'a second variable where the constant was is the proof that expectations add. And its ' +
+        'second — a term that ignores the index still counts the terms — is what the constant b ' +
+        'becomes before the table\'s total of 1 collapses it to b.',
+    },
   ],
   nodes: [
-    {
-      id: 'random-variables',
-      match: /\brandom variable\b/i,
-      name: 'Random variables',
-      is: 'A number attached to each outcome, which is what lets arithmetic be done on a random situation.',
-      needs: ['conditional-probability', 'function-concept'],
-      terms: 'random variable discrete continuous distribution pmf pdf',
-    },
-    {
-      id: 'expectation',
-      match: /\bexpected value\b/i,
-      name: 'Expectation',
-      is: 'A weighted average of outcomes, linear whether or not the variables are independent — which is the fact that makes it useful.',
-      needs: ['random-variables', 'sigma-notation'],
-      terms: 'expectation expected value linearity mean',
-    },
+    /*
+     * `random-variables` WAS THE FIRST ENTRY HERE AND LEFT AT THE FORTY-NINTH
+     * PROMOTION, into `chance-and-events` as that subject's fifth concept. It
+     * had to be deleted rather than annotated: `atlasProblems` rejects a map
+     * node whose id collides with an authored concept, because the composed
+     * list would hold two entries for the id and the shadowing copy has no
+     * knowledge points, so a fully authored concept would read as unteachable.
+     *
+     * IT IS THE FIFTH DEPARTURE FROM THIS AREA AND THE FIRST THAT IS NOT NEXT
+     * IN THE CHAIN. The four before it went up one line — `sample-spaces`,
+     * `counting-probability`, `conditional-probability`, `bayes-theorem` — and
+     * this one is `bayes-theorem`'s SIBLING off the third of them. The
+     * difference shows in `links` below: a chain taken in order costs the area
+     * nothing because the run before has always already moved the far end, and
+     * stepping off the chain ends that.
+     */
+    /*
+     * `expectation` WAS THE FIRST ENTRY HERE AFTER THAT AND LEFT AT THE
+     * FIFTIETH PROMOTION, into `chance-and-events` as that subject's sixth
+     * concept. Deleted rather than annotated, for the collision reason above.
+     *
+     * IT IS THE SIXTH DEPARTURE FROM THIS AREA AND THE CHAIN RESUMES. The
+     * forty-ninth stepped sideways off the line; this one steps straight up
+     * from where that landed, so the six departures are now a chain of four,
+     * one sibling branch, and a step up from the branch. That matters for the
+     * `links` list below rather than as bookkeeping: a chain is cheap because
+     * each step's one prerequisite is the step below it, and this node declared
+     * TWO — so being back on the chain did NOT make it free, and the fifth
+     * entry below is the proof. The cheapness was never about order.
+     *
+     * AND ITS DEPARTURE IS THE FIRST TO LEAVE THIS AREA'S ROOT SET THE SAME
+     * SIZE WITH DIFFERENT MEMBERS. The forty-eighth's rule — the set changes
+     * size by (in-area dependents) minus one — predicts zero here, because
+     * `variance-and-covariance` was its single in-area dependent and inherited
+     * the position it vacated. A `length === 3` check would have passed across
+     * this promotion while every node it named had changed.
+     */
     {
       id: 'variance-and-covariance',
       match: /\b(variance|covariance|standard deviation|correlation)\b/i,

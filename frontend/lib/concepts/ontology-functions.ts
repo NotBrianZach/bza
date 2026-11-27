@@ -1117,10 +1117,23 @@ const CONCEPTS: Concept[] = [
             {
               label: 'Inner first',
               detail: 'f⁻¹(7) = (7 + 2)/3 = 3.',
+              socratic:
+                'The brackets here are nested exactly the way they were when you composed two ' +
+                'ordinary rules, so the inside-out habit carries over untouched — but the inner ' +
+                'rule is f⁻¹, and at the previous point you had to build that rule yourself by ' +
+                'undoing f\'s steps, whereas here it arrives already written as a formula. Only ' +
+                'one of the two rules has the 7 to work on. Which one is it, and what does that ' +
+                'formula hand back when the 7 goes into it?',
             },
             {
               label: 'Then the outer',
               detail: 'f(3) = 3·3 − 2 = 7.',
+              socratic:
+                'f⁻¹ has handed back 3, and the 7 is spent — it was f⁻¹\'s input and never f\'s, ' +
+                'the same way an inner rule\'s input was never the outer rule\'s when you ' +
+                'composed two ordinary rules. So f\'s placeholder is holding 3, and f\'s rule is ' +
+                'the multiply-by-3-then-subtract-2 one. What does f hand back, and why is the ' +
+                'value of f(f⁻¹(7)) that number rather than the 3 you had halfway through?',
             },
             {
               label: 'Why landing back on 7 settles it',
@@ -1128,6 +1141,15 @@ const CONCEPTS: Concept[] = [
                 'The composite returned its own input. Written out, f(f⁻¹(y)) = 3·((y + 2)/3) − 2 ' +
                 '= (y + 2) − 2 = y for every y, so this is not a coincidence at 7 — it is the ' +
                 'identity, which is what being an inverse means.',
+              socratic:
+                'The composite has handed back the very number it was given, which is the first ' +
+                'time anything you have composed has done that. On its own that is one input\'s ' +
+                'worth of evidence, and two rules agreeing at a single point need not agree ' +
+                'anywhere else — but you already know how to drop the inner rule into the outer ' +
+                'one\'s placeholder before any number arrives, which is the move that turns a ' +
+                'claim about 7 into a claim about every y. What does f(f⁻¹(y)) collapse to when ' +
+                'you carry out that substitution, and how much of "this candidate really is the ' +
+                'inverse" does the collapse settle that the 7 on its own did not?',
             },
           ],
           answer: '7 — the composite returns its input',

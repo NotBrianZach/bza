@@ -119,9 +119,23 @@ export default function MathPracticeSection({
           So the slot gets the sentence that was already its fallback, which is
           the better copy anyway: a band on a dashboard should say what the
           feature does, not what one subject happens to contain. Which subject
-          is being practised is named below, next to the figures. */}
+          is being practised is named below, next to the figures.
+
+          THAT FALLBACK SENTENCE HAS SINCE BEEN REWRITTEN, and the reason is
+          the same rule one line up. It read "Work problems and have the
+          answer checked symbolically rather than compared to a string",
+          which is still a sentence about what this is NOT — and the comparison
+          only lands for a reader who already suspected string matching, which
+          is nobody who needed telling.
+
+          The capability stays, SHOWN rather than claimed. "3/2 and 1.5 both
+          count" is the same fact in a form you can check against your own
+          experience, and it is the exact case the verifier is tested on
+          (concepts-logic.mjs, 'a decimal that IS exact is accepted'). Do not
+          swap it for a looser example: a wrong one here is a promise about
+          grading that the engine would then break. */}
       <p className="text-xs text-gray-500 dark:text-gray-400 mb-3 max-w-2xl leading-relaxed">
-        Work problems and have the answer checked symbolically rather than compared to a string.
+        Work problems to navigate through the topics. Answers are checked for value, so 3/2 and 1.5 both count.
       </p>
 
       {loading && (

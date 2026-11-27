@@ -88,7 +88,21 @@ const GROUPS: {
   },
   {
     id: 'learn', label: 'Learn',
-    blurb: 'work problems and have the answer checked, not string-compared',
+    /*
+     * Was "work problems and have the answer checked, not string-compared".
+     *
+     * Every other blurb in this list says what the band GIVES you. That one
+     * spent its only line on what the band is not, and on a distinction that
+     * means nothing until you already know what a naive checker does — the
+     * reader it was written for is the one who would never have suspected
+     * string comparison in the first place.
+     *
+     * The capability is real and worth keeping; it is just not what a
+     * one-line band blurb is for. It survives where it can be SHOWN instead
+     * of claimed: MathPracticeSection names the 3/2-and-1.5 case, and the
+     * verifier itself states its method on every ruling.
+     */
+    blurb: 'navigate through topics by working problems',
     links: [
       { label: 'Practice', href: '/learn' },
       /*

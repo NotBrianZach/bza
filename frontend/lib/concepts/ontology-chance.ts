@@ -1,35 +1,43 @@
 /**
- * Chance and events — the seventeenth subject, and FOUR concepts.
+ * Chance and events — the seventeenth subject, and SIX concepts.
  *
  * `sample-spaces` was a node of `probability` and was the whole of this subject
  * until the forty-sixth promotion added `counting-probability` above it, the
- * forty-seventh added `conditional-probability` above that, and the forty-eighth
- * added `bayes-theorem` above that. The sections about the first run to the
- * `EDGES` note; the second concept's argument begins at `── THE SECOND
- * CONCEPT`, the third at `── THE THIRD CONCEPT`, and the FOURTH concept's
+ * forty-seventh added `conditional-probability` above that, the forty-eighth
+ * added `bayes-theorem` above that, the forty-ninth added `random-variables`
+ * off the third of them rather than off the fourth, and the fiftieth added
+ * `expectation` above the fifth. The sections about the first
+ * run to the `EDGES` note; the second concept's argument begins at `── THE SECOND
+ * CONCEPT`, the third at `── THE THIRD CONCEPT`, the fourth at `── THE FOURTH
+ * CONCEPT`, the fifth at `── THE FIFTH CONCEPT`, and the SIXTH concept's
  * argument together with this file's live measurement of the ready field begins
- * at `── THE FOURTH CONCEPT`.
+ * at `── THE SIXTH CONCEPT`.
  *
- * READ THE LAST OF THOSE FOUR FOR THE FIELD, NEVER AN EARLIER ONE. Four sections
+ * READ THE LAST OF THOSE SIX FOR THE FIELD, NEVER AN EARLIER ONE. Six sections
  * with near-identical titles now sit in this header in promotion order, and a
  * later one can CONTRADICT an earlier one — the third section recommends two
- * candidates and the fourth has spent one of them. Counting is the only way to
- * pick the live one; `templedb vcs log bza` names the promotion that wrote it.
+ * candidates, the fourth has spent one of them, the fifth has spent the last one
+ * and reports a field of ONE, and the sixth has spent that one. Counting is the
+ * only way to pick the live one; `templedb vcs log bza` names the promotion that
+ * wrote it.
  *
- * All four were nodes of `probability`, and each had to be DELETED from that
+ * All six were nodes of `probability`, and each had to be DELETED from that
  * array on the way in. `atlasProblems` rejects a map node whose id collides with
  * an authored concept — the composed list would hold two entries for the id and
  * the shadowing copy has no knowledge points, so a fully authored concept would
  * read as unteachable — so promoting is a MOVE out of that array rather than a
  * fill-in.
  *
- * THIS SUBJECT HAS NOW TAKEN FOUR CONSECUTIVE NODES OFF ONE CHAIN, which is the
- * cheapest shape the promotion run has found, and the fourth section is the one
- * to read about what is left of it: the forty-seventh is where the chain-WALK
- * stopped, because the node it took was a branch point and handed the area three
- * roots instead of one, and the forty-eighth is where the chain stopped paying
- * anything but cheapness — it strands nothing, as a chain taken in order always
- * eventually does, and it unlocked nothing at all.
+ * THIS SUBJECT TOOK FOUR CONSECUTIVE NODES OFF ONE CHAIN AND THE FIFTH IS THE
+ * FIRST THAT IS NOT ON IT. That was the cheapest shape the promotion run has
+ * found, and the fourth section records where it stopped paying: the
+ * forty-seventh is where the chain-WALK stopped, because the node it took was a
+ * branch point and handed the area three roots instead of one, and the
+ * forty-eighth strands nothing and unlocked nothing at all. The forty-ninth
+ * comes off `conditional-probability` SIDEWAYS — it is the fourth concept's
+ * sibling and not its successor — which is why it strands an edge where the two
+ * before it stranded none, and why its material leans on the FIRST concept
+ * rather than on the one it was gated behind.
  *
  * ── WHY THIS CONCEPT, AND WHY THE FIELD CAME DOWN TO TWO ──────────────────
  *
@@ -981,6 +989,529 @@
  * ontology-matrices.ts rather than on rulability — and the SHAPE-vs-MOVE test is
  * how the earlier refusals were overturned. That is a measurement and not a
  * recommendation.
+ *
+ * ── THE FIFTH CONCEPT, AND THE READY FIELD MEASURED RATHER THAN QUOTED ────
+ *
+ * `random-variables`, the forty-ninth promotion, and the only candidate the
+ * section above left. Read THIS section for the field, not the four above it.
+ *
+ * The field was recomputed from the tree rather than taken from that section.
+ * BEFORE: 206 map nodes, 93 authored, 19 areas, 17 subjects, TWELVE ready — a
+ * ready node being one whose every `needs` is `isTeachable` — and 0
+ * floor-blocked, the thinnest area holding a ready node being
+ * `algebra-foundations` at five nodes with eleven departures declared. ELEVEN of
+ * the twelve were refused, which the sections above enumerate and which this
+ * promotion adds none to, so the field came down to ONE and the choice was made
+ * for this run before it started. The eleven are `linear-inequalities`,
+ * `word-problems`, `complex-numbers`, `graphs-of-functions`, `constructions`,
+ * `non-euclidean-geometry`, `supremum-and-completeness`, `eigenvalues`,
+ * `relations`, `combinatorial-identities` and `sampling-and-bias`; the
+ * measurement agreed with the list above it in every entry, which is the first
+ * time a run has recomputed the field and found the previous header exactly
+ * right.
+ *
+ * ── THE RULABILITY QUESTION THE SECTION ABOVE DEFERRED, ANSWERED ──────────
+ *
+ * The forty-eighth raised it and declined to settle it, correctly: "somebody
+ * should decide that deliberately rather than discover it after authoring nine
+ * tasks". The worry was not that nothing could be asked but that what could be
+ * asked would be INDISTINGUISHABLE from the concepts below — a random variable
+ * IS a function from outcomes to numbers, "write down the random variable" is a
+ * `state` task and this build has no verifiable kind for one, and the values
+ * that can be asked for are probabilities, which is what the three concepts
+ * below already ask for.
+ *
+ * THE ANSWER WAS ALREADY WRITTEN IN THIS FILE AND NOBODY HAD NOTICED. The first
+ * concept's second point computes TWO answers for "exactly two heads" — 3/8 in
+ * the eight-sequence space and 1/4 in the space that records only the heads
+ * count — and says the wrong one is the one whose outcomes were never equally
+ * likely, without saying WHICH. That four-outcome space is the set of values of
+ * the heads count, which is to say it is this concept's object seen from below,
+ * and the reason it cannot be divided in is that its outcomes have preimages of
+ * sizes 1, 3, 3 and 1. The first concept records the disagreement and calls it
+ * information loss. It cannot settle it, because settling it needs the four
+ * probabilities, and four probabilities attached to the values of a rule is a
+ * DISTRIBUTION. So the fifth concept finishes an argument the first one opened
+ * and left open on purpose.
+ *
+ * THAT MAKES THE THREE MOVES SEPARABLE FROM EVERYTHING BELOW, which is the
+ * actual test and not "is a number produced":
+ *
+ *  - THE PREIMAGE. "X = 2" is a condition on a number and a probability can only
+ *    be assigned to a SUBSET of the space, so the move is to read the rule
+ *    backwards and collect the sequences it sends to 2. Nothing below does this:
+ *    there the event arrives already described in words ("exactly one new
+ *    member") and the work is counting it. Here the event arrives as a value of a
+ *    function somebody CHOSE, and the work is recovering the set. The space is
+ *    deliberately eight sequences written out, so that the counting is not the
+ *    content.
+ *  - THE WHOLE TABLE, AND THE OBLIGATION THAT IT ADD TO 1. Every question in the
+ *    three concepts below produces ONE number. This one's object is four numbers
+ *    at once, and the total is a check no lower concept has: it is forced,
+ *    because X is a FUNCTION and therefore sends each sequence to exactly one
+ *    value, so the preimages partition the space. That is where
+ *    `function-concept` is load-bearing rather than decorative, and the second
+ *    place is TTT — a second variable in the worked example needs a value there
+ *    or it is not a function on this space at all.
+ *  - THE COLLAPSE. A function of a random variable is a random variable, and its
+ *    table is got by ADDING the probabilities of the values it merges. That
+ *    arithmetic is on probabilities already in hand; no counting can produce it
+ *    and no question below can ask for it, because below there is no table to
+ *    merge entries of. It is the move that most sharply is not the concept
+ *    underneath.
+ *
+ * SO THE VERDICT IS PROMOTE, and the thing that would have made it a refusal is
+ * worth naming: had the material been set on the club, every task would have
+ * been a count over 220 with a letter X written in front of it, which is exactly
+ * the indistinguishability the section above feared. The setting is what made
+ * the difference, not the subject matter.
+ *
+ * ── WHAT THIS PROMOTION COST AND YIELDED ──────────────────────────────────
+ *
+ * AFTER: 205 map nodes, 94 authored, 19 areas, 17 subjects, TWELVE ready, 0
+ * floor-blocked. It spent one and made ONE — `expectation` — so the ready COUNT
+ * is unchanged at twelve while its MEMBERSHIP turned over, which has not happened
+ * before in this area and is exactly the shape the "assert by name, never by
+ * length" rule exists for. A run that checked only the number would conclude the
+ * promotion changed nothing about what is authorable.
+ *
+ * TWO NODES NAMED THE DEPARTING ONE AND ONLY ONE OF THEM BECAME READY, which is
+ * the "dependents are an upper bound on yield" rule biting again.
+ * `continuous-distributions` also names `definite-integral`, which is a node of
+ * `integration` and unwritten, so it is not ready and will not be until calculus
+ * is authored. Worth stating because it is the obvious thing to get wrong here:
+ * a dependent whose other prerequisite is unwritten is NOT yield, and the
+ * difference is invisible in a dependent count.
+ *
+ * IT STRANDED ONE EDGE, WHICH ENDS A RUN OF TWO ZEROES. The node declared
+ * `needs: ['conditional-probability', 'function-concept']`. The first is a
+ * concept of this ontology and so is an ordinary `EDGES` entry; the second is
+ * `functions-and-inverses`, so that edge cannot live here at all —
+ * `ontologyProblems` refuses an edge naming a concept its ontology lacks — and
+ * it is `PROBABILITY.links`' FOURTH entry, the first that list has gained since
+ * the forty-sixth. The two promotions before this one cost the area nothing
+ * because they came up a chain whose lower end the run before had always already
+ * moved; this one comes off the chain sideways and the saving stops. That is the
+ * limit of "a chain taken in order eventually costs nothing": it costs nothing
+ * while you stay ON the chain.
+ *
+ * NO `confusedWith` WAS AT RISK, checked rather than assumed. The node declared
+ * none, so there was no `interferes_with` for `expandEdges` to be emitting and
+ * nothing for this promotion to destroy in silence — unlike the forty-eighth,
+ * which had to rescue one. It declared no `exercises` and no `encompasses`
+ * either. All four fields were read off the node before it was deleted, because
+ * three of them strand without anything going red.
+ *
+ * THE ROOT SET GREW FROM TWO TO THREE, which is an eighth root-set outcome for
+ * atlas-uncertainty.ts and the second growth it records. `markov-chains` was a
+ * root and still is; the departing node had TWO in-area dependents and both
+ * inherited its position, so `expectation` and `continuous-distributions` join
+ * it. The rule the forty-eighth promotion wrote down holds unchanged — the set
+ * changes size by (in-area dependents) minus one, and +1, 0, +2 and −1 have now
+ * all happened — and the point worth keeping is that the set grew while the
+ * READY count held, so the two measures move independently. Being a root says
+ * nothing about being authorable; `continuous-distributions` is a root and is
+ * not ready.
+ *
+ * ── THE FIELD THE NEXT RUN INHERITS, WHICH IS A SINGLE CANDIDATE AGAIN ────
+ *
+ * TWELVE ready, 0 floor-blocked, ELEVEN still refused and the list above
+ * unchanged. Unrefused and available: ONE, and it is this promotion's own yield.
+ *
+ *  - `expectation` (`probability`) — needs `random-variables`, now the fifth
+ *    concept here, and `sigma-notation`, authored in `functions-and-inverses`.
+ *    Filed here it strands ONE, which would be `PROBABILITY.links`' fifth entry
+ *    and the second consecutive promotion to add to that list. TWO dependents
+ *    (`variance-and-covariance`, `law-of-large-numbers`). It is a Rubneb ANCHOR,
+ *    so taking it empties that slot for the FOURTH time in four promotions, and
+ *    the refill this run used — `variance-and-covariance` — is one of its two
+ *    dependents and would still be a node, so the refill is available again.
+ *    Plainly rulable: a weighted average is a number, and the distribution it
+ *    averages over is now written down rather than assumed. The one thing to
+ *    settle first is the opposite of this run's question — not whether anything
+ *    can be asked, but whether the nine tasks would be arithmetic over a table
+ *    the fifth concept supplies, which would make it this concept with a sum in
+ *    front of it. The answer is probably LINEARITY, which is a fact about
+ *    expectation that no table of one variable can state.
+ *
+ * SO THE WARNING THE SECTION ABOVE GAVE STILL STANDS ONE PROMOTION LATER: if
+ * `expectation` is refused there is no unrefused ready node anywhere on the map
+ * and the next run's job becomes overturning a recorded refusal rather than
+ * authoring. `eigenvalues` remains the one to look at — four dependents, refused
+ * by its own host in ontology-matrices.ts rather than on rulability — and that
+ * is a measurement rather than a recommendation.
+ *
+ * AND THE ARMATURE NOTE'S "NO FALLBACK LEFT" IS NOT TRUE, which is this run's
+ * second correction to a predecessor. armature.ts said that the next time
+ * Rubneb's slot emptied there would be nothing to name, having ruled out the
+ * distributions, the limit theorems, `stochastic-processes` and
+ * `measure-theoretic-probability`. That is seven of the nine non-anchor nodes
+ * and the enumeration never reached the other two. `variance-and-covariance` is
+ * E[(X − μ)²] — an expected value, which is what the region's own `because` says
+ * the swamp is always computing — and it is the refill this promotion used. The
+ * lesson is narrower than "the note was wrong": an exhaustive-sounding
+ * enumeration that rules out CATEGORIES has to be checked against the node list,
+ * because a category sweep silently misses whatever belongs to no category it
+ * named.
+ *
+ * ── THE SETTING IS THE FIRST CONCEPT'S COIN, AND THAT IS THE ARGUMENT ─────
+ *
+ * The three concepts between this one and the first are set on twelve club
+ * members and 220 committees, and the fourth dropped the club for a screening
+ * test. This one goes back to three coin tosses and the eight sequences, which is
+ * the FIRST return to an earlier concept's setting in the subject and is not
+ * nostalgia.
+ *
+ * TWO REASONS, AND THE SECOND IS THE LOAD-BEARING ONE. The first is that the
+ * argument this concept finishes was opened on that space: the 3/8-against-1/4
+ * disagreement is about those eight sequences and the four heads-counts, so
+ * settling it anywhere else would be settling a different question. The second
+ * is the boundary against `counting-probability`. On the club every preimage
+ * would be a binomial coefficient and every task a count over 220, and the
+ * content would be the counting with a letter X in front of it — which is
+ * precisely the indistinguishability the rulability question feared. Eight
+ * sequences printed in full means the preimage can be COLLECTED by eye, so the
+ * only thing a learner can be doing is the move this concept is about.
+ *
+ * SO THE CLUB'S ABSENCE HERE IS THE SAME BOUNDARY THE FOURTH CONCEPT DREW AND
+ * THE OPPOSITE DIRECTION. There the club had to go because its overlaps are
+ * countable and a reversal is only needed when they are not. Here it has to go
+ * because its preimages are countable and nothing else, and a concept whose
+ * content is "which set is this" must not be set where finding the set is the
+ * hard part.
+ *
+ * ── FIDELITY IS `checked`, AND THE SHORTFALL IS THE PLURAL ────────────────
+ *
+ * The map node's pattern and its `terms` as the hint, carried across unchanged,
+ * as every promotion since the fourth has done. `expandNode` sets fidelity from
+ * the presence of a `match`, so recognition is unmoved at 271 of 299 — the
+ * denominator is 206 nodes plus 93 concepts before and 205 plus 94 after, which
+ * is why it does not move either. Widening a pattern in the same change that adds
+ * material moves the recognition figure and the written-concept count at once,
+ * with no way afterwards to say which edit moved which, so the pattern is left
+ * exactly as the node had it.
+ *
+ * `/\brandom variable\b/i` REACHES THE SINGULAR AND NOTHING PLURAL, and that is
+ * the whole of its recall gap. "Random variable" is the article and it is this
+ * concept; "Discrete random variable" is this concept more narrowly. Every
+ * naturally-plural title in the area is unreachable — "Random variables",
+ * "Algebra of random variables", "Convergence of random variables", "Sum of
+ * normally distributed random variables" — because the trailing `\b` sits
+ * between `variable` and the `s` that follows it, where both sides are word
+ * characters and no boundary exists.
+ *
+ * THAT IS THE THIRD SIGHTING OF THE SAME `\b` SHAPE IN THIS FILE AND THE FIRST
+ * THAT IS NOT A DEAD ALTERNATIVE. `sample-spaces` carries
+ * `event \(probability theory\)` and `conditional-probability` carries
+ * `independence \(probability\)`, and both can never match anything because an
+ * alternative ending in a literal `)` cannot be followed by a word boundary.
+ * Here the boundary does not kill the pattern — the one title that matters is
+ * singular — it only costs the plural family. So the file now holds both failure
+ * modes of one construction, which is worth saying because the repair differs:
+ * those two want the `\b` moved or dropped, and this one wants `s?` before it.
+ * tests/concepts-logic.mjs asserts the plural misses by name, so the day somebody
+ * sweeps the atlas for this shape the assertion goes red and names what changed.
+ *
+ * AND THE OVERCLAIM IS ONE TITLE AND IS THE SAME SHAPE AS THE THIRD CONCEPT'S.
+ * "Continuous random variable" matches, and this concept is discrete throughout:
+ * eight outcomes, a table of four entries, and no density anywhere. A learner on
+ * that page is offered this concept, which is `continuous-distributions`'
+ * prerequisite rather than its subject — defensible only in the weak sense the
+ * third concept's note already admits about "Conditional probability
+ * distribution", and recorded for the same reason, that an overclaim is invisible
+ * from the inside.
+ *
+ * AUTHORING THIS MAKES THE THIRD CONCEPT'S OVERCLAIM REPAIRABLE AND THE REPAIR IS
+ * NOT DONE HERE. That note says `/\bconditional probability\b/` wrongly reaches
+ * "Conditional probability distribution" and "Conditional probability table",
+ * pages about a FUNCTION of a random variable, and that the gap could not be
+ * closed because `random-variables` was unwritten — so narrowing would have left
+ * those pages with no concept at all. There is now a concept about distributions
+ * for them to reach. The repair is two edits in one change, a negative lookahead
+ * on the third concept's pattern and a widening here, and it belongs in a commit
+ * that moves no material, for the reason given above.
+ *
+ * ── WHAT IS NOT HERE, WHICH IS A BOUNDARY RATHER THAN A BACKLOG ───────────
+ *
+ * EXPECTATION. The node directly above, and the boundary is sharp rather than one
+ * of depth: everything below produces the TABLE and stops. A weighted average
+ * collapses the table to one number and needs `sigma-notation` to write, and the
+ * fact that makes it worth having — E(X + Y) = E(X) + E(Y) whether or not the two
+ * are independent — is about two variables at once, where nothing below has a
+ * second variable on the page at the same time as the first. The third point's Y
+ * is a function OF X rather than a second variable beside it, which is the
+ * distinction that keeps the line clean.
+ *
+ * THE NAMED DISTRIBUTIONS. The table in the second point is the binomial with
+ * three trials and a fair coin, and the name is absent deliberately: a named
+ * distribution is a FAMILY indexed by its parameters, and what is built below is
+ * one member of one family by collecting preimages. `discrete-distributions` is
+ * three nodes up and needs `variance-and-covariance` and `binomial-theorem`
+ * first. Naming it here would promise a mechanism from an instance, which is the
+ * trade the second concept's note made about the hypergeometric and is the same
+ * trade.
+ *
+ * CONTINUOUS VARIABLES AND DENSITY. A random variable on an interval has
+ * P(X = c) = 0 at every single value, so the table — the one object this concept
+ * is about — does not exist there and a density takes its place. That is not a
+ * harder version of this: it is the case where this concept's central object is
+ * identically zero, which is why `continuous-distributions` waits on
+ * `definite-integral` and not merely on this.
+ *
+ * JOINT AND CONDITIONAL DISTRIBUTIONS AS OBJECTS. The third point computes the
+ * conditional distribution of X given at least one head, and that is deliberate
+ * and bounded: it is there as the CONTRAST that shows why merging values needs no
+ * renormalisation and discarding outcomes does. What is not here is the
+ * conditional distribution as a thing with its own algebra, or any second
+ * variable to be joint WITH, both of which need `joint-distributions` five nodes
+ * up. One worked contrast is not a topic.
+ *
+ * THE INDICATOR TRICK AND ANY OTHER VARIABLE WORTH A NAME. An indicator is the
+ * random variable whose table is 1 minus p and p, and it is the cheapest example
+ * in the subject — which is exactly why it is not here. Its preimage is the event
+ * itself, so collecting it teaches nothing, and the whole content of the first
+ * point is that collecting is a move.
+ *
+ * ── WHY EVERY TASK IS `evaluate`, AND WHAT THE NINE ARE MADE OF ───────────
+ *
+ * Nine tasks, three on each point, all nine `evaluate` and every one settled by
+ * exact arithmetic with no worker — the property all four concepts below hold,
+ * for the reason they give: a subject sitting this low must not be walled off by
+ * a worker outage.
+ *
+ * NO `state` TASK, WHICH IS THE REFUSAL THE RULABILITY QUESTION WAS ABOUT. "Write
+ * down the random variable" is the natural first question about this concept and
+ * it is a `state`, which `TaskKind` declares unverifiable — so asking it would
+ * produce a chain that cannot become evidence and would raise
+ * `chainsWithNoRuling`. What is asked instead is always a VALUE the table
+ * decides: a preimage's probability, a total, a merged entry, a renormalised
+ * entry. The object is taught in the worked examples, where telling is honest,
+ * and only its values are graded.
+ *
+ * THE DENOMINATOR IS 8 IN EVERY TASK AND IS WRITTEN AS `u*v*w` IN THREE OF THEM.
+ * That triple is the first concept's `a*b*c` at (2, 2, 2) with different letters,
+ * and the repetition is the point rather than laziness: the space has not
+ * changed, and the three tasks that write it out are the three where a learner
+ * might otherwise divide by 4. Everywhere the space is not in question it is the
+ * literal `n = 8`.
+ *
+ *  - EIGHT of the nine lie in [0, 1] and ONE does not. 3 is the ratio of the most
+ *    likely entry to the least, and a ratio of two probabilities is not a
+ *    probability — the same category the fourth concept's odds ratio 18 belongs
+ *    to, and the second such reference in these subjects.
+ *    tests/concepts-logic.mjs asserts the count is exactly one, as that concept's
+ *    group does, so the exception cannot spread quietly.
+ *  - NOT ONE of the nine is a count, which is the property the two concepts above
+ *    also hold. Every count in the material — the preimage sizes 1, 3, 3, 1, the
+ *    four sequences behind T = 1, the seven behind X at least 1 — is in a worked
+ *    example, and each task divides rather than counts.
+ *  - ONE reference is exactly 1, and it is a PROBABILITY and not a count. It is
+ *    the total of the table, which is the second point's whole content, and it is
+ *    the first reference in these subjects that is 1 for a reason rather than by
+ *    arithmetic accident.
+ *  - NO GIVEN IS REPEATED, inside this concept or against the thirty-six tasks
+ *    below it. The subject has six expressions asked at more than one
+ *    substitution and this promotion adds none, which is deliberate: the fourth
+ *    concept's group asserts a ranking over exactly those six, and a seventh
+ *    would have made that assertion this promotion's business for no teaching
+ *    gain.
+ *
+ * TWO DIFFERENT SHAPES AGREE ON 3/4 AND THE AGREEMENT IS THE TEACHING. `(q+r)/n`
+ * in the second point and `q/n + r/n` in the third give the same number because
+ * they are the same event: "X is 1 or 2" and "Y is 1" are one subset of the eight
+ * sequences under two descriptions, which is what it MEANS for Y to merge two
+ * values of X. The fourth concept had three shapes agree because a theorem has
+ * forms; this is two shapes agreeing because a set has two names.
+ *
+ * NO `transform_to_form`, NO `counterexample`, NO `justify`, and no
+ * `domainConditions` on any of the nine, for the reasons the four concepts below
+ * give. One addition: `1 - p/n` appears inside a DENOMINATOR in the ninth task,
+ * which is the first time a complement has been divided by in these subjects, and
+ * it cannot vanish — `p < n` at the one substitution used, and a complement of
+ * probability 0 would be conditioning on an impossible event, which is undefined
+ * rather than merely awkward. Checked on the task rather than declared as a
+ * domain condition, because the expression is fine and only a substitution could
+ * break it.
+ *
+ * ── THE ONE STRANDED EDGE, AND THE FOUR SILENT LOSSES CHECKED FOR ─────────
+ *
+ * The node declared `needs: ['conditional-probability', 'function-concept']`.
+ * The first is a concept of this ontology and is an ordinary `EDGES` entry. The
+ * second is `functions-and-inverses`, so it is `PROBABILITY.links`' fourth entry
+ * — filed in the area that OWNED the departing node, which is the established
+ * rule — and it GATES immediately, because both ends have material.
+ *
+ * THE FOUR FIELDS THAT STRAND WITHOUT ANYTHING GOING RED were each read off the
+ * node before it was deleted, and all four were empty: no `confusedWith` (so no
+ * `interferes_with` for `expandEdges` to lose), no `exercises` and no
+ * `encompasses` (so no credit edge to lose), and no second cross-subject `need`.
+ * Saying "all four were empty" is worth a line because the forty-sixth promotion
+ * lost an `exercises` claim to this mechanism and the forty-eighth had to rescue
+ * an `interferes_with`, and in neither case would a suite have noticed.
+ *
+ * THE CREDIT EDGE THIS CONCEPT DECLARES SKIPS ITS OWN PREREQUISITE, which is a
+ * first in the subject and is argued in the `EDGES` entry rather than here. In
+ * one line: it credits `sample-spaces`, two concepts down, because every division
+ * in the material is in that concept's space under that concept's licence — and
+ * it does NOT credit `conditional-probability`, which gates it, because exactly
+ * one of nine tasks conditions anything.
+ *
+ * ── THE SIXTH CONCEPT, AND THE READY FIELD MEASURED RATHER THAN QUOTED ────
+ *
+ * `expectation` was the SINGLE unrefused ready node on the map, so the choice
+ * was forced and the fiftieth promotion's work was the question the forty-ninth
+ * deferred: is this concept distinguishable from the one below it, or is it that
+ * concept with a sum in front of it? The predecessor guessed LINEARITY and the
+ * guess was right, with one addition it did not reach.
+ *
+ * THE VERDICT IS PROMOTE, AND THE ARGUMENT IS THAT TWO OF THE THREE MOVES CANNOT
+ * BE STATED BY A TABLE OF ONE VARIABLE AT ALL.
+ *
+ *  - THE WEIGHTED TOTAL is the move that IS arithmetic over the fifth concept's
+ *    table, and on its own it would have been the refusal. What rescues it is
+ *    that it produces a new KIND of number — 12/8 is outside [0, 1] and is
+ *    measured in heads rather than in chance, which no quantity in the five
+ *    concepts below is — and that the weights are provably doing work. The
+ *    proof is the sharp part: X and T take the SAME four values on the same
+ *    eight sequences, so any method reading only the value list must give them
+ *    the same answer, and their expectations are 12/8 and 11/8. The first two
+ *    tasks are therefore ONE EXPRESSION AT TWO SUBSTITUTIONS, with the values
+ *    written in as literals so that nothing a learner can see distinguishes the
+ *    questions. Every other shared-expression pair in these subjects is a pair
+ *    because the two AGREE; this is the first where disagreeing is the content.
+ *  - LINEARITY cannot be stated by that table. E[aX + b] = aE[X] + b is a claim
+ *    about a FAMILY of rules, and its proof is `sigma-notation`'s third point
+ *    twice over plus the fifth concept's forced total of 1 — so the shortcut is
+ *    standing on the partition, and against a conditioned table totalling 7/8 it
+ *    would give aE[X] + 7b/8 and be false. The boundary is where it earns its
+ *    keep: on Y = |2X - 3| the shortcut returns |2(12/8) - 3| = 0 while
+ *    E[Y] = 12/8, and 0 is not merely wrong but OUTSIDE the range of Y, which is
+ *    1 or 3 on every one of the eight sequences. A fault catchable before any
+ *    arithmetic is done.
+ *  - ADDITIVITY is the one that settles the question. E[X + T] = E[X] + E[T]
+ *    needs TWO variables side by side, and the fifth concept has none — its Y is
+ *    a function OF X and carries no information X does not. The subject's own
+ *    `covers` had already recorded that, which is why this was the deferred
+ *    question rather than an open one. And what makes it the useful fact is what
+ *    it does NOT need: X and T are DEPENDENT by `conditional-probability`'s
+ *    product test, 1/16 against an empty overlap, and the addition held anyway.
+ *    The multiplicative version does not — E[XT] = 17/8 against
+ *    E[X]E[T] = 33/16, false by 1/16 — so the asymmetry is observed rather than
+ *    asserted.
+ *
+ * ── WHAT THIS PROMOTION COST AND YIELDED ──────────────────────────────────
+ *
+ * AFTER: 204 map nodes, 95 authored, 19 areas, 17 subjects, TWELVE ready, 0
+ * floor-blocked. Coverage 94 -> 95 material, 94/94 -> 95/95 practisable,
+ * 966/1053 -> 984/1071 questions, 266 -> 269 chains, `chainsWithNoRuling`
+ * UNCHANGED at 1, recognition unchanged at 271/299 since the pattern was carried
+ * verbatim.
+ *
+ * THE READY COUNT HELD AT TWELVE A SECOND CONSECUTIVE TIME, BY A DIFFERENT
+ * MECHANISM, which is the measurement finding. The forty-ninth had TWO
+ * dependents and one happened to be ready, so it spent one and made one by the
+ * luck of the split. This node has ONE dependent and it was ready, so it spent
+ * one and made one NECESSARILY. Same figure twice, two different reasons — and a
+ * run reading only "twelve again" would conclude the field had stopped moving
+ * when in fact its membership has now turned over twice running.
+ *
+ * AND THE ROOT SET HELD AT THREE WHILE EVERY MEMBER CHANGED, which is a first
+ * for atlas-uncertainty.ts and is the sharpest case yet for the "assert roots by
+ * name, never by length" rule — sharper than the ready-count version, because it
+ * is the same measure on the same object: `length === 3` was true before and
+ * after, and not one of the three nodes it named is the same.
+ * `variance-and-covariance` inherited the position `expectation` vacated, and
+ * the forty-eighth's rule predicted it exactly: the set changes size by (in-area
+ * dependents) minus one, and this node had one.
+ *
+ * IT STRANDED ONE EDGE, AND THAT FALSIFIES THE FORTY-NINTH'S ACCOUNT OF ITS OWN
+ * COST. That promotion also cost an entry and blamed having stepped SIDEWAYS off
+ * the chain, writing that "a chain is cheap because each step's ONE prerequisite
+ * is the step below it". This one stepped straight back ON to the chain —
+ * `expectation` sits directly above `random-variables` — and paid anyway,
+ * because the node declared TWO `needs` and `sigma-notation` is
+ * `functions-and-inverses`. So the durable rule is the sentence that note ENDED
+ * on rather than the one it opened with: the cost is a property of the NODE's
+ * `needs`, and the orderliness of the promotions never mattered. Four of this
+ * area's six departures were free and both costly ones declared two
+ * prerequisites.
+ *
+ * NOTHING STRANDED IN SILENCE. The node declared no `confusedWith`, no
+ * `exercises` and no `encompasses`; all four fields were read off it before
+ * deletion. The credit edge it DOES declare goes back to the ordinary shape —
+ * `expectation => random-variables`, pointing at its own gate — so the
+ * forty-ninth's skip stays a single reasoned exception rather than becoming the
+ * subject's habit.
+ *
+ * THREE ASSERTIONS WENT RED THAT WERE NOT FIGURES, AND THEY ARE THE SAME BUG
+ * TWICE. Two claims about what `random-variables` DECLARES were written
+ * undirected — `[e.from, e.to].includes(...)` — so authoring anything above it
+ * falsified them while nothing had been lost. One of them, "nothing credits this
+ * concept", was never measuring a loss at all; it was measuring whether a
+ * successor existed. The repair is DIRECTION plus KIND: scoping to `e.from`
+ * alone was still wrong, because this promotion's prerequisite edge also leaves
+ * that concept. An absence assertion needs both, and the credit-edge one is now
+ * asserted by PROVENANCE instead — every `encompasses` touching the concept is
+ * `author:`-promoted, so none came off the node, which no later promotion can
+ * falsify.
+ *
+ * AND A FIGURE PLACED AS A GUARD WENT RED ON SOMEBODY ELSE'S PROMOTION. The
+ * forty-eighth's group ranks the widest same-expression pair in the subject over
+ * "exactly six" repeated expressions, and the forty-ninth's group re-asserted
+ * that six DELIBERATELY — saying it was doing so in the group whose promotion
+ * could have caused a seventh, "rather than left for the other group to discover
+ * as a failure". Both went red here, on a pair spanning 1/8 that leaves the
+ * superlative untouched. Two lessons: a guard written where the damage could
+ * come from only works while that is the newest code, and the forty-eighth's
+ * comment described the trigger it wanted (a WIDER pair) while its code carried
+ * a broader one (any new pair). The population now lives in this promotion's
+ * group and the superlative stayed where it was argued.
+ *
+ * ── THE FIELD THE NEXT RUN INHERITS, WHICH IS A SINGLE CANDIDATE AGAIN ────
+ *
+ * TWELVE ready, 0 floor-blocked, ELEVEN still refused and the list unchanged:
+ * `graphs-of-functions`, `relations`, `linear-inequalities`, `complex-numbers`,
+ * `supremum-and-completeness`, `constructions`, `non-euclidean-geometry`,
+ * `word-problems`, `eigenvalues`, `combinatorial-identities`,
+ * `sampling-and-bias`. Unrefused and available: ONE, and it is this promotion's
+ * own yield for the third promotion running.
+ *
+ *  - `variance-and-covariance` (`probability`) — needs `expectation` and
+ *    NOTHING else, so filed here it strands ZERO, which no promotion has managed
+ *    since the forty-eighth. TWO dependents (`discrete-distributions`,
+ *    `law-of-large-numbers`). It declares no `confusedWith`, no `exercises` and
+ *    no `encompasses`. It is a Rubneb ANCHOR and has been since the forty-ninth,
+ *    so taking it empties that slot a FIFTH time — and this time there is
+ *    genuinely nothing left to name, because the category sweep's seven plus the
+ *    two that have since filled the slot account for every node the area has.
+ *    Plainly rulable: E[(X - m)^2] is a number.
+ *
+ * THE QUESTION TO SETTLE FIRST IS NOT RULABILITY AND NOT DISTINGUISHABILITY FROM
+ * THIS CONCEPT. It is a BOUNDARY against an already-authored concept in a
+ * different subject, and it is invisible to the refusal set because it is not a
+ * refusal. `descriptive-statistics` in ontology-statistics.ts already teaches
+ * variance as the mean of the squared deviations, dividing by n, with the n - 1
+ * answer named as the one it is not. So two subjects would hold a concept called
+ * variance, one over a data set and one over a distribution, and whoever writes
+ * the second owes an account of why they are not the same thing — the honest one
+ * being that a distribution weights its squared deviations by probability where a
+ * data set weights them equally, which is the sixteenth idea above applied to
+ * squares. That is a real argument and it is available; what it is not is
+ * automatic.
+ *
+ * AND ONE THIRD OF ITS LIKELY CONTENT IS ALREADY COMPUTED HERE. The ninth task
+ * of this concept asks for `k/n - (g/n)*(h/n)` and answers 1/16, which is
+ * E[XY] - E[X]E[Y] exactly — a covariance, deliberately not named as one,
+ * because naming it would promise an account of what the number MEANS and this
+ * subject has independence only as a test. A run authoring
+ * `variance-and-covariance` should read that task before writing a covariance
+ * point, because the arithmetic is done and only the interpretation is missing.
+ *
+ * SO IF `variance-and-covariance` IS REFUSED THE FIELD IS EMPTY, which is the
+ * same warning the two sections above gave and which has now been deferred three
+ * times. `eigenvalues` remains the one to look at first — four dependents, the
+ * most of anything unrefused, and refused by its own HOST in ontology-matrices.ts
+ * rather than on rulability. That is a measurement rather than a recommendation.
  */
 
 import type { Concept, ConceptEdge, ConceptOntology, Subject } from './types'
@@ -991,9 +1522,12 @@ const subject: Subject = {
   covers:
     'How likely something is, worked out from everything that could have happened — first by '
     + 'writing that list down, then by COUNTING it once it is too long to write, and then by '
-    + 'REPLACING it with what you have been told, and finally by REVERSING what you were told '
-    + 'into what you wanted to know. Four concepts and twelve ideas. The first '
-    + 'three are one experiment small enough to print in full. First, '
+    + 'REPLACING it with what you have been told, then by REVERSING what you were told '
+    + 'into what you wanted to know, then by attaching a NUMBER to each outcome and '
+    + 'asking after the number instead, and last by COLLAPSING those numbers to one. Six '
+    + 'concepts and eighteen ideas. The first '
+    + 'three are one experiment small enough to print in full, and the last SIX go back to '
+    + 'that same experiment. First, '
     + 'THE SAMPLE SPACE IS A SET YOU CHOOSE, AND THE '
     + 'CHOICE IS PART OF THE MODEL. An OUTCOME is one complete result, the sample space is the '
     + 'set of all of them, and the only two conditions are that no two outcomes can both happen '
@@ -1099,19 +1633,94 @@ const subject: Subject = {
     + 'chance, and exactly one of 20,001 equally suspected people left it, then the likelihood '
     + 'ratio is 10,000, the prior odds are 1:20,000, the posterior odds are 1:2, and the '
     + 'probability of INNOCENCE given a match is 2/3 — not the 1/10,000 that gets quoted, which '
-    + 'is P(match given innocence) wearing the answer\'s clothes. What is NOT here is a boundary '
+    + 'is P(match given innocence) wearing the answer\'s clothes. The last three ideas go back to '
+    + 'the three tosses and attach a NUMBER to each of the eight sequences, which is what lets '
+    + 'arithmetic be done on a random situation at all. Thirteenth, A VALUE OF THAT NUMBER NAMES A '
+    + 'SET OF OUTCOMES, AND THAT SET IS WHAT THE PROBABILITY BELONGS TO. Let X be the count of '
+    + 'heads. X is not a number, it is a RULE: HHH goes to 3, HHT and HTH and THH go to 2, and so '
+    + 'on. So "X = 2" is a condition on a number and has to be read backwards into the three '
+    + 'sequences the rule sends to 2 — the PREIMAGE — because the only thing a probability can be '
+    + 'assigned to is a subset of the space. Dividing then happens where the outcomes are equally '
+    + 'likely, which is the eight sequences, giving 3/8. This is also what SETTLES the second '
+    + 'idea\'s open question: the four-outcome space that records only the heads count has the '
+    + 'VALUES of X as its outcomes, those values have preimages of sizes 1, 3, 3 and 1, and four '
+    + 'outcomes of unequal size cannot be equally likely — so its 1/4 was never licensed and 3/8 '
+    + 'is right. The rule is a CHOICE made on top of the space, exactly as the space was: the '
+    + 'same eight sequences also carry T, the toss the first head came up on, and T must be given '
+    + 'a value at TTT or it is not a function on this space at all. Fourteenth, THE VALUES '
+    + 'PARTITION THE SPACE, SO THE WHOLE TABLE ADDS TO 1 — AND THE VALUES ARE NOT EQUALLY LIKELY. '
+    + 'Take the preimage of every value and divide each by 8: X is 1/8, 3/8, 3/8, 1/8 at 0, 1, 2, '
+    + '3. Those four numbers together are the DISTRIBUTION, and the total is forced rather than '
+    + 'lucky — X is a function, so it sends each sequence to exactly one value, the preimages '
+    + 'therefore have nothing in common and leave nothing out, and the first idea puts the whole '
+    + 'space at 1. A total that is not 1 means a sequence was double-counted or missed, which is '
+    + 'the only error the check can catch and the reason to make it every time. Two entries also '
+    + 'add with NO correction term, because two values of X can never share a sequence: '
+    + 'P(X = 1 or 2) = 3/8 + 3/8 = 3/4, where the third idea had to subtract an overlap. And the '
+    + 'middle entries are three times the end ones — (3/8)/(1/8) = 3, a ratio of probabilities '
+    + 'and not itself a probability — which is the exact price of the information the four-outcome '
+    + 'space threw away. Fifteenth, A NEW RULE OVER THE SAME OUTCOMES MERGES VALUES, AND THE '
+    + 'PROBABILITIES OF WHAT IT MERGES ADD. Let Y be the margin, |heads - tails|. Tails is 3 - X, '
+    + 'so Y = |2X - 3| and Y is 3, 1, 1, 3 as X runs 0 to 3: a function of a random variable is a '
+    + 'random variable, on the same space. It is not one-to-one, which is the whole of what is '
+    + 'new — two values of X sit behind each value of Y, so P(Y = 1) = P(X = 1) + P(X = 2) = 3/4 '
+    + 'and P(Y = 3) = 1/8 + 1/8 = 1/4, arithmetic on probabilities already in hand with no count '
+    + 'anywhere. The total survives merging necessarily, since a coarser partition is still a '
+    + 'partition. CONDITIONING rebuilds a table the other way and the contrast is the point: '
+    + 'given at least one head, 7 of the 8 sequences remain, so the entries become (3/8)/(7/8) = '
+    + '3/7, 3/7 and 1/7 — and those add to 1 only BECAUSE of the division, their numerators '
+    + 'adding to 7/8. Merging keeps the total for free because nothing left the space; '
+    + 'conditioning discards TTT and has to renormalise. Sixteenth, THE TABLE COLLAPSES TO ONE '
+    + 'NUMBER BY WEIGHTING EACH VALUE WITH ITS OWN PROBABILITY. E[X] = 0(1/8) + 1(3/8) + 2(3/8) '
+    + '+ 3(1/8) = 12/8 = 3/2, written in `sigma-notation` and totalled over four terms because '
+    + 'both limits are included. That number is neither of the kinds met so far: it is outside '
+    + '[0, 1] and measured in heads rather than in chance, and it is not a value X takes at all, '
+    + 'since X counts whole heads — so the average names no outcome of the experiment, which is '
+    + 'not a defect. And the WEIGHTS are what this table hides, because the plain average of the '
+    + 'values 0, 1, 2, 3 is also 3/2: the entries are symmetric, so the pull towards the middle '
+    + 'cancels and the wrong route is right by accident. T, the toss the first head falls on, is '
+    + 'the proof — it takes the SAME four values on the same eight sequences, with table 1/8, '
+    + '1/2, 1/4, 1/8, and E[T] = 11/8. Two rules, one value list, two answers, so the '
+    + 'expectation was never a function of the list. Seventeenth, A LINEAR RULE CAN BE PUSHED '
+    + 'THROUGH THE EXPECTATION, AND THE TABLE TOTALLING 1 IS WHAT LICENSES IT. '
+    + 'E[aX + b] = aE[X] + b, so E[2X + 1] = 2(3/2) + 1 = 4, which rebuilding the table confirms '
+    + 'at 32/8. The proof is the two rearrangements `sigma-notation` allows — split a sum of two '
+    + 'terms, bring a constant factor outside — leaving aE[X] plus b times the total of every '
+    + 'probability, and the fourteenth idea forced that total to be exactly 1. So the rule stands '
+    + 'on the partition: against a conditioned table totalling 7/8 it would give aE[X] + 7b/8 and '
+    + 'be false. The licence comes from the SHAPE of the rule and nothing else, and Y = |2X - 3| '
+    + 'is where it stops — |2E[X] - 3| = 0 against E[Y] = 1(3/4) + 3(1/4) = 3/2, and 0 is not '
+    + 'merely wrong but outside the range of Y, which is 1 or 3 on every single sequence. '
+    + 'Eighteenth, EXPECTATION ADDS ACROSS TWO RULES WHETHER OR NOT THEY ARE INDEPENDENT, which '
+    + 'is the fact no table of ONE variable can state. With S = X + T, E[S] = E[X] + E[T] = '
+    + '12/8 + 11/8 = 23/8, and S\'s own table — 1/8, 1/8, 3/8, 3/8 at 0, 2, 3, 4, skipping 1 '
+    + 'entirely — gives the same 23/8, because totalling X + T over the eight sequences adds the '
+    + 'same numbers in a different order and 23 = 12 + 11. X and T are NOT independent: the '
+    + 'seventh idea\'s product test puts P(X = 0)P(T = 1) at 1/16 while P(X = 0 and T = 1) is 0, '
+    + 'no sequence without heads having its first head on toss one. The addition held regardless, '
+    + 'so nothing has to be checked before adding two expectations — and that is the whole of why '
+    + 'it is the useful fact. Multiplying is not free: E[XT] = 17/8 = 34/16 against '
+    + 'E[X]E[T] = 33/16, false by 1/16 and so by little enough to survive a careless check. What '
+    + 'is NOT here is a boundary '
     + 'rather than a backlog. THE COUNTING ITSELF is '
     + '`counting-principles`, an '
     + 'authored subject of its own — every count above is set up, named as its work, and then '
-    + 'divided, and none of it is re-derived here. THE HYPERGEOMETRIC DISTRIBUTION is the fifth '
-    + 'idea\'s formula as a function of how many new members you ask for, and a distribution is '
-    + 'that function rather than any of its values, so it waits on `random-variables`. RANDOM '
-    + 'VARIABLES, EXPECTATION and the DISTRIBUTIONS attach a NUMBER to each outcome, where '
-    + 'everything here is about the outcomes themselves. And INFINITE OR CONTINUOUS spaces are '
+    + 'divided, and none of it is re-derived here. SPREAD is not: VARIANCE is an expected value '
+    + 'of a squared deviation and so is arithmetic the sixteenth idea can already express, but '
+    + 'its content is which deviations get squared and why, and the eighteenth idea is where that '
+    + 'would have to start rather than where it ends — E[XT] missing E[X]E[T] by 1/16 is a '
+    + 'covariance in all but name, and naming it would promise an account of independence this '
+    + 'subject gives only as a test. THE NAMED DISTRIBUTIONS, the '
+    + 'HYPERGEOMETRIC among them, are FAMILIES indexed by their parameters, where the fourteenth '
+    + 'idea builds one member of one family by collecting preimages, and the fifth idea\'s '
+    + 'C(5,1)C(7,2)/C(12,3) is one value of another; naming a family from an instance would '
+    + 'promise a mechanism nothing above supplies. And INFINITE OR CONTINUOUS spaces are '
     + 'not a harder version of this: equally likely outcomes stop existing there, so the one '
-    + 'formula the first three concepts rest on has no analogue rather than a subtler one — '
-    + 'though P(A and B) / P(B) does survive, which is why the seventh idea is written in that '
-    + 'form as well as in counts, and why the fourth concept never counts anything at all.',
+    + 'formula the first three concepts rest on has no analogue rather than a subtler one, and '
+    + 'the table the last three are about does not exist either, since P(X = c) = 0 at every '
+    + 'single value — though P(A and B) / P(B) does survive, which is why the seventh idea is '
+    + 'written in that form as well as in counts, and why the fourth concept never counts '
+    + 'anything at all.',
   medium: 'theorem',
   facetName: 'Concept',
   facetDoes: 'Which concept the statement has to be about.',
@@ -2888,6 +3497,957 @@ const CONCEPTS: Concept[] = [
       },
     ],
   },
+  {
+    id: 'random-variables',
+    name: 'Random variables',
+    subjectId: subject.id,
+    scope: {
+      id: 'random-variables',
+      label: 'Random variables',
+      hint: 'random variable discrete continuous distribution pmf pdf',
+      /*
+       * The map node's pattern and its `terms` as the hint, carried across
+       * unchanged, as every promotion since the fourth has done. The header
+       * records what it costs: the trailing `\b` sits between `variable` and any
+       * `s`, so every plural title in the area is unreachable, and
+       * "Continuous random variable" is reached where this concept is discrete
+       * throughout. Both are asserted by name in tests/concepts-logic.mjs, and
+       * neither is repaired here — widening in the same change that adds
+       * material would move recognition and the written-concept count at once.
+       */
+      match: /\brandom variable\b/i,
+    },
+    fidelity: 'checked',
+    objectives: [
+      {
+        id: 'read-a-probability-off-a-preimage-rather-than-off-the-list-of-values',
+        statement:
+          'Produce the probability that a stated rule takes a stated value, and so establish '
+          + 'that the value names a SET of outcomes rather than a number, and that the set is '
+          + 'what the probability belongs to. Produce the gap between the answer reached in the '
+          + 'space of outcomes and the answer reached in the space of values, and so settle '
+          + 'which of the two the first concept left open — the one whose outcomes have '
+          + 'preimages of different sizes was never equally likely. Produce the probability of '
+          + 'a value of a DIFFERENT rule over the same outcomes, and so establish that the rule '
+          + 'is a choice made on top of the space rather than something the experiment handed '
+          + 'you.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'build-the-whole-distribution-and-check-it-against-one',
+        statement:
+          'Produce the total of every entry in the table, and so decide from the rule being a '
+          + 'FUNCTION — one value per outcome — that the entries must come to exactly 1, and '
+          + 'that any other total means an outcome was counted twice or missed. Produce the '
+          + 'probability of two values together with no correction term, and so establish that '
+          + 'different values of one rule can never share an outcome where two events in '
+          + 'general can. Produce the ratio of the largest entry to the smallest, and so '
+          + 'establish how far the values are from equally likely and what the four-outcome '
+          + 'space had thrown away.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'rebuild-a-distribution-under-a-new-rule-and-know-which-rebuild-needs-a-division',
+        statement:
+          'Produce an entry of the table of a rule built FROM the first rule, and so establish '
+          + 'that a function of a random variable is a random variable and that the entries it '
+          + 'merges are ADDED, because the outcomes behind different values are disjoint. '
+          + 'Produce the same entry by adding the outcome counts and dividing once instead, and '
+          + 'so establish that the two routes agree and that no counting was needed. Produce an '
+          + 'entry of the table once an outcome has been RULED OUT instead of merged, and so '
+          + 'establish that this rebuild needs a division where merging needed none, because '
+          + 'the surviving entries no longer total 1 on their own.',
+        taskKinds: ['evaluate'],
+      },
+    ],
+    knowledgePoints: [
+      {
+        id: 'a-value-of-the-variable-names-a-set-of-outcomes-so-its-probability-is-that-set-over-the-space',
+        conceptId: 'random-variables',
+        statement:
+          'A random variable is not a number and not an outcome. It is a RULE that attaches one '
+          + 'number to each outcome of a sample space — the heads-count over three coin tosses '
+          + 'sends HHH to 3, HHT to 2, TTT to 0, and so on for all eight sequences. So the three '
+          + 'characters "X = 2" look like a statement about a number and are really the name of a '
+          + 'SET: the sequences the rule sends to 2, which is its PREIMAGE. That matters because '
+          + '`sample-spaces` established that a probability is only ever assigned to a subset of '
+          + 'the space, so the first move on meeting a value is to read the rule backwards and '
+          + 'collect the outcomes, and only then divide. Dividing happens where the outcomes were '
+          + 'the ones assumed equally likely, which is the eight sequences — and that is what '
+          + 'settles the question the first concept deliberately left open. It found 3/8 for '
+          + '"exactly two heads" in the eight-sequence space and 1/4 in the space that records '
+          + 'only the heads count, said the two cannot both be right, and said the wrong one is '
+          + 'the one whose outcomes were never equally likely. The four-outcome space\'s outcomes '
+          + 'ARE the values of X, and their preimages have sizes 1, 3, 3 and 1, so four unequal '
+          + 'groups were being treated as four equal ones: 3/8 is right and 1/4 was never '
+          + 'licensed. Finally the rule is a CHOICE, exactly as the space was. The same eight '
+          + 'sequences carry other variables — the toss on which the first head appears, the '
+          + 'number of changes of side — and each gives a different table.',
+        position: 1,
+        /*
+         * No `automaticityTarget`, for the reason all four concepts below give
+         * about their own arithmetic: 3/8 would time beautifully and the skill
+         * is knowing that the 3 is a count of sequences and the 8 is the space
+         * they came from. A speed reward trains the division a learner already
+         * has, and would reward whoever divides by 4 fastest.
+         */
+        workedExample: {
+          problem:
+            'A fair coin is tossed three times and all eight sequences are equally likely. Let X '
+            + 'be the number of heads. Find P(X = 2) and say what "X = 2" actually names. Then '
+            + 'settle the disagreement `sample-spaces` left open: that concept got 3/8 for '
+            + 'exactly two heads in the eight-sequence space and 1/4 in the space that records '
+            + 'only the heads count, and said the wrong answer is the one whose outcomes were '
+            + 'never equally likely — say which, and by how much they differ. Then let T be the '
+            + 'number of the toss on which the first head appears, and find P(T = 1).',
+          subgoals: [
+            {
+              label: 'Write the rule out, which is bookkeeping about a function and not yet a probability',
+              detail:
+                'X attaches a number to each of the eight sequences: HHH goes to 3, HHT to 2, '
+                + 'HTH to 2, HTT to 1, THH to 2, THT to 1, TTH to 1, TTT to 0. That is the whole '
+                + 'of what X is, and nothing about likelihood has been used to write it — the '
+                + 'table would be identical for a biased coin. Doing this first is what keeps '
+                + 'the rule and the probabilities apart, and they are the two things most easily '
+                + 'run together here.',
+              socratic:
+                'X is written as though it were a number, but what you were handed was a coin. '
+                + 'What does X do to each of the eight sequences, and does writing that down '
+                + 'need to know anything about how likely they are?',
+            },
+            {
+              label: 'Turn the numeric condition back into a set of outcomes',
+              detail:
+                '"X = 2" is a condition on a number, and `sample-spaces` is clear that a '
+                + 'probability belongs to an EVENT, which is a subset of the sample space. So '
+                + 'read the table backwards: the sequences X sends to 2 are HHT, HTH and THH. '
+                + 'That three-element set is the event, and it is what "X = 2" is the name of. '
+                + 'Collecting it is the move this concept adds — in the three concepts between '
+                + 'this one and the first, the event always arrived already described in words '
+                + 'and the work was counting it.',
+              socratic:
+                'A probability can only be assigned to a subset of the sample space. Which of '
+                + 'the eight sequences does X send to 2, and so which event is "X = 2" a name '
+                + 'for?',
+            },
+            {
+              label: 'Divide in the space whose outcomes were assumed equally likely',
+              detail:
+                'The hypothesis is about the eight sequences, so `sample-spaces`\' second point '
+                + 'applies to them and to nothing else: three of eight equally likely outcomes '
+                + 'gives P(X = 2) = 3/8. Nothing new has been used. The denominator is worth '
+                + 'writing as 2 x 2 x 2 rather than as 8, because 8 is also what you would get '
+                + 'by a wrong route and the product says which space is in use.',
+              socratic:
+                'You have three sequences in the event. Which space\'s outcomes were the ones '
+                + 'you were told are equally likely, and so what does the 3 get divided by?',
+            },
+            {
+              label: 'Settle which of the two spaces was wrong, now that the preimages are visible',
+              detail:
+                'The four-outcome space\'s outcomes are the values 0, 1, 2 and 3 of X. The table '
+                + 'in the first subgoal says how many sequences sit behind each: 1, 3, 3 and 1. '
+                + 'Four groups of unequal size cannot be four equally likely outcomes, so '
+                + 'dividing by 4 was never licensed and 1/4 is the wrong answer. 3/8 is right, '
+                + 'and the gap is 3/8 - 1/4 = 3/8 - 2/8 = 1/8. Notice what has happened: the '
+                + 'first concept could state the disagreement and not settle it, because '
+                + 'settling it needs the four preimage sizes, and four probabilities attached to '
+                + 'the values of a rule is the object this concept is about.',
+              socratic:
+                'The four-outcome space has the values 0, 1, 2 and 3 as its outcomes. How many '
+                + 'sequences sit behind each of them, and what does that do to the assumption '
+                + 'that the four are equally likely?',
+            },
+            {
+              label: 'Change the rule and watch the same space carry a different variable',
+              detail:
+                'T is the number of the toss the first head appears on. First a decision has to '
+                + 'be made about TTT, which has no head: T has to be given a value there — 0 is '
+                + 'the usual choice — or T is not a function on this space at all, and '
+                + '`function-concept` is exactly the requirement that a function assign a value '
+                + 'to every member of its domain. With that settled, T = 1 is the sequences '
+                + 'beginning with H. Fixing the first toss to heads leaves the other two free, '
+                + 'so there are 2 x 2 = 4 of them out of 2 x 2 x 2 = 8, and P(T = 1) = 1/2. The '
+                + 'space has not changed by one outcome; only the rule has.',
+              socratic:
+                'Keep the same eight sequences and record instead which toss the first head came '
+                + 'up on. What has to be decided about TTT before that is even a rule, and which '
+                + 'sequences does the rule send to 1?',
+            },
+            {
+              label: 'Say what the two variables together establish about the space',
+              detail:
+                'One space, two rules, two different tables. So a random variable is a choice '
+                + 'made on top of the space in the same way the space was a choice made about '
+                + 'the experiment, and `sample-spaces`\' four-outcome space was never a rival '
+                + 'space so much as the table of ONE variable with the information about which '
+                + 'toss was which already thrown away. That is the sense in which recording '
+                + 'only the heads count "loses information": HHT and HTH are two sequences the '
+                + 'four-outcome space cannot tell apart.',
+              socratic:
+                'Two rules, eight sequences, two different tables. Which of those three things '
+                + 'did the experiment hand you and which did you choose — and which sequences '
+                + 'can the heads-count no longer tell apart?',
+            },
+          ],
+          answer:
+            'P(X = 2) = 3/8. "X = 2" names the three sequences HHT, HTH and THH — the preimage — '
+            + 'and that set, not the number 2, is what the probability belongs to; the 3 is '
+            + 'divided by 2 x 2 x 2 = 8 because the eight sequences are the outcomes assumed '
+            + 'equally likely. The four-outcome space\'s 1/4 is the wrong answer: its outcomes '
+            + 'are the values 0, 1, 2, 3, the preimages behind them have sizes 1, 3, 3 and 1, '
+            + 'and four groups of unequal size cannot be four equally likely outcomes, so '
+            + 'dividing by 4 was never licensed. The two answers differ by 3/8 - 1/4 = 1/8. '
+            + 'P(T = 1) = 1/2: fixing the first toss to heads leaves the other two free, so four '
+            + 'of the eight sequences — and T needs a value at TTT, 0 by convention, or it is '
+            + 'not a function on this space. One space, two rules, two tables, and the '
+            + 'heads-count is the one that can no longer tell HHT from HTH.',
+        },
+      },
+      {
+        id: 'the-values-partition-the-space-so-the-table-adds-to-one-and-they-are-not-equally-likely',
+        conceptId: 'random-variables',
+        statement:
+          'The object worth having is not one probability but the whole TABLE: every value the '
+          + 'rule takes, with the probability of each. Take the preimage of each value and divide '
+          + 'by the size of the space, and for the heads-count over three tosses that is 1/8, '
+          + '3/8, 3/8, 1/8 at 0, 1, 2 and 3. The four add to exactly 1, and that is forced rather '
+          + 'than lucky: X is a FUNCTION, so it sends each sequence to exactly one value, which '
+          + 'means the preimages have no sequence in common and leave none out — they PARTITION '
+          + 'the space. `sample-spaces` licenses adding probabilities across events with nothing '
+          + 'in common and puts the whole space at 1, so the total has to be 1. That makes the '
+          + 'check worth doing every time, because the only thing it can catch is the only thing '
+          + 'likely to go wrong: a sequence counted twice or missed. Two consequences follow. '
+          + 'Entries ADD with no correction term — P(X = 1 or X = 2) = 3/8 + 3/8 = 3/4, where the '
+          + 'first concept\'s third point had to subtract an overlap, because two values of X can '
+          + 'never share a sequence. And the entries are visibly unequal: (3/8)/(1/8) = 3, so a '
+          + 'middle value is three times as likely as an end one. That 3 is a ratio of two '
+          + 'probabilities and so is not itself a probability, and it is the exact size of the '
+          + 'error the four-outcome space was making.',
+        position: 2,
+        workedExample: {
+          problem:
+            'Same three tosses, same X = number of heads. Write down the whole distribution of X '
+            + '— every value it takes with the probability of each — and check it. Then find '
+            + 'P(X = 1 or X = 2) without looking for an overlap to subtract, and say how many '
+            + 'times more likely the most likely value is than the least.',
+          subgoals: [
+            {
+              label: 'Take the preimage of every value, not just the one you were asked about',
+              detail:
+                'Reading the rule backwards at each value: 0 comes from TTT alone; 1 from HTT, '
+                + 'THT and TTH; 2 from HHT, HTH and THH; 3 from HHH alone. Four preimages, of '
+                + 'sizes 1, 3, 3 and 1. Those four numbers add to 8, which is already a check '
+                + 'and is the same check `sample-spaces` made on its counts before any division '
+                + 'happened.',
+              socratic:
+                'You found one preimage in the point below. What do you get doing it at every '
+                + 'value X takes, and what do the four sizes add to?',
+            },
+            {
+              label: 'Divide each preimage by the size of the space, which gives the distribution',
+              detail:
+                'Eight equally likely sequences, so each preimage\'s probability is its size '
+                + 'over 8: P(X = 0) = 1/8, P(X = 1) = 3/8, P(X = 2) = 3/8, P(X = 3) = 1/8. The '
+                + 'four of them TOGETHER are the distribution of X, and that is the shift this '
+                + 'point makes: the three concepts below each produce one number per question, '
+                + 'and the object here is the complete table.',
+              socratic:
+                'Four preimages of sizes 1, 3, 3 and 1 in a space of eight equally likely '
+                + 'sequences. What are the four probabilities, and what is the name for all four '
+                + 'of them together rather than for any one?',
+            },
+            {
+              label: 'Check the total, and know why the check is a theorem rather than good luck',
+              detail:
+                '1/8 + 3/8 + 3/8 + 1/8 = 8/8 = 1. It could not have come out otherwise. X is a '
+                + 'function, so every sequence has exactly one value of X — not none, which '
+                + 'would leave a sequence out of every preimage, and not two, which would put it '
+                + 'in two. So the four preimages partition the eight sequences, '
+                + '`sample-spaces` lets probabilities of events with nothing in common be added, '
+                + 'and the whole space has probability 1. A total of 9/8 would therefore not '
+                + 'mean the table was slightly off: it would mean a sequence had been put in two '
+                + 'preimages, and 7/8 would mean one had been left out of all of them.',
+              socratic:
+                'The four probabilities add to exactly 1. Which property of X guarantees that in '
+                + 'advance, and what would a total of 9/8 have told you about your four '
+                + 'preimages?',
+            },
+            {
+              label: 'Add two entries with no correction term, because a partition cannot overlap',
+              detail:
+                'P(X = 1 or X = 2) = 3/8 + 3/8 = 6/8 = 3/4. `sample-spaces`\' third point says '
+                + 'two events in general need P(A) + P(B) - P(A and B), and the correction is '
+                + 'forced rather than conventional. Here it is not computed and found to be '
+                + 'zero — there is nothing to compute. "Exactly one head AND exactly two heads" '
+                + 'is a condition no sequence can meet, because X gives each sequence one '
+                + 'number, so the event is empty and the whole third term is absent. That is the '
+                + 'partition paying for itself.',
+              socratic:
+                'Two events generally need P(A) + P(B) - P(A and B). What is the probability '
+                + 'that a sequence has exactly one head AND exactly two heads, and so what '
+                + 'becomes of the correction term?',
+            },
+            {
+              label: 'Measure how far from equally likely the values are, which is what the small space got wrong',
+              detail:
+                '(3/8)/(1/8) = 3. A middle value is three times as likely as an end one. That '
+                + 'number is the reason the four-outcome space cannot be divided in: equally '
+                + 'likely would mean 1/4 four times, and the table says 1/8, 3/8, 3/8, 1/8. '
+                + 'Note what 3 is and is not — it is a ratio of two probabilities, so it is not '
+                + 'itself an answer to "how likely", and it can exceed 1 where no entry in the '
+                + 'table ever can.',
+              socratic:
+                'Compare the probability of two heads with the probability of three heads. How '
+                + 'many times larger is it, and what does that number say about treating the '
+                + 'four values as equally likely?',
+            },
+            {
+              label: 'Say what the table records and what it has given up',
+              detail:
+                'The table answers every question about the NUMBER of heads and no question '
+                + 'about which toss was which. HHT and HTH are different sequences with the same '
+                + 'value of X, so the table holds the 3/8 they belong to and cannot separate '
+                + 'them. That is the information loss `sample-spaces` named when it compared the '
+                + 'two spaces, now with the price attached: four numbers instead of eight, and '
+                + 'the ordering gone.',
+              socratic:
+                'HHT and HTH are different sequences with the same heads-count. What can the '
+                + 'table tell you about each of them, and what has it given up in exchange for '
+                + 'being four numbers instead of eight?',
+            },
+          ],
+          answer:
+            'The distribution of X is P(X = 0) = 1/8, P(X = 1) = 3/8, P(X = 2) = 3/8, '
+            + 'P(X = 3) = 1/8, from preimages of sizes 1, 3, 3 and 1 over eight equally likely '
+            + 'sequences. The four add to 8/8 = 1, and that is forced: X is a function, so each '
+            + 'sequence has exactly one value, the four preimages therefore partition the space, '
+            + 'and `sample-spaces` puts the whole space at 1 — a total of 9/8 would have meant a '
+            + 'sequence in two preimages and 7/8 one in none. P(X = 1 or X = 2) = 3/8 + 3/8 = '
+            + '3/4 with no correction term, because no sequence has both one head and two, so '
+            + 'the overlap event is empty rather than merely small. The middle values are three '
+            + 'times as likely as the ends, (3/8)/(1/8) = 3, which is exactly why the '
+            + 'four-outcome space cannot be divided in as though its outcomes were equally '
+            + 'likely — and that 3 is a ratio of probabilities, not a probability. The price of '
+            + 'four numbers instead of eight is that HHT and HTH are no longer distinguishable.',
+        },
+      },
+      {
+        id: 'a-new-rule-over-the-same-outcomes-merges-values-and-the-probabilities-of-what-it-merges-add',
+        conceptId: 'random-variables',
+        statement:
+          'Apply a second rule to the number the first one produced and you have another random '
+          + 'variable on the same outcomes — a function of a random variable is a random '
+          + 'variable. Its table is got by MERGING: if two values of X are sent to the same new '
+          + 'value, that new value\'s preimage is the union of their two preimages, those two '
+          + 'have nothing in common, so their probabilities ADD. For the margin Y = |heads - '
+          + 'tails| over three tosses, tails is 3 - X so Y = |2X - 3|, which is 3, 1, 1, 3 as X '
+          + 'runs 0 to 3; Y takes two values where X took four, and P(Y = 1) = 3/8 + 3/8 = 3/4 '
+          + 'while P(Y = 3) = 1/8 + 1/8 = 1/4. Two things are worth noticing. The arithmetic is '
+          + 'on probabilities already in hand — nothing is counted and the eight sequences are '
+          + 'never revisited, which is what having the table bought. And the total survives for '
+          + 'free: a coarser partition is still a partition, so merging can never break it. '
+          + 'CONDITIONING rebuilds a table the other way and the difference is the point. Given '
+          + 'at least one head, seven of the eight sequences remain, and '
+          + '`conditional-probability` divides each surviving entry by the probability of the '
+          + 'condition: (3/8)/(7/8) = 3/7, 3/7 and 1/7. Those add to 1 only BECAUSE of the '
+          + 'division — their numerators add to 7/8. So both operations rebuild a distribution, '
+          + 'and whether a division is needed turns on one thing: merging keeps every outcome, '
+          + 'conditioning throws some away.',
+        position: 3,
+        workedExample: {
+          problem:
+            'Same three tosses, same X = number of heads, and its table 1/8, 3/8, 3/8, 1/8. Let '
+            + 'Y be the margin, |heads - tails|. Find the whole distribution of Y, check its '
+            + 'total, and find P(Y = 3) a second time by going back to the sequences. Then find '
+            + 'the distribution of X given that at least one head came up, and say which of the '
+            + 'two rebuilds needed a division and why.',
+          subgoals: [
+            {
+              label: 'Compose the new rule with the old one instead of going back to the sequences',
+              detail:
+                'Y is defined from the two counts, and there were three tosses, so tails = '
+                + '3 - X and Y = |X - (3 - X)| = |2X - 3|. Now Y can be evaluated at the four '
+                + 'values of X rather than at the eight sequences: X = 0 gives |-3| = 3, X = 1 '
+                + 'gives |-1| = 1, X = 2 gives |1| = 1, X = 3 gives |3| = 3. Y is a rule applied '
+                + 'to the output of a rule, so it is a rule on the eight sequences too — which '
+                + 'is the claim that a function of a random variable is a random variable.',
+              socratic:
+                'There were three tosses, so tails is 3 - heads. Write Y in terms of X alone, '
+                + 'and then what are its values as X runs 0, 1, 2, 3?',
+            },
+            {
+              label: 'Notice the new rule is not one-to-one, which is the whole of what makes this different',
+              detail:
+                'X = 1 and X = 2 both give Y = 1; X = 0 and X = 3 both give Y = 3. So Y takes '
+                + 'two values where X took four, and each value of Y has TWO values of X behind '
+                + 'it. Reading that down to the sequences: the preimage of a value of Y is the '
+                + 'union of the preimages of the values of X it merged. If the new rule had been '
+                + 'one-to-one — the margin with its sign, say, or 2X - 3 without the bars — '
+                + 'nothing would happen but a relabelling of the same four entries, and there '
+                + 'would be no arithmetic to do.',
+              socratic:
+                'Y takes two values where X took four. Which values of X does Y send to 1, and '
+                + 'so how many of the eight sequences sit behind "Y = 1"?',
+            },
+            {
+              label: 'Add the probabilities of what the rule merged, which the disjointness licenses',
+              detail:
+                'P(Y = 1) = P(X = 1) + P(X = 2) = 3/8 + 3/8 = 3/4, and P(Y = 3) = P(X = 0) + '
+                + 'P(X = 3) = 1/8 + 1/8 = 1/4. The addition is licensed by the point below: '
+                + 'different values of X have preimages with nothing in common, so '
+                + '`sample-spaces`\' additivity applies with no correction. And note the route — '
+                + 'two numbers were taken off the table and added. No sequence was looked at, '
+                + 'nothing was counted, and that is what having built the table bought.',
+              socratic:
+                'You already have X\'s four probabilities. What makes it legal to add two of '
+                + 'them with no correction, and what are P(Y = 1) and P(Y = 3)?',
+            },
+            {
+              label: 'Check the total, see that it had to hold, and get one entry a second way',
+              detail:
+                '3/4 + 1/4 = 1. Merging can never break the total: every sequence still goes to '
+                + 'exactly one value of Y, so the preimages of Y are a coarser partition of the '
+                + 'same eight sequences and a coarser partition is still a partition. The second '
+                + 'route confirms it from below — Y = 3 is TTT and HHH, two sequences of eight, '
+                + 'so 2/8 = 1/4. That is adding the counts and dividing once, where the subgoal '
+                + 'above divided twice and added; the two agree because dividing a sum by 8 and '
+                + 'summing the quotients are the same thing.',
+              socratic:
+                'The two probabilities add to 1 again. Does merging values ever need a '
+                + 'correction to keep the total at 1 — and what do you get for Y = 3 by going '
+                + 'back and counting the sequences instead?',
+            },
+            {
+              label: 'Rebuild the table the other way, by ruling outcomes out instead of merging them',
+              detail:
+                '"At least one head" is X at least 1, which is every sequence but TTT: seven of '
+                + 'the eight, and its probability is 1 - 1/8 = 7/8 by `sample-spaces`\' '
+                + 'complement rule. `conditional-probability` then replaces the space with that '
+                + 'event, so each surviving entry is divided by 7/8: P(X = 1 | X at least 1) = '
+                + '(3/8)/(7/8) = 3/7, P(X = 2 | X at least 1) = 3/7, and '
+                + 'P(X = 3 | X at least 1) = (1/8)/(7/8) = 1/7. X = 0 is gone from the table '
+                + 'rather than set to 0 — it is not a value the conditioned variable takes.',
+              socratic:
+                '"At least one head" is seven of the eight sequences. What does conditioning on '
+                + 'it do to the denominator of each entry that survives, and what are the three '
+                + 'probabilities?',
+            },
+            {
+              label: 'Say which rebuild needed the division, since both produced a table',
+              detail:
+                '3/7 + 3/7 + 1/7 = 1, but only because of the division: the three numerators '
+                + '3/8, 3/8 and 1/8 add to 7/8, not to 1, and dividing by 7/8 is exactly what '
+                + 'puts the total back. Merging needed nothing of the kind because nothing left '
+                + 'the space. So the rule is one line: a rebuild that keeps every outcome '
+                + 'preserves the total for free, and a rebuild that discards outcomes has to '
+                + 'renormalise by the probability of what it kept. Both are legitimate and they '
+                + 'answer different questions — Y asks a coarser question about every sequence, '
+                + 'and the conditioned X asks the original question about seven of them.',
+              socratic:
+                'Before dividing, the three surviving entries added to 7/8. What had to happen '
+                + 'to make them add to 1 — and why did the merging in the first half of this '
+                + 'problem need nothing of the kind?',
+            },
+          ],
+          answer:
+            'Tails is 3 - X, so Y = |X - (3 - X)| = |2X - 3|, which is 3, 1, 1, 3 as X runs 0 to '
+            + '3: a function of a random variable is a random variable on the same eight '
+            + 'sequences. The rule is not one-to-one, which is what makes the arithmetic new — '
+            + 'P(Y = 1) = P(X = 1) + P(X = 2) = 3/8 + 3/8 = 3/4 and P(Y = 3) = P(X = 0) + '
+            + 'P(X = 3) = 1/8 + 1/8 = 1/4, added rather than counted because different values of '
+            + 'X have disjoint preimages. The total survives necessarily, 3/4 + 1/4 = 1, since a '
+            + 'coarser partition is still a partition; counting instead gives Y = 3 as TTT and '
+            + 'HHH, 2 of 8 = 1/4, the same answer with the division done once. Conditioning '
+            + 'rebuilds the table the other way: "at least one head" is 7 of the 8 sequences '
+            + 'with probability 1 - 1/8 = 7/8, so P(X = 1 | X at least 1) = (3/8)/(7/8) = 3/7, '
+            + 'P(X = 2 | X at least 1) = 3/7 and P(X = 3 | X at least 1) = 1/7, with X = 0 gone '
+            + 'from the table rather than set to 0. Those three add to 1 only because of the '
+            + 'division — their numerators add to 7/8. Merging keeps the total for free because '
+            + 'nothing left the space; conditioning discards TTT and has to renormalise.',
+        },
+      },
+    ],
+  },
+  {
+    id: 'expectation',
+    name: 'Expectation',
+    subjectId: subject.id,
+    scope: {
+      id: 'expectation',
+      label: 'Expectation',
+      hint: 'expectation expected value linearity mean',
+      /*
+       * The map node's pattern and its `terms` as the hint, carried across
+       * unchanged, as every promotion since the fourth has done.
+       *
+       * IT IS ALIVE AND IT IS NARROW, which is a different shortfall from the
+       * two shapes already in this file. The concept below carries a `\b` that
+       * reaches a singular title and no plural, and the two below that carry
+       * DEAD `\b`-after-`)` alternatives. This one has neither fault and a
+       * third: the pattern names the encyclopaedia's title for this concept
+       * exactly — "Expected value" is where the article is filed — and so takes
+       * it and nothing else. What it cannot reach is every title that says
+       * EXPECTATION instead, which is most of the family: "Conditional
+       * expectation", "Law of total expectation", "Expectation value". A
+       * learner reading any of those is not offered this concept.
+       *
+       * Not repaired here, for the reason the three below give: widening a
+       * pattern in the same change that adds material moves recognition and the
+       * written-concept count at once, and the two want separate measurements.
+       * The misses are asserted by name in tests/concepts-logic.mjs, since a
+       * recall gap is invisible by construction.
+       */
+      match: /\bexpected value\b/i,
+    },
+    fidelity: 'checked',
+    objectives: [
+      {
+        id: 'total-value-times-probability-and-know-what-kind-of-number-comes-out',
+        statement:
+          'Produce the total of value times probability across a whole table, and so establish '
+          + 'that the number it yields is in the units of the VARIABLE rather than in chance — it '
+          + 'may leave [0, 1], and it need not be a value the variable ever takes. Produce the '
+          + 'plain average of the values the variable takes, and so establish that on a symmetric '
+          + 'table the two agree and that the agreement is about that table rather than about the '
+          + 'method. Produce the weighted total for a SECOND rule whose values are the same four '
+          + 'numbers, and so establish that the answer is not a function of the value list at '
+          + 'all, because two rules sharing a list have different answers.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'push-the-expectation-through-a-linear-rule-and-find-where-the-licence-stops',
+        statement:
+          'Produce the expectation of aX + b from E[X] alone with no table rebuilt, and so '
+          + 'establish that a constant factor comes outside the sum and a constant term '
+          + 'multiplies the total of the probabilities. Produce that same total, and so establish '
+          + 'that the step is standing on the table adding to exactly 1 and would be false under '
+          + 'any other total. Produce both sides for a rule that is NOT of that form, and so '
+          + 'establish that the licence comes from the shape of the rule and nothing else — the '
+          + 'illegal route returns a number outside the range of the quantity it claims to be '
+          + 'averaging.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'add-expectations-across-two-rules-and-test-what-the-addition-did-not-need',
+        statement:
+          'Produce the expectation of a SUM of two rules on one space from the two expectations '
+          + 'separately, and so establish the one fact in this subject that no table of a single '
+          + 'variable can state, because stating it needs two variables side by side. Produce the '
+          + 'product test on one pair of their values, and so establish that the addition held '
+          + 'while the two were DEPENDENT, so nothing had to be checked before adding. Produce '
+          + 'both sides of the multiplicative analogue, and so establish that it is addition '
+          + 'specifically that is free, and that the multiplicative version misses by little '
+          + 'enough to survive a careless check.',
+        taskKinds: ['evaluate'],
+      },
+    ],
+    knowledgePoints: [
+      {
+        id: 'the-expectation-weights-each-value-by-its-probability-so-two-rules-sharing-a-value-list-differ',
+        conceptId: 'expectation',
+        statement:
+          'A table of four probabilities answers every question about which value came up and '
+          + 'does not answer "so what is X, roughly?". Expectation answers it with one number: '
+          + 'multiply each value by its OWN probability and total the lot. For the heads-count '
+          + 'over three tosses that is 0(1/8) + 1(3/8) + 2(3/8) + 3(1/8) = 12/8 = 3/2. Three '
+          + 'things about that number are worth fixing before any shortcut is reached for. It is '
+          + 'NOT a probability — every entry in the table lies in [0, 1] and this is 3/2, measured '
+          + 'in heads rather than in chance. It is NOT a value X takes, since X counts whole '
+          + 'heads, so "the average number of heads" names no outcome of the experiment and is '
+          + 'not meant to. And the WEIGHTS are not decoration, which is the claim this particular '
+          + 'example hides: the plain average of the values 0, 1, 2, 3 is also 6/4 = 3/2, so a '
+          + 'learner who ignored the table would be right here by a route that is wrong. T, the '
+          + 'toss the first head falls on, is the proof. T takes the SAME four values on the same '
+          + 'eight sequences, so anything computed from the value list alone must give T the same '
+          + '3/2 — and its table is 1/8, 1/2, 1/4, 1/8, giving E[T] = 0 + 4/8 + 4/8 + 3/8 = 11/8. '
+          + 'Two rules, one value list, two answers. So the expectation was never a function of '
+          + 'the list, and the weights are precisely what the list cannot see.',
+        position: 1,
+        /*
+         * No `automaticityTarget`, for the reason all five concepts below give
+         * about their own arithmetic, and with one addition specific to this
+         * one. 12/8 would time beautifully and the skill is knowing that the 12
+         * came from four products and not from four values added — and a learner
+         * racing the clock on this table gets the right answer fastest by
+         * averaging 0, 1, 2, 3 and ignoring the probabilities, which is the
+         * exact error the point exists to close. A speed reward here would
+         * reward the wrong route for arriving first.
+         */
+        workedExample: {
+          problem:
+            'A fair coin is tossed three times and all eight sequences are equally likely. X is '
+            + 'the number of heads, with the table 1/8, 3/8, 3/8, 1/8 at 0, 1, 2, 3 that '
+            + '`random-variables` built. Find E[X], and say what kind of number it is. Then take '
+            + 'the plain average of the four values X takes and say why it agrees here. Then let '
+            + 'T be the toss on which the first head appears, with T = 0 at TTT; build its table, '
+            + 'find E[T], and say what the comparison proves about the plain average.',
+          subgoals: [
+            {
+              label: 'Weight each value by its own probability rather than by one over the count',
+              detail:
+                'E[X] is the total of value times probability taken over every row of the table: '
+                + '0(1/8) + 1(3/8) + 2(3/8) + 3(1/8). `sigma-notation` is the notation it is '
+                + 'written in, and its first point is the thing to get right — the index runs '
+                + 'over the values with BOTH ends included, so there are four terms and not '
+                + 'three. The products are 0, 3/8, 6/8 and 3/8, totalling 12/8 = 3/2. Nothing '
+                + 'was counted and no sequence was looked at; the four probabilities were already '
+                + 'on the table.',
+              socratic:
+                'Each value of X arrives with its own probability rather than with a share of '
+                + 'one. What gets multiplied by what here, and how many terms does the total '
+                + 'have?',
+            },
+            {
+              label: 'Say what kind of number came out, since it is neither kind met so far',
+              detail:
+                '3/2 is not a probability. Every entry in the table lies in [0, 1]; this is 1.5, '
+                + 'and it is measured in heads rather than in chance — the only other number in '
+                + 'this subject outside [0, 1] was `random-variables`\' ratio 3, which was a '
+                + 'ratio of two probabilities and so in no units at all. Nor is 3/2 a value of '
+                + 'X: X counts whole heads and cannot be one and a half of them, so the average '
+                + 'names no outcome. That is not a defect to be apologised for. A weighted total '
+                + 'of values is in the units of the values, and its whole use is to stand in for '
+                + 'a rule that takes four different numbers.',
+              socratic:
+                'Every entry in the table sits between 0 and 1, and this answer is 3/2. What is '
+                + 'it measured in, and is it a value X ever takes?',
+            },
+            {
+              label: 'Average the four values with the table ignored, and notice it agrees',
+              detail:
+                'The values are 0, 1, 2 and 3, and (0 + 1 + 2 + 3)/4 = 6/4 = 3/2. The same '
+                + 'answer, reached without looking at a single probability. That agreement is a '
+                + 'property of THIS table and not of expectation: 1/8, 3/8, 3/8, 1/8 is '
+                + 'symmetric about the middle, so the pull towards the heavy middle is equal from '
+                + 'both sides and cancels. It is said out loud because it is the one coincidence '
+                + 'in this concept that can hide the content — and because a learner who meets '
+                + 'this table first has every reason to generalise from it.',
+              socratic:
+                'Ignore the probabilities and average the four values 0, 1, 2 and 3. What comes '
+                + 'out, and does arriving at the right answer that way show the probabilities '
+                + 'were not needed?',
+            },
+            {
+              label: 'Build the second rule\'s table, which shares the value list and nothing else',
+              detail:
+                'T is the toss the first head appears on, with T = 0 at TTT — the convention '
+                + '`random-variables` had to fix before T was a function on this space at all. '
+                + 'Collecting preimages the way that concept\'s second point does: T = 0 is TTT '
+                + 'alone, T = 1 is the four sequences beginning with H, T = 2 is THH and THT, and '
+                + 'T = 3 is TTH alone. So the table is 1/8, 1/2, 1/4, 1/8 at 0, 1, 2, 3, and '
+                + '1/8 + 4/8 + 2/8 + 1/8 = 1 as that point says it must. T takes the SAME four '
+                + 'values as X on the same eight sequences.',
+              socratic:
+                'Which sequences does T send to each of 0, 1, 2 and 3, what are the four '
+                + 'probabilities, and do they total what they have to?',
+            },
+            {
+              label: 'Total it the same way and get a different answer out of the same values',
+              detail:
+                'E[T] = 0(1/8) + 1(1/2) + 2(1/4) + 3(1/8) = 0 + 4/8 + 4/8 + 3/8 = 11/8. Now put '
+                + 'the plain average beside it: T\'s values are the same 0, 1, 2, 3, so the plain '
+                + 'average is the same 6/4 = 12/8 it was for X. The weighted route gives 12/8 for '
+                + 'X and 11/8 for T. The two rules differ by 1/8 and the plain route cannot see '
+                + 'the difference, because the difference is not in the values.',
+              socratic:
+                'T has the same four values as X and a different table. What does the weighted '
+                + 'total give for T, and what would the plain average of its values have given?',
+            },
+            {
+              label: 'State what the comparison proved, which is stronger than "use the weights"',
+              detail:
+                'Two rules on one space, one value list, two expectations. So the expectation is '
+                + 'not a function of the values a variable takes — it is a function of the values '
+                + 'AND the table, and no amount of care with the list can recover it. That also '
+                + 'settles the status of the agreement three subgoals up: it was arithmetic about '
+                + 'one symmetric table, not evidence about the method. Which is why the weights '
+                + 'get written every time, including where they would cancel.',
+              socratic:
+                'X and T take the same four numbers and have different expectations. What does '
+                + 'that rule out as a way of computing one?',
+            },
+          ],
+          answer:
+            'E[X] = 0(1/8) + 1(3/8) + 2(3/8) + 3(1/8) = 12/8 = 3/2. It is not a probability — it '
+            + 'is outside [0, 1] and is measured in heads rather than in chance — and not a value '
+            + 'X takes, since X counts whole heads, so the average names no outcome of the '
+            + 'experiment. The plain average of the values 0, 1, 2, 3 is also 6/4 = 3/2, and that '
+            + 'agreement is a fact about this symmetric table rather than about expectation. T '
+            + 'has preimages TTT; HHH, HHT, HTH, HTT; THH, THT; TTH, so its table is 1/8, 1/2, '
+            + '1/4, 1/8 at 0, 1, 2, 3 — totalling 1 — and E[T] = 0 + 4/8 + 4/8 + 3/8 = 11/8. Same '
+            + 'four values, so the plain average is still 12/8, while the weighted totals are '
+            + '12/8 and 11/8. The expectation is therefore not a function of the value list, and '
+            + 'the weights are exactly what the list cannot see.',
+        },
+      },
+      {
+        id: 'a-linear-rule-can-be-pushed-through-the-expectation-and-the-total-of-one-is-what-licenses-it',
+        conceptId: 'expectation',
+        statement:
+          'A rule built from X by multiplying and adding — aX + b — has its expectation without '
+          + 'any table being rebuilt: E[aX + b] = aE[X] + b. For 2X + 1 on the heads-count that '
+          + 'is 2(3/2) + 1 = 4, and rebuilding the table gives the same 4. The proof is two '
+          + 'rearrangements from `sigma-notation`\' third point and one fact from the concept '
+          + 'below. The total of (ax + b)P(X = x) SPLITS into the total of axP(X = x) plus the '
+          + 'total of bP(X = x); the constant a comes OUTSIDE the first, leaving aE[X]; and the '
+          + 'second is b times the total of every probability in the table, which '
+          + '`random-variables`\' second point forced to be exactly 1, leaving b. So the shortcut '
+          + 'is standing on the partition — had the table totalled 7/8, as a conditioned table '
+          + 'does before it is renormalised, the constant would have come out as 7b/8 and the '
+          + 'rule would be false. AND THE LICENCE COMES FROM THE SHAPE OF THE RULE AND NOTHING '
+          + 'ELSE. Y = |2X - 3| is 2X - 3 with one more operation on the outside, and the '
+          + 'shortcut fails loudly: |2E[X] - 3| = |3 - 3| = 0, while E[Y] = 1(3/4) + 3(1/4) = '
+          + '3/2. Not merely a different number. Y is 1 or 3 on every one of the eight sequences, '
+          + 'so 0 is outside the range of the quantity being averaged, and the fault is visible '
+          + 'before E[Y] is computed at all. Pushing a function through an expectation has to be '
+          + 'earned, and only a linear one earns it.',
+        position: 2,
+        workedExample: {
+          problem:
+            'Same three tosses, same X with the table 1/8, 3/8, 3/8, 1/8, and E[X] = 3/2 from the '
+            + 'point below. Let W = 2X + 1. Find E[W] from E[X] alone, then again by building '
+            + 'W\'s table, and say which step of the shortcut needs the table to total 1. Then '
+            + 'let Y = |2X - 3| be the margin and try the same shortcut on it: compare '
+            + '|2E[X] - 3| with E[Y], and say what is wrong with the shortcut\'s answer beyond '
+            + 'its being the wrong number.',
+          subgoals: [
+            {
+              label: 'Push the expectation through the linear rule and get a number for nothing',
+              detail:
+                'E[2X + 1] = 2E[X] + 1 = 2(3/2) + 1 = 3 + 1 = 4. No table was built and no '
+                + 'probability was consulted: E[X] was already 3/2 and the rest is arithmetic on '
+                + 'one number. That is the whole attraction of the rule, and it is also the '
+                + 'reason it is worth proving rather than assuming — a step this cheap gets '
+                + 'reused on rules that have not earned it, which is the second half of this '
+                + 'problem.',
+              socratic:
+                'You already have E[X] = 3/2. If a rule of the form aX + b can be pushed '
+                + 'through, what is E[2X + 1] — and how many of W\'s own probabilities did you '
+                + 'need?',
+            },
+            {
+              label: 'Rebuild the table and check the shortcut against the long way round',
+              detail:
+                'W = 2X + 1 is one-to-one, so nothing merges: W takes 1, 3, 5, 7 where X took 0, '
+                + '1, 2, 3 and carries the same probabilities 1/8, 3/8, 3/8, 1/8. That is the '
+                + 'case `random-variables`\' third point named as having no arithmetic in it — a '
+                + 'relabelling of four entries. Totalling: E[W] = 1(1/8) + 3(3/8) + 5(3/8) + '
+                + '7(1/8) = (1 + 9 + 15 + 7)/8 = 32/8 = 4. The same 4, so the shortcut is a '
+                + 'theorem and not a lucky feature of the first route.',
+              socratic:
+                'W takes 1, 3, 5 and 7, carrying the probabilities X had. What does totalling '
+                + 'value times probability give, and does it meet the shortcut\'s answer?',
+            },
+            {
+              label: 'Split the total in two, which is the only move the proof makes',
+              detail:
+                'E[aX + b] is the total of (ax + b)P(X = x) over the values. '
+                + '`sigma-notation`\' third point licenses exactly two rearrangements and both '
+                + 'are used here: a sum of two terms splits into two sums, and a constant factor '
+                + 'comes outside one. So this becomes a times the total of xP(X = x), plus b '
+                + 'times the total of P(X = x). The first of those totals is the definition of '
+                + 'E[X] from the point below, so it is already in hand. The second is the one '
+                + 'worth stopping at.',
+              socratic:
+                'The term is (ax + b) times P(X = x). Which two rearrangements does '
+                + '`sigma-notation` permit on that, and what is the first of the two sums they '
+                + 'leave behind?',
+            },
+            {
+              label: 'Find where the table\'s total of 1 is carrying the proof',
+              detail:
+                'The second sum is b times the total of P(X = x) over every value — and that '
+                + 'total is 1. Not by assumption: `random-variables`\' second point proves it, '
+                + 'since the values of a function partition the space. So b times 1 is b, and '
+                + 'E[aX + b] = aE[X] + b. The counterfactual is what makes the dependence '
+                + 'visible: a conditioned table in that concept\'s third point has three '
+                + 'surviving entries totalling 7/8 before renormalising, and on a table like '
+                + 'that the constant would emerge as 7b/8 and the shortcut would be wrong. The '
+                + 'rule is standing on the partition rather than on the algebra.',
+              socratic:
+                'The second sum is b multiplied by the total of every probability in the table. '
+                + 'What is that total, which concept forces it, and so what does the second sum '
+                + 'come to?',
+            },
+            {
+              label: 'Try the same shortcut on a rule that is not of that form',
+              detail:
+                'Y = |2X - 3| is 2X - 3 with one more operation wrapped round the outside. '
+                + 'Pushing through gives |2E[X] - 3| = |2(3/2) - 3| = |0| = 0. The honest route '
+                + 'uses Y\'s own table from `random-variables`\' third point, 3/4 at 1 and 1/4 '
+                + 'at 3: E[Y] = 1(3/4) + 3(1/4) = 3/4 + 3/4 = 3/2. The two routes give 0 and '
+                + '3/2, so one is wrong, and the proof above says which — a modulus sign is '
+                + 'neither a constant factor to bring outside nor a sum to split, so not one '
+                + 'step of the derivation applies to it.',
+              socratic:
+                'Y is |2X - 3|. What does pushing E[X] through the rule give, what does Y\'s own '
+                + 'table give, and which of the proof\'s two rearrangements does a modulus sign '
+                + 'permit?',
+            },
+            {
+              label: 'Say what is wrong with the illegal answer besides its being wrong',
+              detail:
+                'Y is 1 or 3 on every single sequence and never anything else, so any average of '
+                + 'Y has to lie between 1 and 3. The shortcut returned 0 — outside the range of '
+                + 'the quantity it claimed to be averaging — which is a sharper fault than being '
+                + 'off by 3/2, because it could have been caught without computing E[Y] at all. '
+                + 'The reason is visible in the rule: 2X - 3 is negative at X = 0 and X = 1 and '
+                + 'positive at X = 2 and X = 3, the modulus folds the negative half up, and '
+                + 'pushing the expectation through takes the fold at the AVERAGE rather than at '
+                + 'every value — by which point the cancellation the fold was there to prevent '
+                + 'has already happened.',
+              socratic:
+                'Y is 1 or 3 on every one of the eight sequences. What range must any average of '
+                + 'Y lie in, and what does that tell you about the shortcut\'s 0 before you '
+                + 'compute anything else?',
+            },
+          ],
+          answer:
+            'E[W] = E[2X + 1] = 2E[X] + 1 = 2(3/2) + 1 = 4 by the shortcut, and 1(1/8) + 3(3/8) '
+            + '+ 5(3/8) + 7(1/8) = 32/8 = 4 from W\'s rebuilt table, so the rule is a theorem '
+            + 'rather than a coincidence. The proof splits the total of (ax + b)P(X = x) by '
+            + '`sigma-notation`\' third point into a times the total of xP(X = x), which is '
+            + 'aE[X], plus b times the total of P(X = x) — and that second total is 1 only '
+            + 'because the values of a function partition the space, which is where the whole '
+            + 'shortcut is standing; on a conditioned table totalling 7/8 it would have given '
+            + '7b/8 and been false. On Y = |2X - 3| the shortcut fails: |2E[X] - 3| = 0 while '
+            + 'E[Y] = 1(3/4) + 3(1/4) = 3/2. A modulus is neither a constant factor to bring '
+            + 'outside nor a sum to split, so no step of the proof applies — and the fault shows '
+            + 'before any arithmetic, since Y is 1 or 3 on every sequence and 0 is outside the '
+            + 'range of what is being averaged.',
+        },
+      },
+      {
+        id: 'expectation-adds-across-two-rules-on-one-space-whether-or-not-they-are-independent',
+        conceptId: 'expectation',
+        statement:
+          'The fact that makes expectation worth having is about TWO rules at once, so no table '
+          + 'of a single variable can state it. Put X, the heads-count, beside T, the toss the '
+          + 'first head falls on, and let S = X + T. Then E[S] = E[X] + E[T] = 12/8 + 11/8 = '
+          + '23/8, and building S\'s own table gives the same 23/8. The reason is the split from '
+          + 'the point below with a second variable where the constant was: totalling X + T over '
+          + 'the eight sequences adds the same numbers in a different order, 23 = 12 + 11, and '
+          + 'one division by 8 at the end is the same as two divisions and a sum. WHAT IS '
+          + 'REMARKABLE IS WHAT IT DOES NOT REQUIRE. X and T are not independent, and '
+          + '`conditional-probability`\'s product test settles it in a line: P(X = 0) = 1/8 and '
+          + 'P(T = 1) = 1/2 multiply to 1/16, while P(X = 0 and T = 1) is 0, since a sequence '
+          + 'with no heads cannot have its first head on the first toss. The addition held '
+          + 'anyway. So nothing has to be established before two expectations are added, which is '
+          + 'the whole of why this is the useful fact rather than a curiosity — the condition one '
+          + 'expects to need is the expensive one to check, and it is not needed. AND IT IS '
+          + 'ADDITION SPECIFICALLY. E[XT] = 17/8 while E[X]E[T] = (12/8)(11/8) = 33/16, and 17/8 '
+          + 'is 34/16, so the multiplicative version is false here by 1/16. A near miss rather '
+          + 'than a blow-up, which is worse: it would survive a careless check.',
+        position: 3,
+        workedExample: {
+          problem:
+            'Same eight sequences. X is the heads-count with E[X] = 12/8, and T is the toss the '
+            + 'first head falls on with E[T] = 11/8, both from the point two below. Let '
+            + 'S = X + T. Find E[S] from the two expectations, then again from S\'s own table, '
+            + 'and say which property of addition makes them agree. Then settle whether X and T '
+            + 'are independent by the product test on one pair of values, and say what that does '
+            + 'to the first answer. Finally compare E[XT] with E[X]E[T].',
+          subgoals: [
+            {
+              label: 'Add the two expectations and commit to the answer before building anything',
+              detail:
+                'E[X] + E[T] = 12/8 + 11/8 = 23/8. That is the claim, written down first so that '
+                + 'what follows is a check rather than the derivation. Notice how little it '
+                + 'rests on: it is a prediction about a rule whose table nobody has seen, since '
+                + 'S = X + T has not been evaluated on a single sequence yet.',
+              socratic:
+                'E[X] is 12/8 and E[T] is 11/8. What does adding the expectations predict for '
+                + 'E[X + T], and how much of S\'s own table did that prediction use?',
+            },
+            {
+              label: 'Evaluate the sum on every sequence and build the table it has',
+              detail:
+                'Sequence by sequence, X + T: HHH gives 3 + 1 = 4, HHT 2 + 1 = 3, HTH 2 + 1 = 3, '
+                + 'HTT 1 + 1 = 2, THH 2 + 2 = 4, THT 1 + 2 = 3, TTH 1 + 3 = 4, and TTT 0 + 0 = '
+                + '0. So S takes 0 once, 2 once, 3 three times and 4 three times — the table is '
+                + '1/8, 1/8, 3/8, 3/8, which totals 1. S misses the value 1 entirely, which is '
+                + 'worth a glance: S = 1 would need either no heads with a first head on toss '
+                + 'one, or one head with no head anywhere.',
+              socratic:
+                'Work X + T out on each of the eight sequences. Which values does S take, with '
+                + 'what probabilities, and is there a value between its smallest and its largest '
+                + 'that it never takes?',
+            },
+            {
+              label: 'Total S\'s table and meet the number that was predicted',
+              detail:
+                'E[S] = 0(1/8) + 2(1/8) + 3(3/8) + 4(3/8) = (0 + 2 + 9 + 12)/8 = 23/8. The '
+                + 'prediction holds, and the agreement is not luck. Summing X + T across the '
+                + 'eight sequences gives 23, which is the 12 from X plus the 11 from T, because '
+                + 'the same sixteen numbers are being added in a different order — and dividing '
+                + 'one total by 8 is the same as dividing two totals by 8 and adding, which is '
+                + 'the single piece of `fraction-arithmetic` the whole fact needs.',
+              socratic:
+                'S\'s table is 1/8, 1/8, 3/8, 3/8 at 0, 2, 3, 4. What is the weighted total, and '
+                + 'why did the sequence-by-sequence sums have to come out as 12 + 11?',
+            },
+            {
+              label: 'Run the product test, because the obvious condition has not been checked',
+              detail:
+                'Nothing above asked whether X and T were independent, so ask now. '
+                + '`conditional-probability`\'s third point makes independence a product test '
+                + 'that has to be COMPUTED rather than judged by how it sounds. P(X = 0) = 1/8, '
+                + 'since TTT alone has no heads; P(T = 1) = 1/2, the four sequences beginning '
+                + 'with H; and the product is 1/16. But P(X = 0 and T = 1) is 0 — a sequence with '
+                + 'no heads cannot have its first head on the first toss, so the event is empty. '
+                + '0 is not 1/16, so X and T are dependent.',
+              socratic:
+                'P(X = 0) is 1/8 and P(T = 1) is 1/2. What is the probability of both at once, '
+                + 'and what does the product test then say about X and T?',
+            },
+            {
+              label: 'Say what the dependence did to the addition, which is nothing at all',
+              detail:
+                'The two expectations still added, and the check above says they had no right to '
+                + 'by any rule about independence. So additivity is not a reward for '
+                + 'independence and is not licensed by a test: it falls out of reordering a sum, '
+                + 'and a sum can be reordered whatever its terms have to do with one another. '
+                + 'That is why this is the fact worth having rather than a curiosity. It is also '
+                + 'the first claim in this subject about two variables SIDE BY SIDE rather than '
+                + 'about one rule or a function of one — Y was built from X — which is exactly '
+                + 'why no table above could have stated it.',
+              socratic:
+                'X and T are dependent and E[X + T] was still E[X] + E[T]. What did the product '
+                + 'test turn out to be needed for here, and why can reordering a sum not care '
+                + 'about the answer?',
+            },
+            {
+              label: 'Check whether multiplying is free as well, since adding turned out to be',
+              detail:
+                'XT sequence by sequence is 3, 2, 2, 1, 4, 2, 3, 0, totalling 17, so '
+                + 'E[XT] = 17/8. Against that, E[X]E[T] = (12/8)(11/8) = 132/64 = 33/16. Over '
+                + 'sixteenths it is 34/16 against 33/16: not equal, and short by exactly 1/16. '
+                + 'So the multiplicative version is false, and it fails by so little that a '
+                + 'rounded or eyeballed comparison would pass it. That asymmetry is the thing to '
+                + 'carry — the product version is the one that needs independence, and the '
+                + 'addition is the one that needs nothing.',
+              socratic:
+                'XT totals 17 over the eight sequences. Put E[XT] beside E[X] times E[T] over a '
+                + 'common denominator — do they agree, and if not, by how much do they miss?',
+            },
+          ],
+          answer:
+            'E[X] + E[T] = 12/8 + 11/8 = 23/8, predicted before S\'s table existed. S = X + T is '
+            + '4, 3, 3, 2, 4, 3, 4, 0 on HHH to TTT, so its table is 1/8 at 0, 1/8 at 2, 3/8 at '
+            + '3 and 3/8 at 4 — totalling 1, and missing the value 1 — and E[S] = (0 + 2 + 9 + '
+            + '12)/8 = 23/8. The two agree because totalling X + T over the eight sequences adds '
+            + 'the same numbers in a different order, 23 = 12 + 11, and one division by 8 is the '
+            + 'same as two divisions and a sum. X and T are NOT independent: P(X = 0) = 1/8 and '
+            + 'P(T = 1) = 1/2 multiply to 1/16, while P(X = 0 and T = 1) = 0, since a sequence '
+            + 'with no heads cannot have its first head on toss one. The addition held regardless, '
+            + 'so nothing has to be checked before adding two expectations — which is precisely '
+            + 'what makes the fact useful. Multiplying is not free: E[XT] = 17/8 = 34/16 against '
+            + 'E[X]E[T] = 33/16, false by 1/16.',
+        },
+      },
+    ],
+  },
 ]
 
 /**
@@ -2941,7 +4501,17 @@ const CONCEPTS: Concept[] = [
  * concept earns no such credit for the COUNTING, which is the same distinction
  * that edge was written to make.
  *
- * Both ends of all three edges are in `CONCEPTS` above, which is the containment
+ * THE FORTY-EIGHTH ADDED THREE, THE FORTY-NINTH TWO AND THE FIFTIETH TWO, SO
+ * THE ARRAY HOLDS TEN, and the counts in the paragraphs above are each about the
+ * promotion that wrote them rather than about the array — the fourth concept's
+ * three are argued at its own entries below, the fifth's two at theirs and the
+ * sixth's two at theirs. The fifth
+ * promotion's pair is the one to read if you are wondering why a credit edge
+ * here skips the concept that gates it: `random-variables` is a SIBLING of
+ * `bayes-theorem` off the third concept, not a step above it, so for the first
+ * time in this subject the gate and the material point at different concepts.
+ *
+ * Both ends of all eight edges are in `CONCEPTS` above, which is the containment
  * rule `ontologyProblems` enforces and the whole reason the array could not hold
  * either of the first concept's own edges.
  */
@@ -3141,6 +4711,191 @@ const EDGES: ConceptEdge[] = [
       'P(A|B) and P(B|A) are read as the same quantity, which is the single most consequential '
       + 'confusion in the subject: it is the prosecutor\'s fallacy and the medical-test error, '
       + 'and it is produced by the notation looking symmetric.',
+  },
+  {
+    id: 'conditional-probability->random-variables',
+    from: 'conditional-probability',
+    to: 'random-variables',
+    kind: 'prerequisite',
+    /*
+     * THE SUBJECT'S FOURTH INTERNAL PREREQUISITE, AND THE FIRST THAT IS NOT THE
+     * NEXT LINK IN A CHAIN. `random-variables` and `bayes-theorem` both declared
+     * `conditional-probability` and nothing else of this subject, so they are
+     * SIBLINGS off the third concept rather than a fourth and fifth step up one
+     * line. Read off the node, which is the durable rule, and it is the half of
+     * that node's `needs` that could live here at all — `function-concept` is
+     * `functions-and-inverses` and became `PROBABILITY.links`' fourth entry.
+     *
+     * THE CLAIM IS LOAD-BEARING IN EXACTLY ONE PLACE AND THAT IS WORTH STATING
+     * PLAINLY RATHER THAN DRESSING UP. The third knowledge point's last two
+     * subgoals condition on "at least one head" and divide three surviving
+     * entries by 7/8, and the whole teaching of that half is the CONTRAST
+     * between a rebuild that keeps every outcome and one that discards some —
+     * which cannot be taught to somebody who has not met the replacement of the
+     * space. The first two points use no conditioning at all.
+     *
+     * SO THE HONEST READING IS THAT THE REAL PREREQUISITE IS `sample-spaces` AND
+     * THIS EDGE IS THE MAP'S, NOT THIS FILE'S. Every division in the material is
+     * by 8 under the first concept's licence, and the argument the fifth concept
+     * finishes is the first concept's. The map node declared
+     * `conditional-probability` and this promotion honoured it as declared rather
+     * than quietly relaxing the gate, because tightening or loosening a gate is a
+     * curriculum decision and not a bookkeeping one. The `encompasses` below is
+     * where the difference shows: it credits `sample-spaces` and NOT this edge's
+     * far end.
+     *
+     * `author:` rather than `atlas:probability`, as with the three prerequisites
+     * above: `expandEdges` stamped the area on this edge while it was the node's
+     * own `needs`, and the provenance moves with the edge.
+     */
+    promotedBy: 'author:chance-and-events',
+  },
+  {
+    id: 'random-variables=>sample-spaces',
+    from: 'random-variables',
+    to: 'sample-spaces',
+    kind: 'encompasses',
+    /*
+     * THE SUBJECT'S THIRD CREDIT EDGE, AND THE FIRST IN THE BUILD TO SKIP THE
+     * CONCEPT THAT GATES IT.
+     *
+     * The two above run one step down the chain — `counting-probability =>
+     * sample-spaces` and `bayes-theorem => conditional-probability` — and each
+     * credits its own prerequisite. This one reaches TWO concepts down and
+     * declines the one directly behind it, which is a decision rather than an
+     * oversight and is why it needs an argument.
+     *
+     * WHY `sample-spaces` IS CREDITED: the test is whether the higher concept
+     * USES the lower one's points or merely rests on them, and here it uses all
+     * three. The first point — an event is a SUBSET of the listed space — is the
+     * preimage, which is this concept's opening move and is nothing else. The
+     * second — equal likelihood is a property of the SPACE and is what licenses
+     * dividing — is used at every division (by 8, never by 4) and is the subject
+     * of an entire subgoal that settles which of two spaces may be divided in.
+     * The third is used in HALF: the complement rule produces P(X at least 1) =
+     * 1 - 1/8 = 7/8 inside the ninth task's denominator, but inclusion-exclusion
+     * is deliberately NOT exercised, because two values of one rule can never
+     * overlap and the correction term is absent rather than zero. The rationale
+     * says so, since "all three" would be an overclaim by a half point.
+     *
+     * WHY `conditional-probability` IS NOT CREDITED, which is the forty-seventh
+     * promotion's refusal applied to a new shape. ONE of nine tasks conditions
+     * anything and two of eighteen subgoals do. That concept's three points are
+     * the definition with the space replaced, the multiplication rule along a
+     * sequence of draws, and independence as a product test — and nothing here
+     * multiplies two probabilities along a sequence or computes a product test at
+     * all. A learner who has done all nine of these tasks has divided by a
+     * complement once and has demonstrated nothing whatever about multiplication
+     * along a tree. Crediting it would stop the concept coming due as though
+     * untouched when it very nearly was untouched, which is the exact failure the
+     * `encompasses` edge exists to prevent in the other direction.
+     *
+     * AND THE PAIR OF DECISIONS IS THE DURABLE PART: credit follows the material,
+     * not the gate. Those two normally coincide because a chain taken in order
+     * makes them coincide, and this is the first promotion in the subject where
+     * they came apart — which they did because this node is a SIBLING off the
+     * third concept rather than a step above the fourth.
+     */
+    promotedBy: 'author:chance-and-events',
+    rationale:
+      'The preimage IS the first concept\'s first point — an event is a subset of the listed '
+      + 'space, not a sentence about it — used as this concept\'s opening move rather than '
+      + 'mentioned. Every division in all nine tasks is by the eight sequences and never by the '
+      + 'four values, which is that concept\'s second point, and one subgoal settles the '
+      + 'disagreement it left open by showing the four values have preimages of sizes 1, 3, 3 '
+      + 'and 1. Its third point is credited in HALF: the complement rule gives '
+      + 'P(X at least 1) = 1 - 1/8 = 7/8, which the ninth task divides by, but '
+      + 'inclusion-exclusion is NOT exercised — two values of one rule share no outcome, so the '
+      + 'correction term is absent rather than computed and found to be zero. It credits the '
+      + 'SPACE and not the conditioning: one of nine tasks conditions anything, nothing here '
+      + 'multiplies along a sequence of draws or runs a product test, so '
+      + '`conditional-probability` must still come due as though untouched.',
+  },
+  {
+    id: 'random-variables->expectation',
+    from: 'random-variables',
+    to: 'expectation',
+    kind: 'prerequisite',
+    /*
+     * THE SUBJECT'S FIFTH INTERNAL PREREQUISITE, AND THE CHAIN RESUMES. The
+     * fourth was the first off the line — `random-variables` and `bayes-theorem`
+     * are siblings off the third concept — and this one steps straight up from
+     * the fifth, so the array is back in prerequisite order for its last two
+     * entries while remaining a writing order overall.
+     *
+     * IT IS THE HALF OF THE NODE'S `needs` THAT CAN LIVE HERE. The node declared
+     * `['random-variables', 'sigma-notation']`; the second is
+     * `functions-and-inverses` and became `PROBABILITY.links`' fifth entry, for
+     * the same containment reason as the promotion before — an authored ontology
+     * may only name concepts it contains.
+     *
+     * AND THIS GATE IS LOAD-BEARING EVERYWHERE RATHER THAN IN ONE PLACE, which
+     * is worth stating because the edge above had to admit the opposite. Every
+     * one of the three knowledge points starts from a table this concept's
+     * prerequisite builds: the first totals X's and then builds T's by
+     * collecting preimages, the second rebuilds one under a relabelling and
+     * leans on the forced total of 1 for the whole proof, and the third builds
+     * two and then a third. There is no half of this concept that could be
+     * taught to somebody who has not met a distribution.
+     *
+     * `author:` rather than `atlas:probability`, as with the four prerequisites
+     * above: `expandEdges` stamped the area on this edge while it was the node's
+     * own `needs`, and the provenance moves with the edge.
+     */
+    promotedBy: 'author:chance-and-events',
+  },
+  {
+    id: 'expectation=>random-variables',
+    from: 'expectation',
+    to: 'random-variables',
+    kind: 'encompasses',
+    /*
+     * THE SUBJECT'S FOURTH CREDIT EDGE, AND IT GOES BACK TO CREDITING THE
+     * CONCEPT DIRECTLY BELOW — which is the ordinary shape here and is worth a
+     * sentence only because the edge above it is the exception.
+     *
+     * The forty-ninth's `random-variables => sample-spaces` reached TWO concepts
+     * down and declined the one that gated it, because that node was a sibling
+     * and its material used the first concept rather than the fourth. Nothing
+     * like that applies here. This concept is a step UP the line from the fifth,
+     * and the fifth's three points are what every task does before it does
+     * anything of its own.
+     *
+     * ALL THREE OF ITS POINTS ARE USED, AND THE SECOND IS USED AS A THEOREM
+     * RATHER THAN AS A HABIT, which is the part worth the claim. The preimage
+     * collection — that concept's first point — is how T's table is built in the
+     * first point here. The forced total of 1 — its second — is not merely
+     * checked but DERIVED FROM, since the proof of linearity turns on the
+     * probabilities totalling exactly 1 and the point here says in so many words
+     * that on a table totalling 7/8 the rule would be false. And the
+     * relabelling case of its third point is W = 2X + 1, where a one-to-one rule
+     * moves four entries and merges none.
+     *
+     * WHY `sample-spaces` IS NOT ALSO CREDITED, which is the question the edge
+     * above makes unavoidable. Every division here is by 8, so the second point
+     * of that concept is in use — but it arrives through the table rather than
+     * from the space, and that is the distinction. Nothing in these nine tasks
+     * collects an event off a listed space, takes a complement, or repairs an
+     * overlap; the eight sequences are visited twice and both times to total a
+     * variable over them, never to count a subset. A learner who has done all
+     * nine has not demonstrated that an event is a subset. The forty-ninth
+     * promotion credited that concept for exactly those moves, so crediting it
+     * again from one step higher would be claiming them twice.
+     */
+    promotedBy: 'author:chance-and-events',
+    rationale:
+      'Every one of the three points starts from a distribution that concept builds, and two of '
+      + 'its three points are used rather than rested on. Its first — a value names a preimage — '
+      + 'is how T\'s table is collected here, TTT then the four sequences beginning with H then '
+      + 'THH and THT then TTH. Its second — the entries total exactly 1 because the values of a '
+      + 'function partition the space — is DERIVED FROM rather than checked: the proof that '
+      + 'E[aX + b] = aE[X] + b turns on that total being 1, and the material states that on a '
+      + 'conditioned table totalling 7/8 the rule would come out as aE[X] + 7b/8 and be false. '
+      + 'Its third supplies the relabelling case, W = 2X + 1 moving four entries and merging '
+      + 'none, and Y = |2X - 3| as the rule the linear shortcut must refuse. It credits the '
+      + 'TABLE and not the space: nothing here collects an event off a listed space, takes a '
+      + 'complement or repairs an overlap, so `sample-spaces` must still come due as though '
+      + 'untouched.',
   },
 ]
 
