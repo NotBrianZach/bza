@@ -559,8 +559,64 @@ export const REGIONS: Region[] = [
     // concept. So whoever empties this slot next has to either widen the
     // reading or argue that the region does not need three anchors — which is a
     // decision about the game's map and not a bookkeeping one.
+    //
+    // THE SLOT EMPTIED A FIFTH TIME IN FIVE PROMOTIONS, EXACTLY WHERE THE
+    // PARAGRAPH ABOVE SAID IT WOULD, AND THE REFILL IS `law-of-large-numbers` —
+    // WHICH MEANS THE READING WAS WIDENED AND THE THREE-ANCHOR SHAPE KEPT. Of
+    // the two exits that paragraph offered, this is the first; the second was
+    // measured and refused, and the measurement is the part worth keeping.
+    // Dropping to two anchors is not a local edit. Every one of the nineteen
+    // regions in this table carries exactly three, and tests/atlas.mjs asserts
+    // `length === 3` for THIS region in three separate promotion groups — so the
+    // cheap-looking option would have falsified three claims other runs made
+    // deliberately, and left this region the only two-anchor region on the map,
+    // to save overturning one refusal. That is the argument, and it is arithmetic
+    // rather than taste.
+    //
+    // WHY THE CATEGORY REFUSAL DID NOT SURVIVE CONTACT WITH THE REGION'S OWN
+    // `because`. The forty-eighth's sweep ruled out "the distributions and the
+    // limit theorems ... however ready they look" and the forty-ninth repeated
+    // it, and both were ruling out by CATEGORY — the exact move the forty-ninth
+    // then proved unsound when it found that same sweep had never reached two of
+    // the nine nodes. Checked against the sentence instead: the `because` names
+    // two things, an order court pricing a sentence in money owed and "a seasonal
+    // raid whose return nobody can promise". The second is not one expectation.
+    // It is a long-run average — the raid is run season after season and the
+    // takings settle somewhere — and `law-of-large-numbers` is that clause stated
+    // as a theorem. The three anchors are the arithmetic of a random quantity,
+    // and a sample mean is arithmetic ON random quantities carrying a claim about
+    // where it lands; the fit is closer than `transformations-of-variables`,
+    // which the fiftieth took by reaching for a Jacobian.
+    //
+    // AND THE SLOT IS SAFE, WHICH IS WHY IT BEAT `discrete-distributions`. That
+    // node is the OTHER thing the fifty-first promotion made ready, so filling
+    // the slot with it would have emptied the slot again at the next promotion —
+    // choosing on purpose the failure four notes above complain about. This node
+    // names `variance-and-covariance`, now written, AND `sequence-convergence`,
+    // a node of `sequences-and-series` that nothing has touched and that no
+    // promotion out of THIS area can reach, so it cannot become ready from here.
+    // For the first time since the forty-sixth, no anchor of this region is
+    // ready at all: `transformations-of-variables` waits on two unwritten nodes
+    // and `markov-chains` waits on a refusal in ontology-matrices.ts. The next
+    // promotion out of `probability` will not empty this slot.
+    //
+    // THE FALLBACK AFTER THAT, named here because naming one has now decided
+    // four refills in a row — and this time the enumeration is checked against
+    // the LIST and not against categories, which is the whole lesson of the
+    // paragraph above. After this edit the area holds nine nodes, three are
+    // anchors, and the other six are `discrete-distributions`,
+    // `continuous-distributions`, `joint-distributions`, `central-limit-theorem`,
+    // `stochastic-processes` and `measure-theoretic-probability`. Two of those
+    // six are machinery rather than arithmetic and four are a distribution or a
+    // limit theorem; of the four, the long-run-average clause reaches exactly one
+    // besides the node taken here, and `central-limit-theorem` is it. So that is
+    // the named fallback, with a caveat whoever takes it should read: the clause
+    // stretches further for the law of large numbers than for the central limit
+    // theorem, which is about the SHAPE of the fluctuation rather than about the
+    // return settling. One refill left in the reading, and then this question is
+    // genuinely open.
     authored: ['chance-and-events'],
-    anchors: ['markov-chains', 'transformations-of-variables', 'variance-and-covariance'],
+    anchors: ['markov-chains', 'transformations-of-variables', 'law-of-large-numbers'],
     because: 'Order courts price every sentence in money owed to the offended party and the state, and the Scales run a seasonal raid whose return nobody can promise. Both are expected value, and the swamp is where somebody is always computing one.',
   },
   {

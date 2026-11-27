@@ -320,6 +320,18 @@ import type { MapArea } from './atlas'
  *     and the two pairs above are unchanged. The check is worth running on every
  *     promotion precisely because the answer is usually "nothing": the one time
  *     it was not, at the forty-sixth, nothing went red.
+ *
+ *     THE FIFTIETH AND FIFTY-FIRST BOTH HAD NOTHING AT RISK EITHER, CHECKED THE
+ *     SAME WAY, AND THAT IS NOW FOUR PROMOTIONS OUT OF FIVE WITH AN EMPTY
+ *     ANSWER. `variance-and-covariance` declared no `confusedWith`, no
+ *     `exercises` and no `encompasses`, all three read off the node before it was
+ *     deleted. Worth one line because the fiftieth promotion's ready-field note
+ *     had ALREADY recorded all three as absent, in advance and correctly — the
+ *     first time a predecessor has answered this question for its successor. It
+ *     was re-read off the node anyway, which is the right order: a note is
+ *     evidence about what somebody looked at and the node is the thing that
+ *     decides, and the one promotion where the answer was not "nothing" is also
+ *     the one where no suite would have said so.
  */
 const PROBABILITY: MapArea = {
   id: 'probability',
@@ -354,12 +366,23 @@ const PROBABILITY: MapArea = {
     'totalling exactly 1 and refusing any rule that is not linear; and the addition of ' +
     'expectations across two variables on one space WHETHER OR NOT they are independent, with ' +
     'the multiplicative version failing on the same pair — all written as `expectation` in ' +
-    'that subject, which now holds six ' +
-    'concepts and eighteen ideas. THE THREE NODES ABOVE THEM ARE WHERE THIS AREA NOW STARTS, ' +
-    'and it starts in three places rather than one: `variance-and-covariance` is an expectation ' +
-    'of a squared deviation and is the one of the three with everything it needs already ' +
-    'written, `continuous-distributions` replaces the table with a density and waits on ' +
-    '`definite-integral`, and `markov-chains` conditions along time and waits on `eigenvalues`.',
+    'that subject. NOR IS THE SPREAD OF THAT TABLE, which left next and is the seventh ' +
+    'departure: the variance as the same weighted total with squared distances from the mean ' +
+    'in place of the values, so that no divisor is left to argue over and the spread of a ' +
+    'distribution comes out smaller than the spread of its value list read as data; the ' +
+    'two-total route E[X²] − (E[X])², whose gap measures exactly how far pushing a square ' +
+    'through an expectation falls short and in which direction; and the covariance, which is ' +
+    'why variances do NOT add where expectations did, vanishes under independence so that they ' +
+    'do, and can vanish without independence — all written as `variance-and-covariance` in ' +
+    'that subject, which now holds seven ' +
+    'concepts and twenty-one ideas. THE FOUR NODES ABOVE THEM ARE WHERE THIS AREA NOW STARTS, ' +
+    'and the count rose with this departure rather than falling, because the node that left ' +
+    'was the last in-area prerequisite of TWO others: `discrete-distributions` names the ' +
+    'mechanisms one at a time and is the one of the four with everything it needs already ' +
+    'written, `law-of-large-numbers` is a root without being ready and waits on ' +
+    '`sequence-convergence`, `continuous-distributions` replaces the table with a density and ' +
+    'waits on `definite-integral`, and `markov-chains` conditions along time and waits on ' +
+    '`eigenvalues`.',
   links: [
     /*
      * THREE STRANDED PREREQUISITES, FROM TWO PROMOTIONS: the first two entries
@@ -593,14 +616,37 @@ const PROBABILITY: MapArea = {
      * the position it vacated. A `length === 3` check would have passed across
      * this promotion while every node it named had changed.
      */
-    {
-      id: 'variance-and-covariance',
-      match: /\b(variance|covariance|standard deviation|correlation)\b/i,
-      name: 'Variance and covariance',
-      is: 'Spread as an expected squared deviation, with covariance measuring joint movement and independence implying zero but not conversely.',
-      needs: ['expectation'],
-      terms: 'variance standard deviation covariance correlation independence',
-    },
+    /*
+     * `variance-and-covariance` WAS THE FIRST ENTRY HERE AFTER THAT AND LEFT AT
+     * THE FIFTY-FIRST PROMOTION, into `chance-and-events` as that subject's
+     * seventh concept. Deleted rather than annotated, for the collision reason
+     * above.
+     *
+     * IT IS THE SEVENTH DEPARTURE FROM THIS AREA AND THE FIRST SINCE THE
+     * FORTY-EIGHTH TO COST NOTHING. The node declared ONE `need`, `expectation`,
+     * and the fiftieth promotion had just authored that into the same subject —
+     * so the whole of its gate is an ordinary `EDGES` entry there and the `links`
+     * list below is untouched at five. The fiftieth's finding is what predicts
+     * it: the cost is a property of the NODE's `needs` and not of how orderly the
+     * promotions have been, and this node declared one `need` where that one
+     * declared two.
+     *
+     * AND ITS DEPARTURE GREW THE ROOT SET WHERE THE ONE BEFORE HELD IT. The
+     * forty-eighth's rule — the set changes size by (in-area dependents) minus
+     * one — predicts +1 here, because `discrete-distributions` and
+     * `law-of-large-numbers` both name this node and both lose their only
+     * in-area prerequisite with it. Three becomes four. That is the second
+     * consecutive promotion out of this area where the rule has been checked
+     * against the computed set rather than quoted, and the two outcomes differ
+     * only because this node had two in-area dependents and that one had one.
+     *
+     * ONLY ONE OF THE TWO BECAME READY, AND THE DIFFERENCE IS A PROPERTY OF THE
+     * DEPENDENT. `discrete-distributions` also names `binomial-theorem`, written
+     * long since, so it is ready; `law-of-large-numbers` also names
+     * `sequence-convergence`, a node of `sequences-and-series` that nothing has
+     * touched, so it is a root WITHOUT being ready — the same two measures coming
+     * apart that the forty-ninth recorded for `continuous-distributions`.
+     */
     {
       id: 'discrete-distributions',
       match: /\b(binomial|poisson|geometric|bernoulli) distribution\b/i,

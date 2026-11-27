@@ -1462,6 +1462,80 @@ t('and is told it asked for a value', /asks for a value, and this still mentions
 t('a step-1 failure never reaches the worker', stillSymbolic.verdict.ruling === 'incorrect')
 
 /*
+ * ── UNITS, WHICH IS WHAT MAKES A PHYSICS TASK RULABLE ─────────────────────
+ *
+ * `ruleEvaluate` compared bare rationals, which is right for mathematics and
+ * silently wrong for physics in both directions: `9.8` passed a question
+ * about acceleration, and `1 km` failed one whose reference was `1000 m`.
+ * Neither announced itself, and the first is the one that matters — a checker
+ * that ignores units teaches that units are decoration.
+ *
+ * The cases below are the whole contract, and the two worth reading are the
+ * dimension ones. A right-sized answer of the wrong KIND must be reported as
+ * a dimension error and NOT as an arithmetic one, because "that is not 9" to
+ * somebody who wrote `9 kg` sends them hunting for a slip that is not there.
+ * And a bare number against a dimensioned task is its own failure rather than
+ * a mismatch, because dimensionless is a real answer that `unit: '1'` exists
+ * to express.
+ *
+ * The last group is the regression that matters most: a task with no `unit`
+ * must behave exactly as it did before any of this existed. `splitUnit` is
+ * not even called on those, which is what stops it eating the `x` out of an
+ * algebra answer.
+ */
+group('ruleEvaluate — units and dimensions')
+const physTask = (over = {}) => ({
+  id: 'phys', knowledgePointId: 'excluded-points', kind: 'evaluate',
+  prompt: 'Centripetal acceleration.', given: 'v^2/r',
+  variables: [{ name: 'v', assumptions: { real: true } }, { name: 'r', assumptions: { real: true } }],
+  at: { v: '6', r: '4' }, reference: '9', unit: 'm/s^2', ...over,
+})
+const phys = async (answer, over = {}) => ruleEvaluate(physTask(over), answer, NO_WORKER)
+
+t('the right value in the declared unit is correct', (await phys('9 m/s^2')).verdict.ruling === 'correct')
+t('and the superscript spelling is the same answer', (await phys('9 m/s²')).verdict.ruling === 'correct')
+
+/* The conversion, which is the half that stops a correct answer being marked
+   wrong. 900 cm/s^2 IS 9 m/s^2 and a learner may write either. */
+t('a different unit of the same dimension converts and passes',
+  (await phys('900 cm/s^2')).verdict.ruling === 'correct')
+t('and says it compared in SI rather than claiming a bare rational comparison',
+  /SI/.test((await phys('900 cm/s^2')).verdict.method))
+
+const bare = await phys('9')
+t('a bare number does not answer a dimensioned task', bare.verdict.ruling === 'incorrect')
+t('and is told that, rather than being told the number is wrong',
+  /bare number/.test(bare.verdict.brokeAt.detail) && !/is 9, and this is/.test(bare.verdict.brokeAt.detail))
+
+const wrongDim = await phys('9 kg')
+t('the right number in the wrong dimension is incorrect', wrongDim.verdict.ruling === 'incorrect')
+t('and the report names both dimensions, not the arithmetic',
+  /kg/.test(wrongDim.verdict.brokeAt.detail)
+  && /m\/s²/.test(wrongDim.verdict.brokeAt.detail)
+  && /not checked/.test(wrongDim.verdict.brokeAt.detail))
+t('a wrong value in the right unit still reports as arithmetic, with both units named',
+  (await phys('8 m/s^2')).verdict.brokeAt.detail.includes('9 m/s^2')
+  && (await phys('8 m/s^2')).verdict.brokeAt.detail.includes('8 m/s^2'))
+
+/* An author's typo must not mark a learner wrong. */
+t('an unreadable declared unit is an authoring fault, not a wrong answer',
+  (await phys('9 m/s^2', { unit: 'furlongs per fortnight' })).verdict.ruling === 'inconclusive')
+
+/* `unit: '1'` is how a task says the answer really is a pure number, which is
+   a different statement from omitting the field. */
+t('a dimensionless task accepts a bare number',
+  (await phys('9', { unit: '1' })).verdict.ruling === 'correct')
+
+/* THE REGRESSION GUARD. Every mathematics task in the build has no `unit`. */
+const noUnit = over => ruleEvaluate(evalTask(over), '0', NO_WORKER)
+t('a task with no unit is untouched — correct still correct',
+  (await noUnit({})).verdict.ruling === 'correct')
+t('and its method makes no mention of SI or dimensions',
+  !/SI|dimension/i.test((await noUnit({})).verdict.method))
+t('and an algebraic answer is still a step-1 variable failure, not a unit error',
+  (await ruleEvaluate(evalTask({}), 'x - 5', NO_WORKER)).verdict.brokeAt.step === 1)
+
+/*
  * ── EVERY `incorrect` SAYS WHY ────────────────────────────────────────────
  *
  * Reported from play: an evaluate task answered 18 instead of 54, and the
@@ -12815,24 +12889,24 @@ const EX_PREIMAGE = (f, v) => EX_SEQS.filter(s => f(s) === v)
 
 group('expectation, where the table collapses to one number')
 /*
- * THE SUBJECT TOTALS, WHICH THIS PROMOTION MOVED and which the forty-ninth
- * promotion's group above no longer counts — the sixth group to hold them, for
- * the sixth consecutive promotion into this subject. Six concepts, eighteen
- * points, and the array with the new one appended.
+ * THE SUBJECT TOTALS HAVE MOVED ON TO THE FIFTY-FIRST PROMOTION'S GROUP, which
+ * added a seventh concept and three more points. What this group keeps is its
+ * own durable half: that this concept is the SIXTH entry of the array and that
+ * the array is a chain step at the fifth-to-sixth join.
  *
- * THE ARRAY IS A CHAIN STEP AGAIN, which is the counterpart to the claim the
- * group above makes. That promotion broke the prerequisite ordering by being a
+ * THE ARRAY IS A CHAIN STEP HERE, which is the counterpart to the claim the
+ * group above makes. The forty-ninth broke the prerequisite ordering by being a
  * sibling; this one is gated by the concept immediately before it in the array,
- * so the order agrees with the chain at both ends and disagrees only across the
- * fourth-to-fifth join. Asserted, because "the array is not the chain" is now as
- * misleading a summary as "the array is the chain" was.
+ * so the order agrees with the chain at both ends of this join and disagrees
+ * only across the fourth-to-fifth. Asserted by POSITION rather than by the whole
+ * id list, so that a later promotion appending to the array cannot falsify it —
+ * which is exactly what the list form would have done here, and did.
  */
-t('six concepts and eighteen knowledge points, the figure having moved to this group',
-  CE.concepts.length === 6 && allKnowledgePoints(CE).length === 18
-  && CE.concepts.map(c => c.id).join(',')
-    === 'sample-spaces,counting-probability,conditional-probability,bayes-theorem,'
-    + 'random-variables,expectation'
-  && EX_POINTS.map(p => p.position).join(',') === '1,2,3',
+t('this concept is the sixth of the array, with its three points numbered from 1',
+  CE.concepts[5]?.id === 'expectation'
+  && CE.concepts.length >= 6
+  && EX_POINTS.map(p => p.position).join(',') === '1,2,3'
+  && allKnowledgePoints(CE).length >= 18,
   `${CE.concepts.length} concepts, ${allKnowledgePoints(CE).length} points: `
   + CE.concepts.map(c => c.id).join(','))
 t('and this one IS gated by the concept before it, unlike the one before it',
@@ -12869,7 +12943,11 @@ t('its two edges are a chain prerequisite and a credit edge that does NOT skip i
     const credit = CE.edges.find(e => e.id === 'expectation=>random-variables')
     const skipper = CE.edges.find(e => e.id === 'random-variables=>sample-spaces')
     if (!gate || !credit || !skipper) return false
-    return CE.edges.length === 10
+    // THE EDGE COUNT HAS MOVED ON to the fifty-first promotion's group, which
+    // added two more. What this group owns is the SHAPE of its own pair, and
+    // a floor keeps the claim non-vacuous without pinning a total somebody
+    // else's promotion moves.
+    return CE.edges.length >= 10
       && gate.kind === 'prerequisite' && gate.promotedBy === 'author:chance-and-events'
       && credit.kind === 'encompasses' && !!credit.rationale
       && credit.from === 'expectation' && credit.to === 'random-variables'
@@ -13199,23 +13277,27 @@ t('and every knowledge point has a task, so nothing here raises chainsWithNoRuli
   EX_POINTS.every(p => tasksForPoint(p.id).length > 0),
   EX_POINTS.filter(p => tasksForPoint(p.id).length === 0).map(p => p.id).join(', '))
 /*
- * THE COMPARISON CLASS FOR THE SPAN RANKING, which this promotion moved from the
- * forty-eighth's group — seven expressions in the subject are now asked at more
- * than one substitution.
+ * THE COMPARISON CLASS FOR THE SPAN RANKING HAS MOVED AGAIN, to the fifty-first
+ * promotion's group, which added TWO more repeated expressions and took the
+ * population from seven to nine.
  *
- * The figure moved for a reason that is itself the finding. That group asserted
- * "there are six such expressions" and its comment said the check existed so a
- * later concept adding a WIDER pair would go red. What actually happened is that
- * this concept added a NARROWER one — span 1/8 against that pair's 0.79 — and the
- * count went red while the superlative it was protecting stayed true. So the
- * comment described one trigger and the code carried a broader one, and the
- * repair was to leave the superlative there and bring the population here.
+ * SO THE FIGURE HAS NOW GONE RED ON SOMEBODY ELSE'S PROMOTION TWICE RUNNING, AND
+ * THAT IS THE FINDING RATHER THAN THE REPAIR. The forty-eighth's group asserted
+ * "there are six such expressions" and said the check existed so a later concept
+ * adding a WIDER pair would go red; this promotion added a NARROWER one and the
+ * count went red while the superlative it protected stayed true, so the
+ * population came here. It has now done exactly the same thing to this group. A
+ * population count over a whole subject cannot belong to any one promotion's
+ * group for long — what belongs here is the CLAIM about this concept's own pair,
+ * which is below with a floor under the population rather than an equality.
  *
  * WHAT IS DISTINCTIVE ABOUT THIS PAIR IS NOT ITS SPAN. It is the only repeated
  * expression in the subject whose BOTH references leave [0, 1], which follows
  * from the same fact as the group above: an expectation is not a probability.
+ * That claim is durable, because a later pair outside the interval would have to
+ * be two more expectations, and it is still asserted exactly.
  */
-t('seven expressions in the subject are now asked twice, and this pair is the only one outside [0, 1]',
+t('this pair is the only repeated expression in the subject whose answers both leave [0, 1]',
   (() => {
     const byGiven = {}
     for (const c of CE.concepts) {
@@ -13231,7 +13313,7 @@ t('seven expressions in the subject are now asked twice, and this pair is the on
     const outside = refs => refs.every(r => {
       const q = asRational(r); return q.n > q.d
     })
-    return repeated.length === 7
+    return repeated.length >= 7
       && outside(mine[1])
       // And no other repeated pair is, so this is a property of the concept
       // rather than of the subject.
@@ -13281,6 +13363,585 @@ t('and the titles it cannot reach are the ones saying expectation, named rather 
   ['Expectation (mathematics)', 'Conditional expectation', 'Law of total expectation',
     'Variance', 'Random variable', 'Mean']
     .filter(s => EX.scope.match.test(s)).join(', ') || 'none claimed')
+
+// ---------------------------------------------------------------------------
+
+/**
+ * `variance-and-covariance`, the SEVENTH concept of `chance-and-events` and the
+ * seventh departure from `probability`. tests/atlas.mjs owns the structure; what
+ * is asserted here is the material, and the arithmetic is DERIVED from the eight
+ * sequences before any text is read.
+ *
+ * Deriving it matters more here than in the six concepts below. This concept has
+ * 3/4, 5/4, 47/64, 95/64, 103/64 and 1/8 in it, four of them sixty-fourths and
+ * two of them quarters, and a string match on "47/64" would prove only that
+ * somebody typed it. Every claim below recomputes from `VC_SEQS` with exact
+ * integer arithmetic over a common denominator, so no floating point decides
+ * whether two spreads are equal.
+ *
+ * The five things this group is for:
+ *
+ *  - THE SUBJECT TOTALS, which this promotion moved off the sixth concept's
+ *    group: seven concepts, twenty-one points, twelve edges.
+ *  - THE BOUNDARY AGAINST `descriptive-statistics`, asserted as ARITHMETIC in
+ *    both directions — the plain route agrees at the first moment and disagrees
+ *    at the second, on the same table. That is the whole argument for two
+ *    subjects holding a thing called variance, and it is a pair of numbers.
+ *  - THE TWO-TOTAL IDENTITY AGREEING WITH THE DEFINITION AT BOTH SUBSTITUTIONS,
+ *    which is what makes it a theorem here rather than a feature of X's table.
+ *  - THE SHORTFALL BEING TWICE A NUMBER THE CONCEPT BELOW COMPUTED, recomputed
+ *    from the space rather than read off the two references.
+ *  - AND THE CONVERSE, where the same `given` returns 0 on the MORE dependent
+ *    pair. Both the dependence and the vanishing are computed.
+ */
+const VC = conceptById(CE, 'variance-and-covariance')
+const VC_POINTS = VC.knowledgePoints
+const VC_TASKS = VC_POINTS.flatMap(p => tasksForPoint(p.id))
+const VC_SHOWN = VC_POINTS.map(p =>
+  `${p.workedExample.problem} ${p.workedExample.subgoals.map(s => s.detail).join(' ')} `
+  + `${p.workedExample.answer}`).join(' ')
+/*
+ * THE SPACE AND THE RULES, ENUMERATED ONCE — the sixth concept's construction
+ * extended with the three indicators this concept needs, and with everything
+ * held as an integer NUMERATOR over a stated denominator.
+ *
+ * `VC_VAR` returns the variance times n², which is an integer for every rule
+ * here: n²Var = n·(total of f²) − (total of f)². That is the identity the second
+ * point proves, used as the harness's definition deliberately — the FIRST point's
+ * definition is checked against it separately below, so neither is assumed.
+ */
+const VC_SEQS = ['HHH', 'HHT', 'HTH', 'HTT', 'THH', 'THT', 'TTH', 'TTT']
+const VC_N = VC_SEQS.length
+const VC_X = s => [...s].filter(ch => ch === 'H').length
+const VC_T = s => (s.indexOf('H') === -1 ? 0 : s.indexOf('H') + 1)
+const VC_Y = s => Math.abs(2 * VC_X(s) - 3)
+const VC_IND = i => s => (s[i] === 'H' ? 1 : 0)
+const VC_TOTAL = f => VC_SEQS.reduce((a, s) => a + f(s), 0)
+// Variance × n², as an integer. n·Σf² − (Σf)².
+const VC_VAR = f => VC_N * VC_TOTAL(s => f(s) * f(s)) - VC_TOTAL(f) ** 2
+// Covariance × n², as an integer. n·Σfg − (Σf)(Σg).
+const VC_COV = (f, g) => VC_N * VC_TOTAL(s => f(s) * g(s)) - VC_TOTAL(f) * VC_TOTAL(g)
+const VC_PREIMAGE = (f, v) => VC_SEQS.filter(s => f(s) === v)
+
+group('variance and covariance, where the table says how far it strays')
+/*
+ * THE SUBJECT TOTALS, WHICH THIS PROMOTION MOVED — the seventh group to hold
+ * them, for the seventh consecutive promotion into this subject.
+ *
+ * ASSERTED AS THE FULL ID ARRAY AGAIN, AND THAT IS A DELIBERATE RE-BREAKING OF
+ * SOMETHING THIS RUN JUST REPAIRED. The sixth concept's group asserted the array
+ * by its whole contents and this promotion falsified it by appending; the repair
+ * there was to assert that concept's POSITION instead, which no later promotion
+ * can move. The list form belongs HERE, where the thing being claimed is the
+ * writing order of the whole subject — so the two groups now make different
+ * claims rather than the same claim twice, and only this one has to be edited
+ * next time.
+ */
+t('seven concepts and twenty-one knowledge points, the figure having moved to this group',
+  CE.concepts.length === 7 && allKnowledgePoints(CE).length === 21
+  && CE.concepts.map(c => c.id).join(',')
+    === 'sample-spaces,counting-probability,conditional-probability,bayes-theorem,'
+    + 'random-variables,expectation,variance-and-covariance'
+  && VC_POINTS.map(p => p.position).join(',') === '1,2,3',
+  `${CE.concepts.length} concepts, ${allKnowledgePoints(CE).length} points: `
+  + CE.concepts.map(c => c.id).join(','))
+t('the concept is teachable AND practisable, and the subject has no internal faults',
+  isTeachable(CE, 'variance-and-covariance') && isPractisable(CE, 'variance-and-covariance')
+  && ontologyProblems(CE).length === 0 && fidelityMismatches(CE).length === 0,
+  ontologyProblems(CE).join('; '))
+/*
+ * TWELVE EDGES, AND THIS PROMOTION'S PAIR IS THE ORDINARY SHAPE A SECOND TIME —
+ * a prerequisite up the chain and a credit edge pointing at its own gate.
+ *
+ * Worth asserting as a CONTRAST rather than on its own, which is the discipline
+ * the four credit edges below established. The forty-ninth's reaches two concepts
+ * down and declines the one that gates it; the fiftieth's went back to the
+ * ordinary shape; this one keeps it. So the skip is now a single reasoned
+ * exception two promotions old rather than a habit, and the claim that says so
+ * is "this edge credits its gate AND the skipper still does not".
+ */
+t('its two edges are a chain prerequisite and a credit edge that credits its own gate',
+  (() => {
+    const gate = CE.edges.find(e => e.id === 'expectation->variance-and-covariance')
+    const credit = CE.edges.find(e => e.id === 'variance-and-covariance=>expectation')
+    const skipper = CE.edges.find(e => e.id === 'random-variables=>sample-spaces')
+    if (!gate || !credit || !skipper) return false
+    return CE.edges.length === 12
+      && gate.kind === 'prerequisite' && gate.promotedBy === 'author:chance-and-events'
+      && credit.kind === 'encompasses' && !!credit.rationale
+      && credit.from === 'variance-and-covariance' && credit.to === 'expectation'
+      && credit.to === gate.from
+      // The skipper is still the only edge in the file that declines its gate.
+      && skipper.to === 'sample-spaces'
+      && CE.edges.filter(e => e.kind === 'encompasses').length === 5
+      // And this concept claims no credit two concepts down.
+      && !CE.edges.some(e => e.kind === 'encompasses'
+        && e.from === 'variance-and-covariance' && e.to === 'random-variables')
+  })(),
+  CE.edges.map(e => `${e.id}:${e.kind}`).join(' '))
+/*
+ * THE RATIONALE NAMES WHAT IT DOES NOT CREDIT, AND ONE OF THE TWO REFUSALS IS
+ * SHARPER THAN ANY THIS FILE HAS MADE BEFORE.
+ *
+ * `sample-spaces` is refused for the same reason the fiftieth refused it: no
+ * probability here is found by collecting a preimage. `conditional-probability`
+ * is refused despite its product test being RUN TWICE in the third point — and
+ * the reason is the distinction between what a prompt HANDS OVER and what an
+ * expression ASKS FOR. Two prompts state a product test and hand the answer
+ * across; no `given` among the ten computes one, so a learner who has done all
+ * ten has not produced a product test once.
+ *
+ * THAT DISTINCTION IS WHY THIS ASSERTION IS WORTH WRITING AND IT CAUGHT THE
+ * RATIONALE BEING WRONG. The first draft of the sentence said the test appeared
+ * "in the worked example and in no task", and the ninth task's prompt states it
+ * outright — so the claim was false of the prompts while being true of the
+ * expressions. The repair was to the SENTENCE, not to the check: the material is
+ * free to discuss a prerequisite as much as it likes, and what decides a credit
+ * edge is whether anything GRADED rests on it. Asserted over `given` rather than
+ * over `prompt` for exactly that reason.
+ */
+t('its rationale names both halves it refuses, and the task-level refusal is true of the tasks',
+  (() => {
+    const r = CE.edges.find(e => e.id === 'variance-and-covariance=>expectation')?.rationale ?? ''
+    return /must come due as though untouched/.test(r)
+      && /sample-spaces/.test(r)
+      && /conditional-probability/.test(r)
+      && /HANDED OVER/.test(r)
+      // True of the tasks in the sense that matters: the test is stated in
+      // prompts and in the worked examples, and no EXPRESSION computes one.
+      && /product test/.test(VC_SHOWN)
+      && VC_TASKS.some(x => /product test/.test(x.prompt))
+      && !VC_TASKS.some(x => /product test/.test(x.given))
+      // A product test is a probability times a probability compared with a
+      // third; nothing here has that shape, and the one task whose expression
+      // multiplies two quotients is subtracting them from a total.
+      && VC_TASKS.filter(x => /\)\*\(/.test(x.given)).every(x => x.given.includes(' - '))
+      // And nothing here collects an event off the listed space.
+      && !VC_TASKS.some(x => /complement|overlap|inclusion/i.test(x.prompt))
+  })(),
+  (CE.edges.find(e => e.id === 'variance-and-covariance=>expectation')?.rationale ?? '')
+    .slice(0, 80))
+/*
+ * THE BOUNDARY AGAINST `descriptive-statistics`, WHICH IS THIS PROMOTION'S WHOLE
+ * JUSTIFICATION AND IS A PAIR OF NUMBERS RATHER THAN A SENTENCE.
+ *
+ * Two subjects now hold something called variance, one over a data set and one
+ * over a distribution, and the account of why they are not the same thing has to
+ * be better than "one weights by probability". It is: on the ONE table where the
+ * plain equal-weight route got the MEAN exactly right, it gets the SPREAD wrong
+ * by 1/2.
+ *
+ * ASSERTED IN BOTH DIRECTIONS, because either half alone proves nothing. That
+ * the two routes disagree somewhere is unremarkable; that they AGREE at the first
+ * moment and DISAGREE at the second, on the same four values and the same table,
+ * is what shows the sixth concept's coincidence to be about first moments. Both
+ * are computed from the space.
+ */
+t('the plain route agrees on the mean and disagrees on the spread, on the same table',
+  (() => {
+    const vals = [...new Set(VC_SEQS.map(VC_X))].sort((a, b) => a - b)
+    if (vals.join(',') !== '0,1,2,3') return false
+    // The plain list route over the four VALUES, as integers: mean = Σv/4.
+    // 4·mean = 6, and 8·E[X] = 12, so the two agree exactly (6/4 = 12/8).
+    const listMeanNum = vals.reduce((a, v) => a + v, 0)        // 6, over 4
+    const weightedMeanNum = VC_TOTAL(VC_X)                     // 12, over 8
+    const meansAgree = listMeanNum * VC_N === weightedMeanNum * vals.length
+    // The plain list VARIANCE, times 16 (= 4 · 4), with the mean at 3/2:
+    // Σ(2v - 3)² = 9 + 1 + 1 + 9 = 20, so the variance is 20/16 = 5/4.
+    const listVar16 = vals.reduce((a, v) => a + (2 * v - 3) ** 2, 0)   // 20, over 16
+    // The distribution's variance, times 64 (= 8 · 8): 48, so 3/4.
+    const distVar64 = VC_VAR(VC_X)                                     // 48, over 64
+    // 20/16 against 48/64 — over 64: 80 against 48.
+    const varsDisagree = listVar16 * 4 !== distVar64
+    // And the gap is exactly 1/2: (80 - 48)/64 = 32/64.
+    const gap64 = listVar16 * 4 - distVar64
+    return meansAgree && varsDisagree && gap64 === 32 && distVar64 === 48
+      // The distribution's is the SMALLER, which is the direction the material
+      // explains: the table gives the two end values an eighth where the plain
+      // route gives them a quarter.
+      && distVar64 < listVar16 * 4
+      && VC_PREIMAGE(VC_X, 0).length === 1 && VC_PREIMAGE(VC_X, 3).length === 1
+      // And the material says both halves rather than leaving them to be noticed.
+      && /5\/4/.test(VC_SHOWN) && /first moment/.test(VC_SHOWN)
+  })(),
+  `list variance ×64 = ${[0, 1, 2, 3].reduce((a, v) => a + (2 * v - 3) ** 2, 0) * 4}, `
+  + `distribution ×64 = ${VC_VAR(VC_X)}`)
+t('and the plain route gives BOTH rules the same spread, where it gave only the mean away',
+  (() => {
+    // T takes the same four values, so the plain list route returns 5/4 for it
+    // too — exactly as the plain average returned 3/2 for both. One concept down
+    // that was right for X and wrong for T; here it is wrong for both.
+    const xVals = [...new Set(VC_SEQS.map(VC_X))].sort((a, b) => a - b)
+    const tVals = [...new Set(VC_SEQS.map(VC_T))].sort((a, b) => a - b)
+    return xVals.join(',') === tVals.join(',')
+      && VC_VAR(VC_X) === 48 && VC_VAR(VC_T) === 47
+      // Neither is the plain list's 5/4, which over 64 is 80.
+      && VC_VAR(VC_X) !== 80 && VC_VAR(VC_T) !== 80
+      // While the plain AVERAGE did hit one of the two, which is the asymmetry.
+      && VC_TOTAL(VC_X) === 12 && VC_TOTAL(VC_T) === 11
+  })(),
+  `Var(X)×64 = ${VC_VAR(VC_X)}, Var(T)×64 = ${VC_VAR(VC_T)}`)
+/*
+ * THE DEFINITION AND THE TWO-TOTAL IDENTITY AGREE AT BOTH SUBSTITUTIONS, which
+ * is what makes the second point a theorem here rather than a feature of one
+ * table.
+ *
+ * The harness holds variances as n²Var = n·Σf² − (Σf)², which IS the identity —
+ * so asserting agreement needs the OTHER definition computed independently. It
+ * is: the weighted total of squared deviations, carried as Σ(n·f − Σf)², which
+ * is n² times the same quantity with no fraction anywhere. Two integer
+ * expressions that have no term in common, equal for both rules.
+ */
+t('the squared-deviation definition and the two-total identity agree for both rules',
+  (() => {
+    // Σ over the space of (n·f(s) − Σf)², which is n² · n · Var. Divided by n
+    // it is the n²Var the harness uses — computed from deviations rather than
+    // from two totals, so the two routes share nothing.
+    const fromDeviations = f => {
+      const tot = VC_TOTAL(f)
+      const sum = VC_SEQS.reduce((a, s) => a + (VC_N * f(s) - tot) ** 2, 0)
+      return sum % VC_N === 0 ? sum / VC_N : null
+    }
+    return fromDeviations(VC_X) === VC_VAR(VC_X)
+      && fromDeviations(VC_T) === VC_VAR(VC_T)
+      && VC_VAR(VC_X) === 48 && VC_VAR(VC_T) === 47
+      // And the two answers DIFFER, so the agreement is not two ways of
+      // computing one number that happens to be shared.
+      && VC_VAR(VC_X) !== VC_VAR(VC_T)
+  })(),
+  `from deviations: ${(() => {
+    const tot = VC_TOTAL(VC_X)
+    return VC_SEQS.reduce((a, s) => a + (VC_N * VC_X(s) - tot) ** 2, 0) / VC_N
+  })()} vs identity ${VC_VAR(VC_X)}`)
+t('the push-through a square makes always UNDERSHOOTS, and by exactly the spread',
+  (() => {
+    // E[X²] × 8 = 24, (E[X])² × 64 = 144. Over 64: 192 against 144, short by 48.
+    const second64 = VC_N * VC_TOTAL(s => VC_X(s) ** 2)        // 192
+    const firstSq64 = VC_TOTAL(VC_X) ** 2                      // 144
+    return second64 - firstSq64 === VC_VAR(VC_X)
+      && second64 > firstSq64
+      // The direction is not a property of this table: a variance is a weighted
+      // total of squares, so it is non-negative for EVERY rule on this space,
+      // which is checkable over every function the concept names.
+      && [VC_X, VC_T, VC_Y, VC_IND(0), s => VC_X(s) + VC_T(s)]
+        .every(f => VC_VAR(f) >= 0)
+      // And the material states the DIRECTION rather than only the number —
+      // checked over the knowledge-point statements as well as the worked
+      // examples, since this claim is made in the statement of the second point
+      // and `VC_SHOWN` is problem, subgoals and answer only.
+      && /falls short|UNDERSHOOTS|undershoots/.test(
+        VC_SHOWN + VC_POINTS.map(p => p.statement).join(' '))
+  })(),
+  `E[X²]×64 = ${VC_N * VC_TOTAL(s => VC_X(s) ** 2)}, `
+  + `(E[X])²×64 = ${VC_TOTAL(VC_X) ** 2}, Var×64 = ${VC_VAR(VC_X)}`)
+/*
+ * THE SPREADS DO NOT ADD, AND THE SHORTFALL IS TWICE A NUMBER THE SIXTH CONCEPT
+ * COMPUTED AND DECLINED TO NAME.
+ *
+ * This is the third point's claim and the fiftieth promotion's hand-off made it:
+ * its ninth task answers 1/16 and its notes say the quantity is a covariance
+ * whose meaning the subject could not account for. Recomputed here from the
+ * space rather than read off the two references, because "twice 1/16 is 1/8" is
+ * exactly the kind of agreement a typo reproduces.
+ */
+t('the two spreads fall short of the sum\'s, by exactly twice the covariance',
+  (() => {
+    const S = s => VC_X(s) + VC_T(s)
+    // All three times 64. 103, 48, 47 — the three references the eighth task
+    // subtracts.
+    const sum64 = VC_VAR(S)
+    const parts64 = VC_VAR(VC_X) + VC_VAR(VC_T)
+    return sum64 === 103 && parts64 === 95
+      && sum64 - parts64 === 2 * VC_COV(VC_X, VC_T)
+      && VC_COV(VC_X, VC_T) === 4            // 4/64 = 1/16
+      && sum64 - parts64 === 8               // 8/64 = 1/8
+      // The covariance is the one the sixth concept's ninth task computes, which
+      // is checked against that task's own reference rather than against 1/16
+      // written here.
+      && (tasksForPoint('expectation-adds-across-two-rules-on-one-space-whether-or-not-they-are-independent')
+        .find(x => x.given === 'k/n - (g/n)*(h/n)')?.reference) === '1/16'
+  })(),
+  `Var(S)×64 = ${VC_VAR(s => VC_X(s) + VC_T(s))}, `
+  + `Var(X)+Var(T) = ${VC_VAR(VC_X) + VC_VAR(VC_T)}, 2Cov = ${2 * VC_COV(VC_X, VC_T)}`)
+t('while three INDEPENDENT rules add exactly, and they sum to the heads-count itself',
+  (() => {
+    const A = VC_IND(0); const B = VC_IND(1); const C = VC_IND(2)
+    // A + B + C IS X on every sequence — not a model of it.
+    if (!VC_SEQS.every(s => A(s) + B(s) + C(s) === VC_X(s))) return false
+    // Each is its own square, which is what collapses the identity to p − p².
+    if (!VC_SEQS.every(s => A(s) ** 2 === A(s))) return false
+    const each = [A, B, C].map(VC_VAR)
+    return each.join(',') === '16,16,16'              // 16/64 = 1/4 each
+      && each.reduce((a, v) => a + v, 0) === VC_VAR(VC_X)
+      // And the product test passes on every pair, where X and T failed it.
+      && [[A, B], [A, C], [B, C]].every(([f, g]) => VC_COV(f, g) === 0)
+      && VC_COV(VC_X, VC_T) !== 0
+  })(),
+  `each ×64: ${[VC_IND(0), VC_IND(1), VC_IND(2)].map(VC_VAR).join(',')}, `
+  + `total ${[VC_IND(0), VC_IND(1), VC_IND(2)].map(VC_VAR).reduce((a, v) => a + v, 0)}, `
+  + `Var(X) ${VC_VAR(VC_X)}`)
+/*
+ * AND THE CONVERSE IS FALSE, ON THE MOST DEPENDENT PAIR THE SPACE HAS.
+ *
+ * Y = |2X − 3| is a function OF X, so knowing X settles Y. Both halves are
+ * computed: the dependence by `conditional-probability`'s product test over a
+ * common denominator, and the vanishing covariance from the space. The pair of
+ * references is the demonstration — the SAME `given` as the sixth concept's
+ * ninth task, 1/16 there on a dependent pair and 0 here on a pair that is
+ * dependent in the strongest possible sense.
+ */
+t('a function of X has zero covariance with X while being completely determined by it',
+  (() => {
+    // Determined: every sequence with the same X has the same Y.
+    const determined = VC_SEQS.every(a => VC_SEQS.every(b =>
+      VC_X(a) !== VC_X(b) || VC_Y(a) === VC_Y(b)))
+    // And NOT independent, by the product test over n²: P(X=0)·P(Y=3)·n² = 1·2
+    // against P(both)·n² = 1·8.
+    const pX0 = VC_PREIMAGE(VC_X, 0).length                              // 1
+    const pY3 = VC_PREIMAGE(VC_Y, 3).length                              // 2
+    const both = VC_SEQS.filter(s => VC_X(s) === 0 && VC_Y(s) === 3).length  // 1
+    const dependent = pX0 * pY3 !== both * VC_N                          // 2 ≠ 8
+    return determined && dependent
+      && VC_COV(VC_X, VC_Y) === 0
+      // Not vacuous: this covariance really is computable and really is zero,
+      // where the other pair on the same space is not.
+      && VC_COV(VC_X, VC_T) !== 0
+      && VC_TOTAL(s => VC_X(s) * VC_Y(s)) === 18
+      && VC_TOTAL(VC_X) === 12 && VC_TOTAL(VC_Y) === 12
+      // The two totals being equal is the sixth concept's flagged coincidence
+      // (E[X] = E[Y] = 3/2) and is why the tenth task's h is 12 and not 11.
+      && VC_TOTAL(VC_X) === VC_TOTAL(VC_Y)
+  })(),
+  `Cov(X,Y)×64 = ${VC_COV(VC_X, VC_Y)}, Cov(X,T)×64 = ${VC_COV(VC_X, VC_T)}, `
+  + `ΣXY = ${VC_TOTAL(s => VC_X(s) * VC_Y(s))}`)
+t('and the two covariance tasks are ONE expression at two substitutions',
+  (() => {
+    const mine = VC_TASKS.find(x => x.id === 'compute-a-covariance-that-vanishes-on-a-dependent-pair-1')
+    const theirs = tasksForPoint(
+      'expectation-adds-across-two-rules-on-one-space-whether-or-not-they-are-independent')
+      .find(x => x.given === 'k/n - (g/n)*(h/n)')
+    if (!mine || !theirs) return false
+    return mine.given === theirs.given
+      && mine.reference === '0' && theirs.reference === '1/16'
+      // The shared letters mean the same thing: g is the total of X in both, and
+      // n is the size of the space in both.
+      && mine.at.g === theirs.at.g && mine.at.g === '12'
+      && mine.at.n === theirs.at.n && mine.at.n === '8'
+      // Only k and h move, which is what makes the two readable as one question.
+      && mine.at.k !== theirs.at.k && mine.at.h !== theirs.at.h
+      && mine.variables === theirs.variables
+  })(),
+  VC_TASKS.filter(x => x.given === 'k/n - (g/n)*(h/n)')
+    .map(x => `${x.reference}`).join(' | '))
+/*
+ * THE COMPARISON CLASS FOR THE SPAN RANKING, moved here from the sixth concept's
+ * group — NINE expressions in the subject are now asked at more than one
+ * substitution, this promotion having added two.
+ *
+ * The figure has now gone red on a successor's promotion twice running, at the
+ * forty-eighth and at the sixth concept, and both times the superlative it was
+ * protecting stayed true. So it is counted here with its own reason rather than
+ * inherited: a population over a whole subject belongs to whichever promotion
+ * last changed it, and the two new pairs are what changed it.
+ *
+ * BOTH NEW PAIRS ARE NARROW AND NEITHER THREATENS THE SUPERLATIVE, which is
+ * asserted rather than assumed — the widest pair in the subject spans about 0.79
+ * and is in `bayes-theorem`'s group, the runner-up is `k/m` at about 0.49, and
+ * these span 1/64 and 1/16.
+ */
+t('nine expressions in the subject are asked twice, and this promotion added two of them',
+  (() => {
+    const byGiven = {}
+    for (const c of CE.concepts) {
+      for (const p of c.knowledgePoints) {
+        for (const x of tasksForPoint(p.id)) {
+          (byGiven[x.given] = byGiven[x.given] ?? []).push(x.reference)
+        }
+      }
+    }
+    const repeated = Object.entries(byGiven).filter(([, refs]) => refs.length > 1)
+    const spanOf = refs => {
+      const vs = refs.map(r => { const q = asRational(r); return q.n / q.d })
+      return Math.max(...vs) - Math.min(...vs)
+    }
+    const identity = repeated.find(([g]) => g
+      === '(0*p + 1*q + 4*r + 9*s)/n - ((0*p + 1*q + 2*r + 3*s)/n)*((0*p + 1*q + 2*r + 3*s)/n)')
+    const covariance = repeated.find(([g]) => g === 'k/n - (g/n)*(h/n)')
+    if (!identity || !covariance) return false
+    return repeated.length === 9
+      // Both of this promotion's pairs are narrower than the runner-up, so the
+      // superlative two concepts down is untouched and stays where it is argued.
+      && spanOf(identity[1]) < 0.02 && spanOf(covariance[1]) < 0.07
+      && repeated.filter(([g]) => g === 'k/m').every(([, r]) => spanOf(r) > spanOf(identity[1])
+        && spanOf(r) > spanOf(covariance[1]))
+      // And the identity pair's two answers are the two spreads, each of which
+      // another task reaches from deviations — which is why THIS pair is a pair.
+      && identity[1].slice().sort().join(',') === '3/4,47/64'
+  })(),
+  (() => {
+    const b = {}
+    for (const c of CE.concepts) {
+      for (const p of c.knowledgePoints) {
+        for (const x of tasksForPoint(p.id)) (b[x.given] = b[x.given] ?? []).push(x.reference)
+      }
+    }
+    return Object.entries(b).filter(([, r]) => r.length > 1).length
+  })())
+/*
+ * TEN TASKS, 3-3-4, EVERY ONE AN `evaluate` — AND THE BROKEN RATIO IS THE POINT.
+ *
+ * Six concepts of this subject ship three tasks per point. This one ships four
+ * on the third point because the point makes three claims and the map node's own
+ * `is` promised the third by name: "independence implying zero but not
+ * conversely". Asserted as the per-point counts rather than as a total over a
+ * ratio, which is what the checklist in this file has been saying since the
+ * tasks-per-point assertion was first reworded.
+ */
+t('ten tasks, three-three-four, every one an evaluate',
+  VC_TASKS.length === 10
+  && VC_POINTS.map(p => tasksForPoint(p.id).length).join(',') === '3,3,4'
+  && VC_TASKS.every(x => x.kind === 'evaluate')
+  && VC_TASKS.every(x => x.domainConditions === undefined)
+  && VC_TASKS.every(x => x.form === undefined),
+  VC_POINTS.map(p => `${p.position}:${tasksForPoint(p.id).length}`).join(' '))
+t('and the fourth task of the third point is the claim the node promised by name',
+  (() => {
+    const fourth = tasksForPoint(VC_POINTS[2].id)[3]
+    return !!fourth
+      && fourth.id === 'compute-a-covariance-that-vanishes-on-a-dependent-pair-1'
+      && fourth.reference === '0'
+      // The node's `is` is gone with the node, so the promise is asserted
+      // against the material that replaced it.
+      && /not conversely|does not buy independence back|gives nothing back/.test(
+        VC.objectives.map(o => o.statement).join(' ') + VC_SHOWN
+        + VC_POINTS.map(p => p.statement).join(' '))
+  })(),
+  tasksForPoint(VC_POINTS[2].id).map(x => x.id).join(' '))
+t('every objective names a kind that really ships a task here, and only evaluate',
+  VC.objectives.length === 3
+  && VC.objectives.every(o => o.taskKinds.join(',') === 'evaluate')
+  && !VC_TASKS.some(x => x.kind === 'state' || x.kind === 'counterexample'
+    || x.kind === 'justify' || x.kind === 'transform_to_form'),
+  VC.objectives.map(o => `${o.id}:${o.taskKinds.join('+')}`).join(' '))
+/*
+ * EIGHT OF TEN REFERENCES ARE INSIDE [0, 1], AND THE INTERVAL IS THE WRONG
+ * QUESTION HERE FOR A DIFFERENT REASON FROM THE SIXTH CONCEPT'S.
+ *
+ * That concept has seven of nine OUTSIDE, because an expectation is in the units
+ * of the VARIABLE and a count of heads has no reason to be at most 1. A variance
+ * is in those units SQUARED and has even less reason — so what puts eight of
+ * these inside is a fact about a fair coin, whose individual spreads are small,
+ * and not a fact about variances.
+ *
+ * THE FIRST DRAFT OF THIS GROUP CLAIMED NINE AND THE CHECK CAUGHT IT, which is
+ * the argument for computing a population rather than counting one by eye: the
+ * seventh task answers 103/64, the spread of a SUM, and 103/64 is greater than 1.
+ * So the two outside are the two largest quantities the concept computes — a
+ * second moment and the spread of a sum of two rules — and the ten references
+ * cover both sides of 1 for reasons that are about size rather than about kind.
+ *
+ * ASSERTED IN BOTH DIRECTIONS AND BY NAME, so neither half can spread: the two
+ * outside are named by id, and every other reference is checked to be inside.
+ * An eleventh task on either side of 1 moves this and nothing else.
+ */
+t('eight of ten references are inside [0, 1], and the two outside are the two largest quantities',
+  (() => {
+    const rs = VC_TASKS.map(x => ({ task: x, r: asRational(x.reference) }))
+    const outside = rs.filter(({ r }) => r.n > r.d)
+    const inside = rs.filter(({ r }) => r.n >= 0 && r.n <= r.d)
+    return rs.length === 10
+      && outside.length === 2
+      && inside.length === 8
+      // Named rather than described: the second moment of X, and the spread of
+      // X + T. Everything else here is one rule's spread or a difference.
+      && outside.map(({ task }) => task.id).slice().sort().join(',')
+        === 'find-the-spread-of-the-sum-from-its-own-table-1,'
+        + 'total-the-squared-rule-over-the-table-1'
+      && outside.map(({ task }) => task.reference).slice().sort().join(',') === '103/64,3'
+      // And they really are the two largest, which is the reason given: it is
+      // about size and not about what kind of quantity each one is.
+      && Math.min(...outside.map(({ r }) => r.n / r.d))
+        > Math.max(...inside.map(({ r }) => r.n / r.d))
+  })(),
+  VC_TASKS.map(x => `${x.reference}`).join(' | '))
+/*
+ * NINETEEN SUBGOALS AND NINETEEN QUESTIONS, which is what this promotion
+ * contributes to the figure that moves. Six, six and SEVEN — the extra one
+ * belonging to the extra claim, like the extra task.
+ */
+t('all nineteen subgoals ship an authored question, six-six-seven',
+  VC_POINTS.every(p => p.workedExample.subgoals.every(s => typeof s.socratic === 'string'
+    && s.socratic.length > 0))
+  && VC_POINTS.flatMap(p => p.workedExample.subgoals).length === 19
+  && VC_POINTS.map(p => p.workedExample.subgoals.length).join(',') === '6,6,7',
+  VC_POINTS.map(p => `${p.position}:${p.workedExample.subgoals
+    .filter(s => s.socratic).length}/${p.workedExample.subgoals.length}`).join(' '))
+t('and every one is interrogative rather than an imperative with a question mark',
+  VC_POINTS.flatMap(p => p.workedExample.subgoals)
+    .every(s => isInterrogative(s.socratic)),
+  VC_POINTS.flatMap(p => p.workedExample.subgoals)
+    .filter(s => !isInterrogative(s.socratic)).map(s => s.label).join(' | '))
+t('every subgoal names a move rather than a step number, and no two in one example repeat',
+  VC_POINTS.every(p =>
+    p.workedExample.subgoals.every(s => s.label.length > 20 && !/^step\b/i.test(s.label))
+    && new Set(p.workedExample.subgoals.map(s => s.label)).size
+      === p.workedExample.subgoals.length),
+  VC_POINTS.flatMap(p => p.workedExample.subgoals)
+    .filter(s => s.label.length <= 20 || /^step\b/i.test(s.label)).map(s => s.label).join(' | '))
+t('no point claims a figure or a timing target, both absent for stated reasons',
+  VC_POINTS.every(p => p.visualRef === undefined)
+  && VC_POINTS.every(p => p.automaticityTarget === undefined),
+  VC_POINTS.filter(p => p.visualRef !== undefined || p.automaticityTarget !== undefined)
+    .map(p => p.id).join(', '))
+t('and every knowledge point has a task, so nothing here raises chainsWithNoRuling',
+  VC_POINTS.every(p => tasksForPoint(p.id).length > 0),
+  VC_POINTS.filter(p => tasksForPoint(p.id).length === 0).map(p => p.id).join(', '))
+/*
+ * FIDELITY IS `checked` WITH THE PATTERN CARRIED VERBATIM, AND THE SHORTFALL
+ * RUNS THE OTHER WAY FOR THE FIRST TIME IN THIS FILE.
+ *
+ * The six concepts below either miss a plural, carry a dead alternative, or reach
+ * one exact title and nothing else. All four alternatives here are live article
+ * titles. What this pattern does instead is OVER-REACH: `\bvariance\b` claims
+ * "Analysis of variance", which is `anova-and-design`, a node of `statistics`
+ * with a pattern of its own.
+ *
+ * ASSERTED BY NAME BECAUSE NO COVERAGE LINE CAN SHOW IT. A miss lowers the
+ * recognition figure; an over-reach raises it, since the concept is recognised
+ * from a title either way. So the only record of it is here, in the scope
+ * comment, and in tests/atlas.mjs — which is where the collision is asserted
+ * against the OTHER NODE'S OWN PATTERN, since `AREAS` is an atlas export and this
+ * harness does not build atlas.ts. What is checked here is the half that needs
+ * only this concept: it claims the ANOVA title, and it refuses the six concepts
+ * below it.
+ */
+t('its pattern is carried verbatim off the node and all four alternatives are live',
+  String(VC.scope.match) === '/\\b(variance|covariance|standard deviation|correlation)\\b/i'
+  && VC.fidelity === 'checked'
+  && ['Variance', 'Covariance', 'Standard deviation', 'Correlation']
+    .every(title => VC.scope.match.test(title))
+  // No dead alternative: each one matches a title on its own, which is the fault
+  // two concepts below carry and this one does not.
+  && VC.scope.match.test('Covariance matrix')
+  && VC.scope.match.test('Pearson correlation coefficient'),
+  String(VC.scope.match))
+t('but it OVER-REACHES on to a title another node owns, while refusing all six below it',
+  // The over-reach: `\bvariance\b` takes "Analysis of variance", which belongs to
+  // `anova-and-design` in `statistics`. The cross-node half of this claim is
+  // in tests/atlas.mjs, where that node's own pattern is reachable.
+  VC.scope.match.test('Analysis of variance')
+  && VC.scope.match.test('Analysis of covariance')
+  // And it reaches none of the six concepts below it, which is the half that
+  // keeps `checked` honest rather than merely wide.
+  && !VC.scope.match.test('Expected value')
+  && !VC.scope.match.test('Random variable')
+  && !VC.scope.match.test('Bayes theorem')
+  && !VC.scope.match.test('Conditional probability')
+  && !VC.scope.match.test('Sample space')
+  && !VC.scope.match.test('Combination'),
+  ['Analysis of variance', 'Expected value', 'Random variable', 'Bayes theorem',
+    'Conditional probability', 'Sample space', 'Combination']
+    .filter(s => VC.scope.match.test(s)).join(', ') || 'none claimed')
 
 // ---------------------------------------------------------------------------
 
@@ -13771,6 +14432,44 @@ t('while the four older concepts here still name justify, of which the build shi
  * remainder is 4 — the whole of `it-has-to-be-one-to-one`, one point, which is
  * the last unauthored point in the subject.
  *
+ * 96 of 96 now, the seventh pure authoring run, and it is the one every
+ * paragraph above has been pointing at: `it-has-to-be-one-to-one`, the third
+ * of `inverse-functions`' three points, four subgoals, all four labels
+ * imperative so both measures moved by four. The concept closes at 11 of 11
+ * and THE SUBJECT IS DONE — remainder 0, and the first subject to close out of
+ * a run of seven consecutive pure authoring runs rather than out of a
+ * promotion.
+ *
+ * Two things the predictions above got right and one they did not. Right: the
+ * remainder was a single point, so one run closed it; and "prefer a concept
+ * with some authored points" was satisfiable, for the second consecutive run
+ * in this concept, because the fifth run paid the opening cost. Not right, or
+ * rather not stated: the figure that broke was NOT the ratio the paragraphs
+ * kept discussing. It was the exact literal in the clause above, whose
+ * assertion NAME talks about twenty-seven chains and says nothing about
+ * authored counts — so the failure arrives labelled with the wrong clause.
+ * That is the second time a multi-clause assertion in this file has misreported
+ * which of its clauses moved, and it is worth more than the figure it guards.
+ *
+ * The one-sided ratio assertion below has now done what the 78 and 85
+ * paragraphs both predicted and become unfailable in BOTH directions: at 96 of
+ * 96 the fraction is 1, and no addition to this subject can push it under
+ * 16/40 while the numerator and denominator move together. So it is replaced
+ * rather than carried — a vacuous assertion left in place reads as coverage it
+ * is not providing. What replaces it is the statement the ratio was reaching
+ * for all along: this subject has NO unauthored subgoal, at whatever size.
+ * That survives a promotion adding authored points here, and it goes red the
+ * moment one adds an unauthored one, which the exact literal above cannot
+ * distinguish from any other movement.
+ *
+ * Measured across the whole build this run: 983 of 1071 authored-field and 984
+ * of 1071 by the coverage line before, 987 and 988 after. The denominator was
+ * 1053 when the paragraph above was written and is 1071 now — promotion 50
+ * added points — so the remainders in these paragraphs are per-subject figures
+ * and the build totals are not comparable across runs. The one-subgoal gap
+ * between the two measures is still the interrogative LABEL in
+ * `arithmetic-foundations`, untouched by this run.
+ *
  * Two things worth carrying. First, "prefer a concept with some authored
  * points" was satisfiable here for the first time in this subject since
  * `function-composition` closed, and it was satisfiable BECAUSE the previous
@@ -13802,19 +14501,27 @@ t('every subgoal says what its move establishes, so none of them is a bare step'
   FI_SUBGOALS.every(s => typeof s.detail === 'string' && s.detail.length > 0))
 t('the subject is at twenty-seven chains and still has none that cannot become evidence',
   FI_COV.chains === 27 && FI_COV.chainsWithNoRuling === 0
-  && FI_COV.authoredAsQuestions === 92 && FI_COV.questions === 96,
+  && FI_COV.authoredAsQuestions === 96 && FI_COV.questions === 96,
   `${FI_COV.chains} chains, ${FI_COV.chainsWithNoRuling} unrulable, `
   + `${FI_COV.authoredAsQuestions}/${FI_COV.questions} authored`)
 /*
- * The RATIO rather than the total, which is the figure the two promotions were
- * supposed to move and the one a labels-only promotion would push the wrong
- * way. 16/40 is 40%; 36/60 is 60%. Asserted as a strict improvement on the
- * pre-promotion state rather than as a literal, so it keeps meaning the same
- * thing after the next concept lands here.
+ * This was the RATIO — `authoredAsQuestions / questions > 16 / 40`, asserted
+ * one-sided so it would keep meaning the same thing as concepts landed here.
+ * It stopped being able to fail in either direction the moment the subject
+ * closed at 96 of 96, exactly as the 78 and 85 paragraphs predicted, because a
+ * fraction that is 1 cannot be pushed under 40% by additions that move the
+ * numerator and denominator together.
+ *
+ * What replaces it is the thing the ratio was a proxy for: no subgoal in this
+ * subject is left to the generated phrasing. Unlike the exact literal above it
+ * does not go red merely because the subject GREW — a promotion that lands a
+ * fully-authored concept here keeps this green and trips the literal — so the
+ * two together say "nothing unauthored" and "nothing moved" separately, which
+ * is the distinction the single ratio could not draw.
  */
-t('and its authored fraction is well above where the subject started, not diluted',
-  FI_COV.authoredAsQuestions / FI_COV.questions > 16 / 40,
-  `${Math.round(100 * FI_COV.authoredAsQuestions / FI_COV.questions)}% against 40% before`)
+t('and not one of its subgoals is left to the generated phrasing, at any size',
+  FI_COV.authoredAsQuestions === FI_COV.questions,
+  `${FI_COV.questions - FI_COV.authoredAsQuestions} of ${FI_COV.questions} still generated`)
 
 /*
  * ONE SPEED TARGET, ON THE SUBSTITUTION, AND NONE ON THE OTHER TWO.

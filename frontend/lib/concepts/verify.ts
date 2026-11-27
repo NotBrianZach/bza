@@ -40,6 +40,7 @@ import { parseFailure, parsedTree, renderExpr, symbolsIn, tryParse, unsigned, ty
 import { checkDenominatorDegree, checkForm, FORM_LABELS, type FormCheck } from './forms'
 import { asSurd, exactValue, sameSurd, sameValue, showExact, showSurd, substitute } from './numerals'
 import { primaryVariable } from './tasks'
+import { parseUnit, sameDimension, showDimension, splitUnit } from './units'
 import type { PracticeTask, Verdict } from './types'
 
 /**
@@ -554,12 +555,41 @@ export async function ruleEvaluate(
   config: VerifierConfig = verifierConfig(),
 ): Promise<Ruling> {
   const symbols = task.variables.map(v => v.name)
-  const parsed = tryParse(answer, symbols)
+
+  /*
+   * ── step 0: the unit, and why it has to come first ────────────────────
+   *
+   * BEFORE `tryParse`, not after. `9.8 m/s^2` is not an expression in this
+   * grammar — `m` and `s` are not declared variables — so parsing first turns
+   * every correctly-united answer into `unreadable`, and "could not be read"
+   * is the least useful thing you can say to somebody who did the physics
+   * right. The unit is removed, then what is left is arithmetic exactly as
+   * before.
+   *
+   * Only when the task declares one. A task with no `unit` is untouched by
+   * all of this, which is every mathematics task in the build — `splitUnit`
+   * is never even called on them, so there is no chance of it eating the `x`
+   * out of an algebra answer.
+   */
+  const wantUnit = task.unit ? parseUnit(task.unit) : null
+  if (task.unit && !wantUnit) {
+    return authoringFault(
+      `the task declares the unit "${task.unit}", which is not one this verifier can read`,
+      answer, task.domainConditions ?? [])
+  }
+  const split = wantUnit ? splitUnit(answer) : null
+  const parsed = tryParse(split ? split.value : answer, symbols)
   const failure = parseFailure(parsed)
   if (failure) return { status: 'unreadable', ...failure }
   const answerTree = parsedTree(parsed)
   if (!answerTree) return { status: 'unreadable', message: 'could not be read', position: 0 }
-  const asRead = renderExpr(answerTree)
+  /*
+   * `asRead` keeps the unit, because it is what the learner is shown back as
+   * "read as" and echoing a bare number at somebody who typed a quantity
+   * would look like the unit had been ignored — which is the behaviour this
+   * whole change exists to end.
+   */
+  const asRead = renderExpr(answerTree) + (split?.unitText ? ` ${split.unitText}` : '')
   const authored = task.domainConditions ?? []
 
   // ── step 1: it has to be a number ─────────────────────────────────────
@@ -708,18 +738,85 @@ export async function ruleEvaluate(
     }
   }
 
+  /*
+   * ── step 1c: the dimension, which is the whole point of units ─────────
+   *
+   * Checked BEFORE the value and reported separately, because the two are
+   * different mistakes and collapsing them teaches nothing. An answer of
+   * `9.8 kg` to a question about acceleration is not "the wrong number" — the
+   * number is right and the quantity is not, and a learner told only "that is
+   * not 9.8" would go looking for an arithmetic slip that is not there.
+   *
+   * A MISSING unit is its own case and not a dimension mismatch, because
+   * dimensionless is a real answer and `task.unit: '1'` is how a task says so.
+   * Against a dimensioned task, no unit means the question was not answered.
+   */
+  if (wantUnit && Object.keys(wantUnit.dim).length > 0 && !split?.unit) {
+    return {
+      status: 'ruled',
+      asRead,
+      verdict: {
+        ruling: 'incorrect',
+        method: 'the answer carries no unit, and the task asks for a quantity',
+        brokeAt: {
+          step: 1,
+          detail:
+            `this asks for a quantity in ${task.unit} (${showDimension(wantUnit.dim)}), and the `
+            + `answer is a bare number. A number without its unit is not an answer to a physical `
+            + `question.`,
+        },
+        conditions: authored,
+      },
+    }
+  }
+  if (wantUnit && split?.unit && !sameDimension(split.unit.dim, wantUnit.dim)) {
+    return {
+      status: 'ruled',
+      asRead,
+      verdict: {
+        ruling: 'incorrect',
+        method: 'dimensions compared before values',
+        brokeAt: {
+          step: 1,
+          detail:
+            `${split.unitText} is ${showDimension(split.unit.dim)}, and this asks for `
+            + `${showDimension(wantUnit.dim)} — the unit of ${task.unit}. The arithmetic was not `
+            + `checked, because a quantity of the wrong kind cannot be the right size.`,
+        },
+        conditions: authored,
+      },
+    }
+  }
+
   // ── step 2: the right number, compared exactly ────────────────────────
   const answered = exactValue(answerTree)
   const expected = truth ?? claimed
   if (answered && expected) {
     const where = names.map(n => `${n} = ${at[n]}`).join(', ')
-    if (sameValue(answered, expected)) {
+    /*
+     * Both sides converted to SI before comparing, so `1 km` and `1000 m` are
+     * the same answer. Cross-multiplied rather than normalised: every term is
+     * an exact bigint ratio, so one integer comparison settles it without
+     * introducing a division that could lose the exactness the rest of this
+     * function depends on.
+     */
+    const sameQuantity = (() => {
+      if (!wantUnit || !split?.unit) return sameValue(answered, expected)
+      const g = split.unit.scale, w = wantUnit.scale
+      return answered.n * g.n * expected.d * w.d === expected.n * w.n * answered.d * g.d
+    })()
+    if (sameQuantity) {
       return {
         status: 'ruled',
         asRead,
         verdict: {
           ruling: 'correct',
-          method: `exact rational comparison at ${where}`,
+          // Says SI when a conversion happened, because "exact rational
+          // comparison" on an answer of 900 cm/s^2 against a reference of
+          // 9 m/s^2 describes neither what was compared nor why it passed.
+          method: wantUnit
+            ? `dimensions agree, then exact comparison in SI at ${where}`
+            : `exact rational comparison at ${where}`,
           conditions: authored,
         },
       }
@@ -729,10 +826,22 @@ export async function ruleEvaluate(
       asRead,
       verdict: {
         ruling: 'incorrect',
-        method: `exact rational comparison at ${where}`,
+        method: wantUnit
+          ? `exact comparison in SI at ${where}`
+          : `exact rational comparison at ${where}`,
         brokeAt: {
           step: 2,
-          detail: `the value at ${where} is ${showExact(expected)}, and this is ${showExact(answered)}`,
+          /*
+           * Name the units on both sides when there are any. Without them
+           * this line reads "the value is 1000 and this is 2" to somebody who
+           * answered 2 km against a reference of 1000 m — two true numbers,
+           * no indication that they are in different units, and a genuinely
+           * misleading report on an answer that is merely the wrong size.
+           */
+          detail: wantUnit
+            ? `the value at ${where} is ${showExact(expected)} ${task.unit}, and this is `
+              + `${showExact(answered)}${split?.unitText ? ` ${split.unitText}` : ''}`
+            : `the value at ${where} is ${showExact(expected)}, and this is ${showExact(answered)}`,
         },
         conditions: authored,
       },

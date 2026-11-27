@@ -1,27 +1,28 @@
 /**
- * Chance and events — the seventeenth subject, and SIX concepts.
+ * Chance and events — the seventeenth subject, and SEVEN concepts.
  *
  * `sample-spaces` was a node of `probability` and was the whole of this subject
  * until the forty-sixth promotion added `counting-probability` above it, the
  * forty-seventh added `conditional-probability` above that, the forty-eighth
  * added `bayes-theorem` above that, the forty-ninth added `random-variables`
- * off the third of them rather than off the fourth, and the fiftieth added
- * `expectation` above the fifth. The sections about the first
+ * off the third of them rather than off the fourth, the fiftieth added
+ * `expectation` above the fifth, and the fifty-first added
+ * `variance-and-covariance` above the sixth. The sections about the first
  * run to the `EDGES` note; the second concept's argument begins at `── THE SECOND
  * CONCEPT`, the third at `── THE THIRD CONCEPT`, the fourth at `── THE FOURTH
- * CONCEPT`, the fifth at `── THE FIFTH CONCEPT`, and the SIXTH concept's
- * argument together with this file's live measurement of the ready field begins
- * at `── THE SIXTH CONCEPT`.
+ * CONCEPT`, the fifth at `── THE FIFTH CONCEPT`, the sixth at `── THE SIXTH
+ * CONCEPT`, and the SEVENTH concept's argument together with this file's live
+ * measurement of the ready field begins at `── THE SEVENTH CONCEPT`.
  *
- * READ THE LAST OF THOSE SIX FOR THE FIELD, NEVER AN EARLIER ONE. Six sections
- * with near-identical titles now sit in this header in promotion order, and a
- * later one can CONTRADICT an earlier one — the third section recommends two
- * candidates, the fourth has spent one of them, the fifth has spent the last one
- * and reports a field of ONE, and the sixth has spent that one. Counting is the
- * only way to pick the live one; `templedb vcs log bza` names the promotion that
- * wrote it.
+ * READ THE LAST OF THOSE SEVEN FOR THE FIELD, NEVER AN EARLIER ONE. Seven
+ * sections with near-identical titles now sit in this header in promotion order,
+ * and a later one can CONTRADICT an earlier one — the third section recommends
+ * two candidates, the fourth has spent one of them, the fifth has spent the last
+ * one and reports a field of ONE, the sixth has spent that one and reports a
+ * field of one again, and the seventh has spent THAT. Counting is the only way to
+ * pick the live one; `templedb vcs log bza` names the promotion that wrote it.
  *
- * All six were nodes of `probability`, and each had to be DELETED from that
+ * All seven were nodes of `probability`, and each had to be DELETED from that
  * array on the way in. `atlasProblems` rejects a map node whose id collides with
  * an authored concept — the composed list would hold two entries for the id and
  * the shadowing copy has no knowledge points, so a fully authored concept would
@@ -38,6 +39,185 @@
  * sibling and not its successor — which is why it strands an edge where the two
  * before it stranded none, and why its material leans on the FIRST concept
  * rather than on the one it was gated behind.
+ *
+ * ── THE SEVENTH CONCEPT, AND THE READY FIELD MEASURED RATHER THAN QUOTED ──
+ *
+ * `variance-and-covariance` was the single unrefused ready node on the map for
+ * the third promotion running, so the choice was forced again. What the
+ * fifty-first promotion had to settle was neither rulability nor
+ * distinguishability from the concept below but a BOUNDARY against material
+ * already authored in a different subject — and the fiftieth's own hand-off
+ * named it, which is the first time that question has been asked in advance.
+ *
+ * THE BOUNDARY IS AGAINST `descriptive-statistics`, AND IT WAS ALREADY DRAWN
+ * FROM THE OTHER SIDE. That concept teaches variance as the mean of the squared
+ * deviations, dividing by n, with the n − 1 answer named as the one it is not.
+ * So two subjects would hold a thing called variance. What made the promotion
+ * cheap rather than delicate is that ontology-statistics.ts had not merely left
+ * room — it had recorded a DEBT. Under `WHAT IS PROVED HERE, AND WHAT IS MERELY
+ * COMPUTED` it says squaring being the right repair is "NOT PROVED, AND NOT
+ * PRETENDED TO BE", that the mean ABSOLUTE deviation would do as a measure of
+ * spread, and that what buys the squares is "the variance of a sum of
+ * independent quantities adds, which is `variance-and-covariance`'s claim in
+ * `probability` and is unwritten". That sentence is the third knowledge point's
+ * specification. A boundary that one side has already written down is a
+ * different job from one nobody has stated, and the lesson for the next
+ * candidate is to grep the SUBJECT-MATTER WORDS rather than the id: `variance`
+ * across lib/concepts/ontology-*.ts found this in one command, and no header or
+ * refusal set carries it because it is not a refusal.
+ *
+ * THE TWO SUBJECTS ARE DISTINGUISHED BY A FACT RATHER THAN BY A SENTENCE, which
+ * is the part worth keeping. The honest distinction available in advance was
+ * that a distribution weights its squared deviations by probability where a data
+ * set weights them equally — true, and on its own a restatement of the
+ * sixteenth idea. What makes it content is that the weighting CHANGES THE ANSWER
+ * ON THE ONE TABLE WHERE IT DID NOT CHANGE THE MEAN. The plain average of 0, 1,
+ * 2, 3 agrees with E[X] at 3/2, and the sixteenth idea had to explain that away
+ * as a fact about a symmetric table; the plain variance of the same four values
+ * is 5/4 against the distribution's 3/4. So the agreement below is shown to be
+ * about FIRST MOMENTS, by arithmetic, and the first point's three tasks are the
+ * three references that say so. The mechanism is visible too: symmetry makes the
+ * two end deviations cancel, which is all a mean needs, and a spread adds them
+ * instead, so how heavy the ends are is exactly what it measures.
+ *
+ * AND ONE THIRD OF THE CONTENT WAS ALREADY COMPUTED HERE, WHICH THE HAND-OFF
+ * ALSO SAID. The sixth concept's ninth task asks for `k/n - (g/n)*(h/n)` and
+ * answers 1/16 — E[XY] − E[X]E[Y] exactly, a covariance deliberately not named
+ * because naming it would have promised an account of what the number MEANS.
+ * The account is the third point: twice 1/16 is the 1/8 by which Var(X + T)
+ * exceeds Var(X) + Var(T). So the new material is smaller than it looks and the
+ * right response was not to restate the arithmetic but to give it a job — and
+ * the tenth task is that same `given` at a second substitution, answering 0 on a
+ * pair where one member is a FUNCTION of the other. Same expression, two
+ * substitutions, and the one returning ZERO is the more dependent pair, which is
+ * the converse disproved in one comparison rather than asserted.
+ *
+ * ── WHAT THIS PROMOTION COST AND YIELDED ──────────────────────────────────
+ *
+ * AFTER: 210 map nodes, 96 authored, 19 areas, 17 subjects, TWELVE ready, 0
+ * floor-blocked. Coverage 95 -> 96 material, 95/95 -> 96/96 practisable,
+ * 988/1071 -> 1007/1090 questions, 269 -> 272 chains, `chainsWithNoRuling`
+ * UNCHANGED at 1. Nineteen subgoals, nineteen authored interrogatives, so both
+ * the numerator and the denominator moved by nineteen.
+ *
+ * THE MAP GREW WHILE THIS WAS BEING WRITTEN, AND THAT IS WORTH A LINE BECAUSE IT
+ * NEARLY INVALIDATED THE MEASUREMENT. The node total went from 203 to 210 mid-run
+ * — not by a promotion but by atlas-structures.ts splitting
+ * `computability-and-complexity` into seven nodes. The ready field was recomputed
+ * against the newer map and came out TWELVE with identical membership, because
+ * all seven of the new nodes have unwritten prerequisites. So the figure below
+ * survived, and the reason to record this is the general one: a ready field
+ * measured at the start of a run is a claim about the tree at that moment, and
+ * the tree has other authors.
+ *
+ * IT STRANDED NOTHING, WHICH NO PROMOTION HAS MANAGED SINCE THE FORTY-EIGHTH.
+ * The node declared ONE `need` and it was the concept the fiftieth had just
+ * written, so the whole gate is an `EDGES` entry here and `PROBABILITY.links`
+ * is untouched at five. That is the fiftieth's rule confirmed rather than
+ * re-derived: the cost is a property of the NODE's `needs`, and two consecutive
+ * costly promotions each declared two.
+ *
+ * TEN TASKS AND NOT NINE, BREAKING THE THREE-PER-POINT SHAPE THIS SUBJECT HAS
+ * HELD FOR SIX CONCEPTS. The third point makes three claims — the spreads do not
+ * add, independence is what makes them, and a vanishing joint term does not buy
+ * independence back — and the map node's own `is` promised the third by name.
+ * Dropping it to keep a ratio tidy would have shipped a concept narrower than the
+ * map advertised, so the per-point counts are 3, 3, 4 and tests/concepts-logic.mjs
+ * asserts them as counts rather than as a total over a ratio.
+ *
+ * THE READY COUNT HELD AT TWELVE A THIRD CONSECUTIVE TIME, AND BY THE
+ * FORTY-NINTH'S MECHANISM RATHER THAN THE FIFTIETH'S. This node had TWO
+ * dependents and exactly one was ready — `discrete-distributions` also names
+ * `binomial-theorem`, written long since, while `law-of-large-numbers` also names
+ * `sequence-convergence`, which nothing has touched. So the split came out
+ * one-and-one, as the forty-ninth's did, where the fiftieth's single dependent
+ * made its yield forced. Three promotions, one figure, three accounts of it: the
+ * number has now said nothing three times running.
+ *
+ * AND THE ROOT SET GREW, WHICH IS THE OTHER HALF OF THE SAME FACT. Both
+ * dependents lose their only in-area prerequisite with this node, so the
+ * forty-eighth's rule — the set changes size by (in-area dependents) minus one —
+ * predicts +1, and `probability` goes from three roots to four. The fiftieth held
+ * at three with every member changed and this one moves to four; a `length`
+ * check would have been wrong in opposite directions two promotions running.
+ * `law-of-large-numbers` is the second node this file has seen become a root
+ * WITHOUT becoming ready.
+ *
+ * THE ANCHOR SLOT EMPTIED A FIFTH TIME IN FIVE AND THE PREDECESSOR HAD CALLED IT
+ * A HUMAN DECISION. armature.ts said whoever emptied it had to "either widen the
+ * reading or argue that the region does not need three anchors". Both exits were
+ * measured rather than chosen on taste. Dropping to two would have falsified
+ * `anchors.length === 3` in THREE separate promotion groups in tests/atlas.mjs
+ * and left Rubneb the only two-anchor region of nineteen that all carry exactly
+ * three, so the reading was widened instead, to `law-of-large-numbers`. The
+ * refusal it overturns is a CATEGORY refusal — "the distributions and the limit
+ * theorems stay ruled out however ready they look" — which is the same move the
+ * forty-ninth proved unsound when it found that sweep had never reached two of
+ * nine nodes; checked against the region's own `because` instead, "a seasonal
+ * raid whose return nobody can promise" is a long-run average and not one
+ * expectation. The argument is at the anchor list.
+ *
+ * AND THAT SLOT IS SAFE FOR THE FIRST TIME SINCE THE FORTY-SIXTH, deliberately.
+ * `discrete-distributions` is the other thing this promotion made ready, so
+ * filling the slot with it would have emptied the slot again next time — the
+ * failure four armature notes complain about, chosen on purpose. None of the
+ * three anchors is now ready.
+ *
+ * NOTHING STRANDED IN SILENCE, AND THE FIFTIETH'S HEADER HAD ANSWERED THAT IN
+ * ADVANCE. The node declared no `confusedWith`, no `exercises` and no
+ * `encompasses`; all three were read off it before deletion anyway, because a
+ * note is evidence about what somebody looked at and the node is the thing that
+ * decides.
+ *
+ * ── THE FIELD THE NEXT RUN INHERITS, WHICH IS ONE CANDIDATE AGAIN AND IS
+ *    DECLINED BY THIS FILE ──────────────────────────────────────────────────
+ *
+ * TWELVE ready, 0 floor-blocked, ELEVEN still refused and the list unchanged:
+ * `graphs-of-functions`, `relations`, `linear-inequalities`, `complex-numbers`,
+ * `supremum-and-completeness`, `constructions`, `non-euclidean-geometry`,
+ * `word-problems`, `eigenvalues`, `combinatorial-identities`,
+ * `sampling-and-bias`. Unrefused and available: ONE, and it is this promotion's
+ * own yield for the fourth promotion running.
+ *
+ *  - `discrete-distributions` (`probability`) — needs `variance-and-covariance`
+ *    and `binomial-theorem`, which is `rational-expressions` and not
+ *    `functions-and-inverses` as the name suggests, so filed HERE it would
+ *    strand one and give `PROBABILITY.links` a sixth entry. ZERO dependents,
+ *    which was measured and not assumed: nothing in the area names it, since
+ *    `joint-distributions` goes through `continuous-distributions` and
+ *    `central-limit-theorem` through `law-of-large-numbers`. That is the first
+ *    zero-dependent candidate since `dual-spaces` at the forty-second, and it
+ *    means the field after it would be EMPTY unless the two roots this promotion
+ *    made are reached another way. Declares no `confusedWith`, no `exercises`,
+ *    no `encompasses` — read off the node, not inherited from here. Plainly
+ *    rulable: C(3,2)(1/2)^3 is a number.
+ *
+ * BUT THIS FILE DECLINES IT, AND THE REFUSAL IS IN THE `covers` RATHER THAN IN A
+ * COMMENT — so it is printed to a learner and filing here would falsify it. The
+ * sentence is about the named distributions being FAMILIES INDEXED BY THEIR
+ * PARAMETERS. Read it before deciding anything, because THIS PROMOTION CHANGED
+ * IT. It used to say that naming a family from an instance "would promise a
+ * mechanism nothing above supplies", and the twenty-first idea supplies one:
+ * X is A + B + C, three independent indicators, which is how a binomial count is
+ * built. So half of that refusal has expired by this concept's own doing. What
+ * survives, and what the sentence now says, is that the three and the half never
+ * MOVE — nothing here tosses four times or weights the coin, so there is no
+ * parameter for a family to be indexed by.
+ *
+ * WHICH MAKES THE NEXT RUN'S QUESTION A SHARP ONE RATHER THAN A JUDGEMENT CALL.
+ * Either author the parameters, in which case the refusal is discharged rather
+ * than overturned and this subject is the host; or file the concept into a new
+ * subject of its own and leave this `covers` true. The SHAPE-vs-MOVE test is
+ * what decides it: a family indexed by n and p is a MOVE — vary the count, vary
+ * the bias, read the same formula off a different table — and a single table is
+ * a SHAPE. The three independent indicators above are one instance of the move
+ * with both parameters frozen, which is the strongest evidence yet that the move
+ * is reachable and is not itself the move.
+ *
+ * `eigenvalues` remains the one to look at if that comes out badly — four
+ * dependents, the most of anything unrefused, and refused by its own HOST in
+ * ontology-matrices.ts rather than on rulability. That is a measurement rather
+ * than a recommendation.
  *
  * ── WHY THIS CONCEPT, AND WHY THE FIELD CAME DOWN TO TWO ──────────────────
  *
@@ -1524,9 +1704,10 @@ const subject: Subject = {
     + 'writing that list down, then by COUNTING it once it is too long to write, and then by '
     + 'REPLACING it with what you have been told, then by REVERSING what you were told '
     + 'into what you wanted to know, then by attaching a NUMBER to each outcome and '
-    + 'asking after the number instead, and last by COLLAPSING those numbers to one. Six '
-    + 'concepts and eighteen ideas. The first '
-    + 'three are one experiment small enough to print in full, and the last SIX go back to '
+    + 'asking after the number instead, then by COLLAPSING those numbers to one, and last by '
+    + 'asking how far they stray from it. Seven '
+    + 'concepts and twenty-one ideas. The first '
+    + 'three are one experiment small enough to print in full, and the last NINE go back to '
     + 'that same experiment. First, '
     + 'THE SAMPLE SPACE IS A SET YOU CHOOSE, AND THE '
     + 'CHOICE IS PART OF THE MODEL. An OUTCOME is one complete result, the sample space is the '
@@ -1700,21 +1881,67 @@ const subject: Subject = {
     + 'no sequence without heads having its first head on toss one. The addition held regardless, '
     + 'so nothing has to be checked before adding two expectations — and that is the whole of why '
     + 'it is the useful fact. Multiplying is not free: E[XT] = 17/8 = 34/16 against '
-    + 'E[X]E[T] = 33/16, false by 1/16 and so by little enough to survive a careless check. What '
+    + 'E[X]E[T] = 33/16, false by 1/16 and so by little enough to survive a careless check. The '
+    + 'last three ideas ask how far the numbers stray from the one they collapsed to. '
+    + 'Nineteenth, SPREAD IS THE SAME WEIGHTED TOTAL WITH THE SQUARED DISTANCES FROM THE MEAN IN '
+    + 'PLACE OF THE VALUES, AND THERE IS NOTHING LEFT TO DIVIDE BY. X\'s deviations from 3/2 are '
+    + '-3/2, -1/2, 1/2, 3/2, weighted by the table they total 0 — the sixteenth idea\'s linearity '
+    + 'at a = 1 and b = -3/2 — so the squares are a repair rather than a flourish, and '
+    + 'Var(X) = (9/4)(1/8) + (1/4)(3/8) + (1/4)(3/8) + (9/4)(1/8) = 24/32 = 3/4. '
+    + '`descriptive-statistics` divides by n and has to say three times that it is not n - 1; '
+    + 'here the fourteenth idea forced the weights to total exactly 1, so the weighting IS the '
+    + 'averaging and the question does not arise. And the weights do more here than at the '
+    + 'sixteenth idea: the plain average of 0, 1, 2, 3 agreed with E[X] at 3/2 because the table '
+    + 'is symmetric, while the plain variance of the same four values is 5/4 and does NOT agree '
+    + 'with 3/4 — symmetry makes the two end deviations CANCEL, which is all a mean needs, and a '
+    + 'spread ADDS them, so their weight is exactly what it measures. Var(T) = 47/64, and the '
+    + 'plain route returns 5/4 for both rules, so at the second moment it is wrong for both. '
+    + 'Twentieth, THE SPREAD IS THE SECOND TOTAL MINUS THE SQUARE OF THE FIRST, AND THAT GAP '
+    + 'MEASURES THE PUSH-THROUGH THE SEVENTEENTH IDEA FORBADE. E[X^2] = 24/8 = 3 and '
+    + '(E[X])^2 = 9/4, and 3 - 9/4 = 3/4 without one deviation being computed. The proof is the '
+    + 'eighteenth idea and then the seventeenth: (X - m)^2 = X^2 - 2mX + m^2 is a sum of three '
+    + 'rules on one space so the expectations add with nothing checked, the constants come out '
+    + 'as 2mE[X] and m^2 times the total of 1, and m IS E[X]. Measuring from any other centre c '
+    + 'gives the variance plus (c - m)^2, so the mean is the centre that makes the spread least. '
+    + 'A square is the next non-linear rule after |2X - 3| and this says how badly pushing it '
+    + 'through fails: 9/4 against 3, short by the variance — and SHORT rather than over on every '
+    + 'table there is, since a weighted total of squares can never be negative. Twenty-first, '
+    + 'SPREADS DO NOT ADD WHERE EXPECTATIONS DID, AND THE TERM THAT STOPS THEM IS THE NUMBER THE '
+    + 'EIGHTEENTH IDEA COMPUTED WITHOUT NAMING. Var(X + T) = 103/64 while '
+    + 'Var(X) + Var(T) = 95/64, and the identity Var(X + T) = Var(X) + Var(T) + 2Cov(X, T) with '
+    + 'COVARIANCE Cov(X, T) = E[XT] - E[X]E[T] accounts for the 1/8: that cross term is the same '
+    + '1/16 by which multiplying failed above, which had no job until now. Independence makes it '
+    + '0 and the spreads then add exactly — X IS A + B + C, one rule per toss and 1 for heads, '
+    + 'each squaring to itself and so each of variance 1/2 - 1/4 = 1/4, and 3(1/4) is the 3/4 '
+    + 'the nineteenth idea got from four deviations. That additivity is what '
+    + '`descriptive-statistics` named as the reason for squaring at all, having declined to '
+    + 'pretend the mean ABSOLUTE deviation would not do, and it is paid here. The converse is '
+    + 'FALSE: Y = |2X - 3| is built from X, so knowing X settles Y and the ninth idea\'s product '
+    + 'test puts 1/32 against 1/8 — yet E[XY] = 9/4 = E[X]E[Y], so Cov(X, Y) = 0. A zero '
+    + 'covariance says only that two rules do not move together on average and IN A STRAIGHT '
+    + 'LINE, and Y follows the distance of X from 3/2 rather than X. What '
     + 'is NOT here is a boundary '
     + 'rather than a backlog. THE COUNTING ITSELF is '
     + '`counting-principles`, an '
     + 'authored subject of its own — every count above is set up, named as its work, and then '
-    + 'divided, and none of it is re-derived here. SPREAD is not: VARIANCE is an expected value '
-    + 'of a squared deviation and so is arithmetic the sixteenth idea can already express, but '
-    + 'its content is which deviations get squared and why, and the eighteenth idea is where that '
-    + 'would have to start rather than where it ends — E[XT] missing E[X]E[T] by 1/16 is a '
-    + 'covariance in all but name, and naming it would promise an account of independence this '
-    + 'subject gives only as a test. THE NAMED DISTRIBUTIONS, the '
-    + 'HYPERGEOMETRIC among them, are FAMILIES indexed by their parameters, where the fourteenth '
-    + 'idea builds one member of one family by collecting preimages, and the fifth idea\'s '
-    + 'C(5,1)C(7,2)/C(12,3) is one value of another; naming a family from an instance would '
-    + 'promise a mechanism nothing above supplies. And INFINITE OR CONTINUOUS spaces are '
+    + 'divided, and none of it is re-derived here. The STANDARD DEVIATION is named and not '
+    + 'computed, and CORRELATION is not here at all, for one reason shared: both need a square '
+    + 'root of a variance, and on this experiment every one of them is irrational — the root of '
+    + '3/4 to start with — so a correlation, which is a covariance over the product of two of '
+    + 'them, would be an exercise in surds wearing a probability\'s clothes. '
+    + '`descriptive-statistics` chose a list whose standard deviation is exactly 2 precisely to '
+    + 'avoid that, and a fair coin does not offer the same courtesy. THE NAMED DISTRIBUTIONS, '
+    + 'the HYPERGEOMETRIC among them, are FAMILIES INDEXED BY THEIR PARAMETERS, and that '
+    + 'indexing rather than the mechanism is what is missing — which is a correction the '
+    + 'twenty-first idea forced on this sentence. It used to say that naming a family from an '
+    + 'instance would promise a mechanism nothing above supplies, and a mechanism is now '
+    + 'supplied: X is A + B + C, three independent rules each worth 1 for heads, which is '
+    + 'exactly how a binomial count is built. What is still absent is that the three and the '
+    + 'half never MOVE. Nothing above tosses the coin four times or weights it, so every number '
+    + 'here belongs to one member of the family and the family itself has no variable to be '
+    + 'indexed by; the fourteenth idea builds that member by collecting preimages and the fifth '
+    + 'idea\'s C(5,1)C(7,2)/C(12,3) is one value of another. Naming a family from one member '
+    + 'would promise a parameter, and there is none. And INFINITE OR CONTINUOUS spaces are '
     + 'not a harder version of this: equally likely outcomes stop existing there, so the one '
     + 'formula the first three concepts rest on has no analogue rather than a subtler one, and '
     + 'the table the last three are about does not exist either, since P(X = c) = 0 at every '
@@ -4448,6 +4675,552 @@ const CONCEPTS: Concept[] = [
       },
     ],
   },
+  {
+    id: 'variance-and-covariance',
+    name: 'Variance and covariance',
+    subjectId: subject.id,
+    scope: {
+      id: 'variance-and-covariance',
+      label: 'Variance and covariance',
+      hint: 'variance standard deviation covariance correlation independence',
+      /*
+       * The map node's pattern and its `terms` as the hint, carried across
+       * unchanged, as every promotion since the fourth has done.
+       *
+       * AND FOR ONCE THE SHORTFALL RUNS THE OTHER WAY, which is the fourth
+       * distinct shape this file has recorded for one of these patterns. Two of
+       * the concepts below carry DEAD `\b`-after-`)` alternatives, one reaches a
+       * singular title and no plural, and the concept directly below names the
+       * encyclopaedia's exact title for itself and so reaches that and nothing
+       * else in its family. This one misses nothing: `Variance`, `Covariance`,
+       * `Standard deviation` and `Correlation` are each an article title, each
+       * alternative ends in a letter so the closing `\b` bites on all four, and
+       * every name the material uses is reachable.
+       *
+       * WHAT IT DOES INSTEAD IS OVER-REACH, and that is invisible to the
+       * recognition figure in exactly the way a miss is. `\bvariance\b` takes
+       * "Analysis of variance", which is `anova-and-design`, a node of
+       * `statistics` with a pattern of its own — so a learner reading about
+       * ANOVA is offered this concept. Wrong rather than dishonest: what is
+       * written below is the spread of a distribution, and partitioning one
+       * across the groups of a designed experiment is that node's subject and
+       * nothing here touches it.
+       *
+       * NOT REPAIRED, for the reason the six below give about their own
+       * patterns: narrowing one in the same change that adds material moves
+       * recognition and the written-concept count at once, and the two want
+       * separate measurements. Asserted by name in tests/concepts-logic.mjs,
+       * because a pattern that claims a neighbour's article is the one fault
+       * here that no coverage line can show — a miss lowers a number and an
+       * over-reach raises it.
+       */
+      match: /\b(variance|covariance|standard deviation|correlation)\b/i,
+    },
+    fidelity: 'checked',
+    objectives: [
+      {
+        id: 'total-the-squared-deviations-weighted-and-measure-what-ignoring-the-table-costs',
+        statement:
+          'Produce the total of squared deviation times probability over a whole table, and so '
+          + 'establish that the spread of a distribution is a weighted total with nothing left '
+          + 'to divide by, so that the n-versus-n-minus-one question a data set has to settle '
+          + 'does not arise. Produce the spread of the same four values read as a plain list, '
+          + 'and so establish that the two disagree - on the ONE table where the plain average '
+          + 'of the values was right, which fixes the agreement met one concept down as a fact '
+          + 'about first moments only. Produce the weighted spread of a second rule sharing '
+          + 'those values, and so establish that the plain route is wrong for both rules and by '
+          + 'two different amounts.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'reach-the-spread-from-two-totals-and-measure-the-push-through-it-forbids',
+        statement:
+          'Produce the expectation of the SQUARE of a variable, and so establish that it is not '
+          + 'the square of the expectation. Produce the difference of those two numbers and meet '
+          + 'the spread computed the long way, and so establish that the short route is a '
+          + 'theorem rather than a coincidence of one table. Produce the same difference for a '
+          + 'second rule, and so establish that the gap is always the spread - which measures '
+          + 'exactly how far pushing a square through an expectation falls short, and settles '
+          + 'that it falls short rather than over for every table there is.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'add-two-spreads-and-find-the-term-that-stops-them-adding-and-what-makes-it-vanish',
+        statement:
+          'Produce the spread of a SUM of two rules on one space and the two spreads separately, '
+          + 'and so establish that these do NOT add where the expectations did, which is the one '
+          + 'place this subject has a fact and its near neighbour has the opposite. Produce the '
+          + 'shortfall, and so establish that it is twice the number the concept below computed '
+          + 'and declined to name. Produce the spread of a sum of three rules that really are '
+          + 'independent, and so establish that addition comes back exactly when the joint term '
+          + 'vanishes. Produce that joint term for a rule and a function OF it, and so establish '
+          + 'that a vanishing one does not buy independence back.',
+        taskKinds: ['evaluate'],
+      },
+    ],
+    knowledgePoints: [
+      {
+        id: 'the-spread-is-a-weighted-total-of-squared-deviations-so-the-table-decides-it-and-not-the-value-list',
+        conceptId: 'variance-and-covariance',
+        statement:
+          'Expectation collapsed the table to one number and threw away everything about how far '
+          + 'X strays from it. VARIANCE is the second question answered the same way: take each '
+          + 'value\'s distance from the mean, SQUARE it, and total the squares weighted by their '
+          + 'own probabilities. For the heads-count the mean is 3/2, so the four deviations are '
+          + '-3/2, -1/2, 1/2 and 3/2, their squares are 9/4, 1/4, 1/4 and 9/4, and '
+          + 'Var(X) = (9/4)(1/8) + (1/4)(3/8) + (1/4)(3/8) + (9/4)(1/8) = 24/32 = 3/4. Two '
+          + 'things about that construction are the content. THERE IS NO DIVISOR TO ARGUE ABOUT. '
+          + '`descriptive-statistics` teaches the variance of a LIST and has to say three times '
+          + 'over that it divides by n rather than by n - 1; here the weights are probabilities '
+          + 'and `random-variables` forced them to total exactly 1, so nothing is divided at the '
+          + 'end and the question has no counterpart. AND THE WEIGHTS MATTER MORE HERE THAN THEY '
+          + 'DID ONE CONCEPT DOWN, which is the claim this concept exists to make. The plain '
+          + 'average of the values 0, 1, 2, 3 is 3/2 and AGREES with E[X], because the table is '
+          + 'symmetric. The plain variance of those same four values is '
+          + '(9/4 + 1/4 + 1/4 + 9/4)/4 = 5/4, and it does NOT agree with 3/4 - it overstates the '
+          + 'spread by 1/2. Symmetry bought the first moment and buys nothing at the second, '
+          + 'because the plain route gives 0 and 3 - the two values furthest from the centre and '
+          + 'so the two largest squares - a quarter of the weight each where the table gives '
+          + 'them an eighth. So one list of four numbers, read as a data set and read as a '
+          + 'distribution, has two different spreads, and the distribution\'s is the smaller.',
+        position: 1,
+        /*
+         * No `automaticityTarget`, for the reason the six concepts below give
+         * about their own arithmetic, and with the same addition the concept
+         * directly below makes about its own. 24/32 would time beautifully, and
+         * a learner racing the clock on this table reaches a tidier number
+         * faster by averaging the four squared deviations equally - which is the
+         * 5/4 the point exists to reject. A speed reward would again pay the
+         * wrong route for arriving first.
+         */
+        workedExample: {
+          problem:
+            'A fair coin is tossed three times and all eight sequences are equally likely. X is '
+            + 'the number of heads, with the table 1/8, 3/8, 3/8, 1/8 at 0, 1, 2, 3 and '
+            + 'E[X] = 3/2 from the concept below. Find Var(X) as the weighted total of squared '
+            + 'deviations. Then find the variance of the four values 0, 1, 2, 3 read as a plain '
+            + 'list, the way `descriptive-statistics` does, say how far apart the two are, and '
+            + 'say why the symmetry that rescued the plain AVERAGE does not rescue this. Then '
+            + 'take T, the toss the first head falls on, whose table is 1/8, 1/2, 1/4, 1/8 at '
+            + 'the same four values with E[T] = 11/8, and find Var(T).',
+          subgoals: [
+            {
+              label: 'Subtract the mean from each value, before anything is squared or weighted',
+              detail:
+                'The deviations are 0 - 3/2, 1 - 3/2, 2 - 3/2 and 3 - 3/2, which are -3/2, '
+                + '-1/2, 1/2 and 3/2. Those four numbers rather than the values are what a '
+                + 'spread is about, and they already say why their signed total is useless: '
+                + 'weighted by the table it is (-3/2)(1/8) + (-1/2)(3/8) + (1/2)(3/8) + '
+                + '(3/2)(1/8) = -3/16 - 3/16 + 3/16 + 3/16 = 0. `descriptive-statistics` proves '
+                + 'that cancellation for every list there is, and the same fact runs here as '
+                + '`expectation`\'s linearity at a = 1 and b = -3/2: E[X - 3/2] = E[X] - 3/2, '
+                + 'and E[X] IS 3/2. So the squaring is a repair and not a flourish.',
+              socratic:
+                'The four deviations from 3/2 are -3/2, -1/2, 1/2 and 3/2. Weight those by the '
+                + 'table and total them - what comes out, and what does that rule out as a '
+                + 'measure of spread?',
+            },
+            {
+              label: 'Square each deviation, and notice what that does to the units',
+              detail:
+                'Squaring kills the signs: 9/4, 1/4, 1/4 and 9/4. Each is an odd square over 4, '
+                + 'which is the useful way to hold them - 9, 1, 1, 9 over a common 4 - because '
+                + 'the arithmetic after this stays in exact fractions and no decimal has to be '
+                + 'rounded. It also moves the UNITS: a deviation is in heads and its square is '
+                + 'in heads squared, so what this point ends with is not on the same scale as '
+                + 'E[X] and is not comparable with it until a root is taken. '
+                + '`descriptive-statistics` takes that root and calls the result the standard '
+                + 'deviation; on this table the variance is 3/4 and the root is irrational, '
+                + 'which is why every question below asks for the variance.',
+              socratic:
+                'What are the four deviations once squared, and what has the squaring done to '
+                + 'the units the answer will be in?',
+            },
+            {
+              label: 'Weight the squares by the table and total them, which is the definition',
+              detail:
+                'Var(X) is the same weighted total `expectation` is, with the squared deviations '
+                + 'standing where the values stood: (9/4)(1/8) + (1/4)(3/8) + (1/4)(3/8) + '
+                + '(9/4)(1/8). Over thirty-seconds that is 9/32 + 3/32 + 3/32 + 9/32 = 24/32 = '
+                + '3/4. Nothing is divided by four at the end, and there is no choice to make '
+                + 'between four and three: the probabilities total 1 because `random-variables` '
+                + 'proved the values of a function partition the space, so the weighting IS the '
+                + 'averaging. That is the whole of why the n-versus-n-minus-one argument '
+                + '`descriptive-statistics` has to make three separate times has no counterpart '
+                + 'here.',
+              socratic:
+                'You have four squared deviations and four probabilities. What is the weighted '
+                + 'total, and why is there nothing left to divide by once you have it?',
+            },
+            {
+              label: 'Compute the same list\'s spread with the table thrown away, as a data set would',
+              detail:
+                'Read 0, 1, 2, 3 as a list of four numbers rather than as the values of a rule. '
+                + 'Their mean is 6/4 = 3/2, the same centre, so the deviations and the squares '
+                + 'are the same 9/4, 1/4, 1/4, 9/4 - and now each is counted once and the total '
+                + 'is divided by four: (9/4 + 1/4 + 1/4 + 9/4)/4 = (20/4)/4 = 5/4. That is '
+                + '`descriptive-statistics`\' variance of this list, computed exactly as that '
+                + 'concept computes it, divisor and all. It is not 3/4.',
+              socratic:
+                'Averaging those four squared deviations equally gives what, and in which single '
+                + 'respect does that calculation differ from the one a subgoal above?',
+            },
+            {
+              label: 'Say why the symmetry that rescued the plain average does not rescue this',
+              detail:
+                '`expectation`\'s first point showed the plain average of 0, 1, 2, 3 hitting '
+                + 'E[X] exactly at 3/2, and said the agreement was a fact about this symmetric '
+                + 'table rather than about the method. Here is what that was worth: 5/4 against '
+                + '3/4, so the plain route overstates the spread by 1/2 on the very table where '
+                + 'it got the centre right. The reason is in the weights. The plain route gives '
+                + '0 and 3 a quarter each where the table gives them an eighth, and those are '
+                + 'the two largest squares. Symmetry makes the pull from the two ends CANCEL, '
+                + 'which is all a first moment needs; a second moment ADDS the ends instead, so '
+                + 'how heavy they are is exactly the thing it measures.',
+              socratic:
+                'The plain route found the right centre on this table and the wrong spread. '
+                + 'Which values does it weight differently from the table, and why does '
+                + 'cancelling help a mean but not a spread?',
+            },
+            {
+              label: 'Do the second rule, and find the plain route wrong for both this time',
+              detail:
+                'T has the same four values with the table 1/8, 1/2, 1/4, 1/8 and E[T] = 11/8, '
+                + 'so its deviations are -11/8, -3/8, 5/8 and 13/8 and the squares are 121/64, '
+                + '9/64, 25/64 and 169/64. Weighting by the preimage sizes 1, 4, 2, 1 over 8: '
+                + '(121 + 36 + 50 + 169)/512 = 376/512 = 47/64. The plain list variance of T\'s '
+                + 'values is still 5/4, because T takes the same four values - just as the plain '
+                + 'average was 3/2 for both rules. One concept down that plain route was right '
+                + 'for X and wrong for T; here it is wrong for BOTH, 5/4 against 3/4 and against '
+                + '47/64. So the coincidence that had to be explained away below does not arise '
+                + 'at all at the second moment.',
+              socratic:
+                'T has the same values as X and a different table. What is Var(T), and does the '
+                + 'plain list variance give T the same number it gave X or a different one?',
+            },
+          ],
+          answer:
+            'X\'s deviations from 3/2 are -3/2, -1/2, 1/2, 3/2, and weighted by the table they '
+            + 'total 0, so the signs have to go. Their squares are 9/4, 1/4, 1/4, 9/4, and '
+            + 'Var(X) = (9/4)(1/8) + (1/4)(3/8) + (1/4)(3/8) + (9/4)(1/8) = 24/32 = 3/4, with '
+            + 'nothing divided at the end because the probabilities already total 1 - so the '
+            + 'n-versus-n-minus-one question `descriptive-statistics` settles three times does '
+            + 'not arise. The same four values read as a plain list have mean 3/2 and variance '
+            + '(9/4 + 1/4 + 1/4 + 9/4)/4 = 5/4, so the two disagree by 1/2, on the one table '
+            + 'where the plain AVERAGE was right. Symmetry makes the two end deviations cancel, '
+            + 'which is all a mean needs, and a spread adds them instead, so their weight is '
+            + 'precisely what it measures: the plain route gives 0 and 3 a quarter each where '
+            + 'the table gives them an eighth. For T, with table 1/8, 1/2, 1/4, 1/8 and '
+            + 'E[T] = 11/8, the squared deviations are 121/64, 9/64, 25/64, 169/64 and '
+            + 'Var(T) = 376/512 = 47/64, while the plain list route still returns 5/4 - wrong '
+            + 'for both rules, where below it was wrong only for T.',
+        },
+      },
+      {
+        id: 'the-spread-is-the-second-total-minus-the-square-of-the-first-and-that-gap-measures-a-forbidden-push-through',
+        conceptId: 'variance-and-covariance',
+        statement:
+          'The definition totals four squared deviations and cannot start until the mean is '
+          + 'known. There is a shorter route needing two numbers: Var(X) = E[X^2] - (E[X])^2. '
+          + 'For the heads-count E[X^2] = 0(1/8) + 1(3/8) + 4(3/8) + 9(1/8) = 24/8 = 3 and '
+          + '(E[X])^2 = (3/2)(3/2) = 9/4, and 3 - 9/4 = 3/4 - the answer the definition gave. '
+          + 'The proof is `expectation`\'s two facts and nothing else. Expanding (X - m)^2 into '
+          + 'X^2 - 2mX + m^2 gives a SUM of three rules on one space, so the third point adds '
+          + 'their expectations with nothing to check; the second point takes the constants out '
+          + 'of the last two, leaving 2mE[X] and m^2 times the table\'s total of 1; and since m '
+          + 'IS E[X] the middle term is 2m^2 and what survives is E[X^2] - m^2. AND THE GAP IT '
+          + 'NAMES IS NOT AN ARTEFACT OF THE ALGEBRA. `expectation`\'s second point refused to '
+          + 'push a non-linear rule through an expectation, showing one fail on |2X - 3|. A '
+          + 'square is the next non-linear rule to try, and this identity says how badly it '
+          + 'fails: pushing X^2 through returns (E[X])^2 = 9/4 where the truth is 3, short by '
+          + '3/4, and the shortfall IS the variance. Which settles the DIRECTION for every table '
+          + 'there is rather than for this one. A variance is a weighted total of squares and '
+          + 'every square and every probability is at least 0, so it can never be negative: '
+          + 'E[X^2] is at least (E[X])^2 always, a square pushed through an expectation always '
+          + 'UNDERSHOOTS, and it undershoots by exactly how much the variable varies - with '
+          + 'equality only for a rule that never leaves its mean.',
+        position: 2,
+        workedExample: {
+          problem:
+            'Same three tosses and the same X, with table 1/8, 3/8, 3/8, 1/8 at 0, 1, 2, 3 and '
+            + 'E[X] = 3/2. Build the table of X^2, find E[X^2], then compute E[X^2] - (E[X])^2 '
+            + 'and compare it with the 3/4 the point below produced from the deviations. Say '
+            + 'which two of `expectation`\'s facts the identity is proved from, and what the gap '
+            + 'measures about pushing a square through an expectation. Then run the same '
+            + 'two-total route on T, whose table is 1/8, 1/2, 1/4, 1/8 with E[T] = 11/8, and '
+            + 'check it against Var(T).',
+          subgoals: [
+            {
+              label: 'Build the squared rule\'s table, and check whether anything merges',
+              detail:
+                'X^2 is a function of X, so `random-variables`\' third point applies: it is a '
+                + 'random variable on the same eight sequences. Squaring is one-to-one on 0, 1, '
+                + '2, 3 because all four are at least 0, so nothing merges and the probabilities '
+                + 'travel across unchanged - 1/8 at 0, 3/8 at 1, 3/8 at 4, 1/8 at 9. That is the '
+                + 'relabelling case rather than the merging one, and it is worth checking rather '
+                + 'than assuming: on a table holding both -1 and 1 the square WOULD merge two '
+                + 'entries and their probabilities would add.',
+              socratic:
+                'X^2 takes which four values, carrying which probabilities - and would the same '
+                + 'be true of a rule that took both -1 and 1?',
+            },
+            {
+              label: 'Total the squared table, and put it beside the square of the first total',
+              detail:
+                'E[X^2] = 0(1/8) + 1(3/8) + 4(3/8) + 9(1/8) = (0 + 3 + 12 + 9)/8 = 24/8 = 3. '
+                + 'Now (E[X])^2 = (3/2)(3/2) = 9/4. The two are different numbers, which is why '
+                + 'this subgoal exists on its own: the expectation of a square is not the square '
+                + 'of an expectation, and a learner who assumed it was has made exactly the '
+                + 'push-through `expectation`\'s second point refused. Notice which way round '
+                + 'they fall - 3 is the larger.',
+              socratic:
+                'What does totalling the squared table give, and how does it compare with '
+                + '(E[X])^2 - larger, smaller or equal?',
+            },
+            {
+              label: 'Subtract the two and meet the number the deviations produced',
+              detail:
+                '3 - 9/4 = 12/4 - 9/4 = 3/4. That is Var(X) from the point below, reached with '
+                + 'no deviation computed and nothing subtracted from any value: two totals over '
+                + 'the table in place of four subtractions, four squarings and a weighted total. '
+                + 'The agreement is not luck, and the next two subgoals are why.',
+              socratic:
+                'What does E[X^2] - (E[X])^2 come to, and where in this concept have you already '
+                + 'seen that number?',
+            },
+            {
+              label: 'Expand the square and name which fact below licenses each step',
+              detail:
+                '(X - m)^2 is X^2 - 2mX + m^2, a sum of three rules on one space, so '
+                + '`expectation`\'s third point gives E[(X - m)^2] = E[X^2] - E[2mX] + E[m^2] '
+                + 'with nothing established first. Its second point handles the other two: 2m is '
+                + 'a constant factor, so E[2mX] = 2mE[X], and m^2 is a constant, so its '
+                + 'expectation is m^2 times the total of every probability in the table, which '
+                + 'is 1. The ADDITIVITY is doing what no table of one variable could do, and the '
+                + 'LINEARITY is doing the rest - so this identity needs both of that concept\'s '
+                + 'theorems and neither would be enough alone.',
+              socratic:
+                '(X - m)^2 expands into three terms. Which fact below lets you take the '
+                + 'expectation term by term, and which one gets the constants outside?',
+            },
+            {
+              label: 'Collapse it with the one fact about m that is easy to walk past',
+              detail:
+                'What is left is E[X^2] - 2mE[X] + m^2, and m IS E[X] - that is what m was '
+                + 'defined to be - so the middle term is 2m times m, and E[X^2] - 2m^2 + m^2 = '
+                + 'E[X^2] - m^2. The identity is proved. It is worth seeing where it would break '
+                + 'if m were any other number: for a constant c, E[(X - c)^2] = E[X^2] - 2cE[X] '
+                + '+ c^2, which exceeds the variance by (c - m)^2 and is therefore smallest '
+                + 'exactly at c = m. So the mean is not merely the natural centre to measure '
+                + 'from; it is the centre that makes the measurement least.',
+              socratic:
+                'The middle term is 2m times E[X]. What is E[X] here, and what happens to the '
+                + 'three terms once you say so?',
+            },
+            {
+              label: 'Measure the forbidden push-through, and fix its direction for every table',
+              detail:
+                'Pushing X^2 through the expectation gives 9/4; the honest route gives 3; the '
+                + 'gap is 3/4, which is Var(X). So the identity does not only shorten the work, '
+                + 'it measures an error `expectation`\'s second point could only call wrong - a '
+                + 'square pushed through an expectation falls short by exactly the variance. The '
+                + 'direction is settled rather than observed: a variance is a weighted total of '
+                + 'squares, every square is at least 0 and so is every probability, so it is '
+                + 'never negative and E[X^2] is at least (E[X])^2 on every table that exists. '
+                + 'The same route on T gives E[T^2] = 0(1/8) + 1(1/2) + 4(1/4) + 9(1/8) = 21/8 '
+                + 'and (11/8)(11/8) = 121/64, so 168/64 - 121/64 = 47/64 - the 47/64 the '
+                + 'deviations gave.',
+              socratic:
+                'The two routes to a square\'s expectation differ by 3/4 here. What is that '
+                + 'number, and could a gap of that kind ever come out negative?',
+            },
+          ],
+          answer:
+            'X^2 takes 0, 1, 4, 9: squaring is one-to-one on 0, 1, 2, 3, so nothing merges and '
+            + 'the probabilities travel unchanged, giving E[X^2] = (0 + 3 + 12 + 9)/8 = 24/8 = 3 '
+            + 'against (E[X])^2 = 9/4. Subtracting, 3 - 9/4 = 3/4, which is Var(X) from the '
+            + 'point below. The identity is `expectation`\'s third point and then its second: '
+            + '(X - m)^2 = X^2 - 2mX + m^2 is a sum of three rules on one space, so the '
+            + 'expectations add with nothing checked; the constants come out as 2mE[X] and m^2 '
+            + 'times the table\'s total of 1; and since m IS E[X] the middle term is 2m^2 and '
+            + 'what is left is E[X^2] - m^2. Measuring from any other c gives '
+            + 'E[X^2] - 2cE[X] + c^2, which is the variance plus (c - m)^2, so the mean is the '
+            + 'centre that makes the measurement least. The gap measures the push-through that '
+            + 'concept forbade: 9/4 against the true 3, short by exactly the variance - and '
+            + 'short rather than over on every table, since a weighted total of squares cannot '
+            + 'be negative. On T, E[T^2] = 21/8 and (11/8)(11/8) = 121/64, so '
+            + '168/64 - 121/64 = 47/64, matching Var(T).',
+        },
+      },
+      {
+        id: 'the-spreads-add-exactly-when-the-joint-term-vanishes-and-independence-is-enough-for-that-but-is-not-needed-by-it',
+        conceptId: 'variance-and-covariance',
+        statement:
+          'Expectations added across two rules with nothing to check, and this is where that '
+          + 'stops. With S = X + T on the same eight sequences, `expectation` built S\'s table '
+          + 'as 1/8, 1/8, 3/8, 3/8 at 0, 2, 3, 4 with E[S] = 23/8, so the two-total route gives '
+          + 'E[S^2] = 79/8 and Var(S) = 79/8 - (23/8)(23/8) = 103/64. But Var(X) + Var(T) = '
+          + '48/64 + 47/64 = 95/64. The shortfall is 8/64 = 1/8, and it is not a new quantity. '
+          + 'Expanding the square the way the point below expands one gives Var(X + T) = Var(X) '
+          + '+ Var(T) + 2Cov(X, T), where the COVARIANCE is Cov(X, T) = E[XT] - E[X]E[T] - and '
+          + '`expectation`\'s ninth task already computed that number, 17/8 - (12/8)(11/8) = '
+          + '1/16, as the amount by which the multiplicative rule missed. Twice 1/16 is 1/8. So '
+          + 'the thing that was "false by 1/16" one concept down is the thing that stops '
+          + 'variances adding, and the identity is what gives it a job. WHICH MAKES THE '
+          + 'INDEPENDENT CASE THE USEFUL ONE, AND IT IS A DEBT THIS CONCEPT WAS WRITTEN TO PAY. '
+          + 'If the product rule holds the covariance is 0 and the variances add exactly. X IS a '
+          + 'sum of three independent rules - A, B and C, each 1 if its own toss is heads and 0 '
+          + 'if not - each with square equal to itself and so variance 1/2 - 1/4 = 1/4, and '
+          + '3(1/4) is the 3/4 the first point reached from four deviations. '
+          + '`descriptive-statistics` declines to claim that squaring is the forced repair, '
+          + 'since the mean ABSOLUTE deviation is not zero either and is a perfectly good '
+          + 'measure of spread, and records that what buys the squares is this additivity. '
+          + 'Nothing of the kind holds for absolute deviations. AND THE CONVERSE IS FALSE. '
+          + 'Y = |2X - 3| is built FROM X, so knowing X settles Y and the two are as dependent '
+          + 'as anything can be - and yet E[XY] = 18/8 = 9/4 while E[X]E[Y] = (3/2)(3/2) = 9/4, '
+          + 'so Cov(X, Y) = 0. A zero covariance says only that two rules do not move '
+          + 'together ON AVERAGE AND IN A STRAIGHT LINE, and Y follows the DISTANCE of X from '
+          + '3/2 rather than X, so on a table symmetric about 3/2 the rises and the falls '
+          + 'contribute equal and opposite amounts. Independence gives a zero covariance; a zero '
+          + 'covariance gives nothing back, and `conditional-probability`\'s product test '
+          + 'remains the only thing that settles independence.',
+        position: 3,
+        workedExample: {
+          problem:
+            'Same eight sequences, with X the heads-count (E[X] = 12/8, Var(X) = 3/4) and T the '
+            + 'toss the first head falls on (E[T] = 11/8, Var(T) = 47/64) from the two points '
+            + 'below. Let S = X + T, whose table `expectation` built as 1/8, 1/8, 3/8, 3/8 at 0, '
+            + '2, 3, 4 with E[S] = 23/8. Find Var(S), compare it with Var(X) + Var(T), and '
+            + 'identify the shortfall with a number that concept has already computed. Then '
+            + 'write X as a sum of three independent rules and recover Var(X) from theirs. '
+            + 'Finally take Y = |2X - 3|, the margin, and compute Cov(X, Y).',
+          subgoals: [
+            {
+              label: 'Find the sum\'s spread from its own table by the shorter route',
+              detail:
+                'S takes 0, 2, 3, 4 with probabilities 1/8, 1/8, 3/8, 3/8 and E[S] = 23/8, all '
+                + 'three from `expectation`\'s third point. S^2 therefore takes 0, 4, 9, 16 with '
+                + 'the same probabilities - squaring is one-to-one on four non-negative values, '
+                + 'so again nothing merges - and E[S^2] = (0 + 4 + 27 + 48)/8 = 79/8. The point '
+                + 'below\'s identity then gives Var(S) = 79/8 - (23/8)(23/8) = 632/64 - 529/64 = '
+                + '103/64.',
+              socratic:
+                'S takes 0, 2, 3 and 4 with probabilities 1/8, 1/8, 3/8, 3/8. What is E[S^2], '
+                + 'and what does the two-total route then give for Var(S)?',
+            },
+            {
+              label: 'Add the two spreads separately and find they do not reach it',
+              detail:
+                'Var(X) + Var(T) = 3/4 + 47/64 = 48/64 + 47/64 = 95/64, against Var(S) at '
+                + '103/64. They differ by 8/64 = 1/8. Expectation needed nothing checked before '
+                + 'adding and this plainly does, so the two are not one fact with a word '
+                + 'changed - worth saying out loud, because "expectations add" invites the guess '
+                + 'that everything built the same way does.',
+              socratic:
+                'Var(X) is 3/4 and Var(T) is 47/64. Over sixty-fourths, how does their sum stand '
+                + 'against Var(S), and by how much do they miss?',
+            },
+            {
+              label: 'Recognise the shortfall instead of computing a new number for it',
+              detail:
+                'Expanding the square of (X - E[X]) + (T - E[T]) by the method of the point '
+                + 'below gives Var(X + T) = Var(X) + Var(T) + 2Cov(X, T), with the cross term '
+                + 'Cov(X, T) = E[XT] - E[X]E[T]. That expression is `expectation`\'s ninth task '
+                + 'exactly: 17/8 - (12/8)(11/8) = 34/16 - 33/16 = 1/16, set there as the amount '
+                + 'by which the multiplicative rule failed and deliberately left unnamed. Twice '
+                + 'it is 2/16 = 1/8, which is the shortfall above to the sixty-fourth. So the '
+                + 'covariance was in hand one concept down with no account of what it was for, '
+                + 'and this is the account.',
+              socratic:
+                'The identity says the shortfall should be twice E[XT] - E[X]E[T], and that '
+                + 'quantity came to 1/16 one concept down. Does twice it account for the gap you '
+                + 'just found?',
+            },
+            {
+              label: 'Split the heads-count into three rules that really are independent',
+              detail:
+                'Let A be 1 if the first toss is heads and 0 if not, and let B and C say the '
+                + 'same of the second and third tosses. Then A + B + C counts the heads on every '
+                + 'one of the eight sequences, so it IS X - not a model of X. Each of the three '
+                + 'takes only 0 and 1, which makes its square equal to ITSELF, so E[A^2] = E[A] '
+                + '= 4/8 = 1/2 and the point below\'s identity gives Var(A) = 1/2 - (1/2)(1/2) = '
+                + '1/4, and the same for B and C.',
+              socratic:
+                'A is 1 exactly when the first toss is heads. What is A^2, what does that make '
+                + 'E[A^2], and so what is Var(A)?',
+            },
+            {
+              label: 'Check the independence by the product test rather than by the story',
+              detail:
+                '`conditional-probability`\'s third point insists this is computed and not '
+                + 'judged by how it sounds. P(A = 1) = 1/2 and P(B = 1) = 1/2 multiply to 1/4, '
+                + 'and P(A = 1 and B = 1) is HHH and HHT over eight, which is 1/4. The test '
+                + 'passes, and it passes on each of the three pairs - where X and T gave 1/16 '
+                + 'against 0 and failed. So all three covariances vanish, the identity above has '
+                + 'nothing left in it, and Var(X) = Var(A) + Var(B) + Var(C) = 3(1/4) = 3/4: the '
+                + 'number the first point reached from four deviations, by a route that never '
+                + 'mentions a deviation.',
+              socratic:
+                'P(A = 1) and P(B = 1) are each 1/2. How many of the eight sequences have both, '
+                + 'and does the product test pass?',
+            },
+            {
+              label: 'Say what the independent case bought, which is a debt a data set left here',
+              detail:
+                'Variances of independent rules ADD, and no other measure of spread does. '
+                + '`descriptive-statistics` makes the point from the other side: the mean '
+                + 'ABSOLUTE deviation is not identically zero either and is a perfectly good '
+                + 'measure of spread, so that concept says the squares are a choice and refuses '
+                + 'to pretend the choice is forced - recording that what buys them is this '
+                + 'additivity, which was unwritten there. The decomposition above is it: three '
+                + 'independent contributions of 1/4 each, totalling the spread of their sum '
+                + 'exactly. Replace the squares with absolute distances and the three no longer '
+                + 'add, which is why the squares survive.',
+              socratic:
+                'The three independent variances added to exactly Var(X). What does that buy for '
+                + 'squaring that an average of absolute distances could not offer?',
+            },
+            {
+              label: 'Try the converse on the most dependent pair this space has',
+              detail:
+                'Y = |2X - 3| is the margin, built from X by `random-variables`\' third point, '
+                + 'so Y is determined by X completely and there is no dependence stronger than '
+                + 'that. The product test agrees: P(X = 0) = 1/8 and P(Y = 3) = 1/4 multiply to '
+                + '1/32, while P(X = 0 and Y = 3) is just P(X = 0) = 1/8, since X = 0 forces '
+                + 'Y = 3. Yet XY across HHH to TTT is 9, 2, 2, 1, 2, 1, 1, 0, which totals 18, '
+                + 'so E[XY] = 18/8 = 9/4 - and E[X]E[Y] = (3/2)(3/2) = 9/4 as well, '
+                + '`expectation` having put E[Y] at 3/2. The covariance is 0. So it does not buy '
+                + 'independence back: it says only that the two do not move together on average '
+                + 'and in a straight line, and Y tracks the DISTANCE of X from 3/2 rather than '
+                + 'X, so on a table symmetric about 3/2 the half above the centre and the half '
+                + 'below contribute equal and opposite amounts.',
+              socratic:
+                'Y is built from X, so the two are as dependent as a pair can be. What does '
+                + 'E[XY] - E[X]E[Y] come to, and what has to be true of the table for that to '
+                + 'happen?',
+            },
+          ],
+          answer:
+            'Var(S) = E[S^2] - (E[S])^2 = 79/8 - (23/8)(23/8) = 632/64 - 529/64 = 103/64, while '
+            + 'Var(X) + Var(T) = 48/64 + 47/64 = 95/64 - short by 8/64 = 1/8. The identity '
+            + 'Var(X + T) = Var(X) + Var(T) + 2Cov(X, T) accounts for it, and '
+            + 'Cov(X, T) = E[XT] - E[X]E[T] = 17/8 - (12/8)(11/8) = 1/16 is the number '
+            + '`expectation`\'s ninth task already computed as the failure of the multiplicative '
+            + 'rule; twice it is 1/8. Independence is what removes the term: A, B and C - one '
+            + 'per toss, 1 for heads and 0 otherwise - sum to X, each has square equal to itself '
+            + 'so E[A^2] = E[A] = 1/2 and Var(A) = 1/2 - 1/4 = 1/4, and the product test passes '
+            + 'on every pair at 1/4 against 1/4 where X and T gave 1/16 against 0 - so '
+            + 'Var(X) = 3(1/4) = 3/4, matching the first point. That additivity is what '
+            + '`descriptive-statistics` named as the reason for squaring and left unwritten. The '
+            + 'converse fails: Y = |2X - 3| is determined by X and the product test says so '
+            + '(1/32 against 1/8), yet XY over the eight sequences totals 18, so '
+            + 'E[XY] = 9/4 = E[X]E[Y] and Cov(X, Y) = 0. A zero covariance means only that two '
+            + 'rules do not move together in a straight line, and Y follows the distance of X '
+            + 'from 3/2 rather than X itself.',
+        },
+      },
+    ],
+  },
 ]
 
 /**
@@ -4896,6 +5669,84 @@ const EDGES: ConceptEdge[] = [
       + 'TABLE and not the space: nothing here collects an event off a listed space, takes a '
       + 'complement or repairs an overlap, so `sample-spaces` must still come due as though '
       + 'untouched.',
+  },
+  {
+    id: 'expectation->variance-and-covariance',
+    from: 'expectation',
+    to: 'variance-and-covariance',
+    kind: 'prerequisite',
+    /*
+     * THE SUBJECT'S SIXTH INTERNAL PREREQUISITE, AND THE FIRST PROMOTION SINCE
+     * THE FORTY-EIGHTH TO STRAND NOTHING. The node declared exactly one `need`
+     * and it is the concept directly below, so the whole of its gate is this
+     * entry: `PROBABILITY.links` is untouched at five, and no area had to record
+     * anything. Two consecutive promotions had each cost an entry, and the
+     * fiftieth's own note says why this one did not — the cost is a property of
+     * the NODE's `needs`, and this node declared one.
+     *
+     * AND THE GATE IS LOAD-BEARING THREE TIMES OVER IN THE PROOFS AND NOT ONLY
+     * IN THE ARITHMETIC, which is the distinction the credit edge below turns
+     * on. Every variance here is a weighted total and so is that concept's first
+     * point with squares in it; the second point's identity is derived from that
+     * concept's linearity AND its additivity together, neither being enough
+     * alone; and the third point's cross term is a quantity that concept's ninth
+     * task already computes. There is no half of this concept teachable to
+     * somebody who has not met an expectation.
+     *
+     * `author:` rather than `atlas:probability`, as with the five prerequisites
+     * above: `expandEdges` stamped the area on this edge while it was the node's
+     * own `needs`, and the provenance moves with the edge when the edge moves.
+     */
+    promotedBy: 'author:chance-and-events',
+  },
+  {
+    id: 'variance-and-covariance=>expectation',
+    from: 'variance-and-covariance',
+    to: 'expectation',
+    kind: 'encompasses',
+    /*
+     * THE SUBJECT'S FIFTH CREDIT EDGE, AND THE FIRST TO CREDIT ALL THREE POINTS
+     * OF ITS GATE WITH TWO OF THEM USED AS THEOREMS AT ONCE.
+     *
+     * The ordinary shape, pointing down at the concept that gates it, as the
+     * fiftieth's does and unlike the forty-ninth's. What is new is the strength
+     * of it: the fiftieth could claim its gate's second point was "derived from
+     * rather than checked", and here the second point's whole identity is the
+     * gate's linearity and the gate's additivity applied to one expansion, so a
+     * learner who has done these ten tasks has used both theorems and not merely
+     * stood on them.
+     *
+     * WHY `random-variables` IS NOT ALSO CREDITED, which is the question every
+     * credit edge in this file now has to answer. Tables are built here - X^2's,
+     * S^2's, and three indicators' - and each is a function of a variable
+     * relabelling or merging entries, which is that concept's third point. But
+     * they arrive through `expectation` rather than from the space: nothing
+     * below collects a preimage off the eight sequences to FIND a probability,
+     * and every table used is either quoted from the concept below or obtained
+     * by moving entries of one that was. The fiftieth declined `sample-spaces`
+     * on exactly that reasoning one step lower, and crediting two concepts down
+     * from here would claim the same moves a second time.
+     */
+    promotedBy: 'author:chance-and-events',
+    rationale:
+      'All three of the concept below\'s points are used, and two of them as theorems in one '
+      + 'derivation. Its first - a weighted total of value times probability - is every variance '
+      + 'here, with squared deviations standing where the values stood, and the first point '
+      + 'turns on the comparison its first point left open: the plain average of 0, 1, 2, 3 '
+      + 'agreed with E[X] at 3/2 and the plain variance of the same list does NOT agree with '
+      + '3/4, so the coincidence it flagged is shown to be about first moments only. Its second '
+      + 'and third together prove E[X^2] - (E[X])^2: the expansion of (X - m)^2 is a sum of '
+      + 'three rules on one space, which needs the additivity, and the constants come out by the '
+      + 'linearity with the table\'s total of 1 doing the same work it does there. And its ninth '
+      + 'task is credited by being GIVEN A JOB: 17/8 - (12/8)(11/8) = 1/16 is set there as the '
+      + 'failure of the multiplicative rule and named nothing, and twice it is the 1/8 by which '
+      + 'Var(X + T) exceeds Var(X) + Var(T) here. It credits the EXPECTATION and not the space: '
+      + 'no probability here is found by collecting a preimage, so `sample-spaces` must come '
+      + 'due as though untouched. `conditional-probability` must come due as though untouched '
+      + 'too, and that one is worth stating because the third point runs its product test TWICE '
+      + '- on the independent triple and on the pair whose covariance vanishes. Both times the '
+      + 'test is HANDED OVER rather than asked: no expression in any of the ten tasks computes '
+      + 'one, so a learner who has done all ten has not produced a product test once.',
   },
 ]
 

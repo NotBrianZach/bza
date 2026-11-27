@@ -1545,13 +1545,149 @@ const DISCRETE_MATHEMATICS: MapArea = {
       needs: ['graphs', 'proof-techniques'],
       terms: 'graph colouring chromatic number planar euler formula four colour',
     },
+    /*
+     * ── THE MAP OF COMPLEXITY CLASSES, WHICH USED TO BE ONE NODE ───────────
+     *
+     * `computability-and-complexity` read "What an algorithm is, what cannot
+     * be computed at all, and the P versus NP question as a precise
+     * statement" — three different subjects behind one id, resting on one
+     * `needs` list, teachable only as one lump. A map whose point is to show
+     * what rests on what cannot say any of the interesting things in that
+     * form: that P vs NP is a question about two classes you can define
+     * separately, that reductions are the tool and NP-completeness the
+     * consequence, or that the containment chain is mostly open.
+     *
+     * So it is split. The id SURVIVES as the entry node rather than being
+     * replaced, because `formal-logic-and-incompleteness` below declares
+     * `needs: ['computability-and-complexity', …]` — retiring the id would
+     * strand that edge silently, which is the stranded-edge failure the
+     * thirty-seventh promotion wrote its rule about. What changes is that it
+     * now means only the first of its three subjects.
+     *
+     * NO `match` ON THE NEW NODES, deliberately. A mapped node without a
+     * pattern ships `guided`, which is a known and honest state; a pattern
+     * nobody has tested against a real article title is a check that looks
+     * like one and matches nothing. The entry node keeps the pattern it
+     * already had and was presumably written against.
+     *
+     * Depth is capped on purpose — the request was the map, "without getting
+     * too much into the weeds". So there is no Cook–Levin, no specific
+     * NP-complete catalogue, no oracle or relativisation, no hierarchy
+     * theorems. Each node is a thing you can point at on the diagram and say
+     * what it contains.
+     */
     {
       id: 'computability-and-complexity',
       match: /\b(turing machine|computability|halting problem|np-completeness|computational complexity)\b/i,
       name: 'Computability and complexity',
-      is: 'What an algorithm is, what cannot be computed at all, and the P versus NP question as a precise statement.',
+      is: 'A fixed model of computation, and the line between what it can decide at all and what it cannot — the halting problem as the first thing on the far side.',
       needs: ['cardinality', 'graph-algorithms', 'asymptotic-comparison'],
-      terms: 'turing machine halting problem complexity p np reduction',
+      terms: 'turing machine halting problem computability decidable undecidable',
+    },
+    {
+      id: 'decision-problems',
+      name: 'Decision problems',
+      is: 'Recasting a problem as a yes/no question about an input. The move that makes two unlike problems comparable at all, and the reason a "class" can have members.',
+      needs: ['computability-and-complexity'],
+      terms: 'decision problem language yes no instance',
+    },
+    {
+      id: 'complexity-class-p',
+      name: 'P — solvable in polynomial time',
+      is: 'The decision problems some algorithm settles in time bounded by a polynomial in the input size. The usual stand-in for "tractable", and an imperfect one.',
+      needs: ['decision-problems'],
+      terms: 'polynomial time class P tractable',
+    },
+    {
+      id: 'complexity-class-np',
+      name: 'NP — checkable in polynomial time',
+      is: 'Problems where a claimed yes comes with a certificate you can check quickly. Not "solvable by a computer eventually" and not "non-polynomial" — the two things the name is most often read as.',
+      needs: ['decision-problems'],
+      confusedWith: [{
+        id: 'complexity-class-p',
+        because: 'P is about FINDING an answer quickly and NP about CHECKING a given one, so every P problem is in NP by ignoring the certificate — the containment people expect to run the other way.',
+      }],
+      terms: 'NP nondeterministic certificate verifier checkable',
+    },
+    {
+      id: 'polynomial-time-reduction',
+      name: 'Polynomial-time reduction',
+      is: 'Turning one problem into another cheaply enough that a fast solution to the second is a fast solution to the first. The tool that moves hardness around the map.',
+      needs: ['complexity-class-p'],
+      terms: 'reduction polynomial time many-one karp',
+    },
+    {
+      id: 'np-completeness',
+      name: 'NP-completeness',
+      is: 'In NP, and every NP problem reduces to it — so it is at least as hard as anything in the class. One fast algorithm for one of them would collapse all of them.',
+      needs: ['complexity-class-np', 'polynomial-time-reduction'],
+      terms: 'NP-complete SAT satisfiability hardest',
+    },
+    {
+      id: 'p-versus-np',
+      name: 'P versus NP',
+      is: 'Whether checking an answer quickly implies finding one quickly. Open, and NP-completeness is what makes it a single question rather than thousands.',
+      needs: ['np-completeness'],
+      terms: 'P versus NP open problem millennium',
+    },
+    {
+      id: 'complexity-containments',
+      name: 'The containment chain',
+      is: 'P ⊆ NP ⊆ PSPACE ⊆ EXPTIME, with space reusable where time is not. Every inclusion is believed strict and only P ⊊ EXPTIME is known, which is the honest shape of the map.',
+      needs: ['p-versus-np'],
+      terms: 'PSPACE EXPTIME containment hierarchy space complexity',
+    },
+
+    /*
+     * ── THE SECOND LAYER, ADDED ON REQUEST ────────────────────────────────
+     *
+     * The first pass stopped at the containment chain and said so: no
+     * Cook–Levin, no catalogue, no oracles, no hierarchy theorems, because
+     * the ask was the map without the weeds. The ask then changed, and these
+     * four are what the first pass named as the things it was leaving out.
+     *
+     * They are a layer rather than a continuation of the chain, and the
+     * `needs` say which: three of the four hang off nodes in the middle of
+     * the first pass, not off its end. Cook–Levin is what makes
+     * NP-completeness non-empty, the catalogue is what makes it useful, and
+     * the two limitative results are about P-versus-NP rather than after it.
+     * A reader who stops at the first layer has a complete picture; a reader
+     * who goes on gets why it is hard rather than merely open.
+     *
+     * STILL NO `match`, for the reason the first pass gave: an untested
+     * pattern is a check that matches nothing while looking like one.
+     */
+    {
+      id: 'cook-levin-theorem',
+      name: 'Cook–Levin: SAT is NP-complete',
+      is: 'The first NP-complete problem, got by encoding a whole computation as a formula. Without it NP-completeness is a definition nothing is known to satisfy.',
+      needs: ['np-completeness'],
+      terms: 'cook levin SAT satisfiability first NP-complete',
+    },
+    {
+      id: 'np-complete-catalogue',
+      name: 'The catalogue of NP-complete problems',
+      is: '3-SAT, clique, vertex cover, Hamiltonian cycle, subset sum and the rest — each proved by reduction FROM one already in the list, so the catalogue grows from Cook–Levin rather than from scratch.',
+      needs: ['cook-levin-theorem'],
+      terms: '3-SAT clique vertex cover hamiltonian subset sum knapsack karp 21',
+    },
+    {
+      id: 'hierarchy-theorems',
+      name: 'Time and space hierarchy theorems',
+      is: 'Strictly more time decides strictly more problems, and likewise for space. The reason P ⊊ EXPTIME is known, and the one separation technique that does work.',
+      needs: ['complexity-containments'],
+      terms: 'time hierarchy space hierarchy diagonalisation separation',
+    },
+    {
+      id: 'oracles-and-relativisation',
+      name: 'Oracles and relativisation',
+      is: 'Give both machines a free subroutine and P-versus-NP comes out BOTH ways depending on the subroutine. So any proof that survives adding an oracle — diagonalisation included — cannot settle it.',
+      needs: ['hierarchy-theorems'],
+      confusedWith: [{
+        id: 'hierarchy-theorems',
+        because: 'The hierarchy theorems separate classes by diagonalisation and relativisation says diagonalisation cannot separate P from NP — not a contradiction, because the hierarchy results relativise and hold in every oracle world, which is exactly why they cannot decide a question that does not.',
+      }],
+      terms: 'oracle relativisation baker gill solovay barrier',
     },
     {
       id: 'formal-logic-and-incompleteness',

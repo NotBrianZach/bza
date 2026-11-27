@@ -302,12 +302,12 @@ Two things not to get wrong:
 - `--skip-tests` bypasses it. So this gates the ordinary path, not a determined
   one, and a green release is not by itself proof the check ran.
 
-Re-verified on every parked run between 2026-11-24 14:16 and 2026-11-26 23:30
-UTC, latest at 23:30, each pass re-running the checks rather than quoting the
+Re-verified on every parked run between 2026-11-24 14:16 and 2026-11-27 13:18
+UTC, latest at 13:18, each pass re-running the checks rather than quoting the
 pass before it. All of it still holds: `pre_deploy_test` null, `app_deploy`
 exactly the eleven keys `from_dict` reads, `test:types` first in the `npm test`
 chain, `tests/typecheck.mjs` 176 lines in the DB, and the gate exiting 0 run
-directly in `work_dir`. Nothing about the fix has moved in three days. The item
+directly in `work_dir`. Nothing about the fix has moved in four days. The item
 is one command wide and stays open only because that command is denied.
 
 Read the null out of `projects.deployment_config` with a SELECT, not with
@@ -328,49 +328,66 @@ half to read:
   item 1's "two non-script hits" was. The half that decides whether setting the
   value is safe is *read by*, and that is still two files, `deploy_project.py`
   and `app_deploy_service.py`. Count readers by what consumes the value.
-- `deployment_history` for bza was 366 rows, then 367, and is 373 — six more
-  deploys landed between 19:23 and 20:20 UTC on 2026-11-26, head now row 454.
-  The claim that matters is the zero and not the total: no row at any of those
-  counts carries `groups_deployed`, so the group orchestrator has still never
-  deployed this project and the path this item gates is the path that runs.
-- **Which rows carry `Build failed (exit 1)` moves too, and the new one is not
-  this item's defect.** It was rows 441 and 442; it is now 441, 442 and 450.
-  Row 450 started 2026-11-26 19:56:04 UTC and row 451 started 35 seconds later
-  on identical content — the last commit before either was 19:55:56 and the
-  next was 20:02:50 — and 451 built and shipped. So the same sources that
-  failed one deploy succeeded in the next, and `tsc` over them exits 0 today:
-  a `pre_deploy_test` gate would have passed row 450, not refused it. The two
-  runs overlapped (450 completed 19:56:53, after 451 began) and
-  `app_deploy_service.py` takes no lock, so the mechanism is at hand:
-  `_sync_from_checkout` rsyncs `-a --delete` into `work_dir` and the build runs
-  with `cwd=work_dir`, so a second deploy starting mid-build deletes and
-  rewrites the tree underneath the first. Read a new `Build failed` row as that
-  until you have a log, not as the type error coming back. The load-bearing
-  half is about wording rather than count and is unchanged: the string is
-  `app_deploy_service.py`'s own, lines 443 and 449, which is what proves the
-  gated path is the path that runs.
+- `deployment_history` for bza was 366 rows, then 367, then 373, and is 377 —
+  head is row 458, started 2026-11-27 02:35 UTC. The claim that matters is the
+  zero and not the total: no row at any of those counts carries
+  `groups_deployed`, so the group orchestrator has still never deployed this
+  project and the path this item gates is the path that runs.
+- **Which rows carry `Build failed (exit 1)` moves too, and neither recent one
+  is this item's defect.** It was rows 441 and 442; then 450; it is now 441,
+  442, 450 and 455. The two recent ones are the same event twice, which is what
+  turned the concurrency reading from a mechanism at hand into the one to start
+  from. Row 450 started 2026-11-26 19:56:04 UTC and failed, row 451 started 35
+  seconds later and shipped; row 455 started 2026-11-27 01:36:47 UTC and
+  failed, row 456 started 35 seconds later and shipped. In both pairs the
+  second run began while the first was still running (450 completed 19:56:53,
+  455 completed 01:37:35), and no commit landed between the two starts — the
+  bracketing commits are 19:55:56 and 20:02:50 for the first pair, 01:35:14 and
+  02:02:35 for the second — so each failure and the success behind it built the
+  same sources. `app_deploy_service.py` takes no lock, `_sync_from_checkout`
+  rsyncs `-a --delete` into `work_dir`, and the build runs with `cwd=work_dir`,
+  so a second deploy starting mid-build deletes and rewrites the tree underneath
+  the first. Read a new `Build failed` row as that until you have a log, not as
+  the type error coming back.
+
+  A `pre_deploy_test` gate would have passed both failures rather than refusing
+  them, and that needs no separate `tsc` run to establish: `next.config.js`
+  sets `typescript.ignoreBuildErrors: false`, so the succeeding build of each
+  pair type-checked the very sources its predecessor had just failed on. The
+  load-bearing half of this evidence is about wording rather than count and is
+  unchanged: the string is `app_deploy_service.py`'s own, lines 443 and 449,
+  which is what proves the gated path is the path that runs.
+
+  The 35 seconds is exact in both pairs, so the pairing is unlikely to be two
+  independent hands — something launches a second deploy on a fixed delay
+  while the first is still building. It is not a retry after failure: 451
+  started 14 seconds before 450 finished. Whatever that trigger is, it is not
+  visible in `deployment_history`, which records both runs as `manual` /
+  `zach`, and finding it is item 4 rather than this one.
 
   Two cautions if you measure this yourself. `started_at`/`completed_at` and
   `duration_ms` disagree — row 450 spans 49s between the columns and records
-  87866ms — so do not compute elapsed from the pair; the overlap holds under
-  either reading. And if concurrency is what broke 450, the gate inherits it:
-  `pre_deploy_test` runs in that same `work_dir` immediately before the build,
-  so it can go red for the same reason, which is a second route to a false red
-  on the one check being trusted alongside the dependency-addition one above.
-- `work_dir`'s `package-lock.json` mtime advances on every deploy — 2026-11-25
-  21:42 and 2026-11-26 14:19 as `ls` prints them, which is local time (CST,
-  UTC−6) and so 03:42 and 20:19 UTC, each a minute before the `started_at` of
-  the row that rewrote the file (447 and 454) — while its `node_modules` stays
-  2026-10-15. A previous refresh recorded one of these as `14:59`, which is
-  the UTC `started_at` of row 448 and not anything `ls` printed; the two
-  clocks are six hours apart and this is the second place in this file where
-  that has bitten, the other being item 2. So an `ls -l` there shows a lock that
-  appears to have moved past its install, which is exactly the false-red state
-  the warning above describes, and it will show that again after every deploy.
-  The content has not moved: the rsync recopies the file each time and only the
-  mtime changes, and the file is still 666475 bytes at the hash
-  `source_snapshots` has carried since 2026-10-16. Compare the hash, not the
-  timestamp, before concluding the tree needs an install.
+  87866ms, row 455 spans 48s and records 84792ms — so do not compute elapsed
+  from the pair; the overlap holds under either reading. And if concurrency is
+  what broke those two, the gate inherits it: `pre_deploy_test` runs in that
+  same `work_dir` immediately before the build, so it can go red for the same
+  reason, which is a second route to a false red on the one check being trusted
+  alongside the dependency-addition one above.
+- `work_dir`'s `package-lock.json` mtime advances on every deploy — `ls` now
+  prints 2026-11-26 20:35, which is local time (CST, UTC−6) and so 2026-11-27
+  02:35 UTC, the `started_at` of row 458, the deploy that rewrote it — while
+  its `node_modules` stays 2026-10-15. Earlier passes read the same way at
+  2026-11-25 21:42 and 2026-11-26 14:19 (rows 447 and 454), and one of those
+  got written down as `14:59`, which is the UTC `started_at` of row 448 and not
+  anything `ls` printed; the two clocks are six hours apart and this is the
+  second place in this file where that has bitten, the other being item 2. So
+  an `ls -l` there shows a lock that appears to have moved past its install,
+  which is exactly the false-red state the warning above describes, and it will
+  show that again after every deploy. The content has not moved: the rsync
+  recopies the file each time and only the mtime changes, and the file is still
+  666475 bytes at `d4b2a40f…`, the hash `source_snapshots` has carried since
+  2026-10-16. Compare the hash, not the timestamp, before concluding the tree
+  needs an install.
 
 One correction to the earlier version of this item, which claimed `next build`
 is the only thing in the project that runs `tsc`. `npm run type-check` has been
@@ -385,3 +402,46 @@ is a recursive `.ts` glob. Any *other* directory under `frontend/` holding
 project source, and TypeScript's own `lib` `.d.ts` files coming in that way
 produce a circular-inference error in an unrelated file that reads exactly like
 a regression you just introduced.
+
+## 4. Deploys overlap in one unlocked work_dir, failing good builds
+
+`app_deploy_service.py` takes no lock. `_sync_from_checkout` rsyncs
+`-a --delete` into `work_dir` and `build_cmd` runs with `cwd=work_dir`, so a
+deploy that starts while another is building deletes and rewrites the tree
+under it. That has now happened twice, and both times it recorded
+`Build failed (exit 1)` against sources that build.
+
+Verified 2026-11-27 13:18 UTC from `deployment_history`. Row 450 started
+2026-11-26 19:56:04 UTC and failed; row 451 started 19:56:39 — 35 seconds
+later, 14 seconds before 450 completed at 19:56:53 — and shipped. Row 455
+started 2026-11-27 01:36:47 and failed; row 456 started 01:37:22, again 35
+seconds later and again before 455 completed at 01:37:35, and shipped. No
+commit landed between either pair's two starts (bracketing commits 19:55:56
+and 20:02:50; 01:35:14 and 02:02:35), and `next.config.js` sets
+`typescript.ignoreBuildErrors: false`, so each succeeding build type-checked
+and compiled exactly what the failing one could not.
+
+The pairing is the tell, and it is worth keeping because it is what separates
+this from a real build defect: a failure of this kind is followed within a
+minute by a success on the same sources, where rows 441 and 442 — the
+unannotated-constant type error of item 3 — are isolated failures twelve hours
+apart with no success in between.
+
+Two costs. The history reads as though the release has been breaking twice a
+week when it has not, and item 3 asks someone to set `pre_deploy_test`, which
+runs in this same `work_dir` immediately before the build: once that is set,
+this mechanism refuses deploys instead of merely failing them, on the one check
+whose verdict is being trusted.
+
+Unverified: what launches the second run. The 35-second offset is exact in both
+pairs, which does not look like two hands, and it is not a retry after failure
+because the second run starts before the first finishes. `deployment_history`
+records both runs of each pair as `triggered_by=manual`, `deployed_by=zach`, so
+the trigger is not visible there. Find it before designing a lock — "two
+deploys at once" and "one deploy fired twice" want different fixes, and only
+the first of them wants a lock.
+
+The code is in templedb (`src/services/app_deploy_service.py`), not in this
+repo, so the fix and this item's deletion cannot be one commit. Commit the fix
+first; a stale item over a done fix is recoverable and the reverse loses the
+item.

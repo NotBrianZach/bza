@@ -1169,6 +1169,12 @@ const CONCEPTS: Concept[] = [
             {
               label: 'Square both of a pair',
               detail: '3² = 9 and (−3)² = 9.',
+              socratic:
+                'The problem hands you two inputs rather than one, 3 and −3, and those are ' +
+                'certainly not the same number. Squaring multiplies a number by itself, so ' +
+                'whatever sign an input carries appears twice in the product. What does each of ' +
+                'the two come back as — and what is it about a sign appearing twice that decides ' +
+                'what happens to the minus?',
             },
             {
               label: 'Measure the difference',
@@ -1176,12 +1182,27 @@ const CONCEPTS: Concept[] = [
                 '9 − 9 = 0. Two different inputs, and the gap between their outputs is nothing — ' +
                 'which is exactly the failure. For a one-to-one rule this difference could not ' +
                 'be zero unless the inputs were equal.',
+              socratic:
+                'Both inputs came back as 9, and the problem asks you to subtract one output ' +
+                'from the other rather than simply remark that they look alike. Two numbers ' +
+                'differ exactly when their difference is not zero, so this subtraction is a test ' +
+                'rather than a flourish. What does x² − (−x)² come to at x = 3, and what has ' +
+                'that one number established about the two outputs that pointing at a pair of ' +
+                '9s had not?',
             },
             {
               label: 'What that costs',
               detail:
                 'An inverse would have to decide whether 9 came from 3 or from −3, and nothing ' +
                 'in the output records which. So no inverse exists on the whole line.',
+              socratic:
+                'At this concept\'s first point f⁻¹ was the rule that takes an output back to ' +
+                'the input it came from, and that phrasing quietly assumed there was one input ' +
+                'to go back to. Here the output 9 has two, and the 9 carries nothing that ' +
+                'distinguishes the 3 from the −3 — the squaring spent the sign and kept no ' +
+                'record of it. So if somebody handed a candidate inverse the number 9, what ' +
+                'single value would you be demanding of it, and what is it about that demand ' +
+                'that no rule on the whole line can meet?',
             },
             {
               label: 'And how it is repaired',
@@ -1190,6 +1211,14 @@ const CONCEPTS: Concept[] = [
                 'square root as its inverse. The restriction is part of the answer, not a ' +
                 'technicality — "the inverse of x²" is meaningless until somebody says which ' +
                 'half.',
+              socratic:
+                'The obstruction was never the squaring itself but the pairs: every one that ' +
+                'offends is some number together with its negative. From the domain point you ' +
+                'already know that the set of inputs a rule accepts is part of what the rule is, ' +
+                'rather than a whole line it is stuck with. Which inputs would you have to stop ' +
+                'accepting for no two survivors to share an output — and once that cut is made, ' +
+                'what rule sends 9 back where it came from, and why does "the inverse of x²" ' +
+                'not name anything until somebody has said which half?',
             },
           ],
           answer: '0 — two inputs share an output, so there is no inverse',

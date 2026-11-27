@@ -2746,16 +2746,84 @@ const TWO_TOTALS_OVER_ONE_SPACE: VariableDeclaration[] = [
  * 1/16 knows the identity is false in a way that eyeballing two decimals cannot
  * establish.
  *
- * AND IT IS A COVARIANCE, WHICH IS NAMED HERE AND NOWHERE IN THE MATERIAL. This
- * expression is E[XY] - E[X]E[Y] exactly, so the task computes the quantity
- * `variance-and-covariance` is about — a node of `probability` still unwritten.
- * The material does not name it, because naming it would promise an account of
- * what the number MEANS, and this subject has independence only as a test.
+ * AND IT IS A COVARIANCE, WHICH THE FIFTY-FIRST PROMOTION NAMED AND THIS
+ * DECLARATION IS NOW SHARED WITH. This expression is E[XY] - E[X]E[Y] exactly.
+ * When it was written, `variance-and-covariance` was a node of `probability` and
+ * the material deliberately did not name the number, because naming it would
+ * promise an account of what it MEANS and the subject had independence only as a
+ * test. That concept is now the seventh of `chance-and-events`, its third point
+ * gives the number its job — twice it is the amount by which Var(X + T) exceeds
+ * Var(X) + Var(T) — and the tenth task of that concept is THIS EXPRESSION AT A
+ * SECOND SUBSTITUTION, where it comes out 0 on a pair one of whose members is a
+ * function of the other. So the paragraph above stands as written and the
+ * boundary it describes has been crossed on purpose rather than eroded; see the
+ * `── variance-and-covariance ──` block for why the second substitution is the
+ * sharper half of the pair.
  */
 const A_PRODUCT_TOTAL_AGAINST_A_PRODUCT_OF_TOTALS: VariableDeclaration[] = [
   { name: 'k', assumptions: { integer: true } },
   { name: 'g', assumptions: { integer: true } },
   { name: 'h', assumptions: { integer: true } },
+  { name: 'n', assumptions: { integer: true } },
+]
+
+/**
+ * THREE SPREADS OVER A COMMON DENOMINATOR, SUBTRACTED — the shortfall that stops
+ * variances adding, asked as a difference of numbers already in hand.
+ *
+ * `(u - v - w)/d` at (103, 48, 47, 64) is (103 - 48 - 47)/64 = 8/64 = 1/8: u is
+ * Var(X + T), v is Var(X) and w is Var(T), each over sixty-fourths.
+ *
+ * THE NUMERATORS ARRIVE AS INTEGERS AND THAT IS THE POINT, which is the same
+ * decision as `TWO_TOTALS_OVER_ONE_SPACE` one concept down and for the same
+ * reason. The three variances are computed by three other tasks, so rebuilding
+ * them inside this expression would ask those questions a second time and bury
+ * the one this task is for. What is being asked is whether the three numbers are
+ * CONSISTENT with the spreads adding, and over a common denominator of 64 that is
+ * a single subtraction: 103 against 95.
+ *
+ * THE REFERENCE IS A GAP, like the two in the concept below and for a fourth
+ * distinct reason. There the gaps are between two spaces, between two methods on
+ * one table, and between two sides of a false identity. This one is between two
+ * sides of a TRUE identity with a term left out — Var(X + T) really does equal
+ * Var(X) + Var(T) + 2Cov(X, T), and 1/8 is what the omitted term was worth. So a
+ * learner who produces it has not found an error; they have measured a quantity
+ * the concept below computed as 1/16 and left unnamed, and doubled it.
+ */
+const THREE_SPREADS_OVER_A_COMMON_DENOMINATOR: VariableDeclaration[] = [
+  { name: 'u', assumptions: { integer: true } },
+  { name: 'v', assumptions: { integer: true } },
+  { name: 'w', assumptions: { integer: true } },
+  { name: 'd', assumptions: { integer: true } },
+]
+
+/**
+ * ONE INDICATOR'S SPREAD, TAKEN j TIMES — additivity under independence, in the
+ * form that shows what independence bought.
+ *
+ * `j*(a/n - (a/n)*(a/n))` at (3, 4, 8) is 3(1/2 - 1/4) = 3/4: a is how many of
+ * the n sequences put the indicator at 1, and j is how many independent copies
+ * are being added.
+ *
+ * THE INNER BRACKET IS THE TWO-TOTAL IDENTITY AT A VARIABLE THAT IS ITS OWN
+ * SQUARE, which is why it is written as `a/n - (a/n)*(a/n)` and not as a single
+ * number. A indicator takes only 0 and 1, so A² IS A, so E[A²] = E[A] = a/n and
+ * the identity collapses to p - p². Writing 1/4 directly would have asked
+ * nothing; writing the subtraction says WHERE the 1/4 comes from, and a reader
+ * can see that the same shape that gave 3 - 9/4 for the heads-count gives this.
+ *
+ * `j` IS A LETTER AND `3` IS NOT THE POINT. What the task asserts is that
+ * independent spreads add, so the multiplier is the thing being quantified over —
+ * the same reasoning that makes `a` and `b` letters in
+ * `A_LINEAR_RULE_OUTSIDE_A_WHOLE_TABLE` while the values 0, 1, 2, 3 stay
+ * literals. And the answer is 3/4, which is the heads-count's variance computed
+ * in the first point from four deviations and in the second from two totals: a
+ * third route to one number, and the only one of the three that never mentions
+ * the table.
+ */
+const ONE_INDICATOR_SPREAD_TAKEN_SEVERAL_TIMES: VariableDeclaration[] = [
+  { name: 'j', assumptions: { integer: true } },
+  { name: 'a', assumptions: { integer: true } },
   { name: 'n', assumptions: { integer: true } },
 ]
 
@@ -16064,12 +16132,21 @@ export const TASKS: PracticeTask[] = [
     // looking at two decimals cannot establish. A blow-up would have taught
     // less.
     //
-    // IT IS A COVARIANCE AND THE MATERIAL DOES NOT SAY SO. E[XY] − E[X]E[Y] is
-    // exactly the quantity `variance-and-covariance` is about — still a node of
-    // `probability`, and now that area's only ready one. Naming it here would
-    // promise an account of what the number MEANS, and this subject has
-    // independence as a product test and nothing more; ontology-chance.ts's
-    // `covers` records the boundary in those terms.
+    // IT IS A COVARIANCE AND THIS CONCEPT'S MATERIAL STILL DOES NOT SAY SO.
+    // E[XY] − E[X]E[Y] is exactly the quantity `variance-and-covariance` is
+    // about, and that was a node of `probability` when this task was written:
+    // naming the number here would have promised an account of what it MEANS,
+    // and this concept has independence as a product test and nothing more.
+    //
+    // THE FIFTY-FIRST PROMOTION AUTHORED THAT CONCEPT AND THE BOUNDARY IS WHY
+    // THIS COMMENT IS UNCHANGED RATHER THAN DELETED. The account now exists one
+    // concept up, where 1/16 doubled is the amount by which Var(X + T) exceeds
+    // Var(X) + Var(T) — so the number acquired a job without this task acquiring
+    // a word. Its tenth task is this same `given` at a second substitution, and
+    // the pair is the comparison: 1/16 on a dependent pair here against 0 on a
+    // pair one of whose members is a FUNCTION of the other there. Both prompts
+    // hand the dependence over rather than computing it, and in both places the
+    // product test belongs to `conditional-probability`.
     //
     // THE DEPENDENCE IS IN THE PROMPT AND IS NOT COMPUTED BY THE TASK, which is
     // the same decision as the illegal shortcut two tasks up. The product test
@@ -16078,6 +16155,498 @@ export const TASKS: PracticeTask[] = [
     // pair that lacks it, while the one needing nothing held.
     reference: '1/16',
     at: { k: '17', g: '12', h: '11', n: '8' },
+  },
+  // ── variance-and-covariance ─────────────────────────────────────────────
+  //
+  // TEN `evaluate` tasks, three on the first two points and FOUR on the third,
+  // on the same eight sequences every concept of this subject since the fourth
+  // is set on. The shapes:
+  //
+  //     (9*p + 1*q + 1*r + 9*s)/(4*n)            squared deviations, weighted
+  //     (9 + 1 + 1 + 9)/(4*m) - …                what the plain list route costs
+  //     (121*p + 9*q + 25*r + 169*s)/(64*n)      the same, for the second rule
+  //     (0*p + 1*q + 4*r + 9*s)/n                the second total on its own
+  //     (0*p + 1*q + 4*r + 9*s)/n - (…)*(…)      the two-total identity, at X
+  //     (0*p + 1*q + 4*r + 9*s)/n - (…)*(…)      the same, at T
+  //     (0*p + 4*q + 9*r + 16*s)/n - (…)*(…)     the sum's own spread
+  //     (u - v - w)/d                            the shortfall, over sixty-fourths
+  //     j*(a/n - (a/n)*(a/n))                    independent spreads, added
+  //     k/n - (g/n)*(h/n)                        a covariance that VANISHES
+  //
+  // FOUR TASKS ON THE THIRD POINT RATHER THAN THREE, WHICH IS THE FIRST TIME A
+  // CONCEPT IN THIS SUBJECT HAS BROKEN THE THREE-PER-POINT SHAPE. The point
+  // makes three claims and not two: the spreads do not add, independence is what
+  // makes them, and a vanishing joint term does not give independence back. The
+  // node's own `is` promises the third one by name — "independence implying zero
+  // but not conversely" — so dropping it to keep a ratio tidy would have shipped
+  // a concept narrower than the map said it was. Asserted as the per-point counts
+  // 3, 3, 4 in tests/concepts-logic.mjs rather than as a total over a ratio.
+  //
+  // THE FIFTH AND SIXTH ARE ONE EXPRESSION AT TWO SUBSTITUTIONS, AND THEY ARE A
+  // PAIR FOR A THIRD REASON THIS SUBJECT HAS NOT USED. Every shared-expression
+  // pair before the sixth concept was a pair because the two answers AGREE; that
+  // concept's first pair is one because they DISAGREE and the disagreement is the
+  // content. These two disagree — 3/4 and 47/64 — and the point is neither: each
+  // half agrees with a DIFFERENT task, the first and the third, which computed
+  // the same two spreads from deviations instead. So the pair is what makes the
+  // identity a theorem rather than a feature of one table, and a reader can check
+  // that by reading four references rather than by trusting a proof.
+  //
+  // THE TENTH REUSES THE NINTH TASK OF THE CONCEPT BELOW VERBATIM AS ITS `given`,
+  // WHICH IS DELIBERATE AND IS THE CONVERSE DEMONSTRATION IN ITS SHARPEST FORM.
+  // `k/n - (g/n)*(h/n)` is a covariance; there it is 1/16 on a pair that is
+  // dependent, here it is 0 on a pair where one member is a FUNCTION of the other
+  // and so is as dependent as a pair can be. Same expression, two substitutions,
+  // and the one that returns ZERO is the more dependent pair — which is the whole
+  // of why a vanishing covariance proves nothing. Writing a fresh expression for
+  // it would have let a reader believe the two numbers came from two different
+  // measurements.
+  //
+  // EIGHT OF THE TEN REFERENCES ARE INSIDE [0, 1], AND THE INTERVAL IS THE WRONG
+  // QUESTION HERE FOR A DIFFERENT REASON FROM THE CONCEPT BELOW. That concept has
+  // seven of nine OUTSIDE, because an expectation is in the units of the
+  // VARIABLE. A variance is in those units SQUARED and has even less reason to be
+  // at most 1 — so what puts eight of these inside is a fact about a FAIR COIN,
+  // whose individual spreads are small, rather than a fact about variances.
+  //
+  // THE TWO OUTSIDE ARE THE TWO LARGEST QUANTITIES THE CONCEPT COMPUTES: the
+  // fourth task's E[X^2] = 3, a second moment with nothing subtracted from it,
+  // and the seventh task's Var(X + T) = 103/64, the spread of a SUM of two rules.
+  // Everything else is one rule's spread or a difference of two things, and all
+  // eight are below 1. Asserted in tests/concepts-logic.mjs by NAME in both
+  // directions, and the first draft of that assertion said nine and one — the
+  // check caught 103/64, which is the argument for computing a population rather
+  // than counting one by eye.
+  //
+  // NO `state`, NO `justify`, NO `transform_to_form` and NO `counterexample`, for
+  // the reasons ontology-chance.ts gives six times already — and the fourth
+  // refusal is the SAME SCHEMA LIMIT the concept below recorded rather than a
+  // fresh one, which is worth saying because this concept is where the kind looks
+  // most askable of anywhere in the build. "Produce two variables with zero
+  // covariance that are not independent" is a counterexample to a named claim and
+  // the tenth task below IS that object; but ruling a learner's own answer would
+  // need a space and two rules as inputs, where `PracticeTask` carries one
+  // expression, one substitution and one reference. So the best question this
+  // concept raises is asked in a worked example and graded as arithmetic, which
+  // is the honest arrangement and not a gap to be engineered away.
+  //
+  // NO `domainConditions` on any of the ten. The denominators are 4n, 64n, n, d
+  // and n: three are the size of a sample space, one is a literal 4 times it, and
+  // `d` is a common denominator the prompt supplies as 64.
+  {
+    id: 'total-the-squared-deviations-weighted-by-their-own-probabilities-1',
+    knowledgePointId:
+      'the-spread-is-a-weighted-total-of-squared-deviations-so-the-table-decides-it-and-not-the-value-list',
+    kind: 'evaluate',
+    prompt:
+      'A fair coin is tossed three times, so the sample space is the eight equally likely '
+      + 'sequences, X is the number of heads with preimages 1, 3, 3, 1 at the values 0, 1, 2, 3, '
+      + 'and `expectation` put E[X] at 3/2. The deviations of the four values from 3/2 are '
+      + '-3/2, -1/2, 1/2 and 3/2, so their squares are 9/4, 1/4, 1/4 and 9/4 — four odd squares '
+      + 'over a common 4. Total those squares weighted by their own probabilities, which is the '
+      + 'variance. Evaluate (9*p + 1*q + 1*r + 9*s)/(4*n) at p = 1, q = 3, r = 3, s = 1, n = 8, '
+      + 'where the literals 9, 1, 1, 9 are the squared deviations in quarters and p, q, r, s are '
+      + 'the preimage sizes behind the values they belong to.',
+    given: '(9*p + 1*q + 1*r + 9*s)/(4*n)',
+    variables: A_TABLE_AND_THE_SPACE_IT_CAME_FROM,
+    // (9 × 1 + 1 × 3 + 1 × 3 + 9 × 1)/(4 × 8) = 24/32 = 3/4.
+    //
+    // THE SAME FIVE INPUTS AS THE FIRST TWO TASKS OF THE CONCEPT BELOW, AND THE
+    // COEFFICIENTS ARE THE WHOLE DIFFERENCE — which is the third time this
+    // subject has made that comparison with one substitution. `(p+q+r+s)/n` is
+    // 1 and says the values partition the space; `(0*p + 1*q + 2*r + 3*s)/n` is
+    // 3/2 and says the table has a centre; this is 3/4 and says how far from it
+    // the table sits. One division each, five identical inputs, and a reader can
+    // see that each new question is a change of coefficient and nothing else.
+    //
+    // THE EXTRA 4 UNDERNEATH IS THE SQUARING AND IS NOT A TIDY-UP. The squared
+    // deviations are quarters, so they are carried as integers over a common 4
+    // rather than as 9/4 and 1/4 inside the brackets — which keeps the five
+    // inputs the same shape as every other task on this table, and keeps the
+    // whole calculation in integers until the single division at the end.
+    //
+    // THE ZERO TERM IS GONE, UNLIKE EVERY OTHER TASK ON THIS TABLE, AND THAT IS
+    // NOT THE SAME SLIP. `sigma-notation`'s four-terms-not-three point is why
+    // the concept below writes `0*p` out; here there is no zero coefficient to
+    // write, because the value 0 is 3/2 away from the mean and contributes the
+    // LARGEST square. So the four terms are visibly four, and the term a learner
+    // might drop is the one carrying the most weight.
+    reference: '3/4',
+    at: { p: '1', q: '3', r: '3', s: '1', n: '8' },
+  },
+  {
+    id: 'measure-what-the-plain-list-route-costs-at-the-second-moment-1',
+    knowledgePointId:
+      'the-spread-is-a-weighted-total-of-squared-deviations-so-the-table-decides-it-and-not-the-value-list',
+    kind: 'evaluate',
+    prompt:
+      'Read 0, 1, 2, 3 as a plain list of four numbers rather than as the values of a rule, the '
+      + 'way `descriptive-statistics` does. Their mean is 6/4 = 3/2, the same centre, so the '
+      + 'squared deviations are the same 9, 1, 1, 9 over 4 — but now each is counted once and '
+      + 'the total is divided by how many there are. That route found the right ANSWER for E[X] '
+      + 'one concept down, because this table is symmetric. Find how far it overshoots the '
+      + 'variance. Evaluate (9 + 1 + 1 + 9)/(4*m) - (9*p + 1*q + 1*r + 9*s)/(4*n) at m = 4, '
+      + 'p = 1, q = 3, r = 3, s = 1, n = 8.',
+    given: '(9 + 1 + 1 + 9)/(4*m) - (9*p + 1*q + 1*r + 9*s)/(4*n)',
+    variables: A_PLAIN_AVERAGE_AGAINST_THE_WEIGHTED_ONE,
+    // 20/16 − 24/32 = 5/4 − 3/4 = 1/2.
+    //
+    // THE SAME SHAPE AS `A_PLAIN_AVERAGE_AGAINST_THE_WEIGHTED_ONE` ONE CONCEPT
+    // DOWN, AT THE SAME SUBSTITUTION, AND THE ANSWER IS WHERE THEY PART. That
+    // task had to be asked on T, because on X the two routes agree and the
+    // reference would have been 0 — "a true statement that teaches the opposite
+    // of the point", as its own note says. This one is asked ON X deliberately
+    // and is NOT zero. Same table, same symmetry, same two routes, and the gap
+    // is 0 at the first moment and 1/2 at the second: that is the whole claim of
+    // this concept's first point, as two references rather than as a sentence.
+    //
+    // SO THE DECISION THE EARLIER TASK EXPLAINS IS REVERSED HERE FOR THE REASON
+    // IT GAVE. It avoided X because a zero there would teach that the weights do
+    // not matter; the zero was a fact about first moments, and asking the same
+    // question at the second moment on the same table is what shows that.
+    //
+    // `m` IS DECLARED AND IS 4 BECAUSE THE LIST HAS FOUR ENTRIES, which is the
+    // divisor `descriptive-statistics` argues about at length — n and not n − 1.
+    // Here the comparison needs it visible: the right-hand term has no divisor
+    // beyond the size of the space, and the contrast between the two halves is
+    // exactly that one of them still has an averaging step to perform.
+    //
+    // THE NUMERATOR `9 + 1 + 1 + 9` IS LEFT UNEVALUATED rather than written as
+    // 20, for the reason the earlier task leaves `0 + 1 + 2 + 3` standing: the
+    // two halves have to be seen to be reading the same four squares.
+    reference: '1/2',
+    at: { m: '4', p: '1', q: '3', r: '3', s: '1', n: '8' },
+  },
+  {
+    id: 'total-the-squared-deviations-for-the-second-rule-1',
+    knowledgePointId:
+      'the-spread-is-a-weighted-total-of-squared-deviations-so-the-table-decides-it-and-not-the-value-list',
+    kind: 'evaluate',
+    prompt:
+      'Keep the same eight sequences and take T, the toss the first head appears on with T = 0 '
+      + 'at TTT. Its preimages are 1, 4, 2, 1 over 8 at the same values 0, 1, 2, 3, and '
+      + '`expectation` put E[T] at 11/8. So T\'s deviations are -11/8, -3/8, 5/8 and 13/8, and '
+      + 'the squares are 121, 9, 25 and 169 over a common 64. Total them weighted by T\'s own '
+      + 'probabilities. Evaluate (121*p + 9*q + 25*r + 169*s)/(64*n) at p = 1, q = 4, r = 2, '
+      + 's = 1, n = 8, and compare it with what the plain list route gave for X.',
+    given: '(121*p + 9*q + 25*r + 169*s)/(64*n)',
+    variables: A_TABLE_AND_THE_SPACE_IT_CAME_FROM,
+    // (121 × 1 + 9 × 4 + 25 × 2 + 169 × 1)/(64 × 8) = (121 + 36 + 50 + 169)/512
+    // = 376/512 = 47/64.
+    //
+    // NOT THE SAME EXPRESSION AS THE FIRST TASK, AND THE REASON IS THE CONTENT.
+    // The pattern this subject reaches for is one expression at two
+    // substitutions, and it is unavailable here: X and T have DIFFERENT means, so
+    // their squared deviations are different numbers and the coefficients cannot
+    // be shared. That is worth noticing rather than working around — the
+    // coefficients being literals is what made the sixth concept's pair
+    // readable, and the same choice makes this pair impossible. The identity in
+    // the second point is what restores it, which is why the fifth and sixth
+    // tasks ARE one expression twice.
+    //
+    // THE DENOMINATOR IS 64 AND NOT 4 FOR THE SAME REASON THE FIRST TASK'S IS 4:
+    // the deviations are eighths here, so the squares are sixty-fourths. A reader
+    // comparing the two tasks is meant to see that the common denominator is
+    // decided by the mean and not by the rule.
+    //
+    // AND THE REFERENCE IS THE SECOND HALF OF THE POINT'S CLAIM. The plain list
+    // variance of T's values is the same 5/4 it was for X, because T takes the
+    // same four values — so 5/4 is wrong for both rules here, where the plain
+    // AVERAGE was wrong only for T. The two tasks above and this one are the
+    // three references that say so.
+    reference: '47/64',
+    at: { p: '1', q: '4', r: '2', s: '1', n: '8' },
+  },
+  {
+    id: 'total-the-squared-rule-over-the-table-1',
+    knowledgePointId:
+      'the-spread-is-the-second-total-minus-the-square-of-the-first-and-that-gap-measures-a-forbidden-push-through',
+    kind: 'evaluate',
+    prompt:
+      'Same three tosses, same X with preimages 1, 3, 3, 1 over 8 at 0, 1, 2, 3. X^2 is a '
+      + 'function of X and so a random variable on the same space; squaring is one-to-one on 0, '
+      + '1, 2, 3, so nothing merges and the probabilities travel unchanged to the values 0, 1, '
+      + '4, 9. Total that table the ordinary way. Evaluate (0*p + 1*q + 4*r + 9*s)/n at p = 1, '
+      + 'q = 3, r = 3, s = 1, n = 8, and then compare your answer with (E[X])^2 = 9/4.',
+    given: '(0*p + 1*q + 4*r + 9*s)/n',
+    variables: A_TABLE_AND_THE_SPACE_IT_CAME_FROM,
+    // (0 × 1 + 1 × 3 + 4 × 3 + 9 × 1)/8 = (0 + 3 + 12 + 9)/8 = 24/8 = 3.
+    //
+    // THE CONCEPT BELOW'S FIRST EXPRESSION WITH THE VALUES SQUARED, which is the
+    // cheapest possible statement of what a second moment is. `(0*p + 1*q + 2*r
+    // + 3*s)/n` is 3/2; this is the same five inputs with 0, 1, 2, 3 replaced by
+    // 0, 1, 4, 9 and it is 3. A reader can see that nothing about the WEIGHTING
+    // changed, which is the half of the comparison the next task needs.
+    //
+    // IT IS ONE OF THE TWO REFERENCES IN THIS CONCEPT OUTSIDE [0, 1], AND THAT IS
+    // THE RULE RATHER THAN AN EXCEPTION. A variance is in the units of the
+    // variable SQUARED, so nothing here has a reason to be at most 1 — what keeps
+    // the other eight inside is that a fair coin's spreads happen to be small.
+    // This one is a second moment with nothing subtracted from it, and a second
+    // moment of a count reaching 3 cannot be small. The other is the seventh
+    // task, the spread of a SUM. Asserted both ways and by name in
+    // tests/concepts-logic.mjs, since a rule true by accident on eight tasks
+    // would otherwise look like a rule.
+    //
+    // THE ZERO TERM IS WRITTEN OUT, for the reason the concept below gives: there
+    // are FOUR values and therefore four terms, and X = 0 is a value X takes
+    // rather than a row that is not there. Here 0 squared is still 0, so dropping
+    // it would give the same 3 — which is exactly the slip an expression that
+    // drops it would teach.
+    reference: '3',
+    at: { p: '1', q: '3', r: '3', s: '1', n: '8' },
+  },
+  {
+    id: 'reach-the-spread-from-two-totals-1',
+    knowledgePointId:
+      'the-spread-is-the-second-total-minus-the-square-of-the-first-and-that-gap-measures-a-forbidden-push-through',
+    kind: 'evaluate',
+    prompt:
+      'Now put the two totals together. Var(X) = E[X^2] - (E[X])^2 says the spread is the '
+      + 'second total minus the square of the first, with no deviation computed and nothing '
+      + 'subtracted from any value. Both totals read the same five inputs: the squared values '
+      + '0, 1, 4, 9 give one and the values 0, 1, 2, 3 give the other. Evaluate '
+      + '(0*p + 1*q + 4*r + 9*s)/n - ((0*p + 1*q + 2*r + 3*s)/n)*((0*p + 1*q + 2*r + 3*s)/n) '
+      + 'at p = 1, q = 3, r = 3, s = 1, n = 8, and check it against the variance the first '
+      + 'point produced from four squared deviations.',
+    given:
+      '(0*p + 1*q + 4*r + 9*s)/n - ((0*p + 1*q + 2*r + 3*s)/n)*((0*p + 1*q + 2*r + 3*s)/n)',
+    variables: A_TABLE_AND_THE_SPACE_IT_CAME_FROM,
+    // 24/8 − (12/8)(12/8) = 3 − 9/4 = 12/4 − 9/4 = 3/4.
+    //
+    // THE TABLE APPEARS THREE TIMES AND IS NOT ABBREVIATED, which is the same
+    // decision as `A_LINEAR_RULE_OUTSIDE_A_WHOLE_TABLE` one concept down and for
+    // the same reason. An expression taking E[X] as a single letter would be
+    // shorter and would assert nothing: the content is that TWO totals over one
+    // table decide the spread, and only a shape with both totals written out says
+    // which two. A learner looking at `e2 - e*e` cannot see that the second
+    // factor is the first point's answer.
+    //
+    // AND THE SECOND FACTOR IS WRITTEN TWICE RATHER THAN SQUARED, deliberately.
+    // `exactValue` would settle a `^2` perfectly well, so this is not a limit of
+    // the evaluator; it is that the whole concept is about the difference between
+    // squaring a total and totalling squares, and an expression using the same
+    // notation for both would make that difference typographical. Written out,
+    // the left term squares four VALUES and the right term squares one TOTAL, and
+    // nothing has to be said about which is which.
+    //
+    // IT AGREES WITH THE FIRST TASK AND THAT IS THE POINT OF ASKING IT. 3/4 twice
+    // by two routes with no step in common: four subtractions, four squarings and
+    // a weighted total there, two weighted totals and one multiplication here.
+    reference: '3/4',
+    at: { p: '1', q: '3', r: '3', s: '1', n: '8' },
+  },
+  {
+    id: 'reach-the-spread-from-two-totals-for-the-second-rule-1',
+    knowledgePointId:
+      'the-spread-is-the-second-total-minus-the-square-of-the-first-and-that-gap-measures-a-forbidden-push-through',
+    kind: 'evaluate',
+    prompt:
+      'Run the SAME expression on T, whose preimages are 1, 4, 2, 1 over 8 at the same values '
+      + '0, 1, 2, 3. Nothing about the expression changes — the values of T are the values of X '
+      + 'and so are their squares, and only the four preimage sizes are different. Evaluate '
+      + '(0*p + 1*q + 4*r + 9*s)/n - ((0*p + 1*q + 2*r + 3*s)/n)*((0*p + 1*q + 2*r + 3*s)/n) '
+      + 'at p = 1, q = 4, r = 2, s = 1, n = 8, and check it against the 47/64 the third task '
+      + 'produced from T\'s squared deviations.',
+    given:
+      '(0*p + 1*q + 4*r + 9*s)/n - ((0*p + 1*q + 2*r + 3*s)/n)*((0*p + 1*q + 2*r + 3*s)/n)',
+    variables: A_TABLE_AND_THE_SPACE_IT_CAME_FROM,
+    // 21/8 − (11/8)(11/8) = 168/64 − 121/64 = 47/64.
+    //
+    // ONE EXPRESSION, TWO SUBSTITUTIONS, AND THE PAIR IS A PAIR FOR A THIRD
+    // REASON. Every shared-expression pair before the sixth concept exists
+    // because the two answers AGREE; that concept's exists because they DISAGREE
+    // and the disagreement is the content. These two disagree too — 3/4 and 47/64
+    // — but the disagreement is not what is being shown. Each half agrees with a
+    // DIFFERENT earlier task on this concept, the first and the third, which
+    // reached the same two numbers from deviations. So four references close two
+    // loops, and the identity is a theorem rather than a feature of X's table.
+    //
+    // AND THE SUBSTITUTION IS WHY THE FIRST POINT COULD NOT HAVE A PAIR. T's
+    // deviations are eighths where X's are halves, so the squared-deviation
+    // expressions cannot share coefficients and the first and third tasks are
+    // necessarily two expressions. This identity reads only the values and the
+    // table, never the mean, so the mean moving costs it nothing — which is a
+    // second thing the short route buys and is the reason to ask it twice.
+    reference: '47/64',
+    at: { p: '1', q: '4', r: '2', s: '1', n: '8' },
+  },
+  {
+    id: 'find-the-spread-of-the-sum-from-its-own-table-1',
+    knowledgePointId:
+      'the-spreads-add-exactly-when-the-joint-term-vanishes-and-independence-is-enough-for-that-but-is-not-needed-by-it',
+    kind: 'evaluate',
+    prompt:
+      'Let S = X + T on the same eight sequences. `expectation` built S\'s table by evaluating '
+      + 'the sum on each sequence: S takes 0 once, 2 once, 3 three times and 4 three times, '
+      + 'skipping the value 1 entirely, so its preimages are 1, 1, 3, 3 over 8 and E[S] = 23/8. '
+      + 'Use the two-total identity from the point below on S itself — its squared values are 0, '
+      + '4, 9, 16. Evaluate '
+      + '(0*p + 4*q + 9*r + 16*s)/n - ((0*p + 2*q + 3*r + 4*s)/n)*((0*p + 2*q + 3*r + 4*s)/n) '
+      + 'at p = 1, q = 1, r = 3, s = 3, n = 8.',
+    given:
+      '(0*p + 4*q + 9*r + 16*s)/n - ((0*p + 2*q + 3*r + 4*s)/n)*((0*p + 2*q + 3*r + 4*s)/n)',
+    variables: A_TABLE_AND_THE_SPACE_IT_CAME_FROM,
+    // (0 + 4 + 27 + 48)/8 − (23/8)(23/8) = 79/8 − 529/64 = 632/64 − 529/64
+    // = 103/64.
+    //
+    // THE SAME SHAPE AS THE TWO TASKS ABOVE WITH S'S VALUE LIST IN IT, which is
+    // what makes the identity's generality visible: the values 0, 2, 3, 4 and
+    // their squares 0, 4, 9, 16 are different literals in the same frame. A
+    // reader who has done the fifth and sixth tasks has nothing new to learn
+    // here, and that is deliberate — the work of this task is the COMPARISON in
+    // the task after it, and this one is the input to it.
+    //
+    // THE VALUE 1 IS ABSENT FROM THE LITERALS AND THAT IS THE TABLE BEING RIGHT,
+    // not a term dropped. S skips 1 — a sequence cannot have no heads and a first
+    // head on toss one — which the concept below names and which its eighth task
+    // also shows. Four values, four terms, and the gap is in the value list
+    // rather than in the expression.
+    //
+    // 103/64 IS THE SECOND OF THE TWO REFERENCES HERE ABOVE 1, which the fourth
+    // task's comment names as well. It is above 1 for the dull reason — adding
+    // two rules on one space adds their spreads and then some — and that is
+    // exactly why the interval says nothing about this concept: eight of the ten
+    // sit inside it because a fair coin's individual spreads are small, not
+    // because a variance has any business being at most 1.
+    reference: '103/64',
+    at: { p: '1', q: '1', r: '3', s: '3', n: '8' },
+  },
+  {
+    id: 'measure-the-shortfall-the-two-spreads-leave-1',
+    knowledgePointId:
+      'the-spreads-add-exactly-when-the-joint-term-vanishes-and-independence-is-enough-for-that-but-is-not-needed-by-it',
+    kind: 'evaluate',
+    prompt:
+      'You now have three spreads on one space, each over sixty-fourths: Var(X + T) = 103/64 '
+      + 'from the task before, Var(X) = 3/4 = 48/64 from the first point and '
+      + 'Var(T) = 47/64 from the third task. Expectations added across these two rules with '
+      + 'nothing checked first. Find out whether the spreads do. Evaluate (u - v - w)/d at '
+      + 'u = 103, v = 48, w = 47, d = 64, and then recall that `expectation`\'s ninth task '
+      + 'computed E[XT] - E[X]E[T] = 1/16 as the amount by which the MULTIPLICATIVE rule missed '
+      + 'on this same pair.',
+    given: '(u - v - w)/d',
+    variables: THREE_SPREADS_OVER_A_COMMON_DENOMINATOR,
+    // (103 − 48 − 47)/64 = 8/64 = 1/8, which is twice the 1/16 the concept below
+    // computed and declined to name.
+    //
+    // THE THREE NUMERATORS ARE ANSWERS TO OTHER TASKS AND THAT IS THE DESIGN.
+    // Rebuilding the three variances inside this expression would ask the fifth,
+    // sixth and seventh tasks again and bury the only question this one has:
+    // whether three numbers already in hand are consistent with the spreads
+    // adding. Over a common denominator of 64 that is one subtraction, 103
+    // against 95.
+    //
+    // AND THE REFERENCE IS TWICE A NUMBER FROM THE CONCEPT BELOW, WHICH IS WHY
+    // THE TASK IS WORTH SETTING RATHER THAN STATING. That concept's ninth task
+    // answers 1/16 and its notes say outright that the quantity is a covariance
+    // and that naming it would promise an account the subject did not have. This
+    // is the account, as a reference: 2 × 1/16 = 1/8 is exactly what the two
+    // spreads are short by. A learner who has produced both numbers has closed
+    // the loop themselves, and nothing in either prompt had to assert the
+    // identity for them.
+    //
+    // `d` IS DECLARED RATHER THAN WRITTEN AS 64 so that the expression says what
+    // it is doing: three quantities put over one denominator and subtracted,
+    // which is the step `fraction-arithmetic` supplies and the same step the
+    // concept below leans on for `(g + h)/n`.
+    reference: '1/8',
+    at: { u: '103', v: '48', w: '47', d: '64' },
+  },
+  {
+    id: 'add-the-spreads-of-three-independent-rules-1',
+    knowledgePointId:
+      'the-spreads-add-exactly-when-the-joint-term-vanishes-and-independence-is-enough-for-that-but-is-not-needed-by-it',
+    kind: 'evaluate',
+    prompt:
+      'Now take three rules that ARE independent. Let A be 1 if the first toss is heads and 0 if '
+      + 'not, and let B and C say the same of the second and third tosses. A + B + C counts the '
+      + 'heads on every one of the eight sequences, so it IS X. Each takes only 0 and 1, so each '
+      + 'is its own square, so E[A^2] = E[A] and the two-total identity collapses to one '
+      + 'subtraction. A is 1 on 4 of the 8 sequences, and the product test passes on every pair '
+      + '— P(A = 1)P(B = 1) = 1/4 and P(A = 1 and B = 1) is HHH and HHT over eight, also 1/4 — '
+      + 'so every covariance is 0 and the three spreads add. Evaluate j*(a/n - (a/n)*(a/n)) at '
+      + 'j = 3, a = 4, n = 8, and compare it with Var(X) from the first point.',
+    given: 'j*(a/n - (a/n)*(a/n))',
+    variables: ONE_INDICATOR_SPREAD_TAKEN_SEVERAL_TIMES,
+    // 3(4/8 − (4/8)(4/8)) = 3(1/2 − 1/4) = 3(1/4) = 3/4.
+    //
+    // A THIRD ROUTE TO 3/4, AND THE ONLY ONE THAT NEVER LOOKS AT THE TABLE. The
+    // first task totals four squared deviations weighted by four probabilities;
+    // the fifth totals the table twice; this multiplies one indicator's spread by
+    // three. Three references all reading 3/4 with no step shared between the
+    // first and the last, which is what a decomposition claim is worth asserting
+    // as.
+    //
+    // THE INNER BRACKET IS THE POINT BELOW'S IDENTITY AT A VARIABLE EQUAL TO ITS
+    // OWN SQUARE, written out rather than folded to 1/4. `a/n - (a/n)*(a/n)` is
+    // E[A^2] − (E[A])^2 with E[A^2] replaced by E[A], which is legitimate only
+    // because A takes 0 and 1 and nothing else — so the shape carries its own
+    // hypothesis. A bare 1/4 would have asked a learner to multiply by three.
+    //
+    // THE INDEPENDENCE IS IN THE PROMPT AND IS NOT COMPUTED BY THE TASK, the same
+    // decision the concept below makes about the dependence of X and T. The
+    // product test is `conditional-probability`'s and is asked there; what this
+    // task observes is the consequence — that the spreads add exactly where that
+    // test passes, having fallen 1/8 short one task earlier where it failed.
+    //
+    // `j` IS A LETTER BECAUSE THE CLAIM IS QUANTIFIED OVER IT. What is being
+    // asserted is that independent spreads add, so how many are being added is
+    // the parameter; three is this experiment's answer, not the theorem's.
+    reference: '3/4',
+    at: { j: '3', a: '4', n: '8' },
+  },
+  {
+    id: 'compute-a-covariance-that-vanishes-on-a-dependent-pair-1',
+    knowledgePointId:
+      'the-spreads-add-exactly-when-the-joint-term-vanishes-and-independence-is-enough-for-that-but-is-not-needed-by-it',
+    kind: 'evaluate',
+    prompt:
+      'Independence makes the covariance 0. Ask whether it goes the other way. Take Y = |2X - 3|, '
+      + 'the margin `random-variables` built from X, which is 3, 1, 1, 3 as X runs 0 to 3 — so Y '
+      + 'is DETERMINED by X and there is no stronger dependence than that. '
+      + '`conditional-probability`\'s product test agrees: P(X = 0) = 1/8 and P(Y = 3) = 1/4 '
+      + 'multiply to 1/32, while P(X = 0 and Y = 3) is just P(X = 0) = 1/8, since X = 0 forces '
+      + 'Y = 3. Across the eight sequences XY is 9, 2, 2, 1, 2, 1, 1, 0, which totals 18, X '
+      + 'totals 12, and Y totals 12 since `expectation` put E[Y] at 3/2. Evaluate the SAME '
+      + 'expression that concept\'s ninth task used, k/n - (g/n)*(h/n), at k = 18, g = 12, '
+      + 'h = 12, n = 8.',
+    given: 'k/n - (g/n)*(h/n)',
+    variables: A_PRODUCT_TOTAL_AGAINST_A_PRODUCT_OF_TOTALS,
+    // 18/8 − (12/8)(12/8) = 9/4 − 9/4 = 0.
+    //
+    // THE SAME `given` AS THE NINTH TASK OF THE CONCEPT BELOW, VERBATIM, AND THE
+    // PAIR IS THE CONVERSE IN ITS SHARPEST FORM. There the substitution is
+    // (17, 12, 11, 8) and the answer is 1/16 on a pair that is dependent; here it
+    // is (18, 12, 12, 8) and the answer is 0 on a pair where one member is a
+    // FUNCTION of the other. Same expression, two substitutions, and the one that
+    // returns ZERO is the MORE dependent pair. A fresh expression would have let
+    // a reader believe the two numbers came from two different measurements, and
+    // the whole argument is that they come from one.
+    //
+    // THE LETTERS MEAN WHAT THEY MEAN THERE, which is why the declaration is
+    // shared rather than copied: g is the total of X over the eight sequences and
+    // is 12 in both tasks, n is the size of the space, and only k and h move.
+    // That is also how a reader sees that Y and T are different rules with the
+    // same total — E[Y] and E[X] are both 3/2, which the concept below flags as a
+    // coincidence, and it is the reason h is 12 here and 11 there.
+    //
+    // THE REFERENCE IS 0 AND IS THE ANSWER RATHER THAN A FAILURE TO FIND ONE.
+    // `descriptive-statistics` has the other zero of this kind — the signed
+    // deviations of any list cancel — and the two are worth reading together:
+    // there a zero shows a method measures nothing, and here it shows a method
+    // measures something NARROWER than it is taken to measure. A covariance
+    // detects joint movement that is on average and in a straight line, and Y
+    // follows the DISTANCE of X from 3/2 rather than X, so on a table symmetric
+    // about 3/2 the rises and falls cancel exactly.
+    //
+    // THE DEPENDENCE IS IN THE PROMPT AND IS NOT COMPUTED, as in the task below
+    // and in the one two above. The product test is run in the worked example of
+    // this point and in no task of this concept, which is the fact the credit
+    // edge in ontology-chance.ts turns on: `conditional-probability` comes due as
+    // though untouched.
+    reference: '0',
+    at: { k: '18', g: '12', h: '12', n: '8' },
   },
 ]
 

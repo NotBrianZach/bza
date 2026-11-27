@@ -436,6 +436,30 @@ export interface PracticeTask {
   reference: string
   /** `evaluate` only: the inputs to substitute. Exact numerals as strings. */
   at?: Record<string, string>
+  /**
+   * `evaluate` only: the unit `reference` is expressed in, e.g. `m/s^2`.
+   *
+   * Setting it turns on the dimension check in `ruleEvaluate`, which is what
+   * makes a physics task rulable at all. Without it the verifier compares
+   * bare rationals, so `9.8` passes a question about acceleration and
+   * `1 km` fails one whose reference is `1000 m` — wrong in both directions
+   * and silent in both.
+   *
+   * With it: a bare number is incorrect against a dimensioned task, a
+   * right-sized answer of the wrong KIND is reported as a dimension error
+   * rather than an arithmetic one, and any unit of the right dimension is
+   * accepted after conversion to SI.
+   *
+   * `'1'` means dimensionless and is how a task says "this one really is a
+   * pure number" — distinct from omitting the field, which means "units are
+   * not part of this question at all".
+   *
+   * The unit must be one lib/concepts/units.ts can read, and an unreadable
+   * one rules `inconclusive` as an authoring fault rather than marking a
+   * learner wrong for the author's typo. Degrees and °C are deliberately
+   * absent from that module; see its header for why.
+   */
+  unit?: string
 }
 
 // ---------------------------------------------------------------------------
