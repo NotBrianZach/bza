@@ -13,7 +13,10 @@ const HARDCODED_DEFAULTS: Record<string, string> = {
   'defaults.analysis_model': 'deepseek/deepseek-chat-v3',
   'defaults.analysis_model_uncensored': 'nousresearch/hermes-3-llama-3.1-405b',
   'defaults.analysis_model_permissive': 'nousresearch/hermes-3-llama-3.1-405b',
-  'defaults.image_model': 'openai/gpt-image-1',
+  // gpt-image-1 was retired by OpenAI and returns 400 "does not exist".
+  // generate-image also refuses that name explicitly, so a stale app_config
+  // row cannot resurrect it — see RETIRED_IMAGE_MODELS there.
+  'defaults.image_model': 'openai/gpt-image-1.5',
   'defaults.picturebook_image_model': 'fal-ai/flux-dev',
   'defaults.tts_model': 'tts-1',
   'defaults.tts_voice': 'nova',

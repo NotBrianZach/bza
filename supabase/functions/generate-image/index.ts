@@ -4,6 +4,47 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1'
 import { reportOverageIfNeeded } from '../_shared/stripe-overage.ts'
+import { getDefaults } from '../_shared/defaults.ts'
+
+/**
+ * The image model, and why this is read rather than written here.
+ *
+ * COVER GENERATION WAS BROKEN FOR EVERY BOOK. `gpt-image-1` was retired by
+ * OpenAI, and the call came back
+ *
+ *   400 { "message": "The model 'gpt-image-1' does not exist." }
+ *
+ * which `imageQueries.generate` turns into a thrown Error and `maybeAutoCover`
+ * swallows with `.catch(() => {})`. Fire-and-forget with an empty catch is the
+ * right shape for an enrichment and it is also why nobody saw an error: the
+ * cover simply never appeared.
+ *
+ * The model was hard-coded HERE while `app_config` already carried a
+ * `defaults.image_model` key that nothing in this function read — so the knob
+ * existed, pointed at the same dead model, and was not connected. Reading it
+ * is what makes the next retirement a config update instead of an edge-function
+ * redeploy.
+ *
+ * `openai/` is stripped because app_config stores models in OpenRouter's
+ * `vendor/model` form and this function talks to api.openai.com directly,
+ * which rejects the prefix.
+ *
+ * THE DEAD-MODEL GUARD IS DELIBERATE. A config row naming `gpt-image-1` is
+ * known-broken, so it falls through to the default rather than being honoured.
+ * Without it, fixing the code leaves the feature broken until somebody also
+ * remembers the database — which is exactly the trap this bug was.
+ */
+const RETIRED_IMAGE_MODELS = new Set(['gpt-image-1', 'dall-e-3', 'dall-e-2'])
+const FALLBACK_IMAGE_MODEL = 'gpt-image-1.5'
+
+async function imageModelFor(db: any): Promise<string> {
+  try {
+    const defaults = await getDefaults(db)
+    const configured = (defaults.image_model ?? '').replace(/^openai\//, '').trim()
+    if (configured && !RETIRED_IMAGE_MODELS.has(configured)) return configured
+  } catch { /* config unreadable is not a reason to fail the request */ }
+  return FALLBACK_IMAGE_MODEL
+}
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -149,10 +190,13 @@ serve(async (req) => {
       finalPrompt = `${finalPrompt}. Style: ${customStylePrompt.trim()}`
     }
 
-    // Generate image with gpt-image-1 (replaces dall-e-3)
-    // Size mapping: gpt-image-1 uses slightly different dimensions
+    // Size mapping: the gpt-image family uses slightly different dimensions
     const gptSize = size === '1792x1024' ? '1536x1024' : size === '1024x1792' ? '1024x1536' : '1024x1024'
-    const dalleModel = `gpt-image-1-${gptSize}`
+    const imageModel = await imageModelFor(db)
+    // The usage-ledger key, which has always been model-plus-size rather than
+    // the bare model. Built from the resolved model so the ledger follows a
+    // config change instead of recording every image under a retired name.
+    const dalleModel = `${imageModel}-${gptSize}`
     const dalleResponse = await fetch('https://api.openai.com/v1/images/generations', {
       method: 'POST',
       headers: {
@@ -160,7 +204,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-image-1',
+        model: imageModel,
         prompt: finalPrompt,
         n: 1,
         size: gptSize,
@@ -217,7 +261,10 @@ serve(async (req) => {
         page_num: pageNum,
         prompt: finalPrompt,
         image_url: publicUrl,
-        model: 'gpt-image-1',
+        // The resolved model, not a literal. This row is the only record of
+        // what actually drew a given image, and a hard-coded name made it a
+        // record of what the code was written against instead.
+        model: imageModel,
         size,
       })
       .select()
