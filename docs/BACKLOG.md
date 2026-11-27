@@ -328,42 +328,40 @@ half to read:
   item 1's "two non-script hits" was. The half that decides whether setting the
   value is safe is *read by*, and that is still two files, `deploy_project.py`
   and `app_deploy_service.py`. Count readers by what consumes the value.
-- `deployment_history` for bza was 366 rows, then 367, then 373, and is 377 —
-  head is row 458, started 2026-11-27 02:35 UTC. The claim that matters is the
-  zero and not the total: no row at any of those counts carries
+- `deployment_history` for bza was 366 rows, then 367, then 373, 377, and is
+  379 — head is row 460, started 2026-11-27 13:51 UTC. The claim that matters
+  is the zero and not the total: no row at any of those counts carries
   `groups_deployed`, so the group orchestrator has still never deployed this
   project and the path this item gates is the path that runs.
-- **Which rows carry `Build failed (exit 1)` moves too, and neither recent one
-  is this item's defect.** It was rows 441 and 442; then 450; it is now 441,
-  442, 450 and 455. The two recent ones are the same event twice, which is what
-  turned the concurrency reading from a mechanism at hand into the one to start
-  from. Row 450 started 2026-11-26 19:56:04 UTC and failed, row 451 started 35
-  seconds later and shipped; row 455 started 2026-11-27 01:36:47 UTC and
-  failed, row 456 started 35 seconds later and shipped. In both pairs the
-  second run began while the first was still running (450 completed 19:56:53,
-  455 completed 01:37:35), and no commit landed between the two starts — the
-  bracketing commits are 19:55:56 and 20:02:50 for the first pair, 01:35:14 and
-  02:02:35 for the second — so each failure and the success behind it built the
-  same sources. `app_deploy_service.py` takes no lock, `_sync_from_checkout`
+- **Which rows carry `Build failed (exit 1)` moves too, and none of the recent
+  ones is this item's defect.** It was rows 441 and 442; then 450; then 455; it
+  is now 441, 442, 450, 455 and 459. The three recent ones are the same event
+  three times, which is what turned the concurrency reading from a mechanism at
+  hand into the one to start from. Each is a failure with a success 32–35
+  seconds behind it — 450/451, 455/456, 459/460 — where the second run began
+  while the first was still running and no commit landed between the two
+  starts, so each failure and the success behind it built the same sources.
+  Item 4 carries the timings and the bracketing commits.
+  `app_deploy_service.py` takes no lock, `_sync_from_checkout`
   rsyncs `-a --delete` into `work_dir`, and the build runs with `cwd=work_dir`,
   so a second deploy starting mid-build deletes and rewrites the tree underneath
   the first. Read a new `Build failed` row as that until you have a log, not as
   the type error coming back.
 
-  A `pre_deploy_test` gate would have passed both failures rather than refusing
-  them, and that needs no separate `tsc` run to establish: `next.config.js`
+  A `pre_deploy_test` gate would have passed all three failures rather than
+  refusing them, and that needs no separate `tsc` run to establish: `next.config.js`
   sets `typescript.ignoreBuildErrors: false`, so the succeeding build of each
   pair type-checked the very sources its predecessor had just failed on. The
   load-bearing half of this evidence is about wording rather than count and is
   unchanged: the string is `app_deploy_service.py`'s own, lines 443 and 449,
   which is what proves the gated path is the path that runs.
 
-  The 35 seconds is exact in both pairs, so the pairing is unlikely to be two
-  independent hands — something launches a second deploy on a fixed delay
-  while the first is still building. It is not a retry after failure: 451
-  started 14 seconds before 450 finished. Whatever that trigger is, it is not
-  visible in `deployment_history`, which records both runs as `manual` /
-  `zach`, and finding it is item 4 rather than this one.
+  The 35 seconds looked like a fixed delay and is not one — a third pair has
+  since come in at 32, and the launches behind two of the pairs are over a
+  minute apart. It is one hand firing twice, not two hands or a retry; item 4
+  carries the evidence and the mechanism. What matters to *this* item is only
+  that the trigger is not visible in `deployment_history`, which records every
+  run as `manual` / `zach`.
 
   Two cautions if you measure this yourself. `started_at`/`completed_at` and
   `duration_ms` disagree — row 450 spans 49s between the columns and records
@@ -403,45 +401,93 @@ project source, and TypeScript's own `lib` `.d.ts` files coming in that way
 produce a circular-inference error in an unrelated file that reads exactly like
 a regression you just introduced.
 
-## 4. Deploys overlap in one unlocked work_dir, failing good builds
+## 4. The deploy service takes no lock on its one work_dir
 
 `app_deploy_service.py` takes no lock. `_sync_from_checkout` rsyncs
 `-a --delete` into `work_dir` and `build_cmd` runs with `cwd=work_dir`, so a
 deploy that starts while another is building deletes and rewrites the tree
-under it. That has now happened twice, and both times it recorded
-`Build failed (exit 1)` against sources that build.
+under it. The first then records `Build failed (exit 1)` against sources that
+build. That has now happened three times.
 
-Verified 2026-11-27 13:18 UTC from `deployment_history`. Row 450 started
-2026-11-26 19:56:04 UTC and failed; row 451 started 19:56:39 — 35 seconds
-later, 14 seconds before 450 completed at 19:56:53 — and shipped. Row 455
-started 2026-11-27 01:36:47 and failed; row 456 started 01:37:22, again 35
-seconds later and again before 455 completed at 01:37:35, and shipped. No
-commit landed between either pair's two starts (bracketing commits 19:55:56
-and 20:02:50; 01:35:14 and 02:02:35), and `next.config.js` sets
-`typescript.ignoreBuildErrors: false`, so each succeeding build type-checked
-and compiled exactly what the failing one could not.
+The caller side of this is fixed as of the same commit as this paragraph:
+`scripts/deploy.sh` now holds an `flock` for the length of the run and a second
+invocation refuses, naming the holder's pid, target and start time, rather than
+deploying over it. Checked both directions before committing — a live holder
+makes the second invocation exit 1, and a holder killed with `SIGKILL` leaves
+no stale lock, which is the property that matters because the thing that kills
+deploys here is the harness rather than a crash. **The service is still
+unguarded**, so `templedb deploy project bza` run directly still races, and so
+does `deploy_bza_web.sh`, which builds in the canonical checkout and collides
+over the materialize instead.
 
-The pairing is the tell, and it is worth keeping because it is what separates
-this from a real build defect: a failure of this kind is followed within a
-minute by a success on the same sources, where rows 441 and 442 — the
-unannotated-constant type error of item 3 — are isolated failures twelve hours
-apart with no success in between.
+Verified 2026-11-27 21:30 UTC from `deployment_history`, third pair included.
+Row 450 started 2026-11-26 19:56:04 UTC and failed; 451 started 19:56:39 and
+shipped, 14 seconds before 450 completed. Row 455 started 2026-11-27 01:36:47
+and failed; 456 started 01:37:22 and shipped, before 455 completed at 01:37:35.
+Row 459 started 13:51:23 and failed; 460 started 13:51:55 and shipped, 35
+seconds before 459 completed at 13:52:30. No commit landed between any pair's
+two starts (bracketing commits 19:55:56 and 20:02:50; 01:35:14 and 02:02:35;
+`A726A5D8086EE7F0` at 13:49:40 and `CA99167D35CBFD87` at 13:53:06), and
+`next.config.js` sets `typescript.ignoreBuildErrors: false`, so each succeeding
+build type-checked and compiled exactly what the failing one could not. For the
+third pair the surviving run's own log stamped `BUILD_SHA=A726A5D8086EE7F0`,
+which is the same head the failing one had.
 
-Two costs. The history reads as though the release has been breaking twice a
-week when it has not, and item 3 asks someone to set `pre_deploy_test`, which
-runs in this same `work_dir` immediately before the build: once that is set,
-this mechanism refuses deploys instead of merely failing them, on the one check
-whose verdict is being trusted.
+The pairing is the tell, and it is what separates this from a real build
+defect: a failure of this kind is followed within a minute by a success on the
+same sources, where rows 441 and 442 — the unannotated-constant type error of
+item 3 — are isolated failures twelve hours apart with no success between them.
 
-Unverified: what launches the second run. The 35-second offset is exact in both
-pairs, which does not look like two hands, and it is not a retry after failure
-because the second run starts before the first finishes. `deployment_history`
-records both runs of each pair as `triggered_by=manual`, `deployed_by=zach`, so
-the trigger is not visible there. Find it before designing a lock — "two
-deploys at once" and "one deploy fired twice" want different fixes, and only
-the first of them wants a lock.
+**What launches the second run (was Unverified; answered 2026-11-27).** One
+hand fires twice. In the two pairs where the caller is recorded, the
+interactive bza session launched both: `agent_events` for run 1765 shows
+`Publish and deploy the attribution fix` at 2026-11-26 19:54:40 and then
+`Launch the detached deploy` at 19:55:51, and run 1777 shows
+`Publish and deploy the copy change` at 01:35:21 and then
+`Deploy the copy change` at 01:36:36. The launches are ~70 seconds apart, not
+35: the first command publishes before it deploys and a row only appears after
+materialize and rsync, so the gap between *rows* is much shorter than the gap
+between launches. That also disposes of the fixed-delay reading — the third
+pair's rows are 32 seconds apart, and no two launches in this history are the
+same distance apart.
 
-The code is in templedb (`src/services/app_deploy_service.py`), not in this
-repo, so the fix and this item's deletion cannot be one commit. Commit the fix
-first; a stale item over a done fix is recoverable and the reverse loses the
-item.
+So the second launch is a deliberate relaunch of a deploy the caller believed
+had died. A backgrounded deploy that this harness kills at a turn boundary is
+indistinguishable from one that is still building, so the honest move looked
+like relaunching, and the relaunch is what wrecked the live build. That is why
+the fix above refuses rather than locks-and-waits: refusing is what makes those
+two states tell themselves apart.
+
+Two things that make the next pair hard to read, and both are worth fixing
+alongside the service lock:
+
+- **Nothing records the caller.** Every bza row reads `triggered_by=manual`,
+  `deployed_by=zach`, including rows from a detached script nobody was
+  watching, so a pair cannot be attributed after the fact. The third pair has
+  no recorded launcher at all: no agent run in that window issued a deploy —
+  the only one alive, run 1791, is a content task denied every `deploy` verb
+  and its event list has none — so it came from a terminal. Recording the
+  invoking pid and command line at `start_deployment` is what would turn the
+  next occurrence into a one-query answer.
+- **The failing run's log is destroyed by the run that overwrites it.** Both
+  invocations redirect to the same `/dev/shm/dep*.log`, which truncates:
+  `/dev/shm/dep-units.log` holds deployment 460 and nothing of 459. Do not go
+  looking for the first run's output.
+
+Two measurement cautions. One `deploy()` call creates exactly one
+`deployment_history` row and the function has no retry anywhere in it — read
+from the DB copy of `app_deploy_service.py` on 2026-11-27 — so two rows always
+means two processes, never one process logging twice. And `started_at` /
+`completed_at` disagree with `duration_ms` (row 450 spans 49s and records
+87866ms, row 455 spans 48s and records 84792ms), so do not compute elapsed from
+the pair; the overlap holds under either reading.
+
+The remaining cost is item 3's: `pre_deploy_test` runs in this same `work_dir`
+immediately before the build, so once it is set this mechanism refuses deploys
+instead of merely failing them, on the one check whose verdict is being
+trusted. `deploy.sh`'s guard covers the path a human takes and not that one.
+
+The remaining code is in templedb (`src/services/app_deploy_service.py`), not
+in this repo, so that fix and this item's deletion cannot be one commit. Commit
+the fix first; a stale item over a done fix is recoverable and the reverse loses
+the item.

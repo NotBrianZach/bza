@@ -27,6 +27,45 @@ SKIP_VERIFY=false
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# ── One deploy of this project at a time ────────────────────────────────────
+#
+# `templedb deploy project` takes no lock. It rsyncs `-a --delete` into
+# ~/.local/share/templedb/fhs-deployments/bza/working/frontend and runs the
+# build with that as cwd, so a second deploy starting mid-build deletes and
+# rewrites the tree under the first one. The first then records
+# `Build failed (exit 1)` against sources that are fine: deployment_history
+# rows 450, 455 and 459 are each a failure followed inside 40 seconds by a
+# success on the same commit, with nothing committed in between.
+#
+# The second deploy is not a second person. In the two pairs where the caller
+# is recorded, one session launched both ~70 seconds apart — a "publish and
+# deploy" command and then a deliberate relaunch — because a backgrounded
+# deploy this harness kills at a turn boundary looks exactly like one that is
+# still building. Refusing here is what tells those two states apart: a live
+# deploy holds this lock, so the relaunch says who holds it instead of
+# wrecking the build it was worried about.
+#
+# flock on an fd rather than a pidfile, because the thing that kills deploys
+# here is the harness rather than a crash: the kernel drops the lock when this
+# process dies, so a killed deploy leaves nothing to clean up and no stale
+# lock can block a release. fds survive the `exec` at the end of this script,
+# so the verify step is inside the lock too.
+#
+# This guards this script. `templedb deploy project bza` run directly still
+# races, and so does deploy_bza_web.sh, which builds in the canonical checkout
+# instead — the service-side fix is item 4 of docs/BACKLOG.md.
+LOCK_FILE="/tmp/bza-deploy.lock"
+exec 9>>"$LOCK_FILE"
+if ! flock -n 9; then
+  echo "ERROR: a bza deploy is already in flight — refusing to start a second one." >&2
+  sed 's/^/       /' "$LOCK_FILE" >&2
+  echo "       Wait for it, or watch its log. Deploying over it is what turns a" >&2
+  echo "       good build into 'Build failed (exit 1)' in deployment_history." >&2
+  exit 1
+fi
+printf 'holder: pid %s, target %s, started %s\n' \
+  "$$" "$TARGET" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > "$LOCK_FILE"
+
 # Two separate protections, and the second one is the one that was missing.
 #
 # Drained into a variable first: piping `templedb vcs log` straight into `awk …

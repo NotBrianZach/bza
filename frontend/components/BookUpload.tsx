@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Upload, X, AlertCircle, Link as LinkIcon, Rss, Globe, Mail, MessageSquare } from 'lucide-react'
+import { Upload, X, AlertCircle, ClipboardType, Link as LinkIcon, Rss, Globe, Mail, MessageSquare } from 'lucide-react'
 import FeedBrowser from '@/components/FeedBrowser'
 import UpgradeGate, { UpgradeReason } from './UpgradeGate'
 import { FileTab } from './upload/FileTab'
@@ -9,6 +9,7 @@ import { UrlTab } from './upload/UrlTab'
 import { NewsletterTab } from './upload/NewsletterTab'
 import { BrowseTab } from './upload/BrowseTab'
 import { ChatBookCreator } from './upload/ChatBookCreator'
+import { PasteTab } from './upload/PasteTab'
 import { MangaUploader } from './upload/MangaUploader'
 import type { ContentType } from './upload/types'
 
@@ -19,10 +20,17 @@ interface BookUploadProps {
   onCancel?: () => void
 }
 
-type Tab = 'file' | 'url' | 'feed' | 'newsletter' | 'chat' | 'browse'
+type Tab = 'file' | 'paste' | 'url' | 'feed' | 'newsletter' | 'chat' | 'browse'
 
+/*
+ * `paste` sits second, next to File, because the two answer the same question
+ * — "I already have this text" — and the rest of the row answers "go and get
+ * something". Putting it at the end next to Browse would have filed a paste
+ * with the remote sources it is the opposite of.
+ */
 const TABS: { id: Tab; icon: typeof Upload; label: string }[] = [
   { id: 'file',       icon: Upload,        label: 'File' },
+  { id: 'paste',      icon: ClipboardType, label: 'Paste' },
   { id: 'url',        icon: LinkIcon,      label: 'URL' },
   { id: 'feed',       icon: Rss,           label: 'Feeds' },
   { id: 'newsletter', icon: Mail,          label: 'Email' },
@@ -87,6 +95,19 @@ export default function BookUpload({ useLocalStorage = false, isPro = false, onS
           onTitleChange={setTitle}
           contentType={contentType}
           onContentTypeChange={setContentType}
+          onError={setError}
+          onSuccess={onSuccess}
+        />
+      )}
+
+      {/* No `title`/`contentType` from this component's state, unlike the URL
+          and File tabs. Those two share them because a fetch can SUPPLY a
+          title and the tab then edits it; a paste has no source to take one
+          from, so the state has nowhere to come from and belongs inside the
+          tab that owns it. */}
+      {tab === 'paste' && (
+        <PasteTab
+          useLocalStorage={useLocalStorage}
           onError={setError}
           onSuccess={onSuccess}
         />

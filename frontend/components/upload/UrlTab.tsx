@@ -9,7 +9,10 @@ import { maybeAutoCover } from '@/lib/queries/images'
 import { maybeAutoScore } from '@/lib/queries/scores'
 import { supabase } from '@/lib/supabase'
 import { isSupadataUrl } from '@/lib/supadata'
-import { saveLocalBook, saveBookContent } from '@/lib/localStorage'
+import { importMarkdownAsBook } from './importMarkdown'
+/* `saveLocalBook`/`saveBookContent` went with the extracted body — the
+   anonymous path lives in ./importMarkdown now, and this file no longer
+   touches localStorage at all. */
 import { track } from '@/lib/analytics'
 import { PdfMethodSelector } from './PdfMethodSelector'
 import {
@@ -195,32 +198,24 @@ export function UrlTab({
     onError(null)
     setIsUploading(true)
     try {
-      const blob = new Blob([markdown], { type: 'text/markdown' })
-      const syntheticFile = new File([blob], `${importTitle.replace(/[^a-z0-9]/gi, '_')}.md`, { type: 'text/markdown' })
-      if (useLocalStorage) {
-        const { fileToText } = await import('@/lib/pdfToMarkdown')
-        const fileText = await fileToText(syntheticFile)
-        const newBook = saveLocalBook({
-          user_id: '',
-          title: importTitle.trim(),
-          file_path: 'local',
-          total_pages: Math.ceil(fileText.length / 2000),
-        })
-        saveBookContent(newBook.id, fileText)
-        track('book_upload', { source: 'import-local', content_type: contentType })
-        onSuccess ? onSuccess() : router.push(`/books/${newBook.id}`)
-      } else {
-        const book = await booksQueries.upload(syntheticFile, {
-          title: importTitle.trim(),
-          articleType: contentType,
-          wikiRevid: extra?.wikiRevid,
-          sourceUrl: extra?.sourceUrl,
-        })
-        maybeAutoCover(book.id, importTitle.trim())
-        booksQueries.getContent(book.file_path).then(c => maybeAutoScore(book.id, c)).catch(() => {})
-        track('book_upload', { source: 'import-remote', content_type: contentType })
-        onSuccess ? onSuccess() : (router.push(`/books/${book.id}`), router.refresh())
-      }
+      /*
+       * The body of this moved to ./importMarkdown when the Paste tab wanted
+       * it too. What stayed is the part that is genuinely this component's:
+       * the error surface, the busy flag and where to go next. The analytics
+       * source stays `import` so the existing `import-local` / `import-remote`
+       * events keep their names and the history before this refactor is still
+       * one series.
+       */
+      const { id } = await importMarkdownAsBook({
+        markdown,
+        title: importTitle,
+        contentType,
+        useLocalStorage,
+        source: 'import',
+        sourceUrl: extra?.sourceUrl,
+        wikiRevid: extra?.wikiRevid,
+      })
+      onSuccess ? onSuccess() : (router.push(`/books/${id}`), router.refresh())
     } catch (err: any) {
       onError(err.message || 'Import failed')
     } finally {
