@@ -2827,6 +2827,95 @@ const ONE_INDICATOR_SPREAD_TAKEN_SEVERAL_TIMES: VariableDeclaration[] = [
   { name: 'n', assumptions: { integer: true } },
 ]
 
+/**
+ * A WEIGHT AS A RATIO OF TWO INTEGERS — the first parameter in this subject that
+ * is meant to MOVE, and the reason it is two letters rather than one.
+ *
+ * `b/m - (b/m)*(b/m)` at (1, 3) is 1/3 - 1/9 = 2/9: the spread of a single trial
+ * whose success probability is b/m. At (1, 5) the same expression is 4/25, and at
+ * (1, 2) it would be the 1/4 `ONE_INDICATOR_SPREAD_TAKEN_SEVERAL_TIMES` carries
+ * inside its bracket.
+ *
+ * IT IS THAT DECLARATION'S INNER BRACKET WITH THE COUNT REMOVED AND THE WEIGHT
+ * FREED, which is the whole relationship between the two concepts. There the
+ * weight is `a/n` — how many of the n sequences put the indicator at 1 — so it
+ * is a FACT ABOUT A SPACE and cannot be anything but 4/8. Here it is b/m, a
+ * parameter of the experiment, and the two tasks that share this declaration
+ * differ only in what it is set to. A reader can see that the arithmetic did not
+ * change and the status of the number did.
+ *
+ * TWO LETTERS AND NOT ONE, BECAUSE `exactValue` SETTLES RATIONALS AND THE
+ * SUBSTITUTION IS A STRING. A single `p` set to `1/3` would also work, and it
+ * would hide the thing the pair of tasks is for: with b and m separate, moving
+ * the parameter is visibly moving ONE of the two inputs, and `(m - b)/m` is the
+ * complement written in the same terms rather than as a second decimal.
+ */
+const A_WEIGHT_AS_A_RATIO_OF_INTEGERS: VariableDeclaration[] = [
+  { name: 'b', assumptions: { integer: true } },
+  { name: 'm', assumptions: { integer: true } },
+]
+
+/**
+ * A COUNT OF EQUALLY PRICED RUNS AND THE WEIGHT THEY ARE PRICED AT — the
+ * binomial entry, with the two subjects' contributions kept in separate letters.
+ *
+ * `c*(b/m)*((m - b)/m)*((m - b)/m)` at (3, 1, 2) is 3(1/2)(1/2)(1/2) = 3/8, which
+ * is P(X = 1) on the three tosses every concept of this subject since the fourth
+ * is set on. At (3, 1, 3) it is 3(1/3)(2/3)(2/3) = 4/9.
+ *
+ * `c` IS A LETTER AND THE THREE FACTORS ARE NOT, which is the same decision
+ * `A_LINEAR_RULE_OUTSIDE_A_WHOLE_TABLE` makes about a and b. The coefficient is
+ * `counting-principles`' work and arrives from outside, so it is the input; the
+ * SHAPE of the product — one weight per success and one complement per failure —
+ * is what the entry IS, so it is written out. Three factors rather than a power,
+ * because at n = 3 the exponents are 1 and 2 and spelling them out lets a reader
+ * count the trials.
+ *
+ * THE PAIR DISAGREES AND THE DISAGREEMENT IS THE CONTENT, which is the shape the
+ * seventh concept's first pair established. 3/8 against 4/9 says that moving the
+ * weight DOWN raises the chance of exactly one success, which is not obvious and
+ * is not a rounding: 27/72 against 32/72.
+ */
+const A_COUNT_OF_RUNS_AND_THE_WEIGHT_THEY_COST: VariableDeclaration[] = [
+  { name: 'c', assumptions: { integer: true } },
+  { name: 'b', assumptions: { integer: true } },
+  { name: 'm', assumptions: { integer: true } },
+]
+
+/**
+ * A PLAIN AVERAGE AGAINST A MEAN BUILT FROM TWO PARAMETERS — the sixth concept's
+ * comparison asked again at a weight that is not a half.
+ *
+ * `(0 + 1 + 2 + 3)/v - j*(b/m)` at (4, 3, 1, 3) is 3/2 - 1 = 1/2.
+ *
+ * IT IS `A_PLAIN_AVERAGE_AGAINST_THE_WEIGHTED_ONE` WITH THE TABLE REPLACED BY A
+ * FORMULA, and that substitution is the point. There the right-hand term is
+ * `(0*p + 1*q + 2*r + 3*s)/n` — four preimage sizes over the size of the space,
+ * so the expectation can only be computed by reading a table. Here it is
+ * `j*(b/m)`, which is np, so the same number comes out of two parameters with no
+ * table consulted at all. The LEFT-hand term is unchanged, which is what makes
+ * the two tasks comparable: the same four values, averaged the same wrong way.
+ *
+ * AND THE REFERENCE IS 1/2 WHERE THE SAME COMPARISON ON X WOULD BE 0, which is
+ * the whole of why this task exists. `A_PLAIN_AVERAGE_AGAINST_THE_WEIGHTED_ONE`
+ * had to be asked on T because on X the two routes agree and the reference would
+ * be a true 0 that teaches the opposite of its point. This asks it on X — on the
+ * heads-count itself — and gets 1/2, because the weight has moved off a half.
+ * So the coincidence that had to be explained away in two earlier concepts is
+ * DESTROYED here by moving a parameter rather than by changing the rule.
+ *
+ * `v` IS 4 BECAUSE THE LIST HAS FOUR ENTRIES and `j` is 3 because there are three
+ * trials, and they are separate letters because they are separate facts that
+ * happen to be close together. Writing one letter for both would make the task
+ * pass unchanged if a four-trial binomial were ever substituted.
+ */
+const A_PLAIN_AVERAGE_AGAINST_A_PARAMETERISED_MEAN: VariableDeclaration[] = [
+  { name: 'v', assumptions: { integer: true } },
+  { name: 'j', assumptions: { integer: true } },
+  { name: 'b', assumptions: { integer: true } },
+  { name: 'm', assumptions: { integer: true } },
+]
+
 export const TASKS: PracticeTask[] = [
   /*
    * ── fraction-arithmetic ─────────────────────────────────────────────────
@@ -9472,6 +9561,111 @@ export const TASKS: PracticeTask[] = [
     variables: MATRIX_ABCD,
     at: { a: '6', b: '3', c: '4', d: '2' },
     reference: '0',
+  },
+
+  // ── matrices-and-determinants: the fifth concept ────────────────────────
+  //
+  // FOUR TASKS ON A DIFFERENT MATRIX, AND THE SWITCH IS FORCED RATHER THAN
+  // CHOSEN. The twelve tasks above run on A = [[2,-1],[3,4]], and that matrix
+  // has NO REAL EIGENVALUE — its characteristic polynomial is L^2 - 6L + 11
+  // and 36 - 44 is negative. So these four use A = [[3,1],[2,2]], whose
+  // eigenvalues are 1 and 4 and whose eigenvectors are (1,1) and (1,-2),
+  // every number in sight an integer. One matrix still runs through all four,
+  // which is the discipline the comment above describes; it is just not the
+  // same one.
+  //
+  // NOT ONE OF THE FOUR IS A QUADRATIC SOLVE, which is the point they exist to
+  // make. ontology-matrices.ts refused this concept for years on the ground
+  // that its honest task is "solve the characteristic polynomial", and that
+  // refusal is overturned in that file's header by counting what the concept
+  // actually asks. These four are the arithmetic half of the count: a scale
+  // factor read as a ratio, the characteristic determinant evaluated at an
+  // eigenvalue, the second eigenvalue from the diagonal sum with no polynomial
+  // at all, and a component of the direction. The factoring step belongs to
+  // `polynomial-roots`, which is a prerequisite of this concept, and the worked
+  // example hands it back there by name.
+  {
+    id: 'eigenvalue-as-a-ratio-1',
+    knowledgePointId: 'a-direction-the-map-only-scales',
+    kind: 'evaluate',
+    prompt:
+      'A = [[3, 1], [2, 2]] and v = (3, 3). Apply A to v and divide the first component of the ' +
+      'output by the first component of v — that ratio is the eigenvalue. The second components ' +
+      'must give the same ratio, and that they agree is what makes v an eigenvector at all.',
+    given: '(a11*v1 + a12*v2)/v1',
+    variables: [
+      { name: 'a11', assumptions: { real: true } },
+      { name: 'a12', assumptions: { real: true } },
+      { name: 'v1', assumptions: { real: true } },
+      { name: 'v2', assumptions: { real: true } },
+    ],
+    at: { a11: '3', a12: '1', v1: '3', v2: '3' },
+    // Av = (12, 12), so 12/3 = 4. The vector is (3,3) rather than (1,1) on
+    // purpose: the division is then real arithmetic, and a multiple of an
+    // eigenvector is an eigenvector with the SAME eigenvalue, which is the
+    // third point's last subgoal met early.
+    reference: '4',
+  },
+  {
+    id: 'characteristic-determinant-vanishes-1',
+    knowledgePointId: 'det-of-a-minus-lambda-i-vanishes',
+    kind: 'evaluate',
+    prompt:
+      'A = [[3, 1], [2, 2]]. Evaluate det(A − LI) = (a − L)(d − L) − bc at L = 4 — that is, the ' +
+      'determinant of [[3 − 4, 1], [2, 2 − 4]]. Being an eigenvalue IS this determinant ' +
+      'vanishing, so the answer is a check on whether 4 is one.',
+    given: '(a - L)*(d - L) - b*c',
+    variables: [
+      ...MATRIX_ABCD,
+      { name: 'L', assumptions: { real: true } },
+    ],
+    at: { a: '3', b: '1', c: '2', d: '2', L: '4' },
+    // (-1)(-2) - 2 = 2 - 2 = 0. The two negatives are the trap and they
+    // multiply to a positive, which is the only way the subtraction can bring
+    // the expression to zero rather than to -4.
+    reference: '0',
+  },
+  {
+    id: 'second-eigenvalue-from-the-diagonal-sum-1',
+    knowledgePointId: 'det-of-a-minus-lambda-i-vanishes',
+    kind: 'evaluate',
+    prompt:
+      'A = [[3, 1], [2, 2]], and one of its eigenvalues is 4. The two eigenvalues add up to the ' +
+      'diagonal sum a + d, because that is where the characteristic polynomial\'s middle ' +
+      'coefficient comes from. Find the other eigenvalue.',
+    given: '(a + d) - L1',
+    variables: [
+      { name: 'a', assumptions: { real: true } },
+      { name: 'd', assumptions: { real: true } },
+      { name: 'L1', assumptions: { real: true } },
+    ],
+    at: { a: '3', d: '2', L1: '4' },
+    // 5 - 4 = 1. A second eigenvalue with no polynomial anywhere in it, which
+    // is the clearest single answer to "this is factoring-quadratics wearing a
+    // hat". The product check is the other half: 4 * 1 = 4 = ad - bc.
+    reference: '1',
+  },
+  {
+    id: 'eigenvector-component-1',
+    knowledgePointId: 'the-direction-comes-from-the-collapse',
+    kind: 'evaluate',
+    prompt:
+      'A = [[3, 1], [2, 2]] with L = 1, so A − LI = [[2, 1], [2, 1]] and both rows demand ' +
+      '(a − L)x + by = 0. Take x = 1 and find y — the second component of the direction A ' +
+      'leaves unmoved.',
+    given: '-(a - L)*x/b',
+    variables: [
+      { name: 'a', assumptions: { real: true } },
+      { name: 'b', assumptions: { real: true } },
+      { name: 'L', assumptions: { real: true } },
+      { name: 'x', assumptions: { real: true } },
+    ],
+    at: { a: '3', b: '1', L: '1', x: '1' },
+    // -(3-1)*1/1 = -2, giving (1, -2). Check: A(1,-2) = (3-2, 2-4) = (1,-2),
+    // unchanged, which is what an eigenvalue of 1 asserts. x = 1 is a choice
+    // and the answer is the line through it, which the worked example says
+    // and no single-number task can.
+    reference: '-2',
   },
 
   // ── vectors-and-independence ────────────────────────────────────────────
@@ -16647,6 +16841,431 @@ export const TASKS: PracticeTask[] = [
     // though untouched.
     reference: '0',
     at: { k: '18', g: '12', h: '12', n: '8' },
+  },
+
+  // ── discrete-distributions ──────────────────────────────────────────────
+  //
+  // TEN `evaluate` tasks, three on the first point, FOUR on the second and
+  // three on the third. The shapes:
+  //
+  //     b/m - (b/m)*(b/m)                        one trial's spread, at a weight
+  //     b/m - (b/m)*(b/m)                        the same, at a second weight
+  //     1/4 - (b/m - (b/m)*(b/m))                how far that is below the bound
+  //     c*(b/m)*((m - b)/m)*((m - b)/m)          one binomial entry, at a half
+  //     c*(b/m)*((m - b)/m)*((m - b)/m)          the same, at a third
+  //     q^3 + 3pq^2 + 3p^2q + p^3 written out    the whole table, totalling 1
+  //     (0 + 1 + 2 + 3)/v - j*(b/m)              the dead coincidence, measured
+  //     1 - (p + qp + q^2 p) written out         the wait outlasting three trials
+  //     (b/m)*((b - 1)/(m - 1))*((b - 2)/(m - 2))   drawn at once
+  //     (b/m)*(b/m)*(b/m)                        put back
+  //
+  // FOUR TASKS ON THE SECOND POINT, WHICH IS THE SECOND TIME THIS SUBJECT HAS
+  // BROKEN THREE-PER-POINT AND THE FIRST TIME IT WAS BROKEN TO MAKE A `links`
+  // ENTRY LOAD-BEARING. The seventh concept took a fourth task because its
+  // point made three claims and the map node promised the third by name. This
+  // point makes four: the entry is a count times a price, both parameters move,
+  // the table totals 1 by the binomial theorem, and the agreement two concepts
+  // down was the fair coin. The THIRD of those is the one that would have been
+  // dropped on a tidy ratio — and `binomial-theorem` is this promotion's one
+  // stranded prerequisite, filed as `PROBABILITY.links`' sixth entry, so
+  // dropping it would have left that gate standing over nothing graded. The
+  // fifty-first's credit-edge note is where that test comes from: what decides
+  // whether a prerequisite is real is whether anything GRADED rests on it.
+  // Asserted as the per-point counts 3, 4, 3 rather than as a total over a
+  // ratio.
+  //
+  // THE FIRST TWO AND THE FOURTH AND FIFTH ARE TWO EXPRESSIONS AT TWO
+  // SUBSTITUTIONS EACH, AND THE REASON IS NEW TO THE SUBJECT. Every earlier pair
+  // here is a pair because its two answers agree, or because they disagree and
+  // the disagreement is the content. These two are pairs because THE
+  // SUBSTITUTION IS THE SUBJECT MATTER: a family is what you get when a number
+  // in the formula is allowed to move, so a concept about families has to ask at
+  // least one question twice or it has only described one. 2/9 against 4/25 and
+  // 3/8 against 4/9 are the smallest possible demonstration that the formula
+  // outlives the member.
+  //
+  // AND THE NINTH AND TENTH ARE THE INVERSE SHAPE — ONE SUBSTITUTION, TWO
+  // EXPRESSIONS — WHICH NOTHING IN THIS SUBJECT HAS DONE BEFORE. Both are asked
+  // at b = 5, m = 12: five new members among twelve. The ninth multiplies three
+  // factors with the pool shrinking, giving 1/22, and the tenth multiplies the
+  // same factor three times, giving 125/1728. Same experiment in words, same two
+  // inputs, two different answers — which is the third point's claim stated as
+  // arithmetic rather than as prose, and which no one-expression pair could say.
+  //
+  // THE SIXTH IS THE ONLY TASK IN THE SUBJECT WHOSE REFERENCE IS 1, and that is
+  // not a free mark. `random-variables`' first task is `(p+q+r+s)/n` and also
+  // answers 1, by adding four preimage sizes and dividing by the size of the
+  // space — a fact about ONE table. This one expands (q + p)^3 at a weight that
+  // is not a half, so the four terms are 8/27, 12/27, 6/27 and 1/27 and the
+  // total being 1 is the binomial theorem rather than a partition. A learner who
+  // writes 1 without computing has guessed; the four terms are what the task is,
+  // which is why the coefficients 1, 3, 3, 1 are left standing as literals
+  // exactly as `(9 + 1 + 1 + 9)` is left standing two concepts down.
+  //
+  // ALL TEN REFERENCES ARE INSIDE [0, 1], WHICH NO OTHER CONCEPT OF THIS SUBJECT
+  // MANAGES AND WHICH IS A FACT ABOUT KIND RATHER THAN SIZE. The sixth concept
+  // has seven of nine OUTSIDE, because an expectation is in the units of the
+  // variable; the seventh has two of ten outside, and its own note says what
+  // keeps the other eight in is "a fact about a FAIR COIN, whose individual
+  // spreads are small, rather than a fact about variances". Here the reason is
+  // the opposite kind of reason: eight of the ten references ARE probabilities,
+  // so the first concept's axioms put them in [0, 1] and no substitution could
+  // take them out, and the other two are a Bernoulli variance and a distance
+  // between two of them — p(1 - p) is a product of two probabilities and
+  // 1/4 - p(1 - p) is a square. So this is the first concept in the subject
+  // where the interval is settled by what the quantities ARE.
+  //
+  // NO `state`, NO `justify`, NO `transform_to_form` and NO `counterexample`,
+  // for the reasons ontology-chance.ts gives seven times already — and the
+  // `transform_to_form` refusal is sharper here than anywhere, because
+  // `completed_square` EXISTS as a NamedForm and the first point completes a
+  // square. "Write p - p^2 as a quarter minus a square" would be a real
+  // `transform_to_form` task with a real checker. It is not asked, and the
+  // reason is this subject's contract rather than the schema: every task here is
+  // settled by exact rational arithmetic with no worker, and `ruleTransform`
+  // needs an equivalence check that a CAS supplies. A subject whose
+  // prerequisites are a set and a fraction must not be walled off by an outage,
+  // which is the property the six concepts below are built on. So the completed
+  // square is derived in a worked example and graded through the number it
+  // produces — the third task is 1/36, which is (1/3 - 1/2)^2 — and that is the
+  // honest arrangement rather than a gap to engineer away.
+  //
+  // NO `domainConditions` on any of the ten. The denominators are m, 4, v,
+  // m - 1 and m - 2: three are the stated denominator of a weight, one is the
+  // length of a value list, and the two descending ones are the pool after one
+  // and after two draws, which the prompt fixes at 11 and 10.
+  {
+    id: 'spread-of-one-weighted-trial-1',
+    knowledgePointId:
+      'one-weighted-trial-is-the-smallest-member-and-the-parameter-is-what-makes-a-bound-statable',
+    kind: 'evaluate',
+    prompt:
+      'A single trial succeeds with probability b/m and fails with probability (m - b)/m. Let A '
+      + 'be 1 on a success and 0 on a failure. E[A] = b/m, and A takes only 0 and 1, so A^2 is '
+      + 'the same rule as A and E[A^2] = b/m as well — which is why '
+      + '`variance-and-covariance`\'s identity collapses to one subtraction here. Find Var(A) '
+      + 'when the trial succeeds one time in three. Evaluate b/m - (b/m)*(b/m) at b = 1, m = 3.',
+    given: 'b/m - (b/m)*(b/m)',
+    variables: A_WEIGHT_AS_A_RATIO_OF_INTEGERS,
+    // 1/3 − (1/3)(1/3) = 3/9 − 1/9 = 2/9. Equivalently (1/3)(2/3).
+    //
+    // THE SEVENTH CONCEPT'S NINTH TASK WITH THE COUNT REMOVED AND THE WEIGHT
+    // FREED. That one is `j*(a/n - (a/n)*(a/n))` at (3, 4, 8) and answers 3/4,
+    // where `a/n` can only be 4/8 because it counts sequences of a fixed space.
+    // This is the same bracket with `b/m` in place of `a/n` and no multiplier,
+    // so the arithmetic is identical and the STATUS of the number is not: there
+    // a weight is a fact about eight sequences, here it is an input.
+    //
+    // THE SUBTRACTION IS LEFT STANDING RATHER THAN WRITTEN AS `(b/m)*((m-b)/m)`,
+    // which is the same decision that declaration makes and for the same
+    // reason. The product is the tidier form and says nothing; the subtraction
+    // is the two-total identity visible, and a reader can see that the reason it
+    // is one subtraction rather than two tables is A^2 = A.
+    reference: '2/9',
+    at: { b: '1', m: '3' },
+  },
+  {
+    id: 'spread-of-one-weighted-trial-at-a-second-weight-1',
+    knowledgePointId:
+      'one-weighted-trial-is-the-smallest-member-and-the-parameter-is-what-makes-a-bound-statable',
+    kind: 'evaluate',
+    prompt:
+      'Same single trial and the same expression, with the weight moved: the trial now succeeds '
+      + 'one time in five. Evaluate b/m - (b/m)*(b/m) at b = 1, m = 5, and say which of this and '
+      + 'the previous answer is the larger and which weight sits further from a half.',
+    given: 'b/m - (b/m)*(b/m)',
+    variables: A_WEIGHT_AS_A_RATIO_OF_INTEGERS,
+    // 1/5 − (1/5)(1/5) = 5/25 − 1/25 = 4/25. Equivalently (1/5)(4/5).
+    //
+    // ONE EXPRESSION AT TWO SUBSTITUTIONS, AND FOR A REASON THE SUBJECT HAS NOT
+    // USED. The earlier pairs here are pairs because their answers agree, or
+    // because they disagree and the disagreement is the content. This pair is
+    // one because the SUBSTITUTION is the subject matter: a family is a formula
+    // with a number in it allowed to move, so a concept about families that
+    // asked every question once would have described a member.
+    //
+    // 4/25 AGAINST 2/9 IS 144 AGAINST 200 OVER 900, both under 1/4's 225, so the
+    // pair is also the evidence the sixth subgoal then turns into a proof. Two
+    // points below 1/4 are consistent with any number of shapes; the completed
+    // square is what settles it, and the third task is where that gets a number.
+    reference: '4/25',
+    at: { b: '1', m: '5' },
+  },
+  {
+    id: 'distance-from-the-most-uncertain-single-trial-1',
+    knowledgePointId:
+      'one-weighted-trial-is-the-smallest-member-and-the-parameter-is-what-makes-a-bound-statable',
+    kind: 'evaluate',
+    prompt:
+      'Completing the square turns b/m - (b/m)^2 into 1/4 - (b/m - 1/2)^2, so a single trial\'s '
+      + 'spread can never be more than 1/4 and is 1/4 only for a fair trial. Find how far below '
+      + 'that bound the one-in-three trial sits. Evaluate 1/4 - (b/m - (b/m)*(b/m)) at b = 1, '
+      + 'm = 3, and check your answer against (1/3 - 1/2)^2.',
+    given: '1/4 - (b/m - (b/m)*(b/m))',
+    variables: A_WEIGHT_AS_A_RATIO_OF_INTEGERS,
+    // 1/4 − 2/9 = 9/36 − 8/36 = 1/36. And (1/3 − 1/2)² = (−1/6)² = 1/36, so the
+    // completed square is checked by the answer rather than asserted beside it.
+    //
+    // THE REFERENCE IS A GAP, like four in the two concepts below and for a
+    // fifth distinct reason. Those gaps are between two SPACES, between two
+    // METHODS on one table, between two sides of a FALSE identity, and between
+    // two sides of a TRUE identity with a term left out. This one is between a
+    // member and the MAXIMUM OF ITS FAMILY — a quantity that does not exist
+    // until a parameter does, which is the sharpest available statement of what
+    // this concept adds to the seven below it.
+    //
+    // ASKED AS 1/4 MINUS THE VARIANCE RATHER THAN AS THE SQUARE DIRECTLY, which
+    // is what makes it a check instead of a restatement. `(b/m - 1/2)^2` at
+    // (1, 3) would also answer 1/36 and would have asked nothing: it is the
+    // right-hand side of the identity evaluated at a point. Going round the
+    // other way — compute the variance, subtract it from the bound — produces
+    // the same 1/36 only if the identity holds, so one evaluation verifies it.
+    reference: '1/36',
+    at: { b: '1', m: '3' },
+  },
+  {
+    id: 'one-binomial-entry-at-the-subjects-own-weight-1',
+    knowledgePointId:
+      'counting-several-trials-indexes-the-family-by-two-parameters-and-the-binomial-theorem-forces-the-total',
+    kind: 'evaluate',
+    prompt:
+      'Three independent trials each succeed with probability b/m, and X counts the successes. '
+      + 'One run with exactly one success costs (b/m) for the success and (m - b)/m for each of '
+      + 'the two failures, and `counting-principles` puts the number of such runs at C(3, 1) = 3 '
+      + '— which is the coefficient c below. Find P(X = 1) for a fair coin. Evaluate '
+      + 'c*(b/m)*((m - b)/m)*((m - b)/m) at c = 3, b = 1, m = 2, and compare it with the entry at '
+      + 'the value 1 in the table `random-variables` built by collecting preimages.',
+    given: 'c*(b/m)*((m - b)/m)*((m - b)/m)',
+    variables: A_COUNT_OF_RUNS_AND_THE_WEIGHT_THEY_COST,
+    // 3 × (1/2) × (1/2) × (1/2) = 3/8, which is the second entry of the table
+    // 1/8, 3/8, 3/8, 1/8 that the fifth concept obtained from the eight
+    // sequences.
+    //
+    // A THIRD ROUTE TO A NUMBER TWO CONCEPTS ALREADY HAVE, which is this
+    // subject's established move and is stronger here than usual. The fifth
+    // concept got 3/8 by listing HHT, HTH and THH and dividing three by eight —
+    // a fact about a written-out space. This gets it from a count and a product
+    // with nothing listed, which is the step that lets the table exist for a
+    // number of trials nobody would write the space of.
+    //
+    // THREE FACTORS RATHER THAN A POWER, so a reader can count the trials. At
+    // n = 3 the exponents are 1 and 2, and `(b/m)*((m-b)/m)^2` would hide which
+    // factor belongs to which trial behind an exponent the prompt would then
+    // have to explain.
+    reference: '3/8',
+    at: { c: '3', b: '1', m: '2' },
+  },
+  {
+    id: 'one-binomial-entry-at-a-second-weight-1',
+    knowledgePointId:
+      'counting-several-trials-indexes-the-family-by-two-parameters-and-the-binomial-theorem-forces-the-total',
+    kind: 'evaluate',
+    prompt:
+      'Same three trials and the same expression, with the weight moved: each trial now succeeds '
+      + 'one time in three. The coefficient does not move — there are still three runs with '
+      + 'exactly one success — so only the prices change. Evaluate '
+      + 'c*(b/m)*((m - b)/m)*((m - b)/m) at c = 3, b = 1, m = 3, and say whether making success '
+      + 'rarer has made exactly one success more likely or less.',
+    given: 'c*(b/m)*((m - b)/m)*((m - b)/m)',
+    variables: A_COUNT_OF_RUNS_AND_THE_WEIGHT_THEY_COST,
+    // 3 × (1/3) × (2/3) × (2/3) = 3 × 4/27 = 12/27 = 4/9.
+    //
+    // THE PAIR DISAGREES AND THE DIRECTION IS WORTH THE TASK: 3/8 is 27/72 and
+    // 4/9 is 32/72, so making success RARER makes exactly one success MORE
+    // likely. That is not obvious and it is not a rounding — a third of the way
+    // up — and it is the kind of thing a formula can be asked and a member
+    // cannot. The coefficient being identical in the two substitutions is what
+    // isolates the effect to the weight.
+    //
+    // AND IT IS WHERE THE SECOND PARAMETER IS SEEN TO BE SEPARATE FROM THE
+    // FIRST. `c` is `counting-principles`' number and `b/m` is the experiment's;
+    // this pair moves the second and holds the first, and the sixth task below
+    // holds the second and moves nothing, so between them the two inputs are
+    // shown to index the family independently.
+    reference: '4/9',
+    at: { c: '3', b: '1', m: '3' },
+  },
+  {
+    id: 'the-whole-binomial-table-totals-one-1',
+    knowledgePointId:
+      'counting-several-trials-indexes-the-family-by-two-parameters-and-the-binomial-theorem-forces-the-total',
+    kind: 'evaluate',
+    prompt:
+      'Keep three trials at success probability b/m. The four entries of the table are '
+      + '((m - b)/m)^3, then 3(b/m)((m - b)/m)^2, then 3(b/m)^2((m - b)/m), then (b/m)^3, with '
+      + 'the coefficients 1, 3, 3, 1 coming from C(3, k). Total the whole table at b = 1, m = 3, '
+      + 'where the four entries are eight, twelve, six and one twenty-sevenths. Evaluate '
+      + '((m - b)/m)*((m - b)/m)*((m - b)/m) + 3*(b/m)*((m - b)/m)*((m - b)/m) '
+      + '+ 3*(b/m)*(b/m)*((m - b)/m) + (b/m)*(b/m)*(b/m) at b = 1, m = 3, and name the theorem '
+      + 'that makes the answer the same for every weight.',
+    given:
+      '((m - b)/m)*((m - b)/m)*((m - b)/m) + 3*(b/m)*((m - b)/m)*((m - b)/m) '
+      + '+ 3*(b/m)*(b/m)*((m - b)/m) + (b/m)*(b/m)*(b/m)',
+    variables: A_WEIGHT_AS_A_RATIO_OF_INTEGERS,
+    // 8/27 + 12/27 + 6/27 + 1/27 = 27/27 = 1. The expansion of (q + p)³ with
+    // q = 2/3 and p = 1/3, which `binomial-theorem` says is (q + p)³ = 1³ = 1.
+    //
+    // THE ONLY REFERENCE IN THE SUBJECT THAT IS 1, AND IT IS NOT A FREE MARK.
+    // `random-variables`' first task is `(p+q+r+s)/n` and also answers 1, by
+    // adding four preimage sizes over the size of one space — so there the total
+    // is a PARTITION and here it is a THEOREM. The difference is visible in the
+    // substitution: at a weight that is not a half the four entries are four
+    // different numbers, 8, 12, 6 and 1 over 27, and that they come to 27 is
+    // (q + p)³ with q + p = 1 rather than anything about this table.
+    //
+    // THE COEFFICIENTS ARE LEFT AS LITERALS AND THE FOUR TERMS ARE LEFT
+    // UNCOLLECTED, exactly as `(9 + 1 + 1 + 9)` is two concepts down. Writing
+    // `1` would ask nothing and writing `(((m - b) + b)/m)^3` would ask
+    // something else — the identity rather than the table. What is asked is the
+    // table, so the table is what the expression holds.
+    //
+    // AND IT IS WHAT MAKES THIS PROMOTION'S ONE STRANDED PREREQUISITE
+    // LOAD-BEARING. `binomial-theorem` is `PROBABILITY.links`' sixth entry, and
+    // a gate over nothing graded is the fault the fifty-first's credit-edge
+    // rationale was written to catch. This is the task that stops it being one.
+    reference: '1',
+    at: { b: '1', m: '3' },
+  },
+  {
+    id: 'the-plain-average-stops-agreeing-once-the-weight-moves-1',
+    knowledgePointId:
+      'counting-several-trials-indexes-the-family-by-two-parameters-and-the-binomial-theorem-forces-the-total',
+    kind: 'evaluate',
+    prompt:
+      '`expectation` found the plain average of the four values 0, 1, 2, 3 equal to E[X] at 3/2, '
+      + 'and said the agreement was a fact about a symmetric table rather than about the method. '
+      + 'The values do not depend on the weight, so the plain average is 3/2 at every weight — '
+      + 'but E[X] = np does. Find how far apart the two routes are when three trials each succeed '
+      + 'one time in three. Evaluate (0 + 1 + 2 + 3)/v - j*(b/m) at v = 4, j = 3, b = 1, m = 3.',
+    given: '(0 + 1 + 2 + 3)/v - j*(b/m)',
+    variables: A_PLAIN_AVERAGE_AGAINST_A_PARAMETERISED_MEAN,
+    // 6/4 − 3(1/3) = 3/2 − 1 = 1/2.
+    //
+    // THE SIXTH CONCEPT'S COMPARISON ASKED ON X AT LAST, WHICH THAT CONCEPT
+    // EXPLAINED IT COULD NOT DO. `A_PLAIN_AVERAGE_AGAINST_THE_WEIGHTED_ONE` had
+    // to be asked on T, because on X the two routes agree and the reference
+    // would have been a true 0 — "a true statement that teaches the opposite of
+    // the point", as its own note says. The seventh concept got round that by
+    // asking at the SECOND moment, where the gap is 1/2. This asks the FIRST
+    // moment on X and still gets 1/2, by moving the parameter instead of the
+    // rule or the moment — so the same 1/2 now has three different routes to it
+    // and the coincidence is dead in all three directions.
+    //
+    // `j*(b/m)` AND NOT A TABLE, which is the whole difference from that earlier
+    // task. There the right-hand term is four preimage sizes over the size of
+    // the space, so the expectation cannot be had without reading a table. Here
+    // it is np, two parameters and no table — which is what the second point is
+    // for, and which is why the left-hand term is left identical.
+    //
+    // THE NUMERATOR `0 + 1 + 2 + 3` IS LEFT UNEVALUATED, for the reason the two
+    // concepts below leave theirs standing: the two halves have to be seen to be
+    // reading the same four values, and 6 hides that they are the values of X.
+    reference: '1/2',
+    at: { v: '4', j: '3', b: '1', m: '3' },
+  },
+  {
+    id: 'a-wait-that-outlasts-three-trials-1',
+    knowledgePointId:
+      'waiting-rather-than-counting-is-a-different-mechanism-and-only-the-description-chooses-between-them',
+    kind: 'evaluate',
+    prompt:
+      'Trials succeed independently with probability b/m and X is the trial the first success '
+      + 'falls on, so P(X = 1) = b/m, P(X = 2) = ((m - b)/m)(b/m) and '
+      + 'P(X = 3) = ((m - b)/m)^2(b/m). The table has no end, so total what there is of it and '
+      + 'take a complement: find the chance the wait outlasts three trials on a fair coin. '
+      + 'Evaluate 1 - ((b/m) + ((m - b)/m)*(b/m) + ((m - b)/m)*((m - b)/m)*(b/m)) at b = 1, '
+      + 'm = 2, then check it against ((m - b)/m)^3 and say which entry of `random-variables`\' '
+      + 'second table it is.',
+    given:
+      '1 - ((b/m) + ((m - b)/m)*(b/m) + ((m - b)/m)*((m - b)/m)*(b/m))',
+    variables: A_WEIGHT_AS_A_RATIO_OF_INTEGERS,
+    // 1 − (1/2 + 1/4 + 1/8) = 1 − 7/8 = 1/8. And (1/2)³ = 1/8 by the complement
+    // route, so the two agree — which is what identifies the tail with the mass
+    // `random-variables` parked on the value it invented at TTT.
+    //
+    // ASKED AS 1 MINUS THREE TERMS RATHER THAN AS `((m - b)/m)^3`, WHICH IS THE
+    // HARDER ROUTE ON PURPOSE. The complement is the point of the subgoal and is
+    // one product; writing the task that way would ask for the product and never
+    // show what it replaced. Going the long way round and arriving at the same
+    // 1/8 is what makes "a complement settles a table with no end" a measurement
+    // rather than a remark — and the prompt supplies the short route so a
+    // learner can check their own answer without being told it.
+    //
+    // THREE TERMS AND NOT FOUR, WHICH IS THE OPPOSITE SLIP FROM THE ONE
+    // `sigma-notation` GUARDS AGAINST. Everywhere else in this subject a table
+    // has four entries and the error available is dropping one. Here the table
+    // is endless and the error available is thinking three entries are all of
+    // it: 1/2 + 1/4 + 1/8 is 7/8 and not 1, and the 1/8 missing is the answer.
+    reference: '1/8',
+    at: { b: '1', m: '2' },
+  },
+  {
+    id: 'three-drawn-at-once-are-all-new-1',
+    knowledgePointId:
+      'waiting-rather-than-counting-is-a-different-mechanism-and-only-the-description-chooses-between-them',
+    kind: 'evaluate',
+    prompt:
+      '`counting-probability`\'s twelve club members include b = 5 new ones, and three are drawn '
+      + 'at once by lot. `conditional-probability` multiplies one factor per draw with each '
+      + 'denominator counting what is LEFT, so the chance all three are new is '
+      + '(5/12)(4/11)(3/10). That is a HYPERGEOMETRIC probability. Evaluate '
+      + '(b/m)*((b - 1)/(m - 1))*((b - 2)/(m - 2)) at b = 5, m = 12.',
+    given: '(b/m)*((b - 1)/(m - 1))*((b - 2)/(m - 2))',
+    variables: A_WEIGHT_AS_A_RATIO_OF_INTEGERS,
+    // (5/12)(4/11)(3/10) = 60/1320 = 1/22, which is the number
+    // `counting-probability` reaches as C(5,3)/C(12,3) = 10/220 and the subject's
+    // `covers` reaches twice over.
+    //
+    // THE FIRST TASK IN THE BUILD TO NAME THE HYPERGEOMETRIC, and three files
+    // have been deferring to this concept for it by name. The second concept's
+    // boundary note says C(5,1)C(7,2)/C(12,3) "IS a hypergeometric probability"
+    // and that the name is absent because a distribution is a FUNCTION of k
+    // while the material wanted one number; the fifth concept's note repeats it.
+    // The debt is paid by a shape rather than by a label: both numerators and
+    // both denominators DESCEND, which is what "without replacement" looks like
+    // in an expression.
+    //
+    // THE DESCENDING FACTORS ARE WRITTEN OUT AS `(b - 1)/(m - 1)` RATHER THAN
+    // SUBSTITUTED AS 4/11. The pool shrinking is the mechanism, so it has to be
+    // in the expression: a reader comparing this with the task below sees two
+    // products of three factors whose only difference is whether the inputs move
+    // between them, which is the entire content of the third point.
+    reference: '1/22',
+    at: { b: '5', m: '12' },
+  },
+  {
+    id: 'three-drawn-with-each-put-back-are-all-new-1',
+    knowledgePointId:
+      'waiting-rather-than-counting-is-a-different-mechanism-and-only-the-description-chooses-between-them',
+    kind: 'evaluate',
+    prompt:
+      'Same twelve members, same five new ones, same question — with one sentence changed: each '
+      + 'member drawn is RETURNED before the next draw. Every factor is then the same and the '
+      + 'three draws are independent, so this is the binomial at three trials and weight 5/12. '
+      + 'Evaluate (b/m)*(b/m)*(b/m) at b = 5, m = 12, and put it beside the previous answer over '
+      + 'a common denominator of 19008.',
+    given: '(b/m)*(b/m)*(b/m)',
+    variables: A_WEIGHT_AS_A_RATIO_OF_INTEGERS,
+    // (5/12)³ = 125/1728. Against 1/22: over 19008 those are 1375 and 864, so
+    // returning the members raises the chance by more than half again.
+    //
+    // ONE SUBSTITUTION AND TWO EXPRESSIONS, WHICH IS THE INVERSE OF THIS
+    // SUBJECT'S FAVOURITE PAIR AND IS NEW. Nine expressions here are asked at
+    // two substitutions, and the point of every one of those pairs is that the
+    // formula outlives the numbers. This pair holds b = 5 and m = 12 fixed and
+    // changes the FORMULA, because what the third point claims is that the
+    // description picks the family: the same two inputs and the same words give
+    // 1/22 or 125/1728 according to one sentence that no step of either
+    // calculation contains.
+    //
+    // AND IT IS THE LARGER, WHICH IS WORTH THE COMPARISON. Returning a new
+    // member keeps five of twelve available where drawing without replacement
+    // leaves four of eleven and then three of ten, so the without-replacement
+    // route falls away faster. 864 against 1375 over 19008 is not a rounding's
+    // worth of difference, which is what makes choosing the wrong mechanism a
+    // clean calculation of the wrong thing rather than a small error.
+    reference: '125/1728',
+    at: { b: '5', m: '12' },
   },
 ]
 

@@ -36,10 +36,20 @@
  *
  * ── Where it stops ────────────────────────────────────────────────────────
  *
- * Four concepts: what a matrix IS, multiplication, the determinant, and the
- * inverse. `eigenvalues` is left mapped because its honest task is "solve the
- * characteristic polynomial", which is `factoring-quadratics` wearing a hat,
- * and faking it as arithmetic would teach neither.
+ * This heading used to say "four concepts" and then refuse the fifth in one
+ * sentence. The refusal is reproduced rather than deleted, because it names a
+ * real hazard and the material below is shaped by it:
+ *
+ *   Four concepts: what a matrix IS, multiplication, the determinant, and the
+ *   inverse. `eigenvalues` is left mapped because its honest task is "solve
+ *   the characteristic polynomial", which is `factoring-quadratics` wearing a
+ *   hat, and faking it as arithmetic would teach neither.
+ *
+ * Five concepts now. What the sentence got right is that ONE step of this
+ * concept is a quadratic solve and that dressing that step up as though it
+ * were the concept would teach neither topic. What does not follow is that the
+ * concept IS that step — see the fifth-concept heading below, which measures
+ * how much of the material the step accounts for and what the rest of it is.
  *
  * ── THE FIFTH CONCEPT THIS FILE RESERVED, AND WHY IT WENT ELSEWHERE ───────
  *
@@ -77,6 +87,114 @@
  * rather than through an unwritten node — its gating set went from three
  * concepts to two, and the two are `matrix-multiplication` and
  * `gaussian-elimination`.
+ *
+ * ── THE FIFTH CONCEPT, AND THE TWO REFUSALS OF IT THIS FILE WROTE ─────────
+ *
+ * `eigenvalues` is the fifty-third promotion and this file refused it twice —
+ * in `── Where it stops ──` above and by name in the subject `covers`. Both
+ * are overturned here rather than quietly dropped, because the next run has to
+ * be able to tell an expired refusal from a careless one.
+ *
+ * WHY THIS RUN HAD TO OVERTURN SOMETHING AT ALL. The fifty-second promotion
+ * left the ready field EMPTY in a specific and checkable sense: eleven map
+ * nodes had every prerequisite written, and all eleven were under a refusal
+ * somebody had recorded in prose. tests/atlas.mjs asserts that the ready set is
+ * exactly the recorded refusal list, so there was no unrefused node to author
+ * and the only remaining moves were to overturn a refusal or to stop. Four
+ * ontology-chance.ts sections in a row predicted this and all four named
+ * `eigenvalues` as where to start, on the measurement rather than on taste:
+ * FOUR dependents — `diagonalisation`, `cayley-hamilton`, `systems-of-odes`
+ * and `markov-chains` — which is the most of anything on the map, refused or
+ * not.
+ *
+ * THE FIRST REFUSAL IS NOT ABOUT RULABILITY, which is what made it worth
+ * attacking first. "Its honest task is solve the characteristic polynomial,
+ * which is `factoring-quadratics` wearing a hat" says the concept DUPLICATES
+ * an authored one — a boundary claim, not a claim that nothing here can be
+ * graded. Boundary claims are settled by counting, so: of the eleven subgoals
+ * written below, ONE is a quadratic solve. The other ten are the test Av = λv
+ * run forwards on a candidate and backwards on a non-candidate, the
+ * rearrangement to (A − λI)v = 0, the determinant of a matrix with a letter
+ * down its diagonal, the two coefficients read off the grid, the sum-and-
+ * product check against the diagonal sum and ad − bc, the substitution of λ
+ * back in, the two rows that collapse into one equation, and the ratio that
+ * equation fixes. And NOT ONE of the four tasks is a quadratic solve — they ask
+ * for an eigenvalue as a ratio, for the characteristic determinant's value at
+ * an eigenvalue, for the second eigenvalue from the diagonal sum, and for a
+ * component of a direction. So the sentence
+ * was true of one eleventh of the concept and was stated as though it were
+ * true of the whole, and the material is deliberately arranged so that the
+ * quadratic is the step handed BACK to the prerequisite that owns it — the
+ * example says so in the subgoal itself rather than pretending the factoring
+ * is the lesson.
+ *
+ * THE SECOND REFUSAL IS A SHAPE REFUSAL AND THIS FILE HAS ALREADY OVERTURNED
+ * ONE. `covers` declined the eigenvalue and every decomposition together, as
+ * each needing "an answer that is itself a matrix, or a polynomial solved" —
+ * and the heading two above this one is the record of the same file making the
+ * same kind of claim about `gaussian-elimination` ("row reduction's answer is a
+ * matrix in a normal form") and then finding that the answer's shape is never
+ * what gets asked for here. An eigenvalue is a number and a component of an
+ * eigenvector is a number, so the first disjunct is simply false of this
+ * concept; the second describes the one step named above. The decomposition
+ * half of that sentence was NOT overturned and is still in `covers`, because
+ * there it is correct: a diagonalisation, a Jordan form and an SVD each answer
+ * with matrices, and no task here can ask for one.
+ *
+ * ONE HONEST COST, AND IT IS THE RUNNING MATRIX. Every other concept of this
+ * subject works on A = [[2, −1], [3, 4]], so a learner meets the same numbers
+ * four times and sees det(A) = 11 come back as the inverse's denominator. That
+ * matrix cannot be used here: its characteristic polynomial is λ² − 6λ + 11,
+ * whose discriminant is 36 − 44 = −8, so it has no real eigenvalue at all and
+ * `complex-numbers` is itself a refused node — `exactValue` has no complex
+ * case. The material therefore introduces A = [[3, 1], [2, 2]] and keeps it
+ * across all three points and all four tasks, which is the same discipline one
+ * matrix lower down. Worth knowing that the subject's own exemplar is a
+ * rotation-like map and that this is not a coincidence: a matrix picked to show
+ * a clean determinant and a clean inverse has no reason to have real
+ * eigenvalues, and the two choices pull in different directions.
+ *
+ * ── THE READY FIELD THIS PROMOTION LEAVES, MEASURED RATHER THAN QUOTED ────
+ *
+ * 212 map nodes, 98 authored, 19 areas, 17 subjects. THIRTEEN ready where
+ * there were eleven, and the number is the smaller half of what moved: this
+ * promotion spent `eigenvalues` and made THREE nodes ready — `diagonalisation`
+ * (needs `rank-nullity`, written), `cayley-hamilton` (needs nothing else at
+ * all) and `markov-chains` (needs `conditional-probability`, written). No
+ * earlier promotion has made three; the record was two, at the forty-fifth.
+ *
+ * AND NONE OF THE THREE IS UNDER A RECORDED REFUSAL, which is the fact that
+ * matters more than the count. The field was EMPTY — every ready node refused —
+ * and it now holds three unrefused candidates, so the next run does not owe an
+ * overturning argument at all. The eleven refusals are untouched and still
+ * bind: `graphs-of-functions`, `relations`, `linear-inequalities`,
+ * `complex-numbers`, `supremum-and-completeness`, `constructions`,
+ * `non-euclidean-geometry`, `word-problems`, `combinatorial-identities`,
+ * `sampling-and-bias` — ten, `eigenvalues` having been the eleventh and having
+ * left the list by being written rather than by being re-refused.
+ *
+ * WHERE TO START, AND IT IS A JUDGEMENT THIS RUN DELIBERATELY DOES NOT MAKE.
+ * `cayley-hamilton` is the cheapest filing on the map: its only `needs` is this
+ * concept, so filed here it strands ZERO edges and is an ordinary `EDGES` entry
+ * — the shape nothing has managed since the fifty-first. `diagonalisation`
+ * strands one (`rank-nullity`, in `vectors-and-independence`) and unlocks three
+ * further nodes. `markov-chains` strands one and would be a third concept of
+ * `chance-and-events`. What a run picking between them owes is a rulability
+ * read FIRST, before any authoring: `cayley-hamilton`'s content is that a
+ * matrix satisfies its own characteristic polynomial, and "verify that
+ * A² − 5A + 4I is the zero matrix" asks for an answer that IS a matrix, which
+ * is the disjunct of the old `covers` refusal that this promotion did NOT
+ * overturn. Asking instead for one ENTRY of A² − 5A + 4I is the move this whole
+ * subject is built on and it does appear to settle it — but that is an argument
+ * for the next run to make in its own words rather than inherit from this
+ * paragraph.
+ *
+ * `linear-algebra` is at EIGHT nodes with twelve departures, so fifteen of
+ * headroom against a floor of five — unchanged by this promotion, since a
+ * departure moves a node from `nodes` into `departed` and the floor reads the
+ * two together. Its area root set SPLIT from the sole root {`eigenvalues`} to
+ * {`diagonalisation`, `cayley-hamilton`}, the second time that area has had a
+ * sole root promoted out from under it.
  */
 
 import type { Concept, ConceptEdge, ConceptOntology, Subject } from './types'
@@ -85,12 +203,18 @@ const subject: Subject = {
   id: 'matrices-and-determinants',
   name: 'Matrices and determinants',
   covers:
-    'A matrix as a linear map, multiplication as composition, the determinant, and when a map ' +
-    'can be undone. Entries are the unit of work throughout — the engine has no matrix type, so ' +
-    'every question asks for one number. Nothing about eigenvalues or any decomposition: each ' +
-    'needs an answer that is itself a matrix, or a polynomial solved. Row reduction is written, ' +
-    'but not here — with no grid to display it is three equations, so it is authored as ' +
-    '`gaussian-elimination` in `expressions-and-equations` and reaches this subject as the ' +
+    'A matrix as a linear map, multiplication as composition, the determinant, when a map can ' +
+    'be undone, and which directions it leaves alone. Entries are the unit of work throughout — ' +
+    'the engine has no matrix type, so every question asks for one number. THE EIGENVALUE IS ' +
+    'WRITTEN, which is the sentence this subject has had to withdraw: it used to decline both ' +
+    'the eigenvalue and every decomposition together, as each needing "an answer that is itself ' +
+    'a matrix, or a polynomial solved". The decomposition half stands and is still what this ' +
+    'subject does not reach — a diagonalisation, a Jordan form and an SVD each answer with ' +
+    'matrices, and nothing here can ask for one. The eigenvalue half does not: an eigenvalue is ' +
+    'a NUMBER, the quadratic it solves has its two coefficients read straight off the grid, and ' +
+    'the direction belonging to it is fixed by one equation in two unknowns. Row reduction is ' +
+    'written, but not here — with no grid to display it is three equations, so it is authored ' +
+    'as `gaussian-elimination` in `expressions-and-equations` and reaches this subject as the ' +
     'prerequisite of the determinant rather than as a concept of it.',
   medium: 'theorem',
   facetName: 'Concept',
@@ -874,6 +998,243 @@ const CONCEPTS: Concept[] = [
       },
     ],
   },
+
+  {
+    id: 'eigenvalues',
+    name: 'Eigenvalues and eigenvectors',
+    subjectId: subject.id,
+    scope: {
+      id: 'eigenvalues',
+      label: 'Eigenvalues and eigenvectors',
+      hint: 'eigenvalue eigenvector characteristic polynomial invariant direction spectrum',
+      match: /\beigen(value|vector|decomposition)s?\b|\bcharacteristic polynomial\b/i,
+    },
+    fidelity: 'checked',
+    objectives: [
+      {
+        id: 'test-a-direction-for-being-fixed',
+        statement:
+          'Decide whether a given vector is an eigenvector of a given matrix, and read off its ' +
+          'eigenvalue when it is.',
+        taskKinds: ['evaluate', 'justify'],
+      },
+      {
+        id: 'find-the-eigenvalues-and-a-direction',
+        statement:
+          'Build a 2×2 characteristic polynomial from the entries, find the eigenvalues it ' +
+          'vanishes at, and recover the direction belonging to one of them.',
+        taskKinds: ['evaluate', 'justify'],
+      },
+    ],
+    knowledgePoints: [
+      {
+        id: 'a-direction-the-map-only-scales',
+        conceptId: 'eigenvalues',
+        statement:
+          'Almost every vector comes out of a matrix pointing somewhere else. An eigenvector is ' +
+          'one that does not: Av is v itself, scaled, and the scale factor λ is the eigenvalue. ' +
+          'Testing a candidate needs nothing new at all — apply the matrix and ask whether what ' +
+          'came out is a multiple of what went in.',
+        position: 1,
+        workedExample: {
+          problem: 'A = [[3, 1], [2, 2]]. Is (1, 1) an eigenvector of A? Is (1, 0)?',
+          subgoals: [
+            {
+              label: 'Apply the matrix to the first candidate',
+              detail:
+                'Row 1 against the vector gives 3·1 + 1·1 = 4, row 2 gives 2·1 + 2·1 = 4. So ' +
+                'A(1, 1) = (4, 4).',
+              socratic:
+                'Nothing in this point is new machinery: applying a 2×2 to a vector is the row ' +
+                'rule this subject opened with, one row at a time against the same two ' +
+                'components. The vector is (1, 1), which makes each row\'s arithmetic a plain ' +
+                'sum of its two entries rather than a weighted one. Take row 1 of A, then row 2, ' +
+                'against (1, 1) — what two numbers come out, and what vector have you built?',
+            },
+            {
+              label: 'Compare the output with the input',
+              detail:
+                '(4, 4) = 4·(1, 1). Same direction, four times as long, nothing turned — so ' +
+                '(1, 1) is an eigenvector of A and its eigenvalue is 4.',
+              socratic:
+                'You have (1, 1) in and (4, 4) out, and the whole question this concept asks is ' +
+                'whether those two point the same way. Two vectors point the same way exactly ' +
+                'when one is a number times the other, so try to write (4, 4) as a multiple of ' +
+                '(1, 1) and see whether a single number does it for BOTH components at once — ' +
+                'that "both at once" is the condition doing the work, because one component can ' +
+                'always be matched by some factor. If one number does serve, what is it, and ' +
+                'which of the two names in this concept\'s title does the vector get and which ' +
+                'does the number?',
+            },
+            {
+              label: 'Try a vector that is not one',
+              detail:
+                'A(1, 0) = (3, 2), which is just column 1. (3, 2) is not a multiple of (1, 0) — ' +
+                'it has a second component where (1, 0) has none — so (1, 0) is not an ' +
+                'eigenvector. Nothing is wrong with it; being an eigenvector is the rare case, ' +
+                'which is why the previous step is a test and not a formality.',
+              socratic:
+                'Now run the same test on a vector you can predict the answer for without ' +
+                'arithmetic. The columns rule from the first concept of this subject says where ' +
+                'A sends (1, 0): it is column 1, read straight off the grid. Hold that output ' +
+                'next to (1, 0) and ask the multiple question again — (1, 0) has a zero second ' +
+                'component, and scaling a zero by any factor whatever leaves it zero. So what ' +
+                'would the output\'s second component have to be for a multiple to exist, what ' +
+                'is it actually, and does the test fail here because the matrix is defective or ' +
+                'because most directions simply get turned?',
+            },
+          ],
+          answer: '(1, 1) is an eigenvector with eigenvalue 4; (1, 0) is not an eigenvector',
+        },
+      },
+      {
+        id: 'det-of-a-minus-lambda-i-vanishes',
+        conceptId: 'eigenvalues',
+        statement:
+          'Av = λv rearranges to (A − λI)v = 0, so λ is an eigenvalue exactly when some non-zero ' +
+          'vector is sent to the origin by A − λI — which is the collapse the determinant ' +
+          'already tests for. The eigenvalues are therefore the λ with det(A − λI) = 0, and for ' +
+          'a 2×2 that determinant is λ² − (a + d)λ + (ad − bc): both coefficients are read ' +
+          'straight off the grid.',
+        position: 2,
+        workedExample: {
+          problem: 'Find both eigenvalues of A = [[3, 1], [2, 2]].',
+          subgoals: [
+            {
+              label: 'Subtract λ down the diagonal',
+              detail:
+                'A − λI = [[3 − λ, 1], [2, 2 − λ]]. Only the diagonal moves: I has nothing off ' +
+                'its own diagonal to subtract.',
+              socratic:
+                'The equation to be satisfied is Av = λv, and as it stands the two sides are ' +
+                'unlike things — a matrix acting on v against a number times v. Write λv as λI ' +
+                'applied to v so that both sides are matrices acting on the same vector, bring ' +
+                'them together, and you have a single matrix sending v to the origin. Now build ' +
+                'that matrix for this A: where does λI put its entries, so which of A\'s four ' +
+                'entries change and which are untouched?',
+            },
+            {
+              label: 'Take its determinant',
+              detail:
+                '(3 − λ)(2 − λ) − 1·2 = (6 − 5λ + λ²) − 2 = λ² − 5λ + 4. The λ² comes from the ' +
+                'two diagonal brackets, the −5λ from 3 + 2, and the 4 is 6 − 2, which is ad − bc.',
+              socratic:
+                'You are after the λ for which A − λI sends some non-zero vector to the origin, ' +
+                'and the second point of the determinant concept settled exactly which matrices ' +
+                'do that. So apply ad − bc to the matrix you have just built, with λ carried ' +
+                'along as a letter rather than evaluated — the diagonal pair are both brackets ' +
+                'now and the off-diagonal pair are the untouched 1 and 2. Expand it and collect: ' +
+                'what degree does λ reach and why can it reach no higher, where did the ' +
+                'coefficient of λ come from on the grid, and where did the constant?',
+            },
+            {
+              label: 'Set it to zero and solve',
+              detail:
+                'λ² − 5λ + 4 = (λ − 1)(λ − 4), so the eigenvalues are λ = 1 and λ = 4. This last ' +
+                'step is the factoring a prerequisite of this concept already owns; everything ' +
+                'before it is the part that is about eigenvalues.',
+              socratic:
+                'The collapse condition is that this determinant be zero, so you now have a ' +
+                'quadratic set to 0 and a move you have already learned elsewhere for exactly ' +
+                'that. Two numbers multiplying to 4 and adding to 5 are not hard to find. Factor ' +
+                'it, read off the two λ, and then notice what the division of labour has been: ' +
+                'which steps of this example could only have been done by somebody who knows ' +
+                'what an eigenvalue IS, and which one could have been handed to anybody who can ' +
+                'factor a quadratic?',
+            },
+            {
+              label: 'Check against the two invariants',
+              detail:
+                '1 + 4 = 5, which is 3 + 2, the diagonal sum; and 1·4 = 4, which is det A. Both ' +
+                'coefficients came off the grid, so both checks were available before any ' +
+                'solving — and 4 is the eigenvalue the previous point found by hand with no ' +
+                'polynomial at all.',
+              socratic:
+                'Look at the polynomial you expanded rather than at the roots: its λ coefficient ' +
+                'was −(3 + 2) and its constant was ad − bc, and a factored quadratic ' +
+                '(λ − p)(λ − q) has −(p + q) and pq in those two places. Match them up and you ' +
+                'get two statements relating your two answers to two numbers you could compute ' +
+                'from A before you solved anything. What are those two statements, do your 1 and ' +
+                '4 satisfy both, and what would you do if you were handed only ONE eigenvalue of ' +
+                'this matrix and asked for the other?',
+            },
+          ],
+          answer: 'λ = 1 and λ = 4',
+        },
+      },
+      {
+        id: 'the-direction-comes-from-the-collapse',
+        conceptId: 'eigenvalues',
+        statement:
+          'An eigenvalue on its own is a number; the direction belonging to it is what the map ' +
+          'actually leaves alone. Substitute λ back into A − λI and that matrix is singular by ' +
+          'construction, so its two rows say the same thing once — and one equation in two ' +
+          'unknowns fixes a ratio rather than a vector. The eigenvector is a DIRECTION: every ' +
+          'non-zero multiple of it does the same job.',
+        position: 3,
+        workedExample: {
+          problem:
+            'A = [[3, 1], [2, 2]] has eigenvalue λ = 1. Find a direction A leaves unmoved.',
+          subgoals: [
+            {
+              label: 'Substitute the eigenvalue',
+              detail:
+                'A − 1·I = [[2, 1], [2, 1]]. Its determinant is 2·1 − 1·2 = 0, and it had to be: ' +
+                'that vanishing is what made 1 an eigenvalue in the first place.',
+              socratic:
+                'The previous point built A − λI with λ as a letter and then solved for the ' +
+                'values that make its determinant vanish. Now run that backwards: put λ = 1 into ' +
+                'the same matrix so every entry is a number again. Then compute ad − bc on the ' +
+                'result — but before you do, what is it obliged to come to, and why should ' +
+                'hearing that answer be a confirmation rather than news?',
+            },
+            {
+              label: 'Read the one equation the rows give',
+              detail:
+                'Row 1 says 2x + y = 0 and row 2 says the same. The second row is no new ' +
+                'information — which is precisely what a zero determinant means, and why there ' +
+                'is a non-zero solution at all.',
+              socratic:
+                'You want the vectors (x, y) this matrix sends to the origin, so write out what ' +
+                'each row demands of x and y. Two rows, two equations — except look at them side ' +
+                'by side. If they had been genuinely different equations, the only pair ' +
+                'satisfying both would be (0, 0), and the zero vector is no direction at all. ' +
+                'What do these two rows turn out to say, how many independent conditions do you ' +
+                'actually have, and which earlier fact about this matrix guaranteed that in ' +
+                'advance?',
+            },
+            {
+              label: 'Take any solution of it',
+              detail:
+                'y = −2x, so x = 1 gives (1, −2). Check it: A(1, −2) = (3 − 2, 2 − 4) = (1, −2), ' +
+                'returned unchanged — which is exactly the claim an eigenvalue of 1 makes.',
+              socratic:
+                'One equation in two unknowns, so pick one of them and the other follows. ' +
+                'Rearrange 2x + y = 0 for y, choose the easiest x you can that is not zero, and ' +
+                'write the vector down. Then verify it the way the FIRST point of this concept ' +
+                'tested a candidate, by applying A and comparing — and what does the output have ' +
+                'to be here specifically, given which eigenvalue you were handed?',
+            },
+            {
+              label: 'And the answer is the direction, not the vector',
+              detail:
+                '(2, −4) and (−1, 2) satisfy 2x + y = 0 just as well and are eigenvectors just ' +
+                'as much. What A fixes is the whole line through (1, −2), so "the" eigenvector ' +
+                'is a direction with a representative chosen for convenience.',
+              socratic:
+                'You chose x = 1 because it was easy; somebody else would have chosen x = 2 or ' +
+                'x = −1 and written a different vector down. Work out what those two give, check ' +
+                'whether each still satisfies the row equation, and apply A to one of them to ' +
+                'see whether it too comes back unchanged. So what is the real answer to this ' +
+                'problem — a single vector, or something larger that all of these are samples ' +
+                'of — and what does that mean for two learners comparing answers?',
+            },
+          ],
+          answer: '(1, −2), or any non-zero multiple of it',
+        },
+      },
+    ],
+  },
 ]
 
 /**
@@ -976,6 +1337,62 @@ const EDGES: ConceptEdge[] = [
       'are not. Practised together, the determinant rule supplies exactly the false reassurance ' +
       'that matrix products can be reordered — which is the error multiplication exists to ' +
       'prevent.',
+  },
+
+  /*
+   * THE FIFTH CONCEPT'S EDGES, AND THE ONE OF ITS THREE `needs` THAT COULD COME
+   * HERE.
+   *
+   * The map node declared three prerequisites — `determinant`,
+   * `basis-and-dimension` and `polynomial-roots` — and exactly one of them is a
+   * concept of this subject, so exactly one can be an edge in this file. An
+   * authored ontology may only name concepts it contains; the other two join
+   * two concepts in two different ontologies and are `links` entries of
+   * `linear-algebra`, the area that owned the departing node. See
+   * atlas-structures.ts, where the twelfth departure records both.
+   *
+   * THE CHAIN FORKS HERE RATHER THAN LENGTHENING, which is worth stating
+   * because four promotions into this subject had made it a straight line. The
+   * node named `determinant` and not `matrix-inverse`, and that is right: the
+   * characteristic equation needs a determinant to vanish and never needs
+   * anything inverted. So `determinant` now gates two concepts — the inverse
+   * and this — and neither waits on the other.
+   */
+  {
+    id: 'determinant->eigenvalues',
+    from: 'determinant',
+    to: 'eigenvalues',
+    kind: 'prerequisite',
+    promotedBy: 'author:matrices-and-determinants',
+  },
+
+  /*
+   * TWO CREDIT EDGES, AND BOTH ARE THE SAME CLAIM THE OTHER TWO `encompasses`
+   * ENTRIES ABOVE MAKE: the work this concept asks for IS the earlier concept's
+   * work, so a learner who has just done it should not be handed the earlier
+   * one as though untouched.
+   */
+  {
+    id: 'eigenvalues=>determinant',
+    from: 'eigenvalues',
+    to: 'determinant',
+    kind: 'encompasses',
+    promotedBy: 'author:matrices-and-determinants',
+    rationale:
+      'The characteristic polynomial IS a 2×2 determinant with a letter down the diagonal, so ' +
+      'forming one computes ad − bc; and the reason the equation is the right one to solve is ' +
+      'the determinant concept\'s own reading of a vanishing determinant as a collapse.',
+  },
+  {
+    id: 'eigenvalues=>matrices-and-maps',
+    from: 'eigenvalues',
+    to: 'matrices-and-maps',
+    kind: 'encompasses',
+    promotedBy: 'author:matrices-and-determinants',
+    rationale:
+      'Testing a candidate direction is applying the matrix to a vector and comparing, so the ' +
+      'first knowledge point and its task are the row rule performed with the answer\'s shape ' +
+      'known in advance.',
   },
 ]
 

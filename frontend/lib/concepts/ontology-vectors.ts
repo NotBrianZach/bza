@@ -1208,6 +1208,10 @@ const CONCEPTS: Concept[] = [
             {
               label: 'Add component by component',
               detail: 'First: 3 + (−1) = 2. Second: 4 + 2 = 6. So u + v = (2, 6).',
+              socratic:
+                'u is three across and four up; v is one back and two up. Of those four ' +
+                'numbers, which ones can possibly change how far across u + v takes you — and ' +
+                'what does that leave the first component as?',
             },
             {
               label: 'Why that matches the picture',
@@ -1215,6 +1219,11 @@ const CONCEPTS: Concept[] = [
                 'Walk 3 right and 4 up, then 1 LEFT and 2 up. Net horizontal travel is 2 and ' +
                 'vertical is 6 — the components never interact, because going across does not ' +
                 'change how far up you are.',
+              socratic:
+                'Now take the same two trips as a walk — three right and four up, then one left ' +
+                'and two up — and ask where you finish. The arithmetic already said (2, 6). ' +
+                'What is it about sideways travel that makes the walk end up at exactly that ' +
+                'point rather than merely near it?',
             },
             {
               label: 'And why order does not matter here',
@@ -1222,6 +1231,11 @@ const CONCEPTS: Concept[] = [
                 'v + u gives the same (2, 6). Vector addition is commutative because number ' +
                 'addition is, component by component — unlike the matrix products these build ' +
                 'toward, where it is not.',
+              socratic:
+                'Walking v first and u second also finishes at (2, 6), and you never had to ' +
+                'check that separately — each component was a sum of two ordinary numbers. ' +
+                'Which fact about ordinary numbers is that order-independence borrowed from, ' +
+                'and what does that tell you about where it could fail?',
             },
           ],
           answer: '2',
@@ -1241,18 +1255,33 @@ const CONCEPTS: Concept[] = [
             {
               label: 'Scale each component',
               detail: '3·2 = 6 and 3·(−1) = −3, so 3u = (6, −3).',
+              socratic:
+                'You already know what u + u would do to the two numbers, because adding never ' +
+                'lets one component disturb the other. 3u asks for that trip three times over ' +
+                'rather than twice. What does that do to each of u\'s numbers on its own, and ' +
+                'what does it leave the first component of 3u as?',
             },
             {
               label: 'Read the geometry',
               detail:
                 'Three times as long, pointing the same way. Had the factor been −3 the length ' +
                 'would be the same and the arrow would point the other way.',
+              socratic:
+                'Both of u\'s numbers came out three times bigger and neither of them flipped ' +
+                'sign. What does that do to the length of the arrow and to the direction it ' +
+                'points, and which of those two answers would have read differently had the ' +
+                'factor been −3 instead?',
             },
             {
               label: 'The fact this sets up',
               detail:
                 'Every scalar multiple of u lies on one line through the origin. That line is ' +
                 'everything u alone can reach — which is the span, and the next concept.',
+              socratic:
+                'Scaling changed how long u is but not the line it lies along, and that held ' +
+                'even for the −3 you just considered. Picture the tips of all such arrows drawn ' +
+                'from the origin at once, for every factor there is: what shape do they fill, ' +
+                'and what does that settle about the places u on its own can never take you?',
             },
           ],
           answer: '6',

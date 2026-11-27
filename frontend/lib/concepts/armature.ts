@@ -394,7 +394,57 @@ export const REGIONS: Region[] = [
     // predicting rather than computing. The area has ONE ready node now
     // (`eigenvalues`) and one root (the same), and that figure is asserted in
     // tests/atlas.mjs by the group that moved it rather than restated here.
-    anchors: ['cayley-hamilton', 'eigenvalues', 'diagonalisation'],
+    //
+    // AND A SIXTH TIME, AT THE FIFTY-THIRD PROMOTION, which took the one ready
+    // node the paragraph above declined to count on. `eigenvalues` is a concept
+    // of `matrices-and-determinants` now — the first node of this area to land
+    // in a subject that had REFUSED it in writing — so this region has lost an
+    // anchor six times out of six, and for the first time to a subject other
+    // than `vectors-and-independence`.
+    //
+    // THE RULE FAILED A THIRD WAY, AND THIS ONE IS NOT A FAILURE OF NERVE. At
+    // the fourth turnover the rule's single candidate was disqualified for not
+    // becoming a root; at the fifth there was no candidate at all, the departing
+    // node having no dependents. Here the rule WORKS and is useless: the
+    // departing node's in-area dependents are `diagonalisation` and
+    // `cayley-hamilton`, both of them became roots of the area view — the
+    // discriminating half of the rule, satisfied twice over — and both are
+    // already anchors of this region. So the rule returned two correct answers
+    // and neither can fill a slot, since filling it with an existing anchor
+    // would shrink the region to two and `armatureProblems` wants three. That is
+    // worth separating from the other two failures: a rule whose output is
+    // always already in the set it is meant to extend is not exhausted by
+    // circumstance, it is inapplicable to a region whose anchors already sit at
+    // the shallow end of its own area.
+    //
+    // `spectral-theorem` TAKES THE SLOT, ON THE CRITERION THE FIFTH TURNOVER
+    // STATED rather than on a fresh argument — twice running now that the
+    // criterion rather than taste has decided it. The test is DISTANCE FROM
+    // WRITTEN MATERIAL: an anchor on a growing area is a claim about where a cut
+    // may fall, and pointing it at territory nobody can reach makes the claim
+    // about nothing. Measured after this promotion the area sorts cleanly again.
+    // `diagonalisation` and `cayley-hamilton` are ready, and both are anchors
+    // already. At the next depth there is exactly ONE node: `spectral-theorem`,
+    // which needs `diagonalisation` and `inner-product-spaces`, and the second
+    // of those is written. Everything else is two or more behind —
+    // `jordan-normal-form` needs both new roots, `quadratic-forms` needs the
+    // spectral theorem, `matrix-exponential` needs `power-series` in another
+    // area, and the numerics need the SVD. One node at the shallowest unanchored
+    // depth means the choice is forced, which is the most a judgement can be.
+    //
+    // It also reads right against the `because`, which is the check no
+    // `armatureProblems` pass can make: the Runeforger guild fabricates things
+    // that conduct aether — arrays of conducting elements and what they do to
+    // what passes through — and the spectral theorem says a SYMMETRIC array
+    // comes apart into independent directions with real factors. A coupling
+    // matrix that is symmetric because the coupling is mutual is the forge's own
+    // object, and the theorem is the statement that such a thing has modes.
+    //
+    // THE REGION'S READY-NODE COUNT IS STILL NOT ASSERTED HERE, for the reason
+    // the previous turnover's note gives. The area has TWO ready nodes now and
+    // two roots and they are the same two; the figures live in tests/atlas.mjs
+    // with the group that moved them.
+    anchors: ['cayley-hamilton', 'spectral-theorem', 'diagonalisation'],
     because: 'The Runeforger guild fabricates objects that conduct aether — shields, ignition surfaces, industrial equipment — which is arrays of conducting elements and what they do to what passes through them. A city named The Stalwart Machine keeps its mathematics in matrices.',
   },
   {
@@ -615,6 +665,28 @@ export const REGIONS: Region[] = [
     // theorem, which is about the SHAPE of the fluctuation rather than about the
     // return settling. One refill left in the reading, and then this question is
     // genuinely open.
+    //
+    // THE FIFTY-SECOND PROMOTION CONFIRMED THE PARAGRAPH ABOVE IT: THE SLOT DID
+    // NOT EMPTY. It took `discrete-distributions`, which is exactly the node the
+    // fifty-first declined to name here because naming it would have emptied the
+    // slot again one promotion later. Five turnovers in five promotions, then
+    // one promotion with none — and the difference is not luck but the one
+    // decision made against the grain of the obvious choice. That is the whole
+    // case for the practice four notes above complain about the absence of:
+    // choosing a refill that CANNOT become ready is what buys a slot a quiet
+    // promotion, and this is the first evidence that it works rather than the
+    // fourth assertion that it should.
+    //
+    // THE ENUMERATION ABOVE IS NOW FIVE RATHER THAN SIX, which is the one thing
+    // in it that moved. The area holds eight nodes, three are anchors, and the
+    // non-anchor five are `continuous-distributions`, `joint-distributions`,
+    // `central-limit-theorem`, `stochastic-processes` and
+    // `measure-theoretic-probability`. The named fallback is unchanged and is
+    // still `central-limit-theorem`, with the caveat above still attached. And
+    // the slot is safe for a second promotion running, by a stronger fact than
+    // last time: none of the three anchors is ready, and NO node of this area is
+    // ready at all, so no promotion out of here is even available until
+    // `sequence-convergence`, `definite-integral` or `eigenvalues` is written.
     authored: ['chance-and-events'],
     anchors: ['markov-chains', 'transformations-of-variables', 'law-of-large-numbers'],
     because: 'Order courts price every sentence in money owed to the offended party and the state, and the Scales run a seasonal raid whose return nobody can promise. Both are expected value, and the swamp is where somebody is always computing one.',

@@ -11,9 +11,16 @@
  * `statistics` therefore rests on `probability` throughout and never the
  * reverse.
  *
- * THREE NODES HAVE LEFT THIS FILE — ONE FROM `statistics` AND TWO FROM
+ * NINE NODES HAVE LEFT THIS FILE — ONE FROM `statistics` AND EIGHT FROM
  * `probability` — AND THE ORDER THE FIRST TWO WENT IN IS THE OPPOSITE OF THE
  * DEPENDENCE ABOVE.
+ *
+ * The four named below are the first four; the departure block above
+ * `probability` lists all eight in order with what each one cost, and that block
+ * rather than this one is where the live figures are. This paragraph is kept
+ * because the ORDER of the first two is the only thing in the file that
+ * contradicts its own organising principle, and that stays true however many
+ * nodes leave.
  *
  * `descriptive-statistics` went first — the `data-summaries` subject in
  * ontology-statistics.ts, the first written concept anywhere in either of these
@@ -40,15 +47,30 @@
  * subject again — three consecutive nodes off one chain, which no other area has
  * given up. It is also where the shape above STOPS, and the departure block for
  * `probability` sets out why: the rule only walks a chain while exactly one node
- * sits directly above the root, and this one had three. This file's two areas
- * have now given up a chain of three and a chain of one, and the departure blocks
- * above each area record what happened to every edge.
+ * sits directly above the root, and this one had three. Four more have gone since
+ * — `bayes-theorem`, `random-variables`, `expectation` and
+ * `variance-and-covariance` — and the eighth, `discrete-distributions`, went at
+ * the fifty-second. The departure blocks above each area record what happened to
+ * every edge.
+ *
+ * WHAT THE EIGHT TOGETHER DID TO THIS FILE'S OWN ARGUMENT IS WORTH ONE LINE.
+ * `probability` argues from a known mechanism to the behaviour of outcomes, and
+ * the eight concepts now written are everything up to and including the NAMED
+ * MECHANISMS themselves: a weight, a count of trials, a wait. What is left here
+ * is three nodes that each need something from outside this half of the atlas —
+ * a limit, an integral, an eigenvalue — so the next material in the uncertainty
+ * half has to come from `statistics` or from nowhere. That area has exactly one
+ * root, `sampling-and-bias`, and it IS ready; it is also refused, by the
+ * forty-sixth promotion and on rulability, because its content is a judgement
+ * about where data came from and an `evaluate` on a response rate grades
+ * `percent`. So this file holds a ready node and nothing authorable, which are
+ * different things and are easy to read as one.
  */
 
 import type { MapArea } from './atlas'
 
 /**
- * FOUR NODES HAVE LEFT THIS AREA WHEN THEY WERE AUTHORED, AND THEY HAD TO.
+ * EIGHT NODES HAVE LEFT THIS AREA WHEN THEY WERE AUTHORED, AND THEY HAD TO.
  *
  * `atlasProblems` rejects a map node whose id collides with an authored concept
  * — see atlas.ts, which argues it at length: the point of naming a concept in
@@ -58,26 +80,38 @@ import type { MapArea } from './atlas'
  * therefore a MOVE and not a fill-in, and the node has to be deleted from here on
  * the way out.
  *
- * All four went into the `chance-and-events` subject in ontology-chance.ts, and
- * in prerequisite order, which no run of promotions out of one area has matched.
- * `sample-spaces` went first, in the forty-fifth, and was the seventeenth
- * authored ontology and the first written concept in this area: sixteen nodes
- * down to fifteen. `counting-probability` went second, in the forty-sixth, as
- * that subject's second concept: fifteen down to fourteen.
+ * All eight went into the `chance-and-events` subject in ontology-chance.ts,
+ * and in prerequisite order, which no run of promotions out of one area has
+ * matched. `sample-spaces` went first, in the forty-fifth, and was the
+ * seventeenth authored ontology and the first written concept in this area:
+ * sixteen nodes down to fifteen. `counting-probability` went second, in the
+ * forty-sixth, as that subject's second concept: fifteen down to fourteen.
  * `conditional-probability` went third, in the forty-seventh: fourteen down to
  * thirteen. `bayes-theorem` went fourth, in the forty-eighth: thirteen down to
- * TWELVE. tests/atlas.mjs holds the node count in the forty-eighth promotion's
- * group, which is the fourth group to own it.
+ * twelve. `random-variables` went fifth, in the forty-ninth, and is the one that
+ * is not the next link in the chain; `expectation` went sixth, in the fiftieth;
+ * `variance-and-covariance` went seventh, in the fifty-first; and
+ * `discrete-distributions` went eighth, in the fifty-second: nine down to EIGHT.
+ * tests/atlas.mjs holds the node count in the fifty-second promotion's group,
+ * which is the ninth group to own it — a figure belongs to whichever promotion
+ * last moved it, and this one has moved on every promotion since the
+ * forty-fifth.
  *
  * THE FLOOR DECIDED NOTHING AND IS NOT CLOSE, which is worth stating because it
  * decides where most promotions may happen. tests/atlas.mjs asserts that no area
  * sits below five nodes once departures count as covered territory, and this area
- * is at twelve nodes — SEVEN of headroom on the nodes alone, before any departure
+ * is at EIGHT nodes — three of headroom on the nodes alone, before any departure
  * is claimed. No `departed` array is declared here and that is still correct
  * rather than an omission: the floor reads absence as zero, the field is for
- * areas drained NEAR the floor, and declaring the four departures would buy four
- * more of headroom that nothing needs. If this area is ever drained past five,
- * that is when to declare it.
+ * areas drained NEAR the floor, and declaring the eight departures would buy
+ * eight more of headroom that nothing needs.
+ *
+ * BUT THE DEADLINE IS NOW THREE PROMOTIONS AWAY AND SOMEBODY SHOULD DECLARE IT
+ * BEFORE THEN. The fifty-first's group set the rule: whoever takes this area to
+ * six nodes should declare `departed` rather than discovering the floor at five.
+ * That is nearer than it was — and the thing that makes it harder to notice is
+ * that NONE of the three nodes left is ready, so the next promotion out of here
+ * is not imminent and the figure will sit still long enough to look safe.
  *
  * ── THE ROOT WAS THE NODE WORTH TAKING THREE TIMES, AND THEN THE SHAPE RAN OUT ──
  *
@@ -374,15 +408,23 @@ const PROBABILITY: MapArea = {
     'through an expectation falls short and in which direction; and the covariance, which is ' +
     'why variances do NOT add where expectations did, vanishes under independence so that they ' +
     'do, and can vanish without independence — all written as `variance-and-covariance` in ' +
-    'that subject, which now holds seven ' +
-    'concepts and twenty-one ideas. THE FOUR NODES ABOVE THEM ARE WHERE THIS AREA NOW STARTS, ' +
-    'and the count rose with this departure rather than falling, because the node that left ' +
-    'was the last in-area prerequisite of TWO others: `discrete-distributions` names the ' +
-    'mechanisms one at a time and is the one of the four with everything it needs already ' +
-    'written, `law-of-large-numbers` is a root without being ready and waits on ' +
-    '`sequence-convergence`, `continuous-distributions` replaces the table with a density and ' +
-    'waits on `definite-integral`, and `markov-chains` conditions along time and waits on ' +
-    '`eigenvalues`.',
+    'that subject. NOR ARE THE NAMED DISCRETE FAMILIES, which left next and is the eighth ' +
+    'departure: one trial with its weight left as a letter, whose spread p(1 − p) is a product ' +
+    'rather than a number and can never exceed the fair coin\'s 1/4; the count of successes in ' +
+    'n such trials, whose entry is C(n, k)p^k(1 − p)^(n−k) and whose table totals 1 by the ' +
+    'binomial theorem for every n and every weight at once; and the WAIT for a first success, ' +
+    'which has no coefficient, no last value, and a tail a complement settles in one product — ' +
+    'all written as `discrete-distributions` in that subject, which now holds eight concepts ' +
+    'and twenty-four ideas. The POISSON distribution is named there and declined, with its ' +
+    'price stated: every entry of it is irrational, and it reaches probability only as a limit ' +
+    'of binomials, which is `sequence-convergence` and unwritten. THE THREE NODES ABOVE THEM ' +
+    'ARE WHERE THIS AREA NOW STARTS, and the count FELL with this departure where it rose with ' +
+    'the one before, because the node that left was the last in-area prerequisite of NOTHING: ' +
+    '`law-of-large-numbers` is a root without being ready and waits on `sequence-convergence`, ' +
+    '`continuous-distributions` replaces the table with a density and waits on ' +
+    '`definite-integral`, and `markov-chains` conditions along time and waits on ' +
+    '`eigenvalues`. So none of the three is ready, and for the first time since the ' +
+    'forty-fourth promotion nothing in this area can be authored next.',
   links: [
     /*
      * THREE STRANDED PREREQUISITES, FROM TWO PROMOTIONS: the first two entries
@@ -577,6 +619,64 @@ const PROBABILITY: MapArea = {
         'second — a term that ignores the index still counts the terms — is what the constant b ' +
         'becomes before the table\'s total of 1 collapses it to b.',
     },
+    /*
+     * THE FIFTY-SECOND PROMOTION'S ONE STRANDED EDGE, and the third entry in
+     * four promotions. `discrete-distributions` declared
+     * `['variance-and-covariance', 'binomial-theorem']`; the first is in the
+     * subject it joined and became an ordinary `EDGES` entry there, and this is
+     * the other half.
+     *
+     * `binomial-theorem` IS A CONCEPT OF `rational-expressions`, WHICH IS WORTH
+     * SAYING BECAUSE THE NAME MISLEADS. It is not in `functions-and-inverses`
+     * and not in `counting-and-arrangements`, which are the two subjects a
+     * reader guesses: ontology.ts holds it, gated behind
+     * `polynomial-arithmetic`, and it was authored many promotions before any of
+     * this by somebody with no interest in probability. So this is the
+     * forty-ninth's shape rather than the fiftieth's — a far end no earlier run
+     * could have moved into place — arriving at a node that stepped straight UP
+     * the chain, which is the combination the fiftieth's note said to expect:
+     * the cost is a property of the NODE's `needs` and of nothing else.
+     *
+     * IT GATES IMMEDIATELY, like the five above: both ends have material, so
+     * `gatingPrerequisitesOf` on `discrete-distributions` returns
+     * `variance-and-covariance` from the ontology and `binomial-theorem` from
+     * here, and a learner cannot be shown a distribution until both are strong.
+     * Every entry in this list now gates on arrival, which is unusual — most
+     * `links` entries are written while the far node is unwritten and constrain
+     * nothing until it is authored.
+     *
+     * AND IT IS LOAD-BEARING ON A GRADED TASK, WHICH IS THE TEST THE
+     * FIFTY-FIRST'S CREDIT-EDGE RATIONALE INTRODUCED. A gate whose far end
+     * nothing graded rests on is a claim about prose. The sixth task of the new
+     * concept totals a whole binomial table at a weight of 1/3 and answers 1,
+     * and the only reason that total is 1 is (p + q)^n with p + q = 1 — so the
+     * concept is written such that this entry cannot be vacuous.
+     *
+     * NO CREDIT EDGE IS LOST HERE. The departing node declared no `exercises`
+     * and no `encompasses`, read off the node before deletion rather than
+     * assumed. The credit the new concept DOES claim runs to
+     * `variance-and-covariance`, inside `chance-and-events`, so it needed
+     * nothing from this file — and it deliberately does NOT claim
+     * `counting-principles`, which `links` could not have carried anyway and
+     * which its own edge comment argues would be false: the coefficients 1, 3,
+     * 3, 1 are handed over in every prompt, so no task asks a learner to produce
+     * C(n, k) even once.
+     */
+    {
+      from: 'binomial-theorem',
+      to: 'discrete-distributions',
+      because:
+        'The table of a binomial distribution IS the expansion of (p + q)^n read term by term, ' +
+        'so that concept is the form the second knowledge point is written in rather than a ' +
+        'convenience. Both of its halves do work: the coefficients are its triangle and the ' +
+        'expansion is its theorem, and between them they make the table total 1 for every n and ' +
+        'every weight AT ONCE — the entries are C(n, k)p^k q^(n−k), their sum is (p + q)^n, and ' +
+        'p + q = 1 by construction. `random-variables` had to argue the same total one table at ' +
+        'a time from the values of a function partitioning the space, so without this concept ' +
+        'the total is a check that happens to pass rather than a theorem, and a learner who ' +
+        'cannot expand the cube of a sum has no way to see that 8/27, 12/27, 6/27 and 1/27 were ' +
+        'never going to come to anything else.',
+    },
   ],
   nodes: [
     /*
@@ -647,14 +747,50 @@ const PROBABILITY: MapArea = {
      * touched, so it is a root WITHOUT being ready — the same two measures coming
      * apart that the forty-ninth recorded for `continuous-distributions`.
      */
-    {
-      id: 'discrete-distributions',
-      match: /\b(binomial|poisson|geometric|bernoulli) distribution\b/i,
-      name: 'The discrete distributions',
-      is: 'Bernoulli, binomial, geometric and Poisson — each is a mechanism, and naming the mechanism is how you choose one.',
-      needs: ['variance-and-covariance', 'binomial-theorem'],
-      terms: 'bernoulli binomial geometric poisson distribution',
-    },
+    /*
+     * `discrete-distributions` WAS THE FIRST ENTRY HERE AFTER THAT AND LEFT AT
+     * THE FIFTY-SECOND PROMOTION, into `chance-and-events` as that subject's
+     * eighth concept. Deleted rather than annotated, for the collision reason
+     * above.
+     *
+     * IT IS THE EIGHTH DEPARTURE AND IT COST AN ENTRY, WHICH CONFIRMS THE
+     * FIFTIETH'S RULE A THIRD TIME AND FROM THE OTHER SIDE. The node declared
+     * TWO `needs` — `variance-and-covariance`, which the run before had just
+     * authored into the same subject, and `binomial-theorem`, a concept of
+     * `rational-expressions` — so the second stranded and is the sixth entry in
+     * the `links` list above. Three consecutive promotions up one line have now
+     * cost 1, 0 and 1 entries, and in all three the number of `needs` pointing
+     * outside the new subject predicted it exactly. The order of the promotions
+     * has never once explained it.
+     *
+     * AND ITS DEPARTURE SHRANK THE ROOT SET, WHICH IS THE SECOND TIME THAT HAS
+     * HAPPENED HERE AND THE FIRST SINCE THE FORTY-EIGHTH. The forty-eighth's
+     * rule predicts it: the set changes size by (in-area dependents) minus one,
+     * and this node had NONE. Nothing in this area names it —
+     * `joint-distributions` goes through `continuous-distributions` and
+     * `central-limit-theorem` through `law-of-large-numbers` — so nothing
+     * inherited its position. Four becomes THREE. Across the forty-eighth
+     * through the fifty-second the set has gone 3, 2, 3, 4, 3, which is the
+     * argument for naming its members: every one of those five readings is the
+     * rule working correctly, and three of the five sizes repeat.
+     *
+     * THE YIELD WAS ZERO READY NODES, FOR THE SECOND TIME HERE, AND SO THE READY
+     * FIELD FELL. A node with no dependents cannot unlock anything, which is the
+     * upper-bound rule at its floor for the second time — the forty-eighth was
+     * the first. The difference from the forty-eighth is what the fall means:
+     * this node was the LAST unrefused ready node anywhere on the map, so the
+     * field went from twelve to eleven and every one of the eleven is under a
+     * refusal somebody recorded. ontology-chance.ts's eighth section has the
+     * measurement.
+     *
+     * AND IT IS THE FIRST DEPARTURE SINCE THE FORTY-FOURTH THAT EMPTIED NO
+     * ANCHOR SLOT, WHICH THE RUN BEFORE ARRANGED ON PURPOSE. Seven consecutive
+     * promotions each took an anchor of some region; the fifty-first chose
+     * `law-of-large-numbers` as Rubneb's refill specifically because
+     * `discrete-distributions` — the obvious choice, and ready — would have
+     * emptied the slot again at this promotion. armature.ts records the
+     * prediction and this is the event that confirms it.
+     */
     {
       id: 'continuous-distributions',
       match: /\b(normal|exponential|uniform|gamma|beta) distribution\b/i,

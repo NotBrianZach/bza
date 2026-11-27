@@ -1,28 +1,31 @@
 /**
- * Chance and events — the seventeenth subject, and SEVEN concepts.
+ * Chance and events — the seventeenth subject, and EIGHT concepts.
  *
  * `sample-spaces` was a node of `probability` and was the whole of this subject
  * until the forty-sixth promotion added `counting-probability` above it, the
  * forty-seventh added `conditional-probability` above that, the forty-eighth
  * added `bayes-theorem` above that, the forty-ninth added `random-variables`
  * off the third of them rather than off the fourth, the fiftieth added
- * `expectation` above the fifth, and the fifty-first added
- * `variance-and-covariance` above the sixth. The sections about the first
+ * `expectation` above the fifth, the fifty-first added
+ * `variance-and-covariance` above the sixth, and the fifty-second added
+ * `discrete-distributions` above the seventh. The sections about the first
  * run to the `EDGES` note; the second concept's argument begins at `── THE SECOND
  * CONCEPT`, the third at `── THE THIRD CONCEPT`, the fourth at `── THE FOURTH
  * CONCEPT`, the fifth at `── THE FIFTH CONCEPT`, the sixth at `── THE SIXTH
- * CONCEPT`, and the SEVENTH concept's argument together with this file's live
- * measurement of the ready field begins at `── THE SEVENTH CONCEPT`.
+ * CONCEPT`, the seventh at `── THE SEVENTH CONCEPT`, and the EIGHTH concept's
+ * argument together with this file's live measurement of the ready field begins
+ * at `── THE EIGHTH CONCEPT`.
  *
- * READ THE LAST OF THOSE SEVEN FOR THE FIELD, NEVER AN EARLIER ONE. Seven
+ * READ THE LAST OF THOSE EIGHT FOR THE FIELD, NEVER AN EARLIER ONE. Eight
  * sections with near-identical titles now sit in this header in promotion order,
  * and a later one can CONTRADICT an earlier one — the third section recommends
  * two candidates, the fourth has spent one of them, the fifth has spent the last
  * one and reports a field of ONE, the sixth has spent that one and reports a
- * field of one again, and the seventh has spent THAT. Counting is the only way to
+ * field of one again, the seventh has spent THAT, and the eighth has spent the
+ * last one there was and reports a field of ZERO. Counting is the only way to
  * pick the live one; `templedb vcs log bza` names the promotion that wrote it.
  *
- * All seven were nodes of `probability`, and each had to be DELETED from that
+ * All eight were nodes of `probability`, and each had to be DELETED from that
  * array on the way in. `atlasProblems` rejects a map node whose id collides with
  * an authored concept — the composed list would hold two entries for the id and
  * the shadowing copy has no knowledge points, so a fully authored concept would
@@ -39,6 +42,200 @@
  * sibling and not its successor — which is why it strands an edge where the two
  * before it stranded none, and why its material leans on the FIRST concept
  * rather than on the one it was gated behind.
+ *
+ * ── THE EIGHTH CONCEPT, AND THE FIELD IT LEAVES EMPTY ─────────────────────
+ *
+ * `discrete-distributions` was the single unrefused ready node on the map for the
+ * FOURTH promotion running, so the choice was forced again — and this time
+ * spending it empties the field. What the fifty-second had to settle was neither
+ * rulability nor a boundary but whether its own HOST would let it in, because the
+ * refusal standing against it was in this subject's `covers`.
+ *
+ * THE REFUSAL WAS DISCHARGED RATHER THAN OVERTURNED, WHICH IS THE DISTINCTION THE
+ * SEVENTH'S HAND-OFF DREW IN ADVANCE. That section put the question sharply:
+ * either author the parameters, in which case the refusal is discharged and this
+ * subject is the host, or file the concept into a new subject and leave the
+ * `covers` true. The sentence said the named distributions are "FAMILIES INDEXED
+ * BY THEIR PARAMETERS, and that indexing rather than the mechanism is what is
+ * missing", and that nothing above "tosses the coin four times or weights it, so
+ * every number here belongs to one member of the family and the family itself has
+ * no variable to be indexed by". The parameters are now authored: p moves across
+ * three weights in the first idea, n and p move together in the second, and the
+ * third asks the same twelve-member question twice with one sentence changed. So
+ * the sentence that blocked this filing has been made false BY THE FILING, which
+ * is what discharging a refusal looks like, and the `covers` is rewritten rather
+ * than contradicted.
+ *
+ * AND THE SHAPE-vs-MOVE TEST DECIDED IT, as that section said it would. A family
+ * indexed by n and p is a MOVE — vary the count, vary the bias, read the same
+ * formula off a different table — and a single table is a SHAPE. The three
+ * independent indicators of the seventh concept were one instance of the move
+ * with both parameters frozen, and the test says an instance is not the move. What
+ * makes the move real here rather than asserted is that it produces claims a
+ * single table cannot state: p(1 − p) ≤ 1/4 with equality only at a half is a
+ * sentence about every weight at once, and the completed square proves it.
+ *
+ * THREE FILES HAD ALREADY SPECIFIED THIS CONCEPT BY NAME, which is what grepping
+ * the candidate's SUBJECT-MATTER WORDS rather than its id buys, for the second
+ * promotion running. `counting-probability`'s boundary note says
+ * C(5,1)·C(7,2)/C(12,3) "IS a hypergeometric probability" and that the name is
+ * absent because "a distribution is a FUNCTION of k and the material asks for one
+ * number at a time"; `random-variables` repeats it; and `variance-and-covariance`
+ * says the three-toss table is "the binomial with three trials and a fair coin"
+ * with the name "absent deliberately". Three recorded debts, one concept, and all
+ * three paid: the hypergeometric is named in the third point, the binomial table
+ * is rebuilt from the formula in the second and shown to reproduce 1/8, 3/8, 3/8,
+ * 1/8 at (3, 1/2), and both are functions of k rather than single numbers.
+ *
+ * ── WHAT THIS PROMOTION COST AND YIELDED ──────────────────────────────────
+ *
+ * AFTER: 213 map nodes, 97 authored, 19 areas, 17 subjects, ELEVEN ready, 0
+ * floor-blocked. Coverage 96 → 97 material, 96/96 → 97/97 practisable, 1010/1090
+ * → 1029/1109 questions, 272 → 275 chains, `chainsWithNoRuling` UNCHANGED at 1.
+ * Nineteen subgoals and nineteen authored interrogatives, so numerator and
+ * denominator both moved by nineteen.
+ *
+ * IT STRANDED ONE EDGE AND `PROBABILITY.links` GOES TO SIX. The node declared TWO
+ * `needs` — `variance-and-covariance`, which the run before had just authored
+ * here, and `binomial-theorem`, which is a concept of `rational-expressions` and
+ * not of `functions-and-inverses` as the name suggests. That is the fiftieth's
+ * rule confirmed a THIRD time and from the other side: three consecutive
+ * promotions up one line have cost 1, 0 and 1, from `needs` counts of two, one
+ * and two, and the orderliness of the promotions has explained none of it.
+ *
+ * TEN TASKS AND NOT NINE, BREAKING THREE-PER-POINT A SECOND TIME AND FOR A NEW
+ * REASON. The seventh took a fourth task because its point made three claims the
+ * map node promised by name. Here the second point makes four — the entry is a
+ * count times a price, both parameters move, the table totals 1 by the binomial
+ * theorem, and the agreement two concepts down was the fair coin — and the one
+ * that a tidy ratio would have dropped is the TOTAL. That is the only place
+ * `binomial-theorem` does graded work, and it is this promotion's one stranded
+ * prerequisite, so dropping the task would have left a `links` entry gating
+ * nothing a learner is ever asked to do. The seventh's credit-edge rationale is
+ * where that test comes from, and this is the first time it has decided a task
+ * count. Per-point counts 3, 4, 3.
+ *
+ * ZERO DEPENDENTS, SO THE READY FIELD FELL FOR THE FIRST TIME IN FIVE PROMOTIONS.
+ * Twelve held three times running — by a split, then forced, then a split again —
+ * and three groups in tests/atlas.mjs said in turn that the figure was saying
+ * nothing. This one spent the last member and made none, because nothing on the
+ * map names this node: `joint-distributions` reaches it only through
+ * `continuous-distributions` and `central-limit-theorem` only through
+ * `law-of-large-numbers`, so neither declares the edge. Twelve becomes ELEVEN.
+ * That is the upper-bound rule at its floor for the second time here, and the
+ * difference from the forty-eighth is what the fall MEANS rather than its size.
+ *
+ * AND THE ROOT SET SHRANK TO THREE, which is the other half of the same fact. The
+ * forty-eighth's rule — the set changes size by (in-area dependents) minus one —
+ * gives −1. Across the forty-eighth to the fifty-second the size reads 3, 2, 3,
+ * 4, 3 from dependent counts of 0, 2, 1, 2, 0: five readings, every one the rule
+ * working, three of the five sizes repeating, and a `length` check wrong in both
+ * directions twice over.
+ *
+ * NO ANCHOR SLOT EMPTIED, FOR THE FIRST TIME SINCE THE FORTY-FOURTH, AND THAT IS
+ * THE SEVENTH'S DECISION COMING GOOD. It chose `law-of-large-numbers` as Rubneb's
+ * refill over `discrete-distributions` — the obvious candidate, and ready —
+ * precisely because taking the ready one would have emptied the slot again at the
+ * next promotion. It would have: this is that promotion. So the practice four
+ * armature notes argued for is now measured rather than asserted, and the slot is
+ * safe for a second run by a stronger fact than before — NO node of `probability`
+ * is ready at all.
+ *
+ * NOTHING STRANDED IN SILENCE. The node declared no `confusedWith`, no
+ * `exercises` and no `encompasses`, read off the node before deletion, and the
+ * seventh's own hand-off had recorded all three as absent in advance — the second
+ * time a predecessor has answered this question for its successor and been right.
+ * Read off the node anyway, because a note is evidence about what somebody looked
+ * at and the node is the thing that decides.
+ *
+ * AND IT TIGHTENED NO GATE, WHICH NO PROMOTION OUT OF THAT AREA HAS MANAGED.
+ * Authoring a node normally pulls `gatingPrerequisitesOf` forward on to it for
+ * every dependent; with no dependents there is nothing whose gate can move. The
+ * seven before each tightened one, two or three.
+ *
+ * ── THE MATERIAL, AND THE ONE MECHANISM REFUSED ───────────────────────────
+ *
+ * THE MAP NODE'S `is` PROMISED FOUR MECHANISMS AND THREE ARE WRITTEN, which is
+ * the one place this promotion ships less than the map advertised and is said
+ * plainly rather than smoothed over. "Bernoulli, binomial, geometric and Poisson
+ * — each is a mechanism, and naming the mechanism is how you choose one." The
+ * first three are the three knowledge points. The POISSON is named in the
+ * `covers` and declined, with two checkable reasons rather than one preference:
+ * its entries are e^(−lambda)·lambda^k/k!, and e^(−lambda) is irrational at every
+ * positive lambda — the same ground on which this subject already declines the
+ * standard deviation and the correlation, and the ground every task here stands
+ * on, since all ten are settled by exact rational arithmetic with no worker. And
+ * it reaches probability only as the LIMIT of binomials as n grows at fixed np,
+ * which is `sequence-convergence`: a node of `sequences-and-series` nothing has
+ * touched, and the one `law-of-large-numbers` also waits on. So the shortfall is
+ * a boundary with a price on it and not a backlog.
+ *
+ * THE GEOMETRIC'S MEAN IS DECLINED ON THE SAME GROUND AND IT IS WORTH ONE LINE,
+ * because the line that separates what is here from what is not runs THROUGH one
+ * of the three mechanisms rather than between them. Its TAIL is here —
+ * P(X > k) = (1 − p)^k, a complement, one product — and its MEAN of 1/p is not,
+ * because that is a sum of infinitely many terms and needs a geometric SERIES
+ * where nothing above totals more than four. A complement settles an endless
+ * table and an expectation does not, and that difference is the whole of why one
+ * appears.
+ *
+ * THE SHARPEST THING IN THE MATERIAL IS A CONVENTION EXPLAINED RATHER THAN A
+ * FORMULA ADDED. `random-variables` set T to the toss the first head falls on and
+ * had to choose a value at TTT, because a function must be defined everywhere on
+ * its domain; it chose 0 and said so. T's table is 1/8, 1/2, 1/4, 1/8 — and the
+ * entries at 1, 2 and 3 are this family's first three at p = 1/2 exactly, while
+ * the 1/8 parked on the invented value is (1/2)^3 = P(X > 3). So T is the
+ * geometric TRUNCATED at three trials, the parked mass IS the tail, and a
+ * convention three concepts have carried is retired. Both sides are computed in
+ * tests/concepts-logic.mjs, from the eight sequences and from the formula
+ * separately, so the agreement is not one number read twice.
+ *
+ * AND THE THIRD POINT'S PAIR IS THE INVERSE OF THIS SUBJECT'S FAVOURITE SHAPE.
+ * Eleven expressions here are now asked at two substitutions, which is a formula
+ * outliving its member. The ninth and tenth tasks hold ONE substitution — five
+ * new members of twelve — and change the EXPRESSION: three descending factors
+ * give 1/22 and the same factor three times gives 125/1728, which over 19008 are
+ * 864 and 1375. Same words, same two inputs, two families, and nothing in either
+ * calculation says which is right. A one-expression pair could not have said it.
+ *
+ * ── THE FIELD THE NEXT RUN INHERITS, WHICH IS EMPTY ───────────────────────
+ *
+ * ELEVEN ready, 0 floor-blocked, ELEVEN refused — and they are the same eleven.
+ * `graphs-of-functions`, `relations`, `linear-inequalities`, `complex-numbers`,
+ * `supremum-and-completeness`, `constructions`, `non-euclidean-geometry`,
+ * `word-problems`, `eigenvalues`, `combinatorial-identities`,
+ * `sampling-and-bias`. Unrefused and available: NONE. The warning four of these
+ * sections have given in turn has arrived, and the next run's job is to overturn
+ * a recorded refusal rather than to author a ready node. tests/atlas.mjs asserts
+ * the ready set as exactly that list by name, so it goes red the moment the field
+ * moves in either direction.
+ *
+ * WHERE TO START, MEASURED RATHER THAN RECOMMENDED. `eigenvalues` has FOUR
+ * dependents — `systems-of-odes`, `diagonalisation`, `cayley-hamilton` and
+ * `markov-chains` — which is the most of anything unrefused or refused, and its
+ * refusal is in its own HOST, ontology-matrices.ts, in two places rather than on
+ * rulability. `relations` has five dependents and was refused on rulability by
+ * the thirty-ninth: a relation is a SET OF PAIRS, so reflexive, symmetric and
+ * transitive are judgements no task kind can grade. `graphs-of-functions` has
+ * five and is refused in ontology-sets.ts's header.
+ *
+ * AND THE SHAPE-vs-MOVE TEST IS THE ONLY TOOL THAT HAS EVER OVERTURNED ONE, which
+ * this promotion is the second demonstration of. The test asks whether the
+ * concept names a MOVE the engine can observe the output of or a SHAPE it can
+ * only be told about. `eigenvalues` names a move — solve det(A − xI) = 0, which
+ * is a `polynomial-roots` problem with a determinant in front — so whoever looks
+ * at it should read ontology-matrices.ts's two refusals and ask whether either is
+ * about rulability at all, because this one's was not: it was about what a
+ * subject had decided to hold.
+ *
+ * TWO THINGS ARE DIFFERENT ABOUT AN EMPTY FIELD AND BOTH ARE WORTH SAYING. A
+ * refusal is recorded in PROSE and no harness can read one, so "the field is
+ * empty" is not a fact any suite reports — what tests/atlas.mjs can assert, and
+ * does, is that the ready set is exactly the recorded refusal list. And a run
+ * that overturns a refusal owes a different argument from one that authors a
+ * ready node: it has to say which refusal, why its stated reason has expired, and
+ * what has changed since — which is the form the thirty-seventh through
+ * thirty-ninth promotions used and the form this one used on its own host.
  *
  * ── THE SEVENTH CONCEPT, AND THE READY FIELD MEASURED RATHER THAN QUOTED ──
  *
@@ -1704,11 +1901,12 @@ const subject: Subject = {
     + 'writing that list down, then by COUNTING it once it is too long to write, and then by '
     + 'REPLACING it with what you have been told, then by REVERSING what you were told '
     + 'into what you wanted to know, then by attaching a NUMBER to each outcome and '
-    + 'asking after the number instead, then by COLLAPSING those numbers to one, and last by '
-    + 'asking how far they stray from it. Seven '
-    + 'concepts and twenty-one ideas. The first '
-    + 'three are one experiment small enough to print in full, and the last NINE go back to '
-    + 'that same experiment. First, '
+    + 'asking after the number instead, then by COLLAPSING those numbers to one, then by '
+    + 'asking how far they stray from it, and last by letting the two numbers that were never '
+    + 'allowed to move DO SO. Eight '
+    + 'concepts and twenty-four ideas. The first '
+    + 'three are one experiment small enough to print in full, the next NINE go back to '
+    + 'that same experiment, and the LAST THREE unfreeze it. First, '
     + 'THE SAMPLE SPACE IS A SET YOU CHOOSE, AND THE '
     + 'CHOICE IS PART OF THE MODEL. An OUTCOME is one complete result, the sample space is the '
     + 'set of all of them, and the only two conditions are that no two outcomes can both happen '
@@ -1919,7 +2117,50 @@ const subject: Subject = {
     + 'FALSE: Y = |2X - 3| is built from X, so knowing X settles Y and the ninth idea\'s product '
     + 'test puts 1/32 against 1/8 — yet E[XY] = 9/4 = E[X]E[Y], so Cov(X, Y) = 0. A zero '
     + 'covariance says only that two rules do not move together on average and IN A STRAIGHT '
-    + 'LINE, and Y follows the distance of X from 3/2 rather than X. What '
+    + 'LINE, and Y follows the distance of X from 3/2 rather than X. The last three ideas let '
+    + 'the three and the half MOVE. Twenty-second, ONE TRIAL WITH ITS WEIGHT LEFT AS A LETTER IS '
+    + 'THE SMALLEST MEMBER OF EVERY FAMILY, AND THE WEIGHT IS WHAT MAKES A BOUND STATABLE. Let A '
+    + 'be 1 on a success and 0 on a failure with P(A = 1) = p, which is A, B and C of the idea '
+    + 'above with the half replaced by a letter. The table is p and 1 - p, so '
+    + 'E[A] = 1(p) + 0(1 - p) = p; A takes only 0 and 1, so A^2 is the SAME RULE as A and '
+    + 'E[A^2] = p as well; and the twentieth idea gives Var(A) = p - p^2 = p(1 - p). That is a '
+    + 'BERNOULLI distribution, and the answer is a product of the parameter with its complement '
+    + 'rather than a number: 0 at p = 0 and at p = 1, where nothing is uncertain, 1/4 at a half, '
+    + '2/9 at a third and 4/25 at a fifth. `completing-the-square` turns p(1 - p) into '
+    + '1/4 - (p - 1/2)^2, so a square never being negative PROVES that no single trial can have '
+    + 'spread above 1/4 and that only the fair one reaches it - a claim about every weight at '
+    + 'once, which no single table can make and which is the whole difference between a '
+    + 'distribution and a family of them. Twenty-third, COUNTING n OF THEM INDEXES THE FAMILY BY '
+    + 'TWO PARAMETERS, AND THE TABLE TOTALS 1 BY A THEOREM RATHER THAN BY A PARTITION. The n '
+    + 'indicators sum to the count of successes ITSELF, so the eighteenth idea gives E[X] = np '
+    + 'and the twenty-first gives Var(X) = np(1 - p) before a single entry exists. One run with '
+    + 'k successes costs p^k(1 - p)^(n-k), every run with the same k costs the same, and there '
+    + 'are C(n, k) of them - `counting-principles`\' selection count, used and not re-derived - '
+    + 'so P(X = k) = C(n, k)p^k(1 - p)^(n-k), a BINOMIAL distribution. Totalling that over k is '
+    + 'the right-hand side `binomial-theorem` expands (p + q)^n into, and p + q = 1 by '
+    + 'construction, so the table totals 1 for every n and every p SIMULTANEOUSLY where the '
+    + 'fourteenth idea had to argue it one table at a time. Setting (n, p) = (3, 1/2) returns '
+    + '1/8, 3/8, 3/8, 1/8 with E[X] = 3/2 and Var(X) = 3/4 - the fourteenth, sixteenth and '
+    + 'nineteenth ideas recovered by one substitution. Moving the weight to 1/3 gives 8/27, '
+    + '12/27, 6/27, 1/27, still totalling 1 and no longer symmetric, and the sixteenth idea\'s '
+    + 'coincidence dies with the symmetry: the plain average of 0, 1, 2, 3 is still 3/2 while '
+    + 'E[X] is now 1, so the agreement was the fair coin and not the method. Twenty-fourth, '
+    + 'ASKING HOW LONG RATHER THAN HOW MANY IS A DIFFERENT MECHANISM, AND ONLY THE DESCRIPTION '
+    + 'CHOOSES BETWEEN THEM. Let X be the trial the first success falls on: the first k - 1 fail '
+    + 'and the kth succeeds, so P(X = k) = (1 - p)^(k-1)p - a GEOMETRIC distribution with no '
+    + 'coefficient, because exactly ONE run gives each value, and with infinitely many values, '
+    + 'which makes it the first table here that cannot be printed. It needs no new rule: the '
+    + 'wait outlasting k trials is the same event as the first k all failing, so '
+    + 'P(X > k) = (1 - p)^k, and the third idea\'s complement settles an endless table in one '
+    + 'product. That also settles a convention the thirteenth idea had to invent. T\'s entries '
+    + 'at 1, 2 and 3 are 1/2, 1/4 and 1/8, which are this family\'s first three at p = 1/2, and '
+    + 'the further 1/8 parked on the value chosen at TTT is exactly (1/2)^3 = P(X > 3) - so T is '
+    + 'the geometric TRUNCATED at three trials and the parked mass IS the tail. The fifth '
+    + 'idea\'s committee is where the choosing happens: three of twelve drawn at once with five '
+    + 'of them new gives (5/12)(4/11)(3/10) = 1/22, which is a HYPERGEOMETRIC probability, while '
+    + 'returning each member before the next draw gives (5/12)^3 = 125/1728 - 864 against 1375 '
+    + 'over 19008, more than half again as large. The same words, two families, and nothing in '
+    + 'either calculation says which one is right. What '
     + 'is NOT here is a boundary '
     + 'rather than a backlog. THE COUNTING ITSELF is '
     + '`counting-principles`, an '
@@ -1930,18 +2171,23 @@ const subject: Subject = {
     + '3/4 to start with — so a correlation, which is a covariance over the product of two of '
     + 'them, would be an exercise in surds wearing a probability\'s clothes. '
     + '`descriptive-statistics` chose a list whose standard deviation is exactly 2 precisely to '
-    + 'avoid that, and a fair coin does not offer the same courtesy. THE NAMED DISTRIBUTIONS, '
-    + 'the HYPERGEOMETRIC among them, are FAMILIES INDEXED BY THEIR PARAMETERS, and that '
-    + 'indexing rather than the mechanism is what is missing — which is a correction the '
-    + 'twenty-first idea forced on this sentence. It used to say that naming a family from an '
-    + 'instance would promise a mechanism nothing above supplies, and a mechanism is now '
-    + 'supplied: X is A + B + C, three independent rules each worth 1 for heads, which is '
-    + 'exactly how a binomial count is built. What is still absent is that the three and the '
-    + 'half never MOVE. Nothing above tosses the coin four times or weights it, so every number '
-    + 'here belongs to one member of the family and the family itself has no variable to be '
-    + 'indexed by; the fourteenth idea builds that member by collecting preimages and the fifth '
-    + 'idea\'s C(5,1)C(7,2)/C(12,3) is one value of another. Naming a family from one member '
-    + 'would promise a parameter, and there is none. And INFINITE OR CONTINUOUS spaces are '
+    + 'avoid that, and a fair coin does not offer the same courtesy. THE POISSON DISTRIBUTION IS '
+    + 'NAMED AND NOT WRITTEN, and the reasons are two checkable facts rather than one '
+    + 'preference. Its entries are e^(-lambda) lambda^k / k!, and e^(-lambda) is irrational at '
+    + 'every positive lambda — which is the reason the standard deviation and the correlation '
+    + 'are absent just above, and the reason every task in this subject is settled by exact '
+    + 'rational arithmetic with no worker. And it reaches this subject only as what a binomial '
+    + 'BECOMES when n grows without bound at fixed np, which is `sequence-convergence`: a node '
+    + 'of `sequences-and-series` nothing has touched, and the one `law-of-large-numbers` is also '
+    + 'waiting on. So two of the four mechanisms the map advertised for this concept are here, a '
+    + 'third is here under a different question, and the fourth is refused with its price '
+    + 'stated. THE MOMENTS OF THE FAMILIES THAT ARE HERE ARE NOT ALL PROVED EITHER. E[X] = np '
+    + 'and Var(X) = np(1 - p) ARE proved, from the eighteenth and twenty-first ideas, because a '
+    + 'count of successes IS a sum of indicators. The geometric\'s mean of 1/p is not here and '
+    + 'is not pretended to be: it is a sum of infinitely many terms and needs a geometric '
+    + 'SERIES, where nothing above totals more than four. Its TAIL is reachable because a '
+    + 'complement is one product, and its MEAN is not, and the gap between those two is exactly '
+    + 'why one of them appears and the other is named. And INFINITE OR CONTINUOUS spaces are '
     + 'not a harder version of this: equally likely outcomes stop existing there, so the one '
     + 'formula the first three concepts rest on has no analogue rather than a subtler one, and '
     + 'the table the last three are about does not exist either, since P(X = c) = 0 at every '
@@ -5221,6 +5467,537 @@ const CONCEPTS: Concept[] = [
       },
     ],
   },
+  {
+    id: 'discrete-distributions',
+    name: 'The discrete distributions',
+    subjectId: subject.id,
+    scope: {
+      id: 'discrete-distributions',
+      label: 'The discrete distributions',
+      hint: 'bernoulli binomial geometric poisson distribution',
+      /*
+       * The map node's pattern and its `terms` as the hint, carried across
+       * unchanged, as every promotion since the fourth has done.
+       *
+       * AND THIS IS THE FIRST PATTERN IN THE FILE WHOSE SHORTFALL RUNS BOTH
+       * WAYS AT ONCE, which is the fifth distinct shape recorded here and is
+       * worth more than either half.
+       *
+       * IT OVER-REACHES ON `Poisson distribution`, A MECHANISM THIS CONCEPT
+       * DECLINES. The material writes the Bernoulli, the binomial and the
+       * geometric and refuses the Poisson for two reasons given in the
+       * subject's `covers`, so a learner reading that article is offered a
+       * concept that does not teach it. Unlike the concept below's over-reach
+       * this one collides with NOBODY: `stochastic-processes` claims
+       * `Poisson process`, a different title, so no node of the map owns
+       * `Poisson distribution` and the reach is on to a gap rather than on to
+       * a neighbour. Which is the worse of the two to leave, and is left
+       * anyway for the reason below.
+       *
+       * AND IT MISSES `Hypergeometric distribution`, WHICH THE THIRD POINT
+       * NAMES FOR THE FIRST TIME IN THE BUILD. `\bgeometric distribution\b`
+       * cannot reach it: `Hypergeometric` is one word, so there is no word
+       * boundary in front of `geometric` and the alternative does not bite.
+       * That is the same `\b` artefact two concepts below carry, arriving on a
+       * title this concept has material about — so the miss is not a spare
+       * alternative going to waste but a reachable article left unclaimed.
+       *
+       * NEITHER IS REPAIRED, for the reason the seven concepts below give about
+       * their own patterns: narrowing or widening one in the same change that
+       * adds material moves recognition and the written-concept count at once,
+       * and the two want separate measurements. Both halves are asserted by
+       * name in tests/concepts-logic.mjs, which is the only record a coverage
+       * line cannot carry — a miss lowers the recognition figure and an
+       * over-reach raises it, so a pattern wrong in both directions can be
+       * wrong by exactly nothing.
+       */
+      match: /\b(binomial|poisson|geometric|bernoulli) distribution\b/i,
+    },
+    fidelity: 'checked',
+    objectives: [
+      {
+        id: 'produce-the-spread-of-one-weighted-trial-and-the-bound-the-parameter-makes-statable',
+        statement:
+          'Produce the spread of a single weighted trial with the weight left as a ratio of two '
+          + 'integers, and so establish that one trial carries one parameter and that its spread '
+          + 'is a PRODUCT of the parameter with its complement rather than a number to be looked '
+          + 'up. Produce the same spread at a second weight, and so establish that the formula is '
+          + 'a family rather than a calculation. Produce the distance of that spread from a '
+          + 'quarter, and so establish by a completed square that no single trial can be more '
+          + 'uncertain than a fair one - which is a claim about every weight at once and which no '
+          + 'one table can state.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'produce-a-binomial-entry-at-two-weights-and-the-total-a-theorem-forces',
+        statement:
+          'Produce one entry of the count of successes in several weighted trials, and so '
+          + 'establish that the entry is a counted number of equally priced sequences times the '
+          + 'price of one of them. Produce the same entry at a second weight, and so establish '
+          + 'that the count and the weight index the family independently. Produce the total of a '
+          + 'whole table, and so establish that it is FORCED to be 1 by the binomial theorem for '
+          + 'every weight at once rather than checked table by table. Produce the gap between the '
+          + 'plain average of the four values and the expectation, and so establish that the '
+          + 'agreement met two concepts down was a fact about the fair coin alone.',
+        taskKinds: ['evaluate'],
+      },
+      {
+        id: 'produce-a-wait-that-outlasts-three-trials-and-two-answers-to-one-description',
+        statement:
+          'Produce the chance that a wait for a first success outlasts three trials, and so '
+          + 'establish that a complement settles a table with no end to it - and that the number '
+          + 'is exactly the mass the fifth concept had to park on a value it invented. Produce '
+          + 'the chance that three members drawn at once are all new, and produce it again with '
+          + 'each member put back, and so establish that one sentence of the description, and no '
+          + 'step of either calculation, is what chooses the family.',
+        taskKinds: ['evaluate'],
+      },
+    ],
+    knowledgePoints: [
+      {
+        id: 'one-weighted-trial-is-the-smallest-member-and-the-parameter-is-what-makes-a-bound-statable',
+        conceptId: 'discrete-distributions',
+        statement:
+          'Everything from the fifth concept up is a fair coin tossed three times, and BOTH of '
+          + 'those numbers are frozen. A FAMILY is what you get when they move. Start with the '
+          + 'smallest member there is: one trial, succeeding with probability p, and A the rule '
+          + 'that is 1 on a success and 0 on a failure - which is exactly A, B and C from '
+          + '`variance-and-covariance` with the half replaced by a letter. The table is p at 1 '
+          + 'and 1 - p at 0, so E[A] = 1(p) + 0(1 - p) = p; A takes only 0 and 1 so A^2 is the '
+          + 'SAME RULE as A and E[A^2] = p as well; and the two-total identity gives '
+          + 'Var(A) = p - p^2 = p(1 - p). That is a BERNOULLI distribution, and what is worth '
+          + 'noticing is the KIND of answer: not a number but a product of the parameter with its '
+          + 'complement, so it is 0 at p = 0 and at p = 1, where nothing is uncertain, and '
+          + 'positive between. At p = 1/2 it is 1/4, the number the concept below used three '
+          + 'times; at p = 1/3 it is 2/9 and at p = 1/5 it is 4/25, both smaller. AND THE '
+          + 'PARAMETER IS WHAT MAKES A MAXIMUM STATABLE AT ALL. `completing-the-square` turns '
+          + 'p - p^2 into 1/4 - (p - 1/2)^2, and a square is never negative - so the spread of a '
+          + 'single trial is at most 1/4 for EVERY weight and reaches it only at p = 1/2. The '
+          + 'fair coin is the most uncertain single trial there is, proved rather than observed, '
+          + 'and that is a statement about the whole family which no member of it can make.',
+        position: 1,
+        /*
+         * No `automaticityTarget`, for the reason the seven concepts below give
+         * about their own arithmetic and with one addition of this point's own.
+         * p(1 - p) at a stated weight would time beautifully, and a learner
+         * racing a clock reaches an answer fastest by memorising the three
+         * values 1/4, 2/9, 4/25 rather than by multiplying a weight by its
+         * complement - which is the one route this point exists to rule out,
+         * since a remembered triple is precisely not a family.
+         */
+        workedExample: {
+          problem:
+            'A single trial succeeds with probability p and fails with probability 1 - p. Let A '
+            + 'be 1 on a success and 0 on a failure. Build A\'s table, find E[A] and Var(A) with '
+            + 'p left as a letter, then evaluate the spread at p = 1/2, at p = 1/3 and at '
+            + 'p = 1/5. Finally rewrite p(1 - p) as a quarter minus a square, and say which '
+            + 'weight makes the spread largest and what the largest value is.',
+          subgoals: [
+            {
+              label: 'Write the table with the weight as a letter rather than as a number',
+              detail:
+                'Two outcomes, so two entries: p at the value 1 and 1 - p at the value 0. They '
+                + 'total p + (1 - p) = 1 for every p AT ONCE, which is `random-variables`\' '
+                + 'partition fact holding not for one table but for all of them - and that is '
+                + 'the first thing a parameter buys. Nothing has been computed here. What has '
+                + 'happened is that the half inside A, B and C one concept down has been '
+                + 'replaced by a letter, so the same two-entry table now stands for infinitely '
+                + 'many experiments instead of one.',
+              socratic:
+                'A trial succeeds with probability p and has only two outcomes. What are the two '
+                + 'entries of the table, and what do they total for every value of p at once?',
+            },
+            {
+              label: 'Total it, and find that the mean IS the parameter',
+              detail:
+                'E[A] = 1(p) + 0(1 - p) = p. The zero term is written out rather than dropped, '
+                + 'for `sigma-notation`\'s reason - the term count is upper minus lower plus one '
+                + '- and because the term that vanishes is the one carrying the complement. So '
+                + 'the expectation of an indicator is the probability of the thing it indicates, '
+                + 'which is why every probability in this subject can be read as an expectation '
+                + 'and why the count of successes will turn out to have expectation np with '
+                + 'nothing left to prove.',
+              socratic:
+                'What does 1(p) + 0(1 - p) come to, and what does that say about the expectation '
+                + 'of a rule that is 1 exactly when some event happens?',
+            },
+            {
+              label: 'Square the rule, and find that squaring has changed nothing at all',
+              detail:
+                'A takes only 0 and 1, and 0^2 = 0 and 1^2 = 1, so A^2 is the SAME RULE as A on '
+                + 'every outcome rather than merely a rule with the same expectation. Hence '
+                + 'E[A^2] = p. This is the one place in the subject where '
+                + '`random-variables`\' third point neither merges values nor relabels them, '
+                + 'because the two labels are already the fixed points of squaring - and it is '
+                + 'why the next step is a single subtraction instead of a second table.',
+              socratic:
+                'A is 0 or 1 on every outcome. What is A^2 on each of those two, and what does '
+                + 'that make E[A^2]?',
+            },
+            {
+              label: 'Subtract the two totals, and get a product where the concept below got a number',
+              detail:
+                '`variance-and-covariance`\'s identity gives Var(A) = E[A^2] - (E[A])^2 = '
+                + 'p - p^2, which factors as p(1 - p): the probability of success times the '
+                + 'probability of failure. The factored shape is the content. It is 0 at p = 0 '
+                + 'and at p = 1, which are the two experiments with no uncertainty in them, and '
+                + 'positive everywhere between; and at p = 1/2 it is (1/2)(1/2) = 1/4, which is '
+                + 'what each of A, B and C was worth one concept down. There the 1/4 was a '
+                + 'number arrived at; here it is one value of a function.',
+              socratic:
+                'p - p^2 factors into what, and what does that factored form tell you about the '
+                + 'spread at p = 0 and at p = 1?',
+            },
+            {
+              label: 'Move the parameter, and watch the spread fall away on both sides of a half',
+              detail:
+                'At p = 1/3 the spread is (1/3)(2/3) = 2/9 and at p = 1/5 it is (1/5)(4/5) = '
+                + '4/25. Over a common denominator of 900 those are 200 and 144 against 1/4\'s '
+                + '225, so both are smaller and the further the weight sits from a half the '
+                + 'smaller it gets. Three members of one family computed by one formula - and '
+                + 'this is the first time in the subject that MOVING A NUMBER has been the '
+                + 'question rather than changing the experiment.',
+              socratic:
+                'The spread is 2/9 at p = 1/3 and 4/25 at p = 1/5. Put both beside 1/4 over a '
+                + 'common denominator - which way does the spread move as the weight leaves a '
+                + 'half?',
+            },
+            {
+              label: 'Complete the square, and turn the pattern just observed into a proof',
+              detail:
+                '`completing-the-square` rewrites p - p^2 as 1/4 - (p - 1/2)^2, which is an '
+                + 'identity and checks by expanding: 1/4 - (p^2 - p + 1/4) = p - p^2. A square '
+                + 'is never negative, so the spread is at most 1/4 for EVERY weight, with '
+                + 'equality exactly when p - 1/2 = 0. At p = 1/3 the subtracted square is '
+                + '(-1/6)^2 = 1/36, and 9/36 - 1/36 = 8/36 = 2/9 - which checks the subgoal '
+                + 'above rather than restating it. So "a fair trial is the most uncertain one '
+                + 'there is" is PROVED, and it is a sentence about the whole family: the three '
+                + 'numbers above are evidence for it and no number of them would be a proof.',
+              socratic:
+                'Write p - p^2 as a quarter minus a square. Since a square is never negative, '
+                + 'what does that settle about every weight at once, and at which weight is '
+                + 'there nothing to subtract?',
+            },
+          ],
+          answer:
+            'The table is p at the value 1 and 1 - p at the value 0, totalling 1 for every p at '
+            + 'once. E[A] = 1(p) + 0(1 - p) = p, so an indicator\'s expectation is the '
+            + 'probability it indicates. A takes only 0 and 1, so A^2 is the same rule as A and '
+            + 'E[A^2] = p as well; the two-total identity then gives Var(A) = p - p^2 = p(1 - p), '
+            + 'a product rather than a number - zero at p = 0 and p = 1 and (1/2)(1/2) = 1/4 at a '
+            + 'half, which is what each of A, B and C was worth one concept down. At p = 1/3 it '
+            + 'is 2/9 and at p = 1/5 it is 4/25, which over 900 are 200 and 144 against 225. '
+            + 'Completing the square gives p(1 - p) = 1/4 - (p - 1/2)^2, and since a square is '
+            + 'never negative, 1/4 is an upper bound for every weight and is reached only at '
+            + 'p = 1/2; at p = 1/3 the subtracted square is 1/36 and 9/36 - 1/36 = 8/36 = 2/9, '
+            + 'which checks it. So the fair coin is the most uncertain single trial there is - a '
+            + 'claim about the whole family rather than about any member of it.',
+        },
+      },
+      {
+        id: 'counting-several-trials-indexes-the-family-by-two-parameters-and-the-binomial-theorem-forces-the-total',
+        conceptId: 'discrete-distributions',
+        statement:
+          'Add n independent copies of the trial above and let X count the successes. Both '
+          + 'moments are in hand before the table is: `expectation` gives E[X] = np with nothing '
+          + 'to check, since expectations add whether or not the rules are independent, and '
+          + '`variance-and-covariance` gives Var(X) = np(1 - p), since these ones are and the '
+          + 'joint terms vanish. What is new is the TABLE. One particular run with k successes '
+          + 'and n - k failures costs p^k(1 - p)^(n-k), every run with the same k costs the same, '
+          + 'and the number of them is the count `counting-principles` produces - C(n, k), the '
+          + 'choices of WHICH k of the n trials succeeded. The runs are disjoint, so '
+          + 'P(X = k) = C(n, k)p^k(1 - p)^(n-k), and that is a BINOMIAL distribution with TWO '
+          + 'parameters. THE TOTAL IS FORCED BY A THEOREM RATHER THAN CHECKED. '
+          + '`random-variables` argued a table totals 1 because the values of a function '
+          + 'partition the space; here the total is the sum of C(n, k)p^k q^(n-k) over k, which '
+          + '`binomial-theorem` says is (p + q)^n - and p + q = 1 by construction, so it is 1 for '
+          + 'every n and every p at once. AND (n, p) = (3, 1/2) RETURNS THIS SUBJECT\'S OWN '
+          + 'EXPERIMENT. Every power of a half is an eighth there, so the entries are 1/8, 3/8, '
+          + '3/8, 1/8 with E[X] = 3(1/2) = 3/2 and Var(X) = 3(1/4) = 3/4 - the three results the '
+          + 'fifth, sixth and seventh concepts reached by collecting preimages, by weighting '
+          + 'values and by adding three deviations. Move the weight to 1/3 and the table becomes '
+          + '8/27, 12/27, 6/27, 1/27, still totalling 1 and no longer symmetric - and the '
+          + 'coincidence `expectation` had to explain away dies with the symmetry, since the '
+          + 'plain average of 0, 1, 2, 3 is still 3/2 while E[X] is now 1.',
+        position: 2,
+        workedExample: {
+          problem:
+            'n independent trials each succeed with probability p, and X counts the successes. '
+            + 'Write P(X = k), say where the coefficient comes from and which theorem forces the '
+            + 'whole table to total 1. Then set n = 3 and p = 1/2 and check the four entries '
+            + 'against the table `random-variables` built by collecting preimages; set n = 3 and '
+            + 'p = 1/3 and build the table again; and at each of the two weights compare the '
+            + 'plain average of the four values 0, 1, 2, 3 with E[X].',
+          subgoals: [
+            {
+              label: 'Add the trials up, and name what the sum counts on a given outcome',
+              detail:
+                'Let A1 up to An be the indicators of the n trials. Each contributes 1 when its '
+                + 'own trial succeeds and 0 when it does not, so their sum IS the number of '
+                + 'successes on every outcome rather than a model of it. That is '
+                + '`variance-and-covariance`\'s decomposition read in the other direction: there '
+                + 'it took X apart at n = 3 and p = 1/2 in order to add three variances, and '
+                + 'here it builds X in order to find its table. E[X] = np follows from that '
+                + 'concept\'s gate alone and Var(X) = np(1 - p) from the concept itself, so both '
+                + 'moments exist before a single entry does.',
+              socratic:
+                'Each trial contributes 1 when it succeeds and 0 when it does not. What does the '
+                + 'sum of the n indicators count on any one outcome, and which two results does '
+                + 'that hand you straight away?',
+            },
+            {
+              label: 'Price one particular run, which is where the independence is spent',
+              detail:
+                'Fix one pattern of k successes and n - k failures. `conditional-probability`\'s '
+                + 'multiplication rule gives one factor per trial, and the factors do not change '
+                + 'from step to step precisely because the trials are independent - which is the '
+                + 'ninth idea\'s product test passing rather than a story about influence. So '
+                + 'that run costs p^k(1 - p)^(n-k). Every run with the same k costs exactly the '
+                + 'same, whichever of the trials were the successful ones, because multiplication '
+                + 'does not care about the order of its factors.',
+              socratic:
+                'One particular run has k successes and n - k failures. What is its probability, '
+                + 'and what has to be true of the trials for the factors not to change along the '
+                + 'way?',
+            },
+            {
+              label: 'Count how many such runs there are, which is the other subject\'s work',
+              detail:
+                'The runs with exactly k successes are the choices of WHICH k of the n trials '
+                + 'succeeded, so there are C(n, k) of them - `counting-principles`\' selection '
+                + 'count, used and not re-derived. At n = 3 those counts are 1, 3, 3, 1, which '
+                + 'are the preimage sizes `random-variables` obtained by writing the eight '
+                + 'sequences out and sorting them by heads. The same four numbers, once listed '
+                + 'and once counted, and the counted route is what lets a table exist for an n '
+                + 'nobody would write the space of.',
+              socratic:
+                'How many runs of n trials have exactly k successes - and where in this subject '
+                + 'have you already met 1, 3, 3, 1 as the answer to that question?',
+            },
+            {
+              label: 'Multiply the count by the price, then let a theorem total the table',
+              detail:
+                'The runs are disjoint, so the first concept\'s addition rule applies with no '
+                + 'correction, and they all cost the same, so adding C(n, k) of them is one '
+                + 'multiplication: P(X = k) = C(n, k)p^k(1 - p)^(n-k). Totalling over k gives '
+                + 'the sum of C(n, k)p^k q^(n-k), which is exactly the right-hand side '
+                + '`binomial-theorem` expands (p + q)^n into - and p + q = 1 here by '
+                + 'construction, so the total is 1^n = 1. `random-variables` had to argue its '
+                + 'total from the values partitioning the space; this is an algebraic identity '
+                + 'holding for every n and every p simultaneously, which is what a family needs '
+                + 'and a single table never did.',
+              socratic:
+                'The table totals the sum of C(n, k)p^k(1 - p)^(n-k) over k. Which expansion is '
+                + 'that the right-hand side of, and what does the bracket come to here?',
+            },
+            {
+              label: 'Set both parameters to this subject\'s own experiment and see what returns',
+              detail:
+                'At n = 3 and p = 1/2 every product of three halves is an eighth, so the entries '
+                + 'are 1(1/8), 3(1/8), 3(1/8) and 1(1/8) - the table 1/8, 3/8, 3/8, 1/8 that '
+                + '`random-variables` collected from the eight sequences. E[X] = 3(1/2) = 3/2 is '
+                + '`expectation`\'s first result and Var(X) = 3(1/2)(1/2) = 3/4 is '
+                + '`variance-and-covariance`\'s. Three concepts of arithmetic recovered by one '
+                + 'substitution, which is the strongest evidence available that the family is '
+                + 'the object those concepts were working inside all along.',
+              socratic:
+                'Put n = 3 and p = 1/2 into the formula. Which four entries come out, and where '
+                + 'in this subject have those four already been obtained by another route?',
+            },
+            {
+              label: 'Move the weight and keep the count, which is the second parameter moving alone',
+              detail:
+                'At n = 3 and p = 1/3 the prices stop being equal: (2/3)^3 = 8/27, then '
+                + '3(1/3)(2/3)^2 = 3(1/3)(4/9) = 12/27, then 3(1/3)^2(2/3) = 3(1/9)(2/3) = 6/27, '
+                + 'then (1/3)^3 = 1/27. Those total 27/27 = 1, as the theorem promised and not as '
+                + 'a check that might have failed, and the coefficients are still 1, 3, 3, 1 - '
+                + 'only the prices moved. E[X] = 3(1/3) = 1 and Var(X) = 3(1/3)(2/3) = 2/3.',
+              socratic:
+                'At n = 3 and p = 1/3 the four coefficients are still 1, 3, 3, 1. What are the '
+                + 'four entries, and do they still total 1?',
+            },
+            {
+              label: 'Compare the plain average with the expectation at each weight, and watch a coincidence die',
+              detail:
+                '`expectation` found the plain average of 0, 1, 2, 3 equal to E[X] at 3/2 and '
+                + 'said the agreement was a fact about a symmetric table rather than about the '
+                + 'method; `variance-and-covariance` showed it buying nothing at the second '
+                + 'moment. This is the other half. The values are still 0, 1, 2, 3 and their '
+                + 'plain average is still 3/2, but at p = 1/3 the expectation is 1, so the two '
+                + 'disagree by 1/2 at the FIRST moment. The symmetry was the fair coin and the '
+                + 'fair coin is one member, so moving a parameter KILLS the coincidence where '
+                + 'staying inside one table could only explain it away.',
+              socratic:
+                'The four values are the same at both weights, so their plain average is 3/2 '
+                + 'either way. What is E[X] at p = 1/3, and what does the gap say about why the '
+                + 'two agreed at p = 1/2?',
+            },
+          ],
+          answer:
+            'The n indicators sum to X itself, so E[X] = np and Var(X) = np(1 - p) before any '
+            + 'entry is computed. One run with k successes costs p^k(1 - p)^(n-k), the runs with '
+            + 'the same k are disjoint and equally priced, and there are C(n, k) of them, so '
+            + 'P(X = k) = C(n, k)p^k(1 - p)^(n-k). Totalling over k gives (p + q)^n by '
+            + '`binomial-theorem`, and p + q = 1, so the table totals 1 for every n and every p '
+            + 'at once rather than table by table. At n = 3 and p = 1/2 the entries are 1/8, 3/8, '
+            + '3/8, 1/8 with E[X] = 3/2 and Var(X) = 3/4 - the three results the fifth, sixth and '
+            + 'seventh concepts reached from preimages, from weighted values and from deviations. '
+            + 'At n = 3 and p = 1/3 they become 8/27, 12/27, 6/27, 1/27, still totalling 27/27 '
+            + 'with the coefficients unchanged, and E[X] = 1 with Var(X) = 2/3. The plain average '
+            + 'of the four values is 3/2 at both weights, so it agrees with E[X] at p = 1/2 and '
+            + 'misses it by 1/2 at p = 1/3: the agreement was the fair coin, which is one member '
+            + 'of the family and not a property of the method.',
+        },
+      },
+      {
+        id: 'waiting-rather-than-counting-is-a-different-mechanism-and-only-the-description-chooses-between-them',
+        conceptId: 'discrete-distributions',
+        statement:
+          'Both distributions above answer "how many", and what is new here is a question that '
+          + 'does not. Keep the trials and the weight and ask instead WHICH trial the first '
+          + 'success falls on. The first k - 1 must fail and the kth must succeed, so '
+          + 'P(X = k) = (1 - p)^(k-1)p - a GEOMETRIC distribution, one parameter, no coefficient '
+          + 'because exactly one run gives each value, and infinitely many values, which makes it '
+          + 'the first object in this subject whose table cannot be printed. It needs no new rule '
+          + 'to be usable: the wait outlasting k trials is the same event as the first k all '
+          + 'failing, so P(X > k) = (1 - p)^k, and the first concept\'s complement does in one '
+          + 'product what a sum of infinitely many terms would have to do term by term. AND IT '
+          + 'SETTLES A CONVENTION `random-variables` HAD TO INVENT. That concept\'s second rule, '
+          + 'T, is the toss the first head falls on, and TTT has no head - so a value had to be '
+          + 'chosen there or T would not be a function on the space at all. T\'s table is 1/2, '
+          + '1/4, 1/8 at 1, 2, 3 with the remaining 1/8 parked on the invented value 0, and 1/8 '
+          + 'is exactly (1/2)^3 = P(X > 3). So T is this family TRUNCATED at three trials, the '
+          + 'parked mass IS the tail, and the convention was forced by the experiment stopping '
+          + 'rather than chosen for tidiness. AND THE MECHANISM IS WHAT CHOOSES, NOT THE '
+          + 'ARITHMETIC. `counting-probability` drew three of twelve club members at once, five '
+          + 'of them new, and put "all three new" at (5/12)(4/11)(3/10) = 1/22 with each '
+          + 'denominator counting what is LEFT. That is a HYPERGEOMETRIC probability, named here '
+          + 'for the first time in the build. Put each member back before the next draw and the '
+          + 'same words give (5/12)^3 = 125/1728, which is the binomial at n = 3 and p = 5/12 - '
+          + 'and over a common denominator of 19008 those are 864 and 1375, so returning them '
+          + 'raises the answer by more than half again. One sentence of the description moved and '
+          + 'no step of either calculation did, which is why naming the mechanism is how a family '
+          + 'gets chosen and why no formula can do it for you.',
+        position: 3,
+        workedExample: {
+          problem:
+            'Trials succeed independently with probability p. Let X be the trial the first '
+            + 'success falls on. Write P(X = k), then find the chance the wait outlasts three '
+            + 'trials on a fair coin - once by a complement and once by subtracting the first '
+            + 'three entries from 1 - and say which number of `random-variables`\' second table '
+            + 'that is. Then take `counting-probability`\'s twelve club members, five of them '
+            + 'new, and compare the chance that three drawn at once are all new with the chance '
+            + 'when each is put back before the next draw.',
+          subgoals: [
+            {
+              label: 'Change the question from how many to how long, and see what the values become',
+              detail:
+                'The trials are the same and the parameter is the same; only the question has '
+                + 'moved. "Which trial does the first success fall on" has answers 1, 2, 3 and so '
+                + 'on with no largest one, where both tables above had exactly n + 1 values. So '
+                + 'this is the first thing in the subject whose table cannot be printed in full, '
+                + 'and that is why the next subgoal writes a FORMULA for a general entry instead '
+                + 'of a row of numbers.',
+              socratic:
+                'Asking which trial the first success falls on, rather than how many trials '
+                + 'succeed, changes the set of possible answers to what - and what does that do '
+                + 'to the table?',
+            },
+            {
+              label: 'Write one entry by saying what must happen before the success does',
+              detail:
+                'X = k says the first k - 1 trials failed and the kth succeeded. One factor per '
+                + 'trial gives (1 - p) for each of the k - 1 failures and p for the success, so '
+                + 'P(X = k) = (1 - p)^(k-1)p. There is no coefficient this time, and that is the '
+                + 'sharpest difference between the two mechanisms: exactly ONE run of the trials '
+                + 'produces X = k, where C(n, k) runs produced k successes above. So '
+                + '`counting-principles` does no work at all in this third of the concept.',
+              socratic:
+                'X = k says the first k - 1 trials did one thing and the kth did another. What is '
+                + 'the probability of that, and how many runs of the trials give it?',
+            },
+            {
+              label: 'Get the tail without summing anything, using the oldest rule in the subject',
+              detail:
+                '"The wait outlasts k trials" is the same event as "the first k trials all '
+                + 'failed", which is a single product: P(X > k) = (1 - p)^k. On a fair coin at '
+                + 'k = 3 that is (1/2)^3 = 1/8. The other route is to subtract the first three '
+                + 'entries from 1: 1 - (1/2 + 1/4 + 1/8) = 1 - 7/8 = 1/8, and the two agree. The '
+                + 'first is `sample-spaces`\' complement rule settling in one step what an '
+                + 'endless table would otherwise be totalled term by term - so a table with no '
+                + 'end is still handled by the rule written for a table with eight entries.',
+              socratic:
+                'The wait outlasting three trials is the same event as which simpler one, and '
+                + 'what does that let you compute without adding up a single entry?',
+            },
+            {
+              label: 'Identify that tail with the value the fifth concept had to invent',
+              detail:
+                '`random-variables` set T to the toss the first head falls on and had to choose '
+                + 'a value at TTT, because a function must be defined everywhere on its domain. '
+                + 'T\'s table is 1/8, 1/2, 1/4, 1/8 at 0, 1, 2, 3 - and the entries at 1, 2 and '
+                + '3 are 1/2, 1/4 and 1/8, which are this family\'s first three entries at '
+                + 'p = 1/2 exactly. The remaining 1/8, sitting on the invented value 0, is the '
+                + 'tail just computed. So T is the geometric distribution truncated at three '
+                + 'trials with everything beyond collected onto one value; the two agree wherever '
+                + 'both can answer, and the convention was forced rather than arbitrary.',
+              socratic:
+                'T\'s entries at 1, 2 and 3 are 1/2, 1/4 and 1/8, and a further 1/8 sits at the '
+                + 'value 0. Which of those four numbers is the tail you just computed, and what '
+                + 'does that make T?',
+            },
+            {
+              label: 'Ask the committee question again with each member put back',
+              detail:
+                '`counting-probability` drew three of twelve at once, five of them new, and got '
+                + '(5/12)(4/11)(3/10) = 60/1320 = 1/22 for "all three new", each denominator '
+                + 'counting what is left - which is `conditional-probability`\'s sequence of '
+                + 'draws. That is a hypergeometric probability, and that concept computed one '
+                + 'without naming it because a distribution is a function of k and it wanted one '
+                + 'number. Now change a single sentence: each member drawn is returned before the '
+                + 'next draw. Every factor is then 5/12 and the answer is (5/12)^3 = 125/1728, '
+                + 'which is the top entry of the binomial table at n = 3 and p = 5/12.',
+              socratic:
+                'The simultaneous draw gave (5/12)(4/11)(3/10). What do the three factors become '
+                + 'if each member is returned before the next draw, and what is the product then?',
+            },
+            {
+              label: 'Compare the two answers, and find the only thing that chose between them',
+              detail:
+                'Over a common denominator of 19008, 1/22 is 864 and 125/1728 is 1375, so '
+                + 'returning the members raises the chance by more than half again - not a '
+                + 'rounding\'s worth. Both are correct answers to a question in the same words, '
+                + 'and what separates them is whether the draws are independent, which is '
+                + '`conditional-probability`\'s product test and which no formula can read off '
+                + 'the numbers. That is the whole of what the map promised for this concept: '
+                + 'naming the mechanism is how you choose one, because the arithmetic is a '
+                + 'consequence of the description and getting the description wrong produces a '
+                + 'clean calculation of the wrong thing.',
+              socratic:
+                'The same words gave 1/22 and 125/1728. Which single fact about the experiment '
+                + 'decided which one was right, and could any step of either calculation have '
+                + 'told you?',
+            },
+          ],
+          answer:
+            'X = k needs the first k - 1 trials to fail and the kth to succeed, so '
+            + 'P(X = k) = (1 - p)^(k-1)p - no coefficient, because exactly one run gives each '
+            + 'value. The wait outlasting k trials is the same event as the first k all failing, '
+            + 'so P(X > 3) = (1/2)^3 = 1/8 on a fair coin; subtracting the first three entries '
+            + 'from 1 gives 1 - 7/8 = 1/8 as well. That 1/8 is the mass `random-variables` had to '
+            + 'park on the value it invented at TTT, and T\'s entries at 1, 2 and 3 are this '
+            + 'family\'s first three at p = 1/2 - so T is the geometric truncated at three '
+            + 'trials and the convention was forced by the experiment stopping. For the '
+            + 'committee, drawing three of twelve at once gives '
+            + '(5/12)(4/11)(3/10) = 60/1320 = 1/22, a hypergeometric probability; returning each '
+            + 'member first makes every factor 5/12 and gives (5/12)^3 = 125/1728, the binomial '
+            + 'at n = 3 and p = 5/12. Over 19008 those are 864 and 1375, so returning them raises '
+            + 'the answer by more than half again. One sentence of the description chose between '
+            + 'them and no step of either calculation could have.',
+        },
+      },
+    ],
+  },
 ]
 
 /**
@@ -5747,6 +6524,100 @@ const EDGES: ConceptEdge[] = [
       + '- on the independent triple and on the pair whose covariance vanishes. Both times the '
       + 'test is HANDED OVER rather than asked: no expression in any of the ten tasks computes '
       + 'one, so a learner who has done all ten has not produced a product test once.',
+  },
+  {
+    id: 'variance-and-covariance->discrete-distributions',
+    from: 'variance-and-covariance',
+    to: 'discrete-distributions',
+    kind: 'prerequisite',
+    /*
+     * THE SUBJECT'S SEVENTH INTERNAL PREREQUISITE, AND IT IS HALF THE NODE'S
+     * GATE RATHER THAN THE WHOLE OF IT. The node declared TWO `needs` —
+     * `variance-and-covariance`, which the fifty-first authored into this file,
+     * and `binomial-theorem`, which is a concept of `rational-expressions` and
+     * so cannot be named here at all. `ontologyProblems` reports an unknown
+     * endpoint for an edge naming a concept its ontology does not contain, so
+     * the other half is `PROBABILITY.links`' sixth entry.
+     *
+     * WHICH CONFIRMS THE FIFTIETH'S RULE FOR THE SECOND TIME AND IN THE OTHER
+     * DIRECTION. That rule is that the cost is a property of the NODE's
+     * `needs`: the fifty-first declared one and stranded nothing, and this one
+     * declares two and strands one. Three consecutive promotions up one chain
+     * have now cost 1, 0 and 1, and in every case the count of `needs` pointing
+     * outside this subject predicted it exactly.
+     *
+     * AND THE GATE IS LOAD-BEARING IN TWO OF THE THREE POINTS AS A THEOREM.
+     * The first point reaches Var(A) = p − p² by that concept's two-total
+     * identity at a PARAMETER where it was applied to a number, and the second
+     * reaches Var(X) = np(1 − p) by its additivity under independence — the
+     * decomposition X = A + B + C read backwards, with n copies instead of
+     * three. The third point uses none of it, which is stated rather than
+     * glossed: a wait is a probability and no spread appears in it.
+     *
+     * `author:` rather than `atlas:probability`, as with the six prerequisites
+     * above: `expandEdges` stamped the area on this edge while it was the
+     * node's own `needs`, and the provenance moves with the edge when the edge
+     * moves.
+     */
+    promotedBy: 'author:chance-and-events',
+  },
+  {
+    id: 'discrete-distributions=>variance-and-covariance',
+    from: 'discrete-distributions',
+    to: 'variance-and-covariance',
+    kind: 'encompasses',
+    /*
+     * THE SUBJECT'S SIXTH CREDIT EDGE, AND THE FIRST WHOSE GATE IS CREDITED ON
+     * TWO POINTS WITH THE THIRD NAMED AS RESTED ON RATHER THAN USED.
+     *
+     * The ordinary shape — pointing down at the concept that gates it, as the
+     * fiftieth's and fifty-first's do and unlike the forty-ninth's. What is new
+     * is the ACCOUNTING. The fifty-first could claim all three of its gate's
+     * points were used and two of them as theorems in one derivation. Here the
+     * gate's second point (the two-total identity) and its third (additivity
+     * under independence) are each used as a theorem, and its FIRST — the
+     * weighted total of squared deviations — is not performed anywhere: no task
+     * below totals a deviation, and every variance here arrives through the
+     * identity. So this is the fiftieth's shape rather than the fifty-first's,
+     * and saying which point is rested on is what keeps the credit honest.
+     *
+     * WHY `expectation` IS NOT ALSO CREDITED, which every credit edge in this
+     * file now has to answer. E[X] = np is that concept's additivity and E[A]
+     * is a one-term weighted total, so its first and third points are both in
+     * play — but they arrive THROUGH the gate rather than from the table. The
+     * fifty-first declined `random-variables` on exactly this reasoning one
+     * step lower and the fiftieth declined `sample-spaces` one step lower
+     * again; crediting two concepts down from here would claim the same moves a
+     * second time.
+     *
+     * AND `counting-principles` IS NOT CREDITED EITHER, WHICH IS A DIFFERENT
+     * REFUSAL AND IS NOT EXPRESSIBLE HERE ANYWAY. The second point's
+     * coefficient IS that subject's selection count, and the forty-sixth
+     * promotion lost exactly this claim when `counting-probability` left the
+     * map — `links` hard-codes `prerequisite` and carries no kind. The claim
+     * would be false as well as inexpressible: the four coefficients 1, 3, 3, 1
+     * are handed over in every prompt below, so no task asks a learner to
+     * produce C(n, k) even once.
+     */
+    promotedBy: 'author:chance-and-events',
+    rationale:
+      'Two of the concept below\'s three points are used as theorems and the third is rested on, '
+      + 'which is the distinction this rationale exists to draw. Its second - '
+      + 'Var = E[X^2] - (E[X])^2 - is the whole of the first point here, applied to a rule whose '
+      + 'square IS itself so that the identity collapses to p - p^2; a learner who produces 2/9 '
+      + 'and 4/25 has used that identity twice at a PARAMETER where the concept below applied it '
+      + 'to a number. Its third - variances of independent rules add, and the heads-count IS '
+      + 'A + B + C - is the whole of Var(X) = np(1 - p) in the second point, read backwards with '
+      + 'n copies in place of three, and the second point\'s fifth subgoal recovers that '
+      + 'concept\'s own 3/4 from it. Its FIRST point, the weighted total of squared deviations, '
+      + 'is NOT performed here: no expression among the ten tasks totals a deviation, so a '
+      + 'learner who has done all ten has never computed a variance from the definition. That is '
+      + 'a shortfall in the credit and is recorded rather than smoothed over. It credits the '
+      + 'SPREAD and not the space or the table: no probability here is found by collecting a '
+      + 'preimage, so `sample-spaces` and `random-variables` must both come due as though '
+      + 'untouched, and `conditional-probability` must too - its product test is stated in two '
+      + 'prompts and HANDED OVER rather than asked, exactly as the concept below hands it over, '
+      + 'and no `given` here computes one.',
   },
 ]
 

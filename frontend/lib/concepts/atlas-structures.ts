@@ -39,6 +39,15 @@ const LINEAR_ALGEBRA: MapArea = {
     'map reaches, but which directions it leaves alone. The definition of a space, the count of ' +
     'its directions, the rule that gives it angles and the measure of what a map hits and kills ' +
     'are all somewhere a learner arrives from the plane rather than from the top of this list. ' +
+    'NOR IS THE EIGENVALUE, which is the sharpest sentence this area has had to withdraw, since ' +
+    'it is the one the paragraph above had just finished making: `eigenvalues` is authored in ' +
+    '`matrices-and-determinants` as of the fifty-third promotion, because the characteristic ' +
+    'equation is a 2×2 determinant with a letter down its diagonal and the subject that owns the ' +
+    'determinant is the one that had already made every question about an entry. So the area no ' +
+    'longer begins at which directions a map leaves alone — it begins at the CHOICE OF BASIS ' +
+    'that makes those directions the axes, which is `diagonalisation`, and at the law a matrix ' +
+    'cannot escape, which is `cayley-hamilton`. Two beginnings rather than one, and that is the ' +
+    'area view splitting rather than a change of mind. ' +
     'NOR IS THE BEST ANSWER TO AN UNSOLVABLE SYSTEM, which is the half of the next sentence this ' +
     'area has now had to withdraw as well. It used to read "what is still here and rests on the ' +
     'last two of those is the ORTHOGONALITY THAT IS A THEOREM rather than a definition: a ' +
@@ -69,16 +78,10 @@ const LINEAR_ALGEBRA: MapArea = {
     'here within three weeks, and both halves were right: the gap was real, and this was never ' +
     'where the material belonged once somebody wrote it. What is still here of the five is the ' +
     'canonical form, the characteristic polynomial, the quadratic forms and the matrix ' +
-    'exponential, and every one of those genuinely rests on the eigenvalue this area begins at.',
+    'exponential, and every one of those genuinely rests on the eigenvalue — which is now ' +
+    'written, in another subject, so all four rest on material a learner can actually reach ' +
+    'rather than on the node this area used to open with.',
   nodes: [
-    {
-      id: 'eigenvalues',
-      match: /\beigen(value|vector|decomposition)/i,
-      name: 'Eigenvalues and eigenvectors',
-      is: 'Directions a map only stretches, which is what reduces an iterated map to arithmetic on numbers.',
-      needs: ['determinant', 'basis-and-dimension', 'polynomial-roots'],
-      terms: 'eigenvalue eigenvector characteristic polynomial spectrum',
-    },
     {
       id: 'diagonalisation',
       match: /\bdiagonali[sz]able\b|\bdiagonali[sz]ation\b/i,
@@ -154,6 +157,16 @@ const LINEAR_ALGEBRA: MapArea = {
      * ready before these five were added, and is the gateway to four of them —
      * `cayley-hamilton` directly, and `jordan-normal-form`, `quadratic-forms`
      * and `matrix-exponential` behind `diagonalisation`.
+     *
+     * AND THAT PREDICTION CAME TRUE AT THE FIFTY-THIRD, which is the only
+     * forecast in this file that an event has settled rather than eroded.
+     * `eigenvalues` is a concept of `matrices-and-determinants` now, so of the
+     * five topics added here two are gone and the gateway is open: of the
+     * remaining three, `cayley-hamilton` is immediately ready and the other two
+     * sit behind `diagonalisation`, which is also ready. The sentence that has
+     * NOT come true is the one about depth — the chain was supposed to take
+     * several promotions to reach, and one promotion into it put two of its
+     * nodes within reach at once.
      */
     {
       id: 'cayley-hamilton',
@@ -251,9 +264,9 @@ const LINEAR_ALGEBRA: MapArea = {
     },
   ],
   /*
-   * ELEVEN NODES HAVE BEEN AUTHORED OUT OF THIS AREA, which is more than any
+   * TWELVE NODES HAVE BEEN AUTHORED OUT OF THIS AREA, which is more than any
    * other area has given up, and this is the list the stub floor reads so that
-   * eleven departures count as territory covered rather than territory
+   * twelve departures count as territory covered rather than territory
    * missing. See `MapArea.departed` in atlas.ts for why the floor needed it and
    * why absence means zero.
    *
@@ -276,7 +289,7 @@ const LINEAR_ALGEBRA: MapArea = {
    * eigenvalue, and almost everything that does not turns out to belong with
    * the subject a learner arrives from the plane into.
    *
-   * THE LAST ENTRY IS THE ONE THAT WAS NEVER ON THE ORIGINAL MAP, and it is
+   * THE ELEVENTH ENTRY IS THE ONE THAT WAS NEVER ON THE ORIGINAL MAP, and it is
    * worth separating from the other ten. `dual-spaces` was ADDED to this area
    * on 2026-11-24, when the area was read against its own `covers` and five
    * second-course topics were found missing, and it was authored out on
@@ -284,6 +297,15 @@ const LINEAR_ALGEBRA: MapArea = {
    * list now records two different kinds of event — a node the map always had
    * and gave up, and a node the map gained and then grew material for — and the
    * second kind is what a thin area looks like when the fix works.
+   *
+   * AND THE TWELFTH IS THE ONE THIS AREA BEGAN AT. `eigenvalues` left on
+   * 2026-11-27 and is the only name on this list that `covers` above once
+   * described as the area's own starting question. Seven of the first eleven
+   * went to `vectors-and-independence` and one to the equations; this one went
+   * to `matrices-and-determinants`, which makes that subject the second to take
+   * more than one node from here and the first to take one it had REFUSED in
+   * writing. The departure section below records the refusal and where it is
+   * answered.
    */
   departed: [
     'matrices-and-maps',
@@ -297,6 +319,7 @@ const LINEAR_ALGEBRA: MapArea = {
     'rank-nullity',
     'least-squares',
     'dual-spaces',
+    'eigenvalues',
   ],
   /**
    * THE FOUR EDGES THAT CAME IN TO THE AUTHORED NODES.
@@ -313,10 +336,15 @@ const LINEAR_ALGEBRA: MapArea = {
    * root of the entire map, practisable from a cold account by somebody who
    * had never met a letter standing for a number.
    *
-   * Edges pointing the other way — `eigenvalues` needs `determinant`, and
-   * `numerical-linear-algebra` needs `gaussian-elimination` — are declared on
-   * the nodes that REMAIN, so they survive untouched and resolve across the
-   * file boundary in `composeAtlas`. Only the incoming ones are restated here.
+   * Edges pointing the other way — `numerical-linear-algebra` needs
+   * `gaussian-elimination` — are declared on the nodes that REMAIN, so they
+   * survive untouched and resolve across the file boundary in `composeAtlas`.
+   * Only the incoming ones are restated here. This sentence used to lead with
+   * `eigenvalues` needing `determinant`, which was the cleanest example of the
+   * rule right up until the twelfth departure made it an example of the
+   * opposite one: that node is a concept of the same subject now, so the edge
+   * is an ordinary `EDGES` entry in ontology-matrices.ts and is declared by
+   * neither end's map node, there being none.
    * `rank-nullity` used to be named in that list for its own row-reduction
    * edge; it is an authored concept now and the edge is a `links` entry below,
    * which is the ninth departure's section.
@@ -808,7 +836,8 @@ const LINEAR_ALGEBRA: MapArea = {
    * this node lost on and took anyway — it was the only unrefused candidate
    * whose prerequisites sat in one subject, and the one with the fewest
    * dependents of any candidate at all. The node that would have unlocked four
-   * is `eigenvalues`, which is still here and still ready.
+   * is `eigenvalues`, which was still here and still ready when this was
+   * written, and is the twelfth departure below.
    *
    * THE AREA VIEW SHRANK WITHOUT SUBSTITUTING AGAIN, which is the EIGHTH shape
    * and the third shrink. {`dual-spaces`, `eigenvalues`} became
@@ -834,6 +863,99 @@ const LINEAR_ALGEBRA: MapArea = {
    * has no dependents at all, so there is no candidate for the rule to reject.
    * The refill is a judgement again and it is recorded in armature.ts, with its
    * alternative named.
+   *
+   * ── AND A TWELFTH, WHICH WAS THE QUESTION THIS AREA SAID IT BEGAN AT ──────
+   *
+   * `eigenvalues` LEFT THIS AREA WHEN IT WAS AUTHORED, AND HAD TO, for the
+   * collision reason every entry above gives: `atlasProblems` rejects a node
+   * whose id matches an authored concept rather than merging the two, and the
+   * authored copy would be shadowed by a node with no knowledge points.
+   *
+   * IT WENT TO A SUBJECT THAT HAD REFUSED IT IN WRITING, which no departure
+   * above did. ontology-matrices.ts declined this node in two places — in its
+   * `── Where it stops ──` heading and by name in the subject `covers` a
+   * learner is shown — and the fifty-third promotion overturned both there
+   * rather than here, because a refusal is answered where it was written. The
+   * short form: the refusal said the concept's honest task is "solve the
+   * characteristic polynomial, which is `factoring-quadratics` wearing a hat",
+   * which is a claim that the concept DUPLICATES an authored one; one of the
+   * eleven subgoals written is a quadratic solve and none of the four tasks is,
+   * so it was true of a step and stated of the whole. That file's header has
+   * the count.
+   *
+   * EIGHT NODES AFTER, against a stub floor of five, and the count decides
+   * nothing again: eight nodes plus twelve departures is the same twenty of
+   * territory that nine plus eleven was. That conservation is the whole
+   * mechanism `departed` exists for and it is asserted in tests/atlas.mjs
+   * rather than restated here.
+   *
+   * IT STRANDED TWO EDGES AND BOTH ARE `links` ENTRIES BELOW — the most
+   * expensive departure this area has had since the fourth, and the reason is
+   * worth stating because it is the usual shape rather than bad luck. The node
+   * declared THREE `needs`: `determinant`, `basis-and-dimension` and
+   * `polynomial-roots`. The first is a concept of the subject this one joined,
+   * so it is an ordinary `prerequisite` in that ontology's own `EDGES`. The
+   * other two are concepts of `vectors-and-independence` and
+   * `rational-expressions` — neither of them the receiving subject, so neither
+   * ontology may declare the edge, since an authored ontology may only name
+   * concepts it contains. They are filed here, with the area that OWNED the
+   * departing node rather than with the subjects holding the far ends, which is
+   * the rule whenever neither end is local.
+   *
+   * NEITHER OF THE TWO GATES ANYTHING NEW, and that is exactly why they are the
+   * entries somebody drops. Both far ends were already written, so both edges
+   * gated before the promotion and gate after it; what changed is only which
+   * file declares them. An entry that makes no difference to any suite is the
+   * kind that goes missing in silence — and if the `polynomial-roots` one went,
+   * the material below would rest on a determinant and a dimension count with
+   * nothing saying a learner must be able to solve a quadratic first, which is
+   * the one step of this concept that was ever in doubt.
+   *
+   * NOTHING WAS HANDED BACK, checked rather than assumed. A promotion hands an
+   * edge back when the promoted concept lands in the SAME ontology as the far
+   * end of an existing `links` entry, which makes the entry a duplicate of an
+   * ordinary `needs` and no suite notices two identical edges in the composed
+   * graph. No `links` entry of any area named `eigenvalues` at either end
+   * before this promotion, so there was nothing to delete. The absence had to
+   * be looked for to be known.
+   *
+   * `confusedWith` and `exercises` on the departing node: NEITHER, checked
+   * before deleting it. `expandEdges` turns a `confusedWith` into an
+   * `interferes_with` and interference constrains SELECTION rather than gating,
+   * so losing one leaves every assertion in the build green while the scheduler
+   * is freed to introduce two confusable concepts together; and an
+   * `encompasses` whose ends land in two ontologies is expressible nowhere,
+   * since `links` hard-codes `kind: 'prerequisite'`. There was none of either,
+   * so the filing was decided on content and not forced by an edge.
+   *
+   * THE AREA VIEW SPLIT ITS SOLE ROOT, for the second time in this area's
+   * history and by the same mechanism as the sixth departure. {`eigenvalues`}
+   * became {`diagonalisation`, `cayley-hamilton`}: every other node of this
+   * area reached the departing one, `areaOntology` filters each node's `needs`
+   * down to the ones inside the area, and the two nodes that named ONLY
+   * `eigenvalues` and something already authored are therefore roots
+   * themselves. One became two and the membership turned over completely,
+   * which is why tests/atlas.mjs asserts this set by named membership and never
+   * by its length.
+   *
+   * IT WAS AN `armature.ts` ANCHOR, AND KRULL'S SLOT HAS NOW TURNED OVER SIX
+   * TIMES — and the documented refill rule failed a THIRD way, which is the
+   * part worth reading. At the fourth turnover the rule's candidate was
+   * disqualified; at the fifth there was no candidate at all. Here the rule
+   * returns TWO candidates, both correct — `diagonalisation` and
+   * `cayley-hamilton` are the dependents that became roots — and both were
+   * already anchors of this region, so a rule that names existing anchors
+   * cannot refill a slot. See armature.ts, where the judgement and the
+   * criterion it was forced by are recorded.
+   *
+   * WHAT THIS AREA HAS LEFT. Eight nodes, TWO of them ready — the two new roots
+   * — where one was ready before. That is the first departure from here to
+   * leave the area with more ready nodes than it found, every earlier one
+   * having spent the only one it had. `spectral-theorem` is one promotion
+   * behind `diagonalisation`; `jordan-normal-form` needs both new roots
+   * written; `quadratic-forms` is behind the spectral theorem and
+   * `matrix-exponential` behind `power-series`, which is a node of another area
+   * entirely.
    */
   links: [
     /*
@@ -978,6 +1100,62 @@ const LINEAR_ALGEBRA: MapArea = {
         'is free" is the whole content of the theorem and is a sentence about a reduced system. ' +
         'Without row reduction first, a rank is a number somebody asserts about a grid rather ' +
         'than a count a learner has watched being made.',
+    },
+    {
+      /*
+       * THE FIRST OF THE TWO EDGES THE TWELFTH DEPARTURE STRANDED.
+       *
+       * Both ends are authored concepts in subjects other than the one the
+       * departing node joined: `basis-and-dimension` is in
+       * `vectors-and-independence` and `eigenvalues` is in
+       * `matrices-and-determinants`. So neither ontology may declare it — an
+       * authored ontology may only name concepts it contains — and `links` is
+       * the only home, filed with the area that owned the node rather than with
+       * either subject.
+       *
+       * THE DIRECTION IS THE THING TO KEEP and it reads oddly at first, because
+       * the eigenvalue is computed from a grid with no basis mentioned
+       * anywhere. The node's own `needs` named this and the claim is about what
+       * an eigenvector IS: a direction, which is to say a one-dimensional
+       * subspace with a representative chosen for convenience, and the whole
+       * reason "an eigenvector" is not a single vector. A learner who has not
+       * met span and dimension can compute λ and then has no account of what
+       * the thing belonging to it is.
+       */
+      from: 'basis-and-dimension',
+      to: 'eigenvalues',
+      because:
+        'An eigenvector is a DIRECTION rather than a vector — every non-zero multiple of it ' +
+        'does the same job — so the answer to "find the eigenvector" is a one-dimensional ' +
+        'subspace with a representative picked for convenience. Without span and dimension ' +
+        'first, that is an arbitrary-looking convention instead of the only honest reading, and ' +
+        'two learners comparing different-looking correct answers have no way to agree.',
+    },
+    {
+      /*
+       * THE SECOND, AND IT IS THE ENTRY THIS AREA WOULD MOST EASILY HAVE LOST.
+       *
+       * `polynomial-roots` is a concept of `rational-expressions`, so again
+       * neither the receiving ontology nor the far end's may declare the edge.
+       *
+       * It is also the edge the host subject's standing refusal of this node was
+       * ABOUT. ontology-matrices.ts declined `eigenvalues` on the ground that
+       * solving the characteristic polynomial is `factoring-quadratics` wearing
+       * a hat; the overturn argues that one step of eleven is that solve, and
+       * the correct consequence of the honest half is not to refuse the concept
+       * but to make the prerequisite explicit — which is this entry. Drop it and
+       * the concept rests on a determinant and a dimension count with nothing
+       * saying a learner must be able to solve a quadratic, while every suite
+       * stays green.
+       */
+      from: 'polynomial-roots',
+      to: 'eigenvalues',
+      because:
+        'The eigenvalues of a 2×2 are the roots of λ² − (a + d)λ + (ad − bc), so the last step ' +
+        'of finding them is solving a quadratic and nothing in this concept replaces that skill. ' +
+        'Making it explicit is also the honest half of the refusal this node carried for months: ' +
+        'the factoring really does belong to another concept, which is a reason to name the ' +
+        'prerequisite rather than a reason to leave the eigenvalue unwritten.',
     },
   ],
 }

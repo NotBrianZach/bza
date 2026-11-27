@@ -532,11 +532,20 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
    * instance of the rule this list keeps restating. `binomial-theorem` was a
    * root here — both of its prerequisites had already been authored out from
    * under it — and nothing replaced it, because it was the last in-area
-   * prerequisite of NOTHING. All three of its dependents live in other areas:
+   * prerequisite of NOTHING. All three of its dependents lived in other areas:
    * `power-and-sum-rules` in differential calculus, `counting-principles` in
    * discrete mathematics and `discrete-distributions` in probability. A node
    * can only substitute into this set by being freed inside this area, and a
    * departing node with no in-area dependent therefore always shrinks it.
+   *
+   * TWO OF THOSE THREE ARE AUTHORED CONCEPTS NOW AND THE PAST TENSE IS
+   * DELIBERATE. `counting-principles` went at the forty-fourth and
+   * `discrete-distributions` at the fifty-second, so neither is in an area at
+   * all, and each took its `binomial-theorem` edge with it into a `links` entry
+   * on the area it left. The claim above is about what happened at the
+   * nineteenth promotion and still holds of it; what does NOT hold any more is
+   * the present-tense reading, and the note on `binomial-theorem`'s own departure
+   * below is where that is tracked.
    *
    * That is the fourth distinct outcome-by-cause in four promotions, and the
    * causes are what to read rather than the sequence: shrinkage because the
@@ -1621,9 +1630,20 @@ const ALGEBRA_FOUNDATIONS: MapArea = {
     // stranding no test catches — `expandEdges` turns one into an
     // `interferes_with` and deleting the declaring node deletes the edge in
     // silence. And its three dependents — `power-and-sum-rules`,
-    // `counting-principles` and `discrete-distributions` — all sit in OTHER
-    // areas and all DECLARE the edge themselves, so all three resolve through
+    // `counting-principles` and `discrete-distributions` — all sat in OTHER
+    // areas and all DECLARED the edge themselves, so all three resolved through
     // `composeAtlas` untouched. An edge is owned by the node that declares it.
+    //
+    // TWO OF THE THREE HAVE SINCE BEEN AUTHORED, AND BOTH TIMES THE EDGE MOVED
+    // RATHER THAN RESOLVING. `counting-principles` went at the forty-fourth and
+    // `discrete-distributions` at the fifty-second, and when the node DECLARING
+    // an edge is the one being promoted its `needs` have nowhere left to live —
+    // so the first is now a `links` entry on `discrete-mathematics` and the
+    // second a `links` entry on `probability`, each filed in the area that owned
+    // the departing node. `power-and-sum-rules` is the one still mapped and is
+    // the only one of the three this comment still describes in the present
+    // tense. tests/atlas.mjs asserts all three states by name in the group on
+    // this promotion, which is how the second of them was caught.
     {
       id: 'inequality-proofs',
       name: 'Proving inequalities',

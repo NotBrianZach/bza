@@ -13436,13 +13436,23 @@ group('variance and covariance, where the table says how far it strays')
  * writing order of the whole subject — so the two groups now make different
  * claims rather than the same claim twice, and only this one has to be edited
  * next time.
+ *
+ * AND THE NEXT TIME WAS ONE PROMOTION LATER, WHICH SETTLES THE QUESTION THAT
+ * PARAGRAPH LEFT OPEN. The fifty-second appended an eighth concept, so the list
+ * form went red again — exactly as predicted, and in a group that had just
+ * explained why it would. The lesson is not that the prediction was right; it is
+ * that "only this one has to be edited next time" is not a defence of the list
+ * form, because being edited every single promotion is what the sixth concept's
+ * group was repaired to stop. So the list and the totals move to the
+ * fifty-second's group, and what stays here is this concept's POSITION, which is
+ * the repair the sixth concept's group made and which has now survived two
+ * promotions.
  */
-t('seven concepts and twenty-one knowledge points, the figure having moved to this group',
-  CE.concepts.length === 7 && allKnowledgePoints(CE).length === 21
-  && CE.concepts.map(c => c.id).join(',')
-    === 'sample-spaces,counting-probability,conditional-probability,bayes-theorem,'
-    + 'random-variables,expectation,variance-and-covariance'
-  && VC_POINTS.map(p => p.position).join(',') === '1,2,3',
+t('it is the seventh concept of the subject, which is the claim that cannot move',
+  CE.concepts.findIndex(c => c.id === 'variance-and-covariance') === 6
+  && CE.concepts[6].id === 'variance-and-covariance'
+  && VC_POINTS.map(p => p.position).join(',') === '1,2,3'
+  && allKnowledgePoints(CE).filter(p => p.conceptId === 'variance-and-covariance').length === 3,
   `${CE.concepts.length} concepts, ${allKnowledgePoints(CE).length} points: `
   + CE.concepts.map(c => c.id).join(','))
 t('the concept is teachable AND practisable, and the subject has no internal faults',
@@ -13466,14 +13476,21 @@ t('its two edges are a chain prerequisite and a credit edge that credits its own
     const credit = CE.edges.find(e => e.id === 'variance-and-covariance=>expectation')
     const skipper = CE.edges.find(e => e.id === 'random-variables=>sample-spaces')
     if (!gate || !credit || !skipper) return false
-    return CE.edges.length === 12
-      && gate.kind === 'prerequisite' && gate.promotedBy === 'author:chance-and-events'
+    // The TOTALS have moved to the fifty-second's group, which added a pair of
+    // the same shape. What belongs here is this promotion's own pair and the
+    // contrast it was drawing, neither of which a later promotion can move.
+    return gate.kind === 'prerequisite' && gate.promotedBy === 'author:chance-and-events'
       && credit.kind === 'encompasses' && !!credit.rationale
       && credit.from === 'variance-and-covariance' && credit.to === 'expectation'
       && credit.to === gate.from
-      // The skipper is still the only edge in the file that declines its gate.
+      // The skipper is still the only edge in the file that declines its gate,
+      // which is the contrast and is asserted as a population of ONE rather
+      // than as a count of the whole array.
       && skipper.to === 'sample-spaces'
-      && CE.edges.filter(e => e.kind === 'encompasses').length === 5
+      && CE.edges.filter(e => e.kind === 'encompasses')
+        .filter(e => !CE.edges.some(g => g.kind === 'prerequisite'
+          && g.to === e.from && g.from === e.to)).map(e => e.id).join(',')
+        === 'random-variables=>sample-spaces'
       // And this concept claims no credit two concepts down.
       && !CE.edges.some(e => e.kind === 'encompasses'
         && e.from === 'variance-and-covariance' && e.to === 'random-variables')
@@ -13748,8 +13765,17 @@ t('and the two covariance tasks are ONE expression at two substitutions',
  * asserted rather than assumed — the widest pair in the subject spans about 0.79
  * and is in `bayes-theorem`'s group, the runner-up is `k/m` at about 0.49, and
  * these span 1/64 and 1/16.
+ *
+ * AND IT WENT RED A THIRD TIME RUNNING, AT THE FIFTY-SECOND, which is what the
+ * paragraph above was written in anticipation of and which settles how to hold
+ * this figure. It is now a FLOOR here and exact in the fifty-second's group,
+ * which is the arrangement the fiftieth's group was given for the same reason:
+ * a population over a whole subject grows on every promotion, so the only group
+ * that can hold the exact number is the newest one, and every older group holds
+ * what its own pairs did. The two pairs below are named and their spans are
+ * asserted, so this line still fails if either of THEM changes.
  */
-t('nine expressions in the subject are asked twice, and this promotion added two of them',
+t('at least nine expressions in the subject are asked twice, and this promotion added two',
   (() => {
     const byGiven = {}
     for (const c of CE.concepts) {
@@ -13768,7 +13794,7 @@ t('nine expressions in the subject are asked twice, and this promotion added two
       === '(0*p + 1*q + 4*r + 9*s)/n - ((0*p + 1*q + 2*r + 3*s)/n)*((0*p + 1*q + 2*r + 3*s)/n)')
     const covariance = repeated.find(([g]) => g === 'k/n - (g/n)*(h/n)')
     if (!identity || !covariance) return false
-    return repeated.length === 9
+    return repeated.length >= 9
       // Both of this promotion's pairs are narrower than the runner-up, so the
       // superlative two concepts down is untouched and stays where it is argued.
       && spanOf(identity[1]) < 0.02 && spanOf(covariance[1]) < 0.07
@@ -13942,6 +13968,674 @@ t('but it OVER-REACHES on to a title another node owns, while refusing all six b
   ['Analysis of variance', 'Expected value', 'Random variable', 'Bayes theorem',
     'Conditional probability', 'Sample space', 'Combination']
     .filter(s => VC.scope.match.test(s)).join(', ') || 'none claimed')
+
+// ---------------------------------------------------------------------------
+
+/**
+ * `discrete-distributions`, the EIGHTH concept of `chance-and-events` and the
+ * eighth departure from `probability`. tests/atlas.mjs owns the structure; what
+ * is asserted here is the material, and every number is DERIVED — from the eight
+ * sequences where the claim is about this subject's own experiment, and from the
+ * parameters where the claim is about a family.
+ *
+ * Deriving it matters more here than in any concept below, and for a reason that
+ * is new rather than one of degree. The seven below are about ONE table, so a
+ * harness can enumerate eight sequences and recompute everything. This concept's
+ * claims are quantified over a PARAMETER — "the table totals 1 for every weight",
+ * "no single trial has spread above 1/4" — and a check at one weight proves
+ * nothing about those. So the three structural claims below are each computed at
+ * every weight b/m with m up to a bound, in exact integer arithmetic, and the
+ * claims about the subject's own experiment are checked against the eight
+ * sequences as well as against the formula.
+ *
+ * The six things this group is for:
+ *
+ *  - THE SUBJECT TOTALS, which this promotion moved off the seventh concept's
+ *    group: eight concepts, twenty-four points, fourteen edges.
+ *  - EVERY ONE OF THE TEN REFERENCES REPRODUCIBLE FROM ITS OWN `given`, which is
+ *    the one assertion that can catch an authoring slip in the mathematics rather
+ *    than in the prose. Nothing in the build does this automatically.
+ *  - THE BOUND, PROVED THE WAY THE MATERIAL PROVES IT — p(1 − p) against
+ *    1/4 − (p − 1/2)², at every weight rather than at the three the prose names.
+ *  - THE FAMILY REPRODUCING THIS SUBJECT'S OWN NUMBERS at (3, 1/2) and KILLING
+ *    its coincidence at (3, 1/3), both computed from the formula and checked
+ *    against the eight sequences.
+ *  - THE GEOMETRIC'S TAIL BEING THE MASS THE FIFTH CONCEPT PARKED on the value it
+ *    invented, computed from both sides.
+ *  - AND THE TWO FAMILIES DISAGREEING ON ONE DESCRIPTION, which is the third
+ *    point's whole claim and is a pair of numbers.
+ */
+const DD = conceptById(CE, 'discrete-distributions')
+const DD_POINTS = DD.knowledgePoints
+const DD_TASKS = DD_POINTS.flatMap(p => tasksForPoint(p.id))
+const DD_SHOWN = DD_POINTS.map(p =>
+  `${p.workedExample.problem} ${p.workedExample.subgoals.map(s => s.detail).join(' ')} `
+  + `${p.workedExample.answer}`).join(' ')
+/*
+ * THE FAMILY, AS INTEGER ARITHMETIC OVER A WEIGHT b/m — everything held as a
+ * numerator over a stated power of m, so no fraction and no float decides
+ * anything.
+ *
+ * `DD_BERNOULLI_VAR` returns the variance times m²: b(m − b). `DD_BINOMIAL`
+ * returns the four entries of the three-trial table times m³, in value order.
+ * `DD_GEOMETRIC` returns the first k entries times m^k alongside the tail, which
+ * is how the complement is checked against a partial sum.
+ */
+const DD_BERNOULLI_VAR = (b, m) => b * (m - b)
+const DD_BINOMIAL = (b, m) => {
+  const q = m - b
+  return [q * q * q, 3 * b * q * q, 3 * b * b * q, b * b * b]
+}
+const DD_SEQS = ['HHH', 'HHT', 'HTH', 'HTT', 'THH', 'THT', 'TTH', 'TTT']
+const DD_X = s => [...s].filter(ch => ch === 'H').length
+const DD_T = s => (s.indexOf('H') === -1 ? 0 : s.indexOf('H') + 1)
+const DD_PREIMAGE = (f, v) => DD_SEQS.filter(s => f(s) === v).length
+/** Every weight b/m with 2 <= m <= LIMIT and 0 <= b <= m, so the quantifiers are tested. */
+const DD_LIMIT = 24
+const DD_WEIGHTS = []
+for (let m = 2; m <= DD_LIMIT; m++) for (let b = 0; b <= m; b++) DD_WEIGHTS.push([b, m])
+
+group('the discrete distributions, where the frozen numbers finally move')
+/*
+ * THE SUBJECT TOTALS, WHICH THIS PROMOTION MOVED — the eighth group to hold
+ * them, for the eighth consecutive promotion into this subject.
+ *
+ * ASSERTED AS THE FULL ID ARRAY, AND THE SEVENTH CONCEPT'S GROUP HAS BEEN
+ * REPAIRED RATHER THAN LEFT TO CARRY IT. That group chose the list form
+ * deliberately, arguing that it belonged where the claim was about the writing
+ * order of the whole subject and that "only this one has to be edited next
+ * time". One promotion later it was edited, which is the answer: being edited
+ * every promotion is exactly the churn the sixth concept's group was repaired to
+ * stop. So the list lives HERE, in the newest group, and the seventh's keeps its
+ * own concept's POSITION — which no later promotion can move and which is what
+ * an older group should hold.
+ */
+t('eight concepts and twenty-four knowledge points, the figure having moved to this group',
+  CE.concepts.length === 8 && allKnowledgePoints(CE).length === 24
+  && CE.concepts.map(c => c.id).join(',')
+    === 'sample-spaces,counting-probability,conditional-probability,bayes-theorem,'
+    + 'random-variables,expectation,variance-and-covariance,discrete-distributions'
+  && DD_POINTS.map(p => p.position).join(',') === '1,2,3',
+  `${CE.concepts.length} concepts, ${allKnowledgePoints(CE).length} points: `
+  + CE.concepts.map(c => c.id).join(','))
+t('the concept is teachable AND practisable, and the subject has no internal faults',
+  isTeachable(CE, 'discrete-distributions') && isPractisable(CE, 'discrete-distributions')
+  && ontologyProblems(CE).length === 0 && fidelityMismatches(CE).length === 0,
+  ontologyProblems(CE).join('; '))
+/*
+ * FOURTEEN EDGES, AND THE ORDINARY SHAPE A THIRD TIME — a prerequisite up the
+ * chain and a credit edge pointing at its own gate.
+ *
+ * So the forty-ninth's skip is a single reasoned exception three promotions old
+ * rather than a habit, and the claim that says so is asserted as a POPULATION OF
+ * ONE rather than as a count: exactly one `encompasses` edge in this file points
+ * somewhere other than at the concept that gates its source. A count of credit
+ * edges would have gone red here and said nothing.
+ */
+t('its two edges are a chain prerequisite and a credit edge, and the skipper is still alone',
+  (() => {
+    const gate = CE.edges.find(e => e.id === 'variance-and-covariance->discrete-distributions')
+    const credit = CE.edges.find(e => e.id === 'discrete-distributions=>variance-and-covariance')
+    if (!gate || !credit) return false
+    const skippers = CE.edges.filter(e => e.kind === 'encompasses')
+      .filter(e => !CE.edges.some(g => g.kind === 'prerequisite'
+        && g.to === e.from && g.from === e.to))
+    return CE.edges.length === 14
+      && CE.edges.filter(e => e.kind === 'encompasses').length === 6
+      && gate.kind === 'prerequisite' && gate.promotedBy === 'author:chance-and-events'
+      && credit.kind === 'encompasses' && !!credit.rationale
+      && credit.to === gate.from
+      && skippers.map(e => e.id).join(',') === 'random-variables=>sample-spaces'
+      // And this concept claims no credit two concepts down, as the two before
+      // it do not either.
+      && !CE.edges.some(e => e.kind === 'encompasses'
+        && e.from === 'discrete-distributions' && e.to === 'expectation')
+  })(),
+  CE.edges.map(e => `${e.id}:${e.kind}`).join(' '))
+/*
+ * ITS RATIONALE RECORDS A SHORTFALL IN THE CREDIT, WHICH NO CREDIT EDGE IN THIS
+ * FILE HAS DONE BEFORE — and that is the finding rather than the edge.
+ *
+ * The five below each claim what they credit and name what they refuse. This one
+ * also names something it credits INCOMPLETELY: two of the gate's three points
+ * are used as theorems and the FIRST — the weighted total of squared deviations —
+ * is not performed anywhere, because every variance here arrives through the
+ * two-total identity instead. A learner who has done all ten tasks has never
+ * computed a variance from the definition.
+ *
+ * ASSERTED OVER `given` RATHER THAN OVER `prompt`, which is the distinction the
+ * seventh concept's group introduced and the only one that makes this checkable:
+ * the material is free to discuss a deviation as much as it likes, and what
+ * decides a credit edge is whether anything GRADED rests on it.
+ */
+t('its rationale names the point it does NOT credit, and that refusal is true of the tasks',
+  (() => {
+    const r = CE.edges
+      .find(e => e.id === 'discrete-distributions=>variance-and-covariance')?.rationale ?? ''
+    return /is NOT performed here/.test(r)
+      && /squared deviations/.test(r)
+      && /come due as though untouched/.test(r)
+      && /sample-spaces/.test(r) && /random-variables/.test(r)
+      && /conditional-probability/.test(r)
+      // True of the tasks in the sense that matters: no expression subtracts a
+      // mean from a value, which is what totalling a deviation would have to do.
+      && !DD_TASKS.some(x => /- *3\/2|- *\(0 \+ 1|deviation/i.test(x.given))
+      // And nothing here collects a probability off a listed space, which is the
+      // other half of what is refused and is why two concepts further down come
+      // due untouched. Checked on the DECLARATIONS rather than on the prompts:
+      // not one of the ten declares an `n` for the size of a space or the
+      // preimage letters p, q, r, s that every concept below counts with, so no
+      // expression here could divide a count by a space even by accident. The
+      // prompts are a different matter and deliberately so - the third point
+      // uses the complement RULE, which is a theorem about probabilities and not
+      // a count over the eight sequences.
+      && DD_TASKS.every(x => !x.variables.some(v => ['n', 'p', 'q', 'r', 's'].includes(v.name)))
+      && !DD_TASKS.some(x => /\/n\b/.test(x.given))
+  })(),
+  (CE.edges.find(e => e.id === 'discrete-distributions=>variance-and-covariance')?.rationale ?? '')
+    .slice(0, 80))
+/*
+ * EVERY ONE OF THE TEN REFERENCES IS EXACTLY REPRODUCIBLE FROM ITS OWN `given`,
+ * AND THIS IS THE MOST VALUABLE SINGLE LINE IN THE GROUP.
+ *
+ * Nothing in the build checks it. `isPractisable` asks whether a point has a
+ * task; `ruleEvaluate` recomputes a reference when a LEARNER answers, so an
+ * authored task whose reference disagrees with its own expression marks every
+ * correct answer wrong and is discovered by a learner. `arithmetic-foundations`
+ * asserts this over its own tasks and nothing else in the file does.
+ *
+ * It is worth more here than in a subject of one-step fractions because the
+ * expressions are long: the sixth task is a four-term expansion of a cube and the
+ * eighth is one minus a three-term sum, and a dropped bracket in either produces
+ * a plausible number. Asserted with `exactValue` on both sides, so no float
+ * decides whether two rationals agree.
+ */
+t('every one of the ten references is exactly reproducible from its own given',
+  DD_TASKS.every(x => {
+    const at = {}
+    for (const [name, raw] of Object.entries(x.at)) at[name] = parseExpression(raw, [])
+    const truth = exactValue(substitute(parseExpression(x.given, x.variables.map(v => v.name)), at))
+    const claimed = exactValue(parseExpression(x.reference, []))
+    return truth !== null && claimed !== null && showExact(truth) === showExact(claimed)
+  }),
+  DD_TASKS.filter(x => {
+    const at = {}
+    for (const [name, raw] of Object.entries(x.at)) at[name] = parseExpression(raw, [])
+    const truth = exactValue(substitute(parseExpression(x.given, x.variables.map(v => v.name)), at))
+    const claimed = exactValue(parseExpression(x.reference, []))
+    return !(truth !== null && claimed !== null && showExact(truth) === showExact(claimed))
+  }).map(x => x.id).join(', ') || 'all ten agree')
+/*
+ * THE BOUND ON A SINGLE TRIAL, PROVED AT EVERY WEIGHT RATHER THAN AT THE THREE
+ * THE PROSE NAMES — which is the first claim in this subject that a check at one
+ * substitution could not establish.
+ *
+ * The material says p(1 − p) = 1/4 − (p − 1/2)², so a square being non-negative
+ * bounds the spread by 1/4 with equality only at a half. Over m² that identity is
+ * b(m − b) = (m² − (2b − m)²)/4, and both sides are integers after multiplying by
+ * 4 — so the whole quantified statement is checkable in integer arithmetic at
+ * every weight with denominator up to a bound, and it is.
+ */
+t('the completed square is an identity at every weight, and it bounds the spread by a quarter',
+  DD_WEIGHTS.every(([b, m]) => {
+    // 4·m²·Var = 4b(m − b), and 4·m²·(1/4 − (b/m − 1/2)²) = m² − (2b − m)².
+    const viaProduct = 4 * DD_BERNOULLI_VAR(b, m)
+    const viaSquare = m * m - (2 * b - m) ** 2
+    if (viaProduct !== viaSquare) return false
+    // The bound: 4·m²·Var <= m², with equality exactly at 2b = m.
+    const atBound = viaProduct === m * m
+    return viaProduct <= m * m && atBound === (2 * b === m)
+  })
+  // And the three weights the prose names come out as it says: 1/4, 2/9, 4/25.
+  && DD_BERNOULLI_VAR(1, 2) === 1 && DD_BERNOULLI_VAR(1, 3) === 2
+  && DD_BERNOULLI_VAR(1, 5) === 4,
+  `${DD_WEIGHTS.length} weights checked; (1,2) (1,3) (1,5) give `
+  + `${DD_BERNOULLI_VAR(1, 2)}/4 ${DD_BERNOULLI_VAR(1, 3)}/9 ${DD_BERNOULLI_VAR(1, 5)}/25`)
+t('and the fair trial really is the unique maximum, which is what the parameter made statable',
+  (() => {
+    const best = DD_WEIGHTS.filter(([, m]) => m === 12)
+      .map(([b, m]) => ({ b, v: DD_BERNOULLI_VAR(b, m) }))
+    const top = Math.max(...best.map(x => x.v))
+    return best.filter(x => x.v === top).map(x => x.b).join(',') === '6'
+      && top === 36 && 36 * 4 === 12 * 12
+      // Zero at both ends, which is the other half of the shape the material
+      // reads off the factored form.
+      && DD_BERNOULLI_VAR(0, 12) === 0 && DD_BERNOULLI_VAR(12, 12) === 0
+      && /1\/4 - \(p - 1\/2\)\^2|quarter minus a square/.test(
+        DD_SHOWN + DD_POINTS.map(p => p.statement).join(' '))
+  })(),
+  `at m = 12 the maximum is b = ${DD_WEIGHTS.filter(([, m]) => m === 12)
+    .reduce((a, [b, m]) => (DD_BERNOULLI_VAR(b, m) > DD_BERNOULLI_VAR(a, m) ? b : a), 0)}`)
+/*
+ * THE TABLE TOTALS 1 AT EVERY WEIGHT, WHICH IS THE BINOMIAL THEOREM AND NOT A
+ * PARTITION — asserted the same quantified way and for the same reason.
+ *
+ * `random-variables` argues its total from the values of a function partitioning
+ * the space, which is a claim about ONE table. Here the four entries over m³ are
+ * q³, 3bq², 3b²q and b³, and their sum is (q + b)³ = m³ for every b and m — so
+ * the total is an algebraic identity and the check has to quantify over weights
+ * or it is testing the wrong sentence.
+ */
+t('the three-trial table totals 1 at every weight, which is the identity rather than a check',
+  DD_WEIGHTS.every(([b, m]) =>
+    DD_BINOMIAL(b, m).reduce((a, v) => a + v, 0) === m * m * m)
+  // And the coefficients really are 1, 3, 3, 1 rather than four free numbers:
+  // each entry is its coefficient times b^k q^(3-k), checked term by term.
+  && DD_WEIGHTS.every(([b, m]) => {
+    const q = m - b
+    const terms = [q ** 3, b * q ** 2, b ** 2 * q, b ** 3]
+    return DD_BINOMIAL(b, m).every((v, k) => v === [1, 3, 3, 1][k] * terms[k])
+  }),
+  `${DD_WEIGHTS.length} weights checked`)
+t('at a fair coin it reproduces the fifth concept\'s table, collected from the eight sequences',
+  (() => {
+    // The formula at (3, 1/2), times 8.
+    const fromFormula = DD_BINOMIAL(1, 2)
+    // The same four numbers as preimage sizes of the heads-count, which is how
+    // `random-variables` obtained them.
+    const fromSpace = [0, 1, 2, 3].map(v => DD_PREIMAGE(DD_X, v))
+    return fromFormula.join(',') === '1,3,3,1'
+      && fromSpace.join(',') === '1,3,3,1'
+      && fromFormula.join(',') === fromSpace.join(',')
+      // E[X] = np and Var(X) = np(1 − p) at (3, 1/2) are 3/2 and 3/4, which are
+      // the sixth and seventh concepts' own answers. Over 8 and over 4.
+      && 3 * 1 * 4 === 12 && DD_SEQS.reduce((a, s) => a + DD_X(s), 0) === 12
+      && 3 * DD_BERNOULLI_VAR(1, 2) === 3 && 3 * 1 === 3
+      // And the material says so rather than leaving it to be noticed.
+      && /1\/8, 3\/8, 3\/8, 1\/8/.test(DD_SHOWN)
+  })(),
+  `formula ${DD_BINOMIAL(1, 2).join(',')} over 8; space `
+  + `${[0, 1, 2, 3].map(v => DD_PREIMAGE(DD_X, v)).join(',')} over 8`)
+t('and moving the weight off a half KILLS the coincidence two concepts spent prose on',
+  (() => {
+    // At (3, 1/3) the table is 8, 12, 6, 1 over 27 and is not symmetric.
+    const t13 = DD_BINOMIAL(1, 3)
+    if (t13.join(',') !== '8,12,6,1') return false
+    if (t13.join(',') === t13.slice().reverse().join(',')) return false
+    // The plain average of the four values is 3/2 at EVERY weight, since the
+    // values do not depend on it; E[X] = 3b/m does. Over 2m: 3m against 6b.
+    const gapIsZero = ([b, m]) => 3 * m === 6 * b
+    return DD_WEIGHTS.every(gp => gapIsZero(gp) === (2 * gp[0] === gp[1]))
+      // So the agreement held at a half and nowhere else, which is the sixth
+      // concept's flagged coincidence located exactly.
+      && gapIsZero([1, 2]) && !gapIsZero([1, 3])
+      // At (3, 1/3) the gap is 3/2 − 1 = 1/2, which is the seventh task's
+      // reference — checked against the task rather than written here.
+      && tasksForPoint(DD_POINTS[1].id)
+        .find(x => x.id === 'the-plain-average-stops-agreeing-once-the-weight-moves-1')
+        ?.reference === '1/2'
+      // And the symmetric table is symmetric, so the contrast is real.
+      && DD_BINOMIAL(1, 2).join(',') === DD_BINOMIAL(1, 2).slice().reverse().join(',')
+  })(),
+  `(3,1/3) table ${DD_BINOMIAL(1, 3).join(',')} over 27`)
+/*
+ * THE GEOMETRIC'S TAIL IS THE MASS THE FIFTH CONCEPT PARKED ON A VALUE IT HAD TO
+ * INVENT, and both sides are computed — the tail from the formula and the parked
+ * mass from the eight sequences.
+ *
+ * That concept set T to the toss the first head falls on and had to choose a
+ * value at TTT, because a function must be defined everywhere on its domain. The
+ * claim here is that the choice was forced rather than tidy: T agrees with the
+ * geometric at p = 1/2 on every value both can answer, and the leftover it parks
+ * at 0 is exactly the tail. If either side were computed from the other this
+ * would be a tautology, so neither is.
+ */
+t('the geometric tail equals the mass the fifth concept parked, computed from both sides',
+  (() => {
+    // From the formula at p = 1/2, over 8: entries b·m², b·q·m, b·q² and tail q³.
+    const b = 1; const m = 2; const q = m - b
+    const entries = [b * m * m, b * q * m, b * q * q]
+    const tail = q * q * q
+    if (entries.reduce((a, v) => a + v, 0) + tail !== m ** 3) return false
+    // From the space: T's preimages at 1, 2, 3 and at the invented 0, over 8.
+    const fromSpace = [1, 2, 3].map(v => DD_PREIMAGE(DD_T, v))
+    const parked = DD_PREIMAGE(DD_T, 0)
+    return entries.join(',') === '4,2,1'
+      && fromSpace.join(',') === '4,2,1'
+      && tail === 1 && parked === 1 && tail === parked
+      // The partial sum is 7/8 and not 1, which is the error the point says is
+      // available on an endless table — the opposite of dropping a term.
+      && entries.reduce((a, v) => a + v, 0) === 7
+      // The eighth task computes the tail the long way and answers the same 1/8.
+      && tasksForPoint(DD_POINTS[2].id)
+        .find(x => x.id === 'a-wait-that-outlasts-three-trials-1')?.reference === '1/8'
+      // And TTT really is the sequence with no head, which is why a value had to
+      // be chosen there at all.
+      && DD_SEQS.filter(s => !s.includes('H')).join(',') === 'TTT'
+  })(),
+  `formula ${[1 * 4, 1 * 1 * 2, 1 * 1].join(',')} tail 1 over 8; `
+  + `space ${[1, 2, 3].map(v => DD_PREIMAGE(DD_T, v)).join(',')} parked `
+  + `${DD_PREIMAGE(DD_T, 0)} over 8`)
+/*
+ * AND THE TWO FAMILIES DISAGREE ON ONE DESCRIPTION, WHICH IS THE THIRD POINT'S
+ * CLAIM AND IS A PAIR OF NUMBERS.
+ *
+ * `counting-probability` put "three of twelve drawn at once are all new" at 1/22
+ * by two routes, C(5,3)/C(12,3) and the descending product. Returning each member
+ * makes every factor 5/12 and the answer 125/1728. Both are recomputed here, and
+ * the agreement of the hypergeometric with that concept's OWN reference is what
+ * makes the first number a debt paid rather than a number retyped.
+ */
+t('the two families give one description two answers, and the larger is the one with replacement',
+  (() => {
+    const b = 5; const m = 12
+    // Without replacement: b(b−1)(b−2) over m(m−1)(m−2) = 60/1320 = 1/22.
+    const hyperN = b * (b - 1) * (b - 2)
+    const hyperD = m * (m - 1) * (m - 2)
+    // The other route that concept takes, C(5,3)/C(12,3) = 10/220, must agree.
+    const choose = (n, k) => { let r = 1; for (let i = 0; i < k; i++) r = r * (n - i) / (i + 1); return r }
+    if (hyperN * 220 !== 10 * hyperD) return false
+    if (hyperN * choose(12, 3) !== choose(5, 3) * hyperD) return false
+    // With replacement: b³ over m³ = 125/1728.
+    const binomN = b ** 3; const binomD = m ** 3
+    return hyperN === 60 && hyperD === 1320 && binomN === 125 && binomD === 1728
+      // 1/22 and 125/1728, and over 19008 those are 864 and 1375.
+      && hyperN * 19008 === 864 * hyperD && binomN * 19008 === 1375 * binomD
+      // The one with replacement is the LARGER, by cross-multiplication rather
+      // than by a decimal.
+      && binomN * hyperD > hyperN * binomD
+      // And the two tasks are the same substitution at two expressions, which no
+      // pair in this subject has been before.
+      && (() => {
+        const hyper = DD_TASKS.find(x => x.id === 'three-drawn-at-once-are-all-new-1')
+        const binom = DD_TASKS.find(x => x.id === 'three-drawn-with-each-put-back-are-all-new-1')
+        if (!hyper || !binom) return false
+        return hyper.given !== binom.given
+          && JSON.stringify(hyper.at) === JSON.stringify(binom.at)
+          && hyper.at.b === '5' && hyper.at.m === '12'
+          && hyper.reference === '1/22' && binom.reference === '125/1728'
+      })()
+  })(),
+  `without ${5 * 4 * 3}/${12 * 11 * 10}, with ${5 ** 3}/${12 ** 3}`)
+t('and the hypergeometric is named here for the first time in the build, which was a debt',
+  (() => {
+    const named = /HYPERGEOMETRIC|hypergeometric/.test(
+      DD_SHOWN + DD_POINTS.map(p => p.statement).join(' ')
+      + DD_TASKS.map(x => x.prompt).join(' '))
+    // The concept that computed one without naming it still does not name it,
+    // which is what makes this the first: the debt was recorded there and paid
+    // here rather than being paid twice.
+    const cp = conceptById(CE, 'counting-probability')
+    const cpText = cp.knowledgePoints.map(p =>
+      `${p.statement} ${p.workedExample.problem} `
+      + `${p.workedExample.subgoals.map(s => s.detail).join(' ')} ${p.workedExample.answer}`)
+      .join(' ')
+    return named && !/hypergeometric/i.test(cpText)
+      // And the number it is named on is that concept's own, so the two agree
+      // rather than merely coexisting.
+      && tasksForPoint(cp.knowledgePoints[1].id)
+        .some(x => asRational(x.reference).n === 21 && asRational(x.reference).d === 44)
+      && DD_TASKS.some(x => x.reference === '1/22')
+  })(),
+  `named in the new material: ${/hypergeometric/i.test(DD_SHOWN
+    + DD_POINTS.map(p => p.statement).join(' '))}`)
+/*
+ * TEN TASKS, 3-4-3, EVERY ONE AN `evaluate` — AND THE BROKEN RATIO EXISTS TO STOP
+ * A `links` ENTRY BEING VACUOUS, WHICH IS A NEW REASON.
+ *
+ * Six concepts of this subject ship three per point and the seventh took a fourth
+ * because its point made three claims the node promised by name. This point makes
+ * four, and the one that would have gone on a tidy ratio is the table totalling 1
+ * — which is the only place `binomial-theorem` does graded work. That concept is
+ * this promotion's one stranded prerequisite and `PROBABILITY.links`' sixth
+ * entry, so dropping the task would have left a gate standing over nothing a
+ * learner is ever asked to do. The seventh concept's credit-edge rationale is
+ * where that test comes from.
+ */
+t('ten tasks, three-four-three, every one an evaluate',
+  DD_TASKS.length === 10
+  && DD_POINTS.map(p => tasksForPoint(p.id).length).join(',') === '3,4,3'
+  && DD_TASKS.every(x => x.kind === 'evaluate')
+  && DD_TASKS.every(x => x.domainConditions === undefined)
+  && DD_TASKS.every(x => x.form === undefined)
+  && DD_TASKS.every(x => x.acceptsUnevaluated === undefined)
+  && DD_TASKS.every(x => x.unit === undefined),
+  DD_POINTS.map(p => `${p.position}:${tasksForPoint(p.id).length}`).join(' '))
+t('and the third task of the second point is the one that makes the stranded gate real',
+  (() => {
+    const total = tasksForPoint(DD_POINTS[1].id)[2]
+    if (!total || total.id !== 'the-whole-binomial-table-totals-one-1') return false
+    /*
+     * THE DRAFT OF THIS CLAIMED IT WAS THE ONLY REFERENCE OF 1 IN THE SUBJECT
+     * AND THE CHECK CAUGHT IT, which is the argument for computing a population
+     * rather than counting one by eye — the same lesson the seventh concept's
+     * group records about its own [0, 1] figure. There are THREE, and the three
+     * are the point: an overlap COUNTED to 1 in the first concept, a table
+     * PARTITIONED to 1 in the fifth, and a table forced to 1 by a THEOREM here.
+     * Three identical references for three different reasons, which is a better
+     * claim than the superlative would have been.
+     */
+    const allTasks = CE.concepts.flatMap(c => c.knowledgePoints)
+      .flatMap(p => tasksForPoint(p.id))
+    const givenOf = id => allTasks.find(x => x.id === id).given
+    const ones = allTasks.filter(x => x.reference === '1').map(x => x.id)
+    return total.reference === '1'
+      && ones.join(',') === 'count-how-many-times-a-shared-outcome-is-counted-1,'
+        + 'total-the-whole-table-and-check-it-against-one-1,'
+        + 'the-whole-binomial-table-totals-one-1'
+      // And it is the only one of the three whose answer is an identity rather
+      // than an arithmetic fact about one space. The first is an inclusion-
+      // exclusion over three COUNTS with no division in it at all; the second is
+      // four preimages over the size of the space; this one divides by nothing
+      // but the weight's own denominator, which is what makes its 1 a theorem.
+      && !/\/n\b/.test(total.given)
+      && !/\//.test(givenOf(ones[0]))
+      && /\/n\b/.test(givenOf(ones[1]))
+      // Four terms with the coefficients standing as literals, which is what
+      // makes it the table rather than the identity.
+      && /3\*\(b\/m\)/.test(total.given)
+      && total.given.split(' + ').length === 4
+      // And the prerequisite it exercises is the one filed on the area.
+      && /binomial theorem|theorem/i.test(total.prompt)
+  })(),
+  tasksForPoint(DD_POINTS[1].id).map(x => x.id).join(' '))
+t('every objective names a kind that really ships a task here, and only evaluate',
+  DD.objectives.length === 3
+  && DD.objectives.every(o => o.taskKinds.join(',') === 'evaluate')
+  && !DD_TASKS.some(x => x.kind === 'state' || x.kind === 'counterexample'
+    || x.kind === 'justify' || x.kind === 'transform_to_form'),
+  DD.objectives.map(o => `${o.id}:${o.taskKinds.join('+')}`).join(' '))
+/*
+ * ALL TEN REFERENCES ARE INSIDE [0, 1], WHICH NO OTHER CONCEPT OF THIS SUBJECT
+ * MANAGES — AND THE REASON IS A FACT ABOUT KIND WHERE THE SEVENTH'S WAS A FACT
+ * ABOUT SIZE.
+ *
+ * The sixth has seven of nine OUTSIDE, because an expectation is in the units of
+ * the variable. The seventh has two of ten outside, and its own note says that
+ * what keeps the other eight in is "a fact about a FAIR COIN, whose individual
+ * spreads are small, rather than a fact about variances" — so the interval there
+ * is an accident of the experiment and could be broken by a substitution.
+ *
+ * Here it cannot be. Eight of the ten references ARE probabilities, so the first
+ * concept's axioms put them in [0, 1] and no weight could take them out; the
+ * other two are a Bernoulli variance, which is a product of two probabilities,
+ * and its distance from 1/4, which the completed square proves is a square. So
+ * the claim is asserted together with ITS REASON — the two non-probabilities
+ * named by id — because "all ten are inside" is the kind of sentence that would
+ * otherwise be read as luck.
+ */
+t('all ten references are inside [0, 1], and the two that are not probabilities are named',
+  (() => {
+    const rs = DD_TASKS.map(x => ({ task: x, r: asRational(x.reference) }))
+    const inside = rs.filter(({ r }) => r.n >= 0 && r.n <= r.d)
+    const notProbabilities = rs.filter(({ task }) =>
+      task.id === 'spread-of-one-weighted-trial-1'
+      || task.id === 'spread-of-one-weighted-trial-at-a-second-weight-1'
+      || task.id === 'distance-from-the-most-uncertain-single-trial-1')
+    return rs.length === 10 && inside.length === 10
+      && rs.filter(({ r }) => r.n > r.d).length === 0
+      // Three rather than two, counted rather than described: both Bernoulli
+      // variances and the distance from the bound.
+      && notProbabilities.length === 3
+      // And the seven that remain are probabilities, so the reason really does
+      // cover the population it claims to.
+      && rs.length - notProbabilities.length === 7
+      // The contrast with the concept below, asserted so the comparison is not
+      // just prose: it really does have references outside.
+      && (() => {
+        const vc = conceptById(CE, 'variance-and-covariance')
+        const vcRefs = vc.knowledgePoints.flatMap(p => tasksForPoint(p.id))
+          .map(x => asRational(x.reference))
+        return vcRefs.filter(r => r.n > r.d).length === 2
+      })()
+  })(),
+  DD_TASKS.map(x => `${x.reference}`).join(' | '))
+/*
+ * ELEVEN EXPRESSIONS IN THE SUBJECT ARE NOW ASKED TWICE, this promotion having
+ * added two — and the seventh concept's group has been made a FLOOR rather than
+ * edited again.
+ *
+ * That figure has now gone red on a successor's promotion THREE times running:
+ * at the forty-eighth, at the seventh concept, and here. The arrangement the
+ * seventh's group reached is the right one and is now applied one notch along —
+ * a floor in the older group, exact in the newest — because a population over a
+ * whole subject grows on every promotion and only the newest group can hold the
+ * number.
+ *
+ * AND BOTH NEW PAIRS ARE PAIRS FOR A REASON THE SUBJECT HAS NOT USED. Every
+ * earlier pair is one because its answers agree, or because they disagree and
+ * the disagreement is the content. These are pairs because THE SUBSTITUTION IS
+ * THE SUBJECT MATTER: a family is a formula with a number in it allowed to move,
+ * so a concept about families that asked each question once would have described
+ * a member. Both spans are narrow and neither threatens the superlative two
+ * concepts down.
+ */
+t('eleven expressions in the subject are asked twice, and this promotion added two of them',
+  (() => {
+    const byGiven = {}
+    for (const c of CE.concepts) {
+      for (const p of c.knowledgePoints) {
+        for (const x of tasksForPoint(p.id)) {
+          (byGiven[x.given] = byGiven[x.given] ?? []).push(x.reference)
+        }
+      }
+    }
+    const repeated = Object.entries(byGiven).filter(([, refs]) => refs.length > 1)
+    const spanOf = refs => {
+      const vs = refs.map(r => { const q = asRational(r); return q.n / q.d })
+      return Math.max(...vs) - Math.min(...vs)
+    }
+    const bernoulli = repeated.find(([g]) => g === 'b/m - (b/m)*(b/m)')
+    const entry = repeated.find(([g]) => g === 'c*(b/m)*((m - b)/m)*((m - b)/m)')
+    if (!bernoulli || !entry) return false
+    return repeated.length === 11
+      // 2/9 against 4/25 is about 0.062, and 3/8 against 4/9 about 0.069.
+      && spanOf(bernoulli[1]) < 0.07 && spanOf(entry[1]) < 0.07
+      && repeated.filter(([g]) => g === 'k/m')
+        .every(([, r]) => spanOf(r) > spanOf(bernoulli[1]) && spanOf(r) > spanOf(entry[1]))
+      // The two answers of each pair, by name, so the pair cannot quietly become
+      // a pair of something else.
+      && bernoulli[1].slice().sort().join(',') === '2/9,4/25'
+      && entry[1].slice().sort().join(',') === '3/8,4/9'
+      // And the nine before are still nine, so this promotion added exactly two.
+      && repeated.filter(([g]) => g !== 'b/m - (b/m)*(b/m)'
+        && g !== 'c*(b/m)*((m - b)/m)*((m - b)/m)').length === 9
+  })(),
+  (() => {
+    const b = {}
+    for (const c of CE.concepts) {
+      for (const p of c.knowledgePoints) {
+        for (const x of tasksForPoint(p.id)) (b[x.given] = b[x.given] ?? []).push(x.reference)
+      }
+    }
+    return Object.entries(b).filter(([, r]) => r.length > 1).length
+  })())
+/*
+ * NINETEEN SUBGOALS AND NINETEEN QUESTIONS, six-seven-six — the extra one
+ * belonging to the extra claim, like the extra task.
+ */
+t('all nineteen subgoals ship an authored question, six-seven-six',
+  DD_POINTS.every(p => p.workedExample.subgoals.every(s => typeof s.socratic === 'string'
+    && s.socratic.length > 0))
+  && DD_POINTS.flatMap(p => p.workedExample.subgoals).length === 19
+  && DD_POINTS.map(p => p.workedExample.subgoals.length).join(',') === '6,7,6',
+  DD_POINTS.map(p => `${p.position}:${p.workedExample.subgoals
+    .filter(s => s.socratic).length}/${p.workedExample.subgoals.length}`).join(' '))
+t('and every one is interrogative rather than an imperative with a question mark',
+  DD_POINTS.flatMap(p => p.workedExample.subgoals)
+    .every(s => isInterrogative(s.socratic)),
+  DD_POINTS.flatMap(p => p.workedExample.subgoals)
+    .filter(s => !isInterrogative(s.socratic)).map(s => s.label).join(' | '))
+t('every subgoal names a move rather than a step number, and no two in one example repeat',
+  DD_POINTS.every(p =>
+    p.workedExample.subgoals.every(s => s.label.length > 20 && !/^step\b/i.test(s.label))
+    && new Set(p.workedExample.subgoals.map(s => s.label)).size
+      === p.workedExample.subgoals.length),
+  DD_POINTS.flatMap(p => p.workedExample.subgoals)
+    .filter(s => s.label.length <= 20 || /^step\b/i.test(s.label)).map(s => s.label).join(' | '))
+t('no point claims a figure or a timing target, both absent for stated reasons',
+  DD_POINTS.every(p => p.visualRef === undefined)
+  && DD_POINTS.every(p => p.automaticityTarget === undefined),
+  DD_POINTS.filter(p => p.visualRef !== undefined || p.automaticityTarget !== undefined)
+    .map(p => p.id).join(', '))
+t('and every knowledge point has a task, so nothing here raises chainsWithNoRuling',
+  DD_POINTS.every(p => tasksForPoint(p.id).length > 0),
+  DD_POINTS.filter(p => tasksForPoint(p.id).length === 0).map(p => p.id).join(', '))
+/*
+ * FIDELITY IS `checked` WITH THE PATTERN CARRIED VERBATIM, AND THE SHORTFALL RUNS
+ * BOTH WAYS AT ONCE — WHICH IS THE FIFTH SHAPE THIS FILE HAS RECORDED AND THE
+ * FIRST THAT IS WRONG IN TWO DIRECTIONS.
+ *
+ * The seven concepts below either miss a plural, carry a dead `\b`-after-`)`
+ * alternative, reach one exact title and nothing else, or — in the seventh's case
+ * — over-reach on to a title another node owns. This one does two of those at
+ * the same time.
+ *
+ * THE OVER-REACH IS `Poisson distribution`, A MECHANISM THE MATERIAL DECLINES
+ * WITH ITS PRICE STATED. And unlike the seventh's it collides with nothing: no
+ * node of the map owns that title, since `stochastic-processes` claims
+ * `Poisson process`, so the reach is on to a GAP rather than on to a neighbour.
+ * The cross-node half of the seventh's claim had to live in tests/atlas.mjs
+ * because `AREAS` is an atlas export; this one needs only the two patterns and
+ * so is wholly assertable here, with the other node's pattern quoted from the
+ * atlas side.
+ *
+ * THE MISS IS `Hypergeometric distribution`, WHICH THE THIRD POINT NAMES.
+ * `\bgeometric distribution\b` cannot reach it, because `Hypergeometric` is one
+ * word and there is no boundary in front of `geometric`. So this pattern misses
+ * an article it has material about while claiming one it does not — and because
+ * a miss LOWERS the recognition figure and an over-reach RAISES it, a pattern
+ * wrong in both directions can be wrong by exactly nothing. There is no number
+ * anywhere that moves, which is why both halves are asserted by name.
+ */
+t('its pattern is carried verbatim off the node and three of its four alternatives are live here',
+  String(DD.scope.match) === '/\\b(binomial|poisson|geometric|bernoulli) distribution\\b/i'
+  && DD.fidelity === 'checked'
+  && ['Binomial distribution', 'Geometric distribution', 'Bernoulli distribution']
+    .every(title => DD.scope.match.test(title))
+  // No dead alternative: every one of the four matches a title on its own, which
+  // is the fault two concepts below carry and this one does not.
+  && DD.scope.match.test('Poisson distribution')
+  && DD.scope.match.test('Negative binomial distribution')
+  && DD.scope.hint === 'bernoulli binomial geometric poisson distribution'
+  && DD.scope.id === 'discrete-distributions'
+  && DD.scope.label === 'The discrete distributions',
+  String(DD.scope.match) + ' / ' + DD.scope.hint)
+t('but it OVER-REACHES on to the one mechanism declined, and MISSES one the material names',
+  // The over-reach: the pattern claims the Poisson article and the material
+  // declines the Poisson, with both of its reasons stated in the subject's
+  // `covers` rather than asserted here.
+  DD.scope.match.test('Poisson distribution')
+  && /POISSON DISTRIBUTION IS/.test(CE.subject.covers)
+  && /irrational/.test(CE.subject.covers)
+  && /sequence-convergence/.test(CE.subject.covers)
+  && !/poisson/i.test(DD_SHOWN)
+  // The miss: `Hypergeometric distribution` is a title this concept has material
+  // about and the pattern cannot reach, because `\b` wants a word boundary.
+  && !DD.scope.match.test('Hypergeometric distribution')
+  && /hypergeometric/i.test(DD_SHOWN + DD_POINTS.map(p => p.statement).join(' '))
+  // And it reaches none of the seven concepts below it, which is the half that
+  // keeps `checked` honest rather than merely wide.
+  && !DD.scope.match.test('Variance')
+  && !DD.scope.match.test('Expected value')
+  && !DD.scope.match.test('Random variable')
+  && !DD.scope.match.test('Bayes theorem')
+  && !DD.scope.match.test('Conditional probability')
+  && !DD.scope.match.test('Sample space')
+  && !DD.scope.match.test('Combination'),
+  ['Poisson distribution', 'Hypergeometric distribution', 'Variance', 'Expected value',
+    'Random variable', 'Sample space']
+    .filter(s => DD.scope.match.test(s)).join(', ') || 'none claimed')
 
 // ---------------------------------------------------------------------------
 
@@ -17798,6 +18492,216 @@ t('nothing unteachable is named, since its strength can never rise',
     unmetBefore(UNMET_SUBJECT, c.id, [], 0.7).every(u => isTeachable(UNMET_SUBJECT, u.conceptId))))
 t('an unknown concept has no groundwork rather than all of it',
   unmetBefore(UNMET_SUBJECT, 'no-such-concept', [], 0.7).length === 0)
+
+// ---------------------------------------------------------------------------
+
+/*
+ * THE FIFTY-THIRD PROMOTION: THE FIFTH CONCEPT OF `matrices-and-determinants`,
+ * AND THE FIRST SUBJECT TO TAKE A CONCEPT IT HAD REFUSED BY NAME.
+ *
+ * This subject declined `eigenvalues` in two places — ontology-matrices.ts's
+ * `── Where it stops ──` heading, and the `covers` a learner is shown — and
+ * both were overturned there rather than deleted. The structural half of the
+ * promotion is tests/atlas.mjs's; what belongs here is whether the MATERIAL is
+ * what the overturn claimed it would be, and that is a counting question.
+ *
+ * THE REFUSAL WAS "ITS HONEST TASK IS SOLVE THE CHARACTERISTIC POLYNOMIAL,
+ * WHICH IS `factoring-quadratics` WEARING A HAT." That is a claim that the
+ * concept DUPLICATES an authored one, which is settled by counting what the
+ * concept actually asks. So the assertions below count: eleven subgoals, of
+ * which exactly one is the quadratic solve, and four tasks, of which NONE is.
+ * If a later edit makes the polynomial the bulk of the material, the refusal
+ * was right after all and these go red — which is the only mechanical guard
+ * there can be on a promise about proportion.
+ */
+const MD = getOntology('matrices-and-determinants')
+const MD_EIGEN = conceptById(MD, 'eigenvalues')
+const MD_EIGEN_POINTS = MD_EIGEN.knowledgePoints
+const MD_EIGEN_SUBGOALS = MD_EIGEN_POINTS.flatMap(p => p.workedExample.subgoals)
+const MD_EIGEN_TASKS = MD_EIGEN_POINTS.flatMap(p => tasksForPoint(p.id))
+
+group('the fifty-third promotion: the eigenvalue as a subject that owns determinants')
+
+t('it has no internal faults', ontologyProblems(MD).length === 0, ontologyProblems(MD).join('; '))
+t('its fidelity claim matches what its option can do', fidelityMismatches(MD).length === 0)
+t('five concepts, fifteen knowledge points',
+  MD.concepts.length === 5 && allKnowledgePoints(MD).length === 15,
+  `${MD.concepts.length} concepts, ${allKnowledgePoints(MD).length} points`)
+t('the new concept is teachable AND practisable — a syllabus, not a map entry',
+  isTeachable(MD, 'eigenvalues') && isPractisable(MD, 'eigenvalues'))
+t('its points number from 1, which is per concept and not per subject',
+  MD_EIGEN_POINTS.map(p => p.position).join(',') === '1,2,3'
+  // And so does every other concept of the subject, which is what "per concept"
+  // means and what a fifth concept numbering 13,14,15 would have broken.
+  && MD.concepts.every(c => c.knowledgePoints.map(p => p.position).join(',') === '1,2,3'),
+  MD.concepts.map(c => `${c.id}:${c.knowledgePoints.map(p => p.position).join('')}`).join(' '))
+t('every knowledge point has a task, so no chain is left unable to become evidence',
+  allKnowledgePoints(MD).every(p => tasksForPoint(p.id).length > 0),
+  allKnowledgePoints(MD).filter(p => tasksForPoint(p.id).length === 0)
+    .map(p => p.id).join(', ') || 'none without')
+
+/*
+ * THE COUNT THAT ANSWERS THE REFUSAL, and it is the assertion this group exists
+ * for.
+ *
+ * ONE of the eleven subgoals solves the quadratic, and it is the third of the
+ * second point — which says so in its own `detail`, handing the step back to
+ * `polynomial-roots` by name rather than pretending the factoring is the
+ * lesson. The other ten are the test Av = λv run forwards and then on a
+ * non-candidate, the rearrangement to (A − λI)v = 0, the determinant of a
+ * matrix with a letter down its diagonal, the two coefficients read off the
+ * grid, the sum-and-product check, the substitution of λ back in, the two rows
+ * collapsing to one equation, the ratio it fixes, and the direction being the
+ * answer rather than the vector.
+ *
+ * MATCHED ON THE WORD "FACTOR", which is a blunt instrument and the right one
+ * here: the claim is about how much of the material is factoring, so what is
+ * counted is how many subgoals mention it. A subgoal that started factoring
+ * quadratics without saying so would be a different and much stranger fault.
+ */
+t('one subgoal of eleven is the quadratic solve, which is the refusal answered by counting',
+  MD_EIGEN_SUBGOALS.length === 11
+  && MD_EIGEN_SUBGOALS.filter(s => /factor/i.test(s.label) || /factor/i.test(s.detail))
+    .length === 1
+  // It is the one that hands the step back, and it names where it goes.
+  && /factoring a prerequisite of this concept already owns/.test(
+    MD_EIGEN_SUBGOALS.find(s => /factor/i.test(s.detail)).detail)
+  // And the prerequisite it hands it back to really is one, which is the
+  // `links` entry in atlas-structures.ts doing its job.
+  && isTeachable(getOntology('rational-expressions'), 'polynomial-roots'),
+  `${MD_EIGEN_SUBGOALS.length} subgoals, `
+  + `${MD_EIGEN_SUBGOALS.filter(s => /factor/i.test(s.label) || /factor/i.test(s.detail))
+    .length} mention factoring`)
+
+/*
+ * AND NOT ONE OF THE FOUR TASKS IS A QUADRATIC SOLVE, which is the stronger
+ * half of the same answer: the refusal was about what the concept would ASK,
+ * and what it asks is a scale factor read as a ratio, the characteristic
+ * determinant's value at an eigenvalue, the second eigenvalue from the diagonal
+ * sum, and a component of the direction.
+ *
+ * THE THIRD ONE IS THE CLEAREST SINGLE REFUTATION and is asserted by its
+ * expression rather than its name: `(a + d) - L1` produces an eigenvalue with
+ * no polynomial anywhere in it, because the two roots must sum to the diagonal
+ * entry sum. A concept that were only factoring in a hat could not ask that
+ * question at all.
+ */
+t('no task is a quadratic solve, and one of the four finds an eigenvalue without a polynomial',
+  MD_EIGEN_TASKS.length === 4
+  && MD_EIGEN_TASKS.every(x => x.kind === 'evaluate')
+  // No task's `given` is a polynomial in the unknown set to zero — none of the
+  // four even contains a squared term.
+  && MD_EIGEN_TASKS.every(x => !/\^\s*2/.test(x.given))
+  // The invariant task: the second eigenvalue from the diagonal sum.
+  && MD_EIGEN_TASKS.some(x => x.given === '(a + d) - L1' && x.reference === '1')
+  // And the characteristic determinant one really does vanish, which is the
+  // defining condition being ruled rather than described.
+  && MD_EIGEN_TASKS.some(x => x.given === '(a - L)*(d - L) - b*c' && x.reference === '0'),
+  MD_EIGEN_TASKS.map(x => `${x.id}:${x.given}=${x.reference}`).join(' | '))
+
+/*
+ * EVERY SUBGOAL CARRIES A WRITTEN QUESTION, which is the thing the question
+ * coverage line measures and the single highest-value shape this work has.
+ * types.ts's rule is that a question must not contain its own answer — "should
+ * you add the places separately?" is the named failure — so the check is both
+ * that the field exists and that it ends in a question mark, since a
+ * period-ended question scores zero in `questionCoverage` and reads fine to a
+ * human.
+ */
+t('all eleven subgoals ship a written question, each ending in a question mark',
+  MD_EIGEN_SUBGOALS.every(s => typeof s.socratic === 'string' && s.socratic.length > 40)
+  && MD_EIGEN_SUBGOALS.every(s => s.socratic.trim().endsWith('?'))
+  && MD_EIGEN_SUBGOALS.every(s => typeof s.label === 'string' && s.label.length > 0)
+  && MD_EIGEN_SUBGOALS.every(s => typeof s.detail === 'string' && s.detail.length > 0),
+  `${MD_EIGEN_SUBGOALS.filter(s => s.socratic?.trim().endsWith('?')).length} of `
+  + `${MD_EIGEN_SUBGOALS.length} end in a question mark`)
+
+/*
+ * EVERY OBJECTIVE NAMES A KIND THE SUBJECT ACTUALLY SHIPS. An objective naming
+ * a kind nothing serves can never be satisfied, which is types.ts's argument
+ * one level down — and `justify` is the case worth watching, since twenty-eight
+ * of `plane-geometry`'s objectives name it and no `justify` task exists
+ * anywhere in the build.
+ *
+ * THIS SUBJECT NAMES `justify` AND SHIPS NONE, which is deliberate and
+ * inherited rather than introduced here: all four existing concepts do the
+ * same, because "say what the determinant vanishing tells you about the map" is
+ * the question worth asking and the one nothing can rule. So the assertion is
+ * that every objective names at least one kind that DOES ship, which is the
+ * reachability claim, rather than that every kind it names ships.
+ */
+t('every objective names at least one kind this subject really serves',
+  MD.concepts.every(c => c.objectives.length > 0
+    && c.objectives.every(o => o.taskKinds.length > 0
+      && o.taskKinds.some(k => k === 'evaluate'))),
+  MD_EIGEN.objectives.map(o => `${o.id}:${o.taskKinds.join('+')}`).join(' '))
+
+/*
+ * NO FIGURE AND NO TIMING TARGET, both judgements rather than omissions.
+ *
+ * A figure would help here more than almost anywhere — the whole concept is
+ * about a direction a map leaves alone, which is a picture — and there is no
+ * figure to point at, so `visualRef` is absent. types.ts: absent is honest, a
+ * placeholder is not.
+ *
+ * The timing target is the sharper call. Applying a 2×2 to a vector really is a
+ * speed skill and `ad-minus-bc` carries a 15-second target for the same kind of
+ * arithmetic. But every point here is ABOUT a judgement the arithmetic does not
+ * record — whether the output is a multiple, what the vanishing determinant
+ * means, that the answer is a line and not a point — and a speed reward would
+ * train past exactly the step each point exists to teach.
+ */
+t('no point claims a figure and none is timed, in a subject that times its arithmetic',
+  MD_EIGEN_POINTS.every(p => p.visualRef === undefined)
+  && MD_EIGEN_POINTS.every(p => p.automaticityTarget === undefined)
+  // The contrast, named: the subject does time one point, so the absence here
+  // is a choice and not a convention.
+  && allKnowledgePoints(MD).some(p => p.automaticityTarget !== undefined),
+  allKnowledgePoints(MD).filter(p => p.automaticityTarget !== undefined)
+    .map(p => `${p.id}:${p.automaticityTarget}`).join(' ') || 'none timed anywhere')
+
+/*
+ * THE RUNNING MATRIX HAD TO CHANGE, AND THE REASON IS MATHEMATICAL RATHER THAN
+ * EDITORIAL — which is why it is asserted rather than only explained in the
+ * file header.
+ *
+ * Twelve tasks of this subject run on A = [[2, −1], [3, 4]], so a learner meets
+ * the same numbers in four concepts and sees det(A) = 11 reappear as the
+ * inverse's denominator. That matrix has NO REAL EIGENVALUE: its characteristic
+ * polynomial is λ² − 6λ + 11 and the discriminant is 36 − 44 = −8. So these
+ * four tasks use A = [[3, 1], [2, 2]], whose eigenvalues are 1 and 4.
+ *
+ * Asserted by computing both discriminants from the task data, because the
+ * claim is about the numbers and a comment can drift from them. The
+ * `complex-numbers` half is the other reason it could not be stretched to
+ * cover: that node is refused, `exactValue` having no complex case, so a
+ * complex eigenvalue is not a harder question here but an unaskable one.
+ */
+t('the subject\'s running matrix has no real eigenvalue, which is why these tasks use another',
+  (() => {
+    const disc = (a, b, c, d) => (a + d) * (a + d) - 4 * (a * d - b * c)
+    // The subject's exemplar, from the determinant task that introduces it.
+    const det1 = taskById('det-2x2-1')
+    if (!det1) return false
+    const n = (k) => Number(det1.at[k])
+    if (disc(n('a'), n('b'), n('c'), n('d')) !== -8) return false
+    // The one these four use, from the characteristic-determinant task.
+    const ch = MD_EIGEN_TASKS.find(x => x.given === '(a - L)*(d - L) - b*c')
+    const m = (k) => Number(ch.at[k])
+    return disc(m('a'), m('b'), m('c'), m('d')) === 9
+      // Integer eigenvalues, which is what a square discriminant buys and what
+      // makes every number in the material exact.
+      && Number.isInteger(Math.sqrt(disc(m('a'), m('b'), m('c'), m('d'))))
+      // And the complex case is unaskable rather than merely harder: nothing
+      // authors `complex-numbers`, `exactValue` having no complex case.
+      && !ONTOLOGIES.some(o => o.concepts.some(c => c.id === 'complex-numbers'))
+  })(),
+  (() => {
+    const disc = (a, b, c, d) => (a + d) * (a + d) - 4 * (a * d - b * c)
+    const det1 = taskById('det-2x2-1')
+    const n = (k) => Number(det1.at[k])
+    return `subject exemplar discriminant ${disc(n('a'), n('b'), n('c'), n('d'))}`
+  })())
 
 console.log(`\n${questionCoverageLine(EXPONENTS_AND_LOGARITHMS)}`)
 console.log(
