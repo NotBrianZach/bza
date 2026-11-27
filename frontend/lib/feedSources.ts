@@ -14,9 +14,23 @@
  * copied, and app/api/feed/route.ts now imports it.
  *
  * Moved here verbatim. The UA strings in particular are load-bearing and were
- * not touched: Reddit 403s a browser UA server-side and wants a descriptive
- * bot one, 4chan wants a browser UA and a Referer, and swapping them breaks
- * both in ways that look like rate limiting.
+ * not touched: 4chan wants a browser UA and a Referer, and swapping it breaks
+ * in a way that looks like rate limiting.
+ *
+ * THE REDDIT HALF OF THAT SENTENCE IS NO LONGER TRUE and used to read "Reddit
+ * 403s a browser UA server-side and wants a descriptive bot one". Measured
+ * 2026-11-27, every unauthenticated route is closed and the UA makes no
+ * difference to any of them:
+ *
+ *   www.reddit.com/r/X/hot.json   403 for BOTH UAs, with `retry-after: 0`
+ *                                 and a 190KB HTML block page as the body
+ *   www.reddit.com/r/X/.rss       404, or 429 with `x-ratelimit-remaining:
+ *                                 0.0` — never 200, even spaced out
+ *   old.reddit.com/...            302 to the new UI, which serves HTML
+ *
+ * So the descriptive-bot-UA advice now sends you after a variable that stopped
+ * mattering, which is worse than no comment. Reddit needs an app token; see
+ * `redditToken` below.
  *
  * ── Why the suggested feed needs it ───────────────────────────────────────
  *
@@ -28,18 +42,112 @@
  */
 
 
-// Reddit requires a descriptive bot UA — browser UAs get 403'd server-side
+/**
+ * Reddit wants a descriptive UA on the token request and on every API call.
+ * It is no longer what decides whether you are let in — see the header — but
+ * it is still what they ask for, and a generic one invites a throttle.
+ */
 export const REDDIT_UA = 'bza-reader/1.0 (read-along app; +https://aireadalong.com)'
 // Generic UA for non-Reddit fetches
 export const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
 
-export async function redditFetch(url: string, attempt = 0): Promise<Response> {
-  const res = await fetch(url, {
-    headers: { 'User-Agent': REDDIT_UA, 'Accept': 'application/json' },
+/** Thrown when the only thing missing is credentials, so callers can say so. */
+export class RedditNeedsCredentials extends Error {
+  constructor() {
+    super(
+      'Reddit no longer serves feeds anonymously. Add an app: create a "script" ' +
+      'app at reddit.com/prefs/apps, then set REDDIT_CLIENT_ID and ' +
+      'REDDIT_CLIENT_SECRET.',
+    )
+    this.name = 'RedditNeedsCredentials'
+  }
+}
+
+/**
+ * An app token, cached until shortly before it expires.
+ *
+ * Client-credentials ("application only") rather than a user login, because
+ * nothing here reads a private subreddit or acts as anybody — it lists public
+ * posts, which is exactly what this grant is for. It also means no OAuth
+ * redirect, no per-user token storage, and no refresh dance.
+ *
+ * Cached in module scope, which is the right lifetime and not merely the easy
+ * one: the token is valid for hours, and minting one per request would turn
+ * every feed load into two round trips and walk straight into the rate limit
+ * this change exists to get out of. A module global is per-isolate, so the
+ * worst case on a cold isolate is one extra fetch.
+ *
+ * Sixty seconds are shaved off the expiry. A token that is valid when checked
+ * and expired when it arrives fails as a 401 on the real request, which is a
+ * far more confusing error than a slightly early refresh.
+ */
+let redditToken: { value: string; expiresAt: number } | null = null
+
+async function getRedditToken(): Promise<string> {
+  const id = process.env.REDDIT_CLIENT_ID
+  const secret = process.env.REDDIT_CLIENT_SECRET
+  if (!id || !secret) throw new RedditNeedsCredentials()
+
+  if (redditToken && Date.now() < redditToken.expiresAt) return redditToken.value
+
+  const res = await fetch('https://www.reddit.com/api/v1/access_token', {
+    method: 'POST',
+    headers: {
+      Authorization: `Basic ${btoa(`${id}:${secret}`)}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'User-Agent': REDDIT_UA,
+    },
+    body: 'grant_type=client_credentials',
     cache: 'no-store',
   })
-  // Retry once on 429/5xx/403
-  if (!res.ok && attempt === 0 && (res.status === 429 || res.status >= 500 || res.status === 403)) {
+  if (!res.ok) {
+    // 401 here means the id/secret are wrong, which is worth separating from
+    // "Reddit is down" — the remedy is completely different.
+    throw new Error(res.status === 401
+      ? 'Reddit rejected the app credentials — check REDDIT_CLIENT_ID and REDDIT_CLIENT_SECRET.'
+      : `Could not get a Reddit token (${res.status}).`)
+  }
+  const data = await res.json() as { access_token?: string; expires_in?: number }
+  if (!data.access_token) throw new Error('Reddit returned a token response with no token.')
+  redditToken = {
+    value: data.access_token,
+    expiresAt: Date.now() + Math.max(0, (data.expires_in ?? 3600) - 60) * 1000,
+  }
+  return redditToken.value
+}
+
+/**
+ * One authenticated Reddit API call, taking the PUBLIC url its callers build.
+ *
+ * The host-and-suffix swap lives here rather than at the two call sites so
+ * there is one place that knows the API moved, and it THROWS on a url it does
+ * not recognise instead of passing it through. Passing an unrecognised url
+ * through is the failure worth designing against: it would reach
+ * www.reddit.com unauthenticated, 403, and be retried — exactly the behaviour
+ * this function was changed to stop, arriving silently through a caller
+ * nobody updated.
+ */
+export async function redditFetch(url: string, attempt = 0): Promise<Response> {
+  const m = /^https:\/\/www\.reddit\.com(\/[^?]*?)(?:\.json)?(\?.*)?$/.exec(url)
+  if (!m) throw new Error(`redditFetch was given a url it cannot route to the API: ${url}`)
+  const apiUrl = `https://oauth.reddit.com${m[1]}${m[2] ?? ''}`
+
+  const token = await getRedditToken()
+  const res = await fetch(apiUrl, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'User-Agent': REDDIT_UA,
+      'Accept': 'application/json',
+    },
+    cache: 'no-store',
+  })
+  /*
+   * Retry once, and on 401 drop the cached token first. A 401 on a token that
+   * was unexpired by our clock means Reddit revoked or rotated it, and
+   * retrying with the same one just fails again.
+   */
+  if (!res.ok && attempt === 0 && (res.status === 401 || res.status === 429 || res.status >= 500)) {
+    if (res.status === 401) redditToken = null
     await new Promise(r => setTimeout(r, 800))
     return redditFetch(url, 1)
   }

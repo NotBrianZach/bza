@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server'
  * lib/suggest/parse.ts for why that one is duplicated on purpose.
  */
 import {
-  fetch4chan, fetchHN, fetchReddit, redditFetch, UA, type FeedPost,
+  fetch4chan, fetchHN, fetchReddit, redditFetch, RedditNeedsCredentials, UA, type FeedPost,
 } from '@/lib/feedSources'
 
 export type { FeedPost }
@@ -177,6 +177,19 @@ export async function GET(req: NextRequest) {
     }
     return NextResponse.json({ error: 'Unknown feed type' }, { status: 400 })
   } catch (err: any) {
+    /*
+     * "Not configured" is not a server fault, and conflating the two is what
+     * made this hard to diagnose from outside: a missing Reddit app came back
+     * as a 500 reading `Reddit API error: 403`, which names the symptom
+     * Reddit reports and not the cause, and points at Reddit being broken
+     * rather than at this deployment being unconfigured.
+     *
+     * 503 so monitoring can tell a dependency we have not set up from one
+     * that has fallen over, and the message carries the remedy.
+     */
+    if (err instanceof RedditNeedsCredentials) {
+      return NextResponse.json({ error: err.message }, { status: 503 })
+    }
     return NextResponse.json({ error: err.message ?? 'Failed to fetch feed' }, { status: 500 })
   }
 }
