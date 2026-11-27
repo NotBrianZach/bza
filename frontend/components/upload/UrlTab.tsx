@@ -8,6 +8,7 @@ import { classifyImport } from '@/lib/classifyImport'
 import { maybeAutoCover } from '@/lib/queries/images'
 import { maybeAutoScore } from '@/lib/queries/scores'
 import { supabase } from '@/lib/supabase'
+import { isSupadataUrl } from '@/lib/supadata'
 import { saveLocalBook, saveBookContent } from '@/lib/localStorage'
 import { track } from '@/lib/analytics'
 import { PdfMethodSelector } from './PdfMethodSelector'
@@ -272,8 +273,27 @@ export function UrlTab({
   return (
     <div className="space-y-4">
       <div>
+        {/* The social hosts are named because they already WORKED and nobody
+            could tell. `isSupadataUrl` has matched tiktok/twitter/x/instagram
+            since the Supadata integration landed, /api/fetch-url routes them,
+            and the key is set — but this label stopped at "or YouTube", so the
+            only way to discover it was to paste a link on a hunch.
+
+            VERIFIED, so the label is a claim I checked rather than one I read
+            off the host list: x.com/jack/status/20 comes back with the tweet,
+            the author, the timestamp and the reply thread. It arrives noisy —
+            two duplicated Log in/Sign up blocks and raw engagement counts —
+            which is why the wording promises the post rather than a clean
+            read.
+
+            NOT verified: TikTok and Instagram. Both need a real public post
+            URL to test and I could not obtain one without an account — the
+            TikTok profile page serves no video list to a non-browser client.
+            They are routed and they are named here because a failure is
+            legible (fetch-url throws "No readable content found at this URL"),
+            but if either is ever reported broken, start by believing it. */}
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          URL <span className="font-normal text-gray-400 dark:text-gray-500">(PDF, Wikipedia, webpage, RSS feed, or YouTube)</span>
+          URL <span className="font-normal text-gray-400 dark:text-gray-500">(PDF, Wikipedia, webpage, RSS feed, YouTube, or an X / TikTok / Instagram post)</span>
         </label>
         <div className="flex gap-2">
           <input
@@ -282,15 +302,19 @@ export function UrlTab({
             onChange={e => {
               const v = e.target.value
               setUrlInput(v); setFetchResult(null); setMathpixJob(null); setMathpixMarkdown(null)
-              // Auto-switch to Supadata for YouTube/social URLs — except a
-              // YouTube channel, which is a feed rather than a transcript.
-              try {
-                const host = new URL(v).hostname.replace(/^www\./, '')
-                if (!isYouTubeChannelUrl(v)
-                    && ['youtube.com', 'youtu.be', 'tiktok.com', 'twitter.com', 'x.com', 'instagram.com'].some(d => host === d || host.endsWith('.' + d))) {
-                  setUrlMethod('supadata')
-                }
-              } catch {}
+              /* Auto-switch to Supadata for YouTube/social URLs — except a
+                 YouTube channel, which is a feed rather than a transcript.
+
+                 `isSupadataUrl` rather than a literal host list, and that is
+                 the point of touching this at all: the same six hosts were
+                 written out HERE, again thirty lines below, and a third time
+                 as SUPADATA_HOSTS in lib/supadata.ts — which is the list the
+                 SERVER actually routes on. Adding a platform meant editing
+                 three places, and missing one of the two here would hand the
+                 server a url the client did not mark, which fails as a
+                 webpage parse rather than as anything legible. The label
+                 above would have been a fourth copy. */
+              if (!isYouTubeChannelUrl(v) && isSupadataUrl(v)) setUrlMethod('supadata')
             }}
             onKeyDown={e => e.key === 'Enter' && handleFetchUrl()}
             placeholder="https://…"
@@ -307,12 +331,8 @@ export function UrlTab({
           </button>
         </div>
         {(() => {
-          let requiresSupadata = false
-          try {
-            const host = new URL(urlInput).hostname.replace(/^www\./, '')
-            requiresSupadata = !isYouTubeChannelUrl(urlInput)
-              && ['youtube.com', 'youtu.be', 'tiktok.com', 'twitter.com', 'x.com', 'instagram.com'].some(d => host === d || host.endsWith('.' + d))
-          } catch {}
+          // Second copy of the same question, now asking the same function.
+          const requiresSupadata = !isYouTubeChannelUrl(urlInput) && isSupadataUrl(urlInput)
           return (
         <div className="mt-2 flex items-center gap-2">
           <span className="text-xs text-gray-500 dark:text-gray-400">Parse with:</span>
