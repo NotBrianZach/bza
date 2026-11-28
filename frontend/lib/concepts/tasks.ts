@@ -9668,6 +9668,198 @@ export const TASKS: PracticeTask[] = [
     reference: '-2',
   },
 
+  // ── matrices-and-determinants: the sixth concept ────────────────────────
+  //
+  // THREE OF THE FOUR INHERIT THE FIFTH CONCEPT'S MATRIX, which is the first
+  // time this subject's running example has carried across a promotion since it
+  // had to be swapped. A = [[3,1],[2,2]] has trace 5 and determinant 4, so
+  // L^2 - 5L + 4 is already on the page, and these tasks are the same numbers
+  // in a third role: the coefficients of the law A obeys.
+  //
+  // NOT ONE OF THE FOUR ASKS FOR A MATRIX, which is the question this concept
+  // had to answer before it could be written at all. The theorem's own
+  // statement is that a MATRIX is zero, and the refusal this subject's `covers`
+  // still carries over the decompositions is exactly "an answer that is itself
+  // a matrix". So: one entry of A^2 - 5A + 4I, the two COEFFICIENTS of the
+  // reduction A^3 = pA + qI, and the discriminant that decides whether the
+  // minimal polynomial could be shorter than the characteristic one.
+  //
+  // THE COEFFICIENT TASKS ARE THE ONES THAT CANNOT BE SHORTCUT. An entry of A^3
+  // can be had by multiplying the matrices out and ignoring the theorem
+  // entirely; p and q cannot, because a product yields entries and never the
+  // pair. That is why two of the four ask for them.
+  {
+    id: 'cayley-hamilton-entry-1',
+    knowledgePointId: 'a-matrix-satisfies-its-own-characteristic-polynomial',
+    kind: 'evaluate',
+    prompt:
+      'A = [[3, 1], [2, 2]], so its characteristic polynomial is L^2 - (a + d)L + (ad - bc). '
+      + 'Find entry (2, 2) of A^2 - (a + d)A + (ad - bc)I. Entry (2, 2) of A^2 is row 2 against '
+      + 'column 2, which is cb + dd; the identity contributes 1 on the diagonal.',
+    given: '(c*b + d*d) - (a + d)*d + (a*d - b*c)',
+    variables: MATRIX_ABCD,
+    at: { a: '3', b: '1', c: '2', d: '2' },
+    // (2 + 4) - 5*2 + 4 = 6 - 10 + 4 = 0, and all four entries do the same.
+    // The point of asking for (2,2) rather than (1,2) is that the constant term
+    // participates here: an off-diagonal entry gets nothing from I at all, so
+    // it would cancel without the one step of this point that is not
+    // mechanical substitution.
+    reference: '0',
+  },
+  {
+    id: 'power-reduction-coefficient-1',
+    knowledgePointId: 'every-power-is-a-combination-of-a-and-i',
+    kind: 'evaluate',
+    prompt:
+      'A = [[3, 1], [2, 2]] satisfies A^2 = (a + d)A - (ad - bc)I. Substituting that into '
+      + 'A^3 = A*A^2 twice gives A^3 = pA + qI with p = (a + d)^2 - (ad - bc). Find p.',
+    given: '(a + d)*(a + d) - (a*d - b*c)',
+    variables: MATRIX_ABCD,
+    at: { a: '3', b: '1', c: '2', d: '2' },
+    // 25 - 4 = 21, and A^3 = 21A - 20I = [[43,21],[42,22]], which agrees with
+    // A^2*A entry by entry. This is the answer no matrix product can produce:
+    // multiplying A^2 by A yields the four entries and never the pair (p, q),
+    // so the reduction is the only route to it.
+    reference: '21',
+  },
+  {
+    id: 'power-reduction-entry-1',
+    knowledgePointId: 'every-power-is-a-combination-of-a-and-i',
+    kind: 'evaluate',
+    prompt:
+      'A = [[3, 1], [2, 2]] and A^3 = pA + qI with p = (a + d)^2 - (ad - bc) and '
+      + 'q = -(a + d)(ad - bc). Find entry (1, 1) of A^3 from that combination — p times A\'s '
+      + 'entry (1, 1), plus q times the identity\'s.',
+    given: '((a + d)*(a + d) - (a*d - b*c))*a - (a + d)*(a*d - b*c)',
+    variables: MATRIX_ABCD,
+    at: { a: '3', b: '1', c: '2', d: '2' },
+    // 21*3 - 20 = 43. Checked against the direct product: A^2*A has (1,1) entry
+    // 11*3 + 5*2 = 43. The two routes must agree and the slow one is what the
+    // worked example's last subgoal does.
+    reference: '43',
+  },
+  {
+    id: 'minimal-polynomial-degree-forced-1',
+    knowledgePointId: 'the-shortest-law-rather-than-the-known-one',
+    kind: 'evaluate',
+    prompt:
+      'A = [[3, 1], [2, 2]]. A shorter law than the characteristic polynomial needs a repeated '
+      + 'eigenvalue, and the eigenvalues repeat exactly when (a - d)^2 + 4bc is zero. Evaluate '
+      + 'it. Anything non-zero means two distinct eigenvalues, so A\'s minimal polynomial has to '
+      + 'be the characteristic one.',
+    given: '(a - d)*(a - d) + 4*b*c',
+    variables: MATRIX_ABCD,
+    at: { a: '3', b: '1', c: '2', d: '2' },
+    // 1 + 8 = 9, which is the same discriminant the fifth concept's group
+    // computes as (a + d)^2 - 4(ad - bc) = 25 - 16. Two forms of one quantity,
+    // and this one is written as the difference of the diagonal entries because
+    // that is what "the eigenvalues coincide" is about.
+    reference: '9',
+  },
+
+  // ── matrices-and-determinants: the seventh concept ──────────────────────
+  //
+  // FOUR TASKS ON P = [[3/4, 1/4], [1/2, 1/2]], AND THE MATRIX IS THE SUBJECT'S
+  // OWN ONE DIVIDED BY ITS ROW SUM. A = [[3,1],[2,2]] runs through the fifth and
+  // sixth concepts; both of its rows total 4, which is exactly the condition
+  // that makes A/4 a transition matrix. So the eigenvalue 4 that the fifth
+  // concept found by hand — A(1,1) = (4,4) — becomes the eigenvalue 1 that every
+  // transition matrix has, and A^2 = [[11,5],[10,6]] from the sixth concept is
+  // 16 * P^2, which is where the first task's 11/16 comes from. The numbers are
+  // inherited rather than invented, which is the second promotion running that
+  // has managed it.
+  //
+  // THESE ARE THE FIRST TASKS IN THIS SUBJECT WHOSE ANSWERS ARE NOT INTEGERS,
+  // and that is forced rather than chosen: the answers are probabilities and
+  // shares. Every one is still an exact rational that `ruleEvaluate` settles
+  // locally, which is the property the subject was selected on.
+  //
+  // TWO OF THE FOUR CANNOT BE ANSWERED FROM THE GRID BY MULTIPLYING ANYTHING
+  // OUT, which is the same test the sixth concept's block applies to its
+  // coefficients. A long-run share and the factor by which a gap shrinks are not
+  // entries of any power of P — no finite product produces either — so a learner
+  // who answers 1/3 or 1/4 has used the eigenvalue and one who answers 11/16 may
+  // not have.
+  {
+    id: 'two-step-transition-entry-1',
+    knowledgePointId: 'the-rows-are-where-the-process-can-go',
+    kind: 'evaluate',
+    prompt:
+      'P = [[3/4, 1/4], [1/2, 1/2]] is a transition matrix on two states. The chance of being '
+      + 'in state 1 two steps after state 1 splits at the middle step: p11*p11 + p12*p21, which '
+      + 'is row 1 against column 1 and so is entry (1, 1) of P^2. Evaluate it.',
+    given: 'p11*p11 + p12*p21',
+    variables: [
+      { name: 'p11', assumptions: { real: true, positive: true } },
+      { name: 'p12', assumptions: { real: true, positive: true } },
+      { name: 'p21', assumptions: { real: true, positive: true } },
+    ],
+    at: { p11: '3/4', p12: '1/4', p21: '1/2' },
+    // 9/16 + 2/16 = 11/16, which is A^2's (1,1) entry of 11 over 16. The whole
+    // row comes to 11/16 + 5/16 = 1, so the answer is checkable against the
+    // property the concept opens with.
+    reference: '11/16',
+  },
+  {
+    id: 'steady-state-share-1',
+    knowledgePointId: 'the-row-the-matrix-leaves-alone',
+    kind: 'evaluate',
+    prompt:
+      'P = [[3/4, 1/4], [1/2, 1/2]]. In the long run the share leaving state 1 must equal the '
+      + 'share leaving state 2, so pi1*p12 = pi2*p21; with pi1 + pi2 = 1 that makes '
+      + 'pi2 = p12/(p12 + p21). Find the long-run share of state 2.',
+    given: 'p12/(p12 + p21)',
+    variables: [
+      { name: 'p12', assumptions: { real: true, positive: true } },
+      { name: 'p21', assumptions: { real: true, positive: true } },
+    ],
+    at: { p12: '1/4', p21: '1/2' },
+    // (1/4)/(3/4) = 1/3, and the balance it comes from checks out at the answer:
+    // (2/3)(1/4) and (1/3)(1/2) are both 1/6. Note what is NOT on the right-hand
+    // side — the diagonal. Only the two switching probabilities matter, and they
+    // enter REVERSED, which is the part worth being surprised by.
+    reference: '1/3',
+  },
+  {
+    id: 'second-eigenvalue-of-a-chain-1',
+    knowledgePointId: 'the-second-eigenvalue-is-the-rate',
+    kind: 'evaluate',
+    prompt:
+      'P = [[3/4, 1/4], [1/2, 1/2]]. One eigenvalue of every transition matrix is 1, because '
+      + 'each row totals 1, and the two eigenvalues add up to the diagonal sum. Find the other '
+      + 'eigenvalue — the factor by which one step shrinks the distance to the steady state.',
+    given: '(p11 + p22) - 1',
+    variables: [
+      { name: 'p11', assumptions: { real: true, positive: true } },
+      { name: 'p22', assumptions: { real: true, positive: true } },
+    ],
+    at: { p11: '3/4', p22: '1/2' },
+    // 5/4 - 1 = 1/4. The product relation agrees: det P = 3/8 - 1/8 = 1/4 and
+    // one eigenvalue is 1. This is `second-eigenvalue-from-the-diagonal-sum-1`
+    // one concept later with the known eigenvalue supplied by the row sums
+    // rather than by a previous question.
+    reference: '1/4',
+  },
+  {
+    id: 'gap-to-the-steady-state-1',
+    knowledgePointId: 'the-second-eigenvalue-is-the-rate',
+    kind: 'evaluate',
+    prompt:
+      'P = [[3/4, 1/4], [1/2, 1/2]] has steady state (2/3, 1/3) and second eigenvalue L2 = 1/4. '
+      + 'Starting in state 1 with certainty, the state-1 gap begins at 1 - pi1 and is multiplied '
+      + 'by L2 at every step. Find the gap after two steps.',
+    given: '(1 - pi1)*L2*L2',
+    variables: [
+      { name: 'pi1', assumptions: { real: true, positive: true } },
+      { name: 'L2', assumptions: { real: true } },
+    ],
+    at: { pi1: '2/3', L2: '1/4' },
+    // (1/3)(1/16) = 1/48, and the direct route agrees: P^2's (1,1) entry is
+    // 11/16 and 11/16 - 2/3 = 1/48. That the two agree is the point of the
+    // task — the eigenvalue predicts the gap without the matrix power.
+    reference: '1/48',
+  },
+
   // ── vectors-and-independence ────────────────────────────────────────────
   //
   // Twelve tasks, all exactly rulable: three on the plane the components are

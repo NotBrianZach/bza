@@ -154,7 +154,247 @@
  * a clean determinant and a clean inverse has no reason to have real
  * eigenvalues, and the two choices pull in different directions.
  *
- * ── THE READY FIELD THIS PROMOTION LEAVES, MEASURED RATHER THAN QUOTED ────
+ * ── THE SIXTH CONCEPT, AND THE RULABILITY READ ITS PREDECESSOR DEFERRED ───
+ *
+ * `cayley-hamilton` is the fifty-fourth promotion. The section below this one
+ * named it the cheapest filing on the map and then explicitly declined to say
+ * whether it could be authored, leaving "an argument for the next run to make
+ * in its own words". This is that argument, and it is the only thing that stood
+ * between the node and the material: nothing anywhere refuses this concept.
+ *
+ * THE OBJECTION, STATED FAIRLY. The theorem is that A² − (a + d)A + (ad − bc)I
+ * is the zero matrix, so "verify Cayley–Hamilton" asks for an answer that IS a
+ * matrix — which is the disjunct of the old `covers` refusal that the
+ * fifty-third did NOT overturn and which still stands over the decompositions.
+ * If that were all the concept could ask, it would belong on the map.
+ *
+ * WHAT SETTLES IT IS THE MOVE THIS WHOLE SUBJECT IS BUILT ON, applied for the
+ * third time. The heading two above records `gaussian-elimination`'s refusal
+ * dissolving the same way: the answer's shape is never what gets asked for
+ * here, because the engine has no matrix type and every task asks for ONE
+ * ENTRY. Entry (2, 2) of A² − 5A + 4I is 0, and 0 is a number.
+ *
+ * BUT ONE ENTRY ALONE WOULD BE A THIN CONCEPT, and that is the half worth
+ * stating, because "it can be graded" and "it is worth teaching" are different
+ * questions and this file has twice answered only the first. So the material is
+ * built on the two things the theorem is FOR rather than on verifying it:
+ *
+ *   - IT IS A REDUCTION RULE. A² = (a + d)A − (ad − bc)I, so every power of a
+ *     2×2 is pA + qI, and the pair is found by arithmetic on two coefficients
+ *     with no matrices multiplied at all. A³ = 21A − 20I for the running
+ *     matrix, and both 21 and −20 are numbers a task can ask for — and cannot
+ *     be shortcut by multiplying the matrices out, since that route produces
+ *     entries rather than coefficients.
+ *   - IT IS WHAT MAKES THE MINIMAL POLYNOMIAL A QUESTION. Degree 2 comes free
+ *     from the theorem, so the only shorter law is a monic λ − c, and M obeys
+ *     that exactly when M = cI. Hence the degree is 1 for the scalar multiples
+ *     of the identity and 2 for everything else — an integer, and one the
+ *     characteristic polynomial cannot see: [[4, 1], [0, 4]] and [[4, 0], [0, 4]]
+ *     share the polynomial (λ − 4)² and differ in the degree.
+ *
+ * WHAT IS NOT CLAIMED. The general criterion — diagonalisable exactly when the
+ * minimal polynomial is a product of distinct linear factors — is NOT written
+ * here. The 2×2 case is argued in full and needs no division theorem (two monic
+ * degree-2 annihilating polynomials would differ by a degree-1 law), and the
+ * third point says in its own `detail` that what the direction count means for
+ * choosing a basis belongs to `diagonalisation`, which is still a map node.
+ *
+ * THE RUNNING MATRIX IS INHERITED HERE, which the fifty-third's could not be —
+ * see the cost section below it. A = [[3, 1], [2, 2]] has eigenvalues 1 and 4,
+ * trace 5 and determinant 4, so λ² − 5λ + 4 is the polynomial already on the
+ * page and three of this concept's four tasks run on it. The third point has to
+ * introduce two others and the reason is mathematical rather than editorial: A
+ * has DISTINCT eigenvalues, which forces its minimal polynomial to be the
+ * characteristic one, so the question the point exists to ask is vacuous on it.
+ *
+ * ── THE SEVENTH CONCEPT, AND THE FIRST FILING AN EDGE KIND DECIDED ────────
+ *
+ * `markov-chains` is the fifty-fifth promotion and it did not come from this
+ * half of the atlas. It was a node of `probability`, in atlas-uncertainty.ts,
+ * where eight previous departures all went to `chance-and-events` — and that
+ * subject holds the `conditional-probability` this node needs. It is here
+ * anyway, and the reason is structural rather than editorial.
+ *
+ * THE COSTS WERE EQUAL AND THE EDGE KINDS WERE NOT. The node declared two
+ * prerequisites, one in each candidate subject, so filing it either way stranded
+ * exactly one edge and factor 2 could not separate them. It also declared
+ * `exercises: ['eigenvalues']`, which `expandEdges` turns into an `encompasses`.
+ * An authored ontology may name only concepts it contains, and an area's `links`
+ * hard-codes `kind: 'prerequisite'` — so an `encompasses` edge between two
+ * subjects is expressible NOWHERE. Filed with the probability, that credit claim
+ * would have been deleted in silence with every suite green, which is what
+ * happened to `counting-probability`'s claim at the forty-sixth. Filed here it
+ * is an ordinary `EDGES` entry and the probability prerequisite becomes
+ * `PROBABILITY.links`' seventh entry instead.
+ *
+ * AND THE MATERIAL AGREES, WHICH IS WHAT MAKES IT A FILING RATHER THAN A
+ * WORKAROUND. The heading about `gaussian-elimination`, four above this one,
+ * records this subject losing a concept on exactly this test: with no grid to
+ * display, row reduction on three equations IS three equations, so filing it
+ * here would have shipped a matrix concept whose material never shows a matrix.
+ * Run on this concept the test answers the other way. All three worked examples
+ * are on P = [[3/4, 1/4], [1/2, 1/2]], the two-step probability is an entry of
+ * P², and the steady state and the rate of approach are the two eigenvalues.
+ * What the probability supplies is the reason the entries multiply and add as
+ * they do, and that arrives as a prerequisite.
+ *
+ * THE BOUNDARY THAT HAD TO BE SETTLED FIRST IS AGAINST `bayes-theorem`, not
+ * against anything in this file. A two-step transition probability is the law of
+ * total probability conditioning on the middle state, and that law is already
+ * authored — so if the first point presented its sum as new, the concept would
+ * be teaching conditional probability a second time under a matrix heading. The
+ * material therefore borrows the arithmetic BY NAME and keeps the recognition:
+ * 3/4·3/4 + 1/4·1/2 pairs row 1 with column 1, so it is one entry of P·P, and
+ * n steps are the entries of Pⁿ. The subgoal that does the sum cites
+ * `bayes-theorem`; the next one is where the matrix arrives.
+ *
+ * WHAT MAKES THE CONCEPT WORTH TEACHING RATHER THAN MERELY GRADABLE — the
+ * distinction the sixth concept's heading insists on — is the second eigenvalue.
+ * The long-run shares are the row P leaves alone, which is this subject's
+ * fifth concept with the vector on the other side; the RATE at which an
+ * arbitrary start reaches them is λ₂ = (diagonal sum) − 1, and the gap is
+ * multiplied by it exactly, because two distributions each totalling 1 have a
+ * difference totalling 0 and in two states that forces a multiple of (1, −1).
+ * No probability treatment without the eigenvalue reaches that number, and no
+ * power of P produces it. Two of the four tasks ask for quantities of that kind.
+ *
+ * THREE THINGS THE MATERIAL IS CAREFUL ABOUT, each of which could have been
+ * silently wrong:
+ *
+ *   - THE SIDE THE VECTOR GOES ON. The right eigenvector of P for λ = 1 is
+ *     (1, 1); scaled to total 1 that is (1/2, 1/2), and (1/2, 1/2)P = (5/8, 3/8)
+ *     — so the right eigenvector is NOT the steady state. The second point
+ *     checks that rather than asserting it, because the two vectors coincide for
+ *     a symmetric P and a worked example built on one would teach the error.
+ *   - CONVERGENCE IS NOT IMPLIED. A steady state can exist with nothing
+ *     approaching it: the swap matrix [[0, 1], [1, 0]] has diagonal sum 0, so
+ *     λ₂ = −1, and a start at (1, 0) oscillates for ever while (1/2, 1/2) sits
+ *     there fixed. The third point builds that chain, so |λ₂| < 1 is a condition
+ *     the material earns instead of a caveat.
+ *   - NORMALISATION IS A CONDITION AN EIGENVECTOR PROBLEM DOES NOT HAVE. The
+ *     fifth concept ends by insisting the answer is a DIRECTION and every
+ *     non-zero multiple does the same job. Here exactly one multiple totals 1,
+ *     and the second point says so against that concept by name.
+ *
+ * THE RUNNING MATRIX IS INHERITED, BY DIVISION. A = [[3, 1], [2, 2]] runs
+ * through the fifth and sixth concepts, and BOTH of its rows total 4 — which is
+ * exactly the condition that makes A/4 a transition matrix, and the same fact as
+ * A(1, 1) = (4, 4), which the fifth concept's first point computes by hand. So
+ * P = A/4, the eigenvalue 4 becomes the 1 every transition matrix is guaranteed,
+ * and A² = [[11, 5], [10, 6]] from the sixth concept is 16P² — which is where
+ * the first task's 11/16 comes from. The numbers were not chosen to be tidy;
+ * they are the subject's own, and the reason they work is the reason a stochastic
+ * matrix has an eigenvalue 1 at all.
+ *
+ * WHAT IS NOT CLAIMED. Absorbing and recurrent states, periodicity, chains with
+ * more than two states, and the Perron–Frobenius theorem that makes the
+ * two-state argument general are all absent. The node's `terms` named absorbing
+ * and recurrent states and they are not here: with two states an absorbing one
+ * makes the chain trivial, and the vocabulary without a third state would be a
+ * list of words. `stochastic-processes` is the node above, and it is where time
+ * becomes continuous.
+ *
+ * ── THE READY FIELD THIS PROMOTION LEAVES, AND IT IS EMPTY AGAIN ───────────
+ *
+ * 210 map nodes, 100 authored, 19 areas, 17 subjects. ELEVEN ready where there
+ * were twelve: this promotion spent `markov-chains` and made NOTHING ready, its
+ * only dependent `stochastic-processes` needing `central-limit-theorem` as well.
+ * So the yield is ZERO for the second promotion running and the fifth time
+ * overall — and for the second time it was the cheapest-looking candidate that
+ * bought nothing.
+ *
+ * AND NOT ONE OF THE ELEVEN IS UNREFUSED, which is the fact the next run needs
+ * and which has only been true once before, at the fifty-second. The ready set
+ * is now exactly the recorded refusal list plus `diagonalisation`:
+ * `graphs-of-functions`, `relations`, `linear-inequalities`, `complex-numbers`,
+ * `supremum-and-completeness`, `constructions`, `non-euclidean-geometry`,
+ * `word-problems`, `combinatorial-identities`, `sampling-and-bias` — and
+ * `diagonalisation`, refused by THIS subject's shipped `covers`, which declines
+ * "a diagonalisation, a Jordan form and an SVD" by name as each answering with
+ * matrices. Only the eigenvalue half of that sentence was ever overturned.
+ * tests/atlas.mjs asserts that equality by name in the fifty-fifth's group, so a
+ * green suite means the field is still empty and a red one means it has moved —
+ * which is cheaper than rebuilding the tree.
+ *
+ * SO THE NEXT RUN OWES AN OVERTURNING ARGUMENT, and the honest place to start is
+ * `diagonalisation`: three dependents (`spectral-theorem`,
+ * `jordan-normal-form`, `matrix-exponential`), one stranded edge (`rank-nullity`,
+ * in `vectors-and-independence`), and a refusal in this file that this file has
+ * now dissolved three times by the same move — the engine has no matrix type, so
+ * the answer's shape is never what gets asked for, and an entry of PDⁿP⁻¹ is a
+ * number. TWO DIFFICULTIES TO FACE RATHER THAN INHERIT. First, the sixth concept
+ * already reaches an entry of Aⁿ for a 2×2 with no P at all, so the boundary
+ * question is what the diagonalisation ADDS, and the answer has to be more than
+ * a second route to the same entry — the eigenbasis as a change of coordinates
+ * in which the map is two independent scalings is the candidate. Second, this
+ * concept now reaches Pⁿ's limiting behaviour through λ₂ without diagonalising
+ * anything, which narrows the gap further. Both are arguments a run can make;
+ * neither is made here.
+ *
+ * `linear-algebra` is unchanged at SEVEN nodes with thirteen departures, this
+ * promotion having come out of `probability` instead — which is at SEVEN nodes
+ * with nine departures and NO `departed` array, two of headroom on the nodes
+ * alone. The fifty-first set the deadline at six nodes and this promotion made
+ * that the next one, so whoever promotes out of `probability` next declares
+ * `departed` there. Its root set SHRANK from three to two
+ * ({`continuous-distributions`, `law-of-large-numbers`}), and that shrink
+ * FALSIFIED the forty-eighth promotion's rule — see the fifty-fifth's group in
+ * tests/atlas.mjs, which computes both.
+ *
+ * ── THE READY FIELD THE FIFTY-FOURTH LEFT, SUPERSEDED BY THE SECTION ABOVE ─
+ *
+ * 211 map nodes, 99 authored, 19 areas, 17 subjects. TWELVE ready where there
+ * were thirteen: this promotion spent `cayley-hamilton` and made NOTHING ready,
+ * `jordan-normal-form` being its only dependent and needing `diagonalisation`
+ * as well. So the yield is ZERO, which is the fourth time and is independent of
+ * how cheap a promotion was — this was the cheapest filing available and bought
+ * nothing. The dependent count was an upper bound of one and the realisation is
+ * nought.
+ *
+ * TWO UNREFUSED CANDIDATES ARE LEFT and both are the fifty-third's yield rather
+ * than this one's, so the next run still does not owe an overturning argument:
+ *
+ *   - `diagonalisation` — BUT READ THE `covers` ABOVE BEFORE PLANNING IT. The
+ *     fifty-third's header lists it as unrefused and that is wrong in the one
+ *     way the refusal set is routinely wrong: a refusal can live in the HOST
+ *     file where no ready-field header mentions it, and this subject's shipped
+ *     `covers` declines "a diagonalisation, a Jordan form and an SVD" by name as
+ *     each answering with matrices. That half was NOT overturned at the
+ *     fifty-third and is not overturned here. Whether the one-entry move
+ *     dissolves it a fourth time is a real question — an entry of Aⁿ computed
+ *     as PDⁿP⁻¹ is a number — but it is an overturn and has to be argued as
+ *     one, and the honest difficulty is that this concept now reaches an entry
+ *     of Aⁿ for a 2×2 without any P at all. Three dependents
+ *     (`spectral-theorem`, `jordan-normal-form`, `matrix-exponential`), strands
+ *     one (`rank-nullity`, in `vectors-and-independence`).
+ *   - `markov-chains` — under no refusal anywhere, plainly rulable (a two-step
+ *     transition probability and a steady-state share are numbers), ONE
+ *     dependent (`stochastic-processes`). Its cost is the one factor 2 measured
+ *     as stranded `needs` misses: it declares `exercises: ['eigenvalues']`, and
+ *     a credit edge whose ends sit in two ontologies is expressible NOWHERE,
+ *     since `links` hard-codes `kind: 'prerequisite'`. Filed in
+ *     `chance-and-events`, where its prerequisite `conditional-probability`
+ *     lives, that edge is dropped in silence. Filed HERE, where `eigenvalues`
+ *     lives, the credit edge is an ordinary `EDGES` entry and the probability
+ *     prerequisite becomes a `links` entry instead. The precedent is in the
+ *     heading three above this one: `gaussian-elimination` was filed with its
+ *     credit edge rather than against it. Decide that before writing anything.
+ *
+ * The ten refusals are untouched and still bind: `graphs-of-functions`,
+ * `relations`, `linear-inequalities`, `complex-numbers`,
+ * `supremum-and-completeness`, `constructions`, `non-euclidean-geometry`,
+ * `word-problems`, `combinatorial-identities`, `sampling-and-bias`.
+ *
+ * `linear-algebra` is at SEVEN nodes with thirteen departures, so fifteen of
+ * headroom against a floor of five — unchanged, since a departure moves a name
+ * from `nodes` into `departed` and the floor reads the two together. Its root
+ * set SHRANK from {`diagonalisation`, `cayley-hamilton`} to
+ * {`diagonalisation`}, which is the fourth distinct shape this one area has
+ * produced and the second shrink: the departing node was a root itself, and its
+ * only dependent `jordan-normal-form` still names `diagonalisation` inside the
+ * area, so nothing was substituted in.
+ *
+ * ── THE READY FIELD THE FIFTY-THIRD LEFT, SUPERSEDED BY THE SECTION ABOVE ─
  *
  * 212 map nodes, 98 authored, 19 areas, 17 subjects. THIRTEEN ready where
  * there were eleven, and the number is the smaller half of what moved: this
@@ -212,7 +452,23 @@ const subject: Subject = {
     'subject does not reach — a diagonalisation, a Jordan form and an SVD each answer with ' +
     'matrices, and nothing here can ask for one. The eigenvalue half does not: an eigenvalue is ' +
     'a NUMBER, the quadratic it solves has its two coefficients read straight off the grid, and ' +
-    'the direction belonging to it is fixed by one equation in two unknowns. Row reduction is ' +
+    'the direction belonging to it is fixed by one equation in two unknowns. AND THE LAW THE ' +
+    'MATRIX CANNOT ESCAPE is written too: a matrix satisfies its own characteristic polynomial, ' +
+    'which turns that polynomial into a rule for lowering a power and raises the question of ' +
+    'the SHORTEST law a given matrix obeys. That sits inside the withdrawn sentence rather than ' +
+    'outside it — the degree of a minimal polynomial is a number, and for a 2×2 it is 1 exactly ' +
+    'for the scalar multiples of the identity — while the FORM such a polynomial picks out is ' +
+    'still a matrix and still out of reach. AND THE PROCESS THAT FORGETS ITS OWN HISTORY is ' +
+    'written here as well, which is the one concept of this subject that does not begin with a ' +
+    'matrix somebody handed you: a transition matrix is a grid of conditional probabilities ' +
+    'whose every ROW totals 1 and whose columns need not total anything, a multi-step ' +
+    'probability is one entry of a power of it, the long-run shares are the row the matrix ' +
+    'leaves alone — an eigenvector for the 1 that every such matrix is guaranteed, and a LEFT ' +
+    'one, since a distribution multiplies from that side — and how fast an arbitrary start ' +
+    'reaches them is the OTHER eigenvalue, read off the diagonal with nothing solved. The ' +
+    'probability it rests on is not claimed here: conditioning is written as ' +
+    '`conditional-probability` in `chance-and-events` and reaches this subject as a ' +
+    'prerequisite. Row reduction is ' +
     'written, but not here — with no grid to display it is three equations, so it is authored ' +
     'as `gaussian-elimination` in `expressions-and-equations` and reaches this subject as the ' +
     'prerequisite of the determinant rather than as a concept of it.',
@@ -1235,6 +1491,566 @@ const CONCEPTS: Concept[] = [
       },
     ],
   },
+
+  {
+    id: 'cayley-hamilton',
+    name: 'Cayley–Hamilton and the minimal polynomial',
+    subjectId: subject.id,
+    scope: {
+      id: 'cayley-hamilton',
+      label: 'Cayley–Hamilton and the minimal polynomial',
+      hint: 'cayley hamilton theorem minimal polynomial characteristic polynomial annihilating',
+      match: /\bcayley[–-]hamilton\b|\bminimal polynomial\b/i,
+    },
+    fidelity: 'checked',
+    objectives: [
+      {
+        id: 'substitute-a-matrix-into-its-own-polynomial',
+        statement:
+          'Build a 2×2 matrix\'s characteristic polynomial from its entries, substitute the ' +
+          'matrix into it, and check entry by entry that the result is the zero matrix.',
+        taskKinds: ['evaluate', 'justify'],
+      },
+      {
+        id: 'reduce-a-power-and-find-the-shortest-law',
+        statement:
+          'Use the theorem as a reduction rule to write a higher power of a 2×2 as pA + qI, and ' +
+          'decide whether any shorter polynomial can annihilate the matrix.',
+        taskKinds: ['evaluate', 'justify'],
+      },
+    ],
+    knowledgePoints: [
+      {
+        id: 'a-matrix-satisfies-its-own-characteristic-polynomial',
+        conceptId: 'cayley-hamilton',
+        statement:
+          'The characteristic polynomial was built to have the eigenvalues as its roots, and it ' +
+          'turns out to vanish at the matrix itself: A² − (a + d)A + (ad − bc)I is the zero ' +
+          'matrix, always. Both coefficients are the ones already read straight off the grid, so ' +
+          'nothing new is computed — the one step that is not mechanical substitution is that ' +
+          'the constant term becomes a multiple of I, since a number cannot be added to a matrix.',
+        position: 1,
+        workedExample: {
+          problem:
+            'A = [[3, 1], [2, 2]], whose characteristic polynomial is λ² − 5λ + 4. Check entry ' +
+            'by entry that A² − 5A + 4I is the zero matrix.',
+          subgoals: [
+            {
+              label: 'Rebuild the two coefficients from the grid',
+              detail:
+                '3 + 2 = 5 is the diagonal sum and 3·2 − 1·2 = 4 is ad − bc, so the polynomial ' +
+                'is λ² − 5λ + 4. This is the characteristic polynomial the previous concept ' +
+                'built and not a new one; the theorem is about that same polynomial with the ' +
+                'matrix put where λ was.',
+              socratic:
+                'The polynomial this theorem is about is one you have already made: the previous ' +
+                'concept took both of its coefficients straight off the grid, the diagonal sum ' +
+                'into one place and ad − bc into the other. Rebuild it for this A and watch the ' +
+                'signs — which coefficient does the diagonal sum become, what sign does it ' +
+                'carry, and what degree does the finished polynomial have, given that the ' +
+                'degree is what decides which power of A the theorem will have anything to say ' +
+                'about?',
+            },
+            {
+              label: 'Substitute the matrix, and settle what the constant becomes',
+              detail:
+                'λ² becomes A², −5λ becomes −5A, and the 4 becomes 4I rather than the number 4. ' +
+                'Nothing adds a number to a matrix; the matrix that does to a vector exactly ' +
+                'what multiplying by 4 does is 4I, so that is what the constant term has to ' +
+                'mean. Reading it that way is the whole content of "a matrix satisfies a ' +
+                'polynomial".',
+              socratic:
+                'Putting A where λ stands is straightforward in the first two terms and the ' +
+                'third is where a first attempt goes wrong. Write out what each of the three ' +
+                'terms becomes, then look hard at the last one: the first two are 2×2 grids and ' +
+                'the constant is a bare number, and the three have to combine into one object ' +
+                'for the claim to be a claim at all. Which single matrix does to any vector ' +
+                'precisely what multiplying it by 4 does, and so what must that constant term ' +
+                'be read as?',
+            },
+            {
+              label: 'Square the matrix by the row rule',
+              detail:
+                'A² = [[3·3 + 1·2, 3·1 + 1·2], [2·3 + 2·2, 2·1 + 2·2]] = [[11, 5], [10, 6]]. ' +
+                'This is the second concept of this subject performed with both factors the ' +
+                'same matrix; the rule does not change when B is A.',
+              socratic:
+                'The only genuinely new arithmetic in this example is the square, and it is the ' +
+                'subject\'s multiplication rule with B set equal to A. Take row 1 of A against ' +
+                'column 1, then row 1 against column 2, and so on for row 2. Which entry of the ' +
+                'answer does row i against column j land in, and what is the trap in squaring a ' +
+                'matrix that squaring a number does not have?',
+            },
+            {
+              label: 'Add the three matrices one position at a time',
+              detail:
+                'Entry (1, 1) is 11 − 5·3 + 4 = 0, entry (1, 2) is 5 − 5·1 + 0 = 0, entry ' +
+                '(2, 1) is 10 − 5·2 + 0 = 0, and entry (2, 2) is 6 − 5·2 + 4 = 0. All four ' +
+                'vanish. The two off-diagonal entries get nothing at all from 4I, which is ' +
+                'where that matrix\'s zeros do their work.',
+              socratic:
+                'Three 2×2 matrices to combine, and adding matrices never mixes positions — so ' +
+                'this is four separate sums of three numbers each rather than one calculation. ' +
+                'Work the diagonal pair first and then the off-diagonal pair, keeping track of ' +
+                'what 4I contributes to each position. Do all four come to zero, and which two ' +
+                'of them had to get there with no help whatever from the constant term?',
+            },
+          ],
+          answer: 'all four entries come to 0, so A² − 5A + 4I is the zero matrix',
+        },
+      },
+      {
+        id: 'every-power-is-a-combination-of-a-and-i',
+        conceptId: 'cayley-hamilton',
+        statement:
+          'Rearranged, the theorem stops being a fact to check and becomes a reduction rule: ' +
+          'A² = (a + d)A − (ad − bc)I. Any A² inside an expression can be replaced by a ' +
+          'combination of A and I, and applying that repeatedly writes EVERY power of a 2×2 as ' +
+          'pA + qI for some pair of numbers. The pair is found by arithmetic on the ' +
+          'coefficients, with no two matrices ever multiplied together.',
+        position: 2,
+        workedExample: {
+          problem:
+            'A = [[3, 1], [2, 2]] satisfies A² = 5A − 4I. Find p and q with A³ = pA + qI, then ' +
+            'read off entry (1, 1) of A³.',
+          subgoals: [
+            {
+              label: 'Rearrange the law so the power stands alone',
+              detail:
+                'A² − 5A + 4I = 0 gives A² = 5A − 4I. Moving terms across is legitimate here ' +
+                'for the ordinary reason: adding and subtracting matrices behaves exactly like ' +
+                'adding and subtracting numbers, position by position. What changes is the use — ' +
+                'the equation is now a substitution that lowers a power rather than an identity ' +
+                'to verify.',
+              socratic:
+                'You have an expression in A that equals the zero matrix and three terms in it. ' +
+                'Move two of them across so that the highest power stands by itself — the same ' +
+                'rearranging you would do with numbers, and allowed here for the same reason, ' +
+                'since matrix addition works one position at a time and never mixes them. Which ' +
+                'term do you isolate, and what does the result then let you DO to any ' +
+                'expression that has an A² sitting inside it?',
+            },
+            {
+              label: 'Multiply through by A and then reduce the A² that reappears',
+              detail:
+                'A³ = A·A² = A(5A − 4I) = 5A² − 4A, using A·I = A. The A² in that is reducible ' +
+                'by the same rule, so 5(5A − 4I) − 4A = 25A − 20I − 4A = 21A − 20I. Hence ' +
+                'p = 21 and q = −20, reached with no matrix multiplication anywhere.',
+              socratic:
+                'A³ is A times A², and you have a replacement for A². Make that substitution ' +
+                'and expand, remembering that A·I is just A. Now look at what you are holding: ' +
+                'a multiple of A² has appeared again, which is the very shape the rule already ' +
+                'handles. Apply it a second time and collect the two kinds of term. What are ' +
+                'the coefficients of A and of I once nothing reducible is left, and how many ' +
+                'matrices did you multiply together to get them?',
+            },
+            {
+              label: 'Read one entry off the combination',
+              detail:
+                'Entry (1, 1) of 21A − 20I is 21·3 − 20·1 = 63 − 20 = 43, since I contributes a ' +
+                '1 on the diagonal. The answer pA + qI is a recipe for all four entries at ' +
+                'once, so any one of them costs two multiplications and an addition.',
+              socratic:
+                'A³ = 21A − 20I describes all four entries at once and you want only one of ' +
+                'them. Entry (1, 1) of a sum of matrices is the sum of their (1, 1) entries, so ' +
+                'take 21 times A\'s and add q times I\'s. Which number is I\'s (1, 1) entry, and ' +
+                'would the arithmetic have gone differently had you been asked for entry ' +
+                '(1, 2) instead — in what specific way?',
+            },
+            {
+              label: 'Check it the slow way, once',
+              detail:
+                'A³ = A²·A = [[11, 5], [10, 6]]·[[3, 1], [2, 2]], whose (1, 1) entry is ' +
+                '11·3 + 5·2 = 43. The two routes agree. The saving is not in this example — one ' +
+                'entry either way is about the same work. Both routes do get longer with the ' +
+                'exponent, and at different rates: each further power is one more application of ' +
+                'the two-line step, which is a handful of multiplications, against one more ' +
+                'whole matrix product, which is eight.',
+              socratic:
+                'A claim this strong is worth checking the slow way at least once. You already ' +
+                'have A² from the previous point, so multiply it by A and compute just the ' +
+                '(1, 1) entry by the row rule. Does it agree with 43? Then price each route for ' +
+                'ONE more power than you have just done — the reduction needs another ' +
+                'substitute-and-collect and the direct route needs another product. Both get ' +
+                'longer, so the question is by how much each time: how many multiplications does ' +
+                'each step add, and which route would you rather be on at A¹⁰?',
+            },
+          ],
+          answer: 'A³ = 21A − 20I, so entry (1, 1) of A³ is 43',
+        },
+      },
+      {
+        id: 'the-shortest-law-rather-than-the-known-one',
+        conceptId: 'cayley-hamilton',
+        statement:
+          'The theorem supplies a degree-2 law for every 2×2, so the only way a matrix can have ' +
+          'a shorter one is a monic λ − c, and M satisfies that exactly when M = cI. The ' +
+          'minimal polynomial — the shortest monic polynomial a matrix satisfies — is therefore ' +
+          'degree 1 for the scalar multiples of the identity and degree 2 for everything else. ' +
+          'That distinction is invisible to the characteristic polynomial, which is the reason ' +
+          'the minimal one is worth naming at all.',
+        position: 3,
+        workedExample: {
+          problem:
+            'B = [[4, 1], [0, 4]] and C = [[4, 0], [0, 4]]. What is the shortest monic ' +
+            'polynomial each one satisfies?',
+          subgoals: [
+            {
+              label: 'Check that the characteristic polynomials really do agree',
+              detail:
+                'Both have diagonal sum 8 and determinant 16, so both characteristic ' +
+                'polynomials are λ² − 8λ + 16 = (λ − 4)², and 4 is the only eigenvalue of ' +
+                'either. The first point of this concept guarantees that both matrices satisfy ' +
+                'that polynomial. What it does not say is whether either satisfies something ' +
+                'shorter.',
+              socratic:
+                'Compute the diagonal sum and the determinant of each of these two separately. ' +
+                'B has a 1 where C has a 0, so you might expect one of the two quantities to ' +
+                'notice, and neither does. What polynomial does each matrix produce, what does ' +
+                'the first point of this concept then guarantee about both of them, and what is ' +
+                'the one thing that guarantee leaves open?',
+            },
+            {
+              label: 'Work out what a degree-1 law would demand',
+              detail:
+                'A monic polynomial of degree 1 is λ − c, and M satisfies it exactly when ' +
+                'M − cI is the zero matrix — that is, when M = cI. So the only matrices with a ' +
+                'degree-1 law are the scalar multiples of the identity, and that is a condition ' +
+                'on all four entries rather than on the eigenvalues.',
+              socratic:
+                'Degree 2 is what the first point hands you for free, so the only way to do ' +
+                'better is degree 1. Write down the general monic degree-1 polynomial in λ, ' +
+                'substitute a matrix M for λ — remembering what the constant has to become, ' +
+                'which is the step the first point settled — and set the whole thing to the ' +
+                'zero matrix. Rearranged, what does that equation say M IS, and how many 2×2 ' +
+                'matrices are of that shape?',
+            },
+            {
+              label: 'Run that demand on each matrix',
+              detail:
+                'C − 4I = [[0, 0], [0, 0]], so C satisfies λ − 4 and its minimal polynomial has ' +
+                'degree 1. B − 4I = [[0, 1], [0, 0]], whose (1, 2) entry is 1, so B is not cI ' +
+                'for any c and no degree-1 polynomial annihilates it. B\'s minimal polynomial is ' +
+                'therefore degree 2, and it is the characteristic one: two monic degree-2 ' +
+                'polynomials both annihilating B would differ by a degree-1 law, which B has ' +
+                'just been shown not to have.',
+              socratic:
+                'You now have a one-line test — is this matrix a number times the identity — ' +
+                'and two matrices to run it on. Subtract 4I from each and look at all four ' +
+                'entries of the result rather than at the diagonal alone. Which of the two comes ' +
+                'out as the zero matrix, which single entry of the other one refuses, and so ' +
+                'what is the shortest law each of B and C cannot escape?',
+            },
+            {
+              label: 'Read off what the two degrees are telling you',
+              detail:
+                'The degrees differ where the characteristic polynomials do not, so the shorter ' +
+                'law carries information the longer one cannot. The difference shows up as a ' +
+                'count of directions: C − 4I sends every vector to the origin, so C fixes two ' +
+                'independent directions, while B − 4I sends only the multiples of (1, 0) there, ' +
+                'so B fixes one. Two matrices, one characteristic polynomial, two different ' +
+                'answers to "how many directions does this leave alone". What that count means ' +
+                'for choosing a basis is `diagonalisation`, which is not written here.',
+              socratic:
+                'Two matrices, one characteristic polynomial, two different minimal polynomials ' +
+                '— so the shorter law is carrying something the longer one is not. Find out ' +
+                'what, using the method the previous concept used to get an eigenvector: solve ' +
+                '(M − 4I)v = 0 for each of B and C in turn, and count the independent ' +
+                'directions you get. How many does C fix, how many does B, and which of the two ' +
+                'degrees you just found goes with which count?',
+            },
+          ],
+          answer:
+            'C: λ − 4, degree 1. B: (λ − 4)², degree 2 — the same characteristic polynomial, '
+            + 'different minimal polynomials',
+        },
+      },
+    ],
+  },
+
+  {
+    id: 'markov-chains',
+    name: 'Markov chains and the steady state',
+    subjectId: subject.id,
+    scope: {
+      id: 'markov-chains',
+      label: 'Markov chains and the steady state',
+      hint: 'markov chain transition matrix stationary distribution steady state long run',
+      match: /\bmarkov (chain|process|property)\b|\btransition matrix\b|\bstationary distribution\b/i,
+    },
+    fidelity: 'checked',
+    objectives: [
+      {
+        id: 'read-a-process-off-a-transition-matrix',
+        statement:
+          'Check that a grid of numbers really is a transition matrix, and get a multi-step ' +
+          'probability as one entry of a power of it.',
+        taskKinds: ['evaluate', 'justify'],
+      },
+      {
+        id: 'find-the-distribution-the-matrix-fixes',
+        statement:
+          'Find the distribution a chain settles on by solving for the row the transition matrix ' +
+          'leaves alone, and say from the diagonal alone how fast an arbitrary start reaches it.',
+        taskKinds: ['evaluate', 'justify'],
+      },
+    ],
+    knowledgePoints: [
+      {
+        id: 'the-rows-are-where-the-process-can-go',
+        conceptId: 'markov-chains',
+        statement:
+          'A transition matrix is a grid of conditional probabilities: entry (i, j) is the chance ' +
+          'of being in state j one step after being in state i. Every ROW is therefore a whole ' +
+          'distribution and has to total 1, while a column need not total anything. Two steps ' +
+          'split at the middle state, and the sum that splits them is row i against column j — so ' +
+          'the two-step probabilities are the entries of P², and n steps are the entries of Pⁿ.',
+        position: 1,
+        workedExample: {
+          problem:
+            'A machine is either working (state 1) or down (state 2), with ' +
+            'P = [[3/4, 1/4], [1/2, 1/2]]. Find the probability it is working two days after a ' +
+            'day on which it was working.',
+          subgoals: [
+            {
+              label: 'Check the rows before using them',
+              detail:
+                'Row 1 is 3/4 + 1/4 = 1 and row 2 is 1/2 + 1/2 = 1. A row is the distribution of ' +
+                'tomorrow GIVEN today, so it has to total 1 — a machine working today does ' +
+                'something tomorrow. The columns total 5/4 and 3/4, and nothing is wrong with ' +
+                'that: a column collects one outcome across different starting points and is not ' +
+                'a distribution at all.',
+              socratic:
+                'Before computing anything with this grid, add its numbers up two ways — along ' +
+                'each row, then down each column. One direction gives 1 both times and the other ' +
+                'does not. Each row answers a single question about a single starting state, so ' +
+                'work out what that question is and what its answers must come to. Which ' +
+                'direction is forced to total 1, what is it about the meaning of a row that ' +
+                'forces it, and what is a column a collection of instead?',
+            },
+            {
+              label: 'Split the two steps at the middle day',
+              detail:
+                'Working on day 2 means working on day 1 and then working, or down on day 1 and ' +
+                'then working: 3/4·3/4 + 1/4·1/2 = 9/16 + 2/16 = 11/16. The arithmetic is the law ' +
+                'of total probability conditioning on day 1, which `bayes-theorem` already ' +
+                'writes. What is new is in the SECOND factor of each product — it is read off ' +
+                'row 1 or row 2 with no reference to how the machine got there, and that ' +
+                'assumption is the Markov property.',
+              socratic:
+                'Two days is not one row of this grid. Work out the two ways the machine can be ' +
+                'working on day 2, each of them a statement about day 1 as well, and multiply ' +
+                'along each way before adding. The arithmetic is a law you already own from ' +
+                'conditional probability, so the interesting part is what you had to assume: look ' +
+                'hard at the second factor in each product and at what it does NOT depend on. ' +
+                'What is being assumed there, and what does the sum come to?',
+            },
+            {
+              label: 'Recognise the sum as a row against a column',
+              detail:
+                '3/4·3/4 + 1/4·1/2 pairs the entries of row 1 with the entries of column 1, which ' +
+                'is exactly what `matrix-multiplication` gives for entry (1, 1) of P·P. So the ' +
+                'four two-step probabilities are the four entries of ' +
+                'P² = [[11/16, 5/16], [5/8, 3/8]], whose rows still total 1 — and the n-step ' +
+                'probabilities are the entries of Pⁿ.',
+              socratic:
+                'Look at that sum again and at nothing else: which two entries of the grid gave ' +
+                'the first factors, and which two gave the second? Hold the pattern next to this ' +
+                'subject\'s rule for one entry of a product. Which entry of which product have ' +
+                'you just computed, what are the other three entries of it, and what do their row ' +
+                'totals have to be if this reading is right?',
+            },
+            {
+              label: 'Price the two routes at ten steps',
+              detail:
+                'Splitting by paths over n steps gives 2^(n−1) terms, each a product of n ' +
+                'factors: at n = 10 that is 512 paths of ten factors for ONE probability. ' +
+                'Reaching P¹⁰ by repeated multiplication is nine products of eight ' +
+                'multiplications, so 72 multiplications, and it delivers all four ten-step ' +
+                'probabilities at once. The matrix is not shorthand for the path sum; it is what ' +
+                'makes the path sum unnecessary.',
+              socratic:
+                'The splitting route generalises: over n steps the machine has n − 1 intermediate ' +
+                'days, each with two possibilities, and every such history is a separate product ' +
+                'to work out and add. Count those histories for n = 10. Then price the matrix ' +
+                'route instead — how many products, with eight multiplications in each. Which ' +
+                'count is larger, and how many of the ten-step probabilities does each route hand ' +
+                'you for its money?',
+            },
+          ],
+          answer: '11/16',
+        },
+      },
+      {
+        id: 'the-row-the-matrix-leaves-alone',
+        conceptId: 'markov-chains',
+        statement:
+          'A distribution that does not change from one step to the next satisfies πP = π, so it ' +
+          'is a direction P leaves alone and this is `eigenvalues` at λ = 1. Two things differ ' +
+          'from an ordinary eigenvector problem. The eigenvalue is free — every row totals 1, so ' +
+          'P sends (1, 1) to itself — and the distribution multiplies from the LEFT, so the ' +
+          'steady state is a left eigenvector and the right one is a different vector entirely. ' +
+          'And where an eigenvector was a whole line, exactly one point of that line totals 1.',
+        position: 2,
+        workedExample: {
+          problem:
+            'P = [[3/4, 1/4], [1/2, 1/2]]. What share of days is the machine down in the long run?',
+          subgoals: [
+            {
+              label: 'Get the eigenvalue without solving anything',
+              detail:
+                'Every row of P totals 1, so P(1, 1) = (1, 1) and 1 is an eigenvalue of every ' +
+                'transition matrix — found by adding rather than by solving. It is an eigenvalue ' +
+                'of Pᵀ as well: transposing swaps the 1/4 and the 1/2, which changes neither the ' +
+                'diagonal sum nor ad − bc, so the characteristic polynomial is the same one. That ' +
+                'is the half a distribution needs, a distribution being a row.',
+              socratic:
+                '`eigenvalues` found its first eigenvalue by applying the matrix to a candidate ' +
+                'and comparing, and there is a candidate every transition matrix shares. You ' +
+                'already know each row of P totals 1, so apply P to (1, 1) and read off what ' +
+                'comes back. Which eigenvalue does that settle, and how much work was it next to ' +
+                'building a quadratic? Then, since the two coefficients of a 2×2 characteristic ' +
+                'polynomial are the diagonal sum and ad − bc, what does transposing P do to ' +
+                'either of them?',
+            },
+            {
+              label: 'Write the condition, and check which side the vector goes',
+              detail:
+                'A distribution is a row (π₁, π₂) and the next one is πP, so staying put means ' +
+                '3/4·π₁ + 1/2·π₂ = π₁ and 1/4·π₁ + 1/2·π₂ = π₂. The side matters: the RIGHT ' +
+                'eigenvector of P for λ = 1 is (1, 1), which scaled to total 1 is (1/2, 1/2) — ' +
+                'and (1/2, 1/2)P = (5/8, 3/8), so it moves. The right eigenvector is not the ' +
+                'steady state; only the left one is.',
+              socratic:
+                'Tomorrow\'s shares are built by sending each of today\'s shares along its own ' +
+                'row, so write the two sums that give tomorrow\'s π₁ and π₂ and set each equal to ' +
+                'today\'s. Now compare what you wrote with Av = λv from `eigenvalues`, where the ' +
+                'vector sits to the RIGHT of the matrix. Test whether the difference is real: ' +
+                'take (1, 1), scale it so its entries total 1, push it through one step, and see ' +
+                'whether it comes back unchanged. What does the result say about which of the two ' +
+                'eigenvectors a distribution is?',
+            },
+            {
+              label: 'Solve the one equation the two rows share',
+              detail:
+                'The first equation gives π₂/2 = π₁/4, so π₁ = 2π₂; the second gives ' +
+                'π₁/4 = π₂/2, which is the same equation again. That repetition is the collapse ' +
+                '`eigenvalues` relies on — λ = 1 makes the system singular, so one equation in ' +
+                'two unknowns fixes a ratio and nothing more. In words: twice as much share sits ' +
+                'in "working" as in "down".',
+              socratic:
+                'You have two equations in two unknowns, so solve the first for one share in ' +
+                'terms of the other. Now solve the SECOND the same way and put the two results ' +
+                'side by side. They agree, and `eigenvalues`\' third point explains why they had ' +
+                'to for this particular λ. What ratio has been fixed, how many independent ' +
+                'conditions did two equations actually give you, and what is still missing before ' +
+                'either share is a number?',
+            },
+            {
+              label: 'Normalise — the condition an eigenvector problem does not have',
+              detail:
+                'π₁ + π₂ = 1 together with π₁ = 2π₂ gives π₂ = 1/3 and π₁ = 2/3. Check it: ' +
+                '(2/3, 1/3)P = (1/2 + 1/6, 1/6 + 1/6) = (2/3, 1/3), returned unchanged. An ' +
+                'eigenvector was a direction and every non-zero multiple did the same job; a ' +
+                'distribution cannot be rescaled, so exactly one multiple is an answer and the ' +
+                'ratio on its own is not one.',
+              socratic:
+                'A ratio is not a share. One fact about π has not been used yet, and it is not in ' +
+                'the matrix at all — it is what makes π a distribution rather than a direction. ' +
+                'State that condition, combine it with the ratio, and get both numbers; then ' +
+                'verify them by pushing π through a step and seeing what returns. How many ' +
+                'multiples of this direction are distributions, and how does that compare with ' +
+                'the eigenvector answers in `eigenvalues`, where every non-zero multiple was ' +
+                'equally good?',
+            },
+          ],
+          answer: '1/3 of the days',
+        },
+      },
+      {
+        id: 'the-second-eigenvalue-is-the-rate',
+        conceptId: 'markov-chains',
+        statement:
+          'A steady state says where a chain ends up, not whether it gets there. The gap between ' +
+          'the current distribution and the steady state is a row totalling ZERO, which for two ' +
+          'states forces it to be a multiple of (1, −1) — and that is a left eigenvector for the ' +
+          'other eigenvalue. So one step multiplies the gap by λ₂, which is the diagonal sum ' +
+          'minus 1. A chain converges exactly when |λ₂| < 1, and a steady state can exist without ' +
+          'anything approaching it.',
+        position: 3,
+        workedExample: {
+          problem:
+            'P = [[3/4, 1/4], [1/2, 1/2]] has steady state (2/3, 1/3), and the machine is working ' +
+            'on day 0. How far is the working probability from 2/3 after two days, and by what ' +
+            'factor does that distance change per day?',
+          subgoals: [
+            {
+              label: 'Take the second eigenvalue off the diagonal',
+              detail:
+                'The two eigenvalues add to the diagonal sum — the check `eigenvalues` makes ' +
+                'against its polynomial\'s middle coefficient — and one of them is 1, so ' +
+                'λ₂ = (3/4 + 1/2) − 1 = 1/4. The product relation agrees: det P = 3/8 − 1/8 = 1/4 ' +
+                'and 1·λ₂ has to equal it. No polynomial was solved either way.',
+              socratic:
+                'The previous point got the eigenvalue 1 for nothing. `eigenvalues` closes with ' +
+                'two relations between a 2×2\'s pair of eigenvalues and two quantities read ' +
+                'straight off the grid — one of them an addition, one a multiplication — and you ' +
+                'are already holding one of the pair. So either relation alone will give the ' +
+                'other. Compute λ₂ both ways: what does each one give, do they agree, and what ' +
+                'did neither route require you to do?',
+            },
+            {
+              label: 'Measure the gap instead of the probability',
+              detail:
+                'Day 0 is (1, 0) and the steady state is (2/3, 1/3), so the state-1 gap starts ' +
+                'at 1/3. Day 1 is (3/4, 1/4), a gap of 3/4 − 2/3 = 1/12. Day 2 is ' +
+                '(11/16, 5/16) from this concept\'s first point, a gap of 11/16 − 2/3 = 1/48.',
+              socratic:
+                'Converging is a claim about a distance, not about a probability, so build the ' +
+                'distance. Write the distribution on each of days 0, 1 and 2 — the first is ' +
+                'certainty, the second is a row of P, and the third you computed in this ' +
+                'concept\'s first point — then subtract 2/3 from each day\'s first entry. What ' +
+                'three numbers come out, and which one of the three is a statement about the ' +
+                'START rather than about P?',
+            },
+            {
+              label: 'Read the ratio, and say why it is constant',
+              detail:
+                '(1/12)/(1/3) = 1/4 and (1/48)/(1/12) = 1/4 — the same factor each day, and it ' +
+                'is λ₂. The reason: both rows total 1, so their difference totals 0, and in two ' +
+                'states that forces the gap to be a multiple of (1, −1). Push it through and ' +
+                '(1, −1)P = (1/4, −1/4). The gap is a left eigenvector for λ₂, so a step scales ' +
+                'it by λ₂ exactly rather than approximately.',
+              socratic:
+                'Divide each gap by the one before it. The two answers are equal, and equal to a ' +
+                'number you already computed in this point\'s first subgoal — so it is not an ' +
+                'accident of this start. Find the reason: the gap is the difference of two rows ' +
+                'that each total 1, so what does the gap itself total, and in two states what ' +
+                'shape does that force on it? Push that shape through P. What has the gap turned ' +
+                'out to be, and what does one step therefore do to it?',
+            },
+            {
+              label: 'Find a chain its steady state does not attract',
+              detail:
+                'The swap matrix [[0, 1], [1, 0]] has diagonal sum 0, so λ₂ = −1. Its steady ' +
+                'state (1/2, 1/2) is genuine and comes back unchanged. But a machine starting at ' +
+                '(1, 0) goes to (0, 1), back to (1, 0), and on for ever: the gap is multiplied by ' +
+                '−1 each step, so it never shrinks. Existence and convergence are separate ' +
+                'questions, and |λ₂| < 1 settles the second.',
+              socratic:
+                'If each step multiplies the gap by λ₂, the gap only dies when λ₂ is small — so ' +
+                'build the worst case. Write down a 2×2 transition matrix whose diagonal sum is ' +
+                '0, which by this point\'s first subgoal pins λ₂ as far from the origin as a ' +
+                'transition matrix can put it. Find its steady state, then follow a start of ' +
+                '(1, 0) for three steps. Does the steady state exist, is anything approaching it, ' +
+                'and what condition on λ₂ separates this chain from the one above?',
+            },
+          ],
+          answer: 'a gap of 1/48 after two days, multiplied by 1/4 = (diagonal sum) − 1 each day',
+        },
+      },
+    ],
+  },
 ]
 
 /**
@@ -1393,6 +2209,147 @@ const EDGES: ConceptEdge[] = [
       'Testing a candidate direction is applying the matrix to a vector and comparing, so the ' +
       'first knowledge point and its task are the row rule performed with the answer\'s shape ' +
       'known in advance.',
+  },
+
+  /*
+   * THE SIXTH CONCEPT'S EDGES, AND IT IS THE CHEAPEST FILING THIS FILE HAS HAD.
+   *
+   * The map node declared ONE prerequisite, `eigenvalues`, and that is a concept
+   * of this subject — so the whole of what the promotion stranded is the single
+   * edge below and no area `links` entry was needed anywhere. Nothing since the
+   * fifty-first has had that shape, and it is the reason this node was taken
+   * ahead of the other two the fifty-third left ready.
+   *
+   * THE CHAIN LENGTHENS RATHER THAN FORKING AGAIN. The fifth concept forked the
+   * subject at `determinant`; this one extends the eigenvalue branch by one and
+   * leaves the inverse branch alone, so the subject is now a fork with a long
+   * arm and a short one. That is the right shape: Cayley–Hamilton needs the
+   * characteristic polynomial and has no use for an inverse, even though it can
+   * produce one.
+   */
+  {
+    id: 'eigenvalues->cayley-hamilton',
+    from: 'eigenvalues',
+    to: 'cayley-hamilton',
+    kind: 'prerequisite',
+    promotedBy: 'author:matrices-and-determinants',
+  },
+
+  /*
+   * TWO CREDIT EDGES, AND A THIRD DELIBERATELY NOT DECLARED.
+   *
+   * The two below are the same claim the `encompasses` entries above make: the
+   * work this concept asks for IS the earlier concept's work, so a learner who
+   * has just done it should not meet the earlier one as though untouched.
+   *
+   * The third would be `cayley-hamilton => determinant`, and it is left out
+   * rather than forgotten. The determinant does appear — ad − bc is one of the
+   * two coefficients — but it arrives as part of the characteristic polynomial,
+   * which is `eigenvalues`' own content, and `eigenvalues => determinant`
+   * already carries exactly that credit. Declaring it here would credit one
+   * piece of work twice and would weaken the claim the other entries make.
+   */
+  {
+    id: 'cayley-hamilton=>eigenvalues',
+    from: 'cayley-hamilton',
+    to: 'eigenvalues',
+    kind: 'encompasses',
+    promotedBy: 'author:matrices-and-determinants',
+    rationale:
+      'Every point here starts by building the characteristic polynomial from the diagonal sum ' +
+      'and ad − bc, which is the eigenvalue concept\'s own first move; and the third point ends ' +
+      'by counting the directions a matrix leaves alone, which is that concept\'s last one.',
+  },
+  {
+    id: 'cayley-hamilton=>matrix-multiplication',
+    from: 'cayley-hamilton',
+    to: 'matrix-multiplication',
+    kind: 'encompasses',
+    promotedBy: 'author:matrices-and-determinants',
+    rationale:
+      'Squaring a matrix is the row-by-column rule with both factors the same, so verifying the ' +
+      'theorem performs a full product — and the second point\'s check does a second one, with ' +
+      'the answer already known from the reduction.',
+  },
+
+  /*
+   * THE SEVENTH CONCEPT'S EDGES, AND THE CREDIT EDGE IS WHY THE CONCEPT IS IN
+   * THIS FILE AT ALL.
+   *
+   * The map node declared two prerequisites — `conditional-probability` and
+   * `eigenvalues` — and a credit claim, `exercises: ['eigenvalues']`. Only one
+   * of those three names a concept of this subject on its own terms, so a run
+   * ranking the filing by stranded prerequisites would have sent it to
+   * `chance-and-events`, where its probability prerequisite already lives and
+   * where it strands one edge either way.
+   *
+   * THE EDGE KIND DECIDED IT INSTEAD, and the heading four above this one is
+   * the precedent running the other way. `exercises` expands into an
+   * `encompasses` edge; an authored ontology may only name concepts it
+   * contains, and an area's `links` hard-codes `prerequisite` and carries no
+   * kind. So an `encompasses` edge between two subjects is expressible NOWHERE.
+   * Filed with the probability, this concept's credit claim on `eigenvalues`
+   * would have been deleted in silence with every suite green — the thing that
+   * happened to `counting-probability`'s claim at the forty-sixth promotion.
+   * Filed here it is the ordinary entry below, and the probability prerequisite
+   * becomes a `links` entry on `probability`, the area the node left.
+   *
+   * THE MATERIAL AGREES WITH THE STRUCTURE, which is what makes this a filing
+   * rather than a workaround. `gaussian-elimination` went to
+   * `expressions-and-equations` because with no grid to display, row reduction
+   * on three equations IS three equations — a matrix concept whose material
+   * never shows a matrix. The test run on this concept is the same one with the
+   * answer reversed: a transition matrix is on the page in all three points,
+   * the two-step probability is an entry of P², and the steady state and the
+   * rate of approach are the two eigenvalues. What the probability supplies is
+   * the reason the entries multiply and add as they do, and that arrives
+   * through the `links` entry as a prerequisite.
+   */
+  {
+    id: 'eigenvalues->markov-chains',
+    from: 'eigenvalues',
+    to: 'markov-chains',
+    kind: 'prerequisite',
+    promotedBy: 'author:matrices-and-determinants',
+  },
+
+  /*
+   * TWO CREDIT EDGES, AND THE THIRD LEFT OUT FOR THE REASON THE SIXTH
+   * CONCEPT'S BLOCK GIVES.
+   *
+   * The first is the node's own `exercises` claim, re-declared rather than
+   * inherited: `expandEdges` built it from the node, so deleting the node
+   * deleted it, and nothing would have gone red.
+   *
+   * `markov-chains => determinant` is available and absent on purpose. det P
+   * does appear — it is the product check on the two eigenvalues in the third
+   * point's first subgoal — but it arrives as `eigenvalues`' own invariant
+   * relation, and `eigenvalues => determinant` already carries that credit.
+   */
+  {
+    id: 'markov-chains=>eigenvalues',
+    from: 'markov-chains',
+    to: 'eigenvalues',
+    kind: 'encompasses',
+    promotedBy: 'author:matrices-and-determinants',
+    rationale:
+      'The steady state IS an eigenvector for λ = 1 and the rate of approach IS the second ' +
+      'eigenvalue, so two of the three points are the eigenvalue concept\'s own moves — apply ' +
+      'the matrix to a candidate and compare, then recover a direction from the one equation a ' +
+      'singular matrix leaves. The second eigenvalue even comes from that concept\'s closing ' +
+      'sum-and-product check rather than from a polynomial.',
+  },
+  {
+    id: 'markov-chains=>matrix-multiplication',
+    from: 'markov-chains',
+    to: 'matrix-multiplication',
+    kind: 'encompasses',
+    promotedBy: 'author:matrices-and-determinants',
+    rationale:
+      'The first point\'s whole move is recognising a sum over the middle state as row i against ' +
+      'column j, so a two-step probability is computed by performing one entry of P·P — the ' +
+      'multiplication rule with both factors the same matrix, reached from the probability side ' +
+      'rather than stated.',
   },
 ]
 

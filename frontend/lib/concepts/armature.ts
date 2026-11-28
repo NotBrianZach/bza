@@ -444,7 +444,61 @@ export const REGIONS: Region[] = [
     // the previous turnover's note gives. The area has TWO ready nodes now and
     // two roots and they are the same two; the figures live in tests/atlas.mjs
     // with the group that moved them.
-    anchors: ['cayley-hamilton', 'spectral-theorem', 'diagonalisation'],
+    //
+    // AND A SEVENTH TIME, AT THE FIFTY-FOURTH PROMOTION, and this one did NOT
+    // take the refill the paragraphs above had just chosen — `spectral-theorem`
+    // is still here. It took one of the two incumbents the sixth turnover could
+    // not use as a refill because they were anchors already. `cayley-hamilton`
+    // is a concept of `matrices-and-determinants` now, the second node of this
+    // area to land in that subject in consecutive promotions, so this region
+    // has lost an anchor seven times out of seven.
+    //
+    // THE DOCUMENTED RULE WORKED, FOR THE FIRST TIME SINCE THE THIRTIETH, and
+    // the mechanism is worth reading because the departing node supplied its own
+    // successor. `jordan-normal-form` is the departing node's only dependent
+    // anywhere, and its two `needs` were `diagonalisation` and
+    // `cayley-hamilton` — so writing one of the two moved it from TWO
+    // prerequisites away to one, which is exactly what put it at the shallowest
+    // unanchored depth. The anchor promoted its heir.
+    //
+    // BUT THE DISCRIMINATING HALF OF THE RULE STILL FAILS, which is why this is
+    // the distance criterion's pick rather than the rule's. The thirtieth
+    // turnover established that "the dependent that becomes a ROOT" is the half
+    // that does the work and "the node directly above" is the half that happens
+    // to agree; `jordan-normal-form` did NOT become a root, because it names
+    // `diagonalisation` as well and that is still a node of this area. So the
+    // rule's reliable half returns nobody for the fourth turnover running, and
+    // what picks the refill is the test the fifth and sixth both used.
+    //
+    // MEASURED THAT WAY THE AREA SORTS CLEANLY AND THE CHOICE IS FORCED.
+    // `diagonalisation` is ready and is an anchor already. At the next depth —
+    // one unwritten prerequisite, and that one ready — there are exactly TWO
+    // nodes: `spectral-theorem`, which is an anchor already, and
+    // `jordan-normal-form`, which is not. Everything else is two or more
+    // behind: `quadratic-forms` needs the spectral theorem, `matrix-exponential`
+    // needs `power-series` in another area, and the numerics need the SVD. One
+    // node at the shallowest UNANCHORED depth means the choice is forced once
+    // the criterion is stated, which is the most a judgement can be — and the
+    // criterion has now decided three turnovers running.
+    //
+    // It also reads right against the `because`, which is the check no
+    // `armatureProblems` pass can make: the Runeforger guild fabricates arrays
+    // of conducting elements, the spectral theorem says a symmetric array comes
+    // apart into independent modes, and the Jordan form is what the array looks
+    // like when it does NOT — too few independent directions, and a block that
+    // cannot be broken up. A forge that casts a thing which has to work cares
+    // most about the defective case, and the region now anchors on the two
+    // outcomes and the choice of basis that distinguishes them.
+    //
+    // A NOTE FOR THE EIGHTH TURNOVER, since the pattern is now seven for seven.
+    // Every anchor this region has lost went to an authored subject the region
+    // itself claims, and `diagonalisation` is the next ready node. If it goes,
+    // the shallowest unanchored depth will hold `quadratic-forms` and
+    // `matrix-exponential` and possibly the SVD, so the criterion will return
+    // more than one for the first time and this comment's run of forced choices
+    // ends. The honest tie-break then is the `because` rather than another
+    // distance measure.
+    anchors: ['jordan-normal-form', 'spectral-theorem', 'diagonalisation'],
     because: 'The Runeforger guild fabricates objects that conduct aether — shields, ignition surfaces, industrial equipment — which is arrays of conducting elements and what they do to what passes through them. A city named The Stalwart Machine keeps its mathematics in matrices.',
   },
   {
@@ -687,8 +741,65 @@ export const REGIONS: Region[] = [
     // last time: none of the three anchors is ready, and NO node of this area is
     // ready at all, so no promotion out of here is even available until
     // `sequence-convergence`, `definite-integral` or `eigenvalues` is written.
+    //
+    // THE SLOT EMPTIED A SIXTH TIME, AND THE PARAGRAPH ABOVE IS WHERE THE
+    // MISTAKE IS: IT NAMED THE THREE WRITINGS THAT WOULD UNBLOCK THIS AREA AND
+    // THEN DID NOT NOTICE THAT ONE OF THEM HAD ALREADY HAPPENED. `eigenvalues`
+    // was authored at the fifty-third, two promotions before that sentence was
+    // true of anything, so `markov-chains` was ready from that moment and the
+    // fifty-fifth took it. The refill is `central-limit-theorem`, which is
+    // exactly the fallback the fifty-first named and the fifty-second confirmed —
+    // the fifth refill in a row a predecessor's note has decided, and the
+    // argument for the practice rather than for the name.
+    //
+    // WHAT THE ERROR WAS, PRECISELY, BECAUSE IT IS NOT THE CATEGORY MISTAKE THE
+    // NOTES ABOVE KEEP CATCHING. "No node of this area is ready at all" was a
+    // measurement, and it was correct when it was taken. What made it wrong was
+    // a promotion in ANOTHER AREA: `eigenvalues` is a node of `linear-algebra`,
+    // and writing it made a node of `probability` ready without one line of this
+    // file or of atlas-uncertainty.ts changing. So a safety claim about an anchor
+    // is only as durable as the slowest of the prerequisites it rests on,
+    // including the ones outside the region — and this note had even listed the
+    // relevant one by name. A list of what would unblock you is not a safety
+    // argument unless somebody re-reads it.
+    //
+    // THE READING STRETCHES AND THE CAVEAT STANDS, WHICH IS WHY THIS IS RECORDED
+    // AS A COST. The region's `because` names "a seasonal raid whose return
+    // nobody can promise", and the fifty-first read the second clause as a
+    // long-run average settling somewhere, which is `law-of-large-numbers` said
+    // as a theorem. `central-limit-theorem` is about the SHAPE of the
+    // fluctuation around that settling rather than about the settling, so it sits
+    // one step further from the sentence than any anchor here has. It is taken
+    // anyway, for the arithmetic the fifty-first wrote down: every one of the
+    // nineteen regions carries exactly three anchors and tests/atlas.mjs asserts
+    // `length === 3` for this region in several promotion groups, so dropping to
+    // two is not a local edit. Whoever widens the reading next should widen the
+    // `because` with it rather than stretching the same sentence a third time.
+    //
+    // AND THE SLOT IS SAFE, BY THE TEST THE FIFTY-FIRST INTRODUCED AND APPLIED
+    // TO THE WHOLE PREREQUISITE CHAIN RATHER THAN TO ONE STEP OF IT.
+    // `central-limit-theorem` needs `law-of-large-numbers` and
+    // `continuous-distributions`, both nodes of this area; the first waits on
+    // `sequence-convergence` in `sequences-and-series` and the second on
+    // `definite-integral` in `integration`, and nothing has touched either. So
+    // this anchor is two writings away from ready and both of them are outside
+    // this area — which is the same shape as the error above, named deliberately
+    // so that the next reader checks those two ids rather than this sentence.
+    //
+    // THE ENUMERATION IS NOW FOUR. The area holds seven nodes, three are
+    // anchors, and the non-anchor four are `continuous-distributions`,
+    // `joint-distributions`, `stochastic-processes` and
+    // `measure-theoretic-probability`. Two of those are machinery rather than
+    // arithmetic, `continuous-distributions` is a distribution and
+    // `joint-distributions` is a distribution — so the long-run-average clause
+    // reaches NONE of the four and there is no fallback left inside the reading.
+    // That is the third time this slot has been declared out of candidates, and
+    // twice the declaration was wrong; what is different is that the two earlier
+    // ones ruled out by category and this one is a list of four ids. Whoever
+    // empties this slot next is widening the `because` or arguing the
+    // three-anchor shape, and both are decisions about the game's map.
     authored: ['chance-and-events'],
-    anchors: ['markov-chains', 'transformations-of-variables', 'law-of-large-numbers'],
+    anchors: ['central-limit-theorem', 'transformations-of-variables', 'law-of-large-numbers'],
     because: 'Order courts price every sentence in money owed to the offended party and the state, and the Scales run a seasonal raid whose return nobody can promise. Both are expected value, and the swamp is where somebody is always computing one.',
   },
   {

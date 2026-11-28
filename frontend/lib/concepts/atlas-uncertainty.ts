@@ -11,7 +11,7 @@
  * `statistics` therefore rests on `probability` throughout and never the
  * reverse.
  *
- * NINE NODES HAVE LEFT THIS FILE — ONE FROM `statistics` AND EIGHT FROM
+ * TEN NODES HAVE LEFT THIS FILE — ONE FROM `statistics` AND NINE FROM
  * `probability` — AND THE ORDER THE FIRST TWO WENT IN IS THE OPPOSITE OF THE
  * DEPENDENCE ABOVE.
  *
@@ -53,6 +53,16 @@
  * the fifty-second. The departure blocks above each area record what happened to
  * every edge.
  *
+ * THE NINTH BREAKS THE OTHER HALF OF THE PATTERN, which is why it is named here
+ * rather than only in the departure block. `markov-chains` went at the
+ * fifty-fifth and is the first node out of either area that did NOT become a
+ * concept of `chance-and-events`: it is in `matrices-and-determinants`, two
+ * files away, because it declared a credit edge on `eigenvalues` that only the
+ * subject holding `eigenvalues` can express. So "everything that leaves this
+ * file goes to one subject" was a property of which nodes happened to be
+ * promotable, not a rule — and the thing that decided otherwise was an edge
+ * kind rather than a judgement about where probability belongs.
+ *
  * WHAT THE EIGHT TOGETHER DID TO THIS FILE'S OWN ARGUMENT IS WORTH ONE LINE.
  * `probability` argues from a known mechanism to the behaviour of outcomes, and
  * the eight concepts now written are everything up to and including the NAMED
@@ -70,7 +80,7 @@
 import type { MapArea } from './atlas'
 
 /**
- * EIGHT NODES HAVE LEFT THIS AREA WHEN THEY WERE AUTHORED, AND THEY HAD TO.
+ * NINE NODES HAVE LEFT THIS AREA WHEN THEY WERE AUTHORED, AND THEY HAD TO.
  *
  * `atlasProblems` rejects a map node whose id collides with an authored concept
  * — see atlas.ts, which argues it at length: the point of naming a concept in
@@ -80,38 +90,47 @@ import type { MapArea } from './atlas'
  * therefore a MOVE and not a fill-in, and the node has to be deleted from here on
  * the way out.
  *
- * All eight went into the `chance-and-events` subject in ontology-chance.ts,
- * and in prerequisite order, which no run of promotions out of one area has
- * matched. `sample-spaces` went first, in the forty-fifth, and was the
- * seventeenth authored ontology and the first written concept in this area:
- * sixteen nodes down to fifteen. `counting-probability` went second, in the
- * forty-sixth, as that subject's second concept: fifteen down to fourteen.
+ * The first eight went into the `chance-and-events` subject in
+ * ontology-chance.ts, and in prerequisite order, which no run of promotions out
+ * of one area has matched. `sample-spaces` went first, in the forty-fifth, and
+ * was the seventeenth authored ontology and the first written concept in this
+ * area: sixteen nodes down to fifteen. `counting-probability` went second, in
+ * the forty-sixth, as that subject's second concept: fifteen down to fourteen.
  * `conditional-probability` went third, in the forty-seventh: fourteen down to
  * thirteen. `bayes-theorem` went fourth, in the forty-eighth: thirteen down to
  * twelve. `random-variables` went fifth, in the forty-ninth, and is the one that
  * is not the next link in the chain; `expectation` went sixth, in the fiftieth;
  * `variance-and-covariance` went seventh, in the fifty-first; and
- * `discrete-distributions` went eighth, in the fifty-second: nine down to EIGHT.
- * tests/atlas.mjs holds the node count in the fifty-second promotion's group,
- * which is the ninth group to own it — a figure belongs to whichever promotion
- * last moved it, and this one has moved on every promotion since the
- * forty-fifth.
+ * `discrete-distributions` went eighth, in the fifty-second: nine down to eight.
  *
- * THE FLOOR DECIDED NOTHING AND IS NOT CLOSE, which is worth stating because it
- * decides where most promotions may happen. tests/atlas.mjs asserts that no area
- * sits below five nodes once departures count as covered territory, and this area
- * is at EIGHT nodes — three of headroom on the nodes alone, before any departure
- * is claimed. No `departed` array is declared here and that is still correct
- * rather than an omission: the floor reads absence as zero, the field is for
- * areas drained NEAR the floor, and declaring the eight departures would buy
- * eight more of headroom that nothing needs.
+ * `markov-chains` WENT NINTH, IN THE FIFTY-FIFTH, AND IS THE ONE THAT DID NOT GO
+ * TO `chance-and-events`: eight nodes down to SEVEN, with the concept authored
+ * in `matrices-and-determinants` instead. That filing was forced by an edge KIND
+ * and the note where the node used to sit in the list below sets it out in full.
+ * The short version is that the node declared `exercises: ['eigenvalues']`, an
+ * `encompasses` edge; `links` hard-codes `prerequisite` and an authored ontology
+ * may name only concepts it contains, so that claim could live in exactly one
+ * subject and it was not this half of the atlas. tests/atlas.mjs holds the node
+ * count in the fifty-fifth promotion's group, which is the tenth group to own it
+ * — a figure belongs to whichever promotion last moved it, and this one has
+ * moved on every promotion since the forty-fifth bar two.
  *
- * BUT THE DEADLINE IS NOW THREE PROMOTIONS AWAY AND SOMEBODY SHOULD DECLARE IT
- * BEFORE THEN. The fifty-first's group set the rule: whoever takes this area to
- * six nodes should declare `departed` rather than discovering the floor at five.
- * That is nearer than it was — and the thing that makes it harder to notice is
- * that NONE of the three nodes left is ready, so the next promotion out of here
- * is not imminent and the figure will sit still long enough to look safe.
+ * THE FLOOR DECIDED NOTHING AND IS STILL NOT CLOSE, which is worth stating
+ * because it decides where most promotions may happen. tests/atlas.mjs asserts
+ * that no area sits below five nodes once departures count as covered territory,
+ * and this area is at SEVEN nodes — two of headroom on the nodes alone, before
+ * any departure is claimed. No `departed` array is declared here and that is
+ * still correct rather than an omission: the floor reads absence as zero, the
+ * field is for areas drained NEAR the floor, and declaring the nine departures
+ * would buy nine more of headroom that nothing needs.
+ *
+ * BUT THE DEADLINE IS NOW ONE PROMOTION AWAY AND THE NEXT RUN OUT OF HERE OWES
+ * IT. The fifty-first's group set the rule: whoever takes this area to six nodes
+ * should declare `departed` rather than discovering the floor at five. This
+ * departure is the one that made that the very next step — and the thing that
+ * makes it harder to notice is that NEITHER of the two nodes left at the bottom
+ * of this area is ready, so the next promotion out of here is not imminent and
+ * the figure will sit still long enough to look safe.
  *
  * ── THE ROOT WAS THE NODE WORTH TAKING THREE TIMES, AND THEN THE SHAPE RAN OUT ──
  *
@@ -215,8 +234,24 @@ import type { MapArea } from './atlas'
  * An edge belongs to the node that DECLARES it, which is what makes this
  * bookkeeping rather than a judgement.
  *
- *  1. THE STRANDED PREREQUISITES ARE THE `links` ENTRIES BELOW, now FOUR of
- *     them. Neither the forty-seventh nor the forty-eighth promotion
+ *  1. THE STRANDED PREREQUISITES ARE THE `links` ENTRIES BELOW, now SEVEN of
+ *     them — the seventh being the fifty-fifth's, and the first in this list
+ *     where the stranded half is the PROBABILITY one rather than the far
+ *     subject's. That entry's own note works through why.
+ *
+ *     THIS COUNT WAS WRONG UNTIL THE FIFTY-FIFTH CORRECTED IT, and the shape of
+ *     the error is worth more than the number. It said FOUR, which was right
+ *     when the forty-ninth wrote it and has been wrong since the fiftieth: that
+ *     promotion added `sigma-notation` and the fifty-second added
+ *     `binomial-theorem`, and each wrote a correct note on its OWN entry while
+ *     leaving the running total here alone. So a figure stated in two places
+ *     drifts in the one nobody is editing, and this block is the one nobody is
+ *     editing because a promotion's attention is on the entry it is adding.
+ *     Nothing checks this number; `tests/atlas.mjs` asserts the entries by name
+ *     and never counts them, which is the right choice for the assertions and
+ *     is why the prose has to be re-derived rather than incremented.
+ *
+ *     Neither the forty-seventh nor the forty-eighth promotion
  *     added one and the forty-ninth did — `bayes-theorem` declared `conditional-probability` and nothing
  *     else, and that concept had been authored into the subject it was joining
  *     one promotion earlier, so there was again no far end in a third subject
@@ -256,14 +291,22 @@ import type { MapArea } from './atlas'
  *     PROMOTION'S YIELD. `counting-probability` here and `sampling-and-bias` in
  *     `statistics` each named `sample-spaces` in their own `needs`;
  *     `conditional-probability` named `counting-probability` in its own;
- *     `bayes-theorem`, `random-variables`, `markov-chains` here and
+ *     `bayes-theorem`, `random-variables` and `markov-chains` here and
  *     `causal-inference` in `statistics` each named `conditional-probability` in
  *     theirs; and `expectation` and `continuous-distributions` here each name
- *     `random-variables` in theirs. Every one is declared by a node that stayed,
- *     `expandEdges` still
+ *     `random-variables` in theirs. Every one was declared by a node that
+ *     stayed, `expandEdges` still
  *     emits them, and both endpoints of each exist in the composed graph. A
  *     `links` entry for any of them would be a second copy of an edge that
  *     already exists, and `composeAtlas` does not report duplicates.
+ *
+ *     ONE OF THOSE INBOUND EDGES HAS SINCE CHANGED SIDES, which is the case this
+ *     paragraph had not seen. `markov-chains` was one of the three nodes that
+ *     named `conditional-probability` and stayed; at the fifty-fifth it was
+ *     promoted itself, so the edge stopped being owned by a node of this area
+ *     and became the fifth `links` entry below. An inbound edge needs nothing
+ *     done to it only while its declaring end is still a node here — promote
+ *     that end and the same edge turns into work.
  *
  *     THE YIELD STOPPED SHRINKING, GREW, AND THEN WENT TO ZERO. The forty-fifth
  *     made TWO nodes ready, which no promotion had done; the forty-sixth made
@@ -271,9 +314,13 @@ import type { MapArea } from './atlas'
  *     nothing else; the forty-seventh made TWO again — `bayes-theorem`, which
  *     named the new concept and nothing else, and `random-variables`, which
  *     names it and `function-concept`, already written. `markov-chains` and
- *     `causal-inference` also name it and are NOT ready, because `eigenvalues`
- *     and `anova-and-design` are unwritten. Four inbound edges, two ready nodes:
- *     the count of dependents is an upper bound on the yield and not the yield.
+ *     `causal-inference` also named it and were NOT ready at the time, because
+ *     `eigenvalues` and `anova-and-design` were unwritten. Four inbound edges,
+ *     two ready nodes: the count of dependents is an upper bound on the yield
+ *     and not the yield. `eigenvalues` was authored at the fifty-third, which is
+ *     what eventually made `markov-chains` ready and the fifty-fifth possible —
+ *     so an upper bound that a promotion does not realise is not lost, only
+ *     deferred to whichever later run moves the OTHER prerequisite.
  *
  *     THE FORTY-EIGHTH MADE NONE, which is that upper bound reaching its floor
  *     and is the sharpest case the rule has had. `bayes-theorem` had exactly ONE
@@ -366,6 +413,28 @@ import type { MapArea } from './atlas'
  *     evidence about what somebody looked at and the node is the thing that
  *     decides, and the one promotion where the answer was not "nothing" is also
  *     the one where no suite would have said so.
+ *
+ *     THE FIFTY-FIFTH IS THE SECOND PROMOTION OUT OF THIS AREA WITH SOMETHING AT
+ *     RISK, AND THE FIRST WHERE THE ANSWER WAS TO MOVE THE WHOLE CONCEPT.
+ *     `markov-chains` declared `exercises: ['eigenvalues']` — no `confusedWith`
+ *     and no `encompasses`, read off the node before deletion. The forty-sixth
+ *     met the same shape and PAID it: `counting-probability`'s credit claim on
+ *     `counting-principles` was dropped, because the two candidate subjects both
+ *     lacked the far end and the claim was inexpressible wherever the concept
+ *     went. Here the far end was authored two promotions ago in a subject that
+ *     could take the concept, so the claim was expressible at a price — filing
+ *     the concept outside this half of the atlas — and that price was paid
+ *     instead.
+ *
+ *     SO THE RULE THE FORTY-EIGHTH WROTE DOWN GENERALISES PAST INTERFERENCE.
+ *     That promotion found that taking the two ends of a `confusedWith` pair in
+ *     order, lower end first, is the only sequence that preserves the edge. The
+ *     same is true of `exercises`, and with one addition this case supplies:
+ *     when the far end is in a DIFFERENT subject from the concept's other
+ *     prerequisites, "in order" is not enough on its own — the filing has to
+ *     follow the far end as well. An edge kind can therefore decide which
+ *     ontology a concept joins, which is the one thing in this file that
+ *     overrides subject-matter fit.
  */
 const PROBABILITY: MapArea = {
   id: 'probability',
@@ -417,14 +486,19 @@ const PROBABILITY: MapArea = {
     'all written as `discrete-distributions` in that subject, which now holds eight concepts ' +
     'and twenty-four ideas. The POISSON distribution is named there and declined, with its ' +
     'price stated: every entry of it is irrational, and it reaches probability only as a limit ' +
-    'of binomials, which is `sequence-convergence` and unwritten. THE THREE NODES ABOVE THEM ' +
-    'ARE WHERE THIS AREA NOW STARTS, and the count FELL with this departure where it rose with ' +
-    'the one before, because the node that left was the last in-area prerequisite of NOTHING: ' +
+    'of binomials, which is `sequence-convergence` and unwritten. NOR IS CONDITIONING ALONG ' +
+    'TIME, which left ninth and is the one departure from this area that did NOT go to ' +
+    '`chance-and-events`: a transition matrix as a grid of conditional probabilities whose rows ' +
+    'each total 1, a multi-step probability as one entry of a power of it, the long-run shares ' +
+    'as the row the matrix leaves alone, and the rate at which any start reaches them as the ' +
+    'second eigenvalue read off the diagonal — all written as `markov-chains` in the ' +
+    '`matrices-and-determinants` subject, where its `exercises: [\'eigenvalues\']` credit claim ' +
+    'is expressible and where its probability prerequisite reaches it through this area\'s ' +
+    '`links` instead. THE TWO NODES ABOVE THEM ARE WHERE THIS AREA NOW STARTS: ' +
     '`law-of-large-numbers` is a root without being ready and waits on `sequence-convergence`, ' +
-    '`continuous-distributions` replaces the table with a density and waits on ' +
-    '`definite-integral`, and `markov-chains` conditions along time and waits on ' +
-    '`eigenvalues`. So none of the three is ready, and for the first time since the ' +
-    'forty-fourth promotion nothing in this area can be authored next.',
+    'and `continuous-distributions` replaces the table with a density and waits on ' +
+    '`definite-integral`. So neither is ready, and nothing in this area can be authored next — ' +
+    'which has been true since the fifty-second and is not what this departure changed.',
   links: [
     /*
      * THREE STRANDED PREREQUISITES, FROM TWO PROMOTIONS: the first two entries
@@ -677,6 +751,67 @@ const PROBABILITY: MapArea = {
         'cannot expand the cube of a sum has no way to see that 8/27, 12/27, 6/27 and 1/27 were ' +
         'never going to come to anything else.',
     },
+    /*
+     * THE FIFTY-FIFTH PROMOTION'S ONE STRANDED EDGE, and the SEVENTH entry in
+     * this list. `markov-chains` declared
+     * `['conditional-probability', 'eigenvalues']` and went to the subject
+     * holding the SECOND of them, so for the first time in this list it is the
+     * PROBABILITY half that stranded.
+     *
+     * THAT INVERSION IS THE ONLY NEW THING HERE AND IT IS WORTH THE PARAGRAPH.
+     * Every entry above was written because a far end sat in some unrelated
+     * subject — sets, fractions, counting, functions, sigma notation, the
+     * binomial theorem — while the concept itself went to `chance-and-events`,
+     * where its probability prerequisite already lived. This node went the other
+     * way: `matrices-and-determinants` took it, so `eigenvalues` became an
+     * ordinary edge there and `conditional-probability` — the one prerequisite
+     * this file would have expected to keep — is what had to be filed as a
+     * `links` entry. The cost is unchanged at one edge, which is the fiftieth's
+     * rule holding: the count is a property of the node's `needs`, and WHICH of
+     * them strands is a property of the filing.
+     *
+     * THE FILING WAS DECIDED BY AN EDGE KIND, NOT BY THE PREREQUISITE COUNT,
+     * and the note where the node used to sit sets it out: the node declared
+     * `exercises: ['eigenvalues']`, `links` carries no kind, and an
+     * `encompasses` edge across a subject boundary is expressible nowhere. One
+     * stranded edge either way, so the prerequisite count could not decide it
+     * and the credit claim could.
+     *
+     * IT GATES IMMEDIATELY, like the six above: both ends have material, so
+     * `gatingPrerequisitesOf` on `markov-chains` returns `eigenvalues` from the
+     * ontology and `conditional-probability` from here.
+     *
+     * AND IT IS LOAD-BEARING ON A GRADED TASK rather than only on prose, which
+     * is the test the fifty-first's rationale introduced. The new concept's
+     * first task evaluates `p11*p11 + p12*p21` — a sum over the middle state,
+     * which is the multiplication rule along a sequence and the law of total
+     * probability on top of it. A learner who cannot do that sum has nothing to
+     * recognise as a matrix product, so the entry cannot be vacuous.
+     *
+     * NO CREDIT EDGE IS LOST HERE, AND THIS IS THE FIRST DEPARTURE FROM THIS
+     * AREA THAT HAD ONE TO LOSE SINCE THE FORTY-SIXTH. The node declared
+     * `exercises: ['eigenvalues']` and no `confusedWith` and no `encompasses`,
+     * all read off the node before deletion. The `exercises` claim survives as
+     * `markov-chains => eigenvalues` in `MATRICES_AND_DETERMINANTS.edges`,
+     * which is the whole reason the concept is filed there — and is the second
+     * time in this build a credit claim has survived its declaring node being
+     * promoted, the first being the forty-eighth's interference pair. Both
+     * survived for the same reason and it is the one to carry: the far end was
+     * already authored in the subject the node was going to.
+     */
+    {
+      from: 'conditional-probability',
+      to: 'markov-chains',
+      because:
+        'The concept\'s first point is the multiplication rule along a sequence with the law of ' +
+        'total probability over the middle state, and it says so: 3/4·3/4 + 1/4·1/2 is two ' +
+        'two-step paths weighted and added, which is that concept\'s own arithmetic before it is ' +
+        'anything about a matrix. What the matrix adds is the recognition that the same sum is ' +
+        'row 1 against column 1, so a learner who cannot condition has nothing to recognise. The ' +
+        'Markov property is also stated as a RESTRICTION of that rule rather than as a new idea ' +
+        '— the second factor is read off a row with no reference to how the process arrived — and ' +
+        'a restriction is only meaningful to somebody who has the unrestricted version.',
+    },
   ],
   nodes: [
     /*
@@ -831,15 +966,26 @@ const PROBABILITY: MapArea = {
       needs: ['law-of-large-numbers', 'continuous-distributions'],
       terms: 'central limit theorem normal approximation standard error',
     },
-    {
-      id: 'markov-chains',
-      match: /\bmarkov (chain|process|property)\b/i,
-      name: 'Markov chains',
-      is: 'A process whose next state depends only on the present one, with the long-run behaviour read off the transition matrix.',
-      needs: ['conditional-probability', 'eigenvalues'],
-      exercises: ['eigenvalues'],
-      terms: 'markov chain transition matrix stationary distribution absorbing recurrent',
-    },
+    /*
+     * `markov-chains` was here and is now authored in the
+     * `matrices-and-determinants` subject in ontology-matrices.ts — the NINTH
+     * departure from this area and the first that did not go to
+     * `chance-and-events`. It left for a structural reason rather than an
+     * editorial one, and the reason is worth keeping where the node used to be,
+     * because it is the only thing in this file that decides a filing against
+     * the obvious subject.
+     *
+     * The node declared `exercises: ['eigenvalues']`, which `expandEdges` turns
+     * into an `encompasses` edge. An authored ontology may only name concepts it
+     * contains, and an area's `links` hard-codes `kind: 'prerequisite'` — so an
+     * `encompasses` edge whose two ends are concepts of different subjects has
+     * no home anywhere in the build. Filed in `chance-and-events`, beside the
+     * `conditional-probability` it needs, that credit claim would have been
+     * deleted in silence with every suite green, which is exactly what happened
+     * to `counting-probability`'s claim at the forty-sixth. Filed where
+     * `eigenvalues` lives it is an ordinary edge, and the probability
+     * prerequisite becomes the SEVENTH entry in this area's `links` instead.
+     */
     {
       id: 'stochastic-processes',
       match: /\b(stochastic process|brownian motion|poisson process|martingale)\b/i,

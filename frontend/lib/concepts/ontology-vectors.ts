@@ -1325,16 +1325,34 @@ const CONCEPTS: Concept[] = [
             {
               label: 'Scale each one',
               detail: '2u = (4, −2) and 3v = (3, 9).',
+              socratic:
+                'There are two factors here, a 2 and a 3, and each one is attached to a ' +
+                'different vector — nothing in 2u + 3v asks you to stretch u by 3. You have ' +
+                'already tripled a vector of your own and watched both of its numbers grow. ' +
+                'What does each factor do to the pair of numbers it is attached to, and what ' +
+                'two pairs does that leave you holding?',
             },
             {
               label: 'Add',
               detail: 'First component: 4 + 3 = 7. (The second is −2 + 9 = 7 as well, by accident.)',
+              socratic:
+                'The two scaled vectors are (4, −2) and (3, 9), and the question wants only the ' +
+                'first component of their sum. When you added vectors tip to tail, travelling ' +
+                'sideways never changed how far up you were. Which of those four numbers can ' +
+                'therefore reach your answer, and what does that make it?',
             },
             {
               label: 'What the weights mean',
               detail:
                 'They are the recipe. Changing them to 2 and −1 reaches somewhere else entirely; ' +
                 'the set of everywhere you can reach by varying them is the span.',
+              socratic:
+                'The 2 and the 3 were handed to you by the question, and had they been 2 and −1 ' +
+                'the sum would have come out somewhere else. You know already that letting the ' +
+                'single factor on u range over every number traces out a line. Here two factors ' +
+                'are free to vary, and independently. What is the collection of all the places ' +
+                '2u + 3v could have landed, and what part did this particular pair of numbers ' +
+                'play in it?',
             },
           ],
           answer: '7',

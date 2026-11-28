@@ -18524,8 +18524,23 @@ group('the fifty-third promotion: the eigenvalue as a subject that owns determin
 
 t('it has no internal faults', ontologyProblems(MD).length === 0, ontologyProblems(MD).join('; '))
 t('its fidelity claim matches what its option can do', fidelityMismatches(MD).length === 0)
-t('five concepts, fifteen knowledge points',
-  MD.concepts.length === 5 && allKnowledgePoints(MD).length === 15,
+/*
+ * THESE TWO FIGURES MOVED AT THE FIFTY-FOURTH AND AGAIN AT THE FIFTY-FIFTH, and
+ * are kept here rather than copied into either promotion's group, because they
+ * are claims about the SUBJECT and this is the group that owns the subject
+ * handle. Seven concepts, twenty-one points. Everything else in this group is
+ * scoped to the fifth concept and is unmoved by a seventh arriving.
+ *
+ * THE RULE THIS DEPARTS FROM IS WORTH NAMING, since atlas-uncertainty.ts states
+ * the opposite one — a figure belongs to whichever promotion last moved it. That
+ * rule is about figures nobody owns, like an area's node count, which drift
+ * precisely because no group has a reason to hold them. These two are a claim
+ * about `MD`, the handle this group opens by binding, so moving them would split
+ * one subject's arithmetic across three groups to satisfy a convention that
+ * exists to stop exactly that.
+ */
+t('seven concepts, twenty-one knowledge points',
+  MD.concepts.length === 7 && allKnowledgePoints(MD).length === 21,
   `${MD.concepts.length} concepts, ${allKnowledgePoints(MD).length} points`)
 t('the new concept is teachable AND practisable — a syllabus, not a map entry',
   isTeachable(MD, 'eigenvalues') && isPractisable(MD, 'eigenvalues'))
@@ -18702,6 +18717,612 @@ t('the subject\'s running matrix has no real eigenvalue, which is why these task
     const n = (k) => Number(det1.at[k])
     return `subject exemplar discriminant ${disc(n('a'), n('b'), n('c'), n('d'))}`
   })())
+
+// ---------------------------------------------------------------------------
+
+/*
+ * THE FIFTY-FOURTH PROMOTION: THE SIXTH CONCEPT OF `matrices-and-determinants`,
+ * AND THE ONE WHOSE RULABILITY WAS THE WHOLE QUESTION.
+ *
+ * The fifty-third's own header named this the cheapest filing on the map and
+ * then refused to say whether it could be authored, leaving the argument to the
+ * next run. The objection it left is sharp: the theorem's statement is that a
+ * MATRIX is zero, and the disjunct of this subject's `covers` refusal that the
+ * fifty-third did NOT overturn is "an answer that is itself a matrix".
+ *
+ * SO WHAT THIS GROUP CHECKS IS THAT THE MATERIAL ANSWERS THAT AND NOT SOMETHING
+ * EASIER. Three things, each one a way the promotion could have been wrong:
+ *
+ *  1. No task asks for a matrix — every answer is a plain integer.
+ *  2. TWO of the four ask for a COEFFICIENT of the reduction rather than for an
+ *     entry, which is the half a matrix product cannot supply at all. If every
+ *     task were an entry, the concept really would be "multiply the matrices
+ *     out" with a theorem written above it, and the refusal would have been
+ *     right.
+ *  3. The arithmetic is recomputed here from the task data rather than trusted:
+ *     A³ is formed by two actual matrix products and compared against pA + qI
+ *     with p and q taken from the tasks' own `reference` fields. A wrong worked
+ *     example is the worst output this work can produce and prose cannot catch
+ *     one.
+ */
+const MD_CH = conceptById(MD, 'cayley-hamilton')
+const MD_CH_POINTS = MD_CH.knowledgePoints
+const MD_CH_SUBGOALS = MD_CH_POINTS.flatMap(p => p.workedExample.subgoals)
+const MD_CH_TASKS = MD_CH_POINTS.flatMap(p => tasksForPoint(p.id))
+
+group('the fifty-fourth promotion: the law a matrix cannot escape, asked for as numbers')
+
+t('it has no internal faults', ontologyProblems(MD).length === 0, ontologyProblems(MD).join('; '))
+t('the new concept is teachable AND practisable — a syllabus, not a map entry',
+  isTeachable(MD, 'cayley-hamilton') && isPractisable(MD, 'cayley-hamilton'))
+t('three points numbering from 1, which is per concept and not per subject',
+  MD_CH_POINTS.map(p => p.position).join(',') === '1,2,3',
+  MD_CH_POINTS.map(p => `${p.id}:${p.position}`).join(' '))
+t('every one of its points has a task, so no chain is left unable to become evidence',
+  MD_CH_POINTS.every(p => tasksForPoint(p.id).length > 0),
+  MD_CH_POINTS.filter(p => tasksForPoint(p.id).length === 0)
+    .map(p => p.id).join(', ') || 'none without')
+
+/*
+ * NOT ONE OF THE FOUR ASKS FOR A MATRIX, AND TWO OF THEM COULD NOT BE ANSWERED
+ * BY MULTIPLYING ONE OUT.
+ *
+ * The first half is asserted as "every reference is an integer", which is the
+ * checkable form of "the answer is a number" — a matrix cannot be written in
+ * the expression language at all, so a task whose answer were one could not
+ * have a `reference` to begin with; what the check really excludes is a
+ * reference that is a symbol or a fraction standing in for an object.
+ *
+ * The second half is the one that matters and it is asserted by VALUE, naming
+ * the two coefficients of A³ = 21A − 20I. Those two numbers are the content of
+ * the reduction rule: a matrix product yields four entries and never the pair,
+ * so a learner who answers 21 has used the theorem and one who answers 43 may
+ * not have. An assertion that merely counted four evaluate tasks would pass on
+ * a version of this concept where all four were entries, which is exactly the
+ * version the refusal predicted.
+ */
+t('four tasks, every answer an integer, and two of them ask for a coefficient',
+  MD_CH_TASKS.length === 4
+  && MD_CH_TASKS.every(x => x.kind === 'evaluate')
+  && MD_CH_TASKS.every(x => Number.isInteger(Number(x.reference)))
+  // The two coefficients of A³ = 21A − 20I, by value. p is asked for directly;
+  // q appears inside the entry task, which is how that task shows the
+  // reduction rather than the product.
+  && MD_CH_TASKS.some(x => x.given === '(a + d)*(a + d) - (a*d - b*c)'
+    && x.reference === '21')
+  && MD_CH_TASKS.some(x => /- \(a \+ d\)\*\(a\*d - b\*c\)$/.test(x.given)
+    && x.reference === '43')
+  // And the theorem's own statement is asked for as ONE ENTRY coming to zero,
+  // which is the move this whole subject is built on.
+  && MD_CH_TASKS.some(x => x.given === '(c*b + d*d) - (a + d)*d + (a*d - b*c)'
+    && x.reference === '0'),
+  MD_CH_TASKS.map(x => `${x.id}:${x.given}=${x.reference}`).join(' | '))
+
+/*
+ * THE MATHEMATICS, RECOMPUTED RATHER THAN READ.
+ *
+ * Two real matrix products are formed here from the task data — A² and then
+ * A³ — and compared entry by entry against pA + qI with p and q read off the
+ * tasks' own references. This is the one assertion in the group that would
+ * catch a wrong worked example, and it is worth the fifteen lines: the first
+ * draft of this promotion's point 2 had A³'s (2, 2) entry as 32, which is
+ * wrong, and no amount of careful prose would have found it.
+ *
+ * The identity being checked is Cayley–Hamilton used twice over, so a sign
+ * error in either coefficient fails it: p = (a + d)² − (ad − bc) and
+ * q = −(a + d)(ad − bc), and 21A − 20I is [[43, 21], [42, 22]].
+ */
+t('the reduction really does equal the cube, checked by multiplying the matrices out',
+  (() => {
+    const entry = MD_CH_TASKS.find(x => x.reference === '43')
+    const coeff = MD_CH_TASKS.find(x => x.reference === '21')
+    if (!entry || !coeff) return false
+    const g = (k) => Number(coeff.at[k])
+    const A = [[g('a'), g('b')], [g('c'), g('d')]]
+    const mul = (X, Y) => X.map((row, i) => Y[0].map((_, j) =>
+      row.reduce((s, _v, k) => s + X[i][k] * Y[k][j], 0)))
+    const A3 = mul(mul(A, A), A)
+    const tr = A[0][0] + A[1][1]
+    const det = A[0][0] * A[1][1] - A[0][1] * A[1][0]
+    const p = tr * tr - det
+    const q = -tr * det
+    const combo = [[p * A[0][0] + q, p * A[0][1]], [p * A[1][0], p * A[1][1] + q]]
+    return p === 21 && q === -20
+      && JSON.stringify(A3) === JSON.stringify(combo)
+      // And the entry task's own answer is the (1, 1) entry of that cube, so
+      // the two tasks agree with each other as well as with the arithmetic.
+      && A3[0][0] === Number(entry.reference)
+      // The theorem itself, at the same numbers: A² − (tr)A + (det)I is zero.
+      && (() => {
+        const A2 = mul(A, A)
+        return A2[0][0] - tr * A[0][0] + det === 0
+          && A2[0][1] - tr * A[0][1] === 0
+          && A2[1][0] - tr * A[1][0] === 0
+          && A2[1][1] - tr * A[1][1] + det === 0
+      })()
+  })(),
+  (() => {
+    const coeff = MD_CH_TASKS.find(x => x.reference === '21')
+    const g = (k) => Number(coeff?.at?.[k] ?? 0)
+    const tr = g('a') + g('d')
+    const det = g('a') * g('d') - g('b') * g('c')
+    return `p=${tr * tr - det} q=${-tr * det}`
+  })())
+
+/*
+ * THE RUNNING MATRIX WAS INHERITED THIS TIME, which is the opposite of the
+ * fifty-third's cost and is asserted for that contrast.
+ *
+ * That promotion had to abandon the subject's exemplar because [[2, −1], [3, 4]]
+ * has no real eigenvalue, and introduced [[3, 1], [2, 2]]. This concept rests on
+ * the characteristic polynomial, so the same matrix carries straight across and
+ * λ² − 5λ + 4 is already on the page — three of the four tasks run on it.
+ *
+ * THE THIRD POINT HAD TO INTRODUCE TWO OTHERS AND THE REASON IS MATHEMATICAL,
+ * which is why it is asserted rather than only explained. A has DISTINCT
+ * eigenvalues, and distinct eigenvalues force the minimal polynomial to be the
+ * characteristic one — so the question that point exists to ask has only one
+ * possible answer on A and would teach nothing. The discriminant is the check,
+ * and it is the same 9 the group above computes in its other form.
+ */
+t('three of the four tasks inherit the fifth concept\'s matrix, and the fourth says why not',
+  (() => {
+    const onA = MD_CH_TASKS.filter(x => x.at.a === '3' && x.at.b === '1'
+      && x.at.c === '2' && x.at.d === '2')
+    if (onA.length !== 4) return false
+    // All four are ON that matrix; what the third point does differently is in
+    // its worked example, which names two matrices the tasks do not use.
+    const third = MD_CH_POINTS.find(p => p.id === 'the-shortest-law-rather-than-the-known-one')
+    const disc = (a, b, c, d) => (a - d) * (a - d) + 4 * b * c
+    return disc(3, 1, 2, 2) === 9
+      // Non-zero, so the eigenvalues are distinct and the minimal polynomial is
+      // forced — which is what the fourth task asks and what makes the worked
+      // example need a repeated-eigenvalue matrix instead.
+      && MD_CH_TASKS.some(x => x.given === '(a - d)*(a - d) + 4*b*c' && x.reference === '9')
+      // The two the example introduces share one characteristic polynomial and
+      // differ in the minimal one, which is the whole point of the pair.
+      && /\[\[4, 1\], \[0, 4\]\]/.test(third.workedExample.problem)
+      && /\[\[4, 0\], \[0, 4\]\]/.test(third.workedExample.problem)
+      && disc(4, 1, 0, 4) === 0
+      && disc(4, 0, 0, 4) === 0
+  })(),
+  MD_CH_TASKS.map(x => `${x.id}:[[${x.at.a},${x.at.b}],[${x.at.c},${x.at.d}]]`).join(' '))
+
+/*
+ * EVERY SUBGOAL CARRIES A WRITTEN QUESTION, for the reason the fifty-third's
+ * group gives: `questionCoverage` reads only whether the field ends in a
+ * question mark, so a period-ended question scores zero and reads fine to a
+ * person. Twelve subgoals, twelve questions.
+ *
+ * AND NO QUESTION CONTAINS ITS OWN ANSWER, which is types.ts's rule and which
+ * cannot be checked mechanically — so what is checked instead is the shape that
+ * makes the failure likely: a one-clause interrogative with no statement in
+ * front of it is almost always the imperative-with-a-question-mark that
+ * types.ts names. Every one of these is a statement of what is established
+ * followed by the question it licenses, which is why the length floor is as
+ * high as it is.
+ */
+t('all twelve subgoals ship a written question, each ending in a question mark',
+  MD_CH_SUBGOALS.length === 12
+  && MD_CH_SUBGOALS.every(s => typeof s.socratic === 'string' && s.socratic.length > 120)
+  && MD_CH_SUBGOALS.every(s => s.socratic.trim().endsWith('?'))
+  && MD_CH_SUBGOALS.every(s => typeof s.label === 'string' && s.label.length > 0)
+  && MD_CH_SUBGOALS.every(s => typeof s.detail === 'string' && s.detail.length > 0),
+  `${MD_CH_SUBGOALS.filter(s => s.socratic?.trim().endsWith('?')).length} of `
+  + `${MD_CH_SUBGOALS.length} end in a question mark`)
+
+/*
+ * WHAT THE CONCEPT DOES NOT CLAIM, SAID IN ITS OWN MATERIAL.
+ *
+ * The general criterion — diagonalisable exactly when the minimal polynomial is
+ * a product of distinct linear factors — is not written here, and the honest
+ * thing is to say so where a learner reads it rather than only in a file
+ * header. The third point's last subgoal hands that question to
+ * `diagonalisation` BY NAME, which is the same discipline the fifth concept
+ * used for the quadratic solve.
+ *
+ * Asserted because an absence is exactly what later editing erodes: somebody
+ * tightening the prose would drop the sentence and the concept would then
+ * appear to settle a question it does not, with every suite green.
+ */
+t('the concept hands the diagonalisability criterion back by name, rather than implying it',
+  (() => {
+    const third = MD_CH_POINTS.find(p => p.id === 'the-shortest-law-rather-than-the-known-one')
+    const last = third.workedExample.subgoals[third.workedExample.subgoals.length - 1]
+    return /`diagonalisation`/.test(last.detail)
+      && /not written here/.test(last.detail)
+      // And the thing it hands back is not authored anywhere, so the deferral
+      // is real rather than a courtesy to a concept that already exists.
+      && !ONTOLOGIES.some(o => o.concepts.some(c => c.id === 'diagonalisation'))
+  })(),
+  MD_CH_POINTS.find(p => p.id === 'the-shortest-law-rather-than-the-known-one')
+    .workedExample.subgoals.map(s => s.label).join(' | '))
+
+/*
+ * NO FIGURE AND NO TIMING TARGET, and both calls are easier here than they were
+ * for the fifth concept.
+ *
+ * There is no figure to point at, so `visualRef` is absent: types.ts's rule is
+ * that absent is honest and a placeholder is not.
+ *
+ * The timing target is the clearer refusal of the two. Squaring a 2×2 is a
+ * speed skill and this subject does time one point of its arithmetic — but what
+ * each point here is ABOUT is a substitution nobody performs quickly: what the
+ * constant term has to become, which power an expression reduces to, and
+ * whether a shorter law exists at all. A speed reward would train past the step
+ * each point exists to teach.
+ */
+t('no point of the new concept claims a figure and none is timed',
+  MD_CH_POINTS.every(p => p.visualRef === undefined)
+  && MD_CH_POINTS.every(p => p.automaticityTarget === undefined)
+  // The contrast, named: the subject does time one point, so this is a choice.
+  && allKnowledgePoints(MD).some(p => p.automaticityTarget !== undefined),
+  allKnowledgePoints(MD).filter(p => p.automaticityTarget !== undefined)
+    .map(p => `${p.id}:${p.automaticityTarget}`).join(' ') || 'none timed anywhere')
+
+/*
+ * THE CREDIT EDGES, AND THE ONE THAT WAS DELIBERATELY NOT DECLARED.
+ *
+ * Two `encompasses` edges out: the concept builds the characteristic polynomial
+ * every time (which is `eigenvalues`' own first move) and it squares a matrix
+ * (which is `matrix-multiplication`'s rule with both factors the same).
+ *
+ * A THIRD TO `determinant` WAS AVAILABLE AND IS ABSENT ON PURPOSE. ad − bc does
+ * appear, but it arrives as a coefficient of the characteristic polynomial —
+ * `eigenvalues`' content — and `eigenvalues => determinant` already carries
+ * that credit. Declaring it again would credit one piece of work twice.
+ *
+ * An absence needs a DIRECTION and a KIND to be assertable, so this checks for
+ * no `encompasses` FROM this concept TO `determinant` specifically, rather than
+ * for no edge between them: the prerequisite path through `eigenvalues` exists
+ * and should.
+ */
+t('two credit edges out with rationales, and the third one available is absent on purpose',
+  (() => {
+    const out = MD.edges.filter(e => e.kind === 'encompasses' && e.from === 'cayley-hamilton')
+    return out.map(e => e.to).slice().sort().join(' ') === 'eigenvalues matrix-multiplication'
+      && out.every(e => typeof e.rationale === 'string' && e.rationale.length > 40)
+      && out.every(e => e.promotedBy === 'author:matrices-and-determinants')
+      // The one not declared, by direction and kind.
+      && !MD.edges.some(e => e.kind === 'encompasses'
+        && e.from === 'cayley-hamilton' && e.to === 'determinant')
+      // And the prerequisite really does reach the determinant through the
+      // eigenvalue, so nothing was lost by leaving the credit edge out.
+      && MD.edges.some(e => e.kind === 'prerequisite'
+        && e.from === 'eigenvalues' && e.to === 'cayley-hamilton')
+      && MD.edges.some(e => e.kind === 'prerequisite'
+        && e.from === 'determinant' && e.to === 'eigenvalues')
+  })(),
+  MD.edges.filter(e => e.from === 'cayley-hamilton')
+    .map(e => `${e.kind}->${e.to}`).join(' ') || 'none')
+
+// ---------------------------------------------------------------------------
+
+/*
+ * THE FIFTY-FIFTH PROMOTION: THE SEVENTH CONCEPT OF `matrices-and-determinants`,
+ * AND THE FIRST WHOSE FILING WAS DECIDED BY AN EDGE KIND RATHER THAN BY SUBJECT
+ * MATTER.
+ *
+ * `markov-chains` was a node of `probability`, nine areas and two files away
+ * from here, and `chance-and-events` holds the `conditional-probability` it
+ * needs. It is here because it declared `exercises: ['eigenvalues']`, an
+ * `encompasses` edge, and an area's `links` hard-codes `prerequisite` while an
+ * authored ontology may only name concepts it contains — so that claim is
+ * expressible in exactly one subject, the one holding `eigenvalues`. Filed with
+ * the probability it would have been deleted in silence. The structural half of
+ * that is tests/atlas.mjs's; what belongs here is whether the MATERIAL earns the
+ * filing, which is a different question and the one that could have gone wrong.
+ *
+ * SO THIS GROUP CHECKS THREE THINGS, each a way the promotion could have been
+ * wrong rather than merely expensive:
+ *
+ *  1. The material is matrix work, not probability work with a matrix drawn
+ *     beside it. The precedent runs the other way — `gaussian-elimination` left
+ *     this subject because with no grid to display, row reduction on three
+ *     equations IS three equations — so the same test applied here has to come
+ *     back with the opposite answer or the filing is a workaround.
+ *  2. The concept does not DUPLICATE `bayes-theorem`, whose law of total
+ *     probability is exactly the arithmetic of a two-step transition. The
+ *     boundary is that the sum is already written and the recognition of it as
+ *     a matrix product is not, and the material says so in its own `detail`.
+ *  3. The arithmetic is recomputed here in exact rationals rather than read.
+ *     These are the subject's first non-integer answers and a wrong worked
+ *     example is the worst output this work can produce.
+ */
+const MD_MC = conceptById(MD, 'markov-chains')
+const MD_MC_POINTS = MD_MC.knowledgePoints
+const MD_MC_SUBGOALS = MD_MC_POINTS.flatMap(p => p.workedExample.subgoals)
+const MD_MC_TASKS = MD_MC_POINTS.flatMap(p => tasksForPoint(p.id))
+
+group('the fifty-fifth promotion: a process read off a matrix, and the share it settles on')
+
+t('it has no internal faults', ontologyProblems(MD).length === 0, ontologyProblems(MD).join('; '))
+t('the new concept is teachable AND practisable — a syllabus, not a map entry',
+  isTeachable(MD, 'markov-chains') && isPractisable(MD, 'markov-chains'))
+t('three points numbering from 1, which is per concept and not per subject',
+  MD_MC_POINTS.map(p => p.position).join(',') === '1,2,3'
+  && MD.concepts.every(c => c.knowledgePoints.map(p => p.position).join(',') === '1,2,3'),
+  MD.concepts.map(c => `${c.id}:${c.knowledgePoints.map(p => p.position).join('')}`).join(' '))
+t('every one of its points has a task, so no chain is left unable to become evidence',
+  MD_MC_POINTS.every(p => tasksForPoint(p.id).length > 0),
+  MD_MC_POINTS.filter(p => tasksForPoint(p.id).length === 0)
+    .map(p => p.id).join(', ') || 'none without')
+
+/*
+ * THE FIRST NON-INTEGER ANSWERS IN THIS SUBJECT, AND THEY ARE FORCED.
+ *
+ * Twenty of the subject's tasks answer with an integer, because an entry of a
+ * product, a determinant, an eigenvalue and a reduction coefficient all are one.
+ * These four answer with probabilities and shares, which are fractions. The
+ * property the subject was selected on is untouched — every one is an exact
+ * rational that `ruleEvaluate` settles locally with no worker — so what is
+ * asserted is exactness rather than integrality: a reference that was a decimal
+ * would mean somebody had rounded, which is the one way this could go wrong
+ * quietly.
+ *
+ * TWO OF THE FOUR ASK FOR A QUANTITY NO POWER OF P PRODUCES, which is the same
+ * test the sixth concept's group applies to its coefficients and is what stops
+ * this concept being "multiply the transition matrix out". A long-run share and
+ * the factor by which the gap shrinks are properties of the eigenvectors and the
+ * eigenvalues; no finite product of P with itself yields either, so a learner who
+ * answers 1/3 or 1/4 has used the eigenvalue and one who answers 11/16 may not
+ * have.
+ */
+t('four tasks, every answer an exact rational, and two of them need the eigenvalue',
+  MD_MC_TASKS.length === 4
+  && MD_MC_TASKS.every(x => x.kind === 'evaluate')
+  // Exact rationals: a plain integer or a ratio of integers, never a decimal.
+  && MD_MC_TASKS.every(x => /^-?\d+(\/\d+)?$/.test(x.reference))
+  // And genuinely NOT integers, which is what makes this the subject's first set
+  // of its kind rather than a claim about the regular expression.
+  && MD_MC_TASKS.filter(x => !Number.isInteger(Number(x.reference))).length === 4
+  // The two the matrix cannot answer, by value and by expression.
+  && MD_MC_TASKS.some(x => x.given === 'p12/(p12 + p21)' && x.reference === '1/3')
+  && MD_MC_TASKS.some(x => x.given === '(p11 + p22) - 1' && x.reference === '1/4')
+  // And the two-step probability, which IS an entry of a power and is asked for
+  // as the sum that reveals it to be one.
+  && MD_MC_TASKS.some(x => x.given === 'p11*p11 + p12*p21' && x.reference === '11/16'),
+  MD_MC_TASKS.map(x => `${x.id}:${x.given}=${x.reference}`).join(' | '))
+
+/*
+ * THE MATHEMATICS, RECOMPUTED IN EXACT RATIONALS RATHER THAN READ.
+ *
+ * Integer numerators and denominators carried separately, because 3/4 and 1/2
+ * are not exactly representable as doubles and a floating check would either
+ * pass on a wrong answer within epsilon or fail on a right one. Four claims are
+ * rebuilt from the task data: the rows of P total 1, P² has the entry the first
+ * task asserts, the steady state the second task computes really is fixed by P,
+ * and the gap from a certain start is multiplied by the second eigenvalue
+ * exactly — which is the claim the third point is entirely about and the one
+ * prose could not catch being wrong.
+ */
+t('the chain really does behave as the three points say, in exact arithmetic',
+  (() => {
+    const g = (a, b) => (b ? g(b, a % b) : a)
+    const F = (n, d = 1) => { const k = g(Math.abs(n), Math.abs(d)) || 1; return [n / k, d / k] }
+    const mul = ([a, b], [c, d]) => F(a * c, b * d)
+    const add = ([a, b], [c, d]) => F(a * d + c * b, b * d)
+    const sub = (x, y) => add(x, mul(y, F(-1)))
+    const eq = ([a, b], [c, d]) => a * d === c * b
+    const parse = (s) => {
+      const [n, d] = s.split('/')
+      return F(Number(n), d === undefined ? 1 : Number(d))
+    }
+    const two = MD_MC_TASKS.find(x => x.given === 'p11*p11 + p12*p21')
+    const share = MD_MC_TASKS.find(x => x.given === 'p12/(p12 + p21)')
+    const lam = MD_MC_TASKS.find(x => x.given === '(p11 + p22) - 1')
+    const gap = MD_MC_TASKS.find(x => x.given === '(1 - pi1)*L2*L2')
+    if (!two || !share || !lam || !gap) return false
+    // P, rebuilt from the tasks' own inputs rather than from the prose.
+    const p11 = parse(two.at.p11)
+    const p12 = parse(two.at.p12)
+    const p21 = parse(two.at.p21)
+    const p22 = parse(lam.at.p22)
+    const P = [[p11, p12], [p21, p22]]
+    // Every row totals 1, which is the property the concept opens by checking.
+    if (!P.every(r => eq(add(r[0], r[1]), F(1)))) return false
+    // P², and the first task's answer is its (1, 1) entry.
+    const mm = (X, Y) => X.map(r => Y[0].map((_, j) =>
+      r.reduce((acc, x, k) => add(acc, mul(x, Y[k][j])), F(0))))
+    const P2 = mm(P, P)
+    if (!eq(P2[0][0], parse(two.reference))) return false
+    if (!P2.every(r => eq(add(r[0], r[1]), F(1)))) return false
+    // The steady state: the second task gives pi2, so pi1 is its complement, and
+    // the pair has to come back unchanged from one step.
+    const pi2 = parse(share.reference)
+    const pi1 = sub(F(1), pi2)
+    const vm = (v, Y) => Y[0].map((_, j) =>
+      v.reduce((acc, x, k) => add(acc, mul(x, Y[k][j])), F(0)))
+    const next = vm([pi1, pi2], P)
+    if (!eq(next[0], pi1) || !eq(next[1], pi2)) return false
+    // The right eigenvector normalised is NOT the steady state, which is the
+    // second point's sharpest subgoal and would be a wrong worked example if it
+    // happened to coincide.
+    const half = vm([F(1, 2), F(1, 2)], P)
+    if (eq(half[0], F(1, 2))) return false
+    // The second eigenvalue off the diagonal, and the product check on it.
+    const l2 = parse(lam.reference)
+    if (!eq(l2, sub(add(p11, p22), F(1)))) return false
+    const det = sub(mul(p11, p22), mul(p12, p21))
+    if (!eq(det, l2)) return false
+    // And the gap really is multiplied by it: from a certain start in state 1,
+    // two steps of P must land exactly (1 - pi1) * l2 * l2 away from pi1.
+    const after = vm(vm([F(1), F(0)], P), P)
+    const measured = sub(after[0], pi1)
+    const predicted = mul(mul(sub(F(1), pi1), l2), l2)
+    return eq(measured, predicted) && eq(predicted, parse(gap.reference))
+  })(),
+  MD_MC_TASKS.map(x => `${x.id}=${x.reference}`).join(' '))
+
+/*
+ * THE MATERIAL IS MATRIX WORK, WHICH IS THE TEST THAT DECIDED
+ * `gaussian-elimination` THE OTHER WAY.
+ *
+ * That refusal's deciding reason was not the credit edge but the material: with
+ * no grid to display, row reduction on three equations IS three equations, so
+ * filing it here would have shipped a matrix concept whose material never shows
+ * a matrix. Run on this concept the same test has to answer the opposite way or
+ * the filing is a workaround dressed as a judgement — so it is asserted rather
+ * than argued. Every one of the three worked examples puts a transition matrix
+ * on the page, every task's `given` is written in its entries, and two of the
+ * three points are about its eigenvalues.
+ */
+t('all three points are worked on a transition matrix, which is why the filing is honest',
+  MD_MC_POINTS.every(p => /\[\[3\/4, 1\/4\], \[1\/2, 1\/2\]\]/.test(p.workedExample.problem))
+  // Every task is written in the matrix's entries rather than in probabilities
+  // that happen to come from one — `p11`, `p12`, `p21`, `p22` are its names.
+  && MD_MC_TASKS.filter(x => Object.keys(x.at).some(k => /^p\d\d$/.test(k))).length === 3
+  && MD_MC_TASKS.every(x => /\[\[3\/4, 1\/4\], \[1\/2, 1\/2\]\]/.test(x.prompt))
+  // And the eigenvalue is in two of the three points by name, which is what the
+  // credit edge claims and what a probability-only treatment would not need.
+  && MD_MC_POINTS.filter(p => /eigenvalue|eigenvector/.test(p.statement)).length === 2,
+  MD_MC_POINTS.map(p => `${p.id}:${/eigenv/.test(p.statement) ? 'eigen' : '-'}`).join(' '))
+
+/*
+ * AND IT DOES NOT DUPLICATE `bayes-theorem`, WHICH IS THE BOUNDARY THIS CONCEPT
+ * HAD TO BE WRITTEN AGAINST.
+ *
+ * A two-step transition probability is the law of total probability conditioning
+ * on the middle state, and that law is authored — `bayes-theorem`'s second point
+ * builds a denominator with it. So the first knowledge point's arithmetic is
+ * entirely borrowed, and the thing it adds is the RECOGNITION that the same sum
+ * is row i against column j. That is a boundary claim, which the fifty-third
+ * established is settled by having the material say so in its own `detail`
+ * rather than by a file header nobody reads next to the step.
+ *
+ * Asserted because the honest version and the dishonest version differ only in
+ * one sentence: a point that presented the sum as new would look identical to a
+ * reader skimming for correctness, and would be teaching conditional probability
+ * a second time under a matrix heading.
+ */
+t('the first point hands the conditioning back by name, rather than re-teaching it',
+  (() => {
+    const first = MD_MC_POINTS.find(p => p.id === 'the-rows-are-where-the-process-can-go')
+    const split = first.workedExample.subgoals[1]
+    return /`bayes-theorem`/.test(split.detail)
+      && /law of total probability/.test(split.detail)
+      // The thing it keeps for itself is the Markov property, named in the same
+      // subgoal as the assumption the borrowed arithmetic needs.
+      && /Markov property/.test(split.detail)
+      // And the concept it defers to is really authored, so the deferral points
+      // somewhere rather than being a courtesy.
+      && isTeachable(getOntology('chance-and-events'), 'bayes-theorem')
+      // The NEXT subgoal is where the matrix arrives, which is the division of
+      // labour this assertion is about: borrow the sum, then recognise it.
+      && /matrix-multiplication/.test(first.workedExample.subgoals[2].detail)
+  })(),
+  MD_MC_POINTS.find(p => p.id === 'the-rows-are-where-the-process-can-go')
+    .workedExample.subgoals.map(s => s.label).join(' | '))
+
+/*
+ * EVERY SUBGOAL CARRIES A WRITTEN QUESTION, for the reason the two groups above
+ * give: `questionCoverage` reads only whether the field ends in a question mark,
+ * so a period-ended question scores zero and reads fine to a person. Twelve
+ * subgoals, twelve questions.
+ */
+t('all twelve subgoals ship a written question, each ending in a question mark',
+  MD_MC_SUBGOALS.length === 12
+  && MD_MC_SUBGOALS.every(s => typeof s.socratic === 'string' && s.socratic.length > 120)
+  && MD_MC_SUBGOALS.every(s => s.socratic.trim().endsWith('?'))
+  && MD_MC_SUBGOALS.every(s => typeof s.label === 'string' && s.label.length > 0)
+  && MD_MC_SUBGOALS.every(s => typeof s.detail === 'string' && s.detail.length > 0),
+  `${MD_MC_SUBGOALS.filter(s => s.socratic?.trim().endsWith('?')).length} of `
+  + `${MD_MC_SUBGOALS.length} end in a question mark`)
+
+/*
+ * THE COUNTEREXAMPLE AT THE END OF THE THIRD POINT, WHICH IS WHAT STOPS THE
+ * CONCEPT OVERCLAIMING.
+ *
+ * "The gap is multiplied by λ₂ each step" invites the conclusion that every
+ * chain settles down, and it is false: the swap matrix has λ₂ = −1, a perfectly
+ * good steady state, and nothing approaching it. So the last subgoal builds that
+ * chain and follows it. Asserted because an absence is what a later tightening
+ * erodes — drop the subgoal and the concept appears to prove convergence, with
+ * every suite green and the error invisible until somebody applies it.
+ */
+t('the third point exhibits a chain that does NOT converge, so convergence is not implied',
+  (() => {
+    const third = MD_MC_POINTS.find(p => p.id === 'the-second-eigenvalue-is-the-rate')
+    const last = third.workedExample.subgoals[third.workedExample.subgoals.length - 1]
+    // The swap matrix, and its second eigenvalue read the way the point says.
+    return /\[\[0, 1\], \[1, 0\]\]/.test(last.detail)
+      && /λ₂ = −1/.test(last.detail)
+      // Diagonal sum 0 really does give −1 by this point's own rule, so the
+      // counterexample is consistent with the material rather than asserted.
+      && (0 + 0) - 1 === -1
+      // And the condition is stated, which is the thing the subgoal exists for.
+      && /\|λ₂\| < 1/.test(last.detail)
+      && /\|λ₂\| < 1/.test(third.statement)
+  })(),
+  MD_MC_POINTS.find(p => p.id === 'the-second-eigenvalue-is-the-rate')
+    .workedExample.subgoals.map(s => s.label).join(' | '))
+
+/*
+ * NO FIGURE AND NO TIMING TARGET, and the figure is the harder call here than it
+ * has been for the last two concepts.
+ *
+ * A state diagram with two circles and four labelled arrows is the standard
+ * picture of this concept and would genuinely help. There is no such figure in
+ * the build, so `visualRef` is absent: types.ts's rule is that absent is honest
+ * and a placeholder is not, and naming a figure that does not exist would make
+ * the material look illustrated to every count that reads the field.
+ *
+ * The timing target is the easy refusal. Nothing here is a speed skill — the
+ * work is deciding which side of the matrix a distribution multiplies on and
+ * what a gap totalling zero has to be — and a speed reward would train past it.
+ */
+t('no point of the new concept claims a figure and none is timed',
+  MD_MC_POINTS.every(p => p.visualRef === undefined)
+  && MD_MC_POINTS.every(p => p.automaticityTarget === undefined)
+  && allKnowledgePoints(MD).some(p => p.automaticityTarget !== undefined),
+  allKnowledgePoints(MD).filter(p => p.automaticityTarget !== undefined)
+    .map(p => `${p.id}:${p.automaticityTarget}`).join(' ') || 'none timed anywhere')
+
+/*
+ * EVERY OBJECTIVE NAMES A KIND THIS SUBJECT SERVES, which is the fifty-third's
+ * group's claim re-checked over a seventh concept: `justify` is named and not
+ * shipped anywhere in the build, so what has to hold is that each objective
+ * names at least one kind that DOES ship.
+ */
+t('both objectives name a kind this subject really serves',
+  MD_MC.objectives.length === 2
+  && MD_MC.objectives.every(o => o.taskKinds.length > 0
+    && o.taskKinds.some(k => k === 'evaluate')),
+  MD_MC.objectives.map(o => `${o.id}:${o.taskKinds.join('+')}`).join(' '))
+
+/*
+ * THE CREDIT EDGES, AND THE ONE DELIBERATELY NOT DECLARED — the same shape as
+ * the sixth concept's and for the same reason.
+ *
+ * Two out: the eigenvalue, which is what the whole second and third points are,
+ * and the multiplication, because recognising the path sum as row-against-column
+ * performs one entry of a product. `markov-chains => determinant` is available
+ * and absent: det P appears, as the product check on the two eigenvalues, but it
+ * arrives as `eigenvalues`' own invariant relation and `eigenvalues =>
+ * determinant` already carries that credit.
+ *
+ * AND THE FIRST OF THE TWO IS THE EDGE THAT DECIDED THE FILING, re-declared
+ * rather than inherited. `expandEdges` built it from the node's `exercises`, so
+ * deleting the node deleted it, and nothing would have gone red.
+ */
+t('two credit edges out with rationales, and the one that forced the filing is among them',
+  (() => {
+    const out = MD.edges.filter(e => e.kind === 'encompasses' && e.from === 'markov-chains')
+    return out.map(e => e.to).slice().sort().join(' ') === 'eigenvalues matrix-multiplication'
+      && out.every(e => typeof e.rationale === 'string' && e.rationale.length > 40)
+      && out.every(e => e.promotedBy === 'author:matrices-and-determinants')
+      // The one not declared, by direction and kind.
+      && !MD.edges.some(e => e.kind === 'encompasses'
+        && e.from === 'markov-chains' && e.to === 'determinant')
+      // And the prerequisite reaches the determinant through the eigenvalue, so
+      // nothing was lost by leaving that credit edge out.
+      && MD.edges.some(e => e.kind === 'prerequisite'
+        && e.from === 'eigenvalues' && e.to === 'markov-chains')
+      && MD.edges.some(e => e.kind === 'prerequisite'
+        && e.from === 'determinant' && e.to === 'eigenvalues')
+  })(),
+  MD.edges.filter(e => e.from === 'markov-chains')
+    .map(e => `${e.kind}->${e.to}`).join(' ') || 'none')
 
 console.log(`\n${questionCoverageLine(EXPONENTS_AND_LOGARITHMS)}`)
 console.log(

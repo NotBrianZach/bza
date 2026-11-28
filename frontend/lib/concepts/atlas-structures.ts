@@ -48,6 +48,16 @@ const LINEAR_ALGEBRA: MapArea = {
     'that makes those directions the axes, which is `diagonalisation`, and at the law a matrix ' +
     'cannot escape, which is `cayley-hamilton`. Two beginnings rather than one, and that is the ' +
     'area view splitting rather than a change of mind. ' +
+    'AND THE SECOND OF THOSE TWO BEGINNINGS WENT THE WAY THE FIRST SENTENCE DID, one promotion ' +
+    'later: `cayley-hamilton` is authored in `matrices-and-determinants` as of the fifty-fourth, ' +
+    'because a matrix satisfying its own characteristic polynomial is a statement about the ' +
+    'polynomial that subject had just finished building, and because every question it raises — ' +
+    'an entry of the substituted law, the coefficients that write a power as pA + qI, the degree ' +
+    'of the shortest law a matrix obeys — is a number read off a grid, which is what that ' +
+    'subject makes everything. So this area is back to ONE beginning and it is the choice of ' +
+    'basis. The two sentences being withdrawn in consecutive promotions is worth reading as one ' +
+    'event rather than two: what this area kept of the spectral chain is everything that needs a ' +
+    'BASIS chosen, and what it has lost is everything answerable about a single grid. ' +
     'NOR IS THE BEST ANSWER TO AN UNSOLVABLE SYSTEM, which is the half of the next sentence this ' +
     'area has now had to withdraw as well. It used to read "what is still here and rests on the ' +
     'last two of those is the ORTHOGONALITY THAT IS A THEOREM rather than a definition: a ' +
@@ -80,7 +90,14 @@ const LINEAR_ALGEBRA: MapArea = {
     'canonical form, the characteristic polynomial, the quadratic forms and the matrix ' +
     'exponential, and every one of those genuinely rests on the eigenvalue — which is now ' +
     'written, in another subject, so all four rest on material a learner can actually reach ' +
-    'rather than on the node this area used to open with.',
+    'rather than on the node this area used to open with. ' +
+    'AND A SECOND OF THE FIVE HAS NOW LEFT AS WELL: the characteristic polynomial is ' +
+    '`cayley-hamilton` and it is authored in `matrices-and-determinants` as of the fifty-fourth ' +
+    'promotion. So of the five found missing, two have been written and three are still here — ' +
+    'the canonical form, the quadratic forms and the matrix exponential. Both of the two that ' +
+    'went were written only after somebody authored the concept they stand on, which is the ' +
+    'claim the addition made about itself coming true rather than being revised: finding a gap ' +
+    'does not make it cheap to fill.',
   nodes: [
     {
       id: 'diagonalisation',
@@ -167,15 +184,25 @@ const LINEAR_ALGEBRA: MapArea = {
      * NOT come true is the one about depth — the chain was supposed to take
      * several promotions to reach, and one promotion into it put two of its
      * nodes within reach at once.
+     *
+     * AND THE READY ONE WAS TAKEN ONE PROMOTION LATER, so THREE of the five are
+     * now gone and only `jordan-normal-form`, `quadratic-forms` and
+     * `matrix-exponential` are still nodes here. `cayley-hamilton` is a concept
+     * of `matrices-and-determinants` as of the fifty-fourth — the SECOND of
+     * these five additions to be authored, after the dual — and it went by the
+     * route the paragraph above describes rather than by a shortcut: it became
+     * ready when the chain it rests on was started, and it was written the next
+     * promotion along.
+     *
+     * WHAT THIS DOES TO THE "DOES NOT HAND THE NEXT PROMOTION FOUR CHEAP
+     * CANDIDATES" CLAIM is nothing, and it is worth saying why rather than
+     * leaving it to be re-derived. Two of the five have now been authored, and
+     * each was authored only after somebody wrote the concept it stands on —
+     * the dual needed `basis-and-dimension`, this one needed `eigenvalues`. The
+     * claim was never that these nodes would stay unwritten; it was that adding
+     * them bought no cheap authoring, and spending two of them across eleven
+     * promotions at a cost of one prerequisite chain each is that claim holding.
      */
-    {
-      id: 'cayley-hamilton',
-      match: /\bcayley[–-]hamilton\b|\bminimal polynomial\b/i,
-      name: 'Cayley–Hamilton and the minimal polynomial',
-      is: 'A matrix satisfies its own characteristic polynomial, and the least polynomial it satisfies is what decides whether it diagonalises.',
-      needs: ['eigenvalues'],
-      terms: 'cayley hamilton theorem minimal polynomial characteristic polynomial annihilating',
-    },
     {
       id: 'jordan-normal-form',
       match: /\bjordan (normal|canonical) form\b/i,
@@ -264,9 +291,9 @@ const LINEAR_ALGEBRA: MapArea = {
     },
   ],
   /*
-   * TWELVE NODES HAVE BEEN AUTHORED OUT OF THIS AREA, which is more than any
+   * THIRTEEN NODES HAVE BEEN AUTHORED OUT OF THIS AREA, which is more than any
    * other area has given up, and this is the list the stub floor reads so that
-   * twelve departures count as territory covered rather than territory
+   * thirteen departures count as territory covered rather than territory
    * missing. See `MapArea.departed` in atlas.ts for why the floor needed it and
    * why absence means zero.
    *
@@ -306,6 +333,16 @@ const LINEAR_ALGEBRA: MapArea = {
    * more than one node from here and the first to take one it had REFUSED in
    * writing. The departure section below records the refusal and where it is
    * answered.
+   *
+   * AND THE THIRTEENTH WENT STRAIGHT AFTER IT, TO THE SAME SUBJECT, ON THE SAME
+   * DAY. `cayley-hamilton` is a concept of `matrices-and-determinants` as of
+   * the fifty-fourth promotion. That is the first time this area has lost two
+   * nodes to one subject in consecutive promotions, and it is not a coincidence
+   * worth passing over: the twelfth made the thirteenth ready, so the receiving
+   * subject unlocked its own next concept. The thirteen now split SIX to
+   * `matrices-and-determinants`, SIX to `vectors-and-independence` and one to
+   * `expressions-and-equations` — the first time the two large receivers are
+   * level, after `vectors-and-independence` led for nine promotions.
    */
   departed: [
     'matrices-and-maps',
@@ -320,6 +357,7 @@ const LINEAR_ALGEBRA: MapArea = {
     'least-squares',
     'dual-spaces',
     'eigenvalues',
+    'cayley-hamilton',
   ],
   /**
    * THE FOUR EDGES THAT CAME IN TO THE AUTHORED NODES.
@@ -956,6 +994,75 @@ const LINEAR_ALGEBRA: MapArea = {
    * written; `quadratic-forms` is behind the spectral theorem and
    * `matrix-exponential` behind `power-series`, which is a node of another area
    * entirely.
+   *
+   * ── AND A THIRTEENTH, WHICH COST THIS AREA NOTHING AT ALL ────────────────
+   *
+   * `cayley-hamilton` LEFT THIS AREA WHEN IT WAS AUTHORED, AND HAD TO, for the
+   * collision reason every entry above gives: `atlasProblems` rejects a node
+   * whose id matches an authored concept rather than merging the two, and the
+   * authored copy would be shadowed by a node with no knowledge points.
+   *
+   * IT IS THE SECOND OF THE FIVE SECOND-COURSE ADDITIONS TO BE WRITTEN, after
+   * `dual-spaces`, and the second consecutive departure to the same subject —
+   * which no departure above is. The twelfth is what made it ready, so this is
+   * the first time one promotion out of here has unlocked the next one.
+   *
+   * SEVEN NODES AFTER, against a stub floor of five, and the count decides
+   * nothing: seven nodes plus thirteen departures is the same twenty of
+   * territory that eight plus twelve was. The figures live in the group named
+   * "the floor stopped binding" at the end of tests/atlas.mjs and nowhere else.
+   *
+   * IT STRANDED NOTHING, WHICH IS THE CHEAPEST A DEPARTURE CAN BE AND HAS
+   * HAPPENED FIVE TIMES OUT OF THIS AREA NOW. The node declared ONE `needs`,
+   * `eigenvalues`, and that is a concept of the subject this one joined — so
+   * the edge is an ordinary `prerequisite` in that ontology's own `EDGES` and
+   * this area owes no `links` entry. It is also what chose this node over the
+   * other two the twelfth left ready: `diagonalisation` strands `rank-nullity`
+   * and `markov-chains` would strand either its probability prerequisite or its
+   * credit edge depending on where it is filed.
+   *
+   * NOTHING WAS HANDED BACK, checked rather than assumed. A promotion hands an
+   * edge back when the promoted concept lands in the SAME ontology as the far
+   * end of an existing `links` entry, which makes that entry a duplicate of an
+   * ordinary `needs` — and `composeAtlas` produces the same edge twice without
+   * noticing, with no suite checking for it. No `links` entry of any area named
+   * `cayley-hamilton` at either end before this promotion, so there was nothing
+   * to delete. The absence had to be looked for to be known.
+   *
+   * THE ONE EDGE POINTING IN SURVIVED. `jordan-normal-form` names this concept
+   * in its OWN `needs`, so the edge is declared on a node that remains and
+   * resolves in `composeAtlas` untouched. Only a node's own `needs` is stranded
+   * by deleting it, which this area has now recorded thirteen times.
+   *
+   * `confusedWith` and `exercises` on the departing node: NEITHER, checked
+   * before deleting it, for the reason the sixth departure's note gives. Worth
+   * one extra line here because a `confusedWith` was genuinely plausible: the
+   * characteristic polynomial and the minimal polynomial are the two most
+   * confusable objects this concept handles. They are both INSIDE it, so the
+   * confusion is handled by the third knowledge point directly rather than by
+   * an `interferes_with` edge, which can only hold between two concepts.
+   *
+   * THE AREA VIEW SHRANK, for the second time in this area's history and the
+   * fourth distinct shape it has produced. {`diagonalisation`,
+   * `cayley-hamilton`} became {`diagonalisation`}: the departing node was a
+   * root itself, so it left; and it was the last in-area prerequisite of
+   * nothing, because its only dependent `jordan-normal-form` names
+   * `diagonalisation` as well and so stays below a node of this area. Two
+   * became one with the survivor unchanged, which is only sayable by
+   * membership — a length check reading "two became one" makes no claim about
+   * which one survived.
+   *
+   * IT WAS AN `armature.ts` ANCHOR, AND KRULL'S SLOT HAS NOW TURNED OVER SEVEN
+   * TIMES — and the documented refill rule WORKED, for the first time since the
+   * thirtieth. The departing node's one dependent is `jordan-normal-form`, and
+   * it is the unique node at the shallowest unanchored depth precisely BECAUSE
+   * of this promotion: its two `needs` were `diagonalisation` and
+   * `cayley-hamilton`, so writing one of them moved it from two prerequisites
+   * away to one. So the departing anchor promoted its own successor into the
+   * slot it vacated. The discriminating half of the rule — "the dependent that
+   * becomes a ROOT" — still fails, since `jordan-normal-form` did not become a
+   * root; it is the distance criterion the fifth and sixth turnovers used that
+   * picks it, and it picks it uniquely. See armature.ts.
    */
   links: [
     /*
