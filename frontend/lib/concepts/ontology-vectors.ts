@@ -1373,10 +1373,23 @@ const CONCEPTS: Concept[] = [
               label: 'Ask what multiple it would have to be',
               detail:
                 'The first components force c = 6/2 = 3. If w is a multiple of u at all, it is 3u.',
+              socratic:
+                'Everything u on its own can reach is a multiple of it, so either w is c·u for ' +
+                'one single number c or it is not on that line at all. Scaling does not get to ' +
+                'use a different factor on each component — one c has to serve both. Looking at ' +
+                'the first components alone, the 2 and the 6, how many values of c are left in ' +
+                'the running, and what one claim does that leave you to test?',
             },
             {
               label: 'Check the other component agrees',
               detail: '−3/−1 = 3 as well. Subtracting: 3 − 3 = 0.',
+              socratic:
+                'That candidate came out of the first components by themselves, which means the ' +
+                'second pair — the −3 above the −1 — had no hand in choosing it and is still ' +
+                'free to disagree. Ask the second components what factor they demand, and ' +
+                'subtract it from the one you already have. What makes that difference a real ' +
+                'test rather than a repeat of the division you just did, and what does it come ' +
+                'to here?',
             },
             {
               label: 'Read the answer',
@@ -1384,6 +1397,12 @@ const CONCEPTS: Concept[] = [
                 'The ratios match, so w = 3u and w IS in the span. A non-zero difference would ' +
                 'have meant the two components demanded different multiples, which no single ' +
                 'scaling can satisfy.',
+              socratic:
+                'Both components turned out to demand the same factor, so the difference between ' +
+                'their two demands came to 0. A single scaling has only one number to spend and ' +
+                'must spend it on both components at once. What does that zero settle about ' +
+                'whether w lies on u\'s line, and what would any non-zero difference have told ' +
+                'you about the two demands instead?',
             },
           ],
           answer: '0 — the ratios agree, so w = 3u is on the line',
