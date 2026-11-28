@@ -60,17 +60,62 @@ async function openingOf(filePath: string | null): Promise<string | null> {
   } catch { return null }
 }
 
+/**
+ * Once a day, enforced HERE rather than in the button.
+ *
+ * A disabled button is a hint, not a limit — the endpoint is reachable with a
+ * token and a terminal, and embedding a whole library is the one operation in
+ * this feature that costs real money per call. So the throttle is the
+ * server's, and the UI reads it from the same place rather than keeping its
+ * own idea of when the user last ran one.
+ *
+ * KEYED ON THE NEWEST `embedded_at`, which needs no new column and has a
+ * useful property: a sweep that embedded NOTHING — everything already current
+ * — moves no timestamp and so does not consume the day. The thing being
+ * rationed is work done, not buttons pressed.
+ *
+ * The cost is honest and worth stating: a book added an hour after a sweep
+ * waits for tomorrow. That is the right trade for a manual control whose
+ * whole purpose is to be occasional, and the nightly timer is the answer for
+ * anyone who wants it sooner.
+ */
+const THROTTLE_MS = 24 * 60 * 60 * 1000
+
+async function lastEmbeddedAt(userId: string): Promise<Date | null> {
+  const { data } = await db()
+    .from('book_embeddings')
+    .select('embedded_at')
+    .eq('user_id', userId)
+    .eq('model', EMBEDDING_MODEL)
+    .order('embedded_at', { ascending: false })
+    .limit(1)
+  const at = data?.[0]?.embedded_at
+  return at ? new Date(at) : null
+}
+
 export async function GET(req: NextRequest) {
   const userId = await getUserFromToken(req.headers.get('authorization'))
   if (!userId) return NextResponse.json({ error: 'Not signed in' }, { status: 401 })
 
-  const [books, rows] = await Promise.all([
+  const [books, rows, last] = await Promise.all([
     db().from('books').select('id').eq('user_id', userId).is('deleted_at', null),
     db().from('book_embeddings').select('book_id').eq('user_id', userId).eq('model', EMBEDDING_MODEL),
+    lastEmbeddedAt(userId),
   ])
   const total = books.data?.length ?? 0
   const embedded = rows.data?.length ?? 0
-  return NextResponse.json({ total, embedded, outstanding: Math.max(0, total - embedded), model: EMBEDDING_MODEL })
+  const nextAllowedAt = last ? new Date(last.getTime() + THROTTLE_MS) : null
+  return NextResponse.json({
+    total,
+    embedded,
+    outstanding: Math.max(0, total - embedded),
+    model: EMBEDDING_MODEL,
+    lastEmbeddedAt: last?.toISOString() ?? null,
+    // Computed server-side so the button never has to decide, and so a clock
+    // that is wrong in the browser cannot unlock it.
+    canRun: !nextAllowedAt || Date.now() >= nextAllowedAt.getTime(),
+    nextAllowedAt: nextAllowedAt?.toISOString() ?? null,
+  })
 }
 
 export async function POST(req: NextRequest) {
@@ -80,6 +125,16 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({})) as
     { bookIds?: number[]; force?: boolean; limit?: number }
   const limit = Math.min(Math.max(body.limit ?? DEFAULT_LIMIT, 1), 200)
+
+  const last = await lastEmbeddedAt(userId)
+  if (last && Date.now() - last.getTime() < THROTTLE_MS) {
+    const nextAllowedAt = new Date(last.getTime() + THROTTLE_MS)
+    return NextResponse.json({
+      error: 'The library was embedded in the last day. This can run once a day.',
+      lastEmbeddedAt: last.toISOString(),
+      nextAllowedAt: nextAllowedAt.toISOString(),
+    }, { status: 429 })
+  }
 
   let q = db().from('books')
     .select('id, title, summary, synopsis, content_type, file_path')

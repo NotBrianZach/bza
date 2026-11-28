@@ -20,6 +20,7 @@ import NewsletterSection from '@/components/settings/NewsletterSection'
 import ScoreBarsSection from '@/components/settings/ScoreBarsSection'
 import ExportSection from '@/components/settings/ExportSection'
 import ImportHighlightsSection from '@/components/settings/ImportHighlightsSection'
+import LibrarianSection from '@/components/settings/LibrarianSection'
 
 /**
  * SettingsPage is now a thin composition shell.
@@ -110,6 +111,10 @@ export default function SettingsPage() {
 
         <ScoreBarsSection />
 
+        {/* Signed-in only, and not merely by convention: embeddings are rows
+            keyed on a user id, so there is nothing for an anonymous reader to
+            index and the section would be a button that always failed. */}
+        {isAuthenticated && <LibrarianSection />}
         {isAuthenticated && <ExportSection />}
         {isAuthenticated && <ImportHighlightsSection />}
       </div>
